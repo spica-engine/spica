@@ -63,6 +63,14 @@
   overflow: hidden;
 }
 
+.selectableCell {
+  cursor: pointer;
+}
+
+.selectableCell:hover:not(.focusedCell) {
+  border: var(--border-default) !important;
+}
+
 .resizer {
   position: absolute;
   right: 0;

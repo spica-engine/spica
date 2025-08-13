@@ -1,22 +1,9 @@
 import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
-import Table from "../table/Table";
+import Table, { type FieldType } from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useMemo} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 
-type FieldType =
-  | "string"
-  | "number"
-  | "date"
-  | "boolean"
-  | "textarea"
-  | "multiple selection"
-  | "relation"
-  | "location"
-  | "array"
-  | "object"
-  | "file"
-  | "richtext";
 
 export type ColumnType = {
   id: string;
@@ -186,7 +173,7 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
       return (
         <div className={styles.locationCell}>
           <img src="/locationx.png" className={styles.locationImage} />
-          <div>{cellData}</div>
+          <div>{cellData.coordinates}</div>
         </div>
       );
     case "array":

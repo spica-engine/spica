@@ -10,11 +10,25 @@ import React, {
   useRef,
   useState
 } from "react";
-import {FlexElement} from "oziko-ui-kit";
+import {FlexElement, Popover, useInputRepresenter, useOnClickOutside} from "oziko-ui-kit";
 import styles from "./Table.module.scss";
 import InfiniteScroll from "react-infinite-scroll-component";
 import useScrollDirectionLock from "../../../hooks/useScrollDirectionLock";
 import Loader from "../../../components/atoms/loader/Loader";
+
+export type FieldType =
+  | "string"
+  | "number"
+  | "date"
+  | "boolean"
+  | "textarea"
+  | "multiple selection"
+  | "relation"
+  | "location"
+  | "array"
+  | "object"
+  | "file"
+  | "richtext";
 
 type TypeDataColumn = {
   header: string | ReactNode;
@@ -27,6 +41,7 @@ type TypeDataColumn = {
   fixed?: boolean;
   selectable?: boolean;
   leftOffset?: number;
+  type?: FieldType;
 };
 
 type TypeTableData = {
@@ -208,10 +223,7 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
               minWidth: `${totalTableWidth}px`
             }}
           >
-            <TableHeader
-              formattedColumns={formattedColumns}
-              onColumnResize={handleColumnResize}
-            />
+            <TableHeader formattedColumns={formattedColumns} onColumnResize={handleColumnResize} />
             <tbody>
               {formattedColumns.length > 0 && (
                 <Rows
@@ -372,16 +384,22 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
     const cells = formattedColumns.map(column => {
       const cellData = row[column.key];
 
-      return (
-        <Cell
-          key={cellData.id}
-          onClick={() => column.selectable !== false && handleCellClick(column.key, index)}
-          className={`${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`}
-          leftOffset={column.leftOffset}
+      const props = {
+        key: cellData.id,
+        onClick: () => column.selectable !== false && handleCellClick(column.key, index),
+        className: `${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`,
+        leftOffset: column.leftOffset,
+        children: cellData.value
+      };
+
+      return column.selectable !== false ? (
+        <EditableCell
+          {...props}
+          type={column.type ?? "string"}
           focused={focusedCell?.row === index && focusedCell?.column === column.key}
-        >
-          {cellData.value}
-        </Cell>
+        />
+      ) : (
+        <Cell {...props} />
       );
     });
 
@@ -403,18 +421,48 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
 });
 
 type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
-  focused?: boolean;
   leftOffset?: number;
 };
 
-const Cell = memo(({children, focused, leftOffset, ...props}: TypeCell) => {
+const Cell = memo(({children, leftOffset, ...props}: TypeCell) => {
+  return (
+    <td {...props} className={`${styles.cell} ${props.className || ""}`} style={{left: leftOffset}}>
+      {children}
+    </td>
+  );
+});
+
+type TypeEditableCell = TypeCell & {
+  type: FieldType;
+  focused?: boolean;
+};
+
+const EditableCell = memo(({children, focused, leftOffset, type, ...props}: TypeEditableCell) => {
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    props?.onClick?.(e);
+    setIsEditOpen(true);
+  };
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
+  useOnClickOutside({
+    refs: [containerRef, contentRef],
+    onClickOutside: () => setIsEditOpen(false)
+  });
+
   return (
     <td
       {...props}
-      className={`${styles.cell} ${focused ? styles.focusedCell : ""} ${props.className || ""}`}
+      onClick={handleClick}
+      className={`${styles.cell} ${styles.selectableCell} ${focused ? styles.focusedCell : ""} ${props.className || ""}`}
       style={{left: leftOffset}}
     >
-      {children}
+      <div ref={containerRef}>
+        <Popover open={isEditOpen} content={<div ref={contentRef}>{type}</div>}>
+          {children}
+        </Popover>
+      </div>
     </td>
   );
 });
