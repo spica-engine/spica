@@ -6,6 +6,7 @@ import React, {
   type RefObject,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState
@@ -69,10 +70,66 @@ type TypeTable = {
   onScrollEnd?: () => void;
   totalDataLength?: number;
   style?: React.CSSProperties;
+  tableRef?: RefObject<HTMLElement | null>;
   onCellSave?: (value: any, columnName: string, rowId: string) => void;
 };
 
 const MIN_COLUMN_WIDTH = 140;
+
+function extractTextFromReactNode(value: ReactNode | string): string {
+  const extractText = (node: ReactNode): string[] => {
+    if (node == null || typeof node === "boolean") {
+      return [];
+    }
+
+    if (typeof node === "string") {
+      return [node];
+    }
+
+    if (typeof node === "number") {
+      return [node.toString()];
+    }
+
+    if (Array.isArray(node)) {
+      return node.flatMap(extractText);
+    }
+
+    if (React.isValidElement(node)) {
+      if (node.type === React.Fragment) {
+        const props = (node as React.ReactElement).props;
+        if (props && typeof props === "object" && "children" in props) {
+          return extractText(props.children as ReactNode);
+        }
+        return [];
+      }
+
+      if (
+        typeof node === "object" &&
+        node !== null &&
+        "props" in node &&
+        typeof (node as any).props === "object" &&
+        (node as any).props &&
+        "children" in (node as any).props &&
+        (node as any).props.children != null
+      ) {
+        return extractText((node as any).props.children);
+      }
+
+      return [];
+    }
+
+    if (typeof node === "object" && node !== null) {
+      const obj = node as any;
+      if (obj.props && obj.props.children) {
+        return extractText(obj.props.children);
+      }
+    }
+
+    return [];
+  };
+
+  return extractText(value).join("");
+}
 
 // TODO: Refactor this function to render more appropriate UI elements for each field type.
 // Many field types are currently using the generic `renderDefault()`.
@@ -218,10 +275,7 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
   const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth + 10);
 
   const columnsWithWidth = columns.map(column => {
-    return {
-      ...column,
-      width: column.width || defaultColumnWidth
-    };
+    return {...column, width: column.width || defaultColumnWidth};
   });
 
   const formattedColumns: TypeDataColumn[] = [];
@@ -236,11 +290,7 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
     const columnWidth = parseWidth(column.width, containerWidth);
     const fixedLeftOffset = cumulativeOffset;
 
-    formattedColumns.push({
-      ...column,
-      width: `${columnWidth}px`,
-      leftOffset: fixedLeftOffset
-    });
+    formattedColumns.push({...column, width: `${columnWidth}px`, leftOffset: fixedLeftOffset});
 
     cumulativeOffset += columnWidth;
   }
@@ -255,9 +305,12 @@ const Table: FC<TypeTable> = ({
   onScrollEnd,
   totalDataLength,
   style,
-  onCellSave
+  onCellSave,
+  tableRef
 }) => {
   const containerRef = useScrollDirectionLock();
+  useImperativeHandle(tableRef, () => containerRef.current as HTMLElement);
+
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
@@ -330,7 +383,6 @@ const Table: FC<TypeTable> = ({
   useEffect(() => {
     const handleEnter = (event: KeyboardEvent) => {
       if (event.key === "Enter") {
-        console.log("cellChangeEvent");
         const event = new CustomEvent("cellChangeEvent");
         window.dispatchEvent(event);
         return;
@@ -369,11 +421,7 @@ const Table: FC<TypeTable> = ({
         >
           <table
             className={`${styles.table} ${className}`}
-            style={{
-              ...style,
-              width: `${totalTableWidth}px`,
-              minWidth: `${totalTableWidth}px`
-            }}
+            style={{...style, width: `${totalTableWidth}px`, minWidth: `${totalTableWidth}px`}}
           >
             <TableHeader formattedColumns={formattedColumns} onColumnResize={handleColumnResize} />
             <tbody>
@@ -514,15 +562,18 @@ type RowsProps = {
 
 const Rows = memo(
   ({data, formattedColumns, focusedCell, handleCellClick, onCellSave}: RowsProps) => {
-    const rowCacheRef = useRef<Map<string, {element: JSX.Element; lastFocusedCell: string | null}>>(
-      new Map()
-    );
+    const rowCacheRef = useRef<
+      Map<string, {element: JSX.Element; lastFocusedCell: string | null; rowContentString: string}>
+    >(new Map());
     const rows: JSX.Element[] = [];
 
     for (let index = 0; index < data.length; index++) {
       const row = data[index];
+      // If a cell is changed, we need to re-render the row
+      const rowContentString = formattedColumns
+        .map(column => JSON.stringify(row[column.key]?.value))
+        .join("-");
       const rowId = row[Object.keys(row)[0]].id;
-
       const missingCellData = formattedColumns.some(column => !row[column.key]);
       if (missingCellData) continue;
 
@@ -531,13 +582,20 @@ const Rows = memo(
 
       const isFocusedInThisRow = focusedCell?.row === index;
 
-      if (cached && !isFocusedInThisRow && cached.lastFocusedCell === focusedKey) {
+      if (
+        cached &&
+        cached.rowContentString === rowContentString &&
+        !isFocusedInThisRow &&
+        (!focusedKey || cached.lastFocusedCell === focusedKey)
+      ) {
         rows.push(cached.element);
         continue;
       }
+      console.log("recreating cells")
 
       const cells = formattedColumns.map(column => {
         const cellData = row[column.key];
+
         const props = {
           onClick: () => column.selectable !== false && handleCellClick(column.key, index),
           className: `${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`,
@@ -562,15 +620,19 @@ const Rows = memo(
       });
 
       const rowElement = <tr key={rowId}>{cells}</tr>;
-      rowCacheRef.current.set(rowId, {element: rowElement, lastFocusedCell: focusedKey});
+      rowCacheRef.current.set(rowId, {
+        rowContentString,
+        element: rowElement,
+        lastFocusedCell: focusedKey
+      });
       rows.push(rowElement);
     }
 
     useEffect(() => {
-      const currentRowIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
-      for (const cachedKey of rowCacheRef.current.keys()) {
-        if (!currentRowIds.has(cachedKey)) {
-          rowCacheRef.current.delete(cachedKey);
+      const currentBaseIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
+      for (const cachedBaseId of rowCacheRef.current.keys()) {
+        if (!currentBaseIds.has(cachedBaseId)) {
+          rowCacheRef.current.delete(cachedBaseId);
         }
       }
     }, [data]);
@@ -652,6 +714,10 @@ const EditableCell = memo(
       window.addEventListener("cellChangeEvent", eventListener);
       return () => window.removeEventListener("cellChangeEvent", eventListener);
     }, [isEditOpen, title, cellValue.value, onCellSave]);
+
+    useEffect(() => {
+      setCellValue({value})
+    }, [value])
 
     return (
       <td

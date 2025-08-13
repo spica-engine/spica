@@ -1,7 +1,7 @@
 import {Button, Icon, type IconName} from "oziko-ui-kit";
 import Table, { type FieldType } from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useMemo} from "react";
+import {memo, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 
 
@@ -30,6 +30,7 @@ type BucketTableProps = {
   maxHeight?: string | number;
   bucketId: string;
   loading: boolean;
+  tableRef?: RefObject<HTMLElement | null>
   onCellSave?: (value: any, columnName: string, rowId: string) => void;
 };
 
@@ -172,6 +173,7 @@ const BucketTable = ({
   maxHeight,
   bucketId,
   loading,
+  tableRef,
   onCellSave
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
@@ -190,6 +192,7 @@ const BucketTable = ({
       data={formattedData}
       onScrollEnd={onScrollEnd}
       totalDataLength={totalDataLength}
+      tableRef={tableRef}
       onCellSave={onCellSave}
     />
   );
