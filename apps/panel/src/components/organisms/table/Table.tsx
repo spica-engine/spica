@@ -464,10 +464,7 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
 
 type TypeCell = React.HTMLAttributes<HTMLDivElement> & {focused?: boolean; leftOffset?: number};
 
-//let c = 0
 const Cell = memo(({children, focused, leftOffset, ...props}: TypeCell) => {
-  //c++;
-  //console.log(c)
   return (
     <td
       {...props}
