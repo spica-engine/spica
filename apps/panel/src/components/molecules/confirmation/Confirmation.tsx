@@ -15,6 +15,7 @@ type ConfirmationProps = {
   onCancel: () => void;
   loading?: boolean;
   showCloseButton?: boolean;
+  error?: string | null;
 };
 
 function Confirmation({
@@ -29,7 +30,8 @@ function Confirmation({
   onConfirm,
   onCancel,
   loading,
-  showCloseButton
+  showCloseButton,
+  error
 }: ConfirmationProps) {
   const [inputValue, setInputValue] = useState(inputDefaultValue ?? "");
 
@@ -68,6 +70,13 @@ function Confirmation({
             />
           </FlexElement>
         )}
+        <div className={styles.errorTextContainer}>
+          {error && (
+            <Text className={styles.errorText} variant="danger">
+              {error}
+            </Text>
+          )}
+        </div>
       </Modal.Body>
       <Modal.Footer
         dimensionX="fill"
