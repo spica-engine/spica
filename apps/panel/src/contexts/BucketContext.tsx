@@ -30,11 +30,15 @@ type BucketContextType = {
   updateBucketOrderOnServer: (bucketId: string, order: number) => Promise<any>;
   renameBucket: (newTitle: string, bucket: BucketType) => void;
   deleteBucket: (bucketId: string) => Promise<any>;
+  updateBucketHistory: (bucket: BucketType) => Promise<any>;
+  deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   refreshBucketData: () => Promise<void>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
   bucketDataLoading: boolean;
+  deleteBucketHistoryLoading: boolean;
+  deleteBucketHistoryError: string | null;
 };
 
 /**
@@ -52,6 +56,7 @@ type BucketContextType = {
  * - Keep context functions focused on state + side effects.
  * - API-only calls should be imported from useBucketService and named naturally here.
  */
+
 const BucketContext = createContext<BucketContextType | null>(null);
 export const BucketProvider = ({children}: {children: ReactNode}) => {
   const {
@@ -61,8 +66,12 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiUpdateBucketHistory,
+    apiDeleteBucketHistory,
     apiBuckets,
-    apiBucketDataLoading
+    apiBucketDataLoading,
+    apiDeleteBucketHistoryLoading,
+    apiDeleteBucketHistoryError,
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -224,6 +233,21 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     []
   );
 
+  const updateBucketHistory = useCallback(
+    async (bucket: BucketType) => {
+      const previousBuckets = buckets;
+      setBuckets(prev => (prev ? prev.map(i => ({...i, history: !i.history})) : []));
+      return apiUpdateBucketHistory(bucket).then(result => {
+        if (!result) {
+          setBuckets(previousBuckets);
+        }
+        return result;
+      });
+    },
+    [buckets]
+  );
+
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -234,11 +258,16 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketOrderOnServer: apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketHistory,
+      deleteBucketHistory: apiDeleteBucketHistory,
       refreshBucketData,
       buckets,
       bucketData,
       bucketDataLoading: apiBucketDataLoading,
-      bucketCategories
+      bucketCategories,
+      deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
+      deleteBucketHistoryError: apiDeleteBucketHistoryError,
+      nextbucketDataQuery,
     }),
     [
       getBucketData,
@@ -248,13 +277,17 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiChangeBucketOrder,
       renameBucket,
       deleteBucket,
+      updateBucketHistory,
+      apiDeleteBucketHistory,
       refreshBucketData,
       loadMoreBucketData,
       buckets,
       bucketData,
       apiBucketDataLoading,
       bucketCategories,
-      loadMoreBucketData
+      apiDeleteBucketHistoryLoading,
+      apiDeleteBucketHistoryError,
+      nextbucketDataQuery,
     ]
   );
 

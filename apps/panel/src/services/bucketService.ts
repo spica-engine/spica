@@ -106,7 +106,12 @@ export const useBucketService = () => {
     method: "delete"
   });
 
-  const {request: requestNameChange} = useApi({
+  const {request: deleteHistoty, loading: apiDeleteBucketHistoryLoading, error: apiDeleteBucketHistoryError} = useApi({
+    endpoint: "",
+    method: "delete"
+  });
+
+  const {request: putRequest} = useApi({
     endpoint: "",
     method: "put"
   });
@@ -140,12 +145,12 @@ export const useBucketService = () => {
         const body = {...bucket, title: newTitle};
         delete (body as unknown as {section: any}).section;
         delete (body as unknown as {index: any}).index;
-        return await requestNameChange({body, endpoint: `/api/bucket/${bucket._id}`});
+        return await putRequest({body, endpoint: `/api/bucket/${bucket._id}`});
       } catch (err) {
         console.error(err);
       }
     },
-    [requestNameChange]
+    [putRequest]
   );
 
   const apiDeleteBucket = useCallback(
@@ -157,6 +162,22 @@ export const useBucketService = () => {
     [deleteRequest]
   );
 
+  const apiUpdateBucketHistory = useCallback(async (bucket: BucketType) => {
+    return await putRequest({
+      endpoint: `/api/bucket/${bucket._id}`,
+      body: {
+        ...bucket,
+        history: !bucket.history
+      }
+    });
+  }, [patchRequest]);
+
+  const apiDeleteBucketHistory = useCallback(async (bucket: BucketType) => {
+    return await deleteHistoty({
+      endpoint: `/api/bucket/${bucket._id}/history`
+    });
+  }, [deleteHistoty]);
+
   return {
     apiGetBucketData,
     apiGetBuckets: fetchBuckets,
@@ -164,7 +185,11 @@ export const useBucketService = () => {
     apiChangeBucketOrder,
     apiRenameBucket,
     apiDeleteBucket,
+    apiUpdateBucketHistory,
+    apiDeleteBucketHistory,
     apiBuckets,
     apiBucketDataLoading,
+    apiDeleteBucketHistoryLoading,
+    apiDeleteBucketHistoryError,
   };
 };

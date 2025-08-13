@@ -4,7 +4,7 @@ import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo, useReducer, useRef, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketDataQueryWithIdType} from "src/services/bucketService";
+import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
@@ -61,6 +61,8 @@ export default function Bucket() {
     getBucketData(bucketId);
   }, [bucketId]);
 
+  const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
+
   const formattedColumns: ColumnType[] = useMemo(() => {
     const calculatedBucketId = bucketData?.bucketId ?? (bucketId as string);
     const bucket = buckets?.find(i => i._id === calculatedBucketId);
@@ -107,7 +109,7 @@ export default function Bucket() {
   return (
     <div className={styles.container}>
       <BucketActionBar
-        bucketId={bucketId as string}
+        bucket={bucket as BucketType}
         onSearch={handleSearch}
         onRefresh={handleRefresh}
         searchLoading={bucketDataLoading && !isTableLoading}

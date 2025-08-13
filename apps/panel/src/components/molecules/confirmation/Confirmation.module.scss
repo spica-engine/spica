@@ -66,3 +66,19 @@
 .confirmButton:disabled:hover {
   background-color: var(--color-danger) !important;
 }
+
+.errorTextContainer {
+  position: relative;
+  width: 100%;
+}
+
+.errorText {
+  font-size: var(--font-size-xs) !important;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+}
+
+[class^="Portal-module_container__"] {
+  z-index: 4;
+}
