@@ -201,7 +201,7 @@ export const useBucketService = () => {
         body: {[title]: value}
       });
     },
-    []
+    [updateCellData]
   );
 
   return {

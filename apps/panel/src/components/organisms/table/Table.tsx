@@ -154,7 +154,7 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
     case "date":
       return renderDefault();
     case "boolean":
-      return <Checkbox className={styles.checkbox} />;
+      return <Checkbox className={styles.checkbox} checked={cellData} />;
     case "textarea":
       return renderDefault();
     case "multiple selection":
@@ -382,7 +382,7 @@ const Table: FC<TypeTable> = ({
 
   useEffect(() => {
     const handleEnter = (event: KeyboardEvent) => {
-      if (event.key === "Enter") {
+      if (event.key === "Enter" && !event.shiftKey) {
         const event = new CustomEvent("cellChangeEvent");
         window.dispatchEvent(event);
         return;
@@ -591,7 +591,6 @@ const Rows = memo(
         rows.push(cached.element);
         continue;
       }
-      console.log("recreating cells")
 
       const cells = formattedColumns.map(column => {
         const cellData = row[column.key];
@@ -716,9 +715,14 @@ const EditableCell = memo(
     }, [isEditOpen, title, cellValue.value, onCellSave]);
 
     useEffect(() => {
-      setCellValue({value})
-    }, [value])
+      setCellValue({value});
+    }, [value]);
 
+    useEffect(() => {
+      setIsEditOpen(Boolean(focused));
+    }, [focused]);
+
+    if (title === "boo") console.log("cellValue.value: ", cellValue.value);
     return (
       <td
         {...props}
