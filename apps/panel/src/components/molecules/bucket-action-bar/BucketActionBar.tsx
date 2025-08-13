@@ -18,6 +18,7 @@ const BucketActionBar = ({onSearch, bucket, searchLoading}: BucketActionBarProps
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => setSearchValue(""), [bucket?._id]);
+  const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -62,15 +63,17 @@ const BucketActionBar = ({onSearch, bucket, searchLoading}: BucketActionBarProps
         loading={searchLoading}
       />
       <FlexElement className={styles.actionBar}>
-        <Button onClick={() => {}}>
-          <Icon name="plus" />
-          New Entry
-        </Button>
+        {!isReadOnlyChecked && (
+          <Button onClick={() => {}}>
+            <Icon name="plus" />
+            New Entry
+          </Button>
+        )}
         <Button variant="text" onClick={() => {}}>
           <Icon name="refresh" />
           Refresh
         </Button>
-        <Button variant="text" color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="eye" />
           Column
         </Button>

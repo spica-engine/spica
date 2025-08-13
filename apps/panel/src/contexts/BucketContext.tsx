@@ -32,6 +32,7 @@ type BucketContextType = {
   deleteBucket: (bucketId: string) => Promise<any>;
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
+  updateBucketReadonly: (bucket: BucketType) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
@@ -68,6 +69,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiUpdateBucketReadonly,
     apiBuckets,
     apiBucketData,
     apiBucketDataLoading,
@@ -236,6 +238,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   );
 
 
+  const updateBucketReadonly = useCallback(async (bucket: BucketType) => {
+    const previousBuckets = buckets;
+    setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
+    const success = await apiUpdateBucketReadonly(bucket);
+    if (!success) {
+      setBuckets(previousBuckets);
+    }
+  }, [buckets, apiUpdateBucketReadonly]);
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -248,6 +259,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       deleteBucket,
       updateBucketHistory,
       deleteBucketHistory: apiDeleteBucketHistory,
+      updateBucketReadonly,
       buckets,
       bucketData,
       bucketDataLoading: apiBucketDataLoading,
