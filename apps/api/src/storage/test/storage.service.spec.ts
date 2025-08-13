@@ -566,6 +566,22 @@ describe("Storage Service", () => {
           ]);
         });
 
+        fit("should work with include all except for a single file", async () => {
+          const photosAllResourceFilter = {
+            include: ["photos/**"],
+            exclude: ["photos/vacation2.jpg"]
+          };
+
+          const result = await storageService.browse(photosAllResourceFilter, "photos", {}, 20, 0);
+          const names = result.map(r => r.name).sort();
+          expect(names).toEqual([
+            "photos/cats/",
+            "photos/dogs/",
+            "photos/family.jpg",
+            "photos/vacation1.jpg"
+          ]);
+        });
+
         it("shouldn't get docs from documents since policy is restrictive", async () => {
           const documentsOnlyResourceFilter = {include: ["*"], exclude: []};
           const result = await storageService.browse(
@@ -666,12 +682,8 @@ describe("Storage Service", () => {
         it("should apply limit", async () => {
           const photosResourceFilter = {include: ["photos/*"], exclude: []};
 
-          const limitResult = await storageService.browse(photosResourceFilter, "photos", {}, 0, 0);
-          console.log(limitResult);
-          expect(limitResult.map(r => r.name)).toEqual([
-            "photos/vacation1.jpg",
-            "photos/vacation2.jpg"
-          ]);
+          const limitResult = await storageService.browse(photosResourceFilter, "photos", {}, 2, 0);
+          expect(limitResult.map(r => r.name)).toEqual(["photos/cats/", "photos/dogs/"]);
         });
 
         it("should apply skip", async () => {

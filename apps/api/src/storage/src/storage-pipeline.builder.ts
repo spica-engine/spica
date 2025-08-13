@@ -30,13 +30,11 @@ export class StoragePipelineBuilder extends PipelineBuilder {
 
   private static createPatternCondition(pattern: string, isExclude: boolean): object | null {
     const patternType = StoragePipelineBuilder.getPatternType(pattern);
-    const includeCondition = StoragePipelineBuilder.includeCondition(pattern, patternType);
-    if (!includeCondition) {
-      return null;
+
+    if (isExclude) {
+      return this.buildPatternCondition(pattern, patternType, true);
     }
-    return isExclude
-      ? StoragePipelineBuilder.excludeCondition(includeCondition, patternType)
-      : includeCondition;
+    return this.buildPatternCondition(pattern, patternType, false);
   }
 
   private static getPatternType(
@@ -49,73 +47,64 @@ export class StoragePipelineBuilder extends PipelineBuilder {
     return "exact";
   }
 
-  private static includeCondition(pattern: string, patternType: string): object | null {
+  private static buildPatternCondition(
+    pattern: string,
+    patternType: string,
+    isExclude: boolean
+  ): object | null {
+    const escape = StoragePipelineBuilder.escapeRegex;
+
     switch (patternType) {
       case "wildcard":
-        return {
-          $or: [{name: {$not: {$regex: "/"}}}, {name: {$regex: "^[^/]+/$"}}]
-        };
+        return isExclude
+          ? {
+              $and: [{name: {$regex: "/"}}, {name: {$not: {$regex: "^[^/]+/$"}}}]
+            }
+          : {
+              $or: [{name: {$not: {$regex: "/"}}}, {name: {$regex: "^[^/]+/$"}}]
+            };
+
       case "all_files":
-        return {}; // Match everything
+        return isExclude ? {name: {$exists: false}} : {};
+
       case "single_level": {
-        const singleLevelBasePath = pattern.slice(0, -2); // Remove "/*"
-        // Single level should match both files and folders in the specified path
-        return {
-          name: {$regex: `^${StoragePipelineBuilder.escapeRegex(singleLevelBasePath)}/[^/]+/?$`}
-        };
+        const basePath = pattern.slice(0, -2);
+        const regex = `^${escape(basePath)}/[^/]+/?$`;
+        return isExclude ? {name: {$not: {$regex: regex}}} : {name: {$regex: regex}};
       }
+
       case "all_levels": {
-        const allLevelsBasePath = pattern.slice(0, -3); // Remove "/**"
-        // Match files/folders starting with basePath/ OR the folder itself (basePath/)
-        return {
-          $or: [
-            {name: {$regex: `^${StoragePipelineBuilder.escapeRegex(allLevelsBasePath)}/`}},
-            {name: {$eq: `${allLevelsBasePath}/`}}
-          ]
-        };
+        const basePath = pattern.slice(0, -3);
+        return isExclude
+          ? {
+              $and: [
+                {name: {$not: {$regex: `^${escape(basePath)}/`}}},
+                {name: {$ne: `${basePath}/`}}
+              ]
+            }
+          : {
+              $or: [{name: {$regex: `^${escape(basePath)}/`}}, {name: {$eq: `${basePath}/`}}]
+            };
       }
-      case "exact":
-        // For exact patterns, also include parent folders if they exist
+
+      case "exact": {
         const pathParts = pattern.split("/");
-        if (pathParts.length > 1) {
-          // If it's a nested path, also match parent folders
-          const parentFolders = [];
-          for (let i = 1; i < pathParts.length; i++) {
-            const parentPath = pathParts.slice(0, i).join("/") + "/";
-            parentFolders.push({name: {$eq: parentPath}});
-          }
-          return {
-            $or: [{name: pattern}, ...parentFolders]
-          };
+        const folderConds = [];
+
+        for (let i = 1; i < pathParts.length; i++) {
+          const folderPath = pathParts.slice(0, i).join("/") + "/";
+          folderConds.push(isExclude ? {name: {$ne: folderPath}} : {name: {$eq: folderPath}});
         }
-        return {name: pattern};
+
+        return isExclude
+          ? {$and: [{name: {$ne: pattern}}, ...folderConds]}
+          : pathParts.length > 1
+            ? {$or: [{name: pattern}, ...folderConds]}
+            : {name: pattern};
+      }
+
       default:
         return null;
-    }
-  }
-
-  private static excludeCondition(condition: any, patternType: string): object {
-    switch (patternType) {
-      case "wildcard":
-        return {
-          $and: [{name: {$regex: "/"}}, {name: {$not: {$regex: "^[^/]+/$"}}}]
-        };
-      case "all_files":
-        return {name: {$exists: false}};
-      default:
-        if (condition.name) {
-          if (condition.name.$regex) {
-            return {name: {$not: {$regex: condition.name.$regex}}};
-          }
-          if (condition.name.$not) {
-            return {name: {$regex: "/"}};
-          }
-          return {name: {$ne: condition.name}};
-        }
-        if (condition.$or) {
-          return {$nor: [condition]};
-        }
-        return condition;
     }
   }
 
