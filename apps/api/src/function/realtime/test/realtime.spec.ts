@@ -6,7 +6,7 @@ import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/da
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {FunctionRealtimeModule} from "../src";
-import {GuardService} from "@spica-server/passport";
+import {GuardService} from "@spica-server/passport/guard/services";
 
 function url(path: string, query?: {[k: string]: string | string[]}) {
   const url = new URL(path, "ws://insteadof");

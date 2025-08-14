@@ -1,0 +1,5 @@
+{
+  "name": "api/function/packages/database/test",
+  "sourceRoot": "apps/api/src/function/packages/database/test",
+  "projectType": "application"
+}
