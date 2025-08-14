@@ -3,6 +3,7 @@ import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
+import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 
 type FieldType =
   | "string"
@@ -90,6 +91,20 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
   );
 };
 
+const NewFieldHeader = () => {
+  return (
+    <BucketFieldPopup>
+      <Button
+        variant="icon"
+        className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
+      >
+        <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
+        <span>New&nbsp;Field</span>
+      </Button>
+    </BucketFieldPopup>
+  );
+};
+
 const defaultColumns: ColumnType[] = [
   {
     id: "0",
@@ -105,15 +120,7 @@ const defaultColumns: ColumnType[] = [
   },
   {
     id: "1",
-    header: (
-      <Button
-        variant="icon"
-        className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
-      >
-        <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
-        <span>New&nbsp;Field</span>
-      </Button>
-    ),
+    header: <NewFieldHeader />,
     key: "new field",
     width: "125px",
     headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,

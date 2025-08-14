@@ -13,14 +13,9 @@ import {
 } from "oziko-ui-kit";
 import styles from "./BucketAddField.module.scss";
 
-type TypeBucketAddField = {
-  name: string;
-  type: TypeInputType;
-  isOpen?: boolean;
-  modalProps?: TypeModal;
-};
+type TypeBucketAddField = {name: string; type: TypeInputType; modalProps?: TypeModal};
 
-const BucketAddField: FC<TypeBucketAddField> = ({name = "", type, isOpen, modalProps}) => {
+const BucketAddField: FC<TypeBucketAddField> = ({name = "", type, modalProps}) => {
   const isInnerFieldsType = ["object", "array"].includes(type);
   const initialTab = isInnerFieldsType ? 0 : 1;
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -51,13 +46,7 @@ const BucketAddField: FC<TypeBucketAddField> = ({name = "", type, isOpen, modalP
 
   const configurationSchema = configurationMapping[type] || {};
   const schema = createShema[type] || {};
-  const schemaWithDynamicTitle = {
-    ...schema,
-    title: {
-      ...schema.title,
-      title: name
-    }
-  };
+  const schemaWithDynamicTitle = {...schema, title: {...schema.title, title: name}};
   const inputRepresenter = useInputRepresenter({
     properties: schemaWithDynamicTitle,
     value: {
@@ -71,61 +60,42 @@ const BucketAddField: FC<TypeBucketAddField> = ({name = "", type, isOpen, modalP
   const configuration = useInputRepresenter({
     properties: configurationSchema,
     value: configurationValue,
-    onChange: setConfigurationValue
+    onChange: val => setConfigurationValue(val)
   });
 
   const tabItems = [
     ...(isInnerFieldsType
-      ? [
-          {
-            prefix: {
-              children: "Inner Fields",
-              onClick: () => setActiveTab(0)
-            }
-          }
-        ]
+      ? [{prefix: {children: "Inner Fields", onClick: () => setActiveTab(0)}}]
       : []),
-    {
-      root: {
-        children: "Configuration",
-        onClick: () => setActiveTab(1)
-      }
-    },
-    {
-      suffix: {
-        children: "Properties",
-        onClick: () => setActiveTab(2)
-      }
-    }
+    {prefix: {children: "Default", onClick: () => setActiveTab(1)}},
+    {prefix: {children: "Configuration", onClick: () => setActiveTab(2)}}
   ];
 
   return (
-    <Modal overflow={true} showCloseButton={false} {...modalProps}>
+    <Modal isOpen overflow={true} showCloseButton={false} {...modalProps} className={styles.modal}>
       <Modal.Body className={styles.modalBody}>
         <FlexElement direction="vertical" gap={10} className={styles.contentContainer}>
           {inputRepresenter}
-          <Tab type="underline" dimensionX="fill" items={tabItems} />
-          {activeTab === 1 && configuration}
+          <Tab
+            type="underline"
+            indicatorMode={isInnerFieldsType ? "equal" : "fit"}
+            dimensionX="fill"
+            items={tabItems}
+            className={`${styles.tab} ${isInnerFieldsType ? styles.bigTab : styles.smallTab}`}
+          />
+          {activeTab === 2 && configuration}
           <div className={styles.buttonWrapper}>
-            <Button>
+            <Button className={styles.saveAndCloseButton}>
               <FluidContainer
-                prefix={{
-                  children: <Icon name="save" />
-                }}
-                root={{
-                  children: "Save and close"
-                }}
+                prefix={{children: <Icon name="save" size="sm" />}}
+                root={{children: "Save and close"}}
               />
             </Button>
             {isInnerFieldsType && (
               <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
                 <FluidContainer
-                  prefix={{
-                    children: <Icon name="plus" />
-                  }}
-                  root={{
-                    children: "Add New Inner Field"
-                  }}
+                  prefix={{children: <Icon name="plus" size="sm" />}}
+                  root={{children: "Add New Inner Field"}}
                 />
               </Button>
             )}
