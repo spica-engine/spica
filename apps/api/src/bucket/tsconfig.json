@@ -6,6 +6,24 @@
       "path": "./realtime"
     },
     {
+      "path": "./services"
+    },
+    {
+      "path": "./cache"
+    },
+    {
+      "path": "./common"
+    },
+    {
+      "path": "./expression"
+    },
+    {
+      "path": "./hooks"
+    },
+    {
+      "path": "./history"
+    },
+    {
       "path": "./schemas-realtime"
     },
     {
@@ -16,6 +34,33 @@
     },
     {
       "path": "../../../../libs/interface/status"
+    },
+    {
+      "path": "../../../../libs/core/schema"
+    },
+    {
+      "path": "../preference/services"
+    },
+    {
+      "path": "../../../../libs/interface/preference"
+    },
+    {
+      "path": "../../../../libs/core/patch"
+    },
+    {
+      "path": "../../../../libs/interface/versioncontrol"
+    },
+    {
+      "path": "../../../../libs/interface/representative"
+    },
+    {
+      "path": "../../../../libs/representative"
+    },
+    {
+      "path": "../versioncontrol"
+    },
+    {
+      "path": "../../../../libs/interface/asset"
     }
   ]
 }

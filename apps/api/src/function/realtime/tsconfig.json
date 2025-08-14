@@ -4,7 +4,7 @@
   "references": [
     {"path": "../../../../../libs/database/realtime"},
     {
-      "path": "../../passport"
+      "path": "../../passport/guard/services"
     },
     {
       "path": "../../../../../libs/realtime"

@@ -15,7 +15,7 @@
   },
   "pluginsConfig": {
     "@nx/js": {
-      "analyzeSourceFiles": false
+      "analyzeSourceFiles": true
     }
   },
   "plugins": [

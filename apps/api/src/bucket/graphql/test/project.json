@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/graphql/test",
+  "sourceRoot": "apps/api/src/bucket/graphql/test",
+  "projectType": "application"
+}

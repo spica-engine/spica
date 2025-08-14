@@ -1,0 +1,5 @@
+{
+  "name": "api/storage/test",
+  "sourceRoot": "apps/api/src/storage/test",
+  "projectType": "application"
+}

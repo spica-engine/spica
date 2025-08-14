@@ -6,7 +6,16 @@
       "path": "../../../../../libs/interface/passport/testing"
     },
     {
-      "path": "../"
+      "path": "../guard/services"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
+      "path": "../../preference/services"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket/common"
     }
   ]
 }

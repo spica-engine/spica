@@ -1,7 +1,7 @@
 import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
-import {DelegatePkgManager} from "@spica-server/function/pkgmanager";
+import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
