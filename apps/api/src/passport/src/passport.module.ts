@@ -74,7 +74,8 @@ export class PassportModule {
         PolicyModule.forRoot({realtime: options.policyRealtime}),
         ApiKeyModule.forRoot({realtime: options.apikeyRealtime}),
         RefreshTokenModule.forRoot({
-          expiresIn: options.refreshTokenExpiresIn
+          expiresIn: options.refreshTokenExpiresIn,
+          realtime: options.refreshTokenRealtime
         }),
         AuthFactorModule
       ],
