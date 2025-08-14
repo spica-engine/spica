@@ -3,6 +3,21 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../passport/guard/services"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../cache"
+    },
+    {
+      "path": "../common"
+    },
+    {
+      "path": "../expression"
+    },
+    {
       "path": "../hooks"
     },
     {
