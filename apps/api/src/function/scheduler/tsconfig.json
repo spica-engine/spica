@@ -9,12 +9,6 @@
       "path": "../runtime/io"
     },
     {
-      "path": "../pkgmanager/node"
-    },
-    {
-      "path": "../pkgmanager/local"
-    },
-    {
       "path": "../compiler/javascript"
     },
     {
@@ -22,6 +16,12 @@
     },
     {
       "path": "../enqueuer"
+    },
+    {
+      "path": "../pkgmanager/node"
+    },
+    {
+      "path": "../pkgmanager/local"
     },
     {
       "path": "../../../../../libs/interface/function/scheduler"

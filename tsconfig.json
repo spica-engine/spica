@@ -23,7 +23,7 @@
       "@spica/*": ["apps/*"]
     }
   },
-  "exclude": ["node_modules", "tmp", "dist"],
+  "exclude": ["{workspaceRoot}/node_modules", "{workspaceRoot}/tmp", "{workspaceRoot}/dist"],
   "references": [
     {
       "path": "./apps/api/src/function/compiler/javascript"
@@ -45,9 +45,6 @@
     },
     {
       "path": "./apps/api/src/function/queue/proto"
-    },
-    {
-      "path": "./apps/api/src/function/pkgmanager"
     },
     {
       "path": "./apps/api/src/function/queue/node"
@@ -333,6 +330,9 @@
     },
     {
       "path": "./libs/realtime"
+    },
+    {
+      "path": "./apps/api/src/dashboard/realtime"
     },
     {
       "path": "./apps/api/src/function/realtime"

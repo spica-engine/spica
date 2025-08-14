@@ -4,7 +4,7 @@ import {ApiKeyModule} from "@spica-server/passport/apikey";
 import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PreferenceService} from "@spica-server/preference/services";
-import {GuardService} from "../services/src/guard.service";
+import {GuardService} from "@spica-server/passport/guard/services";
 import {RequestService} from "./options";
 import {
   PassportOptions,
@@ -71,7 +71,7 @@ export class PassportModule {
           blockingOptions: options.blockingOptions,
           identityRealtime: options.identityRealtime
         }),
-        PolicyModule.forRoot(),
+        PolicyModule.forRoot({realtime: options.policyRealtime}),
         ApiKeyModule.forRoot({realtime: options.apikeyRealtime}),
         RefreshTokenModule.forRoot({
           expiresIn: options.refreshTokenExpiresIn
