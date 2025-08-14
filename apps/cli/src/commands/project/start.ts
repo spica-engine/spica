@@ -256,11 +256,15 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
       const initiateReplication = async (reconfig = false) => {
         spinner.text = "Initiating replication between database containers.";
-        const evalCmd = reconfig
-          ? `rs.reconfig(${replSetConfig}, { force: true })`
-          : `rs.initiate(${replSetConfig})`;
         const exec = await firstContainer.exec({
-          Cmd: [shell, "admin", "--eval", evalCmd],
+          Cmd: [
+            shell,
+            "admin",
+            "--eval",
+            reconfig
+              ? `rs.reconfig(${replSetConfig}, { force: true })`
+              : `rs.initiate(${replSetConfig})`
+          ],
           AttachStderr: true,
           AttachStdout: true
         });
