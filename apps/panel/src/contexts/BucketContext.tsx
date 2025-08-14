@@ -19,7 +19,7 @@ import type {AxiosRequestHeaders} from "axios";
 
 type BucketContextType = {
   getBucketData: (bucketId: string, query?: BucketDataQueryWithIdType) => Promise<BucketDataType>;
-  cleanBucketData: () => void;
+  loadMoreBucketData: () => Promise<void>;
   getBuckets: (params?: {
     body?: any;
     headers?: AxiosRequestHeaders;
@@ -32,13 +32,13 @@ type BucketContextType = {
   deleteBucket: (bucketId: string) => Promise<any>;
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
+  refreshBucketData: () => Promise<void>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
   bucketDataLoading: boolean;
   deleteBucketHistoryLoading: boolean;
   deleteBucketHistoryError: string | null;
-  nextbucketDataQuery: BucketDataQueryWithIdType | null;
 };
 
 /**
@@ -69,7 +69,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
     apiBuckets,
-    apiBucketData,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
@@ -77,43 +76,107 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
     useState<BucketDataQueryWithIdType | null>(null);
-  const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
-    ...apiBucketData,
-    bucketId: lastUsedBucketDataQuery?.bucketId as string
-  } as BucketDataWithIdType);
   const [buckets, setBuckets] = useState<BucketType[]>(apiBuckets ?? []);
   useEffect(() => setBuckets(apiBuckets ?? []), [apiBuckets]);
-
-  useEffect(() => {
-    if (!apiBucketData) return;
-    setBucketData(prev => {
-      const fetchedBucketDataWithId = {
-        ...apiBucketData,
-        bucketId: lastUsedBucketDataQuery?.bucketId as string
-      } as BucketDataWithIdType;
-      if (!prev) return fetchedBucketDataWithId;
-
-      const prevBucketId = prev.bucketId;
-      const newBucketId = lastUsedBucketDataQuery?.bucketId;
-
-      if (prevBucketId !== newBucketId) return fetchedBucketDataWithId;
-
-      const existingIds = new Set(prev.data.map(item => item._id));
-
-      const newItems = apiBucketData.data.filter(item => !existingIds.has(item.id));
-
-      if (newItems.length === 0) return prev;
-      return {...prev, data: [...prev.data, ...newItems]};
-    });
-  }, [JSON.stringify(lastUsedBucketDataQuery)]);
+  const [bucketData, setBucketData] = useState<BucketDataWithIdType>({
+    data: []
+  } as unknown as BucketDataWithIdType);
 
   const nextbucketDataQuery: BucketDataQueryWithIdType | null = useMemo(
-    () => ({
-      ...(lastUsedBucketDataQuery as BucketDataQueryWithIdType),
-      skip: (lastUsedBucketDataQuery?.skip ?? 0) + 25
-    }),
-    [JSON.stringify(lastUsedBucketDataQuery)]
+    () =>
+      lastUsedBucketDataQuery
+        ? {
+            ...lastUsedBucketDataQuery,
+            skip: (lastUsedBucketDataQuery.skip ?? 0) + 25
+          }
+        : null,
+    [lastUsedBucketDataQuery]
   );
+  const getBucketData = useCallback(
+    async (bucketId: string, query?: BucketDataQueryWithIdType) => {
+      const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
+        paginate: true,
+        relation: true,
+        limit: 25,
+        sort: JSON.stringify({_id: -1})
+      };
+
+      let params = query
+        ? {
+            ...defaultParams,
+            ...query,
+            sort: query.sort ? JSON.stringify(query.sort) : defaultParams.sort
+          }
+        : {...defaultParams};
+
+
+      const queryString = new URLSearchParams(
+        params as unknown as Record<string, string>
+      ).toString();
+
+      try {
+        const result = await apiGetBucketData(bucketId, queryString);
+        if (!result) return;
+
+        setLastUsedBucketDataQuery(
+          query ? {...query, bucketId} : {...defaultParams, sort: {_id: -1}, bucketId}
+        );
+
+        const newDataWithId = {
+          ...result,
+          bucketId
+        } as BucketDataWithIdType;
+
+        setBucketData(newDataWithId);
+
+        return result;
+      } catch (error) {
+        console.error("Error getting bucket data:", error);
+        throw error;
+      }
+    },
+    [apiGetBucketData, setLastUsedBucketDataQuery]
+  );
+
+  const refreshBucketData = useCallback(async () => {
+    if (!lastUsedBucketDataQuery?.bucketId) return;
+    try {
+      await getBucketData(lastUsedBucketDataQuery.bucketId, {
+        ...lastUsedBucketDataQuery,
+        skip: 0
+      });
+    } catch (error) {
+      console.error("Error refreshing bucket data:", error);
+    }
+  }, [getBucketData, lastUsedBucketDataQuery]);
+
+  const loadMoreBucketData = useCallback(async () => {
+    if (!nextbucketDataQuery?.bucketId) return;
+    const query = {
+      ...nextbucketDataQuery,
+      sort: nextbucketDataQuery.sort
+        ? JSON.stringify(nextbucketDataQuery.sort)
+        : JSON.stringify({_id: -1})
+    };
+    const {bucketId: _, ...prevQueryNoBucket} = query || {};
+    const queryString = new URLSearchParams(
+      prevQueryNoBucket as unknown as Record<string, string>
+    ).toString();
+
+    try {
+      const result = await apiGetBucketData(nextbucketDataQuery.bucketId, queryString);
+      if (!result) return;
+      const existingIds = new Set(bucketData.data.map(item => item._id));
+      const newItems = result.data.filter((item: {_id: string}) => !existingIds.has(item._id));
+      const newData =
+        newItems.length > 0 ? {...bucketData, data: [...bucketData.data, ...newItems]} : bucketData;
+      setBucketData(newData);
+      return result;
+    } catch (error) {
+      console.error("Error loading more bucket data:", error);
+      throw error;
+    }
+  }, [nextbucketDataQuery]);
 
   const bucketCategories = useMemo(() => {
     if (!buckets) return [];
@@ -170,57 +233,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     []
   );
 
-  const getBucketData = useCallback(
-    async (bucketId: string, query?: BucketDataQueryWithIdType) => {
-      const {bucketId: _, ...prevQueryNoBucket} = lastUsedBucketDataQuery || {};
-      const {bucketId: __, ...newQueryNoBucket} = query || {bucketId: ""};
-
-      const previousQueryEmpty = Object.keys(prevQueryNoBucket).length <= 1;
-      const newQueryEmpty = Object.keys(newQueryNoBucket).length <= 1;
-      const queriesEqual = JSON.stringify(prevQueryNoBucket) === JSON.stringify(newQueryNoBucket);
-      if (queriesEqual && !previousQueryEmpty && !newQueryEmpty) return;
-
-      const defaultParams: Omit<BucketDataQueryType, "sort"> & {sort: string} = {
-        paginate: true,
-        relation: true,
-        limit: 25,
-        sort: JSON.stringify({_id: -1})
-      };
-
-      let params = newQueryNoBucket
-        ? {
-            ...defaultParams,
-            ...newQueryNoBucket,
-            sort: newQueryNoBucket.sort ? JSON.stringify(newQueryNoBucket.sort) : defaultParams.sort
-          }
-        : {...defaultParams};
-
-      if (!params.sort || Object.keys(JSON.parse(params.sort)).length === 0) {
-        const {sort, ...rest} = params;
-        params = rest as typeof params;
-      }
-
-      const queryString = new URLSearchParams(
-        params as unknown as Record<string, string>
-      ).toString();
-
-      return apiGetBucketData(bucketId, queryString).then(result => {
-        if (!result) return;
-        setLastUsedBucketDataQuery(
-          newQueryNoBucket
-            ? {...newQueryNoBucket, bucketId}
-            : {...defaultParams, sort: {_id: -1}, bucketId}
-        );
-        return result;
-      });
-    },
-    [apiGetBucketData]
-  );
-
-  const cleanBucketData = useCallback(() => {
-    setBucketData({data: []} as unknown as BucketDataWithIdType);
-  }, []);
-
   const updateBucketHistory = useCallback(
     async (bucket: BucketType) => {
       const previousBuckets = buckets;
@@ -239,7 +251,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   const contextValue = useMemo(
     () => ({
       getBucketData,
-      cleanBucketData,
+      loadMoreBucketData,
       getBuckets: apiGetBuckets,
       changeBucketCategory,
       updateBucketOrderLocally,
@@ -248,13 +260,14 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       deleteBucket,
       updateBucketHistory,
       deleteBucketHistory: apiDeleteBucketHistory,
+      refreshBucketData,
       buckets,
       bucketData,
       bucketDataLoading: apiBucketDataLoading,
       bucketCategories,
       deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
       deleteBucketHistoryError: apiDeleteBucketHistoryError,
-      nextbucketDataQuery
+      nextbucketDataQuery,
     }),
     [
       getBucketData,
@@ -266,13 +279,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       deleteBucket,
       updateBucketHistory,
       apiDeleteBucketHistory,
+      refreshBucketData,
+      loadMoreBucketData,
       buckets,
       bucketData,
       apiBucketDataLoading,
       bucketCategories,
       apiDeleteBucketHistoryLoading,
       apiDeleteBucketHistoryError,
-      nextbucketDataQuery
+      nextbucketDataQuery,
     ]
   );
 

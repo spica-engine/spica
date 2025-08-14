@@ -7,14 +7,22 @@ import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
 import type { BucketType } from "src/services/bucketService";
 
 type BucketActionBarProps = {
+  onRefresh: () => void;
   onSearch: (search: string) => void;
   bucket: BucketType;
   searchLoading?: boolean;
+  refreshLoading?: boolean;
 };
 
 const SEARCH_DEBOUNCE_TIME = 1000;
 
-const BucketActionBar = ({onSearch, bucket, searchLoading}: BucketActionBarProps) => {
+const BucketActionBar = ({
+  onRefresh,
+  onSearch,
+  bucket,
+  searchLoading,
+  refreshLoading
+}: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => setSearchValue(""), [bucket?._id]);
@@ -66,11 +74,16 @@ const BucketActionBar = ({onSearch, bucket, searchLoading}: BucketActionBarProps
           <Icon name="plus" />
           New Entry
         </Button>
-        <Button variant="text" onClick={() => {}}>
+        <Button
+          variant="text"
+          onClick={onRefresh}
+          disabled={refreshLoading || searchLoading}
+          loading={refreshLoading}
+        >
           <Icon name="refresh" />
           Refresh
         </Button>
-        <Button variant="text" color="default" onClick={() => {}}>
+        <Button variant="text" onClick={() => {}}>
           <Icon name="eye" />
           Column
         </Button>
