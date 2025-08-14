@@ -1,0 +1,5 @@
+{
+  "name": "api/passport/policy/realtime/test",
+  "sourceRoot": "apps/api/src/passport/policy/realtime/test",
+  "projectType": "application"
+}
