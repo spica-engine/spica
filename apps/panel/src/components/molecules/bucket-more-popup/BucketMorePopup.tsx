@@ -3,15 +3,17 @@ import {
   FlexElement,
   FluidContainer,
   Icon,
-  Popover,
   Text,
+  Checkbox,
+  Popover,
   useOnClickOutside,
-  Checkbox
 } from "oziko-ui-kit";
-import {memo, useEffect, useMemo, useRef, useState, type FC} from "react";
 import styles from "./BucketMorePopup.module.scss";
-import type {BucketType} from "../../../services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
+import type {BucketType} from "src/services/bucketService";
+import BucketLimitationsForm from "../bucket-limitations-form/BucketLimitationsForm";
+
+import {memo, useEffect, useMemo, useRef, useState, type FC} from "react";
 import Confirmation from "../confirmation/Confirmation";
 
 type TypeBucketMorePopup = {
@@ -22,9 +24,20 @@ type TypeBucketMorePopup = {
 };
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
+  const [isLimitationsVisible, setIsLimitationsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
+  const [bucketLimitationValues, setBucketLimitationValues] = useState({
+    ...bucket?.documentSettings
+  });
+
+  useEffect(() => {
+    setBucketLimitationValues({
+      ...bucket?.documentSettings
+    });
+  }, [bucket]);
+
   const containerRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -32,15 +45,38 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     refs: [containerRef, contentRef],
     onClickOutside: () => {
       setIsOpen(false);
+      if (isLimitationsVisible) {
+        handleConfigureLimitation();
+      }
+      setIsLimitationsVisible(false);
     }
   });
 
   const {
+    updateBucketLimitation,
+    updateBucketLimitationFields,
     updateBucketHistory,
     deleteBucketHistory,
     deleteBucketHistoryLoading,
     deleteBucketHistoryError
   } = useBucket();
+  const isLimitationChecked = useMemo(() => Boolean(bucket?.documentSettings), [bucket]);
+
+  const handleChangeLimitation = () => {
+    updateBucketLimitation(bucket);
+  };
+
+  const handleConfigureLimitation = async () => {
+    const success = await updateBucketLimitationFields(
+      bucket,
+      bucketLimitationValues.countLimit,
+      bucketLimitationValues.limitExceedBehaviour
+    );
+    if (!success)
+      setBucketLimitationValues({
+        ...bucket?.documentSettings
+      });
+  };
 
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
   const handleChangeHistory = () => {
@@ -131,7 +167,28 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                       <Text>Remove History</Text>
                     </Button>
                   )}
-                  <Checkbox label="Limitation" />
+                  <Checkbox
+                    label="Limitation"
+                    checked={isLimitationChecked}
+                    onChange={handleChangeLimitation}
+                  />
+                  {isLimitationChecked && (
+                    <Button
+                      variant="text"
+                      className={styles.limitationsPopupButton}
+                      onClick={() => setIsLimitationsVisible(!isLimitationsVisible)}
+                    >
+                      <Icon name="lock" />
+                      <Text>Configure limitations</Text>
+                    </Button>
+                  )}
+                  {isLimitationChecked && isLimitationsVisible && (
+                    <BucketLimitationsForm
+                      className={styles.bucketLimitationsForm}
+                      values={bucketLimitationValues}
+                      setValues={setBucketLimitationValues}
+                    />
+                  )}
                   <Checkbox label="Read Only" />
                 </FlexElement>
               )

@@ -64,8 +64,6 @@ export default function Bucket() {
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
-    const calculatedBucketId = bucketData?.bucketId ?? (bucketId as string);
-    const bucket = buckets?.find(i => i._id === calculatedBucketId);
     const columns = Object.values(bucket?.properties ?? {});
     return [
       {
@@ -80,7 +78,7 @@ export default function Bucket() {
       },
       ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
     ] as ColumnType[];
-  }, [buckets, bucketId, bucketData?.bucketId]);
+  }, [bucket]);
 
   const searchableColumns = formattedColumns
     .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))

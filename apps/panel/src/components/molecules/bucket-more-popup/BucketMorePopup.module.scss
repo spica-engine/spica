@@ -43,10 +43,14 @@
   width: 100% !important;
   .popoverCheckboxes {
     width: 100% !important;
+
+    > div:not(.bucketLimitationsForm) {
+      height: 20px !important;
+    }
+
     align-items: start !important;
     > div {
       width: 100% !important;
-      height: 20px !important;
       gap: var(--gap-md) !important;
     }
 
@@ -55,7 +59,7 @@
       color: var(--color-danger) !important;
     }
 
-    button {
+    > button {
       width: 100% !important;
       min-width: 100% !important;
       max-width: 100% !important;
@@ -68,15 +72,19 @@
       height: 20px;
     }
 
-    button svg,
-    button span {
+    > button svg,
+    > button span {
       margin-left: -1px;
     }
 
-    button:hover {
+    > button:hover {
       background-color: transparent !important;
     }
   }
+}
+
+.bucketLimitationsForm {
+  padding: var(--padding-md) 0;
 }
 
 .confirmText {
