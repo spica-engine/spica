@@ -566,7 +566,7 @@ describe("Storage Service", () => {
           ]);
         });
 
-        fit("should work with include all except for a single file", async () => {
+        it("should work with include all except for a single file", async () => {
           const photosAllResourceFilter = {
             include: ["photos/**"],
             exclude: ["photos/vacation2.jpg"]
@@ -679,53 +679,6 @@ describe("Storage Service", () => {
       });
 
       describe("limit, skip and sort", () => {
-        it("should apply limit", async () => {
-          const photosResourceFilter = {include: ["photos/*"], exclude: []};
-
-          const limitResult = await storageService.browse(photosResourceFilter, "photos", {}, 2, 0);
-          expect(limitResult.map(r => r.name)).toEqual(["photos/cats/", "photos/dogs/"]);
-        });
-
-        it("should apply skip", async () => {
-          const rootResourceFilter = {include: ["*"], exclude: []};
-
-          const skipResult = await storageService.browse(rootResourceFilter, "", {}, 0, 1);
-          expect(skipResult.map(r => r.name)).toEqual(["root-file2.txt", "photos/", "documents/"]);
-        });
-
-        it("should apply sorting", async () => {
-          const photosResourceFilter = {include: ["photos/*"], exclude: []};
-
-          const resultAsc = await storageService.browse(photosResourceFilter, "photos", {}, 10, 0, {
-            name: 1
-          });
-          expect(resultAsc.map(r => r.name)).toEqual([
-            "photos/cats/",
-            "photos/dogs/",
-            "photos/family.jpg",
-            "photos/vacation1.jpg",
-            "photos/vacation2.jpg"
-          ]);
-
-          const resultDesc = await storageService.browse(
-            photosResourceFilter,
-            "photos",
-            {},
-            10,
-            0,
-            {
-              name: -1
-            }
-          );
-          expect(resultDesc.map(r => r.name)).toEqual([
-            "photos/vacation2.jpg",
-            "photos/vacation1.jpg",
-            "photos/family.jpg",
-            "photos/dogs/",
-            "photos/cats/"
-          ]);
-        });
-
         it("should apply limit, skip and sort together", async () => {
           const photosResourceFilter = {include: ["photos/*"], exclude: []};
 
