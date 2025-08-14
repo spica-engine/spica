@@ -24,8 +24,13 @@ import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {
+  ActionGuard,
+  AuthGuard,
+  ResourceFilter,
+  SimpleActionGuard
+} from "@spica-server/passport/guard";
 import {OR} from "@spica-server/core";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import etag from "etag";
 import {createStorageActivity} from "./activity.resource";
 import {
@@ -49,7 +54,8 @@ export class StorageController {
    * @param limit The maximum amount documents that can be present in the response.
    * @param skip The amount of documents to skip.
    * @param sort A JSON string to sort the documents by its properties.
-   * Example: Descending `{"content.size": -1}` OR Ascending `{"content.size": 1}`
+   * Example: Descending `{"content.size": -1}` 
+   Ascending `{"content.size": 1}`
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("storage:index"))
@@ -62,6 +68,18 @@ export class StorageController {
     @Query("sort", JSONP) sort?: object
   ) {
     return this.storage.getAll(resourceFilter, filter, paginate, limit, skip, sort);
+  }
+  @Get("browse")
+  @UseGuards(AuthGuard(), SimpleActionGuard("storage:browse"))
+  async browse(
+    @ResourceFilter() resourceFilter: object,
+    @Query("path") path: string,
+    @Query("filter", JSONP) filter?: object,
+    @Query("limit", NUMBER) limit?: number,
+    @Query("skip", NUMBER) skip?: number,
+    @Query("sort", JSONP) sort?: object
+  ) {
+    return this.storage.browse(resourceFilter, path, filter, limit, skip, sort);
   }
 
   /**
