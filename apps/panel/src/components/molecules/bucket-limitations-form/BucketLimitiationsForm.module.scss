@@ -43,27 +43,17 @@
     background-color: var(--color-default);
   }
 
+  .countLimitInput::placeholder {
+    font-size: var(--font-size-sm);
+  }
+
   .limitExceedBehaviourInput {
     padding-left: 0;
   }
-.limitExceedBehaviourInput  span {
-  width: 100% !important;
-  min-width: 100% !important;
-}
-
-}
-
-.applyButtonContainer {
-  display: flex;
-  justify-content: space-between;
-}
-
-.applyButton {
-  font-size: var(--font-size-md);
-  padding: var(--padding-sm) !important;
-  width: min-content !important;
-  min-width: min-content !important;
-  height: 26px;
+  .limitExceedBehaviourInput span {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
 }
 
 .selectDropdown {
@@ -81,16 +71,4 @@
 
 .selectOption:hover {
   background-color: var(--color-soft);
-}
-
-.errorTextContainer {
-  position: relative;
-  width: 100%;
-}
-
-.errorText {
-  font-size: var(--font-size-xs) !important;
-  width: 100%;
-  position: absolute;
-  bottom: 0;
 }

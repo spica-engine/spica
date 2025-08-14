@@ -6,7 +6,7 @@ import {
   Text,
   Checkbox,
   Popover,
-  useOnClickOutside
+  useOnClickOutside,
 } from "oziko-ui-kit";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -25,10 +25,18 @@ type TypeBucketMorePopup = {
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isLimitationsVisible, setIsLimitationsVisible] = useState(false);
-  const [limitationFieldsError, setLimitationFieldsError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
+  const [bucketLimitationValues, setBucketLimitationValues] = useState({
+    ...bucket?.documentSettings
+  });
+
+  useEffect(() => {
+    setBucketLimitationValues({
+      ...bucket?.documentSettings
+    });
+  }, [bucket]);
 
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -37,16 +45,16 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     refs: [containerRef, contentRef],
     onClickOutside: () => {
       setIsOpen(false);
+      if (isLimitationsVisible) {
+        handleConfigureLimitation();
+      }
       setIsLimitationsVisible(false);
-      setLimitationFieldsError(null);
     }
   });
 
   const {
     updateBucketLimitation,
     updateBucketLimitationFields,
-    updateBucketLimitationFieldsError,
-    updateBucketLimitationFieldsLoading,
     updateBucketHistory,
     deleteBucketHistory,
     deleteBucketHistoryLoading,
@@ -58,13 +66,16 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     updateBucketLimitation(bucket);
   };
 
-  const handleConfigureLimitation = async (
-    countLimit: number,
-    limitExceedBehaviour: "prevent" | "remove"
-  ) => {
-    const result = await updateBucketLimitationFields(bucket, countLimit, limitExceedBehaviour);
-    if (!result) setLimitationFieldsError(updateBucketLimitationFieldsError);
-    else setLimitationFieldsError(null);
+  const handleConfigureLimitation = async () => {
+    const success = await updateBucketLimitationFields(
+      bucket,
+      bucketLimitationValues.countLimit,
+      bucketLimitationValues.limitExceedBehaviour
+    );
+    if (!success)
+      setBucketLimitationValues({
+        ...bucket?.documentSettings
+      });
   };
 
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
@@ -158,7 +169,6 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                   )}
                   <Checkbox
                     label="Limitation"
-                    //disabled={isLimitationLoading}
                     checked={isLimitationChecked}
                     onChange={handleChangeLimitation}
                   />
@@ -166,10 +176,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                     <Button
                       variant="text"
                       className={styles.limitationsPopupButton}
-                      onClick={() => {
-                        if (isLimitationsVisible) setLimitationFieldsError(null);
-                        setIsLimitationsVisible(!isLimitationsVisible);
-                      }}
+                      onClick={() => setIsLimitationsVisible(!isLimitationsVisible)}
                     >
                       <Icon name="lock" />
                       <Text>Configure limitations</Text>
@@ -177,11 +184,9 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                   )}
                   {isLimitationChecked && isLimitationsVisible && (
                     <BucketLimitationsForm
-                      bucket={bucket}
-                      onSubmit={handleConfigureLimitation}
                       className={styles.bucketLimitationsForm}
-                      loading={updateBucketLimitationFieldsLoading}
-                      error={limitationFieldsError}
+                      values={bucketLimitationValues}
+                      setValues={setBucketLimitationValues}
                     />
                   )}
                   <Checkbox label="Read Only" />

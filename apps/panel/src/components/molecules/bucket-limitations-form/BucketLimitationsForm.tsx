@@ -1,51 +1,31 @@
-import {
-  FluidContainer,
-  Icon,
-  Input,
-  FlexElement,
-  Button,
-  Text,
-  Select,
-  type TypeValue
-} from "oziko-ui-kit";
+import {FluidContainer, Icon, Input, FlexElement, Select, type TypeValue} from "oziko-ui-kit";
 import styles from "./BucketLimitiationsForm.module.scss";
-import type {BucketType} from "src/services/bucketService";
-import {useState} from "react";
 
 type BucketLimitationsFormProps = {
-  onSubmit: (countLimit: number, limitExceedBehaviour: "prevent" | "remove") => void;
-  bucket: BucketType;
-  loading?: boolean;
   className: string;
-  error: string | null;
+  setValues: React.Dispatch<
+    React.SetStateAction<{
+      countLimit: any;
+      limitExceedBehaviour: any;
+    }>
+  >;
+  values: {
+    countLimit: number;
+    limitExceedBehaviour: TypeValue;
+  };
 };
 
-const BucketLimitationsForm = ({
-  onSubmit,
-  loading,
-  bucket,
-  className,
-  error
-}: BucketLimitationsFormProps) => {
-  const [values, setValues] = useState({
-    countLimit: bucket.documentSettings.countLimit,
-    limitExceedBehaviour: bucket.documentSettings.limitExceedBehaviour
-  });
+const BucketLimitationsForm = ({className, setValues, values}: BucketLimitationsFormProps) => {
+  const handleCountLimitChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setValues(prev => ({...prev, countLimit: Number(e.target.value)}));
 
-  const handleSubmit = () => {
-    onSubmit(Number(values.countLimit), values.limitExceedBehaviour);
-  };
+  const handleLimitExceedBehaviourChange = (limitExceedBehaviour: TypeValue) =>
+    setValues(prev => ({...prev, limitExceedBehaviour}));
 
   const limitExceedBehaviourOptions = [
     {label: "Do not insert", value: "prevent"},
     {label: "Insert but delete the oldest", value: "remove"}
   ];
-
-  const handleCountLimitChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setValues({...values, countLimit: e.target.value});
-
-  const handleLimitExceedBehaviourChange = (val: TypeValue) =>
-    setValues({...values, limitExceedBehaviour: val});
 
   return (
     <FluidContainer
@@ -57,19 +37,21 @@ const BucketLimitationsForm = ({
           <div className={styles.formContainer}>
             <div className={styles.formInputs}>
               <div>
-                <label htmlFor="bucketLimitationsCountLimit">Maximum number of documents</label>
+                <label htmlFor="bucketLimitationsCountLimit">Max number of documents</label>
                 <FlexElement gap={5} className={styles.countLimitInputContainer}>
                   <Icon name="numericBox" size="md" />
                   <Input
                     className={styles.countLimitInput}
                     onChange={handleCountLimitChange}
-                    placeholder="Maximum number of documents"
+                    placeholder="Max number of documents"
                     value={values.countLimit}
                   />
                 </FlexElement>
               </div>
               <div>
-                <label htmlFor="bucketLimitationsLimitExceedBehaviour">After reached limit</label>
+                <label htmlFor="bucketLimitationsLimitExceedBehaviour">
+                  Choose limit-reached action
+                </label>
                 <FlexElement gap={5} className={styles.limitExceedBehaviourInputContainer}>
                   <Icon name="formatListChecks" size="md" />
                   <Select
@@ -83,25 +65,6 @@ const BucketLimitationsForm = ({
                   />
                 </FlexElement>
               </div>
-            </div>
-            <div className={styles.applyButtonContainer}>
-              <div className={styles.errorTextContainer}>
-                {error && (
-                  <Text className={styles.errorText} variant="danger">
-                    {error}
-                  </Text>
-                )}
-              </div>
-              <Button
-                variant="text"
-                className={styles.applyButton}
-                disabled={loading}
-                loading={loading}
-                onClick={handleSubmit}
-              >
-                <Icon name="filter" size="sm" />
-                Apply
-              </Button>
             </div>
           </div>
         )
