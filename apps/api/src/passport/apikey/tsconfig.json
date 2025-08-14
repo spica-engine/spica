@@ -9,6 +9,9 @@
       "path": "../../asset"
     },
     {
+      "path": "../../../../../libs/database"
+    },
+    {
       "path": "../../../../../libs/core"
     },
     {

@@ -6,7 +6,7 @@
       "path": "../../../../../libs/core/differ"
     },
     {
-      "path": "../../passport/"
+      "path": "../../passport/guard"
     },
     {
       "path": "../services"

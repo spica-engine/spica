@@ -19,6 +19,18 @@
     },
     {
       "path": "./realtime"
+    },
+    {
+      "path": "../status"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../../../libs/core/patch"
+    },
+    {
+      "path": "../../../../libs/database/pipeline"
     }
   ]
 }

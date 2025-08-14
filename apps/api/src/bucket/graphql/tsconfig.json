@@ -13,6 +13,12 @@
     },
     {
       "path": "../../../../../libs/interface/bucket/graphql"
+    },
+    {
+      "path": "../../passport/guard/services"
+    },
+    {
+      "path": "../common"
     }
   ]
 }

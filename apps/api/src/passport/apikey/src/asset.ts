@@ -1,5 +1,6 @@
 import {Validator, Schema} from "@spica-server/core/schema";
-import {ApiKeyService} from "@spica-server/passport/apikey/src/apikey.service";
+// @TODO: create separate apikey services module and update this import
+import {ApiKeyService} from "./apikey.service";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {Resource} from "@spica-server/interface/asset";
 import {registrar} from "@spica-server/asset";

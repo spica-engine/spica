@@ -9,7 +9,10 @@
       "path": "../../../../../../libs/realtime"
     },
     {
-      "path": "../../services"
+      "path": "../../guard/services"
+    },
+    {
+      "path": "../../guard"
     }
   ]
 }

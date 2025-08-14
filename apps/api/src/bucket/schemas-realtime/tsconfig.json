@@ -3,10 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../services"
+      "path": "../../passport/guard"
     },
     {
-      "path": "../../passport"
+      "path": "../../passport/guard/services"
     },
     {
       "path": "../../../../../libs/interface/bucket/realtime"
