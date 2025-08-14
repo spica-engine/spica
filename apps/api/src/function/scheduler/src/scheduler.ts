@@ -13,7 +13,7 @@ import {
   SystemEnqueuer,
   RabbitMQEnqueuer
 } from "@spica-server/function/enqueuer";
-import {DelegatePkgManager} from "@spica-server/function/pkgmanager";
+import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
 import {LocalPackageManager} from "@spica-server/function/pkgmanager/local";
 import {

@@ -7,6 +7,7 @@ import {
   WithId
 } from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {StoragePipelineBuilder} from "./storage-pipeline.builder";
 import {
   StorageOptions,
   StorageObject,
@@ -16,6 +17,7 @@ import {
   PaginatedStorageResponse
 } from "@spica-server/interface/storage";
 import {Strategy} from "./strategy/strategy";
+
 import fs from "fs";
 
 @Injectable()
@@ -82,6 +84,35 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     if (neededInMb > this.storageOptions.totalSizeLimit) {
       throw new Error("Total storage object size limit exceeded");
     }
+  }
+
+  async browse(
+    resourceFilter: {include?: string[]; exclude?: string[]} | object,
+    path: string,
+    filter: object,
+    limit: number,
+    skip: number = 0,
+    sort?: any
+  ): Promise<StorageResponse[]> {
+    const convertedResourceFilter = StoragePipelineBuilder.createResourceFilter(
+      resourceFilter as {include?: string[]; exclude?: string[]}
+    );
+
+    const pathFilter = StoragePipelineBuilder.createPathFilter(path);
+
+    const pipelineBuilder = (
+      await new PipelineBuilder()
+        .filterResources(convertedResourceFilter)
+        .attachToPipeline(true, {$match: pathFilter})
+        .filterByUserRequest(filter)
+    ).result();
+
+    const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
+
+    return this._coll
+      .aggregate<StorageResponse>([...pipelineBuilder, ...seeking])
+      .toArray()
+      .then(r => this.putUrls(r));
   }
 
   async getAll<P extends boolean>(
@@ -255,6 +286,15 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     } else {
       return this.service.writeStream(name, data as fs.ReadStream, type);
     }
+  }
+
+  async getByName(name: string): Promise<WithId<StorageObject<Buffer>>> {
+    const object = await this._coll.findOne({name});
+    if (!object) return null;
+
+    const objectWithData = object as WithId<StorageObject<Buffer>>;
+    objectWithData.content.data = await this.service.read(object.name);
+    return objectWithData;
   }
 
   async getUrl(name: string) {
