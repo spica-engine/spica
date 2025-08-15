@@ -1,78 +1,94 @@
 const schema = {
   title: {
     type: "string",
-    title: "",
+    title: ""
   },
   description: {
     type: "textarea",
-    title: "Description",
+    title: "Description"
   },
   defaultString: {
     type: "string",
-    title: "Default Value",
+    title: "Default Value"
   },
   defaultNumber: {
     type: "number",
-    title: "Default Value",
+    title: "Default Value"
   },
   minNumber: {
     type: "number",
-    title: "Minimum",
+    title: "Minimum"
   },
   maxNumber: {
     type: "number",
-    title: "Maximum",
+    title: "Maximum"
   },
   presets: {
     type: "multiselect",
     title: "Presets",
-    enum: ["Countries", "Days", "Email", "Phone Number"],
+    enum: ["Countries", "Days", "Email", "Phone Number"]
+  },
+  makeEnumerated: {
+    type: "boolean",
+    title: "Make field enumerated"
+  },
+  enumeratedValues: {
+    type: "chip",
+    title: "EnumeratedValues"
   },
   definePattern: {
     type: "boolean",
-    title: "Define Pattern",
+    title: "Define Pattern"
+  },
+  regularExpression: {
+    type: "string",
+    title: "Regex"
   },
   primaryField: {
     type: "boolean",
-    title: "Primary Field",
+    title: "Primary Field"
   },
   translatable: {
     type: "boolean",
-    title: "Translatable",
+    title: "Translatable"
   },
   readonly: {
     type: "boolean",
-    title: "Readonly",
+    title: "Readonly"
   },
   uniqueValues: {
     type: "boolean",
-    title: "Unique Values",
+    title: "Unique Values"
+  },
+  uniqueItems: {
+    type: "boolean",
+    title: "Items should be unique"
   },
   requiredField: {
     type: "boolean",
-    title: "Required Field",
+    title: "Required Field"
   },
   selectionOptions: {
     type: "boolean",
-    title: "Add selection options",
+    title: "Add selection options"
   },
   index: {
     type: "boolean",
-    title: "Indexed field in database",
+    title: "Indexed field in database"
   },
   defaultBoolean: {
     type: "boolean",
-    title: "Default value",
+    title: "Default value"
   },
   defaultDate: {
     type: "string",
     title: "Default Date",
-    enum: ["None", "Created_at", "Updated_at"],
+    enum: ["None", "Created_at", "Updated_at"]
   },
   multipleSelectionType: {
     type: "string",
     title: "Type",
-    enum: ["string", "number"],
+    enum: ["string", "number"]
   },
   arrayType: {
     type: "string",
@@ -88,17 +104,17 @@ const schema = {
       "multiselect",
       "location",
       "richtext",
-      "object",
-    ],
+      "object"
+    ]
   },
   arrayItemTitle: {
     type: "string",
-    title: "Title",
+    title: "Title"
   },
   chip: {
     type: "chip",
-    title: "",
-  },
+    title: ""
+  }
 };
 
 const {
@@ -109,11 +125,15 @@ const {
   minNumber,
   maxNumber,
   presets,
+  makeEnumerated,
+  enumeratedValues,
   definePattern,
+  regularExpression,
   primaryField,
   translatable,
   readonly,
   uniqueValues,
+  uniqueItems,
   requiredField,
   selectionOptions,
   index,
@@ -121,65 +141,110 @@ const {
   defaultDate,
   multipleSelectionType,
   arrayType,
-  chip,
+  chip
 } = schema;
 
 export const createShema: any = {
-  string: { title, description, defaultString, presets },
-  number: { title, description, defaultNumber, minNumber, maxNumber, presets },
-  date: { title, description, defaultDate },
-  boolean: { title, description, defaultBoolean },
-  textarea: { title, description },
-  array: { title, description, arrayType, defaultString, presets, minNumber, maxNumber },
-  multiselect: { title, description, multipleSelectionType, maxNumber, chip },
-  object: { title, description },
-  color: { title, description },
-  storage: { title, description },
+  string: {
+    title,
+    description,
+    default: defaultString,
+    presets,
+    makeEnumerated,
+    enumeratedValues: {...enumeratedValues, requires: "makeEnumerated"},
+    definePattern,
+    regularExpression: {...regularExpression, requires: "definePattern"}
+  },
+  number: {
+    title,
+    description,
+    default: defaultNumber,
+    minimum: minNumber,
+    maximum: maxNumber
+  },
+  date: {title, description, default: defaultDate},
+  boolean: {title, description, default: defaultBoolean},
+  textarea: {title, description},
+  array: {
+    title,
+    description,
+    arrayType,
+    defaultString,
+    presets,
+    makeEnumerated,
+    enumeratedValues: {...enumeratedValues, requires: "makeEnumerated"},
+    definePattern,
+    regularExpression: {...regularExpression, requires: "definePattern"},
+    uniqueItems,
+    minItems: minNumber,
+    maxItems: maxNumber
+  },
+  multiselect: {title, description, multipleSelectionType, maxItems: maxNumber, chip},
+  object: {title, description},
+  color: {title, description},
+  storage: {title, description},
   //Todo Add Relation field
-  richtext: { title, description },
-  location: { title, description },
+  richtext: {title, description},
+  location: {title, description},
+  stringConfiguration: {
+    primaryField,
+    translate: translatable,
+    readonly,
+    uniqueValues,
+    requiredField,
+    index
+  },
+  numberConfiguration: {
+    makeEnumerated,
+    enumeratedValues: {...enumeratedValues, requires: "makeEnumerated"},
+    primaryField,
+    readonly,
+    uniqueValues,
+    requiredField,
+    index
+  },
   configuration: {
     definePattern,
     primaryField,
-    translatable,
+    translate: translatable,
     readonly,
     uniqueValues,
     requiredField,
     selectionOptions,
-    index,
+    index
   }, // Used in string, number
   configurationType1: {
     readonly,
     requiredField,
-    index,
+    index
   }, // Used in date,color,multipleSelection
   configurationType2: {
-    translatable,
-    primaryField,
+    translate: translatable,
+    requiredField,
     readonly,
-    index,
+    index
   }, // Used in object,storage,richText
   configurationTextarea: {
     primaryField,
-    translatable,
+    translate: translatable,
     readonly,
     uniqueValues,
     requiredField,
-    index,
+    index
   },
   configurationBoolean: {
     primaryField,
     readonly,
-    index,
+    index
   },
   configurationLocation: {
     readonly,
-    requiredField,
+    requiredField
   },
   configurationArray: {
-    translatable,
+    translate: translatable,
     readonly,
     requiredField,
-    index,
-  },
+    index
+  }
 };

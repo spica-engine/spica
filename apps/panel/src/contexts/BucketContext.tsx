@@ -13,7 +13,8 @@ import {
   type BucketDataQueryWithIdType,
   type BucketDataType,
   type BucketDataWithIdType,
-  type BucketType
+  type BucketType,
+  type Property
 } from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
@@ -33,6 +34,7 @@ type BucketContextType = {
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   refreshBucketData: () => Promise<void>;
+  createBucketField: (bucket: BucketType, newField: Property, requiredField?: string) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
@@ -68,10 +70,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiCreateBucketField,
     apiBuckets,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
-    apiDeleteBucketHistoryError,
+    apiDeleteBucketHistoryError
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -108,7 +111,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
             sort: query.sort ? JSON.stringify(query.sort) : defaultParams.sort
           }
         : {...defaultParams};
-
 
       const queryString = new URLSearchParams(
         params as unknown as Record<string, string>
@@ -247,6 +249,19 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [buckets]
   );
 
+  const createBucketField = useCallback(
+    async (bucket: BucketType, newField: Property, requiredField?: string) => {
+      const currentRequired = bucket.required ? [...bucket.required] : []
+      if (requiredField) currentRequired.push(requiredField)
+      const modifiedBucket = {
+        ...bucket,
+        properties: {...bucket.properties, [newField.title]: newField},
+        required: currentRequired
+      };
+      return apiCreateBucketField(modifiedBucket);
+    },
+    [apiCreateBucketField]
+  );
 
   const contextValue = useMemo(
     () => ({
@@ -261,13 +276,14 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketHistory,
       deleteBucketHistory: apiDeleteBucketHistory,
       refreshBucketData,
+      createBucketField,
       buckets,
       bucketData,
       bucketDataLoading: apiBucketDataLoading,
       bucketCategories,
       deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
       deleteBucketHistoryError: apiDeleteBucketHistoryError,
-      nextbucketDataQuery,
+      nextbucketDataQuery
     }),
     [
       getBucketData,
@@ -281,13 +297,14 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiDeleteBucketHistory,
       refreshBucketData,
       loadMoreBucketData,
+      createBucketField,
       buckets,
       bucketData,
       apiBucketDataLoading,
       bucketCategories,
       apiDeleteBucketHistoryLoading,
       apiDeleteBucketHistoryError,
-      nextbucketDataQuery,
+      nextbucketDataQuery
     ]
   );
 

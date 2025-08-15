@@ -20,7 +20,7 @@ export type BucketType = {
 
 type Properties = {[key: string]: Property};
 
-type Property =
+export type Property =
   | BasicProperty
   | ArrayProperty
   | ObjectProperty
@@ -94,7 +94,7 @@ export const useBucketService = () => {
   const {request: fetchBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
     endpoint: "",
     method: "get",
-    deduplicateRequests: true,
+    deduplicateRequests: true
   });
 
   const {request: bucketOrderRequest} = useApi({endpoint: "", method: "patch"});
@@ -106,12 +106,21 @@ export const useBucketService = () => {
     method: "delete"
   });
 
-  const {request: deleteHistoty, loading: apiDeleteBucketHistoryLoading, error: apiDeleteBucketHistoryError} = useApi({
+  const {
+    request: deleteHistoty,
+    loading: apiDeleteBucketHistoryLoading,
+    error: apiDeleteBucketHistoryError
+  } = useApi({
     endpoint: "",
     method: "delete"
   });
 
   const {request: putRequest} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+  const {request: createBucketField} = useApi({
     endpoint: "",
     method: "put"
   });
@@ -162,21 +171,34 @@ export const useBucketService = () => {
     [deleteRequest]
   );
 
-  const apiUpdateBucketHistory = useCallback(async (bucket: BucketType) => {
-    return await putRequest({
-      endpoint: `/api/bucket/${bucket._id}`,
-      body: {
-        ...bucket,
-        history: !bucket.history
-      }
-    });
-  }, [patchRequest]);
+  const apiUpdateBucketHistory = useCallback(
+    async (bucket: BucketType) => {
+      return await putRequest({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {
+          ...bucket,
+          history: !bucket.history
+        }
+      });
+    },
+    [patchRequest]
+  );
 
-  const apiDeleteBucketHistory = useCallback(async (bucket: BucketType) => {
-    return await deleteHistoty({
-      endpoint: `/api/bucket/${bucket._id}/history`
-    });
-  }, [deleteHistoty]);
+  const apiDeleteBucketHistory = useCallback(
+    async (bucket: BucketType) => {
+      return await deleteHistoty({
+        endpoint: `/api/bucket/${bucket._id}/history`
+      });
+    },
+    [deleteHistoty]
+  );
+
+  const apiCreateBucketField = useCallback(
+    async (modifiedBucket: BucketType) => {
+      return createBucketField({body: modifiedBucket, endpoint: `/api/bucket/${modifiedBucket._id}`});
+    },
+    [createBucketField]
+  );
 
   return {
     apiGetBucketData,
@@ -187,9 +209,10 @@ export const useBucketService = () => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiCreateBucketField,
     apiBuckets,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
-    apiDeleteBucketHistoryError,
+    apiDeleteBucketHistoryError
   };
 };
