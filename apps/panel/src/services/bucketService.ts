@@ -91,9 +91,10 @@ export const useBucketService = () => {
     method: "get"
   });
 
-  const {request: fetchBucketData, data: apiBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
+  const {request: fetchBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
     endpoint: "",
-    method: "get"
+    method: "get",
+    deduplicateRequests: true,
   });
 
   const {request: bucketOrderRequest} = useApi({endpoint: "", method: "patch"});
@@ -227,7 +228,6 @@ export const useBucketService = () => {
     apiDeleteBucketHistory,
     apiCreateBucket,
     apiBuckets,
-    apiBucketData,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
