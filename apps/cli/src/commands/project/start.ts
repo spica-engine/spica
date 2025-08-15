@@ -139,7 +139,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
         },
         {
           image: "mongo",
-          tag: options.mongoVersion ? options.mongoVersion.toString() : "7.0"
+          tag: options.mongoVersion.toString()
         },
         {
           image: "nginx",
@@ -181,7 +181,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
   async function createMongoDB(instanceIndex: number) {
     const container = await machine.createContainer({
-      Image: `mongo:${options.mongoVersion ? options.mongoVersion.toString() : "7.0"}`,
+      Image: `mongo:${options.mongoVersion.toString()}`,
       name: `${databaseName}-${instanceIndex}`,
       Cmd: ["--replSet", name, "--bind_ip_all"],
       Labels: {namespace: name},
