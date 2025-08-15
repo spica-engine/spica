@@ -33,6 +33,7 @@ type BucketContextType = {
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   refreshBucketData: () => Promise<void>;
+  createBucket: (title: string) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
@@ -68,6 +69,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiCreateBucket,
     apiBuckets,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
@@ -248,6 +250,17 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   );
 
 
+  const createBucket = useCallback(
+    async (title: string) => {
+      return await apiCreateBucket(title, buckets.length).then(result => {
+        if (!result) return
+        setBuckets(prev => [...(prev ?? []), result]);
+        return result;
+      });
+    },
+    [buckets]
+  );
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -261,6 +274,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketHistory,
       deleteBucketHistory: apiDeleteBucketHistory,
       refreshBucketData,
+      createBucket,
       buckets,
       bucketData,
       bucketDataLoading: apiBucketDataLoading,
@@ -281,6 +295,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiDeleteBucketHistory,
       refreshBucketData,
       loadMoreBucketData,
+      createBucket,
       buckets,
       bucketData,
       apiBucketDataLoading,
