@@ -1,11 +1,12 @@
+.container, .container *, .popoverContent, .popoverContent * {
+  line-height: unset !important;
+  font-family: var(--font-family-base) !important;
+}
+
 .popoverContainer {
   width: 160px;
   padding: 0;
   z-index: 4;
-  * {
-    line-height: unset !important;
-    font-family: var(--font-family-base) !important;
-  }
 }
 
 .popoverContent {
@@ -36,14 +37,13 @@
     }
   }
 }
-
 .popoverCheckboxesContainer {
   padding: var(--padding-md);
 
   width: 100% !important;
+  align-items: start !important;
   .popoverCheckboxes {
     width: 100% !important;
-    align-items: start !important;
     > div {
       width: 100% !important;
       height: 20px !important;
@@ -81,4 +81,8 @@
 
 .confirmText {
   margin-top: 0;
+}
+
+.moreButton {
+  color: var(--font-color-primary);
 }

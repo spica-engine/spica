@@ -82,7 +82,7 @@ const BucketActionBar = ({
           New Entry
         </Button>
         <Button
-          variant="text"
+          className={styles.refreshButton} variant="text"
           onClick={onRefresh}
           disabled={refreshLoading || searchLoading}
           loading={refreshLoading}
@@ -113,7 +113,7 @@ const BucketActionBar = ({
             </div>
           }
         >
-          <Button variant="text" onClick={() => {}}>
+          <Button className={styles.columnButton} variant="text" onClick={() => {}}>
             <Icon name="eye" />
             Column
           </Button>
