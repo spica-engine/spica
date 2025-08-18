@@ -258,7 +258,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
         return result;
       });
     },
-    [buckets]
+    [buckets, apiCreateBucket]
   );
 
   const contextValue = useMemo(
