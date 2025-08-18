@@ -21,7 +21,7 @@ const REGEX_PRESETS = {
   "Phone Number": PhoneNumberRegex
 } as const;
 
-export default function useStringAndArrayPresetsSync({
+export default function useStringPresetsSync({
   type,
   fieldValues,
   setFieldValues
@@ -31,7 +31,7 @@ export default function useStringAndArrayPresetsSync({
   const hadPattern = useRef(false);
 
   useEffect(() => {
-    if (type !== "string" && type !== "array") return;
+    if (type !== "string") return;
 
     const currentPresets = fieldValues.presets as string[];
     const isEnumeratedNow = fieldValues.makeEnumerated as boolean;

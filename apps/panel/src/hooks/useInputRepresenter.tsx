@@ -1,4 +1,4 @@
-import {Fragment, useCallback, type ReactNode} from "react";
+import {type ReactNode} from "react";
 import {
   ArrayInput,
   BooleanInput,
@@ -14,10 +14,10 @@ import {
   TextAreaInput,
   type TypeCoordinates,
   apiUtil,
-  Text
+  Text,
+  MultipleSelectionInput,
+  ChipInput
 } from "oziko-ui-kit";
-import ChipInput from "../components/atoms/chip-input/ChipInput";
-import MultipleSelectionInput from "../components/molecules/multiple-selection/MultipleSelection";
 
 export type TypeProperties = {
   [key: string]: {

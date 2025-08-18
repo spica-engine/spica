@@ -248,3 +248,18 @@ export const createShema: any = {
     index
   }
 };
+
+export const configurationMapping = {
+  string: createShema.stringConfiguration,
+  number: createShema.numberConfiguration,
+  date: createShema.configurationType1,
+  color: createShema.configurationType1,
+  multiselect: createShema.configurationType1,
+  object: createShema.configurationType2,
+  storage: createShema.configurationType2,
+  richtext: createShema.configurationType2,
+  textarea: createShema.configurationTextarea,
+  boolean: createShema.configurationBoolean,
+  location: createShema.configurationLocation,
+  array: createShema.configurationArray
+};
