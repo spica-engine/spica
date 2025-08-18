@@ -6,6 +6,8 @@ import React, {
   type RefObject,
   useCallback,
   useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState
@@ -29,12 +31,7 @@ type TypeDataColumn = {
   leftOffset?: number;
 };
 
-type TypeTableData = {
-  [k: string]: {
-    id: string;
-    value: string | JSX.Element;
-  };
-};
+type TypeTableData = {[k: string]: {id: string; value: string | JSX.Element}};
 
 type TypeTable = {
   columns: TypeDataColumn[];
@@ -43,9 +40,65 @@ type TypeTable = {
   onScrollEnd?: () => void;
   totalDataLength?: number;
   style?: React.CSSProperties;
+  tableRef?: RefObject<HTMLElement | null>;
 };
 
 const MIN_COLUMN_WIDTH = 140;
+
+function extractTextFromReactNode(value: ReactNode | string): string {
+  const extractText = (node: ReactNode): string[] => {
+    if (node == null || typeof node === "boolean") {
+      return [];
+    }
+
+    if (typeof node === "string") {
+      return [node];
+    }
+
+    if (typeof node === "number") {
+      return [node.toString()];
+    }
+
+    if (Array.isArray(node)) {
+      return node.flatMap(extractText);
+    }
+
+    if (React.isValidElement(node)) {
+      if (node.type === React.Fragment) {
+        const props = (node as React.ReactElement).props;
+        if (props && typeof props === "object" && "children" in props) {
+          return extractText(props.children as ReactNode);
+        }
+        return [];
+      }
+
+      if (
+        typeof node === "object" &&
+        node !== null &&
+        "props" in node &&
+        typeof (node as any).props === "object" &&
+        (node as any).props &&
+        "children" in (node as any).props &&
+        (node as any).props.children != null
+      ) {
+        return extractText((node as any).props.children);
+      }
+
+      return [];
+    }
+
+    if (typeof node === "object" && node !== null) {
+      const obj = node as any;
+      if (obj.props && obj.props.children) {
+        return extractText(obj.props.children);
+      }
+    }
+
+    return [];
+  };
+
+  return extractText(value).join("");
+}
 
 const parseWidth = (widthValue: string | number, containerWidth: number): number => {
   const baseFontSize = 16;
@@ -75,10 +128,7 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
   const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth + 10);
 
   const columnsWithWidth = columns.map(column => {
-    return {
-      ...column,
-      width: column.width || defaultColumnWidth
-    };
+    return {...column, width: column.width || defaultColumnWidth};
   });
 
   const formattedColumns: TypeDataColumn[] = [];
@@ -93,11 +143,7 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
     const columnWidth = parseWidth(column.width, containerWidth);
     const fixedLeftOffset = cumulativeOffset;
 
-    formattedColumns.push({
-      ...column,
-      width: `${columnWidth}px`,
-      leftOffset: fixedLeftOffset
-    });
+    formattedColumns.push({...column, width: `${columnWidth}px`, leftOffset: fixedLeftOffset});
 
     cumulativeOffset += columnWidth;
   }
@@ -105,12 +151,22 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
   return formattedColumns;
 };
 
-const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataLength, style}) => {
+const Table: FC<TypeTable> = ({
+  columns,
+  data,
+  className,
+  onScrollEnd,
+  totalDataLength,
+  style,
+  tableRef
+}) => {
   const containerRef = useScrollDirectionLock();
+  useImperativeHandle(tableRef, () => containerRef.current as HTMLElement);
+
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!containerRef.current) return;
     const containerWidth = containerRef.current?.clientWidth ?? 0;
     // Making it just a little bit smaller than the container to prevent unnecessary horizontal scrolls
@@ -202,16 +258,9 @@ const Table: FC<TypeTable> = ({columns, data, className, onScrollEnd, totalDataL
         >
           <table
             className={`${styles.table} ${className}`}
-            style={{
-              ...style,
-              width: `${totalTableWidth}px`,
-              minWidth: `${totalTableWidth}px`
-            }}
+            style={{...style, width: `${totalTableWidth}px`, minWidth: `${totalTableWidth}px`}}
           >
-            <TableHeader
-              formattedColumns={formattedColumns}
-              onColumnResize={handleColumnResize}
-            />
+            <TableHeader formattedColumns={formattedColumns} onColumnResize={handleColumnResize} />
             <tbody>
               {formattedColumns.length > 0 && (
                 <Rows
@@ -347,15 +396,19 @@ type RowsProps = {
 };
 
 const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsProps) => {
-  const rowCacheRef = useRef<Map<string, {element: JSX.Element; lastFocusedCell: string | null}>>(
-    new Map()
-  );
+  const rowCacheRef = useRef<
+    Map<string, {element: JSX.Element; lastFocusedCell: string | null; rowContentString: string}>
+  >(new Map());
+
   const rows: JSX.Element[] = [];
 
   for (let index = 0; index < data.length; index++) {
     const row = data[index];
+    // If a cell is changed, we need to re-render the row
+    const rowContentString = formattedColumns
+      .map(column => extractTextFromReactNode(row[column.key]?.value))
+      .join("-");
     const rowId = row[Object.keys(row)[0]].id;
-
     const missingCellData = formattedColumns.some(column => !row[column.key]);
     if (missingCellData) continue;
 
@@ -364,7 +417,12 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
 
     const isFocusedInThisRow = focusedCell?.row === index;
 
-    if (cached && !isFocusedInThisRow && cached.lastFocusedCell === focusedKey) {
+    if (
+      cached &&
+      cached.rowContentString === rowContentString &&
+      !isFocusedInThisRow &&
+      cached.lastFocusedCell === focusedKey
+    ) {
       rows.push(cached.element);
       continue;
     }
@@ -386,15 +444,19 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
     });
 
     const rowElement = <tr key={rowId}>{cells}</tr>;
-    rowCacheRef.current.set(rowId, {element: rowElement, lastFocusedCell: focusedKey});
+    rowCacheRef.current.set(rowId, {
+      rowContentString,
+      element: rowElement,
+      lastFocusedCell: focusedKey
+    });
     rows.push(rowElement);
   }
 
   useEffect(() => {
-    const currentRowIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
-    for (const cachedKey of rowCacheRef.current.keys()) {
-      if (!currentRowIds.has(cachedKey)) {
-        rowCacheRef.current.delete(cachedKey);
+    const currentBaseIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
+    for (const cachedBaseId of rowCacheRef.current.keys()) {
+      if (!currentBaseIds.has(cachedBaseId)) {
+        rowCacheRef.current.delete(cachedBaseId);
       }
     }
   }, [data]);
@@ -402,10 +464,7 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
   return <>{rows}</>;
 });
 
-type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
-  focused?: boolean;
-  leftOffset?: number;
-};
+type TypeCell = React.HTMLAttributes<HTMLDivElement> & {focused?: boolean; leftOffset?: number};
 
 const Cell = memo(({children, focused, leftOffset, ...props}: TypeCell) => {
   return (
