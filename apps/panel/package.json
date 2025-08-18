@@ -5,7 +5,7 @@
   "dependencies": {
     "formik": "^2.4.6",
     "jwt-decode": "^4.0.0",
-    "oziko-ui-kit": "^0.0.34",
+    "oziko-ui-kit": "^0.0.35",
     "react": "^19.0.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
