@@ -8,141 +8,46 @@ import {
   Modal,
   Tab,
   type TypeInputType,
-  type TypeModal
+  type TypeModal,
+  Text
 } from "oziko-ui-kit";
 import styles from "./BucketAddField.module.scss";
 import useInputRepresenter from "../../../hooks/useInputRepresenter";
-import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType, Property} from "src/services/bucketService";
 import useStringPresetsSync from "./useStringPresetsSync";
+import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 
-type TypeBucketAddField = {name: string; type: TypeInputType; modalProps?: TypeModal};
-
-const DEFAULT_VALUES = {
-  string: "",
-  textarea: "",
-  boolean: false,
-  multiselect: [],
-  chip: []
+type TypeBucketAddField = {
+  name: string;
+  type: TypeInputType | "relation";
+  modalProps?: TypeModal;
+  onSaveAndClose: (fieldProperty: Property, requiredField?: string) => void | Promise<void>;
+  bucket: BucketType;
+  buckets: BucketType[];
+  initialValues?: {
+    fieldValues?: Record<string, any>;
+    configurationValue?: Record<string, any>;
+  };
 };
-
-const BucketAddField: FC<TypeBucketAddField> = ({name = "", type, modalProps}) => {
-  const isInnerFieldsType = useMemo(() => ["object", "array"].includes(type), [type]);
-  const [activeTab, setActiveTab] = useState(() => (isInnerFieldsType ? 0 : 1));
-
-  const configurationSchema = useMemo(() => configurationMapping[type] || {}, [type]);
-  const schema = useMemo(() => createShema[type] || {}, [type]);
-  const schemaWithDynamicTitle = useMemo(
-    () => ({...schema, title: {...schema.title, title: name}}),
-    [schema, name]
-  );
-
-  const tabItems = useMemo(
-    () => [
-      ...(isInnerFieldsType
-        ? [
-            {
-              prefix: {
-                children: "Inner Fields",
-                onClick: () => setActiveTab(0)
-              }
-            }
-          ]
-        : []),
-      {
-        prefix: {
-          children: "Default",
-          onClick: () => setActiveTab(1)
-        }
-      },
-      {
-        prefix: {
-          children: "Configuration",
-          onClick: () => setActiveTab(2)
-        }
-      }
-    ],
-    [isInnerFieldsType]
-  );
-
-  const {bucketData, buckets} = useBucket();
-
-  const [fieldValues, setFieldValues] = useState<Record<string, any>>(() => ({
-    title: name,
-    description: "",
-    ...Object.fromEntries(
-      Object.keys(schema).map(key => [
-        key,
-        DEFAULT_VALUES[schema[key].type as keyof typeof DEFAULT_VALUES]
-      ])
-    )
-  }));
-
-  const [configurationValue, setConfigurationValue] = useState(() =>
-    Object.fromEntries(
-      Object.keys(configurationSchema).map(key => [
-        key,
-        DEFAULT_VALUES[configurationSchema[key].type as keyof typeof DEFAULT_VALUES]
-      ])
-    )
-  );
-
-  const inputRepresenter = useInputRepresenter({
-    properties: schemaWithDynamicTitle,
-    value: fieldValues,
-    onChange: setFieldValues
-  });
-
-  const configuration = useInputRepresenter({
-    properties: configurationSchema,
-    value: configurationValue,
-    onChange: val => {
-      setConfigurationValue(val);
-    }
-  });
-
-  useStringPresetsSync({type, fieldValues, setFieldValues});
-
-  const bucket = useMemo(
-    () => buckets.find(i => i._id === bucketData?.bucketId),
-    [buckets, bucketData?.bucketId]
-  );
-
-  return (
-    <Modal isOpen overflow={true} showCloseButton={false} {...modalProps} className={styles.modal}>
-      <Modal.Body className={styles.modalBody}>
-        <BucketFieldCreator
-          type={type}
-          fieldValues={fieldValues}
-          configurationValue={configurationValue}
-          bucket={bucket}
-          inputRepresenter={inputRepresenter}
-          configuration={configuration}
-          activeTab={activeTab}
-          tabItems={tabItems}
-          isInnerFieldsType={isInnerFieldsType}
-        />
-      </Modal.Body>
-    </Modal>
-  );
-};
-
-export default memo(BucketAddField);
 
 type TypeBucketFieldCreator = {
-  type: TypeInputType;
+  type: TypeInputType | "relation";
   fieldValues: Record<string, any>;
+  setFieldValues: React.Dispatch<React.SetStateAction<Record<string, any>>>;
   configurationValue: Record<string, any>;
   bucket?: BucketType;
+  buckets: BucketType[];
   inputRepresenter: ReactNode;
   configuration: ReactNode;
   activeTab: number;
   tabItems: any[];
   isInnerFieldsType: boolean;
+  onSaveAndClose: (fieldProperty: Property, requiredField?: string) => void | Promise<void>;
+  handleClose: () => void;
 };
 
 const createFieldProperty = (
-  type: TypeInputType,
+  type: TypeInputType | "relation",
   fieldValues: Record<string, any>,
   configurationValue: Record<string, any>
 ): Property => {
@@ -156,7 +61,6 @@ const createFieldProperty = (
     }
   } as Property;
 
-  // Type-specific configurations
   switch (type) {
     case "string":
       return {
@@ -233,7 +137,15 @@ const createFieldProperty = (
         default: fieldValues.default,
         maxItems: fieldValues.maxItems,
         minItems: fieldValues.minItems,
-        uniqueItems: fieldValues.uniqueItems
+        uniqueItems: fieldValues.uniqueItems,
+        items: {
+          type: fieldValues.arrayType,
+          title: fieldValues.arrayItemTitle,
+          description: fieldValues.arrayItemDescription,
+          properties: fieldValues.innerFields?.map((field: Property) =>
+            createFieldProperty(field.type, field, {})
+          )
+        }
       };
 
     case "object":
@@ -244,26 +156,168 @@ const createFieldProperty = (
         options: {...baseProperty.options, translate: configurationValue.translate},
         readOnly: configurationValue.readOnly
       };
-
+    case "relation":
+      return baseProperty;
     default:
       return baseProperty;
   }
 };
 
+const DEFAULT_VALUES = {
+  string: "",
+  textarea: "",
+  boolean: false,
+  multiselect: [],
+  select: "",
+  chip: [],
+  arrayType: "string"
+};
+
+const BucketAddField: FC<TypeBucketAddField> = ({
+  name = "",
+  type,
+  modalProps,
+  onSaveAndClose,
+  bucket,
+  buckets,
+  initialValues
+}) => {
+  const isArrayType = useMemo(() => type === "array", [type]);
+  const [activeTab, setActiveTab] = useState(() => (isArrayType ? 0 : 1));
+
+  const configurationSchema = useMemo(() => configurationMapping[type] || {}, [type]);
+  const schema = useMemo(() => createShema[type] || {}, [type]);
+  const schemaWithDynamicTitle = useMemo(
+    () => ({...schema, title: {...schema.title, title: name}}),
+    [schema, name]
+  );
+
+  const [fieldValues, setFieldValues] = useState<Record<string, any>>(
+    () =>
+      initialValues?.fieldValues ?? {
+        title: name,
+        description: "",
+        ...Object.fromEntries(
+          Object.keys(schema).map(key => [
+            key,
+            DEFAULT_VALUES[key as keyof typeof DEFAULT_VALUES] ??
+              DEFAULT_VALUES[schema[key].type as keyof typeof DEFAULT_VALUES]
+          ])
+        )
+      }
+  );
+
+  const isInnerFieldsType = useMemo(
+    () => isArrayType && fieldValues.arrayType === "object",
+    [type, fieldValues.arrayType]
+  );
+
+  const tabItems = useMemo(
+    () => [
+      ...(isInnerFieldsType
+        ? [
+            {
+              prefix: {
+                children: "Inner Fields",
+                onClick: () => setActiveTab(0)
+              }
+            }
+          ]
+        : []),
+      {
+        prefix: {
+          children: "Default",
+          onClick: () => setActiveTab(1)
+        }
+      },
+      {
+        prefix: {
+          children: "Configuration",
+          onClick: () => setActiveTab(2)
+        }
+      }
+    ],
+    [isInnerFieldsType]
+  );
+
+  const [configurationValue, setConfigurationValue] = useState(
+    () =>
+      initialValues?.configurationValue ??
+      Object.fromEntries(
+        Object.keys(configurationSchema).map(key => [
+          key,
+          DEFAULT_VALUES[configurationSchema[key].type as keyof typeof DEFAULT_VALUES]
+        ])
+      )
+  );
+
+  const inputRepresenter = useInputRepresenter({
+    properties:
+      type === "relation"
+        ? {
+            ...schemaWithDynamicTitle,
+            buckets: {
+              ...schemaWithDynamicTitle.buckets,
+              //enum: buckets.map(i => ({title: i.title, id: i._id}))
+              enum: buckets.map(i => i.title)
+            }
+          }
+        : schemaWithDynamicTitle,
+    value: fieldValues,
+    onChange: setFieldValues
+  });
+
+  const configuration = useInputRepresenter({
+    properties: configurationSchema,
+    value: configurationValue,
+    onChange: val => {
+      setConfigurationValue(val);
+    }
+  });
+
+  useStringPresetsSync({type, fieldValues, setFieldValues});
+
+  return (
+    <Modal isOpen overflow={true} showCloseButton={false} {...modalProps} className={styles.modal}>
+      <Modal.Body className={styles.modalBody}>
+        <BucketFieldCreator
+          type={type}
+          fieldValues={fieldValues}
+          setFieldValues={setFieldValues}
+          configurationValue={configurationValue}
+          bucket={bucket}
+          buckets={buckets}
+          inputRepresenter={inputRepresenter}
+          configuration={configuration}
+          activeTab={activeTab}
+          tabItems={tabItems}
+          isInnerFieldsType={isInnerFieldsType}
+          onSaveAndClose={onSaveAndClose}
+          handleClose={modalProps?.onClose as () => void}
+        />
+      </Modal.Body>
+    </Modal>
+  );
+};
+
+export default memo(BucketAddField);
+
 const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
   ({
     type,
     fieldValues,
+    setFieldValues,
     configurationValue,
-    bucket,
     inputRepresenter,
     configuration,
     activeTab,
     tabItems,
-    isInnerFieldsType
+    isInnerFieldsType,
+    onSaveAndClose,
+    handleClose,
+    bucket,
+    buckets
   }) => {
-    const {createBucketField} = useBucket();
-
     const fieldProperty = useMemo(
       () => createFieldProperty(type, fieldValues, configurationValue),
       [type, fieldValues, configurationValue]
@@ -274,10 +328,36 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
       [configurationValue.requiredField, fieldValues.title]
     );
 
-    const handleSaveAndClose = useCallback(() => {
-      if (!bucket) return;
-      createBucketField(bucket, fieldProperty, requiredField);
-    }, [bucket, fieldProperty, requiredField, createBucketField]);
+    const handleSaveAndClose = useCallback(async () => {
+      await onSaveAndClose(fieldProperty, requiredField);
+      handleClose();
+    }, [fieldProperty, requiredField, onSaveAndClose]);
+
+    const handleCreateInnerField = useCallback((fieldProperty: Property) => {
+      setFieldValues(prev => ({
+        ...prev,
+        innerFields: [...(prev.innerFields || []), fieldProperty]
+      }));
+    }, []);
+
+    const handleSaveInnerField = useCallback(
+      (fieldProperty: Property) => {
+        setFieldValues(prev => ({
+          ...prev,
+          innerFields: prev.innerFields?.map((innerField: any) =>
+            innerField.title === fieldProperty.title ? fieldProperty : innerField
+          )
+        }));
+      },
+      [handleCreateInnerField, onSaveAndClose]
+    );
+
+    const handleDeleteInnerField = useCallback((field: Property) => {
+      setFieldValues(prev => ({
+        ...prev,
+        innerFields: prev.innerFields?.filter((innerField: any) => innerField.title !== field.title)
+      }));
+    }, []);
 
     return (
       <FlexElement direction="vertical" gap={10} className={styles.contentContainer}>
@@ -289,7 +369,50 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
           items={tabItems}
           className={`${styles.tab} ${isInnerFieldsType ? styles.bigTab : styles.smallTab}`}
         />
-        {activeTab === 2 && configuration}
+        <div className={styles.configurationOptionsContainer}>
+          {activeTab === 0 && isInnerFieldsType && (
+            <div className={styles.innerFieldsContainer}>
+              {fieldValues.innerFields?.map?.((field: Property, index: number) => (
+                <FluidContainer
+                  dimensionX="fill"
+                  className={styles.innerFieldItem}
+                  key={index}
+                  prefix={{
+                    children: (
+                      <FlexElement gap={5} className={styles.innerFieldPrefix}>
+                        <Icon name={"chevronRight"} size="sm" />
+                        <Text className={styles.innerFieldName}>{field.title}</Text>
+                      </FlexElement>
+                    )
+                  }}
+                  root={{children: <Text>{field.type}</Text>}}
+                  suffix={{
+                    children: (
+                      <FlexElement gap={5} dimensionX="fill" className={styles.innerFieldActions}>
+                        <EditInnerField
+                          name={field.title}
+                          type={field.type}
+                          onSaveAndClose={handleSaveInnerField}
+                          bucket={bucket as BucketType}
+                          buckets={buckets}
+                          fieldValues={field}
+                        />
+                        <Button
+                          color="danger"
+                          variant="icon"
+                          onClick={() => handleDeleteInnerField(field)}
+                        >
+                          <Icon name="delete" />
+                        </Button>
+                      </FlexElement>
+                    )
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          {activeTab === 2 && configuration}
+        </div>
         <div className={styles.buttonWrapper}>
           <Button className={styles.saveAndCloseButton} onClick={handleSaveAndClose}>
             <FluidContainer
@@ -298,15 +421,65 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
             />
           </Button>
           {isInnerFieldsType && (
-            <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
-              <FluidContainer
-                prefix={{children: <Icon name="plus" size="sm" />}}
-                root={{children: "Add New Inner Field"}}
-              />
-            </Button>
+            <BucketFieldPopup
+              buckets={buckets}
+              bucket={bucket as BucketType}
+              onSaveAndClose={handleCreateInnerField}
+            >
+              <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
+                <FluidContainer
+                  prefix={{children: <Icon name="plus" size="sm" />}}
+                  root={{children: "Add New Inner Field"}}
+                />
+              </Button>
+            </BucketFieldPopup>
           )}
         </div>
       </FlexElement>
     );
   }
 );
+
+type EditInnerFieldProps = {
+  name: string;
+  type: TypeInputType | "relation";
+  onSaveAndClose: (fieldProperty: Property, requiredField?: string) => void | Promise<void>;
+  bucket: BucketType;
+  buckets: BucketType[];
+  fieldValues?: Record<string, any>;
+  configurationValue?: Record<string, any>;
+};
+
+const EditInnerField: FC<EditInnerFieldProps> = ({
+  name,
+  type,
+  onSaveAndClose,
+  bucket,
+  buckets,
+  fieldValues,
+  configurationValue
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <Button color="default" variant="icon" onClick={() => setIsOpen(true)}>
+        <Icon name="pencil" />
+      </Button>
+      {isOpen && (
+        <BucketAddField
+          name={name}
+          type={type}
+          onSaveAndClose={onSaveAndClose}
+          bucket={bucket}
+          buckets={buckets}
+          initialValues={{
+            fieldValues: fieldValues,
+            configurationValue: configurationValue
+          }}
+          modalProps={{onClose: () => setIsOpen(false)} as TypeModal}
+        />
+      )}
+    </>
+  );
+};

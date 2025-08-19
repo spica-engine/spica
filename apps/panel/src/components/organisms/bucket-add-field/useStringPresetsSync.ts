@@ -1,5 +1,5 @@
-import { useRef, useEffect } from "react";
-import { Countries, Days, EmailRegex, PhoneNumberRegex } from "./enums";
+import {useRef, useEffect} from "react";
+import {Countries, Days, EmailRegex, PhoneNumberRegex} from "./enums";
 
 type ConfigurationValue = {
   [k: string]: string | boolean | never[];
@@ -31,7 +31,7 @@ export default function useStringPresetsSync({
   const hadPattern = useRef(false);
 
   useEffect(() => {
-    if (type !== "string") return;
+    if (type !== "string" || fieldValues.arrayType !== "string") return;
 
     const currentPresets = fieldValues.presets as string[];
     const isEnumeratedNow = fieldValues.makeEnumerated as boolean;
@@ -42,12 +42,18 @@ export default function useStringPresetsSync({
       cleanupEnumerationPresets(currentPresets, setFieldValues);
       updateRefs(currentPresets, false, hadPattern.current);
       return;
+    } else if (!wasEnumerated.current && isEnumeratedNow) {
+      updateRefs(currentPresets, true, hadPattern.current);
+      return;
     }
 
     // Handle cleanup when pattern definition is disabled
     if (hadPattern.current && !hasPatternNow) {
       cleanupPatternPresets(currentPresets, setFieldValues);
       updateRefs(currentPresets, wasEnumerated.current, false);
+      return;
+    } else if (!hadPattern.current && hasPatternNow) {
+      updateRefs(currentPresets, isEnumeratedNow, hasPatternNow);
       return;
     }
 
@@ -89,13 +95,13 @@ export default function useStringPresetsSync({
     const filteredPresets = presets.filter(
       preset => !Object.keys(ENUMERATION_PRESETS).includes(preset)
     );
-    
+
     setter(prev => ({
       ...prev,
       enumeratedValues: [],
       presets: filteredPresets as never[]
     }));
-    
+
     previousPresets.current = filteredPresets;
     wasEnumerated.current = false;
   }
@@ -104,16 +110,14 @@ export default function useStringPresetsSync({
     presets: string[],
     setter: React.Dispatch<React.SetStateAction<ConfigurationValue>>
   ) {
-    const filteredPresets = presets.filter(
-      preset => !Object.keys(REGEX_PRESETS).includes(preset)
-    );
-    
+    const filteredPresets = presets.filter(preset => !Object.keys(REGEX_PRESETS).includes(preset));
+
     setter(prev => ({
       ...prev,
       regularExpression: "",
       presets: filteredPresets as never[]
     }));
-    
+
     previousPresets.current = filteredPresets;
     hadPattern.current = false;
   }
@@ -172,11 +176,7 @@ export default function useStringPresetsSync({
     return regexArray.join("|");
   }
 
-  function updateRefs(
-    presets: string[],
-    enumerated: boolean,
-    pattern: boolean
-  ) {
+  function updateRefs(presets: string[], enumerated: boolean, pattern: boolean) {
     previousPresets.current = presets;
     wasEnumerated.current = enumerated;
     hadPattern.current = pattern;

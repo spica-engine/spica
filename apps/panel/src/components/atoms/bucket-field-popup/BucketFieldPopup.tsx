@@ -1,4 +1,4 @@
-import {memo, useState, type ReactNode} from "react";
+import {memo, useCallback, useState, type ReactNode} from "react";
 import {
   FlexElement,
   ListItem,
@@ -10,15 +10,16 @@ import {
 } from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../../components/organisms/bucket-add-field/BucketAddField";
+import type {BucketType, Property} from "src/services/bucketService";
 
-const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [
+export const fieldOptions: {icon: IconName; text: string; type: TypeInputType | "relation"}[] = [
   {icon: "formatQuoteClose", text: "String", type: "string"},
   {icon: "numericBox", text: "Number", type: "number"},
   {icon: "calendarBlank", text: "Date", type: "date"},
   {icon: "checkboxBlankOutline", text: "Boolean", type: "boolean"},
   {icon: "formatColorText", text: "Textarea", type: "textarea"},
   {icon: "formatListChecks", text: "Multiple Selection", type: "multiselect"},
-  {icon: "callMerge", text: "Relation", type: "storage"},
+  {icon: "callMerge", text: "Relation", type: "relation"},
   {icon: "mapMarker", text: "Location", type: "location"},
   {icon: "ballot", text: "Array", type: "array"},
   {icon: "dataObject", text: "Object", type: "object"},
@@ -26,8 +27,18 @@ const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [
   {icon: "formatAlignCenter", text: "Richtext", type: "richtext"}
 ];
 
-const BucketFieldPopup = ({children}: {children: ReactNode}) => {
-  const [selectedType, setSelectedType] = useState<TypeInputType | null>(null);
+const BucketFieldPopup = ({
+  children,
+  buckets,
+  bucket,
+  onSaveAndClose
+}: {
+  children: ReactNode;
+  buckets: BucketType[];
+  bucket: BucketType;
+  onSaveAndClose: (fieldProperty: Property, requiredField?: string) => void;
+}) => {
+  const [selectedType, setSelectedType] = useState<TypeInputType | "relation" | null>(null);
 
   return (
     <>
@@ -52,11 +63,14 @@ const BucketFieldPopup = ({children}: {children: ReactNode}) => {
       >
         {children}
       </Popover>
-      {selectedType && (
+      {selectedType && bucket && (
         <BucketAddField
           name="name"
           type={selectedType}
           modalProps={{onClose: () => setSelectedType(null)} as TypeModal}
+          onSaveAndClose={onSaveAndClose}
+          bucket={bucket}
+          buckets={buckets}
         />
       )}
     </>

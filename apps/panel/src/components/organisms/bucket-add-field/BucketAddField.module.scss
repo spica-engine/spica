@@ -54,3 +54,30 @@
     padding-right: var(--padding-md) !important;
   }
 }
+
+.configurationOptionsContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.innerFieldItem {
+  justify-content: space-between !important;
+}
+
+.innerFieldActions button {
+  padding: 0;
+  min-width: none;
+}
+
+.innerFieldPrefix {
+  overflow: visible;
+  width: 100%;
+  justify-content: flex-start !important;
+  min-width: 25px;
+  max-width: 25px;
+  > div {
+    justify-content: flex-start !important;
+  }
+
+}

@@ -23,6 +23,14 @@ const schema = {
     type: "number",
     title: "Maximum"
   },
+  minItems: {
+    type: "number",
+    title: "Min Items",
+  },
+  maxItems: {
+    type: "number",
+    title: "Max Items",
+  },
   presets: {
     type: "multiselect",
     title: "Presets",
@@ -92,7 +100,7 @@ const schema = {
   },
   arrayType: {
     type: "string",
-    title: "",
+    title: "Array Type",
     enum: [
       "string",
       "date",
@@ -111,10 +119,28 @@ const schema = {
     type: "string",
     title: "Title"
   },
+  arrayItemDescription: {
+    type: "string",
+    title: "Description"
+  },
   chip: {
     type: "chip",
     title: ""
-  }
+  },
+  buckets: {
+    title: "Buckets",
+    type: "select",
+    enum: []
+  },
+  relationType: {
+    title: "Relation Type",
+    type: "select",
+    enum: ["One To One", "One To Many"]
+  },
+  dependent: {
+    type: "boolean",
+    title: "Dependent"
+  },
 };
 
 const {
@@ -124,6 +150,8 @@ const {
   defaultNumber,
   minNumber,
   maxNumber,
+  minItems,
+  maxItems,
   presets,
   makeEnumerated,
   enumeratedValues,
@@ -141,7 +169,12 @@ const {
   defaultDate,
   multipleSelectionType,
   arrayType,
-  chip
+  arrayItemTitle,
+  arrayItemDescription,
+  chip,
+  buckets,
+  relationType,
+  dependent
 } = schema;
 
 export const createShema: any = {
@@ -151,9 +184,9 @@ export const createShema: any = {
     default: defaultString,
     presets,
     makeEnumerated,
-    enumeratedValues: {...enumeratedValues, requires: "makeEnumerated"},
+    enumeratedValues: {...enumeratedValues, requires: {field: "makeEnumerated", toBe: true}},
     definePattern,
-    regularExpression: {...regularExpression, requires: "definePattern"}
+    regularExpression: {...regularExpression, requires: {field: "definePattern", toBe: true}}
   },
   number: {
     title,
@@ -169,21 +202,28 @@ export const createShema: any = {
     title,
     description,
     arrayType,
-    defaultString,
-    presets,
-    makeEnumerated,
-    enumeratedValues: {...enumeratedValues, requires: "makeEnumerated"},
-    definePattern,
-    regularExpression: {...regularExpression, requires: "definePattern"},
-    uniqueItems,
-    minItems: minNumber,
-    maxItems: maxNumber
+    arrayItemTitle,
+    arrayItemDescription,
+    defaultString: {...defaultString, requires: {field: "arrayType", toBe: "string"}},
+    defaultBoolean: {...defaultBoolean, requires: {field: "arrayType", toBe: "boolean"}},
+    minNumber: {...minNumber, requires: {field: "arrayType", toBe: "number"}},
+    maxNumber: {...maxNumber, requires: {field: "arrayType", toBe: "number"}},
+    presets: {...presets, requires: {field: "arrayType", toBe: "string"}},
+    makeEnumerated: {...makeEnumerated, requires: {field: "arrayType", toBe: ["string", "number"]}},
+    enumeratedValues: {...enumeratedValues, requires: {field: "makeEnumerated", toBe: true}},
+    definePattern: {...definePattern, requires: {field: "arrayType", toBe: "string"}},
+    regularExpression: {...regularExpression, requires: {field: "definePattern", toBe: true}},
+    uniqueItems: {...uniqueItems, requires: {field: "arrayType", notToBe: ["boolean", "multiselect", "location", "object"]}},
+    multipleSelectionType: {...multipleSelectionType, requires: {field: "arrayType", toBe: "multiselect"}},
+    minItems: {...minItems, requires: {field: "arrayType", notToBe: ["multiselect", "location", "object"]}},
+    maxItems: {...maxItems, requires: {field: "arrayType", notToBe: ["location", "object"]}},
+    chip: {...chip, requires: {field: "arrayType", toBe: "multiselect"}},
   },
   multiselect: {title, description, multipleSelectionType, maxItems: maxNumber, chip},
   object: {title, description},
   color: {title, description},
   storage: {title, description},
-  //Todo Add Relation field
+  relation: {title, description, buckets, relationType, dependent},
   richtext: {title, description},
   location: {title, description},
   stringConfiguration: {
@@ -196,7 +236,7 @@ export const createShema: any = {
   },
   numberConfiguration: {
     makeEnumerated,
-    enumeratedValues: {...enumeratedValues, requires: "makeEnumerated"},
+    enumeratedValues: {...enumeratedValues, requires: {field: "makeEnumerated", toBe: true}},
     primaryField,
     readonly,
     uniqueValues,
@@ -217,7 +257,7 @@ export const createShema: any = {
     readonly,
     requiredField,
     index
-  }, // Used in date,color,multipleSelection
+  }, // Used in date,color,multipleSelection,relation
   configurationType2: {
     translate: translatable,
     requiredField,
@@ -261,5 +301,6 @@ export const configurationMapping = {
   textarea: createShema.configurationTextarea,
   boolean: createShema.configurationBoolean,
   location: createShema.configurationLocation,
-  array: createShema.configurationArray
+  array: createShema.configurationArray,
+  relation: createShema.configurationType1
 };

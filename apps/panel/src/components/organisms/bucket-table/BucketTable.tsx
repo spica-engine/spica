@@ -1,9 +1,11 @@
 import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useMemo, type RefObject} from "react";
+import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
+import {useBucket} from "../../../contexts/BucketContext";
+import type {BucketType, Property} from "src/services/bucketService";
 
 type FieldType =
   | "string"
@@ -43,7 +45,7 @@ type BucketTableProps = {
   maxHeight?: string | number;
   bucketId: string;
   loading: boolean;
-  tableRef?: RefObject<HTMLElement | null>
+  tableRef?: RefObject<HTMLElement | null>;
 };
 
 type ColumnHeaderProps = {
@@ -92,8 +94,27 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
 };
 
 const NewFieldHeader = () => {
+  const {buckets, bucketData, createBucketField} = useBucket();
+
+  const bucket = useMemo(
+    () => buckets.find(i => i._id === bucketData?.bucketId),
+    [buckets, bucketData?.bucketId]
+  );
+
+  const handleSaveAndClose = useCallback(
+    (fieldProperty: Property, requiredField?: string) => {
+      if (!bucket) return;
+      createBucketField(bucket, fieldProperty, requiredField);
+    },
+    [bucket, createBucketField]
+  );
+
   return (
-    <BucketFieldPopup>
+    <BucketFieldPopup
+      buckets={buckets}
+      bucket={bucket as BucketType}
+      onSaveAndClose={handleSaveAndClose}
+    >
       <Button
         variant="icon"
         className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
@@ -305,7 +326,7 @@ const BucketTable = ({
   maxHeight,
   loading,
   bucketId,
-  tableRef,
+  tableRef
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),
