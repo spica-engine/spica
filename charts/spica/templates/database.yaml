@@ -46,8 +46,12 @@ spec:
           command:
             - "/bin/sh"
             - "-c"
-            - | 
-              ./scripts/init-users.sh > ./init-users.log
+            - |
+              if [ "$(hostname)" = "{{ .Release.Name }}-database-0" ]; then
+                ./scripts/init-users.sh > ./init-users.log
+              else
+                echo "Skipping init-users on this pod"
+              fi
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /data/db
@@ -108,9 +112,6 @@ spec:
                   - "/bin/sh"
                   - "-c"
                   - |
-          {{- if eq (int .Values.database.replicas) 1 }}
-                    ./scripts/init-replica.sh > ./init-replica.log
-          {{- end }}
                     ./scripts/set-profiling-level.sh > ./set-profiling-level.log
           resources:
 {{ toYaml .Values.database.resources | indent 12 }}

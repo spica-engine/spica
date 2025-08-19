@@ -2,13 +2,12 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 database:
-  replicas: 1
+  replicas: 2
   replicaSetName: 'rs0'
   name: spica
   version: '7.0'
   storageSize: 2Gi
   storageClass:
-  resources: {}
   replicationControllerImage:
   spicaUsername:
   spicaPassword:
@@ -26,24 +25,29 @@ images:
   migrate: spicaengine/migrate
 
 application:
-  replicas: 1
-  secret:
+  replicas: 2
+  secret: asd123
   defaultPassword: spica
   webBaseUrl: /spica/
   apiBaseUrl: /api/
-  publicHost:
+  publicHost: localhost
   storageSize: 2Gi
   storageClass:
   apiResources: {}
   webResources: {}
-  args: []
+  args: 
+    - --database-read-preference
+    - secondaryPreferred
   diskAccessMode: ReadWriteOnce
   serviceAccountName: default
 ingress:
-  hosts: []
+  hosts: 
+    - name: test.com
+      application: /spica/
+      api: /api/
   tls: []
   ingressClassName: nginx
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 15M
-    nginx.ingress.kubernetes.io/client-body-buffer-size: 15Mb
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 15m
     nginx.ingress.kubernetes.io/rewrite-target: /$1
