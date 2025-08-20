@@ -517,5 +517,17 @@ describe("Queue shifting", () => {
       expect(body.error).toEqual("Bad Request");
       expect(body.message).toContain("Invalid regular expression");
     });
+
+    it("should not allow duplicate function names", async () => {
+      const fn = await request.post("/function", fnSchema).then(r => r.body);
+
+      // attempt to create another function with same name
+      const response = await request.post("/function", fnSchema).catch(e => e);
+
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect(response.body.message).toEqual(
+        "Value of the property .name should unique across all documents."
+      );
+    });
   });
 });
