@@ -1,6 +1,5 @@
-import type { TypeInputType } from "oziko-ui-kit";
-import type { Property } from "src/services/bucketService";
-
+import type {TypeInputType} from "oziko-ui-kit";
+import type {Property} from "src/services/bucketService";
 
 export const createFieldProperty = (
   type: TypeInputType | "relation",
@@ -118,3 +117,27 @@ export const createFieldProperty = (
       return baseProperty;
   }
 };
+
+const DEFAULT_VALUES = {
+  string: "",
+  textarea: "",
+  boolean: false,
+  multiselect: [],
+  select: "",
+  chip: []
+};
+
+export const getDefaultValues = (
+  schema: Record<string, {type: string}>,
+  initial?: Record<string, any>,
+  extraDefaults: Record<string, any> = {}
+) =>
+  initial ?? {
+    ...extraDefaults,
+    ...Object.fromEntries(
+      Object.keys(schema).map(key => [
+        key,
+        DEFAULT_VALUES[schema[key].type as keyof typeof DEFAULT_VALUES]
+      ])
+    )
+  };

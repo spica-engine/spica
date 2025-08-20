@@ -1,7 +1,7 @@
 const schema = {
   title: {
     type: "string",
-    title: ""
+    title: "Name"
   },
   description: {
     type: "textarea",
@@ -25,11 +25,11 @@ const schema = {
   },
   minItems: {
     type: "number",
-    title: "Min Items",
+    title: "Min Items"
   },
   maxItems: {
     type: "number",
-    title: "Max Items",
+    title: "Max Items"
   },
   presets: {
     type: "multiselect",
@@ -140,7 +140,7 @@ const schema = {
   dependent: {
     type: "boolean",
     title: "Dependent"
-  },
+  }
 };
 
 const {
@@ -213,11 +213,20 @@ export const createShema: any = {
     enumeratedValues: {...enumeratedValues, requires: {field: "makeEnumerated", toBe: true}},
     definePattern: {...definePattern, requires: {field: "arrayType", toBe: "string"}},
     regularExpression: {...regularExpression, requires: {field: "definePattern", toBe: true}},
-    uniqueItems: {...uniqueItems, requires: {field: "arrayType", notToBe: ["boolean", "multiselect", "location", "object"]}},
-    multipleSelectionType: {...multipleSelectionType, requires: {field: "arrayType", toBe: "multiselect"}},
-    minItems: {...minItems, requires: {field: "arrayType", notToBe: ["multiselect", "location", "object"]}},
+    uniqueItems: {
+      ...uniqueItems,
+      requires: {field: "arrayType", notToBe: ["boolean", "multiselect", "location", "object"]}
+    },
+    multipleSelectionType: {
+      ...multipleSelectionType,
+      requires: {field: "arrayType", toBe: "multiselect"}
+    },
+    minItems: {
+      ...minItems,
+      requires: {field: "arrayType", notToBe: ["multiselect", "location", "object"]}
+    },
     maxItems: {...maxItems, requires: {field: "arrayType", notToBe: ["location", "object"]}},
-    chip: {...chip, requires: {field: "arrayType", toBe: "multiselect"}},
+    chip: {...chip, requires: {field: "arrayType", toBe: "multiselect"}}
   },
   multiselect: {title, description, multipleSelectionType, maxItems: maxNumber, chip},
   object: {title, description},
