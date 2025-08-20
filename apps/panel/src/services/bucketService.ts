@@ -183,6 +183,19 @@ export const useBucketService = () => {
     });
   }, [deleteHistoty]);
 
+  const apiUpdateBucketReadonly = useCallback(
+    async (bucket: BucketType) => {
+      return await putRequest({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {
+          ...bucket,
+          readOnly: !bucket.readOnly
+        }
+      });
+    },
+    [putRequest]
+  );
+
   const apiCreateBucket = useCallback(
     (title: string, order: number) => {
       const bucket = {
@@ -226,6 +239,7 @@ export const useBucketService = () => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiUpdateBucketReadonly,
     apiCreateBucket,
     apiBuckets,
     apiBucketDataLoading,
