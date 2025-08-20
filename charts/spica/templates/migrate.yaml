@@ -1,56 +1,56 @@
-# {{- if .Release.IsUpgrade }}
-# apiVersion: batch/v1
-# kind: Job
-# metadata:
-#   name: {{ .Release.Name }}-migrate
-#   namespace: {{.Release.Namespace}}
-#   labels:
-#     app.kubernetes.io/name: migrate
-#     app.kubernetes.io/component: migration
-#     app.kubernetes.io/instance: {{ .Release.Name }}
-#     app.kubernetes.io/version: {{ .Chart.AppVersion }}
-#     app.kubernetes.io/part-of: {{ .Chart.Name }}
-#     app.kubernetes.io/managed-by: helm
-#   annotations:
-#     helm.sh/hook: pre-upgrade
-# spec:
-#   backoffLimit: 5
-#   template:
-#     spec:
-#       restartPolicy: OnFailure
-#       containers:
-#         - name: migrate
-#           image: {{ .Values.images.migrate }}:{{ $.Chart.AppVersion }}
-#           imagePullPolicy: IfNotPresent
-#           args: [
-#             --from, "$(FROM)",
-#             --to, {{ .Chart.Version }},
-#             --database-uri, {{ template "database.connection-uri" . }},
-#             --database-name,  {{ .Values.database.name }},
-#             --continue-if-versions-are-equal
-#           ]
-#           env:
-#             - name: FROM
-#               valueFrom:
-#                 configMapKeyRef:
-#                   name: {{ .Release.Name }}-version
-#                   key: VERSION
-#             - name: MONGODB_USERNAME
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: {{ .Release.Name }}-database-root-credentials
-#                   key: rootUsername
-#             - name: MONGODB_PASSWORD
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: {{ .Release.Name }}-database-root-credentials
-#                   key: rootPassword
-#       {{- if .Values.database.nodeSelector }}
-#       nodeSelector:
-# {{ toYaml .Values.database.nodeSelector | indent 8 }}
-#       {{- end }}
-#       {{- if .Values.database.tolerations }}
-#       tolerations:
-# {{ toYaml .Values.database.tolerations | indent 8 }}
-#       {{- end }}
-# {{- end -}}
+{{- if .Release.IsUpgrade }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-migrate
+  namespace: {{.Release.Namespace}}
+  labels:
+    app.kubernetes.io/name: migrate
+    app.kubernetes.io/component: migration
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: helm
+  annotations:
+    helm.sh/hook: pre-upgrade
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: {{ .Values.images.migrate }}:{{ $.Chart.AppVersion }}
+          imagePullPolicy: IfNotPresent
+          args: [
+            --from, "$(FROM)",
+            --to, {{ .Chart.Version }},
+            --database-uri, {{ template "database.connection-uri" . }},
+            --database-name,  {{ .Values.database.name }},
+            --continue-if-versions-are-equal
+          ]
+          env:
+            - name: FROM
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-version
+                  key: VERSION
+            - name: MONGODB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootUsername
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-database-root-credentials
+                  key: rootPassword
+      {{- if .Values.database.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.database.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.database.tolerations }}
+      tolerations:
+{{ toYaml .Values.database.tolerations | indent 8 }}
+      {{- end }}
+{{- end -}}
