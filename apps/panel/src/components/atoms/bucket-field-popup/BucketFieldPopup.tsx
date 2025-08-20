@@ -1,4 +1,4 @@
-import {memo, useCallback, useState, type ReactNode} from "react";
+import {memo, useState, type ReactNode} from "react";
 import {
   FlexElement,
   ListItem,
@@ -43,6 +43,7 @@ const BucketFieldPopup = ({
   return (
     <>
       <Popover
+        open={!!selectedType}
         contentProps={{className: styles.popoverContent}}
         content={
           <FlexElement dimensionX={200} direction="vertical" className={styles.container}>

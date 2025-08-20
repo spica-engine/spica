@@ -1,4 +1,4 @@
-import {type FC, memo, useMemo, useState, useCallback, type ReactNode} from "react";
+import {type FC, memo, useMemo, useState, useCallback, type ReactNode, useEffect} from "react";
 import {configurationMapping, createShema} from "./BucketAddFieldSchema";
 import {
   Button,
@@ -36,7 +36,7 @@ export type TypeBucketFieldCreator = {
   fieldValues: Record<string, any>;
   setFieldValues: React.Dispatch<React.SetStateAction<Record<string, any>>>;
   configurationValue: Record<string, any>;
-  bucket?: BucketType;
+  bucket: BucketType;
   buckets: BucketType[];
   inputRepresenter: ReactNode;
   configuration: ReactNode;
@@ -152,6 +152,12 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
       return items;
     }, [isInnerFieldsType]);
 
+    useEffect(() => {
+      if (isInnerFieldsType) {
+        setActiveTab(0);
+      }
+    }, [isInnerFieldsType]);
+
     const fieldProperty = useMemo(
       () => createFieldProperty(type, fieldValues, configurationValue),
       [type, fieldValues, configurationValue]
@@ -210,7 +216,7 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
           {isInnerFieldsType && (
             <BucketFieldPopup
               buckets={buckets}
-              bucket={bucket as BucketType}
+              bucket={bucket}
               onSaveAndClose={handleCreateInnerField}
             >
               <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
