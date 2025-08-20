@@ -24,7 +24,6 @@ type TypeBucketMorePopup = {
 };
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
-  const [isLimitationsVisible, setIsLimitationsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
@@ -45,10 +44,9 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     refs: [containerRef, contentRef],
     onClickOutside: () => {
       setIsOpen(false);
-      if (isLimitationsVisible) {
+      if (isLimitationChecked) {
         handleConfigureLimitation();
       }
-      setIsLimitationsVisible(false);
     }
   });
 
@@ -173,16 +171,6 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                     onChange={handleChangeLimitation}
                   />
                   {isLimitationChecked && (
-                    <Button
-                      variant="text"
-                      className={styles.limitationsPopupButton}
-                      onClick={() => setIsLimitationsVisible(!isLimitationsVisible)}
-                    >
-                      <Icon name="lock" />
-                      <Text>Configure limitations</Text>
-                    </Button>
-                  )}
-                  {isLimitationChecked && isLimitationsVisible && (
                     <BucketLimitationsForm
                       className={styles.bucketLimitationsForm}
                       values={bucketLimitationValues}
