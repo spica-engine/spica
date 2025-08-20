@@ -1,13 +1,27 @@
-import { FluidContainer, FlexElement, Icon, Button, type TypeModal, Text, type TypeInputType } from "oziko-ui-kit";
-import { useCallback, type FC, useState } from "react";
-import type { Property, BucketType } from "src/services/bucketService";
-import BucketAddField from "./BucketAddField";
+import {
+  FluidContainer,
+  FlexElement,
+  Icon,
+  Button,
+  type TypeModal,
+  Text,
+  type TypeInputType
+} from "oziko-ui-kit";
+import {useCallback, type FC, useState} from "react";
+import type {BucketType} from "src/services/bucketService";
+import BucketAddField, { type TypeSaveFieldHandler } from "./BucketAddField";
 import styles from "./BucketAddField.module.scss";
+
+export type FieldType = {
+  fieldValues: Record<string, any>;
+  configurationValues: Record<string, any>;
+  type: TypeInputType | "relation";
+};
 
 export type EditInnerFieldProps = {
   name: string;
   type: TypeInputType | "relation";
-  onSaveAndClose: (fieldProperty: Property, requiredField?: string) => void | Promise<void>;
+  onSaveAndClose: TypeSaveFieldHandler
   bucket: BucketType;
   buckets: BucketType[];
   fieldValues?: Record<string, any>;
@@ -15,26 +29,37 @@ export type EditInnerFieldProps = {
 };
 
 type InnerFieldProps = {
-  field: Property;
+  field: FieldType;
   bucket?: BucketType;
   buckets: BucketType[];
   setFieldValues: React.Dispatch<React.SetStateAction<Record<string, any>>>;
 };
 
 export const InnerField = ({field, bucket, buckets, setFieldValues}: InnerFieldProps) => {
-  const handleSaveInnerField = useCallback((fieldProperty: Property) => {
-    setFieldValues(prev => ({
-      ...prev,
-      innerFields: prev.innerFields?.map((innerField: Record<string, any>) =>
-        innerField.title === fieldProperty.title ? fieldProperty : innerField
-      )
-    }));
-  }, []);
+  const handleSaveInnerField = useCallback(
+    (
+      type: TypeInputType | "relation",
+      fieldValues: Record<string, any>,
+      configurationValues: Record<string, any>
+    ) => {
+      setFieldValues(prev => ({
+        ...prev,
+        innerFields: prev.innerFields?.map((innerField: FieldType) =>
+          innerField.fieldValues.id === fieldValues.id
+            ? {fieldValues, configurationValues, type}
+            : innerField
+        )
+      }));
+    },
+    []
+  );
 
-  const handleDeleteInnerField = useCallback((field: Property) => {
+  const handleDeleteInnerField = useCallback((field: FieldType) => {
     setFieldValues(prev => ({
       ...prev,
-      innerFields: prev.innerFields?.filter((innerField: Record<string, any>) => innerField.title !== field.title)
+      innerFields: prev.innerFields?.filter(
+        (innerField: FieldType) => innerField.fieldValues.id !== field.fieldValues.id
+      )
     }));
   }, []);
 
@@ -46,7 +71,7 @@ export const InnerField = ({field, bucket, buckets, setFieldValues}: InnerFieldP
         children: (
           <FlexElement gap={5} className={styles.innerFieldPrefix}>
             <Icon name={"chevronRight"} size="sm" />
-            <Text className={styles.innerFieldName}>{field.title}</Text>
+            <Text className={styles.innerFieldName}>{field.fieldValues.title}</Text>
           </FlexElement>
         )
       }}
@@ -55,12 +80,13 @@ export const InnerField = ({field, bucket, buckets, setFieldValues}: InnerFieldP
         children: (
           <FlexElement gap={5} dimensionX="fill" className={styles.innerFieldActions}>
             <EditInnerField
-              name={field.title}
+              name={field.fieldValues.title}
               type={field.type}
               onSaveAndClose={handleSaveInnerField}
               bucket={bucket as BucketType}
               buckets={buckets}
-              fieldValues={field}
+              fieldValues={field.fieldValues}
+              configurationValue={field.configurationValues}
             />
             <Button color="danger" variant="icon" onClick={() => handleDeleteInnerField(field)}>
               <Icon name="delete" />

@@ -1,4 +1,4 @@
-import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
+import {Button, Checkbox, Icon, type IconName, type TypeInputType} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
@@ -6,6 +6,7 @@ import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType, Property} from "src/services/bucketService";
+import { createFieldProperty } from "../bucket-add-field/utils";
 
 type FieldType =
   | "string"
@@ -102,8 +103,14 @@ const NewFieldHeader = () => {
   );
 
   const handleSaveAndClose = useCallback(
-    (fieldProperty: Property, requiredField?: string) => {
+    (
+      type: TypeInputType | "relation",
+      fieldValues: Record<string, any>,
+      configurationValues: Record<string, any>,
+      requiredField?: string
+    ) => {
       if (!bucket) return;
+      const fieldProperty = createFieldProperty(type, fieldValues, configurationValues);
       createBucketField(bucket, fieldProperty, requiredField);
     },
     [bucket, createBucketField]

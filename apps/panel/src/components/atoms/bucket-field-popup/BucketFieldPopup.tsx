@@ -36,7 +36,7 @@ const BucketFieldPopup = ({
   children: ReactNode;
   buckets: BucketType[];
   bucket: BucketType;
-  onSaveAndClose: (fieldProperty: Property, requiredField?: string) => void;
+  onSaveAndClose:  (type: TypeInputType | "relation", fieldValues: Record<string, any>, configurationValues: Record<string, any>, requiredField?: string) => void
 }) => {
   const [selectedType, setSelectedType] = useState<TypeInputType | "relation" | null>(null);
 

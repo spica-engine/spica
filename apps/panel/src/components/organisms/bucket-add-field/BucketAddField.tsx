@@ -15,14 +15,21 @@ import useInputRepresenter from "../../../hooks/useInputRepresenter";
 import type {BucketType, Property} from "src/services/bucketService";
 import useStringPresetsSync from "./useStringPresetsSync";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
-import {createFieldProperty, getDefaultValues} from "./utils";
-import {InnerField} from "./InnerField";
+import {getDefaultValues} from "./utils";
+import {InnerField, type FieldType} from "./InnerField";
+
+export type TypeSaveFieldHandler = (
+  type: TypeInputType | "relation",
+  fieldValues: Record<string, any>,
+  configurationValues: Record<string, any>,
+  requiredField?: string
+) => void;
 
 type TypeBucketAddField = {
   name: string;
   type: TypeInputType | "relation";
   modalProps?: TypeModal;
-  onSaveAndClose: (fieldProperty: Property, requiredField?: string) => void | Promise<void>;
+  onSaveAndClose: TypeSaveFieldHandler;
   bucket: BucketType;
   buckets: BucketType[];
   initialValues?: {
@@ -40,7 +47,7 @@ export type TypeBucketFieldCreator = {
   buckets: BucketType[];
   inputRepresenter: ReactNode;
   configuration: ReactNode;
-  onSaveAndClose: (fieldProperty: Property, requiredField?: string) => void | Promise<void>;
+  onSaveAndClose: TypeSaveFieldHandler;
   handleClose: () => void;
 };
 
@@ -158,27 +165,33 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
       }
     }, [isInnerFieldsType]);
 
-    const fieldProperty = useMemo(
-      () => createFieldProperty(type, fieldValues, configurationValue),
-      [type, fieldValues, configurationValue]
-    );
-
     const requiredField = useMemo(
       () => (configurationValue.requiredField ? fieldValues.title : undefined),
       [configurationValue.requiredField, fieldValues.title]
     );
 
     const handleSaveAndClose = useCallback(async () => {
-      await onSaveAndClose(fieldProperty, requiredField);
+      await onSaveAndClose(type, fieldValues, configurationValue, requiredField);
       handleClose();
-    }, [fieldProperty, requiredField, onSaveAndClose]);
+    }, [fieldValues, requiredField, onSaveAndClose]);
 
-    const handleCreateInnerField = useCallback((fieldProperty: Property) => {
-      setFieldValues(prev => ({
-        ...prev,
-        innerFields: [...(prev.innerFields || []), fieldProperty]
-      }));
-    }, []);
+    const handleCreateInnerField = useCallback(
+      (
+        type: TypeInputType | "relation",
+        fieldValues: Record<string, any>,
+        configurationValues: Record<string, any>
+      ) => {
+        const id = crypto.randomUUID();
+        setFieldValues(prev => ({
+          ...prev,
+          innerFields: [
+            ...(prev.innerFields || []),
+            {fieldValues: {...fieldValues, id}, configurationValues, type}
+          ]
+        }));
+      },
+      []
+    );
 
     return (
       <FlexElement direction="vertical" gap={10} className={styles.contentContainer}>
@@ -193,7 +206,7 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
         <div className={styles.configurationOptionsContainer}>
           {activeTab === 0 && isInnerFieldsType && (
             <div className={styles.innerFieldsContainer}>
-              {fieldValues.innerFields?.map?.((field: Property, index: number) => (
+              {fieldValues.innerFields?.map?.((field: FieldType, index: number) => (
                 <InnerField
                   key={index}
                   field={field}
