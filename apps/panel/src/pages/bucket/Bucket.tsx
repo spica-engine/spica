@@ -2,9 +2,11 @@ import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
 import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
-import {useCallback, useEffect, useMemo, useReducer, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
+import useLocalStorage from "../../hooks/useLocalStorage";
+import Loader from "../../components/atoms/loader/Loader";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
@@ -104,20 +106,103 @@ export default function Bucket() {
     setRefreshLoading(false);
   }, [bucketId, refreshBucketData]);
 
+  if (formattedColumns.length <= 1 || !bucket) {
+    return <Loader />;
+  }
+
+  return (
+    <BucketWithVisibleColumns
+      bucket={bucket}
+      formattedColumns={formattedColumns as ColumnType[]}
+      bucketData={bucketData}
+      handleScrollEnd={loadMoreBucketData}
+      bucketDataLoading={bucketDataLoading}
+      isTableLoading={isTableLoading}
+      handleSearch={handleSearch}
+      handleRefresh={handleRefresh}
+      refreshLoading={refreshLoading}
+      tableRef={tableRef}
+    />
+  );
+}
+
+type BucketWithVisibleColumnsProps = {
+  bucket: BucketType;
+  formattedColumns: ColumnType[];
+  bucketData: any;
+  handleScrollEnd: () => void;
+  bucketDataLoading: boolean;
+  isTableLoading: boolean;
+  handleSearch: (search: string) => Promise<void>;
+  handleRefresh: () => Promise<void>;
+  refreshLoading: boolean;
+  tableRef: React.RefObject<HTMLElement | null>
+};
+
+function BucketWithVisibleColumns({
+  bucket,
+  formattedColumns,
+  bucketData,
+  handleScrollEnd,
+  bucketDataLoading,
+  isTableLoading,
+  handleSearch,
+  handleRefresh,
+  refreshLoading,
+  tableRef,
+}: BucketWithVisibleColumnsProps) {
+  const defaultVisibleColumns = useMemo(
+    () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
+    []
+  );
+
+  const [visibleColumns, setVisibleColumns] = useLocalStorage<{[key: string]: boolean}>(
+    `${bucket._id}-visible-columns`,
+    defaultVisibleColumns
+  );
+
+  const filteredColumns = useMemo(
+    () => formattedColumns.filter(i => visibleColumns?.[i.key]),
+    [formattedColumns, visibleColumns]
+  );
+
+  const toggleColumn = (key?: string) => {
+    if (key) {
+      setVisibleColumns({
+        ...visibleColumns,
+        [key]: !visibleColumns[key]
+      });
+      return;
+    }
+
+    const hasHidden = Object.values(visibleColumns).some(v => !v);
+    if (hasHidden) {
+      setVisibleColumns({...defaultVisibleColumns});
+    } else {
+      setVisibleColumns({
+        ...Object.fromEntries(Object.keys(defaultVisibleColumns).map(k => [k, false])),
+        _id: true
+      });
+    }
+  };
+
   return (
     <div className={styles.container}>
       <BucketActionBar
-        bucket={bucket as BucketType}
+        columns={formattedColumns}
+        visibleColumns={visibleColumns}
+        toggleColumn={toggleColumn}
+        bucket={bucket}
         onSearch={handleSearch}
-        onRefresh={handleRefresh}
         searchLoading={bucketDataLoading && !isTableLoading}
+        onRefresh={handleRefresh}
         refreshLoading={refreshLoading}
       />
       <BucketTable
-        bucketId={bucketId as string}
-        columns={formattedColumns}
+        bucketId={bucket._id}
+        columns={filteredColumns}
         data={bucketData?.data ?? []}
-        onScrollEnd={loadMoreBucketData}
+        onScrollEnd={handleScrollEnd}
         totalDataLength={bucketData?.meta?.total ?? 0}
         maxHeight="88vh"
         loading={isTableLoading}
