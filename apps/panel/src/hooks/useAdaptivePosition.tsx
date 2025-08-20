@@ -1,4 +1,4 @@
-import { useState, useCallback, type RefObject } from "react";
+import { useState, useCallback, RefObject } from "react";
 
 export type Placement =
   | "topStart"
