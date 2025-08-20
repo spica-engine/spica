@@ -5,8 +5,8 @@ type BucketLimitationsFormProps = {
   className: string;
   setValues: React.Dispatch<
     React.SetStateAction<{
-      countLimit: any;
-      limitExceedBehaviour: any;
+      countLimit: number;
+      limitExceedBehaviour: TypeValue;
     }>
   >;
   values: {
