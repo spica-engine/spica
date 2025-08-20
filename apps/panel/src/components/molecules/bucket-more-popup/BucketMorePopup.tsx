@@ -8,7 +8,7 @@ import {
   useOnClickOutside,
   Checkbox
 } from "oziko-ui-kit";
-import {memo, useEffect, useMemo, useRef, useState, type FC} from "react";
+import {memo, useMemo, useEffect, useRef, useState, type FC} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import type {BucketType} from "../../../services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -25,6 +25,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
+
   const containerRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -36,12 +37,17 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   });
 
   const {
+    updateBucketReadonly,
     updateBucketHistory,
     deleteBucketHistory,
     deleteBucketHistoryLoading,
     deleteBucketHistoryError
   } = useBucket();
+  const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
 
+  const handleChangeReadOnly = () => {
+    updateBucketReadonly(bucket)
+  };
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
   const handleChangeHistory = () => {
     updateBucketHistory(bucket);
@@ -132,7 +138,12 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                     </Button>
                   )}
                   <Checkbox label="Limitation" />
-                  <Checkbox label="Read Only" />
+
+                  <Checkbox
+                    label="Read Only"
+                    checked={isReadOnlyChecked}
+                    onChange={handleChangeReadOnly}
+                  />
                 </FlexElement>
               )
             }}

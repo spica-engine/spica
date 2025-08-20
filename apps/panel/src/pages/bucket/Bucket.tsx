@@ -66,8 +66,6 @@ export default function Bucket() {
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
-    const calculatedBucketId = bucketData?.bucketId ?? (bucketId as string);
-    const bucket = buckets?.find(i => i._id === calculatedBucketId);
     const columns = Object.values(bucket?.properties ?? {});
     return [
       {
@@ -82,7 +80,7 @@ export default function Bucket() {
       },
       ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
     ] as ColumnType[];
-  }, [buckets, bucketId, bucketData?.bucketId]);
+  }, [bucket]);
 
   const searchableColumns = formattedColumns
     .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
@@ -138,7 +136,7 @@ type BucketWithVisibleColumnsProps = {
   handleSearch: (search: string) => Promise<void>;
   handleRefresh: () => Promise<void>;
   refreshLoading: boolean;
-  tableRef: React.RefObject<HTMLElement | null>
+  tableRef: React.RefObject<HTMLElement | null>;
 };
 
 function BucketWithVisibleColumns({
@@ -151,7 +149,7 @@ function BucketWithVisibleColumns({
   handleSearch,
   handleRefresh,
   refreshLoading,
-  tableRef,
+  tableRef
 }: BucketWithVisibleColumnsProps) {
   const defaultVisibleColumns = useMemo(
     () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
@@ -191,13 +189,13 @@ function BucketWithVisibleColumns({
   return (
     <div className={styles.container}>
       <BucketActionBar
-        columns={formattedColumns}
+        onSearch={handleSearch}
+        bucket={bucket as BucketType}
+        onRefresh={handleRefresh}
+        columns={filteredColumns}
         visibleColumns={visibleColumns}
         toggleColumn={toggleColumn}
-        bucket={bucket}
-        onSearch={handleSearch}
         searchLoading={bucketDataLoading && !isTableLoading}
-        onRefresh={handleRefresh}
         refreshLoading={refreshLoading}
       />
       <BucketTable
