@@ -43,8 +43,9 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   useOnClickOutside({
     refs: [containerRef, contentRef],
     onClickOutside: () => {
-      setIsOpen(false);
-      if (isLimitationChecked) {
+      setIsOpen(true);
+      setTimeout(() => setIsOpen(false), 0);
+      if (isLimitationChecked && isOpen) {
         handleConfigureLimitation();
       }
     }
