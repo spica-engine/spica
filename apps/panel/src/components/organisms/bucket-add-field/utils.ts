@@ -1,6 +1,72 @@
 import type {TypeInputType} from "oziko-ui-kit";
 import type {Property} from "src/services/bucketService";
 
+const createArrayConfig = (
+  baseProperty: Record<string, any>,
+  fieldValues: Record<string, any>,
+  arrayDefaultValues: Record<string, any>
+) => {
+  const config = {
+    ...baseProperty,
+    maxItems: fieldValues.arrayType === "multiselect" ? undefined : fieldValues.maxItems,
+    minItems: fieldValues.minItems || undefined,
+    uniqueItems: fieldValues.uniqueItems || undefined,
+    items: {
+      type: fieldValues.arrayType,
+      title: fieldValues.arrayItemTitle,
+      description: fieldValues.arrayItemDescription,
+      default: arrayDefaultValues[fieldValues.arrayType] ?? undefined
+    }
+  } as unknown as Property;
+
+  if (fieldValues.arrayType === "multiselect") {
+    config.items.items = {
+      type: fieldValues.multipleSelectionType,
+      enum: fieldValues.chip || undefined
+    };
+    config.items.maxItems = fieldValues.maxItems;
+  }
+
+  if (fieldValues.innerFields) {
+    config.items.properties = fieldValues.innerFields.reduce(
+      (
+        acc: Property,
+        field: {
+          type: TypeInputType;
+          fieldValues: Record<string, any>;
+          configurationValues: Record<string, any>;
+        }
+      ) => {
+        acc[field.fieldValues.title] = createFieldProperty(
+          field.type,
+          field.fieldValues,
+          field.configurationValues
+        );
+        return acc;
+      },
+      {}
+    );
+  }
+
+  if (fieldValues.enumeratedValues?.length > 0) {
+    config.items.enum = fieldValues.enumeratedValues;
+  }
+
+  if (fieldValues.regularExpression?.length) {
+    config.items.pattern = fieldValues.regularExpression;
+  }
+
+  if (fieldValues.maxNumber != null) {
+    config.items.maximum = fieldValues.maxNumber;
+  }
+
+  if (fieldValues.minNumber != null) {
+    config.items.minimum = fieldValues.minNumber;
+  }
+
+  return config;
+};
+
 export const createFieldProperty = (
   type: TypeInputType,
   fieldValues: Record<string, any>,
@@ -59,62 +125,7 @@ export const createFieldProperty = (
       };
 
     case "array":
-      return {
-        ...baseProperty,
-        pattern: undefined,
-        maxItems: fieldValues.arrayType === "multiselect" ? undefined : fieldValues.maxItems,
-        minItems: fieldValues.minItems,
-        uniqueItems: fieldValues.uniqueItems || undefined,
-        items: {
-          items:
-            fieldValues.arrayType === "multiselect"
-              ? {
-                  type: fieldValues.multipleSelectionType,
-                  enum: fieldValues.chip || undefined
-                }
-              : undefined,
-          maxItems: fieldValues.arrayType !== "multiselect" ? undefined : fieldValues.maxItems,
-          type: fieldValues.arrayType,
-          default:
-            arrayDefaultValues[fieldValues.arrayType as "string" | "number" | "boolean"] ||
-            (fieldValues.arrayType === "boolean" ? false : undefined),
-          title: fieldValues.arrayItemTitle,
-          description: fieldValues.arrayItemDescription,
-          properties: fieldValues.innerFields
-            ? fieldValues.innerFields.reduce(
-                (
-                  acc: Record<string, any>,
-                  {
-                    fieldValues,
-                    configurationValues,
-                    type
-                  }: {
-                    fieldValues: Record<string, any>;
-                    configurationValues: Record<string, any>;
-                    type: "relation" | TypeInputType;
-                  }
-                ) => {
-                  acc[fieldValues.title] = createFieldProperty(
-                    type,
-                    fieldValues,
-                    configurationValues
-                  );
-                  return acc;
-                },
-                {} as Record<string, any>
-              )
-            : undefined,
-          enum:
-            (fieldValues.enumeratedValues as string[])?.length > 0
-              ? (fieldValues.enumeratedValues as string[])
-              : undefined,
-          pattern: fieldValues.regularExpression?.length
-            ? fieldValues.regularExpression
-            : undefined,
-          maximum: fieldValues.maxNumber,
-          minimum: fieldValues.minNumber
-        }
-      };
+      return createArrayConfig(baseProperty, fieldValues, arrayDefaultValues);
 
     case "boolean":
       return {
