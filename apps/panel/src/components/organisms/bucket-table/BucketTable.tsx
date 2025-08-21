@@ -1,9 +1,12 @@
-import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
+import {Button, Checkbox, Icon, type IconName, type TypeInputType} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useMemo, type RefObject} from "react";
+import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
-import useLocalStorage from "../../../hooks/useLocalStorage";
+import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
+import {useBucket} from "../../../contexts/BucketContext";
+import type {BucketType, Property} from "src/services/bucketService";
+import { createFieldProperty } from "../bucket-add-field/utils";
 
 type FieldType =
   | "string"
@@ -43,7 +46,7 @@ type BucketTableProps = {
   maxHeight?: string | number;
   bucketId: string;
   loading: boolean;
-  tableRef?: RefObject<HTMLElement | null>
+  tableRef?: RefObject<HTMLElement | null>;
 };
 
 type ColumnHeaderProps = {
@@ -91,6 +94,45 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
   );
 };
 
+const NewFieldHeader = () => {
+  const {buckets, bucketData, createBucketField} = useBucket();
+
+  const bucket = useMemo(
+    () => buckets.find(i => i._id === bucketData?.bucketId),
+    [buckets, bucketData?.bucketId]
+  );
+
+  const handleSaveAndClose = useCallback(
+    (
+      type: TypeInputType,
+      fieldValues: Record<string, any>,
+      configurationValues: Record<string, any>,
+      requiredField?: string
+    ) => {
+      if (!bucket) return;
+      const fieldProperty = createFieldProperty(type, fieldValues, configurationValues);
+      return createBucketField(bucket, fieldProperty, requiredField);
+    },
+    [bucket, createBucketField]
+  );
+
+  return (
+    <BucketFieldPopup
+      buckets={buckets}
+      bucket={bucket as BucketType}
+      onSaveAndClose={handleSaveAndClose}
+    >
+      <Button
+        variant="icon"
+        className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
+      >
+        <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
+        <span>New&nbsp;Field</span>
+      </Button>
+    </BucketFieldPopup>
+  );
+};
+
 const defaultColumns: ColumnType[] = [
   {
     id: "0",
@@ -106,15 +148,7 @@ const defaultColumns: ColumnType[] = [
   },
   {
     id: "1",
-    header: (
-      <Button
-        variant="icon"
-        className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
-      >
-        <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
-        <span>New&nbsp;Field</span>
-      </Button>
-    ),
+    header: <NewFieldHeader />,
     key: "new field",
     width: "125px",
     headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,
@@ -299,7 +333,7 @@ const BucketTable = ({
   maxHeight,
   loading,
   bucketId,
-  tableRef,
+  tableRef
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),

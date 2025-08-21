@@ -1,82 +1,106 @@
+import type {TypeInputType} from "oziko-ui-kit";
+
 const schema = {
   title: {
     type: "string",
-    title: "",
+    title: "Name",
+    required: true,
   },
   description: {
     type: "textarea",
-    title: "Description",
+    title: "Description"
   },
   defaultString: {
     type: "string",
-    title: "Default Value",
+    title: "Default Value"
   },
   defaultNumber: {
     type: "number",
-    title: "Default Value",
+    title: "Default Value"
   },
   minNumber: {
     type: "number",
-    title: "Minimum",
+    title: "Minimum"
   },
   maxNumber: {
     type: "number",
-    title: "Maximum",
+    title: "Maximum"
+  },
+  minItems: {
+    type: "number",
+    title: "Min Items"
+  },
+  maxItems: {
+    type: "number",
+    title: "Max Items"
   },
   presets: {
     type: "multiselect",
     title: "Presets",
-    enum: ["Countries", "Days", "Email", "Phone Number"],
+    enum: ["Countries", "Days", "Email", "Phone Number"]
+  },
+  makeEnumerated: {
+    type: "boolean",
+    title: "Make field enumerated"
+  },
+  enumeratedValues: {
+    type: "chip",
+    title: "EnumeratedValues"
   },
   definePattern: {
     type: "boolean",
-    title: "Define Pattern",
+    title: "Define Pattern"
+  },
+  regularExpression: {
+    type: "string",
+    title: "Regex"
   },
   primaryField: {
     type: "boolean",
-    title: "Primary Field",
+    title: "Primary Field"
   },
   translatable: {
     type: "boolean",
-    title: "Translatable",
+    title: "Translatable"
   },
-  readonly: {
+  readOnly: {
     type: "boolean",
-    title: "Readonly",
+    title: "Readonly"
   },
   uniqueValues: {
     type: "boolean",
-    title: "Unique Values",
+    title: "Unique Values"
+  },
+  uniqueItems: {
+    type: "boolean",
+    title: "Items should be unique"
   },
   requiredField: {
     type: "boolean",
-    title: "Required Field",
-  },
-  selectionOptions: {
-    type: "boolean",
-    title: "Add selection options",
+    title: "Required Field"
   },
   index: {
     type: "boolean",
-    title: "Indexed field in database",
+    title: "Indexed field in database"
   },
   defaultBoolean: {
     type: "boolean",
-    title: "Default value",
+    title: "Default value"
   },
   defaultDate: {
     type: "string",
     title: "Default Date",
-    enum: ["None", "Created_at", "Updated_at"],
+    enum: ["None", ":created_at", ":updated_at"]
   },
   multipleSelectionType: {
     type: "string",
     title: "Type",
     enum: ["string", "number"],
+    required: true,
   },
   arrayType: {
     type: "string",
-    title: "",
+    title: "Array Type",
     enum: [
       "string",
       "date",
@@ -88,17 +112,39 @@ const schema = {
       "multiselect",
       "location",
       "richtext",
-      "object",
+      "object"
     ],
+    required: true
   },
   arrayItemTitle: {
     type: "string",
-    title: "Title",
+    title: "Title"
+  },
+  arrayItemDescription: {
+    type: "string",
+    title: "Description"
   },
   chip: {
     type: "chip",
-    title: "",
+    title: ""
   },
+  bucket: {
+    title: "Buckets",
+    type: "select",
+    enum: []
+  },
+  relationType: {
+    title: "Relation Type",
+    type: "select",
+    enum: [
+      {label: "One To One", value: "onetoone"},
+      {label: "One To Many", value: "onetomany"}
+    ]
+  },
+  dependent: {
+    type: "boolean",
+    title: "Dependent"
+  }
 };
 
 const {
@@ -108,78 +154,200 @@ const {
   defaultNumber,
   minNumber,
   maxNumber,
+  minItems,
+  maxItems,
   presets,
+  makeEnumerated,
+  enumeratedValues,
   definePattern,
+  regularExpression,
   primaryField,
   translatable,
-  readonly,
+  readOnly,
   uniqueValues,
+  uniqueItems,
   requiredField,
-  selectionOptions,
   index,
   defaultBoolean,
   defaultDate,
   multipleSelectionType,
   arrayType,
+  arrayItemTitle,
+  arrayItemDescription,
   chip,
+  bucket,
+  relationType,
+  dependent
 } = schema;
 
 export const createShema: any = {
-  string: { title, description, defaultString, presets },
-  number: { title, description, defaultNumber, minNumber, maxNumber, presets },
-  date: { title, description, defaultDate },
-  boolean: { title, description, defaultBoolean },
-  textarea: { title, description },
-  array: { title, description, arrayType, defaultString, presets, minNumber, maxNumber },
-  multiselect: { title, description, multipleSelectionType, maxNumber, chip },
-  object: { title, description },
-  color: { title, description },
-  storage: { title, description },
-  //Todo Add Relation field
-  richtext: { title, description },
-  location: { title, description },
-  configuration: {
+  string: {
+    title,
+    description,
+    default: defaultString,
+    presets,
+    makeEnumerated,
+    enumeratedValues: {
+      ...enumeratedValues,
+      renderCondition: {field: "makeEnumerated", equals: true}
+    },
     definePattern,
+    regularExpression: {
+      ...regularExpression,
+      renderCondition: {field: "definePattern", equals: true}
+    }
+  },
+  number: {
+    title,
+    description,
+    default: defaultNumber,
+    minimum: minNumber,
+    maximum: maxNumber
+  },
+  date: {title, description, default: defaultDate},
+  boolean: {title, description, default: defaultBoolean},
+  textarea: {title, description},
+  array: {
+    title,
+    description,
+    arrayType,
+    arrayItemTitle,
+    arrayItemDescription,
+    defaultString: {...defaultString, renderCondition: {field: "arrayType", equals: "string"}},
+    defaultBoolean: {...defaultBoolean, renderCondition: {field: "arrayType", equals: "boolean"}},
+    defaultNumber: {...defaultNumber, renderCondition: {field: "arrayType", equals: "number"}},
+    minNumber: {...minNumber, renderCondition: {field: "arrayType", equals: "number"}},
+    maxNumber: {...maxNumber, renderCondition: {field: "arrayType", equals: "number"}},
+    presets: {...presets, renderCondition: {field: "arrayType", equals: "string"}},
+    makeEnumerated: {
+      ...makeEnumerated,
+      renderCondition: {field: "arrayType", equals: ["string", "number"]}
+    },
+    enumeratedValues: {
+      ...enumeratedValues,
+      renderCondition: {field: "makeEnumerated", equals: true}
+    },
+    definePattern: {...definePattern, renderCondition: {field: "arrayType", equals: "string"}},
+    regularExpression: {
+      ...regularExpression,
+      renderCondition: {field: "definePattern", equals: true}
+    },
+    uniqueItems: {
+      ...uniqueItems,
+      renderCondition: {field: "arrayType", notEquals: ["multiselect", "location", "object"]}
+    },
+    multipleSelectionType: {
+      ...multipleSelectionType,
+      renderCondition: {field: "arrayType", equals: "multiselect"}
+    },
+    minItems: {
+      ...minItems,
+      renderCondition: {field: "arrayType", notEquals: ["multiselect", "location", "object"]}
+    },
+    maxItems: {
+      ...maxItems,
+      renderCondition: {field: "arrayType", notEquals: ["location", "object"]}
+    },
+    chip: {...chip, renderCondition: {field: "arrayType", equals: "multiselect"}}
+  },
+  multiselect: {title, description, multipleSelectionType, maxItems, chip},
+  object: {title, description},
+  color: {title, description},
+  storage: {title, description},
+  relation: {title, description, bucket, relationType, dependent},
+  richtext: {title, description},
+  location: {title, description},
+  stringConfiguration: {
     primaryField,
-    translatable,
-    readonly,
+    translate: translatable,
+    readOnly,
     uniqueValues,
     requiredField,
-    selectionOptions,
-    index,
-  }, // Used in string, number
-  configurationType1: {
-    readonly,
-    requiredField,
-    index,
-  }, // Used in date,color,multipleSelection
-  configurationType2: {
-    translatable,
+    index
+  },
+  numberConfiguration: {
+    makeEnumerated,
+    enumeratedValues: {
+      ...enumeratedValues,
+      renderCondition: {field: "makeEnumerated", equals: true}
+    },
     primaryField,
-    readonly,
-    index,
+    readOnly,
+    uniqueValues,
+    requiredField,
+    index
+  },
+  innerConfiguration: {
+    requiredField,
+    index
+  }, // Used in inner fields, string, number, date, textarea, multiselect, relation, object, storage, richtext, array, color
+  innerConfiguration2: {
+    index
+  }, // Used in inner fields, boolean, location,
+  configurationType1: {
+    readOnly,
+    requiredField,
+    index
+  }, // Used in date,color,multipleSelection,relation
+  configurationType2: {
+    translate: translatable,
+    requiredField,
+    readOnly,
+    index
   }, // Used in object,storage,richText
   configurationTextarea: {
     primaryField,
-    translatable,
-    readonly,
+    translate: translatable,
+    readOnly,
     uniqueValues,
     requiredField,
-    index,
+    index
   },
   configurationBoolean: {
     primaryField,
-    readonly,
-    index,
+    readOnly,
+    index
   },
   configurationLocation: {
-    readonly,
-    requiredField,
+    readOnly,
+    requiredField
   },
   configurationArray: {
-    translatable,
-    readonly,
+    translate: translatable,
+    readOnly,
     requiredField,
-    index,
-  },
+    index
+  }
 };
+
+export const configurationMapping = {
+  string: createShema.stringConfiguration,
+  number: createShema.numberConfiguration,
+  date: createShema.configurationType1,
+  color: createShema.configurationType1,
+  multiselect: createShema.configurationType1,
+  object: createShema.configurationType2,
+  storage: createShema.configurationType2,
+  richtext: createShema.configurationType2,
+  textarea: createShema.configurationTextarea,
+  boolean: createShema.configurationBoolean,
+  location: createShema.configurationLocation,
+  array: createShema.configurationArray,
+  relation: createShema.configurationType1
+};
+
+export const innerConfigurationMapping: Record<TypeInputType, Record<string, any>> = {
+  string: createShema.innerConfiguration,
+  number: createShema.innerConfiguration,
+  color: createShema.innerConfiguration,
+  date: createShema.innerConfiguration,
+  textarea: createShema.innerConfiguration,
+  multiselect: createShema.innerConfiguration,
+  relation: createShema.innerConfiguration,
+  object: createShema.innerConfiguration,
+  storage: createShema.innerConfiguration,
+  richtext: createShema.innerConfiguration,
+  array: createShema.innerConfiguration,
+  boolean: createShema.innerConfiguration2,
+  location: createShema.innerConfiguration2
+} as Record<TypeInputType, Record<string, any>>;
