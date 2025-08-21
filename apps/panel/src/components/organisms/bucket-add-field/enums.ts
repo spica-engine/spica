@@ -1,4 +1,3 @@
-// BEFORE COMMITING DELETE THIS FILE AND PUT THE DATA TO A MORE APPROPRIATE PLACE
 const Countries = [
     "United States",
     "Canada",

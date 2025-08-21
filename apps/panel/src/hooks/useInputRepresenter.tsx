@@ -1,24 +1,20 @@
-import {type ReactNode} from "react";
-import {
-  ArrayInput,
-  BooleanInput,
-  ColorInput,
-  DateInput,
-  Icon,
-  LocationInput,
-  NumberInput,
-  ObjectInput,
-  RichTextInput,
-  StorageInput,
-  StringInput,
-  TextAreaInput,
-  type TypeCoordinates,
-  apiUtil,
-  Text,
-  MultipleSelectionInput,
-  ChipInput,
-  Select
-} from "oziko-ui-kit";
+import { TypeCoordinates } from "components/atoms/map/Map";
+import { Fragment, ReactNode } from "react";
+import StringInput from "../components/atoms/inputs/normal/string/String";
+import NumberInput from "../components/atoms/inputs/normal/number/Number";
+import TextAreaInput from "../components/atoms/inputs/normal/text-area/TextArea";
+import DateInput from "../components/atoms/inputs/normal/date/Date";
+import BooleanInput from "../components/atoms/inputs/normal/boolean/Boolean";
+import ColorInput from "../components/atoms/inputs/normal/color/Color";
+import StorageInput from "../components/atoms/inputs/normal/storage/Storage";
+import MultipleSelectionInput from "../components/atoms/inputs/normal/multiple-selection/MultipleSelection";
+import LocationInput from "../components/atoms/inputs/normal/location/Location";
+import RichTextInput from "../components/atoms/inputs/normal/rich-text/RichText";
+import Icon from "components/atoms/icon/Icon";
+import ObjectInput from "components/atoms/inputs/normal/object/ObjectInput";
+import ArrayInput from "components/atoms/inputs/normal/array/ArrayInput";
+import { utils } from "utils";
+import ChipInput from "components/atoms/inputs/normal/chip/ChipInput";
 
 export type TypeProperties = {
   [key: string]: {
@@ -34,7 +30,6 @@ export type TypeProperties = {
     locationType?: string;
     className?: string;
     properties?: TypeProperties;
-    requires?: {field: string; toBe: any} | {field: string; notToBe: any};
   };
 };
 
@@ -89,10 +84,8 @@ export type TypeInputProps<T> = {
   description: string;
   value?: T;
   className?: string;
-  onChange?: ({key, value}: TypeChangeEvent<T>) => void;
+  onChange?: ({ key, value }: TypeChangeEvent<T>) => void;
 };
-
-export type TypeInputRepresenterError = {[key: string]: string | null};
 
 type TypeObjectInputProps<T> = {
   key?: string;
@@ -122,107 +115,106 @@ export type TypeInputTypeMap = {
   color: (props: TypeInputProps<string>) => ReactNode;
   storage: (props: TypeInputProps<string>) => ReactNode;
   multiselect: (props: TypeMultiSelectInputProps<string | number>) => ReactNode;
-  location: (props: TypeInputProps<TypeCoordinates | apiUtil.TypeLocation>) => ReactNode;
+  location: (props: TypeInputProps<TypeCoordinates | utils.api.TypeLocation>) => ReactNode;
   richtext: (props: TypeInputProps<string>) => ReactNode;
   object: (props: TypeObjectInputProps<TypeRepresenterValue>) => ReactNode;
   array: (props: TypeArrayInputProps<TypeValueType>) => ReactNode;
-  chip: (props: TypeInputProps<string[]>) => ReactNode;
-  select: (props: TypeSelectInputProps<string>) => ReactNode;
+  chip: (props: TypeInputProps<string>) => ReactNode;
 };
 
 const types: TypeInputTypeMap = {
-  string: props => (
+  string: (props) => (
     <StringInput
       label={props.title}
       description={props.description}
       inputContainerClassName={props.className}
       value={props.value}
       options={props.enum}
-      onChange={value => {
-        props.onChange?.({key: props.key, value});
+      onChange={(value) => {
+        props.onChange?.({ key: props.key, value });
       }}
     />
   ),
-  number: props => (
+  number: (props) => (
     <NumberInput
       label={props.title}
       description={props.description}
       inputContainerClassName={props.className}
       value={props.value}
       options={props.enum}
-      onChange={value => props.onChange?.({key: props.key, value})}
+      onChange={(value) => props.onChange?.({ key: props.key, value })}
     />
   ),
-  textarea: props => (
+  textarea: (props) => (
     <TextAreaInput
       title={props.title}
-      titlePrefixProps={{children: <Icon name="formatSize" />}}
-      containerProps={{className: props.className}}
+      titlePrefixProps={{ children: <Icon name="formatSize" /> }}
+      containerProps={{ className: props.className }}
       value={props.value}
-      onChange={event => props.onChange?.({key: props.key, value: event.target.value})}
+      onChange={(event) => props.onChange?.({ key: props.key, value: event.target.value })}
     />
   ),
-  date: props => (
+  date: (props) => (
     <DateInput
       label={props.title}
       description={props.description}
       inputContainerClassName={props.className}
       value={props.value}
-      onChange={value => props.onChange?.({key: props.key, value})}
+      onChange={(value) => props.onChange?.({ key: props.key, value })}
     />
   ),
-  boolean: props => (
+  boolean: (props) => (
     <BooleanInput
       checked={props.value}
       label={props.title}
       description={props.description}
-      containerProps={{dimensionX: "fill"}}
-      onChange={value => props.onChange?.({key: props.key, value})}
+      containerProps={{ dimensionX: "fill" }}
+      onChange={(value) => props.onChange?.({ key: props.key, value })}
     />
   ),
-  color: props => (
+  color: (props) => (
     <ColorInput
       label={props.title}
       description={props.description}
       inputContainerClassName={props.className}
       value={props.value}
-      onChange={value => props.onChange?.({key: props.key, value})}
+      onChange={(value) => props.onChange?.({ key: props.key, value })}
     />
   ),
-  storage: props => (
+  storage: (props) => (
     <StorageInput
       onUpload={() => {}}
       label={props.title}
       containerProps={{
-        className: props.className
+        className: props.className,
       }}
     />
   ),
-  multiselect: props => (
+  multiselect: (props) => (
     <MultipleSelectionInput
       label={props.title}
       description={props.description}
       inputContainerClassName={props.className}
       value={props.value}
       options={props.enum}
-      onChange={value => props.onChange?.({key: props.key, value})}
+      onChange={(value) => props.onChange?.({ key: props.key, value })}
     />
   ),
-  location: props => {
-    if (apiUtil.isTypeLocation(props.value)) {
+  location: (props) => {
+    if (utils.api.isTypeLocation(props.value)) {
       const coordinates = props?.value.coordinates;
-      props.value = {lat: coordinates[1], lng: coordinates[0]};
+      props.value = { lat: coordinates[1], lng: coordinates[0] };
     }
 
     const handleChangeLocation = (value: TypeCoordinates) => {
-      let normalizedValue: apiUtil.TypeLocation | TypeCoordinates = value;
-      if (apiUtil.isTypeLocation(props.value)) {
+      let normalizedValue: utils.api.TypeLocation | TypeCoordinates = value;
+      if (utils.api.isTypeLocation(props.value)) {
         normalizedValue = {
           type: "Point",
-          coordinates: [value.lng, value.lng]
+          coordinates: [value.lng, value.lng],
         };
       }
-      props.onChange?.({key: props.key, value: normalizedValue});
+      props.onChange?.({ key: props.key, value: normalizedValue });
     };
 
     return (
@@ -234,123 +226,71 @@ const types: TypeInputTypeMap = {
       />
     );
   },
-  richtext: props => (
+  richtext: (props) => (
     <RichTextInput
-      headerProps={{label: props.title, icon: "formatAlignCenter"}}
+      headerProps={{ label: props.title, icon: "formatAlignCenter" }}
       value={props.value}
-      onChange={value => props.onChange?.({key: props.key, value})}
+      onChange={(value) => props.onChange?.({ key: props.key, value })}
     />
   ),
-  object: props => {
+  object: (props) => {
     return (
       <ObjectInput
-        properties={props.properties! as any}
+        properties={props.properties!}
         title={props.title}
         description={props.description}
         value={props.value}
-        onChange={value => {
-          props.onChange?.({key: props.key, value});
+        onChange={(value) => {
+          props.onChange?.({ key: props.key, value });
         }}
       />
     );
   },
-  array: props => {
+  array: (props) => {
     return (
       <ArrayInput
         title={props.title}
         description={props.description}
         value={props.value}
-        onChange={value => props.onChange?.({key: props.title, value})}
+        onChange={(value) => props.onChange?.({ key: props.title, value })}
         minItems={props.minItems}
         maxItems={props.maxItems}
-        items={props.items as any}
+        items={props.items}
         propertyKey={props.key}
       />
     );
   },
-  chip: props => {
+  chip: (props) => {
     return (
       <ChipInput
-        value={props.value ?? []}
-        onChange={value => {
-          props.onChange?.({key: props.key, value});
+        label={props.value ? [props.value] : []}
+        onChange={([value]) => {
+          props.onChange?.({ key: props.key, value });
         }}
       />
     );
   },
-  select: props => {
-    return (
-      <Select
-        options={props.enum as string[]}
-        value={props.value}
-        onChange={value => {
-          props.onChange?.({key: props.key, value: value as string});
-        }}
-      />
-    );
-  }
 };
 
 type TypeUseInputRepresenter = {
   properties: TypeProperties;
   value?: TypeValueType | TypeRepresenterValue;
-  error?: TypeInputRepresenterError;
   onChange?: (value: any) => void;
-  containerClassName?: string;
-  errorClassName?: string;
 };
 
-const useInputRepresenter = ({
-  properties,
-  value,
-  error,
-  onChange,
-  containerClassName,
-  errorClassName
-}: TypeUseInputRepresenter) => {
-  const handleChange = (event: {key: string; value: any}) => {
+const useInputRepresenter = ({ properties, value, onChange }: TypeUseInputRepresenter) => {
+  const handleChange = (event: { key: string; value: any }) => {
     const updatedValue: any = structuredClone(value);
     updatedValue[event.key] = event.value;
     onChange?.(updatedValue);
   };
 
-  const hasCustomStyles = Boolean(containerClassName || errorClassName);
-
   return Object.entries(properties).map(([key, el]) => {
     const isObject = typeof value === "object" && !Array.isArray(value);
-    if (isObject && el.requires) {
-      const currentFieldValue = value[el.requires.field];
-      if ("notToBe" in el.requires) {
-        const forbiddenValues = el.requires.notToBe;
-        const shouldHide = Array.isArray(forbiddenValues)
-          ? forbiddenValues.includes(currentFieldValue)
-          : currentFieldValue === forbiddenValues;
-
-        if (shouldHide) {
-          return null;
-        }
-      }
-
-      if ("toBe" in el.requires) {
-        const requiredValues = el.requires.toBe;
-        const shouldShow = Array.isArray(requiredValues)
-          ? requiredValues.includes(currentFieldValue)
-          : currentFieldValue === requiredValues;
-
-        if (!shouldShow) {
-          return null;
-        }
-      }
-    }
     const _value = isObject ? (value[key] ?? value) : value;
-    const _error = error?.[key];
 
     return (
-      <div
-        style={hasCustomStyles ? undefined : {position: "relative", width: "100%"}}
-        className={`${containerClassName}`}
-        key={key}
-      >
+      <Fragment key={key}>
         {types[el.type]({
           key,
           title: el.title,
@@ -359,33 +299,13 @@ const useInputRepresenter = ({
           value: _value,
           className: el.className,
           properties: el.properties,
-          enum: el.enum ?? (el.items?.enum as any),
+          enum: el.enum as any,
           minItems: el.minItems,
           maxItems: el.maxItems,
           items: el.items,
-          onChange: event => handleChange(event)
+          onChange: (event) => handleChange(event),
         })}
-        {_error && (
-          <Text
-            className={`${errorClassName}`}
-            style={
-              hasCustomStyles
-                ? undefined
-                : {
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    pointerEvents: "none",
-                    whiteSpace: "nowrap"
-                  }
-            }
-            size="xsmall"
-            variant="danger"
-          >
-            {_error}
-          </Text>
-        )}
-      </div>
+      </Fragment>
     );
   });
 };

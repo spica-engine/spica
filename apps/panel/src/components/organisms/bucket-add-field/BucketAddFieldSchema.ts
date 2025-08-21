@@ -189,9 +189,15 @@ export const createShema: any = {
     default: defaultString,
     presets,
     makeEnumerated,
-    enumeratedValues: {...enumeratedValues, requires: {field: "makeEnumerated", toBe: true}},
+    enumeratedValues: {
+      ...enumeratedValues,
+      renderCondition: {field: "makeEnumerated", equals: true}
+    },
     definePattern,
-    regularExpression: {...regularExpression, requires: {field: "definePattern", toBe: true}}
+    regularExpression: {
+      ...regularExpression,
+      renderCondition: {field: "definePattern", equals: true}
+    }
   },
   number: {
     title,
@@ -209,30 +215,42 @@ export const createShema: any = {
     arrayType,
     arrayItemTitle,
     arrayItemDescription,
-    defaultString: {...defaultString, requires: {field: "arrayType", toBe: "string"}},
-    defaultBoolean: {...defaultBoolean, requires: {field: "arrayType", toBe: "boolean"}},
-    defaultNumber: {...defaultNumber, requires: {field: "arrayType", toBe: "number"}},
-    minNumber: {...minNumber, requires: {field: "arrayType", toBe: "number"}},
-    maxNumber: {...maxNumber, requires: {field: "arrayType", toBe: "number"}},
-    presets: {...presets, requires: {field: "arrayType", toBe: "string"}},
-    makeEnumerated: {...makeEnumerated, requires: {field: "arrayType", toBe: ["string", "number"]}},
-    enumeratedValues: {...enumeratedValues, requires: {field: "makeEnumerated", toBe: true}},
-    definePattern: {...definePattern, requires: {field: "arrayType", toBe: "string"}},
-    regularExpression: {...regularExpression, requires: {field: "definePattern", toBe: true}},
+    defaultString: {...defaultString, renderCondition: {field: "arrayType", equals: "string"}},
+    defaultBoolean: {...defaultBoolean, renderCondition: {field: "arrayType", equals: "boolean"}},
+    defaultNumber: {...defaultNumber, renderCondition: {field: "arrayType", equals: "number"}},
+    minNumber: {...minNumber, renderCondition: {field: "arrayType", equals: "number"}},
+    maxNumber: {...maxNumber, renderCondition: {field: "arrayType", equals: "number"}},
+    presets: {...presets, renderCondition: {field: "arrayType", equals: "string"}},
+    makeEnumerated: {
+      ...makeEnumerated,
+      renderCondition: {field: "arrayType", equals: ["string", "number"]}
+    },
+    enumeratedValues: {
+      ...enumeratedValues,
+      renderCondition: {field: "makeEnumerated", equals: true}
+    },
+    definePattern: {...definePattern, renderCondition: {field: "arrayType", equals: "string"}},
+    regularExpression: {
+      ...regularExpression,
+      renderCondition: {field: "definePattern", equals: true}
+    },
     uniqueItems: {
       ...uniqueItems,
-      requires: {field: "arrayType", notToBe: ["multiselect", "location", "object"]}
+      renderCondition: {field: "arrayType", notEquals: ["multiselect", "location", "object"]}
     },
     multipleSelectionType: {
       ...multipleSelectionType,
-      requires: {field: "arrayType", toBe: "multiselect"}
+      renderCondition: {field: "arrayType", equals: "multiselect"}
     },
     minItems: {
       ...minItems,
-      requires: {field: "arrayType", notToBe: ["multiselect", "location", "object"]}
+      renderCondition: {field: "arrayType", notEquals: ["multiselect", "location", "object"]}
     },
-    maxItems: {...maxItems, requires: {field: "arrayType", notToBe: ["location", "object"]}},
-    chip: {...chip, requires: {field: "arrayType", toBe: "multiselect"}}
+    maxItems: {
+      ...maxItems,
+      renderCondition: {field: "arrayType", notEquals: ["location", "object"]}
+    },
+    chip: {...chip, renderCondition: {field: "arrayType", equals: "multiselect"}}
   },
   multiselect: {title, description, multipleSelectionType, maxItems, chip},
   object: {title, description},
@@ -251,7 +269,10 @@ export const createShema: any = {
   },
   numberConfiguration: {
     makeEnumerated,
-    enumeratedValues: {...enumeratedValues, requires: {field: "makeEnumerated", toBe: true}},
+    enumeratedValues: {
+      ...enumeratedValues,
+      renderCondition: {field: "makeEnumerated", equals: true}
+    },
     primaryField,
     readOnly,
     uniqueValues,

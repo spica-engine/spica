@@ -8,10 +8,10 @@ import {
   Modal,
   Tab,
   type TypeInputType,
-  type TypeModal
+  type TypeModal,
+  useInputRepresenter
 } from "oziko-ui-kit";
 import styles from "./BucketAddField.module.scss";
-import useInputRepresenter from "../../../hooks/useInputRepresenter";
 import type {BucketType} from "src/services/bucketService";
 import useStringPresetsSync from "./useStringPresetsSync";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
