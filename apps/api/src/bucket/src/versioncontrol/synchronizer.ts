@@ -23,13 +23,13 @@ export const getSynchronizer = (
 
   const convertToRepResource = (change: DocChange<Bucket>) => ({
     _id: change.resource._id.toString(),
-    displayableName: getDisplayableName(change, change.resource.title),
+    slug: change.resource.title,
     content: YAML.stringify(change.resource)
   });
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-    return {...parsed, _id: new ObjectId(change.resource._id)};
+    return {...parsed, _id: new ObjectId(parsed._id)};
   };
 
   return {

@@ -66,8 +66,9 @@ export class VCRepresentativeManager implements IRepresentativeManager {
   }
   extractId(part: string): string | undefined {
     if (part === "identity") return "identity";
-    const match = part.match(/\(([\da-f]{24})\)/i);
-    return match?.[1];
+    // Since we're now using slug-only folder names, we return the folder name as the identifier
+    // The actual mapping between slug and MongoDB ObjectId will be handled by the Synchronizer
+    return part;
   }
 
   watch(module: string, files: string[], events: string[] = ["add", "change", "unlink"]) {
@@ -93,25 +94,23 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         const isTrackedFile = files.some(file => parts[1] == file);
         if (!isCorrectDepth || !isTrackedFile) return;
 
-        const _id = this.extractId(parts[0]);
-
         let changeType: ChangeTypes;
         let resource: RepresentativeManagerResource;
 
         switch (event) {
           case "add":
             changeType = ChangeTypes.INSERT;
-            resource = {_id, content: this.readFile(path)};
+            resource = {content: this.readFile(path), slug: parts[0]}; // _id removed since it will be empty not needed to pass
             break;
 
           case "change":
             changeType = ChangeTypes.UPDATE;
-            resource = {_id, content: this.readFile(path)};
+            resource = {content: this.readFile(path), slug: parts[0]};
             break;
 
           case "unlink":
             changeType = ChangeTypes.DELETE;
-            resource = {_id, content: ""};
+            resource = {content: "", slug: parts[0]};
             break;
 
           default:

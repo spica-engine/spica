@@ -24,7 +24,7 @@ export const getSchemaSynchronizer = (
 
   const convertToRepResource = (change: DocChange<Function>) => ({
     _id: change.resource._id.toString(),
-    displayableName: getDisplayableName(change, change.resource.name),
+    slug: change.resource.name,
     content: YAML.stringify(change.resource)
   });
 

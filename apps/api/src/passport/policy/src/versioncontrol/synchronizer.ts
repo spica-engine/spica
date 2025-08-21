@@ -17,7 +17,7 @@ export const getSynchronizer = (ps: PolicyService): VCSynchronizerArgs<Policy> =
 
   const convertToRepResource = (change: DocChange<Policy>) => ({
     _id: change.resource._id.toString(),
-    displayableName: getDisplayableName(change, change.resource.name),
+    slug: change.resource.name,
     content: YAML.stringify(change.resource)
   });
 
