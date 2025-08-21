@@ -54,6 +54,21 @@ export function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
   return fs.aggregate<Function<ER>>(pipeline).next();
 }
 
+export async function findByName<ER extends EnvRelation = EnvRelation.NotResolved>(
+  fs: FunctionService,
+  name: string,
+  options?: {resolveEnvRelations?: ER}
+): Promise<Function<ER> | null> {
+  const fn = await fs.findOne({name});
+  if (!fn) return null;
+  if (options?.resolveEnvRelations) {
+    return findOne(fs, new ObjectId(fn._id), {
+      resolveEnvRelations: options.resolveEnvRelations
+    }) as Promise<Function<ER>>;
+  }
+  return fn as Function<ER>;
+}
+
 export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   if (fn._id) {
     fn._id = new ObjectId(fn._id);

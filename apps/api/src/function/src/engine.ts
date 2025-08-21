@@ -134,7 +134,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private getFunctionRoot(fn: Function) {
-    return path.join(this.options.root, fn._id.toString());
+    return path.join(this.options.root, fn.name);
   }
 
   getPackages(fn: Function): Promise<Package[]> {
@@ -161,7 +161,12 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       private: true,
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED",
-      main: path.join(".", this.options.outDir, functionLanguage.description.entrypoints.runtime)
+      main: path.join(
+        ".",
+        this.options.outDir,
+        fn.name,
+        functionLanguage.description.entrypoints.runtime
+      )
     };
 
     return fs.promises.writeFile(
@@ -171,14 +176,17 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   deleteFunction(fn: Function) {
-    return rimraf(this.getFunctionRoot(fn));
+    const functionRoot = this.getFunctionRoot(fn);
+    const buildDir = path.join(this.options.root, this.options.outDir, fn.name);
+    return Promise.all([rimraf(functionRoot), rimraf(buildDir)]);
   }
 
   compile(fn: Function) {
     const language = this.getFunctionLanguage(fn);
+    const outDirRelative = path.join("..", this.options.outDir, fn.name);
     return language.compile({
       cwd: this.getFunctionRoot(fn),
-      outDir: this.options.outDir,
+      outDir: outDirRelative,
       entrypoints: language.description.entrypoints
     });
   }
@@ -233,9 +241,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         const isTrackedFile = files.some(file => parts[1] == file);
         if (!isCorrectDepth || !isTrackedFile) return;
 
-        const _id = parts[0];
-
-        const fn = await CRUD.findOne(this.fs, new ObjectId(_id), {
+        const dirName = parts[0];
+        const fn = await CRUD.findByName(this.fs, dirName, {
           resolveEnvRelations: EnvRelation.NotResolved
         });
         if (!fn) return;
@@ -319,7 +326,12 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   getFunctionBuildEntrypoint(fn: Function) {
     const language = this.getFunctionLanguage(fn);
-    return path.join(this.getFunctionRoot(fn), language.description.entrypoints.build);
+    return path.join(
+      this.options.root,
+      this.options.outDir,
+      fn.name,
+      language.description.entrypoints.build
+    );
   }
 }
 
