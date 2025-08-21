@@ -200,6 +200,19 @@ export const useBucketService = () => {
     [createBucketField]
   );
 
+  const apiUpdateBucketReadonly = useCallback(
+    async (bucket: BucketType) => {
+      return await putRequest({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {
+          ...bucket,
+          readOnly: !bucket.readOnly
+        }
+      });
+    },
+    [putRequest]
+  );
+
   return {
     apiGetBucketData,
     apiGetBuckets: fetchBuckets,
@@ -209,6 +222,7 @@ export const useBucketService = () => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiUpdateBucketReadonly,
     apiCreateBucketField,
     apiBuckets,
     apiBucketDataLoading,

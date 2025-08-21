@@ -34,6 +34,7 @@ type BucketContextType = {
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   refreshBucketData: () => Promise<void>;
+  updateBucketReadonly: (bucket: BucketType) => Promise<any>;
   createBucketField: (bucket: BucketType, newField: Property, requiredField?: string) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
@@ -70,6 +71,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiUpdateBucketReadonly,
     apiCreateBucketField,
     apiBuckets,
     apiBucketDataLoading,
@@ -249,6 +251,16 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [buckets]
   );
 
+
+  const updateBucketReadonly = useCallback(async (bucket: BucketType) => {
+    const previousBuckets = buckets;
+    setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
+    const success = await apiUpdateBucketReadonly(bucket);
+    if (!success) {
+      setBuckets(previousBuckets);
+    }
+  }, [buckets, apiUpdateBucketReadonly]);
+
   const createBucketField = useCallback(
     async (bucket: BucketType, newField: Property, requiredField?: string) => {
       const currentRequired = bucket.required ? [...bucket.required] : []
@@ -279,6 +291,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketHistory,
       deleteBucketHistory: apiDeleteBucketHistory,
       refreshBucketData,
+      updateBucketReadonly,
       createBucketField,
       buckets,
       bucketData,
@@ -300,6 +313,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiDeleteBucketHistory,
       refreshBucketData,
       loadMoreBucketData,
+      updateBucketReadonly,
       createBucketField,
       buckets,
       bucketData,
