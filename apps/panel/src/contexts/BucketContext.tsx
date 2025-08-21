@@ -256,10 +256,13 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       const modifiedBucket = {
         ...bucket,
         properties: {...bucket.properties, [newField.title]: newField},
-        required: currentRequired
+        required: currentRequired.length > 0 ? currentRequired : undefined
       };
-      return apiCreateBucketField(modifiedBucket);
-    },
+      return apiCreateBucketField(modifiedBucket).then(result => {
+        apiGetBuckets()
+        return result
+      })
+      },
     [apiCreateBucketField]
   );
 

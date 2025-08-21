@@ -31,7 +31,7 @@ export default function useStringPresetsSync({
   const hadPattern = useRef(false);
 
   useEffect(() => {
-    if (type !== "string" || fieldValues.arrayType !== "string") return;
+    if (type !== "string" && fieldValues.arrayType !== "string") return;
 
     const currentPresets = fieldValues.presets as string[];
     const isEnumeratedNow = fieldValues.makeEnumerated as boolean;

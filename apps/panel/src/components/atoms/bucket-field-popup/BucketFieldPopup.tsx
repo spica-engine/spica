@@ -31,12 +31,14 @@ const BucketFieldPopup = ({
   children,
   buckets,
   bucket,
-  onSaveAndClose
+  onSaveAndClose,
+  isInnerField
 }: {
   children: ReactNode;
   buckets: BucketType[];
   bucket: BucketType;
-  onSaveAndClose:  (type: TypeInputType | "relation", fieldValues: Record<string, any>, configurationValues: Record<string, any>, requiredField?: string) => void
+  onSaveAndClose:  (type: TypeInputType | "relation", fieldValues: Record<string, any>, configurationValues: Record<string, any>, requiredField?: string) => void;
+  isInnerField?: boolean;
 }) => {
   const [selectedType, setSelectedType] = useState<TypeInputType | "relation" | null>(null);
 
@@ -72,6 +74,7 @@ const BucketFieldPopup = ({
           onSaveAndClose={onSaveAndClose}
           bucket={bucket}
           buckets={buckets}
+          isInnerField={isInnerField}
         />
       )}
     </>

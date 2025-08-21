@@ -12,21 +12,29 @@ export const createFieldProperty = (
     description: fieldValues.description,
     options: {
       position: "bottom",
-      index: configurationValue.index
-    }
+      index: configurationValue.index || undefined,
+      unique: configurationValue.uniqueValues || undefined,
+      translate: configurationValue.translate || undefined
+    },
+    readOnly: configurationValue.readOnly || undefined,
+    default: fieldValues.default?.length ? fieldValues.default : undefined,
+    pattern: fieldValues.regularExpression?.length ? fieldValues.regularExpression : undefined
   } as Property;
+
+  const arrayDefaultValues = {
+    string: fieldValues.defaultString,
+    number: fieldValues.defaultNumber,
+    boolean: fieldValues.defaultBoolean
+  };
 
   switch (type) {
     case "string":
       return {
         ...baseProperty,
-        options: {...baseProperty.options, translate: configurationValue.translate},
-        pattern: fieldValues.regularExpression,
         enum:
           (fieldValues.enumeratedValues as string[])?.length > 0
             ? (fieldValues.enumeratedValues as string[])
-            : undefined,
-        default: fieldValues.default
+            : undefined
       };
 
     case "number":
@@ -37,30 +45,7 @@ export const createFieldProperty = (
         enum:
           (configurationValue.enumeratedValues as string[])?.length > 0
             ? (configurationValue.enumeratedValues as string[])
-            : undefined,
-        default: fieldValues.default
-      };
-
-    case "date":
-    case "boolean":
-      return {
-        ...baseProperty,
-        readOnly: configurationValue.readOnly,
-        default: fieldValues.default
-      };
-
-    case "color":
-      return {
-        ...baseProperty,
-        readOnly: configurationValue.readOnly
-      };
-
-    case "textarea":
-      return {
-        ...baseProperty,
-        options: {...baseProperty.options, translate: configurationValue.translate},
-        readOnly: configurationValue.readOnly,
-        default: fieldValues.default
+            : undefined
       };
 
     case "multiselect":
@@ -73,46 +58,85 @@ export const createFieldProperty = (
         maxItems: fieldValues.maxItems
       };
 
-    case "location":
-      return {
-        ...baseProperty,
-        locationType: "Point",
-        readOnly: configurationValue.readOnly
-      };
-
     case "array":
       return {
         ...baseProperty,
-        options: {...baseProperty.options, translate: configurationValue.translate},
-        pattern: fieldValues.regularExpression,
-        enum:
-          (fieldValues.enumeratedValues as string[])?.length > 0
-            ? (fieldValues.enumeratedValues as string[])
-            : undefined,
-        default: fieldValues.default,
-        maxItems: fieldValues.maxItems,
+        pattern: undefined,
+        maxItems: fieldValues.arrayType === "multiselect" ? undefined : fieldValues.maxItems,
         minItems: fieldValues.minItems,
-        uniqueItems: fieldValues.uniqueItems,
+        uniqueItems: fieldValues.uniqueItems || undefined,
         items: {
+          items:
+            fieldValues.arrayType === "multiselect"
+              ? {
+                  type: fieldValues.multipleSelectionType,
+                  enum: fieldValues.chip || undefined
+                }
+              : undefined,
+          maxItems: fieldValues.arrayType !== "multiselect" ? undefined : fieldValues.maxItems,
           type: fieldValues.arrayType,
+          default:
+            arrayDefaultValues[fieldValues.arrayType as "string" | "number" | "boolean"] ||
+            (fieldValues.arrayType === "boolean" ? false : undefined),
           title: fieldValues.arrayItemTitle,
           description: fieldValues.arrayItemDescription,
-          properties: fieldValues.innerFields?.map((field: Property) =>
-            createFieldProperty(field.type, field, {})
-          )
+          properties: fieldValues.innerFields
+            ? fieldValues.innerFields.reduce(
+                (
+                  acc: Record<string, any>,
+                  {
+                    fieldValues,
+                    configurationValues,
+                    type
+                  }: {
+                    fieldValues: Record<string, any>;
+                    configurationValues: Record<string, any>;
+                    type: "relation" | TypeInputType;
+                  }
+                ) => {
+                  acc[fieldValues.title] = createFieldProperty(
+                    type,
+                    fieldValues,
+                    configurationValues
+                  );
+                  return acc;
+                },
+                {} as Record<string, any>
+              )
+            : undefined,
+          enum:
+            (fieldValues.enumeratedValues as string[])?.length > 0
+              ? (fieldValues.enumeratedValues as string[])
+              : undefined,
+          pattern: fieldValues.regularExpression?.length
+            ? fieldValues.regularExpression
+            : undefined,
+          maximum: fieldValues.maxNumber,
+          minimum: fieldValues.minNumber
         }
       };
 
+    case "boolean":
+      return {
+        ...baseProperty,
+        default: fieldValues.default
+      };
+
+    case "location":
     case "object":
     case "storage":
     case "richtext":
+    case "date":
+    case "color":
+    case "textarea":
+      return baseProperty;
+    case "relation":
       return {
         ...baseProperty,
-        options: {...baseProperty.options, translate: configurationValue.translate},
-        readOnly: configurationValue.readOnly
+        relationType: fieldValues.relationType,
+        bucketId: fieldValues.bucket,
+        dependent: fieldValues.dependent
       };
-    case "relation":
-      return baseProperty;
     default:
       return baseProperty;
   }

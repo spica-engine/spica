@@ -1,5 +1,5 @@
 import {type FC, memo, useMemo, useState, useCallback, type ReactNode, useEffect} from "react";
-import {configurationMapping, createShema} from "./BucketAddFieldSchema";
+import {configurationMapping, createShema, innerConfigurationMapping} from "./BucketAddFieldSchema";
 import {
   Button,
   FlexElement,
@@ -12,7 +12,7 @@ import {
 } from "oziko-ui-kit";
 import styles from "./BucketAddField.module.scss";
 import useInputRepresenter from "../../../hooks/useInputRepresenter";
-import type {BucketType, Property} from "src/services/bucketService";
+import type {BucketType} from "src/services/bucketService";
 import useStringPresetsSync from "./useStringPresetsSync";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 import {getDefaultValues} from "./utils";
@@ -23,7 +23,7 @@ export type TypeSaveFieldHandler = (
   fieldValues: Record<string, any>,
   configurationValues: Record<string, any>,
   requiredField?: string
-) => void;
+) => void | Promise<void>;
 
 type TypeBucketAddField = {
   name: string;
@@ -36,6 +36,7 @@ type TypeBucketAddField = {
     fieldValues?: Record<string, any>;
     configurationValue?: Record<string, any>;
   };
+  isInnerField?: boolean;
 };
 
 export type TypeBucketFieldCreator = {
@@ -58,9 +59,13 @@ const BucketAddField: FC<TypeBucketAddField> = ({
   onSaveAndClose,
   bucket,
   buckets,
-  initialValues
+  initialValues,
+  isInnerField
 }) => {
-  const configurationSchema = useMemo(() => configurationMapping[type] || {}, [type]);
+  const configurationSchema = useMemo(
+    () => (isInnerField ? innerConfigurationMapping[type] : configurationMapping[type]),
+    [type, isInnerField]
+  );
   const schema = useMemo(() => createShema[type] || {}, [type]);
 
   const [fieldValues, setFieldValues] = useState<Record<string, any>>(() =>
@@ -78,9 +83,9 @@ const BucketAddField: FC<TypeBucketAddField> = ({
     () => ({
       ...schema,
       ...(type === "relation" && {
-        buckets: {
-          ...schema.buckets,
-          enum: buckets.map(b => b.title)
+        bucket: {
+          ...schema.bucket,
+          enum: buckets.map(b => ({label: b.title, value: b._id}))
         }
       })
     }),
@@ -173,7 +178,7 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
     const handleSaveAndClose = useCallback(async () => {
       await onSaveAndClose(type, fieldValues, configurationValue, requiredField);
       handleClose();
-    }, [fieldValues, requiredField, onSaveAndClose]);
+    }, [fieldValues, configurationValue, requiredField, onSaveAndClose]);
 
     const handleCreateInnerField = useCallback(
       (
@@ -231,6 +236,7 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
               buckets={buckets}
               bucket={bucket}
               onSaveAndClose={handleCreateInnerField}
+              isInnerField
             >
               <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
                 <FluidContainer

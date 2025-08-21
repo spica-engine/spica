@@ -126,6 +126,7 @@ const EditInnerField: FC<EditInnerFieldProps> = ({
             configurationValue: configurationValue
           }}
           modalProps={{onClose: () => setIsOpen(false)} as TypeModal}
+          isInnerField={true}
         />
       )}
     </>

@@ -1,3 +1,5 @@
+import type {TypeInputType} from "oziko-ui-kit";
+
 const schema = {
   title: {
     type: "string",
@@ -60,7 +62,7 @@ const schema = {
     type: "boolean",
     title: "Translatable"
   },
-  readonly: {
+  readOnly: {
     type: "boolean",
     title: "Readonly"
   },
@@ -91,7 +93,7 @@ const schema = {
   defaultDate: {
     type: "string",
     title: "Default Date",
-    enum: ["None", "Created_at", "Updated_at"]
+    enum: ["None", ":created_at", ":updated_at"]
   },
   multipleSelectionType: {
     type: "string",
@@ -127,7 +129,7 @@ const schema = {
     type: "chip",
     title: ""
   },
-  buckets: {
+  bucket: {
     title: "Buckets",
     type: "select",
     enum: []
@@ -135,7 +137,10 @@ const schema = {
   relationType: {
     title: "Relation Type",
     type: "select",
-    enum: ["One To One", "One To Many"]
+    enum: [
+      {label: "One To One", value: "onetoone"},
+      {label: "One To Many", value: "onetomany"}
+    ]
   },
   dependent: {
     type: "boolean",
@@ -159,7 +164,7 @@ const {
   regularExpression,
   primaryField,
   translatable,
-  readonly,
+  readOnly,
   uniqueValues,
   uniqueItems,
   requiredField,
@@ -172,7 +177,7 @@ const {
   arrayItemTitle,
   arrayItemDescription,
   chip,
-  buckets,
+  bucket,
   relationType,
   dependent
 } = schema;
@@ -206,6 +211,7 @@ export const createShema: any = {
     arrayItemDescription,
     defaultString: {...defaultString, requires: {field: "arrayType", toBe: "string"}},
     defaultBoolean: {...defaultBoolean, requires: {field: "arrayType", toBe: "boolean"}},
+    defaultNumber: {...defaultNumber, requires: {field: "arrayType", toBe: "number"}},
     minNumber: {...minNumber, requires: {field: "arrayType", toBe: "number"}},
     maxNumber: {...maxNumber, requires: {field: "arrayType", toBe: "number"}},
     presets: {...presets, requires: {field: "arrayType", toBe: "string"}},
@@ -215,7 +221,7 @@ export const createShema: any = {
     regularExpression: {...regularExpression, requires: {field: "definePattern", toBe: true}},
     uniqueItems: {
       ...uniqueItems,
-      requires: {field: "arrayType", notToBe: ["boolean", "multiselect", "location", "object"]}
+      requires: {field: "arrayType", notToBe: ["multiselect", "location", "object"]}
     },
     multipleSelectionType: {
       ...multipleSelectionType,
@@ -228,17 +234,17 @@ export const createShema: any = {
     maxItems: {...maxItems, requires: {field: "arrayType", notToBe: ["location", "object"]}},
     chip: {...chip, requires: {field: "arrayType", toBe: "multiselect"}}
   },
-  multiselect: {title, description, multipleSelectionType, maxItems: maxNumber, chip},
+  multiselect: {title, description, multipleSelectionType, maxItems, chip},
   object: {title, description},
   color: {title, description},
   storage: {title, description},
-  relation: {title, description, buckets, relationType, dependent},
+  relation: {title, description, bucket, relationType, dependent},
   richtext: {title, description},
   location: {title, description},
   stringConfiguration: {
     primaryField,
     translate: translatable,
-    readonly,
+    readOnly,
     uniqueValues,
     requiredField,
     index
@@ -247,52 +253,49 @@ export const createShema: any = {
     makeEnumerated,
     enumeratedValues: {...enumeratedValues, requires: {field: "makeEnumerated", toBe: true}},
     primaryField,
-    readonly,
+    readOnly,
     uniqueValues,
     requiredField,
     index
   },
-  configuration: {
-    definePattern,
-    primaryField,
-    translate: translatable,
-    readonly,
-    uniqueValues,
+  innerConfiguration: {
     requiredField,
-    selectionOptions,
     index
-  }, // Used in string, number
+  }, // Used in inner fields, string, number, date, textarea, multiselect, relation, object, storage, richtext, array, color
+  innerConfiguration2: {
+    index
+  }, // Used in inner fields, boolean, location,
   configurationType1: {
-    readonly,
+    readOnly,
     requiredField,
     index
   }, // Used in date,color,multipleSelection,relation
   configurationType2: {
     translate: translatable,
     requiredField,
-    readonly,
+    readOnly,
     index
   }, // Used in object,storage,richText
   configurationTextarea: {
     primaryField,
     translate: translatable,
-    readonly,
+    readOnly,
     uniqueValues,
     requiredField,
     index
   },
   configurationBoolean: {
     primaryField,
-    readonly,
+    readOnly,
     index
   },
   configurationLocation: {
-    readonly,
+    readOnly,
     requiredField
   },
   configurationArray: {
     translate: translatable,
-    readonly,
+    readOnly,
     requiredField,
     index
   }
@@ -312,4 +315,20 @@ export const configurationMapping = {
   location: createShema.configurationLocation,
   array: createShema.configurationArray,
   relation: createShema.configurationType1
+};
+
+export const innerConfigurationMapping: Record<TypeInputType | "relation", Record<string, any>> = {
+  string: createShema.innerConfiguration,
+  number: createShema.innerConfiguration,
+  color: createShema.innerConfiguration,
+  date: createShema.innerConfiguration,
+  textarea: createShema.innerConfiguration,
+  multiselect: createShema.innerConfiguration,
+  relation: createShema.innerConfiguration,
+  object: createShema.innerConfiguration,
+  storage: createShema.innerConfiguration,
+  richtext: createShema.innerConfiguration,
+  array: createShema.innerConfiguration,
+  boolean: createShema.innerConfiguration2,
+  location: createShema.innerConfiguration2
 };
