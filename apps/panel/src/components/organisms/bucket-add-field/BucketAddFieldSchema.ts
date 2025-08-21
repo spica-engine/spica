@@ -3,7 +3,8 @@ import type {TypeInputType} from "oziko-ui-kit";
 const schema = {
   title: {
     type: "string",
-    title: "Name"
+    title: "Name",
+    required: true,
   },
   description: {
     type: "textarea",
@@ -78,10 +79,6 @@ const schema = {
     type: "boolean",
     title: "Required Field"
   },
-  selectionOptions: {
-    type: "boolean",
-    title: "Add selection options"
-  },
   index: {
     type: "boolean",
     title: "Indexed field in database"
@@ -98,7 +95,8 @@ const schema = {
   multipleSelectionType: {
     type: "string",
     title: "Type",
-    enum: ["string", "number"]
+    enum: ["string", "number"],
+    required: true,
   },
   arrayType: {
     type: "string",
@@ -115,7 +113,8 @@ const schema = {
       "location",
       "richtext",
       "object"
-    ]
+    ],
+    required: true
   },
   arrayItemTitle: {
     type: "string",
@@ -168,7 +167,6 @@ const {
   uniqueValues,
   uniqueItems,
   requiredField,
-  selectionOptions,
   index,
   defaultBoolean,
   defaultDate,
@@ -352,4 +350,4 @@ export const innerConfigurationMapping: Record<TypeInputType, Record<string, any
   array: createShema.innerConfiguration,
   boolean: createShema.innerConfiguration2,
   location: createShema.innerConfiguration2
-};
+} as Record<TypeInputType, Record<string, any>>;

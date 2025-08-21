@@ -23,7 +23,7 @@ export type TypeSaveFieldHandler = (
   fieldValues: Record<string, any>,
   configurationValues: Record<string, any>,
   requiredField?: string
-) => void | Promise<void>;
+) => void | Promise<any>;
 
 type TypeBucketAddField = {
   name: string;
@@ -50,6 +50,7 @@ export type TypeBucketFieldCreator = {
   configuration: ReactNode;
   onSaveAndClose: TypeSaveFieldHandler;
   handleClose: () => void;
+  validateInputs: () => boolean;
 };
 
 const BucketAddField: FC<TypeBucketAddField> = ({
@@ -60,10 +61,13 @@ const BucketAddField: FC<TypeBucketAddField> = ({
   bucket,
   buckets,
   initialValues,
-  isInnerField
+  isInnerField,
 }) => {
   const configurationSchema = useMemo(
-    () => (isInnerField ? innerConfigurationMapping[type] : configurationMapping[type]),
+    () =>
+      (isInnerField
+        ? innerConfigurationMapping[type]
+        : configurationMapping[type as keyof typeof configurationMapping]) || {},
     [type, isInnerField]
   );
   const schema = useMemo(() => createShema[type] || {}, [type]);
@@ -74,6 +78,27 @@ const BucketAddField: FC<TypeBucketAddField> = ({
       description: ""
     })
   );
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
+
+  const validateInputs = useCallback(() => {
+    const errors: Record<string, string> = {};
+    Object.entries(schema).forEach(([key, value]) => {
+      if (key === "title" && fieldValues[key] !== fieldValues[key].toLowerCase()) {
+        errors[key] = "Name must be in lowercase";
+      }
+      if ((value as {required: boolean}).required && !fieldValues[key]) {
+        errors[key] = `${(value as {title: string}).title} is required`;
+      }
+    });
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [schema, fieldValues]);
+
+  useEffect(() => {
+    if (!fieldErrors) return;
+    validateInputs();
+  }, [fieldValues]);
 
   const [configurationValue, setConfigurationValue] = useState<Record<string, any>>(() =>
     getDefaultValues(configurationSchema, initialValues?.configurationValue)
@@ -95,7 +120,9 @@ const BucketAddField: FC<TypeBucketAddField> = ({
   const inputRepresenter = useInputRepresenter({
     properties: inputProperties,
     value: fieldValues,
-    onChange: setFieldValues
+    onChange: setFieldValues,
+    error: fieldErrors ?? {},
+    errorClassName: styles.error,
   });
 
   const configuration = useInputRepresenter({
@@ -120,6 +147,7 @@ const BucketAddField: FC<TypeBucketAddField> = ({
           configuration={configuration}
           onSaveAndClose={onSaveAndClose}
           handleClose={modalProps?.onClose as () => void}
+          validateInputs={validateInputs}
         />
       </Modal.Body>
     </Modal>
@@ -141,7 +169,8 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
     onSaveAndClose,
     handleClose,
     bucket,
-    buckets
+    buckets,
+    validateInputs
   }) => {
     const isInnerFieldsType = useMemo(
       () => type === "array" && fieldValues.arrayType === "object",
@@ -175,11 +204,18 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
       [configurationValue.requiredField, fieldValues.title]
     );
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const handleSaveAndClose = useCallback(async () => {
-      await onSaveAndClose(type, fieldValues, configurationValue, requiredField);
-      handleClose();
+      const isValid = validateInputs();
+      setIsLoading(true);
+      const result = await onSaveAndClose(type, fieldValues, configurationValue, requiredField);
+      setIsLoading(false);
+      console.log("isValid", isValid, "result", result);
+      if (result) handleClose();
     }, [fieldValues, configurationValue, requiredField, onSaveAndClose]);
 
+    console.log("isLoading", isLoading)
     const handleCreateInnerField = useCallback(
       (
         type: TypeInputType,
@@ -225,7 +261,12 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
           {activeTab === 2 && configuration}
         </div>
         <div className={styles.buttonWrapper}>
-          <Button className={styles.saveAndCloseButton} onClick={handleSaveAndClose}>
+          <Button
+            className={styles.saveAndCloseButton}
+            onClick={handleSaveAndClose}
+            loading={isLoading}
+            disabled={isLoading}
+          >
             <FluidContainer
               prefix={{children: <Icon name="save" size="sm" />}}
               root={{children: "Save and close"}}

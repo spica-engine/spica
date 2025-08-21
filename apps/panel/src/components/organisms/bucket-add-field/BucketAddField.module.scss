@@ -7,7 +7,7 @@
 .contentContainer {
   max-width: 100%;
   width: 100% !important;
-  > div input {
+  > div, > div input {
     width: 100% !important;
   }
 }
@@ -80,4 +80,16 @@
     justify-content: flex-start !important;
   }
 
+}
+
+.error {
+  top: "100%" !important;
+  bottom: unset !important;
+  width: 100% !important;
+}
+
+.errorMessage {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  text-align: center;
 }

@@ -111,7 +111,7 @@ const NewFieldHeader = () => {
     ) => {
       if (!bucket) return;
       const fieldProperty = createFieldProperty(type, fieldValues, configurationValues);
-      createBucketField(bucket, fieldProperty, requiredField);
+      return createBucketField(bucket, fieldProperty, requiredField);
     },
     [bucket, createBucketField]
   );
