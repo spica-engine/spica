@@ -12,7 +12,7 @@ import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../../components/organisms/bucket-add-field/BucketAddField";
 import type {BucketType, Property} from "src/services/bucketService";
 
-export const fieldOptions: {icon: IconName; text: string; type: TypeInputType | "relation"}[] = [
+export const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [
   {icon: "formatQuoteClose", text: "String", type: "string"},
   {icon: "numericBox", text: "Number", type: "number"},
   {icon: "calendarBlank", text: "Date", type: "date"},
@@ -37,10 +37,10 @@ const BucketFieldPopup = ({
   children: ReactNode;
   buckets: BucketType[];
   bucket: BucketType;
-  onSaveAndClose:  (type: TypeInputType | "relation", fieldValues: Record<string, any>, configurationValues: Record<string, any>, requiredField?: string) => void;
+  onSaveAndClose:  (type: TypeInputType, fieldValues: Record<string, any>, configurationValues: Record<string, any>, requiredField?: string) => void;
   isInnerField?: boolean;
 }) => {
-  const [selectedType, setSelectedType] = useState<TypeInputType | "relation" | null>(null);
+  const [selectedType, setSelectedType] = useState<TypeInputType | null>(null);
 
   return (
     <>

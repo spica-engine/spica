@@ -338,7 +338,7 @@ export const configurationMapping = {
   relation: createShema.configurationType1
 };
 
-export const innerConfigurationMapping: Record<TypeInputType | "relation", Record<string, any>> = {
+export const innerConfigurationMapping: Record<TypeInputType, Record<string, any>> = {
   string: createShema.innerConfiguration,
   number: createShema.innerConfiguration,
   color: createShema.innerConfiguration,

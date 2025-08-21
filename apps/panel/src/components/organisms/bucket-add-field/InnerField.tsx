@@ -15,12 +15,12 @@ import styles from "./BucketAddField.module.scss";
 export type FieldType = {
   fieldValues: Record<string, any>;
   configurationValues: Record<string, any>;
-  type: TypeInputType | "relation";
+  type: TypeInputType;
 };
 
 export type EditInnerFieldProps = {
   name: string;
-  type: TypeInputType | "relation";
+  type: TypeInputType;
   onSaveAndClose: TypeSaveFieldHandler
   bucket: BucketType;
   buckets: BucketType[];
@@ -38,7 +38,7 @@ type InnerFieldProps = {
 export const InnerField = ({field, bucket, buckets, setFieldValues}: InnerFieldProps) => {
   const handleSaveInnerField = useCallback(
     (
-      type: TypeInputType | "relation",
+      type: TypeInputType,
       fieldValues: Record<string, any>,
       configurationValues: Record<string, any>
     ) => {

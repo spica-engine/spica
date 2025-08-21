@@ -2,7 +2,7 @@ import type {TypeInputType} from "oziko-ui-kit";
 import type {Property} from "src/services/bucketService";
 
 export const createFieldProperty = (
-  type: TypeInputType | "relation",
+  type: TypeInputType,
   fieldValues: Record<string, any>,
   configurationValue: Record<string, any>
 ): Property => {

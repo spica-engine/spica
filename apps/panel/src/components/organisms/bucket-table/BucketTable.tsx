@@ -104,7 +104,7 @@ const NewFieldHeader = () => {
 
   const handleSaveAndClose = useCallback(
     (
-      type: TypeInputType | "relation",
+      type: TypeInputType,
       fieldValues: Record<string, any>,
       configurationValues: Record<string, any>,
       requiredField?: string

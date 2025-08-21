@@ -19,7 +19,7 @@ import {getDefaultValues} from "./utils";
 import {InnerField, type FieldType} from "./InnerField";
 
 export type TypeSaveFieldHandler = (
-  type: TypeInputType | "relation",
+  type: TypeInputType,
   fieldValues: Record<string, any>,
   configurationValues: Record<string, any>,
   requiredField?: string
@@ -27,7 +27,7 @@ export type TypeSaveFieldHandler = (
 
 type TypeBucketAddField = {
   name: string;
-  type: TypeInputType | "relation";
+  type: TypeInputType;
   modalProps?: TypeModal;
   onSaveAndClose: TypeSaveFieldHandler;
   bucket: BucketType;
@@ -40,7 +40,7 @@ type TypeBucketAddField = {
 };
 
 export type TypeBucketFieldCreator = {
-  type: TypeInputType | "relation";
+  type: TypeInputType;
   fieldValues: Record<string, any>;
   setFieldValues: React.Dispatch<React.SetStateAction<Record<string, any>>>;
   configurationValue: Record<string, any>;
@@ -182,7 +182,7 @@ const BucketFieldCreator: FC<TypeBucketFieldCreator> = memo(
 
     const handleCreateInnerField = useCallback(
       (
-        type: TypeInputType | "relation",
+        type: TypeInputType,
         fieldValues: Record<string, any>,
         configurationValues: Record<string, any>
       ) => {
