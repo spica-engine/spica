@@ -16839,10 +16839,10 @@ oxc-resolver@^5.0.0:
     "@oxc-resolver/binding-win32-arm64-msvc" "5.0.1"
     "@oxc-resolver/binding-win32-x64-msvc" "5.0.1"
 
-oziko-ui-kit@^0.0.32:
-  version "0.0.32"
-  resolved "https://registry.yarnpkg.com/oziko-ui-kit/-/oziko-ui-kit-0.0.32.tgz#9f384dd64b143c82775b5bf2461ca1ac923cfeae"
-  integrity sha512-WhTsDoKfVtwbfPidGJjUVjsss+ZcmRm3i968RiuYrdZ08hkUVsnH361WTsq54DF/nUfr2ue34ZdM10ZEtY4n1w==
+oziko-ui-kit@^0.0.38:
+  version "0.0.38"
+  resolved "https://registry.yarnpkg.com/oziko-ui-kit/-/oziko-ui-kit-0.0.38.tgz#f6daf4b120be17f8e7e3b5e86635a24d6b82bbe4"
+  integrity sha512-hNBOFOTFz3xjPNuhQRu1cRC0AjyAVpJcBsGClsGNRT9EnAJGdzEBEncVV2Vu5R8EXufJdaTloNRh9Rf9Z0dLKw==
   dependencies:
     "@emotion/react" "^11.14.0"
     "@emotion/styled" "^11.14.0"
@@ -16859,10 +16859,12 @@ oziko-ui-kit@^0.0.32:
     formik "^2.4.6"
     leaflet "^1.9.4"
     lexical "^0.23.1"
+    lodash "^4.17.21"
     react-chartjs-2 "^5.3.0"
     react-draggable "^4.4.6"
     react-dropzone "^14.3.5"
     react-grid-layout "1.4.4"
+    react-infinite-scroll-component "^6.1.0"
     react-leaflet "^5.0.0"
     react-resizable "^3.0.5"
     react-scripts "^5.0.1"

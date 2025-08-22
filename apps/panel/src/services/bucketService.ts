@@ -18,7 +18,7 @@ export type BucketType = {
   [key: string]: any;
 };
 
-type Properties = {[key: string]: Property};
+export type Properties = {[key: string]: Property};
 
 type Property =
   | BasicProperty
@@ -116,6 +116,12 @@ export const useBucketService = () => {
     method: "put"
   });
 
+  const {request: createBucketEntry} = useApi({
+    endpoint: "",
+    method: "post"
+  });
+  
+
   const apiGetBucketData = useCallback(
     (bucketId: string, queryString?: string) => {
       return fetchBucketData({
@@ -191,6 +197,16 @@ export const useBucketService = () => {
     [putRequest]
   );
 
+  const apiCreateBucketEntry = useCallback(
+    async (bucketId: string, data: Record<string, any>) => {
+      return await createBucketEntry({
+        endpoint: `/api/bucket/${bucketId}/data`,
+        body: data
+      });
+    },
+    [createBucketEntry]
+  );
+  
   return {
     apiGetBucketData,
     apiGetBuckets: fetchBuckets,
@@ -201,6 +217,7 @@ export const useBucketService = () => {
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
+    apiCreateBucketEntry,
     apiBuckets,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
