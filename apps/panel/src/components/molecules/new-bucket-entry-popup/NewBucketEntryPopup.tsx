@@ -88,6 +88,18 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
                 headers: {authorization: `IDENTITY ${authToken}`}
               });
               const data = await result.json();
+              if (!data?.meta?.total) {
+                setRelationStates(prev => ({
+                  ...prev,
+                  [fullKey]: {
+                    ...prev[fullKey],
+                    skip: 25,
+                    total: 0,
+                    lastSearch: ""
+                  }
+                }));
+                return [];
+              }
               setRelationStates(prev => ({
                 ...prev,
                 [fullKey]: {
@@ -130,6 +142,17 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
                 headers: {authorization: `IDENTITY ${authToken}`}
               });
               const data = await result.json();
+              if (!data?.meta?.total) {
+                setRelationStates(prev => ({
+                  ...prev,
+                  [fullKey]: {
+                    ...prev[fullKey],
+                    skip: 25,
+                    total: 0
+                  }
+                }));
+                return;
+              }
               setRelationStates(prev => ({
                 ...prev,
                 [fullKey]: {...prev[fullKey], skip: 25, total: data.meta.total}
@@ -172,7 +195,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
             getOptions: getOptionsMap.current[fullKey],
             loadMoreOptions: loadMoreOptionsMap.current[fullKey],
             searchOptions: searchOptionsMap.current[fullKey],
-            totalOptionsLength: relationStates[fullKey].total || 0
+            totalOptionsLength: relationStates?.[fullKey]?.total || 0
           };
         } else if (property.type === "object" && property.properties) {
           newProperties[key] = {
