@@ -1,7 +1,7 @@
 import {Button, FlexElement, FluidContainer, Icon, Modal, useInputRepresenter} from "oziko-ui-kit";
-import {useCallback, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import styles from "./NewBucketEntryPopup.module.scss";
-import type {BucketType} from "src/services/bucketService";
+import type {BucketType, Properties} from "src/services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
@@ -68,6 +68,66 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const [relationTotals, setRelationTotals] = useState<Record<string, number>>({});
   const [relationLastSearches, setRelationLastSearches] = useState<Record<string, string>>({});
 
+  const getOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
+  const loadMoreOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
+  const searchOptionsMap = useRef<Record<string, (s: string) => Promise<any[]>>>({});
+
+  const processProperties = useCallback(
+    (properties: any, prefix = "") => {
+      Object.entries(properties).forEach(([key, property]: [string, any]) => {
+        const fullKey = prefix ? `${prefix}.${key}` : key;
+
+        if (property.type === "relation") {
+          if (!getOptionsMap.current[fullKey]) {
+            getOptionsMap.current[fullKey] = async () => {
+              const result = await fetch(buildOptionsUrl(property.bucketId, 0), {
+                headers: {authorization: `IDENTITY ${authToken}`}
+              });
+              const data = await result.json();
+              setRelationSkips(prev => ({...prev, [fullKey]: 25}));
+              setRelationLastSearches(prev => ({...prev, [fullKey]: ""}));
+              setRelationTotals(prev => ({...prev, [fullKey]: data.meta.total}));
+              return data.data.map((i: any) => ({label: i.title, value: i._id}));
+            };
+          }
+
+          if (!loadMoreOptionsMap.current[fullKey]) {
+            loadMoreOptionsMap.current[fullKey] = async () => {
+              const currentSkip = relationSkips[fullKey] || 0;
+              const lastSearch = relationLastSearches[fullKey];
+              const result = await fetch(
+                buildOptionsUrl(property.bucketId, currentSkip, lastSearch),
+                {
+                  headers: {authorization: `IDENTITY ${authToken}`}
+                }
+              );
+              const data = await result.json();
+              setRelationSkips(prev => ({...prev, [fullKey]: currentSkip + 25}));
+              return data.data.map((i: any) => ({label: i.title, value: i._id}));
+            };
+          }
+
+          if (!searchOptionsMap.current[fullKey]) {
+            searchOptionsMap.current[fullKey] = async (searchString: string) => {
+              setRelationLastSearches(prev => ({...prev, [fullKey]: searchString}));
+              const result = await fetch(buildOptionsUrl(property.bucketId, 0, searchString), {
+                headers: {authorization: `IDENTITY ${authToken}`}
+              });
+              const data = await result.json();
+              setRelationSkips(prev => ({...prev, [fullKey]: 25}));
+              setRelationTotals(prev => ({...prev, [fullKey]: data.meta.total}));
+              return data.data.map((i: any) => ({label: i.title, value: i._id}));
+            };
+          }
+        } else if (property.type === "object" && property.properties) {
+          // Recursively process nested object properties
+          processProperties(property.properties, fullKey);
+        }
+      });
+    },
+    [authToken, relationSkips, relationLastSearches]
+  );
+
   const formattedBaseProperties = useMemo(() => {
     const newProperties = {...bucket.properties};
 
@@ -76,97 +136,40 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
         property.properties = {};
       }
     });
-
+    processProperties(newProperties);
     return newProperties;
   }, [bucket.properties]);
 
-  const getOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
-  const loadMoreOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
-  const searchOptionsMap = useRef<Record<string, (s: string) => Promise<any[]>>>({});
-
-  // Recursive function to process properties and their nested properties
-  const processProperties = useCallback((properties: any, prefix = "") => {
-    Object.entries(properties).forEach(([key, property]: [string, any]) => {
-      const fullKey = prefix ? `${prefix}.${key}` : key;
-      
-      if (property.type === "relation") {
-        if (!getOptionsMap.current[fullKey]) {
-          getOptionsMap.current[fullKey] = async () => {
-            const result = await fetch(buildOptionsUrl(property.bucketId, 0), {
-              headers: {authorization: `IDENTITY ${authToken}`}
-            });
-            const data = await result.json();
-            setRelationSkips(prev => ({...prev, [fullKey]: 25}));
-            setRelationLastSearches(prev => ({...prev, [fullKey]: ""}));
-            setRelationTotals(prev => ({...prev, [fullKey]: data.meta.total}));
-            return data.data.map((i: any) => ({label: i.title, value: i._id}));
-          };
-        }
-
-        if (!loadMoreOptionsMap.current[fullKey]) {
-          loadMoreOptionsMap.current[fullKey] = async () => {
-            const currentSkip = relationSkips[fullKey] || 0;
-            const lastSearch = relationLastSearches[fullKey];
-            const result = await fetch(buildOptionsUrl(property.bucketId, currentSkip, lastSearch), {
-              headers: {authorization: `IDENTITY ${authToken}`}
-            });
-            const data = await result.json();
-            setRelationSkips(prev => ({...prev, [fullKey]: currentSkip + 25}));
-            return data.data.map((i: any) => ({label: i.title, value: i._id}));
-          };
-        }
-
-        if (!searchOptionsMap.current[fullKey]) {
-          searchOptionsMap.current[fullKey] = async (searchString: string) => {
-            setRelationLastSearches(prev => ({...prev, [fullKey]: searchString}));
-            const result = await fetch(buildOptionsUrl(property.bucketId, 0, searchString), {
-              headers: {authorization: `IDENTITY ${authToken}`}
-            });
-            const data = await result.json();
-            setRelationSkips(prev => ({...prev, [fullKey]: 25}));
-            setRelationTotals(prev => ({...prev, [fullKey]: data.meta.total}));
-            return data.data.map((i: any) => ({label: i.title, value: i._id}));
-          };
-        }
-      } else if (property.type === "object" && property.properties) {
-        // Recursively process nested object properties
-        processProperties(property.properties, fullKey);
-      }
-    });
-  }, [authToken, relationSkips, relationLastSearches]);
-
-  // Process all properties (including nested ones) to set up relation functions
-  useMemo(() => {
-    processProperties(formattedBaseProperties);
-  }, [formattedBaseProperties, processProperties]);
-
   // Recursive function to attach relation functions to properties
-  const attachRelationFunctions = useCallback((properties: any, prefix = ""): any => {
-    const newProperties: Record<string, any> = {};
-    
-    Object.entries(properties).forEach(([key, property]: [string, any]) => {
-      const fullKey = prefix ? `${prefix}.${key}` : key;
-      
-      if (property.type === "relation") {
-        newProperties[key] = {
-          ...property,
-          getOptions: getOptionsMap.current[fullKey],
-          loadMoreOptions: loadMoreOptionsMap.current[fullKey],
-          searchOptions: searchOptionsMap.current[fullKey],
-          totalOptionsLength: relationTotals[fullKey] || 0
-        };
-      } else if (property.type === "object" && property.properties) {
-        newProperties[key] = {
-          ...property,
-          properties: attachRelationFunctions(property.properties, fullKey)
-        };
-      } else {
-        newProperties[key] = property;
-      }
-    });
-    
-    return newProperties;
-  }, [relationTotals]);
+  const attachRelationFunctions = useCallback(
+    (properties: any, prefix = ""): any => {
+      const newProperties: Record<string, any> = {};
+
+      Object.entries(properties).forEach(([key, property]: [string, any]) => {
+        const fullKey = prefix ? `${prefix}.${key}` : key;
+
+        if (property.type === "relation") {
+          newProperties[key] = {
+            ...property,
+            getOptions: getOptionsMap.current[fullKey],
+            loadMoreOptions: loadMoreOptionsMap.current[fullKey],
+            searchOptions: searchOptionsMap.current[fullKey],
+            totalOptionsLength: relationTotals[fullKey] || 0
+          };
+        } else if (property.type === "object" && property.properties) {
+          newProperties[key] = {
+            ...property,
+            properties: attachRelationFunctions(property.properties, fullKey)
+          };
+        } else {
+          newProperties[key] = property;
+        }
+      });
+
+      return newProperties;
+    },
+    [relationTotals]
+  );
 
   // Combine base properties with stable relation function references
   const formattedProperties = useMemo(() => {
@@ -176,30 +179,29 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const {createBucketEntry} = useBucket();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Recursive function to generate initial values for nested objects
-  const generateInitialValues = useCallback((properties: any): any => {
-    return Object.keys(properties).reduce((acc: Record<string, any>, key) => {
-      const property = properties[key];
-      
-      if (property.type === "array") {
-        acc[key] = undefined;
-      } else if (property.type === "object" && property.properties) {
-        acc[key] = generateInitialValues(property.properties);
-      } else {
-        acc[key] = property.type in DEFAULT_VALUES
-          ? DEFAULT_VALUES[property.type as keyof typeof DEFAULT_VALUES]
-          : "";
-      }
-      return acc;
-    }, {});
-  }, []);
+  const generateInitialValues = useCallback(
+    (properties?: Properties) => {
+      const propertiesToUse = properties ?? formattedProperties;
+      return Object.keys(propertiesToUse).reduce((acc: Record<string, any>, key) => {
+        const property = propertiesToUse[key];
 
-  const getInitialValues = useCallback(
-    () => generateInitialValues(formattedProperties),
-    [formattedProperties, generateInitialValues]
+        if (property.type === "array") {
+          acc[key] = undefined;
+        } else if (property.type === "object" && property.properties) {
+          acc[key] = generateInitialValues(property.properties);
+        } else {
+          acc[key] =
+            property.type in DEFAULT_VALUES
+              ? DEFAULT_VALUES[property.type as keyof typeof DEFAULT_VALUES]
+              : "";
+        }
+        return acc;
+      }, {});
+    },
+    [formattedProperties]
   );
 
-  const [value, setValue] = useState<Record<string, any>>(getInitialValues);
+  const [value, setValue] = useState<Record<string, any>>(generateInitialValues);
   const [isLoading, setIsLoading] = useState(false);
   const inputRepresentation = useInputRepresenter({
     properties: formattedProperties as TypeProperties,
@@ -235,7 +237,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
       setIsLoading(false);
       if (!result) return;
       setIsOpen(false);
-      setValue(getInitialValues());
+      setValue(generateInitialValues());
     } catch (error) {
       console.error("Error creating bucket entry:", error);
     }
