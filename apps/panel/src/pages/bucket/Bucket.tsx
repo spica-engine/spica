@@ -136,7 +136,7 @@ type BucketWithVisibleColumnsProps = {
   handleSearch: (search: string) => Promise<void>;
   handleRefresh: () => Promise<void>;
   refreshLoading: boolean;
-  tableRef: React.RefObject<HTMLElement | null>
+  tableRef: React.RefObject<HTMLElement | null>;
 };
 
 function BucketWithVisibleColumns({
@@ -149,7 +149,7 @@ function BucketWithVisibleColumns({
   handleSearch,
   handleRefresh,
   refreshLoading,
-  tableRef,
+  tableRef
 }: BucketWithVisibleColumnsProps) {
   const defaultVisibleColumns = useMemo(
     () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
@@ -189,13 +189,13 @@ function BucketWithVisibleColumns({
   return (
     <div className={styles.container}>
       <BucketActionBar
-        columns={formattedColumns}
+        onSearch={handleSearch}
+        bucket={bucket as BucketType}
+        onRefresh={handleRefresh}
+        columns={filteredColumns}
         visibleColumns={visibleColumns}
         toggleColumn={toggleColumn}
-        bucket={bucket}
-        onSearch={handleSearch}
         searchLoading={bucketDataLoading && !isTableLoading}
-        onRefresh={handleRefresh}
         refreshLoading={refreshLoading}
       />
       <BucketTable

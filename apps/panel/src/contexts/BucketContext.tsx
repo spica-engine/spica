@@ -33,6 +33,7 @@ type BucketContextType = {
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   refreshBucketData: () => Promise<void>;
+  updateBucketReadonly: (bucket: BucketType) => Promise<any>;
   updateBucketLimitation: (bucket: BucketType) => Promise<void>;
   updateBucketLimitationFields: (
     bucket: BucketType,
@@ -76,6 +77,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiUpdateBucketReadonly,
     apiUpdatebucketLimitiation,
     apiUpdatebucketLimitiationFields,
     apiBuckets,
@@ -260,6 +262,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   );
 
 
+  const updateBucketReadonly = useCallback(async (bucket: BucketType) => {
+    const previousBuckets = buckets;
+    setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
+    const success = await apiUpdateBucketReadonly(bucket);
+    if (!success) {
+      setBuckets(previousBuckets);
+    }
+  }, [buckets, apiUpdateBucketReadonly]);
+
   const updateBucketLimitation = useCallback(
     async (bucket: BucketType) => {
       const hasSettings = Boolean(bucket.documentSettings);
@@ -319,6 +330,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketHistory,
       deleteBucketHistory: apiDeleteBucketHistory,
       refreshBucketData,
+      updateBucketReadonly,
       updateBucketLimitation,
       updateBucketLimitationFields,
       buckets,
@@ -343,6 +355,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiDeleteBucketHistory,
       refreshBucketData,
       loadMoreBucketData,
+      updateBucketReadonly,
       updateBucketLimitation,
       updateBucketLimitationFields,
       buckets,

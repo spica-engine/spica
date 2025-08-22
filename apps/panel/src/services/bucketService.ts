@@ -183,6 +183,19 @@ export const useBucketService = () => {
     });
   }, [deleteHistoty]);
 
+  const apiUpdateBucketReadonly = useCallback(
+    async (bucket: BucketType) => {
+      return await putRequest({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {
+          ...bucket,
+          readOnly: !bucket.readOnly
+        }
+      });
+    },
+    [putRequest]
+  );
+
     const apiUpdatebucketLimitiation = useCallback(
     async (bucketId: string, body: Record<string, any>) => {
       return await bucketLimitationRequest({
@@ -209,6 +222,7 @@ export const useBucketService = () => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiUpdateBucketReadonly,
     apiUpdatebucketLimitiation,
     apiUpdatebucketLimitiationFields,
     apiBuckets,

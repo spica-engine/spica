@@ -6,7 +6,7 @@ import {
   Text,
   Checkbox,
   Popover,
-  useOnClickOutside,
+  useOnClickOutside
 } from "oziko-ui-kit";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -54,11 +54,13 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const {
     updateBucketLimitation,
     updateBucketLimitationFields,
+    updateBucketReadonly,
     updateBucketHistory,
     deleteBucketHistory,
     deleteBucketHistoryLoading,
     deleteBucketHistoryError
   } = useBucket();
+  const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
   const isLimitationChecked = useMemo(() => Boolean(bucket?.documentSettings), [bucket]);
 
   const handleChangeLimitation = () => {
@@ -77,6 +79,9 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
       });
   };
 
+  const handleChangeReadOnly = () => {
+    updateBucketReadonly(bucket);
+  };
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
   const handleChangeHistory = () => {
     updateBucketHistory(bucket);
@@ -178,7 +183,12 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                       setValues={setBucketLimitationValues}
                     />
                   )}
-                  <Checkbox label="Read Only" />
+
+                  <Checkbox
+                    label="Read Only"
+                    checked={isReadOnlyChecked}
+                    onChange={handleChangeReadOnly}
+                  />
                 </FlexElement>
               )
             }}
