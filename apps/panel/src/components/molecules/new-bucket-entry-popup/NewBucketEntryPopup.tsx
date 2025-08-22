@@ -62,11 +62,15 @@ function buildOptionsUrl(bucketId: string, skip = 0, searchValue?: string) {
   return `${base}${filter}&skip=${skip}`;
 }
 
+type RelationState = {
+  skip: number;
+  total: number;
+  lastSearch: string;
+};
+
 const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const [authToken] = useLocalStorage("token", "");
-  const [relationSkips, setRelationSkips] = useState<Record<string, number>>({});
-  const [relationTotals, setRelationTotals] = useState<Record<string, number>>({});
-  const [relationLastSearches, setRelationLastSearches] = useState<Record<string, string>>({});
+  const [relationStates, setRelationStates] = useState<Record<string, RelationState>>({});
 
   const getOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
   const loadMoreOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
@@ -84,17 +88,23 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
                 headers: {authorization: `IDENTITY ${authToken}`}
               });
               const data = await result.json();
-              setRelationSkips(prev => ({...prev, [fullKey]: 25}));
-              setRelationLastSearches(prev => ({...prev, [fullKey]: ""}));
-              setRelationTotals(prev => ({...prev, [fullKey]: data.meta.total}));
+              setRelationStates(prev => ({
+                ...prev,
+                [fullKey]: {
+                  ...prev[fullKey],
+                  skip: 25,
+                  total: data.meta.total,
+                  lastSearch: ""
+                }
+              }));
               return data.data.map((i: any) => ({label: i.title, value: i._id}));
             };
           }
 
           if (!loadMoreOptionsMap.current[fullKey]) {
             loadMoreOptionsMap.current[fullKey] = async () => {
-              const currentSkip = relationSkips[fullKey] || 0;
-              const lastSearch = relationLastSearches[fullKey];
+              const currentSkip = relationStates[fullKey].skip || 0;
+              const lastSearch = relationStates[fullKey].lastSearch;
               const result = await fetch(
                 buildOptionsUrl(property.bucketId, currentSkip, lastSearch),
                 {
@@ -102,20 +112,28 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
                 }
               );
               const data = await result.json();
-              setRelationSkips(prev => ({...prev, [fullKey]: currentSkip + 25}));
+              setRelationStates(prev => ({
+                ...prev,
+                [fullKey]: {...prev[fullKey], skip: currentSkip + 25}
+              }));
               return data.data.map((i: any) => ({label: i.title, value: i._id}));
             };
           }
 
           if (!searchOptionsMap.current[fullKey]) {
             searchOptionsMap.current[fullKey] = async (searchString: string) => {
-              setRelationLastSearches(prev => ({...prev, [fullKey]: searchString}));
+              setRelationStates(prev => ({
+                ...prev,
+                [fullKey]: {...prev[fullKey], lastSearch: searchString}
+              }));
               const result = await fetch(buildOptionsUrl(property.bucketId, 0, searchString), {
                 headers: {authorization: `IDENTITY ${authToken}`}
               });
               const data = await result.json();
-              setRelationSkips(prev => ({...prev, [fullKey]: 25}));
-              setRelationTotals(prev => ({...prev, [fullKey]: data.meta.total}));
+              setRelationStates(prev => ({
+                ...prev,
+                [fullKey]: {...prev[fullKey], skip: 25, total: data.meta.total}
+              }));
               return data.data.map((i: any) => ({label: i.title, value: i._id}));
             };
           }
@@ -125,7 +143,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
         }
       });
     },
-    [authToken, relationSkips, relationLastSearches]
+    [authToken, relationStates]
   );
 
   const formattedBaseProperties = useMemo(() => {
@@ -154,7 +172,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
             getOptions: getOptionsMap.current[fullKey],
             loadMoreOptions: loadMoreOptionsMap.current[fullKey],
             searchOptions: searchOptionsMap.current[fullKey],
-            totalOptionsLength: relationTotals[fullKey] || 0
+            totalOptionsLength: relationStates[fullKey].total || 0
           };
         } else if (property.type === "object" && property.properties) {
           newProperties[key] = {
@@ -168,7 +186,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
 
       return newProperties;
     },
-    [relationTotals]
+    [relationStates]
   );
 
   // Combine base properties with stable relation function references
