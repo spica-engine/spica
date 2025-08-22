@@ -139,7 +139,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
         },
         {
           image: "mongo",
-          tag: "4.2"
+          tag: options.mongoVersion.toString()
         },
         {
           image: "nginx",
@@ -181,7 +181,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
   async function createMongoDB(instanceIndex: number) {
     const container = await machine.createContainer({
-      Image: "mongo:4.2",
+      Image: `mongo:${options.mongoVersion.toString()}`,
       name: `${databaseName}-${instanceIndex}`,
       Cmd: ["--replSet", name, "--bind_ip_all"],
       Labels: {namespace: name},
@@ -212,6 +212,22 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
   const databaseReplicas = Number(options.databaseReplicas);
 
+  // shell to use inside DB containers (will be detected at runtime)
+  let shell = "mongo";
+
+  // Detect available mongo shell inside a container (prefer mongosh, fallback to mongo)
+  async function detectShell(container: any): Promise<string> {
+    const probe = await container.exec({
+      Cmd: ["sh", "-c", "command -v mongosh || command -v mongo || true"],
+      AttachStdout: true,
+      AttachStderr: true
+    });
+    const res = await probe.start({});
+    const out = (await streamToBuffer(res)).toString().trim();
+    if (!out) throw new Error("no mongo shell available in container");
+    return out.split("/").pop() as string;
+  }
+
   await spin({
     text: `Creating database containers (1/${databaseReplicas})`,
     op: async spinner => {
@@ -234,11 +250,15 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
       const firstContainer = machine.getContainer(`${databaseName}-0`);
 
+      // detect available shell once on the container
+      const detected = await detectShell(firstContainer);
+      if (detected) shell = detected;
+
       const initiateReplication = async (reconfig = false) => {
         spinner.text = "Initiating replication between database containers.";
         const exec = await firstContainer.exec({
           Cmd: [
-            "mongo",
+            shell,
             "admin",
             "--eval",
             reconfig
@@ -286,7 +306,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
       for (let i = 0; i < 15; i++) {
         const exec = await firstContainer.exec({
-          Cmd: ["mongo", "admin", "--eval", "rs.status()"],
+          Cmd: [shell, "admin", "--eval", "rs.status()"],
           AttachStderr: true,
           AttachStdout: true
         });
@@ -457,6 +477,10 @@ export default function (program: Program): Command {
     )
     .option("--image-version", "Version of the spica to run.", {
       default: "latest",
+      validator: CaporalValidator.STRING
+    })
+    .option("--mongo-version", "Version of the MongoDB image to run.", {
+      default: "7.0",
       validator: CaporalValidator.STRING
     })
     .option("-o, --open", "Open project authorization page after creation.", {
