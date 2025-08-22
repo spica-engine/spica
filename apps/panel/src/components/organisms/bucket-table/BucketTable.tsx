@@ -3,7 +3,6 @@ import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
-import useLocalStorage from "../../../hooks/useLocalStorage";
 
 type FieldType =
   | "string"
@@ -43,7 +42,7 @@ type BucketTableProps = {
   maxHeight?: string | number;
   bucketId: string;
   loading: boolean;
-  tableRef?: RefObject<HTMLElement | null>
+  tableRef?: RefObject<HTMLElement | null>;
 };
 
 type ColumnHeaderProps = {
@@ -188,7 +187,15 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
       return (
         <div className={styles.locationCell}>
           <img src="/locationx.png" className={styles.locationImage} />
-          <div>{cellData}</div>
+          <div
+            data-full={cellData?.coordinates.join(", ")}
+            onCopy={e => {
+              e.preventDefault();
+              e.clipboardData.setData("text/plain", e.currentTarget.dataset.full || "");
+            }}
+          >
+            {cellData?.coordinates?.map((c: number) => c.toFixed(2) + "..").join(", ")}
+          </div>
         </div>
       );
     case "array":
@@ -299,7 +306,7 @@ const BucketTable = ({
   maxHeight,
   loading,
   bucketId,
-  tableRef,
+  tableRef
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),
