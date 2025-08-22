@@ -1,0 +1,5 @@
+{
+  "name": "api/passport/refresh_token/realtime",
+  "sourceRoot": "apps/api/src/passport/refresh_token/realtime",
+  "projectType": "application"
+}
