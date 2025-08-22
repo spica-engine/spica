@@ -101,6 +101,7 @@ export function getRepApplier<R extends Resource>(
 ): SynchronizerArgs<R, RepresentativeManagerResource>["syncs"][0]["applier"]["apply"] {
   return change => {
     const write = (resource: RepresentativeManagerResource) => {
+      console.log("change: ", change);
       return vcRepresentativeManager.write(
         moduleName,
         resource.slug,

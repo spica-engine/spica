@@ -1,7 +1,7 @@
 import {
   ChangeTypes,
   DocChange,
-  getDisplayableName,
+  DocumentManagerResource,
   RepChange,
   RepresentativeManagerResource,
   ResourceType,
@@ -35,13 +35,15 @@ export const getDependencySynchronizer = (
       });
     });
 
-  const convertToRepResource = (change: DocChange<FunctionWithContent>) => {
-    const parsed = JSON.parse(change.resource.content);
+  const convertToRepResource = (
+    change: DocChange<DocumentManagerResource<FunctionWithContent>>
+  ) => {
+    const parsed = JSON.parse(change.resource.content.content);
     const dependencies = parsed.dependencies || {};
 
     return {
-      _id: change.resource._id.toString(),
-      slug: change.resource.name,
+      _id: change.resource.content._id.toString(),
+      slug: change.resource.content.name,
       content: JSON.stringify({dependencies})
     };
   };

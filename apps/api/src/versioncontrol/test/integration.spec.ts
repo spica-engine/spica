@@ -204,7 +204,7 @@ describe("Versioning", () => {
             const file = await readResource("preference", "identity");
             const parsedFile = {
               ...file,
-              displayableName: "identity",
+              slug: "identity",
               contents: {schema: YAML.parse(file.contents.schema)}
             };
 
@@ -213,7 +213,7 @@ describe("Versioning", () => {
 
             expect(parsedFile).toEqual({
               _id: "identity",
-              displayableName: "identity",
+              slug: "identity",
               contents: {schema: expectedSchema}
             });
           });

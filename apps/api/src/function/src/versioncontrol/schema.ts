@@ -2,7 +2,6 @@ import {FunctionService} from "@spica-server/function/services";
 import {
   ChangeTypes,
   DocChange,
-  getDisplayableName,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs

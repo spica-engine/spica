@@ -1,7 +1,6 @@
 import {
   ChangeTypes,
   DocChange,
-  getDisplayableName,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs

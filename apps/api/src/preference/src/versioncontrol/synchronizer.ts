@@ -30,7 +30,7 @@ export const getSynchronizer = (
 
   const convertToRepResource = (change: DocChange<Identity["attributes"]>) => {
     const {_id, ...resourceWithoutID} = change.resource;
-    return {_id, displayableName: _id, content: YAML.stringify(resourceWithoutID)};
+    return {_id, slug: _id, content: YAML.stringify(resourceWithoutID)};
   };
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {

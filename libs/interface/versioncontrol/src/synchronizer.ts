@@ -17,7 +17,7 @@ export interface Resource {
   [key: string]: any;
 }
 
-interface Change<R extends Resource> {
+interface Change<R extends ManagerResource> {
   resourceType: ResourceType;
   changeType: ChangeTypes;
   resource: R;
@@ -128,7 +128,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
           this.addDocToRepAction,
           this.addRepToDocAction,
           this.removeDocToRepAction,
-          this.removeDocToRepAction
+          this.addRepToDocAction
         ],
         CommandType.SYNC
       );
@@ -146,9 +146,23 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
   // New meta-based action tracking methods
   addDocToRepAction(meta: ChangeMeta) {
     this.docToRepActions.add(meta);
+
+    // Store mapping when we have both id and slug
+    if (meta.id && meta.slug) {
+      const idStr = String(meta.id);
+
+      this.storeIdSlugMapping(idStr, meta.slug);
+    }
   }
   addRepToDocAction(meta: ChangeMeta) {
     this.repToDocActions.add(meta);
+
+    // Store mapping when we have both id and slug
+    if (meta.id && meta.slug) {
+      const idStr = String(meta.id);
+
+      this.storeIdSlugMapping(idStr, meta.slug);
+    }
   }
 
   removeDocToRepAction(meta: ChangeMeta) {
@@ -214,7 +228,6 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     if (id && slug) {
       this.storeIdSlugMapping(id, slug);
     }
-
     return {resourceId: id, slug};
   }
 
@@ -233,17 +246,6 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     // If both have slugs, compare them directly
     if (action1.slug && action2.slug) {
       return action1.slug === action2.slug;
-    }
-
-    // Cross-reference: if one has ID and other has slug, check if they map to each other
-    if (action1.id && action2.slug) {
-      const mappedSlug = this.getSlugFromId(action1.id);
-      return mappedSlug === action2.slug;
-    }
-
-    if (action1.slug && action2.id) {
-      const mappedId = this.getIdFromSlug(action1.slug);
-      return mappedId === action2.id;
     }
 
     return false;
@@ -273,11 +275,6 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     const docSync = syncs[0];
 
     const docSyncNext = (change: DocChange<R1>, resourceId: string, slug?: string) => {
-      // Fill missing slug from map if available
-      if (!slug && resourceId) {
-        slug = this.getSlugFromId(resourceId);
-      }
-
       // Generate meta for this change
       const meta: ChangeMeta = {
         id: resourceId,
@@ -288,6 +285,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
       };
 
       const isSynchronizerAction = this.hasMatchingAction(meta, this.repToDocActions);
+      console.log("doc to rep: isSynchronizerAction", isSynchronizerAction);
       if (isSynchronizerAction) {
         return this.removeRepToDocAction(meta);
       }
@@ -296,27 +294,16 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
       const convertedChange = docSync.converter.convert(change);
 
-      // If we resolved a slug or resourceId earlier, ensure the converted
-      // representative change contains them so the rep applier can operate
-      // (for example, delete needs the folder slug to remove the right dir).
-      const _res: any = convertedChange.resource;
-      if (slug && !_res.slug) {
-        _res.slug = slug;
-      }
-      if (resourceId && !_res._id) {
-        _res._id = resourceId;
-      }
-
-      // Apply converted representative change to the representative applier.
-      // (No global duplicate-key fallback here — prefer explicit INSERT/UPDATE
-      // semantics as in the original system.)
       docSync.applier.apply(convertedChange).catch(this.errorHandler);
     };
 
     docSync.watcher.watch().subscribe({
       next: change => {
         const rawResourceId = change.resource._id;
-        const rawSlug = change.resource.slug;
+        // const rawSlug = change.resource.slug;
+        console.log("doc to rep sync: ", change);
+        // console.log("rep rawResourceId:", rawResourceId, "rep rawSlug: ", rawSlug);
+        const rawSlug = change.resource.slug || change.resource.title || change.resource.name;
 
         const resolved = this.resolveIdAndSlug(rawResourceId, rawSlug);
         const resourceId = resolved.resourceId;
@@ -335,11 +322,6 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     const repSync = syncs[1];
 
     const repSyncNext = (change: RepChange<R2>, resourceId: string, slug?: string) => {
-      // Fill missing id from map if available
-      if (!resourceId && slug) {
-        resourceId = this.getIdFromSlug(slug);
-      }
-
       // Generate meta for this change
       const meta: ChangeMeta = {
         id: resourceId,
@@ -350,6 +332,8 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
       };
 
       const isSynchronizerAction = this.hasMatchingAction(meta, this.docToRepActions);
+      console.log("rep to doc: isSynchronizerAction", isSynchronizerAction);
+
       if (isSynchronizerAction) {
         return this.removeDocToRepAction(meta);
       }
@@ -358,20 +342,12 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
       const convertedChange = repSync.converter.convert(change);
 
-      const _res: any = convertedChange.resource;
-      if (slug && !_res.slug) {
-        _res.slug = slug;
-      }
-      if (resourceId && !_res._id) {
-        _res._id = resourceId;
-      }
-
       const retry = (delays: number[]) => {
         repSync.applier.apply(convertedChange).catch(err => {
           delays.length
             ? new Promise(res => setTimeout(res, delays[0])).then(() => retry(delays.slice(1)))
             : console.error(
-                "Failed to apply changes from doc to rep for the following change:\n",
+                "Failed to apply changes from rep to doc for the following change:\n",
                 convertedChange,
                 "\nreason:\n",
                 err
@@ -386,7 +362,8 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
       next: change => {
         const rawResourceId = change.resource._id;
         const rawSlug = change.resource.slug;
-
+        console.log("rep to doc sync: ", change);
+        // console.log("rep rawResourceId:", rawResourceId, "rep rawSlug: ", rawSlug);
         const resolved = this.resolveIdAndSlug(rawResourceId, rawSlug);
         const resourceId = resolved.resourceId;
         const slug = resolved.slug;
@@ -403,10 +380,13 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
   }
 }
 
-export type RepresentativeManagerResource = {
+export type RepresentativeManagerResource = ManagerResource<string>;
+export type DocumentManagerResource<T extends any> = ManagerResource<T>;
+
+export type ManagerResource<T> = {
   _id?: string;
   slug?: string;
-  content: string;
+  content: T;
   additionalParameters?: {[key: string]: string | number};
 };
 
@@ -426,7 +406,9 @@ export type VCSynchronizerArgs<R1 extends Resource> = Omit<
             docWatcher: () => Observable<DocChange<R1>>;
           };
       converter: {
-        convertToRepResource: (change: DocChange<R1>) => RepresentativeManagerResource;
+        convertToRepResource: (
+          change: DocChange<DocumentManagerResource<R1>>
+        ) => RepresentativeManagerResource;
       };
       applier: {
         fileName: string;

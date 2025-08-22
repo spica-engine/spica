@@ -2,8 +2,7 @@ import {
   DocChange,
   RepChange,
   RepresentativeManagerResource,
-  VCSynchronizerArgs,
-  getDisplayableName
+  VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../crud";
 import {PolicyService} from "@spica-server/passport/policy";
