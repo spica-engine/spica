@@ -23,10 +23,11 @@ type TypeBucketMorePopup = {
   onClose?: () => void;
 };
 
+export type TypeLimitExceedBehaviour = "prevent" | "remove"
 export const LIMIT_EXCEED_BEHAVIOUR_OPTIONS = [
   {label: "Do not insert", value: "prevent"},
   {label: "Insert but delete the oldest", value: "remove"}
-] as {label: string; value: "prevent" | "remove"}[];
+] as {label: string; value: TypeLimitExceedBehaviour}[];
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,13 +35,13 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
 
   const [bucketLimitationValues, setBucketLimitationValues] = useState<{
-    countLimit: any;
-    limitExceedBehaviour: TypeValue;
+    countLimit: number;
+    limitExceedBehaviour: TypeLimitExceedBehaviour;
   }>({
     countLimit: bucket?.documentSettings?.countLimit,
     limitExceedBehaviour: LIMIT_EXCEED_BEHAVIOUR_OPTIONS.find(
       i => i.value === bucket?.documentSettings?.limitExceedBehaviour
-    )?.label as TypeValue
+    )?.label as TypeLimitExceedBehaviour
   });
   console.log("bucket?.documentSettings: ", bucket?.documentSettings);
 

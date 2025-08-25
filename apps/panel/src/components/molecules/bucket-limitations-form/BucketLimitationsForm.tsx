@@ -6,26 +6,29 @@ import {
   type TypeFluidContainer
 } from "oziko-ui-kit";
 import styles from "./BucketLimitiationsForm.module.scss";
-import { LIMIT_EXCEED_BEHAVIOUR_OPTIONS } from "../bucket-more-popup/BucketMorePopup";
+import {
+  LIMIT_EXCEED_BEHAVIOUR_OPTIONS,
+  type TypeLimitExceedBehaviour
+} from "../bucket-more-popup/BucketMorePopup";
 
 type BucketLimitationsFormProps = {
   className?: string;
   setValues: React.Dispatch<
     React.SetStateAction<{
       countLimit: number;
-      limitExceedBehaviour: TypeValue;
+      limitExceedBehaviour: TypeLimitExceedBehaviour;
     }>
   >;
   values: {
     countLimit: number;
-    limitExceedBehaviour: TypeValue;
+    limitExceedBehaviour: TypeLimitExceedBehaviour;
   };
 };
 
 const BucketLimitationsForm = ({className, setValues, values}: BucketLimitationsFormProps) => {
   const handleCountLimitChange = (countLimit: number) => setValues(prev => ({...prev, countLimit}));
 
-  const handleLimitExceedBehaviourChange = (limitExceedBehaviour: TypeValue) =>
+  const handleLimitExceedBehaviourChange = (limitExceedBehaviour: TypeLimitExceedBehaviour) =>
     setValues(prev => ({...prev, limitExceedBehaviour}));
 
   return (
@@ -46,8 +49,8 @@ const BucketLimitationsForm = ({className, setValues, values}: BucketLimitations
               <StringInput
                 options={LIMIT_EXCEED_BEHAVIOUR_OPTIONS.map(i => i.label)}
                 className={styles.limitExceedBehaviourInput}
-                value={values.limitExceedBehaviour as string}
-                onChange={handleLimitExceedBehaviourChange}
+                value={values.limitExceedBehaviour}
+                onChange={handleLimitExceedBehaviourChange as (value: string) => void}
                 label="Choose limit-reached action"
                 selectProps={
                   {
