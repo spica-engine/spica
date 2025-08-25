@@ -24,7 +24,8 @@ export class FunctionService extends BaseCollection<Function>(collectionName) {
   ) {
     super(database, {
       entryLimit: options.entryLimit,
-      afterInit: () => this.createIndex({env_vars: 1})
+      afterInit: () =>
+        Promise.all([this.createIndex({env_vars: 1}), this.createIndex({name: 1}, {unique: true})])
     });
   }
 
