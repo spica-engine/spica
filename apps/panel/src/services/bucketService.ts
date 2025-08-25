@@ -211,7 +211,7 @@ export const useBucketService = () => {
       endpoint: `/api/bucket/${bucket._id}`,
       body: bucket
     });
-  }, [])
+  }, [bucketLimitationRequest])
 
   return {
     apiGetBucketData,

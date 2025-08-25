@@ -6,13 +6,13 @@ import {
   Text,
   Checkbox,
   Popover,
-  useOnClickOutside
+  useOnClickOutside,
+  type TypeValue
 } from "oziko-ui-kit";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
 import BucketLimitationsForm from "../bucket-limitations-form/BucketLimitationsForm";
-
 import {memo, useEffect, useMemo, useRef, useState, type FC} from "react";
 import Confirmation from "../confirmation/Confirmation";
 
@@ -23,13 +23,26 @@ type TypeBucketMorePopup = {
   onClose?: () => void;
 };
 
+export const LIMIT_EXCEED_BEHAVIOUR_OPTIONS = [
+  {label: "Do not insert", value: "prevent"},
+  {label: "Insert but delete the oldest", value: "remove"}
+] as {label: string; value: "prevent" | "remove"}[];
+
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
-  const [bucketLimitationValues, setBucketLimitationValues] = useState({
-    ...bucket?.documentSettings
+
+  const [bucketLimitationValues, setBucketLimitationValues] = useState<{
+    countLimit: any;
+    limitExceedBehaviour: TypeValue;
+  }>({
+    countLimit: bucket?.documentSettings?.countLimit,
+    limitExceedBehaviour: LIMIT_EXCEED_BEHAVIOUR_OPTIONS.find(
+      i => i.value === bucket?.documentSettings?.limitExceedBehaviour
+    )?.label as TypeValue
   });
+  console.log("bucket?.documentSettings: ", bucket?.documentSettings);
 
   useEffect(() => {
     setBucketLimitationValues({
@@ -71,7 +84,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     const success = await updateBucketLimitationFields(
       bucket,
       bucketLimitationValues.countLimit,
-      bucketLimitationValues.limitExceedBehaviour
+      bucketLimitationValues.limitExceedBehaviour as "prevent" | "remove"
     );
     if (!success)
       setBucketLimitationValues({
@@ -156,39 +169,56 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                   direction="vertical"
                   gap={0}
                 >
-                  <Checkbox
-                    label="History"
-                    checked={isHistoryChecked}
-                    onChange={handleChangeHistory}
-                  />
-                  {isHistoryChecked && (
-                    <Button
-                      variant="text"
-                      onClick={() => setIsDeleteHistoryConfirmationOpen(true)}
-                      className={styles.historyButton}
-                    >
-                      <Icon name="delete" />
-                      <Text>Remove History</Text>
-                    </Button>
-                  )}
-                  <Checkbox
-                    label="Limitation"
-                    checked={isLimitationChecked}
-                    onChange={handleChangeLimitation}
-                  />
-                  {isLimitationChecked && (
-                    <BucketLimitationsForm
-                      className={styles.bucketLimitationsForm}
-                      values={bucketLimitationValues}
-                      setValues={setBucketLimitationValues}
+                  <FlexElement
+                    direction="vertical"
+                    alignment="leftTop"
+                    className={styles.historyContainer}
+                    gap={0}
+                  >
+                    <Checkbox
+                      label="History"
+                      checked={isHistoryChecked}
+                      onChange={handleChangeHistory}
+                      className={styles.historyCheckbox}
                     />
-                  )}
+                    {isHistoryChecked && (
+                      <Button
+                        variant="text"
+                        onClick={() => setIsDeleteHistoryConfirmationOpen(true)}
+                        className={styles.historyButton}
+                      >
+                        <Icon name="delete" />
+                        <Text>Remove History</Text>
+                      </Button>
+                    )}
+                  </FlexElement>
+                  <FlexElement
+                    gap={5}
+                    direction="vertical"
+                    alignment="leftTop"
+                    className={styles.limitationsContainer}
+                  >
+                    <Checkbox
+                      label="Limitation"
+                      checked={isLimitationChecked}
+                      onChange={handleChangeLimitation}
+                      className={styles.limitationsCheckbox}
+                    />
+                    {isLimitationChecked && (
+                      <BucketLimitationsForm
+                        className={styles.limitationsForm}
+                        values={bucketLimitationValues}
+                        setValues={setBucketLimitationValues}
+                      />
+                    )}
 
-                  <Checkbox
-                    label="Read Only"
-                    checked={isReadOnlyChecked}
-                    onChange={handleChangeReadOnly}
-                  />
+                    <Checkbox
+                      label="Read Only"
+                      checked={isReadOnlyChecked}
+                      onChange={handleChangeReadOnly}
+                      className={styles.readonlyCheckbox}
+                    />
+                  </FlexElement>
                 </FlexElement>
               )
             }}

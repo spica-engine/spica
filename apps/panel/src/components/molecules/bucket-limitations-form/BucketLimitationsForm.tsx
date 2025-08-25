@@ -1,8 +1,15 @@
-import {FluidContainer, Icon, Input, FlexElement, Select, type TypeValue} from "oziko-ui-kit";
+import {
+  FluidContainer,
+  type TypeValue,
+  StringInput,
+  NumberInput,
+  type TypeFluidContainer
+} from "oziko-ui-kit";
 import styles from "./BucketLimitiationsForm.module.scss";
+import { LIMIT_EXCEED_BEHAVIOUR_OPTIONS } from "../bucket-more-popup/BucketMorePopup";
 
 type BucketLimitationsFormProps = {
-  className: string;
+  className?: string;
   setValues: React.Dispatch<
     React.SetStateAction<{
       countLimit: number;
@@ -16,16 +23,10 @@ type BucketLimitationsFormProps = {
 };
 
 const BucketLimitationsForm = ({className, setValues, values}: BucketLimitationsFormProps) => {
-  const handleCountLimitChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setValues(prev => ({...prev, countLimit: Number(e.target.value)}));
+  const handleCountLimitChange = (countLimit: number) => setValues(prev => ({...prev, countLimit}));
 
   const handleLimitExceedBehaviourChange = (limitExceedBehaviour: TypeValue) =>
     setValues(prev => ({...prev, limitExceedBehaviour}));
-
-  const limitExceedBehaviourOptions = [
-    {label: "Do not insert", value: "prevent"},
-    {label: "Insert but delete the oldest", value: "remove"}
-  ];
 
   return (
     <FluidContainer
@@ -36,35 +37,25 @@ const BucketLimitationsForm = ({className, setValues, values}: BucketLimitations
         children: (
           <div className={styles.formContainer}>
             <div className={styles.formInputs}>
-              <div>
-                <label htmlFor="bucketLimitationsCountLimit">Max number of documents</label>
-                <FlexElement gap={5} className={styles.countLimitInputContainer}>
-                  <Icon name="numericBox" size="md" />
-                  <Input
-                    className={styles.countLimitInput}
-                    onChange={handleCountLimitChange}
-                    placeholder="Max number of documents"
-                    value={values.countLimit}
-                  />
-                </FlexElement>
-              </div>
-              <div>
-                <label htmlFor="bucketLimitationsLimitExceedBehaviour">
-                  Choose limit-reached action
-                </label>
-                <FlexElement gap={5} className={styles.limitExceedBehaviourInputContainer}>
-                  <Icon name="formatListChecks" size="md" />
-                  <Select
-                    id="bucketLimitationsLimitExceedBehaviour"
-                    className={styles.limitExceedBehaviourInput}
-                    value={values.limitExceedBehaviour}
-                    options={limitExceedBehaviourOptions}
-                    optionProps={{className: styles.selectOption}}
-                    popupClassName={styles.selectDropdown}
-                    onChange={handleLimitExceedBehaviourChange}
-                  />
-                </FlexElement>
-              </div>
+              <NumberInput
+                className={styles.countLimitInput}
+                onChange={handleCountLimitChange}
+                label="Max Documents"
+                value={values.countLimit}
+              />
+              <StringInput
+                options={LIMIT_EXCEED_BEHAVIOUR_OPTIONS.map(i => i.label)}
+                className={styles.limitExceedBehaviourInput}
+                value={values.limitExceedBehaviour as string}
+                onChange={handleLimitExceedBehaviourChange}
+                label="Choose limit-reached action"
+                selectProps={
+                  {
+                    optionProps: {className: styles.selectOption},
+                    popupClassName: styles.selectPopup
+                  } as TypeFluidContainer
+                }
+              />
             </div>
           </div>
         )

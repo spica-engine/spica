@@ -1,6 +1,9 @@
+.container > div {
+  width: 100% !important;
+}
+
 .formContainer {
-  width: 100%;
-  max-width: 170px;
+  width: 100% !important;
   display: flex;
   flex-direction: column;
   gap: var(--gap-sm);
@@ -9,62 +12,32 @@
 .formInputs {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-md);
   width: 100%;
+  gap: var(--gap-sm);
+  padding: var(--padding-sm) 0;
   > div {
     display: flex;
     flex-direction: column;
     gap: var(--gap-xs);
     width: 100%;
-    label {
-      white-space: nowrap;
-      flex: 1;
-      font-size: var(--font-size-xs);
-    }
-  }
-
-  .countLimitInputContainer,
-  .limitExceedBehaviourInputContainer {
-    height: 20px !important;
-    border-radius: var(--border-radius-md);
-    border: var(--border-default);
-    background-color: var(--color-input-background);
-    width: 100% !important;
-    overflow: hidden;
-  }
-
-  .countLimitInput,
-  .limitExceedBehaviourInput {
-    height: 20px !important;
-    font-family: var(--font-family-base);
-    font-size: var(--font-size-md);
-    width: 100%;
-    border-radius: var(--border-radius-md);
-    background-color: var(--color-default);
-  }
-
-  .countLimitInput::placeholder {
-    font-size: var(--font-size-sm);
-  }
-
-  .limitExceedBehaviourInput {
-    padding-left: 0;
-  }
-  .limitExceedBehaviourInput span {
-    width: 100% !important;
-    min-width: 100% !important;
   }
 }
 
-.selectDropdown {
-  overflow: hidden !important;
-  width: 185px !important;
+.countLimitInput input {
+  width: 100%;
+}
+
+.limitExceedBehaviourInput span {
+  max-width: 80px !important;
+}
+
+.selectPopup {
+  width: 220px !important;
+  margin-left: var(--padding-lg)
 }
 
 .selectOption {
   padding: var(--padding-sm);
-  height: 20px !important;
-  white-space: nowrap;
   font-size: var(--font-size-md);
   width: 100% !important;
 }
