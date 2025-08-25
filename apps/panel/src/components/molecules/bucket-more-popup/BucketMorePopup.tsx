@@ -12,7 +12,7 @@ import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
 import BucketLimitationsForm from "../bucket-limitations-form/BucketLimitationsForm";
-import {memo, useEffect, useMemo, useRef, useState, type FC} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState, type FC} from "react";
 import Confirmation from "../confirmation/Confirmation";
 
 type TypeBucketMorePopup = {
@@ -33,20 +33,23 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
 
+  const getInitialBucketLimitations = useCallback(
+    () => ({
+      countLimit: bucket?.documentSettings?.countLimit,
+      limitExceedBehaviour: LIMIT_EXCEED_BEHAVIOUR_OPTIONS.find(
+        i => i.value === bucket?.documentSettings?.limitExceedBehaviour
+      )?.label as TypeLimitExceedBehaviour
+    }),
+    [bucket?.documentSettings]
+  );
+
   const [bucketLimitationValues, setBucketLimitationValues] = useState<{
     countLimit: number;
     limitExceedBehaviour: TypeLimitExceedBehaviour;
-  }>({
-    countLimit: bucket?.documentSettings?.countLimit,
-    limitExceedBehaviour: LIMIT_EXCEED_BEHAVIOUR_OPTIONS.find(
-      i => i.value === bucket?.documentSettings?.limitExceedBehaviour
-    )?.label as TypeLimitExceedBehaviour
-  });
+  }>(getInitialBucketLimitations);
 
   useEffect(() => {
-    setBucketLimitationValues({
-      ...bucket?.documentSettings
-    });
+    setBucketLimitationValues(getInitialBucketLimitations());
   }, [bucket]);
 
   const containerRef = useRef(null);
@@ -81,12 +84,11 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     const success = await updateBucketLimitationFields(
       bucket,
       bucketLimitationValues.countLimit,
-      bucketLimitationValues.limitExceedBehaviour
+      LIMIT_EXCEED_BEHAVIOUR_OPTIONS.find(
+        i => i.label === bucketLimitationValues.limitExceedBehaviour
+      )?.value as TypeLimitExceedBehaviour
     );
-    if (!success)
-      setBucketLimitationValues({
-        ...bucket?.documentSettings
-      });
+    if (!success) setBucketLimitationValues(getInitialBucketLimitations());
   };
 
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
