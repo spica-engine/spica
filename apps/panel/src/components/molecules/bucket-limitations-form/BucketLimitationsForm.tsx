@@ -1,6 +1,5 @@
 import {
   FluidContainer,
-  type TypeValue,
   StringInput,
   NumberInput,
   type TypeFluidContainer

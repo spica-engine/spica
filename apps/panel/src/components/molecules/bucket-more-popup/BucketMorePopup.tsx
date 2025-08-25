@@ -7,7 +7,6 @@ import {
   Checkbox,
   Popover,
   useOnClickOutside,
-  type TypeValue
 } from "oziko-ui-kit";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -43,7 +42,6 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
       i => i.value === bucket?.documentSettings?.limitExceedBehaviour
     )?.label as TypeLimitExceedBehaviour
   });
-  console.log("bucket?.documentSettings: ", bucket?.documentSettings);
 
   useEffect(() => {
     setBucketLimitationValues({
@@ -85,7 +83,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     const success = await updateBucketLimitationFields(
       bucket,
       bucketLimitationValues.countLimit,
-      bucketLimitationValues.limitExceedBehaviour as "prevent" | "remove"
+      bucketLimitationValues.limitExceedBehaviour
     );
     if (!success)
       setBucketLimitationValues({
