@@ -1,7 +1,8 @@
 .popoverContainer {
-  width: 160px;
+  width: 240px !important;
   padding: 0;
   z-index: 4;
+  justify-content: start !important;
   * {
     line-height: unset !important;
     font-family: var(--font-family-base) !important;
@@ -9,73 +10,69 @@
 }
 
 .popoverContent {
-  width: 100%;
+  width: 100% !important;
+  > div {
+    width: 100% !important;
+  }
 }
 
-.popoverButtonsContainer {
+.openPopupButtonContainer {
   width: 100% !important;
   border-bottom: var(--border-default);
   padding: var(--padding-md);
 
-  .popoverButtons {
+  .openPopupButton {
     width: 100% !important;
-    button {
-      width: 100% !important;
-      min-width: 100% !important;
-      max-width: 100% !important;
-      justify-content: start;
-      padding-left: 0;
-      height: 20px;
-      > div > div {
-        gap: var(--gap-md) !important;
-      }
+    min-width: 100% !important;
+    max-width: 100% !important;
+    justify-content: start;
+    padding-left: 0;
+    height: 20px;
+    > div > div {
+      gap: var(--gap-md) !important;
     }
+  }
 
-    button:hover {
-      background-color: transparent !important;
-    }
+  .openPopupButton:hover {
+    background-color: transparent !important;
   }
 }
 
-.popoverCheckboxesContainer {
-  padding: var(--padding-md);
-
+.historyContainer {
   width: 100% !important;
-  .popoverCheckboxes {
-    width: 100% !important;
-    align-items: start !important;
-    > div {
-      width: 100% !important;
-      height: 20px !important;
-      gap: var(--gap-md) !important;
-    }
+  padding: var(--padding-md);
+  .historyButton {
+    width: min-content;
+    min-width: min-content !important;
+    padding: 0;
+    align-items: center;
+  }
+  .historyButton,
+  .historyButton span {
+    color: var(--color-danger) !important;
+  }
+  .historyButton,
+  .historyCheckbox {
+    height: 20px !important;
+  }
+  .historyButton:hover {
+    background-color: transparent !important;
+  }
+  .historyButton svg,
+  .historyButton span {
+    margin-left: -1px;
+  }
+  .historyButton > div > div {
+    gap: var(--gap-md) !important;
+  }
+  border-bottom: var(--border-default);
+}
 
-    .historyButton,
-    .historyButton span {
-      color: var(--color-danger) !important;
-    }
-
-    button {
-      width: 100% !important;
-      min-width: 100% !important;
-      max-width: 100% !important;
-      justify-content: start;
-      padding-left: 0;
-      height: 20px;
-      > div > div {
-        gap: var(--gap-md) !important;
-      }
-      height: 20px;
-    }
-
-    button svg,
-    button span {
-      margin-left: -1px;
-    }
-
-    button:hover {
-      background-color: transparent !important;
-    }
+.limitationsContainer {
+  width: 100% !important;
+  padding: var(--padding-md);
+  .limitationsCheckbox {
+    height: 20px !important;
   }
 }
 

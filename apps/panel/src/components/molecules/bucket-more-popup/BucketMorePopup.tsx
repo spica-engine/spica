@@ -3,15 +3,16 @@ import {
   FlexElement,
   FluidContainer,
   Icon,
-  Popover,
   Text,
-  useOnClickOutside,
-  Checkbox
+  Checkbox,
+  Popover,
+  useOnClickOutside
 } from "oziko-ui-kit";
-import {memo, useMemo, useEffect, useRef, useState, type FC} from "react";
 import styles from "./BucketMorePopup.module.scss";
-import type {BucketType} from "../../../services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
+import type {BucketType} from "src/services/bucketService";
+import BucketLimitationsForm from "../bucket-limitations-form/BucketLimitationsForm";
+import {memo, useCallback, useEffect, useMemo, useRef, useState, type FC} from "react";
 import Confirmation from "../confirmation/Confirmation";
 
 type TypeBucketMorePopup = {
@@ -21,10 +22,35 @@ type TypeBucketMorePopup = {
   onClose?: () => void;
 };
 
+export type TypeLimitExceedBehaviour = "prevent" | "remove";
+export const LIMIT_EXCEED_BEHAVIOUR_OPTIONS = [
+  {label: "Do not insert", value: "prevent"},
+  {label: "Insert but delete the oldest", value: "remove"}
+] as {label: string; value: TypeLimitExceedBehaviour}[];
+
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
+
+  const getInitialBucketLimitations = useCallback(
+    () => ({
+      countLimit: bucket?.documentSettings?.countLimit,
+      limitExceedBehaviour: LIMIT_EXCEED_BEHAVIOUR_OPTIONS.find(
+        i => i.value === bucket?.documentSettings?.limitExceedBehaviour
+      )?.label as TypeLimitExceedBehaviour
+    }),
+    [bucket?.documentSettings]
+  );
+
+  const [bucketLimitationValues, setBucketLimitationValues] = useState<{
+    countLimit: number;
+    limitExceedBehaviour: TypeLimitExceedBehaviour;
+  }>(getInitialBucketLimitations);
+
+  useEffect(() => {
+    setBucketLimitationValues(getInitialBucketLimitations());
+  }, [bucket]);
 
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -32,22 +58,39 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   useOnClickOutside({
     refs: [containerRef, contentRef],
     onClickOutside: () => {
-      setIsOpen(false);
+      setIsOpen(true);
+      setTimeout(() => setIsOpen(false), 0);
+      if (isLimitationChecked && isOpen) {
+        handleConfigureLimitation();
+      }
     }
   });
 
   const {
-    updateBucketReadonly,
+    updateBucketLimitation,
+    updateBucketLimitationFields,
     updateBucketHistory,
     deleteBucketHistory,
     deleteBucketHistoryLoading,
     deleteBucketHistoryError
   } = useBucket();
-  const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
+  const isLimitationChecked = useMemo(() => Boolean(bucket?.documentSettings), [bucket]);
 
-  const handleChangeReadOnly = () => {
-    updateBucketReadonly(bucket)
+  const handleChangeLimitation = () => {
+    updateBucketLimitation(bucket);
   };
+
+  const handleConfigureLimitation = async () => {
+    const success = await updateBucketLimitationFields(
+      bucket,
+      bucketLimitationValues.countLimit,
+      LIMIT_EXCEED_BEHAVIOUR_OPTIONS.find(
+        i => i.label === bucketLimitationValues.limitExceedBehaviour
+      )?.value as TypeLimitExceedBehaviour
+    );
+    if (!success) setBucketLimitationValues(getInitialBucketLimitations());
+  };
+
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
   const handleChangeHistory = () => {
     updateBucketHistory(bucket);
@@ -93,39 +136,30 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
             gap={0}
             direction="vertical"
             className={styles.popoverContent}
+            alignment="leftTop"
             prefix={{
-              className: styles.popoverButtonsContainer,
+              className: styles.openPopupButtonContainer,
               children: (
-                <FlexElement
-                  alignment="leftCenter"
-                  direction="vertical"
-                  gap={0}
-                  className={styles.popoverButtons}
-                >
-                  <Button variant="text">
-                    <Icon name="formatSize" />
-                    <Text>Configure the view</Text>
-                  </Button>
-                  <Button variant="text" className={styles.openPopupButton}>
-                    <Icon name="security" />
-                    <Text>Configure rules</Text>
-                  </Button>
-                </FlexElement>
+                <Button variant="text" className={styles.openPopupButton}>
+                  <Icon name="security" />
+                  <Text>Configure rules</Text>
+                </Button>
               )
             }}
-            suffix={{
-              className: styles.popoverCheckboxesContainer,
+            root={{
               children: (
                 <FlexElement
-                  className={styles.popoverCheckboxes}
-                  alignment="leftCenter"
                   direction="vertical"
+                  alignment="leftTop"
+                  className={styles.historyContainer}
                   gap={0}
                 >
                   <Checkbox
                     label="History"
                     checked={isHistoryChecked}
                     onChange={handleChangeHistory}
+                    className={styles.historyCheckbox}
+                    gap={10}
                   />
                   {isHistoryChecked && (
                     <Button
@@ -137,13 +171,30 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                       <Text>Remove History</Text>
                     </Button>
                   )}
-                  <Checkbox label="Limitation" />
-
+                </FlexElement>
+              )
+            }}
+            suffix={{
+              children: (
+                <FlexElement
+                  gap={5}
+                  direction="vertical"
+                  alignment="leftTop"
+                  className={styles.limitationsContainer}
+                >
                   <Checkbox
-                    label="Read Only"
-                    checked={isReadOnlyChecked}
-                    onChange={handleChangeReadOnly}
+                    label="Limitation"
+                    checked={isLimitationChecked}
+                    onChange={handleChangeLimitation}
+                    className={styles.limitationsCheckbox}
+                    gap={10}
                   />
+                  {isLimitationChecked && (
+                    <BucketLimitationsForm
+                      values={bucketLimitationValues}
+                      setValues={setBucketLimitationValues}
+                    />
+                  )}
                 </FlexElement>
               )
             }}

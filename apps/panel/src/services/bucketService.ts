@@ -116,6 +116,11 @@ export const useBucketService = () => {
     method: "put"
   });
 
+    const {request: bucketLimitationRequest, loading: apiUpdateBucketLimitationFieldsLoading, error: apiUpdateBucketLimitationFieldsError} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
   const apiGetBucketData = useCallback(
     (bucketId: string, queryString?: string) => {
       return fetchBucketData({
@@ -191,6 +196,23 @@ export const useBucketService = () => {
     [putRequest]
   );
 
+    const apiUpdatebucketLimitiation = useCallback(
+    async (bucketId: string, body: Record<string, any>) => {
+      return await bucketLimitationRequest({
+        endpoint: `/api/bucket/${bucketId}`,
+        body
+      });
+    },
+    [bucketLimitationRequest]
+  );
+
+  const apiUpdatebucketLimitiationFields = useCallback((bucket: BucketType) => {
+    return bucketLimitationRequest({
+      endpoint: `/api/bucket/${bucket._id}`,
+      body: bucket
+    });
+  }, [bucketLimitationRequest])
+
   return {
     apiGetBucketData,
     apiGetBuckets: fetchBuckets,
@@ -201,9 +223,13 @@ export const useBucketService = () => {
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
+    apiUpdatebucketLimitiation,
+    apiUpdatebucketLimitiationFields,
     apiBuckets,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
+    apiUpdateBucketLimitationFieldsLoading,
+    apiUpdateBucketLimitationFieldsError
   };
 };

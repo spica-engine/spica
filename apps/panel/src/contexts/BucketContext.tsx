@@ -34,10 +34,18 @@ type BucketContextType = {
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   refreshBucketData: () => Promise<void>;
   updateBucketReadonly: (bucket: BucketType) => Promise<any>;
+  updateBucketLimitation: (bucket: BucketType) => Promise<void>;
+  updateBucketLimitationFields: (
+    bucket: BucketType,
+    countLimit: number,
+    limitExceedBehaviour: "prevent" | "remove"
+  ) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
   bucketDataLoading: boolean;
+  updateBucketLimitationFieldsLoading: boolean;
+  updateBucketLimitationFieldsError: string | null;
   deleteBucketHistoryLoading: boolean;
   deleteBucketHistoryError: string | null;
 };
@@ -70,10 +78,14 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
+    apiUpdatebucketLimitiation,
+    apiUpdatebucketLimitiationFields,
     apiBuckets,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
+    apiUpdateBucketLimitationFieldsLoading,
+    apiUpdateBucketLimitationFieldsError
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -259,6 +271,52 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     }
   }, [buckets, apiUpdateBucketReadonly]);
 
+  const updateBucketLimitation = useCallback(
+    async (bucket: BucketType) => {
+      const hasSettings = Boolean(bucket.documentSettings);
+      const modifiedBucket: BucketType = hasSettings
+        ? (({documentSettings, ...rest}) => rest)(bucket)
+        : {
+            ...bucket,
+            documentSettings: {
+              countLimit: 100,
+              limitExceedBehaviour: "prevent"
+            }
+          };
+
+      let previousBuckets: BucketType[] = [];
+      setBuckets(prev => {
+        previousBuckets = prev ?? [];
+        return (prev ?? []).map(b => (b._id === bucket._id ? modifiedBucket : b));
+      });
+
+      const success = await apiUpdatebucketLimitiation(bucket._id, modifiedBucket);
+      if (!success) {
+        setBuckets(previousBuckets);
+      }
+    },
+    [apiUpdatebucketLimitiation]
+  );
+
+  const updateBucketLimitationFields = useCallback(
+    async (bucket: BucketType, countLimit: number, limitExceedBehaviour: "prevent" | "remove") => {
+      const modifiedBucket = {
+        ...bucket,
+        documentSettings: {
+          countLimit,
+          limitExceedBehaviour
+        }
+      };
+      const success = await apiUpdatebucketLimitiationFields(modifiedBucket);
+      if (success) {
+        setBuckets(prev =>
+          prev ? prev.map(b => (b._id === bucket._id ? modifiedBucket : b)) : []
+        );
+      }
+    },
+    [apiUpdatebucketLimitiationFields]
+  );
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -273,12 +331,16 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       deleteBucketHistory: apiDeleteBucketHistory,
       refreshBucketData,
       updateBucketReadonly,
+      updateBucketLimitation,
+      updateBucketLimitationFields,
       buckets,
       bucketData,
       bucketDataLoading: apiBucketDataLoading,
       bucketCategories,
       deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
       deleteBucketHistoryError: apiDeleteBucketHistoryError,
+      updateBucketLimitationFieldsLoading: apiUpdateBucketLimitationFieldsLoading,
+      updateBucketLimitationFieldsError: apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,
     }),
     [
@@ -294,12 +356,16 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       refreshBucketData,
       loadMoreBucketData,
       updateBucketReadonly,
+      updateBucketLimitation,
+      updateBucketLimitationFields,
       buckets,
       bucketData,
       apiBucketDataLoading,
       bucketCategories,
       apiDeleteBucketHistoryLoading,
       apiDeleteBucketHistoryError,
+      apiUpdateBucketLimitationFieldsLoading,
+      apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,
     ]
   );
