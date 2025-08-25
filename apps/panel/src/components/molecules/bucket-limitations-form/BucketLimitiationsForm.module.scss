@@ -1,24 +1,6 @@
-.container > div {
-  width: 100% !important;
-}
-
-.formContainer {
-  width: 100% !important;
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-sm);
-}
-
 .formInputs {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: var(--gap-sm);
-  padding: var(--padding-sm) 0;
+  width: 100% !important;
   > div {
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-xs);
     width: 100%;
   }
 }
