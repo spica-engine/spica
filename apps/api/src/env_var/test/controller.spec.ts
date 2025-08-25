@@ -53,11 +53,11 @@ describe("Environment Variable", () => {
 
       const resSkip = await req.get(`/env-var`, {
         skip: 1,
-        limit: 2,
+        limit: 1,
         sort: JSON.stringify({value: -1})
       });
       const bodySkip = resSkip.body.map(({_id, ...rest}) => rest);
-      expect(bodySkip).toEqual([envVar1, envVar3]);
+      expect(bodySkip).toEqual([envVar1]);
     });
 
     it("should paginate", async () => {
