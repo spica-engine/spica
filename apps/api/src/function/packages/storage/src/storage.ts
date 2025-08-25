@@ -4,8 +4,8 @@ import {
   isPlatformBrowser,
   Batch
 } from "@spica-devkit/internal_common";
-import {StorageObject, BufferWithMeta} from "./interface";
-import {preparePostBody, preparePutBody} from "./utility";
+import {StorageObject, BufferWithMeta, ResumableUploadOptions} from "./interface";
+import {preparePostBody, preparePutBody, startResumableUpload} from "./utility";
 import {
   ApikeyInitialization,
   IdentityInitialization,
@@ -17,13 +17,19 @@ import {BatchResponse} from "@spica-server/interface/batch";
 let authorization;
 
 let service: HttpService;
+let publicUrl: string;
 
 export function initialize(options: ApikeyInitialization | IdentityInitialization) {
-  const {authorization: _authorization, service: _service} = _initialize(options);
+  const {
+    authorization: _authorization,
+    service: _service,
+    publicUrl: _publicUrl
+  } = _initialize(options);
 
   authorization = _authorization;
 
   service = _service;
+  publicUrl = _publicUrl;
 }
 
 export async function insert(
@@ -54,6 +60,26 @@ export async function insertMany(
   return service.post<StorageObject[]>("storage", postBody.body, {
     onUploadProgress,
     headers: {...postBody.headers, ...headers}
+  });
+}
+
+export function insertResumable(
+  object: File | BufferWithMeta,
+  headers: Record<string, string>,
+  onError?: ResumableUploadOptions["onError"],
+  onProgress?: ResumableUploadOptions["onProgress"],
+  onSuccess?: ResumableUploadOptions["onSuccess"]
+) {
+  checkInitialized(authorization);
+
+  return startResumableUpload({
+    publicUrl,
+    authorization,
+    object,
+    headers,
+    onError,
+    onProgress,
+    onSuccess
   });
 }
 
