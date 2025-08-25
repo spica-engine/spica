@@ -4,6 +4,7 @@ import {
   LIMIT_EXCEED_BEHAVIOUR_OPTIONS,
   type TypeLimitExceedBehaviour
 } from "../bucket-more-popup/BucketMorePopup";
+import {memo} from "react";
 
 type BucketLimitationsFormProps = {
   setValues: React.Dispatch<
@@ -49,4 +50,4 @@ const BucketLimitationsForm = ({setValues, values}: BucketLimitationsFormProps) 
   );
 };
 
-export default BucketLimitationsForm;
+export default memo(BucketLimitationsForm);
