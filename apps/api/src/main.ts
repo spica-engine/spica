@@ -19,6 +19,7 @@ import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
 import {EnvVarModule} from "@spica-server/env_var";
+import {MailerModule} from "@spica-server/mailer";
 import fs from "fs";
 import https from "https";
 import path from "path";
@@ -328,6 +329,34 @@ const args = yargs(process.argv.slice(2))
       default: 1000 * 60 * 60 * 24 * 2 // 2 days
     }
   })
+  /* Mailer Options */
+  .options({
+    "mail-host": {
+      string: true,
+      description: "SMTP server host (e.g. smtp.example.com)"
+    },
+    "mail-port": {
+      number: true,
+      description: "SMTP server port (e.g. 587)"
+    },
+    "mail-secure": {
+      boolean: true,
+      description: "Use secure connection (TLS/SSL)",
+      default: false
+    },
+    "mail-user": {
+      string: true,
+      description: "SMTP auth user"
+    },
+    "mail-pass": {
+      string: true,
+      description: "SMTP auth password"
+    },
+    "mail-from": {
+      string: true,
+      description: "Default From address for outgoing mails"
+    }
+  })
   /* Status Options */
   .options({
     "status-tracking": {
@@ -541,6 +570,15 @@ const modules = [
   }),
   EnvVarModule.forRoot({
     realtime: args["env-var-realtime"]
+  }),
+  MailerModule.forRoot({
+    host: args["mailer-host"],
+    port: args["mailer-port"],
+    secure: args["mailer-secure"],
+    auth: {
+      user: args["mailer-user"],
+      pass: args["mailer-pass"]
+    }
   }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],

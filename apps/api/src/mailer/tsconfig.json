@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "src/**/*.json",
+    "../../../../libs/interface/mailer/index.ts"
+  ],
+  "references": [
+    {"path": "../../../../libs/database"},
+    {"path": "../../../../libs/core"},
+    {"path": "../../../../libs/interface/mailer"}
+  ]
+}

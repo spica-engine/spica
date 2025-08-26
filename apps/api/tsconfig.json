@@ -42,6 +42,9 @@
       "path": "./src/asset"
     },
     {
+      "path": "./src/mailer"
+    },
+    {
       "path": "../../libs/core"
     },
     {
