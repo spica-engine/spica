@@ -331,28 +331,28 @@ const args = yargs(process.argv.slice(2))
   })
   /* Mailer Options */
   .options({
-    "mail-host": {
+    "mailer-host": {
       string: true,
       description: "SMTP server host (e.g. smtp.example.com)"
     },
-    "mail-port": {
+    "mailer-port": {
       number: true,
       description: "SMTP server port (e.g. 587)"
     },
-    "mail-secure": {
+    "mailer-secure": {
       boolean: true,
       description: "Use secure connection (TLS/SSL)",
       default: false
     },
-    "mail-user": {
+    "mailer-user": {
       string: true,
       description: "SMTP auth user"
     },
-    "mail-pass": {
+    "mailer-pass": {
       string: true,
       description: "SMTP auth password"
     },
-    "mail-from": {
+    "mailer-from": {
       string: true,
       description: "Default From address for outgoing mails"
     }
