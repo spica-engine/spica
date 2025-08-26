@@ -15,7 +15,7 @@ export default async function (ctx: Context) {
 
   const existingNames = new Set(duplicates.map(d => d._id));
 
-  const bulkOps: any[] = [];
+  const bulkOps = [];
 
   for (const dupe of duplicates) {
     const originalName: string = dupe._id;
@@ -48,7 +48,8 @@ export default async function (ctx: Context) {
 
   try {
     await functionCollection.createIndex({name: 1}, {unique: true});
-  } catch (e) {
-    throw e;
+  } catch (error) {
+    console.error("Error creating unique index on function names:", error);
+    throw error;
   }
 }
