@@ -119,8 +119,13 @@ describe("Function Controller (unit)", () => {
       const res = await request.get("/function/information").then(r => r.body);
       expect(res).toBeDefined();
       expect(res.timeout).toEqual(10);
-      expect(Array.isArray(res.enqueuers)).toBe(true);
-      expect(Array.isArray(res.runtimes)).toBe(true);
+
+      const enqueuerTitles = res.enqueuers.map(e => e.description && e.description.title);
+      const expectedEnqueuers = ["Http", "Firehose", "Database", "Scheduler", "System", "RabbitMQ"];
+      expect(enqueuerTitles).toEqual(expect.arrayContaining(expectedEnqueuers));
+
+      const runtimeTitles = res.runtimes.map(r => r.title);
+      expect(runtimeTitles).toEqual(expect.arrayContaining(["Node.js 12"]));
     });
 
     it("should return a function by id", async () => {
