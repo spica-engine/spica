@@ -249,4 +249,15 @@ const EmailRegex =
 
 const PhoneNumberRegex = "^[0-9-+\\s]+$"
 
-export { Countries, Days, EmailRegex, PhoneNumberRegex }
+const enumerationPresets = {
+  Countries,
+  Days
+} as const;
+
+const regexPresets = {
+  Email: EmailRegex,
+  "Phone Number": PhoneNumberRegex
+} as const;
+
+
+export { enumerationPresets, regexPresets }

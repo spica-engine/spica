@@ -1,5 +1,5 @@
 .popoverContent {
-  padding: 0 !important
+  padding: 0 !important;
 }
 
 .container {
@@ -9,11 +9,23 @@
   gap: 0 !important;
   .item {
     color: var(--color-font-primary);
-    padding: 0 var(--padding-md);
+    padding: 0 8px;
     cursor: pointer;
     height: 20px !important;
   }
   .item:hover {
     background-color: var(--color-hover);
   }
+}
+
+.bucketAddField {
+  max-height: 600px !important;
+  overflow-y: auto;
+  display: block !important;
+  width: 330px !important;
+}
+
+.portalClassName {
+  width: unset;
+  height: unset;
 }

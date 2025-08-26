@@ -5,7 +5,7 @@
 }
 
 .contentContainer {
-  max-width: 100%;
+  max-width: 100% !important;
   width: 100% !important;
   > div, > div input {
     width: 100% !important;
@@ -55,10 +55,18 @@
   }
 }
 
-.configurationOptionsContainer {
-  display: flex;
-  flex-direction: column;
+.presetsContainer {
   width: 100%;
+  > div:not(:nth-child(1)) > div {
+    gap: 0 !important;
+  }
+}
+
+.configurationOptionsContainer {
+  width: 100%;
+  > div > div {
+    gap: 0 !important;
+  }
 }
 
 .innerFieldItem {
@@ -92,4 +100,8 @@
   color: var(--color-danger);
   font-size: var(--font-size-sm);
   text-align: center;
+}
+
+.innerField {
+  left: 292px !important;
 }

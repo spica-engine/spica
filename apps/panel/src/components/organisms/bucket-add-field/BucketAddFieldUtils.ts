@@ -176,3 +176,8 @@ export const getDefaultValues = (
       ])
     )
   };
+
+
+export const makeTab = (label: string, onClick: () => void) => ({
+  prefix: {children: label, onClick}
+});

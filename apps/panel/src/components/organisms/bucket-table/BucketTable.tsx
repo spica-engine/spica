@@ -5,8 +5,8 @@ import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
-import type {BucketType, Property} from "src/services/bucketService";
-import { createFieldProperty } from "../bucket-add-field/utils";
+import type {BucketType} from "src/services/bucketService";
+import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
 
 type FieldType =
   | "string"
@@ -141,7 +141,7 @@ const defaultColumns: ColumnType[] = [
     type: "boolean",
     width: "41px",
     headerClassName: styles.columnHeader,
-    cellClassName: styles.selectCell,
+    cellClassName: `${styles.selectCell} ${styles.cell}`,
     resizable: false,
     fixed: true,
     selectable: false
@@ -152,8 +152,9 @@ const defaultColumns: ColumnType[] = [
     key: "new field",
     width: "125px",
     headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,
-    cellClassName: styles.newFieldCell,
+    cellClassName: `${styles.newFieldCell} ${styles.cell}`,
     resizable: false,
+    fixed: true,
     selectable: false
   }
 ];
@@ -287,7 +288,8 @@ function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnTyp
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      id: `${col.key}-${index}-${bucketId}`
+      id: `${col.key}-${index}-${bucketId}`,
+      cellClassName: styles.cell
     })),
     defaultColumns[1]
   ];
