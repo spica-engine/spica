@@ -39,6 +39,7 @@ jobs:
           - command: test-image:api --build-arg PROJECTS=api/dashboard/**
           - command: test-image:api --build-arg PROJECTS=api/env_var/**
           - command: test-image:api --build-arg PROJECTS=api/function
+          - command: test-image:api --build-arg PROJECTS=api/mailer/**
           - command: test-image:api --build-arg PROJECTS=api/function/enqueuer --build-arg RABBITMQ_URL=amqp://172.17.0.1:5672
             rabbitmq: true
           - command: test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE='api/function/packages/**,api/function,api/function/enqueuer'
