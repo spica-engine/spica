@@ -28,12 +28,24 @@ function useScrollDirectionLock(options: ScrollDirectionLockOptions = {}) {
   }, []);
 
   const resetDirectionLock = useCallback(() => {
-    directionRef.current = null;
     const el = elementRef.current;
-    if (el) {
-      el.style.overflowX = "auto";
-      el.style.overflowY = "auto";
-    }
+    if (!el) return;
+
+    const atEndX = el.scrollLeft + el.clientWidth >= el.scrollWidth;
+    const atEndY = el.scrollTop + el.clientHeight >= el.scrollHeight;
+
+    directionRef.current = null;
+    el.style.overflowX = "auto";
+    el.style.overflowY = "auto";
+
+    requestAnimationFrame(() => {
+      if (atEndX) {
+        el.scrollLeft = el.scrollWidth;
+      }
+      if (atEndY) {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
   }, []);
 
   const handleWheel = useCallback(
