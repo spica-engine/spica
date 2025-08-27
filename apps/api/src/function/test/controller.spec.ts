@@ -9,7 +9,7 @@ import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
-describe("Function Controller (unit)", () => {
+describe("Function Controller", () => {
   let app: INestApplication;
   let request: Request;
   const fnSchema = {
@@ -123,9 +123,10 @@ describe("Function Controller (unit)", () => {
       const enqueuerTitles = res.enqueuers.map(e => e.description && e.description.title);
       const expectedEnqueuers = ["Http", "Firehose", "Database", "Scheduler", "System", "RabbitMQ"];
       expect(enqueuerTitles).toEqual(expect.arrayContaining(expectedEnqueuers));
+      expect(enqueuerTitles.length).toEqual(expectedEnqueuers.length);
 
       const runtimeTitles = res.runtimes.map(r => r.title);
-      expect(runtimeTitles).toEqual(expect.arrayContaining(["Node.js 12"]));
+      expect(runtimeTitles).toEqual(expect.arrayContaining(["Node.js 22"]));
     });
 
     it("should return a function by id", async () => {
@@ -140,8 +141,7 @@ describe("Function Controller (unit)", () => {
       expect(del.statusCode).toEqual(204);
 
       const getRes = await request.get(`/function/${inserted._id}`);
-      expect(getRes.statusCode).toEqual(200);
-      expect(getRes.body).toBeUndefined();
+      expect(getRes.statusCode).toEqual(404);
     });
 
     it("should replace a function via PUT and ignore language field", async () => {
