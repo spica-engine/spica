@@ -76,9 +76,23 @@ export const resourceFilterFunction: ResourceFilterFunction = (
 export const ResourceFilter = (data = {pure: false}) => {
   return createParamDecorator<{pure: boolean}>(resourceFilterFunction, [
     (target, key, index) => {
-      const existing = Reflect.getMetadata("resourceFilter", target.constructor) || {};
-      existing[key] = index;
-      Reflect.defineMetadata("resourceFilter", existing, target.constructor);
+      const existingMeta = Reflect.getMetadata("resourceFilter", target.constructor) || {};
+      // normalize to a map-style structure
+      const map: Record<string, number> = Object.prototype.hasOwnProperty.call(existingMeta, "key")
+        ? {[existingMeta.key]: existingMeta.index}
+        : Object.assign({}, existingMeta);
+
+      const handlerKey = String(key);
+      map[handlerKey] = index;
+
+      const meta: any = Object.assign({}, map);
+      const keys = Object.keys(map);
+      if (keys.length === 1) {
+        meta.key = keys[0];
+        meta.index = map[meta.key];
+      }
+
+      Reflect.defineMetadata("resourceFilter", meta, target.constructor);
     }
   ])(data);
 };
@@ -146,11 +160,22 @@ function createActionGuard(
       if (options) {
         hasResourceFilter = options.resourceFilter;
       } else {
-        // hasResourceFilter is true for just index endpoints
         const resourceFilterMetadata =
           Reflect.getMetadata("resourceFilter", context.getClass()) || {};
         const handlerName = context.getHandler().name;
-        hasResourceFilter = resourceFilterMetadata[handlerName] !== undefined;
+
+        // Backwards-compatible check: prefer legacy {key,index} if present,
+        // otherwise check map-style metadata { [handlerName]: index }.
+        if (Object.prototype.hasOwnProperty.call(resourceFilterMetadata, "key")) {
+          hasResourceFilter = resourceFilterMetadata.key === handlerName;
+        } else {
+          hasResourceFilter = Object.prototype.hasOwnProperty.call(
+            resourceFilterMetadata,
+            handlerName
+          )
+            ? resourceFilterMetadata[handlerName] !== undefined
+            : false;
+        }
       }
 
       actions = wrapArray(actions);
