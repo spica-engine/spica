@@ -25,12 +25,9 @@ describe("MailerService", () => {
   let createTransportSpy: jest.SpyInstance;
 
   beforeEach(async () => {
-    // Mock createTransport before the module is compiled so MailerService constructor
-    // uses the mocked transport.
     createTransportSpy = jest
       .spyOn(nodemailer, "createTransport")
       .mockImplementation((opts: any) => {
-        // record the options via the spy; return an object with sendMail
         return {sendMail: sendMailMock} as any;
       });
 
@@ -60,7 +57,7 @@ describe("MailerService", () => {
       transport: {
         host: mockOptions.host,
         port: mockOptions.port,
-        secure: !!mockOptions.secure,
+        secure: mockOptions.secure,
         auth: mockOptions.auth
       }
     };
