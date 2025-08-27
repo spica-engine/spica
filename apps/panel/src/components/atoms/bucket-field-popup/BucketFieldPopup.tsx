@@ -1,16 +1,27 @@
-import {memo, useState, type ReactNode} from "react";
+import {
+  cloneElement,
+  isValidElement,
+  memo,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode
+} from "react";
 import {
   FlexElement,
   ListItem,
   Icon,
   type IconName,
   type TypeInputType,
-  Popover,
   type TypeModal
 } from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../../components/organisms/bucket-add-field/BucketAddField";
 import type {BucketType} from "src/services/bucketService";
+import Popover from "../popover/Popover";
+import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 
 export const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [
   {icon: "formatQuoteClose", text: "String", type: "string"},
@@ -37,7 +48,7 @@ type BucketFieldPopupProps = {
     configurationValues: Record<string, any>,
     requiredField?: string
   ) => Promise<any> | void;
-  bucketAddFieldPopoverClassName?: string;
+  bucketAddFieldPopoverStyles?: CSSProperties;
 };
 
 const BucketFieldPopup = ({
@@ -45,22 +56,77 @@ const BucketFieldPopup = ({
   buckets,
   bucket,
   onSaveAndClose,
-  bucketAddFieldPopoverClassName
+  bucketAddFieldPopoverStyles
 }: BucketFieldPopupProps) => {
   const [selectedType, setSelectedType] = useState<TypeInputType | null>(null);
+  const bucketAddFieldRef = useRef<HTMLDivElement>(null);
+  const [innerFieldStyles, setInnerFieldStyles] = useState<CSSProperties>({});
+  const [isOpen, setIsOpen] = useState(false);
+  const {bucketFieldPopups, setBucketFieldPopups} = useBucketFieldPopups();
+
+  const bucketFieldPopupId = useId();
+
+  useEffect(() => {
+    if (!selectedType || !bucketAddFieldRef.current) return;
+    const {inset, top, right, left, bottom} = bucketAddFieldRef.current.style;
+    setInnerFieldStyles({
+      inset,
+      top: String(Number(top?.slice(0, -2)) + 10) + "px",
+      right,
+      left,
+      bottom
+    });
+  }, [selectedType, bucketAddFieldRef.current]);
+
+  useEffect(() => {
+    if (!isOpen || bucketFieldPopups.includes(bucketFieldPopupId)) return;
+
+    // Then update state
+    setBucketFieldPopups([...bucketFieldPopups, bucketFieldPopupId]);
+
+    return () => {
+      if (!bucketFieldPopups.includes(bucketFieldPopupId)) return;
+
+      // Update state to match ref
+      setBucketFieldPopups(bucketFieldPopups.filter(id => id !== bucketFieldPopupId));
+    };
+  }, [isOpen, bucketFieldPopupId]);
+
+  const portalClassName = bucketFieldPopups.length === 1 ? styles.portalClassName : undefined;
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen(!isOpen);
+  };
+
+  const handleClose = () => {
+    // Only close if this is the last popup
+    if (bucketFieldPopups.at(-1) !== bucketFieldPopupId) return;
+
+    // Update state and close popup
+    setBucketFieldPopups(bucketFieldPopups.filter(id => id !== bucketFieldPopupId));
+    setIsOpen(false);
+    setSelectedType(null);
+  };
 
   return (
     <>
       <Popover
-        open={!!selectedType}
-        portalClassName={styles.portalClassName}
+        id={bucketFieldPopupId + " outer"}
+        open={isOpen}
+        portalClassName={portalClassName}
         contentProps={{className: styles.popoverContent}}
+        onClose={handleClose}
         content={
           <Popover
+            id={bucketFieldPopupId + " inneer"}
+            open={!!selectedType}
+            onClose={handleClose}
             placement="leftStart"
-            portalClassName={styles.portalClassName}
+            portalClassName={portalClassName}
             contentProps={{
-              className: `${styles.bucketAddField} ${bucketAddFieldPopoverClassName || ""}`
+              className: styles.bucketAddField,
+              ref: bucketAddFieldRef,
+              style: bucketAddFieldPopoverStyles
             }}
             content={
               <BucketAddField
@@ -70,6 +136,7 @@ const BucketFieldPopup = ({
                 onSaveAndClose={onSaveAndClose}
                 bucket={bucket}
                 buckets={buckets}
+                innerFieldStyles={innerFieldStyles}
               />
             }
           >
@@ -90,7 +157,11 @@ const BucketFieldPopup = ({
           </Popover>
         }
       >
-        {children}
+        {isValidElement(children)
+          ? cloneElement(children, {
+              onClick: handleToggle
+            } as Partial<unknown> & React.Attributes)
+          : children}
       </Popover>
     </>
   );

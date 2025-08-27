@@ -1,4 +1,13 @@
-import {type FC, memo, useMemo, useState, useCallback, useEffect} from "react";
+import {
+  type FC,
+  memo,
+  useMemo,
+  useState,
+  useCallback,
+  useEffect,
+  type CSSProperties,
+  type ReactNode
+} from "react";
 import {
   Button,
   FlexElement,
@@ -42,6 +51,8 @@ type TypeBucketAddField = {
     presetProperteis?: Record<string, any>;
   };
   className?: string;
+  innerFieldStyles?: CSSProperties;
+  prefix?: ReactNode;
 };
 
 type FieldType = {
@@ -139,7 +150,9 @@ const BucketAddField: FC<TypeBucketAddField> = ({
   bucket,
   buckets,
   initialValues,
-  className
+  className,
+  innerFieldStyles,
+  prefix
 }) => {
   const schema = useMemo(() => createShema[type] || {}, [type]);
   const presetProperties = useMemo(
@@ -325,6 +338,7 @@ const BucketAddField: FC<TypeBucketAddField> = ({
       gap={10}
       className={`${styles.contentContainer} ${className || ""}`}
     >
+      {prefix}
       {inputRepresenter}
       <Tab
         type="underline"
@@ -371,7 +385,7 @@ const BucketAddField: FC<TypeBucketAddField> = ({
             buckets={buckets}
             bucket={bucket}
             onSaveAndClose={handleCreateInnerField}
-            bucketAddFieldPopoverClassName={styles.innerField}
+            bucketAddFieldPopoverStyles={innerFieldStyles}
           >
             <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
               <FluidContainer

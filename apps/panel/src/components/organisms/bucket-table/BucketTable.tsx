@@ -1,12 +1,13 @@
 import {Button, Checkbox, Icon, type IconName, type TypeInputType} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useCallback, useMemo, type RefObject} from "react";
+import {memo, useCallback, useMemo, useRef, useState, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
 import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
+import { BucketFieldPopupsProvider } from "../../../components/atoms/bucket-field-popup/BucketFieldPopupsContext";
 
 type FieldType =
   | "string"
@@ -117,19 +118,21 @@ const NewFieldHeader = () => {
   );
 
   return (
-    <BucketFieldPopup
-      buckets={buckets}
-      bucket={bucket as BucketType}
-      onSaveAndClose={handleSaveAndClose}
-    >
-      <Button
-        variant="icon"
-        className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
+    <BucketFieldPopupsProvider>
+      <BucketFieldPopup
+        buckets={buckets}
+        bucket={bucket as BucketType}
+        onSaveAndClose={handleSaveAndClose}
       >
-        <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
-        <span>New&nbsp;Field</span>
-      </Button>
-    </BucketFieldPopup>
+        <Button
+          variant="icon"
+          className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
+        >
+          <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
+          <span>New&nbsp;Field</span>
+        </Button>
+      </BucketFieldPopup>
+    </BucketFieldPopupsProvider>
   );
 };
 
