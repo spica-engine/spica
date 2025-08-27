@@ -160,6 +160,7 @@ function createActionGuard(
       if (options) {
         hasResourceFilter = options.resourceFilter;
       } else {
+        // hasResourceFilter is true for just index endpoints
         const resourceFilterMetadata =
           Reflect.getMetadata("resourceFilter", context.getClass()) || {};
         const handlerName = context.getHandler().name;
