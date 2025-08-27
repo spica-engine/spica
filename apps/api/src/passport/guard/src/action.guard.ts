@@ -394,12 +394,6 @@ function createSimpleActionGuard(actions: string | string[], format?: string): T
       }
 
       const allPolicyStatements = policies.flatMap(policy => policy.statement);
-      console.log("resourceAndModule: ", resourceAndModule);
-      console.log(
-        "allPolicyStatements: ",
-        allPolicyStatements.filter(s => s.module.includes("storage"))
-      );
-
       const matchedStatements = allPolicyStatements.filter(
         statement =>
           actionsArr.includes(statement.action) && resourceAndModule.module === statement.module
