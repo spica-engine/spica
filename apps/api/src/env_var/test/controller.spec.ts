@@ -71,11 +71,11 @@ describe("Environment Variable", () => {
         req.post("/env-var", envVar3)
       ]);
 
-      const res = await req.get(`/env-var`, {paginate: true});
+      const res = await req.get(`/env-var`, {paginate: true, sort: JSON.stringify({_id: -1})});
       const bodyWithoutIds = {...res.body, data: res.body.data.map(({_id, ...rest}) => rest)};
       expect(bodyWithoutIds).toEqual({
         meta: {total: 3},
-        data: [envVar1, envVar2, envVar3]
+        data: [envVar3, envVar2, envVar1]
       });
     });
 
