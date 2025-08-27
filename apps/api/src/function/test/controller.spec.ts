@@ -142,6 +142,10 @@ describe("Function Controller", () => {
 
       const getRes = await request.get(`/function/${inserted._id}`);
       expect(getRes.statusCode).toEqual(404);
+      expect(getRes.body).toEqual({
+        message: `Couldn't find the function with id ${inserted._id}`,
+        statusCode: 404
+      });
     });
 
     it("should replace a function via PUT and ignore language field", async () => {
