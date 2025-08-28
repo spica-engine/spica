@@ -65,9 +65,19 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
     fn._id = new ObjectId(fn._id);
   }
 
-  const insertedFn = await fs
-    .insertOne(fn)
-    .then(r => findOne(fs, r._id, {resolveEnvRelations: EnvRelation.Resolved}));
+  let insertedFn;
+  try {
+    const r = await fs.insertOne(fn);
+    insertedFn = await findOne(fs, r._id, {resolveEnvRelations: EnvRelation.Resolved});
+  } catch (error: any) {
+    if (error && error.code === 11000) {
+      throw new BadRequestException(
+        `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
+      );
+    }
+
+    throw new InternalServerErrorException(error?.message || error);
+  }
 
   const changes = createTargetChanges(insertedFn, ChangeKind.Added);
   engine.categorizeChanges(changes);
