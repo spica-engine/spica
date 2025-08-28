@@ -73,45 +73,47 @@ describe("Function Controller", () => {
 
   afterEach(async () => await app.close());
 
-  it("should filter functions by index", async () => {
-    const fn1 = await request.post("/function", fnSchema).then(r => r.body);
-    await request.post(`/function/${fn1._id}/index`, {
-      index: `
+  describe("filtering", () => {
+    it("should filter functions by index", async () => {
+      const fn1 = await request.post("/function", fnSchema).then(r => r.body);
+      await request.post(`/function/${fn1._id}/index`, {
+        index: `
   export function findMe(){ 
     return 'OK' ;
   }`
-    });
+      });
 
-    const fn2 = await request.post("/function", fnSchema).then(r => r.body);
-    await request.post(`/function/${fn2._id}/index`, {
-      index: `
+      const fn2 = await request.post("/function", fnSchema).then(r => r.body);
+      await request.post(`/function/${fn2._id}/index`, {
+        index: `
   export function dontFindMe(){ 
     return 'OK' ;
   }`
+      });
+
+      const foundFns = await request
+        .get("/function", {filter: JSON.stringify({index: "findMe\\("})})
+        .then(r => r.body);
+      expect(foundFns).toEqual([{...fn1, env_vars: []}]);
     });
 
-    const foundFns = await request
-      .get("/function", {filter: JSON.stringify({index: "findMe\\("})})
-      .then(r => r.body);
-    expect(foundFns).toEqual([{...fn1, env_vars: []}]);
-  });
-
-  it("should throw bad request exception if filter is mistaken", async () => {
-    const fn1 = await request.post("/function", fnSchema).then(r => r.body);
-    await request.post(`/function/${fn1._id}/index`, {
-      index: `
+    it("should throw bad request exception if filter is mistaken", async () => {
+      const fn1 = await request.post("/function", fnSchema).then(r => r.body);
+      await request.post(`/function/${fn1._id}/index`, {
+        index: `
   export function findMe(){ 
     return 'OK' ;
   }`
-    });
+      });
 
-    // notice no escape characters("\\") for special characters("(")
-    const body = await request
-      .get("/function", {filter: JSON.stringify({index: "findMe("})})
-      .then(r => r.body);
-    expect(body.statusCode).toEqual(400);
-    expect(body.error).toEqual("Bad Request");
-    expect(body.message).toContain("Invalid regular expression");
+      // notice no escape characters("\\") for special characters("(")
+      const body = await request
+        .get("/function", {filter: JSON.stringify({index: "findMe("})})
+        .then(r => r.body);
+      expect(body.statusCode).toEqual(400);
+      expect(body.error).toEqual("Bad Request");
+      expect(body.message).toContain("Invalid regular expression");
+    });
   });
 
   describe("endpoints", () => {
@@ -205,6 +207,20 @@ describe("Function Controller", () => {
 
       const ej = await request.delete(`/function/${inserted._id}/env-var/${envVarId}`);
       expect([ej.statusCode, ej.statusText]).toEqual([204, "No Content"]);
+    });
+  });
+
+  describe("name uniqueness", () => {
+    it("should not allow duplicate function names", async () => {
+      const fn = await request.post("/function", fnSchema).then(r => r.body);
+
+      // attempt to create another function with same name
+      const response = await request.post("/function", fnSchema).catch(e => e);
+
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect(response.body.message).toEqual(
+        "Value of the property .name should unique across all documents."
+      );
     });
   });
 });
