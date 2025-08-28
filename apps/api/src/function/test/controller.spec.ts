@@ -212,6 +212,9 @@ describe("Function Controller", () => {
 
   describe("name uniqueness", () => {
     it("should not allow duplicate function names", async () => {
+      //Wait a bit for before test for mongodb to create name indexes to resolve async process issues
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       const fn = await request.post("/function", fnSchema).then(r => r.body);
 
       // attempt to create another function with same name
