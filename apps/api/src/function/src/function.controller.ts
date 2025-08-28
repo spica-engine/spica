@@ -112,6 +112,8 @@ export class FunctionController {
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.findOne(this.fs, id, {
       resolveEnvRelations: EnvRelation.Resolved
+    }).catch(error => {
+      throw new HttpException(error.message, error.status || 500);
     });
   }
 
