@@ -45,11 +45,4 @@ export default async function (ctx: Context) {
   if (bulkOps.length) {
     await functionCollection.bulkWrite(bulkOps, {ordered: false});
   }
-
-  try {
-    await functionCollection.createIndex({name: 1}, {unique: true});
-  } catch (error) {
-    console.error("Error creating unique index on function names:", error);
-    throw error;
-  }
 }
