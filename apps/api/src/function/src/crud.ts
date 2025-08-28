@@ -40,7 +40,7 @@ export async function find<ER extends EnvRelation = EnvRelation.NotResolved>(
   return fns;
 }
 
-export function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
+export async function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
   fs: FunctionService,
   id: ObjectId,
   options: {
@@ -51,7 +51,13 @@ export function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
     .findOneIfRequested(id)
     .resolveEnvRelation(options.resolveEnvRelations)
     .result();
-  return fs.aggregate<Function<ER>>(pipeline).next();
+
+  const res = await fs.aggregate<Function<ER>>(pipeline).next();
+  if (!res) {
+    throw new NotFoundException(`Couldn't find the function with id ${id}`);
+  }
+
+  return res;
 }
 
 export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Function) {
