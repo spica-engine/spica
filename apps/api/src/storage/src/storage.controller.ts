@@ -70,9 +70,12 @@ export class StorageController {
     return this.storage.getAll(resourceFilter, filter, paginate, limit, skip, sort);
   }
   @Get("browse")
-  @UseGuards(AuthGuard(), SimpleActionGuard("storage:browse"))
+  @UseGuards(AuthGuard(), SimpleActionGuard("storage:browse", "storage"))
   async browse(
-    @ResourceFilter() resourceFilter: object,
+    @ResourceFilter({
+      pure: true
+    })
+    resourceFilter: object,
     @Query("path") path: string,
     @Query("filter", JSONP) filter?: object,
     @Query("limit", NUMBER) limit?: number,
