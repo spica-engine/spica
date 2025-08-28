@@ -33,6 +33,7 @@ type BucketContextType = {
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   refreshBucketData: () => Promise<void>;
+  updateBucketReadonly: (bucket: BucketType) => Promise<any>;
   updateBucketRule: (
     bucket: BucketType,
     newRules: {
@@ -77,6 +78,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiUpdateBucketReadonly,
     apiUpdateBucketRule,
     apiBuckets,
     apiUpdateBucketRuleError,
@@ -272,6 +274,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   );
 
 
+  const updateBucketReadonly = useCallback(async (bucket: BucketType) => {
+    const previousBuckets = buckets;
+    setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
+    const success = await apiUpdateBucketReadonly(bucket);
+    if (!success) {
+      setBuckets(previousBuckets);
+    }
+  }, [buckets, apiUpdateBucketReadonly]);
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -286,6 +297,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       deleteBucketHistory: apiDeleteBucketHistory,
       updateBucketRule,
       refreshBucketData,
+      updateBucketReadonly,
       buckets,
       bucketData,
       updateBucketRuleLoading: apiUpdateBucketRuleLoading,
@@ -309,6 +321,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketRule,
       refreshBucketData,
       loadMoreBucketData,
+      updateBucketReadonly,
       buckets,
       bucketData,
       apiUpdateBucketRuleLoading,

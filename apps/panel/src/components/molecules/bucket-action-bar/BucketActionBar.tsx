@@ -4,7 +4,7 @@ import {Button, FlexElement, Icon, Popover, Checkbox} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
-import type { BucketType } from "src/services/bucketService";
+import type {BucketType} from "src/services/bucketService";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 
 type BucketActionBarProps = {
@@ -33,6 +33,7 @@ const BucketActionBar = ({
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => setSearchValue(""), [bucket?._id]);
+  const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -77,10 +78,12 @@ const BucketActionBar = ({
         loading={searchLoading}
       />
       <FlexElement className={styles.actionBar}>
-        <Button onClick={() => {}}>
-          <Icon name="plus" />
-          New Entry
-        </Button>
+        {!isReadOnlyChecked && (
+          <Button onClick={() => {}}>
+            <Icon name="plus" />
+            New Entry
+          </Button>
+        )}
         <Button
           className={styles.refreshButton} variant="text"
           onClick={onRefresh}
