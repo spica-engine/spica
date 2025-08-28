@@ -13,12 +13,12 @@ describe("MailerService Integration", () => {
   let apiHost: string;
 
   beforeAll(async () => {
-    const mailhogUrl = process.env.MAILHOG_URL;
+    const mailerUrl = process.env.MAILER_URL;
     let smtpHost = "localhost";
     apiHost = "localhost";
 
-    if (mailhogUrl) {
-      const [smtpUrl, apiUrl] = mailhogUrl.split(",");
+    if (mailerUrl) {
+      const [smtpUrl, apiUrl] = mailerUrl.split(",");
       const smtpParts = smtpUrl.split("://")[1].split(":");
       const apiParts = apiUrl.split("://")[1].split(":");
 
@@ -42,9 +42,7 @@ describe("MailerService Integration", () => {
       host: smtpHost,
       port: smtpPort,
       secure: false,
-      defaults: {
-        from: "integration@example.com"
-      }
+      defaults: {from: process.env.TEST_MAIL_FROM || "integration@example.com"}
     } as any;
 
     module = await Test.createTestingModule({
@@ -102,11 +100,11 @@ describe("MailerService Integration", () => {
       text: String(item.Content?.Body || raw || "")
     };
 
-    const expected = expect.objectContaining({
-      to: expect.stringContaining("recipient@example.com"),
-      subject: expect.stringContaining("Integration Test"),
-      text: expect.stringContaining("Hello from integration test")
-    });
+    const expected = {
+      to: "recipient@example.com",
+      subject: "Integration Test",
+      text: "Hello from integration test"
+    };
 
     expect(extracted).toEqual(expected);
   }, 20000);
