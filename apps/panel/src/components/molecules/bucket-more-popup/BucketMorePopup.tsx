@@ -30,7 +30,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const contentRef = useRef(null);
 
   useOnClickOutside({
-    refs: [containerRef, contentRef],
+    targetElements: [containerRef, contentRef],
     onClickOutside: () => {
       setIsOpen(false);
     }

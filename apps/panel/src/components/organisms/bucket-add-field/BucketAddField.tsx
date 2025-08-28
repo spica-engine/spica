@@ -52,7 +52,6 @@ type TypeBucketAddField = {
   };
   className?: string;
   innerFieldStyles?: CSSProperties;
-  prefix?: ReactNode;
 };
 
 type FieldType = {
@@ -152,7 +151,6 @@ const BucketAddField: FC<TypeBucketAddField> = ({
   initialValues,
   className,
   innerFieldStyles,
-  prefix
 }) => {
   const schema = useMemo(() => createShema[type] || {}, [type]);
   const presetProperties = useMemo(
@@ -338,7 +336,6 @@ const BucketAddField: FC<TypeBucketAddField> = ({
       gap={10}
       className={`${styles.contentContainer} ${className || ""}`}
     >
-      {prefix}
       {inputRepresenter}
       <Tab
         type="underline"

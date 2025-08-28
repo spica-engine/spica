@@ -33,7 +33,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   const [isCategorySelectCreateOpen, setIsCategorySelectCreateOpen] = useState(false);
 
   useOnClickOutside({
-    refs: [containerRef, contentRef],
+    targetElements: [containerRef, contentRef],
     onClickOutside: () => setIsOpen(false)
   });
   const {deleteBucket, bucketCategories, changeBucketCategory, renameBucket} = useBucket();

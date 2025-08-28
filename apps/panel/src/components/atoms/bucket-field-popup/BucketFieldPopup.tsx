@@ -15,12 +15,12 @@ import {
   Icon,
   type IconName,
   type TypeInputType,
-  type TypeModal
+  type TypeModal,
+  Popover
 } from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../../components/organisms/bucket-add-field/BucketAddField";
 import type {BucketType} from "src/services/bucketService";
-import Popover from "../popover/Popover";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 
 export const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [
@@ -68,10 +68,14 @@ const BucketFieldPopup = ({
 
   useEffect(() => {
     if (!selectedType || !bucketAddFieldRef.current) return;
-    const {inset, top, right, left, bottom} = bucketAddFieldRef.current.style;
+    const {top, right, left, bottom} = bucketAddFieldRef.current.style;
+    const newTop = String(Number(top?.slice(0, -2)) + 10) + "px";
+    // Update position styles to ensure the inset is recalculated correctly.
+    // We explicitly set both `inset` and the individual sides (`top`, `right`, `bottom`, `left`)
+    // because Popover component may ignore or override our values
     setInnerFieldStyles({
-      inset,
-      top: String(Number(top?.slice(0, -2)) + 10) + "px",
+      inset: `${newTop} ${right} ${bottom} ${left}`,
+      top: newTop,
       right,
       left,
       bottom
@@ -80,49 +84,46 @@ const BucketFieldPopup = ({
 
   useEffect(() => {
     if (!isOpen || bucketFieldPopups.includes(bucketFieldPopupId)) return;
-
-    // Then update state
     setBucketFieldPopups([...bucketFieldPopups, bucketFieldPopupId]);
 
     return () => {
       if (!bucketFieldPopups.includes(bucketFieldPopupId)) return;
-
-      // Update state to match ref
       setBucketFieldPopups(bucketFieldPopups.filter(id => id !== bucketFieldPopupId));
     };
   }, [isOpen, bucketFieldPopupId]);
 
-  const portalClassName = bucketFieldPopups.length === 1 ? styles.portalClassName : undefined;
-  const handleToggle = (e: React.MouseEvent) => {
+  const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsOpen(!isOpen);
+    if (isOpen) {
+      setIsOpen(false);
+      setTimeout(() => setIsOpen(true), 0);
+    } else setIsOpen(true);
   };
 
-  const handleClose = () => {
-    // Only close if this is the last popup
-    if (bucketFieldPopups.at(-1) !== bucketFieldPopupId) return;
-
-    // Update state and close popup
-    setBucketFieldPopups(bucketFieldPopups.filter(id => id !== bucketFieldPopupId));
-    setIsOpen(false);
+  const handleConfigurationClose = () => {
     setSelectedType(null);
   };
 
+  const handleFieldListClose = () => {
+    setBucketFieldPopups(bucketFieldPopups.filter(id => id !== bucketFieldPopupId));
+    setIsOpen(false);
+  };
+
+  const basePortalClassName = bucketFieldPopups.length === 1 ? styles.portalClassName : undefined;
+  const outerPortalClassName = `${basePortalClassName} ${bucketFieldPopups[0] === bucketFieldPopupId || !selectedType ? "" : styles.hidden}`;
   return (
     <>
       <Popover
-        id={bucketFieldPopupId + " outer"}
         open={isOpen}
-        portalClassName={portalClassName}
+        onClose={handleFieldListClose}
+        portalClassName={outerPortalClassName}
         contentProps={{className: styles.popoverContent}}
-        onClose={handleClose}
         content={
           <Popover
-            id={bucketFieldPopupId + " inneer"}
             open={!!selectedType}
-            onClose={handleClose}
+            onClose={handleConfigurationClose}
             placement="leftStart"
-            portalClassName={portalClassName}
+            portalClassName={basePortalClassName}
             contentProps={{
               className: styles.bucketAddField,
               ref: bucketAddFieldRef,
@@ -157,11 +158,11 @@ const BucketFieldPopup = ({
           </Popover>
         }
       >
-        {isValidElement(children)
-          ? cloneElement(children, {
-              onClick: handleToggle
-            } as Partial<unknown> & React.Attributes)
-          : children}
+        {(isValidElement(children) &&
+          typeof children.type !== "string" &&
+          cloneElement(children as React.ReactElement<any>, {
+            onClick: handleOpen
+          })) || <span onClick={handleOpen}>{children}</span>}
       </Popover>
     </>
   );

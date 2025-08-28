@@ -29,3 +29,8 @@
   width: unset;
   height: unset;
 }
+
+.hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
