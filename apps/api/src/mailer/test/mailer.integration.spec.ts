@@ -4,22 +4,42 @@ import {MailerService} from "../index";
 import fetch from "node-fetch";
 import {GenericContainer} from "testcontainers";
 
-describe("MailerService Integration (MailHog)", () => {
+describe("MailerService Integration", () => {
   let module: TestingModule;
   let service: MailerService;
   let container: any;
   let smtpPort: number;
   let apiPort: number;
+  let apiHost: string;
 
   beforeAll(async () => {
-    // Start MailHog container
-    container = await new GenericContainer("mailhog/mailhog").withExposedPorts(1025, 8025).start();
+    const mailhogUrl = process.env.MAILHOG_URL;
+    let smtpHost = "localhost";
+    apiHost = "localhost";
 
-    smtpPort = container.getMappedPort(1025);
-    apiPort = container.getMappedPort(8025);
+    if (mailhogUrl) {
+      const [smtpUrl, apiUrl] = mailhogUrl.split(",");
+      const smtpParts = smtpUrl.split("://")[1].split(":");
+      const apiParts = apiUrl.split("://")[1].split(":");
+
+      smtpHost = smtpParts[0];
+      smtpPort = parseInt(smtpParts[1]);
+      apiHost = apiParts[0];
+      apiPort = parseInt(apiParts[1]);
+    } else {
+      try {
+        container = await new GenericContainer("mailhog/mailhog")
+          .withExposedPorts(1025, 8025)
+          .start();
+        smtpPort = container.getMappedPort(1025);
+        apiPort = container.getMappedPort(8025);
+      } catch (e) {
+        console.error(e);
+      }
+    }
 
     const options = {
-      host: "localhost",
+      host: smtpHost,
       port: smtpPort,
       secure: false,
       defaults: {
@@ -49,7 +69,7 @@ describe("MailerService Integration (MailHog)", () => {
     // wait a moment for MailHog to receive
     await new Promise(r => setTimeout(r, 500));
 
-    const resp = await fetch(`http://localhost:${apiPort}/api/v2/messages`);
+    const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
     const body: any = await resp.json();
 
     expect(body.total).toBeGreaterThan(0);

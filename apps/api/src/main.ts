@@ -578,6 +578,9 @@ const modules = [
     auth: {
       user: args["mailer-user"],
       pass: args["mailer-pass"]
+    },
+    defaults: {
+      from: args["mailer-from"]
     }
   }),
   SchemaModule.forRoot({
