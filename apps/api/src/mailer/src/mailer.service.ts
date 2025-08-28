@@ -21,8 +21,8 @@ export class MailerService {
       from: mail.from || this.options.defaults?.from,
       to: mail.to,
       subject: mail.subject,
-      text: mail.text,
-      html: mail.html
+      text: mail.text || "",
+      html: mail.html || ""
     };
 
     try {
