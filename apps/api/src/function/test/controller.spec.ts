@@ -1,13 +1,13 @@
-import {Test} from "@nestjs/testing";
-import {FunctionModule} from "@spica-server/function";
+import { Test } from "@nestjs/testing";
+import { FunctionModule } from "@spica-server/function";
 import os from "os";
-import {INestApplication} from "@nestjs/common";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import { INestApplication } from "@nestjs/common";
+import { CoreTestingModule, Request } from "@spica-server/core/testing";
+import { DatabaseTestingModule, ObjectId } from "@spica-server/database/testing";
+import { SchemaModule } from "@spica-server/core/schema";
+import { OBJECTID_STRING, OBJECT_ID } from "@spica-server/core/schema/formats";
+import { PassportTestingModule } from "@spica-server/passport/testing";
+import { PreferenceTestingModule } from "@spica-server/preference/testing";
 
 describe("Function Controller", () => {
   let app: INestApplication;
@@ -37,8 +37,8 @@ describe("Function Controller", () => {
         CoreTestingModule,
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
-        PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
-        SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
+        PassportTestingModule.initialize({ overriddenStrategyType: "JWT" }),
+        SchemaModule.forRoot({ formats: [OBJECT_ID, OBJECTID_STRING] }),
         FunctionModule.forRoot({
           invocationLogs: false,
           path: os.tmpdir(),
@@ -73,46 +73,48 @@ describe("Function Controller", () => {
 
   afterEach(async () => await app.close());
 
-  it("should filter functions by index", async () => {
-    const fn1 = await request.post("/function", fnSchema).then(r => r.body);
-    await request.post(`/function/${fn1._id}/index`, {
-      index: `
+  describe("filtering", () => {
+    it("should filter functions by index", async () => {
+      const fn1 = await request.post("/function", fnSchema).then(r => r.body);
+      await request.post(`/function/${fn1._id}/index`, {
+        index: `
   export function findMe(){ 
     return 'OK' ;
   }`
-    });
+      });
 
-    const fn2 = await request.post("/function", fnSchema).then(r => r.body);
-    await request.post(`/function/${fn2._id}/index`, {
-      index: `
+      const fn2 = await request.post("/function", fnSchema).then(r => r.body);
+      await request.post(`/function/${fn2._id}/index`, {
+        index: `
   export function dontFindMe(){ 
     return 'OK' ;
   }`
+      });
+
+      const foundFns = await request
+        .get("/function", { filter: JSON.stringify({ index: "findMe\\(" }) })
+        .then(r => r.body);
+      expect(foundFns).toEqual([{ ...fn1, env_vars: [] }]);
     });
 
-    const foundFns = await request
-      .get("/function", {filter: JSON.stringify({index: "findMe\\("})})
-      .then(r => r.body);
-    expect(foundFns).toEqual([{...fn1, env_vars: []}]);
-  });
-
-  it("should throw bad request exception if filter is mistaken", async () => {
-    const fn1 = await request.post("/function", fnSchema).then(r => r.body);
-    await request.post(`/function/${fn1._id}/index`, {
-      index: `
+    it("should throw bad request exception if filter is mistaken", async () => {
+      const fn1 = await request.post("/function", fnSchema).then(r => r.body);
+      await request.post(`/function/${fn1._id}/index`, {
+        index: `
   export function findMe(){ 
     return 'OK' ;
   }`
-    });
+      });
 
-    // notice no escape characters("\\") for special characters("(")
-    const body = await request
-      .get("/function", {filter: JSON.stringify({index: "findMe("})})
-      .then(r => r.body);
-    expect(body.statusCode).toEqual(400);
-    expect(body.error).toEqual("Bad Request");
-    expect(body.message).toContain("Invalid regular expression");
-  });
+      // notice no escape characters("\\") for special characters("(")
+      const body = await request
+        .get("/function", { filter: JSON.stringify({ index: "findMe(" }) })
+        .then(r => r.body);
+      expect(body.statusCode).toEqual(400);
+      expect(body.error).toEqual("Bad Request");
+      expect(body.message).toContain("Invalid regular expression");
+    });
+  })
 
   describe("endpoints", () => {
     it("should return information about enqueuers/runtimes and timeout", async () => {
@@ -132,7 +134,7 @@ describe("Function Controller", () => {
     it("should return a function by id", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
       const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
-      expect(found).toEqual({...inserted, env_vars: []});
+      expect(found).toEqual({ ...inserted, env_vars: [] });
     });
 
     it("should delete a function and return 204", async () => {
@@ -151,7 +153,7 @@ describe("Function Controller", () => {
     it("should replace a function via PUT and ignore language field", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
 
-      const updated = {...inserted, name: "replaced-name", language: "typescript"};
+      const updated = { ...inserted, name: "replaced-name", language: "typescript" };
       const putRes = await request.put(`/function/${inserted._id}`, updated);
 
       expect(putRes.statusCode).toEqual(200);
@@ -168,14 +170,14 @@ describe("Function Controller", () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
 
       const wrong = await request
-        .patch(`/function/${inserted._id}`, {category: "c1"})
+        .patch(`/function/${inserted._id}`, { category: "c1" })
         .then(r => r.body);
       expect(wrong.statusCode).toEqual(400);
 
       const success = await request.patch(
         `/function/${inserted._id}`,
-        {category: "c1"},
-        {"content-type": "application/merge-patch+json"}
+        { category: "c1" },
+        { "content-type": "application/merge-patch+json" }
       );
       expect(success.statusCode).toEqual(200);
     });
@@ -183,7 +185,7 @@ describe("Function Controller", () => {
     it("should write and read function index (POST index -> 204, GET index -> index)", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
       const indexSource = `export function hello(){ return 'ok' }`;
-      const postRes = await request.post(`/function/${inserted._id}/index`, {index: indexSource});
+      const postRes = await request.post(`/function/${inserted._id}/index`, { index: indexSource });
       expect([postRes.statusCode, postRes.statusText]).toEqual([204, "No Content"]);
 
       const show = await request.get(`/function/${inserted._id}/index`).then(r => r.body);
@@ -207,4 +209,18 @@ describe("Function Controller", () => {
       expect([ej.statusCode, ej.statusText]).toEqual([204, "No Content"]);
     });
   });
+
+  describe("name uniqueness", () => {
+    it("should not allow duplicate function names", async () => {
+      const fn = await request.post("/function", fnSchema).then(r => r.body);
+
+      // attempt to create another function with same name
+      const response = await request.post("/function", fnSchema).catch(e => e);
+
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect(response.body.message).toEqual(
+        "Value of the property .name should unique across all documents."
+      );
+    });
+  })
 });
