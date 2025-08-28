@@ -25,12 +25,7 @@ export class MailerService {
       html: mail.html
     };
 
-    try {
-      const result = await this.transporter.sendMail(message);
-      return result;
-    } catch (error) {
-      this.logger.error(`Failed to send mail to ${mail.to}: ${error.message}`);
-      throw error;
-    }
+    const result = await this.transporter.sendMail(message);
+    return result;
   }
 }
