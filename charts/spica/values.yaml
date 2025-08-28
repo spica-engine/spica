@@ -33,6 +33,7 @@ application:
   publicHost:
   storageSize: 2Gi
   storageClass:
+  resources: {}
   apiResources: {}
   webResources: {}
   args: []
