@@ -21,7 +21,7 @@ spec:
       containers:
         - name: migrate
           image: {{ .Values.images.migrate }}:{{ $.Chart.AppVersion }}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           args: [
             --from, "$(FROM)",
             --to, {{ .Chart.Version }},

@@ -20,13 +20,6 @@ spec:
         - name: replication-controller
           image: {{ .Values.images.replicationcontroller }}:{{ $.Chart.AppVersion }}
           imagePullPolicy: IfNotPresent
-          resources:
-            requests:
-              memory: "64Mi"
-              cpu: "100m"
-            limits:
-              memory: "1Gi"
-              cpu: "200m"
           args: [
             "--from-srv",
             "false",
@@ -35,9 +28,7 @@ spec:
             "--username",
             "$(ROOT_USERNAME)",
             "--password",
-            "$(ROOT_PASSWORD)",
-            "--debug",
-            "true"
+            "$(ROOT_PASSWORD)"
           ]
           env:
             - name: ROOT_USERNAME

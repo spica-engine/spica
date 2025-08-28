@@ -2,8 +2,8 @@ apiVersion: v2
 name: spica
 description: A Helm chart for Spica
 type: application
-version: v0.347
-appVersion: v0.347
+version: 0.0.0-PLACEHOLDER
+appVersion: 0.0.0-PLACEHOLDER
 icon: https://spicaengine.com/assets/icons/icon-512x512.png
 home: https://spicaengine.com
 sources:
