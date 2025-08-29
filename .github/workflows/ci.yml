@@ -111,7 +111,7 @@ jobs:
           done
 
       - name: Start MailHog if needed
-        if: ${{ matrix.mailhog || false }}
+        if: ${{ matrix.mailer || false }}
         run: |
           docker run -d --rm --name mailhog \
             -p 1025:1025 \
@@ -146,5 +146,5 @@ jobs:
         run: docker stop rabbitmq || true
 
       - name: Stop MailHog if needed
-        if: ${{ matrix.mailhog || false }}
+        if: ${{ matrix.mailer || false }}
         run: docker stop mailhog || true
