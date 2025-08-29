@@ -39,7 +39,7 @@ jobs:
           - command: test-image:api --build-arg PROJECTS=api/dashboard/**
           - command: test-image:api --build-arg PROJECTS=api/env_var/**
           - command: test-image:api --build-arg PROJECTS=api/function
-          - command: test-image:api --build-arg PROJECTS=api/mailer/** --build-arg MAILER_URL=smtp://172.17.0.1:1025,api://172.17.0.1:8025 --build-arg TEST_MAIL_FROM=example@example.com
+          - command: test-image:api -- --build-arg PROJECTS=api/mailer/** --build-arg MAILER_URL=smtp://172.17.0.1:1025,api://172.17.0.1:8025 --build-arg TEST_MAIL_FROM=example@example.com
             mailer: true
           - command: test-image:api --build-arg PROJECTS=api/function/enqueuer --build-arg RABBITMQ_URL=amqp://172.17.0.1:5672
             rabbitmq: true
