@@ -39,7 +39,7 @@ jobs:
           - command: test-image:api --build-arg PROJECTS=api/dashboard/**
           - command: test-image:api --build-arg PROJECTS=api/env_var/**
           - command: test-image:api --build-arg PROJECTS=api/function
-          - command: test-image:api --build-arg PROJECTS=api/mailer/** --build-arg MAILER_URL=smtp://172.17.0.1:1025,api://172.17.0.1:8025 --build-arg TEST_MAIL_FROM=example@example.com
+          - command: test-image:api --build-arg PROJECTS=api/mailer/** --build-arg MAILER_URL=smtp://172.17.0.1:1025,api://172.17.0.1:8025
             mailer: true
           - command: test-image:api --build-arg PROJECTS=api/function/enqueuer --build-arg RABBITMQ_URL=amqp://172.17.0.1:5672
             rabbitmq: true
@@ -110,18 +110,18 @@ jobs:
             sleep 2
           done
 
-      - name: Start MailHog if needed
+      - name: Start Mailer if needed
         if: ${{ matrix.mailer || false }}
         run: |
-          docker run -d --rm --name mailhog \
+          docker run -d --rm --name mailer \
             -p 1025:1025 \
             -p 8025:8025 \
             mailhog/mailhog
 
-          echo "Waiting for MailHog..."
+          echo "Waiting for Mailer..."
           for i in {1..10}; do
             if nc -z localhost 1025 && nc -z localhost 8025; then
-              echo "MailHog is ready."
+              echo "Mailer is ready."
               break
             fi
             sleep 2
@@ -145,6 +145,6 @@ jobs:
         if: ${{ matrix.rabbitmq || false }}
         run: docker stop rabbitmq || true
 
-      - name: Stop MailHog if needed
+      - name: Stop Mailer if needed
         if: ${{ matrix.mailer || false }}
-        run: docker stop mailhog || true
+        run: docker stop mailer || true

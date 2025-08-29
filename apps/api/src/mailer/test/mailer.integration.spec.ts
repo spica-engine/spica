@@ -42,7 +42,9 @@ describe("MailerService Integration", () => {
       host: smtpHost,
       port: smtpPort,
       secure: false,
-      defaults: {from: process.env.TEST_MAIL_FROM || "integration@example.com"}
+      defaults: {
+        from: "integration@example.com"
+      }
     } as any;
 
     module = await Test.createTestingModule({
@@ -86,6 +88,7 @@ describe("MailerService Integration", () => {
 
     const subjectHeader = findHeader(headers, ["Subject", "subject"]);
     const toHeader = findHeader(headers, ["To", "to"]);
+    const fromHeader = findHeader(headers, ["From", "from"]);
     const raw =
       item.Raw && item.Raw.Data
         ? item.Raw.Data
@@ -97,12 +100,14 @@ describe("MailerService Integration", () => {
     const extracted = {
       to: toHeader ? String(toHeader[0]) : String(raw || ""),
       subject: subjectHeader ? String(subjectHeader[0]) : String(raw || ""),
+      from: fromHeader ? String(fromHeader[0]) : String(raw || ""),
       text: String(item.Content?.Body || raw || "")
     };
 
     const expected = {
       to: "recipient@example.com",
       subject: "Integration Test",
+      from: "integration@example.com",
       text: "Hello from integration test"
     };
 
