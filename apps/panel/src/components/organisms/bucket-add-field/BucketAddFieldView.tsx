@@ -160,7 +160,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   });
 
   const configuration = useInputRepresenter({
-    properties: configFields as unknown as Property,
+    properties: configFields,
     value: formValues.configurationValues,
     onChange: values => handleFormValueChange(values, "configurationValues"),
     error: formErrors.configurationValues ?? {},
@@ -168,7 +168,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   });
 
   const defaultInput = useInputRepresenter({
-    properties: defaultProperty as unknown as Property,
+    properties: defaultProperty,
     value: formValues.defaultValue,
     onChange: values => handleFormValueChange(values, "defaultValue"),
     error: formErrors.defaultValue ?? {},
@@ -176,7 +176,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   });
 
   const presetsRepresenter = useInputRepresenter({
-    properties: presetProperties as unknown as Property, // presetProperties should be passed from parent
+    properties: presetProperties as unknown as Property,
     value: formValues.presetValues,
     onChange: values => handleFormValueChange(values, "presetValues"),
     error: formErrors.presetValues ?? {},

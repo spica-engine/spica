@@ -2,8 +2,6 @@ import {
   cloneElement,
   isValidElement,
   memo,
-  useEffect,
-  useId,
   useRef,
   useState,
   type CSSProperties,
@@ -143,11 +141,11 @@ const BucketFieldSelectionPopup = ({
         </BucketFieldConfigurationPopup>
       }
     >
-      {(isValidElement(children) &&
-        typeof children.type !== "string" &&
-        cloneElement(children as React.ReactElement<any>, {
+      {
+        cloneElement(children as React.ReactElement<{onClick?: (e: React.MouseEvent) => void}>, {
           onClick: handleOpen
-        })) || <span onClick={handleOpen}>{children}</span>}
+        })
+      }
     </Popover>
   );
 };

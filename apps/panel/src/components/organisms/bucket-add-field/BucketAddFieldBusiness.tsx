@@ -11,7 +11,6 @@ import {
 } from "./BucketAddFieldSchema";
 import {useBucket} from "../../../contexts/BucketContext";
 import BucketAddFieldView from "./BucketAddFieldView";
-import {DEFAULT_FORM_VALUES} from "./BucketAddField";
 
 export type BucketAddFieldBusinessProps = {
   type: TypeInputType;
@@ -48,6 +47,17 @@ const DEFAULT_PRESET_VALUES = {
   enumeratedValues: [],
   definePattern: false,
   regularExpression: ""
+};
+
+const DEFAULT_FORM_VALUES: FormValues = {
+  fieldValues: {
+    title: "New Inner Field",
+    description: ""
+  },
+  configurationValues: {},
+  presetValues: {},
+  defaultValue: {},
+  type: "object"
 };
 
 const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
