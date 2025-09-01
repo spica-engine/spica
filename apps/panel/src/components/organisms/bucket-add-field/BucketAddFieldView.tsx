@@ -27,7 +27,7 @@ import {presetProperties} from "./BucketAddFieldSchema";
 import styles from "./BucketAddField.module.scss";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 import BucketFieldConfigurationPopup from "../../../components/atoms/bucket-field-popup/BucketFieldConfigurationPopup";
-import {fieldOptions} from "../../../components/atoms/bucket-field-popup/BucketFieldPopup_";
+import {fieldOptions} from "../../../components/atoms/bucket-field-popup/BucketFieldSelectionPopup";
 
 type InnerFieldProps = {
   field: FormValues;

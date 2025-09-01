@@ -58,17 +58,7 @@ const BucketFieldSelectionPopup = ({
   const {bucketFieldPopups, setBucketFieldPopups} = useBucketFieldPopups();
   const fieldOptionsListContainerRef = useRef<HTMLDivElement>(null);
 
-  const bucketFieldPopupId = useId();
-
-  useEffect(() => {
-    if (!isOpen || bucketFieldPopups.includes(bucketFieldPopupId)) return;
-    setBucketFieldPopups([...bucketFieldPopups, bucketFieldPopupId]);
-
-    return () => {
-      if (!bucketFieldPopups.includes(bucketFieldPopupId)) return;
-      setBucketFieldPopups(bucketFieldPopups.filter(id => id !== bucketFieldPopupId));
-    };
-  }, [isOpen, bucketFieldPopupId]);
+  const [bucketFieldPopupId, setBucketFieldPopupId] = useState<string>();
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -108,8 +98,10 @@ const BucketFieldSelectionPopup = ({
   };
 
   const basePortalClassName =
-    bucketFieldPopups.length === 1 && !!selectedType ? styles.portalClassName : undefined;
-  const outerPortalClassName = `${basePortalClassName} ${bucketFieldPopups[0] === bucketFieldPopupId || !selectedType ? "" : styles.hidden}`;
+    (!bucketFieldPopupId || bucketFieldPopups.length <= 1) && !!selectedType
+      ? styles.firstPortal
+      : "";
+  const outerPortalClassName = `${basePortalClassName} ${!selectedType || bucketFieldPopups[0] === bucketFieldPopupId ? "" : styles.hidden}`;
 
   return (
     <Popover
@@ -127,6 +119,7 @@ const BucketFieldSelectionPopup = ({
           onSaveAndClose={handleSaveAndClose}
           bucketAddFieldPopoverStyles={bucketAddFieldPopoverStyles ?? {}}
           basePortalClassName={basePortalClassName}
+          setBucketFieldPopupId={setBucketFieldPopupId}
         >
           <FlexElement
             ref={fieldOptionsListContainerRef}
