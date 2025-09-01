@@ -8,8 +8,7 @@ import {
   useInputRepresenter,
   type IconName,
   type TypeFlexElement,
-  type TypeFluidContainer,
-  type TypeInputType
+  type TypeFluidContainer
 } from "oziko-ui-kit";
 import {
   memo,
@@ -23,7 +22,7 @@ import {
   type ReactNode
 } from "react";
 import type {BucketType, Property} from "src/services/bucketService";
-import type {FieldType, FormValues} from "./BucketAddFieldBusiness";
+import type {FormErrors, FormValues} from "./BucketAddFieldBusiness";
 import {presetProperties} from "./BucketAddFieldSchema";
 import styles from "./BucketAddField.module.scss";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
@@ -31,11 +30,11 @@ import BucketFieldConfigurationPopup from "../../../components/atoms/bucket-fiel
 import {fieldOptions} from "../../../components/atoms/bucket-field-popup/BucketFieldPopup_";
 
 type InnerFieldProps = {
-  field: FieldType;
+  field: FormValues;
   bucket?: BucketType;
   buckets: BucketType[];
   onSaveInnerField: (values: FormValues) => void;
-  onDeleteInnerField: (field: FieldType) => void;
+  onDeleteInnerField: (field: FormValues) => void;
   innerFieldStyles: CSSProperties;
 };
 
@@ -100,13 +99,9 @@ type BucketAddFieldViewProps = {
   innerFieldStyles: CSSProperties;
 
   // Form data
-  type: TypeInputType;
-  fieldValues: Record<string, any>;
-  configurationValues: Record<string, any>;
-  defaultValue: Record<string, any>;
-  presetValues: Record<string, any>;
-  fieldErrors: Record<string, string> | null;
-  apiError: string | null;
+  formValues: FormValues;
+  formErrors: FormErrors;
+  error: string | null;
 
   // Schema and configuration
   inputProperties: Record<string, any>;
@@ -122,7 +117,7 @@ type BucketAddFieldViewProps = {
   handleSaveAndClose: () => void;
   handleCreateInnerField: (values: FormValues) => void;
   handleSaveInnerField: (values: FormValues) => void;
-  handleDeleteInnerField: (field: FieldType) => void;
+  handleDeleteInnerField: (values: FormValues) => void;
 
   // External dependencies
   bucket: BucketType;
@@ -132,13 +127,9 @@ type BucketAddFieldViewProps = {
 const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   className,
   innerFieldStyles,
-  type,
-  fieldValues,
-  configurationValues,
-  defaultValue,
-  presetValues,
-  fieldErrors,
-  apiError,
+  formValues,
+  formErrors,
+  error,
   inputProperties,
   configFields,
   defaultProperty,
@@ -162,33 +153,39 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
 
   const inputRepresenter = useInputRepresenter({
     properties: inputProperties,
-    value: fieldValues,
+    value: formValues.fieldValues,
     onChange: values => handleFormValueChange(values, "fieldValues"),
-    error: fieldErrors ?? {},
+    error: formErrors.fieldValues ?? {},
     errorClassName: styles.error
   });
 
   const configuration = useInputRepresenter({
     properties: configFields as unknown as Property,
-    value: configurationValues,
-    onChange: values => handleFormValueChange(values, "configurationValues")
+    value: formValues.configurationValues,
+    onChange: values => handleFormValueChange(values, "configurationValues"),
+    error: formErrors.configurationValues ?? {},
+    errorClassName: styles.error
   });
 
   const defaultInput = useInputRepresenter({
     properties: defaultProperty as unknown as Property,
-    value: defaultValue,
-    onChange: values => handleFormValueChange(values, "defaultValue")
+    value: formValues.defaultValue,
+    onChange: values => handleFormValueChange(values, "defaultValue"),
+    error: formErrors.defaultValue ?? {},
+    errorClassName: styles.error
   });
 
   const presetsRepresenter = useInputRepresenter({
     properties: presetProperties as unknown as Property, // presetProperties should be passed from parent
-    value: presetValues,
-    onChange: values => handleFormValueChange(values, "presetValues")
+    value: formValues.presetValues,
+    onChange: values => handleFormValueChange(values, "presetValues"),
+    error: formErrors.presetValues ?? {},
+    errorClassName: styles.error
   });
 
   useEffect(() => {
     setActiveTab(0);
-  }, [innerFieldExists, type]);
+  }, [innerFieldExists, formValues.type]);
 
   const tabs = useMemo(() => {
     const items: TypeFluidContainer[] = [];
@@ -212,7 +209,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       createConfig(
         "Inner Fields",
         <div>
-          {fieldValues.innerFields?.map?.((field: FieldType, i: number) => (
+          {formValues.innerFields?.map?.((field: FormValues, i: number) => (
             <InnerField
               key={i}
               field={field}
@@ -227,7 +224,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       );
     }
 
-    if (type === "string") {
+    if (formValues.type === "string") {
       createConfig("Presets", <div className={styles.presetsContainer}>{presetsRepresenter}</div>);
     }
 
@@ -241,14 +238,14 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
         "richtext",
         "array",
         "object"
-      ].includes(type)
+      ].includes(formValues.type)
     ) {
       createConfig("Default", defaultInput as unknown as JSX.Element);
     }
 
     createConfig("Configuration", <div className={styles.configuration}>{configuration}</div>);
     return items;
-  }, [type, fieldValues, configurationValues, defaultValue, presetValues, fieldErrors]);
+  }, [formValues, formErrors]);
 
   const tabItems: {prefix?: TypeFlexElement}[] = useMemo(
     () => tabs.map(i => ({prefix: i.prefix})),
@@ -270,14 +267,16 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
         root={{
           children: (
             <Text dimensionX="fill" className={styles.displayer}>
-              {type}
+              {formValues.type}
             </Text>
           ),
           dimensionX: "fill"
         }}
         gap={10}
         prefix={{
-          children: <Icon name={fieldOptions.find(i => i.type === type)?.icon as IconName} />
+          children: (
+            <Icon name={fieldOptions.find(i => i.type === formValues.type)?.icon as IconName} />
+          )
         }}
       />
 
@@ -330,11 +329,11 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       </div>
 
       {/* Error Display */}
-      {apiError && (
+      {error && (
         <div className={innerFieldExists ? styles.innerFieldsError : styles.defaultError}>
           <div className={styles.errorTextContainer}>
             <Text className={styles.errorText} variant="danger">
-              {apiError}
+              {error}
             </Text>
           </div>
         </div>

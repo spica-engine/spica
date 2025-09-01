@@ -3,9 +3,13 @@ import {type TypeInputType} from "oziko-ui-kit";
 import type {BucketType} from "src/services/bucketService";
 import {getDefaultValues} from "./BucketAddFieldUtils";
 import {regexPresets, enumerationPresets} from "./BucketAddFieldPresets";
-import {createShema, configPropertiesMapping, defaultConfig} from "./BucketAddFieldSchema";
+import {
+  createShema,
+  configPropertiesMapping,
+  defaultConfig,
+  presetProperties
+} from "./BucketAddFieldSchema";
 import {useBucket} from "../../../contexts/BucketContext";
-
 import BucketAddFieldView from "./BucketAddFieldView";
 import {DEFAULT_FORM_VALUES} from "./BucketAddField";
 
@@ -20,21 +24,22 @@ export type BucketAddFieldBusinessProps = {
   innerFieldStyles: CSSProperties;
 };
 
-export type FieldType = {
-  fieldValues: Record<string, any>;
-  configurationValues: Record<string, any>;
-  type: TypeInputType;
-  formValues?: FormValues;
-  id: string;
-};
-
 export type FormValues = {
   fieldValues: Record<string, any>;
   presetValues: Record<string, any>;
   configurationValues: Record<string, any>;
   defaultValue: Record<string, any>;
   type: TypeInputType;
+  innerFields?: FormValues[];
   id?: string;
+};
+
+export type FormErrors = {
+  fieldValues?: Record<string, string>;
+  presetValues?: Record<string, string>;
+  configurationValues?: Record<string, string>;
+  defaultValue?: Record<string, string>;
+  innerFields?: string;
 };
 
 const DEFAULT_PRESET_VALUES = {
@@ -68,7 +73,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   );
   const [formValues, setFormValues] = useState<FormValues>(DEFAULT_FORM_VALUES);
 
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
 
   const {createBucketFieldError} = useBucket();
@@ -124,7 +129,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       presetValues: type === "string" ? DEFAULT_PRESET_VALUES : prev.presetValues,
       type
     }));
-    setFieldErrors(null);
+    setFormErrors({});
     setApiError(null);
   }, [type]);
 
@@ -196,44 +201,76 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   }, [type, formValues.presetValues.definePattern, formValues.fieldValues.arrayType]);
 
   // Form validation
-  const validateInputs = useCallback(() => {
+  const validateForm = useCallback(() => {
     setApiError(null);
     const errors: Record<string, string> = {};
-    Object.entries(schema).forEach(([key, value]) => {
-      if (
-        key === "title" &&
-        formValues.fieldValues[key] !== formValues.fieldValues[key].toLowerCase()
-      ) {
-        errors[key] = "Name must be in lowercase";
-      }
-      if (
-        value.required &&
-        !formValues.fieldValues[key] &&
-        (!value.renderCondition ||
-          formValues.fieldValues[value.renderCondition.field] === value.renderCondition.equals)
-      ) {
-        errors[key] = `${(value as {title: string}).title} is required`;
-      }
-    });
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
-  }, [schema, formValues.fieldValues]);
+    const propertyNameRegex = /^(?!(_id)$)([a-z_0-9]*)+$/;
 
-  useEffect(() => {
-    if (!fieldErrors) return;
-    validateInputs();
-  }, [formValues.fieldValues]);
+    const validateSingleSchemaItem = ({
+      key,
+      schemaItem,
+      values
+    }: {
+      key: string;
+      schemaItem: any;
+      values: Record<string, any>;
+    }) => {
+      if (schemaItem.type === "number" && (isNaN(values[key]) || values[key] < schemaItem.min)) {
+        errors[key] =
+          `${(schemaItem as {title: string})?.title ?? "Field"} must be a positive number`;
+      }
+      if (
+        schemaItem.required &&
+        !values.fieldValues?.[key] &&
+        (!schemaItem.renderCondition ||
+          values[schemaItem.renderCondition.field] === schemaItem.renderCondition.equals)
+      ) {
+        errors[key] = `${(schemaItem as {title: string})?.title ?? "Field"} is required`;
+      }
+    };
+
+    Object.entries(schema).forEach(([key, schemaItem]) =>
+      validateSingleSchemaItem({key, schemaItem, values: formValues.fieldValues})
+    );
+    Object.entries(presetProperties).forEach(([key, value]) => {
+      validateSingleSchemaItem({key, schemaItem: value, values: formValues.presetValues});
+    });
+    Object.entries(configFields || {}).forEach(([key, schemaItem]) => {
+      validateSingleSchemaItem({key, schemaItem, values: formValues.configurationValues});
+    });
+    Object.entries(defaultProperty || {}).forEach(([key, schemaItem]) => {
+      validateSingleSchemaItem({key, schemaItem, values: formValues.defaultValue});
+    });
+
+    if (
+      !formValues.fieldValues.title.length ||
+      !propertyNameRegex.test(formValues.fieldValues.title)
+    ) {
+      errors.title =
+        "Name can only contain lowercase letters, numbers, and underscores. It cannot be '_id' or an empty string and must not include spaces.";
+    }
+
+    if (
+      (formValues.type === "object" ||
+        (formValues.type === "array" && formValues.fieldValues.arrayType === "object")) &&
+      !formValues.fieldValues.innerFields?.length
+    ) {
+      errors.innerFields = "At least one inner field is required";
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [schema, formValues.fieldValues, formValues.type]);
 
   // Event handlers
   const handleSaveAndClose = useCallback(async () => {
-    const isValid = validateInputs();
+    const isValid = validateForm();
     if (!isValid) return;
     setIsLoading(true);
 
     const result = await onSaveAndClose(formValues);
     setIsLoading(false);
     if (result) onSuccess?.();
-  }, [formValues.fieldValues, formValues.configurationValues, onSaveAndClose]);
+  }, [formValues, onSaveAndClose]);
 
   const handleCreateInnerField: (values: FormValues) => void | Promise<any> = useCallback(
     values => {
@@ -252,24 +289,28 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   const handleSaveInnerField = useCallback((values: FormValues) => {
     setFormValues(prev => ({
       ...prev,
-      fieldValues: {
-        ...prev.fieldValues,
-        innerFields: prev.fieldValues.innerFields?.map((innerField: FieldType) =>
-          innerField?.id === values.id ? values : innerField
-        )
-      }
+      innerFields: prev.innerFields
+        ? {
+            ...prev.innerFields,
+            innerFields: prev.innerFields?.map((innerField: FormValues) =>
+              innerField?.id === values.id ? values : innerField
+            )
+          }
+        : undefined
     }));
   }, []);
 
-  const handleDeleteInnerField = useCallback((field: FieldType) => {
+  const handleDeleteInnerField = useCallback((field: FormValues) => {
     setFormValues(prev => ({
       ...prev,
-      fieldValues: {
-        ...prev.fieldValues,
-        innerFields: prev.fieldValues.innerFields?.filter(
-          (innerField: FieldType) => innerField.id !== field.id
-        )
-      }
+      innerFields: prev.innerFields
+        ? {
+            ...prev.innerFields,
+            innerFields: prev.innerFields?.filter(
+              (innerField: FormValues) => innerField.id !== field.id
+            )
+          }
+        : undefined
     }));
   }, []);
 
@@ -285,12 +326,16 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   // without formValues.fieldValues being updated. Without this, useInputRepresenter
   // may throw an error due to a mismatch between the provided values and the
   // expected property values. this can happen when switching between field types
-  const currentFieldValues = arraysEqualIgnoreOrder(
-    Object.keys(formValues.fieldValues).filter(i => i !== "innerFields"),
-    Object.keys(defaultFieldValues)
-  )
-    ? formValues.fieldValues
-    : defaultFieldValues;
+  const currentFormValues = useMemo(
+    () =>
+      arraysEqualIgnoreOrder(
+        Object.keys(formValues.fieldValues).filter(i => i !== "innerFields"),
+        Object.keys(defaultFieldValues)
+      )
+        ? formValues
+        : {...formValues, fieldValues: defaultFieldValues},
+    [formValues, defaultFieldValues]
+  );
 
   return (
     <BucketAddFieldView
@@ -298,13 +343,9 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       className={className}
       innerFieldStyles={innerFieldStyles}
       // Form data
-      type={formValues.type}
-      fieldValues={currentFieldValues}
-      configurationValues={formValues.configurationValues}
-      defaultValue={formValues.defaultValue}
-      presetValues={formValues.presetValues}
-      fieldErrors={fieldErrors}
-      apiError={apiError}
+      formValues={currentFormValues}
+      formErrors={formErrors}
+      error={(apiError || formErrors?.innerFields) ?? null}
       // Schema and configuration
       inputProperties={inputProperties}
       configFields={configFields}

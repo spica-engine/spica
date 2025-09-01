@@ -3,7 +3,7 @@ import styles from "./StorageFileSelect.module.scss";
 import {Modal, StorageFileCard} from "oziko-ui-kit";
 import {type TypeSortProp} from "./sort-popover-content/SortPopoverContent";
 import StorageModalHeading from "./storage-modal-heading/StorageModalHeading";
-import {type TypeFile} from "../../../../../../node_modules/oziko-ui-kit/dist/utils/interface";
+import {type TypeFile} from "../../../../../../node_modules/oziko-ui-kit/build/dist/utils/interface";
 
 type TypeStorageFileSelect = {
   data: TypeFile[];
