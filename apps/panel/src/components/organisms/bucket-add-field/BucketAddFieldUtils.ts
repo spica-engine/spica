@@ -1,5 +1,6 @@
 import type {TypeInputType} from "oziko-ui-kit";
 import type {Property} from "src/services/bucketService";
+import type { FormValues } from "./BucketAddFieldBusiness";
 
 const createArrayConfig = (baseProperty: Record<string, any>, values: Record<string, any>) => {
   const arrayDefaultValues = {
@@ -39,7 +40,7 @@ const createArrayConfig = (baseProperty: Record<string, any>, values: Record<str
           configurationValues: Record<string, any>;
         }
       ) => {
-        acc[field.values.title] = createFieldProperty(field.type, field.values);
+        acc[field.values.title] = createFieldProperty(values.fieldValues);
         return acc;
       },
       {}
@@ -65,21 +66,26 @@ const createArrayConfig = (baseProperty: Record<string, any>, values: Record<str
   return config;
 };
 
-export const createFieldProperty = (type: TypeInputType, values: Record<string, any>): Property => {
+export const createFieldProperty = (values: FormValues): Property => {
+  const fieldValues = values.fieldValues
+  const configurationValues = values.configurationValues
+  const defaultValue = values.defaultValue.default
+  const type = values.type
+  const presetValues = values.presetValues
   const baseProperty = {
     type,
-    title: values.title,
-    description: values.description,
+    title: fieldValues.title,
+    description: fieldValues.description,
     options: {
       position: "bottom",
-      index: values.index || undefined,
-      unique: values.uniqueValues || undefined,
-      translate: values.translate || undefined
+      index: configurationValues.index || undefined,
+      unique: configurationValues.uniqueValues || undefined,
+      translate: configurationValues.translate || undefined
     },
-    readOnly: values.readOnly || undefined,
-    default: values.default,
+    readOnly: configurationValues.readOnly || undefined,
+    default: defaultValue,
     pattern:
-      type !== "array" && values.regularExpression?.length ? values.regularExpression : undefined
+      type !== "array" && presetValues.regularExpression?.length ? presetValues.regularExpression : undefined
   } as Property;
 
   switch (type) {
@@ -87,19 +93,19 @@ export const createFieldProperty = (type: TypeInputType, values: Record<string, 
       return {
         ...baseProperty,
         enum:
-          (values.enumeratedValues as string[])?.length > 0
-            ? (values.enumeratedValues as string[])
+          (presetValues.enumeratedValues as string[])?.length > 0
+            ? (presetValues.enumeratedValues as string[])
             : undefined
       };
 
     case "number":
       return {
         ...baseProperty,
-        minimum: values.minimum,
-        maximum: values.maximum,
+        minimum: fieldValues.minimum,
+        maximum: fieldValues.maximum,
         enum:
-          (values.enumeratedValues as string[])?.length > 0
-            ? (values.enumeratedValues as string[])
+          (fieldValues.enumeratedValues as string[])?.length > 0
+            ? (fieldValues.enumeratedValues as string[])
             : undefined
       };
 
@@ -107,10 +113,10 @@ export const createFieldProperty = (type: TypeInputType, values: Record<string, 
       return {
         ...baseProperty,
         items: {
-          type: values.multipleSelectionType,
-          enum: values.chip
+          type: fieldValues.multipleSelectionType,
+          enum: fieldValues.chip
         },
-        maxItems: values.maxItems
+        maxItems: fieldValues.maxItems
       };
 
     case "array":
@@ -119,7 +125,7 @@ export const createFieldProperty = (type: TypeInputType, values: Record<string, 
     case "date":
       return {
         ...baseProperty,
-        default: values.default.length ? values.default : undefined
+        default: defaultValue.length ? defaultValue : undefined
       };
     case "boolean":
     case "location":
@@ -132,9 +138,9 @@ export const createFieldProperty = (type: TypeInputType, values: Record<string, 
     case "relation":
       return {
         ...baseProperty,
-        relationType: values.relationType,
-        bucketId: values.bucket,
-        dependent: values.dependent
+        relationType: fieldValues.relationType,
+        bucketId: fieldValues.bucket,
+        dependent: fieldValues.dependent
       };
     default:
       return baseProperty;

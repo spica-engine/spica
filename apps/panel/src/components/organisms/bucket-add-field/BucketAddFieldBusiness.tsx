@@ -4,38 +4,17 @@ import type {BucketType} from "src/services/bucketService";
 import {fieldOptions} from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 import {getDefaultValues} from "./BucketAddFieldUtils";
 import {regexPresets, enumerationPresets} from "./BucketAddFieldPresets";
-import {
-  createShema,
-  presetProperties,
-  configPropertiesMapping,
-  defaultConfig
-} from "./BucketAddFieldSchema";
+import {createShema, configPropertiesMapping, defaultConfig} from "./BucketAddFieldSchema";
 import {useBucket} from "../../../contexts/BucketContext";
 
 import BucketAddFieldView from "./BucketAddFieldView";
 import {DEFAULT_FORM_VALUES} from "./BucketAddField";
 
-export type SimpleSaveFieldHandlerArg = {
-  type: TypeInputType;
-  values: Record<string, any>;
-};
-
-export type FullSaveFieldHandlerArg = {
-  type: TypeInputType;
-  fieldValues: Record<string, any>;
-  configurationValues: Record<string, any>;
-  presetValues?: Record<string, any>;
-};
-
-export type TypeSaveFieldHandler = (
-  arg: SimpleSaveFieldHandlerArg | FullSaveFieldHandlerArg
-) => void | Promise<any>;
-
 export type BucketAddFieldBusinessProps = {
   name: string;
   type: TypeInputType;
   onSuccess?: () => void;
-  onSaveAndClose: TypeSaveFieldHandler;
+  onSaveAndClose: (values: FormValues) => void | Promise<any>;
   bucket: BucketType;
   buckets: BucketType[];
   initialValues?: FormValues;
@@ -56,6 +35,7 @@ export type FormValues = {
   configurationValues: Record<string, any>;
   defaultValue: Record<string, any>;
   type: TypeInputType;
+  id?: string;
 };
 
 const DEFAULT_PRESET_VALUES = {
@@ -133,7 +113,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
         ...getDefaultValues(configPropertiesMapping[type] || {}, initialValues?.configurationValues)
       }
     }));
-  }, [type, initialValues?.configurationValues]);
+  }, [type, initialValues?.configurationValues, innerFieldExists]);
 
   const title = useMemo(() => fieldOptions.find(i => i.type === type), [type]);
   const configFields = useMemo(() => configPropertiesMapping[type], [type]);
@@ -254,66 +234,32 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     if (!isValid) return;
     setIsLoading(true);
 
-    const payload = {
-      type,
-      values: {
-        ...formValues.fieldValues,
-        ...formValues.configurationValues,
-        ...formValues.presetValues,
-        ...formValues.defaultValue,
-        requiredField: formValues.configurationValues.requiredField
-          ? formValues.fieldValues.title
-          : undefined,
-        primaryField: formValues.configurationValues.primaryField
-          ? formValues.fieldValues.title
-          : undefined
-      }
-    };
-    const result = await onSaveAndClose(payload);
+    const result = await onSaveAndClose(formValues);
     setIsLoading(false);
     if (result) onSuccess?.();
   }, [formValues.fieldValues, formValues.configurationValues, onSaveAndClose]);
 
-  const handleCreateInnerField = useCallback(
-    ({
-      type,
-      fieldValues,
-      configurationValues
-    }: {
-      type: TypeInputType;
-      fieldValues: Record<string, any>;
-      configurationValues: Record<string, any>;
-    }) => {
-      const id = crypto.randomUUID();
-      setFormValues(prev => ({
-        ...prev,
-        fieldValues: {
-          innerFields: [
-            ...(prev.fieldValues.innerFields || []),
-            {fieldValues: {...fieldValues, id}, configurationValues, type}
-          ]
-        }
-      }));
-    },
-    []
-  );
+  const handleCreateInnerField: (values: FormValues) => void | Promise<any> = useCallback(values => {
+    setFormValues(prev => ({
+      ...prev,
+      fieldValues: {
+        ...prev.fieldValues,
+        innerFields: [...(prev.fieldValues.innerFields || []), {...values}]
+      }
+    }));
+  }, []);
 
-  const handleSaveInnerField = useCallback(
-    ({type, fieldValues, configurationValues}: FullSaveFieldHandlerArg) => {
-      setFormValues(prev => ({
-        ...prev,
-        fieldValues: {
-          ...prev.fieldValues,
-          innerFields: prev.fieldValues.innerFields?.map((innerField: FieldType) =>
-            innerField.formValues?.fieldValues.id === formValues.fieldValues.id
-              ? {fieldValues, configurationValues, type}
-              : innerField
-          )
-        }
-      }));
-    },
-    []
-  );
+  const handleSaveInnerField = useCallback((values: FormValues) => {
+    setFormValues(prev => ({
+      ...prev,
+      fieldValues: {
+        ...prev.fieldValues,
+        innerFields: prev.fieldValues.innerFields?.map((innerField: FieldType) =>
+          innerField.formValues?.id === values.id ? values : innerField
+        )
+      }
+    }));
+  }, []);
 
   const handleDeleteInnerField = useCallback((field: FieldType) => {
     setFormValues(prev => ({
@@ -341,7 +287,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   // may throw an error due to a mismatch between the provided values and the
   // expected property values. this can happen when switching between field types
   const currentFieldValues = arraysEqualIgnoreOrder(
-    Object.keys(formValues.fieldValues),
+    Object.keys(formValues.fieldValues).filter(i => i !== "innerFields"),
     Object.keys(defaultFieldValues)
   )
     ? formValues.fieldValues

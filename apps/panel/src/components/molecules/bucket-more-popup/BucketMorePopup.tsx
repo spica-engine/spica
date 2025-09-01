@@ -1,5 +1,3 @@
-// CHANGES ON THIS FILE DO NOT RELATE TO THIS TASK, (sp-698) BUT NEEDED,
-// BECAUSE THE TASK sp-698 REQUIRED CHANGES IN UI KIT WHICH BROKE HOW POPOVER OPEN STATE HANDLED IN HERE(or smt like that, u get me)
 import {Button, FlexElement, FluidContainer, Icon, Popover, Text, Checkbox} from "oziko-ui-kit";
 import {memo, useMemo, useEffect, useRef, useState, type FC} from "react";
 import styles from "./BucketMorePopup.module.scss";

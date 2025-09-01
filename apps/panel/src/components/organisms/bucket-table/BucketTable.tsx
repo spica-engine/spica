@@ -8,10 +8,7 @@ import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
 import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
 import {BucketFieldPopupsProvider} from "../../../components/atoms/bucket-field-popup/BucketFieldPopupsContext";
-import type {
-  SimpleSaveFieldHandlerArg,
-  TypeSaveFieldHandler
-} from "../bucket-add-field/BucketAddField";
+import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 
 type FieldType =
   | "string"
@@ -108,10 +105,17 @@ const NewFieldHeader = memo(() => {
   );
 
   const handleSaveAndClose = useCallback(
-    ({type, values}: SimpleSaveFieldHandlerArg) => {
+    (values: FormValues) => {
       if (!bucket) return;
-      const fieldProperty = createFieldProperty(type, values);
-      return createBucketField(bucket, fieldProperty, values.requiredField, values.primaryField)
+      const fieldProperty = createFieldProperty(values);
+      const requiredField = values.configurationValues.requiredField
+        ? values.fieldValues.title
+        : undefined;
+      const primaryField = values.configurationValues.primaryField
+        ? values.fieldValues.title
+        : undefined;
+
+      return createBucketField(bucket, fieldProperty, requiredField, primaryField);
     },
     [bucket, createBucketField]
   );
@@ -121,7 +125,7 @@ const NewFieldHeader = memo(() => {
       <BucketFieldPopup
         buckets={buckets}
         bucket={bucket as BucketType}
-        onSaveAndClose={handleSaveAndClose as TypeSaveFieldHandler}
+        onSaveAndClose={handleSaveAndClose}
       >
         <Button
           variant="icon"

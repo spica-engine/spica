@@ -23,23 +23,17 @@ import {
   type ReactNode
 } from "react";
 import type {BucketType, Property} from "src/services/bucketService";
-import type {
-  FormValues,
-  FullSaveFieldHandlerArg,
-  FieldType,
-  TypeSaveFieldHandler
-} from "./BucketAddFieldBusiness";
+import type {FieldType, FormValues} from "./BucketAddFieldBusiness";
 import {presetProperties} from "./BucketAddFieldSchema";
 import styles from "./BucketAddField.module.scss";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
-import BucketAddFieldBusiness from "./BucketAddFieldBusiness";
-import {DEFAULT_FORM_VALUES} from "./BucketAddField";
+import BucketFieldConfigurationPopup from "../../../components/atoms/bucket-field-popup/BucketFieldConfigurationPopup";
 
 type InnerFieldProps = {
   field: FieldType;
   bucket?: BucketType;
   buckets: BucketType[];
-  onSaveInnerField: (arg: FullSaveFieldHandlerArg) => void;
+  onSaveInnerField: (values: FormValues) => void;
   onDeleteInnerField: (field: FieldType) => void;
 };
 
@@ -47,10 +41,12 @@ const InnerField: FC<InnerFieldProps> = memo(
   ({field, bucket, buckets, onSaveInnerField, onDeleteInnerField}) => {
     const [isEditing, setIsEditing] = useState(false);
 
+    const handleToggleEdit = () => setIsEditing(prev => !prev);
+
     const handleSave = useCallback(
-      (args: FullSaveFieldHandlerArg) => {
-        onSaveInnerField(args);
-        setIsEditing(false);
+      (values: FormValues) => {
+        onSaveInnerField(values);
+        handleToggleEdit();
       },
       [onSaveInnerField]
     );
@@ -63,7 +59,7 @@ const InnerField: FC<InnerFieldProps> = memo(
           children: (
             <FlexElement gap={5} className={styles.innerFieldPrefix}>
               <Icon name={"chevronRight"} size="sm" />
-              <Text className={styles.innerFieldName}>{field.formValues?.fieldValues.title}</Text>
+              <Text className={styles.innerFieldName}>{field.fieldValues.title}</Text>
             </FlexElement>
           )
         }}
@@ -71,21 +67,19 @@ const InnerField: FC<InnerFieldProps> = memo(
         suffix={{
           children: (
             <FlexElement gap={5} dimensionX="fill" className={styles.innerFieldActions}>
-              <Button color="default" variant="icon" onClick={() => setIsEditing(true)}>
-                <Icon name="pencil" />
-              </Button>
-              {isEditing && (
-                <BucketAddFieldBusiness
-                  name={field.formValues?.fieldValues.title ?? "innerField"}
-                  type={field.type}
-                  onSaveAndClose={handleSave as TypeSaveFieldHandler}
-                  bucket={bucket as BucketType}
-                  buckets={buckets}
-                  initialValues={DEFAULT_FORM_VALUES}
-                  onSuccess={() => setIsEditing(false)}
-                  className={styles.innerField}
-                />
-              )}
+              <BucketFieldConfigurationPopup
+                isOpen={isEditing}
+                selectedType={field.type}
+                bucket={bucket as BucketType}
+                buckets={buckets}
+                onClose={handleToggleEdit}
+                onSaveAndClose={handleSave}
+                initialValues={field as FormValues}
+              >
+                <Button color="default" variant="icon" onClick={handleToggleEdit}>
+                  <Icon name="pencil" />
+                </Button>
+              </BucketFieldConfigurationPopup>
               <Button color="danger" variant="icon" onClick={() => onDeleteInnerField(field)}>
                 <Icon name="delete" />
               </Button>
@@ -126,12 +120,8 @@ type BucketAddFieldViewProps = {
   setFormValues: React.Dispatch<React.SetStateAction<FormValues>>;
   setActiveTab: React.Dispatch<React.SetStateAction<number>>;
   handleSaveAndClose: () => void;
-  handleCreateInnerField: (arg: {
-    type: TypeInputType;
-    fieldValues: Record<string, any>;
-    configurationValues: Record<string, any>;
-  }) => void;
-  handleSaveInnerField: (arg: FullSaveFieldHandlerArg) => void;
+  handleCreateInnerField: (values: FormValues) => void;
+  handleSaveInnerField: (values: FormValues) => void;
   handleDeleteInnerField: (field: FieldType) => void;
 
   // External dependencies
@@ -316,7 +306,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
           <BucketFieldPopup
             buckets={buckets as BucketType[]}
             bucket={bucket}
-            onSaveAndClose={handleCreateInnerField as TypeSaveFieldHandler}
+            onSaveAndClose={handleCreateInnerField}
             bucketAddFieldPopoverStyles={innerFieldStyles}
           >
             <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
