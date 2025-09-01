@@ -1,7 +1,6 @@
 import {type FC, useMemo, useState, useCallback, useEffect, type CSSProperties, memo} from "react";
 import {type TypeInputType} from "oziko-ui-kit";
 import type {BucketType} from "src/services/bucketService";
-import {fieldOptions} from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 import {getDefaultValues} from "./BucketAddFieldUtils";
 import {regexPresets, enumerationPresets} from "./BucketAddFieldPresets";
 import {createShema, configPropertiesMapping, defaultConfig} from "./BucketAddFieldSchema";
@@ -11,7 +10,6 @@ import BucketAddFieldView from "./BucketAddFieldView";
 import {DEFAULT_FORM_VALUES} from "./BucketAddField";
 
 export type BucketAddFieldBusinessProps = {
-  name: string;
   type: TypeInputType;
   onSuccess?: () => void;
   onSaveAndClose: (values: FormValues) => void | Promise<any>;
@@ -19,7 +17,7 @@ export type BucketAddFieldBusinessProps = {
   buckets: BucketType[];
   initialValues?: FormValues;
   className?: string;
-  innerFieldStyles?: CSSProperties;
+  innerFieldStyles: CSSProperties;
 };
 
 export type FieldType = {
@@ -27,6 +25,7 @@ export type FieldType = {
   configurationValues: Record<string, any>;
   type: TypeInputType;
   formValues?: FormValues;
+  id: string;
 };
 
 export type FormValues = {
@@ -47,7 +46,6 @@ const DEFAULT_PRESET_VALUES = {
 };
 
 const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
-  name = "",
   type,
   onSuccess,
   onSaveAndClose,
@@ -63,7 +61,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     () =>
       initialValues?.fieldValues ??
       getDefaultValues(schema, {
-        title: name,
+        title: "Name",
         description: ""
       }),
     [type, schema, initialValues?.fieldValues]
@@ -71,7 +69,6 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   const [formValues, setFormValues] = useState<FormValues>(DEFAULT_FORM_VALUES);
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
-  const [activeTab, setActiveTab] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   const {createBucketFieldError} = useBucket();
@@ -115,7 +112,6 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     }));
   }, [type, initialValues?.configurationValues, innerFieldExists]);
 
-  const title = useMemo(() => fieldOptions.find(i => i.type === type), [type]);
   const configFields = useMemo(() => configPropertiesMapping[type], [type]);
 
   // Initialize form values when type changes
@@ -239,15 +235,19 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     if (result) onSuccess?.();
   }, [formValues.fieldValues, formValues.configurationValues, onSaveAndClose]);
 
-  const handleCreateInnerField: (values: FormValues) => void | Promise<any> = useCallback(values => {
-    setFormValues(prev => ({
-      ...prev,
-      fieldValues: {
-        ...prev.fieldValues,
-        innerFields: [...(prev.fieldValues.innerFields || []), {...values}]
-      }
-    }));
-  }, []);
+  const handleCreateInnerField: (values: FormValues) => void | Promise<any> = useCallback(
+    values => {
+      const id = crypto.randomUUID();
+      setFormValues(prev => ({
+        ...prev,
+        fieldValues: {
+          ...prev.fieldValues,
+          innerFields: [...(prev.fieldValues.innerFields || []), {...values, id}]
+        }
+      }));
+    },
+    []
+  );
 
   const handleSaveInnerField = useCallback((values: FormValues) => {
     setFormValues(prev => ({
@@ -255,7 +255,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       fieldValues: {
         ...prev.fieldValues,
         innerFields: prev.fieldValues.innerFields?.map((innerField: FieldType) =>
-          innerField.formValues?.id === values.id ? values : innerField
+          innerField?.id === values.id ? values : innerField
         )
       }
     }));
@@ -267,8 +267,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       fieldValues: {
         ...prev.fieldValues,
         innerFields: prev.fieldValues.innerFields?.filter(
-          (innerField: FieldType) =>
-            innerField.formValues?.fieldValues.id !== field.formValues?.fieldValues.id
+          (innerField: FieldType) => innerField.id !== field.id
         )
       }
     }));
@@ -297,7 +296,6 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     <BucketAddFieldView
       // Display props
       className={className}
-      title={title}
       innerFieldStyles={innerFieldStyles}
       // Form data
       type={formValues.type}
@@ -312,12 +310,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       configFields={configFields}
       defaultProperty={defaultProperty}
       // State
-      activeTab={activeTab}
       isLoading={isLoading}
       innerFieldExists={innerFieldExists}
       // Event handlers
       setFormValues={setFormValues}
-      setActiveTab={setActiveTab}
       handleSaveAndClose={handleSaveAndClose}
       handleCreateInnerField={handleCreateInnerField}
       handleSaveInnerField={handleSaveInnerField}

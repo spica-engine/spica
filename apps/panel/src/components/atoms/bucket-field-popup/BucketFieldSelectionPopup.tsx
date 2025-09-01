@@ -125,7 +125,7 @@ const BucketFieldSelectionPopup = ({
           buckets={buckets}
           onClose={handleConfigurationClose}
           onSaveAndClose={handleSaveAndClose}
-          bucketAddFieldPopoverStyles={bucketAddFieldPopoverStyles}
+          bucketAddFieldPopoverStyles={bucketAddFieldPopoverStyles ?? {}}
           basePortalClassName={basePortalClassName}
         >
           <FlexElement

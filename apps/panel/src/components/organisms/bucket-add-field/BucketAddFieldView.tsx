@@ -28,6 +28,7 @@ import {presetProperties} from "./BucketAddFieldSchema";
 import styles from "./BucketAddField.module.scss";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 import BucketFieldConfigurationPopup from "../../../components/atoms/bucket-field-popup/BucketFieldConfigurationPopup";
+import {fieldOptions} from "../../../components/atoms/bucket-field-popup/BucketFieldPopup_";
 
 type InnerFieldProps = {
   field: FieldType;
@@ -35,17 +36,18 @@ type InnerFieldProps = {
   buckets: BucketType[];
   onSaveInnerField: (values: FormValues) => void;
   onDeleteInnerField: (field: FieldType) => void;
+  innerFieldStyles: CSSProperties;
 };
 
 const InnerField: FC<InnerFieldProps> = memo(
-  ({field, bucket, buckets, onSaveInnerField, onDeleteInnerField}) => {
+  ({field, bucket, buckets, onSaveInnerField, onDeleteInnerField, innerFieldStyles}) => {
     const [isEditing, setIsEditing] = useState(false);
 
     const handleToggleEdit = () => setIsEditing(prev => !prev);
 
     const handleSave = useCallback(
       (values: FormValues) => {
-        onSaveInnerField(values);
+        onSaveInnerField({...values, id: field.id});
         handleToggleEdit();
       },
       [onSaveInnerField]
@@ -75,6 +77,7 @@ const InnerField: FC<InnerFieldProps> = memo(
                 onClose={handleToggleEdit}
                 onSaveAndClose={handleSave}
                 initialValues={field as FormValues}
+                bucketAddFieldPopoverStyles={innerFieldStyles}
               >
                 <Button color="default" variant="icon" onClick={handleToggleEdit}>
                   <Icon name="pencil" />
@@ -94,8 +97,7 @@ const InnerField: FC<InnerFieldProps> = memo(
 type BucketAddFieldViewProps = {
   // Display props
   className?: string;
-  title?: {text: string; icon: string};
-  innerFieldStyles?: CSSProperties;
+  innerFieldStyles: CSSProperties;
 
   // Form data
   type: TypeInputType;
@@ -112,13 +114,11 @@ type BucketAddFieldViewProps = {
   defaultProperty: Record<string, any>;
 
   // State
-  activeTab: number;
   isLoading: boolean;
   innerFieldExists: boolean;
 
   // Event handlers
   setFormValues: React.Dispatch<React.SetStateAction<FormValues>>;
-  setActiveTab: React.Dispatch<React.SetStateAction<number>>;
   handleSaveAndClose: () => void;
   handleCreateInnerField: (values: FormValues) => void;
   handleSaveInnerField: (values: FormValues) => void;
@@ -131,7 +131,6 @@ type BucketAddFieldViewProps = {
 
 const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   className,
-  title,
   innerFieldStyles,
   type,
   fieldValues,
@@ -191,55 +190,65 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     setActiveTab(0);
   }, [innerFieldExists, type]);
 
-  // Build tabs based on field type and configuration
-  let currentIndex = 0;
-  const tabs: TypeFluidContainer[] = [];
-  const createConfig = (children: ReactNode, element: JSX.Element) => {
-    const item: TypeFluidContainer = {
-      prefix: {children, onClick: () => setActiveTab(currentIndex++)},
-      element
-    } as TypeFluidContainer;
-    tabs.push(item);
-  };
+  const tabs = useMemo(() => {
+    const items: TypeFluidContainer[] = [];
+    let currentIndex = 0;
+    const createConfig = (children: ReactNode, element: JSX.Element) => {
+      const tabIndex = currentIndex; // Capture the current index
+      const item: TypeFluidContainer = {
+        prefix: {
+          children,
+          onClick: () => {
+            setActiveTab(tabIndex);
+          }
+        },
+        element
+      } as TypeFluidContainer;
+      items.push(item);
+      currentIndex++;
+    };
 
-  if (innerFieldExists) {
-    createConfig(
-      "Inner Fields",
-      <div>
-        {fieldValues.innerFields?.map?.((field: FieldType, i: number) => (
-          <InnerField
-            key={i}
-            field={field}
-            buckets={buckets}
-            bucket={bucket}
-            onSaveInnerField={handleSaveInnerField}
-            onDeleteInnerField={handleDeleteInnerField}
-          />
-        ))}
-      </div>
-    );
-  }
+    if (innerFieldExists) {
+      createConfig(
+        "Inner Fields",
+        <div>
+          {fieldValues.innerFields?.map?.((field: FieldType, i: number) => (
+            <InnerField
+              key={i}
+              field={field}
+              buckets={buckets}
+              bucket={bucket}
+              onSaveInnerField={handleSaveInnerField}
+              onDeleteInnerField={handleDeleteInnerField}
+              innerFieldStyles={innerFieldStyles}
+            />
+          ))}
+        </div>
+      );
+    }
 
-  if (type === "string") {
-    createConfig("Presets", <div className={styles.presetsContainer}>{presetsRepresenter}</div>);
-  }
+    if (type === "string") {
+      createConfig("Presets", <div className={styles.presetsContainer}>{presetsRepresenter}</div>);
+    }
 
-  if (
-    ![
-      "textarea",
-      "multiselect",
-      "relation",
-      "location",
-      "storage",
-      "richtext",
-      "array",
-      "object"
-    ].includes(type)
-  ) {
-    createConfig("Default", defaultInput as unknown as JSX.Element);
-  }
+    if (
+      ![
+        "textarea",
+        "multiselect",
+        "relation",
+        "location",
+        "storage",
+        "richtext",
+        "array",
+        "object"
+      ].includes(type)
+    ) {
+      createConfig("Default", defaultInput as unknown as JSX.Element);
+    }
 
-  createConfig("Configuration", <div className={styles.configuration}>{configuration}</div>);
+    createConfig("Configuration", <div className={styles.configuration}>{configuration}</div>);
+    return items;
+  }, [type, fieldValues, configurationValues, defaultValue, presetValues, fieldErrors]);
 
   const tabItems: {prefix?: TypeFlexElement}[] = useMemo(
     () => tabs.map(i => ({prefix: i.prefix})),
@@ -254,7 +263,6 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     >
       {/* Field Type Header */}
       <FluidContainer
-        key={title?.text}
         dimensionX="fill"
         dimensionY="hug"
         alignment="leftCenter"
@@ -262,13 +270,15 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
         root={{
           children: (
             <Text dimensionX="fill" className={styles.displayer}>
-              {title?.text}
+              {type}
             </Text>
           ),
           dimensionX: "fill"
         }}
         gap={10}
-        prefix={{children: <Icon name={title?.icon as IconName} />}}
+        prefix={{
+          children: <Icon name={fieldOptions.find(i => i.type === type)?.icon as IconName} />
+        }}
       />
 
       {/* Main Form Fields */}

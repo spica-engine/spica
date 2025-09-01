@@ -11,7 +11,7 @@ type BucketFieldConfigurationPopupProps = {
   buckets: BucketType[];
   onClose: (event?: MouseEvent) => void;
   onSaveAndClose: (values: FormValues) => void;
-  bucketAddFieldPopoverStyles?: CSSProperties;
+  bucketAddFieldPopoverStyles: CSSProperties;
   basePortalClassName?: string;
   children: ReactNode;
   isOpen: boolean;
@@ -28,10 +28,10 @@ const BucketFieldConfigurationPopup = ({
   basePortalClassName,
   children,
   isOpen,
-  initialValues
+  initialValues,
 }: BucketFieldConfigurationPopupProps) => {
-  const bucketAddFieldRef = useRef<HTMLDivElement>(null);
   const innerContainerRef = useRef<HTMLDivElement>(null);
+  const bucketAddFieldRef = useRef<HTMLDivElement>(null);
   const [innerFieldStyles, setInnerFieldStyles] = useState<CSSProperties>({});
 
   useEffect(() => {
@@ -68,7 +68,6 @@ const BucketFieldConfigurationPopup = ({
       }}
       content={
         <BucketAddField
-          name="name"
           type={selectedType as TypeInputType}
           onSuccess={handleSuccess}
           onSaveAndClose={onSaveAndClose}
