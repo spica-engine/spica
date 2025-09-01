@@ -1,13 +1,17 @@
 import {Button, Checkbox, Icon, type IconName, type TypeInputType} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useCallback, useMemo, useRef, useState, type RefObject} from "react";
+import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
 import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
-import { BucketFieldPopupsProvider } from "../../../components/atoms/bucket-field-popup/BucketFieldPopupsContext";
+import {BucketFieldPopupsProvider} from "../../../components/atoms/bucket-field-popup/BucketFieldPopupsContext";
+import type {
+  SimpleSaveFieldHandlerArg,
+  TypeSaveFieldHandler
+} from "../bucket-add-field/BucketAddField";
 
 type FieldType =
   | "string"
@@ -95,7 +99,7 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
   );
 };
 
-const NewFieldHeader = () => {
+const NewFieldHeader = memo(() => {
   const {buckets, bucketData, createBucketField} = useBucket();
 
   const bucket = useMemo(
@@ -104,15 +108,10 @@ const NewFieldHeader = () => {
   );
 
   const handleSaveAndClose = useCallback(
-    (
-      type: TypeInputType,
-      fieldValues: Record<string, any>,
-      configurationValues: Record<string, any>,
-      requiredField?: string
-    ) => {
+    ({type, values}: SimpleSaveFieldHandlerArg) => {
       if (!bucket) return;
-      const fieldProperty = createFieldProperty(type, fieldValues, configurationValues);
-      return createBucketField(bucket, fieldProperty, requiredField);
+      const fieldProperty = createFieldProperty(type, values);
+      return createBucketField(bucket, fieldProperty, values.requiredField, values.primaryField)
     },
     [bucket, createBucketField]
   );
@@ -122,7 +121,7 @@ const NewFieldHeader = () => {
       <BucketFieldPopup
         buckets={buckets}
         bucket={bucket as BucketType}
-        onSaveAndClose={handleSaveAndClose}
+        onSaveAndClose={handleSaveAndClose as TypeSaveFieldHandler}
       >
         <Button
           variant="icon"
@@ -134,7 +133,7 @@ const NewFieldHeader = () => {
       </BucketFieldPopup>
     </BucketFieldPopupsProvider>
   );
-};
+});
 
 const defaultColumns: ColumnType[] = [
   {

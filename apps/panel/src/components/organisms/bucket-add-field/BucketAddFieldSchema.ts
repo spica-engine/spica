@@ -26,12 +26,16 @@ const defaultValueFields = {
   defaultBoolean: {
     type: "boolean",
     title: "Default value",
-    size: "small",
+    size: "small"
   },
   defaultDate: {
     type: "string",
     title: "Default Date",
-    enum: ["None", ":created_at", ":updated_at"]
+    enum: [
+      {label: "None", value: ""},
+      {label: "Created At", value: ":created_at"},
+      {label: "Updated At", value: ":updated_at"}
+    ]
   }
 };
 
@@ -63,44 +67,11 @@ const validationFields = {
   definePattern: {
     type: "boolean",
     title: "Define Pattern",
-    size: "small",
+    size: "small"
   },
   regularExpression: {
     type: "string",
     title: "Regex"
-  }
-};
-
-// Configuration fields
-export const configFields = {
-  primaryField: {
-    type: "boolean",
-    title: "Primary Field",
-    size: "small",
-  },
-  translatable: {
-    type: "boolean",
-    title: "Translatable",
-    size: "small",
-  },
-  //readOnly: {
-  //  type: "boolean",
-  //  title: "Readonly"
-  //},
-  uniqueValues: {
-    type: "boolean",
-    title: "Unique Values",
-    size: "small"
-  },
-  requiredField: {
-    type: "boolean",
-    title: "Required Field",
-    size: "small",
-  },
-  index: {
-    type: "boolean",
-    title: "Indexed field in database",
-    size: "small",
   }
 };
 
@@ -114,7 +85,7 @@ const specializedFields = {
   makeEnumerated: {
     type: "boolean",
     title: "Make field enumerated",
-    size: "small",
+    size: "small"
   },
   enumeratedValues: {
     type: "chip",
@@ -172,7 +143,7 @@ const specializedFields = {
   dependent: {
     type: "boolean",
     title: "Dependent",
-    size: "small",
+    size: "small"
   },
   uniqueItems: {
     type: "boolean",
@@ -186,7 +157,6 @@ const schema = {
   ...baseFields,
   ...defaultValueFields,
   ...validationFields,
-  ...configFields,
   ...specializedFields
 };
 
@@ -196,7 +166,13 @@ export const createShema = {
   number: {
     ...baseFields,
     minimum: schema.minNumber,
-    maximum: schema.maxNumber
+    maximum: schema.maxNumber,
+    makeEnumerated: schema.makeEnumerated,
+    enumeratedValues: {
+      ...schema.enumeratedValues,
+      valueType: "number",
+      renderCondition: {field: "makeEnumerated", equals: true}
+    }
   },
   date: baseFields,
   boolean: baseFields,
@@ -220,18 +196,14 @@ export const createShema = {
     },
     minNumber: {...schema.minNumber, renderCondition: {field: "arrayType", equals: "number"}},
     maxNumber: {...schema.maxNumber, renderCondition: {field: "arrayType", equals: "number"}},
-    presets: {...schema.preset, renderCondition: {field: "arrayType", equals: "string"}},
     makeEnumerated: {
       ...schema.makeEnumerated,
-      renderCondition: {field: "arrayType", equals: ["string", "number"]}
+      renderCondition: {field: "arrayType", equals: "number"}
     },
     enumeratedValues: {
       ...schema.enumeratedValues,
+      valueType: "number",
       renderCondition: {field: "makeEnumerated", equals: true}
-    },
-    definePattern: {
-      ...schema.definePattern,
-      renderCondition: {field: "arrayType", equals: "string"}
     },
     regularExpression: {
       ...schema.regularExpression,
@@ -239,7 +211,10 @@ export const createShema = {
     },
     uniqueItems: {
       ...schema.uniqueItems,
-      renderCondition: {field: "arrayType", notEquals: ["multiselect", "location", "object"]}
+      renderCondition: {
+        field: "arrayType",
+        notEquals: ["multiselect", "location", "object", "boolean"]
+      }
     },
     multipleSelectionType: {
       ...schema.multipleSelectionType,
@@ -266,26 +241,192 @@ export const createShema = {
   storage: baseFields,
   relation: {
     ...baseFields,
-    bucket: schema.bucket,
-    relationType: schema.relationType,
+    bucket: {...schema.bucket, required: true},
+    relationType: {...schema.relationType, required: true},
     dependent: schema.dependent
   },
   richtext: baseFields,
   location: baseFields
 } as unknown as Record<TypeInputType, Record<string, any>>;
 
-export const presetPropertiesMapping = {
-  string: {
-    preset: schema.preset,
-    makeEnumerated: schema.makeEnumerated,
-    enumeratedValues: {
-      ...schema.enumeratedValues,
-      renderCondition: {field: "makeEnumerated", equals: true}
-    },
-    definePattern: schema.definePattern,
-    regularExpression: {
-      ...schema.regularExpression,
-      renderCondition: {field: "definePattern", equals: true}
-    }
+export const presetProperties = {
+  preset: schema.preset,
+  makeEnumerated: schema.makeEnumerated,
+  enumeratedValues: {
+    ...schema.enumeratedValues,
+    renderCondition: {field: "makeEnumerated", equals: true}
+  },
+  definePattern: schema.definePattern,
+  regularExpression: {
+    ...schema.regularExpression,
+    renderCondition: {field: "definePattern", equals: true}
   }
+};
+
+// Configuration fields
+const configFields = {
+  primaryField: {
+    type: "boolean",
+    title: "Primary Field",
+    size: "small"
+  },
+  uniqueValues: {
+    type: "boolean",
+    title: "Unique Values",
+    size: "small"
+  },
+  requiredField: {
+    type: "boolean",
+    title: "Required Field",
+    size: "small"
+  },
+  index: {
+    type: "boolean",
+    title: "Indexed field in database",
+    size: "small"
+  }
+};
+
+const translatableConfigFields = {
+  primaryField: {
+    type: "boolean",
+    title: "Primary Field",
+    size: "small"
+  },
+  translate: {
+    type: "boolean",
+    title: "Translatable",
+    size: "small"
+  },
+  uniqueValues: {
+    type: "boolean",
+    title: "Unique Values",
+    size: "small"
+  },
+  requiredField: {
+    type: "boolean",
+    title: "Required Field",
+    size: "small"
+  },
+  index: {
+    type: "boolean",
+    title: "Indexed field in database",
+    size: "small"
+  }
+};
+
+export const configPropertiesMapping = {
+  string: translatableConfigFields,
+  textarea: translatableConfigFields,
+  richtext: {
+    translate: {
+      type: "boolean",
+      title: "Translatable",
+      size: "small"
+    },
+    requiredField: {
+      type: "boolean",
+      title: "Required Field",
+      size: "small"
+    },
+    index: {
+      type: "boolean",
+      title: "Indexed field in database",
+      size: "small"
+    }
+  },
+  object: translatableConfigFields,
+  array: {
+    translate: {
+      type: "boolean",
+      title: "Translatable",
+      size: "small"
+    },
+    requiredField: {
+      type: "boolean",
+      title: "Required Field",
+      size: "small"
+    },
+    index: {
+      type: "boolean",
+      title: "Indexed field in database",
+      size: "small"
+    }
+  },
+  select: translatableConfigFields,
+  number: configFields,
+  date: {
+    requiredField: {
+      type: "boolean",
+      title: "Required Field",
+      size: "small"
+    },
+    index: {
+      type: "boolean",
+      title: "Indexed field in database",
+      size: "small"
+    }
+  },
+  boolean: {
+    primaryField: {
+      type: "boolean",
+      title: "Primary Field",
+      size: "small"
+    },
+    index: {
+      type: "boolean",
+      title: "Indexed field in database",
+      size: "small"
+    }
+  },
+  color: configFields,
+  storage: {
+    translate: {
+      type: "boolean",
+      title: "Translatable",
+      size: "small"
+    },
+    requiredField: {
+      type: "boolean",
+      title: "Required Field",
+      size: "small"
+    },
+    index: {
+      type: "boolean",
+      title: "Indexed field in database",
+      size: "small"
+    }
+  },
+  multiselect: {
+    requiredField: {
+      type: "boolean",
+      title: "Required Field",
+      size: "small"
+    },
+    index: {
+      type: "boolean",
+      title: "Indexed field in database",
+      size: "small"
+    }
+  },
+  location: {
+    requiredField: {
+      type: "boolean",
+      title: "Required Field",
+      size: "small"
+    }
+  },
+  relation: {
+    requiredField: {
+      type: "boolean",
+      title: "Required Field",
+      size: "small"
+    },
+    index: {
+      type: "boolean",
+      title: "Indexed field in database",
+      size: "small"
+    }
+  },
+  chip: configFields
 };

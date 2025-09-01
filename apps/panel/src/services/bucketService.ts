@@ -120,7 +120,7 @@ export const useBucketService = () => {
     method: "put"
   });
 
-  const {request: createBucketField} = useApi({
+  const {request: createBucketField, error: apiCreateBucketFieldError} = useApi({
     endpoint: "",
     method: "put"
   });
@@ -227,6 +227,7 @@ export const useBucketService = () => {
     apiBuckets,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
-    apiDeleteBucketHistoryError
+    apiDeleteBucketHistoryError,
+    apiCreateBucketFieldError
   };
 };

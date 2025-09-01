@@ -21,6 +21,7 @@
 .bucketAddField {
   max-height: 600px !important;
   overflow-y: auto;
+  overflow-x: hidden;
   display: block !important;
   width: 330px !important;
 }

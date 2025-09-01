@@ -31,6 +31,7 @@
   .saveAndCloseButton {
     width: 133px;
     min-width: 123px !important;
+    height: 38px !important;
   }
 }
 
@@ -54,14 +55,14 @@
     padding-right: var(--padding-md) !important;
   }
 }
-
+/*
 .presetsContainer {
   width: 100%;
   > div:not(:nth-child(1)) > div {
     gap: 0 !important;
   }
 }
-
+*/
 .configurationOptionsContainer {
   width: 100%;
   > div > div {
@@ -100,4 +101,29 @@
   color: var(--color-danger);
   font-size: var(--font-size-sm);
   text-align: center;
+}
+
+.defaultError {
+  position: absolute;
+  bottom: 15px;
+  left: 10px;
+  max-width: calc(100% - 155px);
+}
+
+.innerFieldsError {
+  height: 20px;
+}
+
+.errorTextContainer {
+  position: relative;
+  width: 100%;
+}
+
+.errorText {
+  font-size: var(--font-size-xs) !important;
+  width: 100%;
+  position: static;
+  white-space: normal;
+  word-break: break-word;
+  max-height: 40px;
 }

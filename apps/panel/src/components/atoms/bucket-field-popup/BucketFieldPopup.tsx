@@ -15,11 +15,13 @@ import {
   Icon,
   type IconName,
   type TypeInputType,
-  type TypeModal,
   Popover
 } from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
-import BucketAddField from "../../../components/organisms/bucket-add-field/BucketAddField";
+import BucketAddField, {
+  type SimpleSaveFieldHandlerArg,
+  type SaveFieldHandler
+} from "../../../components/organisms/bucket-add-field/BucketAddField";
 import type {BucketType} from "src/services/bucketService";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 
@@ -42,15 +44,11 @@ type BucketFieldPopupProps = {
   children: ReactNode;
   buckets: BucketType[];
   bucket: BucketType;
-  onSaveAndClose: (
-    type: TypeInputType,
-    fieldValues: Record<string, any>,
-    configurationValues: Record<string, any>,
-    requiredField?: string
-  ) => Promise<any> | void;
+  onSaveAndClose: SaveFieldHandler;
   bucketAddFieldPopoverStyles?: CSSProperties;
 };
 
+// !!!! relation configi açıkken multiselecte basınca error veriyo
 const BucketFieldPopup = ({
   children,
   buckets,
@@ -60,6 +58,7 @@ const BucketFieldPopup = ({
 }: BucketFieldPopupProps) => {
   const [selectedType, setSelectedType] = useState<TypeInputType | null>(null);
   const bucketAddFieldRef = useRef<HTMLDivElement>(null);
+  const innerContainerRef = useRef<HTMLDivElement>(null);
   const [innerFieldStyles, setInnerFieldStyles] = useState<CSSProperties>({});
   const [isOpen, setIsOpen] = useState(false);
   const {bucketFieldPopups, setBucketFieldPopups} = useBucketFieldPopups();
@@ -94,13 +93,15 @@ const BucketFieldPopup = ({
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isOpen) {
-      setIsOpen(false);
-      setTimeout(() => setIsOpen(true), 0);
-    } else setIsOpen(true);
+    setIsOpen(true);
   };
 
-  const handleConfigurationClose = () => {
+  const fieldOptionsListContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleConfigurationClose = (event?: MouseEvent) => {
+    if (event?.target && fieldOptionsListContainerRef.current?.contains(event.target as Node)) {
+      return;
+    }
     setSelectedType(null);
   };
 
@@ -109,8 +110,24 @@ const BucketFieldPopup = ({
     setIsOpen(false);
   };
 
-  const basePortalClassName = bucketFieldPopups.length === 1 ? styles.portalClassName : undefined;
+  const handleSaveAndClose = (arg: SimpleSaveFieldHandlerArg) => {
+    const maybePromise = onSaveAndClose(arg);
+
+    const runHandlers = () => {
+      handleConfigurationClose();
+      handleFieldListClose();
+    };
+
+    if (maybePromise instanceof Promise) {
+      maybePromise.then(res => {
+        if (res) runHandlers();
+      });
+    } else runHandlers();
+  };
+
+  const basePortalClassName = (bucketFieldPopups.length === 1 && !!selectedType) ? styles.portalClassName : undefined;
   const outerPortalClassName = `${basePortalClassName} ${bucketFieldPopups[0] === bucketFieldPopupId || !selectedType ? "" : styles.hidden}`;
+
   return (
     <>
       <Popover
@@ -124,6 +141,7 @@ const BucketFieldPopup = ({
             onClose={handleConfigurationClose}
             placement="leftStart"
             portalClassName={basePortalClassName}
+            containerProps={{ref: innerContainerRef}}
             contentProps={{
               className: styles.bucketAddField,
               ref: bucketAddFieldRef,
@@ -133,15 +151,20 @@ const BucketFieldPopup = ({
               <BucketAddField
                 name="name"
                 type={selectedType as TypeInputType}
-                modalProps={{onClose: () => setSelectedType(null)} as TypeModal}
-                onSaveAndClose={onSaveAndClose}
+                onSuccess={() => setSelectedType(null)}
+                onSaveAndClose={handleSaveAndClose as SaveFieldHandler}
                 bucket={bucket}
                 buckets={buckets}
                 innerFieldStyles={innerFieldStyles}
               />
             }
           >
-            <FlexElement dimensionX={200} direction="vertical" className={styles.container}>
+            <FlexElement
+              ref={fieldOptionsListContainerRef}
+              dimensionX={200}
+              direction="vertical"
+              className={styles.container}
+            >
               {fieldOptions.map(({icon, text, type}) => (
                 <ListItem
                   key={text}

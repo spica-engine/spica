@@ -35,13 +35,19 @@ type BucketContextType = {
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   refreshBucketData: () => Promise<void>;
   updateBucketReadonly: (bucket: BucketType) => Promise<any>;
-  createBucketField: (bucket: BucketType, newField: Property, requiredField?: string) => Promise<any>;
+  createBucketField: (
+    bucket: BucketType,
+    newField: Property,
+    requiredField?: string,
+    primaryField?: string
+  ) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
   bucketDataLoading: boolean;
   deleteBucketHistoryLoading: boolean;
   deleteBucketHistoryError: string | null;
+  createBucketFieldError: string | null;
 };
 
 /**
@@ -76,7 +82,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiBuckets,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
-    apiDeleteBucketHistoryError
+    apiDeleteBucketHistoryError,
+    apiCreateBucketFieldError
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -251,30 +258,38 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [buckets]
   );
 
-
-  const updateBucketReadonly = useCallback(async (bucket: BucketType) => {
-    const previousBuckets = buckets;
-    setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
-    const success = await apiUpdateBucketReadonly(bucket);
-    if (!success) {
-      setBuckets(previousBuckets);
-    }
-  }, [buckets, apiUpdateBucketReadonly]);
+  const updateBucketReadonly = useCallback(
+    async (bucket: BucketType) => {
+      const previousBuckets = buckets;
+      setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
+      const success = await apiUpdateBucketReadonly(bucket);
+      if (!success) {
+        setBuckets(previousBuckets);
+      }
+    },
+    [buckets, apiUpdateBucketReadonly]
+  );
 
   const createBucketField = useCallback(
-    async (bucket: BucketType, newField: Property, requiredField?: string) => {
-      const currentRequired = bucket.required ? [...bucket.required] : []
-      if (requiredField) currentRequired.push(requiredField)
+    async (
+      bucket: BucketType,
+      newField: Property,
+      requiredField?: string,
+      primaryField?: string
+    ) => {
+      const currentRequired = bucket.required ? [...bucket.required] : [];
+      if (requiredField) currentRequired.push(requiredField);
       const modifiedBucket = {
         ...bucket,
         properties: {...bucket.properties, [newField.title]: newField},
-        required: currentRequired.length > 0 ? currentRequired : undefined
+        required: currentRequired.length > 0 ? currentRequired : undefined,
+        primary: primaryField ?? bucket.primary
       };
       return apiCreateBucketField(modifiedBucket).then(result => {
-        apiGetBuckets()
-        return result
-      })
-      },
+        apiGetBuckets();
+        return result;
+      });
+    },
     [apiCreateBucketField]
   );
 
@@ -299,7 +314,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketCategories,
       deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
       deleteBucketHistoryError: apiDeleteBucketHistoryError,
-      nextbucketDataQuery
+      nextbucketDataQuery,
+      createBucketFieldError: apiCreateBucketFieldError
     }),
     [
       getBucketData,
@@ -321,7 +337,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketCategories,
       apiDeleteBucketHistoryLoading,
       apiDeleteBucketHistoryError,
-      nextbucketDataQuery
+      nextbucketDataQuery,
+      apiCreateBucketFieldError
     ]
   );
 
