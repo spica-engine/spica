@@ -5,6 +5,7 @@ import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
 import type {BucketType} from "src/services/bucketService";
 import type {FormValues} from "src/components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
+import type { configPropertiesMapping, innerFieldConfigProperties } from "src/components/organisms/bucket-add-field/BucketAddFieldSchema";
 
 type BucketFieldConfigurationPopupProps = {
   selectedType: TypeInputType | null;
@@ -19,9 +20,8 @@ type BucketFieldConfigurationPopupProps = {
   initialValues?: FormValues;
   setBucketFieldPopupId?: React.Dispatch<React.SetStateAction<string | undefined>>;
   iconName?: IconName;
-  configurationMapping: Record<string, any>;
-};
-
+  configurationMapping: typeof configPropertiesMapping | typeof innerFieldConfigProperties
+}
 const BucketFieldConfigurationPopup = ({
   selectedType,
   bucket,

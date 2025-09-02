@@ -1,11 +1,4 @@
-import {
-  cloneElement,
-  memo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode
-} from "react";
+import {cloneElement, memo, useRef, useState, type CSSProperties, type ReactNode} from "react";
 import {
   FlexElement,
   ListItem,
@@ -19,8 +12,12 @@ import type {BucketType} from "src/services/bucketService";
 import type {FormValues} from "src/components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
+import type {
+  configPropertiesMapping,
+  innerFieldConfigProperties
+} from "src/components/organisms/bucket-add-field/BucketAddFieldSchema";
 
-export const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[] = [
+export const fieldOptions: {icon: IconName; text: string; type: TypeInputType | "json"}[] = [
   {icon: "formatQuoteClose", text: "String", type: "string"},
   {icon: "numericBox", text: "Number", type: "number"},
   {icon: "calendarBlank", text: "Date", type: "date"},
@@ -33,7 +30,7 @@ export const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[]
   {icon: "dataObject", text: "Object", type: "object"},
   {icon: "imageMultiple", text: "File", type: "storage"},
   {icon: "formatAlignCenter", text: "Richtext", type: "richtext"},
-  {icon: "dataObject", text: "JSON", type: "json"},
+  {icon: "dataObject", text: "JSON", type: "json"}
 ];
 
 type BucketFieldSelectionPopupProps = {
@@ -42,7 +39,7 @@ type BucketFieldSelectionPopupProps = {
   bucket: BucketType;
   onSaveAndClose: (values: FormValues) => void | Promise<any>;
   bucketAddFieldPopoverStyles?: CSSProperties;
-  configurationMapping: Record<string, any>;
+  configurationMapping: typeof configPropertiesMapping | typeof innerFieldConfigProperties;
   iconName?: IconName;
 };
 
@@ -139,7 +136,7 @@ const BucketFieldSelectionPopup = ({
                 dimensionY="hug"
                 gap={10}
                 prefix={{children: <Icon name={icon} />}}
-                onClick={() => handleTypeSelect(type)}
+                onClick={() => handleTypeSelect(type as TypeInputType)}
                 className={styles.item}
               />
             ))}
@@ -147,11 +144,9 @@ const BucketFieldSelectionPopup = ({
         </BucketFieldConfigurationPopup>
       }
     >
-      {
-        cloneElement(children as React.ReactElement<{onClick?: (e: React.MouseEvent) => void}>, {
-          onClick: handleOpen
-        })
-      }
+      {cloneElement(children as React.ReactElement<{onClick?: (e: React.MouseEvent) => void}>, {
+        onClick: handleOpen
+      })}
     </Popover>
   );
 };

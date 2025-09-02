@@ -16,6 +16,7 @@ import {
   configPropertiesMapping,
   createShema,
   defaultConfig,
+  innerFieldConfigProperties,
   presetProperties
 } from "./BucketAddFieldSchema";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -30,7 +31,7 @@ export type BucketAddFieldBusinessProps = {
   initialValues?: FormValues;
   className?: string;
   innerFieldStyles: CSSProperties;
-  configurationMapping: Record<string, Record<string, any>>;
+  configurationMapping: typeof configPropertiesMapping | typeof innerFieldConfigProperties;
   iconName?: IconName;
 };
 
@@ -150,12 +151,12 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       ...prev,
       configurationValues: {
         ...prev.configurationValues,
-        ...getDefaultValues(configurationMapping[type] || {})
+        ...getDefaultValues(configurationMapping[type as keyof typeof configurationMapping] || {})
       }
     }));
   }, [type, initialValues?.configurationValues, innerFieldExists]);
 
-  const configFields = useMemo(() => configurationMapping[type], [type]);
+  const configFields = useMemo(() => configurationMapping[type as keyof typeof configurationMapping], [type]);
 
   // Initialize form values when type changes
   useEffect(() => {
@@ -259,7 +260,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       errorSection
     }: {
       key: string;
-      schemaItem: any;
+      schemaItem: Record<string, any>;
       values: Record<string, any>;
       errorSection: keyof FormErrors;
     }) => {
