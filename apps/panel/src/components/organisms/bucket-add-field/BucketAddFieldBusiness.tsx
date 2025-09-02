@@ -3,7 +3,12 @@ import {type IconName, type TypeInputType} from "oziko-ui-kit";
 import type {BucketType} from "src/services/bucketService";
 import {getDefaultValues} from "./BucketAddFieldUtils";
 import {regexPresets, enumerationPresets} from "./BucketAddFieldPresets";
-import {configPropertiesMapping, createShema, defaultConfig, presetProperties} from "./BucketAddFieldSchema";
+import {
+  configPropertiesMapping,
+  createShema,
+  defaultConfig,
+  presetProperties
+} from "./BucketAddFieldSchema";
 import {useBucket} from "../../../contexts/BucketContext";
 import BucketAddFieldView from "./BucketAddFieldView";
 
@@ -27,9 +32,17 @@ function isObjectEffectivelyEmpty(obj: Object): boolean {
   return Object.values(obj).every(value => isObjectEffectivelyEmpty(value));
 }
 
+type TypePresetValues = {
+  preset: string;
+  makeEnumerated: boolean;
+  enumeratedValues: string[];
+  definePattern: boolean;
+  regularExpression: string;
+};
+
 export type FormValues = {
   fieldValues: Record<string, any>;
-  presetValues: Record<string, any>;
+  presetValues: TypePresetValues;
   configurationValues: Record<string, any>;
   defaultValue: Record<string, any>;
   type: TypeInputType;
@@ -45,7 +58,7 @@ export type FormErrors = {
   innerFields?: string;
 };
 
-const DEFAULT_PRESET_VALUES = {
+const DEFAULT_PRESET_VALUES: TypePresetValues = {
   preset: "",
   makeEnumerated: false,
   enumeratedValues: [],
@@ -59,7 +72,7 @@ const DEFAULT_FORM_VALUES: FormValues = {
     description: ""
   },
   configurationValues: {},
-  presetValues: {},
+  presetValues: DEFAULT_PRESET_VALUES,
   defaultValue: {},
   type: "object"
 };
@@ -128,9 +141,8 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       ...prev,
       configurationValues: {
         ...prev.configurationValues,
-        ...getDefaultValues(configurationMapping[type] || {}, initialValues?.configurationValues)
+        ...getDefaultValues(configurationMapping[type] || {})
       },
-      innerFields: initialValues?.innerFields
     }));
   }, [type, initialValues?.configurationValues, innerFieldExists]);
 
@@ -144,7 +156,8 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       configurationValues: {...getDefaultValues(configFields, initialValues?.configurationValues)},
       defaultValue: {...getDefaultValues(defaultProperty, initialValues?.fieldValues)},
       presetValues: type === "string" ? DEFAULT_PRESET_VALUES : prev.presetValues,
-      type
+      type,
+      ...initialValues
     }));
     setFormErrors({});
     setApiError(null);
@@ -155,9 +168,9 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     setFormValues(prev => ({
       ...prev,
       presetValues:
-        formValues.fieldValues.arrayType !== "string" ? DEFAULT_PRESET_VALUES : prev.presetValues
+        formValues.fieldValues.arrayType !== "string" ? DEFAULT_PRESET_VALUES : prev.presetValues,
+      ...initialValues
     }));
-
     if (formValues.fieldValues.multipleSelectionType) {
       schema.chip.multipleSelectionType = formValues.fieldValues.multipleSelectionType;
     }
@@ -178,14 +191,15 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       presetValues:
         presetKey in enumerationPresets
           ? {
-              enumeratedValues: enumValues as never[],
+              preset: presetKey,
+              enumeratedValues: enumValues as string[],
               regularExpression: "",
               makeEnumerated: true,
               definePattern: false
             }
           : presetKey in regexPresets
             ? {
-                ...prev,
+                preset: presetKey,
                 enumeratedValues: [],
                 regularExpression: regexValue,
                 makeEnumerated: false,
@@ -202,7 +216,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     if (!presetKey) return;
     const makeEnumerated = formValues.presetValues.makeEnumerated;
     if (!makeEnumerated && presetKey in enumerationPresets) {
-      setFormValues(prev => ({...prev, presetValues: {enumeratedValues: [], preset: ""}}));
+      setFormValues(prev => ({
+        ...prev,
+        presetValues: {...prev.presetValues, enumeratedValues: [], preset: ""}
+      }));
     }
   }, [type, formValues.presetValues.makeEnumerated, formValues.fieldValues.arrayType]);
 
@@ -213,7 +230,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     if (!presetKey) return;
     const definePattern = formValues.presetValues.definePattern;
     if (!definePattern && presetKey in regexPresets) {
-      setFormValues(prev => ({...prev, presetValues: {regularExpression: "", preset: ""}}));
+      setFormValues(prev => ({
+        ...prev,
+        presetValues: {...prev.presetValues, regularExpression: "", preset: ""}
+      }));
     }
   }, [type, formValues.presetValues.definePattern, formValues.fieldValues.arrayType]);
 
