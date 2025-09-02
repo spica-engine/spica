@@ -42,6 +42,7 @@ type BucketFieldSelectionPopupProps = {
   onSaveAndClose: (values: FormValues) => void | Promise<any>;
   bucketAddFieldPopoverStyles?: CSSProperties;
   configurationMapping: Record<string, any>;
+  iconName?: IconName;
 };
 
 const BucketFieldSelectionPopup = ({
@@ -50,7 +51,8 @@ const BucketFieldSelectionPopup = ({
   bucket,
   onSaveAndClose,
   bucketAddFieldPopoverStyles,
-  configurationMapping
+  configurationMapping,
+  iconName
 }: BucketFieldSelectionPopupProps) => {
   const [selectedType, setSelectedType] = useState<TypeInputType | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -120,6 +122,7 @@ const BucketFieldSelectionPopup = ({
           basePortalClassName={basePortalClassName}
           setBucketFieldPopupId={setBucketFieldPopupId}
           configurationMapping={configurationMapping}
+          iconName={iconName}
         >
           <FlexElement
             ref={fieldOptionsListContainerRef}

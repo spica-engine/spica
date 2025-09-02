@@ -333,6 +333,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
             onSaveAndClose={handleCreateInnerField}
             bucketAddFieldPopoverStyles={innerFieldStyles}
             configurationMapping={innerFieldConfigProperties}
+            iconName={"plus"}
           >
             <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
               <FluidContainer
