@@ -331,13 +331,13 @@ export const configPropertiesMapping = {
   // Full translatable support
   string: translatableConfigFields,
   textarea: translatableConfigFields,
-  object: translatableConfigFields,
   select: translatableConfigFields,
 
   // Translatable with minimal options
   richtext: translatableMinimalFields,
   array: translatableMinimalFields,
   storage: translatableMinimalFields,
+  object: translatableMinimalFields,
 
   // Basic configuration
   number: basicConfigFields,

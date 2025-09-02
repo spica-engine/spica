@@ -1,4 +1,3 @@
-import type {TypeInputType} from "oziko-ui-kit";
 import type {Property} from "src/services/bucketService";
 import type {FormValues} from "./BucketAddFieldBusiness";
 
@@ -32,7 +31,7 @@ const createArrayConfig = (baseProperty: Record<string, any>, values: FormValues
   if (values.fieldValues.arrayType === "multiselect") {
     config.items.items = {
       type: values.fieldValues.multipleSelectionType,
-      enum: values.fieldValues.chip || undefined
+      enum: values.fieldValues.chip?.length > 0 ? values.fieldValues.chip : undefined
     };
     config.items.maxItems = values.fieldValues.maxItems;
   }
@@ -117,7 +116,7 @@ export const createFieldProperty = (values: FormValues): Property => {
         ...baseProperty,
         items: {
           type: fieldValues.multipleSelectionType,
-          enum: fieldValues.chip
+          enum: fieldValues.chip?.length > 0 ? fieldValues.chip : undefined
         },
         maxItems: fieldValues.maxItems
       };
