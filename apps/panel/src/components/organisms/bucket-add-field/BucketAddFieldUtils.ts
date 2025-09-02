@@ -1,77 +1,77 @@
 import type {TypeInputType} from "oziko-ui-kit";
 import type {Property} from "src/services/bucketService";
-import type { FormValues } from "./BucketAddFieldBusiness";
+import type {FormValues} from "./BucketAddFieldBusiness";
 
-const createArrayConfig = (baseProperty: Record<string, any>, values: Record<string, any>) => {
+const createArrayConfig = (baseProperty: Record<string, any>, values: FormValues) => {
   const arrayDefaultValues = {
-    string: values.defaultString.length ? values.defaultString : undefined,
-    number: values.defaultNumber,
-    boolean: values.defaultBoolean
+    string: values.defaultValue.defaultString?.length
+      ? values.defaultValue.defaultString
+      : undefined,
+    number: values.defaultValue.defaultNumber,
+    boolean: values.defaultValue.defaultBoolean
   };
 
   const config = {
     ...baseProperty,
-    maxItems: values.arrayType === "multiselect" ? undefined : values.maxItems,
-    minItems: values.minItems || undefined,
-    uniqueItems: values.uniqueItems || undefined,
+    maxItems:
+      values.fieldValues.arrayType === "multiselect" ? undefined : values.fieldValues.maxItems,
+    minItems: values.fieldValues.minItems || undefined,
+    uniqueItems: values.fieldValues.uniqueItems || undefined,
     items: {
-      type: values.arrayType,
-      title: values.arrayItemTitle,
-      description: values.arrayItemDescription.length ? values.arrayItemDescription : undefined,
-      default: arrayDefaultValues[values.arrayType as keyof typeof arrayDefaultValues] ?? undefined
+      type: values.fieldValues.arrayType,
+      title: values.fieldValues.arrayItemTitle,
+      description: values.fieldValues.arrayItemDescription?.length
+        ? values.fieldValues.arrayItemDescription
+        : undefined,
+      default:
+        arrayDefaultValues[values.fieldValues.arrayType as keyof typeof arrayDefaultValues] ??
+        undefined
     }
   } as unknown as Property;
 
-  if (values.arrayType === "multiselect") {
+  if (values.fieldValues.arrayType === "multiselect") {
     config.items.items = {
-      type: values.multipleSelectionType,
-      enum: values.chip || undefined
+      type: values.fieldValues.multipleSelectionType,
+      enum: values.fieldValues.chip || undefined
     };
-    config.items.maxItems = values.maxItems;
+    config.items.maxItems = values.fieldValues.maxItems;
   }
 
   if (values.innerFields) {
-    config.items.properties = values.innerFields.reduce(
-      (
-        acc: Property,
-        field: {
-          type: TypeInputType;
-          values: Record<string, any>;
-          configurationValues: Record<string, any>;
-        }
-      ) => {
-        acc[field.values.title] = createFieldProperty(values.fieldValues);
+    config.items.properties = values.innerFields.reduce<Property>(
+      (acc: Property, field: FormValues) => {
+        acc[field.fieldValues.title] = createFieldProperty(field);
         return acc;
       },
-      {}
+      {} as Property
     );
   }
 
-  if (values.enumeratedValues?.length > 0) {
-    config.items.enum = values.enumeratedValues;
+  if (values.presetValues.enumeratedValues?.length > 0) {
+    config.items.enum = values.presetValues.enumeratedValues;
   }
 
-  if (values.regularExpression?.length) {
-    config.items.pattern = values.regularExpression;
+  if (values.presetValues.regularExpression?.length) {
+    config.items.pattern = values.presetValues.regularExpression;
   }
 
-  if (values.maxNumber != null) {
-    config.items.maximum = values.maxNumber;
+  if (values.fieldValues.maxNumber != null) {
+    config.items.maximum = values.fieldValues.maxNumber;
   }
 
-  if (values.minNumber != null) {
-    config.items.minimum = values.minNumber;
+  if (values.fieldValues.minNumber != null) {
+    config.items.minimum = values.fieldValues.minNumber;
   }
 
   return config;
 };
 
 export const createFieldProperty = (values: FormValues): Property => {
-  const fieldValues = values.fieldValues
-  const configurationValues = values.configurationValues
-  const defaultValue = values.defaultValue.default
-  const type = values.type
-  const presetValues = values.presetValues
+  const fieldValues = values.fieldValues;
+  const configurationValues = values.configurationValues;
+  const defaultValue = values.defaultValue.default;
+  const type = values.type;
+  const presetValues = values.presetValues;
   const baseProperty = {
     type,
     title: fieldValues.title,
@@ -85,13 +85,16 @@ export const createFieldProperty = (values: FormValues): Property => {
     readOnly: configurationValues.readOnly || undefined,
     default: defaultValue,
     pattern:
-      type !== "array" && presetValues.regularExpression?.length ? presetValues.regularExpression : undefined
+      type !== "array" && presetValues.regularExpression?.length
+        ? presetValues.regularExpression
+        : undefined
   } as Property;
 
   switch (type) {
     case "string":
       return {
         ...baseProperty,
+        default: defaultValue.length ? defaultValue : undefined,
         enum:
           (presetValues.enumeratedValues as string[])?.length > 0
             ? (presetValues.enumeratedValues as string[])
@@ -127,9 +130,18 @@ export const createFieldProperty = (values: FormValues): Property => {
         ...baseProperty,
         default: defaultValue.length ? defaultValue : undefined
       };
+
+    case "object":
+      return {
+        ...baseProperty,
+        properties: values.innerFields?.reduce<Property>((acc: Property, field: FormValues) => {
+          acc[field.fieldValues.title] = createFieldProperty(field);
+          return acc;
+        }, {} as Property)
+      } as Property;
+
     case "boolean":
     case "location":
-    case "object":
     case "storage":
     case "richtext":
     case "color":
@@ -154,7 +166,7 @@ const DEFAULT_VALUES = {
   multiselect: [],
   select: "",
   chip: [],
-  bucket: "",
+  bucket: ""
 };
 
 export const getDefaultValues = (
