@@ -91,7 +91,7 @@ export const useBucketService = () => {
     method: "get"
   });
 
-  const {request: fetchBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
+  const {request: fetchBucketData, data: apiBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
     endpoint: "",
     method: "get",
     deduplicateRequests: true,
@@ -112,6 +112,15 @@ export const useBucketService = () => {
   });
 
   const {request: putRequest} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+  const {
+    request: updateBucketRule,
+    loading: apiUpdateBucketRuleLoading,
+    error: apiUpdateBucketRuleError
+  } = useApi({
     endpoint: "",
     method: "put"
   });
@@ -197,6 +206,16 @@ export const useBucketService = () => {
     [putRequest]
   );
 
+  const apiUpdateBucketRule = useCallback(
+    async (bucket: BucketType, newRules: {write: string; read: string}) => {
+      return await updateBucketRule({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {...bucket, acl: newRules}
+      });
+    },
+    [updateBucketRule]
+  );
+
   const apiCreateBucketEntry = useCallback(
     async (bucketId: string, data: Record<string, any>) => {
       return await createBucketEntry({
@@ -217,8 +236,12 @@ export const useBucketService = () => {
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
+    apiUpdateBucketRule,
     apiCreateBucketEntry,
     apiBuckets,
+    apiBucketData,
+    apiUpdateBucketRuleLoading,
+    apiUpdateBucketRuleError,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
