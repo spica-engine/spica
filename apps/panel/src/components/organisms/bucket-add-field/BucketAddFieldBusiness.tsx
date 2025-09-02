@@ -269,6 +269,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
 
       // Validate number fields
       if (
+        values[key] !== undefined &&
         shouldRender &&
         schemaItem.type === "number" &&
         (isNaN(values[key]) || values[key] < schemaItem.min)

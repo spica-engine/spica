@@ -32,10 +32,6 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   const contentRef = useRef(null);
   const [isCategorySelectCreateOpen, setIsCategorySelectCreateOpen] = useState(false);
 
-  useOnClickOutside({
-    targetElements: [containerRef, contentRef],
-    onClickOutside: () => setIsOpen(false)
-  });
   const {deleteBucket, bucketCategories, changeBucketCategory, renameBucket} = useBucket();
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
@@ -80,6 +76,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
         contentProps={{
           className: styles.popoverContainer
         }}
+        onClose={() => setIsOpen(false)}
         content={
           <FlexElement
             ref={contentRef}
