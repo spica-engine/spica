@@ -3,11 +3,11 @@ import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
-import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
+import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
 import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
-import {BucketFieldPopupsProvider} from "../../../components/atoms/bucket-field-popup/BucketFieldPopupsContext";
+import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 
 type FieldType =

@@ -1,4 +1,4 @@
-import {Button, FlexElement, Icon, Popover, Text, useOnClickOutside} from "oziko-ui-kit";
+import {Button, FlexElement, Icon, Popover, Text} from "oziko-ui-kit";
 import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
 import Confirmation from "../confirmation/Confirmation";

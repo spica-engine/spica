@@ -1,7 +1,7 @@
 import {memo, useEffect, useId, useRef, useState, type CSSProperties, type ReactNode} from "react";
 import {type IconName, type TypeInputType, Popover} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
-import BucketAddField from "../../../components/organisms/bucket-add-field/BucketAddField";
+import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
 import type {BucketType} from "src/services/bucketService";
 import type {FormValues} from "src/components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";

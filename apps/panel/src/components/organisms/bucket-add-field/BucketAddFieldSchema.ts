@@ -331,22 +331,22 @@ export const configPropertiesMapping = {
   textarea: translatableConfigFields,
   object: translatableConfigFields,
   select: translatableConfigFields,
-  
+
   // Translatable with minimal options
   richtext: translatableMinimalFields,
   array: translatableMinimalFields,
   storage: translatableMinimalFields,
-  
+
   // Basic configuration
   number: basicConfigFields,
   color: basicConfigFields,
   chip: basicConfigFields,
-  
+
   // Minimal configuration
   date: minimalConfigFields,
   multiselect: minimalConfigFields,
   relation: minimalConfigFields,
-  
+
   // Special cases
   boolean: primaryAndIndexFields,
   location: onlyRequiredField
@@ -365,8 +365,8 @@ export const innerFieldConfigProperties = {
   storage: minimalConfigFields,
   relation: minimalConfigFields,
   richtext: minimalConfigFields,
-  
+
   // Special inner fields
-  location: minimalConfigFields,
-  boolean: minimalConfigFields
+  location: {requiredField: configFieldDefinitions.requiredField},
+  boolean: {index: configFieldDefinitions.index}
 };

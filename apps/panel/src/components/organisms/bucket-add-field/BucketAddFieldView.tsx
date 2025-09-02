@@ -25,9 +25,9 @@ import type {BucketType, Property} from "src/services/bucketService";
 import type {FormErrors, FormValues} from "./BucketAddFieldBusiness";
 import {innerFieldConfigProperties, presetProperties} from "./BucketAddFieldSchema";
 import styles from "./BucketAddField.module.scss";
-import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
-import BucketFieldConfigurationPopup from "../../../components/atoms/bucket-field-popup/BucketFieldConfigurationPopup";
-import {fieldOptions} from "../../../components/atoms/bucket-field-popup/BucketFieldSelectionPopup";
+import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
+import BucketFieldConfigurationPopup from "../../molecules/bucket-field-popup/BucketFieldConfigurationPopup";
+import {fieldOptions} from "../../molecules/bucket-field-popup/BucketFieldSelectionPopup";
 
 type InnerFieldProps = {
   field: FormValues;
