@@ -23,7 +23,7 @@ import {
 } from "react";
 import type {BucketType, Property} from "src/services/bucketService";
 import type {FormErrors, FormValues} from "./BucketAddFieldBusiness";
-import {presetProperties} from "./BucketAddFieldSchema";
+import {innerFieldConfigProperties, presetProperties} from "./BucketAddFieldSchema";
 import styles from "./BucketAddField.module.scss";
 import BucketFieldPopup from "../../../components/atoms/bucket-field-popup/BucketFieldPopup";
 import BucketFieldConfigurationPopup from "../../../components/atoms/bucket-field-popup/BucketFieldConfigurationPopup";
@@ -78,6 +78,7 @@ const InnerField: FC<InnerFieldProps> = memo(
                 initialValues={field as FormValues}
                 bucketAddFieldPopoverStyles={innerFieldStyles}
                 iconName={"pencil"}
+                configurationMapping={innerFieldConfigProperties}
               >
                 <Button color="default" variant="icon" onClick={handleToggleEdit}>
                   <Icon name="pencil" />
@@ -245,7 +246,14 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
 
     createConfig("Configuration", <div className={styles.configuration}>{configuration}</div>);
     return items;
-  }, [formValues.type, innerFieldExists, configuration, presetsRepresenter, formValues.innerFields, defaultInput]);
+  }, [
+    formValues.type,
+    innerFieldExists,
+    configuration,
+    presetsRepresenter,
+    formValues.innerFields,
+    defaultInput
+  ]);
 
   const tabItems: {prefix?: TypeFlexElement}[] = useMemo(
     () => tabs.map(i => ({prefix: i.prefix})),
@@ -324,6 +332,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
             bucket={bucket}
             onSaveAndClose={handleCreateInnerField}
             bucketAddFieldPopoverStyles={innerFieldStyles}
+            configurationMapping={innerFieldConfigProperties}
           >
             <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
               <FluidContainer

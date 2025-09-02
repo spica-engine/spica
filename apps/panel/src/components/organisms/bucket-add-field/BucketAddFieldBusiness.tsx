@@ -3,7 +3,7 @@ import {type IconName, type TypeInputType} from "oziko-ui-kit";
 import type {BucketType} from "src/services/bucketService";
 import {getDefaultValues} from "./BucketAddFieldUtils";
 import {regexPresets, enumerationPresets} from "./BucketAddFieldPresets";
-import {createShema, defaultConfig, presetProperties} from "./BucketAddFieldSchema";
+import {configPropertiesMapping, createShema, defaultConfig, presetProperties} from "./BucketAddFieldSchema";
 import {useBucket} from "../../../contexts/BucketContext";
 import BucketAddFieldView from "./BucketAddFieldView";
 
@@ -73,7 +73,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   initialValues,
   className,
   innerFieldStyles,
-  configurationMapping,
+  configurationMapping = configPropertiesMapping,
   iconName
 }) => {
   // Schema and form state management
