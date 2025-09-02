@@ -1,5 +1,5 @@
 import {type FC, useMemo, useState, useCallback, useEffect, type CSSProperties, memo} from "react";
-import {type TypeInputType} from "oziko-ui-kit";
+import {type IconName, type TypeInputType} from "oziko-ui-kit";
 import type {BucketType} from "src/services/bucketService";
 import {getDefaultValues} from "./BucketAddFieldUtils";
 import {regexPresets, enumerationPresets} from "./BucketAddFieldPresets";
@@ -17,6 +17,7 @@ export type BucketAddFieldBusinessProps = {
   className?: string;
   innerFieldStyles: CSSProperties;
   configurationMapping: Record<string, Record<string, any>>;
+  iconName?: IconName;
 };
 
 function isObjectEffectivelyEmpty(obj: Object): boolean {
@@ -72,7 +73,8 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   initialValues,
   className,
   innerFieldStyles,
-  configurationMapping
+  configurationMapping,
+  iconName
 }) => {
   // Schema and form state management
   const schema = useMemo(() => createShema[type] || {}, [type]);
@@ -127,7 +129,8 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       configurationValues: {
         ...prev.configurationValues,
         ...getDefaultValues(configurationMapping[type] || {}, initialValues?.configurationValues)
-      }
+      },
+      innerFields: initialValues?.innerFields
     }));
   }, [type, initialValues?.configurationValues, innerFieldExists]);
 
@@ -405,6 +408,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       // External dependencies
       bucket={bucket}
       buckets={buckets}
+      iconName={iconName}
     />
   );
 };

@@ -1,5 +1,5 @@
 import {memo, useEffect, useId, useRef, useState, type CSSProperties, type ReactNode} from "react";
-import {type TypeInputType, Popover} from "oziko-ui-kit";
+import {type IconName, type TypeInputType, Popover} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../../components/organisms/bucket-add-field/BucketAddField";
 import type {BucketType} from "src/services/bucketService";
@@ -22,6 +22,7 @@ type BucketFieldConfigurationPopupProps = {
   isOpen: boolean;
   initialValues?: FormValues;
   setBucketFieldPopupId?: React.Dispatch<React.SetStateAction<string | undefined>>;
+  iconName?: IconName
 };
 
 const BucketFieldConfigurationPopup = ({
@@ -35,7 +36,8 @@ const BucketFieldConfigurationPopup = ({
   children,
   isOpen,
   initialValues,
-  setBucketFieldPopupId
+  setBucketFieldPopupId,
+  iconName
 }: BucketFieldConfigurationPopupProps) => {
   const innerContainerRef = useRef<HTMLDivElement>(null);
   const bucketAddFieldRef = useRef<HTMLDivElement>(null);
@@ -95,6 +97,7 @@ const BucketFieldConfigurationPopup = ({
           configurationMapping={
             setBucketFieldPopupId ? configPropertiesMapping : innerFieldConfigProperties
           }
+          iconName={iconName}
         />
       }
     >

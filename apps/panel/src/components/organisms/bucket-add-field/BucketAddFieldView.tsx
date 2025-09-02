@@ -14,7 +14,6 @@ import {
   memo,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useState,
   type CSSProperties,
@@ -78,6 +77,7 @@ const InnerField: FC<InnerFieldProps> = memo(
                 onSaveAndClose={handleSave}
                 initialValues={field as FormValues}
                 bucketAddFieldPopoverStyles={innerFieldStyles}
+                iconName={"pencil"}
               >
                 <Button color="default" variant="icon" onClick={handleToggleEdit}>
                   <Icon name="pencil" />
@@ -123,6 +123,8 @@ type BucketAddFieldViewProps = {
   // External dependencies
   bucket: BucketType;
   buckets: BucketType[];
+
+  iconName?: IconName;
 };
 
 const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
@@ -142,7 +144,8 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   handleSaveInnerField,
   handleDeleteInnerField,
   bucket,
-  buckets
+  buckets,
+  iconName
 }) => {
   const [activeTab, setActiveTab] = useState(0);
 
@@ -249,7 +252,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     [tabs]
   );
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     setActiveTab(0);
   }, [formValues.type]);
 
@@ -279,6 +282,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
             <Icon name={fieldOptions.find(i => i.type === formValues.type)?.icon as IconName} />
           )
         }}
+        suffix={{children: iconName && <Icon name={iconName} />}}
       />
 
       {/* Main Form Fields */}
