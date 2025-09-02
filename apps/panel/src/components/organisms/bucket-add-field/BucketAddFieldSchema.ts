@@ -111,7 +111,8 @@ const specializedFields = {
       "multiselect",
       "location",
       "richtext",
-      "object"
+      "object",
+      "json"
     ],
     required: true
   },
@@ -246,7 +247,8 @@ export const createShema = {
     dependent: schema.dependent
   },
   richtext: baseFields,
-  location: baseFields
+  location: baseFields,
+  json: baseFields
 } as unknown as Record<TypeInputType, Record<string, any>>;
 
 export const presetProperties = {
@@ -349,7 +351,9 @@ export const configPropertiesMapping = {
 
   // Special cases
   boolean: primaryAndIndexFields,
-  location: onlyRequiredField
+  location: onlyRequiredField,
+
+  json: basicConfigFields,
 };
 
 export const innerFieldConfigProperties = {
@@ -368,5 +372,7 @@ export const innerFieldConfigProperties = {
 
   // Special inner fields
   location: {requiredField: configFieldDefinitions.requiredField},
-  boolean: {index: configFieldDefinitions.index}
+  boolean: {index: configFieldDefinitions.index},
+
+  json: minimalConfigFields,
 };

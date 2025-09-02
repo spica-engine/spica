@@ -32,7 +32,8 @@ export const fieldOptions: {icon: IconName; text: string; type: TypeInputType}[]
   {icon: "ballot", text: "Array", type: "array"},
   {icon: "dataObject", text: "Object", type: "object"},
   {icon: "imageMultiple", text: "File", type: "storage"},
-  {icon: "formatAlignCenter", text: "Richtext", type: "richtext"}
+  {icon: "formatAlignCenter", text: "Richtext", type: "richtext"},
+  {icon: "dataObject", text: "JSON", type: "json"},
 ];
 
 type BucketFieldSelectionPopupProps = {

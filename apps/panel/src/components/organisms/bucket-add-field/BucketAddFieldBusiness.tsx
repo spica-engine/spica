@@ -1,4 +1,13 @@
-import {type FC, useMemo, useState, useCallback, useEffect, type CSSProperties, memo} from "react";
+import {
+  type FC,
+  useMemo,
+  useState,
+  useCallback,
+  useEffect,
+  type CSSProperties,
+  memo,
+  useRef
+} from "react";
 import {type IconName, type TypeInputType} from "oziko-ui-kit";
 import type {BucketType} from "src/services/bucketService";
 import {getDefaultValues} from "./BucketAddFieldUtils";
@@ -142,7 +151,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       configurationValues: {
         ...prev.configurationValues,
         ...getDefaultValues(configurationMapping[type] || {})
-      },
+      }
     }));
   }, [type, initialValues?.configurationValues, innerFieldExists]);
 
@@ -338,8 +347,12 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     return Object.keys(errors).length === 0;
   }, [schema, formValues]);
 
+  const oldType = useRef(type);
   useEffect(() => {
-    if (!formErrors || isObjectEffectivelyEmpty(formErrors)) return;
+    if (!formErrors || isObjectEffectivelyEmpty(formErrors) || oldType.current !== type) {
+      oldType.current = type;
+      return;
+    }
     validateForm();
   }, [formValues, validateForm]);
 

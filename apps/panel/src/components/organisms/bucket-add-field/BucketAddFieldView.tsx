@@ -238,7 +238,8 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
         "storage",
         "richtext",
         "array",
-        "object"
+        "object",
+        "json"
       ].includes(formValues.type)
     ) {
       createConfig("Default", defaultInput as unknown as JSX.Element);
