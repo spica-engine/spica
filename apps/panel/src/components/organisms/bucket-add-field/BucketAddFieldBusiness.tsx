@@ -33,6 +33,7 @@ export type BucketAddFieldBusinessProps = {
   innerFieldStyles: CSSProperties;
   configurationMapping: typeof configPropertiesMapping | typeof innerFieldConfigProperties;
   iconName?: IconName;
+  forbiddenFieldNames?: string[];
 };
 
 function isObjectEffectivelyEmpty(obj: Object): boolean {
@@ -97,7 +98,8 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   className,
   innerFieldStyles,
   configurationMapping = configPropertiesMapping,
-  iconName
+  iconName,
+  forbiddenFieldNames = []
 }) => {
   // Schema and form state management
   const schema = useMemo(() => createShema[type] || {}, [type]);
@@ -156,7 +158,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     }));
   }, [type, initialValues?.configurationValues, innerFieldExists]);
 
-  const configFields = useMemo(() => configurationMapping[type as keyof typeof configurationMapping], [type]);
+  const configFields = useMemo(
+    () => configurationMapping[type as keyof typeof configurationMapping],
+    [type]
+  );
 
   // Initialize form values when type changes
   useEffect(() => {
@@ -334,6 +339,11 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       if (!errors.fieldValues) errors.fieldValues = {} as Record<string, string> & string;
       errors.fieldValues.title =
         "Name can only contain lowercase letters, numbers, and underscores. It cannot be '_id' or an empty string and must not include spaces.";
+    }
+
+    if (forbiddenFieldNames.includes(formValues.fieldValues.title)) {
+      if (!errors.fieldValues) errors.fieldValues = {} as Record<string, string> & string;
+      errors.fieldValues.title = `'${formValues.fieldValues.title}' is a reserved name and cannot be used. Please choose a different name.`;
     }
 
     if (

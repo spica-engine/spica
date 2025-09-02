@@ -120,12 +120,15 @@ const NewFieldHeader = memo(() => {
     [bucket, createBucketField]
   );
 
+  const forbiddenFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket])
+
   return (
     <BucketFieldPopupsProvider>
       <BucketFieldPopup
         buckets={buckets}
         bucket={bucket as BucketType}
         onSaveAndClose={handleSaveAndClose}
+        forbiddenFieldNames={forbiddenFieldNames}
       >
         <Button
           variant="icon"

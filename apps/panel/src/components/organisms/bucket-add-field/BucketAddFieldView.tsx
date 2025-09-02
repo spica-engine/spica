@@ -36,10 +36,11 @@ type InnerFieldProps = {
   onSaveInnerField: (values: FormValues) => void;
   onDeleteInnerField: (field: FormValues) => void;
   innerFieldStyles: CSSProperties;
+  forbiddenFieldNames: string[];
 };
 
 const InnerField: FC<InnerFieldProps> = memo(
-  ({field, bucket, buckets, onSaveInnerField, onDeleteInnerField, innerFieldStyles}) => {
+  ({field, bucket, buckets, onSaveInnerField, onDeleteInnerField, innerFieldStyles, forbiddenFieldNames}) => {
     const [isEditing, setIsEditing] = useState(false);
 
     const handleToggleEdit = () => setIsEditing(prev => !prev);
@@ -79,6 +80,7 @@ const InnerField: FC<InnerFieldProps> = memo(
                 bucketAddFieldPopoverStyles={innerFieldStyles}
                 iconName={"pencil"}
                 configurationMapping={innerFieldConfigProperties}
+                forbiddenFieldNames={forbiddenFieldNames}
               >
                 <Button color="default" variant="icon" onClick={handleToggleEdit}>
                   <Icon name="pencil" />
@@ -188,6 +190,8 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     errorClassName: styles.error
   });
 
+  const forbiddenInnerFieldNames = useMemo(() => formValues.innerFields?.map((f: FormValues) => f.fieldValues.title) || [], [formValues.innerFields]);
+
   const tabs = useMemo(() => {
     const items: TypeFluidContainer[] = [];
     let currentIndex = 0;
@@ -219,6 +223,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
               onSaveInnerField={handleSaveInnerField}
               onDeleteInnerField={handleDeleteInnerField}
               innerFieldStyles={innerFieldStyles}
+              forbiddenFieldNames={forbiddenInnerFieldNames}
             />
           ))}
         </div>
@@ -253,7 +258,8 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     configuration,
     presetsRepresenter,
     formValues.innerFields,
-    defaultInput
+    defaultInput,
+    forbiddenInnerFieldNames
   ]);
 
   const tabItems: {prefix?: TypeFlexElement}[] = useMemo(
@@ -335,6 +341,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
             bucketAddFieldPopoverStyles={innerFieldStyles}
             configurationMapping={innerFieldConfigProperties}
             iconName={"plus"}
+            forbiddenFieldNames={forbiddenInnerFieldNames}
           >
             <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
               <FluidContainer

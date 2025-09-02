@@ -9,13 +9,13 @@ import {
 } from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 import type {BucketType} from "src/services/bucketService";
-import type {FormValues} from "src/components/organisms/bucket-add-field/BucketAddFieldBusiness";
+import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
-import type {
+import {
   configPropertiesMapping,
-  innerFieldConfigProperties
-} from "src/components/organisms/bucket-add-field/BucketAddFieldSchema";
+  type innerFieldConfigProperties
+} from "../../../components/organisms/bucket-add-field/BucketAddFieldSchema";
 
 export const fieldOptions: {icon: IconName; text: string; type: TypeInputType | "json"}[] = [
   {icon: "formatQuoteClose", text: "String", type: "string"},
@@ -39,8 +39,9 @@ type BucketFieldSelectionPopupProps = {
   bucket: BucketType;
   onSaveAndClose: (values: FormValues) => void | Promise<any>;
   bucketAddFieldPopoverStyles?: CSSProperties;
-  configurationMapping: typeof configPropertiesMapping | typeof innerFieldConfigProperties;
+  configurationMapping?: typeof configPropertiesMapping | typeof innerFieldConfigProperties;
   iconName?: IconName;
+  forbiddenFieldNames?: string[];
 };
 
 const BucketFieldSelectionPopup = ({
@@ -49,8 +50,9 @@ const BucketFieldSelectionPopup = ({
   bucket,
   onSaveAndClose,
   bucketAddFieldPopoverStyles,
-  configurationMapping,
-  iconName
+  configurationMapping = configPropertiesMapping,
+  iconName,
+  forbiddenFieldNames,
 }: BucketFieldSelectionPopupProps) => {
   const [selectedType, setSelectedType] = useState<TypeInputType | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -121,6 +123,7 @@ const BucketFieldSelectionPopup = ({
           setBucketFieldPopupId={setBucketFieldPopupId}
           configurationMapping={configurationMapping}
           iconName={iconName}
+          forbiddenFieldNames={forbiddenFieldNames}
         >
           <FlexElement
             ref={fieldOptionsListContainerRef}

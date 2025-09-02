@@ -3,9 +3,9 @@ import {type IconName, type TypeInputType, Popover} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
 import type {BucketType} from "src/services/bucketService";
-import type {FormValues} from "src/components/organisms/bucket-add-field/BucketAddFieldBusiness";
+import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
-import type { configPropertiesMapping, innerFieldConfigProperties } from "src/components/organisms/bucket-add-field/BucketAddFieldSchema";
+import type { configPropertiesMapping, innerFieldConfigProperties } from "../../../components/organisms/bucket-add-field/BucketAddFieldSchema";
 
 type BucketFieldConfigurationPopupProps = {
   selectedType: TypeInputType | null;
@@ -21,6 +21,7 @@ type BucketFieldConfigurationPopupProps = {
   setBucketFieldPopupId?: React.Dispatch<React.SetStateAction<string | undefined>>;
   iconName?: IconName;
   configurationMapping: typeof configPropertiesMapping | typeof innerFieldConfigProperties
+  forbiddenFieldNames?: string[]
 }
 const BucketFieldConfigurationPopup = ({
   selectedType,
@@ -35,7 +36,8 @@ const BucketFieldConfigurationPopup = ({
   initialValues,
   setBucketFieldPopupId,
   iconName,
-  configurationMapping
+  configurationMapping,
+  forbiddenFieldNames
 }: BucketFieldConfigurationPopupProps) => {
   const innerContainerRef = useRef<HTMLDivElement>(null);
   const bucketAddFieldRef = useRef<HTMLDivElement>(null);
@@ -94,6 +96,7 @@ const BucketFieldConfigurationPopup = ({
           initialValues={initialValues}
           iconName={iconName}
           configurationMapping={configurationMapping}
+          forbiddenFieldNames={forbiddenFieldNames}
         />
       }
     >
