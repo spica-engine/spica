@@ -25,7 +25,7 @@ const SSOButton: FC<TypeSSOButton> = ({icon, label, onClick, ...props}) => {
   };
 
   useOnClickOutside({
-    targetElements: [containerRef],
+    refs: [containerRef],
     onClickOutside: () => setIsClicked(false)
   });
 

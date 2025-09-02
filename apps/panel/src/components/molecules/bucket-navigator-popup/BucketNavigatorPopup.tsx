@@ -1,4 +1,4 @@
-import {Button, FlexElement, Icon, Popover, Text} from "oziko-ui-kit";
+import {Button, FlexElement, Icon, Popover, Text, useOnClickOutside} from "oziko-ui-kit";
 import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
 import Confirmation from "../confirmation/Confirmation";
@@ -32,6 +32,10 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   const contentRef = useRef(null);
   const [isCategorySelectCreateOpen, setIsCategorySelectCreateOpen] = useState(false);
 
+  useOnClickOutside({
+    refs: [containerRef, contentRef],
+    onClickOutside: () => setIsOpen(false)
+  });
   const {deleteBucket, bucketCategories, changeBucketCategory, renameBucket} = useBucket();
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
@@ -76,7 +80,6 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
         contentProps={{
           className: styles.popoverContainer
         }}
-        onClose={() => setIsOpen(false)}
         content={
           <FlexElement
             ref={contentRef}

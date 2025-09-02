@@ -1,4 +1,13 @@
-import {Button, FlexElement, FluidContainer, Icon, Popover, Text, Checkbox} from "oziko-ui-kit";
+import {
+  Button,
+  FlexElement,
+  FluidContainer,
+  Icon,
+  Popover,
+  Text,
+  useOnClickOutside,
+  Checkbox
+} from "oziko-ui-kit";
 import {memo, useMemo, useEffect, useRef, useState, type FC} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import type {BucketType} from "../../../services/bucketService";
@@ -20,6 +29,13 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const containerRef = useRef(null);
   const contentRef = useRef(null);
 
+  useOnClickOutside({
+    refs: [containerRef, contentRef],
+    onClickOutside: () => {
+      setIsOpen(false);
+    }
+  });
+
   const {
     updateBucketReadonly,
     updateBucketHistory,
@@ -30,7 +46,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
 
   const handleChangeReadOnly = () => {
-    updateBucketReadonly(bucket);
+    updateBucketReadonly(bucket)
   };
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
   const handleChangeHistory = () => {
@@ -56,7 +72,15 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     setIsDeleteHistoryConfirmationOpen(false);
   };
 
-  const handleOpen = () => setIsOpen(true);
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // If a checkbox gets clicked, and the popover is closed, the isOpen stays true for some reason and the popover doesn't open
+    // This is a workaround, how popover open state is handled needs to be rethinked
+    if (isOpen) {
+      setIsOpen(false);
+      setTimeout(() => setIsOpen(true), 0);
+    } else setIsOpen(true);
+  };
 
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
