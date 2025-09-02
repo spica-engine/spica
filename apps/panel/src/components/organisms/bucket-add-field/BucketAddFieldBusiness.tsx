@@ -3,12 +3,7 @@ import {type TypeInputType} from "oziko-ui-kit";
 import type {BucketType} from "src/services/bucketService";
 import {getDefaultValues} from "./BucketAddFieldUtils";
 import {regexPresets, enumerationPresets} from "./BucketAddFieldPresets";
-import {
-  createShema,
-  configPropertiesMapping,
-  defaultConfig,
-  presetProperties
-} from "./BucketAddFieldSchema";
+import {createShema, defaultConfig, presetProperties} from "./BucketAddFieldSchema";
 import {useBucket} from "../../../contexts/BucketContext";
 import BucketAddFieldView from "./BucketAddFieldView";
 
@@ -21,7 +16,15 @@ export type BucketAddFieldBusinessProps = {
   initialValues?: FormValues;
   className?: string;
   innerFieldStyles: CSSProperties;
+  configurationMapping: Record<string, Record<string, any>>;
 };
+
+function isObjectEffectivelyEmpty(obj: Object): boolean {
+  if (obj === null || obj === undefined) return true;
+  if (typeof obj !== "object") return obj === "" || obj === null;
+
+  return Object.values(obj).every(value => isObjectEffectivelyEmpty(value));
+}
 
 export type FormValues = {
   fieldValues: Record<string, any>;
@@ -68,7 +71,8 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   buckets,
   initialValues,
   className,
-  innerFieldStyles
+  innerFieldStyles,
+  configurationMapping
 }) => {
   // Schema and form state management
   const schema = useMemo(() => createShema[type] || {}, [type]);
@@ -122,12 +126,12 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       ...prev,
       configurationValues: {
         ...prev.configurationValues,
-        ...getDefaultValues(configPropertiesMapping[type] || {}, initialValues?.configurationValues)
+        ...getDefaultValues(configurationMapping[type] || {}, initialValues?.configurationValues)
       }
     }));
   }, [type, initialValues?.configurationValues, innerFieldExists]);
 
-  const configFields = useMemo(() => configPropertiesMapping[type], [type]);
+  const configFields = useMemo(() => configurationMapping[type], [type]);
 
   // Initialize form values when type changes
   useEffect(() => {
@@ -213,63 +217,107 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   // Form validation
   const validateForm = useCallback(() => {
     setApiError(null);
-    const errors: Record<string, string> = {};
+    const errors: FormErrors = {};
     const propertyNameRegex = /^(?!(_id)$)([a-z_0-9]*)+$/;
 
     const validateSingleSchemaItem = ({
       key,
       schemaItem,
-      values
+      values,
+      errorSection
     }: {
       key: string;
       schemaItem: any;
       values: Record<string, any>;
+      errorSection: keyof FormErrors;
     }) => {
-      if (schemaItem.type === "number" && (isNaN(values[key]) || values[key] < schemaItem.min)) {
-        errors[key] =
-          `${(schemaItem as {title: string})?.title ?? "Field"} must be a positive number`;
-      }
+      const shouldRender =
+        !schemaItem.renderCondition ||
+        values[schemaItem.renderCondition.field] === schemaItem.renderCondition.equals;
+
+      const addError = (message: string) => {
+        if (!errors[errorSection]) {
+          errors[errorSection] = {} as Record<string, string> & string;
+        }
+        (errors[errorSection] as Record<string, string>)[key] = message;
+      };
+
+      const fieldTitle = (schemaItem as {title: string})?.title ?? "Field";
+
+      // Validate number fields
       if (
-        schemaItem.required &&
-        !values.fieldValues?.[key] &&
-        (!schemaItem.renderCondition ||
-          values[schemaItem.renderCondition.field] === schemaItem.renderCondition.equals)
+        shouldRender &&
+        schemaItem.type === "number" &&
+        (isNaN(values[key]) || values[key] < schemaItem.min)
       ) {
-        errors[key] = `${(schemaItem as {title: string})?.title ?? "Field"} is required`;
+        addError(`${fieldTitle} must be a positive number`);
+        return;
+      }
+
+      // Validate required fields
+      if (schemaItem.required && !values?.[key] && shouldRender) {
+        addError(`${fieldTitle} is required`);
       }
     };
 
     Object.entries(schema).forEach(([key, schemaItem]) =>
-      validateSingleSchemaItem({key, schemaItem, values: formValues.fieldValues})
+      validateSingleSchemaItem({
+        key,
+        schemaItem,
+        values: formValues.fieldValues,
+        errorSection: "fieldValues"
+      })
     );
     Object.entries(presetProperties).forEach(([key, value]) => {
-      validateSingleSchemaItem({key, schemaItem: value, values: formValues.presetValues});
+      validateSingleSchemaItem({
+        key,
+        schemaItem: value,
+        values: formValues.presetValues,
+        errorSection: "presetValues"
+      });
     });
     Object.entries(configFields || {}).forEach(([key, schemaItem]) => {
-      validateSingleSchemaItem({key, schemaItem, values: formValues.configurationValues});
+      validateSingleSchemaItem({
+        key,
+        schemaItem,
+        values: formValues.configurationValues,
+        errorSection: "configurationValues"
+      });
     });
     Object.entries(defaultProperty || {}).forEach(([key, schemaItem]) => {
-      validateSingleSchemaItem({key, schemaItem, values: formValues.defaultValue});
+      validateSingleSchemaItem({
+        key,
+        schemaItem,
+        values: formValues.defaultValue,
+        errorSection: "defaultValue"
+      });
     });
 
     if (
-      !formValues.fieldValues.title.length ||
+      !formValues.fieldValues?.title?.length ||
       !propertyNameRegex.test(formValues.fieldValues.title)
     ) {
-      errors.title =
+      if (!errors.fieldValues) errors.fieldValues = {} as Record<string, string> & string;
+      errors.fieldValues.title =
         "Name can only contain lowercase letters, numbers, and underscores. It cannot be '_id' or an empty string and must not include spaces.";
     }
 
     if (
       (formValues.type === "object" ||
         (formValues.type === "array" && formValues.fieldValues.arrayType === "object")) &&
-      !formValues.fieldValues.innerFields?.length
+      !formValues.innerFields?.length
     ) {
       errors.innerFields = "At least one inner field is required";
     }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [schema, formValues.fieldValues, formValues.type]);
+  }, [schema, formValues]);
+
+  useEffect(() => {
+    if (!formErrors || isObjectEffectivelyEmpty(formErrors)) return;
+    validateForm();
+  }, [formValues, validateForm]);
 
   // Event handlers
   const handleSaveAndClose = useCallback(async () => {
@@ -287,10 +335,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       const id = crypto.randomUUID();
       setFormValues(prev => ({
         ...prev,
-        fieldValues: {
-          ...prev.fieldValues,
-          innerFields: [...(prev.fieldValues.innerFields || []), {...values, id}]
-        }
+        innerFields: [...(prev.innerFields || []), {...values, id}]
       }));
     },
     []
@@ -299,28 +344,16 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   const handleSaveInnerField = useCallback((values: FormValues) => {
     setFormValues(prev => ({
       ...prev,
-      innerFields: prev.innerFields
-        ? {
-            ...prev.innerFields,
-            innerFields: prev.innerFields?.map((innerField: FormValues) =>
-              innerField?.id === values.id ? values : innerField
-            )
-          }
-        : undefined
+      innerFields: prev.innerFields?.map((innerField: FormValues) =>
+        innerField?.id === values.id ? values : innerField
+      )
     }));
   }, []);
 
   const handleDeleteInnerField = useCallback((field: FormValues) => {
     setFormValues(prev => ({
       ...prev,
-      innerFields: prev.innerFields
-        ? {
-            ...prev.innerFields,
-            innerFields: prev.innerFields?.filter(
-              (innerField: FormValues) => innerField.id !== field.id
-            )
-          }
-        : undefined
+      innerFields: prev.innerFields?.filter((innerField: FormValues) => innerField.id !== field.id)
     }));
   }, []);
 

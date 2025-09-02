@@ -14,6 +14,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type CSSProperties,
@@ -183,10 +184,6 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     errorClassName: styles.error
   });
 
-  useEffect(() => {
-    setActiveTab(0);
-  }, [innerFieldExists, formValues.type]);
-
   const tabs = useMemo(() => {
     const items: TypeFluidContainer[] = [];
     let currentIndex = 0;
@@ -245,12 +242,16 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
 
     createConfig("Configuration", <div className={styles.configuration}>{configuration}</div>);
     return items;
-  }, [formValues, formErrors]);
+  }, [formValues.type, innerFieldExists, configuration, presetsRepresenter, formValues.innerFields, defaultInput]);
 
   const tabItems: {prefix?: TypeFlexElement}[] = useMemo(
     () => tabs.map(i => ({prefix: i.prefix})),
     [tabs]
   );
+
+  useLayoutEffect(() => {
+    setActiveTab(0);
+  }, [formValues.type]);
 
   return (
     <FlexElement
@@ -290,6 +291,8 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
           indicatorMode={tabItems.length > 2 ? "equal" : "fit"}
           dimensionX="fill"
           items={tabItems}
+          value={activeTab}
+          onChange={setActiveTab}
           className={`${styles.tab} ${tabItems.length > 2 ? styles.bigTab : styles.smallTab}`}
         />
       )}

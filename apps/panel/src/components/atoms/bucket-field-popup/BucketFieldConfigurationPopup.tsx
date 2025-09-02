@@ -5,6 +5,10 @@ import BucketAddField from "../../../components/organisms/bucket-add-field/Bucke
 import type {BucketType} from "src/services/bucketService";
 import type {FormValues} from "src/components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
+import {
+  configPropertiesMapping,
+  innerFieldConfigProperties
+} from "../../../components/organisms/bucket-add-field/BucketAddFieldSchema";
 
 type BucketFieldConfigurationPopupProps = {
   selectedType: TypeInputType | null;
@@ -88,6 +92,9 @@ const BucketFieldConfigurationPopup = ({
           buckets={buckets}
           innerFieldStyles={innerFieldStyles}
           initialValues={initialValues}
+          configurationMapping={
+            setBucketFieldPopupId ? configPropertiesMapping : innerFieldConfigProperties
+          }
         />
       }
     >

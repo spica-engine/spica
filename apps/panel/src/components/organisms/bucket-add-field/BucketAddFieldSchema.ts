@@ -263,31 +263,8 @@ export const presetProperties = {
   }
 };
 
-// Configuration fields
-const configFields = {
-  primaryField: {
-    type: "boolean",
-    title: "Primary Field",
-    size: "small"
-  },
-  uniqueValues: {
-    type: "boolean",
-    title: "Unique Values",
-    size: "small"
-  },
-  requiredField: {
-    type: "boolean",
-    title: "Required Field",
-    size: "small"
-  },
-  index: {
-    type: "boolean",
-    title: "Indexed field in database",
-    size: "small"
-  }
-};
-
-const translatableConfigFields = {
+// Configuration field definitions
+const configFieldDefinitions = {
   primaryField: {
     type: "boolean",
     title: "Primary Field",
@@ -313,120 +290,83 @@ const translatableConfigFields = {
     title: "Indexed field in database",
     size: "small"
   }
+} as const;
+
+// Reusable configuration field sets
+const basicConfigFields = {
+  primaryField: configFieldDefinitions.primaryField,
+  uniqueValues: configFieldDefinitions.uniqueValues,
+  requiredField: configFieldDefinitions.requiredField,
+  index: configFieldDefinitions.index
+};
+
+const translatableConfigFields = {
+  ...basicConfigFields,
+  translate: configFieldDefinitions.translate
+};
+
+const minimalConfigFields = {
+  requiredField: configFieldDefinitions.requiredField,
+  index: configFieldDefinitions.index
+};
+
+const onlyRequiredField = {
+  requiredField: configFieldDefinitions.requiredField
+};
+
+const primaryAndIndexFields = {
+  primaryField: configFieldDefinitions.primaryField,
+  index: configFieldDefinitions.index
+};
+
+const translatableMinimalFields = {
+  translate: configFieldDefinitions.translate,
+  requiredField: configFieldDefinitions.requiredField,
+  index: configFieldDefinitions.index
 };
 
 export const configPropertiesMapping = {
+  // Full translatable support
   string: translatableConfigFields,
   textarea: translatableConfigFields,
-  richtext: {
-    translate: {
-      type: "boolean",
-      title: "Translatable",
-      size: "small"
-    },
-    requiredField: {
-      type: "boolean",
-      title: "Required Field",
-      size: "small"
-    },
-    index: {
-      type: "boolean",
-      title: "Indexed field in database",
-      size: "small"
-    }
-  },
   object: translatableConfigFields,
-  array: {
-    translate: {
-      type: "boolean",
-      title: "Translatable",
-      size: "small"
-    },
-    requiredField: {
-      type: "boolean",
-      title: "Required Field",
-      size: "small"
-    },
-    index: {
-      type: "boolean",
-      title: "Indexed field in database",
-      size: "small"
-    }
-  },
   select: translatableConfigFields,
-  number: configFields,
-  date: {
-    requiredField: {
-      type: "boolean",
-      title: "Required Field",
-      size: "small"
-    },
-    index: {
-      type: "boolean",
-      title: "Indexed field in database",
-      size: "small"
-    }
-  },
-  boolean: {
-    primaryField: {
-      type: "boolean",
-      title: "Primary Field",
-      size: "small"
-    },
-    index: {
-      type: "boolean",
-      title: "Indexed field in database",
-      size: "small"
-    }
-  },
-  color: configFields,
-  storage: {
-    translate: {
-      type: "boolean",
-      title: "Translatable",
-      size: "small"
-    },
-    requiredField: {
-      type: "boolean",
-      title: "Required Field",
-      size: "small"
-    },
-    index: {
-      type: "boolean",
-      title: "Indexed field in database",
-      size: "small"
-    }
-  },
-  multiselect: {
-    requiredField: {
-      type: "boolean",
-      title: "Required Field",
-      size: "small"
-    },
-    index: {
-      type: "boolean",
-      title: "Indexed field in database",
-      size: "small"
-    }
-  },
-  location: {
-    requiredField: {
-      type: "boolean",
-      title: "Required Field",
-      size: "small"
-    }
-  },
-  relation: {
-    requiredField: {
-      type: "boolean",
-      title: "Required Field",
-      size: "small"
-    },
-    index: {
-      type: "boolean",
-      title: "Indexed field in database",
-      size: "small"
-    }
-  },
-  chip: configFields
+  
+  // Translatable with minimal options
+  richtext: translatableMinimalFields,
+  array: translatableMinimalFields,
+  storage: translatableMinimalFields,
+  
+  // Basic configuration
+  number: basicConfigFields,
+  color: basicConfigFields,
+  chip: basicConfigFields,
+  
+  // Minimal configuration
+  date: minimalConfigFields,
+  multiselect: minimalConfigFields,
+  relation: minimalConfigFields,
+  
+  // Special cases
+  boolean: primaryAndIndexFields,
+  location: onlyRequiredField
+};
+
+export const innerFieldConfigProperties = {
+  // Standard inner fields
+  string: minimalConfigFields,
+  number: minimalConfigFields,
+  date: minimalConfigFields,
+  textarea: minimalConfigFields,
+  array: minimalConfigFields,
+  multiselect: minimalConfigFields,
+  object: minimalConfigFields,
+  color: minimalConfigFields,
+  storage: minimalConfigFields,
+  relation: minimalConfigFields,
+  richtext: minimalConfigFields,
+  
+  // Special inner fields
+  location: minimalConfigFields,
+  boolean: minimalConfigFields
 };
