@@ -1,10 +1,9 @@
 import {Button, FlexElement, FluidContainer, Icon, Modal, useInputRepresenter} from "oziko-ui-kit";
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useMemo, useRef, useState} from "react";
 import styles from "./NewBucketEntryPopup.module.scss";
 import type {BucketType, Properties} from "src/services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
 import useLocalStorage from "../../../hooks/useLocalStorage";
-import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 
 type NewBucketEntryPopupProps = {
   bucket: BucketType;
@@ -29,11 +28,11 @@ function cleanValue(value: any, type: string) {
   }
 
   if (type === "array") {
-    return value.length === 1 && value[0] === "" ? undefined : value;
+    return value?.length === 1 && value[0] === "" ? undefined : value;
   }
 
   if (type === "relation" || type === "multiselect") {
-    return value.value;
+    return value?.value;
   }
 
   if (type === "object") {
@@ -227,7 +226,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
         const property = propertiesToUse[key];
 
         if (property.type === "array") {
-          acc[key] = undefined;
+          acc[key] = [];
         } else if (property.type === "object" && property.properties) {
           acc[key] = generateInitialValues(property.properties);
         } else {
@@ -245,14 +244,14 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const [value, setValue] = useState<Record<string, any>>(generateInitialValues);
   const [isLoading, setIsLoading] = useState(false);
   const inputRepresentation = useInputRepresenter({
-    properties: formattedProperties as TypeProperties,
+    properties: formattedProperties,
     onChange: setValue,
     value
   });
 
   // Recursive function to clean nested values
   const cleanValueRecursive = useCallback((val: any, property: any): any => {
-    if (property.type === "object" && property.properties) {
+    if (property?.type === "object" && property.properties) {
       const cleanedObject = Object.fromEntries(
         Object.entries(val || {}).map(([k, v]) => [
           k,
@@ -261,7 +260,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
       );
       return isObjectEffectivelyEmpty(cleanedObject) ? undefined : cleanedObject;
     }
-    return cleanValue(val, property.type);
+    return cleanValue(val, property?.type);
   }, []);
 
   const handleSubmit = async () => {

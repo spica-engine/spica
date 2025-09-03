@@ -1,5 +1,6 @@
 .modalBody {
-    width: 100%;
+  width: 100%;
+  max-height: 500px;
 }
 
 .modalContent {
@@ -15,5 +16,5 @@
 .buttonContainer {
   display: flex;
   justify-content: flex-end;
-    width: 100%;
+  width: 100%;
 }
