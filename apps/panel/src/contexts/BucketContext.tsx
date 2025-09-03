@@ -334,7 +334,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     ]
   );
 
-  return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
+  return <BucketContext value={contextValue}>{children}</BucketContext>;
 };
 
 export function useBucket() {
