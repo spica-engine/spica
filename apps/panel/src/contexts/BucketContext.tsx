@@ -50,6 +50,7 @@ type BucketContextType = {
   deleteBucketHistoryError: string | null;
   updateBucketRuleLoading: boolean;
   updateBucketRuleError: string | null;
+  createBucketEntryError: string | null;
 };
 
 /**
@@ -88,6 +89,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
+    apiCreateBucketEntryError
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -325,6 +327,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
       deleteBucketHistoryError: apiDeleteBucketHistoryError,
       nextbucketDataQuery,
+      createBucketEntryError: apiCreateBucketEntryError
     }),
     [
       getBucketData,
@@ -350,6 +353,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiDeleteBucketHistoryLoading,
       apiDeleteBucketHistoryError,
       nextbucketDataQuery,
+      apiCreateBucketEntryError,
     ]
   );
 

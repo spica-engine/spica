@@ -66,7 +66,11 @@ export default function Bucket() {
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
-    const columns = Object.values(bucket?.properties ?? {});
+    const columns = Object.entries(bucket?.properties ?? {}).map(([key, value]) => ({
+      ...value,
+      key,
+      title: value.title || key
+    }));
     return [
       {
         header: "_id",
@@ -78,7 +82,7 @@ export default function Bucket() {
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
+      ...columns.map(i => ({...i, header: i.title, key: i.key, showDropdownIcon: true}))
     ] as ColumnType[];
   }, [bucket]);
 
@@ -109,7 +113,6 @@ export default function Bucket() {
   if (formattedColumns.length <= 1 || !bucket) {
     return <Loader />;
   }
-
   return (
     <BucketWithVisibleColumns
       bucket={bucket}
@@ -153,7 +156,7 @@ function BucketWithVisibleColumns({
 }: BucketWithVisibleColumnsProps) {
   const defaultVisibleColumns = useMemo(
     () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
-    []
+    [formattedColumns]
   );
 
   const [visibleColumns, setVisibleColumns] = useLocalStorage<{[key: string]: boolean}>(
@@ -161,10 +164,13 @@ function BucketWithVisibleColumns({
     defaultVisibleColumns
   );
 
-  const filteredColumns = useMemo(
-    () => formattedColumns.filter(i => visibleColumns?.[i.key]),
-    [formattedColumns, visibleColumns]
-  );
+  useEffect(() => {
+    setVisibleColumns(defaultVisibleColumns);
+  }, [bucket._id]);
+
+  const filteredColumns = useMemo(() => {
+    return formattedColumns.filter(i => visibleColumns?.[i.key]);
+  }, [formattedColumns, visibleColumns]);
 
   const toggleColumn = (key?: string) => {
     if (key) {

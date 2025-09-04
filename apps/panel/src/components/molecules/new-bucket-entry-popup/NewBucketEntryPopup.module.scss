@@ -1,4 +1,7 @@
 .modalBody {
+  display: block !important;
+}
+.modalBodyContent {
   width: 100%;
   max-height: 500px;
 }
@@ -6,7 +9,8 @@
 .modalContent {
   width: 600px;
   max-width: 600px;
-  min-width: 600px
+  min-width: 600px;
+  min-height: min-content;
 }
 
 .formContainer {
@@ -17,4 +21,30 @@
   display: flex;
   justify-content: flex-end;
   width: 100%;
+}
+
+.inputFieldContainer {
+  width: 100%;
+  min-width: 100%;
+  > div {
+    border: none;
+  }
+}
+
+.errorTextContainer {
+  position: relative;
+  width: 100%;
+  color: var(--color-danger);
+}
+
+.errorText {
+  font-size: var(--font-size-xs) !important;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  max-width: 415px;
+}
+
+.saveButton {
+  height: 38px;
 }

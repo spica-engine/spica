@@ -20,7 +20,7 @@ export type BucketType = {
 
 export type Properties = {[key: string]: Property};
 
-type Property =
+export type Property =
   | BasicProperty
   | ArrayProperty
   | ObjectProperty
@@ -125,7 +125,7 @@ export const useBucketService = () => {
     method: "put"
   });
 
-  const {request: createBucketEntry} = useApi({
+  const {request: createBucketEntry, error: apiCreateBucketEntryError} = useApi({
     endpoint: "",
     method: "post"
   });
@@ -245,5 +245,6 @@ export const useBucketService = () => {
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
+    apiCreateBucketEntryError
   };
 };

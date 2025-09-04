@@ -32,6 +32,7 @@ export type ColumnType = {
   fixed?: boolean;
   selectable?: boolean;
   leftOffset?: number;
+  sticky?: boolean;
 };
 
 type BucketTableProps = {
@@ -146,7 +147,7 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
     case "date":
       return renderDefault();
     case "boolean":
-      return <Checkbox className={styles.checkbox} />;
+      return <Checkbox className={styles.checkbox} checked={cellData} />;
     case "textarea":
       return renderDefault();
     case "multiple selection":
