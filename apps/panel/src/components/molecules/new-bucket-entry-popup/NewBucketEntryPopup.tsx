@@ -361,7 +361,6 @@ const useFormValidation = () => {
       formattedProperties: {[key: string]: Property},
       requiredFields: string[]
     ) => {
-      console.log("Validating form...", value, formattedProperties, requiredFields);
       type FormError = {
         [key: string]: string | FormError;
       };
@@ -420,6 +419,19 @@ const useFormValidation = () => {
           if (!regex.test(val)) {
             errors[key] = `This field does not match the required pattern "${property.pattern}"`;
           }
+        }
+
+        if (property.type === "array") console.log("Validating array items for key:", key, "with value:", val, "and property:", property);
+        if (property.type === "array" && property.items?.type === "number") {
+          val.forEach((item: any, index: number) => {
+            if (typeof item !== "number") {
+              errors[key] = `Array item at index ${index} must be a number`;
+            } else if (property.items.maximum && item > property.items.maximum) {
+              errors[key] = `Array item at index ${index} must be less than ${property.items.maximum}`;
+            } else if (property.items.minimum && item < property.items.minimum) {
+              errors[key] = `Array item at index ${index} must be greater than ${property.items.minimum}`;
+            }
+          });
         }
       }
       return Object.keys(errors).length > 0 ? errors : undefined;
@@ -557,36 +569,33 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
           className={styles.modalContent}
         >
           <Modal.Body className={styles.modalBody}>
-            <div className={styles.modalBodyContent}>
-              <FlexElement gap={10} direction="vertical" className={styles.formContainer}>
-                {inputRepresentation}
-                <div className={styles.buttonContainer}>
-                  <Button
-                    onClick={handleSubmit}
-                    loading={isLoading}
-                    disabled={isLoading}
-                    className={styles.saveButton}
-                  >
-                    <FluidContainer
-                      prefix={{
-                        children: <Icon name="save" />
-                      }}
-                      root={{
-                        children: "Save and close"
-                      }}
-                    />
-                  </Button>
-                </div>
-              </FlexElement>
-            </div>
-
-            {apiError && (
-              <div className={styles.errorTextContainer}>
-                <Text className={styles.errorText} variant="danger">
-                  {apiError}
-                </Text>
+            <FlexElement gap={10} direction="vertical" className={styles.formContainer}>
+              {inputRepresentation}
+              <div className={styles.buttonContainer}>
+                <Button
+                  onClick={handleSubmit}
+                  loading={isLoading}
+                  disabled={isLoading}
+                  className={styles.saveButton}
+                >
+                  <FluidContainer
+                    prefix={{
+                      children: <Icon name="save" />
+                    }}
+                    root={{
+                      children: "Save and close"
+                    }}
+                  />
+                </Button>
               </div>
-            )}
+              {apiError && (
+                <div className={styles.errorTextContainer}>
+                  <Text className={styles.errorText} variant="danger">
+                    {apiError}
+                  </Text>
+                </div>
+              )}
+            </FlexElement>
           </Modal.Body>
         </Modal>
       )}
