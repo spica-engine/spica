@@ -342,15 +342,6 @@ export const useFormValidation = () => {
           }
         }
 
-        if (property.type === "array")
-          console.log(
-            "Validating array items for key:",
-            key,
-            "with value:",
-            val,
-            "and property:",
-            property
-          );
         if (property.type === "array" && property.items?.type === "number") {
           val.forEach((item: any, index: number) => {
             if (typeof item !== "number") {
