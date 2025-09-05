@@ -31,7 +31,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
 
   const formattedProperties = usePropertiesProcessor(bucket, authToken);
   const generateInitialValues = useInitialValues(formattedProperties);
-  const [value, setValue] = useState<Record<string, any>>(() => generateInitialValues());
+  const [value, setValue] = useState<Record<string, any>>(generateInitialValues);
   const {cleanValueRecursive, validateForm} = useFormValidation();
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
     setApiError(null);
     setErrors({});
     setValue(generateInitialValues());
-  }, [isOpen]);
+  }, [isOpen, formattedProperties]);
 
   useEffect(() => {
     if (!errors || Object.keys(errors).length === 0) return;
