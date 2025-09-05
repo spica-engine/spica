@@ -268,10 +268,10 @@ export const useFormValidation = () => {
       const cleanedObject = Object.fromEntries(
         Object.entries(val || {}).map(([k, v]) => [
           k,
-          property.properties[k] ? cleanValueRecursive(v, property.properties[k]) : v
+          (property.properties[k]) ? cleanValueRecursive(v, property.properties[k]) : v
         ])
       );
-      return isObjectEffectivelyEmpty(cleanedObject) ? undefined : cleanedObject;
+      return cleanedObject;
     }
     return cleanValue(val, property?.type);
   }, []);

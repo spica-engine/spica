@@ -5,8 +5,6 @@ export const isObjectEffectivelyEmpty = (obj: any): boolean => {
     key =>
       obj[key] === undefined ||
       obj[key] === null ||
-      obj[key] === "" ||
-      (Array.isArray(obj[key]) && obj[key].length === 0) ||
       (typeof obj[key] === "object" && isObjectEffectivelyEmpty(obj[key]))
   );
 };
