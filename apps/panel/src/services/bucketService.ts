@@ -126,6 +126,15 @@ export const useBucketService = () => {
     method: "put"
   });
 
+  const {
+    request: updateBucketRule,
+    loading: apiUpdateBucketRuleLoading,
+    error: apiUpdateBucketRuleError
+  } = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
   const apiGetBucketData = useCallback(
     (bucketId: string, queryString?: string) => {
       return fetchBucketData({
@@ -204,6 +213,29 @@ export const useBucketService = () => {
     [updateCellData]
   );
 
+  const apiUpdateBucketReadonly = useCallback(
+    async (bucket: BucketType) => {
+      return await putRequest({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {
+          ...bucket,
+          readOnly: !bucket.readOnly
+        }
+      });
+    },
+    [putRequest]
+  );
+
+  const apiUpdateBucketRule = useCallback(
+    async (bucket: BucketType, newRules: {write: string; read: string}) => {
+      return await updateBucketRule({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {...bucket, acl: newRules}
+      });
+    },
+    [updateBucketRule]
+  );
+
   return {
     apiGetBucketData,
     apiGetBuckets: fetchBuckets,
@@ -213,8 +245,13 @@ export const useBucketService = () => {
     apiDeleteBucket,
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
+    apiUpdateBucketReadonly,
+    apiUpdateBucketRule,
     apiUpdateCellData,
     apiBuckets,
+    apiBucketData,
+    apiUpdateBucketRuleLoading,
+    apiUpdateBucketRuleError,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError

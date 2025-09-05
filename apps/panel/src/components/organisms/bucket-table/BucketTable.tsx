@@ -3,6 +3,7 @@ import Table, { type FieldType } from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
+import useLocalStorage from "../../../hooks/useLocalStorage";
 
 
 export type ColumnType = {
@@ -141,15 +142,14 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
   const allKeys = Object.keys(columnMap);
 
   return data.map(row => {
-    const fullRow = {
+    const fullRow: Record<string, any> = {
       select: "",
-      ...row,
       "new field": ""
     };
 
     allKeys.forEach(key => {
       if (!(key in fullRow)) {
-        fullRow[key] = "";
+        fullRow[key] = row[key];
       }
     });
 
@@ -171,8 +171,8 @@ const BucketTable = ({
   onScrollEnd,
   totalDataLength,
   maxHeight,
-  bucketId,
   loading,
+  bucketId,
   tableRef,
   onCellSave
 }: BucketTableProps) => {
@@ -181,7 +181,11 @@ const BucketTable = ({
     [columns, bucketId]
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
-  const formattedData = useMemo(() => formatDataRows(data, columnMap), [data, columnMap]);
+  const formattedData = useMemo(
+    () => formatDataRows(data, columnMap),
+    [data, columnMap, columnMap.length]
+  );
+
   return loading ? (
     <Loader />
   ) : (

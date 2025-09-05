@@ -1,18 +1,10 @@
-import {
-  Button,
-  FlexElement,
-  FluidContainer,
-  Icon,
-  Popover,
-  Text,
-  useOnClickOutside,
-  Checkbox
-} from "oziko-ui-kit";
-import {memo, useEffect, useMemo, useRef, useState, type FC} from "react";
+import {Button, FlexElement, FluidContainer, Icon, Popover, Text, Checkbox} from "oziko-ui-kit";
+import {memo, useMemo, useEffect, useRef, useState, type FC} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import type {BucketType} from "../../../services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
 import Confirmation from "../confirmation/Confirmation";
+import BucketRules from "../bucket-rules/BucketRules";
 
 type TypeBucketMorePopup = {
   className?: string;
@@ -23,25 +15,25 @@ type TypeBucketMorePopup = {
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isBucketRulesOpen, setIsBucketRulesOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
+
   const containerRef = useRef(null);
   const contentRef = useRef(null);
 
-  useOnClickOutside({
-    refs: [containerRef, contentRef],
-    onClickOutside: () => {
-      setIsOpen(false);
-    }
-  });
-
   const {
+    updateBucketReadonly,
     updateBucketHistory,
     deleteBucketHistory,
     deleteBucketHistoryLoading,
     deleteBucketHistoryError
   } = useBucket();
+  const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
 
+  const handleChangeReadOnly = () => {
+    updateBucketReadonly(bucket);
+  };
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
   const handleChangeHistory = () => {
     updateBucketHistory(bucket);
@@ -66,15 +58,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     setIsDeleteHistoryConfirmationOpen(false);
   };
 
-  const handleOpen = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // If a checkbox gets clicked, and the popover is closed, the isOpen stays true for some reason and the popover doesn't open
-    // This is a workaround, how popover open state is handled needs to be rethinked
-    if (isOpen) {
-      setIsOpen(false);
-      setTimeout(() => setIsOpen(true), 0);
-    } else setIsOpen(true);
-  };
+  const handleOpen = () => setIsOpen(true);
 
   return (
     <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
@@ -100,7 +84,11 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                     <Icon name="formatSize" />
                     <Text>Configure the view</Text>
                   </Button>
-                  <Button variant="text" className={styles.openPopupButton}>
+                  <Button
+                    variant="text"
+                    onClick={() => setIsBucketRulesOpen(true)}
+                    className={styles.openPopupButton}
+                  >
                     <Icon name="security" />
                     <Text>Configure rules</Text>
                   </Button>
@@ -132,7 +120,12 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                     </Button>
                   )}
                   <Checkbox label="Limitation" />
-                  <Checkbox label="Read Only" />
+
+                  <Checkbox
+                    label="Read Only"
+                    checked={isReadOnlyChecked}
+                    onChange={handleChangeReadOnly}
+                  />
                 </FlexElement>
               )
             }}
@@ -173,6 +166,15 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           onConfirm={handleDeleteHistory}
           onCancel={handleCancelHistoryConfirmation}
           error={deleteHistoryError}
+        />
+      )}
+      {isBucketRulesOpen && (
+        <BucketRules
+          bucket={bucket}
+          onClose={() => {
+            setIsBucketRulesOpen(false);
+            setIsOpen(false);
+          }}
         />
       )}
     </div>

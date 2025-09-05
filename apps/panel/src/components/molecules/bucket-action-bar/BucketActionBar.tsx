@@ -1,10 +1,11 @@
 import React, {memo, useState, useCallback, useEffect, useMemo} from "react";
 import styles from "./BucketActionBar.module.scss";
-import {Button, FlexElement, Icon} from "oziko-ui-kit";
+import {Button, FlexElement, Icon, Popover, Checkbox} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
-import type { BucketType } from "src/services/bucketService";
+import type {BucketType} from "src/services/bucketService";
+import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 
 type BucketActionBarProps = {
   onRefresh: () => void;
@@ -12,6 +13,9 @@ type BucketActionBarProps = {
   bucket: BucketType;
   searchLoading?: boolean;
   refreshLoading?: boolean;
+  columns: ColumnType[];
+  visibleColumns: Record<string, boolean>;
+  toggleColumn: (key?: string) => void;
 };
 
 const SEARCH_DEBOUNCE_TIME = 1000;
@@ -21,11 +25,15 @@ const BucketActionBar = ({
   onSearch,
   bucket,
   searchLoading,
-  refreshLoading
+  refreshLoading,
+  columns,
+  visibleColumns,
+  toggleColumn
 }: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => setSearchValue(""), [bucket?._id]);
+  const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -70,12 +78,14 @@ const BucketActionBar = ({
         loading={searchLoading}
       />
       <FlexElement className={styles.actionBar}>
-        <Button onClick={() => {}}>
-          <Icon name="plus" />
-          New Entry
-        </Button>
+        {!isReadOnlyChecked && (
+          <Button onClick={() => {}}>
+            <Icon name="plus" />
+            New Entry
+          </Button>
+        )}
         <Button
-          variant="text"
+          className={styles.refreshButton} variant="text"
           onClick={onRefresh}
           disabled={refreshLoading || searchLoading}
           loading={refreshLoading}
@@ -83,10 +93,34 @@ const BucketActionBar = ({
           <Icon name="refresh" />
           Refresh
         </Button>
-        <Button variant="text" onClick={() => {}}>
-          <Icon name="eye" />
-          Column
-        </Button>
+        <Popover
+          contentProps={{
+            className: styles.columnsPopoverContent
+          }}
+          content={
+            <div>
+              <Checkbox
+                label="Display All"
+                checked={Object.values(visibleColumns).every(v => v)}
+                onChange={() => toggleColumn()}
+                className={styles.displayAllCheckbox}
+              />
+              {columns.slice(1).map(col => (
+                <Checkbox
+                  key={col.key}
+                  label={col.header}
+                  checked={visibleColumns[col.key]}
+                  onChange={() => toggleColumn(col.key)}
+                />
+              ))}
+            </div>
+          }
+        >
+          <Button className={styles.columnButton} variant="text" onClick={() => {}}>
+            <Icon name="eye" />
+            Column
+          </Button>
+        </Popover>
         <BucketMorePopup bucket={bucket} />
       </FlexElement>
     </div>
