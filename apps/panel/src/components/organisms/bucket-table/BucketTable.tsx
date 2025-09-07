@@ -120,7 +120,7 @@ const NewFieldHeader = memo(() => {
     [bucket, createBucketField]
   );
 
-  const forbiddenFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket])
+  const forbiddenFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket]);
 
   return (
     <BucketFieldPopupsProvider>
@@ -232,7 +232,15 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
       return (
         <div className={styles.locationCell}>
           <img src="/locationx.png" className={styles.locationImage} />
-          <div>{cellData}</div>
+          <div
+            data-full={cellData?.coordinates.join(", ")}
+            onCopy={e => {
+              e.preventDefault();
+              e.clipboardData.setData("text/plain", e.currentTarget.dataset.full || "");
+            }}
+          >
+            {cellData?.coordinates?.map((c: number) => c.toFixed(2) + "..").join(", ")}
+          </div>
         </div>
       );
     case "array":

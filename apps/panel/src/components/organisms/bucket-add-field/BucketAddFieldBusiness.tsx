@@ -297,6 +297,15 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       if (schemaItem.required && !values?.[key] && shouldRender) {
         addError(`${fieldTitle} is required`);
       }
+
+      if (
+        key === "enumeratedValues" &&
+        shouldRender &&
+        values.makeEnumerated &&
+        (!values.enumeratedValues || values.enumeratedValues.length === 0)
+      ) {
+        addError(`Field must have at least one value`);
+      }
     };
 
     Object.entries(schema).forEach(([key, schemaItem]) =>
