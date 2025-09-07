@@ -12,20 +12,16 @@ import React, {
   useRef,
   useState
 } from "react";
-import {
-  Button,
-  Checkbox,
-  FlexElement,
-  Icon,
-  useInputRepresenter,
-  useOnClickOutside
-} from "oziko-ui-kit";
+import {Button, Checkbox, FlexElement, Icon, useInputRepresenter, Popover} from "oziko-ui-kit";
 import styles from "./Table.module.scss";
 import InfiniteScroll from "react-infinite-scroll-component";
 import useScrollDirectionLock from "../../../hooks/useScrollDirectionLock";
 import Loader from "../../../components/atoms/loader/Loader";
-import type {TypeInputTypeMap} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import Popover from "../../../components/atoms/popover/Popover";
+import type {
+  TypeArrayItems,
+  TypeInputRepresenterError,
+  TypeInputTypeMap
+} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 
 export type FieldType =
   | "string"
@@ -55,6 +51,12 @@ type TypeDataColumn = {
   type?: FieldType;
   deletable?: boolean;
   title?: string;
+  pattern?: string;
+  minimum?: number;
+  maximum?: number;
+  items?: TypeArrayItems;
+  minItems?: number;
+  maxItems?: number;
 };
 
 type TypeTableData = {
@@ -383,11 +385,9 @@ const Table: FC<TypeTable> = ({
 
   useEffect(() => {
     const handleEnter = (event: KeyboardEvent) => {
-      if (event.key === "Enter" && !event.shiftKey) {
-        const event = new CustomEvent("cellChangeEvent");
-        window.dispatchEvent(event);
-        return;
-      }
+      if (event.key !== "Enter" || event.shiftKey) return;
+      const cellChangeEvent = new CustomEvent("cellChangeEvent");
+      window.dispatchEvent(cellChangeEvent);
     };
     window.addEventListener("keydown", handleEnter);
 
@@ -605,6 +605,7 @@ const Rows = memo(
           deletable: column.deletable
         };
 
+        console.log("items: ", column.items);
         return column.selectable !== false ? (
           <EditableCell
             key={cellData.id}
@@ -612,7 +613,15 @@ const Rows = memo(
             type={column.type ?? "string"}
             focused={focusedCell?.row === index && focusedCell?.column === column.key}
             title={column.title ?? "Value"}
-            onCellSave={value => onCellSave?.(value, column.title as string, rowId.split("-")[1])}
+            onCellSave={value => onCellSave?.(value, column.key as string, rowId.split("-")[1])}
+            constraints={{
+              pattern: column.pattern,
+              minimum: column.minimum,
+              maximum: column.maximum,
+              maxItems: column.maxItems,
+              minItems: column.minItems,
+              items: column.items
+            }}
           />
         ) : (
           <Cell key={cellData.id} {...props} />
@@ -660,6 +669,29 @@ type TypeEditableCell = TypeCell & {
   focused?: boolean;
   title: string;
   onCellSave?: (value: any) => void;
+  constraints?: {
+    pattern?: string;
+    minimum?: number;
+    maximum?: number;
+    minItems?: number;
+    maxItems?: number;
+    items?: TypeArrayItems;
+  };
+};
+
+const DEFAULT_VALUES: Record<FieldType, any> = {
+  string: "",
+  number: 0,
+  date: null,
+  boolean: false,
+  textarea: "",
+  "multiple selection": [],
+  relation: null,
+  location: null,
+  array: [],
+  object: {},
+  file: null,
+  richtext: ""
 };
 
 const EditableCell = memo(
@@ -671,44 +703,96 @@ const EditableCell = memo(
     focused,
     leftOffset,
     onCellSave,
+    constraints = {},
     ...props
   }: TypeEditableCell) => {
-    const [cellValue, setCellValue] = useState({value});
+    const getInitialValue = () => ({value: !value ? DEFAULT_VALUES[type] : value});
+
+    const [cellValue, setCellValue] = useState(getInitialValue);
+    const [error, setError] = useState<TypeInputRepresenterError>();
     const [isEditOpen, setIsEditOpen] = useState(false);
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
       props?.onClick?.(e);
       setIsEditOpen(true);
     };
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const contentRef = useRef<HTMLDivElement | null>(null);
 
     const input = useInputRepresenter({
       properties: {
         value: {
           type: (type === "relation" ? "string" : type) as keyof TypeInputTypeMap,
-          title
+          title,
+          items: constraints?.items
         }
       },
       value: cellValue,
-      onChange: setCellValue
+      onChange: setCellValue,
+      error,
+      errorClassName: styles.inputError
     });
 
     const handleClose = () => {
       setIsEditOpen(false);
-      setCellValue({value});
+      setCellValue(getInitialValue());
     };
 
-    useOnClickOutside({
-      refs: [containerRef, contentRef],
-      onClickOutside: () => handleClose
-    });
+    useEffect(() => {
+      if (!error) return;
+      const errors = validateInput(cellValue, constraints);
+      setError(errors);
+    }, [cellValue.value]);
+
+    const validateInput = (
+      values: {[key: string]: any},
+      constraints: {
+        pattern?: string;
+        minimum?: number;
+        maximum?: number;
+        minItems?: number;
+        maxItems?: number;
+        items?: TypeArrayItems;
+      }
+    ) => {
+      const {pattern, minimum, maximum, minItems, maxItems, items} = constraints;
+      const errors: TypeInputRepresenterError = {};
+      Object.keys(values).forEach(key => {
+        const value = values[key];
+        if (pattern) {
+          const isValid = new RegExp(pattern).test(value);
+          if (!isValid) {
+            errors[key] = `This field does not match the required pattern "${pattern}"`;
+            return false;
+          }
+        } else if (minimum !== undefined && type === "number" && value < minimum) {
+          errors[key] = `This field must be at least ${minimum}`;
+          return false;
+        } else if (maximum !== undefined && type === "number" && value > maximum) {
+          errors[key] = `This field must be at most ${maximum}`;
+          return false;
+        } else if (maxItems !== undefined && type === "array" && value.length > maxItems) {
+          errors[key] = `This field must be at most ${maxItems} items`;
+          return false;
+        } else if (minItems !== undefined && type === "array" && value.length < minItems) {
+          errors[key] = `This field must be at least ${minItems} items`;
+          return false;
+        } else if (type === "object" || type === "array") {
+          const nestedErrors = validateInput(value, items as typeof constraints);
+          if (nestedErrors && Object.keys(nestedErrors).length > 0) {
+            errors[key] = nestedErrors;
+          }
+        }
+      });
+
+      return errors;
+    };
 
     useEffect(() => {
       const eventListener = () => {
-        if (isEditOpen) {
-          onCellSave?.(cellValue.value);
-          handleClose();
+        const errors = validateInput(cellValue, constraints);
+        if (!isEditOpen || !Object.keys(errors).length) {
+          setError(errors);
+          return;
         }
+        onCellSave?.(cellValue.value);
       };
 
       window.addEventListener("cellChangeEvent", eventListener);
@@ -716,14 +800,13 @@ const EditableCell = memo(
     }, [isEditOpen, title, cellValue.value, onCellSave]);
 
     useEffect(() => {
-      setCellValue({value});
+      setCellValue(getInitialValue());
     }, [value]);
 
     useEffect(() => {
       setIsEditOpen(Boolean(focused));
     }, [focused]);
 
-    if (title === "boo") console.log("cellValue.value: ", cellValue.value);
     return (
       <td
         {...props}
@@ -731,15 +814,14 @@ const EditableCell = memo(
         className={`${styles.cell} ${styles.selectableCell} ${focused ? styles.focusedCell : ""} ${props.className || ""}`}
         style={{left: leftOffset}}
       >
-        <div ref={containerRef}>
-          <Popover
-            open={isEditOpen}
-            onClose={handleClose}
-            content={<div ref={contentRef}>{input}</div>}
-          >
-            {renderCell(cellValue.value, type, deletable)}
-          </Popover>
-        </div>
+        <Popover
+          open={isEditOpen}
+          onClose={handleClose}
+          content={input}
+          portalClassName={styles.inputPopover}
+        >
+          {renderCell(isEditOpen ? cellValue.value : value, type, deletable)}
+        </Popover>
       </td>
     );
   }

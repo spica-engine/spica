@@ -3,7 +3,6 @@ import Table, { type FieldType } from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
-import useLocalStorage from "../../../hooks/useLocalStorage";
 
 
 export type ColumnType = {

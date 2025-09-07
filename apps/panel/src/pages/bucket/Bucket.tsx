@@ -67,7 +67,12 @@ export default function Bucket() {
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
-    const columns = Object.values(bucket?.properties ?? {});
+    const columns = Object.entries(bucket?.properties ?? {}).map(([key, value]) => ({
+      ...value,
+      key,
+      title: value.title || key
+    }));
+
     return [
       {
         header: "_id",
@@ -79,7 +84,7 @@ export default function Bucket() {
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
+      ...columns.map(i => ({...i, header: i.title, showDropdownIcon: true}))
     ] as ColumnType[];
   }, [bucket]);
 
@@ -107,10 +112,9 @@ export default function Bucket() {
     setRefreshLoading(false);
   }, [bucketId, refreshBucketData]);
 
-
   const handleCellSave = (value: any, columnName: string, rowId: string) => {
-    updateCellData(value, columnName, rowId)
-  }
+    updateCellData(value, columnName, rowId);
+  };
 
   if (formattedColumns.length <= 1 || !bucket) {
     return <Loader />;
@@ -194,7 +198,6 @@ function BucketWithVisibleColumns({
       });
     }
   };
-
 
   return (
     <div className={styles.container}>
