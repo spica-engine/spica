@@ -178,3 +178,12 @@
     overflow: hidden;
   }
 }
+
+.inputError {
+  position: unset;
+}
+
+.inputPopover > div > div {
+  max-width: 360px;
+  min-width: 360px;
+}
