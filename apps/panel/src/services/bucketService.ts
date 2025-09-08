@@ -91,7 +91,7 @@ export const useBucketService = () => {
     method: "get"
   });
 
-  const {request: fetchBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
+  const {request: fetchBucketData, data: apiBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
     endpoint: "",
     method: "get",
     deduplicateRequests: true,
@@ -112,6 +112,20 @@ export const useBucketService = () => {
   });
 
   const {request: putRequest} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+  const {
+    request: updateBucketRule,
+    loading: apiUpdateBucketRuleLoading,
+    error: apiUpdateBucketRuleError
+  } = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+    const {request: bucketLimitationRequest, loading: apiUpdateBucketLimitationFieldsLoading, error: apiUpdateBucketLimitationFieldsError} = useApi({
     endpoint: "",
     method: "put"
   });
@@ -196,6 +210,33 @@ export const useBucketService = () => {
     [putRequest]
   );
 
+  const apiUpdateBucketRule = useCallback(
+    async (bucket: BucketType, newRules: {write: string; read: string}) => {
+      return await updateBucketRule({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {...bucket, acl: newRules}
+      });
+    },
+    [updateBucketRule]
+  );
+
+    const apiUpdatebucketLimitiation = useCallback(
+    async (bucketId: string, body: BucketType) => {
+      return await bucketLimitationRequest({
+        endpoint: `/api/bucket/${bucketId}`,
+        body
+      });
+    },
+    [bucketLimitationRequest]
+  );
+
+  const apiUpdatebucketLimitiationFields = useCallback((bucket: BucketType) => {
+    return bucketLimitationRequest({
+      endpoint: `/api/bucket/${bucket._id}`,
+      body: bucket
+    });
+  }, [bucketLimitationRequest])
+
   const apiCreateBucket = useCallback(
     (title: string, order: number) => {
       const bucket = {
@@ -240,10 +281,18 @@ export const useBucketService = () => {
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
+    apiUpdateBucketRule,
+    apiUpdatebucketLimitiation,
+    apiUpdatebucketLimitiationFields,
     apiCreateBucket,
     apiBuckets,
+    apiBucketData,
+    apiUpdateBucketRuleLoading,
+    apiUpdateBucketRuleError,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
+    apiUpdateBucketLimitationFieldsLoading,
+    apiUpdateBucketLimitationFieldsError
   };
 };

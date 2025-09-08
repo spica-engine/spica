@@ -66,12 +66,12 @@ export const DrawerProvider = ({children}: {children: ReactNode}) => {
   );
 
   return (
-    <DrawerContext.Provider value={contextValue}>
+    <DrawerContext value={contextValue}>
       {children}
       <DrawerShell {...drawerProps} onClose={closeDrawer} isOpen={isOpen}>
         {content}
       </DrawerShell>
-    </DrawerContext.Provider>
+    </DrawerContext>
   );
 };
 
