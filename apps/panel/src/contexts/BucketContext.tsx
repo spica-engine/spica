@@ -47,6 +47,7 @@ type BucketContextType = {
     countLimit: number,
     limitExceedBehaviour: "prevent" | "remove"
   ) => Promise<any>;
+  createBucket: (title: string) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
@@ -90,6 +91,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiUpdateBucketRule,
     apiUpdatebucketLimitiation,
     apiUpdatebucketLimitiationFields,
+    apiCreateBucket,
     apiBuckets,
     apiUpdateBucketRuleError,
     apiUpdateBucketRuleLoading,
@@ -341,6 +343,17 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [apiUpdatebucketLimitiationFields]
   );
 
+  const createBucket = useCallback(
+    async (title: string) => {
+      return await apiCreateBucket(title, buckets.length).then(result => {
+        if (!result) return
+        setBuckets(prev => [...(prev ?? []), result]);
+        return result;
+      });
+    },
+    [buckets, apiCreateBucket]
+  );
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -358,6 +371,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketReadonly,
       updateBucketLimitation,
       updateBucketLimitationFields,
+      createBucket,
       buckets,
       bucketData,
       updateBucketRuleLoading: apiUpdateBucketRuleLoading,
@@ -386,6 +400,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketReadonly,
       updateBucketLimitation,
       updateBucketLimitationFields,
+      createBucket,
       buckets,
       bucketData,
       apiUpdateBucketRuleLoading,

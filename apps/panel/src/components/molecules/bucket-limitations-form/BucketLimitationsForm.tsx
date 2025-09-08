@@ -1,10 +1,12 @@
 import {StringInput, NumberInput, type TypeFluidContainer, FlexElement} from "oziko-ui-kit";
 import styles from "./BucketLimitiationsForm.module.scss";
-import {
-  LIMIT_EXCEED_BEHAVIOUR_OPTIONS,
-  type TypeLimitExceedBehaviour
-} from "../bucket-more-popup/BucketMorePopup";
 import {memo} from "react";
+
+export type TypeLimitExceedBehaviour = "prevent" | "remove";
+export const LIMIT_EXCEED_BEHAVIOUR_OPTIONS = [
+  {label: "Do not insert", value: "prevent"},
+  {label: "Insert but delete the oldest", value: "remove"}
+] as {label: string; value: TypeLimitExceedBehaviour}[];
 
 type BucketLimitationsFormProps = {
   setValues: React.Dispatch<
