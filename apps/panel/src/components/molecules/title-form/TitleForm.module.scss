@@ -11,6 +11,10 @@
   }
 }
 
+.containerWithError {
+  gap: var(--gap-xl) !important;
+}
+
 .container {
   background-color: var(--color-menu-background);
   border-radius: var(--border-radius-md);
@@ -55,9 +59,6 @@
     height: 32px !important;
   }
 
-  .inputContainerContainer {
-    padding-top: var(--padding-md);
-  }
   .inputContainer {
     width: 340px !important;
     height: 44px;
@@ -71,4 +72,10 @@
     font-family: var(--font-family-base);
     font-size: var(--font-size-md);
   }
+}
+
+.errorText {
+  max-width: 100%;
+  font-size: var(--font-size-xs) !important;
+  position: absolute;
 }

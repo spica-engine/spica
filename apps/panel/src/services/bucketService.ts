@@ -129,6 +129,16 @@ export const useBucketService = () => {
     method: "put"
   });
 
+    const {request: bucketLimitationRequest, loading: apiUpdateBucketLimitationFieldsLoading, error: apiUpdateBucketLimitationFieldsError} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+  const {request: postRequest} = useApi<BucketType>({
+    endpoint: "/api/bucket",
+    method: "post"
+  });
+
   const {request: createBucketField, error: apiCreateBucketFieldError} = useApi({
     endpoint: "",
     method: "put"
@@ -232,6 +242,57 @@ export const useBucketService = () => {
     [updateBucketRule]
   );
 
+    const apiUpdatebucketLimitiation = useCallback(
+    async (bucketId: string, body: BucketType) => {
+      return await bucketLimitationRequest({
+        endpoint: `/api/bucket/${bucketId}`,
+        body
+      });
+    },
+    [bucketLimitationRequest]
+  );
+
+  const apiUpdatebucketLimitiationFields = useCallback((bucket: BucketType) => {
+    return bucketLimitationRequest({
+      endpoint: `/api/bucket/${bucket._id}`,
+      body: bucket
+    });
+  }, [bucketLimitationRequest])
+
+  const apiCreateBucket = useCallback(
+    (title: string, order: number) => {
+      const bucket = {
+        title,
+        description: "Describe your new bucket",
+        icon: "view_stream",
+        primary: "title",
+        readOnly: false,
+        history: false,
+        properties: {
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row",
+            options: {position: "left"}
+          },
+          description: {
+            type: "textarea",
+            title: "description",
+            description: "Description of the row",
+            options: {position: "right"}
+          }
+        },
+        acl: {
+          write: "true==true",
+          read: "true==true"
+        },
+        order
+      };
+      return postRequest({body: {...bucket}});
+    },
+    [postRequest]
+  );
+
   return {
     apiGetBucketData,
     apiGetBuckets: fetchBuckets,
@@ -243,6 +304,9 @@ export const useBucketService = () => {
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
     apiUpdateBucketRule,
+    apiUpdatebucketLimitiation,
+    apiUpdatebucketLimitiationFields,
+    apiCreateBucket,
     apiCreateBucketField,
     apiBuckets,
     apiBucketData,
@@ -251,6 +315,8 @@ export const useBucketService = () => {
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
+    apiUpdateBucketLimitationFieldsLoading,
+    apiUpdateBucketLimitationFieldsError,
     apiCreateBucketFieldError
   };
 };
