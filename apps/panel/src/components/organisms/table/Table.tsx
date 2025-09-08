@@ -745,7 +745,7 @@ const EditCellPopover = ({
   const handleInputChange = (newValue: any) => {
     setInputValue(newValue);
     setCellValue(newValue.value);
-  }
+  };
 
   const properties = useMemo(
     () => ({
@@ -772,9 +772,26 @@ const EditCellPopover = ({
   });
 
   const handleClose = () => {
-    handleInputChange(getInitialValue());
     setIsOpen(false);
     onClose();
+  };
+
+  const discardChanges = () => {
+    handleInputChange(getInitialValue());
+    handleClose();
+  };
+
+  const handleSave = async () => {
+    const errors = validateInput(inputValue, constraints);
+    if (Object.keys(errors).length > 0) {
+      setError(errors);
+      return;
+    }
+
+    const result = await onCellSave(inputValue.value);
+    if (result) {
+      handleClose();
+    }
   };
 
   useEffect(() => {
@@ -846,16 +863,7 @@ const EditCellPopover = ({
   useEffect(() => {
     const handleEnter = (event: KeyboardEvent) => {
       if (event.key !== "Enter" || event.shiftKey) return;
-      const errors = validateInput(inputValue, constraints);
-      if (Object.keys(errors).length > 0) {
-        setError(errors);
-        return;
-      }
-
-      onCellSave(inputValue.value).then(result => {
-        if (!result) return;
-        handleClose();
-      });
+      handleSave();
     };
     window.addEventListener("keydown", handleEnter);
 
@@ -882,7 +890,7 @@ const EditCellPopover = ({
       containerProps={{ref: popoverContentRef}}
       contentProps={{style: targetPosition ?? undefined}}
       open={isOpen}
-      onClose={handleClose}
+      onClose={discardChanges}
       content={input}
       portalClassName={styles.inputPopover}
     />
@@ -915,10 +923,7 @@ const EditableCell = memo(
           ref,
           columnId,
           rowId,
-          setCellValue: (value) => {
-            console.log('setCellValue called with', value);
-            setCellValue(value);
-          } 
+          setCellValue
         }
       });
       window.dispatchEvent(cellEditStartEvent);
