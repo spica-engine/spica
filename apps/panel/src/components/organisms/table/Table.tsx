@@ -176,7 +176,15 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
       return (
         <div className={styles.locationCell}>
           <img src="/locationx.png" className={styles.locationImage} />
-          <div>{cellData.coordinates}</div>
+          <div
+            data-full={cellData?.coordinates.join(", ")}
+            onCopy={e => {
+              e.preventDefault();
+              e.clipboardData.setData("text/plain", e.currentTarget.dataset.full || "");
+            }}
+          >
+            {cellData?.coordinates?.map((c: number) => c.toFixed(2) + "..").join(", ")}
+          </div>
         </div>
       );
     case "array":
@@ -697,7 +705,7 @@ type EditCellPopoverProps = {
 const DEFAULT_VALUES: Record<FieldType, any> = {
   string: "",
   number: 0,
-  date: null,
+  date: "",
   boolean: false,
   textarea: "",
   "multiple selection": [],
@@ -770,6 +778,8 @@ const EditCellPopover = ({
     error: error,
     errorClassName: styles.inputError
   });
+
+  console.log("inputValue", inputValue);
 
   const handleClose = () => {
     setIsOpen(false);
