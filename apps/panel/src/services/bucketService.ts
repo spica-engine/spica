@@ -216,7 +216,7 @@ export const useBucketService = () => {
   );
 
     const apiUpdatebucketLimitiation = useCallback(
-    async (bucketId: string, body: Record<string, any>) => {
+    async (bucketId: string, body: BucketType) => {
       return await bucketLimitationRequest({
         endpoint: `/api/bucket/${bucketId}`,
         body
