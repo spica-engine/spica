@@ -19,11 +19,13 @@ type BucketLimitationsFormProps = {
   };
 };
 
+const LIMIT_EXCEED_BEHAVIOUR_LABELS = LIMIT_EXCEED_BEHAVIOUR_OPTIONS.map(i => i.label);
+
 const BucketLimitationsForm = ({setValues, values}: BucketLimitationsFormProps) => {
   const handleCountLimitChange = (countLimit: number) => setValues(prev => ({...prev, countLimit}));
 
-  const handleLimitExceedBehaviourChange = (limitExceedBehaviour: TypeLimitExceedBehaviour) =>
-    setValues(prev => ({...prev, limitExceedBehaviour}));
+  const handleLimitExceedBehaviourChange = (value: string) =>
+    setValues(prev => ({...prev, limitExceedBehaviour: value as TypeLimitExceedBehaviour}));
 
   return (
     <FlexElement direction="vertical" className={styles.formInputs}>
@@ -34,10 +36,10 @@ const BucketLimitationsForm = ({setValues, values}: BucketLimitationsFormProps) 
         value={values.countLimit}
       />
       <StringInput
-        options={LIMIT_EXCEED_BEHAVIOUR_OPTIONS.map(i => i.label)}
+        options={LIMIT_EXCEED_BEHAVIOUR_LABELS}
         className={styles.limitExceedBehaviourInput}
         value={values.limitExceedBehaviour}
-        onChange={handleLimitExceedBehaviourChange as (value: string) => void}
+        onChange={handleLimitExceedBehaviourChange}
         label="Choose limit-reached action"
         selectProps={
           {
