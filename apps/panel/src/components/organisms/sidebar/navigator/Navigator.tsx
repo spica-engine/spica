@@ -1,4 +1,11 @@
-import {FluidContainer, Icon, Text, type IconName, helperUtils, Accordion} from "oziko-ui-kit";
+import {
+  FluidContainer,
+  Icon,
+  Text,
+  type IconName,
+  helperUtils,
+  Accordion,
+} from "oziko-ui-kit";
 import styles from "./Navigator.module.scss";
 import {Button} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
@@ -17,6 +24,7 @@ import {DndProvider, useDrag, useDragLayer, useDrop} from "react-dnd";
 import {getEmptyImage, HTML5Backend} from "react-dnd-html5-backend";
 import type {ReorderableItemGroup, TypeNavigatorItems} from "../SideBar";
 import type {BucketType} from "src/services/bucketService";
+import AddBucketPopup from "../../../../components/molecules/add-bucket-popup/AddBucketPopup";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
@@ -305,14 +313,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
             items={ungrouped as TypeNavigatorItems[]}
           />
         )}
-        {addNewButtonText && (
-          <Button className={styles.addNewButton} color="transparent" variant="text">
-            <Icon name="plus" size="xs" />
-            <Text className={styles.noLineHeight} size="medium">
-              {addNewButtonText}
-            </Text>
-          </Button>
-        )}
+        {addNewButtonText && <AddBucketPopup text={addNewButtonText} />}
       </div>
       {button && (
         <Button color="transparent" variant="text">

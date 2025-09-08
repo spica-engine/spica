@@ -166,13 +166,19 @@ function BucketWithVisibleColumns({
 }: BucketWithVisibleColumnsProps) {
   const defaultVisibleColumns = useMemo(
     () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
-    []
+    [formattedColumns]
   );
 
   const [visibleColumns, setVisibleColumns] = useLocalStorage<{[key: string]: boolean}>(
     `${bucket._id}-visible-columns`,
     defaultVisibleColumns
   );
+
+  useEffect(() => {
+    if (Object.keys(defaultVisibleColumns).length > Object.keys(visibleColumns).length) {
+      setVisibleColumns(defaultVisibleColumns);
+    }
+  }, [defaultVisibleColumns, visibleColumns]);
 
   const filteredColumns = useMemo(
     () => formattedColumns.filter(i => visibleColumns?.[i.key]),

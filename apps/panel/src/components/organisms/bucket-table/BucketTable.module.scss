@@ -49,11 +49,17 @@
 
 .newFieldHeader {
   border-top-right-radius: var(--border-radius-md);
+  right: 0;
+  border-left: var(--border-default);
 }
 
 .columnHeader {
   justify-content: space-between !important;
   background-color: var(--color-border);
+}
+
+.columnHeader:nth-last-child(2) {
+  border-right: none !important;
 }
 
 .columnHeader:first-child {
@@ -79,6 +85,8 @@
 
 .newFieldCell {
   background-color: var(--color-border) !important;
+  right: 0;
+  border-left: var(--border-default);
 }
 
 .selectColumn {
@@ -112,4 +120,29 @@
   &:not(:last-child) {
     border-right: none;
   }
+}
+
+.grayText {
+  color: var(--color-input-placeholder);
+}
+
+.defaultCell {
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  height: 100%;
+  align-items: center;
+}
+
+.defaultCellData {
+  width: 100%;
+  height: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  align-items: center;
+  align-content: center;
+}
+
+.cell:nth-last-child(2) {
+  border-right: none !important;
 }
