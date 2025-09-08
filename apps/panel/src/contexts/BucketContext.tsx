@@ -34,6 +34,13 @@ type BucketContextType = {
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
   refreshBucketData: () => Promise<void>;
   updateBucketReadonly: (bucket: BucketType) => Promise<any>;
+  updateBucketRule: (
+    bucket: BucketType,
+    newRules: {
+      read: string;
+      write: string;
+    }
+  ) => Promise<any>;
   updateBucketLimitation: (bucket: BucketType) => Promise<void>;
   updateBucketLimitationFields: (
     bucket: BucketType,
@@ -48,6 +55,8 @@ type BucketContextType = {
   updateBucketLimitationFieldsError: string | null;
   deleteBucketHistoryLoading: boolean;
   deleteBucketHistoryError: string | null;
+  updateBucketRuleLoading: boolean;
+  updateBucketRuleError: string | null;
 };
 
 /**
@@ -78,9 +87,12 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiUpdateBucketHistory,
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
+    apiUpdateBucketRule,
     apiUpdatebucketLimitiation,
     apiUpdatebucketLimitiationFields,
     apiBuckets,
+    apiUpdateBucketRuleError,
+    apiUpdateBucketRuleLoading,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
@@ -225,6 +237,18 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [apiDeleteBucket]
   );
 
+  const updateBucketRule = useCallback(
+    (bucket: BucketType, newRules: {read: string; write: string}) => {
+      const oldBuckets = buckets;
+      setBuckets(prev => prev.map(i => (i._id === bucket._id ? {...i, acl: newRules} : i)));
+      return apiUpdateBucketRule(bucket, newRules).then(result => {
+        if (!result) setBuckets(oldBuckets);
+        return result;
+      });
+    },
+    [apiUpdateBucketRule, buckets]
+  );
+
   const renameBucket = useCallback(
     async (newTitle: string, bucket: BucketType) => {
       const oldBuckets = buckets;
@@ -329,12 +353,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       deleteBucket,
       updateBucketHistory,
       deleteBucketHistory: apiDeleteBucketHistory,
+      updateBucketRule,
       refreshBucketData,
       updateBucketReadonly,
       updateBucketLimitation,
       updateBucketLimitationFields,
       buckets,
       bucketData,
+      updateBucketRuleLoading: apiUpdateBucketRuleLoading,
+      updateBucketRuleError: apiUpdateBucketRuleError,
       bucketDataLoading: apiBucketDataLoading,
       bucketCategories,
       deleteBucketHistoryLoading: apiDeleteBucketHistoryLoading,
@@ -353,6 +380,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       deleteBucket,
       updateBucketHistory,
       apiDeleteBucketHistory,
+      updateBucketRule,
       refreshBucketData,
       loadMoreBucketData,
       updateBucketReadonly,
@@ -360,6 +388,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketLimitationFields,
       buckets,
       bucketData,
+      apiUpdateBucketRuleLoading,
+      apiUpdateBucketRuleError,
       apiBucketDataLoading,
       bucketCategories,
       apiDeleteBucketHistoryLoading,
@@ -370,7 +400,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     ]
   );
 
-  return <BucketContext.Provider value={contextValue}>{children}</BucketContext.Provider>;
+  return <BucketContext value={contextValue}>{children}</BucketContext>;
 };
 
 export function useBucket() {

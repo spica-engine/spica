@@ -89,7 +89,7 @@ function useApi<T>({
               return;
             }
           }
-          setError(err.message ?? "Something went wrong");
+          setError(err.response?.data?.message ?? err.message ?? "Something went wrong");
           onError?.();
         } finally {
           setLoading(false);

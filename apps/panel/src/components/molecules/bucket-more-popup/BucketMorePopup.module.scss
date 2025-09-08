@@ -1,27 +1,33 @@
+.container,
+.container *,
+.popoverContent,
+.popoverContent * {
+  line-height: unset !important;
+  font-family: var(--font-family-base) !important;
+}
+
 .popoverContainer {
   width: 240px !important;
   padding: 0;
   z-index: 4;
   justify-content: start !important;
-  * {
-    line-height: unset !important;
-    font-family: var(--font-family-base) !important;
-  }
 }
 
 .popoverContent {
   width: 100% !important;
   > div {
     width: 100% !important;
+    justify-content: start !important;
+    padding: 0 var(--padding-md);
   }
 }
 
-.openPopupButtonContainer {
-  width: 100% !important;
+.configureRulesContainer {
   border-bottom: var(--border-default);
-  padding: var(--padding-md);
-
-  .openPopupButton {
+  height: 40px !important;
+  width: 100% !important;
+  align-items: baseline;
+  button {
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
@@ -33,49 +39,41 @@
     }
   }
 
-  .openPopupButton:hover {
+  button:hover {
     background-color: transparent !important;
   }
 }
 
 .historyContainer {
-  width: 100% !important;
-  padding: var(--padding-md);
+  padding: var(--padding-md) !important;
+  border-bottom: var(--border-default);
+  .historyCheckbox,
   .historyButton {
-    width: min-content;
-    min-width: min-content !important;
-    padding: 0;
-    align-items: center;
-  }
-  .historyButton,
-  .historyButton span {
-    color: var(--color-danger) !important;
-  }
-  .historyButton,
-  .historyCheckbox {
     height: 20px !important;
+  }
+  .historyButton {
+    padding-left: 0;
+    justify-content: start;
+    svg {
+      margin-left: -1px;
+    }
+    span {
+      margin-left: 4px;
+    }
   }
   .historyButton:hover {
     background-color: transparent !important;
   }
-  .historyButton svg,
-  .historyButton span {
-    margin-left: -1px;
-  }
-  .historyButton > div > div {
-    gap: var(--gap-md) !important;
-  }
-  border-bottom: var(--border-default);
 }
 
-.limitationsContainer {
-  width: 100% !important;
-  padding: var(--padding-md);
-  .limitationsCheckbox {
-    height: 20px !important;
-  }
+.limitationsCheckbox {
+  height: 40px !important;
 }
 
 .confirmText {
   margin-top: 0;
+}
+
+.danger {
+  color: var(--color-danger) !important;
 }

@@ -3,17 +3,18 @@ import {
   FlexElement,
   FluidContainer,
   Icon,
+  Popover,
   Text,
   Checkbox,
-  Popover,
   useOnClickOutside
 } from "oziko-ui-kit";
+import {memo, useMemo, useEffect, useRef, useState, type FC, useCallback} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
 import BucketLimitationsForm from "../bucket-limitations-form/BucketLimitationsForm";
-import {memo, useCallback, useEffect, useMemo, useRef, useState, type FC} from "react";
 import Confirmation from "../confirmation/Confirmation";
+import BucketRules from "../bucket-rules/BucketRules";
 
 type TypeBucketMorePopup = {
   className?: string;
@@ -30,6 +31,7 @@ export const LIMIT_EXCEED_BEHAVIOUR_OPTIONS = [
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isBucketRulesOpen, setIsBucketRulesOpen] = useState(false);
   const [isDeleteHistoryConfirmationOpen, setIsDeleteHistoryConfirmationOpen] = useState(false);
   const [deleteHistoryError, setDeleteHistoryError] = useState<null | string>(null);
 
@@ -51,20 +53,6 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   useEffect(() => {
     setBucketLimitationValues(getInitialBucketLimitations());
   }, [bucket]);
-
-  const containerRef = useRef(null);
-  const contentRef = useRef(null);
-
-  useOnClickOutside({
-    refs: [containerRef, contentRef],
-    onClickOutside: () => {
-      setIsOpen(true);
-      setTimeout(() => setIsOpen(false), 0);
-      if (isLimitationChecked && isOpen) {
-        handleConfigureLimitation();
-      }
-    }
-  });
 
   const {
     updateBucketLimitation,
@@ -115,45 +103,34 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     setIsDeleteHistoryConfirmationOpen(false);
   };
 
-  const handleOpen = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // If a checkbox gets clicked, and the popover is closed, the isOpen stays true for some reason and the popover doesn't open
-    // This is a workaround, how popover open state is handled needs to be rethinked
-    if (isOpen) {
-      setIsOpen(false);
-      setTimeout(() => setIsOpen(true), 0);
-    } else setIsOpen(true);
-  };
+  const handleOpen = () => setIsOpen(true);
 
   return (
-    <div ref={containerRef} className={`${styles.container} ${className || ""}`}>
+    <div className={`${styles.container} ${className || ""}`}>
       <Popover
         open={isOpen}
         contentProps={{className: styles.popoverContainer}}
         content={
           <FluidContainer
-            ref={contentRef}
             gap={0}
             direction="vertical"
             className={styles.popoverContent}
             alignment="leftTop"
             prefix={{
-              className: styles.openPopupButtonContainer,
+              className: styles.configureRulesContainer,
               children: (
-                <Button variant="text" className={styles.openPopupButton}>
-                  <Icon name="security" />
-                  <Text>Configure rules</Text>
-                </Button>
+                <FlexElement alignment="leftCenter" direction="vertical" gap={0}>
+                  <Button variant="text" onClick={() => setIsBucketRulesOpen(true)}>
+                    <Icon name="security" />
+                    <Text>Configure rules</Text>
+                  </Button>
+                </FlexElement>
               )
             }}
             root={{
+              className: styles.historyContainer,
               children: (
-                <FlexElement
-                  direction="vertical"
-                  alignment="leftTop"
-                  className={styles.historyContainer}
-                  gap={0}
-                >
+                <FlexElement direction="vertical" alignment="leftTop" gap={0}>
                   <Checkbox
                     label="History"
                     checked={isHistoryChecked}
@@ -167,7 +144,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                       onClick={() => setIsDeleteHistoryConfirmationOpen(true)}
                       className={styles.historyButton}
                     >
-                      <Icon name="delete" />
+                      <Icon name="delete" className={styles.danger} />
                       <Text>Remove History</Text>
                     </Button>
                   )}
@@ -180,10 +157,9 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                   gap={5}
                   direction="vertical"
                   alignment="leftTop"
-                  className={styles.limitationsContainer}
                 >
                   <Checkbox
-                    label="Limitation"
+                    label="Limitations"
                     checked={isLimitationChecked}
                     onChange={handleChangeLimitation}
                     className={styles.limitationsCheckbox}
@@ -235,6 +211,15 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           onConfirm={handleDeleteHistory}
           onCancel={handleCancelHistoryConfirmation}
           error={deleteHistoryError}
+        />
+      )}
+      {isBucketRulesOpen && (
+        <BucketRules
+          bucket={bucket}
+          onClose={() => {
+            setIsBucketRulesOpen(false);
+            setIsOpen(false);
+          }}
         />
       )}
     </div>
