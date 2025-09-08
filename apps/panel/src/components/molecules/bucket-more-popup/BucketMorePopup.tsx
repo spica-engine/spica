@@ -69,6 +69,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   };
 
   const handleConfigureLimitation = async () => {
+    if (!isLimitationChecked) return;
     const success = await updateBucketLimitationFields(
       bucket,
       bucketLimitationValues.countLimit,
@@ -92,23 +93,37 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     try {
       const result = await deleteBucketHistory(bucket);
       if (!result) return;
-      handleCancelHistoryConfirmation();
+      handleCloseHistoryConfirmation();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleCancelHistoryConfirmation = () => {
+  const handleOpen = () => setIsOpen(true);
+  const handleClose = () => {
+    setIsOpen(false);
+    handleConfigureLimitation();
+  };
+
+  const handleCloseBucketRules = () => {
+    setIsBucketRulesOpen(false);
+    handleClose();
+  };
+
+  const handleOpenBucketRules = () => setIsBucketRulesOpen(true);
+
+  const handleOpenDeleteHistoryConfirmation = () => setIsDeleteHistoryConfirmationOpen(true);
+
+  const handleCloseHistoryConfirmation = () => {
     setDeleteHistoryError(null);
     setIsDeleteHistoryConfirmationOpen(false);
   };
-
-  const handleOpen = () => setIsOpen(true);
 
   return (
     <div className={`${styles.container} ${className || ""}`}>
       <Popover
         open={isOpen}
+        onClose={handleClose}
         contentProps={{className: styles.popoverContainer}}
         content={
           <FluidContainer
@@ -120,7 +135,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
               className: styles.configureRulesContainer,
               children: (
                 <FlexElement alignment="leftCenter" direction="vertical" gap={0}>
-                  <Button variant="text" onClick={() => setIsBucketRulesOpen(true)}>
+                  <Button variant="text" onClick={handleOpenBucketRules}>
                     <Icon name="security" />
                     <Text>Configure rules</Text>
                   </Button>
@@ -141,7 +156,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
                   {isHistoryChecked && (
                     <Button
                       variant="text"
-                      onClick={() => setIsDeleteHistoryConfirmationOpen(true)}
+                      onClick={handleOpenDeleteHistoryConfirmation}
                       className={styles.historyButton}
                     >
                       <Icon name="delete" className={styles.danger} />
@@ -153,11 +168,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
             }}
             suffix={{
               children: (
-                <FlexElement
-                  gap={5}
-                  direction="vertical"
-                  alignment="leftTop"
-                >
+                <FlexElement gap={5} direction="vertical" alignment="leftTop">
                   <Checkbox
                     label="Limitations"
                     checked={isLimitationChecked}
@@ -209,19 +220,11 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           confirmCondition={input => input === "Delete History"}
           loading={deleteBucketHistoryLoading}
           onConfirm={handleDeleteHistory}
-          onCancel={handleCancelHistoryConfirmation}
+          onCancel={handleCloseHistoryConfirmation}
           error={deleteHistoryError}
         />
       )}
-      {isBucketRulesOpen && (
-        <BucketRules
-          bucket={bucket}
-          onClose={() => {
-            setIsBucketRulesOpen(false);
-            setIsOpen(false);
-          }}
-        />
-      )}
+      {isBucketRulesOpen && <BucketRules bucket={bucket} onClose={handleCloseBucketRules} />}
     </div>
   );
 };
