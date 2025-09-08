@@ -9,7 +9,7 @@
   gap: 0 !important;
   .item {
     color: var(--color-font-primary);
-    padding: 0 8px;
+    padding: 0 calc(var(--padding-md) - var(--padding-xs));
     cursor: pointer;
     height: 20px !important;
   }

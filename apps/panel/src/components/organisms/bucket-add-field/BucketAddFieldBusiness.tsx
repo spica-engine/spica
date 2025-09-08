@@ -130,12 +130,12 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     [type, formValues.fieldValues.arrayType]
   );
 
-  const defaultProperty = useMemo(
+  const defaultInputProperty = useMemo(
     () => defaultConfig[type as keyof typeof defaultConfig] || {},
     [type]
   );
 
-  const inputProperties = useMemo(
+  const mainFormInputProperties = useMemo(
     () => ({
       ...schema,
       ...(type === "relation" && {
@@ -158,7 +158,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     }));
   }, [type, initialValues?.configurationValues, innerFieldExists]);
 
-  const configFields = useMemo(
+  const configurationInputProperties = useMemo(
     () => configurationMapping[type as keyof typeof configurationMapping],
     [type]
   );
@@ -168,8 +168,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     setFormValues(prev => ({
       ...prev,
       fieldValues: {...defaultFieldValues},
-      configurationValues: {...getDefaultValues(configFields, initialValues?.configurationValues)},
-      defaultValue: {...getDefaultValues(defaultProperty, initialValues?.fieldValues)},
+      configurationValues: {
+        ...getDefaultValues(configurationInputProperties, initialValues?.configurationValues)
+      },
+      defaultValue: {...getDefaultValues(defaultInputProperty, initialValues?.fieldValues)},
       presetValues: type === "string" ? DEFAULT_PRESET_VALUES : prev.presetValues,
       type,
       ...initialValues
@@ -324,7 +326,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
         errorSection: "presetValues"
       });
     });
-    Object.entries(configFields || {}).forEach(([key, schemaItem]) => {
+    Object.entries(configurationInputProperties || {}).forEach(([key, schemaItem]) => {
       validateSingleSchemaItem({
         key,
         schemaItem,
@@ -332,7 +334,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
         errorSection: "configurationValues"
       });
     });
-    Object.entries(defaultProperty || {}).forEach(([key, schemaItem]) => {
+    Object.entries(defaultInputProperty || {}).forEach(([key, schemaItem]) => {
       validateSingleSchemaItem({
         key,
         schemaItem,
@@ -422,7 +424,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     return sortedA.every((val, i) => val === sortedB[i]);
   }
 
-  // We explicitly provide field values here because inputProperties can change
+  // We explicitly provide field values here because mainFormInputProperties can change
   // without formValues.fieldValues being updated. Without this, useInputRepresenter
   // may throw an error due to a mismatch between the provided values and the
   // expected property values. this can happen when switching between field types
@@ -447,9 +449,9 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       formErrors={formErrors}
       error={(apiError || formErrors?.innerFields) ?? null}
       // Schema and configuration
-      inputProperties={inputProperties}
-      configFields={configFields}
-      defaultProperty={defaultProperty}
+      mainFormInputProperties={mainFormInputProperties}
+      configurationInputProperties={configurationInputProperties}
+      defaultInputProperty={defaultInputProperty}
       // State
       isLoading={isLoading}
       innerFieldExists={innerFieldExists}

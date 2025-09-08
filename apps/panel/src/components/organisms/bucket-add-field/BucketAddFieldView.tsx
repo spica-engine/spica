@@ -108,9 +108,9 @@ type BucketAddFieldViewProps = {
   error: string | null;
 
   // Schema and configuration
-  inputProperties: Record<string, any>;
-  configFields: Record<string, any>;
-  defaultProperty: Record<string, any>;
+  mainFormInputProperties: Record<string, any>;
+  configurationInputProperties: Record<string, any>;
+  defaultInputProperty: Record<string, any>;
 
   // State
   isLoading: boolean;
@@ -136,9 +136,9 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   formValues,
   formErrors,
   error,
-  inputProperties,
-  configFields,
-  defaultProperty,
+  mainFormInputProperties,
+  configurationInputProperties,
+  defaultInputProperty,
   isLoading,
   innerFieldExists,
   setFormValues,
@@ -158,16 +158,16 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       return {...prev, [formValuesAttribute]: values};
     });
 
-  const inputRepresenter = useInputRepresenter({
-    properties: inputProperties,
+  const mainFormInputs = useInputRepresenter({
+    properties: mainFormInputProperties,
     value: formValues.fieldValues,
     onChange: values => handleFormValueChange(values, "fieldValues"),
     error: formErrors.fieldValues ?? {},
     errorClassName: styles.error
   });
 
-  const configuration = useInputRepresenter({
-    properties: configFields,
+  const configurationInputs = useInputRepresenter({
+    properties: configurationInputProperties,
     value: formValues.configurationValues,
     onChange: values => handleFormValueChange(values, "configurationValues"),
     error: formErrors.configurationValues ?? {},
@@ -175,14 +175,14 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   });
 
   const defaultInput = useInputRepresenter({
-    properties: defaultProperty,
+    properties: defaultInputProperty,
     value: formValues.defaultValue,
     onChange: values => handleFormValueChange(values, "defaultValue"),
     error: formErrors.defaultValue ?? {},
     errorClassName: styles.error
   });
 
-  const presetsRepresenter = useInputRepresenter({
+  const presetInputs = useInputRepresenter({
     properties: presetProperties as unknown as Property,
     value: formValues.presetValues,
     onChange: values => handleFormValueChange(values, "presetValues"),
@@ -231,7 +231,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     }
 
     if (formValues.type === "string") {
-      createConfig("Presets", <div className={styles.presetsContainer}>{presetsRepresenter}</div>);
+      createConfig("Presets", <div className={styles.presetsContainer}>{presetInputs}</div>);
     }
 
     if (
@@ -250,13 +250,13 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       createConfig("Default", defaultInput as unknown as JSX.Element);
     }
 
-    createConfig("Configuration", <div className={styles.configuration}>{configuration}</div>);
+    createConfig("Configuration", <div className={styles.configuration}>{configurationInputs}</div>);
     return items;
   }, [
     formValues.type,
     innerFieldExists,
-    configuration,
-    presetsRepresenter,
+    configurationInputs,
+    presetInputs,
     formValues.innerFields,
     defaultInput,
     forbiddenInnerFieldNames
@@ -300,8 +300,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
         suffix={{children: iconName && <Icon name={iconName} />}}
       />
 
-      {/* Main Form Fields */}
-      {inputRepresenter}
+      {mainFormInputs}
 
       {/* Tabs Navigation */}
       {tabItems.length > 0 && (

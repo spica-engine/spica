@@ -9,9 +9,9 @@ export function BucketFieldPopupsProvider({children}: {children: ReactNode}) {
   const [bucketFieldPopups, setBucketFieldPopups] = useState<string[]>([]);
 
   return (
-    <BucketFieldPopupsContext.Provider value={{bucketFieldPopups, setBucketFieldPopups}}>
+    <BucketFieldPopupsContext value={{bucketFieldPopups, setBucketFieldPopups}}>
       {children}
-    </BucketFieldPopupsContext.Provider>
+    </BucketFieldPopupsContext>
   );
 }
 

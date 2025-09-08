@@ -1,4 +1,4 @@
-import {Button, Checkbox, Icon, type IconName, type TypeInputType} from "oziko-ui-kit";
+import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
@@ -103,23 +103,23 @@ const NewFieldHeader = memo(() => {
     () => buckets.find(i => i._id === bucketData?.bucketId),
     [buckets, bucketData?.bucketId]
   );
-
   const handleSaveAndClose = useCallback(
     (values: FormValues) => {
       if (!bucket) return;
-      const fieldProperty = createFieldProperty(values);
-      const requiredField = values.configurationValues.requiredField
-        ? values.fieldValues.title
-        : undefined;
-      const primaryField = values.configurationValues.primaryField
-        ? values.fieldValues.title
-        : undefined;
 
-      return createBucketField(bucket, fieldProperty, requiredField, primaryField);
+      const fieldProperty = createFieldProperty(values);
+      const {requiredField, primaryField} = values.configurationValues;
+      const {title} = values.fieldValues;
+
+      return createBucketField(
+        bucket,
+        fieldProperty,
+        requiredField ? title : undefined,
+        primaryField ? title : undefined
+      );
     },
     [bucket, createBucketField]
   );
-
   const forbiddenFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket]);
 
   return (
