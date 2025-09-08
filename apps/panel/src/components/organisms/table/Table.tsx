@@ -105,6 +105,7 @@ type CellEditPayload = {
   };
   columnId: string;
   rowId: string;
+  setCellValue: (value: any) => void;
 };
 
 type CellEditStartEvent = CustomEvent<CellEditPayload>;
@@ -427,6 +428,7 @@ const Table: FC<TypeTable> = ({
             title={cellEditPayload.title}
             constraints={cellEditPayload.constraints}
             onCellSave={handleCellSave}
+            setCellValue={cellEditPayload.setCellValue}
             cellRef={cellEditPayload.ref}
             onClose={() => setCellEditPayload(null)}
             updateCellDataError={updateCellDataError ?? null}
@@ -689,6 +691,7 @@ type EditCellPopoverProps = {
     properties?: Properties;
   };
   updateCellDataError: string | null;
+  setCellValue: (value: any) => void;
 };
 
 const DEFAULT_VALUES: Record<FieldType, any> = {
@@ -714,7 +717,8 @@ const EditCellPopover = ({
   onCellSave,
   onClose,
   cellRef,
-  updateCellDataError
+  updateCellDataError,
+  setCellValue
 }: EditCellPopoverProps) => {
   const createInitialObject = () => {
     const initialObject: Record<string, any> = {};
@@ -734,9 +738,14 @@ const EditCellPopover = ({
     value: type === "object" ? createInitialObject() : !value ? DEFAULT_VALUES[type] : value
   });
 
-  const [cellValue, setCellValue] = useState(getInitialValue);
+  const [inputValue, setInputValue] = useState(getInitialValue);
   const [error, setError] = useState<TypeInputRepresenterError>();
   const [isOpen, setIsOpen] = useState(true);
+
+  const handleInputChange = (newValue: any) => {
+    setInputValue(newValue);
+    setCellValue(newValue.value);
+  }
 
   const properties = useMemo(
     () => ({
@@ -756,24 +765,24 @@ const EditCellPopover = ({
 
   const input = useInputRepresenter({
     properties: properties as TypeProperties,
-    value: cellValue,
-    onChange: setCellValue,
+    value: inputValue,
+    onChange: handleInputChange,
     error: error,
     errorClassName: styles.inputError
   });
 
   const handleClose = () => {
-    setCellValue(getInitialValue());
+    handleInputChange(getInitialValue());
     setIsOpen(false);
     onClose();
   };
 
   useEffect(() => {
     if (!error) return;
-    const errors = validateInput(cellValue, constraints);
+    const errors = validateInput(inputValue, constraints);
     if (Object.keys(errors).length === 0 && updateCellDataError === error.value) return;
     setError(errors);
-  }, [cellValue.value]);
+  }, [inputValue.value]);
 
   const validateInput = useCallback(
     (
@@ -831,19 +840,19 @@ const EditCellPopover = ({
   );
 
   useEffect(() => {
-    setCellValue(getInitialValue());
+    handleInputChange(getInitialValue());
   }, [value]);
 
   useEffect(() => {
     const handleEnter = (event: KeyboardEvent) => {
       if (event.key !== "Enter" || event.shiftKey) return;
-      const errors = validateInput(cellValue, constraints);
+      const errors = validateInput(inputValue, constraints);
       if (Object.keys(errors).length > 0) {
         setError(errors);
         return;
       }
 
-      onCellSave(cellValue.value).then(result => {
+      onCellSave(inputValue.value).then(result => {
         if (!result) return;
         handleClose();
       });
@@ -853,7 +862,7 @@ const EditCellPopover = ({
     return () => {
       window.removeEventListener("keydown", handleEnter);
     };
-  }, [cellValue]);
+  }, [inputValue]);
 
   const popoverContentRef = useRef<HTMLDivElement | null>(null);
   const {targetPosition, calculatePosition} = useAdaptivePosition({
@@ -894,6 +903,7 @@ const EditableCell = memo(
     ...props
   }: TypeEditableCell) => {
     const ref = useRef<HTMLTableCellElement | null>(null);
+    const [cellValue, setCellValue] = useState(value);
     const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
       props?.onClick?.(e);
       const cellEditStartEvent: CellEditStartEvent = new CustomEvent("cellEditStart", {
@@ -904,7 +914,11 @@ const EditableCell = memo(
           constraints,
           ref,
           columnId,
-          rowId
+          rowId,
+          setCellValue: (value) => {
+            console.log('setCellValue called with', value);
+            setCellValue(value);
+          } 
         }
       });
       window.dispatchEvent(cellEditStartEvent);
@@ -918,8 +932,7 @@ const EditableCell = memo(
         style={{left: leftOffset}}
         ref={ref}
       >
-        {renderCell(value, type, deletable)}
-        {/* {renderCell(isEditOpen && type !== "object" ? cellValue.value : value, type, deletable)} */}
+        {renderCell(cellValue, type, deletable)}
       </td>
     );
   }
