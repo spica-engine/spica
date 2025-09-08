@@ -12,7 +12,15 @@ import React, {
   useRef,
   useState
 } from "react";
-import {Button, Checkbox, FlexElement, Icon, useInputRepresenter, Popover} from "oziko-ui-kit";
+import {
+  Button,
+  Checkbox,
+  FlexElement,
+  Icon,
+  useInputRepresenter,
+  Popover,
+  useAdaptivePosition
+} from "oziko-ui-kit";
 import styles from "./Table.module.scss";
 import InfiniteScroll from "react-infinite-scroll-component";
 import useScrollDirectionLock from "../../../hooks/useScrollDirectionLock";
@@ -20,8 +28,10 @@ import Loader from "../../../components/atoms/loader/Loader";
 import type {
   TypeArrayItems,
   TypeInputRepresenterError,
-  TypeInputTypeMap
+  TypeInputTypeMap,
+  TypeProperties
 } from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {Properties} from "src/services/bucketService";
 
 export type FieldType =
   | "string"
@@ -57,6 +67,7 @@ type TypeDataColumn = {
   items?: TypeArrayItems;
   minItems?: number;
   maxItems?: number;
+  properties?: Properties;
 };
 
 type TypeTableData = {
@@ -74,65 +85,31 @@ type TypeTable = {
   totalDataLength?: number;
   style?: React.CSSProperties;
   tableRef?: RefObject<HTMLElement | null>;
-  onCellSave?: (value: any, columnName: string, rowId: string) => void;
+  onCellSave?: (value: any, columnName: string, rowId: string) => Promise<any>;
+  updateCellDataError?: string | null;
 };
 
-const MIN_COLUMN_WIDTH = 140;
-
-function extractTextFromReactNode(value: ReactNode | string): string {
-  const extractText = (node: ReactNode): string[] => {
-    if (node == null || typeof node === "boolean") {
-      return [];
-    }
-
-    if (typeof node === "string") {
-      return [node];
-    }
-
-    if (typeof node === "number") {
-      return [node.toString()];
-    }
-
-    if (Array.isArray(node)) {
-      return node.flatMap(extractText);
-    }
-
-    if (React.isValidElement(node)) {
-      if (node.type === React.Fragment) {
-        const props = (node as React.ReactElement).props;
-        if (props && typeof props === "object" && "children" in props) {
-          return extractText(props.children as ReactNode);
-        }
-        return [];
-      }
-
-      if (
-        typeof node === "object" &&
-        node !== null &&
-        "props" in node &&
-        typeof (node as any).props === "object" &&
-        (node as any).props &&
-        "children" in (node as any).props &&
-        (node as any).props.children != null
-      ) {
-        return extractText((node as any).props.children);
-      }
-
-      return [];
-    }
-
-    if (typeof node === "object" && node !== null) {
-      const obj = node as any;
-      if (obj.props && obj.props.children) {
-        return extractText(obj.props.children);
-      }
-    }
-
-    return [];
+type CellEditPayload = {
+  ref: RefObject<HTMLElement | null>;
+  value: any;
+  type: FieldType;
+  title: string;
+  constraints?: {
+    pattern?: string;
+    minimum?: number;
+    maximum?: number;
+    minItems?: number;
+    maxItems?: number;
+    items?: TypeArrayItems;
+    properties?: Properties;
   };
+  columnId: string;
+  rowId: string;
+};
 
-  return extractText(value).join("");
-}
+type CellEditStartEvent = CustomEvent<CellEditPayload>;
+
+const MIN_COLUMN_WIDTH = 140;
 
 // TODO: Refactor this function to render more appropriate UI elements for each field type.
 // Many field types are currently using the generic `renderDefault()`.
@@ -309,7 +286,8 @@ const Table: FC<TypeTable> = ({
   totalDataLength,
   style,
   onCellSave,
-  tableRef
+  tableRef,
+  updateCellDataError
 }) => {
   const containerRef = useScrollDirectionLock();
   useImperativeHandle(tableRef, () => containerRef.current as HTMLElement);
@@ -383,17 +361,12 @@ const Table: FC<TypeTable> = ({
     };
   }, [focusedCell]);
 
-  useEffect(() => {
-    const handleEnter = (event: KeyboardEvent) => {
-      if (event.key !== "Enter" || event.shiftKey) return;
-      const cellChangeEvent = new CustomEvent("cellChangeEvent");
-      window.dispatchEvent(cellChangeEvent);
-    };
-    window.addEventListener("keydown", handleEnter);
+  const [cellEditPayload, setCellEditPayload] = useState<CellEditPayload | null>(null);
 
-    return () => {
-      window.removeEventListener("keydown", handleEnter);
-    };
+  useEffect(() => {
+    const handler = (event: CustomEvent<CellEditPayload>) => setCellEditPayload(event.detail);
+    window.addEventListener("cellEditStart", handler as EventListener);
+    return () => window.removeEventListener("cellEditStart", handler as EventListener);
   }, []);
 
   // Calculate total table width to ensure fixed layout works properly
@@ -402,6 +375,16 @@ const Table: FC<TypeTable> = ({
       return total + parseWidth(col.width || "0", 0);
     }, 0);
   }, [formattedColumns]);
+
+  const handleCellSave = useCallback(
+    (value: any) =>
+      onCellSave?.(
+        value,
+        (cellEditPayload as CellEditPayload).columnId,
+        (cellEditPayload as CellEditPayload).rowId
+      ),
+    [cellEditPayload, onCellSave]
+  ) as (value: any) => Promise<any>;
 
   return (
     <>
@@ -432,12 +415,23 @@ const Table: FC<TypeTable> = ({
                   focusedCell={focusedCell}
                   handleCellClick={handleCellClick}
                   data={data}
-                  onCellSave={onCellSave}
                 />
               )}
             </tbody>
           </table>
         </InfiniteScroll>
+        {onCellSave && cellEditPayload && (
+          <EditCellPopover
+            value={cellEditPayload.value}
+            type={cellEditPayload.type}
+            title={cellEditPayload.title}
+            constraints={cellEditPayload.constraints}
+            onCellSave={handleCellSave}
+            cellRef={cellEditPayload.ref}
+            onClose={() => setCellEditPayload(null)}
+            updateCellDataError={updateCellDataError ?? null}
+          />
+        )}
       </div>
       {!data.length && <div className={styles.noDataText}>No Data Found</div>}
     </>
@@ -540,7 +534,7 @@ const HeaderCell = memo(
         style={{left: leftOffset}}
       >
         <FlexElement dimensionX="fill" alignment="leftCenter" className={styles.headerContent}>
-          {children}
+          {children as any}
         </FlexElement>
         {resizable && (
           <div
@@ -558,97 +552,94 @@ type RowsProps = {
   focusedCell: {row: number; column: string} | null;
   handleCellClick: (columnKey: string, index: number) => void;
   data: TypeTableData[];
-  onCellSave?: (value: any, columnName: string, rowId: string) => void;
 };
 
-const Rows = memo(
-  ({data, formattedColumns, focusedCell, handleCellClick, onCellSave}: RowsProps) => {
-    const rowCacheRef = useRef<
-      Map<string, {element: JSX.Element; lastFocusedCell: string | null; rowContentString: string}>
-    >(new Map());
-    const rows: JSX.Element[] = [];
+const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsProps) => {
+  const rowCacheRef = useRef<
+    Map<string, {element: JSX.Element; lastFocusedCell: string | null; rowContentString: string}>
+  >(new Map());
+  const rows: JSX.Element[] = [];
 
-    for (let index = 0; index < data.length; index++) {
-      const row = data[index];
-      // If a cell is changed, we need to re-render the row
-      const rowContentString = formattedColumns
-        .map(column => JSON.stringify(row[column.key]?.value))
-        .join("-");
-      const rowId = row[Object.keys(row)[0]].id;
-      const missingCellData = formattedColumns.some(column => !row[column.key]);
-      if (missingCellData) continue;
+  for (let index = 0; index < data.length; index++) {
+    const row = data[index];
+    // If a cell is changed, we need to re-render the row
+    const rowContentString = formattedColumns
+      .map(column => JSON.stringify(row[column.key]?.value))
+      .join("-");
+    const rowId = row[Object.keys(row)[0]].id;
+    const missingCellData = formattedColumns.some(column => !row[column.key]);
+    if (missingCellData) continue;
 
-      const focusedKey = focusedCell ? `${focusedCell.row}-${focusedCell.column}` : null;
-      const cached = rowCacheRef.current.get(rowId);
+    const focusedKey = focusedCell ? `${focusedCell.row}-${focusedCell.column}` : null;
+    const cached = rowCacheRef.current.get(rowId);
 
-      const isFocusedInThisRow = focusedCell?.row === index;
+    const isFocusedInThisRow = focusedCell?.row === index;
 
-      if (
-        cached &&
-        cached.rowContentString === rowContentString &&
-        !isFocusedInThisRow &&
-        (!focusedKey || cached.lastFocusedCell === focusedKey)
-      ) {
-        rows.push(cached.element);
-        continue;
-      }
-
-      const cells = formattedColumns.map(column => {
-        const cellData = row[column.key];
-
-        const props = {
-          onClick: () => column.selectable !== false && handleCellClick(column.key, index),
-          className: `${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`,
-          leftOffset: column.leftOffset,
-          value: cellData.value,
-          type: column.type ?? "string",
-          deletable: column.deletable
-        };
-
-        console.log("items: ", column.items);
-        return column.selectable !== false ? (
-          <EditableCell
-            key={cellData.id}
-            {...props}
-            type={column.type ?? "string"}
-            focused={focusedCell?.row === index && focusedCell?.column === column.key}
-            title={column.title ?? "Value"}
-            onCellSave={value => onCellSave?.(value, column.key as string, rowId.split("-")[1])}
-            constraints={{
-              pattern: column.pattern,
-              minimum: column.minimum,
-              maximum: column.maximum,
-              maxItems: column.maxItems,
-              minItems: column.minItems,
-              items: column.items
-            }}
-          />
-        ) : (
-          <Cell key={cellData.id} {...props} />
-        );
-      });
-
-      const rowElement = <tr key={rowId}>{cells}</tr>;
-      rowCacheRef.current.set(rowId, {
-        rowContentString,
-        element: rowElement,
-        lastFocusedCell: focusedKey
-      });
-      rows.push(rowElement);
+    if (
+      cached &&
+      cached.rowContentString === rowContentString &&
+      !isFocusedInThisRow &&
+      (!focusedKey || cached.lastFocusedCell === focusedKey)
+    ) {
+      rows.push(cached.element);
+      continue;
     }
 
-    useEffect(() => {
-      const currentBaseIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
-      for (const cachedBaseId of rowCacheRef.current.keys()) {
-        if (!currentBaseIds.has(cachedBaseId)) {
-          rowCacheRef.current.delete(cachedBaseId);
-        }
-      }
-    }, [data]);
+    const cells = formattedColumns.map(column => {
+      const cellData = row[column.key];
 
-    return <>{rows}</>;
+      const props = {
+        onClick: () => column.selectable !== false && handleCellClick(column.key, index),
+        className: `${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`,
+        leftOffset: column.leftOffset,
+        value: cellData.value,
+        type: column.type ?? "string",
+        deletable: column.deletable
+      };
+
+      return column.selectable !== false ? (
+        <EditableCell
+          key={cellData.id}
+          {...props}
+          type={column.type ?? "string"}
+          focused={focusedCell?.row === index && focusedCell?.column === column.key}
+          title={column.title ?? "Value"}
+          columnId={column.key}
+          rowId={rowId.split("-")[1]}
+          constraints={{
+            pattern: column.pattern,
+            minimum: column.minimum,
+            maximum: column.maximum,
+            maxItems: column.maxItems,
+            minItems: column.minItems,
+            items: column.items
+          }}
+        />
+      ) : (
+        <Cell key={cellData.id} {...props} />
+      );
+    });
+
+    const rowElement = <tr key={rowId}>{cells}</tr>;
+    rowCacheRef.current.set(rowId, {
+      rowContentString,
+      element: rowElement,
+      lastFocusedCell: focusedKey
+    });
+    rows.push(rowElement);
   }
-);
+
+  useEffect(() => {
+    const currentBaseIds = new Set(data.map(row => row[Object.keys(row)[0]].id));
+    for (const cachedBaseId of rowCacheRef.current.keys()) {
+      if (!currentBaseIds.has(cachedBaseId)) {
+        rowCacheRef.current.delete(cachedBaseId);
+      }
+    }
+  }, [data]);
+
+  return <>{rows}</>;
+});
 
 type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
   leftOffset?: number;
@@ -668,7 +659,6 @@ const Cell = memo(({value, type, deletable, leftOffset, ...props}: TypeCell) => 
 type TypeEditableCell = TypeCell & {
   focused?: boolean;
   title: string;
-  onCellSave?: (value: any) => void;
   constraints?: {
     pattern?: string;
     minimum?: number;
@@ -676,7 +666,29 @@ type TypeEditableCell = TypeCell & {
     minItems?: number;
     maxItems?: number;
     items?: TypeArrayItems;
+    properties?: Properties;
   };
+  columnId: string;
+  rowId: string;
+};
+
+type EditCellPopoverProps = {
+  onCellSave: (value: any) => Promise<any>;
+  onClose: () => void;
+  cellRef: RefObject<HTMLElement | null>;
+  type: FieldType;
+  value: any;
+  title: string;
+  constraints?: {
+    pattern?: string;
+    minimum?: number;
+    maximum?: number;
+    minItems?: number;
+    maxItems?: number;
+    items?: TypeArrayItems;
+    properties?: Properties;
+  };
+  updateCellDataError: string | null;
 };
 
 const DEFAULT_VALUES: Record<FieldType, any> = {
@@ -694,54 +706,77 @@ const DEFAULT_VALUES: Record<FieldType, any> = {
   richtext: ""
 };
 
-const EditableCell = memo(
-  ({
-    value,
-    type,
-    deletable,
-    title,
-    focused,
-    leftOffset,
-    onCellSave,
-    constraints = {},
-    ...props
-  }: TypeEditableCell) => {
-    const getInitialValue = () => ({value: !value ? DEFAULT_VALUES[type] : value});
+const EditCellPopover = ({
+  value,
+  type,
+  title,
+  constraints = {},
+  onCellSave,
+  onClose,
+  cellRef,
+  updateCellDataError
+}: EditCellPopoverProps) => {
+  const createInitialObject = () => {
+    const initialObject: Record<string, any> = {};
 
-    const [cellValue, setCellValue] = useState(getInitialValue);
-    const [error, setError] = useState<TypeInputRepresenterError>();
-    const [isEditOpen, setIsEditOpen] = useState(false);
-    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-      props?.onClick?.(e);
-      setIsEditOpen(true);
-    };
-
-    const input = useInputRepresenter({
-      properties: {
-        value: {
-          type: (type === "relation" ? "string" : type) as keyof TypeInputTypeMap,
-          title,
-          items: constraints?.items
-        }
-      },
-      value: cellValue,
-      onChange: setCellValue,
-      error,
-      errorClassName: styles.inputError
+    Object.values(constraints?.properties || {}).forEach(property => {
+      if (property.type === "object") {
+        initialObject[property.title] = createInitialObject();
+      } else {
+        initialObject[property.title] = DEFAULT_VALUES[property.type as FieldType] ?? null;
+      }
     });
 
-    const handleClose = () => {
-      setIsEditOpen(false);
-      setCellValue(getInitialValue());
-    };
+    return initialObject;
+  };
 
-    useEffect(() => {
-      if (!error) return;
-      const errors = validateInput(cellValue, constraints);
-      setError(errors);
-    }, [cellValue.value]);
+  const getInitialValue = () => ({
+    value: type === "object" ? createInitialObject() : !value ? DEFAULT_VALUES[type] : value
+  });
 
-    const validateInput = (
+  const [cellValue, setCellValue] = useState(getInitialValue);
+  const [error, setError] = useState<TypeInputRepresenterError>();
+  const [isOpen, setIsOpen] = useState(true);
+
+  const properties = useMemo(
+    () => ({
+      value: {
+        type: (type === "relation" ? "string" : type) as keyof TypeInputTypeMap,
+        title,
+        items: constraints.properties || constraints?.items
+      }
+    }),
+    [type, title, constraints]
+  );
+
+  useEffect(() => {
+    if (!updateCellDataError) return;
+    setError({value: updateCellDataError});
+  }, [updateCellDataError]);
+
+  const input = useInputRepresenter({
+    properties: properties as TypeProperties,
+    value: cellValue,
+    onChange: setCellValue,
+    error: error,
+    errorClassName: styles.inputError
+  });
+
+  const handleClose = () => {
+    setCellValue(getInitialValue());
+    setIsOpen(false);
+    onClose();
+  };
+
+  useEffect(() => {
+    if (!error) return;
+    const errors = validateInput(cellValue, constraints);
+    if (Object.keys(errors).length === 0 && updateCellDataError === error.value) return;
+    setError(errors);
+  }, [cellValue.value]);
+
+  const validateInput = useCallback(
+    (
       values: {[key: string]: any},
       constraints: {
         pattern?: string;
@@ -750,12 +785,16 @@ const EditableCell = memo(
         minItems?: number;
         maxItems?: number;
         items?: TypeArrayItems;
-      }
+        properties?: Properties; // innerProperties
+      },
+      givenProperties?: Properties
     ) => {
       const {pattern, minimum, maximum, minItems, maxItems, items} = constraints;
+      const propertiesToUse = givenProperties || properties;
       const errors: TypeInputRepresenterError = {};
       Object.keys(values).forEach(key => {
         const value = values[key];
+        const type = (propertiesToUse as Properties)[key]?.type;
         if (pattern) {
           const isValid = new RegExp(pattern).test(value);
           if (!isValid) {
@@ -775,7 +814,11 @@ const EditableCell = memo(
           errors[key] = `This field must be at least ${minItems} items`;
           return false;
         } else if (type === "object" || type === "array") {
-          const nestedErrors = validateInput(value, items as typeof constraints);
+          const nestedErrors = validateInput(
+            value,
+            (items || constraints.properties) as typeof constraints,
+            constraints.properties
+          );
           if (nestedErrors && Object.keys(nestedErrors).length > 0) {
             errors[key] = nestedErrors;
           }
@@ -783,29 +826,89 @@ const EditableCell = memo(
       });
 
       return errors;
+    },
+    []
+  );
+
+  useEffect(() => {
+    setCellValue(getInitialValue());
+  }, [value]);
+
+  useEffect(() => {
+    const handleEnter = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" || event.shiftKey) return;
+      const errors = validateInput(cellValue, constraints);
+      if (Object.keys(errors).length > 0) {
+        setError(errors);
+        return;
+      }
+
+      onCellSave(cellValue.value).then(result => {
+        if (!result) return;
+        handleClose();
+      });
     };
+    window.addEventListener("keydown", handleEnter);
 
-    useEffect(() => {
-      const eventListener = () => {
-        const errors = validateInput(cellValue, constraints);
-        if (!isEditOpen || !Object.keys(errors).length) {
-          setError(errors);
-          return;
+    return () => {
+      window.removeEventListener("keydown", handleEnter);
+    };
+  }, [cellValue]);
+
+  const popoverContentRef = useRef<HTMLDivElement | null>(null);
+  const {targetPosition, calculatePosition} = useAdaptivePosition({
+    containerRef: cellRef,
+    targetRef: popoverContentRef,
+    initialPlacement: "bottomStart"
+  });
+
+  useLayoutEffect(() => {
+    if (isOpen) {
+      calculatePosition();
+    }
+  }, [isOpen, calculatePosition]);
+
+  return (
+    <Popover
+      containerProps={{ref: popoverContentRef}}
+      contentProps={{style: targetPosition ?? undefined}}
+      open={isOpen}
+      onClose={handleClose}
+      content={input}
+      portalClassName={styles.inputPopover}
+    />
+  );
+};
+
+const EditableCell = memo(
+  ({
+    value,
+    type,
+    deletable,
+    title,
+    focused,
+    leftOffset,
+    constraints = {},
+    columnId,
+    rowId,
+    ...props
+  }: TypeEditableCell) => {
+    const ref = useRef<HTMLTableCellElement | null>(null);
+    const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
+      props?.onClick?.(e);
+      const cellEditStartEvent: CellEditStartEvent = new CustomEvent("cellEditStart", {
+        detail: {
+          value,
+          type,
+          title,
+          constraints,
+          ref,
+          columnId,
+          rowId
         }
-        onCellSave?.(cellValue.value);
-      };
-
-      window.addEventListener("cellChangeEvent", eventListener);
-      return () => window.removeEventListener("cellChangeEvent", eventListener);
-    }, [isEditOpen, title, cellValue.value, onCellSave]);
-
-    useEffect(() => {
-      setCellValue(getInitialValue());
-    }, [value]);
-
-    useEffect(() => {
-      setIsEditOpen(Boolean(focused));
-    }, [focused]);
+      });
+      window.dispatchEvent(cellEditStartEvent);
+    };
 
     return (
       <td
@@ -813,15 +916,10 @@ const EditableCell = memo(
         onClick={handleClick}
         className={`${styles.cell} ${styles.selectableCell} ${focused ? styles.focusedCell : ""} ${props.className || ""}`}
         style={{left: leftOffset}}
+        ref={ref}
       >
-        <Popover
-          open={isEditOpen}
-          onClose={handleClose}
-          content={input}
-          portalClassName={styles.inputPopover}
-        >
-          {renderCell(isEditOpen ? cellValue.value : value, type, deletable)}
-        </Popover>
+        {renderCell(value, type, deletable)}
+        {/* {renderCell(isEditOpen && type !== "object" ? cellValue.value : value, type, deletable)} */}
       </td>
     );
   }

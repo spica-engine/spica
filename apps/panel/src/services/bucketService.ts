@@ -18,7 +18,7 @@ export type BucketType = {
   [key: string]: any;
 };
 
-type Properties = {[key: string]: Property};
+export type Properties = {[key: string]: Property};
 
 type Property =
   | BasicProperty
@@ -105,7 +105,7 @@ export const useBucketService = () => {
 
   const {request: patchRequest} = useApi({endpoint: "/api/bucket", method: "patch"});
 
-  const {request: updateCellData} = useApi({endpoint: "", method: "patch"});
+  const {request: updateCellData, error: apiUpdateCellDataError} = useApi({endpoint: "", method: "patch"});
 
   const {request: deleteRequest} = useApi({
     endpoint: "",
@@ -254,6 +254,7 @@ export const useBucketService = () => {
     apiUpdateBucketRuleError,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
-    apiDeleteBucketHistoryError
+    apiDeleteBucketHistoryError,
+    apiUpdateCellDataError
   };
 };

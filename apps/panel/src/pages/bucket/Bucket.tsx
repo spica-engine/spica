@@ -56,7 +56,8 @@ export default function Bucket() {
     loadMoreBucketData,
     bucketDataLoading,
     refreshBucketData,
-    updateCellData
+    updateCellData,
+    updateCellDataError,
   } = useBucket();
 
   useEffect(() => {
@@ -112,10 +113,6 @@ export default function Bucket() {
     setRefreshLoading(false);
   }, [bucketId, refreshBucketData]);
 
-  const handleCellSave = (value: any, columnName: string, rowId: string) => {
-    updateCellData(value, columnName, rowId);
-  };
-
   if (formattedColumns.length <= 1 || !bucket) {
     return <Loader />;
   }
@@ -132,7 +129,8 @@ export default function Bucket() {
       handleRefresh={handleRefresh}
       refreshLoading={refreshLoading}
       tableRef={tableRef}
-      handleCellSave={handleCellSave}
+      handleCellSave={updateCellData}
+      updateCellDataError={updateCellDataError}
     />
   );
 }
@@ -148,7 +146,8 @@ type BucketWithVisibleColumnsProps = {
   handleRefresh: () => Promise<void>;
   refreshLoading: boolean;
   tableRef: React.RefObject<HTMLElement | null>;
-  handleCellSave: (value: any, columnName: string, rowId: string) => void;
+  handleCellSave: (value: any, columnName: string, rowId: string) => Promise<any>;
+  updateCellDataError: string | null;
 };
 
 function BucketWithVisibleColumns({
@@ -162,7 +161,8 @@ function BucketWithVisibleColumns({
   handleRefresh,
   refreshLoading,
   tableRef,
-  handleCellSave
+  handleCellSave,
+  updateCellDataError
 }: BucketWithVisibleColumnsProps) {
   const defaultVisibleColumns = useMemo(
     () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
@@ -221,6 +221,7 @@ function BucketWithVisibleColumns({
         loading={isTableLoading}
         tableRef={tableRef}
         onCellSave={handleCellSave}
+        updateCellDataError={updateCellDataError}
       />
     </div>
   );

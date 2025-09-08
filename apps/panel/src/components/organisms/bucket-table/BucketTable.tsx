@@ -30,8 +30,9 @@ type BucketTableProps = {
   maxHeight?: string | number;
   bucketId: string;
   loading: boolean;
-  tableRef?: RefObject<HTMLElement | null>
-  onCellSave?: (value: any, columnName: string, rowId: string) => void;
+  tableRef?: RefObject<HTMLElement | null>;
+  onCellSave: (value: any, columnName: string, rowId: string) => Promise<any>;
+  updateCellDataError?: string | null;
 };
 
 type ColumnHeaderProps = {
@@ -173,7 +174,8 @@ const BucketTable = ({
   loading,
   bucketId,
   tableRef,
-  onCellSave
+  onCellSave,
+  updateCellDataError
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),
@@ -197,6 +199,7 @@ const BucketTable = ({
       totalDataLength={totalDataLength}
       tableRef={tableRef}
       onCellSave={onCellSave}
+      updateCellDataError={updateCellDataError}
     />
   );
 };
