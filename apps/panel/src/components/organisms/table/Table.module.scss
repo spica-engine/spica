@@ -144,13 +144,17 @@
   gap: var(--gap-md);
 
   .grayBox {
-    width: 22px;
-    height: 22px;
+    width: 22px !important;
+    height: 22px !important;
     border-radius: var(--border-radius-md);
     background-color: var(--color-border);
     font-family: var(--font-family-base);
     font-size: var(--font-size-md);
     line-height: 0 !important;
+  }
+
+  .grayBox:last-child:hover {
+    background-color: var(--color-background);
   }
 }
 
@@ -185,5 +189,20 @@
 
 .inputPopover > div > div {
   max-width: 360px;
-  min-width: 360px;
+}
+
+.multipleSelectionInput {
+  min-width: 300px;
+}
+
+.locationInput {
+  min-width: 500px;
+  max-height: 500px;
+}
+
+.objectInput {
+  max-height: 500px;
+  max-width: 800px !important;
+  overflow: auto;
+  width: fit-content;
 }

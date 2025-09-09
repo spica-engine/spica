@@ -28,7 +28,6 @@ import Loader from "../../../components/atoms/loader/Loader";
 import type {
   TypeArrayItems,
   TypeInputRepresenterError,
-  TypeInputTypeMap,
   TypeProperties
 } from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import type {Properties} from "src/services/bucketService";
@@ -45,7 +44,9 @@ export type FieldType =
   | "array"
   | "object"
   | "file"
-  | "richtext";
+  | "richtext"
+  | "multiselect"
+  | "color";
 
 type TypeDataColumn = {
   header: string | ReactNode;
@@ -112,13 +113,17 @@ type CellEditStartEvent = CustomEvent<CellEditPayload>;
 
 const MIN_COLUMN_WIDTH = 140;
 
+function isValidDate(dateObject: any) {
+  return dateObject instanceof Date && !isNaN(dateObject.getTime());
+}
+
 // TODO: Refactor this function to render more appropriate UI elements for each field type.
 // Many field types are currently using the generic `renderDefault()`.
 function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
-  function renderDefault() {
+  function renderDefault(data?: any): JSX.Element {
     return (
       <div className={styles.defaultCell}>
-        <div className={styles.defaultCellData}>{cellData}</div>
+        <div className={styles.defaultCellData}>{data ?? cellData}</div>
         {deletable && cellData && (
           <Button variant="icon">
             <Icon name="close" size="sm" />
@@ -133,12 +138,33 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
     case "number":
       return renderDefault();
     case "date":
-      return renderDefault();
+      if (!cellData || !isValidDate(new Date(cellData))) return renderDefault("");
+      const dateObj = new Date(cellData);
+      const formattedDate = dateObj.toLocaleString("en-US", {
+        month: "numeric",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      });
+
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{formattedDate}</div>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
     case "boolean":
       return <Checkbox className={styles.checkbox} checked={cellData} />;
     case "textarea":
       return renderDefault();
     case "multiple selection":
+    case "multiselect":
       return (
         <div className={styles.multipleSelectionCell}>
           {cellData?.slice(0, 2)?.map?.((_: any, index: number) => (
@@ -146,7 +172,7 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
               {index + 1}
             </Button>
           ))}
-          {cellData.length > 2 && (
+          {cellData?.length > 2 && (
             <Button variant="icon" className={styles.grayBox}>
               <Icon name="dotsHorizontal" size="xs" />
             </Button>
@@ -177,13 +203,13 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
         <div className={styles.locationCell}>
           <img src="/locationx.png" className={styles.locationImage} />
           <div
-            data-full={cellData?.coordinates.join(", ")}
+            data-full={cellData?.coordinates?.join(", ")}
             onCopy={e => {
               e.preventDefault();
               e.clipboardData.setData("text/plain", e.currentTarget.dataset.full || "");
             }}
           >
-            {cellData?.coordinates?.map((c: number) => c.toFixed(2) + "..").join(", ")}
+            {cellData?.coordinates?.map((c: number) => c?.toFixed(2) + "..").join(", ")}
           </div>
         </div>
       );
@@ -285,6 +311,17 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
   }
 
   return formattedColumns;
+};
+
+const isObjectEffectivelyEmpty = (obj: any): boolean => {
+  if (obj == null || typeof obj !== "object") return true;
+
+  return Object.keys(obj).every(
+    key =>
+      obj[key] === undefined ||
+      obj[key] === null ||
+      (typeof obj[key] === "object" && isObjectEffectivelyEmpty(obj[key]))
+  );
 };
 
 const Table: FC<TypeTable> = ({
@@ -622,7 +659,8 @@ const Rows = memo(({data, formattedColumns, focusedCell, handleCellClick}: RowsP
             maximum: column.maximum,
             maxItems: column.maxItems,
             minItems: column.minItems,
-            items: column.items
+            items: column.items,
+            properties: column.properties
           }}
         />
       ) : (
@@ -709,12 +747,14 @@ const DEFAULT_VALUES: Record<FieldType, any> = {
   boolean: false,
   textarea: "",
   "multiple selection": [],
+  multiselect: [],
   relation: null,
-  location: null,
+  location: {lat: 36.966667, lng: 30.666667},
   array: [],
   object: {},
   file: null,
-  richtext: ""
+  richtext: "",
+  color: "#000000"
 };
 
 const EditCellPopover = ({
@@ -728,39 +768,88 @@ const EditCellPopover = ({
   updateCellDataError,
   setCellValue
 }: EditCellPopoverProps) => {
-  const createInitialObject = () => {
+  const createInitialObject = (currentValue: any, properties: Properties | undefined) => {
     const initialObject: Record<string, any> = {};
 
-    Object.values(constraints?.properties || {}).forEach(property => {
+    Object.values(properties || {}).forEach(property => {
       if (property.type === "object") {
-        initialObject[property.title] = createInitialObject();
+        // Pass the nested value to the recursive call
+        const nestedValue = currentValue?.[property.title];
+        initialObject[property.title] = createInitialObject(nestedValue, property.properties);
       } else {
-        initialObject[property.title] = DEFAULT_VALUES[property.type as FieldType] ?? null;
+        // Use the current value if it exists, otherwise fall back to defaults
+        initialObject[property.title] =
+          currentValue?.[property.title] ?? DEFAULT_VALUES[property.type as FieldType] ?? null;
       }
     });
 
     return initialObject;
   };
 
-  const getInitialValue = () => ({
-    value: type === "object" ? createInitialObject() : !value ? DEFAULT_VALUES[type] : value
-  });
+  const getValueForType = (fallbackToDefaults: boolean = true) => {
+    const defaultValue = DEFAULT_VALUES[type];
+
+    if (type === "object") {
+      return fallbackToDefaults
+        ? {value: createInitialObject(value, constraints.properties)}
+        : {value};
+    }
+
+    if (type === "date") {
+      const dateValue = isValidDate(new Date(value)) ? new Date(value) : null;
+      return {
+        value: dateValue || (fallbackToDefaults ? defaultValue : null)
+      };
+    }
+
+    if (type === "color") {
+      return {
+        value: value || (fallbackToDefaults ? defaultValue : "")
+      };
+    }
+
+    if (type === "location") {
+      return {value: value || {lat: 0, lng: 0}};
+    }
+
+    return fallbackToDefaults ? {value: value ?? defaultValue} : (value ?? defaultValue);
+  };
+
+  const getInitialValue = () => getValueForType(true);
+
+  const getEmptyValue = () => getValueForType(false);
 
   const [inputValue, setInputValue] = useState(getInitialValue);
   const [error, setError] = useState<TypeInputRepresenterError>();
   const [isOpen, setIsOpen] = useState(true);
 
+  console.log("error", error);
   const handleInputChange = (newValue: any) => {
     setInputValue(newValue);
-    setCellValue(newValue.value);
+
+    let transformedValue;
+
+    if (type === "date") {
+      transformedValue = newValue?.value?.toString();
+    } else if (type === "location" && newValue?.value?.lat && newValue?.value?.lng) {
+      transformedValue = {
+        type: "Point",
+        coordinates: [newValue?.value?.lat, newValue?.value?.lng]
+      };
+    } else {
+      transformedValue = newValue?.value;
+    }
+
+    setCellValue(transformedValue);
   };
 
   const properties = useMemo(
     () => ({
       value: {
-        type: (type === "relation" ? "string" : type) as keyof TypeInputTypeMap,
+        type,
         title,
-        items: constraints.properties || constraints?.items
+        items: constraints?.items,
+        properties: constraints.properties
       }
     }),
     [type, title, constraints]
@@ -771,15 +860,21 @@ const EditCellPopover = ({
     setError({value: updateCellDataError});
   }, [updateCellDataError]);
 
+  const customStyles: Partial<Record<FieldType, string>> = {
+    "multiple selection": styles.multipleSelectionInput,
+    multiselect: styles.multipleSelectionInput,
+    location: styles.locationInput,
+    object: styles.objectInput
+  };
+
   const input = useInputRepresenter({
     properties: properties as TypeProperties,
     value: inputValue,
     onChange: handleInputChange,
-    error: error,
-    errorClassName: styles.inputError
+    error: error, //{value: {user: {email: "god damn"}}},
+    errorClassName: styles.inputError,
+    containerClassName: customStyles[type]
   });
-
-  console.log("inputValue", inputValue);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -787,33 +882,31 @@ const EditCellPopover = ({
   };
 
   const discardChanges = () => {
-    handleInputChange(getInitialValue());
+    handleInputChange(getEmptyValue());
     handleClose();
   };
 
   const handleSave = async () => {
     const errors = validateInput(inputValue, constraints);
-    if (Object.keys(errors).length > 0) {
+    if (!isObjectEffectivelyEmpty(errors)) {
       setError(errors);
       return;
     }
 
-    const result = await onCellSave(inputValue.value);
+    const payload =
+      type === "location"
+        ? {type: "Point", coordinates: [inputValue?.value?.lat, inputValue?.value?.lng]}
+        : inputValue?.value;
+
+    const result = await onCellSave(payload);
     if (result) {
       handleClose();
     }
   };
 
-  useEffect(() => {
-    if (!error) return;
-    const errors = validateInput(inputValue, constraints);
-    if (Object.keys(errors).length === 0 && updateCellDataError === error.value) return;
-    setError(errors);
-  }, [inputValue.value]);
-
   const validateInput = useCallback(
     (
-      values: {[key: string]: any},
+      inputValue: {[key: string]: any},
       constraints: {
         pattern?: string;
         minimum?: number;
@@ -821,50 +914,128 @@ const EditCellPopover = ({
         minItems?: number;
         maxItems?: number;
         items?: TypeArrayItems;
-        properties?: Properties; // innerProperties
-      },
-      givenProperties?: Properties
-    ) => {
-      const {pattern, minimum, maximum, minItems, maxItems, items} = constraints;
-      const propertiesToUse = givenProperties || properties;
-      const errors: TypeInputRepresenterError = {};
-      Object.keys(values).forEach(key => {
-        const value = values[key];
-        const type = (propertiesToUse as Properties)[key]?.type;
-        if (pattern) {
-          const isValid = new RegExp(pattern).test(value);
-          if (!isValid) {
-            errors[key] = `This field does not match the required pattern "${pattern}"`;
-            return false;
-          }
-        } else if (minimum !== undefined && type === "number" && value < minimum) {
-          errors[key] = `This field must be at least ${minimum}`;
-          return false;
-        } else if (maximum !== undefined && type === "number" && value > maximum) {
-          errors[key] = `This field must be at most ${maximum}`;
-          return false;
-        } else if (maxItems !== undefined && type === "array" && value.length > maxItems) {
-          errors[key] = `This field must be at most ${maxItems} items`;
-          return false;
-        } else if (minItems !== undefined && type === "array" && value.length < minItems) {
-          errors[key] = `This field must be at least ${minItems} items`;
-          return false;
-        } else if (type === "object" || type === "array") {
-          const nestedErrors = validateInput(
-            value,
-            (items || constraints.properties) as typeof constraints,
-            constraints.properties
-          );
-          if (nestedErrors && Object.keys(nestedErrors).length > 0) {
-            errors[key] = nestedErrors;
-          }
-        }
-      });
+        properties?: Properties;
+      }
+    ): TypeInputRepresenterError => {
+      if (!constraints) return {};
+      // Get the actual value from the input structure
+      const actualValue = inputValue?.value;
+      // If we have properties constraint, validate the object structure
+      if (constraints.properties && type === "object") {
+        const errors = validateObjectProperties(actualValue, constraints.properties);
+        return {value: errors};
+      }
 
-      return errors;
+      // For non-object types, validate the direct value
+      return validateSingleValue(actualValue, constraints, "value");
     },
     []
   );
+
+  useEffect(() => {
+    console.log(1);
+    if (!error || isObjectEffectivelyEmpty(error)) return;
+    const errors = validateInput(inputValue, constraints);
+    if (Object.keys(errors).length === 0 && updateCellDataError === error.value) return;
+    setError(errors);
+  }, [inputValue, JSON.stringify(error), updateCellDataError]);
+
+  const validateObjectProperties = (
+    obj: any,
+    properties: Properties,
+    debugname?: string
+  ): TypeInputRepresenterError => {
+    const errors: TypeInputRepresenterError = {};
+
+    Object.entries(properties).forEach(([key, propertySchema]) => {
+      const value = obj[key];
+      const fieldErrors = validateSingleValue(value, propertySchema, key, debugname + "." + key);
+      errors[key] = fieldErrors[key] || fieldErrors;
+      if (Object.keys(fieldErrors).length === 0) {
+        delete errors[key];
+      }
+    });
+
+    return errors;
+  };
+
+  // Helper function to validate a single value
+  const validateSingleValue = (
+    value: any,
+    schema: any,
+    fieldKey: string,
+    debugname?: string
+  ): TypeInputRepresenterError => {
+    const errors: TypeInputRepresenterError = {};
+
+    if (!schema) return errors;
+
+    const {type, pattern, minimum, maximum, minItems, maxItems, properties, items, required} =
+      schema;
+
+    // Check required fields
+    if (
+      required &&
+      required.includes(fieldKey) &&
+      (value === undefined || value === null || value === "")
+    ) {
+      errors[fieldKey] = `This field is required`;
+      return errors;
+    }
+
+    // Skip validation if value is empty and not required
+    if (value === undefined || value === null || value === "") {
+      return errors;
+    }
+
+    // Type-specific validation
+    switch (type) {
+      case "string":
+        if (pattern && typeof value === "string") {
+          const isValid = new RegExp(pattern).test(value);
+          if (!isValid) {
+            errors[fieldKey] = `This field does not match the required pattern "${pattern}"`;
+          }
+        }
+        break;
+
+      case "number":
+        if (minimum !== undefined && value < minimum) {
+          errors[fieldKey] = `This field must be at least ${minimum}`;
+        }
+        if (maximum !== undefined && value > maximum) {
+          errors[fieldKey] = `This field must be at most ${maximum}`;
+        }
+        break;
+
+      case "array":
+        if (minItems !== undefined && value.length < minItems) {
+          errors[fieldKey] = `This field must have at least ${minItems} items`;
+        }
+        if (maxItems !== undefined && value.length > maxItems) {
+          errors[fieldKey] = `This field must have at most ${maxItems} items`;
+        }
+        //console.log("debugname", debugname);
+        // Validate array items if items schema is provided
+        console.log("schema", schema);
+        if (items) {
+          (value as never[]).forEach((item, index) => {
+            const itemErrors = validateSingleValue(item, items, `${fieldKey}[${index}]`);
+            Object.assign(errors, itemErrors);
+          });
+        }
+        break;
+
+      case "object":
+        if (value && typeof value === "object" && properties) {
+          const nestedErrors = validateObjectProperties(value, properties, debugname);
+          Object.assign(errors, nestedErrors);
+        }
+        break;
+    }
+
+    return errors;
+  };
 
   useEffect(() => {
     handleInputChange(getInitialValue());
@@ -898,7 +1069,11 @@ const EditCellPopover = ({
   return (
     <Popover
       containerProps={{ref: popoverContentRef}}
-      contentProps={{style: targetPosition ?? undefined}}
+      contentProps={{
+        style: targetPosition ?? undefined
+        //? {...targetPosition, left: (targetPosition?.left ?? 0) - 300}
+        //: undefined
+      }}
       open={isOpen}
       onClose={discardChanges}
       content={input}
@@ -933,7 +1108,16 @@ const EditableCell = memo(
           ref,
           columnId,
           rowId,
-          setCellValue
+          setCellValue: val => {
+            // Force a new reference for arrays and objects
+            if (Array.isArray(val)) {
+              setCellValue([...val]);
+            } else if (val && typeof val === "object") {
+              setCellValue({...val});
+            } else {
+              setCellValue(val);
+            }
+          }
         }
       });
       window.dispatchEvent(cellEditStartEvent);
