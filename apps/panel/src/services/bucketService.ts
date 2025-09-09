@@ -94,7 +94,7 @@ export const useBucketService = () => {
   const {request: fetchBucketData, data: apiBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
     endpoint: "",
     method: "get",
-    deduplicateRequests: true,
+    deduplicateRequests: true
   });
 
   const {request: bucketOrderRequest} = useApi({endpoint: "", method: "patch"});
@@ -106,7 +106,11 @@ export const useBucketService = () => {
     method: "delete"
   });
 
-  const {request: deleteHistoty, loading: apiDeleteBucketHistoryLoading, error: apiDeleteBucketHistoryError} = useApi({
+  const {
+    request: deleteHistoty,
+    loading: apiDeleteBucketHistoryLoading,
+    error: apiDeleteBucketHistoryError
+  } = useApi({
     endpoint: "",
     method: "delete"
   });
@@ -121,6 +125,21 @@ export const useBucketService = () => {
     loading: apiUpdateBucketRuleLoading,
     error: apiUpdateBucketRuleError
   } = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+    const {request: bucketLimitationRequest, loading: apiUpdateBucketLimitationFieldsLoading, error: apiUpdateBucketLimitationFieldsError} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+  const {request: postRequest} = useApi<BucketType>({
+    endpoint: "/api/bucket",
+    method: "post"
+  });
+
+  const {request: createBucketField, error: apiCreateBucketFieldError} = useApi({
     endpoint: "",
     method: "put"
   });
@@ -177,21 +196,34 @@ export const useBucketService = () => {
     [deleteRequest]
   );
 
-  const apiUpdateBucketHistory = useCallback(async (bucket: BucketType) => {
-    return await putRequest({
-      endpoint: `/api/bucket/${bucket._id}`,
-      body: {
-        ...bucket,
-        history: !bucket.history
-      }
-    });
-  }, [patchRequest]);
+  const apiUpdateBucketHistory = useCallback(
+    async (bucket: BucketType) => {
+      return await putRequest({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: {
+          ...bucket,
+          history: !bucket.history
+        }
+      });
+    },
+    [patchRequest]
+  );
 
-  const apiDeleteBucketHistory = useCallback(async (bucket: BucketType) => {
-    return await deleteHistoty({
-      endpoint: `/api/bucket/${bucket._id}/history`
-    });
-  }, [deleteHistoty]);
+  const apiDeleteBucketHistory = useCallback(
+    async (bucket: BucketType) => {
+      return await deleteHistoty({
+        endpoint: `/api/bucket/${bucket._id}/history`
+      });
+    },
+    [deleteHistoty]
+  );
+
+  const apiCreateBucketField = useCallback(
+    async (modifiedBucket: BucketType) => {
+      return createBucketField({body: modifiedBucket, endpoint: `/api/bucket/${modifiedBucket._id}`});
+    },
+    [createBucketField]
+  );
 
   const apiUpdateBucketReadonly = useCallback(
     async (bucket: BucketType) => {
@@ -216,6 +248,57 @@ export const useBucketService = () => {
     [updateBucketRule]
   );
 
+    const apiUpdatebucketLimitiation = useCallback(
+    async (bucketId: string, body: BucketType) => {
+      return await bucketLimitationRequest({
+        endpoint: `/api/bucket/${bucketId}`,
+        body
+      });
+    },
+    [bucketLimitationRequest]
+  );
+
+  const apiUpdatebucketLimitiationFields = useCallback((bucket: BucketType) => {
+    return bucketLimitationRequest({
+      endpoint: `/api/bucket/${bucket._id}`,
+      body: bucket
+    });
+  }, [bucketLimitationRequest])
+
+  const apiCreateBucket = useCallback(
+    (title: string, order: number) => {
+      const bucket = {
+        title,
+        description: "Describe your new bucket",
+        icon: "view_stream",
+        primary: "title",
+        readOnly: false,
+        history: false,
+        properties: {
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row",
+            options: {position: "left"}
+          },
+          description: {
+            type: "textarea",
+            title: "description",
+            description: "Description of the row",
+            options: {position: "right"}
+          }
+        },
+        acl: {
+          write: "true==true",
+          read: "true==true"
+        },
+        order
+      };
+      return postRequest({body: {...bucket}});
+    },
+    [postRequest]
+  );
+
   const apiCreateBucketEntry = useCallback(
     async (bucketId: string, data: Record<string, any>) => {
       return await createBucketEntry({
@@ -237,6 +320,10 @@ export const useBucketService = () => {
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
     apiUpdateBucketRule,
+    apiUpdatebucketLimitiation,
+    apiUpdatebucketLimitiationFields,
+    apiCreateBucket,
+    apiCreateBucketField,
     apiCreateBucketEntry,
     apiBuckets,
     apiBucketData,
@@ -245,6 +332,9 @@ export const useBucketService = () => {
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
+    apiUpdateBucketLimitationFieldsLoading,
+    apiUpdateBucketLimitationFieldsError,
+    apiCreateBucketFieldError,
     apiCreateBucketEntryError
   };
 };

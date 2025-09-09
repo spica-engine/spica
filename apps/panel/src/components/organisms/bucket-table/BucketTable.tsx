@@ -1,8 +1,14 @@
 import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useMemo, type RefObject} from "react";
+import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
+import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
+import {useBucket} from "../../../contexts/BucketContext";
+import type {BucketType} from "src/services/bucketService";
+import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
+import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
+import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 
 type FieldType =
   | "string"
@@ -91,6 +97,52 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
   );
 };
 
+const NewFieldHeader = memo(() => {
+  const {buckets, bucketData, createBucketField} = useBucket();
+
+  const bucket = useMemo(
+    () => buckets.find(i => i._id === bucketData?.bucketId),
+    [buckets, bucketData?.bucketId]
+  );
+  const handleSaveAndClose = useCallback(
+    (values: FormValues) => {
+      if (!bucket) return;
+
+      const fieldProperty = createFieldProperty(values);
+      const {requiredField, primaryField} = values.configurationValues;
+      const {title} = values.fieldValues;
+
+      return createBucketField(
+        bucket,
+        fieldProperty,
+        requiredField ? title : undefined,
+        primaryField ? title : undefined
+      );
+    },
+    [bucket, createBucketField]
+  );
+  const forbiddenFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket]);
+
+  return (
+    <BucketFieldPopupsProvider>
+      <BucketFieldPopup
+        buckets={buckets}
+        bucket={bucket as BucketType}
+        onSaveAndClose={handleSaveAndClose}
+        forbiddenFieldNames={forbiddenFieldNames}
+      >
+        <Button
+          variant="icon"
+          className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
+        >
+          <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
+          <span>New&nbsp;Field</span>
+        </Button>
+      </BucketFieldPopup>
+    </BucketFieldPopupsProvider>
+  );
+});
+
 const defaultColumns: ColumnType[] = [
   {
     id: "0",
@@ -99,27 +151,20 @@ const defaultColumns: ColumnType[] = [
     type: "boolean",
     width: "41px",
     headerClassName: styles.columnHeader,
-    cellClassName: styles.selectCell,
+    cellClassName: `${styles.selectCell} ${styles.cell}`,
     resizable: false,
     fixed: true,
     selectable: false
   },
   {
     id: "1",
-    header: (
-      <Button
-        variant="icon"
-        className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
-      >
-        <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
-        <span>New&nbsp;Field</span>
-      </Button>
-    ),
+    header: <NewFieldHeader />,
     key: "new field",
     width: "125px",
     headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,
-    cellClassName: styles.newFieldCell,
+    cellClassName: `${styles.newFieldCell} ${styles.cell}`,
     resizable: false,
+    fixed: true,
     selectable: false
   }
 ];
@@ -261,7 +306,8 @@ function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnTyp
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      id: `${col.key}-${index}-${bucketId}`
+      id: `${col.key}-${index}-${bucketId}`,
+      cellClassName: styles.cell
     })),
     defaultColumns[1]
   ];

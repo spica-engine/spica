@@ -1,16 +1,122 @@
-.contentContainer {
-  max-width: min-content;
-}
-.modalBody {
+.modal {
+  width: 330px !important;
+  min-width: 330px !important;
   padding: 0 !important;
+}
+
+.contentContainer {
+  max-width: 100% !important;
+  width: 100% !important;
+  > div, > div input {
+    width: 100% !important;
+  }
+}
+
+.modalBody {
+  padding: var(--padding-md) !important;
 }
 .buttonWrapper {
   width: 100%;
   display: flex;
   justify-content: space-between;
   flex-direction: row-reverse;
+  gap: var(--gap-sm);
 
   .buttonInnerFields {
     background: var(--color-soft) !important;
+    width: 168px;
+    min-width: 168px !important;
   }
+
+  .saveAndCloseButton {
+    width: 133px;
+    min-width: 123px !important;
+    height: 38px !important;
+  }
+}
+
+.tab {
+  font-size: var(--font-size-md);
+  div:not(:nth-child(1)) {
+    cursor: pointer;
+  }
+}
+
+.smallTab {
+  padding-bottom: var(--padding-sm) !important;
+}
+
+.bigTab {
+  padding-bottom: var(--padding-md) !important;
+  > div:nth-child(2) {
+    padding-left: var(--padding-md) !important;
+  }
+  > div:last-child {
+    padding-right: var(--padding-md) !important;
+  }
+}
+
+.configurationOptionsContainer {
+  width: 100%;
+  > div > div {
+    gap: 0 !important;
+  }
+}
+
+.innerFieldItem {
+  justify-content: space-between !important;
+}
+
+.innerFieldActions button {
+  padding: 0;
+  min-width: none;
+}
+
+.innerFieldPrefix {
+  overflow: visible;
+  width: 100%;
+  justify-content: flex-start !important;
+  min-width: 25px;
+  max-width: 25px;
+  > div {
+    justify-content: flex-start !important;
+  }
+
+}
+
+.error {
+  top: "100%" !important;
+  bottom: unset !important;
+  width: 100% !important;
+}
+
+.errorMessage {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.defaultError {
+  position: absolute;
+  bottom: 15px;
+  left: 10px;
+  max-width: calc(100% - 155px);
+}
+
+.innerFieldsError {
+  height: 10px;
+}
+
+.errorTextContainer {
+  position: relative;
+  width: 100%;
+}
+
+.errorText {
+  font-size: var(--font-size-xs) !important;
+  width: 100%;
+  position: static;
+  white-space: normal;
+  word-break: break-word;
+  max-height: 40px;
 }

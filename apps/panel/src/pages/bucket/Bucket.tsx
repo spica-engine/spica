@@ -165,12 +165,15 @@ function BucketWithVisibleColumns({
   );
 
   useEffect(() => {
-    setVisibleColumns(defaultVisibleColumns);
-  }, [bucket._id]);
+    if (Object.keys(defaultVisibleColumns).length > Object.keys(visibleColumns).length) {
+      setVisibleColumns(defaultVisibleColumns);
+    }
+  }, [defaultVisibleColumns, visibleColumns]);
 
-  const filteredColumns = useMemo(() => {
-    return formattedColumns.filter(i => visibleColumns?.[i.key]);
-  }, [formattedColumns, visibleColumns]);
+  const filteredColumns = useMemo(
+    () => formattedColumns.filter(i => visibleColumns?.[i.key]),
+    [formattedColumns, visibleColumns]
+  );
 
   const toggleColumn = (key?: string) => {
     if (key) {

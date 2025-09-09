@@ -1,0 +1,30 @@
+.formInputs {
+  width: 100% !important;
+  > div {
+    width: 100%;
+  }
+  padding-bottom: var(--padding-md);
+}
+
+.countLimitInput input {
+  width: 100%;
+}
+
+.limitExceedBehaviourInput span {
+  max-width: 80px !important;
+}
+
+.selectPopup {
+  width: 220px !important;
+  margin-left: var(--padding-lg)
+}
+
+.selectOption {
+  padding: var(--padding-sm);
+  font-size: var(--font-size-md);
+  width: 100% !important;
+}
+
+.selectOption:hover {
+  background-color: var(--color-soft);
+}
