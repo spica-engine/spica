@@ -1,5 +1,5 @@
-import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
-import Table, { type FieldType } from "../table/Table";
+import {Button, Icon, type IconName} from "oziko-ui-kit";
+import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
@@ -9,6 +9,7 @@ import type {BucketType} from "src/services/bucketService";
 import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
+import type { FieldType } from "../table/types";
 
 export type ColumnType = {
   id: string;
@@ -66,7 +67,9 @@ const COLUMN_ICONS: Record<FieldType, IconName> = {
   array: "formatQuoteClose",
   object: "dataObject",
   file: "imageMultiple",
-  richtext: "formatQuoteClose"
+  richtext: "formatQuoteClose",
+  color: "formatQuoteClose",
+  multiselect: "formatListChecks"
 };
 
 const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
