@@ -1,11 +1,155 @@
-import {memo, useRef, useState, type ReactNode, type RefObject} from "react";
-import type {TypeArrayItems} from "src/hooks/useInputRepresenter";
-import type {Properties} from "src/services/bucketService";
+import {memo, useRef, useState, type JSX, type ReactNode, type RefObject} from "react";
 import {MIN_COLUMN_WIDTH} from "./columnUtils";
-import {renderCell} from "./TableBody";
-import type {FieldType} from "./types";
+import type {Constraints, FieldType} from "./types";
 import styles from "./Table.module.scss";
 import {FlexElement} from "oziko-ui-kit";
+import {Button, Icon, Checkbox} from "oziko-ui-kit";
+import {isValidDate} from "./EditCellPopover";
+
+// TODO: Refactor this function to render more appropriate UI elements for each field type.
+// Many field types are currently using the generic `renderDefault()`.
+export function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
+  function renderDefault(data?: any): JSX.Element {
+    return (
+      <div className={styles.defaultCell}>
+        <div className={styles.defaultCellData}>{data ?? cellData}</div>
+        {deletable && cellData && (
+          <Button variant="icon">
+            <Icon name="close" size="sm" />
+          </Button>
+        )}
+      </div>
+    );
+  }
+  switch (type) {
+    case "string":
+      return renderDefault();
+    case "number":
+      return renderDefault();
+    case "date":
+      if (!cellData || !isValidDate(new Date(cellData))) return renderDefault("");
+      const dateObj = new Date(cellData);
+      const formattedDate = dateObj.toLocaleString("en-US", {
+        month: "numeric",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      });
+
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{formattedDate}</div>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
+    case "boolean":
+      return <Checkbox className={styles.checkbox} checked={cellData} />;
+    case "textarea":
+      return renderDefault();
+    case "multiple selection":
+    case "multiselect":
+      return (
+        <div className={styles.multipleSelectionCell}>
+          {cellData?.slice(0, 2)?.map?.((_: any, index: number) => (
+            <Button key={index} variant="icon" className={styles.grayBox}>
+              {index + 1}
+            </Button>
+          ))}
+          {cellData?.length > 2 && (
+            <Button variant="icon" className={styles.grayBox}>
+              <Icon name="dotsHorizontal" size="xs" />
+            </Button>
+          )}
+          <Button variant="icon" className={styles.grayBox}>
+            <Icon name="plus" size="xs" />
+          </Button>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
+    case "relation":
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
+    case "location":
+      return (
+        <div className={styles.locationCell}>
+          <img src="/locationx.png" className={styles.locationImage} />
+          <div
+            data-full={cellData?.coordinates?.join(", ")}
+            onCopy={e => {
+              e.preventDefault();
+              e.clipboardData.setData("text/plain", e.currentTarget.dataset.full || "");
+            }}
+          >
+            {cellData?.coordinates?.map((c: number) => c?.toFixed(2) + "..").join(", ")}
+          </div>
+        </div>
+      );
+    case "array":
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
+    case "object":
+      return (
+        <div className={styles.defaultCell}>
+          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
+          {deletable && cellData && (
+            <Button variant="icon">
+              <Icon name="close" size="sm" />
+            </Button>
+          )}
+        </div>
+      );
+    case "file":
+      return (
+        <div className={styles.fileCell}>
+          <Icon name="imageMultiple" size="xs" />
+          {cellData ? (
+            <span>{cellData}</span>
+          ) : (
+            <span className={styles.grayText}>Click or Drag&Drop</span>
+          )}
+        </div>
+      );
+    case "richtext":
+      return renderDefault();
+    default: {
+      if (!cellData) {
+        return <div />;
+      }
+
+      if (typeof cellData === "string") {
+        return cellData;
+      }
+
+      return JSON.stringify(cellData);
+    }
+  }
+}
 
 type CellEditStartEvent = CustomEvent<CellEditPayload>;
 
@@ -14,15 +158,7 @@ export type CellEditPayload = {
   value: any;
   type: FieldType;
   title: string;
-  constraints?: {
-    pattern?: string;
-    minimum?: number;
-    maximum?: number;
-    minItems?: number;
-    maxItems?: number;
-    items?: TypeArrayItems;
-    properties?: Properties;
-  };
+  constraints?: Constraints;
   columnId: string;
   rowId: string;
   setCellValue: (value: any) => void;
@@ -30,14 +166,14 @@ export type CellEditPayload = {
 
 export const CELL_EDIT_START_EVENT_NAME = "cellEditStart";
 
-type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
+type CellProps = React.HTMLAttributes<HTMLDivElement> & {
   leftOffset?: number;
   type: FieldType;
   value: any;
   deletable?: boolean;
 };
 
-export const Cell = memo(({value, type, deletable, leftOffset, ...props}: TypeCell) => {
+export const Cell = memo(({value, type, deletable, leftOffset, ...props}: CellProps) => {
   return (
     <td {...props} className={`${styles.cell} ${props.className || ""}`} style={{left: leftOffset}}>
       {renderCell(value, type, deletable)}
@@ -45,18 +181,10 @@ export const Cell = memo(({value, type, deletable, leftOffset, ...props}: TypeCe
   );
 });
 
-type TypeEditableCell = TypeCell & {
+type EditableCellProps = CellProps & {
   focused?: boolean;
   title: string;
-  constraints?: {
-    pattern?: string;
-    minimum?: number;
-    maximum?: number;
-    minItems?: number;
-    maxItems?: number;
-    items?: TypeArrayItems;
-    properties?: Properties;
-  };
+  constraints?: Constraints;
   columnId: string;
   rowId: string;
 };
@@ -73,7 +201,7 @@ export const EditableCell = memo(
     columnId,
     rowId,
     ...props
-  }: TypeEditableCell) => {
+  }: EditableCellProps) => {
     const ref = useRef<HTMLTableCellElement | null>(null);
     const [cellValue, setCellValue] = useState(value);
     const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {

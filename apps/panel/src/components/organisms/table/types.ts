@@ -47,3 +47,13 @@ export type TypeTableData = {
     value: any;
   };
 };
+
+export type Constraints = {
+  pattern?: string;
+  minimum?: number;
+  maximum?: number;
+  minItems?: number;
+  maxItems?: number;
+  items?: TypeArrayItems;
+  properties?: Properties;
+};

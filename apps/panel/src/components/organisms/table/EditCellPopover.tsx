@@ -9,9 +9,9 @@ import {
   useLayoutEffect,
   type RefObject
 } from "react";
-import type {TypeProperties, TypeArrayItems} from "src/hooks/useInputRepresenter";
+import type {TypeProperties} from "src/hooks/useInputRepresenter";
 import type {Properties} from "src/services/bucketService";
-import type {FieldType} from "./types";
+import type {Constraints, FieldType} from "./types";
 import styles from "./Table.module.scss";
 
 const DEFAULT_VALUES: Record<FieldType, any> = {
@@ -67,15 +67,7 @@ type EditCellPopoverProps = {
   type: FieldType;
   value: any;
   title: string;
-  constraints?: {
-    pattern?: string;
-    minimum?: number;
-    maximum?: number;
-    minItems?: number;
-    maxItems?: number;
-    items?: TypeArrayItems;
-    properties?: Properties;
-  };
+  constraints?: Constraints;
   updateCellDataError: string | null;
   setCellValue: (value: any) => void;
 };
@@ -152,11 +144,11 @@ export const EditCellPopover = ({
     let transformedValue;
 
     if (type === "date") {
-      transformedValue = newValue?.value?.toString();
+      transformedValue = newValue?.value?.toISOString?.();
     } else if (type === "location" && newValue?.value?.lat && newValue?.value?.lng) {
       transformedValue = {
         type: "Point",
-        coordinates: [newValue?.value?.lat, newValue?.value?.lng]
+        coordinates: [newValue?.value?.lng, newValue?.value?.lat]
       };
     } else {
       transformedValue = newValue?.value;
@@ -235,7 +227,7 @@ export const EditCellPopover = ({
 
     const payload =
       type === "location"
-        ? {type: "Point", coordinates: [inputValue?.value?.lat, inputValue?.value?.lng]}
+        ? {type: "Point", coordinates: [inputValue?.value?.lng, inputValue?.value?.lat]}
         : inputValue?.value;
 
     const result = await onCellSave(payload);
@@ -245,18 +237,7 @@ export const EditCellPopover = ({
   };
 
   const validateInput = useCallback(
-    (
-      inputValue: {[key: string]: any},
-      constraints: {
-        pattern?: string;
-        minimum?: number;
-        maximum?: number;
-        minItems?: number;
-        maxItems?: number;
-        items?: TypeArrayItems;
-        properties?: Properties;
-      }
-    ): TypeInputRepresenterError => {
+    (inputValue: {[key: string]: any}, constraints: Constraints): TypeInputRepresenterError => {
       if (!constraints) return {};
       // Get the actual value from the input structure
       const actualValue = inputValue?.value;
