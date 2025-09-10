@@ -5,7 +5,6 @@ import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
-import type {BucketType} from "src/services/bucketService";
 import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
@@ -103,6 +102,7 @@ const NewFieldHeader = memo(() => {
     () => buckets.find(i => i._id === bucketData?.bucketId),
     [buckets, bucketData?.bucketId]
   );
+
   const handleSaveAndClose = useCallback(
     (values: FormValues) => {
       if (!bucket) return;
@@ -120,16 +120,10 @@ const NewFieldHeader = memo(() => {
     },
     [bucket, createBucketField]
   );
-  const forbiddenFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket]);
 
   return (
     <BucketFieldPopupsProvider>
-      <BucketFieldPopup
-        buckets={buckets}
-        bucket={bucket as BucketType}
-        onSaveAndClose={handleSaveAndClose}
-        forbiddenFieldNames={forbiddenFieldNames}
-      >
+      <BucketFieldPopup onSaveAndClose={handleSaveAndClose}>
         <Button
           variant="icon"
           className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}

@@ -1,4 +1,4 @@
-import {cloneElement, memo, useRef, useState, type CSSProperties, type ReactNode} from "react";
+import {cloneElement, memo, useRef, useState, type ReactNode} from "react";
 import {
   FlexElement,
   ListItem,
@@ -8,15 +8,11 @@ import {
   type IconName
 } from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
-import type {BucketType} from "src/services/bucketService";
 import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
-import {
-  configPropertiesMapping,
-  type innerFieldConfigProperties
-} from "../../../components/organisms/bucket-add-field/BucketAddFieldSchema";
-import type { Placement } from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
+import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
+import type {PopupType} from "./BucketFieldPopupsContext";
 
 export const fieldOptions: {icon: IconName; text: string; type: TypeInputType | "json"}[] = [
   {icon: "formatQuoteClose", text: "String", type: "string"},
@@ -36,26 +32,18 @@ export const fieldOptions: {icon: IconName; text: string; type: TypeInputType | 
 
 type BucketFieldSelectionPopupProps = {
   children: ReactNode;
-  buckets: BucketType[];
-  bucket: BucketType;
   onSaveAndClose: (values: FormValues) => void | Promise<any>;
-  bucketAddFieldPopoverStyles?: CSSProperties;
-  configurationMapping?: typeof configPropertiesMapping | typeof innerFieldConfigProperties;
   iconName?: IconName;
-  forbiddenFieldNames?: string[];
   placement?: Placement;
+  popupType?: PopupType;
 };
 
 const BucketFieldSelectionPopup = ({
   children,
-  buckets,
-  bucket,
   onSaveAndClose,
-  bucketAddFieldPopoverStyles,
-  configurationMapping = configPropertiesMapping,
   iconName,
-  forbiddenFieldNames,
   placement,
+  popupType = "add-field"
 }: BucketFieldSelectionPopupProps) => {
   const [selectedType, setSelectedType] = useState<TypeInputType | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -70,7 +58,7 @@ const BucketFieldSelectionPopup = ({
   };
 
   const handleClose = () => {
-    setBucketFieldPopups(bucketFieldPopups.filter(id => id !== bucketFieldPopupId));
+    setBucketFieldPopups(bucketFieldPopups.filter(popup => popup.id !== bucketFieldPopupId));
     setIsOpen(false);
     setSelectedType(null);
   };
@@ -114,15 +102,11 @@ const BucketFieldSelectionPopup = ({
         <BucketFieldConfigurationPopup
           isOpen={!!selectedType}
           selectedType={selectedType}
-          bucket={bucket}
-          buckets={buckets}
           onClose={handleConfigurationClose}
           onSaveAndClose={handleSaveAndClose}
-          bucketAddFieldPopoverStyles={bucketAddFieldPopoverStyles ?? {}}
           setBucketFieldPopupId={setBucketFieldPopupId}
-          configurationMapping={configurationMapping}
           iconName={iconName}
-          forbiddenFieldNames={forbiddenFieldNames}
+          popupType={popupType}
         >
           <FlexElement
             ref={fieldOptionsListContainerRef}

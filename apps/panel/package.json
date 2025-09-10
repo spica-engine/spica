@@ -15,7 +15,7 @@
     "react-grid-layout": "^1.5.1",
     "react-infinite-scroll-component": "^6.1.0",
     "react-router-dom": "^6.11.2",
-    "yup": "^1.6.1"
+    "yup": "^1.7.0"
   },
   "devDependencies": {
     "@nx/react": "^20.4.4",
