@@ -1,4 +1,5 @@
-import MenuGroup from "src/components/organisms/menu-group/MenuGroup";
+
+import { MenuGroup } from "oziko-ui-kit";
 import MenuActionItem from "../../atoms/menu-action-item/MenuActionItem";
 import styles from "./ColumnActionsMenu.module.scss";
 
