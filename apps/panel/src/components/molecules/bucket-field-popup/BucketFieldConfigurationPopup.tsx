@@ -5,7 +5,10 @@ import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
 import type {BucketType} from "src/services/bucketService";
 import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
-import type { configPropertiesMapping, innerFieldConfigProperties } from "../../../components/organisms/bucket-add-field/BucketAddFieldSchema";
+import type {
+  configPropertiesMapping,
+  innerFieldConfigProperties
+} from "../../../components/organisms/bucket-add-field/BucketAddFieldSchema";
 
 type BucketFieldConfigurationPopupProps = {
   selectedType: TypeInputType | null;
@@ -14,15 +17,15 @@ type BucketFieldConfigurationPopupProps = {
   onClose: (event?: MouseEvent) => void;
   onSaveAndClose: (values: FormValues) => void;
   bucketAddFieldPopoverStyles: CSSProperties;
-  basePortalClassName?: string;
   children: ReactNode;
   isOpen: boolean;
   initialValues?: FormValues;
   setBucketFieldPopupId?: React.Dispatch<React.SetStateAction<string | undefined>>;
   iconName?: IconName;
-  configurationMapping: typeof configPropertiesMapping | typeof innerFieldConfigProperties
-  forbiddenFieldNames?: string[]
-}
+  configurationMapping: typeof configPropertiesMapping | typeof innerFieldConfigProperties;
+  forbiddenFieldNames?: string[];
+};
+
 const BucketFieldConfigurationPopup = ({
   selectedType,
   bucket,
@@ -30,7 +33,6 @@ const BucketFieldConfigurationPopup = ({
   onClose,
   onSaveAndClose,
   bucketAddFieldPopoverStyles,
-  basePortalClassName,
   children,
   isOpen,
   initialValues,
@@ -43,24 +45,30 @@ const BucketFieldConfigurationPopup = ({
   const bucketAddFieldRef = useRef<HTMLDivElement>(null);
   const [innerFieldStyles, setInnerFieldStyles] = useState<CSSProperties>({});
   const {setBucketFieldPopups, bucketFieldPopups} = useBucketFieldPopups();
+  const id = useId();
+  const popupStackEmpty = bucketFieldPopups.length === 0;
+  const isFirstPopup = popupStackEmpty || bucketFieldPopups[0] === id;
+  const isLastPopup = bucketFieldPopups.at(-1) === id;
+
+  const offsetX = isFirstPopup ? 200 : 0;
+  const offsetY = isFirstPopup ? 0 : 10;
 
   useEffect(() => {
     if (!isOpen || !bucketAddFieldRef.current) return;
     const {top, right, left, bottom} = bucketAddFieldRef.current.style;
-    const newTop = String(Number(top?.slice(0, -2)) + 10) + "px";
     // Update position styles to ensure the inset is recalculated correctly.
     // We explicitly set both `inset` and the individual sides (`top`, `right`, `bottom`, `left`)
     // because Popover component may ignore or override our values
     setInnerFieldStyles({
-      inset: `${newTop} ${right} ${bottom} ${left}`,
-      top: newTop,
+      inset: `${top} ${right} ${bottom} ${left}`,
+      top,
       right,
       left,
-      bottom
+      bottom,
+      transform: "translate(200px, 10px)"
     });
   }, [isOpen, bucketAddFieldRef.current]);
 
-  const id = useId();
   useEffect(() => {
     if (!isOpen) return;
     setBucketFieldPopups(prev => [...prev, id]);
@@ -71,19 +79,21 @@ const BucketFieldConfigurationPopup = ({
 
   useEffect(() => setBucketFieldPopupId?.(id), [id]);
 
-  const isLastPopup = bucketFieldPopups.at(-1) === id;
+
 
   return (
     <Popover
       open={isOpen}
       onClose={onClose}
       placement="leftStart"
-      portalClassName={basePortalClassName}
       containerProps={{ref: innerContainerRef}}
       contentProps={{
         className: `${styles.bucketAddField} ${!isLastPopup ? styles.lowBrightness : ""}`,
         ref: bucketAddFieldRef,
-        style: bucketAddFieldPopoverStyles
+        style: {
+          transform: `translate(${offsetX}px, ${offsetY}px)`,
+          ...bucketAddFieldPopoverStyles,
+        }
       }}
       content={
         <BucketAddField

@@ -341,6 +341,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
             configurationMapping={innerFieldConfigProperties}
             iconName={"plus"}
             forbiddenFieldNames={forbiddenInnerFieldNames}
+            placement="leftStart"
           >
             <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
               <FluidContainer

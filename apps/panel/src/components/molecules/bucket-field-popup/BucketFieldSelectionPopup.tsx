@@ -16,6 +16,7 @@ import {
   configPropertiesMapping,
   type innerFieldConfigProperties
 } from "../../../components/organisms/bucket-add-field/BucketAddFieldSchema";
+import type { Placement } from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
 
 export const fieldOptions: {icon: IconName; text: string; type: TypeInputType | "json"}[] = [
   {icon: "formatQuoteClose", text: "String", type: "string"},
@@ -42,6 +43,7 @@ type BucketFieldSelectionPopupProps = {
   configurationMapping?: typeof configPropertiesMapping | typeof innerFieldConfigProperties;
   iconName?: IconName;
   forbiddenFieldNames?: string[];
+  placement?: Placement;
 };
 
 const BucketFieldSelectionPopup = ({
@@ -53,6 +55,7 @@ const BucketFieldSelectionPopup = ({
   configurationMapping = configPropertiesMapping,
   iconName,
   forbiddenFieldNames,
+  placement,
 }: BucketFieldSelectionPopupProps) => {
   const [selectedType, setSelectedType] = useState<TypeInputType | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -98,14 +101,11 @@ const BucketFieldSelectionPopup = ({
     } else runHandlers();
   };
 
-  const basePortalClassName =
-    (!bucketFieldPopupId || bucketFieldPopups.length <= 1) && !!selectedType
-      ? styles.firstPortal
-      : "";
-  const outerPortalClassName = `${basePortalClassName} ${!selectedType || bucketFieldPopups[0] === bucketFieldPopupId ? "" : styles.hidden}`;
+  const outerPortalClassName = `${!selectedType ? "" : styles.hidden}`;
 
   return (
     <Popover
+      placement={placement}
       open={isOpen}
       onClose={handleClose}
       portalClassName={outerPortalClassName}
@@ -119,7 +119,6 @@ const BucketFieldSelectionPopup = ({
           onClose={handleConfigurationClose}
           onSaveAndClose={handleSaveAndClose}
           bucketAddFieldPopoverStyles={bucketAddFieldPopoverStyles ?? {}}
-          basePortalClassName={basePortalClassName}
           setBucketFieldPopupId={setBucketFieldPopupId}
           configurationMapping={configurationMapping}
           iconName={iconName}

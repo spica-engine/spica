@@ -9,9 +9,9 @@
   gap: 0 !important;
   .item {
     color: var(--color-font-primary);
-    padding: 0 calc(var(--padding-md) - var(--padding-xs));
+    padding: 0 var(--padding-sm-plus);
     cursor: pointer;
-    height: 20px !important;
+    height: 30px !important;
   }
   .item:hover {
     background-color: var(--color-hover);
@@ -23,12 +23,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   display: block !important;
-  width: 330px !important;
-}
-
-.firstPortal {
-  width: unset;
-  height: unset;
+  width: 400px !important;
 }
 
 .hidden {
