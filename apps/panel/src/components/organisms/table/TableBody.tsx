@@ -1,14 +1,7 @@
 import {memo, useRef, type JSX, useEffect} from "react";
-import type {FieldType, TypeDataColumn, TypeTableData} from "./types";
+import type {TypeDataColumn, TypeTableData} from "./types";
 import styles from "./Table.module.scss";
 import {Cell, EditableCell} from "./Cell";
-
-export type TypeCell = React.HTMLAttributes<HTMLDivElement> & {
-  leftOffset?: number;
-  type: FieldType;
-  value: any;
-  deletable?: boolean;
-};
 
 type TableBodyProps = {
   formattedColumns: TypeDataColumn[];

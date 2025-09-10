@@ -72,6 +72,19 @@ type EditCellPopoverProps = {
   setCellValue: (value: any) => void;
 };
 
+/**
+ * Required handling expects required.includes(fieldKey) on the property
+ * itself; in JSON Schema, required is defined on the parent object and
+ * lists property names. Current logic likely misses many required validations
+ * or applies them incorrectly.
+ *
+ * The “re-validate on error change” effect stringifies input and error;
+ * this is costly and can cause subtle loops. Prefer deep-compare utilities or
+ * targeted deps.
+ *
+ * Error from updateCellDataError is set, then quickly overridden by client-side
+ * validation pass; user may lose server error context.
+ */
 export const EditCellPopover = ({
   value,
   type,
@@ -86,13 +99,15 @@ export const EditCellPopover = ({
   const createInitialObject = (currentValue: any, properties: Properties | undefined) => {
     const initialObject: Record<string, any> = {};
 
+    /**
+     * Using property.title as object keys in EditCellPopover for object
+     * scaffolding can desync with server schemas (titles change, keys don’t).
+     */
     Object.values(properties || {}).forEach(property => {
       if (property.type === "object") {
-        // Pass the nested value to the recursive call
         const nestedValue = currentValue?.[property.title];
         initialObject[property.title] = createInitialObject(nestedValue, property.properties);
       } else {
-        // Use the current value if it exists, otherwise fall back to defaults
         initialObject[property.title] =
           currentValue?.[property.title] ?? DEFAULT_VALUES[property.type as FieldType] ?? null;
       }
@@ -138,6 +153,13 @@ export const EditCellPopover = ({
   const [error, setError] = useState<TypeInputRepresenterError>();
   const [isOpen, setIsOpen] = useState(true);
 
+  /**
+   * Discard changes shape bug: EditCellPopover.getEmptyValue
+   * returns a raw value (not {value: ...}) for most types when
+   * fallbackToDefaults is false; discardChanges() passes this to
+   * handleInputChange, which expects {value}. This can set
+   * undefined and leak incorrect state.
+   */
   const handleInputChange = (newValue: any) => {
     setInputValue(newValue);
 
@@ -185,7 +207,19 @@ export const EditCellPopover = ({
     properties: properties as TypeProperties,
     value: inputValue,
     onChange: handleInputChange,
-    error: error, //{value: {user: {email: "god damn"}}},
+    error: error /*{
+      value: {
+        user: {
+          permissions: {
+            roles: {
+              role: {
+                level: "This field must be at least 1"
+              }
+            }
+          }
+        }
+      }
+    }, //error, //{value: {user: {email: "god damn"}}},*/,
     errorClassName: styles.inputError,
     containerClassName: customStyles[type]
   });
@@ -237,18 +271,20 @@ export const EditCellPopover = ({
   };
 
   const validateInput = useCallback(
-    (inputValue: {[key: string]: any}, constraints: Constraints): TypeInputRepresenterError => {
+    (
+      inputValue: {[key: string]: any},
+      constraints: Constraints | undefined
+    ): TypeInputRepresenterError => {
       if (!constraints) return {};
-      // Get the actual value from the input structure
-      const actualValue = inputValue?.value;
+
       // If we have properties constraint, validate the object structure
       if (constraints.properties && type === "object") {
-        const errors = validateObjectProperties(actualValue, constraints.properties);
+        const errors = validateObjectProperties(inputValue.value, constraints.properties);
         return {value: errors};
       }
 
       // For non-object types, validate the direct value
-      return validateSingleValue(actualValue, constraints, "value");
+      return validateSingleValue(inputValue, constraints, "value");
     },
     []
   );
@@ -281,9 +317,10 @@ export const EditCellPopover = ({
   // Helper function to validate a single value
   const validateSingleValue = (
     value: any,
-    schema: any,
+    schema: Constraints,
     fieldKey: string
   ): TypeInputRepresenterError => {
+    console.log("validateSingleValue", {value, schema, fieldKey});
     const errors: TypeInputRepresenterError = {};
 
     if (!schema) return errors;
