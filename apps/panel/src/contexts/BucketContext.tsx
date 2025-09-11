@@ -13,7 +13,8 @@ import {
   type BucketDataQueryWithIdType,
   type BucketDataType,
   type BucketDataWithIdType,
-  type BucketType
+  type BucketType,
+  type Property
 } from "../services/bucketService";
 import type {AxiosRequestHeaders} from "axios";
 
@@ -41,6 +42,13 @@ type BucketContextType = {
       write: string;
     }
   ) => Promise<any>;
+  createBucket: (title: string) => Promise<any>;
+  createBucketField: (
+    bucket: BucketType,
+    newField: Property,
+    requiredField?: string,
+    primaryField?: string
+  ) => Promise<any>;
   updateBucketLimitation: (bucket: BucketType) => Promise<void>;
   updateBucketLimitationFields: (
     bucket: BucketType,
@@ -57,6 +65,7 @@ type BucketContextType = {
   deleteBucketHistoryError: string | null;
   updateBucketRuleLoading: boolean;
   updateBucketRuleError: string | null;
+  createBucketFieldError: string | null;
 };
 
 /**
@@ -88,6 +97,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
     apiUpdateBucketRule,
+    apiCreateBucket,
+    apiCreateBucketField,
     apiUpdatebucketLimitiation,
     apiUpdatebucketLimitiationFields,
     apiBuckets,
@@ -96,6 +107,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
+    apiCreateBucketFieldError,
     apiUpdateBucketLimitationFieldsLoading,
     apiUpdateBucketLimitationFieldsError
   } = useBucketService();
@@ -134,7 +146,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
             sort: query.sort ? JSON.stringify(query.sort) : defaultParams.sort
           }
         : {...defaultParams};
-
 
       const queryString = new URLSearchParams(
         params as unknown as Record<string, string>
@@ -285,15 +296,40 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [buckets]
   );
 
+  const updateBucketReadonly = useCallback(
+    async (bucket: BucketType) => {
+      const previousBuckets = buckets;
+      setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
+      const success = await apiUpdateBucketReadonly(bucket);
+      if (!success) {
+        setBuckets(previousBuckets);
+      }
+    },
+    [buckets, apiUpdateBucketReadonly]
+  );
 
-  const updateBucketReadonly = useCallback(async (bucket: BucketType) => {
-    const previousBuckets = buckets;
-    setBuckets(prev => (prev ? prev.map(i => ({...i, readOnly: !i.readOnly})) : []));
-    const success = await apiUpdateBucketReadonly(bucket);
-    if (!success) {
-      setBuckets(previousBuckets);
-    }
-  }, [buckets, apiUpdateBucketReadonly]);
+  const createBucketField = useCallback(
+    async (
+      bucket: BucketType,
+      newField: Property,
+      requiredField?: string,
+      primaryField?: string
+    ) => {
+      const currentRequired = bucket.required ? [...bucket.required] : [];
+      if (requiredField) currentRequired.push(requiredField);
+      const modifiedBucket = {
+        ...bucket,
+        properties: {...bucket.properties, [newField.title]: newField},
+        required: currentRequired.length > 0 ? currentRequired : [],
+        primary: primaryField ?? bucket.primary
+      };
+      return apiCreateBucketField(modifiedBucket).then(result => {
+        apiGetBuckets();
+        return result;
+      });
+    },
+    [apiCreateBucketField]
+  );
 
   const updateBucketLimitation = useCallback(
     async (bucket: BucketType) => {
@@ -341,6 +377,17 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [apiUpdatebucketLimitiationFields]
   );
 
+  const createBucket = useCallback(
+    async (title: string) => {
+      return await apiCreateBucket(title, buckets.length).then(result => {
+        if (!result) return;
+        setBuckets(prev => [...(prev ?? []), result]);
+        return result;
+      });
+    },
+    [buckets, apiCreateBucket]
+  );
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -358,6 +405,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketReadonly,
       updateBucketLimitation,
       updateBucketLimitationFields,
+      createBucket,
+      createBucketField,
       buckets,
       bucketData,
       updateBucketRuleLoading: apiUpdateBucketRuleLoading,
@@ -369,6 +418,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketLimitationFieldsLoading: apiUpdateBucketLimitationFieldsLoading,
       updateBucketLimitationFieldsError: apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,
+      createBucketFieldError: apiCreateBucketFieldError
     }),
     [
       getBucketData,
@@ -386,6 +436,10 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketReadonly,
       updateBucketLimitation,
       updateBucketLimitationFields,
+      updateBucketLimitation,
+      updateBucketLimitationFields,
+      createBucket,
+      createBucketField,
       buckets,
       bucketData,
       apiUpdateBucketRuleLoading,
@@ -396,7 +450,10 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiDeleteBucketHistoryError,
       apiUpdateBucketLimitationFieldsLoading,
       apiUpdateBucketLimitationFieldsError,
+      apiUpdateBucketLimitationFieldsLoading,
+      apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,
+      apiCreateBucketFieldError
     ]
   );
 

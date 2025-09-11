@@ -1,0 +1,369 @@
+import {
+  Text,
+  Button,
+  FlexElement,
+  FluidContainer,
+  Icon,
+  Tab,
+  useInputRepresenter,
+  type IconName,
+  type TypeFlexElement,
+  type TypeFluidContainer
+} from "oziko-ui-kit";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type FC,
+  type JSX,
+  type ReactNode
+} from "react";
+import type {BucketType, Property} from "src/services/bucketService";
+import type {FormErrors, FormValues} from "./BucketAddFieldBusiness";
+import {innerFieldConfigProperties, presetProperties} from "./BucketAddFieldSchema";
+import styles from "./BucketAddField.module.scss";
+import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
+import BucketFieldConfigurationPopup from "../../molecules/bucket-field-popup/BucketFieldConfigurationPopup";
+import {fieldOptions} from "../../molecules/bucket-field-popup/BucketFieldSelectionPopup";
+
+type InnerFieldProps = {
+  field: FormValues;
+  bucket?: BucketType;
+  buckets: BucketType[];
+  onSaveInnerField: (values: FormValues) => void;
+  onDeleteInnerField: (field: FormValues) => void;
+  innerFieldStyles: CSSProperties;
+  forbiddenFieldNames: string[];
+};
+
+const InnerField: FC<InnerFieldProps> = memo(
+  ({field, bucket, buckets, onSaveInnerField, onDeleteInnerField, innerFieldStyles, forbiddenFieldNames}) => {
+    const [isEditing, setIsEditing] = useState(false);
+
+    const handleToggleEdit = () => setIsEditing(prev => !prev);
+
+    const handleSave = useCallback(
+      (values: FormValues) => {
+        onSaveInnerField({...values, id: field.id});
+        handleToggleEdit();
+      },
+      [onSaveInnerField]
+    );
+
+    return (
+      <FluidContainer
+        dimensionX="fill"
+        className={styles.innerFieldItem}
+        prefix={{
+          children: (
+            <FlexElement gap={5} className={styles.innerFieldPrefix}>
+              <Icon name={"chevronRight"} size="sm" />
+              <Text className={styles.innerFieldName}>{field.fieldValues.title}</Text>
+            </FlexElement>
+          )
+        }}
+        root={{children: <Text>{field.type}</Text>}}
+        suffix={{
+          children: (
+            <FlexElement gap={5} dimensionX="fill" className={styles.innerFieldActions}>
+              <BucketFieldConfigurationPopup
+                isOpen={isEditing}
+                selectedType={field.type}
+                bucket={bucket as BucketType}
+                buckets={buckets}
+                onClose={handleToggleEdit}
+                onSaveAndClose={handleSave}
+                initialValues={field as FormValues}
+                bucketAddFieldPopoverStyles={innerFieldStyles}
+                iconName={"pencil"}
+                configurationMapping={innerFieldConfigProperties}
+                forbiddenFieldNames={forbiddenFieldNames}
+              >
+                <Button color="default" variant="icon" onClick={handleToggleEdit}>
+                  <Icon name="pencil" />
+                </Button>
+              </BucketFieldConfigurationPopup>
+              <Button color="danger" variant="icon" onClick={() => onDeleteInnerField(field)}>
+                <Icon name="delete" />
+              </Button>
+            </FlexElement>
+          )
+        }}
+      />
+    );
+  }
+);
+
+type BucketAddFieldViewProps = {
+  // Display props
+  className?: string;
+  innerFieldStyles: CSSProperties;
+
+  // Form data
+  formValues: FormValues;
+  formErrors: FormErrors;
+  error: string | null;
+
+  // Schema and configuration
+  mainFormInputProperties: Record<string, any>;
+  configurationInputProperties: Record<string, any>;
+  defaultInputProperty: Record<string, any>;
+
+  // State
+  isLoading: boolean;
+  innerFieldExists: boolean;
+
+  // Event handlers
+  setFormValues: React.Dispatch<React.SetStateAction<FormValues>>;
+  handleSaveAndClose: () => void;
+  handleCreateInnerField: (values: FormValues) => void;
+  handleSaveInnerField: (values: FormValues) => void;
+  handleDeleteInnerField: (values: FormValues) => void;
+
+  // External dependencies
+  bucket: BucketType;
+  buckets: BucketType[];
+
+  iconName?: IconName;
+};
+
+const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
+  className,
+  innerFieldStyles,
+  formValues,
+  formErrors,
+  error,
+  mainFormInputProperties,
+  configurationInputProperties,
+  defaultInputProperty,
+  isLoading,
+  innerFieldExists,
+  setFormValues,
+  handleSaveAndClose,
+  handleCreateInnerField,
+  handleSaveInnerField,
+  handleDeleteInnerField,
+  bucket,
+  buckets,
+  iconName
+}) => {
+  const [activeTab, setActiveTab] = useState(0);
+
+  // Input representers
+  const handleFormValueChange = (values: FormValues, formValuesAttribute: keyof FormValues) =>
+    setFormValues(prev => {
+      return {...prev, [formValuesAttribute]: values};
+    });
+
+  const mainFormInputs = useInputRepresenter({
+    properties: mainFormInputProperties,
+    value: formValues.fieldValues,
+    onChange: values => handleFormValueChange(values, "fieldValues"),
+    error: formErrors.fieldValues ?? {},
+    errorClassName: styles.error
+  });
+
+  const configurationInputs = useInputRepresenter({
+    properties: configurationInputProperties,
+    value: formValues.configurationValues,
+    onChange: values => handleFormValueChange(values, "configurationValues"),
+    error: formErrors.configurationValues ?? {},
+    errorClassName: styles.error
+  });
+
+  const defaultInput = useInputRepresenter({
+    properties: defaultInputProperty,
+    value: formValues.defaultValue,
+    onChange: values => handleFormValueChange(values, "defaultValue"),
+    error: formErrors.defaultValue ?? {},
+    errorClassName: styles.error
+  });
+
+  const presetInputs = useInputRepresenter({
+    properties: presetProperties as unknown as Property,
+    value: formValues.presetValues,
+    onChange: values => handleFormValueChange(values, "presetValues"),
+    error: formErrors.presetValues ?? {},
+    errorClassName: styles.error
+  });
+
+  const forbiddenInnerFieldNames = useMemo(() => formValues.innerFields?.map((f: FormValues) => f.fieldValues.title) || [], [formValues.innerFields]);
+
+  const tabs = useMemo(() => {
+    const items: TypeFluidContainer[] = [];
+    let currentIndex = 0;
+    const createConfig = (children: ReactNode, element: JSX.Element) => {
+      const tabIndex = currentIndex; // Capture the current index
+      const item: TypeFluidContainer = {
+        prefix: {
+          children,
+          onClick: () => {
+            setActiveTab(tabIndex);
+          }
+        },
+        element
+      } as TypeFluidContainer;
+      items.push(item);
+      currentIndex++;
+    };
+
+    if (innerFieldExists) {
+      createConfig(
+        "Inner Fields",
+        <div>
+          {formValues.innerFields?.map?.((field: FormValues, i: number) => (
+            <InnerField
+              key={i}
+              field={field}
+              buckets={buckets}
+              bucket={bucket}
+              onSaveInnerField={handleSaveInnerField}
+              onDeleteInnerField={handleDeleteInnerField}
+              innerFieldStyles={innerFieldStyles}
+              forbiddenFieldNames={forbiddenInnerFieldNames}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (formValues.type === "string") {
+      createConfig("Presets", <div className={styles.presetsContainer}>{presetInputs}</div>);
+    }
+
+    if (
+      ![
+        "textarea",
+        "multiselect",
+        "relation",
+        "location",
+        "storage",
+        "richtext",
+        "array",
+        "object",
+        "json"
+      ].includes(formValues.type)
+    ) {
+      createConfig("Default", defaultInput as unknown as JSX.Element);
+    }
+
+    createConfig("Configuration", <div className={styles.configuration}>{configurationInputs}</div>);
+    return items;
+  }, [
+    formValues.type,
+    innerFieldExists,
+    configurationInputs,
+    presetInputs,
+    formValues.innerFields,
+    defaultInput,
+    forbiddenInnerFieldNames
+  ]);
+
+  const tabItems: {prefix?: TypeFlexElement}[] = useMemo(
+    () => tabs.map(i => ({prefix: i.prefix})),
+    [tabs]
+  );
+
+  useEffect(() => {
+    setActiveTab(0);
+  }, [formValues.type]);
+
+  return (
+    <FlexElement
+      direction="vertical"
+      gap={10}
+      className={`${styles.contentContainer} ${className || ""}`}
+    >
+      {/* Field Type Header */}
+      <FluidContainer
+        dimensionX="fill"
+        dimensionY="hug"
+        alignment="leftCenter"
+        className={styles.item}
+        root={{
+          children: (
+            <Text dimensionX="fill" className={styles.displayer}>
+              {formValues.type}
+            </Text>
+          ),
+          dimensionX: "fill"
+        }}
+        gap={10}
+        prefix={{
+          children: (
+            <Icon name={fieldOptions.find(i => i.type === formValues.type)?.icon as IconName} />
+          )
+        }}
+        suffix={{children: iconName && <Icon name={iconName} />}}
+      />
+
+      {mainFormInputs}
+
+      {/* Tabs Navigation */}
+      {tabItems.length > 0 && (
+        <Tab
+          type="underline"
+          indicatorMode={tabItems.length > 2 ? "equal" : "fit"}
+          dimensionX="fill"
+          items={tabItems}
+          value={activeTab}
+          onChange={setActiveTab}
+          className={`${styles.tab} ${tabItems.length > 2 ? styles.bigTab : styles.smallTab}`}
+        />
+      )}
+
+      {/* Tab Content */}
+      {tabs[activeTab] && (tabs[activeTab] as {element: JSX.Element}).element}
+
+      {/* Action Buttons */}
+      <div className={styles.buttonWrapper}>
+        <Button
+          className={styles.saveAndCloseButton}
+          onClick={handleSaveAndClose}
+          loading={isLoading}
+          disabled={isLoading}
+        >
+          <FluidContainer
+            prefix={{children: <Icon name="save" size="sm" />}}
+            root={{children: "Save and close"}}
+          />
+        </Button>
+
+        {innerFieldExists && (
+          <BucketFieldPopup
+            buckets={buckets as BucketType[]}
+            bucket={bucket}
+            onSaveAndClose={handleCreateInnerField}
+            bucketAddFieldPopoverStyles={innerFieldStyles}
+            configurationMapping={innerFieldConfigProperties}
+            iconName={"plus"}
+            forbiddenFieldNames={forbiddenInnerFieldNames}
+          >
+            <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
+              <FluidContainer
+                prefix={{children: <Icon name="plus" size="sm" />}}
+                root={{children: "Add New Inner Field"}}
+              />
+            </Button>
+          </BucketFieldPopup>
+        )}
+      </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className={innerFieldExists ? styles.innerFieldsError : styles.defaultError}>
+          <div className={styles.errorTextContainer}>
+            <Text className={styles.errorText} variant="danger">
+              {error}
+            </Text>
+          </div>
+        </div>
+      )}
+    </FlexElement>
+  );
+};
+
+export default memo(BucketAddFieldView);

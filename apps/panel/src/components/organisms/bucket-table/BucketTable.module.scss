@@ -49,6 +49,8 @@
 
 .newFieldHeader {
   border-top-right-radius: var(--border-radius-md);
+  right: 0;
+  border-left: var(--border-default);
 }
 
 .multipleSelectionCell {
@@ -69,6 +71,10 @@
 .columnHeader {
   justify-content: space-between !important;
   background-color: var(--color-border);
+}
+
+.columnHeader:nth-last-child(2) {
+  border-right: none !important;
 }
 
 .columnHeader:first-child {
@@ -94,6 +100,8 @@
 
 .newFieldCell {
   background-color: var(--color-border) !important;
+  right: 0;
+  border-left: var(--border-default);
 }
 
 .checkbox {
@@ -191,4 +199,8 @@
   overflow: hidden;
   align-items: center;
   align-content: center;
+}
+
+.cell:nth-last-child(2) {
+  border-right: none !important;
 }

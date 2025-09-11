@@ -1,20 +1,14 @@
-import {
-  Button,
-  FlexElement,
-  FluidContainer,
-  Icon,
-  Popover,
-  Text,
-  Checkbox,
-  useOnClickOutside
-} from "oziko-ui-kit";
-import {memo, useMemo, useEffect, useRef, useState, type FC, useCallback} from "react";
+import {Button, FlexElement, FluidContainer, Icon, Popover, Text, Checkbox} from "oziko-ui-kit";
+import {memo, useMemo, useEffect, useState, type FC, useCallback} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
-import BucketLimitationsForm from "../bucket-limitations-form/BucketLimitationsForm";
 import Confirmation from "../confirmation/Confirmation";
 import BucketRules from "../bucket-rules/BucketRules";
+import BucketLimitationsForm, {
+  LIMIT_EXCEED_BEHAVIOUR_OPTIONS,
+  type TypeLimitExceedBehaviour
+} from "../bucket-limitations-form/BucketLimitationsForm";
 
 type TypeBucketMorePopup = {
   className?: string;
@@ -22,12 +16,6 @@ type TypeBucketMorePopup = {
   onOpen?: () => void;
   onClose?: () => void;
 };
-
-export type TypeLimitExceedBehaviour = "prevent" | "remove";
-export const LIMIT_EXCEED_BEHAVIOUR_OPTIONS = [
-  {label: "Do not insert", value: "prevent"},
-  {label: "Insert but delete the oldest", value: "remove"}
-] as {label: string; value: TypeLimitExceedBehaviour}[];
 
 const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
   const [isOpen, setIsOpen] = useState(false);
