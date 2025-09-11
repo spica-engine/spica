@@ -1,12 +1,12 @@
 import {createContext, useContext, useState, type ReactNode} from "react";
+import {FieldKind} from "../../../domain/fields";
 
 export type PopupType = "add-field" | "edit-inner-field" | "add-inner-field";
 export type BucketFieldPopup = {
   id: string;
   innerFieldStyles?: any;
-  fieldType?: any;
+  fieldKind?: FieldKind; // normalized central registry kind
   popupType?: PopupType;
-  forbiddenFieldNames?: string[];
   initialValues?: any;
 };
 

@@ -1,30 +1,17 @@
 import {type FC, useMemo, useState, useCallback, useEffect, memo, useRef} from "react";
 import type {TypeInputType} from "oziko-ui-kit";
-import {getDefaultValues} from "./BucketAddFieldUtils";
-import {regexPresets, enumerationPresets} from "./BucketAddFieldPresets";
-import {
-  configPropertiesMapping,
-  createShema,
-  defaultConfig,
-  innerFieldConfigProperties
-} from "./BucketAddFieldSchema";
+import * as fieldDomain from "../../../domain/fields";
+import {resolveFieldKind} from "../../../domain/fields/registry"; // local helper for narrowing
+// Direct import for base preset defaults (not re-exported intentionally)
+import {BASE_PRESET_DEFAULTS} from "../../../domain/fields/defaults";
 import {useBucket} from "../../../contexts/BucketContext";
 import BucketAddFieldView from "./BucketAddFieldView";
-import {
-  createBucketFieldValidationSchema,
-  validateBucketFieldForm
-} from "./BucketAddFieldValidation";
 import {
   useBucketFieldPopups,
   type BucketFieldPopup
 } from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
 
-function hasSameElements(a: string[], b: string[]) {
-  if (a.length !== b.length) return false;
-  const sortedA = [...a].sort();
-  const sortedB = [...b].sort();
-  return sortedA.every((val, i) => val === sortedB[i]);
-}
+// Removed redundant hasSameElements helper; inline comparison used where needed.
 
 export type BucketAddFieldBusinessProps = {
   onSuccess?: () => void;
@@ -66,25 +53,6 @@ export type FormErrors = {
   innerFields?: string;
 };
 
-const DEFAULT_PRESET_VALUES: TypePresetValues = {
-  preset: "",
-  makeEnumerated: false,
-  enumeratedValues: [],
-  definePattern: false,
-  regularExpression: ""
-};
-
-const DEFAULT_FORM_VALUES: FormValues = {
-  fieldValues: {
-    title: "New Inner Field",
-    description: ""
-  },
-  configurationValues: {},
-  presetValues: DEFAULT_PRESET_VALUES,
-  defaultValue: {},
-  type: "object"
-};
-
 const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   onSuccess,
   onSaveAndClose,
@@ -93,37 +61,68 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
 }) => {
   const {bucketFieldPopups, setBucketFieldPopups} = useBucketFieldPopups();
   const {
-    fieldType: type,
-    forbiddenFieldNames,
+    fieldKind: type,
     popupType,
     initialValues
   } = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
 
-  const configurationMapping =
-    popupType === "add-field" ? configPropertiesMapping : innerFieldConfigProperties;
+  const isInner = popupType !== "add-field";
 
-  // Schema and form state management
-  const schema = useMemo(() => createShema[type as keyof typeof createShema] || {}, [type]);
-  const defaultFieldValues = useMemo(
-    () =>
-      initialValues?.fieldValues ??
-      getDefaultValues(schema, {
-        title: "Name",
-        description: ""
-      }),
-    [type, schema, initialValues?.fieldValues]
-  );
-  const [formValues, setFormValues] = useState<FormValues>(DEFAULT_FORM_VALUES);
-
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
-
+  // No direct registry usage needed here; facade supplies everything required.
+  // Unified UI schema groups via facade
+  // Buckets need to be resolved before schema memo to avoid temporal dead-zone issues
   const {createBucketFieldError, buckets, bucketData} = useBucket();
-
   const bucket = useMemo(
     () => buckets.find(i => i._id === bucketData?.bucketId),
     [buckets, bucketData?.bucketId]
   );
+  const {
+    main: mainFormInputProperties,
+    configuration: configurationInputProperties,
+    defaults: defaultInputProperty
+  } = useMemo(
+    () =>
+      type
+        ? fieldDomain.getUiSchema(type as fieldDomain.FieldKind, {inner: isInner, buckets})
+        : {main: {}, configuration: {}, defaults: {}},
+    [type, isInner, buckets]
+  ) as {
+    main: Record<string, any>;
+    configuration: Record<string, any>;
+    defaults: Record<string, any>;
+  };
+
+  const initialFormState = useMemo<FormValues>(() => {
+    if (type) {
+      const base = fieldDomain.initFormWithTitleFallback(type as fieldDomain.FieldKind, {
+        inner: isInner,
+        initial: initialValues
+      });
+      return {
+        fieldValues: base.fieldValues,
+        configurationValues: base.configurationValues,
+        presetValues: base.presetValues as TypePresetValues,
+        defaultValue: base.defaultValue,
+        type: type as any,
+        innerFields: base.innerFields
+      };
+    }
+    return {
+      fieldValues: {title: isInner ? "New Inner Field" : "Name", description: ""},
+      configurationValues: {},
+      presetValues: {...BASE_PRESET_DEFAULTS},
+      defaultValue: {},
+      type: "object" as any,
+      innerFields: undefined
+    };
+  }, [type, isInner, initialValues]);
+
+  const [formValues, setFormValues] = useState<FormValues>(initialFormState);
+
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  // (moved buckets/useBucket earlier)
   const existingFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket]);
 
   const [apiError, setApiError] = useState(createBucketFieldError);
@@ -132,151 +131,74 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     setApiError(createBucketFieldError);
   }, [createBucketFieldError]);
 
-  const defaultInputProperty = useMemo(
-    () => defaultConfig[type as keyof typeof defaultConfig] || {},
-    [type]
-  );
-
-  const mainFormInputProperties = useMemo(
-    () => ({
-      ...schema,
-      ...(type === "relation" && {
-        bucket: {
-          ...schema.bucket,
-          enum: buckets.map(b => ({label: b.title, value: b._id}))
-        }
-      })
-    }),
-    [type, schema, buckets]
-  );
-
-  useEffect(() => {
-    setFormValues(prev => ({
-      ...prev,
-      configurationValues: {
-        ...prev.configurationValues,
-        ...getDefaultValues(configurationMapping[type as keyof typeof configurationMapping] || {})
-      }
-    }));
-  }, [type, initialValues?.configurationValues, formValues.fieldValues.arrayType]);
-
-  const configurationInputProperties = useMemo(
-    () => configurationMapping[type as keyof typeof configurationMapping],
-    [type]
-  );
+  // mainFormInputProperties now sourced directly from domain (relation bucket enums injected there).
+  // Ensure configuration defaults populated when schema changes
+  // Configuration defaults merged by initForm; relation bucket options augmented below.
 
   // Initialize form values when type changes
   useEffect(() => {
-    setFormValues(prev => ({
-      ...prev,
-      fieldValues: {...defaultFieldValues},
-      configurationValues: {
-        ...getDefaultValues(configurationInputProperties, initialValues?.configurationValues)
-      },
-      defaultValue: {...getDefaultValues(defaultInputProperty, initialValues?.fieldValues)},
-      presetValues: type === "string" ? DEFAULT_PRESET_VALUES : prev.presetValues,
-      type,
-      ...initialValues
-    }));
+    if (!type) return;
+    setFormValues(() => {
+      const base = fieldDomain.initFormWithTitleFallback(type as fieldDomain.FieldKind, {
+        inner: isInner,
+        initial: initialValues
+      });
+      return {
+        fieldValues: base.fieldValues,
+        configurationValues: base.configurationValues,
+        presetValues: base.presetValues as TypePresetValues,
+        defaultValue: base.defaultValue,
+        type: type as any,
+        innerFields: base.innerFields
+      };
+    });
     setFormErrors({});
     setApiError(null);
-  }, [type]);
+  }, [type, initialValues, isInner]);
 
-  // Handle preset logic for string types
+  // Unified preset application effect (domain-driven)
   useEffect(() => {
-    setFormValues(prev => ({
-      ...prev,
-      presetValues:
-        formValues.fieldValues.arrayType !== "string" ? DEFAULT_PRESET_VALUES : prev.presetValues,
-      ...initialValues
-    }));
-    if (formValues.fieldValues.multipleSelectionType) {
-      schema.chip.multipleSelectionType = formValues.fieldValues.multipleSelectionType;
+    if (!type) return;
+    setFormValues(prev => {
+      const res = fieldDomain.applyPresetLogic(type as fieldDomain.FieldKind, prev as any);
+      if (res.applied || res.reset) return res.form as any;
+      return prev;
+    });
+  }, [
+    type,
+    formValues.presetValues.preset,
+    formValues.presetValues.makeEnumerated,
+    formValues.presetValues.definePattern,
+    formValues.fieldValues.arrayType
+  ]);
+
+  const validateForm = useCallback(async () => {
+    setApiError(null);
+    if (!type) return false;
+    const shaped = fieldDomain.coerceFieldShape(formValues as any);
+    const forbiddenNames =
+      popupType === "add-field"
+        ? existingFieldNames
+        : fieldDomain.listForbiddenNames(shaped as any, {mode: "inner"});
+    const errors = fieldDomain.validateForm(
+      type as fieldDomain.FieldKind,
+      {
+        type: shaped.type,
+        fieldValues: shaped.fieldValues,
+        configurationValues: shaped.configurationValues,
+        defaultValue: shaped.defaultValue,
+        presetValues: shaped.presetValues,
+        innerFields: shaped.innerFields
+      },
+      {forbiddenNames: forbiddenNames}
+    );
+    if (errors) {
+      setFormErrors(errors as any);
+      return false;
     }
-  }, [formValues.fieldValues.arrayType, formValues.fieldValues.multipleSelectionType]);
-
-  // Handle preset changes
-  useEffect(() => {
-    if (
-      (type !== "string" && formValues.fieldValues.arrayType !== "string") ||
-      !formValues.presetValues.preset
-    )
-      return;
-    const presetKey = formValues.presetValues.preset;
-    const enumValues = enumerationPresets[presetKey as keyof typeof enumerationPresets];
-    const regexValue = regexPresets[presetKey as keyof typeof regexPresets];
-    setFormValues(prev => ({
-      ...prev,
-      presetValues:
-        presetKey in enumerationPresets
-          ? {
-              preset: presetKey,
-              enumeratedValues: enumValues as string[],
-              regularExpression: "",
-              makeEnumerated: true,
-              definePattern: false
-            }
-          : presetKey in regexPresets
-            ? {
-                preset: presetKey,
-                enumeratedValues: [],
-                regularExpression: regexValue,
-                makeEnumerated: false,
-                definePattern: true
-              }
-            : prev.presetValues
-    }));
-  }, [type, formValues.presetValues.preset, formValues.fieldValues.arrayType]);
-
-  // Handle enumeration toggle
-  useEffect(() => {
-    if (type !== "string" && formValues.fieldValues.arrayType !== "string") return;
-    const presetKey = formValues.presetValues.preset;
-    if (!presetKey) return;
-    const makeEnumerated = formValues.presetValues.makeEnumerated;
-    if (!makeEnumerated && presetKey in enumerationPresets) {
-      setFormValues(prev => ({
-        ...prev,
-        presetValues: {...prev.presetValues, enumeratedValues: [], preset: ""}
-      }));
-    }
-  }, [type, formValues.presetValues.makeEnumerated, formValues.fieldValues.arrayType]);
-
-  // Handle pattern toggle
-  useEffect(() => {
-    if (type !== "string" && formValues.fieldValues.arrayType !== "string") return;
-    const presetKey = formValues.presetValues.preset;
-    if (!presetKey) return;
-    const definePattern = formValues.presetValues.definePattern;
-    if (!definePattern && presetKey in regexPresets) {
-      setFormValues(prev => ({
-        ...prev,
-        presetValues: {...prev.presetValues, regularExpression: "", preset: ""}
-      }));
-    }
-  }, [type, formValues.presetValues.definePattern, formValues.fieldValues.arrayType]);
-
-  const validationSchema = useMemo(
-    () =>
-      createBucketFieldValidationSchema({
-        schema,
-        configurationInputProperties,
-        defaultInputProperty,
-        forbiddenFieldNames: forbiddenFieldNames || []
-      }),
-    [schema, configurationInputProperties, defaultInputProperty, forbiddenFieldNames]
-  );
-
-  const validateForm = useCallback(
-    () =>
-      validateBucketFieldForm({
-        formValues,
-        validationSchema,
-        setFormErrors,
-        setApiError
-      }),
-    [formValues, validationSchema]
-  );
+    setFormErrors({});
+    return true;
+  }, [formValues, type, popupType, existingFieldNames]);
 
   const oldType = useRef(type);
   useEffect(() => {
@@ -299,66 +221,31 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
 
   const handleCreateInnerField: (values: FormValues) => void | Promise<any> = useCallback(
     values => {
-      const id = crypto.randomUUID();
-      setFormValues(prev => ({
-        ...prev,
-        innerFields: [...(prev.innerFields || []), {...values, id}]
-      }));
+      const innerKind = resolveFieldKind(values.type as any) || fieldDomain.FieldKind.String;
+      setFormValues(
+        prev =>
+          fieldDomain.addInnerField(prev as any, innerKind as fieldDomain.FieldKind, {
+            seed: values as any
+          }) as any
+      );
     },
     []
   );
 
   const handleSaveInnerField = useCallback((values: FormValues) => {
-    setFormValues(prev => ({
-      ...prev,
-      innerFields: prev.innerFields?.map((innerField: FormValues) =>
-        innerField?.id === values.id ? values : innerField
-      )
-    }));
+    setFormValues(prev => fieldDomain.updateInnerField(prev as any, values as any) as any);
   }, []);
 
   const handleDeleteInnerField = useCallback((field: FormValues) => {
-    setFormValues(prev => ({
-      ...prev,
-      innerFields: prev.innerFields?.filter((innerField: FormValues) => innerField.id !== field.id)
-    }));
+    if (!field.id) return;
+    setFormValues(prev => fieldDomain.removeInnerField(prev as any, field.id as string) as any);
   }, []);
 
   // We explicitly provide field values here because mainFormInputProperties can change
   // without formValues.fieldValues being updated. Without this, useInputRepresenter
   // may throw an error due to a mismatch between the provided values and the
   // expected property values. this can happen when switching between field types
-  const currentFormValues = useMemo(
-    () =>
-      hasSameElements(
-        Object.keys(formValues.fieldValues).filter(i => i !== "innerFields"),
-        Object.keys(defaultFieldValues)
-      )
-        ? formValues
-        : {...formValues, fieldValues: defaultFieldValues},
-    [formValues, defaultFieldValues]
-  );
-
-  const forbiddenInnerFieldNames = useMemo(
-    () => currentFormValues.innerFields?.map((f: FormValues) => f.fieldValues.title) || [],
-    [currentFormValues.innerFields]
-  );
-
-  useEffect(() => {
-    if (!popupId) return;
-    setBucketFieldPopups(prev => {
-      const popupIndex = prev.findIndex(p => p.id === popupId);
-      if (popupIndex === -1) return prev;
-      const updatedPopup = {
-        ...prev[popupIndex],
-        forbiddenFieldNames:
-          popupType === "add-field" ? existingFieldNames : forbiddenInnerFieldNames
-      };
-      const newPopups = [...prev];
-      newPopups[popupIndex] = updatedPopup;
-      return newPopups;
-    });
-  }, [forbiddenInnerFieldNames, existingFieldNames, popupType]);
+  // Popup context mutation for forbidden names removed; computed locally instead.
 
   const handleFormValueChange = (values: FormValues, formValuesAttribute: keyof FormValues) =>
     setFormValues(prev => {
@@ -370,7 +257,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       // Display props
       className={className}
       // Form data
-      formValues={currentFormValues}
+      formValues={formValues}
       formErrors={formErrors}
       error={(apiError || formErrors?.innerFields) ?? null}
       // Schema and configuration

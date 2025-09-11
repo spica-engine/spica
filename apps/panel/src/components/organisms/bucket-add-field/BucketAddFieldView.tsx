@@ -5,7 +5,6 @@ import {
   FluidContainer,
   Icon,
   Tab,
-  useInputRepresenter,
   type IconName,
   type TypeFlexElement,
   type TypeFluidContainer
@@ -18,19 +17,19 @@ import {
   useState,
   type FC,
   type JSX,
-  type ReactNode
+  type ReactNode,
 } from "react";
-import type {Property} from "src/services/bucketService";
 import type {FormErrors, FormValues} from "./BucketAddFieldBusiness";
-import {presetProperties} from "./BucketAddFieldSchema";
 import styles from "./BucketAddField.module.scss";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import BucketFieldConfigurationPopup from "../../molecules/bucket-field-popup/BucketFieldConfigurationPopup";
-import {fieldOptions} from "../../molecules/bucket-field-popup/BucketFieldSelectionPopup";
+import * as fieldDomain from "../../../domain/fields";
 import {
   useBucketFieldPopups,
   type PopupType
 } from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
+import {useInputRepresenter} from "oziko-ui-kit";
+//import useInputRepresenter from "../../../hooks/useInputRepresenter";
 
 type InnerFieldProps = {
   field: FormValues;
@@ -69,7 +68,7 @@ const InnerField: FC<InnerFieldProps> = memo(({field, onSaveInnerField, onDelete
           <FlexElement gap={5} dimensionX="fill" className={styles.innerFieldActions}>
             <BucketFieldConfigurationPopup
               isOpen={isEditing}
-              selectedType={field.type}
+              selectedType={field.type as any}
               onClose={handleToggleEdit}
               onSaveAndClose={handleSave}
               initialValues={field as FormValues}
@@ -107,7 +106,7 @@ type BucketAddFieldViewProps = {
   isLoading: boolean;
 
   // Event handlers
-  handleFormValueChange: (values: FormValues, formValuesAttribute: keyof FormValues) => void
+  handleFormValueChange: (values: FormValues, formValuesAttribute: keyof FormValues) => void;
   handleSaveAndClose: () => void;
   handleCreateInnerField: (values: FormValues) => void;
   handleSaveInnerField: (values: FormValues) => void;
@@ -145,10 +144,8 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
 
   // Computed properties
   const innerFieldExists = useMemo(
-    () =>
-      (formValues.type === "array" && formValues.fieldValues.arrayType === "object") ||
-      formValues.type === "object",
-    [formValues.type, formValues.fieldValues.arrayType]
+    () => fieldDomain.requiresInnerFields(formValues.type as any, {fieldValues: formValues.fieldValues}),
+    [formValues.type, formValues.fieldValues]
   );
 
   const [activeTab, setActiveTab] = useState(0);
@@ -178,13 +175,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     errorClassName: styles.error
   });
 
-  const presetInputs = useInputRepresenter({
-    properties: presetProperties as unknown as Property,
-    value: formValues.presetValues,
-    onChange: values => handleFormValueChange(values, "presetValues"),
-    error: formErrors.presetValues ?? {},
-    errorClassName: styles.error
-  });
+  // Preset inputs have been removed as a separate block; string preset fields now reside in mainFormInputs via domain UI schema.
 
   const tabs = useMemo(() => {
     const items: TypeFluidContainer[] = [];
@@ -220,23 +211,9 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       );
     }
 
-    if (formValues.type === "string") {
-      createConfig("Presets", <div className={styles.presetsContainer}>{presetInputs}</div>);
-    }
-
-    if (
-      ![
-        "textarea",
-        "multiselect",
-        "relation",
-        "location",
-        "storage",
-        "richtext",
-        "array",
-        "object",
-        "json"
-      ].includes(formValues.type)
-    ) {
+    // Default tab based on capability flag rather than exclusion list
+    const defCap = fieldDomain.getFieldDefinition(formValues.type as any)?.capabilities;
+    if (defCap?.hasDefaultValue) {
       createConfig("Default", defaultInput as unknown as JSX.Element);
     }
 
@@ -249,7 +226,6 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     formValues.type,
     innerFieldExists,
     configurationInputs,
-    presetInputs,
     formValues.innerFields,
     defaultInput
   ]);
@@ -285,7 +261,11 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
         gap={10}
         prefix={{
           children: (
-            <Icon name={fieldOptions.find(i => i.type === formValues.type)?.icon as IconName} />
+            <Icon
+              name={
+                fieldDomain.getFieldDefinition(formValues.type as any)?.display.icon as IconName
+              }
+            />
           )
         }}
         suffix={{children: iconName && <Icon name={iconName} />}}

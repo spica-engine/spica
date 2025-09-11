@@ -8,25 +8,22 @@ import {
   type CSSProperties,
   type ReactNode
 } from "react";
-import {type IconName, type TypeInputType, Popover} from "oziko-ui-kit";
+import {type IconName, Popover} from "oziko-ui-kit";
+import {FieldKind} from "../../../domain/fields";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
 import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
-import {
-  configPropertiesMapping,
-  innerFieldConfigProperties
-} from "../../../components/organisms/bucket-add-field/BucketAddFieldSchema";
 import type {PopupType} from "./BucketFieldPopupsContext";
 
 type BucketFieldConfigurationPopupProps = {
-  selectedType: TypeInputType | null;
+  selectedType: FieldKind | null;
   onClose: (event?: MouseEvent) => void;
   onSaveAndClose: (values: FormValues) => void;
   children: ReactNode;
   isOpen: boolean;
   initialValues?: FormValues;
-  setBucketFieldPopupId?: React.Dispatch<React.SetStateAction<string | undefined>>;
+  onRegister?: (id: string) => void;
   iconName?: IconName;
   popupType?: PopupType;
 };
@@ -38,7 +35,7 @@ const BucketFieldConfigurationPopup = ({
   children,
   isOpen,
   initialValues,
-  setBucketFieldPopupId,
+  onRegister,
   iconName,
   popupType
 }: BucketFieldConfigurationPopupProps) => {
@@ -48,25 +45,33 @@ const BucketFieldConfigurationPopup = ({
 
   const {setBucketFieldPopups, bucketFieldPopups} = useBucketFieldPopups();
   const id = useId();
-  const popupStackEmpty = bucketFieldPopups.length === 0;
-  const isFirstPopup = popupStackEmpty || bucketFieldPopups[0].id === id;
-  const isLastPopup = popupStackEmpty || bucketFieldPopups.at(-1)?.id === id;
 
-  const offsetX = isFirstPopup ? 200 : 0;
-  const offsetY = isFirstPopup ? 0 : 10;
-  const configurationMapping = isFirstPopup ? configPropertiesMapping : innerFieldConfigProperties;
+  const {isLastPopup, offsetX, offsetY, configurationMapping, bucketAddFieldPopoverStyles} =
+    useMemo(() => {
+      const popupStackEmpty = bucketFieldPopups.length === 0;
+      const isFirstPopup = popupStackEmpty || bucketFieldPopups[0]?.id === id;
+      const isLastPopup = popupStackEmpty || bucketFieldPopups.at(-1)?.id === id;
+      const offsetX = isFirstPopup ? 200 : 0;
+      const offsetY = isFirstPopup ? 0 : 10;
+  const configurationMapping = {}; // configuration now derived in Business component
+      const bucketAddFieldPopoverStyles = isFirstPopup
+        ? {}
+        : bucketFieldPopups[bucketFieldPopups.findIndex(i => i.id === id) - 1]?.innerFieldStyles ||
+          {};
+
+      return {
+        isLastPopup,
+        offsetX,
+        offsetY,
+  configurationMapping: undefined,
+        bucketAddFieldPopoverStyles
+      };
+    }, [bucketFieldPopups, id]);
 
   const isPopupRegistered = useMemo(
     () => bucketFieldPopups.some(p => p.id === id),
     [bucketFieldPopups]
   );
-
-  const bucketAddFieldPopoverStyles = useMemo<CSSProperties>(() => {
-    if (isFirstPopup) return {};
-    return (
-      bucketFieldPopups[bucketFieldPopups.findIndex(i => i.id === id) - 1]?.innerFieldStyles ?? {}
-    );
-  }, [isFirstPopup, bucketFieldPopups]);
 
   useEffect(() => {
     if (!isOpen || !bucketAddFieldRef.current || !isPopupRegistered) return;
@@ -92,27 +97,17 @@ const BucketFieldConfigurationPopup = ({
       {
         id,
         innerFieldStyles,
-        fieldType: selectedType,
+        fieldKind: selectedType || undefined,
         iconName,
         popupType,
-        configurationMapping,
         initialValues
       }
     ]);
-    console.log("popup registered", {
-      id,
-      innerFieldStyles,
-      selectedType,
-      iconName,
-      popupType,
-      configurationMapping
-    });
+    onRegister?.(id);
     return () => {
       setBucketFieldPopups(prev => prev.filter(popup => popup.id !== id));
     };
   }, [isOpen, innerFieldStyles]);
-
-  useEffect(() => setBucketFieldPopupId?.(id), [id]);
 
   return (
     <Popover
@@ -134,7 +129,7 @@ const BucketFieldConfigurationPopup = ({
         )
       }
     >
-      {children}
+      {children as any}
     </Popover>
   );
 };
