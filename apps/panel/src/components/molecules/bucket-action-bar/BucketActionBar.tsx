@@ -114,6 +114,16 @@ const BucketActionBar = ({
     }
   };
 
+  const handleCloseEntryDeletionForm = () => {
+    setDeleteEntryError(null);
+    setIsDeleteConfirmationOpen(false);
+  };
+
+  const handleOpenEntryDeletionForm = () => {
+    setDeleteEntryError(null);
+    setIsDeleteConfirmationOpen(true);
+  };
+
   return (
     <div className={styles.container}>
       <SearchBar
@@ -127,10 +137,7 @@ const BucketActionBar = ({
       <FlexElement className={styles.actionBar}>
         {selectedEntries.size > 0 && (
           <Button
-            onClick={() => {
-              setDeleteEntryError(null);
-              setIsDeleteConfirmationOpen(true);
-            }}
+            onClick={handleOpenEntryDeletionForm}
             color="danger"
             className={styles.deleteButton}
           >
@@ -215,10 +222,7 @@ const BucketActionBar = ({
           loading={deleteLoading}
           error={deleteEntryError}
           onConfirm={handleEntryDeletion}
-          onCancel={() => {
-            setDeleteEntryError(null);
-            setIsDeleteConfirmationOpen(false);
-          }}
+          onCancel={handleCloseEntryDeletionForm}
         />
       )}
     </div>

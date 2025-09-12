@@ -145,11 +145,9 @@ const NewFieldHeader = memo(() => {
   );
 });
 
-const DEFAULT_SELECT_COLUMN_ID = crypto.randomUUID();
-
 const defaultColumns: ColumnType[] = [
   {
-    id: DEFAULT_SELECT_COLUMN_ID,
+    id: "0",
     header: <ColumnHeader />,
     key: "select",
   role: "select",
