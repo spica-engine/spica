@@ -1,7 +1,7 @@
 import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useCallback, useMemo, type RefObject} from "react";
+import {memo, useCallback, useMemo, useState, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -9,6 +9,7 @@ import type {BucketType} from "src/services/bucketService";
 import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
+import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 
 type FieldType =
   | "string"
@@ -28,6 +29,7 @@ export type ColumnType = {
   id: string;
   header: any;
   key: string;
+  role?: "select" | "data" | "new-field";
   type?: FieldType;
   width?: string;
   deletable?: boolean;
@@ -61,6 +63,7 @@ type ColumnMeta = {
   type?: FieldType;
   deletable?: boolean;
   id: string;
+  role?: "select" | "data" | "new-field";
 };
 
 // TODO: Update the icon mappings below to use appropriate icons for each field type.
@@ -142,11 +145,14 @@ const NewFieldHeader = memo(() => {
   );
 });
 
+const DEFAULT_SELECT_COLUMN_ID = crypto.randomUUID();
+
 const defaultColumns: ColumnType[] = [
   {
-    id: "0",
+    id: DEFAULT_SELECT_COLUMN_ID,
     header: <ColumnHeader />,
     key: "select",
+  role: "select",
     type: "boolean",
     width: "41px",
     headerClassName: styles.columnHeader,
@@ -159,6 +165,7 @@ const defaultColumns: ColumnType[] = [
     id: "1",
     header: <NewFieldHeader />,
     key: "new field",
+  role: "new-field",
     width: "125px",
     headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,
     cellClassName: `${styles.newFieldCell} ${styles.cell}`,
@@ -168,9 +175,27 @@ const defaultColumns: ColumnType[] = [
   }
 ];
 
+function SelectionCheckbox({initial, rowId}: {initial: boolean; rowId: string}) {
+  const [checked, setChecked] = useState(initial);
+  const {selectEntry, deselectEntry} = useEntrySelection();
+  const handleChange = () => {
+    setChecked(!checked);
+    if (!checked) {
+      selectEntry(rowId);
+    } else deselectEntry(rowId);
+  };
+  return <Checkbox className={styles.checkbox} checked={checked} onChange={handleChange} />;
+}
+
 // TODO: Refactor this function to render more appropriate UI elements for each field type.
 // Many field types are currently using the generic `renderDefault()`.
-function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
+function renderCell(
+  cellData: any,
+  rowId: string,
+  type?: FieldType,
+  deletable?: boolean,
+  role?: "select" | "data" | "new-field"
+) {
   function renderDefault() {
     return (
       <div className={styles.defaultCell}>
@@ -191,7 +216,11 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
     case "date":
       return renderDefault();
     case "boolean":
-      return <Checkbox className={styles.checkbox} />;
+  return role === "select" ? (
+        <SelectionCheckbox initial={!!cellData} rowId={rowId} />
+      ) : (
+        <Checkbox className={styles.checkbox} checked={!!cellData} />
+      );
     case "textarea":
       return renderDefault();
     case "multiple selection":
@@ -314,7 +343,10 @@ function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnTyp
 
 function buildColumnMeta(columns: ColumnType[]): Record<string, ColumnMeta> {
   return Object.fromEntries(
-    columns.map(col => [col.key, {type: col.type, deletable: col.deletable, id: col.id}])
+    columns.map(col => [
+      col.key,
+      {type: col.type, deletable: col.deletable, id: col.id, role: col.role}
+    ])
   );
 }
 function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
@@ -337,7 +369,16 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
         const meta = columnMap[key] || {};
         return [
           key,
-          {id: `${meta.id}-${fullRow._id}`, value: renderCell(value, meta.type, meta.deletable)}
+          {
+            id: `${meta.id}-${fullRow._id}`,
+            value: renderCell(
+              value,
+              fullRow._id,
+              meta.type,
+              meta.deletable,
+              meta.role
+            )
+          }
         ];
       })
     );

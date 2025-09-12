@@ -33,7 +33,7 @@ type BucketContextType = {
   deleteBucket: (bucketId: string) => Promise<any>;
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
   deleteBucketHistory: (bucket: BucketType) => Promise<any>;
-  refreshBucketData: () => Promise<void>;
+  refreshBucketData: () => Promise<any>;
   updateBucketReadonly: (bucket: BucketType) => Promise<any>;
   updateBucketRule: (
     bucket: BucketType,
@@ -55,6 +55,7 @@ type BucketContextType = {
     requiredField?: string,
     primaryField?: string
   ) => Promise<any>;
+  deleteBucketEntry: (entryId: string, bucketId: string) => Promise<any>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
@@ -109,7 +110,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucketHistoryError,
     apiUpdateBucketLimitationFieldsLoading,
     apiUpdateBucketLimitationFieldsError,
-    apiCreateBucketFieldError
+    apiCreateBucketFieldError,
+    apiDeleteBucketEntry
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -178,7 +180,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   const refreshBucketData = useCallback(async () => {
     if (!lastUsedBucketDataQuery?.bucketId) return;
     try {
-      await getBucketData(lastUsedBucketDataQuery.bucketId, {
+      return await getBucketData(lastUsedBucketDataQuery.bucketId, {
         ...lastUsedBucketDataQuery,
         skip: 0
       });
@@ -380,12 +382,19 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   const createBucket = useCallback(
     async (title: string) => {
       return await apiCreateBucket(title, buckets.length).then(result => {
-        if (!result) return
+        if (!result) return;
         setBuckets(prev => [...(prev ?? []), result]);
         return result;
       });
     },
     [buckets, apiCreateBucket]
+  );
+
+  const deleteBucketEntry = useCallback(
+    async (entryId: string, bucketId: string) => {
+      return await apiDeleteBucketEntry(entryId, bucketId);
+    },
+    [apiDeleteBucketEntry]
   );
 
   const contextValue = useMemo(
@@ -407,6 +416,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketLimitationFields,
       createBucket,
       createBucketField,
+      deleteBucketEntry,
       buckets,
       bucketData,
       updateBucketRuleLoading: apiUpdateBucketRuleLoading,
@@ -438,6 +448,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketLimitationFields,
       createBucket,
       createBucketField,
+      deleteBucketEntry,
       buckets,
       bucketData,
       apiUpdateBucketRuleLoading,
