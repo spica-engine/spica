@@ -1,34 +1,19 @@
-/**
- * Field Domain Facade
- * --------------------------------------
- * Aggregates primitives (registry, defaults, validation, UI schema, property build/parse)
- * into a cohesive, stable API consumed by UI components. All field lifecycle
- * concerns should route through this layer.
- */
-import {getFieldDefinition, resolveFieldKind} from "./registry";
-import {getFieldUIConfig} from "./ui-schema";
-import {getFieldDefaults, makeInnerFieldDefaults, BASE_PRESET_DEFAULTS} from "./defaults";
-import {
-  FieldKind,
-  type FieldDefinition,
-  type FieldFormDefaults,
-  type PersistedFieldProperty
-} from "./types";
-import {normalizeEnum, sanitizePattern} from "./normalizers";
+import {FIELD_REGISTRY, resolveFieldKind} from "./registry";
+import {makeInnerFieldDefaults, BASE_PRESET_DEFAULTS} from "./defaults";
+import {FieldKind, type FieldDefinition, type FieldCreationForm} from "./types";
 
-// ---------------------------------------------------------------------------
-// Form Lifecycle
-// ---------------------------------------------------------------------------
 interface InitFormOptions {
   inner?: boolean;
-  initial?: Partial<FieldFormDefaults & {type?: FieldKind}>;
+  initial?: Partial<FieldCreationForm & {type?: FieldKind}>;
 }
 
 function initForm(kind: FieldKind, opts: InitFormOptions = {}) {
-  const baseSeed = opts.inner ? makeInnerFieldDefaults(kind) : getFieldDefaults(kind);
-
+  const baseSeed = opts.inner
+    ? makeInnerFieldDefaults(kind)
+    : FIELD_REGISTRY[kind as FieldKind]?.creationFormDefaultValues;
+  if (!baseSeed) throw new Error(`initForm: unknown field kind '${kind}'`);
   // Defensive deep clone (structuredClone available in modern runtimes)
-  const seed: FieldFormDefaults =
+  const seed: FieldCreationForm =
     typeof structuredClone === "function"
       ? structuredClone(baseSeed)
       : {
@@ -38,7 +23,7 @@ function initForm(kind: FieldKind, opts: InitFormOptions = {}) {
           defaultValue: {...baseSeed.defaultValue}
         };
 
-  const initial = (opts.initial || {}) as Partial<FieldFormDefaults & {innerFields?: any[]}>;
+  const initial = (opts.initial || {}) as Partial<FieldCreationForm & {innerFields?: any[]}>;
 
   const deepMerge = (target: any, src: any) => {
     if (!src) return target;
@@ -63,7 +48,7 @@ function initForm(kind: FieldKind, opts: InitFormOptions = {}) {
     innerFields: initial.innerFields ? [...initial.innerFields] : undefined
   };
   // Capability-based sanitization (enumeration / pattern fields removed when unsupported)
-  const def = getFieldDefinition(kind);
+  const def = FIELD_REGISTRY[kind];
   return sanitizeFormByCapabilities(merged, def);
 }
 
@@ -97,7 +82,7 @@ function sanitizeFormByCapabilities(form: any, def?: FieldDefinition) {
   return form;
 }
 
-// Dedicated stripper usable before buildPropertyFromForm
+// Dedicated stripper usable before buildCreationFormPropertiesFromForm
 function stripUnsupportedPresetValues(presetValues: any, def?: FieldDefinition) {
   if (!def) return presetValues;
   const caps = def.capabilities || {};
@@ -116,10 +101,6 @@ function stripUnsupportedPresetValues(presetValues: any, def?: FieldDefinition) 
 // ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------
-interface ValidateContext {
-  forbiddenNames?: string[];
-}
-
 function normalizeErrors(raw: any): Record<string, any> | null {
   if (!raw) return null;
   if (typeof raw !== "object" || Array.isArray(raw)) return {fieldValues: {title: String(raw)}};
@@ -132,11 +113,11 @@ function validateForm(
   form: any
   //ctx: ValidateContext = {}
 ): Record<string, any> | null {
-  const def = getFieldDefinition(kind);
+  const def = FIELD_REGISTRY[kind];
   let errors: any = null;
   // Use registry validate first, else fallback to central schema map
-  if (def?.validate) {
-    errors = def.validate(form);
+  if (def?.validateCreationForm) {
+    errors = def.validateCreationForm(form);
   }
   errors = normalizeErrors(errors);
   // Generic name validation (pattern + reserved)
@@ -158,48 +139,30 @@ function validateForm(
 // ---------------------------------------------------------------------------
 // Property Build / Parse
 // ---------------------------------------------------------------------------
-function buildPropertyFromForm(form: any): PersistedFieldProperty {
-  if (!form) throw new Error("buildPropertyFromForm: form is required");
+function buildCreationFormPropertiesFromForm(form: any) {
+  if (!form) throw new Error("buildCreationFormPropertiesFromForm: form is required");
   const kind = resolveFieldKind(form.type);
-  if (!kind) throw new Error(`buildPropertyFromForm: unknown field kind '${form.type}'`);
-  const def = getFieldDefinition(kind);
-  if (!def) throw new Error(`buildPropertyFromForm: definition missing for '${kind}'`);
+  if (!kind)
+    throw new Error(`buildCreationFormPropertiesFromForm: unknown field kind '${form.type}'`);
+  const def = FIELD_REGISTRY[kind];
+  if (!def)
+    throw new Error(`buildCreationFormPropertiesFromForm: definition missing for '${kind}'`);
 
   // 1. Preset sanitation (capability aware)
   const preset = stripUnsupportedPresetValues({...(form.presetValues || {})}, def);
   if (Array.isArray(preset.enumeratedValues)) {
-    const numericContext = def.capabilities?.numericConstraints;
-    const normalized = normalizeEnum(preset.enumeratedValues, {
-      trim: true,
-      dedupe: true,
-      dropEmpty: true,
-      coerceNumber: !!numericContext
-    });
+    const normalized = preset.enumeratedValues;
     if (normalized.length) preset.enumeratedValues = normalized;
     else delete preset.enumeratedValues;
     if (!normalized.length) preset.makeEnumerated = false;
   }
-  if (preset.definePattern && typeof preset.regularExpression === "string") {
-    const cleaned = sanitizePattern(preset.regularExpression);
-    if (cleaned) preset.regularExpression = cleaned;
-    else {
-      delete preset.regularExpression;
-      preset.definePattern = false;
-    }
-  }
-
-  // Number field enumerations live under fieldValues (legacy shape) – normalize for idempotence.
   if (
-    resolveFieldKind(form.type) === FieldKind.Number &&
-    Array.isArray(form.fieldValues?.enumeratedValues)
+    preset.definePattern &&
+    typeof preset.regularExpression === "string" &&
+    !preset.regularExpression
   ) {
-    const normalizedNumEnum = normalizeEnum(form.fieldValues.enumeratedValues, {
-      trim: true,
-      dedupe: true,
-      dropEmpty: true,
-      coerceNumber: true
-    });
-    form.fieldValues.enumeratedValues = normalizedNumEnum;
+    delete preset.regularExpression;
+    preset.definePattern = false;
   }
 
   // 2. Adapt form for definition consumption
@@ -213,9 +176,8 @@ function buildPropertyFromForm(form: any): PersistedFieldProperty {
   };
 
   // 3. Delegate to definition builder
-  const built = def.buildProperty(adapted as any) as PersistedFieldProperty;
+  const built = def.buildCreationFormProperties() as any;
 
-  // 4. Post-normalization (ensure required structural keys)
   built.type = kind; // enforce discriminator
   if (typeof built.title !== "string")
     built.title = String((adapted.fieldValues as any)?.title || "");
@@ -248,7 +210,7 @@ function buildPropertyFromForm(form: any): PersistedFieldProperty {
   // Ensure enum uniqueness & stable order (stringify signature ordering by primitive comparison)
   if (Array.isArray(built.enum)) {
     const sigSeen = new Set<string>();
-    built.enum = built.enum.filter(v => {
+    built.enum = built.enum.filter((v: any) => {
       const sig = typeof v + ":" + v;
       if (sigSeen.has(sig)) return false;
       sigSeen.add(sig);
@@ -258,15 +220,8 @@ function buildPropertyFromForm(form: any): PersistedFieldProperty {
   return built;
 }
 
-function getUiSchema(
-  kind: FieldKind,
-  ctx: {inner?: boolean; buckets?: Array<{_id: string; title: string}>} = {}
-) {
-  return getFieldUIConfig(kind, ctx);
-}
-
 function formatValue(kind: FieldKind, value: any) {
-  const def = getFieldDefinition(kind);
+  const def = FIELD_REGISTRY[kind];
   if (def?.getFormattedValue) return def.getFormattedValue(value);
   return value == null ? "" : value;
 }
@@ -275,25 +230,17 @@ import {
   addInnerField,
   updateInnerField,
   removeInnerField,
-  listForbiddenNames
 } from "./inner-fields";
-import {applyPresetLogic} from "./presets";
-import {coerceFieldShape, requiresInnerFields} from "./lifecycle";
 
 export {
-  getFieldDefinition,
   initFormWithTitleFallback,
   validateForm,
-  buildPropertyFromForm,
-  getUiSchema,
+  buildCreationFormPropertiesFromForm,
   formatValue,
   addInnerField,
   updateInnerField,
   removeInnerField,
-  listForbiddenNames,
-  applyPresetLogic,
   FieldKind,
-  coerceFieldShape,
-  requiresInnerFields,
   initForm,
+  FIELD_REGISTRY
 };

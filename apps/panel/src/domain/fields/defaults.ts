@@ -1,20 +1,11 @@
-import {getFieldDefinition} from "./registry";
-import {FieldKind, type FieldFormDefaults} from "./types";
+import { FIELD_REGISTRY } from "./registry";
+import {FieldKind, type FieldCreationForm} from "./types";
 
-export function cloneFormDefaults(seed: FieldFormDefaults): FieldFormDefaults {
-  return {
-    fieldValues: {...seed.fieldValues},
-    configurationValues: {...seed.configurationValues},
-    presetValues: {...seed.presetValues},
-    defaultValue: {...seed.defaultValue}
-  };
-}
-
-export function freezeFormDefaults(seed: FieldFormDefaults): FieldFormDefaults {
+export function freezeFormDefaults(seed: FieldCreationForm): FieldCreationForm {
   Object.freeze(seed.fieldValues);
   Object.freeze(seed.configurationValues);
   Object.freeze(seed.presetValues);
-  Object.freeze(seed.defaultValue);
+  if (seed.defaultValue) Object.freeze(seed.defaultValue);
   return Object.freeze(seed);
 }
 
@@ -31,24 +22,12 @@ export const BASE_FORM_DEFAULTS = {
     title: "",
     description: ""
   },
-  configurationValues: {},
   presetValues: BASE_PRESET_DEFAULTS,
-  defaultValue: {}
 };
 
-// ---------------------------------------------------------------------------
-// Unified Accessors
-// ---------------------------------------------------------------------------
-
-export function getFieldDefaults(kind: FieldKind): FieldFormDefaults {
-  const def = getFieldDefinition(kind);
-  if (!def) throw new Error(`Field definition not found for kind '${kind}'`);
-  // Deep clone via existing helper (preserves nested object identity safety)
-  return cloneFormDefaults(def.formDefaults);
-}
-
-export function makeInnerFieldDefaults(kind: FieldKind): FieldFormDefaults {
-  const base = getFieldDefaults(kind);
+export function makeInnerFieldDefaults(kind: FieldKind): FieldCreationForm {
+  const base = FIELD_REGISTRY[kind]?.creationFormDefaultValues;
+  if (!base) throw new Error(`makeInnerFieldDefaults: unknown field kind '${kind}'`);
   return {
     ...base,
     fieldValues: {
@@ -57,11 +36,4 @@ export function makeInnerFieldDefaults(kind: FieldKind): FieldFormDefaults {
       description: ""
     }
   };
-}
-
-export function resolveDefault(form: FieldFormDefaults, candidates: string[]) {
-  for (const c of candidates)
-    if (Object.prototype.hasOwnProperty.call(form.defaultValue, c))
-      return (form.defaultValue as any)[c];
-  return undefined;
 }

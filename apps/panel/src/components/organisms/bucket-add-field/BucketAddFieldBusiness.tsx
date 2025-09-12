@@ -10,8 +10,7 @@ import {
   useBucketFieldPopups,
   type BucketFieldPopup
 } from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
-
-// Removed redundant hasSameElements helper; inline comparison used where needed.
+import type {FieldDefinition} from "src/domain/fields/types";
 
 export type BucketAddFieldBusinessProps = {
   onSuccess?: () => void;
@@ -39,7 +38,7 @@ export type FormValues = {
   fieldValues: Record<string, any>;
   presetValues: TypePresetValues;
   configurationValues: Record<string, any>;
-  defaultValue: Record<string, any>;
+  defaultValue: any;
   type: TypeInputType;
   innerFields?: FormValues[];
   id?: string;
@@ -65,6 +64,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     popupType,
     initialValues
   } = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
+  const field = fieldDomain.FIELD_REGISTRY[type as fieldDomain.FieldKind] as FieldDefinition;
 
   const isInner = popupType !== "add-field";
 
@@ -77,63 +77,20 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     [buckets, bucketData?.bucketId]
   );
   const {
-    main: mainFormInputProperties,
-    configuration: configurationInputProperties,
-    defaults: defaultInputProperty
-  } = useMemo(
-    () =>
-      type
-        ? fieldDomain.getUiSchema(type as fieldDomain.FieldKind, {inner: isInner, buckets})
-        : {main: {}, configuration: {}, defaults: {}},
-    [type, isInner, buckets]
-  ) as {
-    main: Record<string, any>;
-    configuration: Record<string, any>;
-    defaults: Record<string, any>;
-  };
+    fieldValues: mainFormInputProperties,
+    configurationValues: configurationInputProperties,
+    defaultValue: defaultInputProperty,
+    presetValues: presetInputProperties
+  } = useMemo(() => field.buildCreationFormProperties(), [field]);
 
-  const initialFormState = useMemo<FormValues>(() => {
-    if (type) {
-      const base = fieldDomain.initFormWithTitleFallback(type as fieldDomain.FieldKind, {
-        inner: isInner,
-        initial: initialValues
-      });
-      return {
-        fieldValues: base.fieldValues,
-        configurationValues: base.configurationValues,
-        presetValues: base.presetValues as TypePresetValues,
-        defaultValue: base.defaultValue,
-        type: type as any,
-        innerFields: base.innerFields
-      };
-    }
-    return {
-      fieldValues: {title: isInner ? "New Inner Field" : "Name", description: ""},
-      configurationValues: {},
-      presetValues: {...BASE_PRESET_DEFAULTS},
-      defaultValue: {},
-      type: "object" as any,
-      innerFields: undefined
-    };
-  }, [type, isInner, initialValues]);
-
-  const [formValues, setFormValues] = useState<FormValues>(initialFormState);
-
+  const [formValues, setFormValues] = useState<FormValues>(field.creationFormDefaultValues as any);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-
-  // (moved buckets/useBucket earlier)
-  const existingFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket]);
-
   const [apiError, setApiError] = useState(createBucketFieldError);
 
   useEffect(() => {
     setApiError(createBucketFieldError);
   }, [createBucketFieldError]);
-
-  // mainFormInputProperties now sourced directly from domain (relation bucket enums injected there).
-  // Ensure configuration defaults populated when schema changes
-  // Configuration defaults merged by initForm; relation bucket options augmented below.
 
   // Initialize form values when type changes
   useEffect(() => {
@@ -156,14 +113,12 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     setApiError(null);
   }, [type, initialValues, isInner]);
 
-  // Unified preset application effect (domain-driven)
+  const oldValues = useRef(formValues);
   useEffect(() => {
     if (!type) return;
-    setFormValues(prev => {
-      const res = fieldDomain.applyPresetLogic(type as fieldDomain.FieldKind, prev as any);
-      if (res.applied || res.reset) return res.form as any;
-      return prev;
-    });
+    const newFormValues = field.applyPresetLogic?.(formValues, oldValues.current) as any;
+    setFormValues(newFormValues ?? formValues);
+    oldValues.current = newFormValues ?? formValues;
   }, [
     type,
     formValues.presetValues.preset,
@@ -175,30 +130,19 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   const validateForm = useCallback(async () => {
     setApiError(null);
     if (!type) return false;
-    const shaped = fieldDomain.coerceFieldShape(formValues as any);
-    const forbiddenNames =
-      popupType === "add-field"
-        ? existingFieldNames
-        : fieldDomain.listForbiddenNames(shaped as any, {mode: "inner"});
-    const errors = fieldDomain.validateForm(
-      type as fieldDomain.FieldKind,
-      {
-        type: shaped.type,
-        fieldValues: shaped.fieldValues,
-        configurationValues: shaped.configurationValues,
-        defaultValue: shaped.defaultValue,
-        presetValues: shaped.presetValues,
-        innerFields: shaped.innerFields
-      },
-      {forbiddenNames: forbiddenNames}
-    );
+    const errors = field.validateCreationForm({
+      ...formValues.configurationValues,
+      ...formValues.defaultValue,
+      ...formValues.fieldValues,
+      ...formValues.presetValues
+    });
     if (errors) {
       setFormErrors(errors as any);
       return false;
     }
     setFormErrors({});
     return true;
-  }, [formValues, type, popupType, existingFieldNames]);
+  }, [formValues, type, popupType]);
 
   const oldType = useRef(type);
   useEffect(() => {
@@ -252,6 +196,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       return {...prev, [formValuesAttribute]: values};
     });
 
+    console.log("formValues from bucket add field business: ", formValues)
   return (
     <BucketAddFieldView
       // Display props
@@ -264,6 +209,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       mainFormInputProperties={mainFormInputProperties}
       configurationInputProperties={configurationInputProperties}
       defaultInputProperty={defaultInputProperty}
+      presetInputProperties={presetInputProperties}
       // State
       isLoading={isLoading}
       // Event handlers
@@ -274,6 +220,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       handleDeleteInnerField={handleDeleteInnerField}
       // External dependencies
       popupId={popupId}
+      type={type as fieldDomain.FieldKind}
     />
   );
 };

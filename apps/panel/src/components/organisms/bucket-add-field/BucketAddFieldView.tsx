@@ -17,7 +17,7 @@ import {
   useState,
   type FC,
   type JSX,
-  type ReactNode,
+  type ReactNode
 } from "react";
 import type {FormErrors, FormValues} from "./BucketAddFieldBusiness";
 import styles from "./BucketAddField.module.scss";
@@ -29,6 +29,11 @@ import {
   type PopupType
 } from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
 import {useInputRepresenter} from "oziko-ui-kit";
+import {FIELD_REGISTRY} from "../../../domain/fields/registry";
+import type {
+  TypeProperties,
+  TypeProperty
+} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 //import useInputRepresenter from "../../../hooks/useInputRepresenter";
 
 type InnerFieldProps = {
@@ -98,9 +103,10 @@ type BucketAddFieldViewProps = {
   error: string | null;
 
   // Schema and configuration
-  mainFormInputProperties: Record<string, any>;
-  configurationInputProperties: Record<string, any>;
-  defaultInputProperty: Record<string, any>;
+  mainFormInputProperties: TypeProperties;
+  configurationInputProperties: TypeProperties;
+  defaultInputProperty?: TypeProperty;
+  presetInputProperties?: TypeProperties;
 
   // State
   isLoading: boolean;
@@ -114,6 +120,7 @@ type BucketAddFieldViewProps = {
 
   // External dependencies
   popupId?: string;
+  type: fieldDomain.FieldKind
 };
 
 const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
@@ -124,13 +131,15 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   mainFormInputProperties,
   configurationInputProperties,
   defaultInputProperty,
+  presetInputProperties,
   isLoading,
   handleFormValueChange,
   handleSaveAndClose,
   handleCreateInnerField,
   handleSaveInnerField,
   handleDeleteInnerField,
-  popupId
+  popupId,
+  type
 }) => {
   const {bucketFieldPopups} = useBucketFieldPopups();
   const {popupType} = bucketFieldPopups.find(p => p.id === popupId) as any;
@@ -142,10 +151,13 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
 
   const iconName = iconsMap[popupType as keyof typeof iconsMap];
 
-  // Computed properties
+  console.log("formValues from bucket add field view: ", formValues);
   const innerFieldExists = useMemo(
-    () => fieldDomain.requiresInnerFields(formValues.type as any, {fieldValues: formValues.fieldValues}),
-    [formValues.type, formValues.fieldValues]
+    () =>
+      FIELD_REGISTRY[type as keyof typeof FIELD_REGISTRY]?.requiresInnerFields?.(
+        formValues
+      ) ?? false,
+    [type, formValues.fieldValues]
   );
 
   const [activeTab, setActiveTab] = useState(0);
@@ -168,14 +180,20 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   });
 
   const defaultInput = useInputRepresenter({
-    properties: defaultInputProperty,
-    value: formValues.defaultValue,
-    onChange: values => handleFormValueChange(values, "defaultValue"),
+    properties: {default: defaultInputProperty} as TypeProperties,
+    value: {default: formValues.defaultValue},
+    onChange: values => handleFormValueChange(values.default, "defaultValue"),
     error: formErrors.defaultValue ?? {},
     errorClassName: styles.error
   });
 
-  // Preset inputs have been removed as a separate block; string preset fields now reside in mainFormInputs via domain UI schema.
+  const presetInputs = useInputRepresenter({
+    properties: presetInputProperties ?? {},
+    value: formValues.presetValues,
+    onChange: values => handleFormValueChange(values, "presetValues"),
+    error: formErrors.presetValues ?? {},
+    errorClassName: styles.error
+  });
 
   const tabs = useMemo(() => {
     const items: TypeFluidContainer[] = [];
@@ -211,9 +229,12 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       );
     }
 
+    if (type === "string") {
+      createConfig("Presets", <div className={styles.presetsContainer}>{presetInputs}</div>);
+    }
+
     // Default tab based on capability flag rather than exclusion list
-    const defCap = fieldDomain.getFieldDefinition(formValues.type as any)?.capabilities;
-    if (defCap?.hasDefaultValue) {
+    if (defaultInputProperty) {
       createConfig("Default", defaultInput as unknown as JSX.Element);
     }
 
@@ -223,7 +244,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     );
     return items;
   }, [
-    formValues.type,
+    type,
     innerFieldExists,
     configurationInputs,
     formValues.innerFields,
@@ -237,7 +258,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
 
   useEffect(() => {
     setActiveTab(0);
-  }, [formValues.type]);
+  }, [type]);
 
   return (
     <FlexElement
@@ -253,7 +274,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
         root={{
           children: (
             <Text dimensionX="fill" className={styles.displayer}>
-              {formValues.type}
+              {type}
             </Text>
           ),
           dimensionX: "fill"
@@ -263,7 +284,8 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
           children: (
             <Icon
               name={
-                fieldDomain.getFieldDefinition(formValues.type as any)?.display.icon as IconName
+                FIELD_REGISTRY[type as keyof typeof FIELD_REGISTRY]?.display
+                  .icon as IconName
               }
             />
           )

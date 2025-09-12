@@ -1,19 +1,5 @@
-/**
- * Field Presets (Enumeration & Regex)
- * ------------------------------------------------------------
- * Central source for predefined enumeration value sets and
- * regular expression presets previously defined in
- * `BucketAddFieldPresets.ts` (UI layer). Moving these into the
- * domain enables pure, deterministic transformation logic and
- * eliminates UI-owned business data.
- *
- * NOTE (Step 1): UI still references the old file; do NOT delete
- * the legacy `BucketAddFieldPresets.ts` until cleanup step.
- */
-
-// ---------------------------------------------------------------------------
-// Enumeration Presets
-// ---------------------------------------------------------------------------
+import {BASE_PRESET_DEFAULTS} from "./defaults";
+import {FieldKind, type FieldCreationForm} from "./types";
 
 const Countries = [
   "United States",
@@ -261,169 +247,94 @@ const Countries = [
 
 const Days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-export const ENUM_PRESETS = { Countries, Days } as const;
+export const ENUM_PRESETS = {Countries, Days} as const;
 
-// ---------------------------------------------------------------------------
-// Regex Presets
-// ---------------------------------------------------------------------------
+const Email = /^\w+@\w+\.\w+$/;
+const PhoneNumber = /^[0-9-+\s]+$/;
 
-// Using RegExp objects for early validation & explicitness.
-const Email = /^\w+@\w+\.\w+$/; // simple email format (legacy parity)
-const PhoneNumber = /^[0-9-+\s]+$/; // digits, spaces, plus, hyphen
-
-export const REGEX_PRESETS = { Email, "Phone Number": PhoneNumber } as const;
-
-// ---------------------------------------------------------------------------
-// Types & Type Guards
-// ---------------------------------------------------------------------------
+export const REGEX_PRESETS = {Email, "Phone Number": PhoneNumber} as const;
 
 export type EnumerationPresetKey = keyof typeof ENUM_PRESETS;
 export type RegexPresetKey = keyof typeof REGEX_PRESETS;
-export type PresetKey = EnumerationPresetKey | RegexPresetKey;
 
-export function isEnumPreset(k: string): k is EnumerationPresetKey {
-  return Object.prototype.hasOwnProperty.call(ENUM_PRESETS, k);
-}
+export function applyPresetLogic(kind: FieldKind, form: FieldCreationForm, oldValues: FieldCreationForm): FieldCreationForm {
+  const isStringContext =
+    kind === FieldKind.String ||
+    (kind === FieldKind.Array && form.fieldValues?.arrayType === "string");
 
-export function isRegexPreset(k: string): k is RegexPresetKey {
-  return Object.prototype.hasOwnProperty.call(REGEX_PRESETS, k);
-}
+  const curr = form.presetValues || {};
+  const prev = oldValues?.presetValues || {};
 
-// ---------------------------------------------------------------------------
-// Access Helpers
-// ---------------------------------------------------------------------------
+  const presetKey = curr.preset || "";
+  const presetExists = !!presetKey;
 
-export function getEnumerationPreset(key: EnumerationPresetKey) {
-  return ENUM_PRESETS[key];
-}
-
-export function getRegexPreset(key: RegexPresetKey) {
-  return REGEX_PRESETS[key];
-}
-
-export function classifyPreset(key: string): "enum" | "regex" | undefined {
-  if (isEnumPreset(key)) return "enum";
-  if (isRegexPreset(key)) return "regex";
-  return undefined;
-}
-
-// ---------------------------------------------------------------------------
-// Transformation Helper (non-mutating)
-// (Actual application logic added in Step 2 – placeholder intent only.)
-// ---------------------------------------------------------------------------
-
-import { BASE_PRESET_DEFAULTS } from "./defaults";
-import { FieldKind, type FieldFormState } from "./types";
-
-export interface ApplyPresetContext {
-  enforceResetOutsideStringContext?: boolean; // default true
-}
-
-/** Result of preset logic application */
-export interface PresetApplicationResult<TForm> {
-  form: TForm;
-  applied?: boolean;
-  kind?: "enum" | "regex";
-  reset?: boolean; // indicates preset section was reset (context not applicable)
-}
-
-/**
- * Pure function that applies preset semantics to a form state.
- * Mirrors / consolidates legacy useEffect chains in BucketAddFieldBusiness.
- */
-export function applyPresetLogic(kind: FieldKind, form: FieldFormState, ctx: ApplyPresetContext = {}): PresetApplicationResult<FieldFormState> {
-  const options = { enforceResetOutsideStringContext: true, ...ctx };
-  const isStringContext = kind === FieldKind.String || (kind === FieldKind.Array && form.fieldValues?.arrayType === "string");
-  let changed = false;
-  let reset = false;
-  const originalPresetKey = form.presetValues?.preset || "";
-
-  // Start from shallow clones to avoid mutating caller state
-  let next: FieldFormState = {
+  // Do not mutate caller
+  let next: FieldCreationForm = {
     ...form,
-    fieldValues: { ...form.fieldValues },
-    presetValues: { ...form.presetValues }
+    fieldValues: {...form.fieldValues},
+    presetValues: {...curr}
   };
 
-  // 1. Context reset: if not a string context and previous state carried custom presets
-  if (!isStringContext && options.enforceResetOutsideStringContext) {
-    const needsReset = Object.keys(next.presetValues || {}).some(k => (next.presetValues as any)[k] !== (BASE_PRESET_DEFAULTS as any)[k]);
-    if (needsReset) {
-      next = { ...next, presetValues: { ...BASE_PRESET_DEFAULTS } } as FieldFormState;
-      changed = true; reset = true;
+  // 1) Only operate in string context (match old effects' early-returns)
+  if (!isStringContext) return next;
+
+  // 2) Apply preset semantics when a preset is selected, but don't override user toggles
+  //    if the change in this tick is a toggle flip.
+  const togglesChanged =
+    prev.makeEnumerated !== curr.makeEnumerated ||
+    prev.definePattern !== curr.definePattern;
+
+  if (presetExists && !togglesChanged) {
+    if (ENUM_PRESETS[presetKey as EnumerationPresetKey]) {
+      const values = ENUM_PRESETS[presetKey as EnumerationPresetKey];
+      next.presetValues.makeEnumerated = true;
+      next.presetValues.definePattern = false;
+      next.presetValues.enumeratedValues = [...values];
+      next.presetValues.regularExpression = "";
+    } else if (REGEX_PRESETS[presetKey as RegexPresetKey]) {
+      const regex = REGEX_PRESETS[presetKey as RegexPresetKey];
+      next.presetValues.definePattern = true;
+      next.presetValues.makeEnumerated = false;
+      next.presetValues.enumeratedValues = [];
+      next.presetValues.regularExpression = regex.source;
     }
-    return { form: next, applied: changed, reset };
   }
 
-  // If no preset selected, still enforce logical cleanup from toggle changes below
-  if (!originalPresetKey) {
-    // Handle toggles clearing lingering arrays/pattern when user turned them off after selecting preset earlier.
-    next = enforceToggleCleanup(next, originalPresetKey);
-    return { form: next, applied: changed };
-  }
+  // 3) Handle toggle cleanups only when a preset is active
+  next = enforceToggleCleanup(next, presetKey);
 
-  // 2. Apply selected preset semantics when in valid context
-  if (isEnumPreset(originalPresetKey)) {
-    const values = getEnumerationPreset(originalPresetKey as EnumerationPresetKey);
-    next.presetValues.makeEnumerated = true;
-    next.presetValues.definePattern = false;
-    next.presetValues.enumeratedValues = [...values];
-    next.presetValues.regularExpression = "";
-    changed = true;
-  } else if (isRegexPreset(originalPresetKey)) {
-    const regex = getRegexPreset(originalPresetKey as RegexPresetKey);
-    next.presetValues.definePattern = true;
-    next.presetValues.makeEnumerated = false;
-    next.presetValues.regularExpression = regex.source; // store as string (matches legacy)
-    next.presetValues.enumeratedValues = [];
-    changed = true;
-  }
-
-  // 3. Apply toggle-driven cleanups (user may have disabled enumeration/pattern after preset set)
-  next = enforceToggleCleanup(next, originalPresetKey);
-
-  return {
-    form: next,
-    applied: changed,
-    kind: isEnumPreset(originalPresetKey) ? "enum" : isRegexPreset(originalPresetKey) ? "regex" : undefined,
-    reset
-  };
+  return next;
 }
 
-/**
- * Helper: ensures when enumeration/pattern toggles are disabled the related
- * fields/preset key are cleared in line with legacy behavior.
- */
-function enforceToggleCleanup(form: FieldFormState, presetKey: string): FieldFormState {
-  let modified = false;
+function enforceToggleCleanup(form: FieldCreationForm, presetKey: string): FieldCreationForm {
+  const curr = form?.presetValues || {};
+  if (!presetKey) return form;
+
   let next = form;
-  const pv = form.presetValues || {};
-  // Enumeration toggle off
-  if (!pv.makeEnumerated && pv.enumeratedValues?.length && isEnumPreset(presetKey)) {
-    next = { ...next, presetValues: { ...pv, enumeratedValues: [], preset: "" } } as FieldFormState;
-    modified = true;
+
+  // Enumeration toggle off while enumeration preset active
+  if (ENUM_PRESETS[presetKey as EnumerationPresetKey] && !curr.makeEnumerated) {
+    next = {
+      ...next,
+      presetValues: {
+        ...curr,
+        enumeratedValues: [],
+        preset: ""
+      }
+    } as FieldCreationForm;
   }
-  // Pattern toggle off
-  if (!pv.definePattern && pv.regularExpression && isRegexPreset(presetKey)) {
-    next = { ...next, presetValues: { ...next.presetValues, regularExpression: "", preset: "" } } as FieldFormState;
-    modified = true;
+
+  // Pattern toggle off while regex preset active
+  if (REGEX_PRESETS[presetKey as RegexPresetKey] && !curr.definePattern) {
+    next = {
+      ...next,
+      presetValues: {
+        ...next.presetValues,
+        regularExpression: "",
+        preset: ""
+      }
+    } as FieldCreationForm;
   }
-  return modified ? next : form;
-}
 
-// Optional exported togglers (may be used by UI if needed later)
-export function clearPreset(kind: FieldKind, form: FieldFormState): FieldFormState {
-  return { ...form, presetValues: { ...BASE_PRESET_DEFAULTS } };
+  return next;
 }
-
-export function forceEnumeration(kind: FieldKind, form: FieldFormState): FieldFormState {
-  if (!(kind === FieldKind.String || (kind === FieldKind.Array && form.fieldValues?.arrayType === "string"))) return form;
-  return { ...form, presetValues: { ...form.presetValues, makeEnumerated: true } };
-}
-
-export function forcePattern(kind: FieldKind, form: FieldFormState): FieldFormState {
-  if (!(kind === FieldKind.String || (kind === FieldKind.Array && form.fieldValues?.arrayType === "string"))) return form;
-  return { ...form, presetValues: { ...form.presetValues, definePattern: true } };
-}
-
-// End of Step 2 implementation.

@@ -5,7 +5,12 @@ import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
-import {fieldDomain, FieldKind} from "../../../domain/fields";
+import {
+  FieldKind,
+  formatValue,
+  FIELD_REGISTRY,
+  buildCreationFormPropertiesFromForm,
+} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 
@@ -48,11 +53,14 @@ type ColumnMeta = {
   id: string;
 };
 
-const COLUMN_ICONS: Record<string, IconName> = Object.values(FieldKind).reduce((acc, k) => {
-  const def = fieldDomain.getFieldDefinition(k as FieldKind);
-  if (def) acc[k] = def.display.icon as IconName;
-  return acc;
-}, {} as Record<string, IconName>);
+const COLUMN_ICONS: Record<string, IconName> = Object.values(FieldKind).reduce(
+  (acc, k) => {
+    const def = FIELD_REGISTRY[k as FieldKind];
+    if (def) acc[k] = def.display.icon as IconName;
+    return acc;
+  },
+  {} as Record<string, IconName>
+);
 
 const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
   return (
@@ -82,7 +90,7 @@ const NewFieldHeader = memo(() => {
     (values: FormValues) => {
       if (!bucket) return;
 
-  const fieldProperty = fieldDomain.buildPropertyFromForm(values as any);
+      const fieldProperty = buildCreationFormPropertiesFromForm(values as any);
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
@@ -154,7 +162,7 @@ function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
   }
   if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
   if (type) {
-    const formatted = fieldDomain.formatValue(type, cellData);
+    const formatted = formatValue(type, cellData);
     if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
   }
   return renderDefault();
@@ -173,7 +181,7 @@ function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnTyp
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      id: `${col.key}-${index}-${bucketId}`,
+      id: `${col.key}-${index}-s${bucketId}`,
       cellClassName: styles.cell
     })),
     defaultColumns[1]

@@ -1,30 +1,23 @@
 import * as Yup from "yup";
-import type {FieldDefinition} from "./types";
 import {FieldKind} from "./types";
-/**
- * Field Form Validation
- * ------------------------------------------------------------
- * Provides: (1) reusable Yup schemas per field kind, (2) higher-level
- * form validation that layers generic naming rules and registry hooks.
- */
-
-// ---------------------------------------------------------------------------
-// Types & Core Exports
-// ---------------------------------------------------------------------------
 export type ValidationSchema = Yup.ObjectSchema<any>;
 
+export const TITLE_REGEX = /^(?!(_id)$)([a-z_0-9]*)+$/; // lowercase, digits, underscore, not _id
 
-// Base fragment shared by all per-kind schemas
-export const TITLE_BLOCK = {
+const BASE_FIELD_CREATION_FORM_SCHEMA = {
   fieldValues: Yup.object({
-    title: Yup.string().required("Title is required"),
+    title: Yup.string()
+      .required("Title is required")
+      .matches(
+        TITLE_REGEX,
+        "Title can be only lowercase letters, numbers, and underscores, and cannot be '_id' or an empty string"
+      ),
     description: Yup.string().optional()
   })
 };
 
-// Per-kind Yup schemas
-export const STRING_SCHEMA: ValidationSchema = Yup.object({
-  ...TITLE_BLOCK,
+export const STRING_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA,
   presetValues: Yup.object({
     makeEnumerated: Yup.boolean().default(false),
     enumeratedValues: Yup.array()
@@ -32,36 +25,35 @@ export const STRING_SCHEMA: ValidationSchema = Yup.object({
       .when("makeEnumerated", {
         is: true,
         then: sch =>
-          sch.min(1, "At least one value").test(
-            "no-empty-string",
-            "Empty values not allowed",
-            arr => !arr || !arr.some(v => v === "")
-          ),
+          sch
+            .min(1, "At least one value")
+            .test(
+              "no-empty-string",
+              "Empty values not allowed",
+              arr => !arr || !arr.some(v => v === "")
+            ),
         otherwise: sch => sch
       }),
     definePattern: Yup.boolean().default(false),
     regularExpression: Yup.string().when("definePattern", {
       is: true,
       then: sch =>
-        sch
-          .min(1, "Pattern required")
-          .test("valid-regex", "Invalid pattern", val => {
-            if (!val) return false;
-            try {
-              new RegExp(val);
-              return true;
-            } catch {
-              return false;
-            }
-          }),
+        sch.min(1, "Pattern required").test("valid-regex", "Invalid pattern", val => {
+          if (!val) return false;
+          try {
+            new RegExp(val);
+            return true;
+          } catch {
+            return false;
+          }
+        }),
       otherwise: sch => sch.optional()
     })
   }).required()
 });
-
-export const NUMBER_SCHEMA: ValidationSchema = Yup.object({
-  ...TITLE_BLOCK,
-  fieldValues: (TITLE_BLOCK.fieldValues as Yup.ObjectSchema<any>).shape({
+export const NUMBER_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA,
+  fieldValues: (BASE_FIELD_CREATION_FORM_SCHEMA.fieldValues as Yup.ObjectSchema<any>).shape({
     minimum: Yup.number().nullable().optional(),
     maximum: Yup.number()
       .nullable()
@@ -73,11 +65,7 @@ export const NUMBER_SCHEMA: ValidationSchema = Yup.object({
       }),
     enumeratedValues: Yup.array()
       .of(Yup.mixed())
-      .test(
-        "no-empty-values",
-        "Empty values not allowed",
-        arr => !arr || !arr.some(v => v === "")
-      )
+      .test("no-empty-values", "Empty values not allowed", arr => !arr || !arr.some(v => v === ""))
       .test(
         "all-numeric",
         "All values must be numeric",
@@ -90,91 +78,170 @@ export const NUMBER_SCHEMA: ValidationSchema = Yup.object({
     regularExpression: Yup.string().when("definePattern", {
       is: true,
       then: sch =>
-        sch
-          .min(1, "Pattern required")
-          .test("valid-regex", "Invalid pattern", val => {
-            if (!val) return false;
-            try {
-              new RegExp(val);
-              return true;
-            } catch {
-              return false;
-            }
-          }),
+        sch.min(1, "Pattern required").test("valid-regex", "Invalid pattern", val => {
+          if (!val) return false;
+          try {
+            new RegExp(val);
+            return true;
+          } catch {
+            return false;
+          }
+        }),
       otherwise: sch => sch.optional()
     })
   }).required()
 });
-
-export const BOOLEAN_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
-export const DATE_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
-export const TEXTAREA_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
-export const MULTISELECT_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
-export const RELATION_SCHEMA: ValidationSchema = Yup.object({
-  fieldValues: (TITLE_BLOCK.fieldValues as Yup.ObjectSchema<any>).shape({
+export const BOOLEAN_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
+export const DATE_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
+export const TEXTAREA_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
+export const MULTISELECT_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
+export const RELATION_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  fieldValues: (BASE_FIELD_CREATION_FORM_SCHEMA.fieldValues as Yup.ObjectSchema<any>).shape({
     bucket: Yup.string().required("Bucket is required"),
-    relationType: Yup.string().optional(),
+    relationType: Yup.string().required("Relation Type is required"),
     dependent: Yup.boolean().optional(),
     title: Yup.string().required("Title is required"),
     description: Yup.string().optional()
   })
 });
-export const LOCATION_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
-export const ARRAY_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
-export const OBJECT_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
-export const FILE_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
-export const RICHTEXT_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
-export const JSON_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
-export const COLOR_SCHEMA: ValidationSchema = Yup.object({...TITLE_BLOCK});
+export const LOCATION_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
+export const ARRAY_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
+export const OBJECT_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
+export const FILE_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
+export const RICHTEXT_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
+export const JSON_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
+export const COLOR_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
+  ...BASE_FIELD_CREATION_FORM_SCHEMA
+});
 
-// Central schema map for facade usage
-// DEPRECATED: FIELD_VALIDATION_SCHEMAS retained temporarily for legacy callers. New code should rely on per-definition validate() only.
-export const FIELD_VALIDATION_SCHEMAS: Record<FieldKind, ValidationSchema> = {
-  [FieldKind.String]: STRING_SCHEMA,
-  [FieldKind.Number]: NUMBER_SCHEMA,
-  [FieldKind.Boolean]: BOOLEAN_SCHEMA,
-  [FieldKind.Date]: DATE_SCHEMA,
-  [FieldKind.Textarea]: TEXTAREA_SCHEMA,
-  [FieldKind.Multiselect]: MULTISELECT_SCHEMA,
-  [FieldKind.Relation]: RELATION_SCHEMA,
-  [FieldKind.Location]: LOCATION_SCHEMA,
-  [FieldKind.Array]: ARRAY_SCHEMA,
-  [FieldKind.Object]: OBJECT_SCHEMA,
-  [FieldKind.File]: FILE_SCHEMA,
-  [FieldKind.Richtext]: RICHTEXT_SCHEMA,
-  [FieldKind.Json]: JSON_SCHEMA,
-  [FieldKind.Color]: COLOR_SCHEMA
+const stringConstraints = {
+  required: (sch: Yup.StringSchema, p: any) =>
+    p.required ? sch.required("This field is required") : sch.notRequired(),
+
+  enum: (sch: Yup.StringSchema, p: any) =>
+    Array.isArray(p.enum) ? sch.oneOf(p.enum, `Value must be one of: ${p.enum.join(", ")}`) : sch,
+
+  pattern: (sch: Yup.StringSchema, p: any) =>
+    p.pattern ? sch.matches(new RegExp(p.pattern), `Must match pattern: ${p.pattern}`) : sch
 };
 
+const numberConstraints = {
+  required: (sch: Yup.NumberSchema, p: any) =>
+    p.required ? sch.required("This field is required") : sch.notRequired()
+  // could add min, max later if you want
+};
 
-// High-level form validation wrapper merges:
-//  * generic name rules (format + reserved list)
-//  * per-kind registry validation (enumerations, patterns, constraints)
-//  * structure rules (object / array-of-object must have inner fields)
+const dateConstraints = {
+  required: (sch: Yup.DateSchema, p: any) =>
+    p.required ? sch.required("This field is required") : sch.notRequired()
+};
 
-export const PROPERTY_NAME_REGEX = /^(?!(_id)$)([a-z_0-9]*)+$/; // lowercase, digits, underscore, not _id
+// … you can extend this for Boolean, Array, etc.
 
-// Minimal shape reused by UI (mirrors previous FormErrors structure)
-export interface FieldFormErrors {
-  fieldValues?: Record<string, string>;
-  presetValues?: Record<string, string>; // kept for backward compatibility (registry may add)
-  configurationValues?: Record<string, string>;
-  defaultValue?: Record<string, string>;
-  innerFields?: string;
+// ---- helper to apply constraints ----
+
+function applyConstraints<T extends Yup.AnySchema>(
+  schema: T,
+  property: any,
+  registry: Record<string, (sch: any, p: any) => any>
+): T {
+  let current = schema;
+  for (const key of Object.keys(property)) {
+    const fn = registry[key];
+    if (fn) {
+      current = fn(current, property);
+    }
+  }
+  return current;
 }
 
-// (Deprecated shim interfaces removed – facade.validateForm is the sole API.)
+const generateFieldValueSchema = (kind: FieldKind, property: any) => {
+  switch (kind) {
+    case FieldKind.String:
+    case FieldKind.Textarea:
+    case FieldKind.Richtext:
+    case FieldKind.Color:
+      return applyConstraints(Yup.string(), property, stringConstraints);
 
-// Thin helper for direct registry-level validation (bypasses wrapper)
-export function validateField(def: FieldDefinition, form: any) {
-  if (!def?.validate) return null;
-  return def.validate(form as any) || null;
-}
+    case FieldKind.Number:
+      return applyConstraints(Yup.number(), property, numberConstraints);
+
+    case FieldKind.Boolean:
+      return Yup.boolean().notRequired(); // could add required constraint if you want
+
+    case FieldKind.Date:
+      return applyConstraints(Yup.date(), property, dateConstraints);
+
+    case FieldKind.Multiselect:
+      return Yup.array().of(Yup.mixed()).notRequired();
+
+    case FieldKind.Location:
+      return Yup.object({
+        address: Yup.string().notRequired(),
+        lat: Yup.number().notRequired(),
+        lng: Yup.number().notRequired()
+      }).notRequired();
+
+    case FieldKind.Array:
+      return Yup.array().notRequired();
+
+    case FieldKind.Object:
+      return Yup.object().notRequired();
+
+    case FieldKind.File:
+      return Yup.mixed().notRequired();
+
+    case FieldKind.Json:
+      return Yup.mixed().notRequired();
+
+    case FieldKind.Relation:
+      return Yup.mixed().notRequired();
+
+    default:
+      return Yup.mixed().notRequired();
+  }
+};
+
+export const validateFieldValue = (value: any, kind: FieldKind, properties: any): string | null => {
+  const schema = generateFieldValueSchema(kind, properties);
+  try {
+    schema.validateSync(value, {abortEarly: true}); // only first error
+    return null;
+  } catch (error) {
+    if (error instanceof Yup.ValidationError) {
+      return error.message;
+    }
+    return "Validation failed"; // fallback just in case
+  }
+};
 
 // ---------------------------------------------------------------------------
 // Low-level Yup runner kept last for readability
-// ---------------------------------------------------------------------------
-export function runYupValidation(schema: ValidationSchema, form: any): Record<string, string> | null {
+// --------------------------------------------------
+export function runYupValidation(
+  schema: ValidationSchema,
+  form: any
+): Record<string, string> | null {
   try {
     schema.validateSync(form, {abortEarly: false, stripUnknown: false});
     return null;
