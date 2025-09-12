@@ -16,15 +16,20 @@ export const EntrySelectionProvider: React.FC<EntrySelectionProviderProps> = ({c
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
 
   const selectEntry = useCallback((entryId: string) => {
-    setSelectedEntries(prev => new Set(prev).add(entryId));
+    if (entryId === "select-all")
+      console.log("not-implemented-yet"); // handle select all case
+    else setSelectedEntries(prev => new Set(prev).add(entryId));
   }, []);
 
   const deselectEntry = useCallback((entryId: string) => {
-    setSelectedEntries(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(entryId);
-      return newSet;
-    });
+    if (entryId === "select-all") {
+      setSelectedEntries(new Set());
+    } else
+      setSelectedEntries(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(entryId);
+        return newSet;
+      });
   }, []);
 
   const value = {

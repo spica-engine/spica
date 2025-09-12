@@ -89,6 +89,7 @@ function Confirmation({
               onClick={() => onConfirm(inputValue)}
               className={styles.confirmButton}
               disabled={!isConfirmEnabled}
+              loading={loading}
             >
               {confirmLabel}
             </Button>

@@ -39,6 +39,15 @@
   width: 80%;
 }
 
+.selectColumnHeader {
+  justify-content: center !important;
+  padding: 0 !important;
+  width: 60px !important;
+  label {
+    background-color: var(--color-soft-light);
+  }
+}
+
 .headerIcon {
   color: var(--color-icon);
 }

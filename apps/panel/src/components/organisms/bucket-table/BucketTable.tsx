@@ -1,7 +1,7 @@
 import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useCallback, useMemo, useState, type RefObject} from "react";
+import {memo, useCallback, useContext, useMemo, useState, type RefObject, createContext} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -10,6 +10,9 @@ import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
+
+// Local context to share the currently visible row ids for select-all logic
+const VisibleRowsContext = createContext<string[]>([]);
 
 type FieldType =
   | "string"
@@ -99,6 +102,60 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
   );
 };
 
+const SelectColumnHeader = () => {
+  return (
+    <>
+      <div className={styles.selectColumnHeader}>
+        <span>
+          <SelectionCheckbox initial={false} rowId="select-all" />
+        </span>
+      </div>
+    </>
+  );
+};
+
+
+function SelectionCheckbox({initial: _ignoredInitial, rowId}: {initial: boolean; rowId: string}) {
+  const visibleIds = useContext(VisibleRowsContext);
+  const {selectEntry, deselectEntry, selectedEntries} = useEntrySelection();
+
+  const isHeader = rowId === "select-all";
+  const selectedCount = isHeader
+    ? visibleIds.filter(id => selectedEntries.has(id)).length
+    : undefined;
+  const total = isHeader ? visibleIds.length : undefined;
+
+  const checked = isHeader
+    ? total! > 0 && selectedCount === total
+    : selectedEntries.has(rowId);
+  const indeterminate = isHeader ? !!total && !!selectedCount && selectedCount! > 0 && selectedCount! < total! : false;
+
+  const handleChange = () => {
+    if (isHeader) {
+      // If all are selected, deselect all visible; otherwise select all visible
+      const shouldDeselect = checked;
+      if (shouldDeselect) {
+        visibleIds.forEach(id => deselectEntry(id));
+      } else {
+        visibleIds.forEach(id => selectEntry(id));
+      }
+    } else {
+      if (!checked) selectEntry(rowId);
+      else deselectEntry(rowId);
+    }
+  };
+
+  return (
+    <Checkbox
+      className={styles.checkbox}
+      checked={!!checked}
+      indeterminate={!!indeterminate}
+      onChange={handleChange}
+    />
+  );
+}
+
+
 const NewFieldHeader = memo(() => {
   const {buckets, bucketData, createBucketField} = useBucket();
 
@@ -148,7 +205,7 @@ const NewFieldHeader = memo(() => {
 const defaultColumns: ColumnType[] = [
   {
     id: "0",
-    header: <ColumnHeader />,
+    header: <SelectColumnHeader />,
     key: "select",
   role: "select",
     type: "boolean",
@@ -172,18 +229,6 @@ const defaultColumns: ColumnType[] = [
     selectable: false
   }
 ];
-
-function SelectionCheckbox({initial, rowId}: {initial: boolean; rowId: string}) {
-  const [checked, setChecked] = useState(initial);
-  const {selectEntry, deselectEntry} = useEntrySelection();
-  const handleChange = () => {
-    setChecked(!checked);
-    if (!checked) {
-      selectEntry(rowId);
-    } else deselectEntry(rowId);
-  };
-  return <Checkbox className={styles.checkbox} checked={checked} onChange={handleChange} />;
-}
 
 // TODO: Refactor this function to render more appropriate UI elements for each field type.
 // Many field types are currently using the generic `renderDefault()`.
@@ -406,15 +451,17 @@ const BucketTable = ({
   return loading ? (
     <Loader />
   ) : (
-    <Table
-      style={{maxHeight}}
-      className={styles.table}
-      columns={formattedColumns}
-      data={formattedData}
-      onScrollEnd={onScrollEnd}
-      totalDataLength={totalDataLength}
-      tableRef={tableRef}
-    />
+    <VisibleRowsContext.Provider value={(data?.map?.(r => r._id).filter(Boolean) as string[]) || []}>
+      <Table
+        style={{maxHeight}}
+        className={styles.table}
+        columns={formattedColumns}
+        data={formattedData}
+        onScrollEnd={onScrollEnd}
+        totalDataLength={totalDataLength}
+        tableRef={tableRef}
+      />
+    </VisibleRowsContext.Provider>
   );
 };
 
