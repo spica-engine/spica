@@ -1,5 +1,12 @@
 import {Button, FlexElement, FluidContainer, Icon, Popover, Text, Checkbox} from "oziko-ui-kit";
-import {memo, useMemo, useEffect, useState, type FC, useCallback} from "react";
+import {
+  memo,
+  useMemo,
+  useEffect,
+  useState,
+  type FC,
+  useCallback,
+} from "react";
 import styles from "./BucketMorePopup.module.scss";
 import {useBucket} from "../../../contexts/BucketContext";
 import type {BucketType} from "src/services/bucketService";
@@ -121,9 +128,10 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
             alignment="leftTop"
             prefix={{
               className: styles.configureRulesContainer,
+              onClick: handleOpenBucketRules,
               children: (
                 <FlexElement alignment="leftCenter" direction="vertical" gap={0}>
-                  <Button variant="text" onClick={handleOpenBucketRules}>
+                  <Button variant="text">
                     <Icon name="security" />
                     <Text>Configure rules</Text>
                   </Button>
@@ -155,6 +163,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
               )
             }}
             suffix={{
+              className: styles.limitationsContainer,
               children: (
                 <FlexElement gap={5} direction="vertical" alignment="leftTop">
                   <Checkbox
