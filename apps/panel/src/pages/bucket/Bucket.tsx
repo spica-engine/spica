@@ -199,7 +199,7 @@ function BucketWithVisibleColumns({
   };
 
   return (
-    <EntrySelectionProvider>
+    <EntrySelectionProvider currentBucketId={bucket._id}>
       <div className={styles.container}>
         <BucketActionBar
           onSearch={handleSearch}

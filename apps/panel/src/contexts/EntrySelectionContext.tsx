@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useState, useCallback, type ReactNode} from "react";
+import React, {createContext, useContext, useState, useCallback, type ReactNode, useEffect} from "react";
 
 interface EntrySelectionContextType {
   selectedEntries: Set<string>;
@@ -10,9 +10,10 @@ const EntrySelectionContext = createContext<EntrySelectionContextType | undefine
 
 interface EntrySelectionProviderProps {
   children: ReactNode;
+  currentBucketId: string;
 }
 
-export const EntrySelectionProvider: React.FC<EntrySelectionProviderProps> = ({children}) => {
+export const EntrySelectionProvider: React.FC<EntrySelectionProviderProps> = ({children, currentBucketId}) => {
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
 
   const selectEntry = useCallback((entryId: string) => {
@@ -37,6 +38,10 @@ export const EntrySelectionProvider: React.FC<EntrySelectionProviderProps> = ({c
     selectEntry,
     deselectEntry
   };
+
+  useEffect(() => {
+    setSelectedEntries(new Set());
+  }, [currentBucketId]);
 
   return <EntrySelectionContext value={value}>{children}</EntrySelectionContext>;
 };
