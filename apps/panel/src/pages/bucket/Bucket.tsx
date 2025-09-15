@@ -93,14 +93,6 @@ export default function Bucket() {
     defaultVisibleColumns
   );
 
-  useEffect(() => {
-    const shouldSyncVisibilityState =
-      Object.keys(defaultVisibleColumns).length > Object.keys(visibleColumns).length;
-    if (shouldSyncVisibilityState) {
-      setVisibleColumns(defaultVisibleColumns);
-    }
-  }, [defaultVisibleColumns, visibleColumns, setVisibleColumns]);
-
   const filteredColumns = useMemo(
     () => formattedColumns.filter(column => visibleColumns?.[column.key]),
     [formattedColumns, visibleColumns]
