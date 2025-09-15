@@ -1,4 +1,12 @@
-import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
+import {
+  Button,
+  Checkbox,
+  FlexElement,
+  FluidContainer,
+  Icon,
+  Popover,
+  type IconName
+} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
@@ -13,6 +21,7 @@ import {
 } from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
+import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 
 export type ColumnType = {
   id: string;
@@ -45,6 +54,12 @@ type ColumnHeaderProps = {
   title?: string;
   icon?: IconName;
   showDropdownIcon?: boolean;
+  onEdit?: () => void;
+  onMoveRight?: () => void;
+  onMoveLeft?: () => void;
+  onSortAsc?: () => void;
+  onSortDesc?: () => void;
+  onDelete?: () => void;
 };
 
 type ColumnMeta = {
@@ -62,7 +77,17 @@ const COLUMN_ICONS: Record<string, IconName> = Object.values(FieldKind).reduce(
   {} as Record<string, IconName>
 );
 
-const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
+const ColumnHeader = ({
+  title,
+  icon,
+  showDropdownIcon,
+  onEdit,
+  onMoveRight,
+  onMoveLeft,
+  onSortAsc,
+  onSortDesc,
+  onDelete
+}: ColumnHeaderProps) => {
   return (
     <>
       <div className={styles.columnHeaderText}>
@@ -70,9 +95,26 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
         <span>{title || "\u00A0"}</span>
       </div>
       {showDropdownIcon && (
-        <Button variant="icon">
-          <Icon name="chevronDown" size="lg" />
-        </Button>
+        <Popover
+          content={
+            <ColumnActionsMenu
+              onEdit={onEdit}
+              onMoveRight={onMoveRight}
+              onMoveLeft={onMoveLeft}
+              onSortAsc={onSortAsc}
+              onSortDesc={onSortDesc}
+              onDelete={onDelete}
+            />
+          }
+          contentProps={{
+            className: styles.popover,
+          }}
+          placement="topStart"
+        >
+          <Button variant="icon">
+            <Icon name="chevronDown" size="lg" />
+          </Button>
+        </Popover>
       )}
     </>
   );
