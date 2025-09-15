@@ -29,6 +29,7 @@ type TypeDataColumn = {
   fixed?: boolean;
   selectable?: boolean;
   leftOffset?: number;
+  fixedWidth?: boolean; // If true, the column width won't change when resizing other columns
 };
 
 type TypeTableData = {[k: string]: {id: string; value: string | JSX.Element}};
@@ -125,6 +126,25 @@ function getCalculatedColumnWidth(columns: TypeDataColumn[], containerWidth: num
 }
 
 const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) => {
+  if (columns.filter(col => col.width !== undefined).length === columns.length) {
+    const fixedWidthColumns = columns.filter(col => col.fixedWidth);
+    const resizableColumns = columns.filter(col => !col.fixedWidth);
+    
+    const fixedWidthTotal = fixedWidthColumns.reduce(
+      (total, col) => total + parseWidth(col.width as string, containerWidth),
+      0
+    );
+    
+    const remainingWidth = containerWidth - fixedWidthTotal;
+    const widthPerResizableColumn = remainingWidth / resizableColumns.length;
+    
+    return columns.map(col => ({
+      ...col,
+      width: col.fixedWidth
+        ? col.width
+        : `${widthPerResizableColumn}px`
+    }));
+  }
   const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth + 10);
 
   const columnsWithWidth = columns.map(column => {
@@ -166,13 +186,21 @@ const Table: FC<TypeTable> = ({
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
-  useLayoutEffect(() => {
+  const handleColumnWidthChange = useCallback(() => {
     if (!containerRef.current) return;
     const containerWidth = containerRef.current?.clientWidth ?? 0;
     // Making it just a little bit smaller than the container to prevent unnecessary horizontal scrolls
     const formattedColumns = getFormattedColumns(containerWidth - 15, columns);
     setFormattedColumns(formattedColumns);
     setFocusedCell(null);
+  }, [columns]);
+
+  useLayoutEffect(() => {
+    handleColumnWidthChange();
+    window.addEventListener("resize", handleColumnWidthChange);
+    return () => {
+      window.removeEventListener("resize", handleColumnWidthChange);
+    };
   }, [columns]);
 
   const handleColumnResize = useCallback((id: string, newWidth: number) => {
