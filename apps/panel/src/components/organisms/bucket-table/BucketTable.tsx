@@ -104,28 +104,27 @@ const SelectColumnHeader = ({visibleIds}: {visibleIds: string[]}) => {
     <>
       <div className={styles.selectColumnHeader}>
         <span>
-          <SelectionCheckbox initial={false} rowId="select-all" visibleIds={visibleIds} />
+          <SelectionCheckbox rowId="select-all" visibleIds={visibleIds} />
         </span>
       </div>
     </>
   );
 };
 
-
-function SelectionCheckbox({initial: _ignoredInitial, rowId, visibleIds}: {initial: boolean; rowId: string; visibleIds?: string[]}) {
+function SelectionCheckbox({rowId, visibleIds}: {rowId: string; visibleIds?: string[]}) {
   const {selectEntry, deselectEntry, selectedEntries} = useEntrySelection();
 
   const isHeader = rowId === "select-all";
-  const headerVisibleIds = isHeader ? (visibleIds || []) : [];
+  const headerVisibleIds = isHeader ? visibleIds || [] : [];
   const selectedCount = isHeader
     ? headerVisibleIds.filter(id => selectedEntries.has(id)).length
     : undefined;
   const total = isHeader ? headerVisibleIds.length : undefined;
 
-  const checked = isHeader
-    ? total! > 0 && selectedCount === total
-    : selectedEntries.has(rowId);
-  const indeterminate = isHeader ? !!total && !!selectedCount && selectedCount! > 0 && selectedCount! < total! : false;
+  const checked = isHeader ? total! > 0 && selectedCount === total : selectedEntries.has(rowId);
+  const indeterminate = isHeader
+    ? !!total && !!selectedCount && selectedCount! > 0 && selectedCount! < total!
+    : false;
 
   const handleChange = () => {
     if (isHeader) {
@@ -151,7 +150,6 @@ function SelectionCheckbox({initial: _ignoredInitial, rowId, visibleIds}: {initi
     />
   );
 }
-
 
 const NewFieldHeader = memo(() => {
   const {buckets, bucketData, createBucketField} = useBucket();
@@ -204,7 +202,7 @@ const buildDefaultColumns = (visibleIds: string[]): ColumnType[] => [
     id: "0",
     header: <SelectColumnHeader visibleIds={visibleIds} />,
     key: "select",
-  role: "select",
+    role: "select",
     type: "boolean",
     width: "41px",
     headerClassName: styles.columnHeader,
@@ -217,7 +215,7 @@ const buildDefaultColumns = (visibleIds: string[]): ColumnType[] => [
     id: "1",
     header: <NewFieldHeader />,
     key: "new field",
-  role: "new-field",
+    role: "new-field",
     width: "125px",
     headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,
     cellClassName: `${styles.newFieldCell} ${styles.cell}`,
@@ -256,8 +254,8 @@ function renderCell(
     case "date":
       return renderDefault();
     case "boolean":
-  return role === "select" ? (
-        <SelectionCheckbox initial={!!cellData} rowId={rowId} />
+      return role === "select" ? (
+        <SelectionCheckbox rowId={rowId} />
       ) : (
         <Checkbox className={styles.checkbox} checked={!!cellData} />
       );
@@ -361,7 +359,11 @@ function renderCell(
   }
 }
 
-function getFormattedColumns(columns: ColumnType[], bucketId: string, visibleIds: string[]): ColumnType[] {
+function getFormattedColumns(
+  columns: ColumnType[],
+  bucketId: string,
+  visibleIds: string[]
+): ColumnType[] {
   const defaultColumns = buildDefaultColumns(visibleIds);
   return [
     defaultColumns[0],
@@ -412,13 +414,7 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
           key,
           {
             id: `${meta.id}-${fullRow._id}`,
-            value: renderCell(
-              value,
-              fullRow._id,
-              meta.type,
-              meta.deletable,
-              meta.role
-            )
+            value: renderCell(value, fullRow._id, meta.type, meta.deletable, meta.role)
           }
         ];
       })
