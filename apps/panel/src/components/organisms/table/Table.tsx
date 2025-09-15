@@ -126,23 +126,24 @@ function getCalculatedColumnWidth(columns: TypeDataColumn[], containerWidth: num
 }
 
 const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) => {
-  if (columns.filter(col => col.width !== undefined).length === columns.length) {
+  const allColumnsHaveWidth =
+    columns.filter(col => col.width !== undefined).length === columns.length;
+
+  if (allColumnsHaveWidth) {
     const fixedWidthColumns = columns.filter(col => col.fixedWidth);
     const resizableColumns = columns.filter(col => !col.fixedWidth);
-    
+
     const fixedWidthTotal = fixedWidthColumns.reduce(
       (total, col) => total + parseWidth(col.width as string, containerWidth),
       0
     );
-    
+
     const remainingWidth = containerWidth - fixedWidthTotal;
     const widthPerResizableColumn = remainingWidth / resizableColumns.length;
-    
+
     return columns.map(col => ({
       ...col,
-      width: col.fixedWidth
-        ? col.width
-        : `${widthPerResizableColumn}px`
+      width: col.fixedWidth ? col.width : `${widthPerResizableColumn}px`
     }));
   }
   const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth);
