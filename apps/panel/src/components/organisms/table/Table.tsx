@@ -29,7 +29,7 @@ type TypeDataColumn = {
   fixed?: boolean;
   selectable?: boolean;
   leftOffset?: number;
-  fixedWidth?: boolean; // If true, the column width won't change when resizing other columns
+  fixedWidth?: boolean;
 };
 
 type TypeTableData = {[k: string]: {id: string; value: string | JSX.Element}};
@@ -145,7 +145,7 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
         : `${widthPerResizableColumn}px`
     }));
   }
-  const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth + 10);
+  const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth);
 
   const columnsWithWidth = columns.map(column => {
     return {...column, width: column.width || defaultColumnWidth};
@@ -189,8 +189,7 @@ const Table: FC<TypeTable> = ({
   const handleColumnWidthChange = useCallback(() => {
     if (!containerRef.current) return;
     const containerWidth = containerRef.current?.clientWidth ?? 0;
-    // Making it just a little bit smaller than the container to prevent unnecessary horizontal scrolls
-    const formattedColumns = getFormattedColumns(containerWidth - 15, columns);
+    const formattedColumns = getFormattedColumns(containerWidth, columns);
     setFormattedColumns(formattedColumns);
     setFocusedCell(null);
   }, [columns]);
