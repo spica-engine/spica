@@ -44,7 +44,8 @@
   padding: 0 !important;
   width: 60px !important;
   label {
-    background-color: var(--color-soft-light);
+    background-color: var(--color-border);
+    border-color: var(--color-font-primary) !important;
   }
 }
 
@@ -113,11 +114,14 @@
   border-left: var(--border-default);
 }
 
+.checkbox:not(.selectColumnHeader .checkbox) {
+  border-color: var(--color-border) !important;
+}
+
 .checkbox {
   label {
     width: 20px !important;
     height: 20px !important;
-    border-color: var(--color-border) !important;
     border-radius: var(--border-radius-md) !important;
     cursor: pointer !important;
     position: relative !important;
