@@ -1,7 +1,7 @@
 import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useCallback, useContext, useMemo, useState, type RefObject, createContext} from "react";
+import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -10,9 +10,6 @@ import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
-
-// Local context to share the currently visible row ids for select-all logic
-const VisibleRowsContext = createContext<string[]>([]);
 
 type FieldType =
   | "string"
@@ -102,12 +99,12 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
   );
 };
 
-const SelectColumnHeader = () => {
+const SelectColumnHeader = ({visibleIds}: {visibleIds: string[]}) => {
   return (
     <>
       <div className={styles.selectColumnHeader}>
         <span>
-          <SelectionCheckbox initial={false} rowId="select-all" />
+          <SelectionCheckbox initial={false} rowId="select-all" visibleIds={visibleIds} />
         </span>
       </div>
     </>
@@ -115,15 +112,15 @@ const SelectColumnHeader = () => {
 };
 
 
-function SelectionCheckbox({initial: _ignoredInitial, rowId}: {initial: boolean; rowId: string}) {
-  const visibleIds = useContext(VisibleRowsContext);
+function SelectionCheckbox({initial: _ignoredInitial, rowId, visibleIds}: {initial: boolean; rowId: string; visibleIds?: string[]}) {
   const {selectEntry, deselectEntry, selectedEntries} = useEntrySelection();
 
   const isHeader = rowId === "select-all";
+  const headerVisibleIds = isHeader ? (visibleIds || []) : [];
   const selectedCount = isHeader
-    ? visibleIds.filter(id => selectedEntries.has(id)).length
+    ? headerVisibleIds.filter(id => selectedEntries.has(id)).length
     : undefined;
-  const total = isHeader ? visibleIds.length : undefined;
+  const total = isHeader ? headerVisibleIds.length : undefined;
 
   const checked = isHeader
     ? total! > 0 && selectedCount === total
@@ -135,9 +132,9 @@ function SelectionCheckbox({initial: _ignoredInitial, rowId}: {initial: boolean;
       // If all are selected, deselect all visible; otherwise select all visible
       const shouldDeselect = checked;
       if (shouldDeselect) {
-        visibleIds.forEach(id => deselectEntry(id));
+        headerVisibleIds.forEach(id => deselectEntry(id));
       } else {
-        visibleIds.forEach(id => selectEntry(id));
+        headerVisibleIds.forEach(id => selectEntry(id));
       }
     } else {
       if (!checked) selectEntry(rowId);
@@ -202,10 +199,10 @@ const NewFieldHeader = memo(() => {
   );
 });
 
-const defaultColumns: ColumnType[] = [
+const buildDefaultColumns = (visibleIds: string[]): ColumnType[] => [
   {
     id: "0",
-    header: <SelectColumnHeader />,
+    header: <SelectColumnHeader visibleIds={visibleIds} />,
     key: "select",
   role: "select",
     type: "boolean",
@@ -364,7 +361,8 @@ function renderCell(
   }
 }
 
-function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
+function getFormattedColumns(columns: ColumnType[], bucketId: string, visibleIds: string[]): ColumnType[] {
+  const defaultColumns = buildDefaultColumns(visibleIds);
   return [
     defaultColumns[0],
     ...columns.map((col, index) => ({
@@ -438,9 +436,13 @@ const BucketTable = ({
   bucketId,
   tableRef
 }: BucketTableProps) => {
+  const visibleIds = useMemo(
+    () => (data?.map?.(r => r._id).filter(Boolean) as string[]) || [],
+    [data]
+  );
   const formattedColumns = useMemo(
-    () => getFormattedColumns(columns, bucketId),
-    [columns, bucketId]
+    () => getFormattedColumns(columns, bucketId, visibleIds),
+    [columns, bucketId, visibleIds]
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(
@@ -451,17 +453,15 @@ const BucketTable = ({
   return loading ? (
     <Loader />
   ) : (
-    <VisibleRowsContext.Provider value={(data?.map?.(r => r._id).filter(Boolean) as string[]) || []}>
-      <Table
-        style={{maxHeight}}
-        className={styles.table}
-        columns={formattedColumns}
-        data={formattedData}
-        onScrollEnd={onScrollEnd}
-        totalDataLength={totalDataLength}
-        tableRef={tableRef}
-      />
-    </VisibleRowsContext.Provider>
+    <Table
+      style={{maxHeight}}
+      className={styles.table}
+      columns={formattedColumns}
+      data={formattedData}
+      onScrollEnd={onScrollEnd}
+      totalDataLength={totalDataLength}
+      tableRef={tableRef}
+    />
   );
 };
 
