@@ -101,13 +101,11 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
 
 const SelectColumnHeader = ({visibleIds}: {visibleIds: string[]}) => {
   return (
-    <>
-      <div className={styles.selectColumnHeader}>
-        <span>
-          <SelectionCheckbox rowId="select-all" visibleIds={visibleIds} />
-        </span>
-      </div>
-    </>
+    <div className={styles.selectColumnHeader}>
+      <span>
+        <SelectionCheckbox rowId="select-all" visibleIds={visibleIds} />
+      </span>
+    </div>
   );
 };
 

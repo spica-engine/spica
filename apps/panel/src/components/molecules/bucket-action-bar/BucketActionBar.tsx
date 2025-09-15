@@ -83,7 +83,6 @@ const BucketActionBar = ({
     await Promise.all(
       Array.from(selectedEntries).map(async entryId => {
         const result: string | null = await deleteBucketEntry(entryId, bucket._id);
-        console.log("Deletion result for entryId", entryId, ":", result);
         if (!result) {
           failedEntryIds.push(entryId);
         }
