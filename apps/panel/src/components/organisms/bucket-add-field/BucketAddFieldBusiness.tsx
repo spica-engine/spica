@@ -1,9 +1,7 @@
 import {type FC, useMemo, useState, useCallback, useEffect, memo, useRef} from "react";
 import type {TypeInputType} from "oziko-ui-kit";
 import * as fieldDomain from "../../../domain/fields";
-import {resolveFieldKind} from "../../../domain/fields/registry"; // local helper for narrowing
-// Direct import for base preset defaults (not re-exported intentionally)
-import {BASE_PRESET_DEFAULTS} from "../../../domain/fields/defaults";
+import {resolveFieldKind} from "../../../domain/fields/registry";
 import {useBucket} from "../../../contexts/BucketContext";
 import BucketAddFieldView from "./BucketAddFieldView";
 import {
@@ -68,14 +66,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
 
   const isInner = popupType !== "add-field";
 
-  // No direct registry usage needed here; facade supplies everything required.
-  // Unified UI schema groups via facade
-  // Buckets need to be resolved before schema memo to avoid temporal dead-zone issues
-  const {createBucketFieldError, buckets, bucketData} = useBucket();
-  const bucket = useMemo(
-    () => buckets.find(i => i._id === bucketData?.bucketId),
-    [buckets, bucketData?.bucketId]
-  );
+  const {createBucketFieldError} = useBucket();
   const {
     fieldValues: mainFormInputProperties,
     configurationValues: configurationInputProperties,
@@ -131,10 +122,11 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     setApiError(null);
     if (!type) return false;
     const errors = field.validateCreationForm({
-      ...formValues.configurationValues,
-      ...formValues.defaultValue,
-      ...formValues.fieldValues,
-      ...formValues.presetValues
+      fieldValues: formValues.fieldValues,
+      configurationValues: formValues.configurationValues,
+      defaultValue: formValues.defaultValue,
+      presetValues: formValues.presetValues,
+      innerFields: formValues.innerFields
     });
     if (errors) {
       setFormErrors(errors as any);
@@ -151,7 +143,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       return;
     }
     validateForm();
-  }, [formValues, validateForm, type, formErrors]);
+  }, [validateForm, formValues]);
 
   // Event handlers
   const handleSaveAndClose = useCallback(async () => {
@@ -196,7 +188,6 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       return {...prev, [formValuesAttribute]: values};
     });
 
-    console.log("formValues from bucket add field business: ", formValues)
   return (
     <BucketAddFieldView
       // Display props

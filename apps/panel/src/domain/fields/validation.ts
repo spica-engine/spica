@@ -116,10 +116,18 @@ export const LOCATION_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object(
   ...BASE_FIELD_CREATION_FORM_SCHEMA
 });
 export const ARRAY_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
-  ...BASE_FIELD_CREATION_FORM_SCHEMA
+  ...BASE_FIELD_CREATION_FORM_SCHEMA,
+  innerFields: Yup.array().when("fieldValues.arrayType", {
+    is: "object",
+    then: sch => sch.min(1, "At least one inner field is required"),
+    otherwise: sch => sch.optional()
+  })
 });
 export const OBJECT_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
-  ...BASE_FIELD_CREATION_FORM_SCHEMA
+  ...BASE_FIELD_CREATION_FORM_SCHEMA,
+  innerFields: Yup.array()
+    .min(1, "At least one inner field is required")
+    .required("Inner fields are required")
 });
 export const FILE_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
   ...BASE_FIELD_CREATION_FORM_SCHEMA
@@ -236,23 +244,51 @@ export const validateFieldValue = (value: any, kind: FieldKind, properties: any)
 };
 
 // ---------------------------------------------------------------------------
+// Helper function to convert flat error paths to nested object structure
+// --------------------------------------------------
+function createNestedErrorObject(flatErrors: Record<string, string>): any {
+  const result: any = {};
+
+  for (const [path, message] of Object.entries(flatErrors)) {
+    const keys = path.split(".");
+    let current = result;
+
+    // Navigate/create the nested structure
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      if (!(key in current)) {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+
+    // Set the final value
+    const lastKey = keys[keys.length - 1];
+    current[lastKey] = message;
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
 // Low-level Yup runner kept last for readability
 // --------------------------------------------------
-export function runYupValidation(
-  schema: ValidationSchema,
-  form: any
-): Record<string, string> | null {
+export function runYupValidation(schema: ValidationSchema, form: any): any | null {
   try {
     schema.validateSync(form, {abortEarly: false, stripUnknown: false});
     return null;
   } catch (err) {
     if (err instanceof Yup.ValidationError) {
-      const out: Record<string, string> = {};
+      const flatErrors: Record<string, string> = {};
       for (const e of err.inner) {
-        if (e.path && !out[e.path]) out[e.path] = e.message;
+        if (e.path && !flatErrors[e.path]) flatErrors[e.path] = e.message;
       }
-      if (!err.inner.length && err.path) out[err.path] = err.message;
-      return Object.keys(out).length ? out : null;
+      if (!err.inner.length && err.path) flatErrors[err.path] = err.message;
+
+      if (Object.keys(flatErrors).length === 0) return null;
+
+      // Convert flat errors to nested structure
+      return createNestedErrorObject(flatErrors);
     }
     return {__root: "Validation failed"};
   }

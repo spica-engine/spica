@@ -4,14 +4,14 @@ import styles from "./BucketFieldPopup.module.scss";
 import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
-import type {Placement} from "oziko-ui-kit/build/dist/custom-hooks/useAdaptivePosition";
+import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
 import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
 import { FIELD_REGISTRY } from "../../../domain/fields/registry";
 
 type BucketFieldSelectionPopupProps = {
   children: ReactNode;
-  onSaveAndClose: (values: FormValues) => void | Promise<any>;
+  onSaveAndClose: (values: FormValues, kind: FieldKind) => void | Promise<any>;
   placement?: Placement;
   popupType?: PopupType;
 };
@@ -62,7 +62,7 @@ const BucketFieldSelectionPopup = ({
   };
 
   const handleSaveAndClose = (values: FormValues) => {
-    const maybePromise = onSaveAndClose(values);
+    const maybePromise = onSaveAndClose(values, selectedType as FieldKind);
 
     const runHandlers = () => {
       setSelectedType(null);

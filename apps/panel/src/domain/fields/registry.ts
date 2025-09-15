@@ -26,7 +26,7 @@ import {
   COLOR_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "./validation";
-import type {TypeInputTypeMap} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {TypeInputTypeMap} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
   if (!input) return undefined;

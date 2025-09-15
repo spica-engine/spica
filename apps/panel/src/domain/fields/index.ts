@@ -139,14 +139,9 @@ function validateForm(
 // ---------------------------------------------------------------------------
 // Property Build / Parse
 // ---------------------------------------------------------------------------
-function buildCreationFormPropertiesFromForm(form: any) {
-  if (!form) throw new Error("buildCreationFormPropertiesFromForm: form is required");
-  const kind = resolveFieldKind(form.type);
-  if (!kind)
-    throw new Error(`buildCreationFormPropertiesFromForm: unknown field kind '${form.type}'`);
+function buildCreationFormPropertiesFromForm(form: FieldCreationForm, kind: FieldKind): any {
   const def = FIELD_REGISTRY[kind];
-  if (!def)
-    throw new Error(`buildCreationFormPropertiesFromForm: definition missing for '${kind}'`);
+  if (!def) throw new Error(`definition missing for '${kind}'`);
 
   // 1. Preset sanitation (capability aware)
   const preset = stripUnsupportedPresetValues({...(form.presetValues || {})}, def);
@@ -226,11 +221,7 @@ function formatValue(kind: FieldKind, value: any) {
   return value == null ? "" : value;
 }
 
-import {
-  addInnerField,
-  updateInnerField,
-  removeInnerField,
-} from "./inner-fields";
+import {addInnerField, updateInnerField, removeInnerField} from "./inner-fields";
 
 export {
   initFormWithTitleFallback,
