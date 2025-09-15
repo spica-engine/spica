@@ -1,4 +1,11 @@
-import React, {createContext, useContext, useState, useCallback, type ReactNode, useEffect} from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  type ReactNode,
+  useEffect
+} from "react";
 
 interface EntrySelectionContextType {
   selectedEntries: Set<string>;
@@ -13,24 +20,22 @@ interface EntrySelectionProviderProps {
   currentBucketId: string;
 }
 
-export const EntrySelectionProvider: React.FC<EntrySelectionProviderProps> = ({children, currentBucketId}) => {
+export const EntrySelectionProvider: React.FC<EntrySelectionProviderProps> = ({
+  children,
+  currentBucketId
+}) => {
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
 
   const selectEntry = useCallback((entryId: string) => {
-    if (entryId === "select-all")
-      console.log("not-implemented-yet"); // handle select all case
-    else setSelectedEntries(prev => new Set(prev).add(entryId));
+    setSelectedEntries(prev => new Set(prev).add(entryId));
   }, []);
 
   const deselectEntry = useCallback((entryId: string) => {
-    if (entryId === "select-all") {
-      setSelectedEntries(new Set());
-    } else
-      setSelectedEntries(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(entryId);
-        return newSet;
-      });
+    setSelectedEntries(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(entryId);
+      return newSet;
+    });
   }, []);
 
   const value = {
