@@ -19,7 +19,7 @@ import {
   type JSX,
   type ReactNode
 } from "react";
-import type {FormErrors, FormValues} from "./BucketAddFieldBusiness";
+import type {FormErrors} from "./BucketAddFieldBusiness";
 import styles from "./BucketAddField.module.scss";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import BucketFieldConfigurationPopup from "../../molecules/bucket-field-popup/BucketFieldConfigurationPopup";
@@ -31,11 +31,12 @@ import {
 import {useInputRepresenter} from "oziko-ui-kit";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type { FieldFormState } from "src/domain/fields/types";
 
 type InnerFieldProps = {
-  field: FormValues;
-  onSaveInnerField: (values: FormValues) => void;
-  onDeleteInnerField: (field: FormValues) => void;
+  field: FieldFormState;
+  onSaveInnerField: (values: FieldFormState) => void;
+  onDeleteInnerField: (field: FieldFormState) => void;
 };
 
 const InnerField: FC<InnerFieldProps> = memo(({field, onSaveInnerField, onDeleteInnerField}) => {
@@ -44,7 +45,7 @@ const InnerField: FC<InnerFieldProps> = memo(({field, onSaveInnerField, onDelete
   const handleToggleEdit = () => setIsEditing(prev => !prev);
 
   const handleSave = useCallback(
-    (values: FormValues) => {
+    (values: FieldFormState) => {
       onSaveInnerField({...values, id: field.id});
       handleToggleEdit();
     },
@@ -72,7 +73,7 @@ const InnerField: FC<InnerFieldProps> = memo(({field, onSaveInnerField, onDelete
               selectedType={field.type as any}
               onClose={handleToggleEdit}
               onSaveAndClose={handleSave}
-              initialValues={field as FormValues}
+              initialValues={field as FieldFormState}
               popupType="edit-inner-field"
             >
               <Button color="default" variant="icon" onClick={handleToggleEdit}>
@@ -94,7 +95,7 @@ type BucketAddFieldViewProps = {
   className?: string;
 
   // Form data
-  formValues: FormValues;
+  formValues: FieldFormState;
   formErrors: FormErrors;
   error: string | null;
 
@@ -108,11 +109,11 @@ type BucketAddFieldViewProps = {
   isLoading: boolean;
 
   // Event handlers
-  handleFormValueChange: (values: FormValues, formValuesAttribute: keyof FormValues) => void;
+  handleFormValueChange: (values: FieldFormState, formValuesAttribute: keyof FieldFormState) => void;
   handleSaveAndClose: () => void;
-  handleCreateInnerField: (values: FormValues) => void;
-  handleSaveInnerField: (values: FormValues) => void;
-  handleDeleteInnerField: (values: FormValues) => void;
+  handleCreateInnerField: (values: FieldFormState) => void;
+  handleSaveInnerField: (values: FieldFormState) => void;
+  handleDeleteInnerField: (values: FieldFormState) => void;
 
   // External dependencies
   popupId?: string;
@@ -211,7 +212,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       createConfig(
         "Inner Fields",
         <div>
-          {formValues.innerFields?.map?.((field: FormValues, i: number) => (
+          {formValues.innerFields?.map?.((field: FieldFormState, i: number) => (
             <InnerField
               key={i}
               field={field}

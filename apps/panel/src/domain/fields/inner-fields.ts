@@ -1,18 +1,13 @@
 import {initForm} from ".";
-import {FieldKind, type FieldFormState, type FieldCreationForm} from "./types";
-
-interface AddInnerFieldOptions {
-  seed?: Partial<FieldCreationForm & {type?: FieldKind}>;
-  idFactory?: () => string; // injectable for determinism if needed
-}
+import {FieldKind, type FieldFormState} from "./types";
 
 export function addInnerField(
   parent: FieldFormState,
   kind: FieldKind,
-  opts: AddInnerFieldOptions = {}
+  initialValues?: FieldFormState
 ): FieldFormState {
-  const child = initForm(kind, {inner: true, initial: opts.seed}) as any;
-  const id = opts.idFactory ? opts.idFactory() : crypto.randomUUID();
+  const child = initForm(kind, initialValues);
+  const id = crypto.randomUUID(); // crypto is fine for now, but not supported in some older browsers
   const nextChild = {...child, id};
   return {
     ...parent,

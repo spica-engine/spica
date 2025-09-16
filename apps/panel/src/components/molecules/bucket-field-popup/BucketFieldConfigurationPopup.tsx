@@ -12,17 +12,17 @@ import {type IconName, Popover} from "oziko-ui-kit";
 import {FieldKind} from "../../../domain/fields";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
-import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import type {PopupType} from "./BucketFieldPopupsContext";
+import type { FieldFormState } from "src/domain/fields/types";
 
 type BucketFieldConfigurationPopupProps = {
   selectedType: FieldKind | null;
   onClose: (event?: MouseEvent) => void;
-  onSaveAndClose: (values: FormValues) => void;
+  onSaveAndClose: (values: FieldFormState) => void;
   children: ReactNode;
   isOpen: boolean;
-  initialValues?: FormValues;
+  initialValues?: FieldFormState;
   onRegister?: (id: string) => void;
   iconName?: IconName;
   popupType?: PopupType;
@@ -53,7 +53,6 @@ const BucketFieldConfigurationPopup = ({
       const isLastPopup = popupStackEmpty || bucketFieldPopups.at(-1)?.id === id;
       const offsetX = isFirstPopup ? 200 : 0;
       const offsetY = isFirstPopup ? 0 : 10;
-  const configurationMapping = {}; // configuration now derived in Business component
       const bucketAddFieldPopoverStyles = isFirstPopup
         ? {}
         : bucketFieldPopups[bucketFieldPopups.findIndex(i => i.id === id) - 1]?.innerFieldStyles ||

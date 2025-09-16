@@ -1,13 +1,14 @@
-import {createContext, useContext, useState, type ReactNode} from "react";
+import {createContext, useContext, useState, type CSSProperties, type ReactNode} from "react";
 import {FieldKind} from "../../../domain/fields";
+import type { FieldFormState } from "src/domain/fields/types";
 
 export type PopupType = "add-field" | "edit-inner-field" | "add-inner-field";
 export type BucketFieldPopup = {
   id: string;
-  innerFieldStyles?: any;
+  innerFieldStyles?: CSSProperties;
   fieldKind?: FieldKind; // normalized central registry kind
   popupType?: PopupType;
-  initialValues?: any;
+  initialValues?: FieldFormState;
 };
 
 const BucketFieldPopupsContext = createContext<{

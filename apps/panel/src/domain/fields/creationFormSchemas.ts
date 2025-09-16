@@ -1,0 +1,142 @@
+// Common field definitions used in creation forms
+export const BaseFields = {
+  title: {type: "string", title: "Name", required: true},
+  description: {type: "textarea", title: "Description"}
+} as const;
+
+export const DefaultInputs = {
+  defaultString: {type: "string", title: "Default Value"},
+  defaultNumber: {type: "number", title: "Default Value"},
+  defaultBoolean: {type: "boolean", title: "Default value", size: "small"},
+  defaultDate: {
+    type: "string",
+    title: "Default Date",
+    enum: [
+      {label: "None", value: ""},
+      {label: "Created At", value: ":created_at"},
+      {label: "Updated At", value: ":updated_at"}
+    ] as any[]
+  }
+} as const;
+
+export const ValidationInputs = {
+  minNumber: {type: "number", title: "Minimum"},
+  maxNumber: {type: "number", title: "Maximum"},
+  minItems: {type: "number", title: "Min Items"},
+  maxItems: {type: "number", title: "Max Items"},
+  definePattern: {type: "boolean", title: "Define Pattern", size: "small"},
+  regularExpression: {type: "string", title: "Regex"}
+} as const;
+
+export const SpecializedInputs = {
+  preset: {
+    type: "string",
+    title: "Presets",
+    enum: ["Countries", "Days", "Email", "Phone Number"] as string[]
+  },
+  makeEnumerated: {type: "boolean", title: "Make field enumerated", size: "small"},
+  enumeratedValues: {type: "chip", title: "EnumeratedValues"},
+  multipleSelectionType: {
+    type: "string",
+    title: "Type",
+    enum: ["string", "number"] as string[],
+    required: true
+  },
+  arrayType: {
+    type: "string",
+    title: "Array Type",
+    enum: [
+      "string",
+      "date",
+      "number",
+      "textarea",
+      "boolean",
+      "color",
+      "storage",
+      "multiselect",
+      "location",
+      "richtext",
+      "object",
+      "json"
+    ] as string[],
+    required: true
+  },
+  arrayItemTitle: {type: "string", title: "Title"},
+  arrayItemDescription: {type: "string", title: "Description"},
+  chip: {type: "chip", title: ""},
+  bucket: {title: "Buckets", type: "select", enum: [] as any[]},
+  relationType: {
+    title: "Relation Type",
+    type: "select",
+    enum: [
+      {label: "One To One", value: "onetoone"},
+      {label: "One To Many", value: "onetomany"}
+    ] as any[]
+  },
+  dependent: {type: "boolean", title: "Dependent", size: "small"},
+  uniqueItems: {type: "boolean", title: "Items should be unique", size: "small"}
+} as const;
+
+// Preset panel used by string and array, and pattern for number/array
+export const PresetPanel = {
+  preset: SpecializedInputs.preset,
+  makeEnumerated: SpecializedInputs.makeEnumerated,
+  enumeratedValues: {
+    ...SpecializedInputs.enumeratedValues,
+    renderCondition: {field: "makeEnumerated", equals: true}
+  },
+  definePattern: ValidationInputs.definePattern,
+  regularExpression: {
+    ...ValidationInputs.regularExpression,
+    renderCondition: {field: "definePattern", equals: true}
+  }
+} as const;
+
+// Configuration field definitions and mappings
+export const ConfigDefs = {
+  primaryField: {type: "boolean", title: "Primary Field", size: "small"},
+  translate: {type: "boolean", title: "Translatable", size: "small"},
+  uniqueValues: {type: "boolean", title: "Unique Values", size: "small"},
+  requiredField: {type: "boolean", title: "Required Field", size: "small"},
+  index: {type: "boolean", title: "Indexed field in database", size: "small"}
+} as const;
+
+export const BasicConfig = {
+  primaryField: ConfigDefs.primaryField,
+  uniqueValues: ConfigDefs.uniqueValues,
+  requiredField: ConfigDefs.requiredField,
+  index: ConfigDefs.index
+} as const;
+
+export const TranslatableConfig = {
+  ...BasicConfig,
+  translate: ConfigDefs.translate
+} as const;
+
+export const MinimalConfig = {
+  requiredField: ConfigDefs.requiredField,
+  index: ConfigDefs.index
+} as const;
+
+export const OnlyRequiredConfig = {
+  requiredField: ConfigDefs.requiredField
+} as const;
+
+export const PrimaryAndIndexConfig = {
+  primaryField: ConfigDefs.primaryField,
+  index: ConfigDefs.index
+} as const;
+
+export const TranslatableMinimalConfig = {
+  translate: ConfigDefs.translate,
+  requiredField: ConfigDefs.requiredField,
+  index: ConfigDefs.index
+} as const;
+
+export const InnerFieldConfig = MinimalConfig;
+
+export const MinimalInnerFieldConfig = {
+  index: ConfigDefs.index
+} as const;
+
+

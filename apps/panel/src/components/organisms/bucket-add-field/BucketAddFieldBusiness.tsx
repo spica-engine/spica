@@ -1,21 +1,13 @@
 import {type FC, useMemo, useState, useCallback, useEffect, memo, useRef} from "react";
-import type {TypeInputType} from "oziko-ui-kit";
 import * as fieldDomain from "../../../domain/fields";
-import {resolveFieldKind} from "../../../domain/fields/registry";
+import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import {useBucket} from "../../../contexts/BucketContext";
 import BucketAddFieldView from "./BucketAddFieldView";
 import {
   useBucketFieldPopups,
   type BucketFieldPopup
 } from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
-import type {FieldDefinition} from "src/domain/fields/types";
-
-export type BucketAddFieldBusinessProps = {
-  onSuccess?: () => void;
-  onSaveAndClose: (values: FormValues) => void | Promise<any>;
-  className?: string;
-  popupId?: string;
-};
+import type {FieldDefinition, FieldFormState, FieldKind} from "src/domain/fields/types";
 
 function isObjectEffectivelyEmpty(obj: Object): boolean {
   if (obj === null || obj === undefined) return true;
@@ -24,22 +16,19 @@ function isObjectEffectivelyEmpty(obj: Object): boolean {
   return Object.values(obj).every(value => isObjectEffectivelyEmpty(value));
 }
 
+export type BucketAddFieldBusinessProps = {
+  onSuccess?: () => void;
+  onSaveAndClose: (values: FieldFormState) => void | Promise<any>;
+  className?: string;
+  popupId?: string;
+};
+
 type TypePresetValues = {
   preset: string;
   makeEnumerated: boolean;
   enumeratedValues: string[];
   definePattern: boolean;
   regularExpression: string;
-};
-
-export type FormValues = {
-  fieldValues: Record<string, any>;
-  presetValues: TypePresetValues;
-  configurationValues: Record<string, any>;
-  defaultValue: any;
-  type: TypeInputType;
-  innerFields?: FormValues[];
-  id?: string;
 };
 
 export type FormErrors = {
@@ -50,32 +39,82 @@ export type FormErrors = {
   innerFields?: string;
 };
 
+function useFormState(
+  field: FieldDefinition,
+  type: FieldKind,
+  isInner: boolean,
+  initialValues?: FieldFormState
+) {
+  const [formValues, setFormValues] = useState<FieldFormState>(field.creationFormDefaultValues);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!type) return;
+
+    const base = fieldDomain.initForm(type, initialValues);
+
+    const newFormValues = {
+      fieldValues: base.fieldValues,
+      configurationValues: base.configurationValues,
+      presetValues: base.presetValues as TypePresetValues,
+      defaultValue: base.defaultValue,
+      type,
+      innerFields: base.innerFields
+    };
+
+    setFormValues(newFormValues);
+    setFormErrors({});
+    setIsInitialized(true);
+  }, [type, initialValues, isInner, field]);
+
+  return {
+    formValues,
+    setFormValues,
+    formErrors,
+    setFormErrors,
+    isInitialized
+  };
+}
+
 const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   onSuccess,
   onSaveAndClose,
   className,
   popupId
 }) => {
-  const {bucketFieldPopups, setBucketFieldPopups} = useBucketFieldPopups();
+  const {bucketFieldPopups} = useBucketFieldPopups();
+  const {buckets, createBucketFieldError} = useBucket();
+
+  const currentPopup = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
+  const {fieldKind: fieldType, popupType, initialValues} = currentPopup;
+
+  const fieldDefinition = FIELD_REGISTRY[fieldType as FieldKind] as FieldDefinition;
+  const isInnerField = popupType !== "add-field";
+
   const {
-    fieldKind: type,
-    popupType,
+    fieldValues: initialMainFormProperties,
+    configurationValues: configurationProperties,
+    defaultValue: defaultValueProperties,
+    presetValues: presetProperties
+  } = useMemo(
+    () => fieldDefinition.buildCreationFormProperties(isInnerField, buckets),
+    [fieldDefinition, isInnerField, buckets]
+  );
+
+  const [mainFormProperties, setMainFormProperties] = useState(initialMainFormProperties);
+
+  useEffect(() => {
+    setMainFormProperties(initialMainFormProperties);
+  }, [initialMainFormProperties]);
+
+  const {formValues, setFormValues, formErrors, setFormErrors, isInitialized} = useFormState(
+    fieldDefinition,
+    fieldType as FieldKind,
+    isInnerField,
     initialValues
-  } = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
-  const field = fieldDomain.FIELD_REGISTRY[type as fieldDomain.FieldKind] as FieldDefinition;
+  );
 
-  const isInner = popupType !== "add-field";
-
-  const {createBucketFieldError} = useBucket();
-  const {
-    fieldValues: mainFormInputProperties,
-    configurationValues: configurationInputProperties,
-    defaultValue: defaultInputProperty,
-    presetValues: presetInputProperties
-  } = useMemo(() => field.buildCreationFormProperties(), [field]);
-
-  const [formValues, setFormValues] = useState<FormValues>(field.creationFormDefaultValues as any);
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(createBucketFieldError);
 
@@ -83,107 +122,92 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     setApiError(createBucketFieldError);
   }, [createBucketFieldError]);
 
-  // Initialize form values when type changes
-  useEffect(() => {
-    if (!type) return;
-    setFormValues(() => {
-      const base = fieldDomain.initFormWithTitleFallback(type as fieldDomain.FieldKind, {
-        inner: isInner,
-        initial: initialValues
-      });
-      return {
-        fieldValues: base.fieldValues,
-        configurationValues: base.configurationValues,
-        presetValues: base.presetValues as TypePresetValues,
-        defaultValue: base.defaultValue,
-        type: type as any,
-        innerFields: base.innerFields
-      };
-    });
-    setFormErrors({});
-    setApiError(null);
-  }, [type, initialValues, isInner]);
-
   const oldValues = useRef(formValues);
   useEffect(() => {
-    if (!type) return;
-    const newFormValues = field.applyPresetLogic?.(formValues, oldValues.current) as any;
+    if (!fieldType || !isInitialized) return;
+    const newFormValues = fieldDefinition.applyPresetLogic?.(formValues, oldValues.current);
     setFormValues(newFormValues ?? formValues);
     oldValues.current = newFormValues ?? formValues;
   }, [
-    type,
+    fieldType,
+    isInitialized,
     formValues.presetValues.preset,
     formValues.presetValues.makeEnumerated,
     formValues.presetValues.definePattern,
     formValues.fieldValues.arrayType
   ]);
 
+  useEffect(() => {
+    if (!fieldType || fieldType !== "multiselect" || !isInitialized) return;
+    const {updatedForm, updatedFieldProperties} =
+      fieldDefinition.applySelectionTypeLogic?.(formValues, mainFormProperties) ?? {};
+    setFormValues(updatedForm ?? formValues);
+    setMainFormProperties(updatedFieldProperties ?? mainFormProperties);
+  }, [fieldType, isInitialized, formValues.fieldValues.multipleSelectionType]);
+
   const validateForm = useCallback(async () => {
     setApiError(null);
-    if (!type) return false;
-    const errors = field.validateCreationForm({
+    if (!fieldType) return false;
+
+    const errors = fieldDefinition.validateCreationForm({
       fieldValues: formValues.fieldValues,
       configurationValues: formValues.configurationValues,
       defaultValue: formValues.defaultValue,
       presetValues: formValues.presetValues,
-      innerFields: formValues.innerFields
+      innerFields: formValues.innerFields,
+      type: fieldType
     });
+
     if (errors) {
-      setFormErrors(errors as any);
+      setFormErrors(errors);
       return false;
     }
+
     setFormErrors({});
     return true;
-  }, [formValues, type, popupType]);
+  }, [formValues, fieldType, popupType]);
 
-  const oldType = useRef(type);
+  const oldType = useRef(fieldType);
   useEffect(() => {
-    if (!formErrors || isObjectEffectivelyEmpty(formErrors) || oldType.current !== type) {
-      oldType.current = type;
+    if (!formErrors || isObjectEffectivelyEmpty(formErrors) || oldType.current !== fieldType) {
+      oldType.current = fieldType;
       return;
     }
     validateForm();
   }, [validateForm, formValues]);
 
-  // Event handlers
   const handleSaveAndClose = useCallback(async () => {
     const isValid = await validateForm();
     if (!isValid) return;
+
     setIsLoading(true);
     const result = await onSaveAndClose(formValues);
     setIsLoading(false);
+
     if (result) onSuccess?.();
   }, [formValues, onSaveAndClose, validateForm, onSuccess]);
 
-  const handleCreateInnerField: (values: FormValues) => void | Promise<any> = useCallback(
+  const handleCreateInnerField: (values: FieldFormState) => void | Promise<any> = useCallback(
     values => {
-      const innerKind = resolveFieldKind(values.type as any) || fieldDomain.FieldKind.String;
-      setFormValues(
-        prev =>
-          fieldDomain.addInnerField(prev as any, innerKind as fieldDomain.FieldKind, {
-            seed: values as any
-          }) as any
-      );
+      const innerKind = values.type || fieldDomain.FieldKind.String;
+      setFormValues(prev => fieldDomain.addInnerField(prev, innerKind as FieldKind, values));
     },
     []
   );
 
-  const handleSaveInnerField = useCallback((values: FormValues) => {
-    setFormValues(prev => fieldDomain.updateInnerField(prev as any, values as any) as any);
+  const handleSaveInnerField = useCallback((values: FieldFormState) => {
+    setFormValues(prev => fieldDomain.updateInnerField(prev, values));
   }, []);
 
-  const handleDeleteInnerField = useCallback((field: FormValues) => {
+  const handleDeleteInnerField = useCallback((field: FieldFormState) => {
     if (!field.id) return;
-    setFormValues(prev => fieldDomain.removeInnerField(prev as any, field.id as string) as any);
+    setFormValues(prev => fieldDomain.removeInnerField(prev, field.id as string));
   }, []);
 
-  // We explicitly provide field values here because mainFormInputProperties can change
-  // without formValues.fieldValues being updated. Without this, useInputRepresenter
-  // may throw an error due to a mismatch between the provided values and the
-  // expected property values. this can happen when switching between field types
-  // Popup context mutation for forbidden names removed; computed locally instead.
-
-  const handleFormValueChange = (values: FormValues, formValuesAttribute: keyof FormValues) =>
+  const handleFormValueChange = (
+    values: FieldFormState,
+    formValuesAttribute: keyof FieldFormState
+  ) =>
     setFormValues(prev => {
       return {...prev, [formValuesAttribute]: values};
     });
@@ -197,10 +221,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       formErrors={formErrors}
       error={(apiError || formErrors?.innerFields) ?? null}
       // Schema and configuration
-      mainFormInputProperties={mainFormInputProperties}
-      configurationInputProperties={configurationInputProperties}
-      defaultInputProperty={defaultInputProperty}
-      presetInputProperties={presetInputProperties}
+      mainFormInputProperties={mainFormProperties}
+      configurationInputProperties={configurationProperties}
+      defaultInputProperty={defaultValueProperties}
+      presetInputProperties={presetProperties}
       // State
       isLoading={isLoading}
       // Event handlers
@@ -211,7 +235,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       handleDeleteInnerField={handleDeleteInnerField}
       // External dependencies
       popupId={popupId}
-      type={type as fieldDomain.FieldKind}
+      type={fieldType as fieldDomain.FieldKind}
     />
   );
 };

@@ -1,4 +1,3 @@
-import {BASE_PRESET_DEFAULTS} from "./defaults";
 import {FieldKind, type FieldCreationForm} from "./types";
 
 const Countries = [
