@@ -30,15 +30,16 @@ import {
 import {useInputRepresenter} from "oziko-ui-kit";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import type {FieldFormState, FieldKind} from "src/domain/fields/types";
+import type {FieldFormState, FieldKind} from "../../../domain/fields/types";
 
 type InnerFieldProps = {
   field: FieldFormState;
   onSaveInnerField: (values: FieldFormState) => void;
   onDeleteInnerField: (field: FieldFormState) => void;
+  forbiddenFieldNames: string[];
 };
 
-const InnerField: FC<InnerFieldProps> = memo(({field, onSaveInnerField, onDeleteInnerField}) => {
+const InnerField: FC<InnerFieldProps> = memo(({field, onSaveInnerField, onDeleteInnerField, forbiddenFieldNames}) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const handleToggleEdit = () => setIsEditing(prev => !prev);
@@ -74,6 +75,7 @@ const InnerField: FC<InnerFieldProps> = memo(({field, onSaveInnerField, onDelete
               onSaveAndClose={handleSave}
               initialValues={field as FieldFormState}
               popupType="edit-inner-field"
+              forbiddenFieldNames={forbiddenFieldNames}
             >
               <Button color="default" variant="icon" onClick={handleToggleEdit}>
                 <Icon name="pencil" />
@@ -208,6 +210,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     };
 
     if (innerFieldExists) {
+      const forbiddenFieldNames = formValues.innerFields?.map(f => f.fieldValues.title) || [];
       createConfig(
         "Inner Fields",
         <div>
@@ -217,6 +220,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
               field={field}
               onSaveInnerField={handleSaveInnerField}
               onDeleteInnerField={handleDeleteInnerField}
+              forbiddenFieldNames={forbiddenFieldNames}
             />
           ))}
         </div>
@@ -233,7 +237,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
 
     createConfig(
       "Configuration",
-      <div className={styles.configuration}>{configurationInputs}</div>
+      <div className={styles.configurationOptionsContainer}>{configurationInputs}</div>
     );
     return items;
   }, [type, innerFieldExists, configurationInputs, formValues.innerFields, defaultInput]);

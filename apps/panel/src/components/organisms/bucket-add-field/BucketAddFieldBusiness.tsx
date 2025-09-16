@@ -6,9 +6,13 @@ import {
   useBucketFieldPopups,
   type BucketFieldPopup
 } from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
-import {FieldKind, type FieldDefinition, type FieldFormState} from "src/domain/fields/types";
-import {addInnerField, removeInnerField, updateInnerField} from "src/domain/fields/inner-fields";
-import {initForm} from "src/domain/fields";
+import {FieldKind, type FieldDefinition, type FieldFormState} from "../../../domain/fields/types";
+import {
+  addInnerField,
+  removeInnerField,
+  updateInnerField
+} from "../../../domain/fields/inner-fields";
+import {initForm} from "../../../domain/fields";
 
 function isObjectEffectivelyEmpty(obj: Object): boolean {
   if (obj === null || obj === undefined) return true;
@@ -85,13 +89,25 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   popupId
 }) => {
   const {bucketFieldPopups} = useBucketFieldPopups();
-  const {buckets, createBucketFieldError} = useBucket();
+  const {bucketData, buckets, createBucketFieldError} = useBucket();
 
   const currentPopup = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
-  const {fieldKind: fieldType, popupType, initialValues} = currentPopup;
+  const {
+    fieldKind: fieldType,
+    popupType,
+    initialValues,
+    forbiddenFieldNames: initialForbiddenFieldNames
+  } = currentPopup;
 
   const fieldDefinition = FIELD_REGISTRY[fieldType as FieldKind] as FieldDefinition;
   const isInnerField = popupType !== "add-field";
+
+  const forbiddenFieldNames = useMemo(() => {
+    if (isInnerField) return initialForbiddenFieldNames || [];
+    const bucket = buckets.find(b => b._id === bucketData?.bucketId);
+    if (!bucket) return initialForbiddenFieldNames || [];
+    return Object.keys(bucket.properties || {});
+  }, [initialForbiddenFieldNames, bucketData, buckets, isInnerField]);
 
   const {
     fieldValues: initialMainFormProperties,
@@ -161,6 +177,14 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
 
     if (errors) {
       setFormErrors(errors);
+      return false;
+    }
+
+    if (forbiddenFieldNames.includes(formValues.fieldValues.title)) {
+      setFormErrors(prev => ({
+        ...prev,
+        fieldValues: {title: "This title is already taken."}
+      }));
       return false;
     }
 

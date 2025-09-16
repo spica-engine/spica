@@ -8,7 +8,7 @@ import {useBucket} from "../../../contexts/BucketContext";
 import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
-import type {FieldFormState} from "src/domain/fields/types";
+import type {FieldFormState} from "../../../domain/fields/types";
 
 export type ColumnType = {
   id: string;

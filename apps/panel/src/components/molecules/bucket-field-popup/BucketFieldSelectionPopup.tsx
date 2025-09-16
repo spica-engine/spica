@@ -1,4 +1,4 @@
-import {cloneElement, memo, useRef, useState, type ReactNode, useMemo} from "react";
+import {cloneElement, memo, useRef, useState, type ReactNode} from "react";
 import {FlexElement, ListItem, Icon, Popover, type IconName} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
@@ -7,7 +7,7 @@ import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition
 import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
-import type {FieldFormState} from "src/domain/fields/types";
+import type {FieldFormState} from "../../../domain/fields/types";
 
 type BucketFieldSelectionPopupProps = {
   children: ReactNode;
@@ -40,15 +40,6 @@ const BucketFieldSelectionPopup = ({
     setSelectedType(null);
   };
 
-  const fieldOptions = useMemo(
-    () =>
-      Object.values(FIELD_REGISTRY).map(o => ({
-        icon: o.display.icon as IconName,
-        text: o.display.label,
-        kind: o.kind
-      })),
-    []
-  );
 
   const handleTypeSelect = (kind: FieldKind) => {
     setSelectedType(kind);
@@ -100,15 +91,15 @@ const BucketFieldSelectionPopup = ({
             direction="vertical"
             className={styles.container}
           >
-            {fieldOptions.map(({icon, text, kind}) => (
+            {Object.values(FIELD_REGISTRY).map((field) => (
               <ListItem
-                key={kind}
-                label={text}
+                key={field.kind}
+                label={field.display.label}
                 dimensionX="fill"
                 dimensionY="hug"
                 gap={10}
-                prefix={{children: <Icon name={icon} />}}
-                onClick={() => handleTypeSelect(kind)}
+                prefix={{children: <Icon name={field.display.icon as IconName} />}}
+                onClick={() => handleTypeSelect(field.kind)}
                 className={styles.item}
               />
             ))}

@@ -14,7 +14,7 @@ import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import type {PopupType} from "./BucketFieldPopupsContext";
-import type {FieldFormState} from "src/domain/fields/types";
+import type {FieldFormState} from "../../../domain/fields/types";
 
 type BucketFieldConfigurationPopupProps = {
   selectedType: FieldKind | null;
@@ -26,6 +26,7 @@ type BucketFieldConfigurationPopupProps = {
   onRegister?: (id: string) => void;
   iconName?: IconName;
   popupType?: PopupType;
+  forbiddenFieldNames?: string[];
 };
 
 const BucketFieldConfigurationPopup = ({
@@ -37,7 +38,8 @@ const BucketFieldConfigurationPopup = ({
   initialValues,
   onRegister,
   iconName,
-  popupType
+  popupType,
+  forbiddenFieldNames
 }: BucketFieldConfigurationPopupProps) => {
   const innerContainerRef = useRef<HTMLDivElement>(null);
   const bucketAddFieldRef = useRef<HTMLDivElement>(null);
@@ -93,7 +95,8 @@ const BucketFieldConfigurationPopup = ({
       fieldKind: selectedType || undefined,
       iconName,
       popupType,
-      initialValues
+      initialValues,
+      forbiddenFieldNames: forbiddenFieldNames || []
     };
     setBucketFieldPopups(prev => [...prev, newBucketFieldPopup]);
     onRegister?.(id);

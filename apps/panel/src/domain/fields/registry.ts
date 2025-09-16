@@ -42,7 +42,7 @@ import {
   TranslatableConfig,
   TranslatableMinimalConfig,
   ValidationInputs
-} from "./creationFormSchemas";
+} from "./creation-form-schemas";
 
 export function isFieldKind(value: string): value is FieldKind {
   return (Object.values(FieldKind) as string[]).includes(value);
@@ -776,8 +776,8 @@ const COLOR_DEFINITION: FieldDefinition = {
 export const FIELD_REGISTRY: Partial<Record<FieldKind, FieldDefinition>> = {
   [FieldKind.String]: STRING_DEFINITION,
   [FieldKind.Number]: NUMBER_DEFINITION,
-  [FieldKind.Boolean]: BOOLEAN_DEFINITION,
   [FieldKind.Date]: DATE_DEFINITION,
+  [FieldKind.Boolean]: BOOLEAN_DEFINITION,
   [FieldKind.Textarea]: TEXTAREA_DEFINITION,
   [FieldKind.Multiselect]: MULTISELECT_DEFINITION,
   [FieldKind.Relation]: RELATION_DEFINITION,
@@ -786,6 +786,6 @@ export const FIELD_REGISTRY: Partial<Record<FieldKind, FieldDefinition>> = {
   [FieldKind.Object]: OBJECT_DEFINITION,
   [FieldKind.File]: FILE_DEFINITION,
   [FieldKind.Richtext]: RICHTEXT_DEFINITION,
+  [FieldKind.Color]: COLOR_DEFINITION,
   [FieldKind.Json]: JSON_DEFINITION,
-  [FieldKind.Color]: COLOR_DEFINITION
 };
