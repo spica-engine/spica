@@ -1,5 +1,4 @@
 import {type FC, useMemo, useState, useCallback, useEffect, memo, useRef} from "react";
-import * as fieldDomain from "../../../domain/fields";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import {useBucket} from "../../../contexts/BucketContext";
 import BucketAddFieldView from "./BucketAddFieldView";
@@ -7,7 +6,9 @@ import {
   useBucketFieldPopups,
   type BucketFieldPopup
 } from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
-import type {FieldDefinition, FieldFormState, FieldKind} from "src/domain/fields/types";
+import {FieldKind, type FieldDefinition, type FieldFormState} from "src/domain/fields/types";
+import {addInnerField, removeInnerField, updateInnerField} from "src/domain/fields/inner-fields";
+import {initForm} from "src/domain/fields";
 
 function isObjectEffectivelyEmpty(obj: Object): boolean {
   if (obj === null || obj === undefined) return true;
@@ -52,7 +53,7 @@ function useFormState(
   useEffect(() => {
     if (!type) return;
 
-    const base = fieldDomain.initForm(type, initialValues);
+    const base = initForm(type, initialValues);
 
     const newFormValues = {
       fieldValues: base.fieldValues,
@@ -189,19 +190,19 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
 
   const handleCreateInnerField: (values: FieldFormState) => void | Promise<any> = useCallback(
     values => {
-      const innerKind = values.type || fieldDomain.FieldKind.String;
-      setFormValues(prev => fieldDomain.addInnerField(prev, innerKind as FieldKind, values));
+      const innerKind = values.type || FieldKind.String;
+      setFormValues(prev => addInnerField(prev, innerKind as FieldKind, values));
     },
     []
   );
 
   const handleSaveInnerField = useCallback((values: FieldFormState) => {
-    setFormValues(prev => fieldDomain.updateInnerField(prev, values));
+    setFormValues(prev => updateInnerField(prev, values));
   }, []);
 
   const handleDeleteInnerField = useCallback((field: FieldFormState) => {
     if (!field.id) return;
-    setFormValues(prev => fieldDomain.removeInnerField(prev, field.id as string));
+    setFormValues(prev => removeInnerField(prev, field.id as string));
   }, []);
 
   const handleFormValueChange = (
@@ -235,7 +236,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       handleDeleteInnerField={handleDeleteInnerField}
       // External dependencies
       popupId={popupId}
-      type={fieldType as fieldDomain.FieldKind}
+      type={fieldType as FieldKind}
     />
   );
 };

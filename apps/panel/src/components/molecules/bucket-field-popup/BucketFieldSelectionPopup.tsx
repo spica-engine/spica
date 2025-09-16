@@ -1,17 +1,17 @@
 import {cloneElement, memo, useRef, useState, type ReactNode, useMemo} from "react";
 import {FlexElement, ListItem, Icon, Popover, type IconName} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
-import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
 import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
 import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
-import { FIELD_REGISTRY } from "../../../domain/fields/registry";
+import {FIELD_REGISTRY} from "../../../domain/fields/registry";
+import type {FieldFormState} from "src/domain/fields/types";
 
 type BucketFieldSelectionPopupProps = {
   children: ReactNode;
-  onSaveAndClose: (values: FormValues, kind: FieldKind) => void | Promise<any>;
+  onSaveAndClose: (values: FieldFormState, kind: FieldKind) => void | Promise<any>;
   placement?: Placement;
   popupType?: PopupType;
 };
@@ -61,7 +61,7 @@ const BucketFieldSelectionPopup = ({
     setSelectedType(null);
   };
 
-  const handleSaveAndClose = (values: FormValues) => {
+  const handleSaveAndClose = (values: FieldFormState) => {
     const maybePromise = onSaveAndClose(values, selectedType as FieldKind);
 
     const runHandlers = () => {

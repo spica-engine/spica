@@ -31,7 +31,7 @@ import {
 import {useInputRepresenter} from "oziko-ui-kit";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import type { FieldFormState } from "src/domain/fields/types";
+import type {FieldFormState} from "src/domain/fields/types";
 
 type InnerFieldProps = {
   field: FieldFormState;
@@ -70,7 +70,7 @@ const InnerField: FC<InnerFieldProps> = memo(({field, onSaveInnerField, onDelete
           <FlexElement gap={5} dimensionX="fill" className={styles.innerFieldActions}>
             <BucketFieldConfigurationPopup
               isOpen={isEditing}
-              selectedType={field.type as any}
+              selectedType={field.type}
               onClose={handleToggleEdit}
               onSaveAndClose={handleSave}
               initialValues={field as FieldFormState}
@@ -109,7 +109,10 @@ type BucketAddFieldViewProps = {
   isLoading: boolean;
 
   // Event handlers
-  handleFormValueChange: (values: FieldFormState, formValuesAttribute: keyof FieldFormState) => void;
+  handleFormValueChange: (
+    values: FieldFormState,
+    formValuesAttribute: keyof FieldFormState
+  ) => void;
   handleSaveAndClose: () => void;
   handleCreateInnerField: (values: FieldFormState) => void;
   handleSaveInnerField: (values: FieldFormState) => void;
@@ -139,7 +142,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   type
 }) => {
   const {bucketFieldPopups} = useBucketFieldPopups();
-  const {popupType} = bucketFieldPopups.find(p => p.id === popupId) as any;
+  const {popupType} = bucketFieldPopups.find(p => p.id === popupId) as {popupType: PopupType};
 
   const iconsMap: Record<Exclude<PopupType, "add-field">, IconName> = {
     "edit-inner-field": "pencil",
@@ -157,7 +160,6 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
 
   const [activeTab, setActiveTab] = useState(0);
 
-  // Input representers
   const mainFormInputs = useInputRepresenter({
     properties: mainFormInputProperties,
     value: formValues.fieldValues,
@@ -194,7 +196,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     const items: TypeFluidContainer[] = [];
     let currentIndex = 0;
     const createConfig = (children: ReactNode, element: JSX.Element) => {
-      const tabIndex = currentIndex; // Capture the current index
+      const tabIndex = currentIndex;
       const item: TypeFluidContainer = {
         prefix: {
           children,
@@ -228,7 +230,6 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       createConfig("Presets", <div className={styles.presetsContainer}>{presetInputs}</div>);
     }
 
-    // Default tab based on capability flag rather than exclusion list
     if (defaultInputProperty) {
       createConfig("Default", defaultInput as unknown as JSX.Element);
     }

@@ -16,7 +16,7 @@ function initForm(
   const deepMerge = (target: any, src: any) => {
     if (!src) return target;
     for (const k of Object.keys(src)) {
-      const sv = (src as any)[k];
+      const sv = src[k];
       if (sv && typeof sv === "object" && !Array.isArray(sv)) {
         if (!target[k] || typeof target[k] !== "object" || Array.isArray(target[k])) target[k] = {};
         deepMerge(target[k], sv);
@@ -63,5 +63,4 @@ function sanitizeFormByCapabilities(form: FieldFormState, def?: FieldDefinition)
   return form;
 }
 
-import {addInnerField, updateInnerField, removeInnerField} from "./inner-fields";
-export {initForm, addInnerField, updateInnerField, removeInnerField, FieldKind, FIELD_REGISTRY};
+export {initForm, FieldKind, FIELD_REGISTRY};

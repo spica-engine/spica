@@ -14,7 +14,7 @@ import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import type {PopupType} from "./BucketFieldPopupsContext";
-import type { FieldFormState } from "src/domain/fields/types";
+import type {FieldFormState} from "src/domain/fields/types";
 
 type BucketFieldConfigurationPopupProps = {
   selectedType: FieldKind | null;
@@ -46,31 +46,27 @@ const BucketFieldConfigurationPopup = ({
   const {setBucketFieldPopups, bucketFieldPopups} = useBucketFieldPopups();
   const id = useId();
 
-  const {isLastPopup, offsetX, offsetY, configurationMapping, bucketAddFieldPopoverStyles} =
+  const {isLastPopup, offsetX, offsetY, bucketAddFieldPopoverStyles, isPopupRegistered} =
     useMemo(() => {
+      const isPopupRegistered = bucketFieldPopups.some(p => p.id === id);
       const popupStackEmpty = bucketFieldPopups.length === 0;
       const isFirstPopup = popupStackEmpty || bucketFieldPopups[0]?.id === id;
       const isLastPopup = popupStackEmpty || bucketFieldPopups.at(-1)?.id === id;
       const offsetX = isFirstPopup ? 200 : 0;
       const offsetY = isFirstPopup ? 0 : 10;
-      const bucketAddFieldPopoverStyles = isFirstPopup
-        ? {}
-        : bucketFieldPopups[bucketFieldPopups.findIndex(i => i.id === id) - 1]?.innerFieldStyles ||
-          {};
+
+      const parentPopupIndex = bucketFieldPopups.findIndex(p => p.id === id) - 1;
+      const innerFieldStyles = bucketFieldPopups[parentPopupIndex]?.innerFieldStyles || {};
+      const bucketAddFieldPopoverStyles = isFirstPopup ? {} : innerFieldStyles;
 
       return {
         isLastPopup,
         offsetX,
         offsetY,
-  configurationMapping: undefined,
-        bucketAddFieldPopoverStyles
+        bucketAddFieldPopoverStyles,
+        isPopupRegistered
       };
     }, [bucketFieldPopups, id]);
-
-  const isPopupRegistered = useMemo(
-    () => bucketFieldPopups.some(p => p.id === id),
-    [bucketFieldPopups]
-  );
 
   useEffect(() => {
     if (!isOpen || !bucketAddFieldRef.current || !isPopupRegistered) return;
@@ -91,17 +87,15 @@ const BucketFieldConfigurationPopup = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    setBucketFieldPopups(prev => [
-      ...prev,
-      {
-        id,
-        innerFieldStyles,
-        fieldKind: selectedType || undefined,
-        iconName,
-        popupType,
-        initialValues
-      }
-    ]);
+    const newBucketFieldPopup = {
+      id,
+      innerFieldStyles,
+      fieldKind: selectedType || undefined,
+      iconName,
+      popupType,
+      initialValues
+    };
+    setBucketFieldPopups(prev => [...prev, newBucketFieldPopup]);
     onRegister?.(id);
     return () => {
       setBucketFieldPopups(prev => prev.filter(popup => popup.id !== id));
@@ -128,7 +122,7 @@ const BucketFieldConfigurationPopup = ({
         )
       }
     >
-      {children as any}
+      {children}
     </Popover>
   );
 };
