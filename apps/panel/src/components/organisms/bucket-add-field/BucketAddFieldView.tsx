@@ -23,7 +23,6 @@ import type {FormErrors} from "./BucketAddFieldBusiness";
 import styles from "./BucketAddField.module.scss";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import BucketFieldConfigurationPopup from "../../molecules/bucket-field-popup/BucketFieldConfigurationPopup";
-import * as fieldDomain from "../../../domain/fields";
 import {
   useBucketFieldPopups,
   type PopupType
@@ -31,7 +30,7 @@ import {
 import {useInputRepresenter} from "oziko-ui-kit";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import type {FieldFormState} from "src/domain/fields/types";
+import type {FieldFormState, FieldKind} from "src/domain/fields/types";
 
 type InnerFieldProps = {
   field: FieldFormState;
@@ -120,7 +119,7 @@ type BucketAddFieldViewProps = {
 
   // External dependencies
   popupId?: string;
-  type: fieldDomain.FieldKind;
+  type: FieldKind;
 };
 
 const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
@@ -197,12 +196,10 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     let currentIndex = 0;
     const createConfig = (children: ReactNode, element: JSX.Element) => {
       const tabIndex = currentIndex;
-      const item: TypeFluidContainer = {
+      const item = {
         prefix: {
           children,
-          onClick: () => {
-            setActiveTab(tabIndex);
-          }
+          onClick: () => setActiveTab(tabIndex)
         },
         element
       } as TypeFluidContainer;
