@@ -133,9 +133,17 @@ const NewFieldHeader = memo(() => {
     [bucket, createBucketField]
   );
 
+  const forbiddenFieldNames = useMemo(() => {
+    if (!bucket) return [];
+    return Object.keys(bucket.properties || {});
+  }, [bucket]);
+
   return (
     <BucketFieldPopupsProvider>
-      <BucketFieldPopup onSaveAndClose={handleSaveAndClose}>
+      <BucketFieldPopup
+        onSaveAndClose={handleSaveAndClose}
+        forbiddenFieldNames={forbiddenFieldNames}
+      >
         <Button
           variant="icon"
           className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}

@@ -14,13 +14,15 @@ type BucketFieldSelectionPopupProps = {
   onSaveAndClose: (values: FieldFormState, kind: FieldKind) => void | Promise<any>;
   placement?: Placement;
   popupType?: PopupType;
+  forbiddenFieldNames?: string[];
 };
 
 const BucketFieldSelectionPopup = ({
   children,
   onSaveAndClose,
   placement,
-  popupType = "add-field"
+  popupType = "add-field",
+  forbiddenFieldNames = []
 }: BucketFieldSelectionPopupProps) => {
   const [selectedType, setSelectedType] = useState<FieldKind | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -84,6 +86,7 @@ const BucketFieldSelectionPopup = ({
           onSaveAndClose={handleSaveAndClose}
           onRegister={setBucketFieldPopupId}
           popupType={popupType}
+          forbiddenFieldNames={forbiddenFieldNames}
         >
           <FlexElement
             ref={fieldOptionsListContainerRef}

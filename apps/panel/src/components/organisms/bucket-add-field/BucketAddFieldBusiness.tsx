@@ -26,6 +26,7 @@ export type BucketAddFieldBusinessProps = {
   onSaveAndClose: (values: FieldFormState) => void | Promise<any>;
   className?: string;
   popupId?: string;
+  forbiddenFieldNames?: string[];
 };
 
 type TypePresetValues = {
@@ -86,7 +87,8 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   onSuccess,
   onSaveAndClose,
   className,
-  popupId
+  popupId,
+  forbiddenFieldNames
 }) => {
   const {bucketFieldPopups} = useBucketFieldPopups();
   const {bucketData, buckets, createBucketFieldError} = useBucket();
@@ -96,18 +98,9 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     fieldKind: fieldType,
     popupType,
     initialValues,
-    forbiddenFieldNames: initialForbiddenFieldNames
   } = currentPopup;
-
   const fieldDefinition = FIELD_REGISTRY[fieldType as FieldKind] as FieldDefinition;
   const isInnerField = popupType !== "add-field";
-
-  const forbiddenFieldNames = useMemo(() => {
-    if (isInnerField) return initialForbiddenFieldNames || [];
-    const bucket = buckets.find(b => b._id === bucketData?.bucketId);
-    if (!bucket) return initialForbiddenFieldNames || [];
-    return Object.keys(bucket.properties || {});
-  }, [initialForbiddenFieldNames, bucketData, buckets, isInnerField]);
 
   const {
     fieldValues: initialMainFormProperties,
@@ -180,7 +173,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       return false;
     }
 
-    if (forbiddenFieldNames.includes(formValues.fieldValues.title)) {
+    if (forbiddenFieldNames?.includes(formValues.fieldValues.title)) {
       setFormErrors(prev => ({
         ...prev,
         fieldValues: {title: "This title is already taken."}

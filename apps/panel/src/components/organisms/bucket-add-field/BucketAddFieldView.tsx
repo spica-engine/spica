@@ -39,57 +39,61 @@ type InnerFieldProps = {
   forbiddenFieldNames: string[];
 };
 
-const InnerField: FC<InnerFieldProps> = memo(({field, onSaveInnerField, onDeleteInnerField, forbiddenFieldNames}) => {
-  const [isEditing, setIsEditing] = useState(false);
+const InnerField: FC<InnerFieldProps> = memo(
+  ({field, onSaveInnerField, onDeleteInnerField, forbiddenFieldNames}) => {
+    const [isEditing, setIsEditing] = useState(false);
 
-  const handleToggleEdit = () => setIsEditing(prev => !prev);
+    const handleToggleEdit = () => setIsEditing(prev => !prev);
 
-  const handleSave = useCallback(
-    (values: FieldFormState) => {
-      onSaveInnerField({...values, id: field.id});
-      handleToggleEdit();
-    },
-    [onSaveInnerField]
-  );
+    const handleSave = useCallback(
+      (values: FieldFormState) => {
+        onSaveInnerField({...values, id: field.id});
+        handleToggleEdit();
+      },
+      [onSaveInnerField]
+    );
 
-  return (
-    <FluidContainer
-      dimensionX="fill"
-      className={styles.innerFieldItem}
-      prefix={{
-        children: (
-          <FlexElement gap={5} className={styles.innerFieldPrefix}>
-            <Icon name={"chevronRight"} size="sm" />
-            <Text className={styles.innerFieldName}>{field.fieldValues.title}</Text>
-          </FlexElement>
-        )
-      }}
-      root={{children: <Text>{field.type}</Text>}}
-      suffix={{
-        children: (
-          <FlexElement gap={5} dimensionX="fill" className={styles.innerFieldActions}>
-            <BucketFieldConfigurationPopup
-              isOpen={isEditing}
-              selectedType={field.type}
-              onClose={handleToggleEdit}
-              onSaveAndClose={handleSave}
-              initialValues={field as FieldFormState}
-              popupType="edit-inner-field"
-              forbiddenFieldNames={forbiddenFieldNames}
-            >
-              <Button color="default" variant="icon" onClick={handleToggleEdit}>
-                <Icon name="pencil" />
+    return (
+      <FluidContainer
+        dimensionX="fill"
+        className={styles.innerFieldItem}
+        prefix={{
+          children: (
+            <FlexElement gap={5} className={styles.innerFieldPrefix}>
+              <Icon name={"chevronRight"} size="sm" />
+              <Text className={styles.innerFieldName}>{field.fieldValues.title}</Text>
+            </FlexElement>
+          )
+        }}
+        root={{children: <Text>{field.type}</Text>}}
+        suffix={{
+          children: (
+            <FlexElement gap={5} dimensionX="fill" className={styles.innerFieldActions}>
+              <BucketFieldConfigurationPopup
+                isOpen={isEditing}
+                selectedType={field.type}
+                onClose={handleToggleEdit}
+                onSaveAndClose={handleSave}
+                initialValues={field as FieldFormState}
+                popupType="edit-inner-field"
+                forbiddenFieldNames={forbiddenFieldNames.filter(
+                  name => name !== field.fieldValues.title
+                )}
+              >
+                <Button color="default" variant="icon" onClick={handleToggleEdit}>
+                  <Icon name="pencil" />
+                </Button>
+              </BucketFieldConfigurationPopup>
+              <Button color="danger" variant="icon" onClick={() => onDeleteInnerField(field)}>
+                <Icon name="delete" />
               </Button>
-            </BucketFieldConfigurationPopup>
-            <Button color="danger" variant="icon" onClick={() => onDeleteInnerField(field)}>
-              <Icon name="delete" />
-            </Button>
-          </FlexElement>
-        )
-      }}
-    />
-  );
-});
+            </FlexElement>
+          )
+        }}
+      />
+    );
+  }
+);
 
 type BucketAddFieldViewProps = {
   // Display props
@@ -193,6 +197,11 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     errorClassName: styles.error
   });
 
+  const forbiddenFieldNames = useMemo(
+    () => formValues.innerFields?.map(f => f.fieldValues.title) || [],
+    [formValues.innerFields]
+  );
+
   const tabs = useMemo(() => {
     const items: TypeFluidContainer[] = [];
     let currentIndex = 0;
@@ -210,7 +219,6 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     };
 
     if (innerFieldExists) {
-      const forbiddenFieldNames = formValues.innerFields?.map(f => f.fieldValues.title) || [];
       createConfig(
         "Inner Fields",
         <div>
@@ -310,6 +318,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
             onSaveAndClose={handleCreateInnerField}
             popupType="add-inner-field"
             placement="leftStart"
+            forbiddenFieldNames={forbiddenFieldNames}
           >
             <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
               <FluidContainer
