@@ -1,39 +1,22 @@
-import {
-  type FC,
-  useMemo,
-  useState,
-  useCallback,
-  useEffect,
-  type CSSProperties,
-  memo,
-  useRef
-} from "react";
-import {type IconName, type TypeInputType} from "oziko-ui-kit";
-import type {BucketType} from "src/services/bucketService";
-import {getDefaultValues} from "./BucketAddFieldUtils";
-import {regexPresets, enumerationPresets} from "./BucketAddFieldPresets";
-import {
-  configPropertiesMapping,
-  createShema,
-  defaultConfig,
-  innerFieldConfigProperties,
-  presetProperties
-} from "./BucketAddFieldSchema";
+import {type FC, useMemo, useState, useCallback, useEffect, memo, useRef} from "react";
+import type {TypeInputType} from "oziko-ui-kit";
+import * as fieldDomain from "../../../domain/fields";
+import {resolveFieldKind} from "../../../domain/fields/registry"; // local helper for narrowing
+// Direct import for base preset defaults (not re-exported intentionally)
+import {BASE_PRESET_DEFAULTS} from "../../../domain/fields/defaults";
 import {useBucket} from "../../../contexts/BucketContext";
 import BucketAddFieldView from "./BucketAddFieldView";
+import {
+  useBucketFieldPopups,
+  type BucketFieldPopup
+} from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
+import type {FieldDefinition} from "src/domain/fields/types";
 
 export type BucketAddFieldBusinessProps = {
-  type: TypeInputType;
   onSuccess?: () => void;
   onSaveAndClose: (values: FormValues) => void | Promise<any>;
-  bucket: BucketType;
-  buckets: BucketType[];
-  initialValues?: FormValues;
   className?: string;
-  innerFieldStyles: CSSProperties;
-  configurationMapping: typeof configPropertiesMapping | typeof innerFieldConfigProperties;
-  iconName?: IconName;
-  forbiddenFieldNames?: string[];
+  popupId?: string;
 };
 
 function isObjectEffectivelyEmpty(obj: Object): boolean {
@@ -55,7 +38,7 @@ export type FormValues = {
   fieldValues: Record<string, any>;
   presetValues: TypePresetValues;
   configurationValues: Record<string, any>;
-  defaultValue: Record<string, any>;
+  defaultValue: any;
   type: TypeInputType;
   innerFields?: FormValues[];
   id?: string;
@@ -69,305 +52,97 @@ export type FormErrors = {
   innerFields?: string;
 };
 
-const DEFAULT_PRESET_VALUES: TypePresetValues = {
-  preset: "",
-  makeEnumerated: false,
-  enumeratedValues: [],
-  definePattern: false,
-  regularExpression: ""
-};
-
-const DEFAULT_FORM_VALUES: FormValues = {
-  fieldValues: {
-    title: "New Inner Field",
-    description: ""
-  },
-  configurationValues: {},
-  presetValues: DEFAULT_PRESET_VALUES,
-  defaultValue: {},
-  type: "object"
-};
-
 const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
-  type,
   onSuccess,
   onSaveAndClose,
-  bucket,
-  buckets,
-  initialValues,
   className,
-  innerFieldStyles,
-  configurationMapping = configPropertiesMapping,
-  iconName,
-  forbiddenFieldNames = []
+  popupId
 }) => {
-  // Schema and form state management
-  const schema = useMemo(() => createShema[type] || {}, [type]);
-  const defaultFieldValues = useMemo(
-    () =>
-      initialValues?.fieldValues ??
-      getDefaultValues(schema, {
-        title: "Name",
-        description: ""
-      }),
-    [type, schema, initialValues?.fieldValues]
-  );
-  const [formValues, setFormValues] = useState<FormValues>(DEFAULT_FORM_VALUES);
+  const {bucketFieldPopups, setBucketFieldPopups} = useBucketFieldPopups();
+  const {
+    fieldKind: type,
+    popupType,
+    initialValues
+  } = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
+  const field = fieldDomain.FIELD_REGISTRY[type as fieldDomain.FieldKind] as FieldDefinition;
 
+  const isInner = popupType !== "add-field";
+
+  // No direct registry usage needed here; facade supplies everything required.
+  // Unified UI schema groups via facade
+  // Buckets need to be resolved before schema memo to avoid temporal dead-zone issues
+  const {createBucketFieldError, buckets, bucketData} = useBucket();
+  const bucket = useMemo(
+    () => buckets.find(i => i._id === bucketData?.bucketId),
+    [buckets, bucketData?.bucketId]
+  );
+  const {
+    fieldValues: mainFormInputProperties,
+    configurationValues: configurationInputProperties,
+    defaultValue: defaultInputProperty,
+    presetValues: presetInputProperties
+  } = useMemo(() => field.buildCreationFormProperties(), [field]);
+
+  const [formValues, setFormValues] = useState<FormValues>(field.creationFormDefaultValues as any);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-
-  const {createBucketFieldError} = useBucket();
   const [apiError, setApiError] = useState(createBucketFieldError);
 
   useEffect(() => {
     setApiError(createBucketFieldError);
   }, [createBucketFieldError]);
 
-  // Computed properties
-  const innerFieldExists = useMemo(
-    () => (type === "array" && formValues.fieldValues.arrayType === "object") || type === "object",
-    [type, formValues.fieldValues.arrayType]
-  );
-
-  const defaultInputProperty = useMemo(
-    () => defaultConfig[type as keyof typeof defaultConfig] || {},
-    [type]
-  );
-
-  const mainFormInputProperties = useMemo(
-    () => ({
-      ...schema,
-      ...(type === "relation" && {
-        bucket: {
-          ...schema.bucket,
-          enum: buckets.map(b => ({label: b.title, value: b._id}))
-        }
-      })
-    }),
-    [type, schema, buckets]
-  );
-
-  useEffect(() => {
-    setFormValues(prev => ({
-      ...prev,
-      configurationValues: {
-        ...prev.configurationValues,
-        ...getDefaultValues(configurationMapping[type as keyof typeof configurationMapping] || {})
-      }
-    }));
-  }, [type, initialValues?.configurationValues, innerFieldExists]);
-
-  const configurationInputProperties = useMemo(
-    () => configurationMapping[type as keyof typeof configurationMapping],
-    [type]
-  );
-
   // Initialize form values when type changes
   useEffect(() => {
-    setFormValues(prev => ({
-      ...prev,
-      fieldValues: {...defaultFieldValues},
-      configurationValues: {
-        ...getDefaultValues(configurationInputProperties, initialValues?.configurationValues)
-      },
-      defaultValue: {...getDefaultValues(defaultInputProperty, initialValues?.fieldValues)},
-      presetValues: type === "string" ? DEFAULT_PRESET_VALUES : prev.presetValues,
-      type,
-      ...initialValues
-    }));
+    if (!type) return;
+    setFormValues(() => {
+      const base = fieldDomain.initFormWithTitleFallback(type as fieldDomain.FieldKind, {
+        inner: isInner,
+        initial: initialValues
+      });
+      return {
+        fieldValues: base.fieldValues,
+        configurationValues: base.configurationValues,
+        presetValues: base.presetValues as TypePresetValues,
+        defaultValue: base.defaultValue,
+        type: type as any,
+        innerFields: base.innerFields
+      };
+    });
     setFormErrors({});
     setApiError(null);
-  }, [type]);
+  }, [type, initialValues, isInner]);
 
-  // Handle preset logic for string types
+  const oldValues = useRef(formValues);
   useEffect(() => {
-    setFormValues(prev => ({
-      ...prev,
-      presetValues:
-        formValues.fieldValues.arrayType !== "string" ? DEFAULT_PRESET_VALUES : prev.presetValues,
-      ...initialValues
-    }));
-    if (formValues.fieldValues.multipleSelectionType) {
-      schema.chip.multipleSelectionType = formValues.fieldValues.multipleSelectionType;
-    }
-  }, [formValues.fieldValues.arrayType, formValues.fieldValues.multipleSelectionType]);
+    if (!type) return;
+    const newFormValues = field.applyPresetLogic?.(formValues, oldValues.current) as any;
+    setFormValues(newFormValues ?? formValues);
+    oldValues.current = newFormValues ?? formValues;
+  }, [
+    type,
+    formValues.presetValues.preset,
+    formValues.presetValues.makeEnumerated,
+    formValues.presetValues.definePattern,
+    formValues.fieldValues.arrayType
+  ]);
 
-  // Handle preset changes
-  useEffect(() => {
-    if (
-      (type !== "string" && formValues.fieldValues.arrayType !== "string") ||
-      !formValues.presetValues.preset
-    )
-      return;
-    const presetKey = formValues.presetValues.preset;
-    const enumValues = enumerationPresets[presetKey as keyof typeof enumerationPresets];
-    const regexValue = regexPresets[presetKey as keyof typeof regexPresets];
-    setFormValues(prev => ({
-      ...prev,
-      presetValues:
-        presetKey in enumerationPresets
-          ? {
-              preset: presetKey,
-              enumeratedValues: enumValues as string[],
-              regularExpression: "",
-              makeEnumerated: true,
-              definePattern: false
-            }
-          : presetKey in regexPresets
-            ? {
-                preset: presetKey,
-                enumeratedValues: [],
-                regularExpression: regexValue,
-                makeEnumerated: false,
-                definePattern: true
-              }
-            : prev.presetValues
-    }));
-  }, [type, formValues.presetValues.preset, formValues.fieldValues.arrayType]);
-
-  // Handle enumeration toggle
-  useEffect(() => {
-    if (type !== "string" && formValues.fieldValues.arrayType !== "string") return;
-    const presetKey = formValues.presetValues.preset;
-    if (!presetKey) return;
-    const makeEnumerated = formValues.presetValues.makeEnumerated;
-    if (!makeEnumerated && presetKey in enumerationPresets) {
-      setFormValues(prev => ({
-        ...prev,
-        presetValues: {...prev.presetValues, enumeratedValues: [], preset: ""}
-      }));
-    }
-  }, [type, formValues.presetValues.makeEnumerated, formValues.fieldValues.arrayType]);
-
-  // Handle pattern toggle
-  useEffect(() => {
-    if (type !== "string" && formValues.fieldValues.arrayType !== "string") return;
-    const presetKey = formValues.presetValues.preset;
-    if (!presetKey) return;
-    const definePattern = formValues.presetValues.definePattern;
-    if (!definePattern && presetKey in regexPresets) {
-      setFormValues(prev => ({
-        ...prev,
-        presetValues: {...prev.presetValues, regularExpression: "", preset: ""}
-      }));
-    }
-  }, [type, formValues.presetValues.definePattern, formValues.fieldValues.arrayType]);
-
-  // Form validation
-  const validateForm = useCallback(() => {
+  const validateForm = useCallback(async () => {
     setApiError(null);
-    const errors: FormErrors = {};
-    const propertyNameRegex = /^(?!(_id)$)([a-z_0-9]*)+$/;
-
-    const validateSingleSchemaItem = ({
-      key,
-      schemaItem,
-      values,
-      errorSection
-    }: {
-      key: string;
-      schemaItem: Record<string, any>;
-      values: Record<string, any>;
-      errorSection: keyof FormErrors;
-    }) => {
-      const shouldRender =
-        !schemaItem.renderCondition ||
-        values[schemaItem.renderCondition.field] === schemaItem.renderCondition.equals;
-
-      const addError = (message: string) => {
-        if (!errors[errorSection]) {
-          errors[errorSection] = {} as Record<string, string> & string;
-        }
-        (errors[errorSection] as Record<string, string>)[key] = message;
-      };
-
-      const fieldTitle = (schemaItem as {title: string})?.title ?? "Field";
-
-      // Validate number fields
-      if (
-        values[key] !== undefined &&
-        shouldRender &&
-        schemaItem.type === "number" &&
-        (isNaN(values[key]) || values[key] < schemaItem.min)
-      ) {
-        addError(`${fieldTitle} must be a positive number`);
-        return;
-      }
-
-      // Validate required fields
-      if (schemaItem.required && !values?.[key] && shouldRender) {
-        addError(`${fieldTitle} is required`);
-      }
-
-      if (
-        key === "enumeratedValues" &&
-        shouldRender &&
-        values.makeEnumerated &&
-        (!values.enumeratedValues || values.enumeratedValues.length === 0)
-      ) {
-        addError(`Field must have at least one value`);
-      }
-    };
-
-    Object.entries(schema).forEach(([key, schemaItem]) =>
-      validateSingleSchemaItem({
-        key,
-        schemaItem,
-        values: formValues.fieldValues,
-        errorSection: "fieldValues"
-      })
-    );
-    Object.entries(presetProperties).forEach(([key, value]) => {
-      validateSingleSchemaItem({
-        key,
-        schemaItem: value,
-        values: formValues.presetValues,
-        errorSection: "presetValues"
-      });
+    if (!type) return false;
+    const errors = field.validateCreationForm({
+      ...formValues.configurationValues,
+      ...formValues.defaultValue,
+      ...formValues.fieldValues,
+      ...formValues.presetValues
     });
-    Object.entries(configurationInputProperties || {}).forEach(([key, schemaItem]) => {
-      validateSingleSchemaItem({
-        key,
-        schemaItem,
-        values: formValues.configurationValues,
-        errorSection: "configurationValues"
-      });
-    });
-    Object.entries(defaultInputProperty || {}).forEach(([key, schemaItem]) => {
-      validateSingleSchemaItem({
-        key,
-        schemaItem,
-        values: formValues.defaultValue,
-        errorSection: "defaultValue"
-      });
-    });
-
-    if (
-      !formValues.fieldValues?.title?.length ||
-      !propertyNameRegex.test(formValues.fieldValues.title)
-    ) {
-      if (!errors.fieldValues) errors.fieldValues = {} as Record<string, string> & string;
-      errors.fieldValues.title =
-        "Name can only contain lowercase letters, numbers, and underscores. It cannot be '_id' or an empty string and must not include spaces.";
+    if (errors) {
+      setFormErrors(errors as any);
+      return false;
     }
-
-    if (forbiddenFieldNames.includes(formValues.fieldValues.title)) {
-      if (!errors.fieldValues) errors.fieldValues = {} as Record<string, string> & string;
-      errors.fieldValues.title = `'${formValues.fieldValues.title}' is a reserved name and cannot be used. Please choose a different name.`;
-    }
-
-    if (
-      (formValues.type === "object" ||
-        (formValues.type === "array" && formValues.fieldValues.arrayType === "object")) &&
-      !formValues.innerFields?.length
-    ) {
-      errors.innerFields = "At least one inner field is required";
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  }, [schema, formValues]);
+    setFormErrors({});
+    return true;
+  }, [formValues, type, popupType]);
 
   const oldType = useRef(type);
   useEffect(() => {
@@ -376,95 +151,76 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       return;
     }
     validateForm();
-  }, [formValues, validateForm]);
+  }, [formValues, validateForm, type, formErrors]);
 
   // Event handlers
   const handleSaveAndClose = useCallback(async () => {
-    const isValid = validateForm();
+    const isValid = await validateForm();
     if (!isValid) return;
     setIsLoading(true);
-
     const result = await onSaveAndClose(formValues);
     setIsLoading(false);
     if (result) onSuccess?.();
-  }, [formValues, onSaveAndClose]);
+  }, [formValues, onSaveAndClose, validateForm, onSuccess]);
 
   const handleCreateInnerField: (values: FormValues) => void | Promise<any> = useCallback(
     values => {
-      const id = crypto.randomUUID();
-      setFormValues(prev => ({
-        ...prev,
-        innerFields: [...(prev.innerFields || []), {...values, id}]
-      }));
+      const innerKind = resolveFieldKind(values.type as any) || fieldDomain.FieldKind.String;
+      setFormValues(
+        prev =>
+          fieldDomain.addInnerField(prev as any, innerKind as fieldDomain.FieldKind, {
+            seed: values as any
+          }) as any
+      );
     },
     []
   );
 
   const handleSaveInnerField = useCallback((values: FormValues) => {
-    setFormValues(prev => ({
-      ...prev,
-      innerFields: prev.innerFields?.map((innerField: FormValues) =>
-        innerField?.id === values.id ? values : innerField
-      )
-    }));
+    setFormValues(prev => fieldDomain.updateInnerField(prev as any, values as any) as any);
   }, []);
 
   const handleDeleteInnerField = useCallback((field: FormValues) => {
-    setFormValues(prev => ({
-      ...prev,
-      innerFields: prev.innerFields?.filter((innerField: FormValues) => innerField.id !== field.id)
-    }));
+    if (!field.id) return;
+    setFormValues(prev => fieldDomain.removeInnerField(prev as any, field.id as string) as any);
   }, []);
-
-  // Helper function for field values comparison
-  function arraysEqualIgnoreOrder(a: string[], b: string[]) {
-    if (a.length !== b.length) return false;
-    const sortedA = [...a].sort();
-    const sortedB = [...b].sort();
-    return sortedA.every((val, i) => val === sortedB[i]);
-  }
 
   // We explicitly provide field values here because mainFormInputProperties can change
   // without formValues.fieldValues being updated. Without this, useInputRepresenter
   // may throw an error due to a mismatch between the provided values and the
   // expected property values. this can happen when switching between field types
-  const currentFormValues = useMemo(
-    () =>
-      arraysEqualIgnoreOrder(
-        Object.keys(formValues.fieldValues).filter(i => i !== "innerFields"),
-        Object.keys(defaultFieldValues)
-      )
-        ? formValues
-        : {...formValues, fieldValues: defaultFieldValues},
-    [formValues, defaultFieldValues]
-  );
+  // Popup context mutation for forbidden names removed; computed locally instead.
 
+  const handleFormValueChange = (values: FormValues, formValuesAttribute: keyof FormValues) =>
+    setFormValues(prev => {
+      return {...prev, [formValuesAttribute]: values};
+    });
+
+    console.log("formValues from bucket add field business: ", formValues)
   return (
     <BucketAddFieldView
       // Display props
       className={className}
-      innerFieldStyles={innerFieldStyles}
       // Form data
-      formValues={currentFormValues}
+      formValues={formValues}
       formErrors={formErrors}
       error={(apiError || formErrors?.innerFields) ?? null}
       // Schema and configuration
       mainFormInputProperties={mainFormInputProperties}
       configurationInputProperties={configurationInputProperties}
       defaultInputProperty={defaultInputProperty}
+      presetInputProperties={presetInputProperties}
       // State
       isLoading={isLoading}
-      innerFieldExists={innerFieldExists}
       // Event handlers
-      setFormValues={setFormValues}
+      handleFormValueChange={handleFormValueChange}
       handleSaveAndClose={handleSaveAndClose}
       handleCreateInnerField={handleCreateInnerField}
       handleSaveInnerField={handleSaveInnerField}
       handleDeleteInnerField={handleDeleteInnerField}
       // External dependencies
-      bucket={bucket}
-      buckets={buckets}
-      iconName={iconName}
+      popupId={popupId}
+      type={type as fieldDomain.FieldKind}
     />
   );
 };

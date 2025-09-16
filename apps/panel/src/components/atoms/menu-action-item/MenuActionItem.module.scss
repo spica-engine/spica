@@ -1,0 +1,13 @@
+.menuActionItem {
+  cursor: pointer;
+  padding: var(--padding-sm) var(--padding-md);
+
+      &:hover{
+        background: var(--color-hover) !important;
+    }
+    font-size: var(--font-size-md);
+}
+
+.danger {
+  color: var(--color-danger, #ef4444);
+}
