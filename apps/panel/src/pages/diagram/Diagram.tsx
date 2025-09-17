@@ -1,7 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useBucketService } from '../../services/bucketService';
-import type { Property, BucketType } from '../../services/bucketService';
-import './Diagram.css';
+import React, {useState, useRef, useEffect} from "react";
+import {useBucketService} from "../../services/bucketService";
+import type {Property, BucketType} from "../../services/bucketService";
+import "./Diagram.css";
+import ZoomControl from "../../components/molecules/zoom-control/ZoomControl";
+import NodeView from "../../components/molecules/node-view/NodeView";
 
 interface Field {
   id: string;
@@ -10,12 +12,14 @@ interface Field {
   isUnique?: boolean;
   isRelation?: boolean;
   relationTo?: string;
+  path?: string; // Path to the field, needed for nested fields
+  relationType?: "onetoone" | "onetomany"; // Store relation type
 }
 
 interface Node {
   id: string;
   name: string;
-  position: { x: number; y: number };
+  position: {x: number; y: number};
   fields: Field[];
 }
 
@@ -24,40 +28,62 @@ interface Relation {
   to: string;
   fromField: string;
   toField: string;
-  type: '1:1' | '1:*' | '*:*';
+  type: "1:1" | "1:*" | "*:*";
+  fromPath?: string; // Path to the field, for nested fields
 }
 
 const Diagram: React.FC = () => {
-  const { apiGetBuckets, apiBuckets } = useBucketService();
+  const {apiGetBuckets, apiBuckets} = useBucketService();
   const [nodes, setNodes] = useState<Node[]>([]);
   const [relations, setRelations] = useState<Relation[]>([]);
   const [dragging, setDragging] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [dragOffset, setDragOffset] = useState({x: 0, y: 0});
+  const [pan, setPan] = useState({x: 0, y: 0});
   const [isPanning, setIsPanning] = useState(false);
-  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState<number>(1); // Add zoom state
+  const [lastPanPoint, setLastPanPoint] = useState({x: 0, y: 0});
+  const [zoom, setZoom] = useState<number>(1);
+  const [needsPositioning, setNeedsPositioning] = useState(true);
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fieldRefsMap = useRef<Map<string, DOMRect>>(new Map());
 
-  // Convert bucket properties to fields
-  const convertPropertyToField = (key: string, property: Property): Field => {
+  // Convert bucket properties to fields, including nested properties
+  const convertPropertyToField = (
+    key: string, 
+    property: Property, 
+    path: string = key
+  ): Field[] => {
+    const fields: Field[] = [];
+    
     const field: Field = {
-      id: key,
+      id: path,
       name: key,
-      type: property.type
+      type: property.type,
+      path: path
     };
 
-    if (property.type === 'relation') {
+    if (property.type === "relation") {
       field.isRelation = true;
       field.relationTo = property.bucketId;
+      field.relationType = property.relationType;
     }
 
-    if (key === '_id' || key === 'id') {
+    if (key === "_id" || key === "id") {
       field.isUnique = true;
     }
+    
+    fields.push(field);
 
-    return field;
+    // Handle nested properties in objects
+    if (property.type === "object" && property.properties) {
+      Object.entries(property.properties).forEach(([nestedKey, nestedProperty]) => {
+        const nestedPath = `${path}.${nestedKey}`;
+        const nestedFields = convertPropertyToField(nestedKey, nestedProperty, nestedPath);
+        fields.push(...nestedFields);
+      });
+    }
+
+    return fields;
   };
 
   // Convert buckets to nodes with structured random positioning
@@ -67,84 +93,171 @@ const Diagram: React.FC = () => {
     const gridCols = Math.ceil(Math.sqrt(buckets.length));
     const baseSpacingX = nodeWidth + 150;
     const baseSpacingY = nodeHeight + 100;
-    
+
     return buckets.map((bucket, index) => {
       const fields: Field[] = [];
-      
+
       fields.push({
-        id: '_id',
-        name: '_id',
-        type: 'unique',
-        isUnique: true
+        id: "_id",
+        name: "_id",
+        type: "unique",
+        isUnique: true,
+        path: "_id"
       });
 
       Object.entries(bucket.properties || {}).forEach(([key, property]) => {
-        fields.push(convertPropertyToField(key, property));
+        const propertyFields = convertPropertyToField(key, property);
+        fields.push(...propertyFields);
       });
 
       const gridX = index % gridCols;
       const gridY = Math.floor(index / gridCols);
-      
+
       const randomOffsetX = (Math.random() - 0.5) * 100;
       const randomOffsetY = (Math.random() - 0.5) * 80;
-      
-      const x = 100 + (gridX * baseSpacingX) + randomOffsetX;
-      const y = 100 + (gridY * baseSpacingY) + randomOffsetY;
+
+      const x = 100 + gridX * baseSpacingX + randomOffsetX;
+      const y = 100 + gridY * baseSpacingY + randomOffsetY;
 
       return {
         id: bucket._id,
         name: bucket.title,
-        position: { x, y },
+        position: {x, y},
         fields
       };
     });
   };
 
-  // Extract relations from bucket data
+  // Extract relations from bucket data, including nested relations
   const extractRelations = (buckets: BucketType[]): Relation[] => {
     const relations: Relation[] = [];
 
+    const processProperty = (
+      bucketId: string,
+      key: string,
+      property: any,
+      path: string = key
+    ) => {
+      if (property.type === "relation") {
+        const relationType = property.relationType === "onetoone" ? "1:1" : "1:*";
+
+        relations.push({
+          from: bucketId,
+          to: property.bucketId,
+          fromField: key,
+          toField: "_id",
+          type: relationType,
+          fromPath: path
+        });
+      } else if (property.type === "object" && property.properties) {
+        // Process nested properties
+        Object.entries(property.properties).forEach(([nestedKey, nestedProperty]) => {
+          const nestedPath = `${path}.${nestedKey}`;
+          processProperty(bucketId, nestedKey, nestedProperty, nestedPath);
+        });
+      }
+    };
+
     buckets.forEach(bucket => {
-      Object.entries(bucket.properties || {}).forEach(([fieldKey, property]) => {
-        if (property.type === 'relation') {
-          const relationType = property.relationType === 'onetoone' ? '1:1' : '1:*';
-          
-          relations.push({
-            from: bucket._id,
-            to: property.bucketId,
-            fromField: fieldKey,
-            toField: '_id',
-            type: relationType
-          });
-        }
+      Object.entries(bucket.properties || {}).forEach(([key, property]) => {
+        processProperty(bucket._id, key, property);
       });
     });
 
     return relations;
   };
 
+  // Effect to update field positions whenever nodes render
+  useEffect(() => {
+    const updateFieldPositions = () => {
+      // Clear previous refs
+      fieldRefsMap.current.clear();
+      
+      // Find all field elements and store their positions
+      document.querySelectorAll(`.field-row`).forEach(el => {
+        const fieldId = el.getAttribute('data-field-path');
+        const nodeId = el.getAttribute('data-node-id');
+        
+        if (fieldId && nodeId) {
+          const key = `${nodeId}-${fieldId}`;
+          fieldRefsMap.current.set(key, el.getBoundingClientRect());
+        }
+      });
+    };
+    
+    // Use a small timeout to ensure elements are rendered
+    const timer = setTimeout(updateFieldPositions, 100);
+    
+    return () => clearTimeout(timer);
+  }, [nodes]);
+
   useEffect(() => {
     apiGetBuckets();
   }, [apiGetBuckets]);
 
   useEffect(() => {
+    console.log("API Buckets:", apiBuckets);
     if (apiBuckets && apiBuckets.length > 0) {
       const convertedNodes = convertBucketsToNodes(apiBuckets);
       const extractedRelations = extractRelations(apiBuckets);
-      
+
       setNodes(convertedNodes);
       setRelations(extractedRelations);
     }
   }, [apiBuckets]);
 
-  // Zoom handlers
-  const zoomIn = () => {
-    setZoom(prev => Math.min(prev * 1.2, 3)); // Limit max zoom to 3x
-  };
+  // Position isolated nodes (no relations) to the right in a 2x2 grid
+  useEffect(() => {
+    if (!needsPositioning || nodes.length === 0 || relations.length === 0) return;
 
-  const zoomOut = () => {
-    setZoom(prev => Math.max(prev / 1.2, 0.3)); // Limit min zoom to 0.3x
-  };
+    // Find nodes that have no relations (incoming or outgoing)
+    const nodesWithRelations = new Set<string>();
+    
+    relations.forEach(relation => {
+      nodesWithRelations.add(relation.from);
+      nodesWithRelations.add(relation.to);
+    });
+    
+    const isolatedNodes = nodes.filter(node => !nodesWithRelations.has(node.id));
+    
+    if (isolatedNodes.length === 0) return;
+    
+    // Find the rightmost position of connected nodes
+    let maxX = 0;
+    nodes.forEach(node => {
+      if (nodesWithRelations.has(node.id)) {
+        maxX = Math.max(maxX, node.position.x);
+      }
+    });
+    
+    // Position isolated nodes to the right in a 2x2 grid
+    const updatedNodes = [...nodes];
+    const nodeWidth = 350;
+    const nodeHeight = 300;
+    const rightPadding = 200; // Space between connected nodes and isolated nodes
+    const gridStartX = maxX + nodeWidth + rightPadding;
+    const gridStartY = 400; // Position toward bottom
+    const gridCols = 2; // 2x2 grid
+    
+    isolatedNodes.forEach((node, index) => {
+      const gridX = index % gridCols;
+      const gridY = Math.floor(index / gridCols);
+      
+      const nodeIndex = nodes.findIndex(n => n.id === node.id);
+      if (nodeIndex !== -1) {
+        updatedNodes[nodeIndex] = {
+          ...node,
+          position: {
+            x: gridStartX + gridX * (nodeWidth + 50),
+            y: gridStartY + gridY * (nodeHeight + 50)
+          }
+        };
+      }
+    });
+    
+    setNodes(updatedNodes);
+    setNeedsPositioning(false);
+  }, [needsPositioning, nodes, relations]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -155,56 +268,14 @@ const Diagram: React.FC = () => {
     }
   };
 
-  // Fit to view function
-  const fitToView = () => {
-    if (nodes.length === 0 || !containerRef.current) return;
-    
-    // Calculate bounding box of all nodes
-    const nodeWidth = 350;
-    const nodeHeight = 300;
-    let minX = Infinity, minY = Infinity;
-    let maxX = -Infinity, maxY = -Infinity;
-    
-    nodes.forEach(node => {
-      minX = Math.min(minX, node.position.x);
-      minY = Math.min(minY, node.position.y);
-      maxX = Math.max(maxX, node.position.x + nodeWidth);
-      maxY = Math.max(maxY, node.position.y + nodeHeight);
-    });
-    
-    // Add padding
-    const padding = 50;
-    minX -= padding;
-    minY -= padding;
-    maxX += padding;
-    maxY += padding;
-    
-    const width = maxX - minX;
-    const height = maxY - minY;
-    
-    // Get container dimensions
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
-    
-    // Calculate zoom to fit
-    const zoomX = containerWidth / width;
-    const zoomY = containerHeight / height;
-    const newZoom = Math.min(zoomX, zoomY, 1); // Cap at 1 to prevent zooming in too much
-    
-    // Set the new zoom and center the view
-    setZoom(newZoom);
-    setPan({
-      x: containerWidth / 2 - ((minX + maxX) / 2) * newZoom,
-      y: containerHeight / 2 - ((minY + maxY) / 2) * newZoom
-    });
-  };
-
   // Pan handlers
   const handlePanStart = (e: React.MouseEvent) => {
-    if (e.target === containerRef.current || (e.target as HTMLElement).closest('.diagram-content')) {
+    if (
+      e.target === containerRef.current ||
+      (e.target as HTMLElement).closest(".diagram-content")
+    ) {
       setIsPanning(true);
-      setLastPanPoint({ x: e.clientX, y: e.clientY });
+      setLastPanPoint({x: e.clientX, y: e.clientY});
       e.preventDefault();
     }
   };
@@ -217,7 +288,7 @@ const Diagram: React.FC = () => {
         x: prev.x + deltaX,
         y: prev.y + deltaY
       }));
-      setLastPanPoint({ x: e.clientX, y: e.clientY });
+      setLastPanPoint({x: e.clientX, y: e.clientY});
     }
   };
 
@@ -252,15 +323,13 @@ const Diagram: React.FC = () => {
 
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
-      
+
       const newX = (mouseX - pan.x - dragOffset.x) / zoom;
       const newY = (mouseY - pan.y - dragOffset.y) / zoom;
 
-      setNodes(prev => prev.map(node => 
-        node.id === dragging 
-          ? { ...node, position: { x: newX, y: newY } }
-          : node
-      ));
+      setNodes(prev =>
+        prev.map(node => (node.id === dragging ? {...node, position: {x: newX, y: newY}} : node))
+      );
     } else {
       handlePanMove(e);
     }
@@ -272,74 +341,75 @@ const Diagram: React.FC = () => {
   };
 
   const addField = (nodeId: string) => {
-    const newFieldName = prompt('Enter field name:');
-    const fieldType = prompt('Enter field type (text, number, boolean, object, array, relation, unique):');
-    
+    const newFieldName = prompt("Enter field name:");
+    const fieldType = prompt(
+      "Enter field type (text, number, boolean, object, array, relation, unique):"
+    );
+
     if (!newFieldName || !fieldType) return;
 
-    setNodes(prev => prev.map(node => 
-      node.id === nodeId 
-        ? { ...node, fields: [...node.fields, { 
-            id: `${nodeId}_${newFieldName}`, 
-            name: newFieldName, 
-            type: fieldType 
-          }] }
-        : node
-    ));
+    setNodes(prev =>
+      prev.map(node =>
+        node.id === nodeId
+          ? {
+              ...node,
+              fields: [
+                ...node.fields,
+                {
+                  id: `${nodeId}_${newFieldName}`,
+                  name: newFieldName,
+                  type: fieldType,
+                  path: newFieldName
+                }
+              ]
+            }
+          : node
+      )
+    );
   };
 
   const removeField = (nodeId: string, fieldId: string) => {
-    setNodes(prev => prev.map(node => 
-      node.id === nodeId 
-        ? { ...node, fields: node.fields.filter(f => f.id !== fieldId) }
-        : node
-    ));
-  };
-
-  const getFieldIcon = (type: string) => {
-    switch (type) {
-      case 'unique': return '🔑';
-      case 'string': return '📝';
-      case 'textarea': return '📝';
-      case 'number': return '🔢';
-      case 'boolean': return '☑️';
-      case 'object': return '📦';
-      case 'array': return '📋';
-      case 'multiselect': return '📋';
-      case 'relation': return '🔗';
-      case 'date': return '📅';
-      case 'color': return '🎨';
-      case 'storage': return '💾';
-      case 'location': return '📍';
-      case 'richtext': return '📄';
-      default: return '•';
-    }
-  };
-
-  const getFieldTypeDisplay = (field: Field) => {
-    if (field.isUnique) return 'unique';
-    if (field.isRelation) return 'relation';
-    return field.type;
+    setNodes(prev =>
+      prev.map(node =>
+        node.id === nodeId ? {...node, fields: node.fields.filter(f => f.id !== fieldId)} : node
+      )
+    );
   };
 
   const renderRelationArrow = (relation: Relation) => {
     const fromNode = nodes.find(n => n.id === relation.from);
     const toNode = nodes.find(n => n.id === relation.to);
-    
+
     if (!fromNode || !toNode) return null;
 
     const nodeWidth = 350;
-    const spacing = 20;
+    const fieldHeight = 30;
+    const spacing = 5;
     
-    const startX = fromNode.position.x + nodeWidth + spacing;
-    const startY = fromNode.position.y + 100;
-    const endX = toNode.position.x - spacing;
-    const endY = toNode.position.y + 100;
-
-    const [startType, endType] = relation.type.split(':');
+    // Find the field in the source node
+    const fromFieldPath = relation.fromPath || relation.fromField;
+    const fromField = fromNode.fields.find(f => f.path === fromFieldPath);
+    
+    if (!fromField) return null;
+    
+    // Calculate field index to determine y position
+    const fromFieldIndex = fromNode.fields.findIndex(f => f.path === fromFieldPath);
+    
+    // Calculate starting point (from field position)
+    const startX = fromNode.position.x + nodeWidth - spacing;
+    const startY = fromNode.position.y + 50 + (fromFieldIndex * fieldHeight); // 50px for header
+    
+    // Calculate ending point (to node)
+    const endX = toNode.position.x + spacing;
+    const endY = toNode.position.y + 100; // Target the middle of the node header
+    
+    const [startType, endType] = relation.type.split(":");
+    
+    // Generate a unique ID for this relation
+    const relationId = `${relation.from}-${fromFieldPath}-${relation.to}`;
 
     return (
-      <g key={`${relation.from}-${relation.to}`}>
+      <g key={relationId} className="relation-line">
         <line
           x1={startX}
           y1={startY}
@@ -350,20 +420,20 @@ const Diagram: React.FC = () => {
           markerEnd="url(#arrowhead)"
         />
         <text
-          x={startX + 10}
-          y={startY - 10}
-          textAnchor="middle"
-          fontSize="14"
+          x={startX - 15}
+          y={startY - 5}
+          textAnchor="end"
+          fontSize="12"
           fill="#666"
           fontWeight="bold"
         >
           {startType}
         </text>
         <text
-          x={endX - 10}
-          y={endY - 10}
-          textAnchor="middle"
-          fontSize="14"
+          x={endX + 15}
+          y={endY - 5}
+          textAnchor="start"
+          fontSize="12"
           fill="#666"
           fontWeight="bold"
         >
@@ -373,64 +443,25 @@ const Diagram: React.FC = () => {
     );
   };
 
-  const reorganizeNodes = () => {
-    const nodeWidth = 350;
-    const nodeHeight = 300;
-    const gridCols = Math.ceil(Math.sqrt(nodes.length));
-    const baseSpacingX = nodeWidth + 200;
-    const baseSpacingY = nodeHeight + 150;
-
-    setNodes(prev => prev.map((node, index) => {
-      const gridX = index % gridCols;
-      const gridY = Math.floor(index / gridCols);
-      
-      const patternOffset = {
-        x: gridY % 2 === 0 ? 0 : 50,
-        y: gridX % 3 === 0 ? -30 : gridX % 3 === 1 ? 0 : 30
-      };
-      
-      const randomOffset = {
-        x: (Math.random() - 0.5) * 80,
-        y: (Math.random() - 0.5) * 60
-      };
-
-      return {
-        ...node,
-        position: {
-          x: 100 + (gridX * baseSpacingX) + patternOffset.x + randomOffset.x,
-          y: 100 + (gridY * baseSpacingY) + patternOffset.y + randomOffset.y
-        }
-      };
-    }));
-  };
-
-  const resetView = () => {
-    setPan({ x: 0, y: 0 });
-    setZoom(1);
-  };
-
   if (!apiBuckets || apiBuckets.length === 0) {
     return (
       <div className="diagram-container">
-        <div className="loading-message">
-          Loading buckets...
-        </div>
+        <div className="loading-message">Loading buckets...</div>
       </div>
     );
   }
 
   return (
     <div className="diagram-wrapper">
-      <div className="controls">
-        <button onClick={resetView} className="control-btn">Reset View</button>
-        <button onClick={reorganizeNodes} className="control-btn">Reorganize</button>
-        <button onClick={zoomIn} className="control-btn">Zoom In</button>
-        <button onClick={zoomOut} className="control-btn">Zoom Out</button>
-        <button onClick={fitToView} className="control-btn">Fit to View</button>
-        <span className="zoom-level">{Math.round(zoom * 100)}%</span>
-      </div>
+      <ZoomControl
+        zoom={zoom}
+        setZoom={setZoom}
+        setPan={setPan}
+        containerRef={containerRef}
+        nodes={nodes}
+      />
 
-      <div 
+      <div
         ref={containerRef}
         className="diagram-container"
         onMouseDown={handlePanStart}
@@ -438,22 +469,26 @@ const Diagram: React.FC = () => {
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
         style={{
-          cursor: isPanning ? 'grabbing' : dragging ? 'grabbing' : 'grab'
+          cursor: isPanning ? "grabbing" : dragging ? "grabbing" : "grab"
         }}
       >
         <div
           className="diagram-content"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: '0 0'
+            transformOrigin: "0 0"
           }}
         >
-          <svg 
+          <svg
             ref={svgRef}
             className="relations-svg"
             style={{
-              width: '5000px',
-              height: '5000px'
+              width: "5000px",
+              height: "5000px",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              pointerEvents: "none"
             }}
           >
             <defs>
@@ -472,57 +507,14 @@ const Diagram: React.FC = () => {
           </svg>
 
           {nodes.map(node => (
-            <div
+            <NodeView
               key={node.id}
-              className="node"
-              style={{
-                left: node.position.x,
-                top: node.position.y,
-                cursor: dragging === node.id ? 'grabbing' : 'grab'
-              }}
-              onMouseDown={(e) => handleMouseDown(node.id, e)}
-            >
-              <div className="node-header">
-                <h3>{node.name}</h3>
-                <span className="node-id">{node.id.substring(0, 12)}...</span>
-                <div className="node-controls">
-                  <button className="control-btn">⚙️</button>
-                  <button className="control-btn delete">🗑️</button>
-                </div>
-              </div>
-
-              <div className="node-fields">
-                {node.fields.map(field => (
-                  <div key={field.id} className="field-row">
-                    <span className="field-icon">{getFieldIcon(field.type)}</span>
-                    <span className="field-name">{field.name}</span>
-                    <span className="field-type">{getFieldTypeDisplay(field)}</span>
-                    <div className="field-controls">
-                      <button className="control-btn">✏️</button>
-                      <button 
-                        className="control-btn delete"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeField(node.id, field.id);
-                        }}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                
-                <button 
-                  className="add-field-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addField(node.id);
-                  }}
-                >
-                  + Add New Field
-                </button>
-              </div>
-            </div>
+              node={node}
+              onMouseDown={handleMouseDown}
+              onAddField={addField}
+              onRemoveField={removeField}
+              dragging={dragging === node.id}
+            />
           ))}
         </div>
       </div>

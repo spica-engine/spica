@@ -1,0 +1,136 @@
+.node {
+  position: absolute;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  min-width: 350px;
+  z-index: 2;
+  user-select: none;
+}
+
+.nodeHeader {
+  background: #3a3b7c;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+}
+}
+
+
+
+.nodeId {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-left: 8px;
+}
+
+.nodeControls {
+  display: flex;
+  gap: 4px;
+
+  .controlBtn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.controlBtn.delete {
+  color: #ff6b6b;
+}
+}
+
+
+.nodeFields {
+  padding: 16px;
+}
+.fieldRow {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  gap: 12px;
+  &:last-of-type {
+    border-bottom: none;
+  }
+
+  &:hover .fieldControls {
+    opacity: 1;
+  }
+}
+
+.fieldIcon {
+  font-size: 14px;
+  width: 20px;
+}
+
+.fieldName {
+  flex: 1;
+  font-weight: 500;
+}
+
+.fieldType {
+  color: #666;
+  font-size: 12px;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.fieldControls {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  .controlBtn {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    font-size: 12px;
+
+    &.delete {
+      color: #ff6b6b;
+    }
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+.addFieldBtn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border: 2px dashed #ddd;
+  background: none;
+  color: #666;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+
+  &:hover {
+    border-color: #3a3b7c;
+    color: #3a3b7c;
+  }
+}
