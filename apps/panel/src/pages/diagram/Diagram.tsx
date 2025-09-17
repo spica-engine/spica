@@ -42,7 +42,6 @@ const Diagram: React.FC = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({x: 0, y: 0});
   const [zoom, setZoom] = useState<number>(1);
-  const [needsPositioning, setNeedsPositioning] = useState(true);
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fieldRefsMap = useRef<Map<string, DOMRect>>(new Map());
@@ -86,15 +85,82 @@ const Diagram: React.FC = () => {
     return fields;
   };
 
-  // Convert buckets to nodes with structured random positioning
-  const convertBucketsToNodes = (buckets: BucketType[]): Node[] => {
+  // Convert buckets to nodes with relation-based positioning
+  const convertBucketsToNodes = (buckets: BucketType[], extractedRelations: Relation[]): Node[] => {
     const nodeWidth = 350;
     const nodeHeight = 300;
-    const gridCols = Math.ceil(Math.sqrt(buckets.length));
-    const baseSpacingX = nodeWidth + 150;
-    const baseSpacingY = nodeHeight + 100;
+    const baseSpacingX = nodeWidth + 350; // Column spacing
+    const baseSpacingY = nodeHeight + 250;
 
-    return buckets.map((bucket, index) => {
+    // Analyze relationships to determine positioning
+    const bucketRelations = new Map<string, { incoming: Set<string>, outgoing: Set<string> }>();
+    
+    // Initialize all buckets
+    buckets.forEach(bucket => {
+      bucketRelations.set(bucket._id, { incoming: new Set(), outgoing: new Set() });
+    });
+
+    // Process relations to build dependency graph
+    extractedRelations.forEach(relation => {
+      const fromBucket = bucketRelations.get(relation.from);
+      const toBucket = bucketRelations.get(relation.to);
+      
+      if (fromBucket) {
+        fromBucket.outgoing.add(relation.to);
+      }
+      if (toBucket) {
+        toBucket.incoming.add(relation.from);
+      }
+    });
+
+    // Determine column positions based on relationships
+    const columnAssignments = new Map<string, number>();
+    const processedBuckets = new Set<string>();
+    
+    // Helper function to assign columns recursively
+    const assignColumn = (bucketId: string, column: number = 0): void => {
+      if (processedBuckets.has(bucketId)) return;
+      
+      processedBuckets.add(bucketId);
+      const currentAssignment = columnAssignments.get(bucketId);
+      
+      // Only update if this is a higher column number (further right)
+      if (currentAssignment === undefined || column > currentAssignment) {
+        columnAssignments.set(bucketId, column);
+      }
+      
+      // Process outgoing relations (children should be in next column)
+      const relations = bucketRelations.get(bucketId);
+      if (relations) {
+        relations.outgoing.forEach(targetId => {
+          assignColumn(targetId, (columnAssignments.get(bucketId) || 0) + 1);
+        });
+      }
+    };
+
+    // Start with buckets that have no incoming relations (root nodes)
+    buckets.forEach(bucket => {
+      const relations = bucketRelations.get(bucket._id);
+      if (relations && relations.incoming.size === 0) {
+        assignColumn(bucket._id, 0); // Start from column 0
+      }
+    });
+
+    // Handle isolated nodes (no relations at all)
+    const maxColumn = Math.max(...Array.from(columnAssignments.values()), -1);
+    const isolatedColumn = maxColumn + 2; // Place isolated nodes 2 columns after the last connected node
+    
+    buckets.forEach(bucket => {
+      const relations = bucketRelations.get(bucket._id);
+      if (relations && relations.incoming.size === 0 && relations.outgoing.size === 0) {
+        columnAssignments.set(bucket._id, isolatedColumn);
+      }
+    });
+
+    // Create position map for each column
+    const columnNodeCounts = new Map<number, number>();
+    
+    return buckets.map((bucket) => {
       const fields: Field[] = [];
 
       fields.push({
@@ -110,14 +176,14 @@ const Diagram: React.FC = () => {
         fields.push(...propertyFields);
       });
 
-      const gridX = index % gridCols;
-      const gridY = Math.floor(index / gridCols);
+      // Determine column and position within column
+      const column = columnAssignments.get(bucket._id) || 0;
+      const nodeIndexInColumn = columnNodeCounts.get(column) || 0;
+      columnNodeCounts.set(column, nodeIndexInColumn + 1);
 
-      const randomOffsetX = (Math.random() - 0.5) * 100;
-      const randomOffsetY = (Math.random() - 0.5) * 80;
-
-      const x = 100 + gridX * baseSpacingX + randomOffsetX;
-      const y = 100 + gridY * baseSpacingY + randomOffsetY;
+      // Calculate position
+      const x = 100 + column * baseSpacingX;
+      const y = 100 + nodeIndexInColumn * baseSpacingY;
 
       return {
         id: bucket._id,
@@ -139,7 +205,22 @@ const Diagram: React.FC = () => {
       path: string = key
     ) => {
       if (property.type === "relation") {
-        const relationType = property.relationType === "onetoone" ? "1:1" : "1:*";
+        // Map the relation type string to a display format
+        let relationType: "1:1" | "1:*" | "*:*";
+        
+        switch (property.relationType) {
+          case "onetoone":
+            relationType = "1:1";
+            break;
+          case "onetomany":
+            relationType = "1:*";
+            break;
+          case "manytomany":
+            relationType = "*:*";
+            break;
+          default:
+            relationType = "1:*"; // Default case
+        }
 
         relations.push({
           from: bucketId,
@@ -198,66 +279,14 @@ const Diagram: React.FC = () => {
   useEffect(() => {
     console.log("API Buckets:", apiBuckets);
     if (apiBuckets && apiBuckets.length > 0) {
-      const convertedNodes = convertBucketsToNodes(apiBuckets);
       const extractedRelations = extractRelations(apiBuckets);
-
-      setNodes(convertedNodes);
       setRelations(extractedRelations);
+
+      const convertedNodes = convertBucketsToNodes(apiBuckets, extractedRelations);
+      console.log("Converted Nodes:", convertedNodes);
+      setNodes(convertedNodes);
     }
   }, [apiBuckets]);
-
-  // Position isolated nodes (no relations) to the right in a 2x2 grid
-  useEffect(() => {
-    if (!needsPositioning || nodes.length === 0 || relations.length === 0) return;
-
-    // Find nodes that have no relations (incoming or outgoing)
-    const nodesWithRelations = new Set<string>();
-    
-    relations.forEach(relation => {
-      nodesWithRelations.add(relation.from);
-      nodesWithRelations.add(relation.to);
-    });
-    
-    const isolatedNodes = nodes.filter(node => !nodesWithRelations.has(node.id));
-    
-    if (isolatedNodes.length === 0) return;
-    
-    // Find the rightmost position of connected nodes
-    let maxX = 0;
-    nodes.forEach(node => {
-      if (nodesWithRelations.has(node.id)) {
-        maxX = Math.max(maxX, node.position.x);
-      }
-    });
-    
-    // Position isolated nodes to the right in a 2x2 grid
-    const updatedNodes = [...nodes];
-    const nodeWidth = 350;
-    const nodeHeight = 300;
-    const rightPadding = 200; // Space between connected nodes and isolated nodes
-    const gridStartX = maxX + nodeWidth + rightPadding;
-    const gridStartY = 400; // Position toward bottom
-    const gridCols = 2; // 2x2 grid
-    
-    isolatedNodes.forEach((node, index) => {
-      const gridX = index % gridCols;
-      const gridY = Math.floor(index / gridCols);
-      
-      const nodeIndex = nodes.findIndex(n => n.id === node.id);
-      if (nodeIndex !== -1) {
-        updatedNodes[nodeIndex] = {
-          ...node,
-          position: {
-            x: gridStartX + gridX * (nodeWidth + 50),
-            y: gridStartY + gridY * (nodeHeight + 50)
-          }
-        };
-      }
-    });
-    
-    setNodes(updatedNodes);
-    setNeedsPositioning(false);
-  }, [needsPositioning, nodes, relations]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -384,6 +413,7 @@ const Diagram: React.FC = () => {
 
     const nodeWidth = 350;
     const fieldHeight = 30;
+    const headerHeight = 50;
     const spacing = 5;
     
     // Find the field in the source node
@@ -397,16 +427,21 @@ const Diagram: React.FC = () => {
     
     // Calculate starting point (from field position)
     const startX = fromNode.position.x + nodeWidth - spacing;
-    const startY = fromNode.position.y + 50 + (fromFieldIndex * fieldHeight); // 50px for header
+    const startY = fromNode.position.y + headerHeight + (fromFieldIndex * fieldHeight) + (fieldHeight / 2);
     
     // Calculate ending point (to node)
     const endX = toNode.position.x + spacing;
-    const endY = toNode.position.y + 100; // Target the middle of the node header
+    const endY = toNode.position.y + headerHeight;
     
+    // Parse relation type for display
     const [startType, endType] = relation.type.split(":");
     
     // Generate a unique ID for this relation
     const relationId = `${relation.from}-${fromFieldPath}-${relation.to}`;
+
+    // Calculate midpoint for relation type label
+    const midX = startX + (endX - startX) / 2;
+    const midY = startY + (endY - startY) / 2;
 
     return (
       <g key={relationId} className="relation-line">
@@ -419,6 +454,22 @@ const Diagram: React.FC = () => {
           strokeWidth="2"
           markerEnd="url(#arrowhead)"
         />
+        
+        {/* Relation type label */}
+        <text
+          x={midX}
+          y={midY - 10}
+          textAnchor="middle"
+          fontSize="12"
+          fill="#444"
+          fontWeight="bold"
+          className="relation-type-label"
+          style={{ backgroundColor: "white", padding: "2px" }}
+        >
+          {relation.type}
+        </text>
+        
+        {/* Start type marker */}
         <text
           x={startX - 15}
           y={startY - 5}
@@ -429,6 +480,8 @@ const Diagram: React.FC = () => {
         >
           {startType}
         </text>
+        
+        {/* End type marker */}
         <text
           x={endX + 15}
           y={endY - 5}

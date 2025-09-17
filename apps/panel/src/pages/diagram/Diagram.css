@@ -81,3 +81,7 @@ path.relation-path:hover {
 .nested-relation {
   stroke-dasharray: 5,5;
 }
+
+.relation-line{
+  z-index: 99;
+}
