@@ -1,5 +1,6 @@
 import * as Yup from "yup";
 import {FieldKind} from "./types";
+import type {Property} from "src/services/bucketService";
 export type ValidationSchema = Yup.ObjectSchema<any>;
 
 export const TITLE_REGEX = /^(?!(_id)$)([a-z_0-9]*)+$/; // lowercase, digits, underscore, not _id
@@ -59,7 +60,7 @@ export const NUMBER_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
       .nullable()
       .optional()
       .test("max>=min", "Max must be >= Min", function (value) {
-        const {minimum} = this.parent as any;
+        const {minimum} = this.parent;
         if (value == null || minimum == null) return true;
         return value >= minimum;
       }),
@@ -142,17 +143,41 @@ const stringConstraints = {
     Array.isArray(p.enum) ? sch.oneOf(p.enum, `Value must be one of: ${p.enum.join(", ")}`) : sch,
 
   pattern: (sch: Yup.StringSchema, p: any) =>
-    p.pattern ? sch.matches(new RegExp(p.pattern), `Must match pattern: ${p.pattern}`) : sch
+    p.pattern
+      ? sch.matches(
+          new RegExp(p.pattern),
+          `This field does not match the required pattern "${p.pattern}"`
+        )
+      : sch
 };
 
 const numberConstraints = {
   required: (sch: Yup.NumberSchema, p: any) =>
-    p.required ? sch.required("This field is required") : sch.notRequired()
-  // could add min, max later if you want
+    p.required ? sch.required("This field is required") : sch.notRequired(),
+  enum: (sch: Yup.NumberSchema, p: any) =>
+    Array.isArray(p.enum) ? sch.oneOf(p.enum, `Value must be one of: ${p.enum.join(", ")}`) : sch,
+  minimum: (sch: Yup.NumberSchema, p: any) =>
+    p.minimum !== undefined && p.minimum !== null
+      ? sch.min(p.minimum, `Value must be greater than ${p.minimum}`)
+      : sch,
+  maximum: (sch: Yup.NumberSchema, p: any) =>
+    p.maximum !== undefined && p.maximum !== null
+      ? sch.max(p.maximum, `Value must be less than ${p.maximum}`)
+      : sch
 };
 
 const dateConstraints = {
   required: (sch: Yup.DateSchema, p: any) =>
+    p.required ? sch.required("This field is required") : sch.notRequired()
+};
+
+const booleanConstraints = {
+  required: (sch: Yup.BooleanSchema, p: any) =>
+    p.required ? sch.required("This field is required") : sch.notRequired()
+};
+
+const mixedConstraints = {
+  required: (sch: Yup.MixedSchema, p: any) =>
     p.required ? sch.required("This field is required") : sch.notRequired()
 };
 
@@ -175,7 +200,22 @@ function applyConstraints<T extends Yup.AnySchema>(
   return current;
 }
 
-const generateFieldValueSchema = (kind: FieldKind, property: any) => {
+const arrayConstraints = {
+  required: (sch: any, p: any) =>
+    p.required
+      ? sch.required("This field is required").min(1, "This field is required")
+      : sch.notRequired(),
+  minItems: (sch: any, p: any) =>
+    p.minItems !== undefined && p.minItems !== null
+      ? sch.min(p.minItems, `Array must contain at least ${p.minItems} items`)
+      : sch,
+  maxItems: (sch: any, p: any) =>
+    p.maxItems !== undefined && p.maxItems !== null
+      ? sch.max(p.maxItems, `Array must contain at most ${p.maxItems} items`)
+      : sch
+};
+
+const generateFieldValueSchema = (kind: FieldKind, property: Property) => {
   switch (kind) {
     case FieldKind.String:
     case FieldKind.Textarea:
@@ -184,45 +224,162 @@ const generateFieldValueSchema = (kind: FieldKind, property: any) => {
       return applyConstraints(Yup.string(), property, stringConstraints);
 
     case FieldKind.Number:
-      return applyConstraints(Yup.number(), property, numberConstraints);
+      return applyConstraints(
+        Yup.number().typeError("Value must be a number"),
+        property,
+        numberConstraints
+      );
 
     case FieldKind.Boolean:
-      return Yup.boolean().notRequired(); // could add required constraint if you want
+      return applyConstraints(Yup.boolean(), property, booleanConstraints);
 
     case FieldKind.Date:
       return applyConstraints(Yup.date(), property, dateConstraints);
 
     case FieldKind.Multiselect:
-      return Yup.array().of(Yup.mixed()).notRequired();
+      return applyConstraints(Yup.array().of(Yup.mixed()), property, arrayConstraints);
 
     case FieldKind.Location:
-      return Yup.object({
-        address: Yup.string().notRequired(),
-        lat: Yup.number().notRequired(),
-        lng: Yup.number().notRequired()
-      }).notRequired();
+      return applyConstraints(
+        Yup.object({
+          address: Yup.string().notRequired(),
+          lat: Yup.number().notRequired(),
+          lng: Yup.number().notRequired()
+        }),
+        property,
+        mixedConstraints as any
+      );
 
-    case FieldKind.Array:
-      return Yup.array().notRequired();
+    case FieldKind.Array: {
+      let arr: any = applyConstraints(Yup.array(), property, arrayConstraints);
+      const itemType = property?.items?.type as FieldKind | undefined;
+      const itemProps = property?.items;
 
-    case FieldKind.Object:
-      return Yup.object().notRequired();
+      if (itemType && itemProps) {
+        const baseItemSchema = generateFieldValueSchema(itemType, itemProps) as Yup.AnySchema;
+
+        // For object arrays, we need to handle nested field errors with index information
+        if (itemType === FieldKind.Object) {
+          const enhancedObjectSchema = baseItemSchema
+            .transform((value, originalValue, context) => {
+              return originalValue;
+            })
+            .test({
+              name: "object-with-index",
+              message: "Validation failed",
+              test: function (value, context) {
+                try {
+                  baseItemSchema.validateSync(value, {abortEarly: false});
+                  return true;
+                } catch (error) {
+                  if (error instanceof Yup.ValidationError) {
+                    const pathParts = context.path.split(".");
+                    const arrayIndex = pathParts[pathParts.length - 1];
+
+                    // Get the first error to create a meaningful message
+                    const firstError = error.inner[0] || error;
+                    const fieldPath = firstError.path;
+                    const fieldName = fieldPath ? fieldPath.split(".").pop() : "field";
+
+                    return context.createError({
+                      message: `${fieldName} at index ${arrayIndex.replace(/\[|\]/g, "")} ${firstError.message.replace(/^this field /i, "").replace(/^This field /i, "")}`
+                    });
+                  }
+                  return false;
+                }
+              }
+            });
+
+          arr = arr.of(enhancedObjectSchema);
+        } else {
+          // For primitive arrays, add index information
+          const enhancedPrimitiveSchema = baseItemSchema.test({
+            name: "primitive-with-index",
+            message: "Validation failed",
+            test: function (value, context) {
+              try {
+                baseItemSchema.validateSync(value);
+                return true;
+              } catch (error) {
+                if (error instanceof Yup.ValidationError) {
+                  const pathParts = context.path.split(".");
+                  const arrayIndex = pathParts[pathParts.length - 1];
+
+                  return context.createError({
+                    message: `Item at index ${arrayIndex} ${error.message.replace(/^Value /i, "").replace(/^This field /i, "")}`
+                  });
+                }
+                return false;
+              }
+            }
+          });
+
+          arr = arr.of(enhancedPrimitiveSchema);
+        }
+      } else {
+        arr = arr.of(Yup.mixed());
+      }
+      return arr;
+    }
+
+    case FieldKind.Object: {
+      const props: Record<string, any> | undefined = property?.properties;
+      let obj: any = Yup.object();
+      if (props && typeof props === "object") {
+        const requiredKeys = Array.isArray(property?.required)
+          ? (property.required as string[])
+          : [];
+        const shape: Record<string, Yup.AnySchema> = {};
+        for (const [k, childProp] of Object.entries(props)) {
+          const childKind = childProp?.type as FieldKind | undefined;
+          let childSchema: Yup.AnySchema;
+          if (childKind) {
+            childSchema = generateFieldValueSchema(childKind, childProp) as Yup.AnySchema;
+          } else {
+            childSchema = Yup.mixed();
+          }
+          shape[k] = requiredKeys.includes(k)
+            ? childSchema.required("This field is required")
+            : childSchema.notRequired();
+        }
+        obj = obj.shape(shape);
+      }
+      if (property?.required === true) {
+        obj = obj
+          .required("This field is required")
+          .test(
+            "object-non-empty",
+            "This field is required",
+            (val: unknown) =>
+              val != null &&
+              typeof val === "object" &&
+              Object.keys(val as Record<string, any>).length > 0
+          );
+      } else {
+        obj = obj.notRequired();
+      }
+      return obj;
+    }
 
     case FieldKind.File:
-      return Yup.mixed().notRequired();
+      return applyConstraints(Yup.mixed(), property, mixedConstraints);
 
     case FieldKind.Json:
-      return Yup.mixed().notRequired();
+      return applyConstraints(Yup.mixed(), property, mixedConstraints);
 
     case FieldKind.Relation:
-      return Yup.mixed().notRequired();
+      return applyConstraints(Yup.string(), property, stringConstraints);
 
     default:
       return Yup.mixed().notRequired();
   }
 };
 
-export const validateFieldValue = (value: any, kind: FieldKind, properties: any): string | null => {
+export const validateFieldValue = (
+  value: any,
+  kind: FieldKind,
+  properties: Property
+): string | null => {
   const schema = generateFieldValueSchema(kind, properties);
   try {
     schema.validateSync(value, {abortEarly: true}); // only first error

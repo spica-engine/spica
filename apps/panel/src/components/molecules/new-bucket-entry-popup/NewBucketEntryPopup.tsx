@@ -13,8 +13,8 @@ import type {BucketType} from "src/services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
-import { findFirstErrorId } from "./NewBucketEntryPopupUtils";
-import { usePropertiesProcessor, useInitialValues, useFormValidation } from "./NewBucketEntryPopupHooks";
+import {findFirstErrorId, generateInitialValues} from "./NewBucketEntryPopupUtils";
+import {useValueProperties, useValidation} from "./NewBucketEntryPopupHooks";
 
 type NewBucketEntryPopupProps = {
   bucket: BucketType;
@@ -29,10 +29,11 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<TypeInputRepresenterError>({});
 
-  const formattedProperties = usePropertiesProcessor(bucket, authToken);
-  const generateInitialValues = useInitialValues(formattedProperties);
-  const [value, setValue] = useState<Record<string, any>>(generateInitialValues);
-  const {cleanValueRecursive, validateForm} = useFormValidation();
+  const formattedProperties = useValueProperties(bucket, authToken);
+  const [value, setValue] = useState<Record<string, any>>(() =>
+    generateInitialValues(formattedProperties)
+  );
+  const {cleanValueRecursive, validateValues} = useValidation();
 
   useEffect(() => {
     setApiError(createBucketEntryError);
@@ -41,14 +42,14 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   useEffect(() => {
     setApiError(null);
     setErrors({});
-    setValue(generateInitialValues());
+    setValue(generateInitialValues(formattedProperties));
   }, [isOpen, formattedProperties]);
 
   useEffect(() => {
     if (!errors || Object.keys(errors).length === 0) return;
-    const newErrors = validateForm(value, formattedProperties, bucket?.required || []);
+    const newErrors = validateValues(value, formattedProperties as any, bucket?.required || []);
     setErrors((newErrors as TypeInputRepresenterError) || {});
-  }, [value, validateForm, formattedProperties, bucket?.required]);
+  }, [value, validateValues, formattedProperties, bucket?.required]);
 
   const inputRepresentation = useInputRepresenter({
     properties: formattedProperties,
@@ -60,7 +61,11 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
 
   const modalBody = useRef<HTMLDivElement>(null);
   const handleSubmit = useCallback(async () => {
-    const validationErrors = validateForm(value, formattedProperties, bucket?.required || []);
+    const validationErrors = validateValues(
+      value,
+      formattedProperties as any,
+      bucket?.required || []
+    );
 
     if (validationErrors && Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors as TypeInputRepresenterError);
@@ -90,7 +95,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
 
       if (result) {
         setIsOpen(false);
-        setValue(generateInitialValues());
+        setValue(generateInitialValues(formattedProperties));
       }
     } catch (error) {
       console.error("Error creating bucket entry:", error);
@@ -99,7 +104,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
     }
   }, [
     value,
-    validateForm,
+    validateValues,
     formattedProperties,
     bucket?.required,
     bucket._id,
@@ -129,30 +134,32 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
           <Modal.Body className={styles.modalBody} ref={modalBody}>
             <FlexElement gap={10} direction="vertical" className={styles.formContainer}>
               {inputRepresentation}
-              <div className={styles.buttonContainer}>
-                <Button
-                  onClick={handleSubmit}
-                  loading={isLoading}
-                  disabled={isLoading}
-                  className={styles.saveButton}
-                >
-                  <FluidContainer
-                    prefix={{
-                      children: <Icon name="save" />
-                    }}
-                    root={{
-                      children: "Save and close"
-                    }}
-                  />
-                </Button>
-              </div>
-              {apiError && (
-                <div className={styles.errorTextContainer}>
-                  <Text className={styles.errorText} variant="danger">
-                    {apiError}
-                  </Text>
+              <FlexElement className={styles.footer}>
+                {apiError && (
+                  <div className={styles.errorTextContainer}>
+                    <Text className={styles.errorText} variant="danger">
+                      {apiError}
+                    </Text>
+                  </div>
+                )}
+                <div className={styles.buttonContainer}>
+                  <Button
+                    onClick={handleSubmit}
+                    loading={isLoading}
+                    disabled={isLoading}
+                    className={styles.saveButton}
+                  >
+                    <FluidContainer
+                      prefix={{
+                        children: <Icon name="save" />
+                      }}
+                      root={{
+                        children: "Save and close"
+                      }}
+                    />
+                  </Button>
                 </div>
-              )}
+              </FlexElement>
             </FlexElement>
           </Modal.Body>
         </Modal>

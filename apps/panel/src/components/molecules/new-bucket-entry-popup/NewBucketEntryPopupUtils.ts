@@ -1,3 +1,7 @@
+import {FIELD_REGISTRY} from "../../../domain/fields";
+import type {FieldDefinition} from "src/domain/fields/types";
+import type {Property} from "src/services/bucketService";
+
 export const isObjectEffectivelyEmpty = (obj: any): boolean => {
   if (obj == null || typeof obj !== "object") return true;
 
@@ -69,4 +73,20 @@ export const findFirstErrorId = (
     }
   }
   return null;
+};
+
+export const generateInitialValues = (properties: Record<string, Property>) => {
+  return Object.keys(properties).reduce(
+    (acc: Record<string, any>, key) => {
+      const property = properties[key];
+      const field = FIELD_REGISTRY[property.type] as FieldDefinition;
+      if (property.type === "object" && property.properties) {
+        acc[key] = generateInitialValues(property.properties);
+      } else {
+        acc[key] = field.getDefaultValue(property);
+      }
+      return acc;
+    },
+    {} as Record<string, any>
+  );
 };

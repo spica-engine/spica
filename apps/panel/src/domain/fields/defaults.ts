@@ -37,3 +37,5 @@ export function makeInnerFieldDefaults(kind: FieldKind): FieldCreationForm {
     }
   };
 }
+
+export const DEFAULT_COORDINATES = {lat: 36.8969, lng: 30.7133}; // Default to Antalya, Turkiye

@@ -5,7 +5,7 @@
  * defaults, property construction, parsing, formatting and validation.
  */
 
-import {BASE_FORM_DEFAULTS, freezeFormDefaults} from "./defaults";
+import {BASE_FORM_DEFAULTS, DEFAULT_COORDINATES, freezeFormDefaults} from "./defaults";
 import {applyPresetLogic} from "./presets";
 import {type FieldDefinition, FieldKind} from "./types";
 import {
@@ -205,7 +205,7 @@ const STRING_DEFINITION: FieldDefinition = {
     ),
     defaultValue: ""
   }),
-  getDefaultValue: property => property.default,
+  getDefaultValue: property => property.default || "",
   validateCreationForm: form => runYupValidation(STRING_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.String, properties),
   buildCreationFormProperties: () => ({
@@ -248,6 +248,7 @@ const NUMBER_DEFINITION: FieldDefinition = {
       maximum: undefined
     }
   }),
+  getDefaultValue: property => property.default,
   validateCreationForm: form => runYupValidation(NUMBER_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Number, properties),
   buildCreationFormProperties: () => ({
@@ -271,7 +272,6 @@ const NUMBER_DEFINITION: FieldDefinition = {
     description: property.description,
     enum: property.enum
   }),
-  getDefaultValue: property => property.default,
   getFormattedValue: value => (value == null ? "" : value),
   capabilities: {
     enumerable: true,
@@ -294,6 +294,7 @@ const BOOLEAN_DEFINITION: FieldDefinition = {
     ),
     defaultValue: false
   }),
+  getDefaultValue: property => property.default || false,
   validateCreationForm: form => runYupValidation(BOOLEAN_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Boolean, properties),
   buildCreationFormProperties: () => ({
@@ -318,6 +319,7 @@ const DATE_DEFINITION: FieldDefinition = {
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),
     defaultValue: {defaultDate: ""}
   }),
+  getDefaultValue: property => property.default,
   validateCreationForm: form => runYupValidation(DATE_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Date, properties),
   buildCreationFormProperties: () => ({
@@ -352,6 +354,7 @@ const TEXTAREA_DEFINITION: FieldDefinition = {
       Object.keys(TranslatableConfig).map(key => [key, false])
     )
   }),
+  getDefaultValue: property => property.default || "",
   validateCreationForm: form => runYupValidation(TEXTAREA_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Textarea, properties),
   buildCreationFormProperties: () => ({
@@ -380,6 +383,7 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
     },
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false]))
   }),
+  getDefaultValue: property => property.default || [],
   validateCreationForm: form => runYupValidation(MULTISELECT_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) =>
     validateFieldValue(value, FieldKind.Multiselect, properties),
@@ -415,6 +419,7 @@ const RELATION_DEFINITION: FieldDefinition = {
     },
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false]))
   }),
+  getDefaultValue: property => property.default,
   validateCreationForm: form => runYupValidation(RELATION_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Relation, properties),
   buildCreationFormProperties: () => ({
@@ -426,16 +431,11 @@ const RELATION_DEFINITION: FieldDefinition = {
     },
     configurationValues: MinimalConfig
   }),
-  buildValueProperty: property => ({
+  buildValueProperty: (property, relationProps) => ({
     type: FieldKind.Relation,
     title: property.title,
-    description: property.description
-    // NEEDS TO WAY TO DEFINE
-    // getOptions?: () => Promise<TypeLabeledValue[]>;
-    // loadMoreOptions?: () => Promise<TypeLabeledValue[]>;
-    // searchOptions?: (value: string) => Promise<TypeLabeledValue[]>;
-    // totalOptionsLength?: number;
-    // THESE ARE NECESSARY FOR RELATION FIELDS
+    description: property.description,
+    ...relationProps
   }),
   getFormattedValue: v => {
     if (!v) return "";
@@ -450,11 +450,11 @@ const LOCATION_DEFINITION: FieldDefinition = {
   display: {label: "Location", icon: "mapMarker"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
-
     configurationValues: Object.fromEntries(
       Object.keys(OnlyRequiredConfig).map(key => [key, false])
     )
   }),
+  getDefaultValue: property => property.default || DEFAULT_COORDINATES,
   validateCreationForm: form => runYupValidation(LOCATION_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Location, properties),
   buildCreationFormProperties: () => ({
@@ -492,7 +492,7 @@ const ARRAY_DEFINITION: FieldDefinition = {
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
     )
   }),
-  getDefaultValue: property => property.default,
+  getDefaultValue: property => property.default || [],
   validateCreationForm: form => runYupValidation(ARRAY_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Array, properties),
   buildCreationFormProperties: () => ({
@@ -590,6 +590,7 @@ const OBJECT_DEFINITION: FieldDefinition = {
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
     )
   }),
+  getDefaultValue: property => property.default || {},
   validateCreationForm: form => runYupValidation(OBJECT_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Object, properties),
   buildCreationFormProperties: () => ({
@@ -603,7 +604,6 @@ const OBJECT_DEFINITION: FieldDefinition = {
     properties: property.properties
   }),
   requiresInnerFields: _ => true,
-  getDefaultValue: property => property.default,
   getFormattedValue: v => (v && typeof v === "object" ? `{${Object.keys(v).length}}` : ""),
   capabilities: {supportsInnerFields: true}
 };
@@ -617,6 +617,7 @@ const FILE_DEFINITION: FieldDefinition = {
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
     )
   }),
+  getDefaultValue: property => property.default,
   validateCreationForm: form => runYupValidation(FILE_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.File, properties),
   buildCreationFormProperties: () => ({
@@ -646,6 +647,7 @@ const RICHTEXT_DEFINITION: FieldDefinition = {
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
     )
   }),
+  getDefaultValue: property => property.default || "",
   validateCreationForm: form => runYupValidation(RICHTEXT_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Richtext, properties),
   buildCreationFormProperties: () => ({
@@ -668,6 +670,7 @@ const JSON_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(Object.keys(BasicConfig).map(key => [key, false]))
   }),
+  getDefaultValue: property => property.default,
   validateCreationForm: form => runYupValidation(JSON_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Json, properties),
   buildCreationFormProperties: () => ({
@@ -699,6 +702,7 @@ const COLOR_DEFINITION: FieldDefinition = {
 
     configurationValues: Object.fromEntries(Object.keys(BasicConfig).map(key => [key, false]))
   }),
+  getDefaultValue: property => property.default || "",
   validateCreationForm: form => runYupValidation(COLOR_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Color, properties),
   buildCreationFormProperties: () => ({
@@ -710,7 +714,6 @@ const COLOR_DEFINITION: FieldDefinition = {
     title: property.title,
     description: property.description
   }),
-  getDefaultValue: property => property.default || "#000000",
   getFormattedValue: v => (v ? String(v).toUpperCase() : ""),
   capabilities: {hasDefaultValue: true, indexable: true}
 };

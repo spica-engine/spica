@@ -1,6 +1,7 @@
-import {useState, useRef, useCallback, useEffect, useMemo} from "react";
-import type {BucketType, Property, Properties} from "src/services/bucketService";
-import {buildOptionsUrl, isObjectEffectivelyEmpty, cleanValue} from "./NewBucketEntryPopupUtils";
+import {useCallback, useMemo, useRef, useState} from "react";
+import type {BucketType, Property} from "src/services/bucketService";
+import {FIELD_REGISTRY} from "../../../domain/fields/registry";
+import {buildOptionsUrl, cleanValue} from "./NewBucketEntryPopupUtils";
 
 type RelationState = {
   skip: number;
@@ -8,160 +9,95 @@ type RelationState = {
   lastSearch: string;
 };
 
-// Custom hooks for better organization
 const useRelationHandlers = (authToken: string) => {
   const [relationStates, setRelationStates] = useState<Record<string, RelationState>>({});
   const getOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
   const loadMoreOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
   const searchOptionsMap = useRef<Record<string, (s: string) => Promise<any[]>>>({});
-
-  // Track active requests for cancellation
   const abortControllersRef = useRef<Record<string, AbortController>>({});
 
-  // Cleanup function to clear all maps
-  const clearAllMaps = useCallback(() => {
-    // Cancel any pending requests
-    Object.values(abortControllersRef.current).forEach(controller => {
-      controller.abort();
-    });
-
-    // Clear all maps
-    getOptionsMap.current = {};
-    loadMoreOptionsMap.current = {};
-    searchOptionsMap.current = {};
-    abortControllersRef.current = {};
-
-    // Reset relation states
-    setRelationStates({});
-  }, []);
-
-  const createRelationHandlers = useCallback(
-    (bucketId: string, fullKey: string) => {
-      if (!getOptionsMap.current[fullKey]) {
-        getOptionsMap.current[fullKey] = async () => {
-          // Cancel any existing request for this key
-          if (abortControllersRef.current[fullKey]) {
-            abortControllersRef.current[fullKey].abort();
-          }
-
-          const abortController = new AbortController();
-          abortControllersRef.current[fullKey] = abortController;
-
+  const ensureHandlers = useCallback(
+    (bucketId: string, key: string) => {
+      if (!getOptionsMap.current[key]) {
+        getOptionsMap.current[key] = async () => {
+          if (abortControllersRef.current[key]) abortControllersRef.current[key].abort();
+          const ac = new AbortController();
+          abortControllersRef.current[key] = ac;
           try {
-            const result = await fetch(buildOptionsUrl(bucketId, 0), {
+            const res = await fetch(buildOptionsUrl(bucketId, 0), {
               headers: {authorization: `IDENTITY ${authToken}`},
-              signal: abortController.signal
+              signal: ac.signal
             });
-
-            if (result.ok) {
-              const data = await result.json();
-
-              const newState = {
-                skip: 25,
-                total: data?.meta?.total || 0,
-                lastSearch: ""
-              };
-
-              setRelationStates(prev => ({...prev, [fullKey]: {...prev[fullKey], ...newState}}));
-
-              return data?.data?.map((i: any) => ({label: i.title, value: i._id})) || [];
-            }
-            return [];
-          } catch (error) {
-            if ((error as {name: string})?.name === "AbortError") {
-              return []; // Request was cancelled, return empty array
-            }
-            throw error;
+            if (!res.ok) return [];
+            const data = await res.json();
+            setRelationStates(prev => ({
+              ...prev,
+              [key]: {skip: 25, total: data?.meta?.total || 0, lastSearch: ""}
+            }));
+            return data?.data?.map((i: any) => ({label: i.title, value: i._id})) || [];
+          } catch (e: any) {
+            if (e?.name === "AbortError") return [];
+            throw e;
           } finally {
-            // Clean up the abort controller reference
-            delete abortControllersRef.current[fullKey];
+            delete abortControllersRef.current[key];
           }
         };
       }
 
-      if (!loadMoreOptionsMap.current[fullKey]) {
-        loadMoreOptionsMap.current[fullKey] = async () => {
-          const currentSkip = relationStates[fullKey]?.skip || 0;
-          const lastSearch = relationStates[fullKey]?.lastSearch || "";
-
-          if (abortControllersRef.current[`${fullKey}_loadMore`]) {
-            abortControllersRef.current[`${fullKey}_loadMore`].abort();
-          }
-
-          const abortController = new AbortController();
-          abortControllersRef.current[`${fullKey}_loadMore`] = abortController;
-
+      if (!loadMoreOptionsMap.current[key]) {
+        loadMoreOptionsMap.current[key] = async () => {
+          const currentSkip = relationStates[key]?.skip || 0;
+          const lastSearch = relationStates[key]?.lastSearch || "";
+          const loadKey = `${key}_loadMore`;
+          if (abortControllersRef.current[loadKey]) abortControllersRef.current[loadKey].abort();
+          const ac = new AbortController();
+          abortControllersRef.current[loadKey] = ac;
           try {
-            const result = await fetch(buildOptionsUrl(bucketId, currentSkip, lastSearch), {
+            const res = await fetch(buildOptionsUrl(bucketId, currentSkip, lastSearch), {
               headers: {authorization: `IDENTITY ${authToken}`},
-              signal: abortController.signal
+              signal: ac.signal
             });
-
-            if (result.ok) {
-              const data = await result.json();
-
-              setRelationStates(prev => ({
-                ...prev,
-                [fullKey]: {...prev[fullKey], skip: currentSkip + 25}
-              }));
-
-              return data?.data?.map((i: any) => ({label: i.title, value: i._id})) || [];
-            }
-            return [];
-          } catch (error) {
-            if ((error as {name: string})?.name === "AbortError") {
-              return [];
-            }
-            throw error;
+            if (!res.ok) return [];
+            const data = await res.json();
+            setRelationStates(prev => ({
+              ...prev,
+              [key]: {...prev[key], skip: currentSkip + 25}
+            }));
+            return data?.data?.map((i: any) => ({label: i.title, value: i._id})) || [];
+          } catch (e: any) {
+            if (e?.name === "AbortError") return [];
+            throw e;
           } finally {
-            delete abortControllersRef.current[`${fullKey}_loadMore`];
+            delete abortControllersRef.current[loadKey];
           }
         };
       }
 
-      if (!searchOptionsMap.current[fullKey]) {
-        searchOptionsMap.current[fullKey] = async (searchString: string) => {
-          setRelationStates(prev => ({
-            ...prev,
-            [fullKey]: {...prev[fullKey], lastSearch: searchString}
-          }));
-
-          if (abortControllersRef.current[`${fullKey}_search`]) {
-            abortControllersRef.current[`${fullKey}_search`].abort();
-          }
-
-          const abortController = new AbortController();
-          abortControllersRef.current[`${fullKey}_search`] = abortController;
-
+      if (!searchOptionsMap.current[key]) {
+        searchOptionsMap.current[key] = async (search: string) => {
+          const searchKey = `${key}_search`;
+          setRelationStates(prev => ({...prev, [key]: {...prev[key], lastSearch: search}}));
+          if (abortControllersRef.current[searchKey])
+            abortControllersRef.current[searchKey].abort();
+          const ac = new AbortController();
+          abortControllersRef.current[searchKey] = ac;
           try {
-            const result = await fetch(buildOptionsUrl(bucketId, 0, searchString), {
+            const res = await fetch(buildOptionsUrl(bucketId, 0, search), {
               headers: {authorization: `IDENTITY ${authToken}`},
-              signal: abortController.signal
+              signal: ac.signal
             });
-
-            if (result.ok) {
-              const data = await result.json();
-
-              const newState = {
-                skip: 25,
-                total: data?.meta?.total || 0
-              };
-
-              setRelationStates(prev => ({
-                ...prev,
-                [fullKey]: {...prev[fullKey], ...newState}
-              }));
-
-              return data?.data?.map((i: any) => ({label: i.title, value: i._id})) || [];
-            }
-            return [];
-          } catch (error) {
-            if ((error as {name: string})?.name === "AbortError") {
-              return [];
-            }
-            throw error;
+            if (!res.ok) return [];
+            const data = await res.json();
+            setRelationStates(prev => ({
+              ...prev,
+              [key]: {...prev[key], skip: 25, total: data?.meta?.total || 0}
+            }));
+            return data?.data?.map((i: any) => ({label: i.title, value: i._id})) || [];
+          } catch (e: any) {
+            if (e?.name === "AbortError") return [];
+            throw e;
           } finally {
-            delete abortControllersRef.current[`${fullKey}_search`];
+            delete abortControllersRef.current[searchKey];
           }
         };
       }
@@ -169,106 +105,106 @@ const useRelationHandlers = (authToken: string) => {
     [authToken, relationStates]
   );
 
-  return {
-    relationStates,
-    getOptionsMap,
-    loadMoreOptionsMap,
-    searchOptionsMap,
-    createRelationHandlers,
-    clearAllMaps
-  };
+  return {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers};
 };
 
-export const usePropertiesProcessor = (bucket: BucketType, authToken: string) => {
-  const {
-    relationStates,
-    getOptionsMap,
-    loadMoreOptionsMap,
-    searchOptionsMap,
-    createRelationHandlers,
-    clearAllMaps
-  } = useRelationHandlers(authToken);
+function mergeConstraints(from: any, into: any) {
+  const keys = [
+    "minimum",
+    "maximum",
+    "minItems",
+    "maxItems",
+    "pattern",
+    "enum",
+    // Do NOT copy complex children here; they are
+    // constructed separately with generated ids.
+    // "items", // intentionally omitted to prevent overwriting built child items
+    // "properties", // intentionally omitted to prevent overwriting built child properties
+    "relationType",
+    "bucketId",
+    "required",
+    "default"
+  ];
+  for (const k of keys) {
+    if (from?.[k] !== undefined) into[k] = from[k];
+  }
+}
 
-  // Cleanup when bucket properties change
-  useEffect(() => {
-    return () => {
-      clearAllMaps();
-    };
-  }, [bucket._id, clearAllMaps]); // Clear when bucket changes
+export const useValueProperties = (bucket: BucketType, authToken: string) => {
+  const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers} =
+    useRelationHandlers(authToken);
 
-  const processProperties = useCallback(
-    (properties: any, prefix = "") => {
-      Object.entries(properties).forEach(([key, property]: [string, any]) => {
+  const buildProps = useCallback(
+    (properties: Record<string, Property>, prefix = ""): Record<string, any> => {
+      const output: Record<string, any> = {};
+      for (const [key, prop] of Object.entries(properties || {})) {
         const fullKey = prefix ? `${prefix}.${key}` : key;
-
-        if (property.type === "relation") {
-          createRelationHandlers(property.bucketId, fullKey);
-        } else if (property.type === "object" && property.properties) {
-          processProperties(property.properties, fullKey);
+        const kind = prop.type;
+        const fieldDefinition = kind ? FIELD_REGISTRY[kind] : undefined;
+        if (!fieldDefinition) {
+          output[key] = {...prop, id: crypto.randomUUID()};
+          continue;
         }
-      });
-    },
-    [createRelationHandlers]
-  );
-
-  const formattedBaseProperties = useMemo(() => {
-    const newProperties = {...bucket.properties};
-
-    Object.entries(newProperties).forEach(([key, property]: [string, any]) => {
-      if (property.type === "object" && !property.properties) {
-        property.properties = {};
-      }
-      property.id = crypto.randomUUID();
-    });
-
-    processProperties(newProperties);
-    return newProperties;
-  }, [bucket.properties, processProperties]);
-
-  const attachRelationFunctions = useCallback(
-    (properties: any, prefix = ""): any => {
-      const newProperties: Record<string, any> = {};
-
-      Object.entries(properties).forEach(([key, property]: [string, any]) => {
-        const fullKey = prefix ? `${prefix}.${key}` : key;
-
-        if (property.type === "relation") {
-          newProperties[key] = {
-            ...property,
+        let base;
+        if (kind !== "relation") {
+          base = fieldDefinition.buildValueProperty(prop);
+        } else {
+          ensureHandlers(prop.bucketId, fullKey);
+          const relationProps = {
             getOptions: getOptionsMap.current[fullKey],
             loadMoreOptions: loadMoreOptionsMap.current[fullKey],
             searchOptions: searchOptionsMap.current[fullKey],
             totalOptionsLength: relationStates?.[fullKey]?.total || 0
           };
-        } else if (property.type === "object" && property.properties) {
-          newProperties[key] = {
-            ...property,
-            properties: attachRelationFunctions(property.properties, fullKey)
-          };
-        } else {
-          newProperties[key] = property;
+          base = fieldDefinition.buildValueProperty(prop, relationProps);
         }
-      });
+        const withId = {...base, id: crypto.randomUUID()};
 
-      return newProperties;
+        // Recursively handle object child properties when present
+        if (prop.type === "object" && prop.properties) {
+          withId.properties = buildProps(prop.properties, fullKey);
+        }
+
+        // For arrays with object items, pass through as-is to preserve structure
+        if (prop.type === "array" && prop.items?.type === "object") {
+          withId.items = {
+            ...base.items,
+            type: prop.items.type ?? "object",
+            properties: buildProps(prop.items.properties, `${fullKey}[]`)
+          };
+          mergeConstraints(prop.items, withId.items);
+        } else if (prop.type === "array" && prop.items?.type) {
+          mergeConstraints(prop.items, withId.items);
+        }
+
+        if (prop.type === "multiselect") {
+          withId.enum = prop.items.enum || [];
+        }
+
+        // Carry over constraints/patterns to keep validation intact
+        mergeConstraints(prop, withId);
+        output[key] = withId;
+      }
+      return output;
     },
-    [relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap]
+    [ensureHandlers, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, relationStates]
   );
 
-  const formattedProperties = useMemo(() => {
-    return attachRelationFunctions(formattedBaseProperties);
-  }, [formattedBaseProperties, attachRelationFunctions]);
+  const valueProperties = useMemo(
+    () => buildProps(bucket.properties || {}, ""),
+    [bucket.properties, buildProps]
+  );
 
-  return formattedProperties;
+  return valueProperties;
 };
 
-export const useFormValidation = () => {
+export const useValidation = () => {
   const cleanValueRecursive = useCallback((val: any, property: Property): any => {
     if (property?.type === "object" && property.properties) {
       const cleanedObject = Object.fromEntries(
         Object.entries(val || {}).map(([k, v]) => [
           k,
-          (property.properties[k]) ? cleanValueRecursive(v, property.properties[k]) : v
+          property.properties[k] ? cleanValueRecursive(v, property.properties[k]) : v
         ])
       );
       return cleanedObject;
@@ -276,84 +212,78 @@ export const useFormValidation = () => {
     return cleanValue(val, property?.type);
   }, []);
 
-  const validateForm = useCallback(
+  const validateValues = useCallback(
     (
       value: Record<string, any>,
-      formattedProperties: {[key: string]: Property},
+      formattedProperties: Record<string, Property>,
       requiredFields: string[]
     ) => {
-      type FormError = {
-        [key: string]: string | FormError;
-      };
-
+      type FormError = {[key: string]: string | FormError | Record<number, any>};
       const errors: FormError = {};
 
-      for (const [key, property] of Object.entries(formattedProperties)) {
-        const val = value[key];
+      for (const [key, property] of Object.entries(formattedProperties || {})) {
+        const val = value?.[key];
+        const propertyWithRequired = {
+          ...property,
+          required: requiredFields?.includes(key) ? true : (property as any).required
+        } as Property & {required?: boolean};
 
-        if (requiredFields.includes(key) && (val === undefined || val === null || val === "")) {
-          errors[key] = "This field is required";
-          continue;
-        }
-
-        if ((property.type === "object" || property.type === "array") && property.properties) {
-          const nestedErrors = validateForm(val, property.properties, property.required || []);
+        if (property.type === "object" && property.properties) {
+          const nestedRequired = (property as any).required || [];
+          const nestedErrors = validateValues(
+            val || {},
+            property.properties,
+            Array.isArray(nestedRequired) ? nestedRequired : []
+          );
           if (nestedErrors && Object.keys(nestedErrors).length > 0) {
             errors[key] = nestedErrors as FormError;
           }
+          continue;
         }
 
-        if (
-          property.type === "number" &&
-          property.maximum &&
-          val !== undefined &&
-          val > property.maximum
-        ) {
-          errors[key] = `Value must be less than ${property.maximum}`;
-        } else if (
-          property.type === "number" &&
-          property.minimum &&
-          val !== undefined &&
-          val < property.minimum
-        ) {
-          errors[key] = `Value must be greater than ${property.minimum}`;
-        }
-
-        if (
-          property.type === "array" &&
-          Array.isArray(val) &&
-          property.maxItems &&
-          val.length > property.maxItems
-        ) {
-          errors[key] = `Array must contain at most ${property.maxItems} items`;
-        } else if (
-          property.type === "array" &&
-          Array.isArray(val) &&
-          property.minItems &&
-          val.length < property.minItems
-        ) {
-          errors[key] = `Array must contain at least ${property.minItems} items`;
-        }
-
-        if (property.type === "string" && property.pattern) {
-          const regex = new RegExp(property.pattern);
-          if (!regex.test(val)) {
-            errors[key] = `This field does not match the required pattern "${property.pattern}"`;
-          }
-        }
-
-        if (property.type === "array" && property.items?.type === "number") {
-          val.forEach((item: any, index: number) => {
-            if (typeof item !== "number") {
-              errors[key] = `Array item at index ${index} must be a number`;
-            } else if (property.items.maximum && item > property.items.maximum) {
-              errors[key] =
-                `Array item at index ${index} must be less than ${property.items.maximum}`;
-            } else if (property.items.minimum && item < property.items.minimum) {
-              errors[key] =
-                `Array item at index ${index} must be greater than ${property.items.minimum}`;
+        if (property.type === "array") {
+          const arrayDef = FIELD_REGISTRY[property.type as keyof typeof FIELD_REGISTRY];
+          if (arrayDef?.validateValue) {
+            const msg = arrayDef.validateValue(val, propertyWithRequired as any);
+            if (msg) {
+              errors[key] = msg;
+              continue;
             }
-          });
+          }
+
+          const items = (property as any).items;
+          if (Array.isArray(val) && items?.type) {
+            if (items.type === "object" && items.properties) {
+              const arrayErrors: string[] = [];
+              const nestedRequired = Array.isArray((items as any).required)
+                ? (items as any).required
+                : [];
+              for (let i = 0; i < val.length; i++) {
+                const element = val[i] || {};
+                const nestedErrors = validateValues(element, items.properties, nestedRequired);
+                if (nestedErrors && Object.keys(nestedErrors).length > 0) {
+                  // Transform nested errors to include index information
+                  for (const [fieldName, fieldError] of Object.entries(nestedErrors)) {
+                    if (typeof fieldError === 'string') {
+                      arrayErrors.push(`${fieldName} at index ${i} ${fieldError.replace(/^this field /i, "").replace(/^This field /i, "")}`);
+                    }
+                  }
+                }
+              }
+              if (arrayErrors.length > 0) {
+                errors[key] = arrayErrors[0]; // Return the first error as a string
+                continue;
+              }
+            }
+          }
+          continue;
+        }
+
+        const kind = property.type as keyof typeof FIELD_REGISTRY;
+        const def = FIELD_REGISTRY[kind];
+        if (def?.validateValue) {
+          const msg = def.validateValue(val, propertyWithRequired);
+          if (msg) errors[key] = msg as string;
         }
       }
       return Object.keys(errors).length > 0 ? errors : undefined;
@@ -361,42 +291,5 @@ export const useFormValidation = () => {
     []
   );
 
-  return {cleanValueRecursive, validateForm};
-};
-
-const DEFAULT_VALUES = {
-  color: "",
-  multiselect: [],
-  number: undefined,
-  relation: []
-};
-
-export const useInitialValues = (formattedProperties: Properties) => {
-  const generateInitialValues = useCallback(
-    (properties?: Properties) => {
-      const propertiesToUse = properties ?? formattedProperties;
-      return Object.keys(propertiesToUse).reduce((acc: Record<string, any>, key) => {
-        const property = propertiesToUse[key];
-
-        if (property.type === "array") {
-          acc[key] = [
-            property.items.properties
-              ? generateInitialValues(property.items.properties)
-              : DEFAULT_VALUES[property.items.type as keyof typeof DEFAULT_VALUES] || ""
-          ];
-        } else if (property.type === "object" && property.properties) {
-          acc[key] = generateInitialValues(property.properties);
-        } else {
-          acc[key] =
-            property.type in DEFAULT_VALUES
-              ? DEFAULT_VALUES[property.type as keyof typeof DEFAULT_VALUES]
-              : "";
-        }
-        return acc;
-      }, {});
-    },
-    [formattedProperties]
-  );
-
-  return generateInitialValues;
+  return {cleanValueRecursive, validateValues};
 };

@@ -2,6 +2,7 @@
   display: block !important;
   max-height: 500px;
   width: 100%;
+  scrollbar-gutter: stable;
 }
 
 .modalContent {
@@ -9,16 +10,11 @@
   max-width: 600px;
   min-width: 600px;
   min-height: min-content;
+  padding-right: 0 !important;
 }
 
 .formContainer {
   width: 100% !important;
-}
-
-.buttonContainer {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
 }
 
 .inputFieldContainer {
@@ -29,20 +25,27 @@
   }
 }
 
-.errorTextContainer {
-  position: relative;
-  width: 100%;
-  color: var(--color-danger);
-}
+.footer {
+  width: 100% !important;
+  justify-content: flex-end !important;
 
-.errorText {
-  font-size: var(--font-size-xs) !important;
-  width: 100%;
-  position: absolute;
-  bottom: 20px;
-  max-width: 415px;
-}
+  .errorTextContainer {
+    width: 100%;
+    color: var(--color-danger);
+  }
 
-.saveButton {
-  height: 38px;
+  .errorText {
+    font-size: var(--font-size-xs) !important;
+    width: 100%;
+  }
+
+  .buttonContainer {
+    display: flex;
+    justify-content: flex-end;
+    width: min-content;
+  }
+
+  .saveButton {
+    height: 38px;
+  }
 }
