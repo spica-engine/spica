@@ -20,6 +20,9 @@
   left: 0;
   width: 100%;
   height: 100%;
+  /* Add minimum dimensions to ensure content expands properly */
+  min-width: 100%;
+  min-height: 100%;
 }
 
 .relations-svg {
@@ -28,6 +31,11 @@
   left: 0;
   pointer-events: none;
   z-index: 1;
+  /* Ensure SVG takes up entire space and expands with content */
+  width: 100%;
+  height: 100%;
+  /* Critical: Make SVG container expand with its content */
+  overflow: visible;
 }
 
 
@@ -70,6 +78,7 @@
 path.relation-path {
   stroke-dasharray: none;
   transition: stroke-width 0.2s ease;
+  vector-effect: non-scaling-stroke; /* Important for maintaining visibility at different zoom levels */
 }
 
 path.relation-path:hover {
@@ -82,6 +91,8 @@ path.relation-path:hover {
   stroke-dasharray: 5,5;
 }
 
-.relation-line{
+.relation-line {
   z-index: 99;
+  pointer-events: none;
+  overflow: visible;
 }
