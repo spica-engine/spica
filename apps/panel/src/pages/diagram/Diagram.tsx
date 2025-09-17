@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from "react";
+import React, {useState, useRef, useEffect, useCallback} from "react";
 import {useBucketService} from "../../services/bucketService";
 import type {Property, BucketType} from "../../services/bucketService";
 import "./Diagram.css";
@@ -45,6 +45,10 @@ const Diagram: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fieldRefsMap = useRef<Map<string, DOMRect>>(new Map());
+
+  // Add focus mode state
+  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+  const [focusedRelatedNodes, setFocusedRelatedNodes] = useState<Set<string>>(new Set());
 
   // Convert bucket properties to fields, including nested properties
   const convertPropertyToField = (
@@ -405,6 +409,70 @@ const Diagram: React.FC = () => {
     );
   };
 
+  // Determine if a node is focused or related to focused node
+  const isNodeFocused = useCallback((nodeId: string) => {
+    if (!focusedNodeId) return true; // All nodes are focused when no focus mode
+    return nodeId === focusedNodeId || focusedRelatedNodes.has(nodeId);
+  }, [focusedNodeId, focusedRelatedNodes]);
+  
+  // Determine if a relation should be visible in focus mode
+  const isRelationVisible = useCallback((relation: Relation) => {
+    if (!focusedNodeId) return true; // All relations visible when no focus mode
+    
+    // Relation is visible if it connects two focused nodes
+    return (
+      (relation.from === focusedNodeId || focusedRelatedNodes.has(relation.from)) &&
+      (relation.to === focusedNodeId || focusedRelatedNodes.has(relation.to))
+    );
+  }, [focusedNodeId, focusedRelatedNodes]);
+
+  // Handle node click to toggle focus mode
+  const handleNodeClick = useCallback((nodeId: string) => {
+    if (focusedNodeId === nodeId) {
+      // If clicking the already focused node, exit focus mode
+      setFocusedNodeId(null);
+      setFocusedRelatedNodes(new Set());
+    } else {
+      // Find all related nodes
+      const relatedNodeIds = new Set<string>();
+      relations.forEach(relation => {
+        if (relation.from === nodeId) {
+          relatedNodeIds.add(relation.to);
+        } else if (relation.to === nodeId) {
+          relatedNodeIds.add(relation.from);
+        }
+      });
+      
+      setFocusedNodeId(nodeId);
+      setFocusedRelatedNodes(relatedNodeIds);
+    }
+  }, [focusedNodeId, relations]);
+
+  // Handle clicks outside nodes to exit focus mode
+  const handleBackgroundClick = useCallback((e: React.MouseEvent) => {
+    if (
+      focusedNodeId && 
+      e.target === containerRef.current ||
+      (e.target as HTMLElement).closest(".diagram-content")
+    ) {
+      setFocusedNodeId(null);
+      setFocusedRelatedNodes(new Set());
+    }
+  }, [focusedNodeId]);
+  
+  // Add escape key listener to exit focus mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && focusedNodeId) {
+        setFocusedNodeId(null);
+        setFocusedRelatedNodes(new Set());
+      }
+    };
+    
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [focusedNodeId]);
+
   const renderRelationArrow = (relation: Relation) => {
     const fromNode = nodes.find(n => n.id === relation.from);
     const toNode = nodes.find(n => n.id === relation.to);
@@ -442,6 +510,9 @@ const Diagram: React.FC = () => {
     // Calculate midpoint for relation type label
     const midX = startX + (endX - startX) / 2;
     const midY = startY + (endY - startY) / 2;
+
+    // Skip rendering if relation is not visible in focus mode
+    if (focusedNodeId && !isRelationVisible(relation)) return null;
 
     return (
       <g key={relationId} className="relation-line">
@@ -517,7 +588,10 @@ const Diagram: React.FC = () => {
       <div
         ref={containerRef}
         className="diagram-container"
-        onMouseDown={handlePanStart}
+        onMouseDown={(e) => {
+          handlePanStart(e);
+          handleBackgroundClick(e); // Add background click handler
+        }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
@@ -564,9 +638,12 @@ const Diagram: React.FC = () => {
               key={node.id}
               node={node}
               onMouseDown={handleMouseDown}
+              onClick={handleNodeClick}
               onAddField={addField}
               onRemoveField={removeField}
               dragging={dragging === node.id}
+              isFocused={isNodeFocused(node.id)}
+              focusMode={focusedNodeId !== null}
             />
           ))}
         </div>

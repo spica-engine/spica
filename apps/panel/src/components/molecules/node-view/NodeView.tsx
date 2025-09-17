@@ -21,22 +21,48 @@ export interface Node {
 interface NodeViewProps {
   node: Node;
   onMouseDown: (nodeId: string, e: React.MouseEvent) => void;
+  onClick?: (nodeId: string, e: React.MouseEvent) => void; // Add onClick prop
   onAddField: (nodeId: string) => void;
   onRemoveField: (nodeId: string, fieldId: string) => void;
   dragging: boolean;
+  isFocused?: boolean; // Add focus state prop
+  focusMode?: boolean; // Whether any node is focused
 }
 
 const NodeView: React.FC<NodeViewProps> = ({
   node,
   onMouseDown,
+  onClick,
   onAddField,
   onRemoveField,
   dragging,
+  isFocused = true, // Default to true when no focus mode is active
+  focusMode = false,
 }) => {
+  // Track mouse movement to differentiate between clicks and drags
+  const mouseDownPosRef = React.useRef<{x: number, y: number} | null>(null);
+  
   // Use callbacks to prevent unnecessary re-renders
   const handleNodeMouseDown = useCallback((e: React.MouseEvent) => {
+    // Store the initial position to check if this is a drag or click
+    mouseDownPosRef.current = { x: e.clientX, y: e.clientY };
     onMouseDown(node.id, e);
   }, [node.id, onMouseDown]);
+  
+  const handleNodeClick = useCallback((e: React.MouseEvent) => {
+    if (!onClick || !mouseDownPosRef.current) return;
+    
+    // Check if this was a click (minimal movement) or a drag
+    const dx = Math.abs(e.clientX - mouseDownPosRef.current.x);
+    const dy = Math.abs(e.clientY - mouseDownPosRef.current.y);
+    
+    // If movement was minimal, consider it a click
+    if (dx < 5 && dy < 5) {
+      onClick(node.id, e);
+    }
+    
+    mouseDownPosRef.current = null;
+  }, [node.id, onClick]);
 
   const handleAddField = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -91,13 +117,15 @@ const NodeView: React.FC<NodeViewProps> = ({
 
   return (
     <div
-      className={styles.node}
+      className={`${styles.node} ${focusMode && !isFocused ? styles.unfocused : ''}`}
       style={{
         left: node.position.x,
         top: node.position.y,
         cursor: dragging ? 'grabbing' : 'grab'
       }}
       onMouseDown={handleNodeMouseDown}
+      onMouseUp={handleNodeClick} // Handle click on mouse up to avoid conflict with drag
+      onClick={(e) => e.stopPropagation()} // Stop click propagation to container
     >
       <div className={styles.nodeHeader}>
         <h3>{node.name}</h3>

@@ -1,11 +1,22 @@
 .node {
   position: absolute;
-  background: white;
+  width: 350px;
+  background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  min-width: 350px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  /* Add z-index to ensure nodes are above relation lines */
   z-index: 2;
-  user-select: none;
+
+  &.unfocused {
+    opacity: 0.4;
+  }
+
+  &:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+  }
 }
 
 .nodeHeader {

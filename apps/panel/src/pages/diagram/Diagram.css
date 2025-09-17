@@ -30,6 +30,7 @@
   top: 0;
   left: 0;
   pointer-events: none;
+  /* Change z-index to lower value to ensure it's below nodes */
   z-index: 1;
   /* Ensure SVG takes up entire space and expands with content */
   width: 100%;
@@ -92,7 +93,12 @@ path.relation-path:hover {
 }
 
 .relation-line {
-  z-index: 99;
+  z-index: 1;
   pointer-events: none;
   overflow: visible;
+  transition: opacity 0.3s ease;
+}
+
+.relation-line.unfocused {
+  opacity: 0.3;
 }
