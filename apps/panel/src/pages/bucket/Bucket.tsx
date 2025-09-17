@@ -76,7 +76,6 @@ export default function Bucket() {
         header: "_id",
         key: "_id",
         showDropdownIcon: true,
-        sticky: true,
         width: "230px",
         resizable: false,
         fixed: true,

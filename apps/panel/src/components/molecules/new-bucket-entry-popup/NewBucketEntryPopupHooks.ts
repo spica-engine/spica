@@ -108,7 +108,7 @@ const useRelationHandlers = (authToken: string) => {
   return {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers};
 };
 
-function mergeConstraints(from: any, into: any) {
+function mergeConstraints(from: {[key: string]: any}, into: {[key: string]: any}) {
   const keys = [
     "minimum",
     "maximum",
@@ -116,10 +116,6 @@ function mergeConstraints(from: any, into: any) {
     "maxItems",
     "pattern",
     "enum",
-    // Do NOT copy complex children here; they are
-    // constructed separately with generated ids.
-    // "items", // intentionally omitted to prevent overwriting built child items
-    // "properties", // intentionally omitted to prevent overwriting built child properties
     "relationType",
     "bucketId",
     "required",
@@ -173,7 +169,7 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
             properties: buildProps(prop.items.properties, `${fullKey}[]`)
           };
           mergeConstraints(prop.items, withId.items);
-        } else if (prop.type === "array" && prop.items?.type) {
+        } else if (prop.type === "array" && prop.items?.type && withId.items) {
           mergeConstraints(prop.items, withId.items);
         }
 
@@ -198,6 +194,7 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
   return valueProperties;
 };
 
+// WE'RE STILL USING A LOT OF CUSTOM VALIDATION LOGIC IN HERE WHICH IS NOT IDEAL - SHOULD FULLY MOVE TO FIELD REGISTRY BASED VALIDATION
 export const useValidation = () => {
   const cleanValueRecursive = useCallback((val: any, property: Property): any => {
     if (property?.type === "object" && property.properties) {
@@ -225,11 +222,11 @@ export const useValidation = () => {
         const val = value?.[key];
         const propertyWithRequired = {
           ...property,
-          required: requiredFields?.includes(key) ? true : (property as any).required
+          required: requiredFields?.includes(key) ? true : property.required
         } as Property & {required?: boolean};
 
         if (property.type === "object" && property.properties) {
-          const nestedRequired = (property as any).required || [];
+          const nestedRequired = property.required || [];
           const nestedErrors = validateValues(
             val || {},
             property.properties,
@@ -244,28 +241,28 @@ export const useValidation = () => {
         if (property.type === "array") {
           const arrayDef = FIELD_REGISTRY[property.type as keyof typeof FIELD_REGISTRY];
           if (arrayDef?.validateValue) {
-            const msg = arrayDef.validateValue(val, propertyWithRequired as any);
+            const msg = arrayDef.validateValue(val, propertyWithRequired);
             if (msg) {
               errors[key] = msg;
               continue;
             }
           }
 
-          const items = (property as any).items;
+          const items = property.items;
           if (Array.isArray(val) && items?.type) {
             if (items.type === "object" && items.properties) {
               const arrayErrors: string[] = [];
-              const nestedRequired = Array.isArray((items as any).required)
-                ? (items as any).required
-                : [];
+              const nestedRequired = Array.isArray(items.required) ? items.required : [];
               for (let i = 0; i < val.length; i++) {
                 const element = val[i] || {};
                 const nestedErrors = validateValues(element, items.properties, nestedRequired);
                 if (nestedErrors && Object.keys(nestedErrors).length > 0) {
                   // Transform nested errors to include index information
                   for (const [fieldName, fieldError] of Object.entries(nestedErrors)) {
-                    if (typeof fieldError === 'string') {
-                      arrayErrors.push(`${fieldName} at index ${i} ${fieldError.replace(/^this field /i, "").replace(/^This field /i, "")}`);
+                    if (typeof fieldError === "string") {
+                      arrayErrors.push(
+                        `${fieldName} at index ${i} ${fieldError.replace(/^this field /i, "").replace(/^This field /i, "")}`
+                      );
                     }
                   }
                 }

@@ -29,20 +29,10 @@
   width: 100% !important;
   justify-content: flex-end !important;
 
-  .errorTextContainer {
-    width: 100%;
-    color: var(--color-danger);
-  }
-
   .errorText {
     font-size: var(--font-size-xs) !important;
+    color: var(--color-danger);
     width: 100%;
-  }
-
-  .buttonContainer {
-    display: flex;
-    justify-content: flex-end;
-    width: min-content;
   }
 
   .saveButton {

@@ -37,7 +37,6 @@ export type ColumnType = {
   fixed?: boolean;
   selectable?: boolean;
   leftOffset?: number;
-  sticky?: boolean;
 };
 
 type BucketTableProps = {

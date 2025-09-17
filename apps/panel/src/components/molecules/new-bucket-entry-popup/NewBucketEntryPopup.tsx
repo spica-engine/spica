@@ -73,12 +73,11 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
       const firstErrorId = findFirstErrorId(validationErrors, formattedProperties);
       if (firstErrorId) {
         const errorElement = document.getElementById(firstErrorId);
-        if (errorElement) {
-          errorElement.scrollIntoView({behavior: "smooth", block: "center"});
-        }
+        errorElement?.scrollIntoView({behavior: "smooth", block: "center"});
       } else {
         modalBody.current?.scrollTo({top: 0, behavior: "smooth"});
       }
+
       return;
     }
 
@@ -113,16 +112,14 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
     generateInitialValues
   ]);
 
-  const handleOpenModal = useCallback(() => setIsOpen(true), []);
-  const handleCloseModal = useCallback(() => setIsOpen(false), []);
+  const handleOpenModal = () => setIsOpen(true);
+  const handleCloseModal = () => setIsOpen(false);
 
   return (
     <>
       <Button onClick={handleOpenModal}>
-        <Icon name="plus" />
-        New Entry
+        <FluidContainer prefix={{children: <Icon name="plus" />}} root={{children: "New Entry"}} />
       </Button>
-
       {isOpen && (
         <Modal
           showCloseButton={false}
@@ -136,29 +133,21 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
               {inputRepresentation}
               <FlexElement className={styles.footer}>
                 {apiError && (
-                  <div className={styles.errorTextContainer}>
-                    <Text className={styles.errorText} variant="danger">
-                      {apiError}
-                    </Text>
-                  </div>
+                  <Text className={styles.errorText} variant="danger">
+                    {apiError}
+                  </Text>
                 )}
-                <div className={styles.buttonContainer}>
-                  <Button
-                    onClick={handleSubmit}
-                    loading={isLoading}
-                    disabled={isLoading}
-                    className={styles.saveButton}
-                  >
-                    <FluidContainer
-                      prefix={{
-                        children: <Icon name="save" />
-                      }}
-                      root={{
-                        children: "Save and close"
-                      }}
-                    />
-                  </Button>
-                </div>
+                <Button
+                  onClick={handleSubmit}
+                  loading={isLoading}
+                  disabled={isLoading}
+                  className={styles.saveButton}
+                >
+                  <FluidContainer
+                    prefix={{children: <Icon name="save" />}}
+                    root={{children: "Save and close"}}
+                  />
+                </Button>
               </FlexElement>
             </FlexElement>
           </Modal.Body>

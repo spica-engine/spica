@@ -57,8 +57,8 @@ export const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string
 };
 
 export const findFirstErrorId = (
-  errors: any,
-  formattedProperties: any,
+  errors: {[key: string]: string | typeof errors},
+  formattedProperties: Record<string, any>,
   prefix = ""
 ): string | null => {
   for (const [key, error] of Object.entries(errors)) {
