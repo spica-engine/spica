@@ -580,7 +580,6 @@ const ARRAY_DEFINITION: FieldDefinition = {
         ? {...property.items, ...OBJECT_DEFINITION.buildValueProperty(property.items)}
         : property.items
   }),
-  // Recursively build properties for array items if they are objects
   requiresInnerFields: form => form.fieldValues?.arrayType === "object",
   applyPresetLogic: (form, oldValues) =>
     form.fieldValues.arrayType === "string"
