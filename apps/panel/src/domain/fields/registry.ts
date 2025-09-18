@@ -614,6 +614,7 @@ const OBJECT_DEFINITION: FieldDefinition = {
     title: property.title,
     description: property.description,
     className: styles.objectProperty,
+    required: property.required,
     properties: Object.fromEntries(
       Object.entries(property.properties as Property).map(([key, val]) => {
         return [
