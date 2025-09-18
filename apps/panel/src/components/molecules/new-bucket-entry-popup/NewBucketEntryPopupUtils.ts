@@ -2,7 +2,7 @@ import {FIELD_REGISTRY} from "../../../domain/fields";
 import type {FieldDefinition} from "src/domain/fields/types";
 import type {Property} from "src/services/bucketService";
 
-const isObjectEffectivelyEmpty = (obj: any): boolean => {
+const isObjectEffectivelyEmpty = (obj: Record<string, any>): boolean => {
   if (obj == null || typeof obj !== "object") return true;
 
   return Object.keys(obj).every(
