@@ -151,8 +151,7 @@ const stringConstraints = {
 
   enum: (schema: Yup.StringSchema, property: Property) =>
     Array.isArray(property.enum)
-      ? // If field is not required, allow empty string through enum validation
-        schema.test(
+      ? schema.test(
           "enum-or-empty",
           `Value must be one of: ${property.enum.join(", ")}`,
           function (val) {
@@ -160,15 +159,14 @@ const stringConstraints = {
               if (!property.required) return true;
               return false;
             }
-            return property.enum!.includes(val as any);
+            return property.enum!.includes(val);
           }
         )
       : schema,
 
   pattern: (schema: Yup.StringSchema, property: Property) =>
     property.pattern
-      ? // If field is not required, skip pattern matching for empty strings
-        schema.test(
+      ? schema.test(
           "pattern-or-empty",
           `This field does not match the required pattern "${property.pattern}"`,
           function (val) {
@@ -457,7 +455,7 @@ export const validateFieldValue = (
       if (hasArrayIndex) {
         root = message;
       } else {
-        let cur: any = root;
+        let cur = root;
         for (let i = 0; i < parts.length; i++) {
           const p = parts[i];
           const isLast = i === parts.length - 1;

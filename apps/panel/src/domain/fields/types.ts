@@ -1,8 +1,6 @@
 import type {IconName} from "oziko-ui-kit";
 import type {Property} from "../../services/bucketService";
-import type {
-  TypeProperties,
-} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {TypeProperties} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 
 type TypeProperty = TypeProperties[string];
 
@@ -59,7 +57,7 @@ export interface FieldDefinition {
   creationFormDefaultValues: FieldCreationForm; // seed values for creation form
   getDefaultValue: (property: Property) => any; // default value for data creation using this field, if any
   validateCreationForm: (form: FieldCreationForm) => Record<string, string> | null; // validate the creation form state for this field type
-  validateValue: (value: any, properties: any) => string | Record<string, any> | null; // validate a raw value for this field (e.g. before saving data)
+  validateValue: (value: any, properties: Property) => string | Record<string, any> | null; // validate a raw value for this field (e.g. before saving data)
   buildCreationFormProperties: () => {
     fieldValues: TypeProperties;
     configurationValues: TypeProperties;

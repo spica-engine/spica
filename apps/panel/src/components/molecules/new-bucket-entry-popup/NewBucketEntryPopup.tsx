@@ -51,7 +51,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
 
   useEffect(() => {
     if (!errors || Object.keys(errors).length === 0) return;
-    const newErrors = validateValues(value, formattedProperties as any, bucket?.required || []);
+    const newErrors = validateValues(value, formattedProperties, bucket?.required || []);
     setErrors((newErrors as TypeInputRepresenterError) || {});
   }, [value, validateValues, formattedProperties, bucket?.required]);
 
@@ -65,11 +65,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
 
   const modalBody = useRef<HTMLDivElement>(null);
   const handleSubmit = useCallback(async () => {
-    const validationErrors = validateValues(
-      value,
-      formattedProperties as any,
-      bucket?.required || []
-    );
+    const validationErrors = validateValues(value, formattedProperties, bucket?.required || []);
 
     if (validationErrors && Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors as TypeInputRepresenterError);
