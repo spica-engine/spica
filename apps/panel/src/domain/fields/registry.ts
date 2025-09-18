@@ -27,10 +27,7 @@ import {
   COLOR_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "./validation";
-import type {
-  TypeArrayItems,
-  TypeInputTypeMap
-} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {TypeInputTypeMap} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import styles from "./styles.module.scss";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
@@ -577,7 +574,14 @@ const ARRAY_DEFINITION: FieldDefinition = {
     description: property.description,
     items:
       property.items.type === "object"
-        ? {...property.items, ...OBJECT_DEFINITION.buildValueProperty(property.items)}
+        ? {
+            ...property.items,
+            ...OBJECT_DEFINITION.buildValueProperty(property.items),
+            ...Object.fromEntries(property.items).map(([key, val]: [string, Property]) => [
+              key,
+              {...val, id: crypto.randomUUID()}
+            ])
+          }
         : property.items
   }),
   requiresInnerFields: form => form.fieldValues?.arrayType === "object",
@@ -611,14 +615,19 @@ const OBJECT_DEFINITION: FieldDefinition = {
     description: property.description,
     className: styles.objectProperty,
     properties: Object.fromEntries(
-      Object.entries(property.properties as Property).map(([key, val]) => [
-        key,
-        {
-          ...val,
-          className: val.type === "boolean" ? "" : styles.outlinedInput,
-          id: crypto.randomUUID()
-        }
-      ])
+      Object.entries(property.properties as Property).map(([key, val]) => {
+        return [
+          key,
+          val.type === "object"
+            ? OBJECT_DEFINITION.buildValueProperty(val)
+            : {
+                ...val,
+                className:
+                  val.type !== "boolean" && val.type !== "object" ? styles.outlinedInput : "",
+                id: crypto.randomUUID()
+              }
+        ];
+      })
     )
   }),
   requiresInnerFields: _ => true,
