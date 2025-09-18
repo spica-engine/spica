@@ -156,63 +156,48 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
   const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers} =
     useRelationHandlers(authToken);
 
-  const buildProps = useCallback(
-    (properties: Record<string, Property>, prefix = ""): Record<string, any> => {
-      const output: Record<string, any> = {};
-      for (const [key, prop] of Object.entries(properties || {})) {
-        const fullKey = prefix ? `${prefix}.${key}` : key;
-        const kind = prop.type;
-        const fieldDefinition = kind ? FIELD_REGISTRY[kind] : undefined;
-        if (!fieldDefinition) {
-          output[key] = {...prop, id: crypto.randomUUID()};
-          continue;
-        }
-        let base;
-        if (kind !== "relation") {
-          base = fieldDefinition.buildValueProperty(prop);
-        } else {
-          ensureHandlers(prop.bucketId, fullKey);
-          const relationProps = {
-            getOptions: getOptionsMap.current[fullKey],
-            loadMoreOptions: loadMoreOptionsMap.current[fullKey],
-            searchOptions: searchOptionsMap.current[fullKey],
-            totalOptionsLength: relationStates?.[fullKey]?.total || 0
-          };
-          base = fieldDefinition.buildValueProperty(prop, relationProps);
-        }
-        const withId = {...base, id: crypto.randomUUID()};
-
-        if (prop.type === "object" && prop.properties) {
-          withId.properties = buildProps(prop.properties, fullKey);
-        }
-
-        if (prop.type === "array" && prop.items?.type === "object") {
-          withId.items = {
-            ...base.items,
-            type: prop.items.type ?? "object",
-            properties: buildProps(prop.items.properties, `${fullKey}[]`)
-          };
-          mergeConstraints(prop.items, withId.items);
-        } else if (prop.type === "array" && prop.items?.type && withId.items) {
-          mergeConstraints(prop.items, withId.items);
-        }
-
-        if (prop.type === "multiselect") {
-          withId.enum = prop.items.enum || [];
-        }
-
-        mergeConstraints(prop, withId as Property);
-        output[key] = withId;
+  const valueProperties = useMemo(() => {
+    const properties = bucket?.properties || {};
+    const output: Record<string, any> = {};
+    for (const [key, prop] of Object.entries(properties || {})) {
+      const kind = prop.type;
+      const fieldDefinition = kind ? FIELD_REGISTRY[kind] : undefined;
+      if (!fieldDefinition) {
+        output[key] = {...prop, id: crypto.randomUUID()};
+        continue;
       }
-      return output;
-    },
-    [ensureHandlers, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, relationStates]
-  );
+      let base;
+      if (kind === "relation") {
+        ensureHandlers(prop.bucketId, key);
+        const relationProps = {
+          getOptions: getOptionsMap.current[key],
+          loadMoreOptions: loadMoreOptionsMap.current[key],
+          searchOptions: searchOptionsMap.current[key],
+          totalOptionsLength: relationStates?.[key]?.total || 0
+        };
+        base = fieldDefinition.buildValueProperty(prop, relationProps);
+      } else {
+        base = fieldDefinition.buildValueProperty(prop);
+      }
+      const withId = {...base, id: crypto.randomUUID()};
 
-  const valueProperties = useMemo(
-    () => buildProps(bucket.properties || {}, ""),
-    [bucket.properties, buildProps]
-  );
+      if (prop.type === "multiselect") {
+        withId.enum = prop.items.enum || [];
+      }
+
+      mergeConstraints(prop, withId as Property);
+      output[key] = withId;
+    }
+
+    return output;
+  }, [
+    bucket.properties,
+    ensureHandlers,
+    getOptionsMap,
+    loadMoreOptionsMap,
+    searchOptionsMap,
+    relationStates
+  ]);
 
   return valueProperties;
 };

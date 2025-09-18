@@ -5,6 +5,7 @@
  * defaults, property construction, parsing, formatting and validation.
  */
 
+import type {Property} from "src/services/bucketService";
 import {BASE_FORM_DEFAULTS, DEFAULT_COORDINATES, freezeFormDefaults} from "./defaults";
 import {applyPresetLogic} from "./presets";
 import {type FieldDefinition, FieldKind} from "./types";
@@ -26,7 +27,11 @@ import {
   COLOR_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "./validation";
-import type {TypeInputTypeMap} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {
+  TypeArrayItems,
+  TypeInputTypeMap
+} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import styles from "./styles.module.scss";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
   if (!input) return undefined;
@@ -570,8 +575,12 @@ const ARRAY_DEFINITION: FieldDefinition = {
     type: FieldKind.Array,
     title: property.title,
     description: property.description,
-    items: property.items
+    items:
+      property.items.type === "object"
+        ? {...property.items, ...OBJECT_DEFINITION.buildValueProperty(property.items)}
+        : property.items
   }),
+  // Recursively build properties for array items if they are objects
   requiresInnerFields: form => form.fieldValues?.arrayType === "object",
   applyPresetLogic: (form, oldValues) =>
     form.fieldValues.arrayType === "string"
@@ -601,7 +610,17 @@ const OBJECT_DEFINITION: FieldDefinition = {
     type: FieldKind.Object,
     title: property.title,
     description: property.description,
-    properties: property.properties
+    className: styles.objectProperty,
+    properties: Object.fromEntries(
+      Object.entries(property.properties as Property).map(([key, val]) => [
+        key,
+        {
+          ...val,
+          className: val.type === "boolean" ? "" : styles.outlinedInput,
+          id: crypto.randomUUID()
+        }
+      ])
+    )
   }),
   requiresInnerFields: _ => true,
   getFormattedValue: v => (v && typeof v === "object" ? `{${Object.keys(v).length}}` : ""),

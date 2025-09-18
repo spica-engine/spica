@@ -31,10 +31,6 @@ const cleanValue = (
     return value?.value;
   }
 
-  if (type === "multiselect") {
-    return value?.length === 0 ? undefined : value;
-  }
-
   if (type === "object") {
     const cleanedObject = Object.fromEntries(
       Object.entries(value).map(([k, v]) => [
