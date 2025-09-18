@@ -63,7 +63,6 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
     error: errors
   });
 
-  console.log("properties", formattedProperties, "\nerrors: ", errors, "\nvalue: ", value);
   const modalBody = useRef<HTMLDivElement>(null);
   const handleSubmit = useCallback(async () => {
     const validationErrors = validateValues(value, formattedProperties, bucket?.required || []);

@@ -447,7 +447,6 @@ export const validateFieldValue = (
       return (error as {message?: string})?.message || "Validation failed";
     let out: Record<string, any> | string = {};
 
-    console.log("Validation error: ", error.errors);
     const getNested = (root: Record<string, any> | string, path: string, message: string) => {
       const parts = path.match(/[^.\[\]]+/g) || [path];
 
