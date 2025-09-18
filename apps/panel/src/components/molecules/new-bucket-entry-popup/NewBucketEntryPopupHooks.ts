@@ -10,7 +10,7 @@ type RelationState = {
   lastSearch: string;
 };
 
-const useRelationHandlers = (authToken: string) => {
+const useRelationInputHandlers = (authToken: string) => {
   const [relationStates, setRelationStates] = useState<Record<string, RelationState>>({});
   const relationStatesRef = useRef(relationStates);
 
@@ -134,27 +134,9 @@ const useRelationHandlers = (authToken: string) => {
   return {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers};
 };
 
-function mergeConstraints(from: Property | TypeArrayItems, into: Property | TypeArrayItems) {
-  const keys = [
-    "minimum",
-    "maximum",
-    "minItems",
-    "maxItems",
-    "pattern",
-    "enum",
-    "relationType",
-    "bucketId",
-    "required",
-    "default"
-  ] as (keyof (Property | TypeArrayItems))[];
-  for (const k of keys) {
-    if (from?.[k] !== undefined) into[k] = from[k];
-  }
-}
-
 export const useValueProperties = (bucket: BucketType, authToken: string) => {
   const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers} =
-    useRelationHandlers(authToken);
+    useRelationInputHandlers(authToken);
 
   const valueProperties = useMemo(() => {
     const properties = bucket?.properties || {};
@@ -185,7 +167,21 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
         withId.enum = prop.items.enum || [];
       }
 
-      mergeConstraints(prop, withId as Property);
+      const keys = [
+        "minimum",
+        "maximum",
+        "minItems",
+        "maxItems",
+        "pattern",
+        "enum",
+        "relationType",
+        "bucketId",
+        "required",
+        "default"
+      ] as (keyof (Property | TypeArrayItems))[];
+      for (const k of keys) {
+        if (prop?.[k] !== undefined) withId[k] = prop[k];
+      }
       output[key] = withId;
     }
 
