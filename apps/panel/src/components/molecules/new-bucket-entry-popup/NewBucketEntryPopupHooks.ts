@@ -1,7 +1,7 @@
-import {useCallback, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import type {BucketType, Property} from "src/services/bucketService";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
-import {buildOptionsUrl, cleanValue} from "./NewBucketEntryPopupUtils";
+import {buildOptionsUrl} from "./NewBucketEntryPopupUtils";
 import type {TypeArrayItems} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 
 type RelationState = {
@@ -12,6 +12,12 @@ type RelationState = {
 
 const useRelationHandlers = (authToken: string) => {
   const [relationStates, setRelationStates] = useState<Record<string, RelationState>>({});
+  const relationStatesRef = useRef(relationStates);
+
+  useEffect(() => {
+    relationStatesRef.current = relationStates;
+  }, [relationStates]);
+
   const getOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
   const loadMoreOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
   const searchOptionsMap = useRef<Record<string, (s: string) => Promise<any[]>>>({});
@@ -52,16 +58,8 @@ const useRelationHandlers = (authToken: string) => {
 
       if (!loadMoreOptionsMap.current[key]) {
         loadMoreOptionsMap.current[key] = async () => {
-          // Use a ref to get current state values
-          let currentSkip = 0;
-          let lastSearch = "";
-
-          setRelationStates(prev => {
-            const currentState = prev[key] || {};
-            currentSkip = currentState.skip || 0;
-            lastSearch = currentState.lastSearch || "";
-            return prev; // Return unchanged to avoid triggering re-render
-          });
+          const currentSkip = relationStatesRef.current?.[key]?.skip || 0;
+          const lastSearch = relationStatesRef.current?.[key]?.lastSearch || "";
 
           const loadKey = `${key}_loadMore`;
           if (abortControllersRef.current[loadKey]) abortControllersRef.current[loadKey].abort();
@@ -184,12 +182,10 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
         }
         const withId = {...base, id: crypto.randomUUID()};
 
-        // Recursively handle object child properties when present
         if (prop.type === "object" && prop.properties) {
           withId.properties = buildProps(prop.properties, fullKey);
         }
 
-        // For arrays with object items, pass through as-is to preserve structure
         if (prop.type === "array" && prop.items?.type === "object") {
           withId.items = {
             ...base.items,
@@ -205,7 +201,6 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
           withId.enum = prop.items.enum || [];
         }
 
-        // Carry over constraints/patterns to keep validation intact
         mergeConstraints(prop, withId as Property);
         output[key] = withId;
       }

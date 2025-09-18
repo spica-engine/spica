@@ -66,22 +66,19 @@ export default function Bucket() {
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
-    const columns = Object.entries(bucket?.properties ?? {}).map(([key, value]) => ({
-      ...value,
-      key,
-      title: value.title || key
-    }));
+    const columns = Object.values(bucket?.properties ?? {});
     return [
       {
         header: "_id",
         key: "_id",
         showDropdownIcon: true,
+        sticky: true,
         width: "230px",
         resizable: false,
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({...i, header: i.title, key: i.key, showDropdownIcon: true}))
+      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
     ] as ColumnType[];
   }, [bucket]);
 
@@ -112,6 +109,7 @@ export default function Bucket() {
   if (formattedColumns.length <= 1 || !bucket) {
     return <Loader />;
   }
+
   return (
     <BucketWithVisibleColumns
       bucket={bucket}

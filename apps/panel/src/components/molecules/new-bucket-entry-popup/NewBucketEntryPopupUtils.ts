@@ -2,7 +2,7 @@ import {FIELD_REGISTRY} from "../../../domain/fields";
 import type {FieldDefinition} from "src/domain/fields/types";
 import type {Property} from "src/services/bucketService";
 
-export const isObjectEffectivelyEmpty = (obj: any): boolean => {
+const isObjectEffectivelyEmpty = (obj: any): boolean => {
   if (obj == null || typeof obj !== "object") return true;
 
   return Object.keys(obj).every(
@@ -13,7 +13,7 @@ export const isObjectEffectivelyEmpty = (obj: any): boolean => {
   );
 };
 
-export const cleanValue = (
+const cleanValue = (
   value: any,
   type: string,
   required: boolean,

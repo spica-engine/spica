@@ -157,9 +157,7 @@ const stringConstraints = {
           `Value must be one of: ${property.enum.join(", ")}`,
           function (val) {
             if (val === "" || val == null) {
-              // allow empty values when not required
               if (!property.required) return true;
-              // if required, empty string should fail (let other required validator handle message)
               return false;
             }
             return property.enum!.includes(val as any);
@@ -311,7 +309,6 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property, required?
       if (itemType && itemProps) {
         const baseItemSchema = generateFieldValueSchema(itemType, itemProps) as Yup.AnySchema;
 
-        // For object arrays, we need to handle nested field errors with index information
         if (itemType === FieldKind.Object) {
           const enhancedObjectSchema = baseItemSchema
             .transform((_, originalValue) => originalValue)
@@ -324,17 +321,13 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property, required?
                   return true;
                 } catch (error) {
                   if (error instanceof Yup.ValidationError) {
-                    // Build an error anchored to the specific nested field path so
-                    // the outer validator can reconstruct a proper nested object.
                     const firstError = error.inner[0] || error;
-                    const fieldPath = firstError.path || ""; // e.g. "childField.sub"
+                    const fieldPath = firstError.path || "";
 
-                    // calculate array base name and index from context.path (e.g. "arr[0]")
                     const idxMatch = (context.path || "").match(/\[(\d+)\]$/);
                     const index = idxMatch ? idxMatch[1] : undefined;
                     const arrayBase = (context.path || "").replace(/\[\d+\]$/, "");
 
-                    // build a readable message that includes the inner field name (if any) and index
                     const innerField = fieldPath || "";
                     const cleanedMsg = (firstError.message || "")
                       .replace(/^this field /i, "")
@@ -345,7 +338,6 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property, required?
                         ? `${cleanedMsg} at index ${index}`.trim()
                         : `${cleanedMsg}`;
 
-                    // attach error to the array base key (without the numeric index)
                     return context.createError({
                       path: arrayBase || context.path,
                       message
@@ -358,7 +350,6 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property, required?
 
           arr = arr.of(enhancedObjectSchema);
         } else {
-          // For primitive arrays, add index information
           const enhancedPrimitiveSchema = baseItemSchema.test({
             name: "primitive-with-index",
             message: "Validation failed",
@@ -368,8 +359,6 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property, required?
                 return true;
               } catch (error) {
                 if (error instanceof Yup.ValidationError) {
-                  // Attach the error to the array item path so nested structure can be built.
-                  // For primitive array items attach error to the array base (strip the [index])
                   const idxMatch = (context.path || "").match(/\[(\d+)\]$/);
                   const index = idxMatch ? idxMatch[1] : undefined;
                   const arrayBase = (context.path || "").replace(/\[\d+\]$/, "");
@@ -453,30 +442,26 @@ export const validateFieldValue = (
 ): string | Record<string, any> | null => {
   const schema = generateFieldValueSchema(kind, properties);
   try {
-    schema.validateSync(value, {abortEarly: false}); // gather all errors
+    schema.validateSync(value, {abortEarly: false});
     return null;
   } catch (error) {
     if (!(error instanceof Yup.ValidationError) || !error.inner || !error.inner.length)
       return (error as {message?: string})?.message || "Validation failed";
     let out: Record<string, any> | string = {};
-    
-    const getNested = (root: Record<string, any>, path: string, message: string) => {
+
+    const getNested = (root: Record<string, any> | string, path: string, message: string) => {
       const parts = path.match(/[^.\[\]]+/g) || [path];
-      
-      // Check if this path contains any array indices
+
       const hasArrayIndex = parts.some(part => /^\d+$/.test(part));
-      
+
       if (hasArrayIndex) {
-        console.log("message: ", message)
-        root = message
-        
+        root = message;
       } else {
-        // No array indices, handle as regular nested object
         let cur: any = root;
         for (let i = 0; i < parts.length; i++) {
           const p = parts[i];
           const isLast = i === parts.length - 1;
-          
+
           if (isLast) {
             if (cur == null || typeof cur !== "object") {
               cur = {};
@@ -493,11 +478,10 @@ export const validateFieldValue = (
           }
         }
       }
-      
+
       return root;
     };
-    
-    // Remove the sorting since we want to keep it simple
+
     for (const e of error.inner) {
       if (e.path) {
         if (typeof out === "string") out = {};
