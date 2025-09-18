@@ -577,10 +577,6 @@ const ARRAY_DEFINITION: FieldDefinition = {
         ? {
             ...property.items,
             ...OBJECT_DEFINITION.buildValueProperty(property.items),
-            ...Object.fromEntries(property.items).map(([key, val]: [string, Property]) => [
-              key,
-              {...val, id: crypto.randomUUID()}
-            ])
           }
         : property.items
   }),
@@ -615,6 +611,7 @@ const OBJECT_DEFINITION: FieldDefinition = {
     description: property.description,
     className: styles.objectProperty,
     required: property.required,
+    id: crypto.randomUUID(),
     properties: Object.fromEntries(
       Object.entries(property.properties as Property).map(([key, val]) => {
         return [
