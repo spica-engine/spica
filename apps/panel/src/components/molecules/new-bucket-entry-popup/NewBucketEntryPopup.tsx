@@ -18,7 +18,8 @@ import {
   findFirstErrorId,
   generateInitialValues
 } from "./NewBucketEntryPopupUtils";
-import {useValueProperties, useValidation} from "./NewBucketEntryPopupHooks";
+import {useValueProperties} from "./NewBucketEntryPopupHooks";
+import { validateValues } from "./NewBucketEntryPopupUtils";
 
 type NewBucketEntryPopupProps = {
   bucket: BucketType;
@@ -37,7 +38,6 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const [value, setValue] = useState<Record<string, any>>(() =>
     generateInitialValues(formattedProperties)
   );
-  const {validateValues} = useValidation();
 
   useEffect(() => {
     setApiError(createBucketEntryError);

@@ -197,32 +197,3 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
 
   return valueProperties;
 };
-
-export const useValidation = () => {
-  const validateValues = useCallback(
-    (
-      value: Record<string, any>,
-      formattedProperties: Record<string, Property>,
-      requiredFields: string[]
-    ) => {
-      type FormError = {[key: string]: string | FormError | Record<number, any>};
-      const errors: FormError = {};
-
-      for (const [key, property] of Object.entries(formattedProperties || {})) {
-        const val = value?.[key];
-        const propertyWithRequired = {
-          ...property,
-          required: requiredFields?.includes(key) ? true : property.required
-        };
-        const kind = property.type;
-        const field = FIELD_REGISTRY[kind];
-        const msg = field?.validateValue(val, propertyWithRequired);
-        if (msg) errors[key] = msg as string;
-      }
-      return Object.keys(errors).length > 0 ? errors : undefined;
-    },
-    []
-  );
-
-  return {validateValues};
-};
