@@ -1,5 +1,5 @@
 import * as Yup from "yup";
-import {FieldKind} from "./types";
+import {FieldKind, type FieldCreationForm, type FieldFormState} from "./types";
 import type {Property} from "src/services/bucketService";
 export type ValidationSchema = Yup.ObjectSchema<any>;
 
@@ -25,21 +25,21 @@ export const STRING_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
       .of(Yup.string())
       .when("makeEnumerated", {
         is: true,
-        then: sch =>
-          sch
+        then: schema =>
+          schema
             .min(1, "At least one value")
             .test(
               "no-empty-string",
               "Empty values not allowed",
               arr => !arr || !arr.some(v => v === "")
             ),
-        otherwise: sch => sch
+        otherwise: schema => schema
       }),
     definePattern: Yup.boolean().default(false),
     regularExpression: Yup.string().when("definePattern", {
       is: true,
-      then: sch =>
-        sch.min(1, "Pattern required").test("valid-regex", "Invalid pattern", val => {
+      then: schema =>
+        schema.min(1, "Pattern required").test("valid-regex", "Invalid pattern", val => {
           if (!val) return false;
           try {
             new RegExp(val);
@@ -48,7 +48,7 @@ export const STRING_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
             return false;
           }
         }),
-      otherwise: sch => sch.optional()
+      otherwise: schema => schema.optional()
     })
   }).required()
 });
@@ -78,8 +78,8 @@ export const NUMBER_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
     definePattern: Yup.boolean().default(false),
     regularExpression: Yup.string().when("definePattern", {
       is: true,
-      then: sch =>
-        sch.min(1, "Pattern required").test("valid-regex", "Invalid pattern", val => {
+      then: schema =>
+        schema.min(1, "Pattern required").test("valid-regex", "Invalid pattern", val => {
           if (!val) return false;
           try {
             new RegExp(val);
@@ -88,7 +88,7 @@ export const NUMBER_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
             return false;
           }
         }),
-      otherwise: sch => sch.optional()
+      otherwise: schema => schema.optional()
     })
   }).required()
 });
@@ -135,109 +135,156 @@ export const COLOR_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
   ...BASE_FIELD_CREATION_FORM_SCHEMA
 });
 
+type Constraint = Record<
+  string,
+  (
+    schema: Yup.AnySchema,
+    property: Omit<Property, "required"> & {required?: boolean}
+  ) => Yup.AnySchema
+>;
+
 const stringConstraints = {
-  required: (sch: Yup.StringSchema, p: any) =>
-    p.required ? sch.required("This field is required") : sch.notRequired(),
+  required: (schema: Yup.StringSchema, property: Property & {required?: boolean}) =>
+    property.required
+      ? schema.required("This field is required").min(1, "This field is required")
+      : schema.optional(),
 
-  enum: (sch: Yup.StringSchema, p: any) =>
-    Array.isArray(p.enum) ? sch.oneOf(p.enum, `Value must be one of: ${p.enum.join(", ")}`) : sch,
-
-  pattern: (sch: Yup.StringSchema, p: any) =>
-    p.pattern
-      ? sch.matches(
-          new RegExp(p.pattern),
-          `This field does not match the required pattern "${p.pattern}"`
+  enum: (schema: Yup.StringSchema, property: Property) =>
+    Array.isArray(property.enum)
+      ? // If field is not required, allow empty string through enum validation
+        schema.test(
+          "enum-or-empty",
+          `Value must be one of: ${property.enum.join(", ")}`,
+          function (val) {
+            if (val === "" || val == null) {
+              // allow empty values when not required
+              if (!property.required) return true;
+              // if required, empty string should fail (let other required validator handle message)
+              return false;
+            }
+            return property.enum!.includes(val as any);
+          }
         )
-      : sch
-};
+      : schema,
+
+  pattern: (schema: Yup.StringSchema, property: Property) =>
+    property.pattern
+      ? // If field is not required, skip pattern matching for empty strings
+        schema.test(
+          "pattern-or-empty",
+          `This field does not match the required pattern "${property.pattern}"`,
+          function (val) {
+            if (val === "" || val == null) {
+              return !property.required;
+            }
+            return new RegExp(property.pattern as string).test(val as string);
+          }
+        )
+      : schema
+} as unknown as Constraint;
 
 const numberConstraints = {
-  required: (sch: Yup.NumberSchema, p: any) =>
-    p.required ? sch.required("This field is required") : sch.notRequired(),
-  enum: (sch: Yup.NumberSchema, p: any) =>
-    Array.isArray(p.enum) ? sch.oneOf(p.enum, `Value must be one of: ${p.enum.join(", ")}`) : sch,
-  minimum: (sch: Yup.NumberSchema, p: any) =>
-    p.minimum !== undefined && p.minimum !== null
-      ? sch.min(p.minimum, `Value must be greater than ${p.minimum}`)
-      : sch,
-  maximum: (sch: Yup.NumberSchema, p: any) =>
-    p.maximum !== undefined && p.maximum !== null
-      ? sch.max(p.maximum, `Value must be less than ${p.maximum}`)
-      : sch
-};
+  required: (schema: Yup.NumberSchema, property: Property) =>
+    property.required ? schema.required("This field is required") : schema.notRequired(),
+  enum: (schema: Yup.NumberSchema, property: Property) =>
+    Array.isArray(property.enum)
+      ? schema.oneOf(property.enum, `Value must be one of: ${property.enum.join(", ")}`)
+      : schema,
+  minimum: (schema: Yup.NumberSchema, property: Property) =>
+    property.minimum !== undefined && property.minimum !== null
+      ? schema.min(property.minimum, `Value must be greater than ${property.minimum}`)
+      : schema,
+  maximum: (schema: Yup.NumberSchema, property: Property) =>
+    property.maximum !== undefined && property.maximum !== null
+      ? schema.max(property.maximum, `Value must be less than ${property.maximum}`)
+      : schema
+} as unknown as Constraint;
 
 const dateConstraints = {
-  required: (sch: Yup.DateSchema, p: any) =>
-    p.required ? sch.required("This field is required") : sch.notRequired()
-};
+  required: (schema: Yup.DateSchema, property: Property) =>
+    property.required ? schema.required("This field is required") : schema.notRequired()
+} as unknown as Constraint;
 
 const booleanConstraints = {
-  required: (sch: Yup.BooleanSchema, p: any) =>
-    p.required ? sch.required("This field is required") : sch.notRequired()
-};
+  required: (schema: Yup.BooleanSchema, property: Property) =>
+    property.required ? schema.required("This field is required") : schema.notRequired()
+} as unknown as Constraint;
 
 const mixedConstraints = {
-  required: (sch: Yup.MixedSchema, p: any) =>
-    p.required ? sch.required("This field is required") : sch.notRequired()
-};
-
-// … you can extend this for Boolean, Array, etc.
-
-// ---- helper to apply constraints ----
-
-function applyConstraints<T extends Yup.AnySchema>(
-  schema: T,
-  property: any,
-  registry: Record<string, (sch: any, p: any) => any>
-): T {
-  let current = schema;
-  for (const key of Object.keys(property)) {
-    const fn = registry[key];
-    if (fn) {
-      current = fn(current, property);
-    }
-  }
-  return current;
-}
+  required: (schema: Yup.Schema, property: Property) =>
+    property.required ? schema.required("This field is required") : schema.notRequired()
+} as unknown as Constraint;
 
 const arrayConstraints = {
-  required: (sch: any, p: any) =>
-    p.required
-      ? sch.required("This field is required").min(1, "This field is required")
-      : sch.notRequired(),
-  minItems: (sch: any, p: any) =>
-    p.minItems !== undefined && p.minItems !== null
-      ? sch.min(p.minItems, `Array must contain at least ${p.minItems} items`)
-      : sch,
-  maxItems: (sch: any, p: any) =>
-    p.maxItems !== undefined && p.maxItems !== null
-      ? sch.max(p.maxItems, `Array must contain at most ${p.maxItems} items`)
-      : sch
-};
+  required: (schema: Yup.ArraySchema<any, any>, property: Property) =>
+    property.required
+      ? schema.required("This field is required").min(1, "This field is required")
+      : schema.notRequired(),
 
-const generateFieldValueSchema = (kind: FieldKind, property: Property) => {
+  minItems: (schema: Yup.ArraySchema<any, any>, property: Property) =>
+    property.minItems != null
+      ? (schema as Yup.ArraySchema<any, any>).min(
+          property.minItems,
+          `Array must contain at least ${property.minItems} items`
+        )
+      : schema,
+
+  maxItems: (schema: Yup.ArraySchema<any, any>, property: Property) =>
+    property.maxItems != null
+      ? (schema as Yup.ArraySchema<any, any>).max(
+          property.maxItems,
+          `Array must contain at most ${property.maxItems} items`
+        )
+      : schema
+} as unknown as Constraint;
+
+// ---- helper to apply constraints ----
+function applyConstraints<T extends Yup.AnySchema>(
+  schema: T,
+  property: Property,
+  registry: Record<
+    string,
+    (
+      schema: Yup.AnySchema,
+      property: Omit<Property, "required"> & {required?: boolean}
+    ) => Yup.AnySchema
+  >,
+  required?: boolean
+): T {
+  let current: Yup.AnySchema = schema;
+  for (const key of Object.keys(registry)) {
+    const fn = registry[key];
+    if (fn) {
+      current = fn(current, {...property, required}); // pass required separately to avoid modifying original property object
+    }
+  }
+  return current as T;
+}
+
+const generateFieldValueSchema = (kind: FieldKind, property: Property, required?: boolean) => {
   switch (kind) {
     case FieldKind.String:
     case FieldKind.Textarea:
     case FieldKind.Richtext:
     case FieldKind.Color:
-      return applyConstraints(Yup.string(), property, stringConstraints);
+      return applyConstraints(Yup.string(), property, stringConstraints, required);
 
     case FieldKind.Number:
       return applyConstraints(
         Yup.number().typeError("Value must be a number"),
         property,
-        numberConstraints
+        numberConstraints,
+        required
       );
 
     case FieldKind.Boolean:
-      return applyConstraints(Yup.boolean(), property, booleanConstraints);
+      return applyConstraints(Yup.boolean(), property, booleanConstraints, required);
 
     case FieldKind.Date:
-      return applyConstraints(Yup.date(), property, dateConstraints);
+      return applyConstraints(Yup.date(), property, dateConstraints, required);
 
     case FieldKind.Multiselect:
-      return applyConstraints(Yup.array().of(Yup.mixed()), property, arrayConstraints);
+      return applyConstraints(Yup.array().of(Yup.mixed()), property, arrayConstraints, required);
 
     case FieldKind.Location:
       return applyConstraints(
@@ -247,11 +294,17 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property) => {
           lng: Yup.number().notRequired()
         }),
         property,
-        mixedConstraints as any
+        mixedConstraints,
+        required
       );
 
     case FieldKind.Array: {
-      let arr: any = applyConstraints(Yup.array(), property, arrayConstraints);
+      let arr = applyConstraints(
+        Yup.array(),
+        property,
+        arrayConstraints,
+        required
+      ) as Yup.ArraySchema<any, any, any>;
       const itemType = property?.items?.type as FieldKind | undefined;
       const itemProps = property?.items;
 
@@ -261,9 +314,7 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property) => {
         // For object arrays, we need to handle nested field errors with index information
         if (itemType === FieldKind.Object) {
           const enhancedObjectSchema = baseItemSchema
-            .transform((value, originalValue, context) => {
-              return originalValue;
-            })
+            .transform((_, originalValue) => originalValue)
             .test({
               name: "object-with-index",
               message: "Validation failed",
@@ -273,16 +324,31 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property) => {
                   return true;
                 } catch (error) {
                   if (error instanceof Yup.ValidationError) {
-                    const pathParts = context.path.split(".");
-                    const arrayIndex = pathParts[pathParts.length - 1];
-
-                    // Get the first error to create a meaningful message
+                    // Build an error anchored to the specific nested field path so
+                    // the outer validator can reconstruct a proper nested object.
                     const firstError = error.inner[0] || error;
-                    const fieldPath = firstError.path;
-                    const fieldName = fieldPath ? fieldPath.split(".").pop() : "field";
+                    const fieldPath = firstError.path || ""; // e.g. "childField.sub"
 
+                    // calculate array base name and index from context.path (e.g. "arr[0]")
+                    const idxMatch = (context.path || "").match(/\[(\d+)\]$/);
+                    const index = idxMatch ? idxMatch[1] : undefined;
+                    const arrayBase = (context.path || "").replace(/\[\d+\]$/, "");
+
+                    // build a readable message that includes the inner field name (if any) and index
+                    const innerField = fieldPath || "";
+                    const cleanedMsg = (firstError.message || "")
+                      .replace(/^this field /i, "")
+                      .replace(/^This field /i, "");
+                    const message = innerField
+                      ? `${innerField} at index ${index} ${cleanedMsg}`.trim()
+                      : index
+                        ? `${cleanedMsg} at index ${index}`.trim()
+                        : `${cleanedMsg}`;
+
+                    // attach error to the array base key (without the numeric index)
                     return context.createError({
-                      message: `${fieldName} at index ${arrayIndex.replace(/\[|\]/g, "")} ${firstError.message.replace(/^this field /i, "").replace(/^This field /i, "")}`
+                      path: arrayBase || context.path,
+                      message
                     });
                   }
                   return false;
@@ -302,11 +368,18 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property) => {
                 return true;
               } catch (error) {
                 if (error instanceof Yup.ValidationError) {
-                  const pathParts = context.path.split(".");
-                  const arrayIndex = pathParts[pathParts.length - 1];
-
+                  // Attach the error to the array item path so nested structure can be built.
+                  // For primitive array items attach error to the array base (strip the [index])
+                  const idxMatch = (context.path || "").match(/\[(\d+)\]$/);
+                  const index = idxMatch ? idxMatch[1] : undefined;
+                  const arrayBase = (context.path || "").replace(/\[\d+\]$/, "");
+                  const cleaned = (error.message || "")
+                    .replace(/^Value /i, "")
+                    .replace(/^This field /i, "");
+                  const message = index ? `${cleaned} at index ${index}`.trim() : cleaned;
                   return context.createError({
-                    message: `Item at index ${arrayIndex} ${error.message.replace(/^Value /i, "").replace(/^This field /i, "")}`
+                    path: arrayBase || context.path,
+                    message
                   });
                 }
                 return false;
@@ -323,8 +396,8 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property) => {
     }
 
     case FieldKind.Object: {
-      const props: Record<string, any> | undefined = property?.properties;
-      let obj: any = Yup.object();
+      const props: Record<string, Property> | undefined = property?.properties;
+      let obj: Yup.ObjectSchema<Yup.Maybe<{}>, Yup.AnyObject, {}, ""> = Yup.object();
       if (props && typeof props === "object") {
         const requiredKeys = Array.isArray(property?.required)
           ? (property.required as string[])
@@ -334,17 +407,15 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property) => {
           const childKind = childProp?.type as FieldKind | undefined;
           let childSchema: Yup.AnySchema;
           if (childKind) {
-            childSchema = generateFieldValueSchema(childKind, childProp) as Yup.AnySchema;
+            childSchema = generateFieldValueSchema(childKind, childProp, requiredKeys.includes(k));
           } else {
             childSchema = Yup.mixed();
           }
-          shape[k] = requiredKeys.includes(k)
-            ? childSchema.required("This field is required")
-            : childSchema.notRequired();
+          shape[k] = childSchema;
         }
         obj = obj.shape(shape);
       }
-      if (property?.required === true) {
+      if (required) {
         obj = obj
           .required("This field is required")
           .test(
@@ -362,13 +433,13 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property) => {
     }
 
     case FieldKind.File:
-      return applyConstraints(Yup.mixed(), property, mixedConstraints);
+      return applyConstraints(Yup.mixed(), property, mixedConstraints, required);
 
     case FieldKind.Json:
-      return applyConstraints(Yup.mixed(), property, mixedConstraints);
+      return applyConstraints(Yup.mixed(), property, mixedConstraints, required);
 
     case FieldKind.Relation:
-      return applyConstraints(Yup.string(), property, stringConstraints);
+      return applyConstraints(Yup.mixed(), property, mixedConstraints, required);
 
     default:
       return Yup.mixed().notRequired();
@@ -379,25 +450,72 @@ export const validateFieldValue = (
   value: any,
   kind: FieldKind,
   properties: Property
-): string | null => {
+): string | Record<string, any> | null => {
   const schema = generateFieldValueSchema(kind, properties);
   try {
-    schema.validateSync(value, {abortEarly: true}); // only first error
+    schema.validateSync(value, {abortEarly: false}); // gather all errors
     return null;
   } catch (error) {
-    if (error instanceof Yup.ValidationError) {
-      return error.message;
+    if (!(error instanceof Yup.ValidationError) || !error.inner || !error.inner.length)
+      return (error as {message?: string})?.message || "Validation failed";
+    let out: Record<string, any> | string = {};
+    
+    const getNested = (root: Record<string, any>, path: string, message: string) => {
+      const parts = path.match(/[^.\[\]]+/g) || [path];
+      
+      // Check if this path contains any array indices
+      const hasArrayIndex = parts.some(part => /^\d+$/.test(part));
+      
+      if (hasArrayIndex) {
+        console.log("message: ", message)
+        root = message
+        
+      } else {
+        // No array indices, handle as regular nested object
+        let cur: any = root;
+        for (let i = 0; i < parts.length; i++) {
+          const p = parts[i];
+          const isLast = i === parts.length - 1;
+          
+          if (isLast) {
+            if (cur == null || typeof cur !== "object") {
+              cur = {};
+            }
+            cur[p] = message;
+          } else {
+            if (cur == null || typeof cur !== "object") {
+              cur = {};
+            }
+            if (!cur[p]) {
+              cur[p] = {};
+            }
+            cur = cur[p];
+          }
+        }
+      }
+      
+      return root;
+    };
+    
+    // Remove the sorting since we want to keep it simple
+    for (const e of error.inner) {
+      if (e.path) {
+        if (typeof out === "string") out = {};
+        out = getNested(out as Record<string, any>, e.path, e.message);
+      } else {
+        out = typeof out === "string" ? out : e.message;
+      }
     }
-    return "Validation failed"; // fallback just in case
+    return Object.keys(out).length ? out : null;
   }
 };
 
 // ---------------------------------------------------------------------------
 // Low-level Yup runner kept last for readability
-// --------------------------------------------------
+// ---------------------------------------------------------------------------
 export function runYupValidation(
   schema: ValidationSchema,
-  form: any
+  form: FieldCreationForm
 ): Record<string, string> | null {
   try {
     schema.validateSync(form, {abortEarly: false, stripUnknown: false});

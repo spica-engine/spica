@@ -13,7 +13,11 @@ import type {BucketType} from "src/services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
-import {findFirstErrorId, generateInitialValues} from "./NewBucketEntryPopupUtils";
+import {
+  cleanValueRecursive,
+  findFirstErrorId,
+  generateInitialValues
+} from "./NewBucketEntryPopupUtils";
 import {useValueProperties, useValidation} from "./NewBucketEntryPopupHooks";
 
 type NewBucketEntryPopupProps = {
@@ -33,7 +37,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const [value, setValue] = useState<Record<string, any>>(() =>
     generateInitialValues(formattedProperties)
   );
-  const {cleanValueRecursive, validateValues} = useValidation();
+  const {validateValues} = useValidation();
 
   useEffect(() => {
     setApiError(createBucketEntryError);
@@ -84,7 +88,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
     const cleaned = Object.fromEntries(
       Object.entries(value).map(([key, val]) => [
         key,
-        cleanValueRecursive(val, formattedProperties[key])
+        cleanValueRecursive(val, formattedProperties[key], bucket.required?.includes(key), true)
       ])
     );
 
@@ -107,7 +111,6 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
     formattedProperties,
     bucket?.required,
     bucket._id,
-    cleanValueRecursive,
     createBucketEntry,
     generateInitialValues
   ]);

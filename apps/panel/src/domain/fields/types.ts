@@ -59,7 +59,7 @@ export interface FieldDefinition {
   creationFormDefaultValues: FieldCreationForm; // seed values for creation form
   getDefaultValue: (property: Property) => any; // default value for data creation using this field, if any
   validateCreationForm: (form: FieldCreationForm) => Record<string, string> | null; // validate the creation form state for this field type
-  validateValue: (value: any, properties: any) => string | null; // validate a raw value for this field (e.g. before saving data)
+  validateValue: (value: any, properties: any) => string | Record<string, any> | null; // validate a raw value for this field (e.g. before saving data)
   buildCreationFormProperties: () => {
     fieldValues: TypeProperties;
     configurationValues: TypeProperties;

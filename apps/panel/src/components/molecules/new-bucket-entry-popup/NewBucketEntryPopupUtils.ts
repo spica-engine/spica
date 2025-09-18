@@ -13,7 +13,12 @@ export const isObjectEffectivelyEmpty = (obj: any): boolean => {
   );
 };
 
-export const cleanValue = (value: any, type: string) => {
+export const cleanValue = (
+  value: any,
+  type: string,
+  required: boolean,
+  preferUndefined?: boolean
+): any => {
   if (type === "location" && value) {
     return {type: "Point", coordinates: [value.lat, value.lng]};
   }
@@ -40,7 +45,7 @@ export const cleanValue = (value: any, type: string) => {
     return isObjectEffectivelyEmpty(cleanedObject) ? undefined : cleanedObject;
   }
 
-  return value === "" ? undefined : value;
+  return value === "" ? (required ? undefined : preferUndefined ? undefined : value) : value;
 };
 
 export const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string) => {
@@ -89,4 +94,27 @@ export const generateInitialValues = (properties: Record<string, Property>) => {
     },
     {} as Record<string, any>
   );
+};
+
+export const cleanValueRecursive = (
+  val: any,
+  property: Property,
+  required?: boolean,
+  preferUndefined?: boolean
+): any => {
+  if (property?.type === "object" && property.properties) {
+    const cleanedObject = Object.fromEntries(
+      Object.entries(val || {}).map(([k, v]) => [
+        k,
+        property.properties[k]
+          ? cleanValueRecursive(v, property.properties[k], property.required?.includes(k), true)
+          : v
+      ])
+    );
+    return cleanedObject;
+  } else if (property?.type === "array" && property.items) {
+    if (!Array.isArray(val)) return val;
+    return val.map(v => cleanValueRecursive(v, property.items));
+  }
+  return cleanValue(val, property?.type, required || false, preferUndefined || false);
 };
