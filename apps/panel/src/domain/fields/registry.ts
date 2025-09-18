@@ -28,7 +28,7 @@ import {
   validateFieldValue
 } from "./validation";
 import type {TypeInputTypeMap} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
-import styles from "./styles.module.scss";
+import styles from "./field-styles.module.scss";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
   if (!input) return undefined;
