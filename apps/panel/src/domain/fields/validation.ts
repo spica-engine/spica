@@ -221,7 +221,7 @@ const arrayConstraints = {
     property.minItems != null
       ? (schema as Yup.ArraySchema<any, any>).min(
           property.minItems,
-          `Array must contain at least ${property.minItems} items`
+          `Array must contain at least ${property.minItems} item${property.minItems > 1 ? "s" : ""}`
         )
       : schema,
 
@@ -229,7 +229,7 @@ const arrayConstraints = {
     property.maxItems != null
       ? (schema as Yup.ArraySchema<any, any>).max(
           property.maxItems,
-          `Array must contain at most ${property.maxItems} items`
+          `Array must contain at most ${property.maxItems} item${property.maxItems > 1 ? "s" : ""}`
         )
       : schema
 } as unknown as Constraint;
