@@ -7,7 +7,9 @@ import {
   Tab,
   type IconName,
   type TypeFlexElement,
-  type TypeFluidContainer
+  type TypeFluidContainer,
+  Select,
+  type TypeValue
 } from "oziko-ui-kit";
 import {
   memo,
@@ -21,7 +23,7 @@ import {
 } from "react";
 import type {FormErrors} from "./BucketAddFieldBusiness";
 import styles from "./BucketAddField.module.scss";
-import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
+//import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import BucketFieldConfigurationPopup from "../../molecules/bucket-field-popup/BucketFieldConfigurationPopup";
 import {
   useBucketFieldPopups,
@@ -29,7 +31,7 @@ import {
 } from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
 import {useInputRepresenter} from "oziko-ui-kit";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
-import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type {TypeProperties} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import type {FieldFormState} from "../../../domain/fields/types";
 import {FieldKind} from "../../../domain/fields/types";
 
@@ -38,6 +40,11 @@ type InnerFieldProps = {
   onSaveInnerField: (values: FieldFormState) => void;
   onDeleteInnerField: (field: FieldFormState) => void;
   forbiddenFieldNames: string[];
+};
+
+const iconsMap: Record<Exclude<PopupType, "add-field">, IconName> = {
+  "edit-inner-field": "pencil",
+  "add-inner-field": "plus"
 };
 
 const InnerField: FC<InnerFieldProps> = memo(
@@ -152,18 +159,12 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   const {bucketFieldPopups} = useBucketFieldPopups();
   const {popupType} = bucketFieldPopups.find(p => p.id === popupId) as {popupType: PopupType};
 
-  const iconsMap: Record<Exclude<PopupType, "add-field">, IconName> = {
-    "edit-inner-field": "pencil",
-    "add-inner-field": "plus"
-  };
-
   const iconName = iconsMap[popupType as keyof typeof iconsMap];
+  const field = FIELD_REGISTRY[type as keyof typeof FIELD_REGISTRY];
 
   const innerFieldExists = useMemo(
-    () =>
-      FIELD_REGISTRY[type as keyof typeof FIELD_REGISTRY]?.requiresInnerFields?.(formValues) ??
-      false,
-    [type, formValues.fieldValues]
+    () => field?.requiresInnerFields?.(formValues) ?? false,
+    [field, formValues.fieldValues]
   );
 
   const [activeTab, setActiveTab] = useState(0);
@@ -175,6 +176,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     error: formErrors.fieldValues ?? {},
     errorClassName: styles.error
   });
+  //console.log("mainFormInputProperties", mainFormInputProperties, "\nformValues", formValues);
 
   const configurationInputs = useInputRepresenter({
     properties: configurationInputProperties,
@@ -251,10 +253,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     }
 
     if (type === FieldKind["Multiselect"]) {
-      createConfig(
-        "Multiple Selection",
-        <div>{multipleSelectionTabInputs}</div>
-      );
+      createConfig("Multiple Selection", <div>{multipleSelectionTabInputs}</div>);
     }
 
     createConfig(
@@ -273,6 +272,12 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     setActiveTab(0);
   }, [type]);
 
+  const [isSelectInnerFieldOpen, setIsSelectInnerFieldOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<TypeValue | null>(null);
+  const handleRenderSelectInnerField = () => setIsSelectInnerFieldOpen(true);
+  const handleCloseSelectInnerField = () => setIsSelectInnerFieldOpen(false);
+  const handleSelectInnerField = (value: TypeValue) => setSelectedType(value);
+
   return (
     <FlexElement
       direction="vertical"
@@ -287,18 +292,14 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
         root={{
           children: (
             <Text dimensionX="fill" className={styles.displayer}>
-              {type}
+              {field?.display.label}
             </Text>
           ),
           dimensionX: "fill"
         }}
         gap={10}
         prefix={{
-          children: (
-            <Icon
-              name={FIELD_REGISTRY[type as keyof typeof FIELD_REGISTRY]?.display.icon as IconName}
-            />
-          )
+          children: <Icon name={field?.display.icon as IconName} />
         }}
         suffix={{children: iconName && <Icon name={iconName} />}}
       />
@@ -329,21 +330,53 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
           />
         </Button>
         {innerFieldExists && (
-          <BucketFieldPopup
+          <>
+            {/*<BucketFieldPopup
             onSaveAndClose={handleCreateInnerField}
             popupType="add-inner-field"
             placement="leftStart"
             forbiddenFieldNames={forbiddenFieldNames}
-          >
-            <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
+          >*/}
+            <Button
+              color="default"
+              variant="dashed"
+              className={styles.buttonInnerFields}
+              onClick={handleRenderSelectInnerField}
+            >
               <FluidContainer
                 prefix={{children: <Icon name="plus" size="sm" />}}
                 root={{children: "Add New Inner Field"}}
               />
             </Button>
-          </BucketFieldPopup>
+            {/*</BucketFieldPopup>*/}
+          </>
         )}
       </div>
+      {isSelectInnerFieldOpen && (
+        <Select
+          options={Object.keys(FIELD_REGISTRY)}
+          value={selectedType ?? undefined}
+          onChange={handleSelectInnerField}
+        />
+      )}
+      {selectedType && (
+        <BucketFieldConfigurationPopup
+          isOpen={!!selectedType}
+          selectedType={selectedType as FieldKind}
+          onClose={() => {
+            setSelectedType(null);
+            handleCloseSelectInnerField();
+          }}
+          onSaveAndClose={(values: FieldFormState) => {
+            handleCreateInnerField(values);
+            // setSelectedType(null);
+            // handleCloseSelectInnerField();
+          }}
+          popupType="add-inner-field"
+          children={undefined}
+        />
+      )}
+
       {error && (
         <div className={innerFieldExists ? styles.innerFieldsError : styles.defaultError}>
           <div className={styles.errorTextContainer}>

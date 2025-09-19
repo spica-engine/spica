@@ -96,6 +96,7 @@ const BucketFieldConfigurationPopup = ({
       iconName,
       popupType,
       initialValues,
+      forbiddenFieldNames: forbiddenFieldNames ?? [],
     };
     setBucketFieldPopups(prev => [...prev, newBucketFieldPopup]);
     onRegister?.(id);
@@ -121,7 +122,7 @@ const BucketFieldConfigurationPopup = ({
       content={
         isPopupRegistered && (
           <BucketAddField
-            onSuccess={onClose}
+            onClose={onClose}
             onSaveAndClose={onSaveAndClose}
             popupId={id}
             forbiddenFieldNames={forbiddenFieldNames}

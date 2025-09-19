@@ -1,13 +1,18 @@
 // Common field definitions used in creation forms
 export const BaseFields = {
   title: {type: "string", title: "Name", required: true},
-  description: {type: "textarea", title: "Description"}
+  description: {
+    type: "textarea",
+    title: "Textarea title",
+    icon: "sort",
+    placeholder: "Description of the input"
+  }
 } as const;
 
 export const DefaultInputs = {
   defaultString: {type: "string", title: "Default Value"},
   defaultNumber: {type: "number", title: "Default Value"},
-  defaultBoolean: {type: "boolean", title: "Default value", size: "small"},
+  defaultBoolean: {type: "boolean", title: "Default value", size: "extra-small"},
   defaultDate: {
     type: "string",
     title: "Default Date",
@@ -24,7 +29,7 @@ export const ValidationInputs = {
   maxNumber: {type: "number", title: "Maximum"},
   minItems: {type: "number", title: "Min Items"},
   maxItems: {type: "number", title: "Max Items"},
-  definePattern: {type: "boolean", title: "Define Pattern", size: "small"},
+  definePattern: {type: "boolean", title: "Define Pattern", size: "extra-small"},
   regularExpression: {type: "string", title: "Regex"}
 } as const;
 
@@ -34,7 +39,7 @@ export const SpecializedInputs = {
     title: "Presets",
     enum: ["Countries", "Days", "Email", "Phone Number"] as string[]
   },
-  makeEnumerated: {type: "boolean", title: "Make field enumerated", size: "small"},
+  makeEnumerated: {type: "boolean", title: "Make field enumerated", size: "extra-small"},
   enumeratedValues: {type: "chip", title: "EnumeratedValues"},
   multipleSelectionType: {
     type: "string",
@@ -56,25 +61,23 @@ export const SpecializedInputs = {
       "multiselect",
       "location",
       "richtext",
-      "object",
-      "json"
+      "object"
     ] as string[],
     required: true
   },
   arrayItemTitle: {type: "string", title: "Title"},
   arrayItemDescription: {type: "string", title: "Description"},
   chip: {type: "chip", title: ""},
-  bucket: {title: "Buckets", type: "select", enum: [] as any[]},
+  bucket: {title: "Buckets", type: "string", enum: [] as any[]},
   relationType: {
     title: "Relation Type",
-    type: "select",
+    type: "string",
     enum: [
       {label: "One To One", value: "onetoone"},
       {label: "One To Many", value: "onetomany"}
     ] as any[]
   },
-  dependent: {type: "boolean", title: "Dependent", size: "small"},
-  uniqueItems: {type: "boolean", title: "Items should be unique", size: "small"}
+  uniqueItems: {type: "boolean", title: "Items should be unique", size: "extra-small"}
 } as const;
 
 // Preset panel used by string and array, and pattern for number/array
@@ -94,11 +97,12 @@ export const PresetPanel = {
 
 // Configuration field definitions and mappings
 export const ConfigDefs = {
-  primaryField: {type: "boolean", title: "Primary Field", size: "small"},
-  translate: {type: "boolean", title: "Translatable", size: "small"},
-  uniqueValues: {type: "boolean", title: "Unique Values", size: "small"},
-  requiredField: {type: "boolean", title: "Required Field", size: "small"},
-  index: {type: "boolean", title: "Indexed field in database", size: "small"}
+  primaryField: {type: "boolean", title: "Primary Field", size: "extra-small"},
+  translate: {type: "boolean", title: "Translatable", size: "extra-small"},
+  uniqueValues: {type: "boolean", title: "Unique Values", size: "extra-small"},
+  requiredField: {type: "boolean", title: "Required Field", size: "extra-small"},
+  index: {type: "boolean", title: "Indexed field in database", size: "extra-small"},
+  dependent: {type: "boolean", title: "Dependent", size: "extra-small"}
 } as const;
 
 export const BasicConfig = {
@@ -133,10 +137,11 @@ export const TranslatableMinimalConfig = {
   index: ConfigDefs.index
 } as const;
 
-export const InnerFieldConfig = MinimalConfig;
-
 export const MinimalInnerFieldConfig = {
   index: ConfigDefs.index
 } as const;
 
-
+export const RelationFieldConfig = {
+  dependent: ConfigDefs.dependent,
+  ...MinimalConfig
+} as const;

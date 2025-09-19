@@ -1,6 +1,6 @@
 import type {IconName} from "oziko-ui-kit";
 import type {BucketType, Property} from "../../services/bucketService";
-import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type {TypeProperties} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 
 export enum FieldKind {
   String = "string",

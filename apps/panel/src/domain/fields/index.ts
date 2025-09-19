@@ -1,15 +1,8 @@
 import {FIELD_REGISTRY} from "./registry";
 import {BASE_PRESET_DEFAULTS} from "./defaults";
-import {
-  FieldKind,
-  type FieldDefinition,
-  type FieldFormState
-} from "./types";
+import {FieldKind, type FieldDefinition, type FieldFormState} from "./types";
 
-function initForm(
-  kind: FieldKind,
-  initialValues?: FieldFormState
-) {
+function initForm(kind: FieldKind, initialValues?: FieldFormState) {
   const seed = FIELD_REGISTRY[kind as FieldKind]?.creationFormDefaultValues;
   if (!seed) throw new Error(`initForm: unknown field kind '${kind}'`);
 
@@ -27,15 +20,17 @@ function initForm(
     return target;
   };
 
-  const initial = initialValues || {} as FieldFormState;
+  const initial = initialValues || ({} as FieldFormState);
 
   const merged = {
-    fieldValues: deepMerge({...seed.fieldValues}, initial.fieldValues),
-    configurationValues: deepMerge({...seed.configurationValues}, initial.configurationValues),
-    presetValues: deepMerge({...seed.presetValues}, initial.presetValues),
+    ...(Object.fromEntries(
+      Object.entries(seed).map(([k, v]) => [
+        k,
+        deepMerge({...v}, initial[k as keyof FieldFormState])
+      ])
+    ) as Omit<FieldFormState, "type" | "defaultValue">),
     defaultValue: initial.defaultValue || seed.defaultValue,
-    type: kind,
-    innerFields: initial.innerFields ? [...initial.innerFields] : undefined
+    type: kind
   };
 
   // Capability-based sanitization (enumeration / pattern fields removed when unsupported)

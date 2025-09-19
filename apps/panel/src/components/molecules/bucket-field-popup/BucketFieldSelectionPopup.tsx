@@ -3,7 +3,7 @@ import {FlexElement, ListItem, Icon, Popover, type IconName} from "oziko-ui-kit"
 import styles from "./BucketFieldPopup.module.scss";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
-import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
+import type {Placement} from "oziko-ui-kit/build/dist/custom-hooks/useAdaptivePosition";
 import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
@@ -42,16 +42,8 @@ const BucketFieldSelectionPopup = ({
     setSelectedType(null);
   };
 
-
   const handleTypeSelect = (kind: FieldKind) => {
     setSelectedType(kind);
-  };
-
-  const handleConfigurationClose = (event?: MouseEvent) => {
-    if (event?.target && fieldOptionsListContainerRef.current?.contains(event.target as Node)) {
-      return;
-    }
-    setSelectedType(null);
   };
 
   const handleSaveAndClose = (values: FieldFormState) => {
@@ -82,7 +74,7 @@ const BucketFieldSelectionPopup = ({
         <BucketFieldConfigurationPopup
           isOpen={!!selectedType}
           selectedType={selectedType as FieldKind | null}
-          onClose={handleConfigurationClose}
+          onClose={handleClose}
           onSaveAndClose={handleSaveAndClose}
           onRegister={setBucketFieldPopupId}
           popupType={popupType}
@@ -94,7 +86,7 @@ const BucketFieldSelectionPopup = ({
             direction="vertical"
             className={styles.container}
           >
-            {Object.values(FIELD_REGISTRY).map((field) => (
+            {Object.values(FIELD_REGISTRY).map(field => (
               <ListItem
                 key={field.kind}
                 label={field.display.label}

@@ -22,7 +22,7 @@ function isObjectEffectivelyEmpty(obj: Object): boolean {
 }
 
 export type BucketAddFieldBusinessProps = {
-  onSuccess?: () => void;
+  onClose?: () => void;
   onSaveAndClose: (values: FieldFormState) => void | Promise<any>;
   className?: string;
   popupId?: string;
@@ -61,15 +61,8 @@ function useFormState(
 
     const base = initForm(type, initialValues);
 
-    const newFormValues = {
-      fieldValues: base.fieldValues,
-      configurationValues: base.configurationValues,
-      presetValues: base.presetValues as TypePresetValues,
-      defaultValue: base.defaultValue,
-      type,
-      innerFields: base.innerFields
-    };
-
+    const newFormValues = {...base, type};
+    //console.log("Initialized form values:", newFormValues, "\nWith initialValues:", initialValues);
     setFormValues(newFormValues);
     setFormErrors({});
     setIsInitialized(true);
@@ -85,7 +78,7 @@ function useFormState(
 }
 
 const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
-  onSuccess,
+  onClose,
   onSaveAndClose,
   className,
   popupId,
@@ -95,11 +88,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   const {buckets, createBucketFieldError} = useBucket();
 
   const currentPopup = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
-  const {
-    fieldKind: fieldType,
-    popupType,
-    initialValues,
-  } = currentPopup;
+  const {fieldKind: fieldType, popupType, initialValues} = currentPopup;
   const fieldDefinition = FIELD_REGISTRY[fieldType as FieldKind] as FieldDefinition;
   const isInnerField = popupType !== "add-field";
 
@@ -150,25 +139,18 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   ]);
 
   useEffect(() => {
-    if (!fieldType || fieldType !== "multiselect" || !isInitialized) return;
+    if (fieldType !== "multiselect" || !isInitialized) return;
     const {updatedForm, updatedFieldProperties} =
       fieldDefinition.applySelectionTypeLogic?.(formValues, mainFormProperties) ?? {};
     setFormValues(updatedForm ?? formValues);
     setMainFormProperties(updatedFieldProperties ?? mainFormProperties);
-  }, [fieldType, isInitialized, formValues.fieldValues.multipleSelectionType]);
+  }, [fieldType, isInitialized, formValues.multipleSelectionTab?.multipleSelectionType]);
 
   const validateForm = useCallback(async () => {
     setApiError(null);
     if (!fieldType) return false;
 
-    const errors = fieldDefinition.validateCreationForm({
-      fieldValues: formValues.fieldValues,
-      configurationValues: formValues.configurationValues,
-      defaultValue: formValues.defaultValue,
-      presetValues: formValues.presetValues,
-      innerFields: formValues.innerFields,
-      type: fieldType
-    });
+    const errors = fieldDefinition.validateCreationForm({...formValues, type: fieldType});
 
     if (errors) {
       setFormErrors(errors);
@@ -204,8 +186,8 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     const result = await onSaveAndClose(formValues);
     setIsLoading(false);
 
-    if (result) onSuccess?.();
-  }, [formValues, onSaveAndClose, validateForm, onSuccess]);
+    if (result) onClose?.();
+  }, [formValues, onSaveAndClose, validateForm, onClose]);
 
   const handleCreateInnerField: (values: FieldFormState) => void | Promise<any> = useCallback(
     values => {

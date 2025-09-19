@@ -20,7 +20,8 @@
   display: flex;
   justify-content: space-between;
   flex-direction: row-reverse;
-  gap: var(--gap-sm);
+  gap: var(--gap-md);
+  justify-content: flex-start !important;
 
   .buttonInnerFields {
     background: var(--color-soft) !important;
