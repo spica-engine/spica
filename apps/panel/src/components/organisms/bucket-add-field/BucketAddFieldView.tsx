@@ -30,7 +30,8 @@ import {
 import {useInputRepresenter} from "oziko-ui-kit";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import type {FieldFormState, FieldKind} from "../../../domain/fields/types";
+import type {FieldFormState} from "../../../domain/fields/types";
+import {FieldKind} from "../../../domain/fields/types";
 
 type InnerFieldProps = {
   field: FieldFormState;
@@ -109,6 +110,7 @@ type BucketAddFieldViewProps = {
   configurationInputProperties: TypeProperties;
   defaultInputProperty?: TypeProperties[keyof TypeProperties];
   presetInputProperties?: TypeProperties;
+  multipleSelectionTabProperties?: TypeProperties;
 
   // State
   isLoading: boolean;
@@ -137,6 +139,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   configurationInputProperties,
   defaultInputProperty,
   presetInputProperties,
+  multipleSelectionTabProperties,
   isLoading,
   handleFormValueChange,
   handleSaveAndClose,
@@ -197,6 +200,14 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     errorClassName: styles.error
   });
 
+  const multipleSelectionTabInputs = useInputRepresenter({
+    properties: multipleSelectionTabProperties ?? {},
+    value: formValues.multipleSelectionTab ?? {},
+    onChange: values => handleFormValueChange(values, "multipleSelectionTab"),
+    error: formErrors.multipleSelectionTab ?? {},
+    errorClassName: styles.error
+  });
+
   const forbiddenFieldNames = useMemo(
     () => formValues.innerFields?.map(f => f.fieldValues.title) || [],
     [formValues.innerFields]
@@ -235,12 +246,15 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       );
     }
 
-    if (type === "string") {
+    if (presetInputProperties) {
       createConfig("Presets", <div className={styles.presetsContainer}>{presetInputs}</div>);
     }
 
-    if (defaultInputProperty) {
-      createConfig("Default", defaultInput as unknown as JSX.Element);
+    if (type === FieldKind["Multiselect"]) {
+      createConfig(
+        "Multiple Selection",
+        <div>{multipleSelectionTabInputs}</div>
+      );
     }
 
     createConfig(
@@ -301,6 +315,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
         />
       )}
       {tabs[activeTab] && (tabs[activeTab] as {element: JSX.Element}).element}
+      {defaultInput}
       <div className={styles.buttonWrapper}>
         <Button
           className={styles.saveAndCloseButton}

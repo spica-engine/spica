@@ -29,6 +29,7 @@ export interface FieldCreationForm {
   configurationValues: Record<string, any>;
   presetValues: Record<string, any>;
   defaultValue?: any;
+  multipleSelectionTab?: Record<string, any>; // only for multiselect
   type: FieldKind; // only used internally in the form state
 }
 
@@ -53,9 +54,10 @@ export interface FieldFormState extends FieldCreationForm {
 
 export interface FieldCreationFormProperties {
   fieldValues: TypeProperties;
+  defaultValue?: TypeProperties[keyof TypeProperties];
   configurationValues: TypeProperties;
   presetValues?: TypeProperties;
-  defaultValue?: TypeProperties[keyof TypeProperties];
+  multipleSelectionTab?: TypeProperties;
 }
 
 export interface FieldDefinition {
@@ -65,14 +67,17 @@ export interface FieldDefinition {
   getDefaultValue?: (property: Property) => any; // default value for data creation using this field, if any
   validateCreationForm: (form: FieldFormState) => Record<string, string> | null; // validate the creation form state for this field type
   validateValue: (value: any, properties: any) => string | null; // validate a raw value for this field (e.g. before saving data)
-  buildCreationFormProperties: (isInnerField: boolean, buckets?: BucketType[]) => FieldCreationFormProperties;
+  buildCreationFormProperties: (
+    isInnerField: boolean,
+    buckets?: BucketType[]
+  ) => FieldCreationFormProperties;
   buildValueProperty: (property: Property) => TypeProperties[keyof TypeProperties]; // build TypeProperty-compatible value schema for this field
   requiresInnerFields?: (form: FieldCreationForm) => boolean; // whether this field kind structurally requires at least one inner field
   applyPresetLogic?: (form: FieldCreationForm, oldValues: FieldCreationForm) => FieldCreationForm; // apply preset logic to the form state, (only for string and array's with string items)
   applySelectionTypeLogic?: (
     form: FieldCreationForm,
     properties: TypeProperties
-  ) => {updatedForm: FieldCreationForm, updatedFieldProperties: TypeProperties}; // apply selection type logic to the form state (only for multiselect)
+  ) => {updatedForm: FieldCreationForm; updatedFieldProperties: TypeProperties}; // apply selection type logic to the form state (only for multiselect)
   // Optional formatting function for displaying values in lists, etc.
   getFormattedValue?: (value: any) => any;
   // Optional builder that converts a FieldFormState to API Property definition (progressive migration from createFieldProperty.ts)

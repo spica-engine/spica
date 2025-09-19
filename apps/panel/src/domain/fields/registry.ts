@@ -88,7 +88,7 @@ const STRING_DEFINITION: FieldDefinition = {
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.String, properties),
   buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
-    presetValues: PresetPanel,
+    //presetValues: PresetPanel,
     defaultValue: DefaultInputs.defaultString,
     configurationValues: isInnerField ? InnerFieldConfig : TranslatableConfig
   }),
@@ -295,28 +295,31 @@ const TEXTAREA_DEFINITION: FieldDefinition = {
 
 const MULTISELECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Multiselect,
-  display: {label: "Multiple Selection", icon: "formatListChecks"},
+  display: {label: "Select", icon: "formatListChecks"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     fieldValues: {
       ...BASE_FORM_DEFAULTS.fieldValues,
-      multipleSelectionType: "string",
       chip: [],
-      maxItems: undefined
     },
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),
+    multipleSelectionTab: {
+      multipleSelectionType: "string",
+      maxItems: undefined
+    },
     type: FieldKind.Multiselect
   }),
   validateCreationForm: form => runYupValidation(MULTISELECT_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) =>
     validateFieldValue(value, FieldKind.Multiselect, properties),
   buildCreationFormProperties: isInnerField => ({
-    fieldValues: {
-      ...BaseFields,
+    fieldValues: BaseFields,
+    configurationValues: isInnerField ? InnerFieldConfig : MinimalConfig,
+    presetValues: PresetPanel,
+    multipleSelectionTab: {
       multipleSelectionType: SpecializedInputs.multipleSelectionType,
       maxItems: ValidationInputs.maxItems
-    },
-    configurationValues: isInnerField ? InnerFieldConfig : MinimalConfig
+    }
   }),
   buildValueProperty: property => ({
     type: FieldKind.Multiselect,
@@ -787,5 +790,5 @@ export const FIELD_REGISTRY: Partial<Record<FieldKind, FieldDefinition>> = {
   [FieldKind.File]: FILE_DEFINITION,
   [FieldKind.Richtext]: RICHTEXT_DEFINITION,
   [FieldKind.Color]: COLOR_DEFINITION,
-  [FieldKind.Json]: JSON_DEFINITION,
+  [FieldKind.Json]: JSON_DEFINITION
 };

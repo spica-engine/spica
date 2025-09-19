@@ -42,6 +42,7 @@ export type FormErrors = {
   presetValues?: Record<string, string>;
   configurationValues?: Record<string, string>;
   defaultValue?: Record<string, string>;
+  multipleSelectionTab?: Record<string, string>;
   innerFields?: string;
 };
 
@@ -91,7 +92,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   forbiddenFieldNames
 }) => {
   const {bucketFieldPopups} = useBucketFieldPopups();
-  const {bucketData, buckets, createBucketFieldError} = useBucket();
+  const {buckets, createBucketFieldError} = useBucket();
 
   const currentPopup = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
   const {
@@ -106,7 +107,8 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     fieldValues: initialMainFormProperties,
     configurationValues: configurationProperties,
     defaultValue: defaultValueProperties,
-    presetValues: presetProperties
+    presetValues: presetProperties,
+    multipleSelectionTab: multipleSelectionTabProperties
   } = useMemo(
     () => fieldDefinition.buildCreationFormProperties(isInnerField, buckets),
     [fieldDefinition, isInnerField, buckets]
@@ -243,6 +245,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       configurationInputProperties={configurationProperties}
       defaultInputProperty={defaultValueProperties}
       presetInputProperties={presetProperties}
+      multipleSelectionTabProperties={multipleSelectionTabProperties}
       // State
       isLoading={isLoading}
       // Event handlers
