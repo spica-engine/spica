@@ -13,31 +13,21 @@ import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
-import type {BucketType} from "src/services/bucketService";
-import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
+import {
+  FieldKind,
+  formatValue,
+  FIELD_REGISTRY,
+  buildCreationFormPropertiesFromForm,
+} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
-
-type FieldType =
-  | "string"
-  | "number"
-  | "date"
-  | "boolean"
-  | "textarea"
-  | "multiple selection"
-  | "relation"
-  | "location"
-  | "array"
-  | "object"
-  | "file"
-  | "richtext";
 
 export type ColumnType = {
   id: string;
   header: any;
   key: string;
-  type?: FieldType;
+  type?: FieldKind;
   width?: string;
   deletable?: boolean;
   headerClassName?: string;
@@ -74,27 +64,19 @@ type ColumnHeaderProps = {
 };
 
 type ColumnMeta = {
-  type?: FieldType;
+  type?: FieldKind;
   deletable?: boolean;
   id: string;
 };
 
-// TODO: Update the icon mappings below to use appropriate icons for each field type.
-// Currently, many field types are using the same placeholder icon ("formatQuoteClose").
-const COLUMN_ICONS: Record<FieldType, IconName> = {
-  string: "formatQuoteClose",
-  number: "formatQuoteClose",
-  date: "formatQuoteClose",
-  boolean: "formatQuoteClose",
-  textarea: "formatQuoteClose",
-  "multiple selection": "formatListChecks",
-  relation: "formatQuoteClose",
-  location: "mapMarker",
-  array: "formatQuoteClose",
-  object: "dataObject",
-  file: "imageMultiple",
-  richtext: "formatQuoteClose"
-};
+const COLUMN_ICONS: Record<string, IconName> = Object.values(FieldKind).reduce(
+  (acc, k) => {
+    const def = FIELD_REGISTRY[k as FieldKind];
+    if (def) acc[k] = def.display.icon as IconName;
+    return acc;
+  },
+  {} as Record<string, IconName>
+);
 
 const ColumnHeader = ({
   title,
@@ -146,33 +128,28 @@ const NewFieldHeader = memo(() => {
     () => buckets.find(i => i._id === bucketData?.bucketId),
     [buckets, bucketData?.bucketId]
   );
+
   const handleSaveAndClose = useCallback(
     (values: FormValues) => {
       if (!bucket) return;
 
-      const fieldProperty = createFieldProperty(values);
+      const fieldProperty = buildCreationFormPropertiesFromForm(values as any);
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
       return createBucketField(
         bucket,
-        fieldProperty,
+        fieldProperty as any,
         requiredField ? title : undefined,
         primaryField ? title : undefined
       );
     },
     [bucket, createBucketField]
   );
-  const forbiddenFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket]);
 
   return (
     <BucketFieldPopupsProvider>
-      <BucketFieldPopup
-        buckets={buckets}
-        bucket={bucket as BucketType}
-        onSaveAndClose={handleSaveAndClose}
-        forbiddenFieldNames={forbiddenFieldNames}
-      >
+      <BucketFieldPopup onSaveAndClose={handleSaveAndClose}>
         <Button
           variant="icon"
           className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
@@ -190,7 +167,7 @@ const defaultColumns: ColumnType[] = [
     id: "0",
     header: <ColumnHeader />,
     key: "select",
-    type: "boolean",
+    type: FieldKind.Boolean,
     width: "41px",
     fixedWidth: true,
     headerClassName: styles.columnHeader,
@@ -214,7 +191,7 @@ const defaultColumns: ColumnType[] = [
 
 // TODO: Refactor this function to render more appropriate UI elements for each field type.
 // Many field types are currently using the generic `renderDefault()`.
-function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
+function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
   function renderDefault() {
     return (
       <div className={styles.defaultCell}>
@@ -227,113 +204,12 @@ function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
       </div>
     );
   }
-  switch (type) {
-    case "string":
-      return renderDefault();
-    case "number":
-      return renderDefault();
-    case "date":
-      return renderDefault();
-    case "boolean":
-      return <Checkbox className={styles.checkbox} />;
-    case "textarea":
-      return renderDefault();
-    case "multiple selection":
-      return (
-        <div className={styles.multipleSelectionCell}>
-          {cellData?.slice(0, 2)?.map?.((_: any, index: number) => (
-            <Button key={index} variant="icon" className={styles.grayBox}>
-              {index + 1}
-            </Button>
-          ))}
-          {cellData.length > 2 && (
-            <Button variant="icon" className={styles.grayBox}>
-              <Icon name="dotsHorizontal" size="xs" />
-            </Button>
-          )}
-          <Button variant="icon" className={styles.grayBox}>
-            <Icon name="plus" size="xs" />
-          </Button>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "relation":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "location":
-      return (
-        <div className={styles.locationCell}>
-          <img src="/locationx.png" className={styles.locationImage} />
-          <div
-            data-full={cellData?.coordinates.join(", ")}
-            onCopy={e => {
-              e.preventDefault();
-              e.clipboardData.setData("text/plain", e.currentTarget.dataset.full || "");
-            }}
-          >
-            {cellData?.coordinates?.map((c: number) => c.toFixed(2) + "..").join(", ")}
-          </div>
-        </div>
-      );
-    case "array":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "object":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {!deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "file":
-      return (
-        <div className={styles.fileCell}>
-          <Icon name="imageMultiple" size="xs" />
-          {cellData ? (
-            <span>{cellData}</span>
-          ) : (
-            <span className={styles.grayText}>Click or Drag&Drop</span>
-          )}
-        </div>
-      );
-    case "richtext":
-      return renderDefault();
-    default: {
-      if (!cellData) {
-        return <div />;
-      }
-
-      if (typeof cellData === "string") {
-        return cellData;
-      }
-
-      return JSON.stringify(cellData);
-    }
+  if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
+  if (type) {
+    const formatted = formatValue(type, cellData);
+    if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
   }
+  return renderDefault();
 }
 
 function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
@@ -349,7 +225,7 @@ function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnTyp
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      id: `${col.key}-${index}-${bucketId}`,
+      id: `${col.key}-${index}-s${bucketId}`,
       cellClassName: styles.cell
     })),
     defaultColumns[1]
