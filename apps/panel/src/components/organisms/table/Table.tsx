@@ -138,8 +138,10 @@ const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) 
       0
     );
 
-    const remainingWidth = containerWidth - fixedWidthTotal;
-    const widthPerResizableColumn = remainingWidth / resizableColumns.length;
+    const remainingWidth = Math.max(containerWidth - fixedWidthTotal, 0);
+
+    const resizableColumnsLength = Math.max(resizableColumns.length, 1);
+    const widthPerResizableColumn = remainingWidth / resizableColumnsLength;
 
     return columns.map(col => ({
       ...col,
