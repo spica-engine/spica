@@ -54,7 +54,7 @@ type BucketContextType = {
     bucket: BucketType,
     countLimit: number,
     limitExceedBehaviour: "prevent" | "remove"
-  ) => Promise<any>;
+  ) => Promise<void>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
