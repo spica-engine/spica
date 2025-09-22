@@ -141,7 +141,7 @@ type BucketWithVisibleColumnsProps = {
   handleRefresh: () => Promise<void | BucketDataType>;
   refreshLoading: boolean;
   tableRef: React.RefObject<HTMLElement | null>;
-  deleteBucketEntry: (entryId: string, bucketId: string) => Promise<any>;
+  deleteBucketEntry: (entryId: string, bucketId: string) => Promise<string | null>;
 };
 
 function BucketWithVisibleColumns({

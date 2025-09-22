@@ -55,7 +55,7 @@ type BucketContextType = {
     requiredField?: string,
     primaryField?: string
   ) => Promise<any>;
-  deleteBucketEntry: (entryId: string, bucketId: string) => Promise<any>;
+  deleteBucketEntry: (entryId: string, bucketId: string) => Promise<string | null>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
