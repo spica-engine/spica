@@ -127,7 +127,7 @@ function getCalculatedColumnWidth(columns: TypeDataColumn[], containerWidth: num
 
 const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) => {
   const allColumnsHaveWidth =
-    columns.filter(col => col.width !== undefined).length === columns.length;
+    columns.filter(col => (col.width !== undefined || col.width !== null)).length === columns.length;
 
   if (allColumnsHaveWidth) {
     const fixedWidthColumns = columns.filter(col => col.fixedWidth);
