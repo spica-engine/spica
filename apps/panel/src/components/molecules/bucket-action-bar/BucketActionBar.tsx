@@ -217,7 +217,7 @@ const BucketActionBar = ({
               Cancel
             </>
           }
-          confirmCondition={value => value === "Agree"}
+          confirmCondition={value => value === "agree"}
           loading={deleteLoading}
           error={deleteEntryError}
           onConfirm={handleEntryDeletion}
