@@ -1,9 +1,8 @@
 import {cloneElement, memo, useRef, useState, type ReactNode} from "react";
 import {FlexElement, ListItem, Icon, Popover, type IconName} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
-import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
-import type {Placement} from "oziko-ui-kit/build/dist/custom-hooks/useAdaptivePosition";
+import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
 import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
@@ -26,10 +25,6 @@ const BucketFieldSelectionPopup = ({
 }: BucketFieldSelectionPopupProps) => {
   const [selectedType, setSelectedType] = useState<FieldKind | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const {bucketFieldPopups, setBucketFieldPopups} = useBucketFieldPopups();
-  const fieldOptionsListContainerRef = useRef<HTMLDivElement>(null);
-
-  const [bucketFieldPopupId, setBucketFieldPopupId] = useState<string>();
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -37,7 +32,6 @@ const BucketFieldSelectionPopup = ({
   };
 
   const handleClose = () => {
-    setBucketFieldPopups(bucketFieldPopups.filter(popup => popup.id !== bucketFieldPopupId));
     setIsOpen(false);
     setSelectedType(null);
   };
@@ -76,16 +70,10 @@ const BucketFieldSelectionPopup = ({
           selectedType={selectedType as FieldKind | null}
           onClose={handleClose}
           onSaveAndClose={handleSaveAndClose}
-          onRegister={setBucketFieldPopupId}
           popupType={popupType}
           forbiddenFieldNames={forbiddenFieldNames}
         >
-          <FlexElement
-            ref={fieldOptionsListContainerRef}
-            dimensionX={200}
-            direction="vertical"
-            className={styles.container}
-          >
+          <FlexElement dimensionX={200} direction="vertical" className={styles.container}>
             {Object.values(FIELD_REGISTRY).map(field => (
               <ListItem
                 key={field.kind}

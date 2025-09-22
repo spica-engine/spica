@@ -23,10 +23,10 @@ type BucketFieldConfigurationPopupProps = {
   children: ReactNode;
   isOpen: boolean;
   initialValues?: FieldFormState;
-  onRegister?: (id: string) => void;
   iconName?: IconName;
   popupType?: PopupType;
   forbiddenFieldNames?: string[];
+  popoverClassName?: string;
 };
 
 const BucketFieldConfigurationPopup = ({
@@ -36,10 +36,10 @@ const BucketFieldConfigurationPopup = ({
   children,
   isOpen,
   initialValues,
-  onRegister,
   iconName,
   popupType,
-  forbiddenFieldNames
+  forbiddenFieldNames,
+  popoverClassName
 }: BucketFieldConfigurationPopupProps) => {
   const innerContainerRef = useRef<HTMLDivElement>(null);
   const bucketAddFieldRef = useRef<HTMLDivElement>(null);
@@ -96,21 +96,26 @@ const BucketFieldConfigurationPopup = ({
       iconName,
       popupType,
       initialValues,
-      forbiddenFieldNames: forbiddenFieldNames ?? [],
+      forbiddenFieldNames: forbiddenFieldNames ?? []
     };
     setBucketFieldPopups(prev => [...prev, newBucketFieldPopup]);
-    onRegister?.(id);
     return () => {
       setBucketFieldPopups(prev => prev.filter(popup => popup.id !== id));
     };
   }, [isOpen, innerFieldStyles]);
 
+
+  const handleClose = (e?: MouseEvent) => {
+    setBucketFieldPopups(bucketFieldPopups.filter(popup => popup.id !== id));
+    onClose(e);
+  };
+
   return (
     <Popover
       open={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       placement="leftStart"
-      containerProps={{ref: innerContainerRef}}
+      containerProps={{ref: innerContainerRef, className: popoverClassName || ""}}
       contentProps={{
         className: `${styles.bucketAddField} ${!isLastPopup ? styles.lowBrightness : ""}`,
         ref: bucketAddFieldRef,
@@ -122,7 +127,7 @@ const BucketFieldConfigurationPopup = ({
       content={
         isPopupRegistered && (
           <BucketAddField
-            onClose={onClose}
+            onClose={handleClose}
             onSaveAndClose={onSaveAndClose}
             popupId={id}
             forbiddenFieldNames={forbiddenFieldNames}
