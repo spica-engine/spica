@@ -1,29 +1,25 @@
-import {Button, Checkbox, Icon, type IconName} from "oziko-ui-kit";
+import {
+  Button,
+  Checkbox,
+  Icon,
+  Popover,
+  type IconName
+} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
-import type {BucketType} from "src/services/bucketService";
-import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
+import {
+  FieldKind,
+  FIELD_REGISTRY,
+  buildCreationFormPropertiesFromForm
+} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
-
-type FieldType =
-  | "string"
-  | "number"
-  | "date"
-  | "boolean"
-  | "textarea"
-  | "multiple selection"
-  | "relation"
-  | "location"
-  | "array"
-  | "object"
-  | "file"
-  | "richtext";
+import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 
 type TypeColumnRole = "select" | "data" | "new-field";
 
@@ -32,7 +28,7 @@ export type ColumnType = {
   header: any;
   key: string;
   role?: TypeColumnRole;
-  type?: FieldType;
+  type?: FieldKind;
   width?: string;
   deletable?: boolean;
   headerClassName?: string;
@@ -59,33 +55,41 @@ type ColumnHeaderProps = {
   title?: string;
   icon?: IconName;
   showDropdownIcon?: boolean;
+  onEdit?: () => void;
+  onMoveRight?: () => void;
+  onMoveLeft?: () => void;
+  onSortAsc?: () => void;
+  onSortDesc?: () => void;
+  onDelete?: () => void;
 };
 
 type ColumnMeta = {
-  type?: FieldType;
+  type?: FieldKind;
   deletable?: boolean;
   id: string;
   role?: TypeColumnRole;
 };
 
-// TODO: Update the icon mappings below to use appropriate icons for each field type.
-// Currently, many field types are using the same placeholder icon ("formatQuoteClose").
-const COLUMN_ICONS: Record<FieldType, IconName> = {
-  string: "formatQuoteClose",
-  number: "formatQuoteClose",
-  date: "formatQuoteClose",
-  boolean: "formatQuoteClose",
-  textarea: "formatQuoteClose",
-  "multiple selection": "formatListChecks",
-  relation: "formatQuoteClose",
-  location: "mapMarker",
-  array: "formatQuoteClose",
-  object: "dataObject",
-  file: "imageMultiple",
-  richtext: "formatQuoteClose"
-};
+const COLUMN_ICONS: Record<string, IconName> = Object.values(FieldKind).reduce(
+  (acc, k) => {
+    const def = FIELD_REGISTRY[k as FieldKind];
+    if (def) acc[k] = def.display.icon as IconName;
+    return acc;
+  },
+  {} as Record<string, IconName>
+);
 
-const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
+const ColumnHeader = ({
+  title,
+  icon,
+  showDropdownIcon,
+  onEdit,
+  onMoveRight,
+  onMoveLeft,
+  onSortAsc,
+  onSortDesc,
+  onDelete
+}: ColumnHeaderProps) => {
   return (
     <>
       <div className={styles.columnHeaderText}>
@@ -93,9 +97,26 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
         <span>{title || "\u00A0"}</span>
       </div>
       {showDropdownIcon && (
-        <Button variant="icon">
-          <Icon name="chevronDown" size="lg" />
-        </Button>
+        <Popover
+          content={
+            <ColumnActionsMenu
+              onEdit={onEdit}
+              onMoveRight={onMoveRight}
+              onMoveLeft={onMoveLeft}
+              onSortAsc={onSortAsc}
+              onSortDesc={onSortDesc}
+              onDelete={onDelete}
+            />
+          }
+          contentProps={{
+            className: styles.popover
+          }}
+          placement="topStart"
+        >
+          <Button variant="icon">
+            <Icon name="chevronDown" size="lg" />
+          </Button>
+        </Popover>
       )}
     </>
   );
@@ -158,33 +179,28 @@ const NewFieldHeader = memo(() => {
     () => buckets.find(i => i._id === bucketData?.bucketId),
     [buckets, bucketData?.bucketId]
   );
+
   const handleSaveAndClose = useCallback(
     (values: FormValues) => {
       if (!bucket) return;
 
-      const fieldProperty = createFieldProperty(values);
+      const fieldProperty = buildCreationFormPropertiesFromForm(values as any);
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
       return createBucketField(
         bucket,
-        fieldProperty,
+        fieldProperty as any,
         requiredField ? title : undefined,
         primaryField ? title : undefined
       );
     },
     [bucket, createBucketField]
   );
-  const forbiddenFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket]);
 
   return (
     <BucketFieldPopupsProvider>
-      <BucketFieldPopup
-        buckets={buckets}
-        bucket={bucket as BucketType}
-        onSaveAndClose={handleSaveAndClose}
-        forbiddenFieldNames={forbiddenFieldNames}
-      >
+      <BucketFieldPopup onSaveAndClose={handleSaveAndClose}>
         <Button
           variant="icon"
           className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
@@ -203,7 +219,7 @@ const buildDefaultColumns = (visibleIds: string[]): ColumnType[] => [
     header: <SelectColumnHeader visibleIds={visibleIds} />,
     key: "select",
     role: "select",
-    type: "boolean",
+    type: FieldKind.Boolean,
     width: "41px",
     headerClassName: styles.columnHeader,
     cellClassName: `${styles.selectCell} ${styles.cell}`,
@@ -230,7 +246,7 @@ const buildDefaultColumns = (visibleIds: string[]): ColumnType[] => [
 function renderCell(
   cellData: any,
   rowId: string,
-  type?: FieldType,
+  type?: FieldKind,
   deletable?: boolean,
   role?: TypeColumnRole
 ) {
@@ -261,7 +277,7 @@ function renderCell(
       );
     case "textarea":
       return renderDefault();
-    case "multiple selection":
+    case "multiple selection" as FieldKind:
       return (
         <div className={styles.multipleSelectionCell}>
           {cellData?.slice(0, 2)?.map?.((_: any, index: number) => (
@@ -332,7 +348,7 @@ function renderCell(
           )}
         </div>
       );
-    case "file":
+    case "file" as FieldKind:
       return (
         <div className={styles.fileCell}>
           <Icon name="imageMultiple" size="xs" />
@@ -377,7 +393,7 @@ function getFormattedColumns(
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      id: `${col.key}-${index}-${bucketId}`,
+      id: `${col.key}-${index}-s${bucketId}`,
       cellClassName: styles.cell
     })),
     defaultColumns[1]
