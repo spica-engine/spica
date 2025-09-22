@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import type {BucketType, Property} from "src/services/bucketService";
+import type {BucketDataType, BucketType, Property} from "src/services/bucketService";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import {buildOptionsUrl} from "./NewBucketEntryPopupUtils";
 import type {TypeArrayItems} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
@@ -18,9 +18,11 @@ const useRelationInputHandlers = (authToken: string) => {
     relationStatesRef.current = relationStates;
   }, [relationStates]);
 
-  const getOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
-  const loadMoreOptionsMap = useRef<Record<string, () => Promise<any[]>>>({});
-  const searchOptionsMap = useRef<Record<string, (s: string) => Promise<any[]>>>({});
+  const getOptionsMap = useRef<Record<string, () => Promise<BucketDataType["data"][]>>>({});
+  const loadMoreOptionsMap = useRef<Record<string, () => Promise<BucketDataType["data"][]>>>({});
+  const searchOptionsMap = useRef<Record<string, (s: string) => Promise<BucketDataType["data"][]>>>(
+    {}
+  );
   const abortControllersRef = useRef<Record<string, AbortController>>({});
 
   const ensureHandlers = useCallback(
