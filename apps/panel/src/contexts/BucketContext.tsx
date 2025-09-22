@@ -42,12 +42,6 @@ type BucketContextType = {
       write: string;
     }
   ) => Promise<any>;
-  updateBucketLimitation: (bucket: BucketType) => Promise<void>;
-  updateBucketLimitationFields: (
-    bucket: BucketType,
-    countLimit: number,
-    limitExceedBehaviour: "prevent" | "remove"
-  ) => Promise<any>;
   createBucket: (title: string) => Promise<any>;
   createBucketField: (
     bucket: BucketType,
@@ -56,6 +50,12 @@ type BucketContextType = {
     primaryField?: string
   ) => Promise<any>;
   updateCellData: (value: any, title: string, id: string) => Promise<any>;
+  updateBucketLimitation: (bucket: BucketType) => Promise<void>;
+  updateBucketLimitationFields: (
+    bucket: BucketType,
+    countLimit: number,
+    limitExceedBehaviour: "prevent" | "remove"
+  ) => Promise<void>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
@@ -99,21 +99,21 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
     apiUpdateBucketRule,
-    apiUpdatebucketLimitiation,
-    apiUpdatebucketLimitiationFields,
     apiCreateBucket,
     apiCreateBucketField,
     apiUpdateCellData,
+    apiUpdatebucketLimitiation,
+    apiUpdatebucketLimitiationFields,
     apiBuckets,
     apiUpdateBucketRuleError,
     apiUpdateBucketRuleLoading,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
-    apiUpdateBucketLimitationFieldsLoading,
-    apiUpdateBucketLimitationFieldsError,
     apiCreateBucketFieldError,
-    apiUpdateCellDataError
+    apiUpdateBucketLimitationFieldsLoading,
+    apiUpdateCellDataError,
+    apiUpdateBucketLimitationFieldsError
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -384,7 +384,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   const createBucket = useCallback(
     async (title: string) => {
       return await apiCreateBucket(title, buckets.length).then(result => {
-        if (!result) return
+        if (!result) return;
         setBuckets(prev => [...(prev ?? []), result]);
         return result;
       });
@@ -408,7 +408,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       if (!result) {
         setBucketData(oldBucketData);
       }
-      return result
+      return result;
     },
     [apiUpdateCellData, bucketData]
   );
@@ -463,6 +463,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketReadonly,
       updateBucketLimitation,
       updateBucketLimitationFields,
+      updateBucketLimitation,
+      updateBucketLimitationFields,
       createBucket,
       createBucketField,
       buckets,
@@ -476,6 +478,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiUpdateBucketLimitationFieldsLoading,
       apiUpdateBucketLimitationFieldsError,
       updateCellData,
+      apiUpdateBucketLimitationFieldsLoading,
+      apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,
       apiCreateBucketFieldError,
       apiUpdateCellDataError

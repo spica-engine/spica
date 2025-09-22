@@ -38,6 +38,9 @@
   --color-success-dark: #119907;
   --color-success-dark-rgb: 17, 153, 7;
 
+  --color-info: #2196f3;
+  --color-info-rgb: 33, 150, 243;
+
   --color-soft: #f5f5f5;
   --color-soft-rgb: 245, 245, 245;
   --color-soft-light: #ffffff;
@@ -91,6 +94,7 @@
 
   --padding-xs: 2.5px;
   --padding-sm: 5px;
+  --padding-sm-plus: 8px;
   --padding-md: 10px;
   --padding-lg: 15px;
   --padding-xl: 20px;
@@ -147,4 +151,10 @@ code {
 
 .objectInput {
   border: var(--border-default);
+}
+
+.canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }

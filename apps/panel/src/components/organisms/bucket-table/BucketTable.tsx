@@ -1,21 +1,34 @@
-import {Button, Icon, type IconName} from "oziko-ui-kit";
+import {
+  Button,
+  Checkbox,
+  FlexElement,
+  FluidContainer,
+  Icon,
+  Popover,
+  type IconName
+} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
-import type {BucketType} from "src/services/bucketService";
-import {createFieldProperty} from "../bucket-add-field/BucketAddFieldUtils";
+import {
+  FieldKind,
+  formatValue,
+  FIELD_REGISTRY,
+  buildCreationFormPropertiesFromForm,
+} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
+import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type { FieldType } from "../table/types";
 
 export type ColumnType = {
   id: string;
   header: any;
   key: string;
-  type?: FieldType;
+  type?: FieldKind;
   width?: string;
   deletable?: boolean;
   headerClassName?: string;
@@ -45,34 +58,40 @@ type ColumnHeaderProps = {
   title?: string;
   icon?: IconName;
   showDropdownIcon?: boolean;
+  onEdit?: () => void;
+  onMoveRight?: () => void;
+  onMoveLeft?: () => void;
+  onSortAsc?: () => void;
+  onSortDesc?: () => void;
+  onDelete?: () => void;
 };
 
 type ColumnMeta = {
-  type?: FieldType;
+  type?: FieldKind;
   deletable?: boolean;
   id: string;
 };
 
-// TODO: Update the icon mappings below to use appropriate icons for each field type.
-// Currently, many field types are using the same placeholder icon ("formatQuoteClose").
-const COLUMN_ICONS: Record<FieldType, IconName> = {
-  string: "formatQuoteClose",
-  number: "formatQuoteClose",
-  date: "formatQuoteClose",
-  boolean: "formatQuoteClose",
-  textarea: "formatQuoteClose",
-  "multiple selection": "formatListChecks",
-  relation: "formatQuoteClose",
-  location: "mapMarker",
-  array: "formatQuoteClose",
-  object: "dataObject",
-  file: "imageMultiple",
-  richtext: "formatQuoteClose",
-  color: "formatQuoteClose",
-  multiselect: "formatListChecks"
-};
+const COLUMN_ICONS: Record<string, IconName> = Object.values(FieldKind).reduce(
+  (acc, k) => {
+    const def = FIELD_REGISTRY[k as FieldKind];
+    if (def) acc[k] = def.display.icon as IconName;
+    return acc;
+  },
+  {} as Record<string, IconName>
+);
 
-const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
+const ColumnHeader = ({
+  title,
+  icon,
+  showDropdownIcon,
+  onEdit,
+  onMoveRight,
+  onMoveLeft,
+  onSortAsc,
+  onSortDesc,
+  onDelete
+}: ColumnHeaderProps) => {
   return (
     <>
       <div className={styles.columnHeaderText}>
@@ -80,9 +99,26 @@ const ColumnHeader = ({title, icon, showDropdownIcon}: ColumnHeaderProps) => {
         <span>{title || "\u00A0"}</span>
       </div>
       {showDropdownIcon && (
-        <Button variant="icon">
-          <Icon name="chevronDown" size="lg" />
-        </Button>
+        <Popover
+          content={
+            <ColumnActionsMenu
+              onEdit={onEdit}
+              onMoveRight={onMoveRight}
+              onMoveLeft={onMoveLeft}
+              onSortAsc={onSortAsc}
+              onSortDesc={onSortDesc}
+              onDelete={onDelete}
+            />
+          }
+          contentProps={{
+            className: styles.popover,
+          }}
+          placement="topStart"
+        >
+          <Button variant="icon">
+            <Icon name="chevronDown" size="lg" />
+          </Button>
+        </Popover>
       )}
     </>
   );
@@ -95,33 +131,28 @@ const NewFieldHeader = memo(() => {
     () => buckets.find(i => i._id === bucketData?.bucketId),
     [buckets, bucketData?.bucketId]
   );
+
   const handleSaveAndClose = useCallback(
     (values: FormValues) => {
       if (!bucket) return;
 
-      const fieldProperty = createFieldProperty(values);
+      const fieldProperty = buildCreationFormPropertiesFromForm(values as any);
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
       return createBucketField(
         bucket,
-        fieldProperty,
+        fieldProperty as any,
         requiredField ? title : undefined,
         primaryField ? title : undefined
       );
     },
     [bucket, createBucketField]
   );
-  const forbiddenFieldNames = useMemo(() => Object.keys(bucket?.properties || {}), [bucket]);
 
   return (
     <BucketFieldPopupsProvider>
-      <BucketFieldPopup
-        buckets={buckets}
-        bucket={bucket as BucketType}
-        onSaveAndClose={handleSaveAndClose}
-        forbiddenFieldNames={forbiddenFieldNames}
-      >
+      <BucketFieldPopup onSaveAndClose={handleSaveAndClose}>
         <Button
           variant="icon"
           className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
@@ -139,7 +170,7 @@ const defaultColumns: ColumnType[] = [
     id: "0",
     header: <ColumnHeader />,
     key: "select",
-    type: "boolean",
+    type: FieldKind.Boolean,
     width: "41px",
     headerClassName: styles.columnHeader,
     cellClassName: `${styles.selectCell} ${styles.cell}`,
@@ -160,6 +191,28 @@ const defaultColumns: ColumnType[] = [
   }
 ];
 
+// TODO: Refactor this function to render more appropriate UI elements for each field type.
+// Many field types are currently using the generic `renderDefault()`.
+function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
+  function renderDefault() {
+    return (
+      <div className={styles.defaultCell}>
+        <div className={styles.defaultCellData}>{cellData}</div>
+        {deletable && cellData && (
+          <Button variant="icon">
+            <Icon name="close" size="sm" />
+          </Button>
+        )}
+      </div>
+    );
+  }
+  if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
+  if (type) {
+    const formatted = formatValue(type, cellData);
+    if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
+  }
+  return renderDefault();
+}
 
 function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
   return [

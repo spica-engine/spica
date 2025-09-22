@@ -6,25 +6,47 @@
   padding-bottom: var(--padding-md);
 }
 
+.activeFormInputs {
+  background: var(--color-background);
+}
+
 .countLimitInput input {
   width: 100%;
 }
 
+.countLimitInput > div:first-child,
+.limitExceedBehaviourInput > div:first-child {
+  gap: var(--gap-sm) !important;
+}
+
 .limitExceedBehaviourInput span {
-  max-width: 80px !important;
+  max-width: unset !important;
 }
 
 .selectPopup {
   width: 220px !important;
-  margin-left: var(--padding-lg)
+  margin-left: calc(-1 * var(--padding-md));
 }
 
 .selectOption {
   padding: var(--padding-sm);
   font-size: var(--font-size-md);
   width: 100% !important;
+  height: 38.5px !important;
+  justify-content: center !important;
+  > div {
+    width: 190px !important;
+    span {
+     max-width: unset !important
+    }
+  }
 }
 
 .selectOption:hover {
   background-color: var(--color-soft);
+}
+
+.activeFormInputs > div:first-child {
+  outline: var(--border-default);
+  outline-color: var(--color-primary);
 }
