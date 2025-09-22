@@ -1,6 +1,8 @@
 import {FIELD_REGISTRY} from "../../../domain/fields";
 import type {FieldDefinition} from "src/domain/fields/types";
-import type {Property} from "src/services/bucketService";
+import type {Properties, Property} from "src/services/bucketService";
+
+type FormError = {[key: string]: string | FormError | undefined};
 
 const isObjectEffectivelyEmpty = (obj: Record<string, any>): boolean => {
   if (obj == null || typeof obj !== "object") return true;
@@ -69,8 +71,8 @@ export const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string
 };
 
 export const findFirstErrorId = (
-  errors: {[key: string]: string | typeof errors},
-  formattedProperties: Record<string, any>,
+  errors: FormError,
+  formattedProperties: Properties,
   prefix = ""
 ): string | null => {
   for (const [key, error] of Object.entries(errors)) {
@@ -130,7 +132,6 @@ export const validateValues = (
   formattedProperties: Record<string, Property>,
   requiredFields: string[]
 ) => {
-  type FormError = {[key: string]: string | FormError | Record<number, any>};
   const errors: FormError = {};
 
   for (const [key, property] of Object.entries(formattedProperties || {})) {

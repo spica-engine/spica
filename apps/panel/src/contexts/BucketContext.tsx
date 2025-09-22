@@ -55,7 +55,10 @@ type BucketContextType = {
     countLimit: number,
     limitExceedBehaviour: "prevent" | "remove"
   ) => Promise<void>;
-  createBucketEntry: (bucketId: string, data: Record<string, any>) => Promise<string | null | BucketDataType["data"][0]>;
+  createBucketEntry: (
+    bucketId: string,
+    data: Record<string, any>
+  ) => Promise<string | null | BucketDataType["data"][0]>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
@@ -476,7 +479,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,
       apiCreateBucketFieldError,
-      apiCreateBucketEntryError,
+      apiCreateBucketEntryError
     ]
   );
 

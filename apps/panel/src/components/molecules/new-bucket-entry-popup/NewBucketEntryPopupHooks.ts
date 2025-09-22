@@ -10,6 +10,8 @@ type RelationState = {
   lastSearch: string;
 };
 
+type RelationInputHandlerResult = Promise<{label: string; value: string}[]>;
+
 const useRelationInputHandlers = (authToken: string) => {
   const [relationStates, setRelationStates] = useState<Record<string, RelationState>>({});
   const relationStatesRef = useRef(relationStates);
@@ -18,11 +20,9 @@ const useRelationInputHandlers = (authToken: string) => {
     relationStatesRef.current = relationStates;
   }, [relationStates]);
 
-  const getOptionsMap = useRef<Record<string, () => Promise<BucketDataType["data"][]>>>({});
-  const loadMoreOptionsMap = useRef<Record<string, () => Promise<BucketDataType["data"][]>>>({});
-  const searchOptionsMap = useRef<Record<string, (s: string) => Promise<BucketDataType["data"][]>>>(
-    {}
-  );
+  const getOptionsMap = useRef<Record<string, () => RelationInputHandlerResult>>({});
+  const loadMoreOptionsMap = useRef<Record<string, () => RelationInputHandlerResult>>({});
+  const searchOptionsMap = useRef<Record<string, (s: string) => RelationInputHandlerResult>>({});
   const abortControllersRef = useRef<Record<string, AbortController>>({});
 
   const ensureHandlers = useCallback(
