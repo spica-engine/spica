@@ -198,6 +198,8 @@ function BucketWithVisibleColumns({
     }
   };
 
+  const data = bucketData?.data ?? [];
+
   return (
     <EntrySelectionProvider currentBucketId={bucket._id}>
       <div className={styles.container}>
@@ -211,11 +213,12 @@ function BucketWithVisibleColumns({
           searchLoading={bucketDataLoading && !isTableLoading}
           refreshLoading={refreshLoading}
           deleteBucketEntry={deleteBucketEntry}
+          bucketData={data}
         />
         <BucketTable
           bucketId={bucket._id}
           columns={filteredColumns}
-          data={bucketData?.data ?? []}
+          data={data}
           onScrollEnd={handleScrollEnd}
           totalDataLength={bucketData?.meta?.total ?? 0}
           maxHeight="88vh"

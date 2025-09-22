@@ -1,10 +1,4 @@
-import {
-  Button,
-  Checkbox,
-  Icon,
-  Popover,
-  type IconName
-} from "oziko-ui-kit";
+import {Button, Checkbox, Icon, Popover, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
@@ -122,14 +116,20 @@ const ColumnHeader = ({
   );
 };
 
-const SelectColumnHeader = ({visibleIds}: {visibleIds: string[]}) => {
-  return (
+const SelectColumnHeader = ({
+  visibleIds,
+  dataExists
+}: {
+  visibleIds: string[];
+  dataExists: boolean;
+}) => {
+  return dataExists ? (
     <div className={styles.selectColumnHeader}>
       <span>
         <SelectionCheckbox rowId="select-all" visibleIds={visibleIds} />
       </span>
     </div>
-  );
+  ) : null;
 };
 
 function SelectionCheckbox({rowId, visibleIds}: {rowId: string; visibleIds?: string[]}) {
@@ -213,10 +213,10 @@ const NewFieldHeader = memo(() => {
   );
 });
 
-const buildDefaultColumns = (visibleIds: string[]): ColumnType[] => [
+const buildDefaultColumns = (visibleIds: string[], dataExists: boolean): ColumnType[] => [
   {
     id: "0",
-    header: <SelectColumnHeader visibleIds={visibleIds} />,
+    header: <SelectColumnHeader visibleIds={visibleIds} dataExists={dataExists} />,
     key: "select",
     role: "select",
     type: FieldKind.Boolean,
@@ -378,9 +378,10 @@ function renderCell(
 function getFormattedColumns(
   columns: ColumnType[],
   bucketId: string,
-  visibleIds: string[]
+  visibleIds: string[],
+  dataExists: boolean
 ): ColumnType[] {
-  const defaultColumns = buildDefaultColumns(visibleIds);
+  const defaultColumns = buildDefaultColumns(visibleIds, dataExists);
   return [
     defaultColumns[0],
     ...columns.map((col, index) => ({
@@ -452,9 +453,10 @@ const BucketTable = ({
     () => (data?.map?.(r => r._id).filter(Boolean) as string[]) || [],
     [data]
   );
+  const dataExists = data.length > 0;
   const formattedColumns = useMemo(
-    () => getFormattedColumns(columns, bucketId, visibleIds),
-    [columns, bucketId, visibleIds]
+    () => getFormattedColumns(columns, bucketId, visibleIds, dataExists),
+    [columns, bucketId, visibleIds, dataExists]
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(

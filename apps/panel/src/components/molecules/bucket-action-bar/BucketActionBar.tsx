@@ -13,6 +13,7 @@ type BucketActionBarProps = {
   onRefresh: () => Promise<BucketDataType | void>;
   onSearch: (search: string) => void;
   bucket: BucketType;
+  bucketData: Record<string, any>[];
   searchLoading?: boolean;
   refreshLoading?: boolean;
   columns: ColumnType[];
@@ -35,10 +36,51 @@ const generateErrorMessage = (failedIds: string[]): string | null => {
   return `Failed to delete the entries with ids ${failedIds[0]}, ${failedIds[1]}, and ${count - 2} more.`;
 };
 
+const DeleteWarningParagraph = ({
+  selectedEntries,
+  isDataDependent,
+  bucketData
+}: {
+  selectedEntries: Set<string>;
+  isDataDependent: boolean;
+  bucketData: Record<string, any>[];
+}) => {
+  const count = selectedEntries.size;
+  const isSingle = count === 1;
+
+  const dependentEntries = isDataDependent
+    ? bucketData.filter(entry => selectedEntries.has(entry._id))
+    : [];
+
+  return (
+    <div className="space-y-2">
+      <p>
+        This action will permanently delete {count} selected entr
+        {isSingle ? "y" : "ies"}.
+      </p>
+
+      {isDataDependent && (
+        <div>
+          <p>
+            Break all relations and delete {count} dependent document
+            {isSingle ? "" : "s"}:
+          </p>
+          <ul>
+            {dependentEntries.map(entry => (
+              <li key={entry._id}>{entry._id}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const BucketActionBar = ({
   onRefresh,
   onSearch,
   bucket,
+  bucketData,
   searchLoading,
   refreshLoading,
   columns,
@@ -86,6 +128,12 @@ const BucketActionBar = ({
       }
     },
     [debouncedSearch]
+  );
+
+  const isDataDependent = useMemo(
+    () =>
+      Object.values(bucket?.properties).find(prop => prop.type === "relation" && prop.dependent),
+    [bucket]
   );
 
   const handleEntryDeletion = async () => {
@@ -196,10 +244,11 @@ const BucketActionBar = ({
           inputPlaceholder="Type Here"
           description={
             <>
-              <p>
-                This action will permanently delete {selectedEntries.size} selected entr
-                {selectedEntries.size === 1 ? "y" : "ies"}.
-              </p>
+              <DeleteWarningParagraph
+                selectedEntries={selectedEntries}
+                isDataDependent={!!isDataDependent}
+                bucketData={bucketData}
+              />
               <span>
                 Please type <strong>agree</strong> to confirm deletion.
               </span>
