@@ -33,10 +33,10 @@ const cleanValue = (
 
   if (type === "object") {
     const cleanedObject = Object.fromEntries(
-      Object.entries(value).map(([k, v]) => [
-        k,
-        v === "" || (Array.isArray(v) && v.length === 0) ? undefined : v
-      ])
+      Object.entries(value).map(([key, value]) => {
+        const isValueEmpty = value === "" || (Array.isArray(value) && value.length === 0);
+        return [key, isValueEmpty ? undefined : value];
+      })
     );
     return isObjectEffectivelyEmpty(cleanedObject) ? undefined : cleanedObject;
   }
@@ -45,16 +45,27 @@ const cleanValue = (
 };
 
 export const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string) => {
-  const base = `${import.meta.env.VITE_BASE_URL}/api/bucket/${bucketId}/data?paginate=true&relation=true&limit=25&sort=%7B%22_id%22%3A-1%7D`;
-  const filter = searchValue
-    ? `&filter=${encodeURIComponent(
-        JSON.stringify({
-          $or: [{title: {$regex: searchValue, $options: "i"}}]
-        })
-      )}`
-    : "";
+  const baseUrl = import.meta.env.VITE_BASE_URL;
+  const params = new URLSearchParams({
+    paginate: "true",
+    relation: "true",
+    limit: "25",
+    sort: JSON.stringify({_id: -1}),
+    skip: String(skip)
+  });
 
-  return `${base}${filter}&skip=${skip}`;
+  if (searchValue) {
+    const filter = {
+      $or: [
+        {
+          title: {$regex: searchValue, $options: "i"}
+        }
+      ]
+    };
+    params.append("filter", JSON.stringify(filter));
+  }
+
+  return `${baseUrl}/api/bucket/${bucketId}/data?${params.toString()}`;
 };
 
 export const findFirstErrorId = (
@@ -99,14 +110,13 @@ export const cleanValueRecursive = (
   preferUndefined?: boolean
 ): any => {
   if (property?.type === "object" && property.properties) {
-    const cleanedObject = Object.fromEntries(
-      Object.entries(val || {}).map(([k, v]) => [
-        k,
-        property.properties[k]
-          ? cleanValueRecursive(v, property.properties[k], property.required?.includes(k), true)
-          : v
-      ])
-    );
+    const entries = Object.entries(val || {}).map(([key, value]) => {
+      const schema = property.properties[key];
+      const isRequired = property.required?.includes(key);
+      const cleanedValue = schema ? cleanValueRecursive(value, schema, isRequired, true) : value;
+      return [key, cleanedValue];
+    });
+    const cleanedObject = Object.fromEntries(entries);
     return cleanedObject;
   } else if (property?.type === "array" && property.items) {
     if (!Array.isArray(val)) return val;
@@ -125,10 +135,8 @@ export const validateValues = (
 
   for (const [key, property] of Object.entries(formattedProperties || {})) {
     const val = value?.[key];
-    const propertyWithRequired = {
-      ...property,
-      required: requiredFields?.includes(key) ? true : property.required
-    };
+    const required = requiredFields?.includes(key) ? true : property.required;
+    const propertyWithRequired = {...property, required};
     const kind = property.type;
     const field = FIELD_REGISTRY[kind];
     const msg = field?.validateValue(val, propertyWithRequired);

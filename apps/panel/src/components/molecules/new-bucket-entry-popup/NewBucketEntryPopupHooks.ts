@@ -42,7 +42,7 @@ const useRelationInputHandlers = (authToken: string) => {
               [key]: {skip: 25, total: data?.meta?.total || 0, lastSearch: ""}
             }));
             return (
-              data?.data?.map((i: {_id: string, [key: string]: any}) => ({
+              data?.data?.map((i: {_id: string; [key: string]: any}) => ({
                 label: i[bucketPrimaryKey],
                 value: i._id
               })) || []
@@ -134,7 +134,11 @@ const useRelationInputHandlers = (authToken: string) => {
   return {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers};
 };
 
-export const useValueProperties = (bucket: BucketType, authToken: string, primaryKeys: Record<string, string>) => {
+export const useValueProperties = (
+  bucket: BucketType,
+  authToken: string,
+  primaryKeys: Record<string, string>
+) => {
   const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers} =
     useRelationInputHandlers(authToken);
 

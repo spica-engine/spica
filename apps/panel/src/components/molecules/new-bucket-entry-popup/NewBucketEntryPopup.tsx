@@ -43,7 +43,6 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const [value, setValue] = useState<Record<string, any>>(() =>
     generateInitialValues(formattedProperties)
   );
-  console.log("Formatted Properties:", formattedProperties);
 
   useEffect(() => {
     setApiError(createBucketEntryError);
