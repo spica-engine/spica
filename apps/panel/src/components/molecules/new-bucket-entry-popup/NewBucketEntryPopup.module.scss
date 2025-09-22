@@ -23,6 +23,9 @@
   > div {
     border: none;
   }
+  *:not(input):not(textarea) {
+    text-transform: capitalize;
+  }
 }
 
 .footer {

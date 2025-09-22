@@ -1,9 +1,10 @@
-* {
+.confirmModal {
+  * {
+    font-family: var(--font-family-base) !important;
+    line-height: unset !important;
+  }
   font-family: var(--font-family-base) !important;
   line-height: unset !important;
-}
-
-.confirmModal {
   padding: 0;
   min-height: 0 !important;
   width: 600px !important;
@@ -17,7 +18,7 @@
       font-size: var(--font-size-xl);
       font-weight: 700;
       padding: var(--padding-xl) 0 !important;
-      color: var(--color-black)
+      color: var(--color-black);
     }
   }
   .body {
@@ -59,7 +60,8 @@
   border: none;
 }
 
-.cancelButton, .confirmButton {
+.cancelButton,
+.confirmButton {
   height: 32px !important;
 }
 

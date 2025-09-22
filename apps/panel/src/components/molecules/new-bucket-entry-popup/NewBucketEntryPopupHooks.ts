@@ -24,7 +24,7 @@ const useRelationInputHandlers = (authToken: string) => {
   const abortControllersRef = useRef<Record<string, AbortController>>({});
 
   const ensureHandlers = useCallback(
-    (bucketId: string, key: string) => {
+    (bucketId: string, key: string, bucketPrimaryKey: string) => {
       if (!getOptionsMap.current[key]) {
         getOptionsMap.current[key] = async () => {
           if (abortControllersRef.current[key]) abortControllersRef.current[key].abort();
@@ -42,8 +42,8 @@ const useRelationInputHandlers = (authToken: string) => {
               [key]: {skip: 25, total: data?.meta?.total || 0, lastSearch: ""}
             }));
             return (
-              data?.data?.map((i: {title: string; _id: string}) => ({
-                label: i.title,
+              data?.data?.map((i: {_id: string, [key: string]: any}) => ({
+                label: i[bucketPrimaryKey],
                 value: i._id
               })) || []
             );
@@ -134,7 +134,7 @@ const useRelationInputHandlers = (authToken: string) => {
   return {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers};
 };
 
-export const useValueProperties = (bucket: BucketType, authToken: string) => {
+export const useValueProperties = (bucket: BucketType, authToken: string, primaryKeys: Record<string, string>) => {
   const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers} =
     useRelationInputHandlers(authToken);
 
@@ -150,7 +150,7 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
       }
       let base;
       if (kind === "relation") {
-        ensureHandlers(prop.bucketId, key);
+        ensureHandlers(prop.bucketId, key, primaryKeys[prop.bucketId]);
         const relationProps = {
           getOptions: getOptionsMap.current[key],
           loadMoreOptions: loadMoreOptionsMap.current[key],
@@ -180,7 +180,9 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
         "default"
       ] as (keyof (Property | TypeArrayItems))[];
       for (const k of keys) {
-        if (prop?.[k] !== undefined) withId[k] = prop[k];
+        if (prop?.[k as string] !== undefined) {
+          withId[k] = prop[k as string];
+        }
       }
       output[key] = withId;
     }

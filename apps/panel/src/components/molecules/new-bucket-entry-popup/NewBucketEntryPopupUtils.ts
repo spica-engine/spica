@@ -28,7 +28,7 @@ const cleanValue = (
   }
 
   if (type === "relation") {
-    return value?.value;
+    return Array.isArray(value) ? value.map(v => v.value) : value?.value;
   }
 
   if (type === "object") {
