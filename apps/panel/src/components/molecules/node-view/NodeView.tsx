@@ -8,7 +8,7 @@ export interface Field {
   isUnique?: boolean;
   isRelation?: boolean;
   relationTo?: string;
-  path?: string; // Add path property
+  path?: string;
 }
 
 export interface Node {
@@ -21,12 +21,12 @@ export interface Node {
 interface NodeViewProps {
   node: Node;
   onMouseDown: (nodeId: string, e: React.MouseEvent) => void;
-  onClick?: (nodeId: string, e: React.MouseEvent) => void; // Add onClick prop
+  onClick?: (nodeId: string, e: React.MouseEvent) => void;
   onAddField: (nodeId: string) => void;
   onRemoveField: (nodeId: string, fieldId: string) => void;
   dragging: boolean;
-  isFocused?: boolean; // Add focus state prop
-  focusMode?: boolean; // Whether any node is focused
+  isFocused?: boolean;
+  focusMode?: boolean;
 }
 
 const NodeView: React.FC<NodeViewProps> = ({
@@ -36,15 +36,12 @@ const NodeView: React.FC<NodeViewProps> = ({
   onAddField,
   onRemoveField,
   dragging,
-  isFocused = true, // Default to true when no focus mode is active
+  isFocused = true,
   focusMode = false,
 }) => {
-  // Track mouse movement to differentiate between clicks and drags
   const mouseDownPosRef = React.useRef<{x: number, y: number} | null>(null);
   
-  // Use callbacks to prevent unnecessary re-renders
   const handleNodeMouseDown = useCallback((e: React.MouseEvent) => {
-    // Store the initial position to check if this is a drag or click
     mouseDownPosRef.current = { x: e.clientX, y: e.clientY };
     onMouseDown(node.id, e);
   }, [node.id, onMouseDown]);
@@ -52,11 +49,9 @@ const NodeView: React.FC<NodeViewProps> = ({
   const handleNodeClick = useCallback((e: React.MouseEvent) => {
     if (!onClick || !mouseDownPosRef.current) return;
     
-    // Check if this was a click (minimal movement) or a drag
     const dx = Math.abs(e.clientX - mouseDownPosRef.current.x);
     const dy = Math.abs(e.clientY - mouseDownPosRef.current.y);
     
-    // If movement was minimal, consider it a click
     if (dx < 5 && dy < 5) {
       onClick(node.id, e);
     }
@@ -102,13 +97,11 @@ const NodeView: React.FC<NodeViewProps> = ({
     return field.type;
   }, []);
 
-  // Helper to create indentation for nested fields
   const getFieldIndent = useCallback((path?: string) => {
     if (!path) return 0;
-    return (path.split('.').length - 1) * 15; // 15px indent per level
+    return (path.split('.').length - 1) * 15;
   }, []);
 
-  // Helper to format field name for display - show only the last part of nested fields
   const getFieldDisplayName = useCallback((field: Field) => {
     const path = field.path || field.name;
     const parts = path.split('.');
@@ -124,8 +117,8 @@ const NodeView: React.FC<NodeViewProps> = ({
         cursor: dragging ? 'grabbing' : 'grab'
       }}
       onMouseDown={handleNodeMouseDown}
-      onMouseUp={handleNodeClick} // Handle click on mouse up to avoid conflict with drag
-      onClick={(e) => e.stopPropagation()} // Stop click propagation to container
+      onMouseUp={handleNodeClick}
+      onClick={(e) => e.stopPropagation()}
     >
       <div className={styles.nodeHeader}>
         <h3>{node.name}</h3>
@@ -171,5 +164,4 @@ const NodeView: React.FC<NodeViewProps> = ({
   );
 };
 
-// Use memo to prevent unnecessary re-renders
 export default memo(NodeView);

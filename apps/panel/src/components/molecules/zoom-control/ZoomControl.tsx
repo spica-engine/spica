@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './ZoomControl.module.scss';
+import Button from '../../atoms/button/Button';
 
 interface ZoomControlProps {
   zoom: number;
@@ -12,10 +13,10 @@ interface ZoomControlProps {
 const ZoomControl: React.FC<ZoomControlProps> = ({ zoom, zoomIn, zoomOut, fitToView, resetView }) => {
   return (
     <div className={styles.controls}>
-      <button onClick={resetView} className={styles.controlBtn}>Reset View</button>
-      <button onClick={zoomIn} className={styles.controlBtn}>Zoom In</button>
-      <button onClick={zoomOut} className={styles.controlBtn}>Zoom Out</button>
-      <button onClick={fitToView} className={styles.controlBtn}>Fit to View</button>
+      <Button onClick={resetView} className={styles.controlBtn} >Reset View</Button>
+      <Button onClick={zoomIn} className={styles.controlBtn}  >Zoom In</Button>
+      <Button onClick={zoomOut} className={styles.controlBtn} >Zoom Out</Button>
+      <Button onClick={fitToView} className={styles.controlBtn} >Fit to View</Button>
       <span className={styles.zoomLevel}>{Math.round(zoom * 100)}%</span>
     </div>
   );

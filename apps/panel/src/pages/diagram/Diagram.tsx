@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useBucketService } from "../../services/bucketService";
-import "./Diagram.css";
+import styles from "./Diagram.module.scss";
 import ZoomControl from "../../components/molecules/zoom-control/ZoomControl";
 import NodeView from "../../components/molecules/node-view/NodeView";
 import {
@@ -53,7 +53,7 @@ const Diagram: React.FC = () => {
     } = relationData;
 
     return (
-      <g key={relationId} className="relation-line">
+      <g key={relationId} className={styles.relationLine}>
         <path
           d={pathData}
           stroke="#666"
@@ -77,46 +77,25 @@ const Diagram: React.FC = () => {
           fontSize="12"
           fill="#444"
           fontWeight="bold"
-          className="relation-type-label"
+          className={styles.relationTypeLabel}
         >
           {relation.type}
         </text>
         
-        <text
-          x={useRightSideStart ? startX - 20 : startX + 20}
-          y={startY - 8}
-          textAnchor={useRightSideStart ? "end" : "start"}
-          fontSize="12"
-          fill="#666"
-          fontWeight="bold"
-        >
-          {startType}
-        </text>
-        
-        <text
-          x={useLeftSideEnd ? endX + 20 : endX - 20}
-          y={endY - 8}
-          textAnchor={useLeftSideEnd ? "start" : "end"}
-          fontSize="12"
-          fill="#666"
-          fontWeight="bold"
-        >
-          {endType}
-        </text>
       </g>
     );
   };
 
   if (!apiBuckets || apiBuckets.length === 0) {
     return (
-      <div className="diagram-container">
-        <div className="loading-message">Loading buckets...</div>
+      <div className={styles.diagramContainer}>
+        <div className={styles.loadingMessage}>Loading buckets...</div>
       </div>
     );
   }
 
   return (
-    <div className="diagram-wrapper">
+    <div className={styles.diagramWrapper}>
       <ZoomControl
         zoom={interactions.zoom}
         zoomIn={interactions.zoomIn}
@@ -127,7 +106,7 @@ const Diagram: React.FC = () => {
 
       <div
         ref={containerRef}
-        className="diagram-container"
+        className={styles.diagramContainer}
         onMouseDown={(e) => {
           interactions.handlePanStart(e);
           focusMode.handleBackgroundClick(e, containerRef); // Add background click handler
@@ -140,7 +119,7 @@ const Diagram: React.FC = () => {
         }}
       >
         <div
-          className="diagram-content"
+          className={styles.diagramContent}
           style={{
             transform: `translate(${interactions.pan.x}px, ${interactions.pan.y}px) scale(${interactions.zoom})`,
             transformOrigin: "0 0"
@@ -148,7 +127,7 @@ const Diagram: React.FC = () => {
         >
           <svg
             ref={svgRef}
-            className="relations-svg"
+            className={styles.relationsSvg}
             style={{
               width: "5000px",
               height: "5000px",
