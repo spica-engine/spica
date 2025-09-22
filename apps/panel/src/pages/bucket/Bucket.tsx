@@ -4,7 +4,7 @@ import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
+import type {BucketDataQueryWithIdType, BucketDataType, BucketType} from "src/services/bucketService";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import Loader from "../../components/atoms/loader/Loader";
 import {EntrySelectionProvider} from "../../contexts/EntrySelectionContext";
@@ -138,7 +138,7 @@ type BucketWithVisibleColumnsProps = {
   bucketDataLoading: boolean;
   isTableLoading: boolean;
   handleSearch: (search: string) => Promise<void>;
-  handleRefresh: () => Promise<any>;
+  handleRefresh: () => Promise<void | BucketDataType>;
   refreshLoading: boolean;
   tableRef: React.RefObject<HTMLElement | null>;
   deleteBucketEntry: (entryId: string, bucketId: string) => Promise<any>;

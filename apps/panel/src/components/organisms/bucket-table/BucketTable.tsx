@@ -25,11 +25,13 @@ type FieldType =
   | "file"
   | "richtext";
 
+type TypeColumnRole = "select" | "data" | "new-field";
+
 export type ColumnType = {
   id: string;
   header: any;
   key: string;
-  role?: "select" | "data" | "new-field";
+  role?: TypeColumnRole;
   type?: FieldType;
   width?: string;
   deletable?: boolean;
@@ -63,7 +65,7 @@ type ColumnMeta = {
   type?: FieldType;
   deletable?: boolean;
   id: string;
-  role?: "select" | "data" | "new-field";
+  role?: TypeColumnRole;
 };
 
 // TODO: Update the icon mappings below to use appropriate icons for each field type.
@@ -230,7 +232,7 @@ function renderCell(
   rowId: string,
   type?: FieldType,
   deletable?: boolean,
-  role?: "select" | "data" | "new-field"
+  role?: TypeColumnRole
 ) {
   function renderDefault() {
     return (

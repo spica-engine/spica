@@ -32,8 +32,8 @@ type BucketContextType = {
   renameBucket: (newTitle: string, bucket: BucketType) => void;
   deleteBucket: (bucketId: string) => Promise<any>;
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
-  deleteBucketHistory: (bucket: BucketType) => Promise<any>;
-  refreshBucketData: () => Promise<any>;
+  deleteBucketHistory: (bucket: BucketType) => Promise<string | null>;
+  refreshBucketData: () => Promise<BucketDataType | void>;
   updateBucketReadonly: (bucket: BucketType) => Promise<any>;
   updateBucketRule: (
     bucket: BucketType,

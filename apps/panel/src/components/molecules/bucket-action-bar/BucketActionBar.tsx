@@ -10,7 +10,7 @@ import type {ColumnType} from "../../../components/organisms/bucket-table/Bucket
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 
 type BucketActionBarProps = {
-  onRefresh: () => Promise<any>;
+  onRefresh: () => Promise<BucketDataType | void>;
   onSearch: (search: string) => void;
   bucket: BucketType;
   searchLoading?: boolean;
@@ -18,10 +18,22 @@ type BucketActionBarProps = {
   columns: ColumnType[];
   visibleColumns: Record<string, boolean>;
   toggleColumn: (key?: string) => void;
-  deleteBucketEntry: (entryId: string, bucketId: string) => Promise<any>;
+  deleteBucketEntry: (entryId: string, bucketId: string) => Promise<string | null>;
 };
 
 const SEARCH_DEBOUNCE_TIME = 1000;
+
+const generateErrorMessage = (failedIds: string[]): string | null => {
+  const count = failedIds.length;
+  if (count === 0) return null;
+  if (count === 1) {
+    return `Failed to delete the entry with id ${failedIds[0]}.`;
+  }
+  if (count === 2) {
+    return `Failed to delete the entries with ids ${failedIds[0]} and ${failedIds[1]}.`;
+  }
+  return `Failed to delete the entries with ids ${failedIds[0]}, ${failedIds[1]}, and ${count - 2} more.`;
+};
 
 const BucketActionBar = ({
   onRefresh,
@@ -82,35 +94,23 @@ const BucketActionBar = ({
     const failedEntryIds: string[] = [];
     await Promise.all(
       Array.from(selectedEntries).map(async entryId => {
-        const result: string | null = await deleteBucketEntry(entryId, bucket._id);
+        const result = await deleteBucketEntry(entryId, bucket._id);
         if (!result) {
           failedEntryIds.push(entryId);
         }
       })
     );
 
-    const newBucketData = (await onRefresh()) as BucketDataType;
+    const newBucketData = await onRefresh();
     if (newBucketData) {
-      setTimeout(() => {
-        const dataIds = new Set(newBucketData?.data.map(d => d._id));
-        const deletedIds = [...selectedEntries].filter(id => !dataIds.has(id));
-        deletedIds.forEach(id => deselectEntry(id));
-      }, 0);
+      const dataIds = new Set(newBucketData?.data.map(d => d._id));
+      const deletedIds = [...selectedEntries].filter(id => !dataIds.has(id));
+      deletedIds.forEach(id => deselectEntry(id));
     }
     setDeleteLoading(false);
-    if (failedEntryIds.length > 0) {
-      let message = "";
-      if (failedEntryIds.length === 1) {
-        message = `Failed to delete the entry with id ${failedEntryIds[0]}.`;
-      } else if (failedEntryIds.length === 2) {
-        message = `Failed to delete the entries with ids ${failedEntryIds[0]} and ${failedEntryIds[1]}.`;
-      } else {
-        message = `Failed to delete the entries with ids ${failedEntryIds[0]}, ${failedEntryIds[1]}, and ${failedEntryIds.length - 2} more.`;
-      }
-      setDeleteEntryError(message);
-    } else {
-      setIsDeleteConfirmationOpen(false);
-    }
+    const message = generateErrorMessage(failedEntryIds);
+    if (message) setDeleteEntryError(message);
+    else setIsDeleteConfirmationOpen(false);
   };
 
   const handleCloseEntryDeletionForm = () => {
@@ -201,7 +201,7 @@ const BucketActionBar = ({
                 {selectedEntries.size === 1 ? "y" : "ies"}.
               </p>
               <span>
-                Please type <strong>Agree</strong> to confirm deletion.
+                Please type <strong>agree</strong> to confirm deletion.
               </span>
             </>
           }
