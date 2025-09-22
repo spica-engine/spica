@@ -1,6 +1,6 @@
 import type { TypeMenuItems, TypeNavigatorItems } from "../../components/organisms/sidebar/SideBar";
 
-export const menuItems: TypeMenuItems[] = [
+export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[] => [
   {
     id: "bucket",
     name: "Bucket",
@@ -10,7 +10,9 @@ export const menuItems: TypeMenuItems[] = [
       buttons: [{
         icon: "clockOutline",
         onClick: () => { }
-      }]
+      },
+      { icon: "viewList", onClick: () => navigate?.("/diagram") }
+    ]
     },
     addNewButtonText: "New Bucket"
   },
@@ -63,6 +65,8 @@ export const menuItems: TypeMenuItems[] = [
     }
   },
 ];
+
+export const menuItems: TypeMenuItems[] = getMenuItems();
 
 export const navigatorItems: { [key: string]: TypeNavigatorItems[] } = {
   dashboard: [
