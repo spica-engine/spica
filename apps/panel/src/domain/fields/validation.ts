@@ -234,7 +234,6 @@ const arrayConstraints = {
       : schema
 } as unknown as Constraint;
 
-// ---- helper to apply constraints ----
 function applyConstraints<T extends Yup.AnySchema>(
   schema: T,
   property: Property,
