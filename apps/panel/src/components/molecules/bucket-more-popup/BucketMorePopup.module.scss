@@ -19,6 +19,9 @@
     width: 100% !important;
     justify-content: start !important;
     padding: 0 var(--padding-md);
+    &:hover {
+      background-color: var(--color-hover) !important;
+    }
   }
 }
 
@@ -27,6 +30,7 @@
   height: 40px !important;
   width: 100% !important;
   align-items: baseline;
+  cursor: pointer;
   button {
     width: 100% !important;
     min-width: 100% !important;
@@ -76,4 +80,11 @@
 
 .danger {
   color: var(--color-danger) !important;
+}
+
+.limitationsContainer {
+  display: initial;
+  > div {
+    width: 100% !important
+  }
 }
