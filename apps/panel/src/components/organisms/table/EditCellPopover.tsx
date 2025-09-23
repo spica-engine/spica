@@ -250,11 +250,20 @@ export const EditCellPopover = ({
     handleInputChange(getInitialValue());
   }, [value]);
 
+  const savingRef = useRef(false);
   useEffect(() => {
-    const handleEnter = (event: KeyboardEvent) => {
+    const handleEnter = async (event: KeyboardEvent) => {
       if (event.key !== "Enter" || event.shiftKey) return;
-      handleSave();
+      if (savingRef.current) return;
+
+      savingRef.current = true;
+      try {
+        await handleSave();
+      } finally {
+        savingRef.current = false;
+      }
     };
+
     window.addEventListener("keydown", handleEnter);
 
     return () => {
