@@ -29,14 +29,6 @@ export type BucketAddFieldBusinessProps = {
   forbiddenFieldNames?: string[];
 };
 
-type TypePresetValues = {
-  preset: string;
-  makeEnumerated: boolean;
-  enumeratedValues: string[];
-  definePattern: boolean;
-  regularExpression: string;
-};
-
 export type FormErrors = {
   fieldValues?: Record<string, string>;
   presetValues?: Record<string, string>;
@@ -62,7 +54,6 @@ function useFormState(
     const base = initForm(type, initialValues);
 
     const newFormValues = {...base, type};
-    //console.log("Initialized form values:", newFormValues, "\nWith initialValues:", initialValues);
     setFormValues(newFormValues);
     setFormErrors({});
     setIsInitialized(true);
@@ -216,27 +207,21 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
 
   return (
     <BucketAddFieldView
-      // Display props
       className={className}
-      // Form data
       formValues={formValues}
       formErrors={formErrors}
       error={(apiError || formErrors?.innerFields) ?? null}
-      // Schema and configuration
       mainFormInputProperties={mainFormProperties}
       configurationInputProperties={configurationProperties}
       defaultInputProperty={defaultValueProperties}
       presetInputProperties={presetProperties}
       multipleSelectionTabProperties={multipleSelectionTabProperties}
-      // State
       isLoading={isLoading}
-      // Event handlers
       handleFormValueChange={handleFormValueChange}
       handleSaveAndClose={handleSaveAndClose}
       handleCreateInnerField={handleCreateInnerField}
       handleSaveInnerField={handleSaveInnerField}
       handleDeleteInnerField={handleDeleteInnerField}
-      // External dependencies
       popupId={popupId}
       type={fieldType as FieldKind}
     />

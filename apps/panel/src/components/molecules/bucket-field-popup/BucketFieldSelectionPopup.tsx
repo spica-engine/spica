@@ -1,4 +1,4 @@
-import {cloneElement, memo, useRef, useState, type ReactNode} from "react";
+import {cloneElement, memo, useState, type ReactNode} from "react";
 import {FlexElement, ListItem, Icon, Popover, type IconName} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
