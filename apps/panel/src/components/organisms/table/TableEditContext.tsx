@@ -10,11 +10,6 @@ export type CellEditPayload = {
   constraints?: Constraints;
   columnId: string;
   rowId: string;
-  cellViewportPosition: {
-    viewportRelativeLeft: number;
-    viewportRelativeTop: number;
-    viewportWidth: number;
-  };
   setCellValue: (value: any) => void;
 };
 

@@ -33,7 +33,7 @@ import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {
   TypeProperties,
   TypeProperty
-} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 //import useInputRepresenter from "../../../hooks/useInputRepresenter";
 
 type InnerFieldProps = {

@@ -1,4 +1,4 @@
-import {memo, useRef, useState, useContext, type JSX, type ReactNode, type RefObject} from "react";
+import {memo, useRef, useState, useContext, type JSX, type ReactNode} from "react";
 import { TableEditContext } from "./TableEditContext";
 import {MIN_COLUMN_WIDTH} from "./columnUtils";
 import type {Constraints} from "./types";
@@ -203,7 +203,7 @@ export const EditableCell = memo(
         columnId,
         rowId,
         setCellValue: val => {
-          // Force a new reference for arrays and objects
+          // Force a new reference for arrays and objects to ensure re-renders
           if (Array.isArray(val)) {
             setCellValue([...val]);
           } else if (val && typeof val === "object") {

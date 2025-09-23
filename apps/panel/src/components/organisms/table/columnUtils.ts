@@ -10,7 +10,7 @@ export const parseWidth = (widthValue: string | number, containerWidth: number):
   if (widthValue.endsWith("rem")) return parseFloat(widthValue) * baseFontSize;
   if (widthValue.endsWith("em")) return parseFloat(widthValue) * baseFontSize;
   if (widthValue.endsWith("%")) return (parseFloat(widthValue) / 100) * containerWidth;
-  return 0; // fallback for unsupported or auto values
+  return 0;
 };
 
 export const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) => {

@@ -49,7 +49,7 @@ type BucketContextType = {
     requiredField?: string,
     primaryField?: string
   ) => Promise<any>;
-  updateCellData: (value: any, title: string, id: string) => Promise<any>;
+  updateCellData: (value: any, title: string, id: string) => Promise<BucketDataType["data"][0] | void>;
   updateBucketLimitation: (bucket: BucketType) => Promise<void>;
   updateBucketLimitationFields: (
     bucket: BucketType,
@@ -391,6 +391,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     },
     [buckets, apiCreateBucket]
   );
+
   const updateCellData = useCallback(
     async (value: any, title: string, id: string) => {
       const oldBucketData = bucketData;

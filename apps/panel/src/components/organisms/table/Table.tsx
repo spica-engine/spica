@@ -118,13 +118,6 @@ function Table({
 
   const [cellEditPayload, setCellEditPayload] = useState<CellEditPayload | null>(null);
 
-  // Handler to start editing a cell, to be provided via context
-  const handleEditCellStart = useCallback((payload: CellEditPayload) => {
-    const cellViewportPosition = getCellViewportPosition(payload.ref.current!, containerRef.current!);
-    setCellEditPayload({...payload, cellViewportPosition});
-  }, []);
-
-  // Calculate total table width to ensure fixed layout works properly
   const totalTableWidth = useMemo(() => {
     return formattedColumns.reduce((total, col) => {
       return total + parseWidth(col.width || "0", 0);
@@ -142,7 +135,7 @@ function Table({
   ) as (value: any) => Promise<any>;
 
   return (
-    <TableEditContext value={{onEditCellStart: handleEditCellStart}}>
+    <TableEditContext value={{onEditCellStart: setCellEditPayload}}>
       <div
         ref={containerRef as RefObject<HTMLDivElement>}
         id="scrollableDiv"
@@ -187,7 +180,7 @@ function Table({
             cellRef={cellEditPayload.ref}
             onClose={() => setCellEditPayload(null)}
             updateCellDataError={updateCellDataError ?? null}
-            cellViewportPosition={cellEditPayload.cellViewportPosition}
+            containerRef={containerRef as RefObject<HTMLDivElement>}
           />
         )}
       </div>
@@ -195,24 +188,5 @@ function Table({
     </TableEditContext>
   );
 }
-function getCellViewportPosition(element: HTMLElement, container: HTMLElement) {
-  const elementLeft = element.offsetLeft;
-  const elementTop = element.offsetTop;
-
-  // Container scroll position
-  const scrollLeft = container.scrollLeft;
-  const scrollTop = container.scrollTop;
-
-  // Relative position inside container viewport
-  const viewportRelativeLeft = elementLeft - scrollLeft;
-  const viewportRelativeTop = elementTop - scrollTop;
-
-  return {
-    viewportRelativeLeft,
-    viewportRelativeTop,
-    viewportWidth: container.clientWidth,
-  };
-}
-
 
 export default memo(Table);

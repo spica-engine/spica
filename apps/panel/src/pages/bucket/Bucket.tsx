@@ -1,7 +1,7 @@
 import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
 import {useParams} from "react-router-dom";
-import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
+import BucketTable, {type RawColumn} from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
@@ -67,7 +67,7 @@ export default function Bucket() {
 
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
-  const formattedColumns: ColumnType[] = useMemo(() => {
+  const formattedColumns = useMemo(() => {
     const columns = Object.entries(bucket?.properties ?? {}).map(([key, value]) => ({
       ...value,
       key,
@@ -86,7 +86,7 @@ export default function Bucket() {
         selectable: false
       },
       ...columns.map(i => ({...i, header: i.title, showDropdownIcon: true}))
-    ] as ColumnType[];
+    ] as RawColumn[];
   }, [bucket]);
 
   const searchableColumns = formattedColumns
@@ -120,7 +120,7 @@ export default function Bucket() {
   return (
     <BucketWithVisibleColumns
       bucket={bucket}
-      formattedColumns={formattedColumns as ColumnType[]}
+      formattedColumns={formattedColumns as RawColumn[]}
       bucketData={bucketData}
       handleScrollEnd={loadMoreBucketData}
       bucketDataLoading={bucketDataLoading}
@@ -137,7 +137,7 @@ export default function Bucket() {
 
 type BucketWithVisibleColumnsProps = {
   bucket: BucketType;
-  formattedColumns: ColumnType[];
+  formattedColumns: RawColumn[];
   bucketData: any;
   handleScrollEnd: () => void;
   bucketDataLoading: boolean;

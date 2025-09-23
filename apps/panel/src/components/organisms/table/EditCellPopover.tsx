@@ -1,6 +1,7 @@
 import {useInputRepresenter, useAdaptivePosition, Popover} from "oziko-ui-kit";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import {useState, useMemo, useEffect, useRef, useLayoutEffect, type RefObject} from "react";
+import {useState, useMemo, useEffect, useRef, useLayoutEffect} from "react";
+import type {RefObject} from "react";
 import type {TypeProperties} from "src/hooks/useInputRepresenter";
 import type {Properties, Property} from "src/services/bucketService";
 import type {Constraints} from "./types";
@@ -64,26 +65,9 @@ type EditCellPopoverProps = {
   constraints?: Constraints;
   updateCellDataError: string | null;
   setCellValue: (value: any) => void;
-  cellViewportPosition: {
-    viewportRelativeLeft: number;
-    viewportRelativeTop: number;
-    viewportWidth: number;
-  };
+  containerRef?: RefObject<HTMLElement | null>;
 };
 
-/**
- * Required handling expects required.includes(fieldKey) on the property
- * itself; in JSON Schema, required is defined on the parent object and
- * lists property names. Current logic likely misses many required validations
- * or applies them incorrectly.
- *
- * The “re-validate on error change” effect stringifies input and error;
- * this is costly and can cause subtle loops. Prefer deep-compare utilities or
- * targeted deps.
- *
- * Error from updateCellDataError is set, then quickly overridden by client-side
- * validation pass; user may lose server error context.
- */
 export const EditCellPopover = ({
   value,
   type,
@@ -94,16 +78,12 @@ export const EditCellPopover = ({
   cellRef,
   updateCellDataError,
   setCellValue,
-  cellViewportPosition
+  containerRef
 }: EditCellPopoverProps) => {
   const field = FIELD_REGISTRY[type];
   const createInitialObject = (currentValue: any, properties: Properties | undefined) => {
     const initialObject: Record<string, any> = {};
 
-    /**
-     * Using property.title as object keys in EditCellPopover for object
-     * scaffolding can desync with server schemas (titles change, keys don’t).
-     */
     Object.values(properties || {}).forEach(property => {
       if (property.type === "object") {
         const nestedValue = currentValue?.[property.title];
@@ -117,25 +97,23 @@ export const EditCellPopover = ({
     return initialObject;
   };
 
-  const getValueForType = (fallbackToDefaults: boolean = true) => {
+  const getInitialValue = () => {
     const defaultValue = DEFAULT_VALUES[type];
 
     if (type === "object") {
-      return fallbackToDefaults
-        ? {[title]: createInitialObject(value, constraints.properties)}
-        : {[title]: value};
+      return {[title]: createInitialObject(value, constraints.properties)};
     }
 
     if (type === "date") {
       const dateValue = isValidDate(new Date(value)) ? new Date(value) : null;
       return {
-        [title]: dateValue || (fallbackToDefaults ? defaultValue : null)
+        [title]: dateValue || defaultValue
       };
     }
 
     if (type === "color") {
       return {
-        [title]: value || (fallbackToDefaults ? defaultValue : "")
+        [title]: value || defaultValue
       };
     }
 
@@ -143,24 +121,13 @@ export const EditCellPopover = ({
       return {[title]: value || {lat: 0, lng: 0}};
     }
 
-    return fallbackToDefaults ? {[title]: value ?? defaultValue} : (value ?? defaultValue);
+    return {[title]: value ?? defaultValue};
   };
-
-  const getInitialValue = () => getValueForType(true);
-
-  const getEmptyValue = () => getValueForType(false);
 
   const [inputValue, setInputValue] = useState(getInitialValue);
   const [error, setError] = useState<TypeInputRepresenterError>();
   const [isOpen, setIsOpen] = useState(true);
 
-  /**
-   * Discard changes shape bug: EditCellPopover.getEmptyValue
-   * returns a raw value (not {value: ...}) for most types when
-   * fallbackToDefaults is false; discardChanges() passes this to
-   * handleInputChange, which expects {value}. This can set
-   * undefined and leak incorrect state.
-   */
   const handleInputChange = (newValue: any) => {
     setInputValue(newValue);
 
@@ -302,18 +269,34 @@ export const EditCellPopover = ({
     }
   }, [isOpen, calculatePosition]);
 
+  const contentStyle = useMemo(() => {
+    if (!targetPosition) return undefined;
+    const baseLeft = targetPosition?.left ?? 0;
+
+    if (!containerRef?.current || !cellRef?.current) return {...targetPosition, left: baseLeft};
+
+    const cellElement = cellRef.current as HTMLElement;
+    const containerElement = containerRef.current as HTMLElement;
+
+    const maxPopoverWidth = 300;
+
+    const cellOffsetLeft = cellElement.offsetLeft;
+    const containerScrollLeft = containerElement.scrollLeft;
+
+    const cellViewportLeft = cellOffsetLeft - containerScrollLeft;
+    const containerViewportWidth = containerElement.clientWidth ?? 0;
+
+    const overflowsOnRight = cellViewportLeft + maxPopoverWidth > containerViewportWidth;
+
+    const left = baseLeft - (overflowsOnRight ? maxPopoverWidth : 0);
+    return {...targetPosition, left};
+  }, [targetPosition]);
+
   return (
     <Popover
       containerProps={{ref: popoverContainerRef}}
       contentProps={{
-        style: targetPosition
-          ? {
-              ...targetPosition,
-              left:
-                (targetPosition?.left ?? 0) -
-                (cellViewportPosition.viewportRelativeLeft + 300 > cellViewportPosition.viewportWidth ? 300 : 0)
-            }
-          : undefined,
+        style: contentStyle,
         ref: popoverContentRef
       }}
       open={isOpen}
