@@ -4,7 +4,7 @@ import styles from "./BucketFieldPopup.module.scss";
 import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
-import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
+import type {Placement} from "oziko-ui-kit/build/dist/custom-hooks/useAdaptivePosition";
 import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
 import { FIELD_REGISTRY } from "../../../domain/fields/registry";
