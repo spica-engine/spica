@@ -55,6 +55,61 @@ const findFirstErrorId = (errors: any, formattedProperties: any): string | null 
   return null;
 };
 
+function getInitialValue(
+  type: FieldKind,
+  title: string,
+  value: any,
+  constraints: Constraints | undefined
+) {
+  const defaultValue = DEFAULT_VALUES[type];
+
+  if (type === "object") {
+    return {[title]: createInitialObject(value, constraints?.properties)};
+  }
+
+  if (type === "date") {
+    const dateValue = isValidDate(new Date(value)) ? new Date(value) : null;
+    return {
+      [title]: dateValue || defaultValue
+    };
+  }
+
+  if (type === "color") {
+    return {
+      [title]: value || defaultValue
+    };
+  }
+
+  if (type === "location") {
+    return {[title]: value || {lat: 0, lng: 0}};
+  }
+
+  return {[title]: value ?? defaultValue};
+}
+
+function createInitialObject(currentValue: any, properties: Properties | undefined) {
+  const initialObject: Record<string, any> = {};
+
+  Object.values(properties || {}).forEach(property => {
+    if (property.type === "object") {
+      const nestedValue = currentValue?.[property.title];
+      initialObject[property.title] = createInitialObject(nestedValue, property.properties);
+    } else {
+      initialObject[property.title] =
+        currentValue?.[property.title] ?? DEFAULT_VALUES[property.type] ?? null;
+    }
+  });
+
+  return initialObject;
+}
+
+const customStyles: Partial<Record<FieldKind, string>> = {
+  "multiple selection": styles.multipleSelectionInput,
+  multiselect: styles.multipleSelectionInput,
+  location: styles.locationInput,
+  object: styles.objectInput
+} as Partial<Record<FieldKind, string>>;
+
 type EditCellPopoverProps = {
   onCellSave: (value: any) => Promise<any>;
   onClose: () => void;
@@ -80,54 +135,13 @@ export const EditCellPopover = ({
   setCellValue,
   containerRef
 }: EditCellPopoverProps) => {
-  const field = FIELD_REGISTRY[type];
-  const createInitialObject = (currentValue: any, properties: Properties | undefined) => {
-    const initialObject: Record<string, any> = {};
-
-    Object.values(properties || {}).forEach(property => {
-      if (property.type === "object") {
-        const nestedValue = currentValue?.[property.title];
-        initialObject[property.title] = createInitialObject(nestedValue, property.properties);
-      } else {
-        initialObject[property.title] =
-          currentValue?.[property.title] ?? DEFAULT_VALUES[property.type] ?? null;
-      }
-    });
-
-    return initialObject;
-  };
-
-  const getInitialValue = () => {
-    const defaultValue = DEFAULT_VALUES[type];
-
-    if (type === "object") {
-      return {[title]: createInitialObject(value, constraints.properties)};
-    }
-
-    if (type === "date") {
-      const dateValue = isValidDate(new Date(value)) ? new Date(value) : null;
-      return {
-        [title]: dateValue || defaultValue
-      };
-    }
-
-    if (type === "color") {
-      return {
-        [title]: value || defaultValue
-      };
-    }
-
-    if (type === "location") {
-      return {[title]: value || {lat: 0, lng: 0}};
-    }
-
-    return {[title]: value ?? defaultValue};
-  };
-
   const [inputValue, setInputValue] = useState(getInitialValue);
   const [error, setError] = useState<TypeInputRepresenterError>();
   const [isOpen, setIsOpen] = useState(true);
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const field = FIELD_REGISTRY[type];
 
   const handleInputChange = (newValue: any) => {
     setInputValue(newValue);
@@ -167,18 +181,6 @@ export const EditCellPopover = ({
     [type, title, constraints]
   );
 
-  useEffect(() => {
-    if (!updateCellDataError || !submitted) return;
-    setError({[title]: updateCellDataError});
-  }, [updateCellDataError, submitted]);
-
-  const customStyles: Partial<Record<FieldKind, string>> = {
-    "multiple selection": styles.multipleSelectionInput,
-    multiselect: styles.multipleSelectionInput,
-    location: styles.locationInput,
-    object: styles.objectInput
-  } as Partial<Record<FieldKind, string>>;
-
   const input = useInputRepresenter({
     properties: properties as TypeProperties,
     value: inputValue,
@@ -188,55 +190,10 @@ export const EditCellPopover = ({
     containerClassName: customStyles[type]
   });
 
-  const handleClose = () => {
-    setIsOpen(false);
-    onClose();
-  };
-
-  const discardChanges = () => {
-    handleInputChange(getInitialValue());
-    handleClose();
-  };
-
-  const popoverContentRef = useRef<HTMLDivElement | null>(null);
-  const popoverContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const handleSave = async () => {
-    const errors = field?.validateValue(inputValue, constraints as Property, constraints.required);
-    if (!isObjectEffectivelyEmpty(errors)) {
-      setError({[title]: errors} as TypeInputRepresenterError);
-      const firstErrorId = findFirstErrorId(errors, properties);
-      if (firstErrorId) {
-        const errorElement = document.getElementById(firstErrorId);
-        if (errorElement) {
-          errorElement.scrollIntoView({behavior: "smooth", block: "center"});
-        }
-      } else {
-        (popoverContentRef.current?.firstChild as HTMLElement | null)?.scrollTo?.({
-          top: 0,
-          behavior: "smooth"
-        });
-      }
-      return;
-    }
-
-    const payload =
-      type === "location"
-        ? {type: "Point", coordinates: [inputValue?.[title]?.lng, inputValue?.[title]?.lat]}
-        : inputValue[title];
-
-    const error = field?.validateValue(payload, constraints as Property, constraints.required);
-
-    if (error) {
-      setError({[title]: error} as TypeInputRepresenterError);
-      return;
-    }
-    const result = await onCellSave(payload);
-    setSubmitted(true);
-    if (result) {
-      handleClose();
-    }
-  };
+  useEffect(() => {
+    if (!updateCellDataError || !submitted) return;
+    setError({[title]: updateCellDataError});
+  }, [updateCellDataError, submitted]);
 
   useEffect(() => {
     if (!error || isObjectEffectivelyEmpty(error)) return;
@@ -247,7 +204,7 @@ export const EditCellPopover = ({
   }, [JSON.stringify(inputValue), JSON.stringify(error), updateCellDataError]);
 
   useEffect(() => {
-    handleInputChange(getInitialValue());
+    handleInputChange(getInitialValue(type, title, value, constraints));
   }, [value]);
 
   const savingRef = useRef(false);
@@ -256,10 +213,12 @@ export const EditCellPopover = ({
       if (event.key !== "Enter" || event.shiftKey) return;
       if (savingRef.current) return;
 
+      setSaving(true);
       savingRef.current = true;
       try {
         await handleSave();
       } finally {
+        setSaving(false);
         savingRef.current = false;
       }
     };
@@ -271,15 +230,16 @@ export const EditCellPopover = ({
     };
   }, [inputValue]);
 
+  const popoverContentRef = useRef<HTMLDivElement | null>(null);
+  const popoverContainerRef = useRef<HTMLDivElement | null>(null);
+
   const {targetPosition, calculatePosition} = useAdaptivePosition({
     containerRef: cellRef,
     targetRef: popoverContainerRef
   });
 
   useLayoutEffect(() => {
-    if (isOpen) {
-      calculatePosition();
-    }
+    if (isOpen) calculatePosition();
   }, [isOpen, calculatePosition]);
 
   const contentStyle = useMemo(() => {
@@ -305,6 +265,72 @@ export const EditCellPopover = ({
     return {...targetPosition, left};
   }, [targetPosition]);
 
+  const handleClose = () => {
+    if (saving) return;
+    setIsOpen(false);
+    onClose();
+  };
+
+  const handleSave = async () => {
+    const validationErrors = field?.validateValue(
+      inputValue,
+      constraints as Property,
+      constraints.required
+    );
+
+    if (!isObjectEffectivelyEmpty(validationErrors)) {
+      setError({[title]: validationErrors} as TypeInputRepresenterError);
+
+      const firstErrorId = findFirstErrorId(validationErrors, properties);
+
+      if (firstErrorId) {
+        const errorElement = document.getElementById(firstErrorId);
+        errorElement?.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      } else {
+        const popoverFirstChild = popoverContentRef.current?.firstChild as HTMLElement;
+        popoverFirstChild?.scrollTo?.({
+          top: 0,
+          behavior: "smooth"
+        });
+      }
+
+      return;
+    }
+
+    const payload =
+      type === "location"
+        ? {
+            type: "Point",
+            coordinates: [inputValue?.[title]?.lng, inputValue?.[title]?.lat]
+          }
+        : inputValue[title];
+
+    const payloadError = field?.validateValue(
+      payload,
+      constraints as Property,
+      constraints.required
+    );
+
+    if (payloadError) {
+      setError({[title]: payloadError} as TypeInputRepresenterError);
+      return;
+    }
+
+    const result = await onCellSave(payload);
+    setSubmitted(true);
+
+    if (result) handleClose();
+  };
+
+  const discardChanges = () => {
+    if (saving) return;
+    handleInputChange(getInitialValue(type, title, value, constraints));
+    handleClose();
+  };
+
   return (
     <Popover
       containerProps={{ref: popoverContainerRef}}
@@ -312,7 +338,7 @@ export const EditCellPopover = ({
         style: contentStyle,
         ref: popoverContentRef
       }}
-      open={isOpen}
+      open={isOpen || saving}
       onClose={discardChanges}
       content={input}
       portalClassName={styles.inputPopover}
