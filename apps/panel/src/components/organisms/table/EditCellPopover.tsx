@@ -127,6 +127,7 @@ export const EditCellPopover = ({
   const [inputValue, setInputValue] = useState(getInitialValue);
   const [error, setError] = useState<TypeInputRepresenterError>();
   const [isOpen, setIsOpen] = useState(true);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleInputChange = (newValue: any) => {
     setInputValue(newValue);
@@ -165,9 +166,9 @@ export const EditCellPopover = ({
   );
 
   useEffect(() => {
-    if (!updateCellDataError) return;
+    if (!updateCellDataError || !submitted) return;
     setError({[title]: updateCellDataError});
-  }, [updateCellDataError]);
+  }, [updateCellDataError, submitted]);
 
   const customStyles: Partial<Record<FieldKind, string>> = {
     "multiple selection": styles.multipleSelectionInput,
@@ -229,6 +230,7 @@ export const EditCellPopover = ({
       return;
     }
     const result = await onCellSave(payload);
+    setSubmitted(true);
     if (result) {
       handleClose();
     }
