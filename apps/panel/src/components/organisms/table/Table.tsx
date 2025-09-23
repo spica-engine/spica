@@ -16,7 +16,7 @@ import type {TypeDataColumn, TypeTableData} from "./types";
 import {TableHeader} from "./TableHeader";
 import {TableBody} from "./TableBody";
 import {EditCellPopover} from "./EditCellPopover";
-import {CELL_EDIT_START_EVENT_NAME, type CellEditPayload} from "./Cell";
+import {TableEditContext, type CellEditPayload} from "./TableEditContext";
 import {getFormattedColumns, parseWidth} from "./columnUtils";
 
 export type TableProps = {
@@ -29,6 +29,7 @@ export type TableProps = {
   tableRef?: RefObject<HTMLElement | null>;
   onCellSave?: (value: any, columnName: string, rowId: string) => Promise<any>;
   updateCellDataError?: string | null;
+  requiredColumns?: string[];
 };
 
 function Table({
@@ -40,7 +41,8 @@ function Table({
   style,
   onCellSave,
   tableRef,
-  updateCellDataError
+  updateCellDataError,
+  requiredColumns = []
 }: TableProps) {
   const containerRef = useScrollDirectionLock();
   useImperativeHandle(tableRef, () => containerRef.current as HTMLElement);
@@ -116,10 +118,10 @@ function Table({
 
   const [cellEditPayload, setCellEditPayload] = useState<CellEditPayload | null>(null);
 
-  useEffect(() => {
-    const handler = (event: CustomEvent<CellEditPayload>) => setCellEditPayload(event.detail);
-    window.addEventListener(CELL_EDIT_START_EVENT_NAME, handler as EventListener);
-    return () => window.removeEventListener(CELL_EDIT_START_EVENT_NAME, handler as EventListener);
+  // Handler to start editing a cell, to be provided via context
+  const handleEditCellStart = useCallback((payload: CellEditPayload) => {
+    const cellViewportPosition = getCellViewportPosition(payload.ref.current!, containerRef.current!);
+    setCellEditPayload({...payload, cellViewportPosition});
   }, []);
 
   // Calculate total table width to ensure fixed layout works properly
@@ -140,7 +142,7 @@ function Table({
   ) as (value: any) => Promise<any>;
 
   return (
-    <>
+    <TableEditContext value={{onEditCellStart: handleEditCellStart}}>
       <div
         ref={containerRef as RefObject<HTMLDivElement>}
         id="scrollableDiv"
@@ -168,6 +170,7 @@ function Table({
                   focusedCell={focusedCell}
                   handleCellClick={handleCellClick}
                   data={data}
+                  requiredColumns={requiredColumns}
                 />
               )}
             </tbody>
@@ -184,12 +187,32 @@ function Table({
             cellRef={cellEditPayload.ref}
             onClose={() => setCellEditPayload(null)}
             updateCellDataError={updateCellDataError ?? null}
+            cellViewportPosition={cellEditPayload.cellViewportPosition}
           />
         )}
       </div>
       {!data.length && <div className={styles.noDataText}>No Data Found</div>}
-    </>
+    </TableEditContext>
   );
 }
+function getCellViewportPosition(element: HTMLElement, container: HTMLElement) {
+  const elementLeft = element.offsetLeft;
+  const elementTop = element.offsetTop;
+
+  // Container scroll position
+  const scrollLeft = container.scrollLeft;
+  const scrollTop = container.scrollTop;
+
+  // Relative position inside container viewport
+  const viewportRelativeLeft = elementLeft - scrollLeft;
+  const viewportRelativeTop = elementTop - scrollTop;
+
+  return {
+    viewportRelativeLeft,
+    viewportRelativeTop,
+    viewportWidth: container.clientWidth,
+  };
+}
+
 
 export default memo(Table);

@@ -57,7 +57,7 @@ export default function Bucket() {
     bucketDataLoading,
     refreshBucketData,
     updateCellData,
-    updateCellDataError,
+    updateCellDataError
   } = useBucket();
 
   useEffect(() => {
@@ -228,6 +228,7 @@ function BucketWithVisibleColumns({
         tableRef={tableRef}
         onCellSave={handleCellSave}
         updateCellDataError={updateCellDataError}
+        requiredColumns={bucket.required ?? []}
       />
     </div>
   );

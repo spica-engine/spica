@@ -1,14 +1,16 @@
-import {memo, useRef, useState, type JSX, type ReactNode, type RefObject} from "react";
+import {memo, useRef, useState, useContext, type JSX, type ReactNode, type RefObject} from "react";
+import { TableEditContext } from "./TableEditContext";
 import {MIN_COLUMN_WIDTH} from "./columnUtils";
-import type {Constraints, FieldType} from "./types";
+import type {Constraints} from "./types";
 import styles from "./Table.module.scss";
 import {FlexElement} from "oziko-ui-kit";
 import {Button, Icon, Checkbox} from "oziko-ui-kit";
 import {isValidDate} from "./EditCellPopover";
+import type { FieldKind } from "src/domain/fields";
 
 // TODO: Refactor this function to render more appropriate UI elements for each field type.
 // Many field types are currently using the generic `renderDefault()`.
-export function renderCell(cellData: any, type?: FieldType, deletable?: boolean) {
+export function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
   function renderDefault(data?: any): JSX.Element {
     return (
       <div className={styles.defaultCell}>
@@ -52,7 +54,7 @@ export function renderCell(cellData: any, type?: FieldType, deletable?: boolean)
       return <Checkbox className={styles.checkbox} checked={cellData} />;
     case "textarea":
       return renderDefault();
-    case "multiple selection":
+    case "multiple selection" as FieldKind:
     case "multiselect":
       return (
         <div className={styles.multipleSelectionCell}>
@@ -124,7 +126,7 @@ export function renderCell(cellData: any, type?: FieldType, deletable?: boolean)
           )}
         </div>
       );
-    case "file":
+    case "file" as FieldKind:
       return (
         <div className={styles.fileCell}>
           <Icon name="imageMultiple" size="xs" />
@@ -151,24 +153,9 @@ export function renderCell(cellData: any, type?: FieldType, deletable?: boolean)
   }
 }
 
-type CellEditStartEvent = CustomEvent<CellEditPayload>;
-
-export type CellEditPayload = {
-  ref: RefObject<HTMLElement | null>;
-  value: any;
-  type: FieldType;
-  title: string;
-  constraints?: Constraints;
-  columnId: string;
-  rowId: string;
-  setCellValue: (value: any) => void;
-};
-
-export const CELL_EDIT_START_EVENT_NAME = "cellEditStart";
-
 type CellProps = React.HTMLAttributes<HTMLDivElement> & {
   leftOffset?: number;
-  type: FieldType;
+  type: FieldKind;
   value: any;
   deletable?: boolean;
 };
@@ -204,30 +191,28 @@ export const EditableCell = memo(
   }: EditableCellProps) => {
     const ref = useRef<HTMLTableCellElement | null>(null);
     const [cellValue, setCellValue] = useState(value);
+    const { onEditCellStart } = useContext(TableEditContext);
     const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
       props?.onClick?.(e);
-      const cellEditStartEvent: CellEditStartEvent = new CustomEvent(CELL_EDIT_START_EVENT_NAME, {
-        detail: {
-          value,
-          type,
-          title,
-          constraints,
-          ref,
-          columnId,
-          rowId,
-          setCellValue: val => {
-            // Force a new reference for arrays and objects
-            if (Array.isArray(val)) {
-              setCellValue([...val]);
-            } else if (val && typeof val === "object") {
-              setCellValue({...val});
-            } else {
-              setCellValue(val);
-            }
+      onEditCellStart({
+        value,
+        type,
+        title,
+        constraints,
+        ref,
+        columnId,
+        rowId,
+        setCellValue: val => {
+          // Force a new reference for arrays and objects
+          if (Array.isArray(val)) {
+            setCellValue([...val]);
+          } else if (val && typeof val === "object") {
+            setCellValue({ ...val });
+          } else {
+            setCellValue(val);
           }
         }
       });
-      window.dispatchEvent(cellEditStartEvent);
     };
 
     return (

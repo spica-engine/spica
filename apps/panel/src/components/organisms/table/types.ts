@@ -1,22 +1,7 @@
 import type {ReactNode} from "react";
+import type { FieldKind } from "src/domain/fields";
 import type {TypeArrayItems} from "src/hooks/useInputRepresenter";
 import type {Properties} from "src/services/bucketService";
-
-export type FieldType =
-  | "string"
-  | "number"
-  | "date"
-  | "boolean"
-  | "textarea"
-  | "multiple selection"
-  | "relation"
-  | "location"
-  | "array"
-  | "object"
-  | "file"
-  | "richtext"
-  | "multiselect"
-  | "color";
 
 export type TypeDataColumn = {
   header: string | ReactNode;
@@ -29,7 +14,7 @@ export type TypeDataColumn = {
   fixed?: boolean;
   selectable?: boolean;
   leftOffset?: number;
-  type?: FieldType;
+  type?: FieldKind;
   deletable?: boolean;
   title?: string;
   pattern?: string;
@@ -39,6 +24,7 @@ export type TypeDataColumn = {
   minItems?: number;
   maxItems?: number;
   properties?: Properties;
+  required?: string[];
 };
 
 export type TypeTableData = {
@@ -56,4 +42,7 @@ export type Constraints = {
   maxItems?: number;
   items?: TypeArrayItems;
   properties?: Properties;
+  type?: FieldKind;
+  required?: boolean;
+  requiredFields?: string[];
 };

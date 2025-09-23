@@ -2,16 +2,18 @@ import {memo, useRef, type JSX, useEffect} from "react";
 import type {TypeDataColumn, TypeTableData} from "./types";
 import styles from "./Table.module.scss";
 import {Cell, EditableCell} from "./Cell";
+import {FieldKind} from "../../../domain/fields";
 
 type TableBodyProps = {
   formattedColumns: TypeDataColumn[];
   focusedCell: {row: number; column: string} | null;
   handleCellClick: (columnKey: string, index: number) => void;
   data: TypeTableData[];
+  requiredColumns?: string[];
 };
 
 export const TableBody = memo(
-  ({data, formattedColumns, focusedCell, handleCellClick}: TableBodyProps) => {
+  ({data, formattedColumns, focusedCell, handleCellClick, requiredColumns}: TableBodyProps) => {
     const rowCacheRef = useRef<
       Map<string, {element: JSX.Element; lastFocusedCell: string | null; rowContentString: string}>
     >(new Map());
@@ -54,11 +56,13 @@ export const TableBody = memo(
           deletable: column.deletable
         };
 
+        const type = column.type ?? FieldKind.String;
+
         return column.selectable !== false ? (
           <EditableCell
             key={cellData.id}
             {...props}
-            type={column.type ?? "string"}
+            type={type}
             focused={focusedCell?.row === index && focusedCell?.column === column.key}
             title={column.title ?? "Value"}
             columnId={column.key}
@@ -70,11 +74,13 @@ export const TableBody = memo(
               maxItems: column.maxItems,
               minItems: column.minItems,
               items: column.items,
-              properties: column.properties
+              properties: column.properties,
+              requiredFields: column.required,
+              required: requiredColumns?.includes(column.key),
             }}
           />
         ) : (
-          <Cell key={cellData.id} {...props} />
+          <Cell key={cellData.id} {...props} type={type} />
         );
       });
 

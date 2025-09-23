@@ -26,7 +26,7 @@ import {
   COLOR_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "./validation";
-import type {TypeInputTypeMap} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {TypeInputTypeMap} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
   if (!input) return undefined;
@@ -207,7 +207,8 @@ const STRING_DEFINITION: FieldDefinition = {
   }),
   getDefaultValue: property => property.default,
   validateCreationForm: form => runYupValidation(STRING_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.String, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.String, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
     presetValues: PresetPanel,
@@ -249,7 +250,8 @@ const NUMBER_DEFINITION: FieldDefinition = {
     }
   }),
   validateCreationForm: form => runYupValidation(NUMBER_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Number, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Number, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: {
       ...BaseFields,
@@ -266,7 +268,7 @@ const NUMBER_DEFINITION: FieldDefinition = {
     configurationValues: BasicConfig
   }),
   buildValueProperty: property => ({
-    type: FieldKind.Number as keyof TypeInputTypeMap,
+    type: FieldKind.Number,
     title: property.title,
     description: property.description,
     enum: property.enum
@@ -295,14 +297,15 @@ const BOOLEAN_DEFINITION: FieldDefinition = {
     defaultValue: false
   }),
   validateCreationForm: form => runYupValidation(BOOLEAN_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Boolean, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Boolean, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
     defaultValue: DefaultInputs.defaultBoolean,
     configurationValues: PrimaryAndIndexConfig
   }),
   buildValueProperty: property => ({
-    type: FieldKind.Boolean as keyof TypeInputTypeMap,
+    type: FieldKind.Boolean,
     title: property.title,
     description: property.description
   }),
@@ -319,7 +322,8 @@ const DATE_DEFINITION: FieldDefinition = {
     defaultValue: {defaultDate: ""}
   }),
   validateCreationForm: form => runYupValidation(DATE_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Date, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Date, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
     defaultValue: DefaultInputs.defaultDate,
@@ -353,7 +357,8 @@ const TEXTAREA_DEFINITION: FieldDefinition = {
     )
   }),
   validateCreationForm: form => runYupValidation(TEXTAREA_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Textarea, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Textarea, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
     configurationValues: TranslatableConfig
@@ -381,8 +386,8 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false]))
   }),
   validateCreationForm: form => runYupValidation(MULTISELECT_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) =>
-    validateFieldValue(value, FieldKind.Multiselect, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Multiselect, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: {
       ...BaseFields,
@@ -416,7 +421,8 @@ const RELATION_DEFINITION: FieldDefinition = {
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false]))
   }),
   validateCreationForm: form => runYupValidation(RELATION_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Relation, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Relation, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: {
       ...BaseFields,
@@ -456,7 +462,8 @@ const LOCATION_DEFINITION: FieldDefinition = {
     )
   }),
   validateCreationForm: form => runYupValidation(LOCATION_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Location, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Location, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
     configurationValues: OnlyRequiredConfig
@@ -494,7 +501,8 @@ const ARRAY_DEFINITION: FieldDefinition = {
   }),
   getDefaultValue: property => property.default,
   validateCreationForm: form => runYupValidation(ARRAY_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Array, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Array, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: {
       ...BaseFields,
@@ -591,7 +599,8 @@ const OBJECT_DEFINITION: FieldDefinition = {
     )
   }),
   validateCreationForm: form => runYupValidation(OBJECT_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Object, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Object, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
     configurationValues: TranslatableMinimalConfig
@@ -618,7 +627,8 @@ const FILE_DEFINITION: FieldDefinition = {
     )
   }),
   validateCreationForm: form => runYupValidation(FILE_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.File, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.File, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
     configurationValues: TranslatableMinimalConfig
@@ -647,7 +657,8 @@ const RICHTEXT_DEFINITION: FieldDefinition = {
     )
   }),
   validateCreationForm: form => runYupValidation(RICHTEXT_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Richtext, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Richtext, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
     configurationValues: TranslatableMinimalConfig
@@ -669,7 +680,8 @@ const JSON_DEFINITION: FieldDefinition = {
     configurationValues: Object.fromEntries(Object.keys(BasicConfig).map(key => [key, false]))
   }),
   validateCreationForm: form => runYupValidation(JSON_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Json, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Json, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
     configurationValues: BasicConfig
@@ -700,7 +712,8 @@ const COLOR_DEFINITION: FieldDefinition = {
     configurationValues: Object.fromEntries(Object.keys(BasicConfig).map(key => [key, false]))
   }),
   validateCreationForm: form => runYupValidation(COLOR_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties) => validateFieldValue(value, FieldKind.Color, properties),
+  validateValue: (value, properties, required) =>
+    validateFieldValue(value, FieldKind.Color, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
     configurationValues: BasicConfig

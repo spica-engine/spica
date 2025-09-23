@@ -1,20 +1,14 @@
 import {useInputRepresenter, useAdaptivePosition, Popover} from "oziko-ui-kit";
-import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
-import {
-  useState,
-  useMemo,
-  useEffect,
-  useRef,
-  useCallback,
-  useLayoutEffect,
-  type RefObject
-} from "react";
+import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import {useState, useMemo, useEffect, useRef, useLayoutEffect, type RefObject} from "react";
 import type {TypeProperties} from "src/hooks/useInputRepresenter";
-import type {Properties} from "src/services/bucketService";
-import type {Constraints, FieldType} from "./types";
+import type {Properties, Property} from "src/services/bucketService";
+import type {Constraints} from "./types";
 import styles from "./Table.module.scss";
+import type {FieldKind} from "src/domain/fields/types";
+import {FIELD_REGISTRY} from "../../../domain/fields";
 
-const DEFAULT_VALUES: Record<FieldType, any> = {
+const DEFAULT_VALUES: Record<FieldKind, any> = {
   string: "",
   number: 0,
   date: "",
@@ -29,7 +23,7 @@ const DEFAULT_VALUES: Record<FieldType, any> = {
   file: null,
   richtext: "",
   color: "#000000"
-};
+} as unknown as Record<FieldKind, any>;
 
 export function isValidDate(dateObject: any) {
   return dateObject instanceof Date && !isNaN(dateObject.getTime());
@@ -64,12 +58,17 @@ type EditCellPopoverProps = {
   onCellSave: (value: any) => Promise<any>;
   onClose: () => void;
   cellRef: RefObject<HTMLElement | null>;
-  type: FieldType;
+  type: FieldKind;
   value: any;
   title: string;
   constraints?: Constraints;
   updateCellDataError: string | null;
   setCellValue: (value: any) => void;
+  cellViewportPosition: {
+    viewportRelativeLeft: number;
+    viewportRelativeTop: number;
+    viewportWidth: number;
+  };
 };
 
 /**
@@ -94,8 +93,10 @@ export const EditCellPopover = ({
   onClose,
   cellRef,
   updateCellDataError,
-  setCellValue
+  setCellValue,
+  cellViewportPosition
 }: EditCellPopoverProps) => {
+  const field = FIELD_REGISTRY[type];
   const createInitialObject = (currentValue: any, properties: Properties | undefined) => {
     const initialObject: Record<string, any> = {};
 
@@ -109,7 +110,7 @@ export const EditCellPopover = ({
         initialObject[property.title] = createInitialObject(nestedValue, property.properties);
       } else {
         initialObject[property.title] =
-          currentValue?.[property.title] ?? DEFAULT_VALUES[property.type as FieldType] ?? null;
+          currentValue?.[property.title] ?? DEFAULT_VALUES[property.type] ?? null;
       }
     });
 
@@ -121,28 +122,28 @@ export const EditCellPopover = ({
 
     if (type === "object") {
       return fallbackToDefaults
-        ? {value: createInitialObject(value, constraints.properties)}
-        : {value};
+        ? {[title]: createInitialObject(value, constraints.properties)}
+        : {[title]: value};
     }
 
     if (type === "date") {
       const dateValue = isValidDate(new Date(value)) ? new Date(value) : null;
       return {
-        value: dateValue || (fallbackToDefaults ? defaultValue : null)
+        [title]: dateValue || (fallbackToDefaults ? defaultValue : null)
       };
     }
 
     if (type === "color") {
       return {
-        value: value || (fallbackToDefaults ? defaultValue : "")
+        [title]: value || (fallbackToDefaults ? defaultValue : "")
       };
     }
 
     if (type === "location") {
-      return {value: value || {lat: 0, lng: 0}};
+      return {[title]: value || {lat: 0, lng: 0}};
     }
 
-    return fallbackToDefaults ? {value: value ?? defaultValue} : (value ?? defaultValue);
+    return fallbackToDefaults ? {[title]: value ?? defaultValue} : (value ?? defaultValue);
   };
 
   const getInitialValue = () => getValueForType(true);
@@ -166,14 +167,19 @@ export const EditCellPopover = ({
     let transformedValue;
 
     if (type === "date") {
-      transformedValue = newValue?.value?.toISOString?.();
-    } else if (type === "location" && newValue?.value?.lat && newValue?.value?.lng) {
+      const dateObj = newValue[title];
+      if (dateObj instanceof Date && !isNaN(dateObj.getTime())) {
+        transformedValue = dateObj.toISOString();
+      } else {
+        transformedValue = null;
+      }
+    } else if (type === "location" && newValue[title]?.lat && newValue[title]?.lng) {
       transformedValue = {
         type: "Point",
-        coordinates: [newValue?.value?.lng, newValue?.value?.lat]
+        coordinates: [newValue[title]?.lng, newValue[title]?.lat]
       };
     } else {
-      transformedValue = newValue?.value;
+      transformedValue = newValue[title];
     }
 
     setCellValue(transformedValue);
@@ -181,7 +187,7 @@ export const EditCellPopover = ({
 
   const properties = useMemo(
     () => ({
-      value: {
+      [title]: {
         type,
         title,
         items: constraints?.items,
@@ -193,33 +199,21 @@ export const EditCellPopover = ({
 
   useEffect(() => {
     if (!updateCellDataError) return;
-    setError({value: updateCellDataError});
+    setError({[title]: updateCellDataError});
   }, [updateCellDataError]);
 
-  const customStyles: Partial<Record<FieldType, string>> = {
+  const customStyles: Partial<Record<FieldKind, string>> = {
     "multiple selection": styles.multipleSelectionInput,
     multiselect: styles.multipleSelectionInput,
     location: styles.locationInput,
     object: styles.objectInput
-  };
+  } as Partial<Record<FieldKind, string>>;
 
   const input = useInputRepresenter({
     properties: properties as TypeProperties,
     value: inputValue,
     onChange: handleInputChange,
-    error: error /*{
-      value: {
-        user: {
-          permissions: {
-            roles: {
-              role: {
-                level: "This field must be at least 1"
-              }
-            }
-          }
-        }
-      }
-    }, //error, //{value: {user: {email: "god damn"}}},*/,
+    error: error,
     errorClassName: styles.inputError,
     containerClassName: customStyles[type]
   });
@@ -230,7 +224,7 @@ export const EditCellPopover = ({
   };
 
   const discardChanges = () => {
-    handleInputChange(getEmptyValue());
+    handleInputChange(getInitialValue());
     handleClose();
   };
 
@@ -238,19 +232,16 @@ export const EditCellPopover = ({
   const popoverContainerRef = useRef<HTMLDivElement | null>(null);
 
   const handleSave = async () => {
-    const errors = validateInput(inputValue, constraints);
+    const errors = field?.validateValue(inputValue, constraints as Property, constraints.required);
     if (!isObjectEffectivelyEmpty(errors)) {
-      console.log("validation errors", errors);
-      setError(errors);
+      setError({[title]: errors} as TypeInputRepresenterError);
       const firstErrorId = findFirstErrorId(errors, properties);
       if (firstErrorId) {
-        console.log("firstErrorId", firstErrorId);
         const errorElement = document.getElementById(firstErrorId);
         if (errorElement) {
           errorElement.scrollIntoView({behavior: "smooth", block: "center"});
         }
       } else {
-        console.log("no firstErrorId found");
         (popoverContentRef.current?.firstChild as HTMLElement | null)?.scrollTo?.({
           top: 0,
           behavior: "smooth"
@@ -261,134 +252,28 @@ export const EditCellPopover = ({
 
     const payload =
       type === "location"
-        ? {type: "Point", coordinates: [inputValue?.value?.lng, inputValue?.value?.lat]}
-        : inputValue?.value;
+        ? {type: "Point", coordinates: [inputValue?.[title]?.lng, inputValue?.[title]?.lat]}
+        : inputValue[title];
 
+    const error = field?.validateValue(payload, constraints as Property, constraints.required);
+
+    if (error) {
+      setError({[title]: error} as TypeInputRepresenterError);
+      return;
+    }
     const result = await onCellSave(payload);
     if (result) {
       handleClose();
     }
   };
 
-  const validateInput = useCallback(
-    (
-      inputValue: {[key: string]: any},
-      constraints: Constraints | undefined
-    ): TypeInputRepresenterError => {
-      if (!constraints) return {};
-
-      // If we have properties constraint, validate the object structure
-      if (constraints.properties && type === "object") {
-        const errors = validateObjectProperties(inputValue.value, constraints.properties);
-        return {value: errors};
-      }
-
-      // For non-object types, validate the direct value
-      return validateSingleValue(inputValue, constraints, "value");
-    },
-    []
-  );
-
   useEffect(() => {
     if (!error || isObjectEffectivelyEmpty(error)) return;
-    const errors = validateInput(inputValue, constraints);
-    if (isObjectEffectivelyEmpty(errors) && updateCellDataError === error.value) return;
-    setError(errors);
+    const payload = inputValue[title];
+    const errors = field?.validateValue(payload, constraints as Property, constraints.required);
+    if (isObjectEffectivelyEmpty(errors) && updateCellDataError === error[title]) return;
+    setError({[title]: errors} as TypeInputRepresenterError);
   }, [JSON.stringify(inputValue), JSON.stringify(error), updateCellDataError]);
-
-  const validateObjectProperties = (
-    obj: any,
-    properties: Properties
-  ): TypeInputRepresenterError => {
-    const errors: TypeInputRepresenterError = {};
-
-    Object.entries(properties).forEach(([key, propertySchema]) => {
-      const value = obj[key];
-      const fieldErrors = validateSingleValue(value, propertySchema, key);
-      errors[key] = fieldErrors[key] || fieldErrors;
-      if (Object.keys(fieldErrors).length === 0) {
-        delete errors[key];
-      }
-    });
-
-    return errors;
-  };
-
-  // Helper function to validate a single value
-  const validateSingleValue = (
-    value: any,
-    schema: Constraints,
-    fieldKey: string
-  ): TypeInputRepresenterError => {
-    console.log("validateSingleValue", {value, schema, fieldKey});
-    const errors: TypeInputRepresenterError = {};
-
-    if (!schema) return errors;
-
-    const {type, pattern, minimum, maximum, minItems, maxItems, properties, items, required} =
-      schema;
-
-    // Check required fields
-    if (
-      required &&
-      required.includes(fieldKey) &&
-      (value === undefined || value === null || value === "")
-    ) {
-      errors[fieldKey] = `This field is required`;
-      return errors;
-    }
-
-    // Skip validation if value is empty and not required
-    if (value === undefined || value === null || value === "") {
-      return errors;
-    }
-
-    // Type-specific validation
-    switch (type) {
-      case "string":
-        if (pattern && typeof value === "string") {
-          const isValid = new RegExp(pattern).test(value);
-          if (!isValid) {
-            errors[fieldKey] = `This field does not match the required pattern "${pattern}"`;
-          }
-        }
-        break;
-
-      case "number":
-        if (minimum !== undefined && value < minimum) {
-          errors[fieldKey] = `This field must be at least ${minimum}`;
-        }
-        if (maximum !== undefined && value > maximum) {
-          errors[fieldKey] = `This field must be at most ${maximum}`;
-        }
-        break;
-
-      case "array":
-        if (minItems !== undefined && value.length < minItems) {
-          errors[fieldKey] = `This field must have at least ${minItems} items`;
-        }
-        if (maxItems !== undefined && value.length > maxItems) {
-          errors[fieldKey] = `This field must have at most ${maxItems} items`;
-        }
-        // Validate array items if items schema is provided
-        if (items) {
-          (value as never[]).forEach((item, index) => {
-            const itemErrors = validateSingleValue(item, items, `${fieldKey}[${index}]`);
-            Object.assign(errors, itemErrors);
-          });
-        }
-        break;
-
-      case "object":
-        if (value && typeof value === "object" && properties) {
-          const nestedErrors = validateObjectProperties(value, properties);
-          Object.assign(errors, nestedErrors);
-        }
-        break;
-    }
-
-    return errors;
-  };
 
   useEffect(() => {
     handleInputChange(getInitialValue());
@@ -408,8 +293,7 @@ export const EditCellPopover = ({
 
   const {targetPosition, calculatePosition} = useAdaptivePosition({
     containerRef: cellRef,
-    targetRef: popoverContainerRef,
-    initialPlacement: "bottomStart"
+    targetRef: popoverContainerRef
   });
 
   useLayoutEffect(() => {
@@ -422,10 +306,15 @@ export const EditCellPopover = ({
     <Popover
       containerProps={{ref: popoverContainerRef}}
       contentProps={{
-        style: targetPosition ?? undefined,
+        style: targetPosition
+          ? {
+              ...targetPosition,
+              left:
+                (targetPosition?.left ?? 0) -
+                (cellViewportPosition.viewportRelativeLeft + 300 > cellViewportPosition.viewportWidth ? 300 : 0)
+            }
+          : undefined,
         ref: popoverContentRef
-        //? {...targetPosition, left: (targetPosition?.left ?? 0) - 300}
-        //: undefined
       }}
       open={isOpen}
       onClose={discardChanges}

@@ -22,7 +22,6 @@ import {
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
-import type { FieldType } from "../table/types";
 
 export type ColumnType = {
   id: string;
@@ -52,6 +51,7 @@ type BucketTableProps = {
   tableRef?: RefObject<HTMLElement | null>;
   onCellSave: (value: any, columnName: string, rowId: string) => Promise<any>;
   updateCellDataError?: string | null;
+  requiredColumns?: string[];
 };
 
 type ColumnHeaderProps = {
@@ -277,7 +277,8 @@ const BucketTable = ({
   bucketId,
   tableRef,
   onCellSave,
-  updateCellDataError
+  updateCellDataError,
+  requiredColumns = [],
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),
@@ -302,6 +303,7 @@ const BucketTable = ({
       tableRef={tableRef}
       onCellSave={onCellSave}
       updateCellDataError={updateCellDataError}
+      requiredColumns={requiredColumns}
     />
   );
 };
