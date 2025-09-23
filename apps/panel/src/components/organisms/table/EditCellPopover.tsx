@@ -159,7 +159,9 @@ export const EditCellPopover = ({
         type,
         title,
         items: constraints?.items,
-        properties: constraints.properties
+        properties: constraints.properties,
+        enum: constraints?.enum,
+        className: constraints?.enum ? styles.enumInput : undefined
       }
     }),
     [type, title, constraints]

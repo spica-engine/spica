@@ -206,3 +206,8 @@
   overflow: auto;
   width: fit-content;
 }
+
+.enumInput > div:nth-child(2) span {
+  max-width: unset !important;
+  min-width: calc(100% + 100px);
+}

@@ -1,5 +1,5 @@
 import type {ReactNode} from "react";
-import type { FieldKind } from "src/domain/fields";
+import type {FieldKind} from "src/domain/fields";
 import type {TypeArrayItems} from "src/hooks/useInputRepresenter";
 import type {Properties} from "src/services/bucketService";
 
@@ -25,6 +25,7 @@ export type TypeDataColumn = {
   maxItems?: number;
   properties?: Properties;
   required?: string[];
+  enum?: string[] | number[];
 };
 
 export type TypeTableData = {
@@ -43,6 +44,7 @@ export type Constraints = {
   items?: TypeArrayItems;
   properties?: Properties;
   type?: FieldKind;
+  enum?: string[] | number[];
   required?: boolean;
   requiredFields?: string[];
 };

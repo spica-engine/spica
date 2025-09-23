@@ -75,6 +75,7 @@ export const TableBody = memo(
               minItems: column.minItems,
               items: column.items,
               properties: column.properties,
+              enum: column.enum,
               requiredFields: column.required,
               required: requiredColumns?.includes(column.key),
             }}
