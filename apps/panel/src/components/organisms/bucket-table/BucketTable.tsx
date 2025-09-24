@@ -37,6 +37,7 @@ export type ColumnType = {
   fixed?: boolean;
   selectable?: boolean;
   leftOffset?: number;
+  fixedWidth?: boolean;
 };
 
 type BucketTableProps = {
@@ -168,6 +169,7 @@ const defaultColumns: ColumnType[] = [
     key: "select",
     type: FieldKind.Boolean,
     width: "41px",
+    fixedWidth: true,
     headerClassName: styles.columnHeader,
     cellClassName: `${styles.selectCell} ${styles.cell}`,
     resizable: false,
