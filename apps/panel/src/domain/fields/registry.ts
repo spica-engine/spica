@@ -27,7 +27,7 @@ import {
   COLOR_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "./validation";
-import type {TypeInputTypeMap} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {TypeInputTypeMap} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import styles from "./field-styles.module.scss";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
@@ -304,7 +304,7 @@ const BOOLEAN_DEFINITION: FieldDefinition = {
   }),
   buildValueProperty: property => ({
     type: FieldKind.Boolean as keyof TypeInputTypeMap,
-    title: property.title,
+    title: property.title
   }),
   getFormattedValue: v => (v === true ? "✔" : v === false ? "✘" : ""),
   capabilities: {hasDefaultValue: true, primaryEligible: true, indexable: true}
@@ -318,7 +318,10 @@ const DATE_DEFINITION: FieldDefinition = {
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),
     defaultValue: {defaultDate: ""}
   }),
-  getDefaultValue: property => property.default,
+  getDefaultValue: property =>
+    property.default === ":created_at" || property.default === ":updated_at"
+      ? new Date()
+      : undefined,
   validateCreationForm: form => runYupValidation(DATE_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Date, properties),
   buildCreationFormProperties: () => ({
@@ -328,7 +331,7 @@ const DATE_DEFINITION: FieldDefinition = {
   }),
   buildValueProperty: property => ({
     type: FieldKind.Date,
-    title: property.title,
+    title: property.title
   }),
   getFormattedValue: v => {
     if (!v) return "";
@@ -361,7 +364,7 @@ const TEXTAREA_DEFINITION: FieldDefinition = {
   }),
   buildValueProperty: property => ({
     type: FieldKind.Textarea,
-    title: property.title,
+    title: property.title
   }),
   getFormattedValue: v => (v == null ? "" : String(v)),
   capabilities: {translatable: true, indexable: true}
@@ -415,7 +418,8 @@ const RELATION_DEFINITION: FieldDefinition = {
     },
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false]))
   }),
-  getDefaultValue: property => property.default || (property.relationType === "onetomany" ? [] : undefined),
+  getDefaultValue: property =>
+    property.default || (property.relationType === "onetomany" ? [] : undefined),
   validateCreationForm: form => runYupValidation(RELATION_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Relation, properties),
   buildCreationFormProperties: () => ({
@@ -423,7 +427,7 @@ const RELATION_DEFINITION: FieldDefinition = {
       ...BaseFields,
       bucket: SpecializedInputs.bucket,
       relationType: SpecializedInputs.relationType,
-      dependent: SpecializedInputs.dependent,
+      dependent: SpecializedInputs.dependent
     },
     configurationValues: MinimalConfig
   }),
@@ -459,7 +463,7 @@ const LOCATION_DEFINITION: FieldDefinition = {
   }),
   buildValueProperty: property => ({
     type: FieldKind.Location,
-    title: property.title,
+    title: property.title
   }),
   getFormattedValue: v => {
     if (!v || typeof v !== "object") return "";
@@ -568,7 +572,7 @@ const ARRAY_DEFINITION: FieldDefinition = {
       property.items.type === "object"
         ? {
             ...property.items,
-            ...OBJECT_DEFINITION.buildValueProperty(property.items),
+            ...OBJECT_DEFINITION.buildValueProperty(property.items)
           }
         : property.items
   }),
@@ -643,7 +647,7 @@ const FILE_DEFINITION: FieldDefinition = {
   }),
   buildValueProperty: property => ({
     type: FieldKind.File,
-    title: property.title,
+    title: property.title
   }),
   getFormattedValue: v => {
     if (!v) return "";
@@ -672,7 +676,7 @@ const RICHTEXT_DEFINITION: FieldDefinition = {
   }),
   buildValueProperty: property => ({
     type: FieldKind.Richtext,
-    title: property.title,
+    title: property.title
   }),
   getFormattedValue: v => (v ? "[rich]" : ""),
   capabilities: {translatable: true}
@@ -694,7 +698,7 @@ const JSON_DEFINITION: FieldDefinition = {
   }),
   buildValueProperty: property => ({
     type: FieldKind.Object, //FieldKind.Json is not in TypeInputTypeMap yet, so we use Object for now, will be fixed later
-    title: property.title,
+    title: property.title
   }),
   getFormattedValue: v => {
     if (!v) return "";
@@ -725,7 +729,7 @@ const COLOR_DEFINITION: FieldDefinition = {
   }),
   buildValueProperty: property => ({
     type: FieldKind.Color as keyof TypeInputTypeMap,
-    title: property.title,
+    title: property.title
   }),
   getFormattedValue: v => (v ? String(v).toUpperCase() : ""),
   capabilities: {hasDefaultValue: true, indexable: true}

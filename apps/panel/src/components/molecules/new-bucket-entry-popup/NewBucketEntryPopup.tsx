@@ -12,7 +12,7 @@ import styles from "./NewBucketEntryPopup.module.scss";
 import type {BucketType} from "src/services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
 import useLocalStorage from "../../../hooks/useLocalStorage";
-import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import {
   cleanValueRecursive,
   findFirstErrorId,
