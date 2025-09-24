@@ -144,6 +144,7 @@ export const EditCellPopover = ({
   const field = FIELD_REGISTRY[type];
 
   const handleInputChange = (newValue: any) => {
+    if (saving) return;
     setInputValue(newValue);
 
     let transformedValue;
@@ -189,6 +190,7 @@ export const EditCellPopover = ({
     errorClassName: styles.inputError,
     containerClassName: customStyles[type]
   });
+  console.log("inputValue", inputValue);
 
   useEffect(() => {
     if (!updateCellDataError || !submitted) return;
