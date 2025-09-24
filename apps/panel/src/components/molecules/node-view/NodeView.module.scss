@@ -1,15 +1,26 @@
 .node {
   position: absolute;
   width: 350px;
-  background: var(--color-default);
+  background: var(--color-soft);
   border-radius: var(--border-radius-md);
   box-shadow: 0 3px var(--padding-md) rgba(0, 0, 0, 0.2);
-  transition: opacity var(--transition-duration) ease, transform 0.2s ease, box-shadow var(--transition-duration) ease;
+  transition: opacity var(--transition-duration) ease, transform 0.2s ease, box-shadow var(--transition-duration) ease, z-index var(--transition-duration) ease;
   overflow: hidden;
   z-index: 2;
 
   &.unfocused {
     opacity: var(--disabled-opacity);
+    z-index: 1;
+  }
+
+  &.focused {
+    z-index: 10;
+    box-shadow: 0 var(--padding-sm) var(--padding-lg) rgba(0, 0, 0, 0.4);
+  }
+
+  &.related {
+    z-index: 8;
+    box-shadow: 0 var(--padding-xs) var(--padding-md) rgba(0, 0, 0, 0.35);
   }
 
   &:hover {

@@ -52,8 +52,21 @@ const Diagram: React.FC = () => {
       useLeftSideEnd
     } = relationData;
 
+    const isRelationFocused = focusMode.focusedNodeId && (
+      relation.from === focusMode.focusedNodeId || 
+      relation.to === focusMode.focusedNodeId ||
+      focusMode.focusedRelatedNodes.has(relation.from) ||
+      focusMode.focusedRelatedNodes.has(relation.to)
+    );
+
     return (
-      <g key={relationId} className={styles.relationLine}>
+      <g key={relationId} className={`${styles.relationLine} ${
+        focusMode.focusedNodeId && !isRelationFocused 
+          ? styles.unfocused 
+          : isRelationFocused 
+            ? styles.focused 
+            : ''
+      }`}>
         <path
           d={pathData}
           stroke="#666"
@@ -164,6 +177,7 @@ const Diagram: React.FC = () => {
               dragging={interactions.dragging === node.id}
               isFocused={focusMode.isNodeFocused(node.id)}
               focusMode={focusMode.focusedNodeId !== null}
+              isDirectlyFocused={node.id === focusMode.focusedNodeId}
             />
           ))}
         </div>
