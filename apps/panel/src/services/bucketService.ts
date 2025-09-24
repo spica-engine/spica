@@ -238,7 +238,7 @@ export const useBucketService = () => {
     (value: any, title: string, id: string, bucketId: string) => {
       return updateCellData({
         endpoint: `/api/bucket/${bucketId}/data/${id}`,
-        body: {[title]: value}
+        body: {[title]: value ?? null}
       });
     },
     [updateCellData]

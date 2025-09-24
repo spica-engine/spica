@@ -1,5 +1,5 @@
 import {useInputRepresenter, useAdaptivePosition, Popover} from "oziko-ui-kit";
-import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import {useState, useMemo, useEffect, useRef, useLayoutEffect} from "react";
 import type {RefObject} from "react";
 import type {TypeProperties} from "src/hooks/useInputRepresenter";
@@ -84,7 +84,11 @@ function getInitialValue(
     return {[title]: value || {lat: 0, lng: 0}};
   }
 
-  return {[title]: value ?? defaultValue};
+  if (type === "number") {
+    return {[title]: value};
+  }
+
+  return {[title]: value || defaultValue};
 }
 
 function createInitialObject(currentValue: any, properties: Properties | undefined) {
@@ -190,7 +194,6 @@ export const EditCellPopover = ({
     errorClassName: styles.inputError,
     containerClassName: customStyles[type]
   });
-  console.log("inputValue", inputValue);
 
   useEffect(() => {
     if (!updateCellDataError || !submitted) return;
@@ -214,12 +217,13 @@ export const EditCellPopover = ({
     const handleEnter = async (event: KeyboardEvent) => {
       if (event.key !== "Enter" || event.shiftKey) return;
       if (savingRef.current) return;
-
+      window.document.body.style.cursor = "wait";
       setSaving(true);
       savingRef.current = true;
       try {
         await handleSave();
       } finally {
+        window.document.body.style.cursor = "default";
         setSaving(false);
         savingRef.current = false;
       }
@@ -237,7 +241,8 @@ export const EditCellPopover = ({
 
   const {targetPosition, calculatePosition} = useAdaptivePosition({
     containerRef: cellRef,
-    targetRef: popoverContainerRef
+    targetRef: popoverContainerRef,
+    initialPlacement: "bottomStart"
   });
 
   useLayoutEffect(() => {

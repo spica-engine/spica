@@ -70,8 +70,12 @@ function Table({
     else setFocusedCell({column: columnKey, row: index});
   };
 
+  const [cellEditPayload, setCellEditPayload] = useState<CellEditPayload | null>(null);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      const isCellEditing = !!cellEditPayload;
+      if (isCellEditing) return;
       const focusedColumnIndex = columns.findIndex(col => col.key === focusedCell?.column);
       const focusedRowIndex = focusedCell?.row;
 
@@ -115,8 +119,6 @@ function Table({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [focusedCell]);
-
-  const [cellEditPayload, setCellEditPayload] = useState<CellEditPayload | null>(null);
 
   const totalTableWidth = useMemo(() => {
     return formattedColumns.reduce((total, col) => {
