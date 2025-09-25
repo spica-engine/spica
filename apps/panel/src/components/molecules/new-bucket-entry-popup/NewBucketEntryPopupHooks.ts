@@ -1,8 +1,8 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import type {BucketDataType, BucketType, Property} from "src/services/bucketService";
+import type {BucketType, Property} from "src/services/bucketService";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import {buildOptionsUrl} from "./NewBucketEntryPopupUtils";
-import type {TypeArrayItems} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {TypeArrayItems} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 
 type RelationState = {
   skip: number;
@@ -23,19 +23,14 @@ const useRelationInputHandlers = (authToken: string) => {
   const getOptionsMap = useRef<Record<string, () => RelationInputHandlerResult>>({});
   const loadMoreOptionsMap = useRef<Record<string, () => RelationInputHandlerResult>>({});
   const searchOptionsMap = useRef<Record<string, (s: string) => RelationInputHandlerResult>>({});
-  const abortControllersRef = useRef<Record<string, AbortController>>({});
 
   const ensureHandlers = useCallback(
     (bucketId: string, key: string, bucketPrimaryKey: string) => {
       if (!getOptionsMap.current[key]) {
         getOptionsMap.current[key] = async () => {
-          if (abortControllersRef.current[key]) abortControllersRef.current[key].abort();
-          const ac = new AbortController();
-          abortControllersRef.current[key] = ac;
           try {
             const res = await fetch(buildOptionsUrl(bucketId, 0), {
-              headers: {authorization: `IDENTITY ${authToken}`},
-              signal: ac.signal
+              headers: {authorization: `IDENTITY ${authToken}`}
             });
             if (!res.ok) return [];
             const data = await res.json();
@@ -49,11 +44,8 @@ const useRelationInputHandlers = (authToken: string) => {
                 value: i._id
               })) || []
             );
-          } catch (e: unknown) {
-            if ((e as Error)?.name === "AbortError") return [];
+          } catch (e) {
             throw e;
-          } finally {
-            delete abortControllersRef.current[key];
           }
         };
       }
@@ -63,15 +55,9 @@ const useRelationInputHandlers = (authToken: string) => {
           const currentSkip = relationStatesRef.current?.[key]?.skip || 0;
           const lastSearch = relationStatesRef.current?.[key]?.lastSearch || "";
 
-          const loadKey = `${key}_loadMore`;
-          if (abortControllersRef.current[loadKey]) abortControllersRef.current[loadKey].abort();
-          const ac = new AbortController();
-          abortControllersRef.current[loadKey] = ac;
-
           try {
             const res = await fetch(buildOptionsUrl(bucketId, currentSkip, lastSearch), {
-              headers: {authorization: `IDENTITY ${authToken}`},
-              signal: ac.signal
+              headers: {authorization: `IDENTITY ${authToken}`}
             });
             if (!res.ok) return [];
             const data = await res.json();
@@ -87,27 +73,18 @@ const useRelationInputHandlers = (authToken: string) => {
                 value: i._id
               })) || []
             );
-          } catch (e: unknown) {
-            if ((e as Error)?.name === "AbortError") return [];
+          } catch (e) {
             throw e;
-          } finally {
-            delete abortControllersRef.current[loadKey];
           }
         };
       }
 
       if (!searchOptionsMap.current[key]) {
         searchOptionsMap.current[key] = async (search: string) => {
-          const searchKey = `${key}_search`;
           setRelationStates(prev => ({...prev, [key]: {...prev[key], lastSearch: search}}));
-          if (abortControllersRef.current[searchKey])
-            abortControllersRef.current[searchKey].abort();
-          const ac = new AbortController();
-          abortControllersRef.current[searchKey] = ac;
           try {
             const res = await fetch(buildOptionsUrl(bucketId, 0, search), {
-              headers: {authorization: `IDENTITY ${authToken}`},
-              signal: ac.signal
+              headers: {authorization: `IDENTITY ${authToken}`}
             });
             if (!res.ok) return [];
             const data = await res.json();
@@ -121,11 +98,8 @@ const useRelationInputHandlers = (authToken: string) => {
                 value: i._id
               })) || []
             );
-          } catch (e: unknown) {
-            if ((e as Error)?.name === "AbortError") return [];
+          } catch (e) {
             throw e;
-          } finally {
-            delete abortControllersRef.current[searchKey];
           }
         };
       }
