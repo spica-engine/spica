@@ -35,7 +35,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({
     _id: storage._id || "",
     name: storage.name,
     content: {
-      type: storage.content?.type || "application/octet-stream",
+      type: storage.name.endsWith('/') ? "inode/directory" : (storage.content?.type || "application/octet-stream"),
       size: storage.content?.size || 0
     },
     url: storage.url || ""
@@ -48,10 +48,35 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({
     setIsLoadingMore(true);
     
     try {
-      const currentDirectory = directory.join("");
-      const directoryFilter = currentDirectory === "/" ? {} : {
-        name: { $regex: `^${currentDirectory}` }
-      };
+      // Build current directory path correctly
+      const currentDirectory = directory.length === 1 ? "/" : directory.slice(1).join("");
+      console.log("Current directory:", currentDirectory, "Directory array:", directory);
+      let directoryFilter = {};
+      
+      if (currentDirectory === "/") {
+        // At root level, show files that don't contain '/' or only one '/' at the end (folders)
+        directoryFilter = {
+          $or: [
+            { name: { $regex: "^[^/]+$" } }, // Files with no slashes
+            { name: { $regex: "^[^/]+/$" } } // Folders with one slash at the end
+          ]
+        };
+      } else {
+        // In a specific directory, show files that start with the current path
+        // and don't have additional nested folders
+        const escapedDirectory = currentDirectory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        directoryFilter = {
+          $and: [
+            { name: { $regex: `^${escapedDirectory}` } },
+            {
+              $or: [
+                { name: { $regex: `^${escapedDirectory}[^/]+$` } }, // Direct files
+                { name: { $regex: `^${escapedDirectory}[^/]+/$` } } // Direct subfolders
+              ]
+            }
+          ]
+        };
+      }
       
       const searchFilter = searchTerm ? {
         name: { $regex: searchTerm, $options: "i" }
@@ -61,6 +86,8 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({
         ...directoryFilter,
         ...searchFilter
       };
+      
+      console.log("Applied filter:", JSON.stringify(filter, null, 2));
       
       const sortMap = {
         name_asc: { name: 1 },
@@ -99,8 +126,24 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({
   };
 
   const handleClickFile = (file: TypeFile) => {
-    // Handle file selection - can be extended based on requirements
-    console.log("Selected file:", file);
+    // Check if it's a folder (name ends with '/')
+    if (file.name.endsWith('/')) {
+      // Navigate into the folder
+      const folderPath = file.name;
+      setDirectory(prevDirectory => {
+        // If we're at root, just add the folder
+        if (prevDirectory.length === 1 && prevDirectory[0] === "/") {
+          return ["/", folderPath];
+        }
+        // Otherwise append to current path
+        return [...prevDirectory, folderPath];
+      });
+    } else {
+      // Handle file selection - can be extended based on requirements
+      console.log("Selected file:", file);
+      // You can add additional logic here for file selection
+      // For example, close modal and return selected file
+    }
   };
   
   const handleChangeSearch = (search: string) => {
@@ -122,6 +165,18 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({
 
   const handleChangeDirectory = (index: number) => {
     setDirectory(directory.slice(0, index + 1));
+  };
+
+  // Handle modal close with root restart
+  const handleClose = () => {
+    // Reset directory to root when modal closes
+    setDirectory(["/"]);
+    // Reset other states to initial values
+    setData([]);
+    setSearchTerm("");
+    setHasNextPage(true);
+    // Call the original onClose callback
+    onClose?.();
   };
 
   // Load initial data and reset when sort/search/directory changes
@@ -149,7 +204,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({
   }, [handleScroll]);
 
   return (
-    <Modal isOpen={isOpen} showCloseButton={false} onClose={onClose} className={styles.container} dimensionX="fill">
+    <Modal isOpen={isOpen} showCloseButton={false} onClose={handleClose} className={styles.container} dimensionX="fill">
       <Modal.Header
         dimensionY="hug"
         root={{
