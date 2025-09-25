@@ -117,7 +117,7 @@ const BucketFieldConfigurationPopup = ({
       placement="leftStart"
       containerProps={{ref: innerContainerRef, className: popoverClassName || ""}}
       contentProps={{
-        className: `${styles.bucketAddField} ${!isLastPopup ? styles.lowBrightness : ""}`,
+        className: `${styles.bucketAddField} ${!isLastPopup ? styles.hidden : ""}`,
         ref: bucketAddFieldRef,
         style: {
           transform: `translate(${offsetX}px, ${offsetY}px)`,

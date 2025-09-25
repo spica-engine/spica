@@ -114,6 +114,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     setApiError(createBucketFieldError);
   }, [createBucketFieldError]);
 
+  useEffect(() => {
+    setApiError(null);
+  }, []);
+
   const oldValues = useRef(formValues);
   useEffect(() => {
     if (!fieldType || !isInitialized) return;

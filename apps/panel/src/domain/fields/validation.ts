@@ -121,6 +121,14 @@ export const ARRAY_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
     is: "object",
     then: sch => sch.min(1, "At least one inner field is required"),
     otherwise: sch => sch.optional()
+  }),
+  fieldValues: (BASE_FIELD_CREATION_FORM_SCHEMA.fieldValues as Yup.ObjectSchema<any>).shape({
+    arrayType: Yup.string().required("Array Type is required"),
+    multipleSelectionType: Yup.string().when("arrayType", {
+      is: "multiselect",
+      then: sch => sch.required("Multiple Selection Type is required"),
+      otherwise: sch => sch.optional()
+    })
   })
 });
 export const OBJECT_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({

@@ -1,3 +1,5 @@
+import styles from "./field-styles.module.scss";
+
 // Common field definitions used in creation forms
 export const BaseFields = {
   title: {type: "string", title: "Name", required: true},
@@ -86,7 +88,8 @@ export const PresetPanel = {
   makeEnumerated: SpecializedInputs.makeEnumerated,
   enumeratedValues: {
     ...SpecializedInputs.enumeratedValues,
-    renderCondition: {field: "makeEnumerated", equals: true}
+    renderCondition: {field: "makeEnumerated", equals: true},
+    className: styles.presetsEnumeratedValues
   },
   definePattern: ValidationInputs.definePattern,
   regularExpression: {

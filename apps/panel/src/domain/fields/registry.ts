@@ -244,7 +244,7 @@ const DATE_DEFINITION: FieldDefinition = {
     const base = buildBaseProperty(form);
     return {
       ...base,
-      default: form.defaultValue.length ? form.defaultValue : undefined
+      default: form?.defaultValue?.length ? form.defaultValue : undefined
     };
   },
   getFormattedValue: v => {
@@ -369,7 +369,7 @@ const RELATION_DEFINITION: FieldDefinition = {
     fieldValues: {
       ...BASE_FORM_DEFAULTS.fieldValues,
       bucket: "",
-      relationType: "onetoone",
+      relationType: "",
       dependent: false
     },
     configurationValues: Object.fromEntries(
@@ -463,7 +463,7 @@ const ARRAY_DEFINITION: FieldDefinition = {
       ...BASE_FORM_DEFAULTS.fieldValues,
       arrayItemTitle: "",
       arrayItemDescription: "",
-      arrayType: "string",
+      arrayType: "",
       chip: [],
       enumeratedValues: [],
       makeEnumerated: false,
@@ -471,7 +471,7 @@ const ARRAY_DEFINITION: FieldDefinition = {
       regularExpression: "",
       uniqueItems: false,
       defaultString: "",
-      multipleSelectionType: "string",
+      multipleSelectionType: "",
     },
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
