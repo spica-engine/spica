@@ -1,22 +1,24 @@
 import React from "react";
-import type { FieldKind } from "src/domain/fields";
-import type { Constraints } from "./types";
 
 export type CellEditPayload = {
-  ref: React.RefObject<HTMLElement | null>;
-  value: any;
-  type: FieldKind;
-  title: string;
-  constraints?: Constraints;
+  handleCellSave: (value: any, columnId: string, rowId: string) => Promise<any>;
+};
+
+export type RegisterCellPayload = {
+  saveFn: () => Promise<any>;
+  discardFn?: () => void;
   columnId: string;
   rowId: string;
-  setCellValue: (value: any) => void;
 };
 
 export type TableEditContextType = {
-  onEditCellStart: (payload: CellEditPayload) => void;
+  handleCellSave: (value: any, columnId: string, rowId: string) => Promise<any>;
+  registerActiveCell: (payload: RegisterCellPayload) => void;
+  unregisterActiveCell: () => void;
 };
 
 export const TableEditContext = React.createContext<TableEditContextType>({
-  onEditCellStart: () => {},
+  handleCellSave: () => Promise.resolve(),
+  registerActiveCell: () => {},
+  unregisterActiveCell: () => {}
 });

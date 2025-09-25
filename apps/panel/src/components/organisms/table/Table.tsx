@@ -15,8 +15,7 @@ import Loader from "../../../components/atoms/loader/Loader";
 import type {TypeDataColumn, TypeTableData} from "./types";
 import {TableHeader} from "./TableHeader";
 import {TableBody} from "./TableBody";
-import {EditCellPopover} from "./EditCellPopover";
-import {TableEditContext, type CellEditPayload} from "./TableEditContext";
+import {TableEditContext, type CellEditPayload, type RegisterCellPayload} from "./TableEditContext";
 import {getFormattedColumns, parseWidth} from "./columnUtils";
 
 export type TableProps = {
@@ -28,7 +27,6 @@ export type TableProps = {
   style?: React.CSSProperties;
   tableRef?: RefObject<HTMLElement | null>;
   onCellSave?: (value: any, columnName: string, rowId: string) => Promise<any>;
-  updateCellDataError?: string | null;
   requiredColumns?: string[];
 };
 
@@ -41,7 +39,6 @@ function Table({
   style,
   onCellSave,
   tableRef,
-  updateCellDataError,
   requiredColumns = []
 }: TableProps) {
   const containerRef = useScrollDirectionLock();
@@ -49,6 +46,12 @@ function Table({
 
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
+  const activeCellRef = React.useRef<{
+    saveFn: (() => Promise<any>) | null;
+    discardFn?: (() => void) | null;
+    columnId?: string;
+    rowId?: string;
+  }>({saveFn: null, discardFn: null});
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
@@ -70,11 +73,9 @@ function Table({
     else setFocusedCell({column: columnKey, row: index});
   };
 
-  const [cellEditPayload, setCellEditPayload] = useState<CellEditPayload | null>(null);
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const isCellEditing = !!cellEditPayload;
+      const isCellEditing = Boolean(activeCellRef.current?.saveFn);
       if (isCellEditing) return;
       const focusedColumnIndex = columns.findIndex(col => col.key === focusedCell?.column);
       const focusedRowIndex = focusedCell?.row;
@@ -127,17 +128,51 @@ function Table({
   }, [formattedColumns]);
 
   const handleCellSave = useCallback(
-    (value: any) =>
-      onCellSave?.(
-        value,
-        (cellEditPayload as CellEditPayload).columnId,
-        (cellEditPayload as CellEditPayload).rowId
-      ),
-    [cellEditPayload, onCellSave]
+    (value: any, columnId: string, rowId: string) => onCellSave?.(value, columnId, rowId),
+    [onCellSave]
   ) as (value: any) => Promise<any>;
 
+  // register/unregister active cell save handler so Table can trigger save on Enter
+  const registerActiveCell = useCallback(
+    (payload: {
+      saveFn: () => Promise<any>;
+      discardFn?: () => void;
+      columnId: string;
+      rowId: string;
+    }) => {
+      activeCellRef.current = {
+        saveFn: payload.saveFn,
+        discardFn: payload.discardFn ?? null,
+        columnId: payload.columnId,
+        rowId: payload.rowId
+      };
+    },
+    []
+  );
+
+  const unregisterActiveCell = useCallback(() => {
+    activeCellRef.current = {saveFn: null, discardFn: null};
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const activeCell = activeCellRef.current;
+      if (!activeCell) return;
+
+      if (e.key === "Enter" && !e.shiftKey) {
+        console.log("Enter key pressed, saving cell");
+        activeCell?.saveFn?.();
+      } else if (e.key === "Escape") {
+        activeCell?.discardFn?.();
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
-    <TableEditContext value={{onEditCellStart: setCellEditPayload}}>
+    <TableEditContext value={{handleCellSave, registerActiveCell, unregisterActiveCell}}>
       <div
         ref={containerRef as RefObject<HTMLDivElement>}
         id="scrollableDiv"
@@ -171,20 +206,6 @@ function Table({
             </tbody>
           </table>
         </InfiniteScroll>
-        {onCellSave && cellEditPayload && (
-          <EditCellPopover
-            value={cellEditPayload.value}
-            type={cellEditPayload.type}
-            title={cellEditPayload.title}
-            constraints={cellEditPayload.constraints}
-            onCellSave={handleCellSave}
-            setCellValue={cellEditPayload.setCellValue}
-            cellRef={cellEditPayload.ref}
-            onClose={() => setCellEditPayload(null)}
-            updateCellDataError={updateCellDataError ?? null}
-            containerRef={containerRef as RefObject<HTMLDivElement>}
-          />
-        )}
       </div>
       {!data.length && <div className={styles.noDataText}>No Data Found</div>}
     </TableEditContext>

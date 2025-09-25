@@ -67,7 +67,6 @@ type BucketContextType = {
   updateBucketRuleLoading: boolean;
   updateBucketRuleError: string | null;
   createBucketFieldError: string | null;
-  updateCellDataError: string | null;
 };
 
 /**
@@ -446,7 +445,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateCellData,
       nextbucketDataQuery,
       createBucketFieldError: apiCreateBucketFieldError,
-      updateCellDataError: apiUpdateCellDataError
     }),
     [
       getBucketData,
@@ -483,7 +481,6 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,
       apiCreateBucketFieldError,
-      apiUpdateCellDataError
     ]
   );
 

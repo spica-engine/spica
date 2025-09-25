@@ -139,25 +139,6 @@
   margin-top: -2px;
 }
 
-.multipleSelectionCell {
-  display: flex;
-  gap: var(--gap-md);
-
-  .grayBox {
-    width: 22px !important;
-    height: 22px !important;
-    border-radius: var(--border-radius-md);
-    background-color: var(--color-border);
-    font-family: var(--font-family-base);
-    font-size: var(--font-size-md);
-    line-height: 0 !important;
-  }
-
-  .grayBox:last-child:hover {
-    background-color: var(--color-background);
-  }
-}
-
 .locationCell {
   display: flex;
   align-items: center;
@@ -211,4 +192,14 @@
 .enumInput > div:nth-child(2) span {
   max-width: unset !important;
   min-width: calc(100% + 100px);
+}
+
+.cellUpdateInput {
+  padding: 0 var(--padding-md);
+  height: 36px !important;
+  padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
+}
+
+.editingCell {
+  padding: 0 !important;
 }

@@ -1,6 +1,6 @@
 import type {TypeDataColumn} from "./types";
 
-export const MIN_COLUMN_WIDTH = 140;
+export const MIN_COLUMN_WIDTH = 160;
 
 export const parseWidth = (widthValue: string | number, containerWidth: number): number => {
   const baseFontSize = 16;

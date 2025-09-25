@@ -249,7 +249,6 @@ const BucketTable = ({
   bucketId,
   tableRef,
   onCellSave,
-  updateCellDataError,
   requiredColumns = []
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
@@ -274,7 +273,6 @@ const BucketTable = ({
       totalDataLength={totalDataLength}
       tableRef={tableRef}
       onCellSave={onCellSave}
-      updateCellDataError={updateCellDataError}
       requiredColumns={requiredColumns}
     />
   );

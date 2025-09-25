@@ -1,157 +1,84 @@
-import {memo, useRef, useState, useContext, type JSX, type ReactNode} from "react";
-import { TableEditContext } from "./TableEditContext";
+import {memo, useRef, useState, useContext, type ReactNode, useEffect, useMemo} from "react";
+import {TableEditContext} from "./TableEditContext";
 import {MIN_COLUMN_WIDTH} from "./columnUtils";
 import type {Constraints} from "./types";
 import styles from "./Table.module.scss";
-import {FlexElement} from "oziko-ui-kit";
-import {Button, Icon, Checkbox} from "oziko-ui-kit";
-import {isValidDate} from "./EditCellPopover";
-import type { FieldKind } from "src/domain/fields";
+import {FlexElement, Portal, useOnClickOutside} from "oziko-ui-kit";
+import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import {FIELD_REGISTRY, type FieldKind} from "../../../domain/fields";
 
-// TODO: Refactor this function to render more appropriate UI elements for each field type.
-// Many field types are currently using the generic `renderDefault()`.
-export function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
-  function renderDefault(data?: any): JSX.Element {
-    return (
-      <div className={styles.defaultCell}>
-        <div className={styles.defaultCellData}>{data ?? cellData}</div>
-        {deletable && cellData && (
-          <Button variant="icon">
-            <Icon name="close" size="sm" />
-          </Button>
-        )}
-      </div>
-    );
-  }
-  switch (type) {
-    case "string":
-      return renderDefault();
-    case "number":
-      return renderDefault();
-    case "date":
-      if (!cellData || !isValidDate(new Date(cellData))) return renderDefault("");
-      const dateObj = new Date(cellData);
-      const formattedDate = dateObj.toLocaleString("en-US", {
-        month: "numeric",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true
-      });
+const DEFAULT_VALUES: Record<FieldKind, any> = {
+  string: "",
+  number: 0,
+  date: "",
+  boolean: false,
+  textarea: "",
+  "multiple selection": [],
+  multiselect: [],
+  relation: null,
+  location: {lat: 36.966667, lng: 30.666667},
+  array: [],
+  object: {},
+  file: null,
+  richtext: "",
+  color: "#000000"
+} as unknown as Record<FieldKind, any>;
 
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{formattedDate}</div>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "boolean":
-      return <Checkbox className={styles.checkbox} checked={cellData} />;
-    case "textarea":
-      return renderDefault();
-    case "multiple selection" as FieldKind:
-    case "multiselect":
-      return (
-        <div className={styles.multipleSelectionCell}>
-          {cellData?.slice(0, 2)?.map?.((_: any, index: number) => (
-            <Button key={index} variant="icon" className={styles.grayBox}>
-              {index + 1}
-            </Button>
-          ))}
-          {cellData?.length > 2 && (
-            <Button variant="icon" className={styles.grayBox}>
-              <Icon name="dotsHorizontal" size="xs" />
-            </Button>
-          )}
-          <Button variant="icon" className={styles.grayBox}>
-            <Icon name="plus" size="xs" />
-          </Button>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "relation":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "location":
-      return (
-        <div className={styles.locationCell}>
-          <img src="/locationx.png" className={styles.locationImage} />
-          <div
-            data-full={cellData?.coordinates?.join(", ")}
-            onCopy={e => {
-              e.preventDefault();
-              e.clipboardData.setData("text/plain", e.currentTarget.dataset.full || "");
-            }}
-          >
-            {cellData?.coordinates?.map((c: number) => c?.toFixed(2) + "..").join(", ")}
-          </div>
-        </div>
-      );
-    case "array":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "object":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "file" as FieldKind:
-      return (
-        <div className={styles.fileCell}>
-          <Icon name="imageMultiple" size="xs" />
-          {cellData ? (
-            <span>{cellData}</span>
-          ) : (
-            <span className={styles.grayText}>Click or Drag&Drop</span>
-          )}
-        </div>
-      );
-    case "richtext":
-      return renderDefault();
-    default: {
-      if (!cellData) {
-        return <div />;
-      }
-
-      if (typeof cellData === "string") {
-        return cellData;
-      }
-
-      return JSON.stringify(cellData);
-    }
-  }
+export function isValidDate(dateObject: any) {
+  return dateObject instanceof Date && !isNaN(dateObject.getTime());
 }
+
+const isObjectEffectivelyEmpty = (obj: any): boolean => {
+  if (obj == null || typeof obj !== "object") return true;
+
+  return Object.keys(obj).every(
+    key =>
+      obj[key] === undefined ||
+      obj[key] === null ||
+      (typeof obj[key] === "object" && isObjectEffectivelyEmpty(obj[key]))
+  );
+};
+
+function getInitialValue(type: FieldKind, value: any, constraints: Constraints | undefined) {
+  const defaultValue = DEFAULT_VALUES[type];
+  if (type === "object") {
+    return createInitialObject(value, constraints?.properties);
+  }
+
+  if (type === "date") {
+    const dateValue = isValidDate(new Date(value)) ? new Date(value) : null;
+    return dateValue || defaultValue;
+  }
+
+  if (type === "location") return value || {lat: 0, lng: 0};
+
+  if (type === "number") return value;
+
+  return value || defaultValue;
+}
+
+function createInitialObject(currentValue: any, properties: any | undefined) {
+  const initialObject: Record<string, any> = {};
+
+  Object.values(properties || {}).forEach((property: any) => {
+    if (property.type === "object") {
+      const nestedValue = currentValue?.[property.title];
+      initialObject[property.title] = createInitialObject(nestedValue, property.properties);
+    } else {
+      initialObject[property.title] =
+        currentValue?.[property.title] ?? DEFAULT_VALUES[property.type as FieldKind] ?? null;
+    }
+  });
+
+  return initialObject;
+}
+
+const customStyles: Partial<Record<FieldKind, string>> = {
+  "multiple selection": styles.multipleSelectionInput,
+  multiselect: styles.multipleSelectionInput,
+  location: styles.locationInput,
+  object: styles.objectInput
+} as Partial<Record<FieldKind, string>>;
 
 type CellProps = React.HTMLAttributes<HTMLDivElement> & {
   leftOffset?: number;
@@ -161,9 +88,10 @@ type CellProps = React.HTMLAttributes<HTMLDivElement> & {
 };
 
 export const Cell = memo(({value, type, deletable, leftOffset, ...props}: CellProps) => {
+  const field = FIELD_REGISTRY[type || "string"];
   return (
     <td {...props} className={`${styles.cell} ${props.className || ""}`} style={{left: leftOffset}}>
-      {renderCell(value, type, deletable)}
+      {field?.renderValue?.(value, deletable ?? false)}
     </td>
   );
 });
@@ -176,6 +104,11 @@ type EditableCellProps = CellProps & {
   rowId: string;
 };
 
+
+// AFTER ALL OF THE UPDATES WORKED
+// MAKE SURE NO SUBMIT GOES TO BACNKEND IF ERRORS EXIST
+// AND AFTER THAT START TO TEST THE CASES WHERE USER SELECTS ANOTHER CELL WHILE SUBMITTING
+// OR CLICKS OUTSIDE THE CELL WHILE SUBMITTING
 export const EditableCell = memo(
   ({
     value,
@@ -189,41 +122,171 @@ export const EditableCell = memo(
     rowId,
     ...props
   }: EditableCellProps) => {
-    const ref = useRef<HTMLTableCellElement | null>(null);
-    const [cellValue, setCellValue] = useState(value);
-    const { onEditCellStart } = useContext(TableEditContext);
-    const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
-      props?.onClick?.(e);
-      onEditCellStart({
-        value,
-        type,
-        title,
-        constraints,
-        ref,
-        columnId,
-        rowId,
-        setCellValue: val => {
-          // Force a new reference for arrays and objects to ensure re-renders
-          if (Array.isArray(val)) {
-            setCellValue([...val]);
-          } else if (val && typeof val === "object") {
-            setCellValue({ ...val });
-          } else {
-            setCellValue(val);
-          }
-        }
-      });
+    const inputRef = useRef<HTMLTableCellElement | null>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const savingRef = useRef(false);
+    const floatingElementRef = useRef<HTMLDivElement | null>(null);
+    const {handleCellSave, registerActiveCell, unregisterActiveCell} = useContext(TableEditContext);
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [inputValue, setInputValue] = useState<any>(undefined);
+    const [error, setError] = useState<TypeInputRepresenterError | undefined>(undefined);
+
+    const handleDiscardEdit = () => {
+      setIsEditing(false);
+      setInputValue(getInitialValue(type, value, constraints));
+      setError(undefined);
     };
 
+    useOnClickOutside({
+      targetElements: [containerRef, inputRef, floatingElementRef],
+      onClickOutside: handleDiscardEdit
+    });
+
+    const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
+      setIsEditing(true);
+      try {
+        props.onClick?.(e);
+      } catch (error) {
+        console.error("Error occurred while handling click:", error);
+      }
+    };
+
+    useEffect(() => {
+      // type !== "number" check is to make sure user can clear number input
+      // but its a hacky fix, need to find a better way
+      if (isEditing && inputValue === undefined && type !== "number") {
+        setInputValue(getInitialValue(type, value, constraints));
+      }
+    }, [isEditing, type, title, value, constraints, inputValue]);
+
+    useEffect(() => {
+      if (!isEditing || !inputRef.current) return;
+      inputRef.current?.focus();
+    }, [isEditing, inputRef]);
+
+    const properties = useMemo(
+      () => ({
+        type,
+        title,
+        items: constraints?.items,
+        properties: constraints.properties,
+        enum: constraints?.enum,
+        className: constraints?.enum ? styles.enumInput : undefined
+      }),
+      [type, title, constraints]
+    );
+
+    async function handleSave() {
+      const validationErrors = field?.validateValue(
+        inputValue,
+        constraints as any,
+        constraints.required
+      );
+
+      if (validationErrors && !isObjectEffectivelyEmpty(validationErrors)) {
+        setError(validationErrors as TypeInputRepresenterError);
+        return;
+      }
+
+      let payload: any;
+      if (type === "date") {
+        if (!inputValue) payload = undefined;
+        else if (inputValue instanceof Date && !isNaN(inputValue.getTime()))
+          payload = inputValue.toISOString();
+        else payload = new Date(inputValue).toISOString();
+      } else if (type === "location") {
+        const loc = inputValue;
+        if (loc?.lat && loc?.lng) payload = {type: "Point", coordinates: [loc.lng, loc.lat]};
+        else payload = null;
+      } else {
+        payload = inputValue;
+      }
+
+      const payloadError = field?.validateValue(payload, constraints as any, constraints.required);
+      if (payloadError && !isObjectEffectivelyEmpty(payloadError)) {
+        setError({[title]: payloadError} as TypeInputRepresenterError);
+        return;
+      }
+
+      if (!handleCellSave) {
+        setIsEditing(false);
+        return;
+      }
+
+      try {
+        window.document.body.style.cursor = "wait";
+        savingRef.current = true;
+        const result = await handleCellSave(payload, columnId, rowId);
+        if (result) setError(undefined);
+        setIsEditing(false);
+      } catch (err) {
+        const errMsg = {[title]: String((err as any)?.message || err)} as TypeInputRepresenterError;
+        setError(errMsg);
+      } finally {
+        savingRef.current = false;
+        window.document.body.style.cursor = "default";
+      }
+    }
+
+    useEffect(() => {
+      if (isEditing) {
+        const saveFn = async () => {
+          if (savingRef.current) return;
+          savingRef.current = true;
+          try {
+            await handleSave();
+          } finally {
+            savingRef.current = false;
+          }
+        };
+        registerActiveCell({saveFn, discardFn: handleDiscardEdit, columnId, rowId});
+      } else {
+         unregisterActiveCell();
+      }
+
+      return () => {
+        unregisterActiveCell();
+      };
+    }, [isEditing, inputValue, columnId, rowId]);
+
+    const field = FIELD_REGISTRY[type || "string"];
+    const InputComponent = field?.renderInput;
+
+    const className = useMemo(
+      () =>
+        [
+          styles.cell,
+          styles.selectableCell,
+          focused ? styles.focusedCell : "",
+          isEditing && type !== "date" ? styles.editingCell : "",
+          props.className
+        ]
+          .filter(Boolean)
+          .join(" "),
+      [focused, isEditing, props.className, type]
+    );
+
     return (
-      <td
-        {...props}
-        onClick={handleClick}
-        className={`${styles.cell} ${styles.selectableCell} ${focused ? styles.focusedCell : ""} ${props.className || ""}`}
-        style={{left: leftOffset}}
-        ref={ref}
-      >
-        {renderCell(cellValue, type, deletable)}
+      <td {...props} className={className} style={{left: leftOffset}} onClick={handleClick}>
+        {isEditing && InputComponent ? (
+          <div ref={containerRef}>
+            <InputComponent
+              value={inputValue}
+              onChange={setInputValue}
+              ref={inputRef}
+              properties={properties as any}
+              title={title}
+              // we can remove the extra refs and just use one ref called extraRef or something.
+              // Both of these refs are used to detect clicks outside the cell to discard changes
+              // we need them because some inputs have dropdowns or popovers
+              floatingElementRef={floatingElementRef}
+              className={type !== "date" ? styles.cellUpdateInput : ""}
+            />
+          </div>
+        ) : (
+          field?.renderValue?.(value, deletable ?? false)
+        )}
       </td>
     );
   }

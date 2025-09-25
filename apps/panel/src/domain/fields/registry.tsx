@@ -5,6 +5,18 @@
  * defaults, property construction, parsing, formatting and validation.
  */
 
+import {
+  Button,
+  Checkbox,
+  DateInput,
+  DatePicker,
+  Icon,
+  Input,
+  MultipleSelectionInput,
+  Select,
+  TextAreaInput,
+  type TypeSelectRef
+} from "oziko-ui-kit";
 import {BASE_FORM_DEFAULTS, freezeFormDefaults} from "./defaults";
 import {applyPresetLogic} from "./presets";
 import {type FieldDefinition, FieldKind} from "./types";
@@ -26,7 +38,10 @@ import {
   COLOR_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "./validation";
-import type {TypeInputTypeMap} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type {TypeInputTypeMap} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import styles from "./field-styles.module.scss";
+import {useEffect, useId, useRef, type ChangeEvent, type RefObject} from "react";
+import {isValidDate} from "../../components/organisms/table/EditCellPopover";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
   if (!input) return undefined;
@@ -231,6 +246,45 @@ const STRING_DEFINITION: FieldDefinition = {
     primaryEligible: true,
     uniqueEligible: true,
     indexable: true
+  },
+  renderValue: (value, deletable) => {
+    return (
+      <div className={styles.defaultCell}>
+        <div className={styles.defaultCellData}>{value}</div>
+        {deletable && value && (
+          <Button variant="icon">
+            <Icon name="close" size="sm" />
+          </Button>
+        )}
+      </div>
+    );
+  },
+  renderInput: ({value, onChange, ref, properties, title, floatingElementRef, className}) => {
+    const selectRef = useRef<TypeSelectRef>(null);
+
+    useEffect(() => {
+      selectRef.current?.toggleDropdown(true);
+    }, [selectRef]);
+
+    return properties.enum ? (
+      <Select
+        options={properties.enum}
+        value={value}
+        onChange={val => onChange(val)}
+        title={title}
+        externalDropdownRef={floatingElementRef}
+        className={className}
+        selectRef={selectRef}
+      />
+    ) : (
+      <Input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        ref={ref as RefObject<HTMLInputElement | null>}
+        title={title}
+        className={className}
+      />
+    );
   }
 };
 
@@ -283,6 +337,52 @@ const NUMBER_DEFINITION: FieldDefinition = {
     primaryEligible: true,
     uniqueEligible: true,
     indexable: true
+  },
+  renderValue: (value, deletable) => {
+    return (
+      <div className={styles.defaultCell}>
+        <div className={styles.defaultCellData}>{value}</div>
+        {deletable && value && (
+          <Button variant="icon">
+            <Icon name="close" size="sm" />
+          </Button>
+        )}
+      </div>
+    );
+  },
+  renderInput: ({value, onChange, ref, properties, title, floatingElementRef, className}) => {
+    const selectRef = useRef<TypeSelectRef>(null);
+
+    useEffect(() => {
+      selectRef.current?.toggleDropdown(true);
+    }, [selectRef]);
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      const isEmptyString = value === "";
+      onChange?.(isEmptyString ? undefined : Number(value));
+    };
+
+    return properties.enum ? (
+      <Select
+        options={properties.enum}
+        value={value}
+        onChange={val => onChange(val)}
+        title={title}
+        externalDropdownRef={floatingElementRef}
+        className={className}
+        selectRef={selectRef}
+      />
+    ) : (
+      <Input
+        value={value}
+        onChange={handleChange}
+        ref={ref as RefObject<HTMLInputElement | null>}
+        title={title}
+        className={className}
+        type="number"
+      />
+    );
   }
 };
 
@@ -310,7 +410,17 @@ const BOOLEAN_DEFINITION: FieldDefinition = {
     description: property.description
   }),
   getFormattedValue: v => (v === true ? "✔" : v === false ? "✘" : ""),
-  capabilities: {hasDefaultValue: true, primaryEligible: true, indexable: true}
+  capabilities: {hasDefaultValue: true, primaryEligible: true, indexable: true},
+  renderValue: value => (
+    <Checkbox className={`${styles.checkbox} ${styles.booleanValue}`} checked={value} />
+  ),
+  renderInput: ({value, onChange, className}) => (
+    <Checkbox
+      className={`${className} ${styles.checkbox}`}
+      checked={value}
+      onChange={() => onChange(!value)}
+    />
+  )
 };
 
 const DATE_DEFINITION: FieldDefinition = {
@@ -344,7 +454,71 @@ const DATE_DEFINITION: FieldDefinition = {
       return String(v);
     }
   },
-  capabilities: {hasDefaultValue: true, indexable: true}
+  capabilities: {hasDefaultValue: true, indexable: true},
+  renderValue: (value, deletable) => {
+    if (!value || !isValidDate(new Date(value))) return "";
+    const dateObj = new Date(value);
+    const formattedDate = dateObj.toLocaleString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    });
+
+    return (
+      <div className={styles.defaultCell}>
+        <div className={styles.defaultCellData}>{formattedDate}</div>
+        {deletable && value && (
+          <Button variant="icon">
+            <Icon name="close" size="sm" />
+          </Button>
+        )}
+      </div>
+    );
+  },
+  renderInput: ({value, onChange, ref, floatingElementRef}) => {
+    const popupId = useId(); // unique per component instance
+    const observer = useRef<MutationObserver | null>(null);
+
+    const handleOpenChange = (open: boolean) => {
+      if (!floatingElementRef) return;
+
+      if (open) {
+        observer.current = new MutationObserver(() => {
+          const popupEl = document.querySelector<HTMLDivElement>(`.${popupId}`);
+          if (popupEl) {
+            floatingElementRef.current = popupEl;
+            observer.current?.disconnect();
+          }
+        });
+        observer.current.observe(document.body, {childList: true, subtree: true});
+      } else {
+        floatingElementRef.current = null;
+        observer.current?.disconnect();
+      }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault(); // prevents popup from opening
+        e.stopPropagation(); // stops propagation to DatePicker internal handlers
+      }
+    };
+
+    return (
+      <DatePicker
+        value={value}
+        onChange={onChange}
+        placement="bottomLeft"
+        ref={ref as any}
+        onOpenChange={handleOpenChange}
+        classNames={{popup: {root: popupId}}}
+        onKeyDown={handleKeyDown}
+      />
+    );
+  }
 };
 
 const TEXTAREA_DEFINITION: FieldDefinition = {
@@ -369,7 +543,39 @@ const TEXTAREA_DEFINITION: FieldDefinition = {
     description: property.description
   }),
   getFormattedValue: v => (v == null ? "" : String(v)),
-  capabilities: {translatable: true, indexable: true}
+  capabilities: {translatable: true, indexable: true},
+  renderValue: (value, deletable) => {
+    return (
+      <div className={styles.defaultCell}>
+        <div className={styles.defaultCellData}>{value}</div>
+        {deletable && value && (
+          <Button variant="icon">
+            <Icon name="close" size="sm" />
+          </Button>
+        )}
+      </div>
+    );
+  },
+  renderInput: ({value, onChange, ref, title, className}) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+      }
+    };
+    return (
+      <TextAreaInput
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        title={title}
+        textAreaProps={{
+          ref: ref as RefObject<HTMLTextAreaElement>,
+          className,
+          onKeyDown: handleKeyDown
+        }}
+        titleRootProps={{className: styles.textAreaTitle}}
+      />
+    );
+  }
 };
 
 const MULTISELECT_DEFINITION: FieldDefinition = {
@@ -404,7 +610,49 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
     enum: property.enum
   }),
   getFormattedValue: v => (Array.isArray(v) ? v.join(", ") : ""),
-  capabilities: {enumerable: true, indexable: true}
+  capabilities: {enumerable: true, indexable: true},
+  renderValue: (value, deletable) => (
+    <div className={styles.multipleSelectionCell}>
+      {value?.slice(0, 2)?.map?.((_: any, index: number) => (
+        <Button key={index} variant="icon" className={styles.grayBox}>
+          {index + 1}
+        </Button>
+      ))}
+      {value?.length > 2 && (
+        <Button variant="icon" className={styles.grayBox}>
+          <Icon name="dotsHorizontal" size="xs" />
+        </Button>
+      )}
+      <Button variant="icon" className={styles.grayBox}>
+        <Icon name="plus" size="xs" />
+      </Button>
+      {deletable && value && (
+        <Button variant="icon">
+          <Icon name="close" size="sm" />
+        </Button>
+      )}
+    </div>
+  ),
+  renderInput: ({value, onChange, properties, title, floatingElementRef}) => {
+    const selectRef = useRef<TypeSelectRef>(null);
+
+    useEffect(() => {
+      selectRef.current?.toggleDropdown(true);
+    }, [selectRef]);
+
+    return (
+      <Select
+        title={title}
+        selectRef={selectRef}
+        externalDropdownRef={floatingElementRef}
+        disableClick
+        options={properties.items.enum || []}
+        value={value}
+        multiple={true}
+        onChange={onChange}
+      />
+    );
+  }
 };
 
 const RELATION_DEFINITION: FieldDefinition = {
@@ -448,7 +696,17 @@ const RELATION_DEFINITION: FieldDefinition = {
     if (typeof v === "string") return v;
     return (v as any).title || (v as any).name || (v as any)._id || (v as any).id || "";
   },
-  capabilities: {indexable: true}
+  capabilities: {indexable: true},
+  renderValue: (value, deletable) => (
+    <div className={styles.defaultCell}>
+      <div className={styles.defaultCellData}>{JSON.stringify(value)}</div>
+      {deletable && value && (
+        <Button variant="icon">
+          <Icon name="close" size="sm" />
+        </Button>
+      )}
+    </div>
+  )
 };
 
 const LOCATION_DEFINITION: FieldDefinition = {

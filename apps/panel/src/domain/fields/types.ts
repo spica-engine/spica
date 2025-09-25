@@ -1,6 +1,7 @@
 import type {IconName} from "oziko-ui-kit";
 import type {Property} from "../../services/bucketService";
-import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type {TypeProperties} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {RefObject} from "react";
 
 type TypeProperty = TypeProperties[string];
 
@@ -51,9 +52,12 @@ export interface FieldFormState extends FieldCreationForm {
   innerFields?: any[]; // for object/array-of-object editing flows
 }
 
-export type FormError = string | null | {
-  [key: string]: string | FormError | null;
-}
+export type FormError =
+  | string
+  | null
+  | {
+      [key: string]: string | FormError | null;
+    };
 
 export interface FieldDefinition {
   kind: FieldKind; // name of the field kind
@@ -74,4 +78,14 @@ export interface FieldDefinition {
   // Optional formatting function for displaying values in lists, etc.
   getFormattedValue?: (value: any) => any;
   capabilities?: FieldCapabilities;
+  renderValue: (value: any, deletable: boolean) => React.ReactNode; // custom render function for displaying values
+  renderInput: React.FC<{
+    value: any;
+    onChange: (value: any) => void;
+    ref: RefObject<HTMLElement | HTMLTextAreaElement | null>;
+    properties: Property;
+    title?: string;
+    floatingElementRef?: RefObject<HTMLInputElement | HTMLDivElement | null>; // ref for dropdowns/popovers inside the input component
+    className?: string;
+  }>; // custom input renderer for quick editing in tables, etc.
 }
