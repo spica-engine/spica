@@ -155,6 +155,7 @@ const BucketActionBar = ({
       </FlexElement>
       <StorageFileSelect
         isOpen={isStorageModalOpen}
+        onClose={handleStorageModalClose}
       />
     </div>
   );
