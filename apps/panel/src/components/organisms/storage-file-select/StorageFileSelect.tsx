@@ -1,36 +1,35 @@
 import {type FC, memo, useEffect, useState} from "react";
 import styles from "./StorageFileSelect.module.scss";
-import {Modal, StorageFileCard} from "oziko-ui-kit";
+import {Modal, StorageFileCard, type TypeFile} from "oziko-ui-kit";
 import {type TypeSortProp} from "./sort-popover-content/SortPopoverContent";
 import StorageModalHeading from "./storage-modal-heading/StorageModalHeading";
-import {type TypeFile} from "../../../../../../node_modules/oziko-ui-kit/dist/utils/interface";
+
 
 type TypeStorageFileSelect = {
-  data: TypeFile[];
   className?: string;
-  onChangeSearch?: (search: string) => void;
-  onClickSort?: (prop: TypeSortProp) => void;
-  onChooseFile?: (file: TypeFile) => void;
   isOpen?: boolean;
 };
 
 const StorageFileSelect: FC<TypeStorageFileSelect> = ({
-  data,
-  onChangeSearch,
-  onClickSort,
-  onChooseFile,
   isOpen = false
 }) => {
   const [directory, setDirectory] = useState(["/"]);
   const [fileLength, setFileLength] = useState(0);
   const [folderLength, setFolderLength] = useState(0);
-
+  
+  // TODO: These will be implemented via context
+  const data: TypeFile[] = [];
+  
   const handleClickSortProp = (prop: TypeSortProp) => {
-    onClickSort?.(prop);
+    // TODO: Will be implemented via context
   };
 
   const handleClickFile = (file: TypeFile) => {
-    onChooseFile?.(file);
+    // TODO: Will be implemented via context
+  };
+  
+  const handleChangeSearch = (search: string) => {
+    // TODO: Will be implemented via context
   };
 
   const handleChangeDirectory = (index: number) => {
@@ -54,7 +53,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({
               onClickSort={handleClickSortProp}
               directory={directory}
               onChangeDirectory={handleChangeDirectory}
-              onChangeSearch={onChangeSearch}
+              onChangeSearch={handleChangeSearch}
             />
           )
         }}

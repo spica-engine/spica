@@ -4,6 +4,7 @@ import {Button, FlexElement, Icon, Popover, Checkbox} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
+import StorageFileSelect from "../../organisms/storage-file-select/StorageFileSelect";
 import type {BucketType} from "src/services/bucketService";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 
@@ -31,6 +32,28 @@ const BucketActionBar = ({
   toggleColumn
 }: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
+  const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
+
+  const handleStorageModalClose = useCallback(() => {
+    setIsStorageModalOpen(false);
+  }, []);
+
+  // Handle escape key to close storage modal
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isStorageModalOpen) {
+        handleStorageModalClose();
+      }
+    };
+
+    if (isStorageModalOpen) {
+      document.addEventListener('keydown', handleEscapeKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isStorageModalOpen, handleStorageModalClose]);
 
   useEffect(() => setSearchValue(""), [bucket?._id]);
   const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
@@ -84,6 +107,13 @@ const BucketActionBar = ({
             New Entry
           </Button>
         )}
+        <Button 
+          variant="text" 
+          onClick={() => setIsStorageModalOpen(true)}
+        >
+          <Icon name="folder" />
+          Storage
+        </Button>
         <Button
           className={styles.refreshButton} variant="text"
           onClick={onRefresh}
@@ -123,6 +153,9 @@ const BucketActionBar = ({
         </Popover>
         <BucketMorePopup bucket={bucket} />
       </FlexElement>
+      <StorageFileSelect
+        isOpen={isStorageModalOpen}
+      />
     </div>
   );
 };
