@@ -101,7 +101,10 @@ export const TEXTAREA_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object(
   ...BASE_FIELD_CREATION_FORM_SCHEMA
 });
 export const MULTISELECT_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
-  ...BASE_FIELD_CREATION_FORM_SCHEMA
+  ...BASE_FIELD_CREATION_FORM_SCHEMA,
+  multipleSelectionTab: Yup.object({
+    multipleSelectionType: Yup.string().required("Multiple Selection Type is required")
+  })
 });
 export const RELATION_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
   fieldValues: (BASE_FIELD_CREATION_FORM_SCHEMA.fieldValues as Yup.ObjectSchema<any>).shape({

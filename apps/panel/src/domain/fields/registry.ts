@@ -297,7 +297,7 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
     },
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),
     multipleSelectionTab: {
-      multipleSelectionType: "string",
+      multipleSelectionType: "",
       maxItems: undefined
     },
     type: FieldKind.Multiselect
