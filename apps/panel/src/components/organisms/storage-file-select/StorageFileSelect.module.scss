@@ -1,16 +1,18 @@
 .container {
   padding: 0;
+  width: 1280px !important;
+  height: 720px !important;
 }
 
 .content {
   display: grid !important;
-  grid-template-columns: repeat(4, 240px);
-  gap: 16px;
+  grid-template-columns: repeat(5, 240px);
+  justify-content: start;
+  align-items: start;
+  // gap: 16px;
   background: var(--color-background);
-  justify-content: center;
   max-height: 600px;
   overflow-y: auto;
-  padding: 16px;
 
   .file {
     width: 240px;

@@ -84,6 +84,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
   });
 
   const onSubmit = (data: TypeFilterValue) => {
+    console.log("filter data", data);
     onApply?.(data);
   };
 

@@ -55,6 +55,37 @@ interface IStorageContext {
   refreshStorage: () => Promise<void>;
 }
 
+function generateRegexFilter($regex: string) {
+  return {
+    name: {$regex}
+  };
+}
+  export namespace Filters {
+  // prettier-ignore
+  export const ListRootDirs = generateRegexFilter("^[^\/]+\/$");
+  // prettier-ignore
+  export const ListOnlyObjects = generateRegexFilter("^.*[^\/]$");
+  export const Match = (name: any)   => generateRegexFilter(`^${name}$`);
+  export const ListFirstChildren = (dir: any, itself = false) => {
+    let regex = `^${dir}[^\/]+\/?$`;
+
+    if (itself) {
+      regex = `${regex}|^${dir}$`;
+    }
+
+    return generateRegexFilter(regex);
+  };
+  export const ListAllChildren = (dir: any, itself = false) => {
+    let regex = `^${dir}.+`;
+
+    if (itself) {
+      regex = `${regex}|^${dir}$`;
+    }
+
+    return generateRegexFilter(regex);
+  };
+}
+
 const StorageContext = createContext<IStorageContext | null>(null);
 
 export const StorageProvider = ({children}: {children: ReactNode}) => {
