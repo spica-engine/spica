@@ -1,6 +1,6 @@
 import {type FC, memo, useEffect, useState, useCallback, useRef} from "react";
 import styles from "./StorageFileSelect.module.scss";
-import {Modal, StorageFileCard, type TypeFile} from "oziko-ui-kit";
+import {Modal, StorageFileCard, type TypeFile, type TypeFilterValue} from "oziko-ui-kit";
 import {type TypeSortProp} from "./sort-popover-content/SortPopoverContent";
 import StorageModalHeading from "./storage-modal-heading/StorageModalHeading";
 import StorageFileCardSkeleton from "./storage-file-card-skeleton/StorageFileCardSkeleton";
@@ -8,30 +8,18 @@ import {useStorage, type Storage} from "../../../contexts/StorageContext";
 import { convertQuickDateToRange, convertToBytes } from "../../../utils/storage";
 
 
-type TypeFilterValue = {
-  type: string[];
-  fileSize: {
-    min: {
-      value: number | null;
-      unit: string;
-    };
-    max: {
-      value: number | null;
-      unit: string;
-    };
-  };
-  quickdate: string | null;
-  dateRange: {
-    from: null | string;
-    to: null | string;
-  };
-};
-
 type TypeStorageFileSelect = {
   className?: string;
   isOpen?: boolean;
   onClose?: () => void;
 };
+
+enum SORTS {
+  NAME_DESC = "name_desc",
+  NAME_ASC = "name_asc",
+  DATE_DESC = "date_desc",
+  DATE_ASC = "date_asc"
+}
 
 const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose}) => {
   const [directory, setDirectory] = useState(["/"]);
@@ -42,7 +30,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<TypeSortProp>("name_asc");
+  const [sortBy, setSortBy] = useState<TypeSortProp>(SORTS.NAME_ASC);
   const [activeFilter, setActiveFilter] = useState<TypeFilterValue | null>(null);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
@@ -198,10 +186,10 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
 
   const buildSortOptions = useCallback(() => {
     const sortMap = {
-      name_asc: {name: 1},
-      name_desc: {name: -1},
-      date_asc: {_id: 1},
-      date_desc: {_id: -1}
+      [SORTS.NAME_ASC]: {name: 1},
+      [SORTS.NAME_DESC]: {name: -1},
+      [SORTS.DATE_ASC]: {_id: 1},
+      [SORTS.DATE_DESC]: {_id: -1}
     };
 
     return sortMap[sortBy];
@@ -238,7 +226,6 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
         };
         const response = await getAll(options);
         const folders = await getAll(optionsForFolders);
-        console.log("response", response);
 
         const convertedData = response.data.map(convertStorageToTypeFile);
 

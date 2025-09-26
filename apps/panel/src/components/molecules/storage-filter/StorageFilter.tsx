@@ -9,28 +9,10 @@ import {
   Chip,
   DatePicker,
   Icon,
-  Button
+  Button,
+  type TypeFilterValue
 } from "oziko-ui-kit";
 import {useFormik} from "formik";
-
-type TypeFilterValue = {
-  type: string[];
-  fileSize: {
-    min: {
-      value: number | null;
-      unit: string;
-    };
-    max: {
-      value: number | null;
-      unit: string;
-    };
-  };
-  quickdate: string | null;
-  dateRange: {
-    from: null | string;
-    to: null | string;
-  };
-};
 
 type TypeStorageFilter = {
   onApply?: (filter: TypeFilterValue) => void;
@@ -84,7 +66,6 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
   });
 
   const onSubmit = (data: TypeFilterValue) => {
-    console.log("filter data", data);
     onApply?.(data);
   };
 
