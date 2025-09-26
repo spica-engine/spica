@@ -27,6 +27,8 @@ export type TypeDataColumn = {
   required?: string[];
   enum?: string[] | number[];
   fixedWidth?: boolean;
+  bucketId?: string;
+  primary?: string;
 };
 
 export type TypeTableData = {
@@ -48,4 +50,6 @@ export type Constraints = {
   enum?: string[] | number[];
   required?: boolean;
   requiredFields?: string[];
+  bucketId?: string;
+  primary?: string;
 };

@@ -6,15 +6,19 @@
  */
 
 import {
+  ArrayInput,
   Button,
   Checkbox,
-  DateInput,
   DatePicker,
   Icon,
   Input,
-  MultipleSelectionInput,
+  LocationInput,
+  Popover,
+  Portal,
+  RelationInput,
   Select,
   TextAreaInput,
+  useAdaptivePosition,
   type TypeSelectRef
 } from "oziko-ui-kit";
 import {BASE_FORM_DEFAULTS, freezeFormDefaults} from "./defaults";
@@ -38,10 +42,16 @@ import {
   COLOR_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "./validation";
-import type {TypeInputTypeMap} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {
+  TypeInputRepresenterError,
+  TypeInputTypeMap
+} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import styles from "./field-styles.module.scss";
-import {useEffect, useId, useRef, type ChangeEvent, type RefObject} from "react";
+import {useEffect, useId, useLayoutEffect, useRef, type ChangeEvent, type RefObject} from "react";
 import {isValidDate} from "../../components/organisms/table/EditCellPopover";
+import {useRelationInputHandler} from "../../hooks/useRelationInputHandlers";
+import useLocalStorage from "../../hooks/useLocalStorage";
+import type {TypeRelationSelect} from "oziko-ui-kit/build/dist/components/atoms/relation-input/relation-select/RelationSelect";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
   if (!input) return undefined;
@@ -706,7 +716,38 @@ const RELATION_DEFINITION: FieldDefinition = {
         </Button>
       )}
     </div>
-  )
+  ),
+  renderInput: ({value, onChange, title, properties, floatingElementRef}) => {
+    const [token] = useLocalStorage("token", "");
+    const {getOptions, loadMoreOptions, searchOptions, totalOptionsLength} =
+      useRelationInputHandler(token, properties?.bucketId, properties?.primary);
+
+    const selectRef = useRef<TypeSelectRef>(null);
+
+    useEffect(() => {
+      selectRef.current?.toggleDropdown(true);
+    }, [selectRef]);
+
+    return (
+      <RelationInput
+        label={title as string}
+        description={properties?.description}
+        value={value}
+        onChange={onChange}
+        getOptions={getOptions}
+        loadMoreOptions={loadMoreOptions}
+        searchOptions={searchOptions}
+        totalOptionsLength={totalOptionsLength}
+        multiple={properties?.multiple}
+        selectProps={
+          {optionProps: {className: styles.relationInputOption}, selectRef} as TypeRelationSelect
+        }
+        className={styles.relationInput}
+        labelProps={undefined}
+        externalDropdownRef={floatingElementRef as React.RefObject<HTMLDivElement>}
+      />
+    );
+  }
 };
 
 const LOCATION_DEFINITION: FieldDefinition = {
@@ -741,9 +782,56 @@ const LOCATION_DEFINITION: FieldDefinition = {
       return `${(v as any).latitude},${(v as any).longitude}`;
     return "";
   },
-  capabilities: {indexable: true}
+  capabilities: {indexable: true},
+  renderValue: value => {
+    const formattedValue = !value
+      ? [0, 0]
+      : value.type === "Point"
+        ? value.coordinates
+        : [value.lat, value.lng];
+    const handleCopy = (e: React.ClipboardEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.clipboardData.setData("text/plain", e.currentTarget.dataset.full || "");
+    };
+    return (
+      <div className={styles.locationCell}>
+        <img src="/locationx.png" className={styles.locationImage} />
+        <div data-full={formattedValue.join(", ")} onCopy={handleCopy}>
+          {formattedValue.map((c: number) => c?.toFixed(2) + "..").join(", ")}
+        </div>
+      </div>
+    );
+  },
+  renderInput: ({value, onChange, ref, className}) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const {targetPosition, calculatePosition} = useAdaptivePosition({
+      containerRef: containerRef,
+      targetRef: ref,
+      initialPlacement: "bottom"
+    });
+
+    useEffect(calculatePosition, [calculatePosition]);
+
+    const RenderedValue = ({value}: any) => LOCATION_DEFINITION.renderValue(value, false);
+    return (
+      <div ref={containerRef}>
+        <RenderedValue value={value} />
+        <Portal>
+          <LocationInput
+            coordinates={{lat: value?.coordinates?.[0] || 0, lng: value?.coordinates?.[1] || 0}}
+            onChange={onChange}
+            ref={ref as RefObject<HTMLInputElement | null>}
+            title="Location"
+            style={{...targetPosition, position: "absolute"}}
+          />
+        </Portal>
+      </div>
+    );
+  }
 };
 
+// DID NOT TESTED FOR COMPOSITE ARRAYS SUCH AS ARRAY OF OBJECTS OR ARRAY OF MULTISELECTS
 const ARRAY_DEFINITION: FieldDefinition = {
   kind: FieldKind.Array,
   display: {label: "Array", icon: "ballot"},
@@ -844,7 +932,68 @@ const ARRAY_DEFINITION: FieldDefinition = {
       ? applyPresetLogic(FieldKind.String, form, oldValues)
       : form,
   getFormattedValue: v => (Array.isArray(v) ? `${v.length} item${v.length === 1 ? "" : "s"}` : ""),
-  capabilities: {supportsInnerFields: true}
+  capabilities: {supportsInnerFields: true},
+  renderValue: (value, deletable) => (
+    <div className={styles.multipleSelectionCell}>
+      {value?.slice(0, 2)?.map?.((_: any, index: number) => (
+        <Button key={index} variant="icon" className={styles.grayBox}>
+          {index + 1}
+        </Button>
+      ))}
+      {value?.length > 2 && (
+        <Button variant="icon" className={styles.grayBox}>
+          <Icon name="dotsHorizontal" size="xs" />
+        </Button>
+      )}
+      <Button variant="icon" className={styles.grayBox}>
+        <Icon name="plus" size="xs" />
+      </Button>
+      {deletable && value && (
+        <Button variant="icon">
+          <Icon name="close" size="sm" />
+        </Button>
+      )}
+    </div>
+  ),
+  renderInput: ({value, onChange, ref, properties, title, floatingElementRef}) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const {targetPosition, calculatePosition} = useAdaptivePosition({
+      containerRef: containerRef,
+      targetRef: ref,
+      initialPlacement: "bottom"
+    });
+
+    useEffect(calculatePosition, [calculatePosition]);
+
+    const RenderedValue = ({value}: any) => ARRAY_DEFINITION.renderValue(value, false);
+
+    const onChange_ = (val: any) => {
+      console.log("Array changed:", val);
+      onChange?.(val);
+    };
+    return (
+      <div ref={containerRef}>
+        <RenderedValue value={value} />
+        <Portal>
+          <ArrayInput
+            ref={ref as RefObject<HTMLInputElement | null>}
+            title={title}
+            description={"description"}
+            value={value}
+            onChange={onChange_}
+            minItems={properties.minItems}
+            maxItems={properties.maxItems}
+            items={properties.items}
+            propertyKey={properties.key}
+            errors={properties.errors as TypeInputRepresenterError}
+            style={{...targetPosition, position: "absolute"}}
+            className={styles.arrayInput}
+          />
+        </Portal>
+      </div>
+    );
+  }
 };
 
 const OBJECT_DEFINITION: FieldDefinition = {

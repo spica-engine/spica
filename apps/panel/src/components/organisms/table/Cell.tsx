@@ -3,7 +3,7 @@ import {TableEditContext} from "./TableEditContext";
 import {MIN_COLUMN_WIDTH} from "./columnUtils";
 import type {Constraints} from "./types";
 import styles from "./Table.module.scss";
-import {FlexElement, Portal, useOnClickOutside} from "oziko-ui-kit";
+import {FlexElement, useOnClickOutside} from "oziko-ui-kit";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import {FIELD_REGISTRY, type FieldKind} from "../../../domain/fields";
 
@@ -104,11 +104,12 @@ type EditableCellProps = CellProps & {
   rowId: string;
 };
 
-
 // AFTER ALL OF THE UPDATES WORKED
 // MAKE SURE NO SUBMIT GOES TO BACNKEND IF ERRORS EXIST
 // AND AFTER THAT START TO TEST THE CASES WHERE USER SELECTS ANOTHER CELL WHILE SUBMITTING
 // OR CLICKS OUTSIDE THE CELL WHILE SUBMITTING
+// ALSO ON RELATION FIELDS, EVERYTIME A USER OPENS THE DROPDOWN, IT LOADS THE OPTIONS AGAIN
+// NEED TO FIX THAT AS WELL
 export const EditableCell = memo(
   ({
     value,
@@ -167,6 +168,7 @@ export const EditableCell = memo(
 
     const properties = useMemo(
       () => ({
+        ...constraints,
         type,
         title,
         items: constraints?.items,
@@ -199,6 +201,8 @@ export const EditableCell = memo(
         const loc = inputValue;
         if (loc?.lat && loc?.lng) payload = {type: "Point", coordinates: [loc.lng, loc.lat]};
         else payload = null;
+      } else if (type === "relation") {
+        payload = inputValue.value;
       } else {
         payload = inputValue;
       }
@@ -242,7 +246,7 @@ export const EditableCell = memo(
         };
         registerActiveCell({saveFn, discardFn: handleDiscardEdit, columnId, rowId});
       } else {
-         unregisterActiveCell();
+        unregisterActiveCell();
       }
 
       return () => {
@@ -259,7 +263,7 @@ export const EditableCell = memo(
           styles.cell,
           styles.selectableCell,
           focused ? styles.focusedCell : "",
-          isEditing && type !== "date" ? styles.editingCell : "",
+          isEditing && type !== "date" && type !== "location" && type !== "array" ? styles.editingCell : "",
           props.className
         ]
           .filter(Boolean)
@@ -277,11 +281,8 @@ export const EditableCell = memo(
               ref={inputRef}
               properties={properties as any}
               title={title}
-              // we can remove the extra refs and just use one ref called extraRef or something.
-              // Both of these refs are used to detect clicks outside the cell to discard changes
-              // we need them because some inputs have dropdowns or popovers
               floatingElementRef={floatingElementRef}
-              className={type !== "date" ? styles.cellUpdateInput : ""}
+              className={styles.cellUpdateInput}
             />
           </div>
         ) : (

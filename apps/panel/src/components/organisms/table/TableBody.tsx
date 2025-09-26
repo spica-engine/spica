@@ -78,6 +78,8 @@ export const TableBody = memo(
               enum: column.enum,
               requiredFields: column.required,
               required: requiredColumns?.includes(column.key),
+              bucketId: column.bucketId,
+              primary: column.primary
             }}
           />
         ) : (

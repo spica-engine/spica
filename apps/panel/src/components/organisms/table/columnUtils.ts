@@ -11,7 +11,7 @@ export function parseWidth(widthValue: string | number, containerWidth: number):
   if (widthValue.endsWith("em")) return parseFloat(widthValue) * baseFontSize;
   if (widthValue.endsWith("%")) return (parseFloat(widthValue) / 100) * containerWidth;
   return 0;
-};
+}
 
 function getCalculatedColumnWidth(columns: TypeDataColumn[], containerWidth: number): string {
   const totalDefinedWidth = columns.reduce((total, column) => {
@@ -42,7 +42,10 @@ export function getFormattedColumns(containerWidth: number, columns: TypeDataCol
     const remainingWidth = Math.max(containerWidth - fixedWidthTotal, 0);
 
     const resizableColumnsLength = Math.max(resizableColumns.length, 1);
-    const widthPerResizableColumn = remainingWidth / resizableColumnsLength;
+    const widthPerResizableColumn = Math.max(
+      remainingWidth / resizableColumnsLength,
+      MIN_COLUMN_WIDTH
+    );
 
     return columns.map(col => ({
       ...col,
@@ -73,4 +76,4 @@ export function getFormattedColumns(containerWidth: number, columns: TypeDataCol
   }
 
   return formattedColumns;
-};
+}

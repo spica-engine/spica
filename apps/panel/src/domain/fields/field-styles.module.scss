@@ -46,3 +46,30 @@
     background-color: var(--color-background);
   }
 }
+
+.relationInputOption {
+  width: 100% !important;
+}
+
+.relationInput > div {
+  outline: none !important;
+}
+
+.locationCell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.locationImage {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--border-radius-md);
+}
+
+.arrayInput {
+  min-width: 400px !important;
+  max-width: 800px !important;
+  width: fit-content !important;
+}
