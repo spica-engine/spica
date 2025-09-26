@@ -62,7 +62,7 @@ const StorageModalHeading: FC<TypeStorageModalHeading> = ({
   };
 
   return (
-    <FlexElement dimensionX="fill" direction="vertical" gap={20}>
+    <FlexElement dimensionX="fill" direction="vertical" gap={20} className={styles.container}>
       <FluidContainer
         dimensionX="fill"
         prefix={{
@@ -119,8 +119,9 @@ const StorageModalHeading: FC<TypeStorageModalHeading> = ({
                 trigger="click"
               >
                 <Button variant="text" color={hasActiveFilter ? "primary" : undefined}>
-                  <Icon name="filter" />
+                  <Icon name="filter" size="sm"/>
                   Filter
+                  {hasActiveFilter && <Icon name="check" />}
                 </Button>
               </Popover>
               <Popover
@@ -129,7 +130,7 @@ const StorageModalHeading: FC<TypeStorageModalHeading> = ({
                 trigger="click"
               >
                 <Button variant="text">
-                  <Icon name="sort" />
+                  <Icon name="sort"  size="sm"/>
                   Sort
                 </Button>
               </Popover>

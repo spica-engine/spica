@@ -467,8 +467,9 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
             />
           )
         }}
+        className={styles.header}
       />
-      <Modal.Body gap={12} className={styles.content} ref={containerRef}>
+      <Modal.Body className={styles.content} ref={containerRef}>
         {data.map(el => (
           <StorageFileCard
             onClick={() => handleClickFile(el)}

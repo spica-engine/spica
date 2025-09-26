@@ -2,17 +2,22 @@
   padding: 0;
   width: 1280px !important;
   height: 720px !important;
+
+.header{
+  padding: var(--padding-lg);
+}
 }
 
 .content {
   display: grid !important;
   grid-template-columns: repeat(5, 240px);
-  justify-content: start;
+  justify-content: space-between !important;
   align-items: start;
-  // gap: 16px;
+  gap: var(--gap-md);
   background: var(--color-background);
   max-height: 600px;
   overflow-y: auto;
+  padding: var(--padding-lg);
 
   .file {
     width: 240px;

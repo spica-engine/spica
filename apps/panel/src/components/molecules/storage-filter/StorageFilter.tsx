@@ -239,12 +239,12 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
           }}
         />
         <FlexElement dimensionX="fill" alignment="rightCenter">
-          <Button color="transparent" variant="text" onClick={handleCancel}>
-            <Icon name="close" />
+          <Button variant="text" onClick={handleCancel} className={styles.button}>
+            <Icon name="close" size="sm"/>
             Cancel
           </Button>
           <Button type="submit">
-            <Icon name="filter" /> Apply
+            <Icon name="filter" size="sm" className={styles.button}/> Apply
           </Button>
         </FlexElement>
       </FlexElement>
