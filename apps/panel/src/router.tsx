@@ -6,6 +6,7 @@ import Home from "./pages/home/Home";
 import Layout from "./layout/Layout";
 import Bucket from "./pages/bucket/Bucket";
 import Identity from "./pages/identity/Identity";
+import Diagram from "./pages/diagram/Diagram";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
       {
         path: "passport/identity",
         element: <Identity />
+      },
+         {
+        path: "diagram",
+        element: <Diagram />
       }
     ]
   }
