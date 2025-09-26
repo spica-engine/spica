@@ -51,6 +51,9 @@
   border-top-right-radius: var(--border-radius-md);
   right: 0;
   border-left: var(--border-default);
+  > div {
+    justify-content: center !important;
+  }
 }
 
 .columnHeader {

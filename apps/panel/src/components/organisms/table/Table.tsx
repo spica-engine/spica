@@ -56,10 +56,17 @@ function Table({
   useLayoutEffect(() => {
     if (!containerRef.current) return;
     const containerWidth = containerRef.current?.clientWidth ?? 0;
-    // Making it just a little bit smaller than the container to prevent unnecessary horizontal scrolls
-    const formattedColumns = getFormattedColumns(containerWidth - 15, columns);
+    const formattedColumns = getFormattedColumns(containerWidth, columns);
     setFormattedColumns(formattedColumns);
     setFocusedCell(null);
+  }, [columns]);
+
+  useLayoutEffect(() => {
+    handleColumnWidthChange();
+    window.addEventListener("resize", handleColumnWidthChange);
+    return () => {
+      window.removeEventListener("resize", handleColumnWidthChange);
+    };
   }, [columns]);
 
   const handleColumnResize = useCallback((id: string, newWidth: number) => {
