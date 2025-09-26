@@ -26,6 +26,7 @@ export type TypeDataColumn = {
   properties?: Properties;
   required?: string[];
   enum?: string[] | number[];
+  fixedWidth?: boolean;
 };
 
 export type TypeTableData = {

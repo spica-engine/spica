@@ -15,7 +15,7 @@ import Loader from "../../../components/atoms/loader/Loader";
 import type {TypeDataColumn, TypeTableData} from "./types";
 import {TableHeader} from "./TableHeader";
 import {TableBody} from "./TableBody";
-import {TableEditContext, type CellEditPayload, type RegisterCellPayload} from "./TableEditContext";
+import {TableEditContext} from "./TableEditContext";
 import {getFormattedColumns, parseWidth} from "./columnUtils";
 
 export type TableProps = {
@@ -54,6 +54,14 @@ function Table({
   }>({saveFn: null, discardFn: null});
 
   useLayoutEffect(() => {
+    if (!containerRef.current) return;
+    const containerWidth = containerRef.current?.clientWidth ?? 0;
+    const formattedColumns = getFormattedColumns(containerWidth, columns);
+    setFormattedColumns(formattedColumns);
+    setFocusedCell(null);
+  }, [columns]);
+
+  const handleColumnWidthChange = useCallback(() => {
     if (!containerRef.current) return;
     const containerWidth = containerRef.current?.clientWidth ?? 0;
     const formattedColumns = getFormattedColumns(containerWidth, columns);
