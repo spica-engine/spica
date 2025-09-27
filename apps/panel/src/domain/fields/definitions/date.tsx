@@ -1,6 +1,6 @@
 import { Button, Icon, DatePicker } from "oziko-ui-kit";
 import { useId, useRef } from "react";
-import { isValidDate } from "src/components/organisms/table/EditCellPopover";
+import { isValidDate } from "../../../components/organisms/table/EditCellPopover";
 import { MinimalConfig, BaseFields, DefaultInputs } from "../creation-form-schemas";
 import { freezeFormDefaults, BASE_FORM_DEFAULTS } from "../defaults";
 import { FieldKind, type FieldDefinition } from "../types";

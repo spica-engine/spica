@@ -7,8 +7,8 @@ import {
 } from "oziko-ui-kit";
 import type {TypeRelationSelect} from "oziko-ui-kit/build/dist/components/atoms/relation-input/relation-select/RelationSelect";
 import {useRef, useEffect} from "react";
-import useLocalStorage from "src/hooks/useLocalStorage";
-import {useRelationInputHandler} from "src/hooks/useRelationInputHandlers";
+import useLocalStorage from "../../../hooks/useLocalStorage";
+import {useRelationInputHandler} from "../../../hooks/useRelationInputHandlers";
 import {MinimalConfig, BaseFields, SpecializedInputs} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {FieldKind, type FieldDefinition} from "../types";

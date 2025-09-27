@@ -154,12 +154,8 @@ export const ARRAY_DEFINITION: FieldDefinition = {
 
     useEffect(calculatePosition, [calculatePosition]);
 
-    const RenderedValue = ({value}: any) => ARRAY_DEFINITION.renderValue(value, false);
+    const RenderedValue = ({value}: {value: any[]}) => ARRAY_DEFINITION.renderValue(value, false);
 
-    const onChange_ = (val: any) => {
-      console.log("Array changed:", val);
-      onChange?.(val);
-    };
     return (
       <div ref={containerRef}>
         <RenderedValue value={value} />
@@ -169,7 +165,7 @@ export const ARRAY_DEFINITION: FieldDefinition = {
             title={title}
             description={"description"}
             value={value}
-            onChange={onChange_}
+            onChange={onChange}
             minItems={properties.minItems}
             maxItems={properties.maxItems}
             items={properties.items}
