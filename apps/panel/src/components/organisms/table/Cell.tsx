@@ -7,6 +7,7 @@ import {FlexElement, useOnClickOutside} from "oziko-ui-kit";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import {FIELD_REGISTRY, type FieldKind} from "../../../domain/fields";
 import type {Property} from "src/services/bucketService";
+import type {FieldDefinition} from "src/domain/fields/types";
 
 export function isValidDate(dateObject: any) {
   return dateObject instanceof Date && !isNaN(dateObject.getTime());
@@ -15,12 +16,14 @@ export function isValidDate(dateObject: any) {
 const isObjectEffectivelyEmpty = (obj: any): boolean => {
   if (obj == null || typeof obj !== "object") return true;
 
-  return Object.keys(obj).every(
-    key =>
+  return Object.keys(obj).every(key => {
+    console.log("Checking key for emptiness:", key, obj[key]);
+    return (
       obj[key] === undefined ||
       obj[key] === null ||
       (typeof obj[key] === "object" && isObjectEffectivelyEmpty(obj[key]))
-  );
+    );
+  });
 };
 
 type CellProps = React.HTMLAttributes<HTMLDivElement> & {
@@ -28,71 +31,120 @@ type CellProps = React.HTMLAttributes<HTMLDivElement> & {
   type: FieldKind;
   value: any;
   deletable?: boolean;
-};
-
-export const Cell = memo(({value, type, deletable, leftOffset, ...props}: CellProps) => {
-  const field = FIELD_REGISTRY[type || "string"];
-  return (
-    <td {...props} className={`${styles.cell} ${props.className || ""}`} style={{left: leftOffset}}>
-      {field?.renderValue?.(value, deletable ?? false)}
-    </td>
-  );
-});
-
-type EditableCellProps = CellProps & {
+  editable?: boolean;
   focused?: boolean;
   title: string;
-  constraints?: Constraints;
   columnId: string;
   rowId: string;
+  constraints?: Constraints;
 };
 
-export const EditableCell = memo(
+export const Cell = memo(
   ({
     value,
     type,
     deletable,
-    title,
-    focused,
     leftOffset,
-    constraints = {},
+    editable,
+    focused,
+    title,
     columnId,
     rowId,
+    constraints,
     ...props
-  }: EditableCellProps) => {
-    const field = FIELD_REGISTRY[type || "string"];
-    const inputRef = useRef<HTMLTableCellElement | null>(null);
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const floatingElementRef = useRef<HTMLDivElement | null>(null);
-    const {handleCellSave, registerActiveCell, unregisterActiveCell} = useContext(TableEditContext);
-
+  }: CellProps) => {
+    const field = FIELD_REGISTRY[type || "string"] as FieldDefinition;
     const [isEditing, setIsEditing] = useState(false);
-    const [inputValue, setInputValue] = useState<any>(undefined);
-    const [error, setError] = useState<TypeInputRepresenterError | undefined>(undefined);
-    const [isSaving, setIsSaving] = useState(false);
-
     const properties = useMemo(
       () => ({
         ...constraints,
         type,
         title,
         items: constraints?.items,
-        properties: constraints.properties,
+        properties: constraints?.properties,
         enum: constraints?.enum,
         className: constraints?.enum ? styles.enumInput : undefined
       }),
       [type, title, constraints]
     ) as Property;
+    const [cellValue, setCellValue] = useState(field.getFormattedValue(value, properties as any));
+
+    const handleStartEditing = (e: React.MouseEvent<HTMLTableCellElement>) => {
+      if (!editable) return;
+      setIsEditing(true);
+    };
+
+    function handleStopEditing(newValue?: any) {
+      setIsEditing(false);
+      if (arguments.length === 0) {
+        setCellValue(value);
+      } else {
+        const formattedValue = field?.getFormattedValue?.(newValue, properties);
+        setCellValue(formattedValue);
+      }
+    }
+
+    return isEditing ? (
+      <EditableCell
+        {...props}
+        type={type}
+        focused={focused}
+        title={title}
+        columnId={columnId!}
+        rowId={rowId!}
+        constraints={constraints}
+        value={cellValue}
+        onStopEdit={handleStopEditing}
+        properties={properties as any}
+        setValue={setCellValue}
+      />
+    ) : (
+      <td
+        {...props}
+        className={`${styles.cell} ${props.className || ""}`}
+        style={{left: leftOffset}}
+        onClick={handleStartEditing}
+      >
+        {field?.renderValue?.(cellValue, deletable ?? false)}
+      </td>
+    );
+  }
+);
+
+type EditableCellProps = CellProps & {
+  onStopEdit: (newValue?: any) => void;
+  setValue: (value: any) => void;
+  properties: Property;
+};
+
+const EditableCell = memo(
+  ({
+    value,
+    setValue,
+    type,
+    deletable,
+    title,
+    focused,
+    leftOffset,
+    constraints = {},
+    properties,
+    columnId,
+    rowId,
+    onStopEdit,
+    ...props
+  }: EditableCellProps) => {
+    const field = FIELD_REGISTRY[type || "string"] as FieldDefinition;
+    const inputRef = useRef<HTMLTableCellElement | null>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const floatingElementRef = useRef<HTMLDivElement | null>(null);
+    const {onCellSave, registerActiveCell, unregisterActiveCell} = useContext(TableEditContext);
+
+    const [error, setError] = useState<TypeInputRepresenterError | undefined>(undefined);
+    const [isSaving, setIsSaving] = useState(false);
 
     const handleDiscardEdit = () => {
-      // if we dont, then other cells handleDiscardEdit will be called too,
-      // we should instead not render this component at all when not editing
-      if (!isEditing) return;
-      const newValue = field?.getFormattedValue?.(value, properties);
-      console.log(1, newValue, value);
-      setInputValue(newValue);
-      setIsEditing(false);
       setError(undefined);
+      onStopEdit();
     };
 
     useOnClickOutside({
@@ -101,8 +153,6 @@ export const EditableCell = memo(
     });
 
     const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
-      setIsEditing(true);
-
       if (type === "color") {
         // Open the color input’s native picker on first render.
         // We use requestAnimationFrame to ensure the input is fully rendered
@@ -121,41 +171,32 @@ export const EditableCell = memo(
     };
 
     useEffect(() => {
-      if (!isEditing || !inputRef.current) return;
+      if (!inputRef.current) return;
       inputRef.current?.focus();
-    }, [isEditing, inputRef]);
+    }, [inputRef]);
 
     async function handleSave() {
       if (isSaving) return;
       setIsSaving(true);
 
       const validationErrors = field?.validateValue(
-        inputValue,
+        value,
         constraints as any,
         constraints.required
       );
 
-      if (validationErrors && !isObjectEffectivelyEmpty(validationErrors)) {
+      if (
+        (validationErrors &&
+          typeof validationErrors === "object" &&
+          !isObjectEffectivelyEmpty(validationErrors)) ||
+        typeof validationErrors === "string"
+      ) {
         setError(validationErrors as TypeInputRepresenterError);
         setIsSaving(false);
         return;
       }
 
-      let payload: any;
-      if (type === "date") {
-        if (!inputValue) payload = undefined;
-        else if (inputValue instanceof Date && !isNaN(inputValue.getTime()))
-          payload = inputValue.toISOString();
-        else payload = new Date(inputValue).toISOString();
-      } else if (type === "location") {
-        const loc = inputValue;
-        if (loc?.lat && loc?.lng) payload = {type: "Point", coordinates: [loc.lng, loc.lat]};
-        else payload = null;
-      } else if (type === "relation") {
-        payload = inputValue.value;
-      } else {
-        payload = inputValue;
-      }
+      const payload = field.getFormattedValue(value, properties as any);
 
       const payloadError = field?.validateValue(payload, constraints as any, constraints.required);
       if (payloadError && !isObjectEffectivelyEmpty(payloadError)) {
@@ -164,41 +205,46 @@ export const EditableCell = memo(
         return;
       }
 
-      if (!handleCellSave) {
-        setIsEditing(false);
+      if (!onCellSave) {
+        onStopEdit();
         setIsSaving(false);
         return;
       }
 
       try {
         window.document.body.style.cursor = "wait";
-        const result = await handleCellSave(payload, columnId, rowId);
+        const result = await onCellSave(payload, columnId, rowId);
         if (result) setError(undefined);
-        setIsEditing(false);
       } catch (err) {
         const errMsg = {[title]: String((err as any)?.message || err)} as TypeInputRepresenterError;
         setError(errMsg);
       } finally {
         setIsSaving(false);
+        onStopEdit(value);
         window.document.body.style.cursor = "default";
       }
     }
 
     useEffect(() => {
-      if (isEditing) {
-        const saveFn = async () => {
-          if (isSaving) return;
-          await handleSave();
-        };
-        registerActiveCell({saveFn, discardFn: handleDiscardEdit, columnId, rowId});
-      } else {
-        unregisterActiveCell();
-      }
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          console.log("Enter key pressed, saving cell");
+          handleSave();
+        } else if (e.key === "Escape") {
+          handleDiscardEdit();
+        }
+      };
 
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }, [handleSave]);
+
+    useEffect(() => {
+      registerActiveCell();
       return () => {
         unregisterActiveCell();
       };
-    }, [isEditing, inputValue, columnId, rowId, isSaving]);
+    }, []);
 
     const InputComponent = field?.renderInput;
 
@@ -208,36 +254,27 @@ export const EditableCell = memo(
           styles.cell,
           styles.selectableCell,
           focused ? styles.focusedCell : "",
-          isEditing && type !== "date" && type !== "location" && type !== "array"
-            ? styles.editingCell
-            : "",
+          type !== "date" && type !== "location" && type !== "array" ? styles.editingCell : "",
           props.className
         ]
           .filter(Boolean)
           .join(" "),
-      [focused, isEditing, props.className, type]
+      [focused, props.className, type]
     );
 
     return (
       <td {...props} className={className} style={{left: leftOffset}} onClick={handleClick}>
-        {isEditing && InputComponent ? (
-          <div ref={containerRef}>
-            <InputComponent
-              value={inputValue}
-              onChange={value => {
-                console.log(3, value);
-                setInputValue(value);
-              }}
-              ref={inputRef}
-              properties={properties as any}
-              title={title}
-              floatingElementRef={floatingElementRef}
-              className={styles.cellUpdateInput}
-            />
-          </div>
-        ) : (
-          field?.renderValue?.(value, deletable ?? false)
-        )}
+        <div ref={containerRef}>
+          <InputComponent
+            value={value}
+            onChange={setValue}
+            ref={inputRef}
+            properties={properties as any}
+            title={title}
+            floatingElementRef={floatingElementRef}
+            className={styles.cellUpdateInput}
+          />
+        </div>
       </td>
     );
   }

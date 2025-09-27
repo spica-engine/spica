@@ -46,12 +46,9 @@ function Table({
 
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
-  const activeCellRef = React.useRef<{
-    saveFn: (() => Promise<any>) | null;
-    discardFn?: (() => void) | null;
-    columnId?: string;
-    rowId?: string;
-  }>({saveFn: null, discardFn: null});
+  const [isCellEditing, setIsCellEditing] = React.useState(false);
+  const registerActiveCell = () => setIsCellEditing(true);
+  const unregisterActiveCell = () => setIsCellEditing(false);
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
@@ -90,7 +87,6 @@ function Table({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const isCellEditing = Boolean(activeCellRef.current?.saveFn);
       if (isCellEditing) return;
       const focusedColumnIndex = columns.findIndex(col => col.key === focusedCell?.column);
       const focusedRowIndex = focusedCell?.row;
@@ -142,52 +138,8 @@ function Table({
     }, 0);
   }, [formattedColumns]);
 
-  const handleCellSave = useCallback(
-    (value: any, columnId: string, rowId: string) => onCellSave?.(value, columnId, rowId),
-    [onCellSave]
-  ) as (value: any) => Promise<any>;
-
-  // register/unregister active cell save handler so Table can trigger save on Enter
-  const registerActiveCell = useCallback(
-    (payload: {
-      saveFn: () => Promise<any>;
-      discardFn?: () => void;
-      columnId: string;
-      rowId: string;
-    }) => {
-      activeCellRef.current = {
-        saveFn: payload.saveFn,
-        discardFn: payload.discardFn ?? null,
-        columnId: payload.columnId,
-        rowId: payload.rowId
-      };
-    },
-    []
-  );
-
-  const unregisterActiveCell = useCallback(() => {
-    activeCellRef.current = {saveFn: null, discardFn: null};
-  }, []);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const activeCell = activeCellRef.current;
-      if (!activeCell) return;
-
-      if (e.key === "Enter" && !e.shiftKey) {
-        console.log("Enter key pressed, saving cell");
-        activeCell?.saveFn?.();
-      } else if (e.key === "Escape") {
-        activeCell?.discardFn?.();
-      }
-    };
-
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
   return (
-    <TableEditContext value={{handleCellSave, registerActiveCell, unregisterActiveCell}}>
+    <TableEditContext value={{onCellSave, registerActiveCell, unregisterActiveCell}}>
       <div
         ref={containerRef as RefObject<HTMLDivElement>}
         id="scrollableDiv"

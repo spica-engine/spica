@@ -1,24 +1,18 @@
 import React from "react";
 
 export type CellEditPayload = {
-  handleCellSave: (value: any, columnId: string, rowId: string) => Promise<any>;
-};
-
-export type RegisterCellPayload = {
-  saveFn: () => Promise<any>;
-  discardFn?: () => void;
-  columnId: string;
-  rowId: string;
+  onCellSave: (value: any, columnId: string, rowId: string) => Promise<any>;
+  isCellEditing: boolean;
 };
 
 export type TableEditContextType = {
-  handleCellSave: (value: any, columnId: string, rowId: string) => Promise<any>;
-  registerActiveCell: (payload: RegisterCellPayload) => void;
+  onCellSave?: (value: any, columnId: string, rowId: string) => Promise<any>;
+  registerActiveCell: () => void;
   unregisterActiveCell: () => void;
 };
 
 export const TableEditContext = React.createContext<TableEditContextType>({
-  handleCellSave: () => Promise.resolve(),
+  onCellSave: () => Promise.resolve(),
   registerActiveCell: () => {},
   unregisterActiveCell: () => {}
 });

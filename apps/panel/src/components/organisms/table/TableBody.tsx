@@ -1,7 +1,7 @@
 import {memo, useRef, type JSX, useEffect} from "react";
 import type {TypeDataColumn, TypeTableData} from "./types";
 import styles from "./Table.module.scss";
-import {Cell, EditableCell} from "./Cell";
+import {Cell} from "./Cell";
 import {FieldKind} from "../../../domain/fields";
 
 type TableBodyProps = {
@@ -47,26 +47,20 @@ export const TableBody = memo(
       const cells = formattedColumns.map(column => {
         const cellData = row[column.key];
 
-        const props = {
-          onClick: () => column.selectable !== false && handleCellClick(column.key, index),
-          className: `${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`,
-          leftOffset: column.leftOffset,
-          value: cellData.value,
-          type: column.type ?? "string",
-          deletable: column.deletable
-        };
-
-        const type = column.type ?? FieldKind.String;
-
-        return column.selectable !== false ? (
-          <EditableCell
+        return (
+          <Cell
             key={cellData.id}
-            {...props}
-            type={type}
+            onClick={() => column.selectable !== false && handleCellClick(column.key, index)}
+            className={`${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`}
+            leftOffset={column.leftOffset}
+            value={cellData.value}
+            type={column.type ?? FieldKind.String}
+            deletable={column.deletable}
             focused={focusedCell?.row === index && focusedCell?.column === column.key}
             title={column.title ?? "Value"}
             columnId={column.key}
             rowId={rowId.split("-")[1]}
+            editable={column.selectable !== false}
             constraints={{
               pattern: column.pattern,
               minimum: column.minimum,
@@ -82,8 +76,6 @@ export const TableBody = memo(
               primary: column.primary
             }}
           />
-        ) : (
-          <Cell key={cellData.id} {...props} type={type} />
         );
       });
 
