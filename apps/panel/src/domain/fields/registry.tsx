@@ -9,13 +9,14 @@ import {
   ArrayInput,
   Button,
   Checkbox,
+  Color,
   DatePicker,
   Icon,
   Input,
   LocationInput,
-  Popover,
   Portal,
   RelationInput,
+  RichTextInput,
   Select,
   TextAreaInput,
   useAdaptivePosition,
@@ -47,11 +48,12 @@ import type {
   TypeInputTypeMap
 } from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import styles from "./field-styles.module.scss";
-import {useEffect, useId, useLayoutEffect, useRef, type ChangeEvent, type RefObject} from "react";
+import {useEffect, useId, useRef, type ChangeEvent, type RefObject} from "react";
 import {isValidDate} from "../../components/organisms/table/EditCellPopover";
 import {useRelationInputHandler} from "../../hooks/useRelationInputHandlers";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import type {TypeRelationSelect} from "oziko-ui-kit/build/dist/components/atoms/relation-input/relation-select/RelationSelect";
+import type {TypeFluidContainer} from "oziko-ui-kit";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
   if (!input) return undefined;
@@ -740,7 +742,8 @@ const RELATION_DEFINITION: FieldDefinition = {
         totalOptionsLength={totalOptionsLength}
         multiple={properties?.multiple}
         selectProps={
-          {optionProps: {className: styles.relationInputOption}, selectRef} as TypeRelationSelect
+          {optionProps: {className: styles.relationInputOption}, selectRef} as TypeRelationSelect &
+            TypeFluidContainer
         }
         className={styles.relationInput}
         labelProps={undefined}
@@ -1021,7 +1024,17 @@ const OBJECT_DEFINITION: FieldDefinition = {
   requiresInnerFields: _ => true,
   getDefaultValue: property => property.default,
   getFormattedValue: v => (v && typeof v === "object" ? `{${Object.keys(v).length}}` : ""),
-  capabilities: {supportsInnerFields: true}
+  capabilities: {supportsInnerFields: true},
+  renderValue: (value, deletable) => (
+    <div className={styles.defaultCell}>
+      <div className={styles.defaultCellData}>{JSON.stringify(value)}</div>
+      {deletable && value && (
+        <Button variant="icon">
+          <Icon name="close" size="sm" />
+        </Button>
+      )}
+    </div>
+  )
 };
 
 const FILE_DEFINITION: FieldDefinition = {
@@ -1051,7 +1064,13 @@ const FILE_DEFINITION: FieldDefinition = {
     if (v && typeof v === "object") return (v as any).originalName || (v as any).name || "📎";
     return "📎";
   },
-  capabilities: {}
+  capabilities: {},
+  renderValue: value => (
+    <div className={styles.fileCell}>
+      <Icon name="imageMultiple" size="xs" />
+      {value ? <span>{value}</span> : <span className={styles.grayText}>Click or Drag&Drop</span>}
+    </div>
+  )
 };
 
 const RICHTEXT_DEFINITION: FieldDefinition = {
@@ -1076,7 +1095,45 @@ const RICHTEXT_DEFINITION: FieldDefinition = {
     description: property.description
   }),
   getFormattedValue: v => (v ? "[rich]" : ""),
-  capabilities: {translatable: true}
+  capabilities: {translatable: true},
+  renderValue: (value, deletable) => (
+    <div className={styles.defaultCell}>
+      <div className={styles.defaultCellData}>{value}</div>
+      {deletable && value && (
+        <Button variant="icon">
+          <Icon name="close" size="sm" />
+        </Button>
+      )}
+    </div>
+  ),
+  renderInput: ({value, onChange, ref, className}) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const {targetPosition, calculatePosition} = useAdaptivePosition({
+      containerRef: containerRef,
+      targetRef: ref,
+      initialPlacement: "bottom"
+    });
+
+    useEffect(calculatePosition, [calculatePosition]);
+
+    const RenderedValue = ({value}: any) => RICHTEXT_DEFINITION.renderValue(value, false);
+
+    return (
+      <div ref={containerRef}>
+        <RenderedValue value={value} />
+        <Portal>
+          <RichTextInput
+            value={value}
+            onChange={onChange}
+            className={className}
+            ref={ref as RefObject<HTMLDivElement | null>}
+            style={{...targetPosition, position: "absolute"}}
+          />
+        </Portal>
+      </div>
+    );
+  }
 };
 
 const JSON_DEFINITION: FieldDefinition = {
@@ -1107,7 +1164,8 @@ const JSON_DEFINITION: FieldDefinition = {
       return "{…}";
     }
   },
-  capabilities: {indexable: true}
+  capabilities: {indexable: true},
+  renderValue: value => JSON.stringify(value).slice(0, 30) + (String(value).length > 30 ? "…" : "")
 };
 
 const COLOR_DEFINITION: FieldDefinition = {
@@ -1132,7 +1190,18 @@ const COLOR_DEFINITION: FieldDefinition = {
   }),
   getDefaultValue: property => property.default || "#000000",
   getFormattedValue: v => (v ? String(v).toUpperCase() : ""),
-  capabilities: {hasDefaultValue: true, indexable: true}
+  capabilities: {hasDefaultValue: true, indexable: true},
+  renderValue: value => value,
+  renderInput: ({value, onChange, ref, className}) => {
+    return (
+      <Color
+        value={value}
+        onChange={onChange}
+        className={className}
+        inputProps={{ ref }}
+      />
+    );
+  }
 };
 
 export const FIELD_REGISTRY: Partial<Record<FieldKind, FieldDefinition>> = {

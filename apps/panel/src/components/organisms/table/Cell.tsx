@@ -104,12 +104,7 @@ type EditableCellProps = CellProps & {
   rowId: string;
 };
 
-// AFTER ALL OF THE UPDATES WORKED
-// MAKE SURE NO SUBMIT GOES TO BACNKEND IF ERRORS EXIST
-// AND AFTER THAT START TO TEST THE CASES WHERE USER SELECTS ANOTHER CELL WHILE SUBMITTING
-// OR CLICKS OUTSIDE THE CELL WHILE SUBMITTING
-// ALSO ON RELATION FIELDS, EVERYTIME A USER OPENS THE DROPDOWN, IT LOADS THE OPTIONS AGAIN
-// NEED TO FIX THAT AS WELL
+
 export const EditableCell = memo(
   ({
     value,
@@ -125,13 +120,13 @@ export const EditableCell = memo(
   }: EditableCellProps) => {
     const inputRef = useRef<HTMLTableCellElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const savingRef = useRef(false);
     const floatingElementRef = useRef<HTMLDivElement | null>(null);
     const {handleCellSave, registerActiveCell, unregisterActiveCell} = useContext(TableEditContext);
 
     const [isEditing, setIsEditing] = useState(false);
     const [inputValue, setInputValue] = useState<any>(undefined);
     const [error, setError] = useState<TypeInputRepresenterError | undefined>(undefined);
+    const [isSaving, setIsSaving] = useState(false);
 
     const handleDiscardEdit = () => {
       setIsEditing(false);
@@ -146,6 +141,17 @@ export const EditableCell = memo(
 
     const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
       setIsEditing(true);
+
+      if (type === "color") {
+        // Open the color input’s native picker on first render.
+        // We use requestAnimationFrame to ensure the input is fully rendered
+        // and has layout before triggering .click(), so the popup appears
+        // anchored correctly instead of at the top-left corner.
+        requestAnimationFrame(() => {
+          inputRef.current?.click();
+        });
+      }
+
       try {
         props.onClick?.(e);
       } catch (error) {
@@ -157,6 +163,7 @@ export const EditableCell = memo(
       // type !== "number" check is to make sure user can clear number input
       // but its a hacky fix, need to find a better way
       if (isEditing && inputValue === undefined && type !== "number") {
+        // test if we can get initial value from field.getDefaultValue, which we should
         setInputValue(getInitialValue(type, value, constraints));
       }
     }, [isEditing, type, title, value, constraints, inputValue]);
@@ -180,6 +187,9 @@ export const EditableCell = memo(
     );
 
     async function handleSave() {
+      if (isSaving) return;
+      setIsSaving(true);
+
       const validationErrors = field?.validateValue(
         inputValue,
         constraints as any,
@@ -188,6 +198,7 @@ export const EditableCell = memo(
 
       if (validationErrors && !isObjectEffectivelyEmpty(validationErrors)) {
         setError(validationErrors as TypeInputRepresenterError);
+        setIsSaving(false);
         return;
       }
 
@@ -210,17 +221,18 @@ export const EditableCell = memo(
       const payloadError = field?.validateValue(payload, constraints as any, constraints.required);
       if (payloadError && !isObjectEffectivelyEmpty(payloadError)) {
         setError({[title]: payloadError} as TypeInputRepresenterError);
+        setIsSaving(false);
         return;
       }
 
       if (!handleCellSave) {
         setIsEditing(false);
+        setIsSaving(false);
         return;
       }
 
       try {
         window.document.body.style.cursor = "wait";
-        savingRef.current = true;
         const result = await handleCellSave(payload, columnId, rowId);
         if (result) setError(undefined);
         setIsEditing(false);
@@ -228,7 +240,7 @@ export const EditableCell = memo(
         const errMsg = {[title]: String((err as any)?.message || err)} as TypeInputRepresenterError;
         setError(errMsg);
       } finally {
-        savingRef.current = false;
+        setIsSaving(false);
         window.document.body.style.cursor = "default";
       }
     }
@@ -236,13 +248,8 @@ export const EditableCell = memo(
     useEffect(() => {
       if (isEditing) {
         const saveFn = async () => {
-          if (savingRef.current) return;
-          savingRef.current = true;
-          try {
-            await handleSave();
-          } finally {
-            savingRef.current = false;
-          }
+          if (isSaving) return;
+          await handleSave();
         };
         registerActiveCell({saveFn, discardFn: handleDiscardEdit, columnId, rowId});
       } else {
@@ -252,7 +259,7 @@ export const EditableCell = memo(
       return () => {
         unregisterActiveCell();
       };
-    }, [isEditing, inputValue, columnId, rowId]);
+    }, [isEditing, inputValue, columnId, rowId, isSaving]);
 
     const field = FIELD_REGISTRY[type || "string"];
     const InputComponent = field?.renderInput;
@@ -263,7 +270,9 @@ export const EditableCell = memo(
           styles.cell,
           styles.selectableCell,
           focused ? styles.focusedCell : "",
-          isEditing && type !== "date" && type !== "location" && type !== "array" ? styles.editingCell : "",
+          isEditing && type !== "date" && type !== "location" && type !== "array"
+            ? styles.editingCell
+            : "",
           props.className
         ]
           .filter(Boolean)
