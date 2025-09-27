@@ -173,22 +173,6 @@
   width: 328px;
 }
 
-.multipleSelectionInput {
-  min-width: 300px;
-}
-
-.locationInput {
-  min-width: 500px;
-  max-height: 500px;
-}
-
-.objectInput {
-  max-height: 500px;
-  max-width: 800px !important;
-  overflow: auto;
-  width: fit-content;
-}
-
 .enumInput > div:nth-child(2) span {
   max-width: unset !important;
   min-width: calc(100% + 100px);

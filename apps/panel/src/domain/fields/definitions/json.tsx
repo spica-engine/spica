@@ -22,15 +22,7 @@ export const JSON_DEFINITION: FieldDefinition = {
     title: property.title,
     description: property.description
   }),
-  getFormattedValue: v => {
-    if (!v) return "";
-    try {
-      const str = typeof v === "string" ? v : JSON.stringify(v);
-      return str.length > 20 ? str.slice(0, 20) + "…" : str;
-    } catch {
-      return "{…}";
-    }
-  },
+  getFormattedValue: value => JSON.parse(value),
   capabilities: {indexable: true},
   renderValue: value => JSON.stringify(value).slice(0, 30) + (String(value).length > 30 ? "…" : "")
 };

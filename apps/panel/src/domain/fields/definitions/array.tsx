@@ -34,6 +34,7 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     )
   }),
   getDefaultValue: property => property.default,
+  getFormattedValue: value => value || [],
   validateCreationForm: form => runYupValidation(ARRAY_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Array, properties, required),
@@ -119,7 +120,6 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     form.fieldValues.arrayType === "string"
       ? applyPresetLogic(FieldKind.String, form, oldValues)
       : form,
-  getFormattedValue: v => (Array.isArray(v) ? `${v.length} item${v.length === 1 ? "" : "s"}` : ""),
   capabilities: {supportsInnerFields: true},
   renderValue: (value, deletable) => (
     <div className={styles.multipleSelectionCell}>

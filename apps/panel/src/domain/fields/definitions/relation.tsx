@@ -55,11 +55,7 @@ export const RELATION_DEFINITION: FieldDefinition = {
     // totalOptionsLength?: number;
     // THESE ARE NECESSARY FOR RELATION FIELDS
   }),
-  getFormattedValue: v => {
-    if (!v) return "";
-    if (typeof v === "string") return v;
-    return (v as any).title || (v as any).name || (v as any)._id || (v as any).id || "";
-  },
+  getFormattedValue: value => value || null,
   capabilities: {indexable: true},
   renderValue: (value, deletable) => (
     <div className={styles.defaultCell}>

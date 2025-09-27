@@ -46,7 +46,7 @@ export const MULTISELECT_DEFINITION: FieldDefinition = {
     description: property.description,
     enum: property.enum
   }),
-  getFormattedValue: v => (Array.isArray(v) ? v.join(", ") : ""),
+  getFormattedValue: value => value || [],
   capabilities: {enumerable: true, indexable: true},
   renderValue: (value, deletable) => (
     <div className={styles.multipleSelectionCell}>

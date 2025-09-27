@@ -6,23 +6,7 @@ import styles from "./Table.module.scss";
 import {FlexElement, useOnClickOutside} from "oziko-ui-kit";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import {FIELD_REGISTRY, type FieldKind} from "../../../domain/fields";
-
-const DEFAULT_VALUES: Record<FieldKind, any> = {
-  string: "",
-  number: 0,
-  date: "",
-  boolean: false,
-  textarea: "",
-  "multiple selection": [],
-  multiselect: [],
-  relation: null,
-  location: {lat: 36.966667, lng: 30.666667},
-  array: [],
-  object: {},
-  file: null,
-  richtext: "",
-  color: "#000000"
-} as unknown as Record<FieldKind, any>;
+import type {Property} from "src/services/bucketService";
 
 export function isValidDate(dateObject: any) {
   return dateObject instanceof Date && !isNaN(dateObject.getTime());
@@ -38,47 +22,6 @@ const isObjectEffectivelyEmpty = (obj: any): boolean => {
       (typeof obj[key] === "object" && isObjectEffectivelyEmpty(obj[key]))
   );
 };
-
-function getInitialValue(type: FieldKind, value: any, constraints: Constraints | undefined) {
-  const defaultValue = DEFAULT_VALUES[type];
-  if (type === "object") {
-    return createInitialObject(value, constraints?.properties);
-  }
-
-  if (type === "date") {
-    const dateValue = isValidDate(new Date(value)) ? new Date(value) : null;
-    return dateValue || defaultValue;
-  }
-
-  if (type === "location") return value || {lat: 0, lng: 0};
-
-  if (type === "number") return value;
-
-  return value || defaultValue;
-}
-
-function createInitialObject(currentValue: any, properties: any | undefined) {
-  const initialObject: Record<string, any> = {};
-
-  Object.values(properties || {}).forEach((property: any) => {
-    if (property.type === "object") {
-      const nestedValue = currentValue?.[property.title];
-      initialObject[property.title] = createInitialObject(nestedValue, property.properties);
-    } else {
-      initialObject[property.title] =
-        currentValue?.[property.title] ?? DEFAULT_VALUES[property.type as FieldKind] ?? null;
-    }
-  });
-
-  return initialObject;
-}
-
-const customStyles: Partial<Record<FieldKind, string>> = {
-  "multiple selection": styles.multipleSelectionInput,
-  multiselect: styles.multipleSelectionInput,
-  location: styles.locationInput,
-  object: styles.objectInput
-} as Partial<Record<FieldKind, string>>;
 
 type CellProps = React.HTMLAttributes<HTMLDivElement> & {
   leftOffset?: number;
@@ -104,7 +47,6 @@ type EditableCellProps = CellProps & {
   rowId: string;
 };
 
-
 export const EditableCell = memo(
   ({
     value,
@@ -118,6 +60,7 @@ export const EditableCell = memo(
     rowId,
     ...props
   }: EditableCellProps) => {
+    const field = FIELD_REGISTRY[type || "string"];
     const inputRef = useRef<HTMLTableCellElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const floatingElementRef = useRef<HTMLDivElement | null>(null);
@@ -128,9 +71,27 @@ export const EditableCell = memo(
     const [error, setError] = useState<TypeInputRepresenterError | undefined>(undefined);
     const [isSaving, setIsSaving] = useState(false);
 
+    const properties = useMemo(
+      () => ({
+        ...constraints,
+        type,
+        title,
+        items: constraints?.items,
+        properties: constraints.properties,
+        enum: constraints?.enum,
+        className: constraints?.enum ? styles.enumInput : undefined
+      }),
+      [type, title, constraints]
+    ) as Property;
+
     const handleDiscardEdit = () => {
+      // if we dont, then other cells handleDiscardEdit will be called too,
+      // we should instead not render this component at all when not editing
+      if (!isEditing) return;
+      const newValue = field?.getFormattedValue?.(value, properties);
+      console.log(1, newValue, value);
+      setInputValue(newValue);
       setIsEditing(false);
-      setInputValue(getInitialValue(type, value, constraints));
       setError(undefined);
     };
 
@@ -160,31 +121,9 @@ export const EditableCell = memo(
     };
 
     useEffect(() => {
-      // type !== "number" check is to make sure user can clear number input
-      // but its a hacky fix, need to find a better way
-      if (isEditing && inputValue === undefined && type !== "number") {
-        // test if we can get initial value from field.getDefaultValue, which we should
-        setInputValue(getInitialValue(type, value, constraints));
-      }
-    }, [isEditing, type, title, value, constraints, inputValue]);
-
-    useEffect(() => {
       if (!isEditing || !inputRef.current) return;
       inputRef.current?.focus();
     }, [isEditing, inputRef]);
-
-    const properties = useMemo(
-      () => ({
-        ...constraints,
-        type,
-        title,
-        items: constraints?.items,
-        properties: constraints.properties,
-        enum: constraints?.enum,
-        className: constraints?.enum ? styles.enumInput : undefined
-      }),
-      [type, title, constraints]
-    );
 
     async function handleSave() {
       if (isSaving) return;
@@ -261,7 +200,6 @@ export const EditableCell = memo(
       };
     }, [isEditing, inputValue, columnId, rowId, isSaving]);
 
-    const field = FIELD_REGISTRY[type || "string"];
     const InputComponent = field?.renderInput;
 
     const className = useMemo(
@@ -286,7 +224,10 @@ export const EditableCell = memo(
           <div ref={containerRef}>
             <InputComponent
               value={inputValue}
-              onChange={setInputValue}
+              onChange={value => {
+                console.log(3, value);
+                setInputValue(value);
+              }}
               ref={inputRef}
               properties={properties as any}
               title={title}

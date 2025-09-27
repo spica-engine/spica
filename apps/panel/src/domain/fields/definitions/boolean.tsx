@@ -19,6 +19,7 @@ export const BOOLEAN_DEFINITION: FieldDefinition = {
     ),
     defaultValue: false
   }),
+  getFormattedValue: value => value,
   validateCreationForm: form => runYupValidation(BOOLEAN_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Boolean, properties, required),
@@ -32,7 +33,6 @@ export const BOOLEAN_DEFINITION: FieldDefinition = {
     title: property.title,
     description: property.description
   }),
-  getFormattedValue: v => (v === true ? "✔" : v === false ? "✘" : ""),
   capabilities: {hasDefaultValue: true, primaryEligible: true, indexable: true},
   renderValue: value => (
     <Checkbox className={`${styles.checkbox} ${styles.booleanValue}`} checked={value} />

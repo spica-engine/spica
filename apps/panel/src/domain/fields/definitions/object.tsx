@@ -7,6 +7,8 @@ import {
   OBJECT_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "../validation";
+import styles from "../field-styles.module.scss";
+import { FIELD_REGISTRY } from "../registry";
 
 export const OBJECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Object,
@@ -32,7 +34,22 @@ export const OBJECT_DEFINITION: FieldDefinition = {
   }),
   requiresInnerFields: _ => true,
   getDefaultValue: property => property.default,
-  getFormattedValue: v => (v && typeof v === "object" ? `{${Object.keys(v).length}}` : ""),
+  getFormattedValue: (value, properties) => {
+    const initialObject: Record<string, any> = {};
+
+    Object.values(properties || {}).forEach((property: any) => {
+      if (property.type === "object") {
+        const nestedValue = value?.[property.title];
+        initialObject[property.title] = OBJECT_DEFINITION.getFormattedValue(nestedValue, property.properties);
+      } else {
+        initialObject[property.title] = FIELD_REGISTRY?.[
+          property.type as FieldKind
+        ]?.getDefaultValue?.(value?.[property.title]);
+      }
+    });
+
+    return initialObject;
+  },
   capabilities: {supportsInnerFields: true},
   renderValue: (value, deletable) => (
     <div className={styles.defaultCell}>

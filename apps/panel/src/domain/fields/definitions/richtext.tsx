@@ -1,9 +1,14 @@
-import { Button, Icon, useAdaptivePosition, Portal, RichTextInput } from "oziko-ui-kit";
-import { useRef, useEffect, type RefObject } from "react";
-import { TranslatableMinimalConfig, BaseFields } from "../creation-form-schemas";
-import { freezeFormDefaults, BASE_FORM_DEFAULTS } from "../defaults";
-import { type FieldDefinition, FieldKind } from "../types";
-import { runYupValidation, RICHTEXT_FIELD_CREATION_FORM_SCHEMA, validateFieldValue } from "../validation";
+import {Button, Icon, useAdaptivePosition, Portal, RichTextInput} from "oziko-ui-kit";
+import {useRef, useEffect, type RefObject} from "react";
+import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
+import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
+import {type FieldDefinition, FieldKind} from "../types";
+import {
+  runYupValidation,
+  RICHTEXT_FIELD_CREATION_FORM_SCHEMA,
+  validateFieldValue
+} from "../validation";
+import styles from "../field-styles.module.scss";
 
 export const RICHTEXT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Richtext,
@@ -26,7 +31,7 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
     title: property.title,
     description: property.description
   }),
-  getFormattedValue: v => (v ? "[rich]" : ""),
+  getFormattedValue: value => value || "",
   capabilities: {translatable: true},
   renderValue: (value, deletable) => (
     <div className={styles.defaultCell}>

@@ -3,6 +3,7 @@ import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {type FieldDefinition, FieldKind} from "../types";
 import {runYupValidation, FILE_FIELD_CREATION_FORM_SCHEMA, validateFieldValue} from "../validation";
+import styles from "../field-styles.module.scss";
 
 export const FILE_DEFINITION: FieldDefinition = {
   kind: FieldKind.File,
@@ -25,12 +26,7 @@ export const FILE_DEFINITION: FieldDefinition = {
     title: property.title,
     description: property.description
   }),
-  getFormattedValue: v => {
-    if (!v) return "";
-    if (typeof v === "string") return v;
-    if (v && typeof v === "object") return (v as any).originalName || (v as any).name || "📎";
-    return "📎";
-  },
+  getFormattedValue: value => value || null,
   capabilities: {},
   renderValue: value => (
     <div className={styles.fileCell}>

@@ -1,10 +1,14 @@
-import { Button, Icon, type TypeSelectRef, Select, Input } from "oziko-ui-kit";
-import { useRef, useEffect, type RefObject } from "react";
-import { TranslatableConfig, BaseFields, PresetPanel, DefaultInputs } from "../creation-form-schemas";
-import { freezeFormDefaults, BASE_FORM_DEFAULTS } from "../defaults";
-import { applyPresetLogic } from "../presets";
-import { FieldKind, type FieldDefinition } from "../types";
-import { runYupValidation, STRING_FIELD_CREATION_FORM_SCHEMA, validateFieldValue } from "../validation";
+import {Button, Icon, type TypeSelectRef, Select, Input} from "oziko-ui-kit";
+import {useRef, useEffect, type RefObject} from "react";
+import {TranslatableConfig, BaseFields, PresetPanel, DefaultInputs} from "../creation-form-schemas";
+import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
+import {applyPresetLogic} from "../presets";
+import {FieldKind, type FieldDefinition} from "../types";
+import {
+  runYupValidation,
+  STRING_FIELD_CREATION_FORM_SCHEMA,
+  validateFieldValue
+} from "../validation";
 import styles from "../field-styles.module.scss";
 
 export const STRING_DEFINITION: FieldDefinition = {
@@ -34,7 +38,7 @@ export const STRING_DEFINITION: FieldDefinition = {
     enum: property.enum
   }),
   applyPresetLogic: (form, oldValues) => applyPresetLogic(FieldKind.String, form, oldValues),
-  getFormattedValue: value => (value == null ? "" : String(value)),
+  getFormattedValue: value => value || "",
   capabilities: {
     enumerable: true,
     pattern: true,

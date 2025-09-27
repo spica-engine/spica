@@ -32,16 +32,7 @@ export const LOCATION_DEFINITION: FieldDefinition = {
     title: property.title,
     description: property.description
   }),
-  getFormattedValue: v => {
-    if (!v || typeof v !== "object") return "";
-    if (Array.isArray((v as any).coordinates)) {
-      const coords = (v as any).coordinates;
-      if (coords.length >= 2) return `${coords[0]},${coords[1]}`;
-    }
-    if ("latitude" in (v as any) && "longitude" in (v as any))
-      return `${(v as any).latitude},${(v as any).longitude}`;
-    return "";
-  },
+  getFormattedValue: value => value || {lat: 36.966667, lng: 30.666667},
   capabilities: {indexable: true},
   renderValue: value => {
     const formattedValue = !value

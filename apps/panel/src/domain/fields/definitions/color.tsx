@@ -26,7 +26,7 @@ export const COLOR_DEFINITION: FieldDefinition = {
     description: property.description
   }),
   getDefaultValue: property => property.default || "#000000",
-  getFormattedValue: v => (v ? String(v).toUpperCase() : ""),
+  getFormattedValue: value => value ?? "#000000",
   capabilities: {hasDefaultValue: true, indexable: true},
   renderValue: value => value,
   renderInput: ({value, onChange, ref, className}) => {

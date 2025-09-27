@@ -1,11 +1,14 @@
-import { Button, Icon, DatePicker } from "oziko-ui-kit";
-import { useId, useRef } from "react";
-import { isValidDate } from "../../../components/organisms/table/EditCellPopover";
-import { MinimalConfig, BaseFields, DefaultInputs } from "../creation-form-schemas";
-import { freezeFormDefaults, BASE_FORM_DEFAULTS } from "../defaults";
-import { FieldKind, type FieldDefinition } from "../types";
-import { runYupValidation, DATE_FIELD_CREATION_FORM_SCHEMA, validateFieldValue } from "../validation";
+import {Button, Icon, DatePicker} from "oziko-ui-kit";
+import {useId, useRef} from "react";
+import {MinimalConfig, BaseFields, DefaultInputs} from "../creation-form-schemas";
+import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
+import {FieldKind, type FieldDefinition} from "../types";
+import {runYupValidation, DATE_FIELD_CREATION_FORM_SCHEMA, validateFieldValue} from "../validation";
 import styles from "../field-styles.module.scss";
+
+function isValidDate(dateObject: any) {
+  return dateObject instanceof Date && !isNaN(dateObject.getTime());
+}
 
 export const DATE_DEFINITION: FieldDefinition = {
   kind: FieldKind.Date,
@@ -28,16 +31,7 @@ export const DATE_DEFINITION: FieldDefinition = {
     title: property.title,
     description: property.description
   }),
-  getFormattedValue: v => {
-    if (!v) return "";
-    try {
-      const d = new Date(v);
-      if (isNaN(d.getTime())) return String(v);
-      return d.toISOString().split("T")[0];
-    } catch {
-      return String(v);
-    }
-  },
+  getFormattedValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
   capabilities: {hasDefaultValue: true, indexable: true},
   renderValue: (value, deletable) => {
     if (!value || !isValidDate(new Date(value))) return "";

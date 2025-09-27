@@ -45,8 +45,8 @@ export const NUMBER_DEFINITION: FieldDefinition = {
     description: property.description,
     enum: property.enum
   }),
-  getDefaultValue: property => property.default,
-  getFormattedValue: value => (value == null ? "" : value),
+  getDefaultValue: (property) => property.default,
+  getFormattedValue: value => value,
   capabilities: {
     enumerable: true,
     numericConstraints: true,

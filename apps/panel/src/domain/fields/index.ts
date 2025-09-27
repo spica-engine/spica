@@ -220,12 +220,6 @@ function buildCreationFormPropertiesFromForm(form: any) {
   return built;
 }
 
-function formatValue(kind: FieldKind, value: any) {
-  const def = FIELD_REGISTRY[kind];
-  if (def?.getFormattedValue) return def.getFormattedValue(value);
-  return value == null ? "" : value;
-}
-
 import {
   addInnerField,
   updateInnerField,
@@ -236,7 +230,6 @@ export {
   initFormWithTitleFallback,
   validateForm,
   buildCreationFormPropertiesFromForm,
-  formatValue,
   addInnerField,
   updateInnerField,
   removeInnerField,
