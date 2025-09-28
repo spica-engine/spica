@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useBucketService } from "../../services/bucketService";
+import React, {useState, useRef, useEffect} from "react";
+import {useBucketService} from "../../services/bucketService";
 import styles from "./Diagram.module.scss";
 import ZoomControl from "../../components/molecules/zoom-control/ZoomControl";
 import NodeView from "../../components/molecules/node-view/NodeView";
@@ -11,18 +11,54 @@ import {
   useRelationRenderer
 } from "./hooks";
 
-const Diagram: React.FC = () => {
-  const { apiGetBuckets, apiBuckets } = useBucketService();
+export default function Diagram() {
+  const playgroundRef = useRef(null);
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const handleWheel = (e: any) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        setScale(prev => {
+          let zoomFactor = -e.deltaY * 0.002;
+          let newScale = prev + zoomFactor;
+          newScale = Math.min(Math.max(newScale, 0.1), 5);
+          return newScale;
+        });
+      }
+    };
+    const handleKeyDown = (e: any) => {
+      if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
+        e.preventDefault();
+        setScale(prev => Math.min(prev + 0.1, 5));
+      }
+      if (e.ctrlKey && e.key === "-") {
+        e.preventDefault();
+        setScale(prev => Math.max(prev - 0.1, 0.1));
+      }
+      if (e.ctrlKey && e.key === "0") {
+        e.preventDefault();
+        setScale(1);
+      }
+    };
+    window.addEventListener("wheel", handleWheel, {passive: false});
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  const {apiGetBuckets, apiBuckets} = useBucketService();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  const { nodes, relations } = useBucketConverter(apiBuckets);
+
+  const {nodes, relations} = useBucketConverter(apiBuckets);
   const [currentNodes, setCurrentNodes] = useState(nodes);
-  
+
   useEffect(() => {
     setCurrentNodes(nodes);
   }, [nodes]);
-  
+
   const interactions = useDiagramInteractions(currentNodes, setCurrentNodes, containerRef);
   const focusMode = useFocusMode(relations);
   const nodeManagement = useNodeManagement(currentNodes, setCurrentNodes);
@@ -52,37 +88,27 @@ const Diagram: React.FC = () => {
       useLeftSideEnd
     } = relationData;
 
-    const isRelationFocused = focusMode.focusedNodeId && (
-      relation.from === focusMode.focusedNodeId || 
-      relation.to === focusMode.focusedNodeId ||
-      focusMode.focusedRelatedNodes.has(relation.from) ||
-      focusMode.focusedRelatedNodes.has(relation.to)
-    );
+    const isRelationFocused =
+      focusMode.focusedNodeId &&
+      (relation.from === focusMode.focusedNodeId ||
+        relation.to === focusMode.focusedNodeId ||
+        focusMode.focusedRelatedNodes.has(relation.from) ||
+        focusMode.focusedRelatedNodes.has(relation.to));
 
     return (
-      <g key={relationId} className={`${styles.relationLine} ${
-        focusMode.focusedNodeId && !isRelationFocused 
-          ? styles.unfocused 
-          : isRelationFocused 
-            ? styles.focused 
-            : ''
-      }`}>
-        <path
-          d={pathData}
-          stroke="#666"
-          strokeWidth="2"
-          fill="none"
-          markerEnd="url(#arrowhead)"
-        />
-        
-        <circle
-          cx={labelMidX}
-          cy={labelMidY}
-          r="20"
-          fill="white"
-          stroke="#ddd"
-          strokeWidth="1"
-        />
+      <g
+        key={relationId}
+        className={`${styles.relationLine} ${
+          focusMode.focusedNodeId && !isRelationFocused
+            ? styles.unfocused
+            : isRelationFocused
+              ? styles.focused
+              : ""
+        }`}
+      >
+        <path d={pathData} stroke="#666" strokeWidth="2" fill="none" markerEnd="url(#arrowhead)" />
+
+        <circle cx={labelMidX} cy={labelMidY} r="20" fill="white" stroke="#ddd" strokeWidth="1" />
         <text
           x={labelMidX}
           y={labelMidY + 4}
@@ -94,7 +120,6 @@ const Diagram: React.FC = () => {
         >
           {relation.type}
         </text>
-        
       </g>
     );
   };
@@ -106,10 +131,10 @@ const Diagram: React.FC = () => {
       </div>
     );
   }
-
   return (
-    <div className={styles.diagramWrapper}>
-      <ZoomControl
+    <>
+
+   <ZoomControl
         zoom={interactions.zoom}
         zoomIn={interactions.zoomIn}
         zoomOut={interactions.zoomOut}
@@ -117,12 +142,21 @@ const Diagram: React.FC = () => {
         resetView={interactions.resetView}
       />
 
+        <div
+      ref={playgroundRef}
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: "top left",
+      }}
+    >
+  
+   
       <div
         ref={containerRef}
         className={styles.diagramContainer}
-        onMouseDown={(e) => {
+        onMouseDown={e => {
           interactions.handlePanStart(e);
-          focusMode.handleBackgroundClick(e, containerRef); // Add background click handler
+          focusMode.handleBackgroundClick(e, containerRef);
         }}
         onMouseMove={interactions.handleMouseMove}
         onMouseUp={interactions.handleMouseUp}
@@ -183,7 +217,7 @@ const Diagram: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
+ 
   );
-};
-
-export default Diagram;
+}

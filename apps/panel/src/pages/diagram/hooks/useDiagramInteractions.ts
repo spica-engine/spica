@@ -66,13 +66,7 @@ export const useDiagramInteractions = (
   }, [nodes, containerRef, isInitialized]);
 
   const zoomIn = (clientX?: number, clientY?: number) => {
-    if (!containerRef.current) {
-      setZoom(prev => {
-        const newZoom = Math.min(prev * 1.05, 3);
-        return newZoom;
-      });
-      return;
-    }
+    if (!containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
     const centerX = clientX ?? rect.width / 2;
@@ -81,7 +75,7 @@ export const useDiagramInteractions = (
     setZoom(prev => {
       if (prev >= 3) return prev;
       
-      const newZoom = Math.min(prev * 1.05, 3);
+      const newZoom = Math.min(prev * 1.02, 3);
       const zoomFactor = newZoom / prev;
 
       setPan(prevPan => ({
@@ -94,13 +88,7 @@ export const useDiagramInteractions = (
   };
 
   const zoomOut = (clientX?: number, clientY?: number) => {
-    if (!containerRef.current) {
-      setZoom(prev => {
-        const newZoom = Math.max(prev / 1.05, 0.1);
-        return newZoom;
-      });
-      return;
-    }
+    if (!containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
     const centerX = clientX ?? rect.width / 2;
@@ -109,7 +97,7 @@ export const useDiagramInteractions = (
     setZoom(prev => {
       if (prev <= 0.1) return prev;
       
-      const newZoom = Math.max(prev / 1.05, 0.1);
+      const newZoom = Math.max(prev / 1.02, 0.1);
       const zoomFactor = newZoom / prev;
 
       setPan(prevPan => ({
@@ -139,18 +127,17 @@ export const useDiagramInteractions = (
   const handleWheel = (e: React.WheelEvent) => {
     if (!containerRef.current) return;
 
+    e.preventDefault();
     const rect = containerRef.current.getBoundingClientRect();
     const clientX = e.clientX - rect.left;
     const clientY = e.clientY - rect.top;
 
     if (e.deltaY < 0) {
       if (zoom < 3) {
-        e.preventDefault();
         zoomIn(clientX, clientY);
       }
     } else {
       if (zoom > 0.1) {
-        e.preventDefault();
         zoomOut(clientX, clientY);
       }
     }
@@ -159,8 +146,9 @@ export const useDiagramInteractions = (
   const handlePanStart = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const isNodeElement = target.closest('[class*="node"]') || target.closest('[data-node-id]');
+    const isZoomControlElement = target.closest('[class*="controls"]') || target.closest('[class*="controlBtn"]');
     
-    if (!isNodeElement) {
+    if (!isNodeElement && !isZoomControlElement) {
       setIsPanning(true);
       setLastPanPoint({ x: e.clientX, y: e.clientY });
       e.preventDefault();
