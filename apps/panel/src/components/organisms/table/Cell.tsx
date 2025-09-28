@@ -17,7 +17,6 @@ const isObjectEffectivelyEmpty = (obj: any): boolean => {
   if (obj == null || typeof obj !== "object") return true;
 
   return Object.keys(obj).every(key => {
-    console.log("Checking key for emptiness:", key, obj[key]);
     return (
       obj[key] === undefined ||
       obj[key] === null ||
@@ -228,7 +227,6 @@ const EditableCell = memo(
     useEffect(() => {
       const onKey = (e: KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
-          console.log("Enter key pressed, saving cell");
           handleSave();
         } else if (e.key === "Escape") {
           handleDiscardEdit();
