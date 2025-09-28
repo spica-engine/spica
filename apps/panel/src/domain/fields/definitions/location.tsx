@@ -32,7 +32,17 @@ export const LOCATION_DEFINITION: FieldDefinition = {
     title: property.title,
     description: property.description
   }),
-  getFormattedValue: value => value || {lat: 36.966667, lng: 30.666667},
+  getFormattedValue: value => {
+    const DEFAULT_COORDINATES = {type: "Point", coordinates: [36.966667, 30.666667]};
+    if (!value) return DEFAULT_COORDINATES;
+    if (value.type === "Point" && Array.isArray(value.coordinates) && value.coordinates.length === 2) {
+      return value;
+    }
+    if (typeof value.lat === "number" && typeof value.lng === "number") {
+      return {type: "Point", coordinates: [value.lat, value.lng]};
+    }
+    return DEFAULT_COORDINATES;
+  },
   capabilities: {indexable: true},
   renderValue: value => {
     const formattedValue = !value

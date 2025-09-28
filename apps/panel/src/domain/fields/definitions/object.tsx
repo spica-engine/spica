@@ -1,4 +1,4 @@
-import {Button, Icon} from "oziko-ui-kit";
+import {Button, Icon, ObjectInput, Portal, useAdaptivePosition} from "oziko-ui-kit";
 import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {type FieldDefinition, FieldKind} from "../types";
@@ -8,7 +8,9 @@ import {
   validateFieldValue
 } from "../validation";
 import styles from "../field-styles.module.scss";
-import { FIELD_REGISTRY } from "../registry";
+import {FIELD_REGISTRY} from "../registry";
+import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import {useEffect, useRef, type RefObject} from "react";
 
 export const OBJECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Object,
@@ -37,14 +39,19 @@ export const OBJECT_DEFINITION: FieldDefinition = {
   getFormattedValue: (value, properties) => {
     const initialObject: Record<string, any> = {};
 
-    Object.values(properties || {}).forEach((property: any) => {
+    Object.values(properties.properties || {}).forEach((property: any) => {
       if (property.type === "object") {
         const nestedValue = value?.[property.title];
-        initialObject[property.title] = OBJECT_DEFINITION.getFormattedValue(nestedValue, property.properties);
+        initialObject[property.title] = OBJECT_DEFINITION.getFormattedValue(
+          nestedValue,
+          property.properties
+        );
       } else {
-        initialObject[property.title] = FIELD_REGISTRY?.[
-          property.type as FieldKind
-        ]?.getDefaultValue?.(value?.[property.title]);
+        const field = FIELD_REGISTRY?.[property.type as FieldKind];
+        initialObject[property.title] = field?.getFormattedValue?.(
+          value?.[property.title],
+          property
+        );
       }
     });
 
@@ -52,13 +59,45 @@ export const OBJECT_DEFINITION: FieldDefinition = {
   },
   capabilities: {supportsInnerFields: true},
   renderValue: (value, deletable) => (
-    <div className={styles.defaultCell}>
-      <div className={styles.defaultCellData}>{JSON.stringify(value)}</div>
+    <div>
+      <div>{JSON.stringify(value)}</div>
       {deletable && value && (
         <Button variant="icon">
           <Icon name="close" size="sm" />
         </Button>
       )}
     </div>
-  )
+  ),
+  renderInput: ({value, onChange, ref, properties, title, className}) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const {targetPosition, calculatePosition} = useAdaptivePosition({
+      containerRef: containerRef,
+      targetRef: ref,
+      initialPlacement: "bottom"
+    });
+
+    useEffect(calculatePosition, [calculatePosition]);
+
+    const RenderedValue = ({value}: {value: any[]}) => OBJECT_DEFINITION.renderValue(value, false);
+
+    return (
+      <div ref={containerRef} className={styles.objectInputContainer}>
+        <RenderedValue value={value} />
+        <Portal>
+          <ObjectInput
+            ref={ref as RefObject<HTMLInputElement | null>}
+            title={title}
+            description={"description"}
+            value={value}
+            onChange={onChange}
+            properties={properties.properties}
+            errors={properties.errors as TypeInputRepresenterError}
+            style={{...targetPosition, position: "absolute"}}
+            className={styles.objectInput}
+          />
+        </Portal>
+      </div>
+    );
+  }
 };

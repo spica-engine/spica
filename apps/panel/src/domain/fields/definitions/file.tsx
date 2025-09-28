@@ -1,4 +1,4 @@
-import {Icon} from "oziko-ui-kit";
+import {Icon, StorageInput} from "oziko-ui-kit";
 import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {type FieldDefinition, FieldKind} from "../types";
@@ -33,5 +33,8 @@ export const FILE_DEFINITION: FieldDefinition = {
       <Icon name="imageMultiple" size="xs" />
       {value ? <span>{value}</span> : <span className={styles.grayText}>Click or Drag&Drop</span>}
     </div>
-  )
+  ),
+  renderInput: ({title}) => {
+    return <StorageInput onUpload={() => {}} label={title} />;
+  }
 };

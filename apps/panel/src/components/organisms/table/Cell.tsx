@@ -66,7 +66,7 @@ export const Cell = memo(
       }),
       [type, title, constraints]
     ) as Property;
-    const [cellValue, setCellValue] = useState(field.getFormattedValue(value, properties as any));
+    const [cellValue, setCellValue] = useState(() => field.getFormattedValue(value, properties as any));
 
     const handleStartEditing = (e: React.MouseEvent<HTMLTableCellElement>) => {
       if (!editable) return;
@@ -75,12 +75,9 @@ export const Cell = memo(
 
     function handleStopEditing(newValue?: any) {
       setIsEditing(false);
-      if (arguments.length === 0) {
-        setCellValue(value);
-      } else {
-        const formattedValue = field?.getFormattedValue?.(newValue, properties);
-        setCellValue(formattedValue);
-      }
+      const notFormattedValue = arguments.length ? newValue : value;
+      const formattedValue = field?.getFormattedValue(notFormattedValue, properties);
+      setCellValue(formattedValue);
     }
 
     return isEditing ? (
