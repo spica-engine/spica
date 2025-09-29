@@ -64,7 +64,7 @@ function buildBaseProperty(values: FieldFormState): Property {
       innerFields && innerFields.length > 0
         ? innerFields
             .filter(i => i.configurationValues.requiredField)
-            ?.map?.((i: any) => i.fieldValues.title)
+            ?.map?.(i => i.fieldValues.title)
         : undefined
   } as Property;
 }
@@ -159,8 +159,8 @@ const NUMBER_DEFINITION: FieldDefinition = {
   }),
   getDefaultValue: property => property.default,
   buildCreationFormApiProperty: form => {
-    const base = buildBaseProperty(form) as any;
-    const fv: any = form.fieldValues;
+    const base = buildBaseProperty(form);
+    const fv = form.fieldValues;
     return {
       ...base,
       default: form.defaultValue,
@@ -208,7 +208,7 @@ const BOOLEAN_DEFINITION: FieldDefinition = {
     description: property.description
   }),
   buildCreationFormApiProperty: form => {
-    const base = buildBaseProperty(form) as any;
+    const base = buildBaseProperty(form);
     const def = form.defaultValue;
     return {
       ...base,
@@ -321,7 +321,7 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
     enum: property.enum
   }),
   buildCreationFormApiProperty: form => {
-    const base = buildBaseProperty(form) as any;
+    const base = buildBaseProperty(form);
     const fv = form.fieldValues;
     const multipleSelectionTab = form.multipleSelectionTab;
     return {
@@ -384,7 +384,7 @@ const RELATION_DEFINITION: FieldDefinition = {
       ...BaseFields,
       bucket: {
         ...SpecializedInputs.bucket,
-        enum: (buckets?.map(b => ({label: b.title, value: b._id})) as any[]) || []
+        enum: buckets?.map(b => ({label: b.title, value: b._id})) || []
       },
       relationType: SpecializedInputs.relationType
     },
@@ -402,7 +402,7 @@ const RELATION_DEFINITION: FieldDefinition = {
     // THESE ARE NECESSARY FOR RELATION FIELDS
   }),
   buildCreationFormApiProperty: form => {
-    const base = buildBaseProperty(form) as any;
+    const base = buildBaseProperty(form);
     const fv = form.fieldValues;
     return {
       ...base,
@@ -414,7 +414,7 @@ const RELATION_DEFINITION: FieldDefinition = {
   getFormattedValue: v => {
     if (!v) return "";
     if (typeof v === "string") return v;
-    return (v as any).title || (v as any).name || (v as any)._id || (v as any).id || "";
+    return v.title || v.name || v._id || v.id || "";
   },
   capabilities: {indexable: true}
 };
@@ -442,12 +442,11 @@ const LOCATION_DEFINITION: FieldDefinition = {
   }),
   getFormattedValue: v => {
     if (!v || typeof v !== "object") return "";
-    if (Array.isArray((v as any).coordinates)) {
-      const coords = (v as any).coordinates;
+    if (Array.isArray(v.coordinates)) {
+      const coords = v.coordinates;
       if (coords.length >= 2) return `${coords[0]},${coords[1]}`;
     }
-    if ("latitude" in (v as any) && "longitude" in (v as any))
-      return `${(v as any).latitude},${(v as any).longitude}`;
+    if ("latitude" in v && "longitude" in v) return `${v.latitude},${v.longitude}`;
     return "";
   },
   buildCreationFormApiProperty: buildBaseProperty,
@@ -471,7 +470,7 @@ const ARRAY_DEFINITION: FieldDefinition = {
       regularExpression: "",
       uniqueItems: false,
       defaultString: "",
-      multipleSelectionType: "",
+      multipleSelectionType: ""
     },
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
@@ -533,7 +532,7 @@ const ARRAY_DEFINITION: FieldDefinition = {
       },
       multipleSelectionType: {
         ...SpecializedInputs.multipleSelectionType,
-        renderCondition: {field: "arrayType", equals: "multiselect"},
+        renderCondition: {field: "arrayType", equals: "multiselect"}
       },
       minItems: {
         ...ValidationInputs.minItems,
@@ -563,18 +562,17 @@ const ARRAY_DEFINITION: FieldDefinition = {
     items: property.items
   }),
   buildCreationFormApiProperty: form => {
-    const base = buildBaseProperty(form) as any; // base.type === 'array'
+    const base = buildBaseProperty(form);
     const fv = form.fieldValues;
     const pv = form.presetValues || {};
 
-    const item: any = {
+    const item: Property = {
       type: fv.arrayType,
       title: fv.arrayItemTitle,
       description: fv.arrayItemDescription?.length ? fv.arrayItemDescription : undefined,
       default: form.defaultValue
     };
 
-    // Attach enum / pattern / numeric constraints to item (mirrors legacy createArrayConfig)
     if (pv.enumeratedValues?.length) item.enum = pv.enumeratedValues;
     if (pv.regularExpression?.length) item.pattern = pv.regularExpression;
     if (fv.maxNumber != null) item.maximum = fv.maxNumber;
@@ -604,9 +602,9 @@ const ARRAY_DEFINITION: FieldDefinition = {
 
     return {
       ...base,
-      maxItems: fv.arrayType === "multiselect" ? undefined : fv.maxItems || undefined,
-      minItems: fv.minItems || undefined,
-      uniqueItems: fv.uniqueItems || undefined,
+      maxItems: fv.arrayType === "multiselect" ? undefined : (fv.maxItems ?? undefined),
+      minItems: fv.minItems ?? undefined,
+      uniqueItems: fv.uniqueItems ?? undefined,
       items: item
     };
   },
@@ -689,7 +687,7 @@ const FILE_DEFINITION: FieldDefinition = {
   getFormattedValue: v => {
     if (!v) return "";
     if (typeof v === "string") return v;
-    if (v && typeof v === "object") return (v as any).originalName || (v as any).name || "📎";
+    if (v && typeof v === "object") return v.originalName || v.name || "📎";
     return "📎";
   },
   buildCreationFormApiProperty: buildBaseProperty,
@@ -727,14 +725,16 @@ const JSON_DEFINITION: FieldDefinition = {
   display: {label: "JSON", icon: "dataObject"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
-    configurationValues: Object.fromEntries(Object.keys(OnlyRequiredConfig).map(key => [key, false])),
+    configurationValues: Object.fromEntries(
+      Object.keys(OnlyRequiredConfig).map(key => [key, false])
+    ),
     type: FieldKind.Json
   }),
   validateCreationForm: form => runYupValidation(JSON_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Json, properties),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
-    configurationValues: OnlyRequiredConfig,
+    configurationValues: OnlyRequiredConfig
   }),
   buildValueProperty: property => ({
     type: FieldKind.Object,

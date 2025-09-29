@@ -284,7 +284,7 @@ function createNestedErrorObject(flatErrors: Record<string, string>): any {
 // ---------------------------------------------------------------------------
 // Low-level Yup runner kept last for readability
 // --------------------------------------------------
-export function runYupValidation(schema: ValidationSchema, form: any): any | null {
+export function runYupValidation(schema: ValidationSchema, form: any): Record<string, string> | null {
   try {
     schema.validateSync(form, {abortEarly: false, stripUnknown: false});
     return null;

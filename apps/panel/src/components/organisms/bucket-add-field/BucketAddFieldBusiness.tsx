@@ -127,10 +127,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   }, [
     fieldType,
     isInitialized,
-    formValues.presetValues.preset,
-    formValues.presetValues.makeEnumerated,
-    formValues.presetValues.definePattern,
-    formValues.fieldValues.arrayType
+    formValues.presetValues?.preset,
+    formValues.presetValues?.makeEnumerated,
+    formValues.presetValues?.definePattern,
+    formValues.fieldValues?.arrayType
   ]);
 
   useEffect(() => {

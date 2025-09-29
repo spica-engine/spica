@@ -46,9 +46,13 @@ export interface FieldCapabilities {
   indexable?: boolean; // Field can be indexed
 }
 
+export interface InnerField extends FieldFormState {
+  id: string;
+}
+
 export interface FieldFormState extends FieldCreationForm {
   type: FieldKind;
-  innerFields?: any[]; // for object/array-of-object editing flows
+  innerFields?: InnerField[]; // for object/array-of-object editing flows
   id?: string; // for handling inner fields in the UI
 }
 

@@ -239,7 +239,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       createConfig("Presets", <div className={styles.presetsContainer}>{presetInputs}</div>);
     }
 
-    if (type === FieldKind["Multiselect"]) {
+    if (type === FieldKind.Multiselect) {
       createConfig("Multiple Selection", <div>{multipleSelectionTabInputs}</div>);
     }
 
