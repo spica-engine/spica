@@ -32,11 +32,11 @@ import {useInputRepresenter} from "oziko-ui-kit";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import type {FieldFormState} from "../../../domain/fields/types";
-import {FieldKind} from "../../../domain/fields/types";
+import {FieldKind, type InnerFieldFormState} from "../../../domain/fields/types";
 
 type InnerFieldProps = {
-  field: FieldFormState;
-  onSaveInnerField: (values: FieldFormState) => void;
+  field: InnerFieldFormState;
+  onSaveInnerField: (values: InnerFieldFormState) => void;
   onDeleteInnerField: (field: FieldFormState) => void;
   forbiddenFieldNames: string[];
 };
@@ -119,7 +119,7 @@ type BucketAddFieldViewProps = {
   ) => void;
   handleSaveAndClose: () => void;
   handleCreateInnerField: (values: FieldFormState) => void;
-  handleSaveInnerField: (values: FieldFormState) => void;
+  handleSaveInnerField: (values: InnerFieldFormState) => void;
   handleDeleteInnerField: (values: FieldFormState) => void;
   popupId?: string;
   type: FieldKind;
@@ -222,7 +222,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       createConfig(
         "Inner Fields",
         <div>
-          {formValues.innerFields?.map?.((field: FieldFormState, i: number) => (
+          {formValues.innerFields?.map?.((field: InnerFieldFormState, i: number) => (
             <InnerField
               key={i}
               field={field}

@@ -2,7 +2,7 @@ import {cloneElement, memo, useState, type ReactNode} from "react";
 import {FlexElement, ListItem, Icon, Popover, type IconName} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
-import type {Placement} from "oziko-ui-kit/build/dist/custom-hooks/useAdaptivePosition";
+import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
 import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
@@ -40,19 +40,13 @@ const BucketFieldSelectionPopup = ({
     setSelectedType(kind);
   };
 
-  const handleSaveAndClose = (values: FieldFormState) => {
-    const maybePromise = onSaveAndClose(values, selectedType as FieldKind);
-
-    const runHandlers = () => {
-      setSelectedType(null);
+  const handleSaveAndClose = async (values: FieldFormState) => {
+    try {
+      await onSaveAndClose(values, selectedType as FieldKind);
       handleClose();
-    };
-
-    if (maybePromise instanceof Promise) {
-      maybePromise.then(res => {
-        if (res) runHandlers();
-      });
-    } else runHandlers();
+    } catch (error) {
+      console.error("Error saving field:", error);
+    }
   };
 
   const outerPortalClassName = `${!selectedType ? "" : styles.hidden}`;
