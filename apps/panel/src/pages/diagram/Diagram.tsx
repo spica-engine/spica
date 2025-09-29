@@ -13,40 +13,6 @@ import {
 
 export default function Diagram() {
   const playgroundRef = useRef(null);
-  const [scale, setScale] = useState(1);
-  useEffect(() => {
-    const handleWheel = (e: any) => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-        setScale(prev => {
-          let zoomFactor = -e.deltaY * 0.002;
-          let newScale = prev + zoomFactor;
-          newScale = Math.min(Math.max(newScale, 0.1), 5);
-          return newScale;
-        });
-      }
-    };
-    const handleKeyDown = (e: any) => {
-      if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
-        e.preventDefault();
-        setScale(prev => Math.min(prev + 0.1, 5));
-      }
-      if (e.ctrlKey && e.key === "-") {
-        e.preventDefault();
-        setScale(prev => Math.max(prev - 0.1, 0.1));
-      }
-      if (e.ctrlKey && e.key === "0") {
-        e.preventDefault();
-        setScale(1);
-      }
-    };
-    window.addEventListener("wheel", handleWheel, {passive: false});
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
 
   const {apiGetBuckets, apiBuckets} = useBucketService();
   const svgRef = useRef<SVGSVGElement>(null);
@@ -76,16 +42,8 @@ export default function Diagram() {
     const {
       relationId,
       pathData,
-      startType,
-      endType,
       labelMidX,
       labelMidY,
-      startX,
-      startY,
-      endX,
-      endY,
-      useRightSideStart,
-      useLeftSideEnd
     } = relationData;
 
     const isRelationFocused =
@@ -142,15 +100,7 @@ export default function Diagram() {
         resetView={interactions.resetView}
       />
 
-        <div
-      ref={playgroundRef}
-      style={{
-        transform: `scale(${scale})`,
-        transformOrigin: "top left",
-      }}
-    >
-  
-   
+        <div ref={playgroundRef}>
       <div
         ref={containerRef}
         className={styles.diagramContainer}
@@ -160,7 +110,6 @@ export default function Diagram() {
         }}
         onMouseMove={interactions.handleMouseMove}
         onMouseUp={interactions.handleMouseUp}
-        onWheel={interactions.handleWheel}
         style={{
           cursor: interactions.isPanning ? "grabbing" : interactions.dragging ? "grabbing" : "grab"
         }}
@@ -218,6 +167,5 @@ export default function Diagram() {
       </div>
     </div>
     </>
- 
   );
 }

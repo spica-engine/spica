@@ -15,6 +15,41 @@ export const useDiagramInteractions = (
   const [zoom, setZoom] = useState<number>(1);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Enhanced zoom functionality with wheel and keyboard controls
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        setZoom(prev => {
+          let zoomFactor = -e.deltaY * 0.002;
+          let newZoom = prev + zoomFactor;
+          newZoom = Math.min(Math.max(newZoom, 0.1), 5);
+          return newZoom;
+        });
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
+        e.preventDefault();
+        setZoom(prev => Math.min(prev + 0.1, 5));
+      }
+      if (e.ctrlKey && e.key === "-") {
+        e.preventDefault();
+        setZoom(prev => Math.max(prev - 0.1, 0.1));
+      }
+      if (e.ctrlKey && e.key === "0") {
+        e.preventDefault();
+        setZoom(1);
+      }
+    };
+    window.addEventListener("wheel", handleWheel, {passive: false});
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   const calculateFitToView = () => {
     if (nodes.length === 0 || !containerRef.current) return { zoom: 1, pan: { x: 0, y: 0 } };
     
@@ -65,48 +100,12 @@ export const useDiagramInteractions = (
     }
   }, [nodes, containerRef, isInitialized]);
 
-  const zoomIn = (clientX?: number, clientY?: number) => {
-    if (!containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const centerX = clientX ?? rect.width / 2;
-    const centerY = clientY ?? rect.height / 2;
-
-    setZoom(prev => {
-      if (prev >= 3) return prev;
-      
-      const newZoom = Math.min(prev * 1.02, 3);
-      const zoomFactor = newZoom / prev;
-
-      setPan(prevPan => ({
-        x: centerX - (centerX - prevPan.x) * zoomFactor,
-        y: centerY - (centerY - prevPan.y) * zoomFactor
-      }));
-
-      return newZoom;
-    });
+  const zoomIn = () => {
+    setZoom(prev => Math.min(prev + 0.02, 5));
   };
 
-  const zoomOut = (clientX?: number, clientY?: number) => {
-    if (!containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const centerX = clientX ?? rect.width / 2;
-    const centerY = clientY ?? rect.height / 2;
-
-    setZoom(prev => {
-      if (prev <= 0.1) return prev;
-      
-      const newZoom = Math.max(prev / 1.02, 0.1);
-      const zoomFactor = newZoom / prev;
-
-      setPan(prevPan => ({
-        x: centerX - (centerX - prevPan.x) * zoomFactor,
-        y: centerY - (centerY - prevPan.y) * zoomFactor
-      }));
-
-      return newZoom;
-    });
+  const zoomOut = () => {
+    setZoom(prev => Math.max(prev - 0.02, 0.1));
   };
 
   const fitToView = () => {
@@ -122,25 +121,6 @@ export const useDiagramInteractions = (
 
     setPan(newPan);
     setZoom(newZoom);
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    if (!containerRef.current) return;
-
-    e.preventDefault();
-    const rect = containerRef.current.getBoundingClientRect();
-    const clientX = e.clientX - rect.left;
-    const clientY = e.clientY - rect.top;
-
-    if (e.deltaY < 0) {
-      if (zoom < 3) {
-        zoomIn(clientX, clientY);
-      }
-    } else {
-      if (zoom > 0.1) {
-        zoomOut(clientX, clientY);
-      }
-    }
   };
 
   const handlePanStart = (e: React.MouseEvent) => {
@@ -227,7 +207,6 @@ export const useDiagramInteractions = (
     zoomOut,
     fitToView,
     resetView,
-    handleWheel,
     handlePanStart,
     handleMouseDown,
     handleMouseMove,
