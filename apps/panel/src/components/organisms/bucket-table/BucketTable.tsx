@@ -9,6 +9,7 @@ import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
+import type { Property } from "src/services/bucketService";
 
 export type ColumnType = {
   id: string;
@@ -126,7 +127,7 @@ const NewFieldHeader = memo(() => {
 
       return createBucketField(
         bucket,
-        fieldProperty as any,
+        fieldProperty as Property,
         requiredField ? title : undefined,
         primaryField ? title : undefined
       );

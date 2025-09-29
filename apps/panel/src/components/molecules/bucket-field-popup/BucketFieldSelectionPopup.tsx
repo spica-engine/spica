@@ -7,10 +7,11 @@ import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {FieldFormState} from "../../../domain/fields/types";
+import type {BucketType} from "src/services/bucketService";
 
 type BucketFieldSelectionPopupProps = {
   children: ReactNode;
-  onSaveAndClose: (values: FieldFormState, kind: FieldKind) => void | Promise<any>;
+  onSaveAndClose: (values: FieldFormState, kind: FieldKind) => void | Promise<BucketType>;
   placement?: Placement;
   popupType?: PopupType;
   forbiddenFieldNames?: string[];

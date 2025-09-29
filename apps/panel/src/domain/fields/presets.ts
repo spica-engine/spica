@@ -267,18 +267,14 @@ export function applyPresetLogic(kind: FieldKind, form: FieldCreationForm, oldVa
   const presetKey = curr.preset || "";
   const presetExists = !!presetKey;
 
-  // Do not mutate caller
   let next: FieldCreationForm = {
     ...form,
     fieldValues: {...form.fieldValues},
     presetValues: {...curr}
   };
 
-  // 1) Only operate in string context (match old effects' early-returns)
   if (!isStringContext) return next;
 
-  // 2) Apply preset semantics when a preset is selected, but don't override user toggles
-  //    if the change in this tick is a toggle flip.
   const togglesChanged =
     prev.makeEnumerated !== curr.makeEnumerated ||
     prev.definePattern !== curr.definePattern;
@@ -299,7 +295,6 @@ export function applyPresetLogic(kind: FieldKind, form: FieldCreationForm, oldVa
     }
   }
 
-  // 3) Handle toggle cleanups only when a preset is active
   next = enforceToggleCleanup(next, presetKey);
 
   return next;
@@ -311,7 +306,6 @@ function enforceToggleCleanup(form: FieldCreationForm, presetKey: string): Field
 
   let next = form;
 
-  // Enumeration toggle off while enumeration preset active
   if (ENUM_PRESETS[presetKey as EnumerationPresetKey] && !curr.makeEnumerated) {
     next = {
       ...next,
@@ -323,7 +317,6 @@ function enforceToggleCleanup(form: FieldCreationForm, presetKey: string): Field
     } as FieldCreationForm;
   }
 
-  // Pattern toggle off while regex preset active
   if (REGEX_PRESETS[presetKey as RegexPresetKey] && !curr.definePattern) {
     next = {
       ...next,

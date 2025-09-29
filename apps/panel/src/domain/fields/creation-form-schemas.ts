@@ -1,6 +1,5 @@
 import styles from "./field-styles.module.scss";
 
-// Common field definitions used in creation forms
 export const BaseFields = {
   title: {type: "string", title: "Name", required: true},
   description: {
@@ -19,10 +18,10 @@ export const DefaultInputs = {
     type: "string",
     title: "Default Date",
     enum: [
-      {label: "None", value: ""},
-      {label: "Created At", value: ":created_at"},
-      {label: "Updated At", value: ":updated_at"}
-    ] as any[]
+      {label: "No Default", value: ""},
+      {label: "Current Date", value: "now"},
+      {label: "Custom Date", value: "custom"}
+    ]
   }
 } as const;
 
@@ -70,19 +69,18 @@ export const SpecializedInputs = {
   arrayItemTitle: {type: "string", title: "Title"},
   arrayItemDescription: {type: "string", title: "Description"},
   chip: {type: "chip", title: ""},
-  bucket: {title: "Buckets", type: "string", enum: [] as any[]},
+  bucket: {title: "Buckets", type: "string", enum: []},
   relationType: {
     title: "Relation Type",
     type: "string",
     enum: [
       {label: "One To One", value: "onetoone"},
       {label: "One To Many", value: "onetomany"}
-    ] as any[]
+    ]
   },
   uniqueItems: {type: "boolean", title: "Items should be unique", size: "extra-small"}
 } as const;
 
-// Preset panel used by string and array, and pattern for number/array
 export const PresetPanel = {
   preset: SpecializedInputs.preset,
   makeEnumerated: SpecializedInputs.makeEnumerated,
@@ -98,7 +96,6 @@ export const PresetPanel = {
   }
 } as const;
 
-// Configuration field definitions and mappings
 export const ConfigDefs = {
   primaryField: {type: "boolean", title: "Primary Field", size: "extra-small"},
   translate: {type: "boolean", title: "Translatable", size: "extra-small"},

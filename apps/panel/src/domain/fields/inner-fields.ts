@@ -1,5 +1,5 @@
 import {initForm} from ".";
-import {FieldKind, type FieldFormState, type InnerField} from "./types";
+import {FieldKind, type FieldFormState, type InnerFieldFormState} from "./types";
 
 export function addInnerField(
   parent: FieldFormState,
@@ -15,7 +15,7 @@ export function addInnerField(
   } as FieldFormState;
 }
 
-export function updateInnerField(parent: FieldFormState, updated: InnerField): FieldFormState {
+export function updateInnerField(parent: FieldFormState, updated: InnerFieldFormState): FieldFormState {
   if (!parent.innerFields) return parent;
   return {
     ...parent,

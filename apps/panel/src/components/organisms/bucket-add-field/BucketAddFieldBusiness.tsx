@@ -18,6 +18,7 @@ import {
   updateInnerField
 } from "../../../domain/fields/inner-fields";
 import {useFormState} from "./BucketAddFieldHooks";
+import type {BucketType} from "src/services/bucketService";
 
 function isObjectEffectivelyEmpty(obj: Object): boolean {
   if (obj === null || obj === undefined) return true;
@@ -28,7 +29,7 @@ function isObjectEffectivelyEmpty(obj: Object): boolean {
 
 export type BucketAddFieldBusinessProps = {
   onClose?: () => void;
-  onSaveAndClose: (values: FieldFormState) => void | Promise<any>;
+  onSaveAndClose: (values: FieldFormState) => void | Promise<BucketType>;
   className?: string;
   popupId?: string;
   forbiddenFieldNames?: string[];
@@ -159,13 +160,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     if (result) onClose?.();
   }, [formValues, onSaveAndClose, validateForm, onClose]);
 
-  const handleCreateInnerField: (values: FieldFormState) => void | Promise<any> = useCallback(
-    values => {
-      const innerKind = values.type || FieldKind.String;
-      setFormValues(prev => addInnerField(prev, innerKind as FieldKind, values));
-    },
-    []
-  );
+  const handleCreateInnerField = useCallback((values: FieldFormState) => {
+    const innerKind = values.type || FieldKind.String;
+    setFormValues(prev => addInnerField(prev, innerKind as FieldKind, values));
+  }, []);
 
   const handleSaveInnerField = useCallback((values: InnerFieldFormState) => {
     setFormValues(prev => updateInnerField(prev, values));

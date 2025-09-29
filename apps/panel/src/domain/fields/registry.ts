@@ -7,7 +7,12 @@
 
 import {BASE_FORM_DEFAULTS, freezeFormDefaults} from "./defaults";
 import {applyPresetLogic} from "./presets";
-import {type FieldDefinition, type FieldFormState, FieldKind} from "./types";
+import {
+  type FieldCreationFormProperties,
+  type FieldDefinition,
+  type FieldFormState,
+  FieldKind
+} from "./types";
 import {
   runYupValidation,
   STRING_FIELD_CREATION_FORM_SCHEMA,
@@ -26,7 +31,10 @@ import {
   COLOR_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "./validation";
-import type {TypeInputTypeMap} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type {
+  TypeInputTypeMap,
+  TypeProperties
+} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import type {BucketType, Property} from "src/services/bucketService";
 import {
   BaseFields,
@@ -69,9 +77,6 @@ function buildBaseProperty(values: FieldFormState): Property {
   } as Property;
 }
 
-// ---------------------------------------------------------------------------
-// Field Definitions
-// ---------------------------------------------------------------------------
 const STRING_DEFINITION: FieldDefinition = {
   kind: FieldKind.String,
   display: {label: "String", icon: "formatQuoteClose"},
@@ -232,7 +237,7 @@ const DATE_DEFINITION: FieldDefinition = {
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Date, properties),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
-    defaultValue: DefaultInputs.defaultDate,
+    defaultValue: DefaultInputs.defaultDate as unknown as TypeProperties[keyof TypeProperties],
     configurationValues: MinimalConfig
   }),
   buildValueProperty: property => ({
@@ -379,17 +384,18 @@ const RELATION_DEFINITION: FieldDefinition = {
   }),
   validateCreationForm: form => runYupValidation(RELATION_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties) => validateFieldValue(value, FieldKind.Relation, properties),
-  buildCreationFormProperties: (_, buckets?: BucketType[]) => ({
-    fieldValues: {
-      ...BaseFields,
-      bucket: {
-        ...SpecializedInputs.bucket,
-        enum: buckets?.map(b => ({label: b.title, value: b._id})) || []
+  buildCreationFormProperties: (_, buckets?: BucketType[]) =>
+    ({
+      fieldValues: {
+        ...BaseFields,
+        bucket: {
+          ...SpecializedInputs.bucket,
+          enum: buckets?.map(b => ({label: b.title, value: b._id})) || []
+        },
+        relationType: SpecializedInputs.relationType
       },
-      relationType: SpecializedInputs.relationType
-    },
-    configurationValues: RelationFieldConfig
-  }),
+      configurationValues: RelationFieldConfig
+    }) as unknown as FieldCreationFormProperties,
   buildValueProperty: property => ({
     type: FieldKind.Relation,
     title: property.title,
@@ -547,7 +553,6 @@ const ARRAY_DEFINITION: FieldDefinition = {
         renderCondition: {field: "arrayType", equals: "multiselect"}
       }
     },
-    // Array reads enum/pattern for number items from presets
     presetValues: {
       definePattern: PresetPanel.definePattern,
       regularExpression: PresetPanel.regularExpression,
@@ -578,7 +583,6 @@ const ARRAY_DEFINITION: FieldDefinition = {
     if (fv.maxNumber != null) item.maximum = fv.maxNumber;
     if (fv.minNumber != null) item.minimum = fv.minNumber;
 
-    // Multiselect specialization (array of multiselect wrappers)
     if (fv.arrayType === "multiselect") {
       item.items = {
         type: fv.multipleSelectionType,
@@ -587,7 +591,6 @@ const ARRAY_DEFINITION: FieldDefinition = {
       item.maxItems = fv.maxItems;
     }
 
-    // Object inner fields (recursive) -- use registry buildProperty if available
     if (fv.arrayType === "object" && Array.isArray(form.innerFields)) {
       item.properties = form.innerFields.reduce<Record<string, Property>>((acc, inner) => {
         const innerDef = FIELD_REGISTRY[inner.type as FieldKind];
