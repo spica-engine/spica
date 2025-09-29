@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useBucketService } from "../../services/bucketService";
+import React, {useState, useRef, useEffect} from "react";
+import {useBucketService} from "../../services/bucketService";
 import styles from "./Diagram.module.scss";
 import ZoomControl from "../../components/molecules/zoom-control/ZoomControl";
 import NodeView from "../../components/molecules/node-view/NodeView";
@@ -11,18 +11,20 @@ import {
   useRelationRenderer
 } from "./hooks";
 
-const Diagram: React.FC = () => {
-  const { apiGetBuckets, apiBuckets } = useBucketService();
+export default function Diagram() {
+  const playgroundRef = useRef(null);
+
+  const {apiGetBuckets, apiBuckets} = useBucketService();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  const { nodes, relations } = useBucketConverter(apiBuckets);
+
+  const {nodes, relations} = useBucketConverter(apiBuckets);
   const [currentNodes, setCurrentNodes] = useState(nodes);
-  
+
   useEffect(() => {
     setCurrentNodes(nodes);
   }, [nodes]);
-  
+
   const interactions = useDiagramInteractions(currentNodes, setCurrentNodes, containerRef);
   const focusMode = useFocusMode(relations);
   const nodeManagement = useNodeManagement(currentNodes, setCurrentNodes);
@@ -40,36 +42,31 @@ const Diagram: React.FC = () => {
     const {
       relationId,
       pathData,
-      startType,
-      endType,
       labelMidX,
       labelMidY,
-      startX,
-      startY,
-      endX,
-      endY,
-      useRightSideStart,
-      useLeftSideEnd
     } = relationData;
 
+    const isRelationFocused =
+      focusMode.focusedNodeId &&
+      (relation.from === focusMode.focusedNodeId ||
+        relation.to === focusMode.focusedNodeId ||
+        focusMode.focusedRelatedNodes.has(relation.from) ||
+        focusMode.focusedRelatedNodes.has(relation.to));
+
     return (
-      <g key={relationId} className={styles.relationLine}>
-        <path
-          d={pathData}
-          stroke="#666"
-          strokeWidth="2"
-          fill="none"
-          markerEnd="url(#arrowhead)"
-        />
-        
-        <circle
-          cx={labelMidX}
-          cy={labelMidY}
-          r="20"
-          fill="white"
-          stroke="#ddd"
-          strokeWidth="1"
-        />
+      <g
+        key={relationId}
+        className={`${styles.relationLine} ${
+          focusMode.focusedNodeId && !isRelationFocused
+            ? styles.unfocused
+            : isRelationFocused
+              ? styles.focused
+              : ""
+        }`}
+      >
+        <path d={pathData} stroke="#666" strokeWidth="2" fill="none" markerEnd="url(#arrowhead)" />
+
+        <circle cx={labelMidX} cy={labelMidY} r="20" fill="white" stroke="#ddd" strokeWidth="1" />
         <text
           x={labelMidX}
           y={labelMidY + 4}
@@ -81,7 +78,6 @@ const Diagram: React.FC = () => {
         >
           {relation.type}
         </text>
-        
       </g>
     );
   };
@@ -93,10 +89,10 @@ const Diagram: React.FC = () => {
       </div>
     );
   }
-
   return (
-    <div className={styles.diagramWrapper}>
-      <ZoomControl
+    <>
+
+   <ZoomControl
         zoom={interactions.zoom}
         zoomIn={interactions.zoomIn}
         zoomOut={interactions.zoomOut}
@@ -104,16 +100,16 @@ const Diagram: React.FC = () => {
         resetView={interactions.resetView}
       />
 
+        <div ref={playgroundRef}>
       <div
         ref={containerRef}
         className={styles.diagramContainer}
-        onMouseDown={(e) => {
+        onMouseDown={e => {
           interactions.handlePanStart(e);
-          focusMode.handleBackgroundClick(e, containerRef); // Add background click handler
+          focusMode.handleBackgroundClick(e, containerRef);
         }}
         onMouseMove={interactions.handleMouseMove}
         onMouseUp={interactions.handleMouseUp}
-        onWheel={interactions.handleWheel}
         style={{
           cursor: interactions.isPanning ? "grabbing" : interactions.dragging ? "grabbing" : "grab"
         }}
@@ -164,12 +160,12 @@ const Diagram: React.FC = () => {
               dragging={interactions.dragging === node.id}
               isFocused={focusMode.isNodeFocused(node.id)}
               focusMode={focusMode.focusedNodeId !== null}
+              isDirectlyFocused={node.id === focusMode.focusedNodeId}
             />
           ))}
         </div>
       </div>
     </div>
+    </>
   );
-};
-
-export default Diagram;
+}

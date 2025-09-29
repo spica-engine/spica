@@ -9,8 +9,6 @@
   position: relative;
   width: 100%;
   height: 100vh;
-  background-color: var(--color-soft);
-  overflow: hidden;
   user-select: none;
 }
 
@@ -22,6 +20,7 @@
   height: 100%;
   min-width: 100%;
   min-height: 100%;
+  pointer-events: none;
 }
 
 .relationsSvg {
@@ -55,7 +54,7 @@
   justify-content: center;
   color: var(--color-font-secondary);
   font-weight: bold;
-  z-index: 3;
+  z-index: 16;
   box-shadow: 0 var(--padding-xs) var(--padding-sm-plus) rgba(0, 0, 0, 0.2);
 }
 
@@ -90,12 +89,16 @@ path {
 }
 
 .relationLine {
-  z-index: 1;
+  z-index: 5;
   pointer-events: none;
   overflow: visible;
-  transition: opacity var(--transition-duration) ease;
+  transition: opacity var(--transition-duration) ease, z-index var(--transition-duration) ease;
 
   &.unfocused {
     opacity: var(--disabled-opacity);
+  }
+
+  &.focused {
+    z-index: 10;
   }
 }

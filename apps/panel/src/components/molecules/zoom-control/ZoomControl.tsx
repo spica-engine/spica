@@ -11,12 +11,51 @@ interface ZoomControlProps {
 }
 
 const ZoomControl: React.FC<ZoomControlProps> = ({ zoom, zoomIn, zoomOut, fitToView, resetView }) => {
+  const isMaxZoom = zoom >= 3;
+  const isMinZoom = zoom <= 0.1;
+
+  const handleZoomIn = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    zoomIn();
+  };
+
+  const handleZoomOut = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    zoomOut();
+  };
+
+  const handleResetView = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    resetView();
+  };
+
+  const handleFitToView = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    fitToView();
+  };
+
   return (
-    <div className={styles.controls}>
-      <Button onClick={resetView} className={styles.controlBtn} >Reset View</Button>
-      <Button onClick={zoomIn} className={styles.controlBtn}  >Zoom In</Button>
-      <Button onClick={zoomOut} className={styles.controlBtn} >Zoom Out</Button>
-      <Button onClick={fitToView} className={styles.controlBtn} >Fit to View</Button>
+    <div className={styles.controls} onMouseDown={(e) => e.stopPropagation()}>
+      <Button onClick={handleResetView} className={styles.controlBtn} >Reset View</Button>
+      <Button 
+        onClick={handleZoomIn} 
+        className={styles.controlBtn} 
+        disabled={isMaxZoom}
+      >
+        Zoom In
+      </Button>
+      <Button 
+        onClick={handleZoomOut} 
+        className={styles.controlBtn}
+        disabled={isMinZoom}
+      >
+        Zoom Out
+      </Button>
+      <Button onClick={handleFitToView} className={styles.controlBtn} >Fit to View</Button>
       <span className={styles.zoomLevel}>{Math.round(zoom * 100)}%</span>
     </div>
   );
