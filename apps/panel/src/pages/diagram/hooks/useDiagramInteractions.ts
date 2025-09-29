@@ -14,6 +14,7 @@ export const useDiagramInteractions = (
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState<number>(1);
   const [isInitialized, setIsInitialized] = useState(false);
+  const ZOOM_INCREMENT = 0.02;
 
   // Enhanced zoom functionality with wheel and keyboard controls
   useEffect(() => {
@@ -23,7 +24,7 @@ export const useDiagramInteractions = (
         setZoom(prev => {
           let zoomFactor = -e.deltaY * 0.002;
           let newZoom = prev + zoomFactor;
-          newZoom = Math.min(Math.max(newZoom, 0.1), 5);
+          newZoom = Math.min(Math.max(newZoom, 0.1), 3);
           return newZoom;
         });
       }
@@ -101,11 +102,11 @@ export const useDiagramInteractions = (
   }, [nodes, containerRef, isInitialized]);
 
   const zoomIn = () => {
-    setZoom(prev => Math.min(prev + 0.02, 5));
+    setZoom(prev => Math.min(prev + ZOOM_INCREMENT, 3));
   };
 
   const zoomOut = () => {
-    setZoom(prev => Math.max(prev - 0.02, 0.1));
+    setZoom(prev => Math.max(prev - ZOOM_INCREMENT, 0.1));
   };
 
   const fitToView = () => {
