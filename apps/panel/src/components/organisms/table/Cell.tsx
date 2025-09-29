@@ -8,6 +8,8 @@ import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hoo
 import {FIELD_REGISTRY, type FieldKind} from "../../../domain/fields";
 import type {Property} from "src/services/bucketService";
 import type {FieldDefinition} from "src/domain/fields/types";
+import useLocalStorage from "../../../hooks/useLocalStorage";
+import {useRelationInputHandlers} from "../../../hooks/useRelationInputHandlers";
 
 export function isValidDate(dateObject: any) {
   return dateObject instanceof Date && !isNaN(dateObject.getTime());
@@ -54,19 +56,24 @@ export const Cell = memo(
   }: CellProps) => {
     const field = FIELD_REGISTRY[type || "string"] as FieldDefinition;
     const [isEditing, setIsEditing] = useState(false);
+    const [token] = useLocalStorage("token", "");
+    const {getOptionsMap, loadMoreOptionsMap, searchOptionsMap, relationStates, ensureHandlers} =
+      useRelationInputHandlers(token);
+
     const properties = useMemo(
-      () => ({
-        ...constraints,
-        type,
-        title,
-        items: constraints?.items,
-        properties: constraints?.properties,
-        enum: constraints?.enum,
-        className: constraints?.enum ? styles.enumInput : undefined
+      () => field.buildValueProperty?.(constraints as Property, {
+        getOptionsMap,
+        loadMoreOptionsMap,
+        searchOptionsMap,
+        relationStates,
+        ensureHandlers
       }),
       [type, title, constraints]
     ) as Property;
-    const [cellValue, setCellValue] = useState(() => field.getFormattedValue(value, properties as any));
+
+    const [cellValue, setCellValue] = useState(() =>
+      field.getFormattedValue(value, properties as any)
+    );
 
     const handleStartEditing = (e: React.MouseEvent<HTMLTableCellElement>) => {
       if (!editable) return;
@@ -174,6 +181,7 @@ const EditableCell = memo(
     async function handleSave() {
       if (isSaving) return;
       setIsSaving(true);
+      setError(undefined);
 
       const validationErrors = field?.validateValue(
         value,
@@ -268,6 +276,7 @@ const EditableCell = memo(
             title={title}
             floatingElementRef={floatingElementRef}
             className={styles.cellUpdateInput}
+            error={error}
           />
         </div>
       </td>

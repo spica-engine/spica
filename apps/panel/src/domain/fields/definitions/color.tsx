@@ -1,9 +1,13 @@
-import { Color } from "oziko-ui-kit";
-import type { TypeInputTypeMap } from "src/hooks/useInputRepresenter";
-import { freezeFormDefaults, BASE_FORM_DEFAULTS } from "../defaults";
-import { type FieldDefinition, FieldKind } from "../types";
-import { runYupValidation, COLOR_FIELD_CREATION_FORM_SCHEMA, validateFieldValue } from "../validation";
-import { BaseFields, BasicConfig } from "../creation-form-schemas";
+import {Color} from "oziko-ui-kit";
+import type {TypeInputTypeMap} from "src/hooks/useInputRepresenter";
+import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
+import {type FieldDefinition, FieldKind, type TypeProperty} from "../types";
+import {
+  runYupValidation,
+  COLOR_FIELD_CREATION_FORM_SCHEMA,
+  validateFieldValue
+} from "../validation";
+import {BaseFields, BasicConfig} from "../creation-form-schemas";
 
 export const COLOR_DEFINITION: FieldDefinition = {
   kind: FieldKind.Color,
@@ -20,23 +24,17 @@ export const COLOR_DEFINITION: FieldDefinition = {
     fieldValues: BaseFields,
     configurationValues: BasicConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Color as keyof TypeInputTypeMap,
-    title: property.title,
-    description: property.description
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Color,
+      description: undefined
+    }) as TypeProperty,
   getDefaultValue: property => property.default || "#000000",
   getFormattedValue: value => value ?? "#000000",
   capabilities: {hasDefaultValue: true, indexable: true},
   renderValue: value => value,
   renderInput: ({value, onChange, ref, className}) => {
-    return (
-      <Color
-        value={value}
-        onChange={onChange}
-        className={className}
-        inputProps={{ ref }}
-      />
-    );
+    return <Color value={value} onChange={onChange} className={className} inputProps={{ref}} />;
   }
 };

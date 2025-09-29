@@ -1,6 +1,6 @@
 import { BasicConfig, BaseFields } from "../creation-form-schemas";
 import { freezeFormDefaults, BASE_FORM_DEFAULTS } from "../defaults";
-import { type FieldDefinition, FieldKind } from "../types";
+import { type FieldDefinition, FieldKind, type TypeProperty } from "../types";
 import { runYupValidation, JSON_FIELD_CREATION_FORM_SCHEMA, validateFieldValue } from "../validation";
 
 export const JSON_DEFINITION: FieldDefinition = {
@@ -18,10 +18,9 @@ export const JSON_DEFINITION: FieldDefinition = {
     configurationValues: BasicConfig
   }),
   buildValueProperty: property => ({
+    ...property,
     type: FieldKind.Object, //FieldKind.Json is not in TypeInputTypeMap yet, so we use Object for now, will be fixed later
-    title: property.title,
-    description: property.description
-  }),
+  } as TypeProperty),
   getFormattedValue: value => JSON.parse(value),
   capabilities: {indexable: true},
   renderValue: value => JSON.stringify(value).slice(0, 30) + (String(value).length > 30 ? "…" : "")

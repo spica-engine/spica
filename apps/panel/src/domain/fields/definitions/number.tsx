@@ -1,9 +1,19 @@
-import { Button, Icon, type TypeSelectRef, Select, Input } from "oziko-ui-kit";
-import { useRef, useEffect, type ChangeEvent, type RefObject } from "react";
-import { BasicConfig, BaseFields, ValidationInputs, SpecializedInputs, DefaultInputs } from "../creation-form-schemas";
-import { freezeFormDefaults, BASE_FORM_DEFAULTS } from "../defaults";
-import { FieldKind, type FieldDefinition } from "../types";
-import { runYupValidation, NUMBER_FIELD_CREATION_FORM_SCHEMA, validateFieldValue } from "../validation";
+import {Button, Icon, type TypeSelectRef, Select, Input} from "oziko-ui-kit";
+import {useRef, useEffect, type ChangeEvent, type RefObject} from "react";
+import {
+  BasicConfig,
+  BaseFields,
+  ValidationInputs,
+  SpecializedInputs,
+  DefaultInputs
+} from "../creation-form-schemas";
+import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
+import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
+import {
+  runYupValidation,
+  NUMBER_FIELD_CREATION_FORM_SCHEMA,
+  validateFieldValue
+} from "../validation";
 import styles from "../field-styles.module.scss";
 
 export const NUMBER_DEFINITION: FieldDefinition = {
@@ -39,13 +49,14 @@ export const NUMBER_DEFINITION: FieldDefinition = {
     defaultValue: DefaultInputs.defaultNumber,
     configurationValues: BasicConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Number,
-    title: property.title,
-    description: property.description,
-    enum: property.enum
-  }),
-  getDefaultValue: (property) => property.default,
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Number,
+      className: property?.enum ? styles.enumInput : undefined,
+      description: undefined
+    }) as TypeProperty,
+  getDefaultValue: property => property.default,
   getFormattedValue: value => value,
   capabilities: {
     enumerable: true,

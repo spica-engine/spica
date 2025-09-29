@@ -1,7 +1,7 @@
 import {Icon, StorageInput} from "oziko-ui-kit";
 import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
-import {type FieldDefinition, FieldKind} from "../types";
+import {type FieldDefinition, FieldKind, type TypeProperty} from "../types";
 import {runYupValidation, FILE_FIELD_CREATION_FORM_SCHEMA, validateFieldValue} from "../validation";
 import styles from "../field-styles.module.scss";
 
@@ -22,10 +22,10 @@ export const FILE_DEFINITION: FieldDefinition = {
     configurationValues: TranslatableMinimalConfig
   }),
   buildValueProperty: property => ({
+    ...property,
     type: FieldKind.File,
-    title: property.title,
-    description: property.description
-  }),
+    description: undefined
+  } as TypeProperty),
   getFormattedValue: value => value || null,
   capabilities: {},
   renderValue: value => (

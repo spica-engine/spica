@@ -2,7 +2,7 @@ import {Button, Icon, useAdaptivePosition, Portal, RichTextInput} from "oziko-ui
 import {useRef, useEffect, type RefObject} from "react";
 import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
-import {type FieldDefinition, FieldKind} from "../types";
+import {type FieldDefinition, FieldKind, type TypeProperty} from "../types";
 import {
   runYupValidation,
   RICHTEXT_FIELD_CREATION_FORM_SCHEMA,
@@ -27,10 +27,10 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
     configurationValues: TranslatableMinimalConfig
   }),
   buildValueProperty: property => ({
+    ...property,
     type: FieldKind.Richtext,
-    title: property.title,
-    description: property.description
-  }),
+    description: undefined
+  } as TypeProperty),
   getFormattedValue: value => value || "",
   capabilities: {translatable: true},
   renderValue: (value, deletable) => (
@@ -56,6 +56,13 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
 
     const RenderedValue = ({value}: any) => RICHTEXT_DEFINITION.renderValue(value, false);
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
     return (
       <div ref={containerRef}>
         <RenderedValue value={value} />
@@ -64,8 +71,12 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
             value={value}
             onChange={onChange}
             className={className}
-            ref={ref as RefObject<HTMLDivElement | null>}
-            style={{...targetPosition, position: "absolute"}}
+            contentProps={{
+              ref: ref as RefObject<HTMLDivElement | null>,
+              style: targetPosition || {},
+              className: styles.richTextInput,
+              onKeyDown: handleKeyDown
+            }}
           />
         </Portal>
       </div>

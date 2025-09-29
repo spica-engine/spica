@@ -2,7 +2,7 @@ import {useAdaptivePosition, Portal, LocationInput} from "oziko-ui-kit";
 import {useRef, useEffect, type RefObject} from "react";
 import {OnlyRequiredConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
-import {type FieldDefinition, FieldKind} from "../types";
+import {type FieldDefinition, FieldKind, type TypeProperty} from "../types";
 import {
   runYupValidation,
   LOCATION_FIELD_CREATION_FORM_SCHEMA,
@@ -28,10 +28,10 @@ export const LOCATION_DEFINITION: FieldDefinition = {
     configurationValues: OnlyRequiredConfig
   }),
   buildValueProperty: property => ({
+    ...property,
     type: FieldKind.Location,
-    title: property.title,
-    description: property.description
-  }),
+    description: undefined
+  } as TypeProperty),
   getFormattedValue: value => {
     const DEFAULT_COORDINATES = {type: "Point", coordinates: [36.966667, 30.666667]};
     if (!value) return DEFAULT_COORDINATES;

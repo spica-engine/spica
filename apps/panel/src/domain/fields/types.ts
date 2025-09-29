@@ -2,8 +2,9 @@ import type {IconName} from "oziko-ui-kit";
 import type {Properties, Property} from "../../services/bucketService";
 import type {TypeProperties} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import type {RefObject} from "react";
+import type {RelationInputHandlerResult, RelationState} from "src/hooks/useRelationInputHandlers";
 
-type TypeProperty = TypeProperties[string];
+export type TypeProperty = TypeProperties[string];
 
 export enum FieldKind {
   String = "string",
@@ -72,7 +73,16 @@ export interface FieldDefinition {
     presetValues?: TypeProperties;
     defaultValue?: TypeProperty;
   };
-  buildValueProperty: (property: Property) => TypeProperty; // build TypeProperty-compatible value schema for this field
+  buildValueProperty: (
+    property: Property,
+    relationProps?: {
+      getOptionsMap: React.RefObject<Record<string, () => RelationInputHandlerResult>>;
+      loadMoreOptionsMap: React.RefObject<Record<string, () => RelationInputHandlerResult>>;
+      searchOptionsMap: React.RefObject<Record<string, (s: string) => RelationInputHandlerResult>>;
+      relationStates: Record<string, RelationState>;
+      ensureHandlers: (bucketId: string, key: string, bucketPrimaryKey: string) => void;
+    }
+  ) => TypeProperty; // build TypeProperty-compatible value schema for this field
   requiresInnerFields?: (form: FieldCreationForm) => boolean; // whether this field kind structurally requires at least one inner field
   applyPresetLogic?: (form: FieldCreationForm, oldValues: FieldCreationForm) => FieldCreationForm; // apply preset logic to the form state, (only for string and array's with string items)
   // Optional formatting function for displaying values in lists, etc.
@@ -87,5 +97,6 @@ export interface FieldDefinition {
     title?: string;
     floatingElementRef?: RefObject<HTMLInputElement | HTMLDivElement | null>; // ref for dropdowns/popovers inside the input component
     className?: string;
+    error?: FormError;
   }>; // custom input renderer for quick editing in tables, etc.
 }

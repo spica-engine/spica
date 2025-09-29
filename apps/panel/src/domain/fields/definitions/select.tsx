@@ -7,7 +7,7 @@ import {
   ValidationInputs
 } from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
-import {FieldKind, type FieldDefinition} from "../types";
+import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
 import {
   runYupValidation,
   MULTISELECT_FIELD_CREATION_FORM_SCHEMA,
@@ -41,11 +41,10 @@ export const MULTISELECT_DEFINITION: FieldDefinition = {
     configurationValues: MinimalConfig
   }),
   buildValueProperty: property => ({
+    ...property,
     type: FieldKind.Multiselect,
-    title: property.title,
-    description: property.description,
-    enum: property.enum
-  }),
+    description: undefined
+  } as TypeProperty),
   getFormattedValue: value => value || [],
   capabilities: {enumerable: true, indexable: true},
   renderValue: (value, deletable) => (

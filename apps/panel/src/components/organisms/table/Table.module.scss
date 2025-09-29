@@ -173,11 +173,6 @@
   width: 328px;
 }
 
-.enumInput > div:nth-child(2) span {
-  max-width: unset !important;
-  min-width: calc(100% + 100px);
-}
-
 .cellUpdateInput {
   padding: 0 var(--padding-md);
   height: 36px !important;

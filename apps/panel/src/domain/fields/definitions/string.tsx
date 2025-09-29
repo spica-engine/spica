@@ -3,7 +3,7 @@ import {useRef, useEffect, type RefObject} from "react";
 import {TranslatableConfig, BaseFields, PresetPanel, DefaultInputs} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {applyPresetLogic} from "../presets";
-import {FieldKind, type FieldDefinition} from "../types";
+import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
 import {
   runYupValidation,
   STRING_FIELD_CREATION_FORM_SCHEMA,
@@ -32,13 +32,13 @@ export const STRING_DEFINITION: FieldDefinition = {
     configurationValues: TranslatableConfig
   }),
   buildValueProperty: property => ({
-    type: FieldKind.String as any, //keyof TypeInputTypeMap,
-    title: property.title,
-    description: property.description,
-    enum: property.enum
-  }),
+    ...property,
+    type: FieldKind.String,
+    className: property?.enum ? styles.enumInput : undefined,
+    description: undefined
+  } as TypeProperty),
   applyPresetLogic: (form, oldValues) => applyPresetLogic(FieldKind.String, form, oldValues),
-  getFormattedValue: value => value || "",
+  getFormattedValue: value => typeof value === "string" ? value : "",
   capabilities: {
     enumerable: true,
     pattern: true,

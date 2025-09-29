@@ -11,7 +11,7 @@ import {
 } from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {applyPresetLogic} from "../presets";
-import {type FieldDefinition, FieldKind} from "../types";
+import {type FieldDefinition, FieldKind, type TypeProperty} from "../types";
 import {
   runYupValidation,
   ARRAY_FIELD_CREATION_FORM_SCHEMA,
@@ -19,6 +19,7 @@ import {
 } from "../validation";
 import styles from "../field-styles.module.scss";
 import {FIELD_REGISTRY} from "../registry";
+import type {Type} from "typescript";
 
 export const ARRAY_DEFINITION: FieldDefinition = {
   kind: FieldKind.Array,
@@ -37,7 +38,7 @@ export const ARRAY_DEFINITION: FieldDefinition = {
   getFormattedValue: (value, properties) => {
     if (!Array.isArray(value)) return [];
     const type = properties?.items?.type || "string";
-    const field = FIELD_REGISTRY[type];
+    const field = FIELD_REGISTRY[type as FieldKind];
     return value.map(item => field?.getFormattedValue?.(item, properties.items) || item);
   },
   validateCreationForm: form => runYupValidation(ARRAY_FIELD_CREATION_FORM_SCHEMA, form),
@@ -106,7 +107,6 @@ export const ARRAY_DEFINITION: FieldDefinition = {
         renderCondition: {field: "arrayType", equals: "multiselect"}
       }
     },
-    // Array reads enum/pattern for number items from presets
     presetValues: {
       definePattern: PresetPanel.definePattern,
       regularExpression: PresetPanel.regularExpression,
@@ -114,12 +114,12 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     },
     configurationValues: TranslatableMinimalConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Array,
-    title: property.title,
-    description: property.description,
-    items: property.items,
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Array,
+      description: undefined,
+    }) as TypeProperty,
   requiresInnerFields: form => form.fieldValues?.arrayType === "object",
   applyPresetLogic: (form, oldValues) =>
     form.fieldValues.arrayType === "string"

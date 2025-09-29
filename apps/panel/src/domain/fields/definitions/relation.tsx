@@ -11,7 +11,7 @@ import useLocalStorage from "../../../hooks/useLocalStorage";
 import {useRelationInputHandler} from "../../../hooks/useRelationInputHandlers";
 import {MinimalConfig, BaseFields, SpecializedInputs} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
-import {FieldKind, type FieldDefinition} from "../types";
+import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
 import {
   runYupValidation,
   RELATION_FIELD_CREATION_FORM_SCHEMA,
@@ -44,17 +44,12 @@ export const RELATION_DEFINITION: FieldDefinition = {
     },
     configurationValues: MinimalConfig
   }),
-  buildValueProperty: property => ({
+  buildValueProperty: (property, relationProps) => ({
+    ...property,
     type: FieldKind.Relation,
-    title: property.title,
-    description: property.description
-    // NEEDS TO WAY TO DEFINE
-    // getOptions?: () => Promise<TypeLabeledValue[]>;
-    // loadMoreOptions?: () => Promise<TypeLabeledValue[]>;
-    // searchOptions?: (value: string) => Promise<TypeLabeledValue[]>;
-    // totalOptionsLength?: number;
-    // THESE ARE NECESSARY FOR RELATION FIELDS
-  }),
+    ...relationProps,
+    description: undefined
+  } as TypeProperty),
   getFormattedValue: value => value || null,
   capabilities: {indexable: true},
   renderValue: (value, deletable) => (

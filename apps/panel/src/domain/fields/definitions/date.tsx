@@ -2,7 +2,7 @@ import {Button, Icon, DatePicker} from "oziko-ui-kit";
 import {useId, useRef} from "react";
 import {MinimalConfig, BaseFields, DefaultInputs} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
-import {FieldKind, type FieldDefinition} from "../types";
+import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
 import {runYupValidation, DATE_FIELD_CREATION_FORM_SCHEMA, validateFieldValue} from "../validation";
 import styles from "../field-styles.module.scss";
 
@@ -27,10 +27,10 @@ export const DATE_DEFINITION: FieldDefinition = {
     configurationValues: MinimalConfig
   }),
   buildValueProperty: property => ({
+    ...property,
     type: FieldKind.Date,
-    title: property.title,
-    description: property.description
-  }),
+    description: undefined
+  } as TypeProperty),
   getFormattedValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
   capabilities: {hasDefaultValue: true, indexable: true},
   renderValue: (value, deletable) => {
