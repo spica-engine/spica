@@ -6,8 +6,8 @@ import styles from "./Table.module.scss";
 import {FlexElement, useOnClickOutside} from "oziko-ui-kit";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import {FIELD_REGISTRY, type FieldKind} from "../../../domain/fields";
-import type {Property} from "src/services/bucketService";
-import type {FieldDefinition} from "src/domain/fields/types";
+import type {Properties, Property} from "src/services/bucketService";
+import type {FieldDefinition, FormError} from "src/domain/fields/types";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import {useRelationInputHandlers} from "../../../hooks/useRelationInputHandlers";
 
@@ -40,6 +40,20 @@ type CellProps = React.HTMLAttributes<HTMLDivElement> & {
   constraints?: Constraints;
 };
 
+const findFirstErrorId = (errors: FormError, formattedProperties: Properties): string | null => {
+  for (const [key, error] of Object.entries(errors ?? {})) {
+    const property = formattedProperties[key];
+
+    if (typeof error === "string" && property?.id) {
+      return property.id;
+    } else if (typeof error === "object" && property?.properties) {
+      const nestedId = findFirstErrorId(error, property.properties);
+      if (nestedId) return nestedId;
+    }
+  }
+  return null;
+};
+
 export const Cell = memo(
   ({
     value,
@@ -61,21 +75,20 @@ export const Cell = memo(
       useRelationInputHandlers(token);
 
     const properties = useMemo(
-      () => field.buildValueProperty?.(constraints as Property, {
-        getOptionsMap,
-        loadMoreOptionsMap,
-        searchOptionsMap,
-        relationStates,
-        ensureHandlers
-      }),
+      () =>
+        field.buildValueProperty?.(constraints as Property, {
+          getOptionsMap,
+          loadMoreOptionsMap,
+          searchOptionsMap,
+          relationStates,
+          ensureHandlers
+        }),
       [type, title, constraints]
     ) as Property;
 
-    const [cellValue, setCellValue] = useState(() =>
-      field.getFormattedValue(value, properties as any)
-    );
+    const [cellValue, setCellValue] = useState(() => field.getFormattedValue(value, properties));
 
-    const handleStartEditing = (e: React.MouseEvent<HTMLTableCellElement>) => {
+    const handleStartEditing = () => {
       if (!editable) return;
       setIsEditing(true);
     };
@@ -84,7 +97,9 @@ export const Cell = memo(
       setIsEditing(false);
       const notFormattedValue = arguments.length ? newValue : value;
       const formattedValue = field?.getFormattedValue(notFormattedValue, properties);
-      setCellValue(formattedValue);
+      // Some of the inputs (like richtext) trigger their onChange on unmount,
+      // This ensures the latest value is always rendered. when the cell exits edit mode without saving.
+      setTimeout(() => setCellValue(formattedValue), 0);
     }
 
     return isEditing ? (
@@ -98,7 +113,7 @@ export const Cell = memo(
         constraints={constraints}
         value={cellValue}
         onStopEdit={handleStopEditing}
-        properties={properties as any}
+        properties={properties}
         setValue={setCellValue}
       />
     ) : (
@@ -146,6 +161,7 @@ const EditableCell = memo(
     const [isSaving, setIsSaving] = useState(false);
 
     const handleDiscardEdit = () => {
+      if (isSaving) return;
       setError(undefined);
       onStopEdit();
     };
@@ -178,14 +194,15 @@ const EditableCell = memo(
       inputRef.current?.focus();
     }, [inputRef]);
 
-    async function handleSave() {
-      if (isSaving) return;
-      setIsSaving(true);
-      setError(undefined);
+    useEffect(() => {
+      if ((type !== "object" && type !== "array") || !error) return;
+      handleValidate();
+    }, [value]);
 
+    const handleValidate = () => {
       const validationErrors = field?.validateValue(
         value,
-        constraints as any,
+        constraints as Property,
         constraints.required
       );
 
@@ -195,19 +212,41 @@ const EditableCell = memo(
           !isObjectEffectivelyEmpty(validationErrors)) ||
         typeof validationErrors === "string"
       ) {
+        const firstErrorId = findFirstErrorId(validationErrors, properties.properties);
         setError(validationErrors as TypeInputRepresenterError);
         setIsSaving(false);
-        return;
+        if (firstErrorId) {
+          const errorElement = document.getElementById(firstErrorId);
+          errorElement?.scrollIntoView({behavior: "smooth", block: "center"});
+        } else {
+          containerRef.current?.scrollTo({top: 0, behavior: "smooth"});
+        }
+        return false;
       }
 
-      const payload = field.getFormattedValue(value, properties as any);
+      const payload = field.getFormattedValue(value, properties);
+      const payloadError = field?.validateValue(
+        payload,
+        constraints as Property,
+        constraints.required
+      );
 
-      const payloadError = field?.validateValue(payload, constraints as any, constraints.required);
       if (payloadError && !isObjectEffectivelyEmpty(payloadError)) {
         setError({[title]: payloadError} as TypeInputRepresenterError);
         setIsSaving(false);
-        return;
+        return false;
       }
+      setError(undefined);
+      return {payload};
+    };
+
+    async function handleSave() {
+      if (isSaving) return;
+      const payloadResult = handleValidate();
+      if (!payloadResult) return;
+      const {payload} = payloadResult;
+      setIsSaving(true);
+      setError(undefined);
 
       if (!onCellSave) {
         onStopEdit();
@@ -220,7 +259,9 @@ const EditableCell = memo(
         const result = await onCellSave(payload, columnId, rowId);
         if (result) setError(undefined);
       } catch (err) {
-        const errMsg = {[title]: String((err as any)?.message || err)} as TypeInputRepresenterError;
+        const errMsg = {
+          [title]: String((err as Error)?.message || err)
+        } as TypeInputRepresenterError;
         setError(errMsg);
       } finally {
         setIsSaving(false);
@@ -272,7 +313,7 @@ const EditableCell = memo(
             value={value}
             onChange={setValue}
             ref={inputRef}
-            properties={properties as any}
+            properties={properties}
             title={title}
             floatingElementRef={floatingElementRef}
             className={styles.cellUpdateInput}
@@ -329,7 +370,7 @@ export const HeaderCell = memo(
         style={{left: leftOffset}}
       >
         <FlexElement dimensionX="fill" alignment="leftCenter" className={styles.headerContent}>
-          {children as any}
+          {children}
         </FlexElement>
         {resizable && (
           <div

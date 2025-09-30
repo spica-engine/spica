@@ -26,16 +26,17 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
     fieldValues: BaseFields,
     configurationValues: TranslatableMinimalConfig
   }),
-  buildValueProperty: property => ({
-    ...property,
-    type: FieldKind.Richtext,
-    description: undefined
-  } as TypeProperty),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Richtext,
+      description: undefined
+    }) as TypeProperty,
   getFormattedValue: value => value || "",
   capabilities: {translatable: true},
-  renderValue: (value, deletable) => (
-    <div className={styles.defaultCell}>
-      <div className={styles.defaultCellData}>{value}</div>
+  renderValue: (value, deletable, className) => (
+    <div className={className}>
+      <div>{value}</div>
       {deletable && value && (
         <Button variant="icon">
           <Icon name="close" size="sm" />
@@ -54,7 +55,8 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
 
     useEffect(calculatePosition, [calculatePosition]);
 
-    const RenderedValue = ({value}: any) => RICHTEXT_DEFINITION.renderValue(value, false);
+    const RenderedValue = ({value, className}: {value: string, className: string}) =>
+      RICHTEXT_DEFINITION.renderValue(value, false, className);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && e.shiftKey) {
@@ -65,19 +67,23 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
 
     return (
       <div ref={containerRef}>
-        <RenderedValue value={value} />
+        <RenderedValue value={value} className={styles.editingRichTextCell} />
         <Portal>
-          <RichTextInput
-            value={value}
-            onChange={onChange}
-            className={className}
-            contentProps={{
-              ref: ref as RefObject<HTMLDivElement | null>,
-              style: targetPosition || {},
-              className: styles.richTextInput,
-              onKeyDown: handleKeyDown
-            }}
-          />
+          <div
+            style={targetPosition || {}}
+            ref={ref as RefObject<HTMLDivElement>}
+            className={styles.richTextInputContainer}
+          >
+            <RichTextInput
+              value={value}
+              onChange={onChange}
+              className={`${className} ${styles.richTextInput}`}
+              contentProps={{
+                onKeyDown: handleKeyDown,
+                className: styles.richTextInputContent
+              }}
+            />
+          </div>
         </Portal>
       </div>
     );

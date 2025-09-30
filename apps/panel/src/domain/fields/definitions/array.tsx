@@ -19,7 +19,6 @@ import {
 } from "../validation";
 import styles from "../field-styles.module.scss";
 import {FIELD_REGISTRY} from "../registry";
-import type {Type} from "typescript";
 
 export const ARRAY_DEFINITION: FieldDefinition = {
   kind: FieldKind.Array,

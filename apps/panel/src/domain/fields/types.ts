@@ -88,7 +88,7 @@ export interface FieldDefinition {
   // Optional formatting function for displaying values in lists, etc.
   getFormattedValue: (value: any, properties: Properties) => any;
   capabilities?: FieldCapabilities;
-  renderValue: (value: any, deletable: boolean) => React.ReactNode; // custom render function for displaying values
+  renderValue: (value: any, deletable: boolean, className?: string) => React.ReactNode; // custom render function for displaying values
   renderInput: React.FC<{
     value: any;
     onChange: (value: any) => void;

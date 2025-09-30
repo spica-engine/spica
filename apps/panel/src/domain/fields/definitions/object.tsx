@@ -32,21 +32,25 @@ export const OBJECT_DEFINITION: FieldDefinition = {
   buildValueProperty: (property, relationHandlers) => {
     const properties = Object.fromEntries(
       Object.entries(property?.properties || {}).map(([key, prop]) => {
-        const randomKey = crypto.randomUUID();
+        const id = crypto.randomUUID();
         // property.primary or prop.primary is not the value we want to pass here
-        relationHandlers?.ensureHandlers((prop as Property).bucketId, randomKey, property.primary);
-        return [
-          key,
-          {
-            ...(prop ?? {}),
-            className: `${(prop as Property)?.type === "object" ? styles.innerObjectInput : styles.objectProperty}`,
-            getOptions: relationHandlers?.getOptionsMap.current[randomKey],
-            loadMoreOptions: relationHandlers?.loadMoreOptionsMap.current[randomKey],
-            searchOptions: relationHandlers?.searchOptionsMap.current[randomKey],
-            totalOptionsLength: relationHandlers?.relationStates[randomKey]?.total || 0,
-            description: undefined
-          }
-        ];
+        relationHandlers?.ensureHandlers((prop as Property).bucketId, id, property.primary);
+
+        // "propertyConfig" is bad naming here, change it
+        const propertyConfig =
+          (prop as Property).type === "object"
+            ? OBJECT_DEFINITION.buildValueProperty(prop as Property, relationHandlers)
+            : {
+                ...(prop ?? {}),
+                className: `${(prop as Property)?.type === "object" ? styles.innerObjectInput : styles.objectProperty}`,
+                getOptions: relationHandlers?.getOptionsMap.current[id],
+                loadMoreOptions: relationHandlers?.loadMoreOptionsMap.current[id],
+                searchOptions: relationHandlers?.searchOptionsMap.current[id],
+                totalOptionsLength: relationHandlers?.relationStates[id]?.total || 0,
+                description: undefined,
+                id
+              };
+        return [key, propertyConfig];
       })
     );
 
@@ -62,7 +66,7 @@ export const OBJECT_DEFINITION: FieldDefinition = {
   getFormattedValue: (value, properties) => {
     const initialObject: Record<string, any> = {};
 
-    Object.values(properties.properties || properties || {}).forEach((property: any) => {
+    Object.values(properties.properties || properties || {}).forEach((property: Property) => {
       if (property.type === "object") {
         const nestedValue = value?.[property.title];
         initialObject[property.title] = OBJECT_DEFINITION.getFormattedValue(
@@ -99,7 +103,7 @@ export const OBJECT_DEFINITION: FieldDefinition = {
 
     useEffect(calculatePosition, [calculatePosition]);
 
-    const RenderedValue = ({value}: {value: any[]}) => OBJECT_DEFINITION.renderValue(value, false);
+    const RenderedValue = ({value}: {value: Object}) => OBJECT_DEFINITION.renderValue(value, false);
 
     return (
       <div ref={containerRef} className={styles.objectInputContainer}>

@@ -1,3 +1,5 @@
+@import "src/styles/mixins";
+
 .checkbox {
   label {
     width: 20px !important;
@@ -79,13 +81,7 @@
   border: var(--border-default);
   border-radius: var(--border-radius-md);
   overflow-y: auto;
-  /* Hide scrollbar but keep scroll */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
-}
-
-.objectInputWrapper::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  @include hideScrollbar;
 }
 
 .objectInput {
@@ -98,7 +94,8 @@
   overflow-x: hidden !important;
 }
 
-.innerObjectInput > div, .objectInput > div {
+.innerObjectInput > div,
+.objectInput > div {
   flex-shrink: 0;
 }
 
@@ -106,13 +103,30 @@
   max-height: 350px;
 }
 
-.richTextInput {
+.richTextInputContainer {
+  max-width: 600px;
   position: absolute;
-  padding: var(--padding-md);
+  width: 580px;
+  height: 330px;
+}
+
+.richTextInput {
+  height: 100% !important;
+  padding: var(--padding-xl) var(--padding-md) !important;
+}
+
+.richTextInputContent {
   border: var(--border-default);
   border-radius: var(--border-radius-md);
   background: var(--color-soft-light);
-  max-width: 800px;
+  height: 100% !important;
+  > div {
+    @include hideScrollbar;
+  }
+}
+
+.editingRichTextCell {
+  padding-left: var(--padding-md) !important;
 }
 
 .objectProperty {

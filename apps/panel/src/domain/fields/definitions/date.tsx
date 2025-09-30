@@ -6,7 +6,7 @@ import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
 import {runYupValidation, DATE_FIELD_CREATION_FORM_SCHEMA, validateFieldValue} from "../validation";
 import styles from "../field-styles.module.scss";
 
-function isValidDate(dateObject: any) {
+function isValidDate(dateObject: Date) {
   return dateObject instanceof Date && !isNaN(dateObject.getTime());
 }
 
@@ -23,7 +23,7 @@ export const DATE_DEFINITION: FieldDefinition = {
     validateFieldValue(value, FieldKind.Date, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
-    defaultValue: DefaultInputs.defaultDate,
+    defaultValue: DefaultInputs.defaultDate as unknown as TypeProperty,
     configurationValues: MinimalConfig
   }),
   buildValueProperty: property => ({

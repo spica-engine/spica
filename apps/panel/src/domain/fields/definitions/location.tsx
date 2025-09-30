@@ -10,6 +10,13 @@ import {
 } from "../validation";
 import styles from "../field-styles.module.scss";
 
+type TypeLocation =
+  | {lat: number; lng: number}
+  | {
+      type: "Point";
+      coordinates: [number, number];
+    };
+
 export const LOCATION_DEFINITION: FieldDefinition = {
   kind: FieldKind.Location,
   display: {label: "Location", icon: "mapMarker"},
@@ -27,15 +34,20 @@ export const LOCATION_DEFINITION: FieldDefinition = {
     fieldValues: BaseFields,
     configurationValues: OnlyRequiredConfig
   }),
-  buildValueProperty: property => ({
-    ...property,
-    type: FieldKind.Location,
-    description: undefined
-  } as TypeProperty),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Location,
+      description: undefined
+    }) as TypeProperty,
   getFormattedValue: value => {
     const DEFAULT_COORDINATES = {type: "Point", coordinates: [36.966667, 30.666667]};
     if (!value) return DEFAULT_COORDINATES;
-    if (value.type === "Point" && Array.isArray(value.coordinates) && value.coordinates.length === 2) {
+    if (
+      value.type === "Point" &&
+      Array.isArray(value.coordinates) &&
+      value.coordinates.length === 2
+    ) {
       return value;
     }
     if (typeof value.lat === "number" && typeof value.lng === "number") {
@@ -74,7 +86,8 @@ export const LOCATION_DEFINITION: FieldDefinition = {
 
     useEffect(calculatePosition, [calculatePosition]);
 
-    const RenderedValue = ({value}: any) => LOCATION_DEFINITION.renderValue(value, false);
+    const RenderedValue = ({value}: {value: TypeLocation}) =>
+      LOCATION_DEFINITION.renderValue(value, false);
     return (
       <div ref={containerRef}>
         <RenderedValue value={value} />
