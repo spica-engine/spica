@@ -240,7 +240,10 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     }
 
     if (type === FieldKind.Multiselect) {
-      createConfig("Multiple Selection", <div>{multipleSelectionTabInputs}</div>);
+      createConfig(
+        "Multiple Selection",
+        <div className={styles.multipleSelectionTab}>{multipleSelectionTabInputs}</div>
+      );
     }
 
     createConfig(

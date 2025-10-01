@@ -129,3 +129,13 @@
 .selectInnerFieldPopup > div {
   width: 100% !important;
 }
+
+.multipleSelectionTab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+}
+
+.presetsContainer > div > div {
+  gap: var(--gap-sm) !important;
+}
