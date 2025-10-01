@@ -1,4 +1,4 @@
-import {useAdaptivePosition, Portal, LocationInput} from "oziko-ui-kit";
+import {useAdaptivePosition, Portal, LocationInput, Popover} from "oziko-ui-kit";
 import {useRef, useEffect, type RefObject} from "react";
 import {OnlyRequiredConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
@@ -75,7 +75,7 @@ export const LOCATION_DEFINITION: FieldDefinition = {
       </div>
     );
   },
-  renderInput: ({value, onChange, ref, className}) => {
+  renderInput: ({value, onChange, ref, onClose}) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const {targetPosition, calculatePosition} = useAdaptivePosition({
@@ -91,15 +91,22 @@ export const LOCATION_DEFINITION: FieldDefinition = {
     return (
       <div ref={containerRef}>
         <RenderedValue value={value} />
-        <Portal>
-          <LocationInput
-            coordinates={{lat: value?.coordinates?.[0] || 0, lng: value?.coordinates?.[1] || 0}}
-            onChange={onChange}
-            ref={ref as RefObject<HTMLInputElement | null>}
-            title="Location"
-            style={{...targetPosition, position: "absolute"}}
-          />
-        </Portal>
+        <Popover
+          contentProps={{
+            ref: ref as RefObject<HTMLDivElement | null>,
+            style: targetPosition as React.CSSProperties
+          }}
+          open
+          onClose={onClose}
+          content={
+            <LocationInput
+              coordinates={{lat: value?.coordinates?.[0] || 0, lng: value?.coordinates?.[1] || 0}}
+              onChange={onChange}
+              ref={ref as RefObject<HTMLInputElement | null>}
+              title="Location"
+            />
+          }
+        />
       </div>
     );
   }

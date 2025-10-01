@@ -57,7 +57,7 @@ export const NUMBER_DEFINITION: FieldDefinition = {
       description: undefined
     }) as TypeProperty,
   getDefaultValue: property => property.default,
-  getFormattedValue: value => value,
+  getFormattedValue: value => value ?? undefined,
   capabilities: {
     enumerable: true,
     numericConstraints: true,

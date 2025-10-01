@@ -1,4 +1,4 @@
-import {Button, Icon, useAdaptivePosition, Portal, ArrayInput} from "oziko-ui-kit";
+import {Button, Icon, useAdaptivePosition, Portal, ArrayInput, Popover} from "oziko-ui-kit";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import {useRef, useEffect, type RefObject} from "react";
 import {
@@ -117,7 +117,7 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     ({
       ...property,
       type: FieldKind.Array,
-      description: undefined,
+      description: undefined
     }) as TypeProperty,
   requiresInnerFields: form => form.fieldValues?.arrayType === "object",
   applyPresetLogic: (form, oldValues) =>
@@ -147,7 +147,7 @@ export const ARRAY_DEFINITION: FieldDefinition = {
       )}
     </div>
   ),
-  renderInput: ({value, onChange, ref, properties, title}) => {
+  renderInput: ({value, onChange, ref, properties, title, onClose}) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const {targetPosition, calculatePosition} = useAdaptivePosition({
@@ -162,22 +162,30 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     return (
       <div ref={containerRef}>
         <RenderedValue value={value} />
-        <Portal>
-          <ArrayInput
-            ref={ref as RefObject<HTMLInputElement | null>}
-            title={title}
-            description={"description"}
-            value={value}
-            onChange={onChange}
-            minItems={properties.minItems}
-            maxItems={properties.maxItems}
-            items={properties.items}
-            propertyKey={properties.key}
-            errors={properties.errors as TypeInputRepresenterError}
-            style={{...targetPosition, position: "absolute"}}
-            className={styles.arrayInput}
-          />
-        </Portal>
+        <Popover
+          contentProps={{
+            ref: ref as RefObject<HTMLDivElement | null>,
+            style: targetPosition as React.CSSProperties
+          }}
+          open
+          onClose={onClose}
+          content={
+            <ArrayInput
+              ref={ref as RefObject<HTMLInputElement | null>}
+              title={title}
+              description={"description"}
+              value={value}
+              onChange={onChange}
+              minItems={properties.minItems}
+              maxItems={properties.maxItems}
+              items={properties.items}
+              propertyKey={properties.key}
+              errors={properties.errors as TypeInputRepresenterError}
+              style={{...targetPosition, position: "absolute"}}
+              className={styles.arrayInput}
+            />
+          }
+        />
       </div>
     );
   }

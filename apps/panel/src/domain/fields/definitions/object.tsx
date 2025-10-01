@@ -1,4 +1,4 @@
-import {Button, Icon, ObjectInput, Portal, useAdaptivePosition} from "oziko-ui-kit";
+import {Button, Icon, ObjectInput, Popover, Portal, useAdaptivePosition} from "oziko-ui-kit";
 import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {
@@ -134,7 +134,7 @@ export const OBJECT_DEFINITION: FieldDefinition = {
       )}
     </div>
   ),
-  renderInput: ({value, onChange, ref, properties, title, error}) => {
+  renderInput: ({value, onChange, ref, properties, title, error, onClose}) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const {targetPosition, calculatePosition} = useAdaptivePosition({
@@ -150,22 +150,26 @@ export const OBJECT_DEFINITION: FieldDefinition = {
     return (
       <div ref={containerRef} className={styles.objectInputContainer}>
         <RenderedValue value={value} />
-        <Portal>
-          <div
-            className={styles.objectInputWrapper}
-            ref={ref as RefObject<HTMLDivElement | null>}
-            style={{...targetPosition, position: "absolute"}}
-          >
-            <ObjectInput
-              title={title}
-              value={value}
-              onChange={onChange}
-              properties={properties.properties}
-              errors={error as TypeInputRepresenterError}
-              className={styles.objectInput}
-            />
-          </div>
-        </Portal>
+        <Popover
+          contentProps={{
+            ref: ref as RefObject<HTMLDivElement | null>,
+            style: targetPosition as React.CSSProperties
+          }}
+          open
+          onClose={onClose}
+          content={
+            <div className={styles.objectInputWrapper}>
+              <ObjectInput
+                title={title}
+                value={value}
+                onChange={onChange}
+                properties={properties.properties}
+                errors={error as TypeInputRepresenterError}
+                className={styles.objectInput}
+              />
+            </div>
+          }
+        />
       </div>
     );
   }

@@ -69,7 +69,7 @@ function collectBucketIds(Properties: Properties, cellValue: any): CollectedRela
     if (property.type !== "relation" && (property.type === "object" || property.type === "array")) {
       for (const prop of Object.values(property.properties || {})) {
         const childValue = value?.[(prop as Property).title];
-        if (prop && typeof childValue === "object") traverse(prop as Property, childValue);
+        if (prop && (typeof childValue === "object" || !childValue)) traverse(prop as Property, childValue);
       }
     }
   }
@@ -236,9 +236,10 @@ const EditableCell = memo(
       onStopEdit();
     };
 
+    const inputsWithPopover = ["object", "array", "location", "richtext"];
     useOnClickOutside({
       targetElements: [containerRef, inputRef, floatingElementRef],
-      onClickOutside: handleDiscardEdit
+      onClickOutside: (inputsWithPopover.includes(type)) ? () => {} : handleDiscardEdit
     });
 
     const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
@@ -395,6 +396,7 @@ const EditableCell = memo(
             floatingElementRef={floatingElementRef}
             className={styles.cellUpdateInput}
             error={error}
+            onClose={handleDiscardEdit}
           />
         </div>
       </td>

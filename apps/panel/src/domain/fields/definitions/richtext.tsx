@@ -1,4 +1,4 @@
-import {Button, Icon, useAdaptivePosition, Portal, RichTextInput} from "oziko-ui-kit";
+import {Button, Icon, useAdaptivePosition, Portal, RichTextInput, Popover} from "oziko-ui-kit";
 import {useRef, useEffect, type RefObject} from "react";
 import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
@@ -44,7 +44,7 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
       )}
     </div>
   ),
-  renderInput: ({value, onChange, ref, className}) => {
+  renderInput: ({value, onChange, ref, className, onClose}) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const {targetPosition, calculatePosition} = useAdaptivePosition({
@@ -55,7 +55,7 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
 
     useEffect(calculatePosition, [calculatePosition]);
 
-    const RenderedValue = ({value, className}: {value: string, className: string}) =>
+    const RenderedValue = ({value, className}: {value: string; className: string}) =>
       RICHTEXT_DEFINITION.renderValue(value, false, className);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -68,23 +68,31 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
     return (
       <div ref={containerRef}>
         <RenderedValue value={value} className={styles.editingRichTextCell} />
-        <Portal>
-          <div
-            style={targetPosition || {}}
-            ref={ref as RefObject<HTMLDivElement>}
-            className={styles.richTextInputContainer}
-          >
-            <RichTextInput
-              value={value}
-              onChange={onChange}
-              className={`${className} ${styles.richTextInput}`}
-              contentProps={{
-                onKeyDown: handleKeyDown,
-                className: styles.richTextInputContent
-              }}
-            />
-          </div>
-        </Portal>
+        <Popover
+          contentProps={{
+            ref: ref as RefObject<HTMLDivElement | null>,
+            style: targetPosition as React.CSSProperties
+          }}
+          open
+          onClose={onClose}
+          content={
+            <div
+              style={targetPosition || {}}
+              ref={ref as RefObject<HTMLDivElement>}
+              className={styles.richTextInputContainer}
+            >
+              <RichTextInput
+                value={value}
+                onChange={onChange}
+                className={`${className} ${styles.richTextInput}`}
+                contentProps={{
+                  onKeyDown: handleKeyDown,
+                  className: styles.richTextInputContent
+                }}
+              />
+            </div>
+          }
+        />
       </div>
     );
   }

@@ -115,5 +115,6 @@ export interface FieldDefinition {
     floatingElementRef?: RefObject<HTMLInputElement | HTMLDivElement | null>; // ref for dropdowns/popovers inside the input component
     className?: string;
     error?: FormError;
+    onClose?: () => void;
   }>; // custom input renderer for quick editing in tables, etc.
 }
