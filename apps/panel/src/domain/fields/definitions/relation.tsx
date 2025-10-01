@@ -7,8 +7,6 @@ import {
 } from "oziko-ui-kit";
 import type {TypeRelationSelect} from "oziko-ui-kit/build/dist/components/atoms/relation-input/relation-select/RelationSelect";
 import {useRef, useEffect} from "react";
-import useLocalStorage from "../../../hooks/useLocalStorage";
-import {useRelationInputHandler} from "../../../hooks/useRelationInputHandlers";
 import {MinimalConfig, BaseFields, SpecializedInputs} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
@@ -44,17 +42,37 @@ export const RELATION_DEFINITION: FieldDefinition = {
     },
     configurationValues: MinimalConfig
   }),
-  buildValueProperty: (property, relationProps) => ({
-    ...property,
-    type: FieldKind.Relation,
-    ...relationProps,
-    description: undefined
-  } as TypeProperty),
-  getFormattedValue: value => value || null,
+  buildValueProperty: (property, relationProps) => {
+    return {
+      ...property,
+      type: FieldKind.Relation,
+      ...relationProps,
+      description: undefined
+    } as TypeProperty;
+  },
+  getFormattedValue: (value, property) => {
+    if (!value) return null;
+    const primaryKey = property?.relationState?.primaryKey;
+
+    const getValue = (v: {_id?: string; value?: string}) => v._id ?? v.value ?? v;
+    const getLabel = (v: {[key: string]: string}) => v[primaryKey] ?? v.label ?? v;
+
+    if (property.relationType === "onetomany") {
+      const values = Array.isArray(value)
+        ? value.map(i => ({value: getValue(i), label: getLabel(i)}))
+        : [{value: getValue(value), label: getLabel(value)}];
+      return values;
+    }
+
+    return {
+      value: getValue(value),
+      label: getLabel(value)
+    };
+  },
   capabilities: {indexable: true},
   renderValue: (value, deletable) => (
-    <div className={styles.defaultCell}>
-      <div className={styles.defaultCellData}>{JSON.stringify(value)}</div>
+    <div>
+      <div>{value ? JSON.stringify(value) : ""}</div>
       {deletable && value && (
         <Button variant="icon">
           <Icon name="close" size="sm" />
@@ -63,30 +81,31 @@ export const RELATION_DEFINITION: FieldDefinition = {
     </div>
   ),
   renderInput: ({value, onChange, title, properties, floatingElementRef}) => {
-    const [token] = useLocalStorage("token", "");
-    const {getOptions, loadMoreOptions, searchOptions, totalOptionsLength} =
-      useRelationInputHandler(token, properties?.bucketId, properties?.primary);
-
     const selectRef = useRef<TypeSelectRef>(null);
 
     useEffect(() => {
       selectRef.current?.toggleDropdown(true);
     }, [selectRef]);
-
+    console.log("{value, properties}", {value, properties});
     return (
       <RelationInput
         label={title as string}
         description={properties?.description}
         value={value}
         onChange={onChange}
-        getOptions={getOptions}
-        loadMoreOptions={loadMoreOptions}
-        searchOptions={searchOptions}
-        totalOptionsLength={totalOptionsLength}
-        multiple={properties?.multiple}
+        getOptions={properties.getOptions}
+        loadMoreOptions={properties.loadMoreOptions}
+        searchOptions={properties.searchOptions}
+        totalOptionsLength={properties.relationState?.total}
+        multiple={properties?.relationType === "onetomany"}
         selectProps={
-          {optionProps: {className: styles.relationInputOption}, selectRef} as TypeRelationSelect &
-            TypeFluidContainer
+          {
+            popupClassName: styles.relationSelect,
+            optionProps: {className: styles.relationInputOption},
+            selectRef,
+            root: {className: styles.relationRoot},
+            portalClassName: styles.relationPortal
+          } as TypeRelationSelect & TypeFluidContainer
         }
         className={styles.relationInput}
         labelProps={undefined}

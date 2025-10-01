@@ -4,13 +4,12 @@ export type RelationState = {
   skip: number;
   total: number;
   lastSearch: string;
+  primaryKey: string;
 };
 
 type Option = {label: string; value: string};
 
-// This function also exists in one of other branches, but in a different file. 
-// Make sure to delete this after it is merged to main, or delete it then import the function from here
-const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string) => {
+const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string, primaryKey?: string) => {
   const baseUrl = import.meta.env.VITE_BASE_URL;
   const params = new URLSearchParams({
     paginate: "true",
@@ -21,10 +20,11 @@ const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string) => {
   });
 
   if (searchValue) {
+    const searchField = primaryKey || "title";
     const filter = {
       $or: [
         {
-          title: {$regex: searchValue, $options: "i"}
+          [searchField]: {$regex: searchValue, $options: "i"}
         }
       ]
     };
@@ -34,99 +34,25 @@ const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string) => {
   return `${baseUrl}/api/bucket/${bucketId}/data?${params.toString()}`;
 };
 
-export const useRelationInputHandler = (
-  authToken: string,
-  bucketId: string,
-  bucketPrimaryKey: string
-) => {
-  const [relationState, setRelationState] = useState<RelationState>({
-    skip: 0,
-    total: 0,
-    lastSearch: ""
-  });
-
-  const relationStateRef = useRef(relationState);
-
-  useEffect(() => {
-    relationStateRef.current = relationState;
-  }, [relationState]);
-
-  const getOptions = useCallback(async (): Promise<Option[]> => {
-    try {
-      const res = await fetch(buildOptionsUrl(bucketId, 0), {
-        headers: {authorization: `IDENTITY ${authToken}`}
-      });
-      if (!res.ok) return [];
-      const data = await res.json();
-      setRelationState({skip: 25, total: data?.meta?.total || 0, lastSearch: ""});
-      return (
-        data?.data?.map((i: {_id: string; [k: string]: any}) => ({
-          label: i[bucketPrimaryKey],
-          value: i._id
-        })) || []
-      );
-    } catch (e) {
-      throw e;
-    }
-  }, [authToken, bucketId, bucketPrimaryKey]);
-
-  const loadMoreOptions = useCallback(async (): Promise<Option[]> => {
-    const currentSkip = relationStateRef.current.skip || 0;
-    const lastSearch = relationStateRef.current.lastSearch || "";
-
-    try {
-      const res = await fetch(buildOptionsUrl(bucketId, currentSkip, lastSearch), {
-        headers: {authorization: `IDENTITY ${authToken}`}
-      });
-      if (!res.ok) return [];
-      const data = await res.json();
-
-      setRelationState(prev => ({...prev, skip: currentSkip + 25}));
-
-      return (
-        data?.data?.map((i: {title: string; _id: string}) => ({
-          label: i.title,
-          value: i._id
-        })) || []
-      );
-    } catch (e) {
-      throw e;
-    }
-  }, [authToken, bucketId]);
-
-  const searchOptions = useCallback(
-    async (search: string): Promise<Option[]> => {
-      setRelationState(prev => ({...prev, lastSearch: search}));
-      try {
-        const res = await fetch(buildOptionsUrl(bucketId, 0, search), {
-          headers: {authorization: `IDENTITY ${authToken}`}
-        });
-        if (!res.ok) return [];
-        const data = await res.json();
-        setRelationState(prev => ({
-          ...prev,
-          skip: 25,
-          total: data?.meta?.total || 0
-        }));
-        return (
-          data?.data?.map((i: {title: string; _id: string}) => ({
-            label: i.title,
-            value: i._id
-          })) || []
-        );
-      } catch (e) {
-        throw e;
-      }
-    },
-    [authToken, bucketId]
-  );
-
-  return {relationState, getOptions, loadMoreOptions, searchOptions, totalOptionsLength: relationState.total};
-};
-
 export type RelationInputHandlerResult = Promise<Option[]>;
 
-export const useRelationInputHandlers = (authToken: string) => {
+export type getOptionsHandler = () => RelationInputHandlerResult;
+export type loadMoreOptionsHandler = () => RelationInputHandlerResult;
+export type searchOptionsHandler = (s: string) => RelationInputHandlerResult;
+
+type TypeGetMoreOptionsMap = Record<string, loadMoreOptionsHandler>;
+type TypeSearchOptionsMap = Record<string, searchOptionsHandler>;
+type TypeGetOptionsMap = Record<string, getOptionsHandler>;
+
+export type RelationInputHandlers = {
+  relationStates: Record<string, RelationState>;
+  getOptionsMap: React.RefObject<TypeGetOptionsMap>;
+  loadMoreOptionsMap: React.RefObject<TypeGetMoreOptionsMap>;
+  searchOptionsMap: React.RefObject<TypeSearchOptionsMap>;
+  ensureHandlers: (bucketId: string, key: string) => void;
+};
+
+export const useRelationInputHandlers = (authToken: string): RelationInputHandlers => {
   const [relationStates, setRelationStates] = useState<Record<string, RelationState>>({});
   const relationStatesRef = useRef(relationStates);
 
@@ -134,91 +60,162 @@ export const useRelationInputHandlers = (authToken: string) => {
     relationStatesRef.current = relationStates;
   }, [relationStates]);
 
-  const getOptionsMap = useRef<Record<string, () => RelationInputHandlerResult>>({});
-  const loadMoreOptionsMap = useRef<Record<string, () => RelationInputHandlerResult>>({});
-  const searchOptionsMap = useRef<Record<string, (s: string) => RelationInputHandlerResult>>({});
+  const getOptionsMap = useRef<TypeGetOptionsMap>({});
+  const loadMoreOptionsMap = useRef<TypeGetMoreOptionsMap>({});
+  const searchOptionsMap = useRef<TypeSearchOptionsMap>({});
 
-  const ensureHandlers = useCallback(
-    (bucketId: string, key: string, bucketPrimaryKey: string) => {
-      if (!getOptionsMap.current[key]) {
-        getOptionsMap.current[key] = async () => {
-          try {
-            const res = await fetch(buildOptionsUrl(bucketId, 0), {
-              headers: {authorization: `IDENTITY ${authToken}`}
-            });
-            if (!res.ok) return [];
-            const data = await res.json();
-            setRelationStates(prev => ({
-              ...prev,
-              [key]: {skip: 25, total: data?.meta?.total || 0, lastSearch: ""}
-            }));
-            return (
-              data?.data?.map((i: {_id: string; [key: string]: any}) => ({
-                label: i[bucketPrimaryKey],
-                value: i._id
-              })) || []
-            );
-          } catch (e) {
-            throw e;
-          }
+  const getPrimaryKey = useCallback(
+    async (bucketId: string, key: string) => {
+      if (relationStatesRef.current[key]?.primaryKey)
+        return relationStatesRef.current[key].primaryKey;
+      if (!bucketId) return;
+      try {
+        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/api/bucket/${bucketId}`, {
+          headers: {authorization: `IDENTITY ${authToken}`}
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const bucketPrimaryKey = data?.primary;
+        if (!bucketPrimaryKey) return;
+        // update both ref and state so consumers re-render with the primary key
+        relationStatesRef.current[key] = {
+          ...relationStatesRef.current[key],
+          primaryKey: bucketPrimaryKey
         };
-      }
-
-      if (!loadMoreOptionsMap.current[key]) {
-        loadMoreOptionsMap.current[key] = async () => {
-          const currentSkip = relationStatesRef.current?.[key]?.skip || 0;
-          const lastSearch = relationStatesRef.current?.[key]?.lastSearch || "";
-
-          try {
-            const res = await fetch(buildOptionsUrl(bucketId, currentSkip, lastSearch), {
-              headers: {authorization: `IDENTITY ${authToken}`}
-            });
-            if (!res.ok) return [];
-            const data = await res.json();
-
-            setRelationStates(prev => ({
-              ...prev,
-              [key]: {...prev[key], skip: currentSkip + 25}
-            }));
-
-            return (
-              data?.data?.map((i: {title: string; _id: string}) => ({
-                label: i.title,
-                value: i._id
-              })) || []
-            );
-          } catch (e) {
-            throw e;
-          }
-        };
-      }
-
-      if (!searchOptionsMap.current[key]) {
-        searchOptionsMap.current[key] = async (search: string) => {
-          setRelationStates(prev => ({...prev, [key]: {...prev[key], lastSearch: search}}));
-          try {
-            const res = await fetch(buildOptionsUrl(bucketId, 0, search), {
-              headers: {authorization: `IDENTITY ${authToken}`}
-            });
-            if (!res.ok) return [];
-            const data = await res.json();
-            setRelationStates(prev => ({
-              ...prev,
-              [key]: {...prev[key], skip: 25, total: data?.meta?.total || 0}
-            }));
-            return (
-              data?.data?.map((i: {title: string; _id: string}) => ({
-                label: i.title,
-                value: i._id
-              })) || []
-            );
-          } catch (e) {
-            throw e;
-          }
-        };
+        setRelationStates(prev => ({...prev, [key]: {...prev[key], primaryKey: bucketPrimaryKey}}));
+        return bucketPrimaryKey;
+      } catch (e) {
+        throw e;
       }
     },
-    [authToken, relationStates]
+    [authToken, relationStatesRef]
+  );
+
+  const populateGetOptions = useCallback(
+    (bucketId: string, key: string) => {
+      if (getOptionsMap.current[key]) return;
+
+      // Always create a function that will ensure primary key exists before fetching.
+      getOptionsMap.current[key] = async () => {
+        if (!bucketId) return [];
+        // make sure we have primary key (may trigger network request)
+        const bucketPrimaryKey = await getPrimaryKey(bucketId, key);
+        if (!bucketPrimaryKey) return [];
+        try {
+          const res = await fetch(buildOptionsUrl(bucketId, 0, undefined, bucketPrimaryKey), {
+            headers: {authorization: `IDENTITY ${authToken}`}
+          });
+          if (!res.ok) return [];
+          const data = await res.json();
+          setRelationStates(prev => ({
+            ...prev,
+            [key]: {
+              skip: 25,
+              total: data?.meta?.total || 0,
+              lastSearch: "",
+              primaryKey: bucketPrimaryKey
+            }
+          }));
+          return (
+            data?.data?.map((i: {_id: string; [key: string]: any}) => ({
+              label: i[bucketPrimaryKey],
+              value: i._id
+            })) || []
+          );
+        } catch (e) {
+          throw e;
+        }
+      };
+    },
+    [authToken]
+  );
+
+  const populateLoadMoreOptions = useCallback(
+    (bucketId: string, key: string) => {
+      if (loadMoreOptionsMap.current[key]) return;
+      loadMoreOptionsMap.current[key] = async () => {
+        console.log("loadMoreOptions for", key, bucketId, relationStatesRef.current[key]);
+        if (!bucketId) return [];
+        const currentSkip = relationStatesRef.current?.[key]?.skip || 0;
+        const lastSearch = relationStatesRef.current?.[key]?.lastSearch || "";
+        const bucketPrimaryKey = await getPrimaryKey(bucketId, key);
+        if (!bucketPrimaryKey) return [];
+
+        try {
+          const res = await fetch(
+            buildOptionsUrl(bucketId, currentSkip, lastSearch, bucketPrimaryKey),
+            {
+              headers: {authorization: `IDENTITY ${authToken}`}
+            }
+          );
+          if (!res.ok) return [];
+          const data = await res.json();
+
+          setRelationStates(prev => ({...prev, [key]: {...prev[key], skip: currentSkip + 25}}));
+
+          return (
+            data?.data?.map((i: {[k: string]: any; _id: string}) => ({
+              label: i[bucketPrimaryKey] ?? i.title,
+              value: i._id
+            })) || []
+          );
+        } catch (e) {
+          throw e;
+        }
+      };
+    },
+    [authToken]
+  );
+
+  const populateSearchOptions = useCallback(
+    (bucketId: string, key: string) => {
+      if (searchOptionsMap.current[key]) return;
+
+      searchOptionsMap.current[key] = async (search: string) => {
+        if (!bucketId) return [];
+        const bucketPrimaryKey = await getPrimaryKey(bucketId, key);
+        if (!bucketPrimaryKey) return [];
+        setRelationStates(prev => ({...prev, [key]: {...prev[key], lastSearch: search}}));
+        try {
+          const res = await fetch(buildOptionsUrl(bucketId, 0, search, bucketPrimaryKey), {
+            headers: {authorization: `IDENTITY ${authToken}`}
+          });
+          if (!res.ok) return [];
+          const data = await res.json();
+          setRelationStates(prev => ({
+            ...prev,
+            [key]: {...prev[key], skip: 25, total: data?.meta?.total || 0}
+          }));
+          return (
+            data?.data?.map((i: {[k: string]: any; _id: string}) => ({
+              label: i[bucketPrimaryKey] ?? i.title,
+              value: i._id
+            })) || []
+          );
+        } catch (e) {
+          throw e;
+        }
+      };
+    },
+    [authToken]
+  );
+
+  const populateHandlers = useCallback(
+    (bucketId: string, key: string) => {
+      populateGetOptions(bucketId, key);
+      populateLoadMoreOptions(bucketId, key);
+      populateSearchOptions(bucketId, key);
+    },
+    [populateGetOptions, populateLoadMoreOptions, populateSearchOptions]
+  );
+
+  const ensureHandlers = useCallback(
+    (bucketId: string, key: string) => {
+      if (getOptionsMap.current[key]) return;
+      getPrimaryKey(bucketId, key);
+      populateHandlers(bucketId, key);
+    },
+    [getPrimaryKey, populateHandlers]
   );
 
   return {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers};

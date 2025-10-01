@@ -3,6 +3,8 @@ import type {FieldKind} from "src/domain/fields";
 import type {TypeArrayItems} from "src/hooks/useInputRepresenter";
 import type {Properties} from "src/services/bucketService";
 
+type RelationType = "onetoone" | "onetomany";
+
 export type TypeDataColumn = {
   header: string | ReactNode;
   key: string;
@@ -29,6 +31,7 @@ export type TypeDataColumn = {
   fixedWidth?: boolean;
   bucketId?: string;
   primary?: string;
+  relationType?: RelationType;
 };
 
 export type TypeTableData = {
@@ -52,4 +55,5 @@ export type Constraints = {
   requiredFields?: string[];
   bucketId?: string;
   primary?: string;
+  relationType?: RelationType;
 };

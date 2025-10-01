@@ -49,6 +49,7 @@ export const STRING_DEFINITION: FieldDefinition = {
     indexable: true
   },
   renderValue: (value, deletable) => {
+    console.log("STRING_DEFINITION renderValue:", value, deletable);
     return (
       <div className={styles.defaultCell}>
         <div className={styles.defaultCellData}>{value}</div>

@@ -144,7 +144,7 @@ type BucketWithVisibleColumnsProps = {
   handleRefresh: () => Promise<void>;
   refreshLoading: boolean;
   tableRef: React.RefObject<HTMLElement | null>;
-  handleCellSave: (value: any, columnName: string, rowId: string) => Promise<any>;
+  handleCellSave: (value: any, columnName: string, rowId: string, formattedValue: any) => Promise<any>;
 };
 
 function BucketWithVisibleColumns({

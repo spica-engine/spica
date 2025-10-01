@@ -46,7 +46,6 @@ export const TableBody = memo(
 
       const cells = formattedColumns.map(column => {
         const cellData = row[column.key];
-
         return (
           <Cell
             key={cellData.id}
@@ -73,7 +72,8 @@ export const TableBody = memo(
               requiredFields: column.required,
               required: requiredColumns?.includes(column.key),
               bucketId: column.bucketId,
-              primary: column.primary
+              primary: column.primary,
+              relationType: column.relationType
             }}
           />
         );

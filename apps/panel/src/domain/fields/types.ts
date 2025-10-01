@@ -1,8 +1,8 @@
 import type {IconName} from "oziko-ui-kit";
-import type {Properties, Property} from "../../services/bucketService";
+import type {Property} from "../../services/bucketService";
 import type {TypeProperties} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import type {RefObject} from "react";
-import type {RelationInputHandlerResult, RelationState} from "src/hooks/useRelationInputHandlers";
+import type {getOptionsHandler, loadMoreOptionsHandler, RelationInputHandlerResult, RelationState, searchOptionsHandler} from "src/hooks/useRelationInputHandlers";
 
 export type TypeProperty = TypeProperties[string];
 
@@ -76,17 +76,16 @@ export interface FieldDefinition {
   buildValueProperty: (
     property: Property,
     relationProps?: {
-      getOptionsMap: React.RefObject<Record<string, () => RelationInputHandlerResult>>;
-      loadMoreOptionsMap: React.RefObject<Record<string, () => RelationInputHandlerResult>>;
-      searchOptionsMap: React.RefObject<Record<string, (s: string) => RelationInputHandlerResult>>;
-      relationStates: Record<string, RelationState>;
-      ensureHandlers: (bucketId: string, key: string, bucketPrimaryKey: string) => void;
+      getOptions: getOptionsHandler;
+      loadMoreOptions: loadMoreOptionsHandler;
+      searchOptions: searchOptionsHandler;
+      relationState: RelationState
     }
   ) => TypeProperty; // build TypeProperty-compatible value schema for this field
   requiresInnerFields?: (form: FieldCreationForm) => boolean; // whether this field kind structurally requires at least one inner field
   applyPresetLogic?: (form: FieldCreationForm, oldValues: FieldCreationForm) => FieldCreationForm; // apply preset logic to the form state, (only for string and array's with string items)
   // Optional formatting function for displaying values in lists, etc.
-  getFormattedValue: (value: any, properties: Properties) => any;
+  getFormattedValue: (value: any, properties: Property) => any;
   capabilities?: FieldCapabilities;
   renderValue: (value: any, deletable: boolean, className?: string) => React.ReactNode; // custom render function for displaying values
   renderInput: React.FC<{

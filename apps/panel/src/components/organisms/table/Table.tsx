@@ -26,7 +26,7 @@ export type TableProps = {
   totalDataLength?: number;
   style?: React.CSSProperties;
   tableRef?: RefObject<HTMLElement | null>;
-  onCellSave?: (value: any, columnName: string, rowId: string) => Promise<any>;
+  onCellSave?: (value: any, columnName: string, rowId: string, formattedValue: any) => Promise<any>;
   requiredColumns?: string[];
 };
 

@@ -34,11 +34,11 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     )
   }),
   getDefaultValue: property => property.default,
-  getFormattedValue: (value, properties) => {
+  getFormattedValue: (value, property) => {
     if (!Array.isArray(value)) return [];
-    const type = properties?.items?.type || "string";
+    const type = property?.items?.type || "string";
     const field = FIELD_REGISTRY[type as FieldKind];
-    return value.map(item => field?.getFormattedValue?.(item, properties.items) || item);
+    return value.map(item => field?.getFormattedValue?.(item, property.items) || item);
   },
   validateCreationForm: form => runYupValidation(ARRAY_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
@@ -159,7 +159,7 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     useEffect(calculatePosition, [calculatePosition]);
 
     const RenderedValue = ({value}: {value: any[]}) => ARRAY_DEFINITION.renderValue(value, false);
-
+    console.log("RenderedValue", properties.items);
     return (
       <div ref={containerRef}>
         <RenderedValue value={value} />

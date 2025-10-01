@@ -1,4 +1,4 @@
-import {memo, useRef, useState, useContext, type ReactNode, useEffect, useMemo} from "react";
+import {memo, useRef, useState, useContext, type ReactNode, useEffect, useMemo, useId} from "react";
 import {TableEditContext} from "./TableEditContext";
 import {MIN_COLUMN_WIDTH} from "./columnUtils";
 import type {Constraints} from "./types";
@@ -27,19 +27,6 @@ const isObjectEffectivelyEmpty = (obj: any): boolean => {
   });
 };
 
-type CellProps = React.HTMLAttributes<HTMLDivElement> & {
-  leftOffset?: number;
-  type: FieldKind;
-  value: any;
-  deletable?: boolean;
-  editable?: boolean;
-  focused?: boolean;
-  title: string;
-  columnId: string;
-  rowId: string;
-  constraints?: Constraints;
-};
-
 const findFirstErrorId = (errors: FormError, formattedProperties: Properties): string | null => {
   for (const [key, error] of Object.entries(errors ?? {})) {
     const property = formattedProperties[key];
@@ -52,6 +39,19 @@ const findFirstErrorId = (errors: FormError, formattedProperties: Properties): s
     }
   }
   return null;
+};
+
+type CellProps = React.HTMLAttributes<HTMLDivElement> & {
+  leftOffset?: number;
+  type: FieldKind;
+  value: any;
+  deletable?: boolean;
+  editable?: boolean;
+  focused?: boolean;
+  title: string;
+  columnId: string;
+  rowId: string;
+  constraints?: Constraints;
 };
 
 export const Cell = memo(
@@ -74,35 +74,49 @@ export const Cell = memo(
     const {getOptionsMap, loadMoreOptionsMap, searchOptionsMap, relationStates, ensureHandlers} =
       useRelationInputHandlers(token);
 
-    const properties = useMemo(
-      () =>
-        field.buildValueProperty?.(constraints as Property, {
-          getOptionsMap,
-          loadMoreOptionsMap,
-          searchOptionsMap,
-          relationStates,
-          ensureHandlers
-        }),
-      [type, title, constraints]
-    ) as Property;
+    const id = useId();
 
-    const [cellValue, setCellValue] = useState(() => field.getFormattedValue(value, properties));
+    useEffect(() => {
+      if (type !== "relation" || !constraints?.bucketId) return;
+      ensureHandlers(constraints?.bucketId, id);
+    }, [ensureHandlers, constraints?.bucketId, id]);
+    const myRelationState = relationStates[id];
+
+    const properties = useMemo(() => {
+      if (!myRelationState && type === "relation") return undefined;
+      return field.buildValueProperty?.(constraints as Property, {
+        getOptions: getOptionsMap.current[id],
+        loadMoreOptions: loadMoreOptionsMap.current[id],
+        searchOptions: searchOptionsMap.current[id],
+        relationState: myRelationState
+      }) as Property;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [myRelationState, constraints]);
+
+    const [cellValue, setCellValue] = useState();
+    const isValueInitialized = useRef(false);
+    useEffect(() => {
+      if (!properties || isValueInitialized.current) return;
+      const formatted = field.getFormattedValue(value, properties);
+      setCellValue(formatted);
+      isValueInitialized.current = true;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [properties]);
 
     const handleStartEditing = () => {
-      if (!editable) return;
+      if (!editable || !properties) return;
       setIsEditing(true);
     };
 
     function handleStopEditing(newValue?: any) {
       setIsEditing(false);
       const notFormattedValue = arguments.length ? newValue : value;
-      const formattedValue = field?.getFormattedValue(notFormattedValue, properties);
+      const formattedValue = field?.getFormattedValue(notFormattedValue, properties as Property);
       // Some of the inputs (like richtext) trigger their onChange on unmount,
-      // This ensures the latest value is always rendered. when the cell exits edit mode without saving.
+      // This ensures the latest value is always rendered when the cell exits edit mode without saving.
       setTimeout(() => setCellValue(formattedValue), 0);
     }
-
-    return isEditing ? (
+    return isEditing && properties ? (
       <EditableCell
         {...props}
         type={type}
@@ -156,7 +170,6 @@ const EditableCell = memo(
     const containerRef = useRef<HTMLDivElement | null>(null);
     const floatingElementRef = useRef<HTMLDivElement | null>(null);
     const {onCellSave, registerActiveCell, unregisterActiveCell} = useContext(TableEditContext);
-
     const [error, setError] = useState<TypeInputRepresenterError | undefined>(undefined);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -224,7 +237,13 @@ const EditableCell = memo(
         return false;
       }
 
-      const payload = field.getFormattedValue(value, properties);
+      const formattedValue = field.getFormattedValue(value, properties);
+      console.log("Formatted value on validate:", formattedValue);
+      let payload;
+      if (type === "relation" && properties.relationType === "onetomany") {
+        payload = Array.isArray(formattedValue) ? formattedValue.map(i => i.value) : [formattedValue?.value];
+      } else payload = formattedValue;
+
       const payloadError = field?.validateValue(
         payload,
         constraints as Property,
@@ -237,14 +256,14 @@ const EditableCell = memo(
         return false;
       }
       setError(undefined);
-      return {payload};
+      return {payload, formattedValue};
     };
 
     async function handleSave() {
       if (isSaving) return;
       const payloadResult = handleValidate();
       if (!payloadResult) return;
-      const {payload} = payloadResult;
+      const {payload, formattedValue} = payloadResult;
       setIsSaving(true);
       setError(undefined);
 
@@ -256,7 +275,7 @@ const EditableCell = memo(
 
       try {
         window.document.body.style.cursor = "wait";
-        const result = await onCellSave(payload, columnId, rowId);
+        const result = await onCellSave(payload, columnId, rowId, formattedValue);
         if (result) setError(undefined);
       } catch (err) {
         const errMsg = {

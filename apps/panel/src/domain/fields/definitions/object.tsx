@@ -32,10 +32,8 @@ export const OBJECT_DEFINITION: FieldDefinition = {
   buildValueProperty: (property, relationHandlers) => {
     const properties = Object.fromEntries(
       Object.entries(property?.properties || {}).map(([key, prop]) => {
-        const id = crypto.randomUUID();
-        // property.primary or prop.primary is not the value we want to pass here
-        relationHandlers?.ensureHandlers((prop as Property).bucketId, id, property.primary);
-
+        console.log("OBJECT_DEFINITION buildValueProperty for key:", key, prop, property);
+        
         // "propertyConfig" is bad naming here, change it
         const propertyConfig =
           (prop as Property).type === "object"
@@ -43,12 +41,7 @@ export const OBJECT_DEFINITION: FieldDefinition = {
             : {
                 ...(prop ?? {}),
                 className: `${(prop as Property)?.type === "object" ? styles.innerObjectInput : styles.objectProperty}`,
-                getOptions: relationHandlers?.getOptionsMap.current[id],
-                loadMoreOptions: relationHandlers?.loadMoreOptionsMap.current[id],
-                searchOptions: relationHandlers?.searchOptionsMap.current[id],
-                totalOptionsLength: relationHandlers?.relationStates[id]?.total || 0,
                 description: undefined,
-                id
               };
         return [key, propertyConfig];
       })
@@ -65,13 +58,13 @@ export const OBJECT_DEFINITION: FieldDefinition = {
   getDefaultValue: property => property.default,
   getFormattedValue: (value, properties) => {
     const initialObject: Record<string, any> = {};
-
-    Object.values(properties.properties || properties || {}).forEach((property: Property) => {
+    const propertyArray = Object.values(properties.properties || properties || {}) as Property[];
+    propertyArray.forEach(property => {
       if (property.type === "object") {
         const nestedValue = value?.[property.title];
         initialObject[property.title] = OBJECT_DEFINITION.getFormattedValue(
           nestedValue,
-          property.properties
+          property.properties as Property
         );
       } else {
         const field = FIELD_REGISTRY?.[property.type as FieldKind];

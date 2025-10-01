@@ -48,7 +48,7 @@ type BucketTableProps = {
   bucketId: string;
   loading: boolean;
   tableRef?: RefObject<HTMLElement | null>;
-  onCellSave: (value: any, columnName: string, rowId: string) => Promise<any>;
+  onCellSave: (value: any, columnName: string, rowId: string, formattedValue: any) => Promise<any>;
   updateCellDataError?: string | null;
   requiredColumns?: string[];
 };

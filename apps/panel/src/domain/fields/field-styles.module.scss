@@ -1,4 +1,4 @@
-@import "src/styles/mixins";
+@import "../../styles/mixins";
 
 .checkbox {
   label {
@@ -46,14 +46,6 @@
   .grayBox:last-child:hover {
     background-color: var(--color-background);
   }
-}
-
-.relationInputOption {
-  width: 100% !important;
-}
-
-.relationInput > div {
-  outline: none !important;
 }
 
 .locationCell {
@@ -136,4 +128,25 @@
 .enumInput > div:nth-child(2) span {
   max-width: unset !important;
   min-width: calc(100% + 100px);
+}
+
+.relationSelect {
+  @include hideScrollbar;
+}
+
+.relationInput {
+  height: 36px !important;
+}
+
+.relationInputOption {
+  width: 100% !important;
+}
+
+.relationRoot {
+  max-width: unset !important;
+}
+
+.relationPortal {
+  //width: unset !important;
+  //height: unset !important;
 }
