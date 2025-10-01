@@ -1,5 +1,5 @@
 import * as Yup from "yup";
-import {FieldKind, type FieldCreationForm, type FieldFormState} from "./types";
+import {FieldKind, type FieldCreationForm, type FieldFormState, type FormError} from "./types";
 import type {Property} from "src/services/bucketService";
 export type ValidationSchema = Yup.ObjectSchema<any>;
 
@@ -276,7 +276,19 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property, required?
       return applyConstraints(Yup.boolean(), property, booleanConstraints, required);
 
     case FieldKind.Date:
-      return applyConstraints(Yup.date(), property, dateConstraints, required);
+      return applyConstraints(
+        Yup.mixed().test("invalid-date", "Please provide a valid date.", function (value) {
+          const isInvalidDateString = (value as unknown as string) === "Invalid Date";
+          const isInvalidDateObject = value instanceof Date && isNaN(value.getTime());
+          const isUnparsableDateValue = isNaN(new Date(value as Date).getTime());
+          return required && (isInvalidDateString || isInvalidDateObject || isUnparsableDateValue)
+            ? false
+            : true;
+        }),
+        property,
+        dateConstraints,
+        required
+      );
 
     case FieldKind.Multiselect:
       return applyConstraints(Yup.array().of(Yup.mixed()), property, arrayConstraints, required);
@@ -435,16 +447,17 @@ const generateFieldValueSchema = (kind: FieldKind, property: Property, required?
 export const validateFieldValue = (
   value: any,
   kind: FieldKind,
-  properties: Property
-): string | Record<string, any> | null => {
-  const schema = generateFieldValueSchema(kind, properties);
+  properties: Property,
+  required?: boolean
+): FormError => {
+  const schema = generateFieldValueSchema(kind, properties, required);
   try {
     schema.validateSync(value, {abortEarly: false});
     return null;
   } catch (error) {
     if (!(error instanceof Yup.ValidationError) || !error.inner || !error.inner.length)
       return (error as {message?: string})?.message || "Validation failed";
-    let out: Record<string, any> | string = {};
+    let out: FormError = {};
 
     const getNested = (root: Record<string, any> | string, path: string, message: string) => {
       const parts = path.match(/[^.\[\]]+/g) || [path];

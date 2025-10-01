@@ -46,30 +46,6 @@ const cleanValue = (
   return value === "" ? (required ? undefined : preferUndefined ? undefined : value) : value;
 };
 
-export const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string) => {
-  const baseUrl = import.meta.env.VITE_BASE_URL;
-  const params = new URLSearchParams({
-    paginate: "true",
-    relation: "true",
-    limit: "25",
-    sort: JSON.stringify({_id: -1}),
-    skip: String(skip)
-  });
-
-  if (searchValue) {
-    const filter = {
-      $or: [
-        {
-          title: {$regex: searchValue, $options: "i"}
-        }
-      ]
-    };
-    params.append("filter", JSON.stringify(filter));
-  }
-
-  return `${baseUrl}/api/bucket/${bucketId}/data?${params.toString()}`;
-};
-
 export const findFirstErrorId = (
   errors: FormError,
   formattedProperties: Properties,
@@ -137,11 +113,36 @@ export const validateValues = (
   for (const [key, property] of Object.entries(formattedProperties || {})) {
     const val = value?.[key];
     const required = requiredFields?.includes(key) ? true : property.required;
-    const propertyWithRequired = {...property, required};
     const kind = property.type;
     const field = FIELD_REGISTRY[kind];
-    const msg = field?.validateValue(val, propertyWithRequired);
+    const msg = field?.validateValue(val, property, required);
     if (msg) errors[key] = msg as string;
   }
   return Object.keys(errors).length > 0 ? errors : undefined;
 };
+
+type CollectedRelation = {bucketId: string; value: any};
+
+export function collectBucketIds(Properties: Properties, cellValue: any): CollectedRelation[] {
+  const collected: CollectedRelation[] = [];
+
+  function traverse(property: Property, value: any) {
+    if (!property || typeof property !== "object") return;
+    if (property.type === "relation") {
+      const relationValue = value?.[property.title];
+      collected.push({bucketId: property.bucketId as string, value: relationValue});
+    }
+
+    if (property.type !== "relation" && (property.type === "object" || property.type === "array")) {
+      for (const prop of Object.values(property.properties || {})) {
+        const childValue = value?.[(prop as Property).title];
+        if (prop && (typeof childValue === "object" || !childValue)) traverse(prop as Property, childValue);
+      }
+    }
+  }
+
+  for (const prop of Object.values(Properties || {})) {
+    traverse(prop, cellValue);
+  }
+  return collected;
+}

@@ -206,6 +206,7 @@ function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
   if (type) {
     const formatted = formatValue(type, cellData);
     if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
+    if (typeof formatted === "object") return JSON.stringify(formatted)
   }
   return renderDefault();
 }

@@ -1,8 +1,17 @@
 import type {IconName} from "oziko-ui-kit";
 import type {Property} from "../../services/bucketService";
 import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type {
+  getOptionsHandler,
+  loadMoreOptionsHandler,
+  RelationState,
+  searchOptionsHandler,
+  TypeGetMoreOptionsMap,
+  TypeGetOptionsMap,
+  TypeSearchOptionsMap
+} from "src/hooks/useRelationInputHandlers";
 
-type TypeProperty = TypeProperties[string];
+export type TypeProperty = TypeProperties[string];
 
 export enum FieldKind {
   String = "string",
@@ -51,13 +60,37 @@ export interface FieldFormState extends FieldCreationForm {
   innerFields?: any[]; // for object/array-of-object editing flows
 }
 
+export type FormError =
+  | string
+  | null
+  | {
+      [key: string]: string | FormError | null;
+    };
+
+type RelationInputRelationHandlers = {
+  getOptions: getOptionsHandler;
+  loadMoreOptions: loadMoreOptionsHandler;
+  searchOptions: searchOptionsHandler;
+  relationState: RelationState;
+  totalOptionsLength?: number;
+};
+
+export type ObjectInputRelationHandlers = {
+  getOptionsMap: TypeGetOptionsMap;
+  loadMoreOptionsMap: TypeGetMoreOptionsMap;
+  searchOptionsMap: TypeSearchOptionsMap;
+  relationStates: Record<string, RelationState>;
+  totalOptionsLength?: number;
+};
+
+
 export interface FieldDefinition {
   kind: FieldKind; // name of the field kind
   display: FieldDisplayMeta; // UI metadata
   creationFormDefaultValues: FieldCreationForm; // seed values for creation form
   getDefaultValue: (property: Property) => any; // default value for data creation using this field, if any
   validateCreationForm: (form: FieldCreationForm) => Record<string, string> | null; // validate the creation form state for this field type
-  validateValue: (value: any, properties: Property) => string | Record<string, any> | null; // validate a raw value for this field (e.g. before saving data)
+  validateValue: (value: any, properties: Property, required?: boolean) => FormError; // validate a raw value for this field (e.g. before saving data)
   buildCreationFormProperties: () => {
     fieldValues: TypeProperties;
     configurationValues: TypeProperties;
@@ -66,16 +99,11 @@ export interface FieldDefinition {
   };
   buildValueProperty: (
     property: Property,
-    relationProps?: {
-      getOptions?: () => Promise<{label: string; value: string}[]>;
-      loadMoreOptions?: () => Promise<{label: string; value: string}[]>;
-      searchOptions?: (search: string) => Promise<{label: string; value: string}[]>;
-      totalOptionsLength?: number;
-    }
-  ) => TypeProperty; // build TypeProperty-compatible value schema for this field
+    relationProps?: RelationInputRelationHandlers | ObjectInputRelationHandlers
+  ) => TypeProperty; // build TypeProperty-compatible value schema for this field  requiresInnerFields?: (form: FieldCreationForm) => boolean; // whether this field kind structurally requires at least one inner field
   requiresInnerFields?: (form: FieldCreationForm) => boolean; // whether this field kind structurally requires at least one inner field
   applyPresetLogic?: (form: FieldCreationForm, oldValues: FieldCreationForm) => FieldCreationForm; // apply preset logic to the form state, (only for string and array's with string items)
   // Optional formatting function for displaying values in lists, etc.
-  getFormattedValue?: (value: any) => any;
+  getFormattedValue: (value: any, properties: Property) => any;
   capabilities?: FieldCapabilities;
 }

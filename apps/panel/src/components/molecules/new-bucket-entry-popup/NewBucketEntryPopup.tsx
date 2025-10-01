@@ -7,7 +7,7 @@ import {
   Modal,
   useInputRepresenter
 } from "oziko-ui-kit";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import styles from "./NewBucketEntryPopup.module.scss";
 import type {BucketType} from "src/services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -33,13 +33,8 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const [apiError, setApiError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<TypeInputRepresenterError>({});
-  const {buckets} = useBucket();
 
-  const primaryKeys = useMemo(() => {
-    return Object.fromEntries(buckets.map(b => [b._id, b.primary])) as Record<string, string>;
-  }, [bucket]);
-
-  const formattedProperties = useValueProperties(bucket, authToken, primaryKeys);
+  const formattedProperties = useValueProperties(bucket, authToken);
   const [value, setValue] = useState<Record<string, any>>(() =>
     generateInitialValues(formattedProperties)
   );

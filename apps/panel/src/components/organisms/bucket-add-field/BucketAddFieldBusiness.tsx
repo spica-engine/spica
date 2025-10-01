@@ -196,7 +196,6 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       return {...prev, [formValuesAttribute]: values};
     });
 
-    console.log("formValues from bucket add field business: ", formValues)
   return (
     <BucketAddFieldView
       // Display props
