@@ -54,6 +54,31 @@ type CellProps = React.HTMLAttributes<HTMLDivElement> & {
   constraints?: Constraints;
 };
 
+type CollectedRelation = {bucketId: string; value: any};
+
+function collectBucketIds(Properties: Properties, cellValue: any): CollectedRelation[] {
+  const collected: CollectedRelation[] = [];
+
+  function traverse(property: Property, value: any) {
+    if (!property || typeof property !== "object") return;
+    if (property.type === "relation") {
+      const relationValue = value?.[property.title as any];
+      collected.push({bucketId: property.bucketId as string, value: relationValue});
+    }
+
+    if (property.type !== "relation" && (property.type === "object" || property.type === "array")) {
+      for (const prop of Object.values(property.properties || {})) {
+        const childValue = value?.[(prop as Property).title];
+        if (prop && typeof childValue === "object") traverse(prop as Property, childValue);
+      }
+    }
+  }
+  for (const prop of Object.values(Properties || {})) {
+    traverse(prop, cellValue);
+  }
+  return collected;
+}
+
 export const Cell = memo(
   ({
     value,
@@ -76,31 +101,63 @@ export const Cell = memo(
 
     const id = useId();
 
-    useEffect(() => {
-      if (type !== "relation" || !constraints?.bucketId) return;
-      ensureHandlers(constraints?.bucketId, id);
-    }, [ensureHandlers, constraints?.bucketId, id]);
-    const myRelationState = relationStates[id];
+    const bucketIds = useMemo<CollectedRelation[]>(
+      () =>
+        type === "object" ? collectBucketIds(constraints?.properties as Properties, value) : [],
+      [type, constraints?.properties, value]
+    );
 
-    const properties = useMemo(() => {
-      if (!myRelationState && type === "relation") return undefined;
-      return field.buildValueProperty?.(constraints as Property, {
-        getOptions: getOptionsMap.current[id],
-        loadMoreOptions: loadMoreOptionsMap.current[id],
-        searchOptions: searchOptionsMap.current[id],
-        relationState: myRelationState
-      }) as Property;
+    useEffect(() => {
+      for (const {bucketId, value: relationValue} of bucketIds) {
+        ensureHandlers(bucketId, bucketId, relationValue);
+      }
+
+      if (type === "relation" && constraints?.bucketId) {
+        ensureHandlers(constraints.bucketId, id);
+      }
+    }, [type, constraints?.properties, constraints?.bucketId, ensureHandlers, id]);
+
+    const properties = useMemo<Property | undefined>(() => {
+      if (relationStates[id] && type === "relation") {
+        return field.buildValueProperty?.(constraints as Property, {
+          getOptions: getOptionsMap.current[id],
+          loadMoreOptions: loadMoreOptionsMap.current[id],
+          searchOptions: searchOptionsMap.current[id],
+          relationState: relationStates[id]
+        }) as Property;
+      } else if (
+        type === "object" &&
+        Object.keys(relationStates).length &&
+        Object.values(relationStates).every(i => i.stateInitialized)
+      ) {
+        return field.buildValueProperty?.(constraints as Property, {
+          getOptionsMap: getOptionsMap.current,
+          loadMoreOptionsMap: loadMoreOptionsMap.current,
+          searchOptionsMap: searchOptionsMap.current,
+          relationStates
+        }) as Property;
+      } else {
+        return field.buildValueProperty?.(constraints as Property) as Property;
+      }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myRelationState, constraints]);
+    }, [relationStates, constraints]);
 
     const [cellValue, setCellValue] = useState();
     const isValueInitialized = useRef(false);
     useEffect(() => {
       if (!properties || isValueInitialized.current) return;
-      const formatted = field.getFormattedValue(value, properties);
+      if (type === "relation" && !relationStates[id]) return;
+      if (
+        type === "object" &&
+        bucketIds.length &&
+        (Object.keys(relationStates).length === 0 ||
+          !Object.values(relationStates).every(i => i.stateInitialized))
+      )
+        return;
+
+      const formatted = field.getFormattedValue(value, properties as Property);
       setCellValue(formatted);
       isValueInitialized.current = true;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [properties]);
 
     const handleStartEditing = () => {
@@ -238,11 +295,12 @@ const EditableCell = memo(
       }
 
       const formattedValue = field.getFormattedValue(value, properties);
-      console.log("Formatted value on validate:", formattedValue);
       let payload;
       if (type === "relation" && properties.relationType === "onetomany") {
-        payload = Array.isArray(formattedValue) ? formattedValue.map(i => i.value) : [formattedValue?.value];
-      } else payload = formattedValue;
+        payload = Array.isArray(formattedValue)
+          ? formattedValue.map(i => i.value)
+          : [formattedValue?.value];
+      } else payload = typeof formattedValue === "string" ? formattedValue : formattedValue.value;
 
       const payloadError = field?.validateValue(
         payload,

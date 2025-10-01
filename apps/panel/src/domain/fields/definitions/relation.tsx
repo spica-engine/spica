@@ -54,8 +54,17 @@ export const RELATION_DEFINITION: FieldDefinition = {
     if (!value) return null;
     const primaryKey = property?.relationState?.primaryKey;
 
+    const initialFormattedValues = property.relationState.initialFormattedValues;
     const getValue = (v: {_id?: string; value?: string}) => v._id ?? v.value ?? v;
-    const getLabel = (v: {[key: string]: string}) => v[primaryKey] ?? v.label ?? v;
+    const getLabel = (v: {[key: string]: string}) =>
+      v[primaryKey] ??
+      v.label ??
+      initialFormattedValues.label ??
+      initialFormattedValues.find((i: {value: string; _id: string}) =>
+        i.value === v.value ||
+        i.value === v._id ||
+        (typeof v === "string" && i.value === v)
+      )?.label;
 
     if (property.relationType === "onetomany") {
       const values = Array.isArray(value)
@@ -86,7 +95,6 @@ export const RELATION_DEFINITION: FieldDefinition = {
     useEffect(() => {
       selectRef.current?.toggleDropdown(true);
     }, [selectRef]);
-    console.log("{value, properties}", {value, properties});
     return (
       <RelationInput
         label={title as string}

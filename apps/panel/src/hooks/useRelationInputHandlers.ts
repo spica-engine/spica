@@ -1,13 +1,41 @@
 import {useState, useRef, useEffect, useCallback} from "react";
 
+type Option = {label: string; value: string};
+
+export type RelationInputHandlerResult = Promise<Option[]>;
+
+export type getOptionsHandler = () => RelationInputHandlerResult;
+export type loadMoreOptionsHandler = () => RelationInputHandlerResult;
+export type searchOptionsHandler = (s: string) => RelationInputHandlerResult;
+
+export type TypeGetMoreOptionsMap = Record<string, loadMoreOptionsHandler>;
+export type TypeSearchOptionsMap = Record<string, searchOptionsHandler>;
+export type TypeGetOptionsMap = Record<string, getOptionsHandler>;
+
+type FormattedInitialValue = {_id: string; label: string} | {value: string; label: string};
+
 export type RelationState = {
   skip: number;
   total: number;
   lastSearch: string;
   primaryKey: string;
+  initialFormattedValues?: FormattedInitialValue | FormattedInitialValue[];
+  stateInitialized: boolean
 };
 
-type Option = {label: string; value: string};
+export type RelationInputHandlers = {
+  relationStates: Record<string, RelationState>;
+  getOptionsMap: React.RefObject<TypeGetOptionsMap>;
+  loadMoreOptionsMap: React.RefObject<TypeGetMoreOptionsMap>;
+  searchOptionsMap: React.RefObject<TypeSearchOptionsMap>;
+  ensureHandlers: (bucketId: string, key: string, initialValue?: TypeInitialValues) => void;
+};
+
+export type TypeInitialValues =
+  | string
+  | string[]
+  | FormattedInitialValue
+  | Array<FormattedInitialValue>;
 
 const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string, primaryKey?: string) => {
   const baseUrl = import.meta.env.VITE_BASE_URL;
@@ -34,22 +62,23 @@ const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string, prima
   return `${baseUrl}/api/bucket/${bucketId}/data?${params.toString()}`;
 };
 
-export type RelationInputHandlerResult = Promise<Option[]>;
-
-export type getOptionsHandler = () => RelationInputHandlerResult;
-export type loadMoreOptionsHandler = () => RelationInputHandlerResult;
-export type searchOptionsHandler = (s: string) => RelationInputHandlerResult;
-
-type TypeGetMoreOptionsMap = Record<string, loadMoreOptionsHandler>;
-type TypeSearchOptionsMap = Record<string, searchOptionsHandler>;
-type TypeGetOptionsMap = Record<string, getOptionsHandler>;
-
-export type RelationInputHandlers = {
-  relationStates: Record<string, RelationState>;
-  getOptionsMap: React.RefObject<TypeGetOptionsMap>;
-  loadMoreOptionsMap: React.RefObject<TypeGetMoreOptionsMap>;
-  searchOptionsMap: React.RefObject<TypeSearchOptionsMap>;
-  ensureHandlers: (bucketId: string, key: string) => void;
+const getRowValue = async (rowId: string, bucketId: string, authToken: string) => {
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_BASE_URL}/api/bucket/${bucketId}/data/${rowId}`,
+      {
+        headers: {authorization: `IDENTITY ${authToken}`}
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Error fetching row: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch row data:", error);
+    return null;
+  }
 };
 
 export const useRelationInputHandlers = (authToken: string): RelationInputHandlers => {
@@ -82,7 +111,7 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
           ...relationStatesRef.current[key],
           primaryKey: bucketPrimaryKey
         };
-        setRelationStates(prev => ({...prev, [key]: {...prev[key], primaryKey: bucketPrimaryKey}}));
+        setRelationStates(prev => ({...prev, [key]: {...prev[key], primaryKey: bucketPrimaryKey, stateInitialized: false}}));
         return bucketPrimaryKey;
       } catch (e) {
         throw e;
@@ -110,10 +139,11 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
           setRelationStates(prev => ({
             ...prev,
             [key]: {
+              ...prev[key],
               skip: 25,
               total: data?.meta?.total || 0,
               lastSearch: "",
-              primaryKey: bucketPrimaryKey
+              primaryKey: bucketPrimaryKey,
             }
           }));
           return (
@@ -134,7 +164,6 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
     (bucketId: string, key: string) => {
       if (loadMoreOptionsMap.current[key]) return;
       loadMoreOptionsMap.current[key] = async () => {
-        console.log("loadMoreOptions for", key, bucketId, relationStatesRef.current[key]);
         if (!bucketId) return [];
         const currentSkip = relationStatesRef.current?.[key]?.skip || 0;
         const lastSearch = relationStatesRef.current?.[key]?.lastSearch || "";
@@ -209,10 +238,61 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
     [populateGetOptions, populateLoadMoreOptions, populateSearchOptions]
   );
 
+  const ensureInitialValueFormatting = useCallback(
+    async (bucketId: string, key: string, initialValue?: TypeInitialValues) => {
+      const noInitial = !initialValue;
+      const hasStoredFormattedInitialValues =
+        relationStatesRef.current[key]?.initialFormattedValues;
+      const objectAlreadyFormattedByCaller =
+        typeof initialValue === "object" && Object.keys(initialValue).toString() === "value";
+      const arrayAlreadyFormattedByCaller =
+        Array.isArray(initialValue) &&
+        (initialValue.length === 0 || initialValue.every(i => typeof i !== "string"));
+
+      if (
+        noInitial ||
+        hasStoredFormattedInitialValues ||
+        arrayAlreadyFormattedByCaller ||
+        objectAlreadyFormattedByCaller
+      )
+        return initialValue;
+
+      let formattedValue;
+      const primaryKey = relationStatesRef.current[key]?.primaryKey;
+      if (Array.isArray(initialValue)) {
+        const formattedValues: Array<{label: string; value: string}> = [];
+        for (const val of initialValue) {
+          console.log("val: ", val);
+          const row = await getRowValue(val as string, bucketId, authToken);
+          console.log("row: ", row, primaryKey);
+          const formatted = {
+            value: (row as {_id: string})?._id,
+            label: primaryKey ? (row as {[key: string]: string})?.[primaryKey] : ""
+          };
+          formattedValues.push(formatted);
+        }
+        formattedValue = formattedValues;
+      } else {
+        const row = await getRowValue(initialValue as string, bucketId, authToken);
+        const formatted = {
+          value: (row as {_id: string})?._id,
+          label: primaryKey ? (row as {[key: string]: string})?.[primaryKey] : ""
+        };
+        formattedValue = formatted;
+      }
+      setRelationStates(prev => ({
+        ...prev,
+        [key]: {...prev[key], initialFormattedValues: formattedValue, stateInitialized: true}
+      }));
+    },
+    [relationStatesRef, setRelationStates]
+  );
   const ensureHandlers = useCallback(
-    (bucketId: string, key: string) => {
+    (bucketId: string, key: string, relationValue?: TypeInitialValues) => {
       if (getOptionsMap.current[key]) return;
-      getPrimaryKey(bucketId, key);
+      getPrimaryKey(bucketId, key).then(() =>
+        ensureInitialValueFormatting(bucketId, key, relationValue)
+      );
       populateHandlers(bucketId, key);
     },
     [getPrimaryKey, populateHandlers]

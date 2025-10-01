@@ -2,7 +2,16 @@ import type {IconName} from "oziko-ui-kit";
 import type {Property} from "../../services/bucketService";
 import type {TypeProperties} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import type {RefObject} from "react";
-import type {getOptionsHandler, loadMoreOptionsHandler, RelationInputHandlerResult, RelationState, searchOptionsHandler} from "src/hooks/useRelationInputHandlers";
+import type {
+  getOptionsHandler,
+  loadMoreOptionsHandler,
+  RelationInputHandlerResult,
+  RelationState,
+  searchOptionsHandler,
+  TypeGetMoreOptionsMap,
+  TypeGetOptionsMap,
+  TypeSearchOptionsMap
+} from "src/hooks/useRelationInputHandlers";
 
 export type TypeProperty = TypeProperties[string];
 
@@ -60,6 +69,20 @@ export type FormError =
       [key: string]: string | FormError | null;
     };
 
+type RelationInputRelationHandlers = {
+  getOptions: getOptionsHandler;
+  loadMoreOptions: loadMoreOptionsHandler;
+  searchOptions: searchOptionsHandler;
+  relationState: RelationState;
+};
+
+export type ObjectInputRelationHandlers = {
+  getOptionsMap: TypeGetOptionsMap;
+  loadMoreOptionsMap: TypeGetMoreOptionsMap;
+  searchOptionsMap: TypeSearchOptionsMap;
+  relationStates: Record<string, RelationState>;
+};
+
 export interface FieldDefinition {
   kind: FieldKind; // name of the field kind
   display: FieldDisplayMeta; // UI metadata
@@ -75,12 +98,7 @@ export interface FieldDefinition {
   };
   buildValueProperty: (
     property: Property,
-    relationProps?: {
-      getOptions: getOptionsHandler;
-      loadMoreOptions: loadMoreOptionsHandler;
-      searchOptions: searchOptionsHandler;
-      relationState: RelationState
-    }
+    relationProps?: RelationInputRelationHandlers | ObjectInputRelationHandlers
   ) => TypeProperty; // build TypeProperty-compatible value schema for this field
   requiresInnerFields?: (form: FieldCreationForm) => boolean; // whether this field kind structurally requires at least one inner field
   applyPresetLogic?: (form: FieldCreationForm, oldValues: FieldCreationForm) => FieldCreationForm; // apply preset logic to the form state, (only for string and array's with string items)

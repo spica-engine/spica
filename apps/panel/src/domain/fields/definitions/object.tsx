@@ -1,7 +1,12 @@
 import {Button, Icon, ObjectInput, Portal, useAdaptivePosition} from "oziko-ui-kit";
 import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
-import {type FieldDefinition, FieldKind, type TypeProperty} from "../types";
+import {
+  type FieldDefinition,
+  FieldKind,
+  type ObjectInputRelationHandlers,
+  type TypeProperty
+} from "../types";
 import {
   runYupValidation,
   OBJECT_FIELD_CREATION_FORM_SCHEMA,
@@ -12,6 +17,13 @@ import {FIELD_REGISTRY} from "../registry";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
 import {useEffect, useRef, type RefObject} from "react";
 import type {Property} from "src/services/bucketService";
+import type {
+  RelationState,
+  TypeGetMoreOptionsMap,
+  TypeGetOptionsMap,
+  TypeSearchOptionsMap
+} from "src/hooks/useRelationInputHandlers";
+import {RELATION_DEFINITION} from "./relation";
 
 export const OBJECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Object,
@@ -29,30 +41,67 @@ export const OBJECT_DEFINITION: FieldDefinition = {
     fieldValues: BaseFields,
     configurationValues: TranslatableMinimalConfig
   }),
-  buildValueProperty: (property, relationHandlers) => {
-    const properties = Object.fromEntries(
-      Object.entries(property?.properties || {}).map(([key, prop]) => {
-        console.log("OBJECT_DEFINITION buildValueProperty for key:", key, prop, property);
-        
-        // "propertyConfig" is bad naming here, change it
-        const propertyConfig =
-          (prop as Property).type === "object"
-            ? OBJECT_DEFINITION.buildValueProperty(prop as Property, relationHandlers)
-            : {
-                ...(prop ?? {}),
-                className: `${(prop as Property)?.type === "object" ? styles.innerObjectInput : styles.objectProperty}`,
-                description: undefined,
-              };
-        return [key, propertyConfig];
+  buildValueProperty: (rawProperty, relationHandlers) => {
+    if (!rawProperty) {
+      return {
+        type: FieldKind.Object,
+        properties: {},
+        description: undefined
+      } as TypeProperty;
+    }
+
+    const {
+      getOptionsMap = {},
+      loadMoreOptionsMap = {},
+      searchOptionsMap = {},
+      relationStates = {}
+    } = (relationHandlers || {}) as ObjectInputRelationHandlers;
+
+    const sourceProperties = rawProperty?.properties || {};
+    const builtProperties = Object.fromEntries(
+      Object.entries(sourceProperties as {[key: string]: Property}).map(([propKey, property]) => {
+        const bucketId = property?.bucketId;
+
+        let builtChild;
+        switch (property.type) {
+          case "object": {
+            builtChild = OBJECT_DEFINITION.buildValueProperty(property, relationHandlers);
+            break;
+          }
+          case "relation": {
+            const relationHandlerBundle = {
+              getOptions: (getOptionsMap as TypeGetOptionsMap)?.[bucketId],
+              loadMoreOptions: (loadMoreOptionsMap as TypeGetMoreOptionsMap)?.[bucketId],
+              searchOptions: (searchOptionsMap as TypeSearchOptionsMap)?.[bucketId],
+              relationState: (relationStates as Record<string, RelationState | undefined>)?.[
+                bucketId
+              ]
+            };
+            builtChild = RELATION_DEFINITION.buildValueProperty(
+              property,
+              relationHandlerBundle as any
+            );
+            break;
+          }
+          default: {
+            const field = FIELD_REGISTRY[property.type];
+            builtChild = field?.buildValueProperty(property);
+            break;
+          }
+        }
+
+        return [propKey, builtChild];
       })
     );
 
-    return {
-      ...property,
+    const r = {
+      ...(rawProperty as Property),
       type: FieldKind.Object,
-      properties,
+      properties: builtProperties,
       description: undefined
     } as TypeProperty;
+
+    return r;
   },
   requiresInnerFields: _ => true,
   getDefaultValue: property => property.default,

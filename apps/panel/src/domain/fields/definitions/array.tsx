@@ -159,7 +159,6 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     useEffect(calculatePosition, [calculatePosition]);
 
     const RenderedValue = ({value}: {value: any[]}) => ARRAY_DEFINITION.renderValue(value, false);
-    console.log("RenderedValue", properties.items);
     return (
       <div ref={containerRef}>
         <RenderedValue value={value} />
