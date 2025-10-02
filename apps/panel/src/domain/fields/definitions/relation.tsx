@@ -50,23 +50,22 @@ export const RELATION_DEFINITION: FieldDefinition = {
       description: undefined
     } as TypeProperty;
   },
-  getFormattedValue: (value, property) => {
+  getDisplayValue: (value, property) => {
     if (!value) return null;
     const primaryKey = property?.relationState?.primaryKey;
 
-    const initialFormattedValues = property.relationState.initialFormattedValues;
+    const initialFormattedValues = property?.relationState.initialFormattedValues;
     const getValue = (v: {_id?: string; value?: string}) => v._id ?? v.value ?? v;
     const getLabel = (v: {[key: string]: string}) =>
       v[primaryKey] ??
       v.label ??
       initialFormattedValues.label ??
-      initialFormattedValues.find((i: {value: string; _id: string}) =>
-        i.value === v.value ||
-        i.value === v._id ||
-        (typeof v === "string" && i.value === v)
+      initialFormattedValues.find(
+        (i: {value: string; _id: string}) =>
+          i.value === v.value || i.value === v._id || (typeof v === "string" && i.value === v)
       )?.label;
 
-    if (property.relationType === "onetomany") {
+    if (property?.relationType === "onetomany") {
       const values = Array.isArray(value)
         ? value.map(i => ({value: getValue(i), label: getLabel(i)}))
         : [{value: getValue(value), label: getLabel(value)}];
@@ -77,6 +76,15 @@ export const RELATION_DEFINITION: FieldDefinition = {
       value: getValue(value),
       label: getLabel(value)
     };
+  },
+  getSaveReadyValue: (value, property) => {
+    
+    const displayValue = RELATION_DEFINITION.getDisplayValue(value, property)
+    if (property?.relationType !== "onetomany") return displayValue.value
+    const payload = Array.isArray(displayValue)
+      ? displayValue.map(i => i.value)
+      : displayValue?.value ? [displayValue?.value]: [];
+    return payload;
   },
   capabilities: {indexable: true},
   renderValue: (value, deletable) => (

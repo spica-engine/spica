@@ -37,3 +37,5 @@ export function makeInnerFieldDefaults(kind: FieldKind): FieldCreationForm {
     }
   };
 }
+
+export const DEFAULT_COORDINATES = {type: "Point", coordinates: [36.966667, 30.666667]};

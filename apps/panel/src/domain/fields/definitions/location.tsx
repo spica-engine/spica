@@ -1,7 +1,7 @@
 import {useAdaptivePosition, Portal, LocationInput, Popover} from "oziko-ui-kit";
 import {useRef, useEffect, type RefObject} from "react";
 import {OnlyRequiredConfig, BaseFields} from "../creation-form-schemas";
-import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
+import {freezeFormDefaults, BASE_FORM_DEFAULTS, DEFAULT_COORDINATES} from "../defaults";
 import {type FieldDefinition, FieldKind, type TypeProperty} from "../types";
 import {
   runYupValidation,
@@ -16,6 +16,21 @@ type TypeLocation =
       type: "Point";
       coordinates: [number, number];
     };
+
+function getLocationType(value: any): "geojson" | "latlng" | "unknown" | "none" {
+  if (value === null || value === undefined) return "none";
+  if (
+    value?.type === "Point" &&
+    Array.isArray(value?.coordinates) &&
+    value.coordinates.length === 2
+  ) {
+    return "geojson";
+  }
+  if (typeof value?.lat === "number" && typeof value?.lng === "number") {
+    return "latlng";
+  }
+  return "unknown";
+}
 
 export const LOCATION_DEFINITION: FieldDefinition = {
   kind: FieldKind.Location,
@@ -40,38 +55,38 @@ export const LOCATION_DEFINITION: FieldDefinition = {
       type: FieldKind.Location,
       description: undefined
     }) as TypeProperty,
-  getFormattedValue: value => {
-    const DEFAULT_COORDINATES = {type: "Point", coordinates: [36.966667, 30.666667]};
-    if (!value) return DEFAULT_COORDINATES;
-    if (
-      value.type === "Point" &&
-      Array.isArray(value.coordinates) &&
-      value.coordinates.length === 2
-    ) {
-      return value;
-    }
-    if (typeof value.lat === "number" && typeof value.lng === "number") {
-      return {type: "Point", coordinates: [value.lat, value.lng]};
-    }
-    return DEFAULT_COORDINATES;
+  getDisplayValue: value => {
+    const locationType = getLocationType(value);
+    const normalizedLocationByType = {
+      geojson: value,
+      latlng: {type: "Point", coordinates: [value?.lat, value?.lng]},
+      none: null,
+      unknown: DEFAULT_COORDINATES
+    };
+    return normalizedLocationByType[locationType];
+  },
+  getSaveReadyValue: value => {
+    const displayValue = LOCATION_DEFINITION.getDisplayValue(value);
+    if (displayValue === null) return null;
+    return {lat: displayValue.coordinates[0], lng: displayValue.coordinates[1]};
   },
   capabilities: {indexable: true},
   renderValue: value => {
-    const formattedValue = !value
-      ? [0, 0]
-      : value.type === "Point"
-        ? value.coordinates
-        : [value.lat, value.lng];
+    const formattedValue = LOCATION_DEFINITION.getDisplayValue(value);
     const handleCopy = (e: React.ClipboardEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.clipboardData.setData("text/plain", e.currentTarget.dataset.full || "");
     };
     return (
       <div className={styles.locationCell}>
-        <img src="/locationx.png" className={styles.locationImage} />
-        <div data-full={formattedValue.join(", ")} onCopy={handleCopy}>
-          {formattedValue.map((c: number) => c?.toFixed(2) + "..").join(", ")}
-        </div>
+        {value && (
+          <>
+            <img src="/locationx.png" className={styles.locationImage} />
+            <div data-full={formattedValue.coordinates.join(", ")} onCopy={handleCopy}>
+              {formattedValue.coordinates.map((c: number) => c?.toFixed(2) + "..").join(", ")}
+            </div>
+          </>
+        )}
       </div>
     );
   },
@@ -88,6 +103,13 @@ export const LOCATION_DEFINITION: FieldDefinition = {
 
     const RenderedValue = ({value}: {value: TypeLocation}) =>
       LOCATION_DEFINITION.renderValue(value, false);
+
+    const formattedCoordinates = LOCATION_DEFINITION.getDisplayValue(value);
+
+    const inputCoordinates = {
+      lat: formattedCoordinates?.coordinates?.[0] || DEFAULT_COORDINATES.coordinates[0],
+      lng: formattedCoordinates?.coordinates?.[1] || DEFAULT_COORDINATES.coordinates[1]
+    };
     return (
       <div ref={containerRef}>
         <RenderedValue value={value} />
@@ -100,7 +122,7 @@ export const LOCATION_DEFINITION: FieldDefinition = {
           onClose={onClose}
           content={
             <LocationInput
-              coordinates={{lat: value?.coordinates?.[0] || 0, lng: value?.coordinates?.[1] || 0}}
+              coordinates={inputCoordinates}
               onChange={onChange}
               ref={ref as RefObject<HTMLInputElement | null>}
               title="Location"

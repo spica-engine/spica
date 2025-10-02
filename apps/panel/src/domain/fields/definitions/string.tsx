@@ -38,7 +38,8 @@ export const STRING_DEFINITION: FieldDefinition = {
     description: undefined
   } as TypeProperty),
   applyPresetLogic: (form, oldValues) => applyPresetLogic(FieldKind.String, form, oldValues),
-  getFormattedValue: value => typeof value === "string" ? value : "",
+  getDisplayValue: value => typeof value === "string" ? value : "",
+  getSaveReadyValue: value => typeof value === "string" ? value : "",
   capabilities: {
     enumerable: true,
     pattern: true,

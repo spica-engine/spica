@@ -25,6 +25,30 @@ import type {
 } from "src/hooks/useRelationInputHandlers";
 import {RELATION_DEFINITION} from "./relation";
 
+function formatObjectFieldValues(
+  value: any,
+  properties: any,
+  method: "getDisplayValue" | "getSaveReadyValue"
+): Record<string, any> {
+  const result: Record<string, any> = {};
+  const propertyArray = Object.values(properties?.properties || properties || {}) as Property[];
+  propertyArray.forEach(property => {
+    if (property.type === "object") {
+      const nestedValue = value?.[property.title];
+      result[property.title] = formatObjectFieldValues(
+        nestedValue,
+        property.properties as Property,
+        method
+      );
+    } else {
+      const field = FIELD_REGISTRY?.[property.type as FieldKind];
+      const fn = field?.[method] as ((v: any, p: Property) => any) | undefined;
+      result[property.title] = fn?.(value?.[property.title], property);
+    }
+  });
+  return result;
+};
+
 export const OBJECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Object,
   display: {label: "Object", icon: "dataObject"},
@@ -105,24 +129,11 @@ export const OBJECT_DEFINITION: FieldDefinition = {
   },
   requiresInnerFields: _ => true,
   getDefaultValue: property => property.default,
-  getFormattedValue: (value, properties) => {
-    const initialObject: Record<string, any> = {};
-    const propertyArray = Object.values(properties.properties || properties || {}) as Property[];
-    propertyArray.forEach(property => {
-      if (property.type === "object") {
-        const nestedValue = value?.[property.title];
-        initialObject[property.title] = OBJECT_DEFINITION.getFormattedValue(
-          nestedValue,
-          property.properties as Property
-        );
-      } else {
-        const field = FIELD_REGISTRY?.[property.type as FieldKind];
-        const formattedValue = field?.getFormattedValue?.(value?.[property.title], property);
-        initialObject[property.title] = formattedValue;
-      }
-    });
-    return initialObject;
-  },
+  getDisplayValue: (value, properties) =>
+    formatObjectFieldValues(value, properties, "getDisplayValue"),
+  getSaveReadyValue: (value, properties) =>
+    formatObjectFieldValues(value, properties, "getSaveReadyValue"),
+
   capabilities: {supportsInnerFields: true},
   renderValue: (value, deletable) => (
     <div>

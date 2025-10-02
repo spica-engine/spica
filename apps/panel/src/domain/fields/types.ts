@@ -103,7 +103,8 @@ export interface FieldDefinition {
   requiresInnerFields?: (form: FieldCreationForm) => boolean; // whether this field kind structurally requires at least one inner field
   applyPresetLogic?: (form: FieldCreationForm, oldValues: FieldCreationForm) => FieldCreationForm; // apply preset logic to the form state, (only for string and array's with string items)
   // Optional formatting function for displaying values in lists, etc.
-  getFormattedValue: (value: any, properties: Property) => any;
+  getDisplayValue: (value: any, properties?: Property) => any;
+  getSaveReadyValue: (value: any, properties?: Property) => any; // transform the value into a save-ready format, if needed (e.g. for uploading to server)
   capabilities?: FieldCapabilities;
   renderValue: (value: any, deletable: boolean, className?: string) => React.ReactNode; // custom render function for displaying values
   renderInput: React.FC<{

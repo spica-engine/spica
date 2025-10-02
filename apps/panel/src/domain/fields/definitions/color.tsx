@@ -31,7 +31,8 @@ export const COLOR_DEFINITION: FieldDefinition = {
       description: undefined
     }) as TypeProperty,
   getDefaultValue: property => property.default || "#000000",
-  getFormattedValue: value => value ?? "#000000",
+  getDisplayValue: value => value ?? "#000000",
+  getSaveReadyValue: value => value ?? "#000000",
   capabilities: {hasDefaultValue: true, indexable: true},
   renderValue: value => value,
   renderInput: ({value, onChange, ref, className}) => {

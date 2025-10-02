@@ -31,7 +31,8 @@ export const TEXTAREA_DEFINITION: FieldDefinition = {
     title: property.title,
     description: property.description
   }),
-  getFormattedValue: value => value || "",
+  getDisplayValue: value => value || "",
+  getSaveReadyValue: value => value || "",
   capabilities: {translatable: true, indexable: true},
   renderValue: (value, deletable) => {
     return (

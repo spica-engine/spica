@@ -20,6 +20,17 @@ import {
 import styles from "../field-styles.module.scss";
 import {FIELD_REGISTRY} from "../registry";
 
+function formatArrayFieldValues(
+  value: any,
+  property: any,
+  method: "getDisplayValue" | "getSaveReadyValue"
+): Record<string, any> {
+  if (!Array.isArray(value)) return [];
+  const type = property?.items?.type || "string";
+  const field = FIELD_REGISTRY[type as FieldKind];
+  return value.map(item => field?.[method]?.(item, property?.items) || item);
+}
+
 export const ARRAY_DEFINITION: FieldDefinition = {
   kind: FieldKind.Array,
   display: {label: "Array", icon: "ballot"},
@@ -34,12 +45,8 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     )
   }),
   getDefaultValue: property => property.default,
-  getFormattedValue: (value, property) => {
-    if (!Array.isArray(value)) return [];
-    const type = property?.items?.type || "string";
-    const field = FIELD_REGISTRY[type as FieldKind];
-    return value.map(item => field?.getFormattedValue?.(item, property.items) || item);
-  },
+  getDisplayValue: (value, property) => formatArrayFieldValues(value, property, "getDisplayValue"),
+  getSaveReadyValue: (value, property) => formatArrayFieldValues(value, property, "getSaveReadyValue"),
   validateCreationForm: form => runYupValidation(ARRAY_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Array, properties, required),
@@ -125,14 +132,16 @@ export const ARRAY_DEFINITION: FieldDefinition = {
       ? applyPresetLogic(FieldKind.String, form, oldValues)
       : form,
   capabilities: {supportsInnerFields: true},
-  renderValue: (value, deletable) => (
+  renderValue: (value, deletable) => {
+    const formattedValue = Array.isArray(value) ? value : [];
+    return (
     <div className={styles.multipleSelectionCell}>
-      {value?.slice(0, 2)?.map?.((_: any, index: number) => (
+      {formattedValue?.slice(0, 2)?.map?.((_: any, index: number) => (
         <Button key={index} variant="icon" className={styles.grayBox}>
           {index + 1}
         </Button>
       ))}
-      {value?.length > 2 && (
+      {formattedValue?.length > 2 && (
         <Button variant="icon" className={styles.grayBox}>
           <Icon name="dotsHorizontal" size="xs" />
         </Button>
@@ -146,7 +155,8 @@ export const ARRAY_DEFINITION: FieldDefinition = {
         </Button>
       )}
     </div>
-  ),
+  )
+  },
   renderInput: ({value, onChange, ref, properties, title, onClose}) => {
     const containerRef = useRef<HTMLDivElement>(null);
 

@@ -20,7 +20,7 @@ export type RelationState = {
   lastSearch: string;
   primaryKey: string;
   initialFormattedValues?: FormattedInitialValue | FormattedInitialValue[];
-  stateInitialized: boolean
+  stateInitialized: boolean;
 };
 
 export type RelationInputHandlers = {
@@ -111,7 +111,10 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
           ...relationStatesRef.current[key],
           primaryKey: bucketPrimaryKey
         };
-        setRelationStates(prev => ({...prev, [key]: {...prev[key], primaryKey: bucketPrimaryKey, stateInitialized: false}}));
+        setRelationStates(prev => ({
+          ...prev,
+          [key]: {...prev[key], primaryKey: bucketPrimaryKey, stateInitialized: false}
+        }));
         return bucketPrimaryKey;
       } catch (e) {
         throw e;
@@ -143,7 +146,7 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
               skip: 25,
               total: data?.meta?.total || 0,
               lastSearch: "",
-              primaryKey: bucketPrimaryKey,
+              primaryKey: bucketPrimaryKey
             }
           }));
           return (
@@ -240,31 +243,33 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
 
   const ensureInitialValueFormatting = useCallback(
     async (bucketId: string, key: string, initialValue?: TypeInitialValues) => {
-      const noInitial = !initialValue;
-      const hasStoredFormattedInitialValues =
-        relationStatesRef.current[key]?.initialFormattedValues;
       const objectAlreadyFormattedByCaller =
         typeof initialValue === "object" && Object.keys(initialValue).toString() === "value";
       const arrayAlreadyFormattedByCaller =
         Array.isArray(initialValue) &&
         (initialValue.length === 0 || initialValue.every(i => typeof i !== "string"));
 
-      if (
-        noInitial ||
-        hasStoredFormattedInitialValues ||
-        arrayAlreadyFormattedByCaller ||
-        objectAlreadyFormattedByCaller
-      )
+      if (!initialValue || objectAlreadyFormattedByCaller || arrayAlreadyFormattedByCaller) {
+        setRelationStates(prev => ({
+          ...prev,
+          [key]: {...prev[key], stateInitialized: true}
+        }));
         return initialValue;
+      }
+
+      const hasStoredFormattedInitialValues =
+        relationStatesRef.current[key]?.initialFormattedValues;
+
+      if (hasStoredFormattedInitialValues) {
+        return initialValue;
+      }
 
       let formattedValue;
       const primaryKey = relationStatesRef.current[key]?.primaryKey;
       if (Array.isArray(initialValue)) {
         const formattedValues: Array<{label: string; value: string}> = [];
         for (const val of initialValue) {
-          console.log("val: ", val);
           const row = await getRowValue(val as string, bucketId, authToken);
-          console.log("row: ", row, primaryKey);
           const formatted = {
             value: (row as {_id: string})?._id,
             label: primaryKey ? (row as {[key: string]: string})?.[primaryKey] : ""
@@ -290,9 +295,9 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
   const ensureHandlers = useCallback(
     (bucketId: string, key: string, relationValue?: TypeInitialValues) => {
       if (getOptionsMap.current[key]) return;
-      getPrimaryKey(bucketId, key).then(() =>
-        ensureInitialValueFormatting(bucketId, key, relationValue)
-      );
+      getPrimaryKey(bucketId, key).then(() => {
+        ensureInitialValueFormatting(bucketId, key, relationValue);
+      });
       populateHandlers(bucketId, key);
     },
     [getPrimaryKey, populateHandlers]

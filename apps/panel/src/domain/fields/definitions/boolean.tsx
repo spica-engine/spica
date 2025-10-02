@@ -19,7 +19,8 @@ export const BOOLEAN_DEFINITION: FieldDefinition = {
     ),
     defaultValue: false
   }),
-  getFormattedValue: value => value,
+  getDisplayValue: value => value,
+  getSaveReadyValue: value => value,
   validateCreationForm: form => runYupValidation(BOOLEAN_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Boolean, properties, required),

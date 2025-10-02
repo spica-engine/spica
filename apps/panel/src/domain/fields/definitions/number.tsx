@@ -57,7 +57,8 @@ export const NUMBER_DEFINITION: FieldDefinition = {
       description: undefined
     }) as TypeProperty,
   getDefaultValue: property => property.default,
-  getFormattedValue: value => value ?? undefined,
+  getDisplayValue: value => value ?? undefined,
+  getSaveReadyValue: value => value ?? undefined,
   capabilities: {
     enumerable: true,
     numericConstraints: true,
@@ -68,9 +69,10 @@ export const NUMBER_DEFINITION: FieldDefinition = {
     indexable: true
   },
   renderValue: (value, deletable) => {
+    const formattedValue = NUMBER_DEFINITION.getDisplayValue(value);
     return (
       <div className={styles.defaultCell}>
-        <div className={styles.defaultCellData}>{value}</div>
+        <div className={styles.defaultCellData}>{formattedValue}</div>
         {deletable && value && (
           <Button variant="icon">
             <Icon name="close" size="sm" />

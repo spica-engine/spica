@@ -31,10 +31,11 @@ export const DATE_DEFINITION: FieldDefinition = {
     type: FieldKind.Date,
     description: undefined
   } as TypeProperty),
-  getFormattedValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
+  getDisplayValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
+  getSaveReadyValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
   capabilities: {hasDefaultValue: true, indexable: true},
   renderValue: (value, deletable) => {
-    if (!value || !isValidDate(new Date(value))) return "";
+    if (DATE_DEFINITION.getDisplayValue(value) === null) return "";
     const dateObj = new Date(value);
     const formattedDate = dateObj.toLocaleString("en-US", {
       month: "numeric",

@@ -45,7 +45,8 @@ export const MULTISELECT_DEFINITION: FieldDefinition = {
     type: FieldKind.Multiselect,
     description: undefined
   } as TypeProperty),
-  getFormattedValue: value => value || [],
+  getDisplayValue: value => value || [],
+  getSaveReadyValue: value => value || [],
   capabilities: {enumerable: true, indexable: true},
   renderValue: (value, deletable) => (
     <div className={styles.multipleSelectionCell}>

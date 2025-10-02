@@ -26,7 +26,8 @@ export const FILE_DEFINITION: FieldDefinition = {
     type: FieldKind.File,
     description: undefined
   } as TypeProperty),
-  getFormattedValue: value => value || null,
+  getDisplayValue: value => value || null,
+  getSaveReadyValue: value => value || null,
   capabilities: {},
   renderValue: value => (
     <div className={styles.fileCell}>

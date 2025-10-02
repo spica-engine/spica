@@ -21,7 +21,8 @@ export const JSON_DEFINITION: FieldDefinition = {
     ...property,
     type: FieldKind.Object, //FieldKind.Json is not in TypeInputTypeMap yet, so we use Object for now, will be fixed later
   } as TypeProperty),
-  getFormattedValue: value => JSON.parse(value),
+  getDisplayValue: value => JSON.parse(value),
+  getSaveReadyValue: value => JSON.stringify(value),
   capabilities: {indexable: true},
   renderValue: value => JSON.stringify(value).slice(0, 30) + (String(value).length > 30 ? "…" : "")
 };

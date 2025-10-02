@@ -32,7 +32,8 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
       type: FieldKind.Richtext,
       description: undefined
     }) as TypeProperty,
-  getFormattedValue: value => value || "",
+  getDisplayValue: value => value || "",
+  getSaveReadyValue: value => value || "",
   capabilities: {translatable: true},
   renderValue: (value, deletable, className) => (
     <div className={className}>

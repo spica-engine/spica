@@ -69,7 +69,8 @@ function collectBucketIds(Properties: Properties, cellValue: any): CollectedRela
     if (property.type !== "relation" && (property.type === "object" || property.type === "array")) {
       for (const prop of Object.values(property.properties || {})) {
         const childValue = value?.[(prop as Property).title];
-        if (prop && (typeof childValue === "object" || !childValue)) traverse(prop as Property, childValue);
+        if (prop && (typeof childValue === "object" || !childValue))
+          traverse(prop as Property, childValue);
       }
     }
   }
@@ -117,48 +118,50 @@ export const Cell = memo(
       }
     }, [type, constraints?.properties, constraints?.bucketId, ensureHandlers, id]);
 
-    const properties = useMemo<Property | undefined>(() => {
-      if (relationStates[id] && type === "relation") {
-        return field.buildValueProperty?.(constraints as Property, {
-          getOptions: getOptionsMap.current[id],
-          loadMoreOptions: loadMoreOptionsMap.current[id],
-          searchOptions: searchOptionsMap.current[id],
-          relationState: relationStates[id]
-        }) as Property;
-      } else if (
-        type === "object" &&
-        Object.keys(relationStates).length &&
-        Object.values(relationStates).every(i => i.stateInitialized)
-      ) {
-        return field.buildValueProperty?.(constraints as Property, {
-          getOptionsMap: getOptionsMap.current,
-          loadMoreOptionsMap: loadMoreOptionsMap.current,
-          searchOptionsMap: searchOptionsMap.current,
-          relationStates
-        }) as Property;
-      } else {
-        return field.buildValueProperty?.(constraints as Property) as Property;
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [relationStates, constraints]);
+    let properties: Property | undefined;
+    if (relationStates[id] && type === "relation") {
+      // if the cell is a relation and its state is ready
+      properties = field.buildValueProperty?.(constraints as Property, {
+        getOptions: getOptionsMap.current[id],
+        loadMoreOptions: loadMoreOptionsMap.current[id],
+        searchOptions: searchOptionsMap.current[id],
+        relationState: relationStates[id]
+      }) as Property;
+    } else if (
+      type === "object" &&
+      Object.keys(relationStates).length &&
+      Object.values(relationStates).every(i => i.stateInitialized)
+    ) {
+      properties = field.buildValueProperty?.(constraints as Property, {
+        getOptionsMap: getOptionsMap.current,
+        loadMoreOptionsMap: loadMoreOptionsMap.current,
+        searchOptionsMap: searchOptionsMap.current,
+        relationStates
+      }) as Property;
+    } else if (type === "object" && bucketIds.length > 0) {
+    } else {
+      properties = field.buildValueProperty?.(constraints as Property) as Property;
+    }
 
     const [cellValue, setCellValue] = useState();
     const isValueInitialized = useRef(false);
     useEffect(() => {
-      if (!properties || isValueInitialized.current) return;
-      if (type === "relation" && !relationStates[id]) return;
+      if (!properties || isValueInitialized.current) return; // Wait for properties to be ready and only run once
+      if (type === "relation" && !relationStates[id]) return; // Wait for relation state to be ready
       if (
-        type === "object" &&
-        bucketIds.length &&
-        (Object.keys(relationStates).length === 0 ||
-          !Object.values(relationStates).every(i => i.stateInitialized))
+        type === "object" && // For object types, we need to ensure all bucket IDs are initialized
+        bucketIds.length > 0 && // bucketIds are present
+        (Object.keys(relationStates).length === 0 /* no relation states present */ ||
+          !Object.values(relationStates).every(
+            i => i.stateInitialized
+          )) /* or not all relation states initialized */
       )
         return;
 
-      const formatted = field.getFormattedValue(value, properties as Property);
+      const formatted = field.getDisplayValue(value, properties as Property);
       setCellValue(formatted);
       isValueInitialized.current = true;
-    }, [properties]);
+    }, [properties, relationStates]);
 
     const handleStartEditing = () => {
       if (!editable || !properties) return;
@@ -168,7 +171,7 @@ export const Cell = memo(
     function handleStopEditing(newValue?: any) {
       setIsEditing(false);
       const notFormattedValue = arguments.length ? newValue : value;
-      const formattedValue = field?.getFormattedValue(notFormattedValue, properties as Property);
+      const formattedValue = field?.getDisplayValue(notFormattedValue, properties as Property);
       // Some of the inputs (like richtext) trigger their onChange on unmount,
       // This ensures the latest value is always rendered when the cell exits edit mode without saving.
       setTimeout(() => setCellValue(formattedValue), 0);
@@ -236,10 +239,11 @@ const EditableCell = memo(
       onStopEdit();
     };
 
-    const inputsWithPopover = ["object", "array", "location", "richtext"];
     useOnClickOutside({
       targetElements: [containerRef, inputRef, floatingElementRef],
-      onClickOutside: (inputsWithPopover.includes(type)) ? () => {} : handleDiscardEdit
+      onClickOutside: ["object", "array", "location", "richtext"].includes(type)
+        ? () => {}
+        : handleDiscardEdit
     });
 
     const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
@@ -266,11 +270,12 @@ const EditableCell = memo(
     }, [inputRef]);
 
     useEffect(() => {
-      if ((type !== "object" && type !== "array") || !error) return;
-      handleValidate();
+      if (!["object", "array"].includes(type) || !error) return;
+      const formattedValue = field.getDisplayValue(value, properties);
+      handleValidate(formattedValue);
     }, [value]);
 
-    const handleValidate = () => {
+    const handleValidate = (formattedValue: any) => {
       const validationErrors = field?.validateValue(
         value,
         constraints as Property,
@@ -295,16 +300,8 @@ const EditableCell = memo(
         return false;
       }
 
-      const formattedValue = field.getFormattedValue(value, properties);
-      let payload;
-      if (type === "relation" && properties.relationType === "onetomany") {
-        payload = Array.isArray(formattedValue)
-          ? formattedValue.map(i => i.value)
-          : [formattedValue?.value];
-      } else payload = typeof formattedValue === "string" ? formattedValue : formattedValue.value;
-
       const payloadError = field?.validateValue(
-        payload,
+        formattedValue,
         constraints as Property,
         constraints.required
       );
@@ -315,14 +312,14 @@ const EditableCell = memo(
         return false;
       }
       setError(undefined);
-      return {payload, formattedValue};
+      return true;
     };
 
     async function handleSave() {
       if (isSaving) return;
-      const payloadResult = handleValidate();
-      if (!payloadResult) return;
-      const {payload, formattedValue} = payloadResult;
+      const formattedValue = field.getSaveReadyValue(value, properties);
+      const isValid = handleValidate(formattedValue);
+      if (!isValid) return;
       setIsSaving(true);
       setError(undefined);
 
@@ -334,7 +331,7 @@ const EditableCell = memo(
 
       try {
         window.document.body.style.cursor = "wait";
-        const result = await onCellSave(payload, columnId, rowId, formattedValue);
+        const result = await onCellSave(formattedValue, columnId, rowId, formattedValue);
         if (result) setError(undefined);
       } catch (err) {
         const errMsg = {
