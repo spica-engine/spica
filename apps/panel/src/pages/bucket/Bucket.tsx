@@ -58,15 +58,34 @@ export default function Bucket() {
     refreshBucketData
   } = useBucket();
 
+  const [sortMeta] = useLocalStorage<{field: string; direction: "asc" | "desc"} | null>(
+    `${bucketId}-sort-meta`,
+    null
+  );
+
   useEffect(() => {
     if (!bucketId) return;
-    getBucketData(bucketId);
-  }, [bucketId]);
+    const query = {};
+    if (sortMeta)
+      (query as {sort: Record<string, number>}).sort = {
+        [sortMeta.field]: sortMeta.direction === "asc" ? 1 : -1
+      };
+    getBucketData(bucketId, query as BucketDataQueryWithIdType);
+  }, [bucketId, sortMeta]);
 
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
+  const [fieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, []);
+
   const formattedColumns: ColumnType[] = useMemo(() => {
     const columns = Object.values(bucket?.properties ?? {});
+
+    const orderedColumns = fieldsOrder.length
+      ? (fieldsOrder
+          .map(orderKey => columns.find(c => c.title === orderKey))
+          .filter(Boolean) as ColumnType[] as typeof columns)
+      : columns;
+
     return [
       {
         header: "_id",
@@ -78,9 +97,9 @@ export default function Bucket() {
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
+      ...orderedColumns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
     ] as ColumnType[];
-  }, [bucket]);
+  }, [bucket, fieldsOrder]);
 
   const searchableColumns = formattedColumns
     .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))

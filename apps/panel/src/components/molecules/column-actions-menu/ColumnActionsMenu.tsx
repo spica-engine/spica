@@ -32,8 +32,8 @@ const ColumnActionsMenu = ({
         actions: {
           value: (
             <>
-              <MenuActionItem icon="chevronRight" label="Move Right" onClick={onMoveRight} />
-              <MenuActionItem icon="chevronLeft" label="Move Left" onClick={onMoveLeft} />
+              {onMoveRight && <MenuActionItem icon="chevronRight" label="Move Right" onClick={onMoveRight} />}
+              {onMoveLeft && <MenuActionItem icon="chevronLeft" label="Move Left" onClick={onMoveLeft} />}
               <MenuActionItem icon="chevronDown" label="Sort By Asc" onClick={onSortAsc} />
               <MenuActionItem icon="chevronDown" label="Sort By Desc" onClick={onSortDesc} />
             </>

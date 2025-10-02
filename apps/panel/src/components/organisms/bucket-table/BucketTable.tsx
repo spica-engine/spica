@@ -1,12 +1,4 @@
-import {
-  Button,
-  Checkbox,
-  FlexElement,
-  FluidContainer,
-  Icon,
-  Popover,
-  type IconName
-} from "oziko-ui-kit";
+import {Button, Checkbox, Icon, Popover, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
@@ -17,11 +9,31 @@ import {
   FieldKind,
   formatValue,
   FIELD_REGISTRY,
-  buildCreationFormPropertiesFromForm,
+  buildCreationFormPropertiesFromForm
 } from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
+import useLocalStorage from "../../../hooks/useLocalStorage";
+
+function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
+  const index = arr.indexOf(target);
+  if (index === -1) return arr;
+
+  if (direction === "left" && index > 0) {
+    const newArr = [...arr];
+    [newArr[index - 1], newArr[index]] = [newArr[index], newArr[index - 1]];
+    return newArr;
+  }
+
+  if (direction === "right" && index < arr.length - 1) {
+    const newArr = [...arr];
+    [newArr[index], newArr[index + 1]] = [newArr[index + 1], newArr[index]];
+    return newArr;
+  }
+
+  return arr;
+}
 
 export type ColumnType = {
   id: string;
@@ -49,6 +61,8 @@ type BucketTableProps = {
   bucketId: string;
   loading: boolean;
   tableRef?: RefObject<HTMLElement | null>;
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
 };
 
 type ColumnHeaderProps = {
@@ -56,10 +70,10 @@ type ColumnHeaderProps = {
   icon?: IconName;
   showDropdownIcon?: boolean;
   onEdit?: () => void;
-  onMoveRight?: () => void;
-  onMoveLeft?: () => void;
-  onSortAsc?: () => void;
-  onSortDesc?: () => void;
+  onMoveRight?: (fieldTitle: string) => void;
+  onMoveLeft?: (fieldTitle: string) => void;
+  onSortAsc?: (fieldTitle: string) => void;
+  onSortDesc?: (fieldTitle: string) => void;
   onDelete?: () => void;
 };
 
@@ -89,6 +103,11 @@ const ColumnHeader = ({
   onSortDesc,
   onDelete
 }: ColumnHeaderProps) => {
+  const handleMoveRight = useCallback(() => onMoveRight?.(title!), [onMoveRight]);
+  const handleMoveLeft = useCallback(() => onMoveLeft?.(title!), [onMoveLeft]);
+  const handleSortAsc = useCallback(() => onSortAsc?.(title!), [onSortAsc]);
+  const handleSortDesc = useCallback(() => onSortDesc?.(title!), [onSortDesc]);
+
   return (
     <>
       <div className={styles.columnHeaderText}>
@@ -100,15 +119,15 @@ const ColumnHeader = ({
           content={
             <ColumnActionsMenu
               onEdit={onEdit}
-              onMoveRight={onMoveRight}
-              onMoveLeft={onMoveLeft}
-              onSortAsc={onSortAsc}
-              onSortDesc={onSortDesc}
+              onMoveRight={onMoveRight ? handleMoveRight : undefined}
+              onMoveLeft={onMoveLeft ? handleMoveLeft : undefined}
+              onSortAsc={handleSortAsc}
+              onSortDesc={handleSortDesc}
               onDelete={onDelete}
             />
           }
           contentProps={{
-            className: styles.popover,
+            className: styles.popover
           }}
           placement="topStart"
         >
@@ -212,22 +231,39 @@ function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
   return renderDefault();
 }
 
-function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
+function getFormattedColumns(
+  columns: ColumnType[],
+  bucketId: string,
+  onMoveLeft?: (fieldTitle: string) => void,
+  onMoveRight?: (fieldTitle: string) => void,
+  onSortAsc?: (fieldTitle: string) => void,
+  onSortDesc?: (fieldTitle: string) => void
+): ColumnType[] {
   return [
     defaultColumns[0],
-    ...columns.map((col, index) => ({
-      ...col,
-      header: (
-        <ColumnHeader
-          title={col.header}
-          icon={col.type && COLUMN_ICONS[col.type]}
-          showDropdownIcon={col.showDropdownIcon}
-        />
-      ),
-      headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      id: `${col.key}-${index}-s${bucketId}`,
-      cellClassName: styles.cell
-    })),
+    ...columns.map((col, index) => {
+      const {header, type, showDropdownIcon} = col;
+      const moveRightAllowed = index !== columns.length - 1 && index !== 0;
+      const moveLeftAllowed = index > 1;
+      const icon = COLUMN_ICONS[type as string];
+      return {
+        ...col,
+        header: (
+          <ColumnHeader
+            title={header}
+            icon={icon}
+            showDropdownIcon={showDropdownIcon}
+            onMoveRight={moveRightAllowed ? onMoveRight : undefined}
+            onMoveLeft={moveLeftAllowed ? onMoveLeft : undefined}
+            onSortAsc={onSortAsc}
+            onSortDesc={onSortDesc}
+          />
+        ),
+        headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
+        id: `${col.key}-${index}-s${bucketId}`,
+        cellClassName: styles.cell
+      };
+    }),
     defaultColumns[1]
   ];
 }
@@ -274,9 +310,49 @@ const BucketTable = ({
   bucketId,
   tableRef
 }: BucketTableProps) => {
-  const formattedColumns = useMemo(
-    () => getFormattedColumns(columns, bucketId),
+  const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, [
+    ...columns.slice(1).map(i => i.key)
+  ]);
+
+  const [sortMeta, setSortMeta] = useLocalStorage<{
+    field: string;
+    direction: "asc" | "desc";
+  } | null>(`${bucketId}-sort-meta`, null);
+  const onMoveLeft = useCallback(
+    (fieldTitle: string) => {
+      const oldIndex = fieldsOrder.indexOf(fieldTitle);
+      const newOrder = moveElement(fieldsOrder, "left", fieldsOrder[oldIndex]);
+      setFieldsOrder(newOrder);
+    },
     [columns, bucketId]
+  );
+
+  const onMoveRight = useCallback(
+    (fieldTitle: string) => {
+      const oldIndex = fieldsOrder.indexOf(fieldTitle);
+      const newOrder = moveElement(fieldsOrder, "right", fieldsOrder[oldIndex]);
+      setFieldsOrder(newOrder);
+    },
+    [columns, bucketId]
+  );
+
+  const onSortAsc = useCallback(
+    (fieldTitle: string) => {
+      setSortMeta({field: fieldTitle, direction: "asc"});
+    },
+    [bucketId]
+  );
+
+  const onSortDesc = useCallback(
+    (fieldTitle: string) => {
+      setSortMeta({field: fieldTitle, direction: "desc"});
+    },
+    [bucketId]
+  );
+
+  const formattedColumns = useMemo(
+    () => getFormattedColumns(columns, bucketId, onMoveLeft, onMoveRight, onSortAsc, onSortDesc),
+    [columns, bucketId, onMoveLeft, onMoveRight, onSortAsc, onSortDesc]
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(
