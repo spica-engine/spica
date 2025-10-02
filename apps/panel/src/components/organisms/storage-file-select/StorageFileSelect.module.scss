@@ -1,16 +1,51 @@
 .container {
   padding: 0;
+  width: 1280px !important;
+  height: 720px !important;
+
+.header{
+  padding: var(--padding-lg);
+}
 }
 
 .content {
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(5, 240px);
+  justify-content: space-between !important;
+  align-items: start;
+  gap: var(--gap-md);
   background: var(--color-background);
+  max-height: 600px;
+  overflow-y: auto;
+  padding: var(--padding-lg);
 
   .file {
-    min-width: 100px;
-    min-height: 100px;
-    max-height: 200px;
-    height: 200px;
+    width: 240px;
+    height: 240px;
+    min-width: 240px;
+    min-height: 240px;
+    max-width: 240px;
+    max-height: 240px;
   }
+}
+
+.endIndicator,
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--padding-xl);
+  color: var(--color-text-secondary);
+  background: var(--color-background);
+
+  font-size: var(--font-size-md);
+}
+
+.loadingIndicator {
+  border-radius: var(--border-radius-lg);
+}
+
+.emptyState {
+  border-radius: var(--border-radius-lg);
+  padding: var(--padding-xl);
+  font-size: var(--font-size-lg);
 }

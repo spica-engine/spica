@@ -27,6 +27,7 @@ interface NodeViewProps {
   dragging: boolean;
   isFocused?: boolean;
   focusMode?: boolean;
+  isDirectlyFocused?: boolean;
 }
 
 const NodeView: React.FC<NodeViewProps> = ({
@@ -38,6 +39,7 @@ const NodeView: React.FC<NodeViewProps> = ({
   dragging,
   isFocused = true,
   focusMode = false,
+  isDirectlyFocused = false,
 }) => {
   const mouseDownPosRef = React.useRef<{x: number, y: number} | null>(null);
   
@@ -110,7 +112,15 @@ const NodeView: React.FC<NodeViewProps> = ({
 
   return (
     <div
-      className={`${styles.node} ${focusMode && !isFocused ? styles.unfocused : ''}`}
+      className={`${styles.node} ${
+        focusMode && !isFocused 
+          ? styles.unfocused 
+          : focusMode && isDirectlyFocused
+            ? styles.focused
+            : focusMode && isFocused 
+            ? styles.related 
+            : ''
+      }`}
       style={{
         left: node.position.x,
         top: node.position.y,

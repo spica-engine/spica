@@ -14,6 +14,42 @@ export const useDiagramInteractions = (
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState<number>(1);
   const [isInitialized, setIsInitialized] = useState(false);
+  const ZOOM_INCREMENT = 0.02;
+
+  // Enhanced zoom functionality with wheel and keyboard controls
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        setZoom(prev => {
+          let zoomFactor = -e.deltaY * 0.002;
+          let newZoom = prev + zoomFactor;
+          newZoom = Math.min(Math.max(newZoom, 0.1), 3);
+          return newZoom;
+        });
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
+        e.preventDefault();
+        setZoom(prev => Math.min(prev + 0.1, 5));
+      }
+      if (e.ctrlKey && e.key === "-") {
+        e.preventDefault();
+        setZoom(prev => Math.max(prev - 0.1, 0.1));
+      }
+      if (e.ctrlKey && e.key === "0") {
+        e.preventDefault();
+        setZoom(1);
+      }
+    };
+    window.addEventListener("wheel", handleWheel, {passive: false});
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const calculateFitToView = () => {
     if (nodes.length === 0 || !containerRef.current) return { zoom: 1, pan: { x: 0, y: 0 } };
@@ -66,11 +102,11 @@ export const useDiagramInteractions = (
   }, [nodes, containerRef, isInitialized]);
 
   const zoomIn = () => {
-    setZoom(prev => Math.min(prev * 1.2, 3));
+    setZoom(prev => Math.min(prev + ZOOM_INCREMENT, 3));
   };
 
   const zoomOut = () => {
-    setZoom(prev => Math.max(prev / 1.2, 0.1));
+    setZoom(prev => Math.max(prev - ZOOM_INCREMENT, 0.1));
   };
 
   const fitToView = () => {
@@ -88,20 +124,12 @@ export const useDiagramInteractions = (
     setZoom(newZoom);
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    if (e.deltaY < 0) {
-      setZoom(prev => Math.min(prev * 1.05, 3));
-    } else {
-      setZoom(prev => Math.max(prev / 1.05, 0.3));
-    }
-  };
-
   const handlePanStart = (e: React.MouseEvent) => {
-    if (
-      e.target === containerRef.current ||
-      (e.target as HTMLElement).closest(".diagram-content")
-    ) {
+    const target = e.target as HTMLElement;
+    const isNodeElement = target.closest('[class*="node"]') || target.closest('[data-node-id]');
+    const isZoomControlElement = target.closest('[class*="controls"]') || target.closest('[class*="controlBtn"]');
+    
+    if (!isNodeElement && !isZoomControlElement) {
       setIsPanning(true);
       setLastPanPoint({ x: e.clientX, y: e.clientY });
       e.preventDefault();
@@ -180,7 +208,6 @@ export const useDiagramInteractions = (
     zoomOut,
     fitToView,
     resetView,
-    handleWheel,
     handlePanStart,
     handleMouseDown,
     handleMouseMove,
