@@ -132,11 +132,11 @@ export function collectBucketIds(Properties: Properties, cellValue: any): Collec
       const relationValue = value?.[property.title];
       collected.push({bucketId: property.bucketId as string, value: relationValue});
     }
-
-    if (property.type !== "relation" && (property.type === "object" || property.type === "array")) {
-      for (const prop of Object.values(property.properties || {})) {
+    if (property.type === "object" || property.type === "array") {
+      for (const prop of Object.values(property.properties || property.items.properties || {})) {
         const childValue = value?.[(prop as Property).title];
-        if (prop && (typeof childValue === "object" || !childValue)) traverse(prop as Property, childValue);
+        if (prop && (typeof childValue === "object" || !childValue))
+          traverse(prop as Property, childValue);
       }
     }
   }

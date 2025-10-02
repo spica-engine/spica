@@ -8,7 +8,12 @@
 import type {Property} from "src/services/bucketService";
 import {BASE_FORM_DEFAULTS, DEFAULT_COORDINATES, freezeFormDefaults} from "./defaults";
 import {applyPresetLogic} from "./presets";
-import {type FieldDefinition, FieldKind, type ObjectInputRelationHandlers, type TypeProperty} from "./types";
+import {
+  type FieldDefinition,
+  FieldKind,
+  type ObjectInputRelationHandlers,
+  type TypeProperty
+} from "./types";
 import {
   runYupValidation,
   STRING_FIELD_CREATION_FORM_SCHEMA,
@@ -29,7 +34,12 @@ import {
 } from "./validation";
 import type {TypeInputTypeMap} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import styles from "./field-styles.module.scss";
-import type { TypeGetOptionsMap, TypeGetMoreOptionsMap, TypeSearchOptionsMap, RelationState } from "src/hooks/useRelationInputHandlers";
+import type {
+  TypeGetOptionsMap,
+  TypeGetMoreOptionsMap,
+  TypeSearchOptionsMap,
+  RelationState
+} from "src/hooks/useRelationInputHandlers";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
   if (!input) return undefined;
@@ -218,11 +228,12 @@ const STRING_DEFINITION: FieldDefinition = {
     defaultValue: DefaultInputs.defaultString,
     configurationValues: TranslatableConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.String as any, //keyof TypeInputTypeMap,
-    title: property.title,
-    enum: property.enum
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.String,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   applyPresetLogic: (form, oldValues) => applyPresetLogic(FieldKind.String, form, oldValues),
   getFormattedValue: value => (value == null ? "" : String(value)),
   capabilities: {
@@ -270,11 +281,12 @@ const NUMBER_DEFINITION: FieldDefinition = {
     defaultValue: DefaultInputs.defaultNumber,
     configurationValues: BasicConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Number as keyof TypeInputTypeMap,
-    title: property.title,
-    enum: property.enum
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Number as keyof TypeInputTypeMap,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: value => (value == null ? "" : value),
   capabilities: {
     enumerable: true,
@@ -306,10 +318,12 @@ const BOOLEAN_DEFINITION: FieldDefinition = {
     defaultValue: DefaultInputs.defaultBoolean,
     configurationValues: PrimaryAndIndexConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Boolean as keyof TypeInputTypeMap,
-    title: property.title
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Boolean as keyof TypeInputTypeMap,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: v => (v === true ? "✔" : v === false ? "✘" : ""),
   capabilities: {hasDefaultValue: true, primaryEligible: true, indexable: true}
 };
@@ -334,10 +348,12 @@ const DATE_DEFINITION: FieldDefinition = {
     defaultValue: DefaultInputs.defaultDate,
     configurationValues: MinimalConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Date,
-    title: property.title
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Date,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: v => {
     if (!v) return "";
     try {
@@ -368,10 +384,12 @@ const TEXTAREA_DEFINITION: FieldDefinition = {
     fieldValues: BaseFields,
     configurationValues: TranslatableConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Textarea,
-    title: property.title
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Textarea,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: v => (v == null ? "" : String(v)),
   capabilities: {translatable: true, indexable: true}
 };
@@ -402,11 +420,12 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
     },
     configurationValues: MinimalConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Multiselect,
-    title: property.title,
-    enum: property.enum
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Multiselect,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: v => (Array.isArray(v) ? v.join(", ") : ""),
   capabilities: {enumerable: true, indexable: true}
 };
@@ -438,12 +457,14 @@ const RELATION_DEFINITION: FieldDefinition = {
     },
     configurationValues: MinimalConfig
   }),
-  buildValueProperty: (property, relationProps) => ({
-    type: FieldKind.Relation,
-    title: property.title,
-    className: styles.relationInput,
-    ...relationProps
-  }),
+  buildValueProperty: (property, relationProps) =>
+    ({
+      ...property,
+      type: FieldKind.Relation,
+      className: styles.relationInput,
+      ...relationProps,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: (value, property) => {
     if (!value) return null;
     const primaryKey = property?.relationState?.primaryKey;
@@ -459,7 +480,7 @@ const RELATION_DEFINITION: FieldDefinition = {
           i.value === v.value || i.value === v._id || (typeof v === "string" && i.value === v)
       )?.label;
 
-      if (property?.relationType === "onetomany") {
+    if (property?.relationType === "onetomany") {
       const values = Array.isArray(value)
         ? value.map(i => ({value: getValue(i), label: getLabel(i)}))
         : [{value: getValue(value), label: getLabel(value)}];
@@ -491,10 +512,12 @@ const LOCATION_DEFINITION: FieldDefinition = {
     fieldValues: BaseFields,
     configurationValues: OnlyRequiredConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Location,
-    title: property.title
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Location,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: v => {
     if (!v || typeof v !== "object") return "";
     if (Array.isArray((v as any).coordinates)) {
@@ -596,17 +619,25 @@ const ARRAY_DEFINITION: FieldDefinition = {
     },
     configurationValues: TranslatableMinimalConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Array,
-    title: property.title,
-    items:
-      property.items.type === "object"
-        ? {
-            ...property.items,
-            ...OBJECT_DEFINITION.buildValueProperty(property.items)
-          }
-        : property.items
-  }),
+  buildValueProperty: (property, relationHandlers) =>
+    ({
+      ...property,
+      type: FieldKind.Array,
+      title: property.title,
+      items:
+        property.items.type === "object"
+          ? {
+              ...property.items,
+              ...OBJECT_DEFINITION.buildValueProperty(property.items, relationHandlers)
+            }
+          : property.items.type === "relation"
+            ? {
+                ...property.items,
+                ...RELATION_DEFINITION.buildValueProperty(property.items, relationHandlers)
+              }
+            : property.items,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   requiresInnerFields: form => form.fieldValues?.arrayType === "object",
   applyPresetLogic: (form, oldValues) =>
     form.fieldValues.arrayType === "string"
@@ -638,7 +669,8 @@ const OBJECT_DEFINITION: FieldDefinition = {
       return {
         type: FieldKind.Object,
         properties: {},
-        description: undefined
+        description: undefined,
+        id: crypto.randomUUID()
       } as TypeProperty;
     }
 
@@ -658,6 +690,10 @@ const OBJECT_DEFINITION: FieldDefinition = {
         switch (property.type) {
           case "object": {
             builtChild = OBJECT_DEFINITION.buildValueProperty(property, relationHandlers);
+            break;
+          }
+          case "array": {
+            builtChild = ARRAY_DEFINITION.buildValueProperty(property, relationHandlers);
             break;
           }
           case "relation": {
@@ -686,14 +722,15 @@ const OBJECT_DEFINITION: FieldDefinition = {
       })
     );
 
-    const r = {
+    const result = {
       ...(rawProperty as Property),
       type: FieldKind.Object,
       properties: builtProperties,
-      description: undefined
+      description: undefined,
+      id: crypto.randomUUID()
     } as TypeProperty;
 
-    return r;
+    return result;
   },
   requiresInnerFields: _ => true,
   getFormattedValue: v => (v && typeof v === "object" ? `{${Object.keys(v).length}}` : ""),
@@ -717,10 +754,12 @@ const FILE_DEFINITION: FieldDefinition = {
     fieldValues: BaseFields,
     configurationValues: TranslatableMinimalConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.File,
-    title: property.title
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.File,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: v => {
     if (!v) return "";
     if (typeof v === "string") return v;
@@ -747,10 +786,12 @@ const RICHTEXT_DEFINITION: FieldDefinition = {
     fieldValues: BaseFields,
     configurationValues: TranslatableMinimalConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Richtext,
-    title: property.title
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Richtext,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: v => (v ? "[rich]" : ""),
   capabilities: {translatable: true}
 };
@@ -770,10 +811,12 @@ const JSON_DEFINITION: FieldDefinition = {
     fieldValues: BaseFields,
     configurationValues: BasicConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Object, //FieldKind.Json is not in TypeInputTypeMap yet, so we use Object for now, will be fixed later
-    title: property.title
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Object, //FieldKind.Json is not in TypeInputTypeMap yet, so we use Object for now, will be fixed later
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: v => {
     if (!v) return "";
     try {
@@ -802,10 +845,12 @@ const COLOR_DEFINITION: FieldDefinition = {
     fieldValues: BaseFields,
     configurationValues: BasicConfig
   }),
-  buildValueProperty: property => ({
-    type: FieldKind.Color as keyof TypeInputTypeMap,
-    title: property.title
-  }),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Color as keyof TypeInputTypeMap,
+      id: crypto.randomUUID()
+    }) as TypeProperty,
   getFormattedValue: v => (v ? String(v).toUpperCase() : ""),
   capabilities: {hasDefaultValue: true, indexable: true}
 };

@@ -6,8 +6,7 @@ import {
   useRelationInputHandlers,
   type RelationState
 } from "../../../hooks/useRelationInputHandlers";
-import { collectBucketIds } from "./NewBucketEntryPopupUtils";
-
+import {collectBucketIds} from "./NewBucketEntryPopupUtils";
 
 export const useValueProperties = (bucket: BucketType, authToken: string) => {
   const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers} =
@@ -53,13 +52,21 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
           totalOptionsLength: relationStates?.[key]?.total || 0
         };
         base = fieldDefinition.buildValueProperty(prop, relationProps);
+      } else if (kind === "array") {
+        const relationProps = {
+          getOptionsMap: getOptionsMap.current,
+          loadMoreOptionsMap: loadMoreOptionsMap.current,
+          searchOptionsMap: searchOptionsMap.current,
+          relationStates: relationStates as Record<string, RelationState>,
+          totalOptionsLength: relationStates?.[key]?.total || 0
+        };
+        base = fieldDefinition.buildValueProperty(prop, relationProps);
       } else {
         base = fieldDefinition.buildValueProperty(prop);
       }
-      const withId = {...base, id: crypto.randomUUID()};
 
       if (prop.type === "multiselect") {
-        withId.enum = prop.items.enum || [];
+        base.enum = prop.items.enum || [];
       }
 
       const keys = [
@@ -76,10 +83,10 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
       ] as (keyof (Property | TypeArrayItems))[];
       for (const k of keys) {
         if (prop?.[k as string] !== undefined) {
-          withId[k] = prop[k as string];
+          base[k] = prop[k as string];
         }
       }
-      output[key] = withId;
+      output[key] = base;
     }
 
     return output;

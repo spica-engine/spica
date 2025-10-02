@@ -35,6 +35,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const [errors, setErrors] = useState<TypeInputRepresenterError>({});
 
   const formattedProperties = useValueProperties(bucket, authToken);
+
   const [value, setValue] = useState<Record<string, any>>(() =>
     generateInitialValues(formattedProperties)
   );
@@ -47,7 +48,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
     setApiError(null);
     setErrors({});
     setValue(generateInitialValues(formattedProperties));
-  }, [isOpen, formattedProperties]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!errors || Object.keys(errors).length === 0) return;
@@ -58,7 +59,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
   const inputRepresentation = useInputRepresenter({
     properties: formattedProperties,
     onChange: setValue,
-    value,
+    value: Object.keys(value).length === 0 && value.constructor === Object ? "" : value,
     containerClassName: styles.inputFieldContainer,
     error: errors
   });
