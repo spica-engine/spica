@@ -1,0 +1,157 @@
+.node {
+  position: absolute;
+  width: 350px;
+  background: var(--color-soft);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 3px var(--padding-md) rgba(0, 0, 0, 0.2);
+  transition: opacity var(--transition-duration) ease, transform 0.2s ease, box-shadow var(--transition-duration) ease, z-index var(--transition-duration) ease;
+  overflow: hidden;
+  z-index: 10;
+  pointer-events: auto;
+
+  &.unfocused {
+    opacity: var(--disabled-opacity);
+  }
+
+  &.focused {
+    z-index: 20;
+    box-shadow: 0 var(--padding-sm) var(--padding-lg) rgba(0, 0, 0, 0.4);
+  }
+
+  &.related {
+    z-index: 11;
+    box-shadow: 0 var(--padding-xs) var(--padding-md) rgba(0, 0, 0, 0.35);
+  }
+
+  &:hover {
+    box-shadow: 0 var(--padding-sm) var(--padding-lg) rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+  }
+}
+
+.nodeHeader {
+  background: var(--color-primary);
+  color: var(--color-font-secondary);
+  padding: var(--padding-md) var(--padding-lg);
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  flex: 1;
+}
+}
+
+
+
+.nodeId {
+  font-size: var(--font-size-sm);
+  opacity: 0.8;
+  margin-left: var(--padding-sm-plus);
+}
+
+.nodeControls {
+  display: flex;
+  gap: var(--gap-xs);
+
+  .controlBtn {
+  background: none;
+  border: none;
+  color: var(--color-font-secondary);
+  cursor: pointer;
+  padding: var(--padding-xs);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.controlBtn.delete {
+  color: var(--color-danger-light);
+}
+}
+
+
+.nodeFields {
+  padding: var(--padding-lg);
+}
+.fieldRow {
+  display: flex;
+  align-items: center;
+  padding: var(--padding-sm-plus) 0;
+  border-bottom: var(--border-width-default) solid #eee;
+  gap: var(--gap-md);
+  &:last-of-type {
+    border-bottom: none;
+  }
+
+  &:hover .fieldControls {
+    opacity: 1;
+  }
+}
+
+.fieldIcon {
+  font-size: var(--icon-size-sm);
+  width: var(--padding-xl);
+}
+
+.fieldName {
+  flex: 1;
+  font-weight: 500;
+}
+
+.fieldType {
+  color: var(--color-font-tertiary);
+  font-size: var(--font-size-sm);
+  background: var(--color-soft);
+  padding: var(--padding-xs) var(--padding-sm-plus);
+  border-radius: var(--border-radius-md);
+}
+
+.fieldControls {
+  display: flex;
+  gap: var(--gap-xs);
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  .controlBtn {
+    background: none;
+    border: none;
+    color: var(--color-font-tertiary);
+    cursor: pointer;
+    padding: var(--padding-xs);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+
+    &.delete {
+      color: var(--color-danger-light);
+    }
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+.addFieldBtn {
+  width: 100%;
+  padding: var(--padding-md);
+  margin-top: var(--padding-md);
+  border: 2px dashed #ddd;
+  background: none;
+  color: var(--color-font-tertiary);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: var(--icon-size-sm);
+
+  &:hover {
+    border-color: var(--color-primary-light);
+    color: var(--color-primary-light);
+  }
+}

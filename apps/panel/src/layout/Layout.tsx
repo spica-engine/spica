@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from "react";
-import {Outlet} from "react-router-dom";
+import {Outlet, useNavigate} from "react-router-dom";
 import SideBar, {type ReorderableItemGroup} from "../components/organisms/sidebar/SideBar";
-import {menuItems, navigatorItems} from "../pages/home/mock";
+import {getMenuItems, navigatorItems} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
 import Toolbar from "../components/atoms/toolbar/Toolbar";
@@ -12,10 +12,13 @@ import {useBucket} from "../contexts/BucketContext";
 import {useRequestTracker} from "../hooks/useRequestTracker";
 
 const Layout = () => {
+  const navigate = useNavigate();
   const [token] = useLocalStorage<string>("token", "");
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const {bucketData, buckets, getBuckets, updateBucketOrderOnServer, updateBucketOrderLocally} = useBucket();
+
+  const menuItems = getMenuItems(navigate);
 
   const mergedNavigatorItems: {
     [key: string]: ReorderableItemGroup;

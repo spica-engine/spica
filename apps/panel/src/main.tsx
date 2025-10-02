@@ -5,7 +5,8 @@ import "oziko-ui-kit/dist/index.css";
 import "./styles.scss";
 import {AuthProvider} from "./contexts/AuthContext";
 import {DrawerProvider} from "./contexts/DrawerContext";
-import { BucketProvider } from "./contexts/BucketContext";
+import {BucketProvider} from "./contexts/BucketContext";
+import {StorageProvider} from "./contexts/StorageContext";
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
@@ -14,7 +15,9 @@ root.render(
     <DrawerProvider>
       <AuthProvider>
         <BucketProvider>
-          <AppRouter />
+          <StorageProvider>
+            <AppRouter />
+          </StorageProvider>
         </BucketProvider>
       </AuthProvider>
     </DrawerProvider>

@@ -42,12 +42,6 @@ type BucketContextType = {
       write: string;
     }
   ) => Promise<any>;
-  updateBucketLimitation: (bucket: BucketType) => Promise<void>;
-  updateBucketLimitationFields: (
-    bucket: BucketType,
-    countLimit: number,
-    limitExceedBehaviour: "prevent" | "remove"
-  ) => Promise<any>;
   createBucket: (title: string) => Promise<any>;
   createBucketField: (
     bucket: BucketType,
@@ -55,6 +49,12 @@ type BucketContextType = {
     requiredField?: string,
     primaryField?: string
   ) => Promise<any>;
+  updateBucketLimitation: (bucket: BucketType) => Promise<void>;
+  updateBucketLimitationFields: (
+    bucket: BucketType,
+    countLimit: number,
+    limitExceedBehaviour: "prevent" | "remove"
+  ) => Promise<void>;
   deleteBucketEntry: (entryId: string, bucketId: string) => Promise<string | null>;
   buckets: BucketType[];
   bucketCategories: string[];
@@ -98,19 +98,19 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucketHistory,
     apiUpdateBucketReadonly,
     apiUpdateBucketRule,
-    apiUpdatebucketLimitiation,
-    apiUpdatebucketLimitiationFields,
     apiCreateBucket,
     apiCreateBucketField,
+    apiUpdatebucketLimitiation,
+    apiUpdatebucketLimitiationFields,
     apiBuckets,
     apiUpdateBucketRuleError,
     apiUpdateBucketRuleLoading,
     apiBucketDataLoading,
     apiDeleteBucketHistoryLoading,
     apiDeleteBucketHistoryError,
+    apiCreateBucketFieldError,
     apiUpdateBucketLimitationFieldsLoading,
     apiUpdateBucketLimitationFieldsError,
-    apiCreateBucketFieldError,
     apiDeleteBucketEntry
   } = useBucketService();
 
@@ -446,6 +446,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketReadonly,
       updateBucketLimitation,
       updateBucketLimitationFields,
+      updateBucketLimitation,
+      updateBucketLimitationFields,
       createBucket,
       createBucketField,
       deleteBucketEntry,
@@ -457,6 +459,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       bucketCategories,
       apiDeleteBucketHistoryLoading,
       apiDeleteBucketHistoryError,
+      apiUpdateBucketLimitationFieldsLoading,
+      apiUpdateBucketLimitationFieldsError,
       apiUpdateBucketLimitationFieldsLoading,
       apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,

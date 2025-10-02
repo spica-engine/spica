@@ -259,26 +259,6 @@ export const useBucketService = () => {
     [updateBucketRule]
   );
 
-  const apiUpdatebucketLimitiation = useCallback(
-    async (bucketId: string, body: BucketType) => {
-      return await bucketLimitationRequest({
-        endpoint: `/api/bucket/${bucketId}`,
-        body
-      });
-    },
-    [bucketLimitationRequest]
-  );
-
-  const apiUpdatebucketLimitiationFields = useCallback(
-    (bucket: BucketType) => {
-      return bucketLimitationRequest({
-        endpoint: `/api/bucket/${bucket._id}`,
-        body: bucket
-      });
-    },
-    [bucketLimitationRequest]
-  );
-
   const apiCreateBucket = useCallback(
     (title: string, order: number) => {
       const bucket = {
@@ -320,6 +300,26 @@ export const useBucketService = () => {
       });
     },
     [deleteBucketEntry]
+  );
+
+  const apiUpdatebucketLimitiation = useCallback(
+    async (bucketId: string, body: BucketType) => {
+      return await bucketLimitationRequest({
+        endpoint: `/api/bucket/${bucketId}`,
+        body
+      });
+    },
+    [bucketLimitationRequest]
+  );
+
+  const apiUpdatebucketLimitiationFields = useCallback(
+    (bucket: BucketType) => {
+      return bucketLimitationRequest({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: bucket
+      });
+    },
+    [bucketLimitationRequest]
   );
 
   return {
