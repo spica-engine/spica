@@ -1,33 +1,31 @@
-import {cloneElement, memo, useRef, useState, type ReactNode, useMemo} from "react";
+import {cloneElement, memo, useState, type ReactNode} from "react";
 import {FlexElement, ListItem, Icon, Popover, type IconName} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
-import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
-import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
-import type {Placement} from "oziko-ui-kit/build/dist/custom-hooks/useAdaptivePosition";
+import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
 import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
-import { FIELD_REGISTRY } from "../../../domain/fields/registry";
+import {FIELD_REGISTRY} from "../../../domain/fields/registry";
+import type {FieldFormState} from "../../../domain/fields/types";
+import type {BucketType} from "src/services/bucketService";
 
 type BucketFieldSelectionPopupProps = {
   children: ReactNode;
-  onSaveAndClose: (values: FormValues) => void | Promise<any>;
+  onSaveAndClose: (values: FieldFormState, kind: FieldKind) => void | Promise<BucketType>;
   placement?: Placement;
   popupType?: PopupType;
+  forbiddenFieldNames?: string[];
 };
 
 const BucketFieldSelectionPopup = ({
   children,
   onSaveAndClose,
   placement,
-  popupType = "add-field"
+  popupType = "add-field",
+  forbiddenFieldNames = []
 }: BucketFieldSelectionPopupProps) => {
   const [selectedType, setSelectedType] = useState<FieldKind | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const {bucketFieldPopups, setBucketFieldPopups} = useBucketFieldPopups();
-  const fieldOptionsListContainerRef = useRef<HTMLDivElement>(null);
-
-  const [bucketFieldPopupId, setBucketFieldPopupId] = useState<string>();
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -35,45 +33,21 @@ const BucketFieldSelectionPopup = ({
   };
 
   const handleClose = () => {
-    setBucketFieldPopups(bucketFieldPopups.filter(popup => popup.id !== bucketFieldPopupId));
     setIsOpen(false);
     setSelectedType(null);
   };
-
-  const fieldOptions = useMemo(
-    () =>
-      Object.values(FIELD_REGISTRY).map(o => ({
-        icon: o.display.icon as IconName,
-        text: o.display.label,
-        kind: o.kind
-      })),
-    []
-  );
 
   const handleTypeSelect = (kind: FieldKind) => {
     setSelectedType(kind);
   };
 
-  const handleConfigurationClose = (event?: MouseEvent) => {
-    if (event?.target && fieldOptionsListContainerRef.current?.contains(event.target as Node)) {
-      return;
-    }
-    setSelectedType(null);
-  };
-
-  const handleSaveAndClose = (values: FormValues) => {
-    const maybePromise = onSaveAndClose(values);
-
-    const runHandlers = () => {
-      setSelectedType(null);
+  const handleSaveAndClose = async (values: FieldFormState) => {
+    try {
+      await onSaveAndClose(values, selectedType as FieldKind);
       handleClose();
-    };
-
-    if (maybePromise instanceof Promise) {
-      maybePromise.then(res => {
-        if (res) runHandlers();
-      });
-    } else runHandlers();
+    } catch (error) {
+      console.error("Error saving field:", error);
+    }
   };
 
   const outerPortalClassName = `${!selectedType ? "" : styles.hidden}`;
@@ -89,26 +63,21 @@ const BucketFieldSelectionPopup = ({
         <BucketFieldConfigurationPopup
           isOpen={!!selectedType}
           selectedType={selectedType as FieldKind | null}
-          onClose={handleConfigurationClose}
+          onClose={handleClose}
           onSaveAndClose={handleSaveAndClose}
-          onRegister={setBucketFieldPopupId}
           popupType={popupType}
+          forbiddenFieldNames={forbiddenFieldNames}
         >
-          <FlexElement
-            ref={fieldOptionsListContainerRef}
-            dimensionX={200}
-            direction="vertical"
-            className={styles.container}
-          >
-            {fieldOptions.map(({icon, text, kind}) => (
+          <FlexElement dimensionX={200} direction="vertical" className={styles.container}>
+            {Object.values(FIELD_REGISTRY).map(field => (
               <ListItem
-                key={kind}
-                label={text}
+                key={field.kind}
+                label={field.display.label}
                 dimensionX="fill"
                 dimensionY="hug"
                 gap={10}
-                prefix={{children: <Icon name={icon} />}}
-                onClick={() => handleTypeSelect(kind)}
+                prefix={{children: <Icon name={field.display.icon as IconName} />}}
+                onClick={() => handleTypeSelect(field.kind)}
                 className={styles.item}
               />
             ))}
