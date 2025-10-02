@@ -60,6 +60,8 @@
 
 .configurationOptionsContainer {
   width: 100%;
+  background: var(--color-input-background);
+  border-radius: var(--border-radius-md);
   > div > div {
     gap: 0 !important;
   }
