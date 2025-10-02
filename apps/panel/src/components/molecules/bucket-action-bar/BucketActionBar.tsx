@@ -5,7 +5,7 @@ import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
 import Confirmation from "../confirmation/Confirmation";
-import type {BucketDataType, BucketType} from "src/services/bucketService";
+import type {BucketDataType, BucketType, Property} from "src/services/bucketService";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 
@@ -38,19 +38,33 @@ const generateErrorMessage = (failedIds: string[]): string | null => {
 
 const DeleteWarningParagraph = ({
   selectedEntries,
-  isDataDependent,
+  dependentRelations,
   bucketData
 }: {
   selectedEntries: Set<string>;
-  isDataDependent: boolean;
+  dependentRelations: Property[];
   bucketData: Record<string, any>[];
 }) => {
   const count = selectedEntries.size;
   const isSingle = count === 1;
 
-  const dependentEntries = isDataDependent
-    ? bucketData.filter(entry => selectedEntries.has(entry._id))
-    : [];
+  const relationTitles = dependentRelations.map(relation => relation.title);
+  const dependentEntries =
+    dependentRelations.length > 0 ? bucketData.filter(entry => selectedEntries.has(entry._id)) : [];
+
+  const relatedIds = dependentEntries.flatMap(entry => {
+    return relationTitles.flatMap(title => {
+      const fieldValue = entry[title];
+
+      if (Array.isArray(fieldValue)) {
+        return fieldValue.map(item => item._id);
+      }
+
+      return fieldValue?._id || [];
+    });
+  });
+
+  const uniqueRelatedIds = [...new Set(relatedIds)];
 
   return (
     <div className="space-y-2">
@@ -59,15 +73,15 @@ const DeleteWarningParagraph = ({
         {isSingle ? "y" : "ies"}.
       </p>
 
-      {isDataDependent && (
+      {dependentEntries.length > 0 && (
         <div>
           <p>
             Break all relations and delete {count} dependent document
             {isSingle ? "" : "s"}:
           </p>
           <ul>
-            {dependentEntries.map(entry => (
-              <li key={entry._id}>{entry._id}</li>
+            {uniqueRelatedIds.map(entryId => (
+              <li key={entryId}>{entryId}</li>
             ))}
           </ul>
         </div>
@@ -130,9 +144,9 @@ const BucketActionBar = ({
     [debouncedSearch]
   );
 
-  const isDataDependent = useMemo(
+  const dependentRelations = useMemo(
     () =>
-      Object.values(bucket?.properties).find(prop => prop.type === "relation" && prop.dependent),
+      Object.values(bucket?.properties).filter(prop => prop.type === "relation" && prop.dependent),
     [bucket]
   );
 
@@ -246,7 +260,7 @@ const BucketActionBar = ({
             <>
               <DeleteWarningParagraph
                 selectedEntries={selectedEntries}
-                isDataDependent={!!isDataDependent}
+                dependentRelations={dependentRelations}
                 bucketData={bucketData}
               />
               <span>
