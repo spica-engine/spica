@@ -1,4 +1,3 @@
-import styles from "./field-styles.module.scss";
 
 export const BaseFields = {
   title: {type: "string", title: "Name", required: true},
@@ -87,7 +86,6 @@ export const PresetPanel = {
   enumeratedValues: {
     ...SpecializedInputs.enumeratedValues,
     renderCondition: {field: "makeEnumerated", equals: true},
-    className: styles.presetsEnumeratedValues
   },
   definePattern: ValidationInputs.definePattern,
   regularExpression: {

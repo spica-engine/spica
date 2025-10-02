@@ -135,9 +135,11 @@
 .multipleSelectionTab {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-sm);
+  gap: var(--gap-md);
 }
 
-.presetsContainer > div > div {
-  gap: var(--gap-sm) !important;
+.presetsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
 }

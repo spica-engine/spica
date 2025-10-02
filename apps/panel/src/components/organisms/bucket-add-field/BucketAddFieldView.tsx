@@ -221,17 +221,21 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     if (innerFieldExists) {
       createConfig(
         "Inner Fields",
-        <div>
-          {formValues.innerFields?.map?.((field: InnerFieldFormState, i: number) => (
-            <InnerField
-              key={i}
-              field={field}
-              onSaveInnerField={handleSaveInnerField}
-              onDeleteInnerField={handleDeleteInnerField}
-              forbiddenFieldNames={forbiddenFieldNames}
-            />
-          ))}
-        </div>
+        <>
+          {formValues?.innerFields?.length && (
+            <div>
+              {formValues.innerFields.map((field: InnerFieldFormState, i: number) => (
+                <InnerField
+                  key={i}
+                  field={field}
+                  onSaveInnerField={handleSaveInnerField}
+                  onDeleteInnerField={handleDeleteInnerField}
+                  forbiddenFieldNames={forbiddenFieldNames}
+                />
+              ))}
+            </div>
+          )}
+        </>
       );
     }
 
