@@ -56,10 +56,11 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
     setErrors((newErrors as TypeInputRepresenterError) || {});
   }, [value, validateValues, formattedProperties, bucket?.required]);
 
+  const normalizedValue = Object.keys(value).length === 0 && value.constructor === Object ? "" : value;
   const inputRepresentation = useInputRepresenter({
     properties: formattedProperties,
     onChange: setValue,
-    value: Object.keys(value).length === 0 && value.constructor === Object ? "" : value,
+    value: normalizedValue,
     containerClassName: styles.inputFieldContainer,
     error: errors
   });

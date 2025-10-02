@@ -1,22 +1,11 @@
+@import "../../../styles/mixins";
+
+
 .modalBody {
   display: block !important;
   max-height: 500px;
   width: 100%;
-}
-
-/* For Chrome, Safari and Opera */
-.modalBody::-webkit-scrollbar {
-  display: none;
-}
-
-/* For Firefox */
-.modalBody {
-  scrollbar-width: none; /* hides scrollbar */
-}
-
-/* For IE, Edge */
-.modalBody {
-  -ms-overflow-style: none; /* hides scrollbar */
+  @include hideScrollbar;
 }
 
 .modalContent {

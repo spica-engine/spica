@@ -106,7 +106,6 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
         const data = await res.json();
         const bucketPrimaryKey = data?.primary;
         if (!bucketPrimaryKey) return;
-        // update both ref and state so consumers re-render with the primary key
         relationStatesRef.current[key] = {
           ...relationStatesRef.current[key],
           primaryKey: bucketPrimaryKey
@@ -127,10 +126,8 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
     (bucketId: string, key: string) => {
       if (getOptionsMap.current[key]) return;
 
-      // Always create a function that will ensure primary key exists before fetching.
       getOptionsMap.current[key] = async () => {
         if (!bucketId) return [];
-        // make sure we have primary key (may trigger network request)
         const bucketPrimaryKey = await getPrimaryKey(bucketId, key);
         if (!bucketPrimaryKey) return [];
         try {
