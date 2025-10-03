@@ -1,6 +1,6 @@
 import {Button, Icon, useAdaptivePosition, Portal, RichTextInput, Popover} from "oziko-ui-kit";
 import {useRef, useEffect, type RefObject} from "react";
-import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
+import {TranslatableMinimalConfig, BaseFields, MinimalConfig} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {type FieldDefinition, FieldKind, type TypeProperty} from "../types";
 import {
@@ -9,6 +9,7 @@ import {
   validateFieldValue
 } from "../validation";
 import styles from "../field-styles.module.scss";
+import {buildBaseProperty} from "../registry";
 
 export const RICHTEXT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Richtext,
@@ -17,15 +18,17 @@ export const RICHTEXT_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.Richtext
   }),
   validateCreationForm: form => runYupValidation(RICHTEXT_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Richtext, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
-    configurationValues: TranslatableMinimalConfig
+    configurationValues: isInnerField ? MinimalConfig : TranslatableMinimalConfig
   }),
+  buildCreationFormApiProperty: buildBaseProperty,
   buildValueProperty: property =>
     ({
       ...property,

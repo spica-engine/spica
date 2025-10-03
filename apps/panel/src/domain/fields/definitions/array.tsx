@@ -1,5 +1,5 @@
 import {Button, Icon, useAdaptivePosition, Portal, ArrayInput, Popover} from "oziko-ui-kit";
-import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import {useRef, useEffect, type RefObject} from "react";
 import {
   TranslatableMinimalConfig,
@@ -7,7 +7,8 @@ import {
   SpecializedInputs,
   DefaultInputs,
   ValidationInputs,
-  PresetPanel
+  PresetPanel,
+  MinimalConfig
 } from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {applyPresetLogic} from "../presets";
@@ -18,7 +19,8 @@ import {
   validateFieldValue
 } from "../validation";
 import styles from "../field-styles.module.scss";
-import {FIELD_REGISTRY} from "../registry";
+import {buildBaseProperty, FIELD_REGISTRY} from "../registry";
+import type {Property} from "src/services/bucketService";
 
 function formatArrayFieldValues(
   value: any,
@@ -38,19 +40,31 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     fieldValues: {
       ...BASE_FORM_DEFAULTS.fieldValues,
-      arrayType: "string"
+      arrayItemTitle: "",
+      arrayItemDescription: "",
+      arrayType: "",
+      chip: [],
+      enumeratedValues: [],
+      makeEnumerated: false,
+      definePattern: false,
+      regularExpression: "",
+      uniqueItems: false,
+      defaultString: "",
+      multipleSelectionType: ""
     },
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.Array
   }),
   getDefaultValue: property => property.default,
   getDisplayValue: (value, property) => formatArrayFieldValues(value, property, "getDisplayValue"),
-  getSaveReadyValue: (value, property) => formatArrayFieldValues(value, property, "getSaveReadyValue"),
+  getSaveReadyValue: (value, property) =>
+    formatArrayFieldValues(value, property, "getSaveReadyValue"),
   validateCreationForm: form => runYupValidation(ARRAY_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Array, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: {
       ...BaseFields,
       arrayType: SpecializedInputs.arrayType,
@@ -85,6 +99,10 @@ export const ARRAY_DEFINITION: FieldDefinition = {
         valueType: "number",
         renderCondition: {field: "makeEnumerated", equals: true}
       },
+      definePattern: {
+        ...ValidationInputs.definePattern,
+        renderCondition: {field: "arrayType", equals: "string"}
+      },
       regularExpression: {
         ...ValidationInputs.regularExpression,
         renderCondition: {field: "definePattern", equals: true}
@@ -118,8 +136,53 @@ export const ARRAY_DEFINITION: FieldDefinition = {
       regularExpression: PresetPanel.regularExpression,
       enumeratedValues: PresetPanel.enumeratedValues
     },
-    configurationValues: TranslatableMinimalConfig
+    configurationValues: isInnerField ? MinimalConfig : TranslatableMinimalConfig
   }),
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const fv = form.fieldValues;
+    const pv = form.presetValues || {};
+
+    const item: Property = {
+      type: fv.arrayType,
+      title: fv.arrayItemTitle,
+      description: fv.arrayItemDescription?.length ? fv.arrayItemDescription : undefined,
+      default: form.defaultValue
+    };
+
+    if (pv.enumeratedValues?.length) item.enum = pv.enumeratedValues;
+    if (pv.regularExpression?.length) item.pattern = pv.regularExpression;
+    if (fv.maxNumber != null) item.maximum = fv.maxNumber;
+    if (fv.minNumber != null) item.minimum = fv.minNumber;
+
+    if (fv.arrayType === "multiselect") {
+      item.items = {
+        type: fv.multipleSelectionType,
+        enum: Array.isArray(fv.chip) && fv.chip.length ? fv.chip : undefined
+      };
+      item.maxItems = fv.maxItems;
+    }
+
+    if (fv.arrayType === "object" && Array.isArray(form.innerFields)) {
+      item.properties = form.innerFields.reduce<Record<string, Property>>((acc, inner) => {
+        const innerDef = FIELD_REGISTRY[inner.type as FieldKind];
+        if (innerDef?.buildCreationFormApiProperty) {
+          acc[inner.fieldValues.title] = innerDef.buildCreationFormApiProperty(inner);
+        } else {
+          throw new Error(`Cannot build property for field type ${inner?.type}`);
+        }
+        return acc;
+      }, {});
+    }
+
+    return {
+      ...base,
+      maxItems: fv.arrayType === "multiselect" ? undefined : (fv.maxItems ?? undefined),
+      minItems: fv.minItems ?? undefined,
+      uniqueItems: fv.uniqueItems ?? undefined,
+      items: item
+    };
+  },
   buildValueProperty: property =>
     ({
       ...property,
@@ -135,27 +198,27 @@ export const ARRAY_DEFINITION: FieldDefinition = {
   renderValue: (value, deletable) => {
     const formattedValue = Array.isArray(value) ? value : [];
     return (
-    <div className={styles.multipleSelectionCell}>
-      {formattedValue?.slice(0, 2)?.map?.((_: any, index: number) => (
-        <Button key={index} variant="icon" className={styles.grayBox}>
-          {index + 1}
-        </Button>
-      ))}
-      {formattedValue?.length > 2 && (
+      <div className={styles.multipleSelectionCell}>
+        {formattedValue?.slice(0, 2)?.map?.((_: any, index: number) => (
+          <Button key={index} variant="icon" className={styles.grayBox}>
+            {index + 1}
+          </Button>
+        ))}
+        {formattedValue?.length > 2 && (
+          <Button variant="icon" className={styles.grayBox}>
+            <Icon name="dotsHorizontal" size="xs" />
+          </Button>
+        )}
         <Button variant="icon" className={styles.grayBox}>
-          <Icon name="dotsHorizontal" size="xs" />
+          <Icon name="plus" size="xs" />
         </Button>
-      )}
-      <Button variant="icon" className={styles.grayBox}>
-        <Icon name="plus" size="xs" />
-      </Button>
-      {deletable && value && (
-        <Button variant="icon">
-          <Icon name="close" size="sm" />
-        </Button>
-      )}
-    </div>
-  )
+        {deletable && value && (
+          <Button variant="icon">
+            <Icon name="close" size="sm" />
+          </Button>
+        )}
+      </div>
+    );
   },
   renderInput: ({value, onChange, ref, properties, title, onClose}) => {
     const containerRef = useRef<HTMLDivElement>(null);

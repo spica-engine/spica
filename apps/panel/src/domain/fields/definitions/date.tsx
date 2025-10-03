@@ -5,6 +5,7 @@ import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
 import {runYupValidation, DATE_FIELD_CREATION_FORM_SCHEMA, validateFieldValue} from "../validation";
 import styles from "../field-styles.module.scss";
+import {buildBaseProperty} from "../registry";
 
 function isValidDate(dateObject: Date) {
   return dateObject instanceof Date && !isNaN(dateObject.getTime());
@@ -16,7 +17,8 @@ export const DATE_DEFINITION: FieldDefinition = {
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),
-    defaultValue: {defaultDate: ""}
+    defaultValue: undefined,
+    type: FieldKind.Date
   }),
   validateCreationForm: form => runYupValidation(DATE_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
@@ -26,11 +28,19 @@ export const DATE_DEFINITION: FieldDefinition = {
     defaultValue: DefaultInputs.defaultDate as unknown as TypeProperty,
     configurationValues: MinimalConfig
   }),
-  buildValueProperty: property => ({
-    ...property,
-    type: FieldKind.Date,
-    description: undefined
-  } as TypeProperty),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Date,
+      description: undefined
+    }) as TypeProperty,
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    return {
+      ...base,
+      default: form?.defaultValue?.length ? form.defaultValue : undefined
+    };
+  },
   getDisplayValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
   getSaveReadyValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
   capabilities: {hasDefaultValue: true, indexable: true},

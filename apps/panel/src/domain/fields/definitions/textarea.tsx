@@ -1,6 +1,6 @@
 import {Button, Icon, TextAreaInput} from "oziko-ui-kit";
 import type {RefObject} from "react";
-import {TranslatableConfig, BaseFields} from "../creation-form-schemas";
+import {TranslatableConfig, BaseFields, MinimalConfig} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {FieldKind, type FieldDefinition} from "../types";
 import {
@@ -9,6 +9,7 @@ import {
   validateFieldValue
 } from "../validation";
 import styles from "../field-styles.module.scss";
+import {buildBaseProperty} from "../registry";
 
 export const TEXTAREA_DEFINITION: FieldDefinition = {
   kind: FieldKind.Textarea,
@@ -17,20 +18,22 @@ export const TEXTAREA_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.Textarea
   }),
   validateCreationForm: form => runYupValidation(TEXTAREA_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Textarea, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
-    configurationValues: TranslatableConfig
+    configurationValues: isInnerField ? MinimalConfig : TranslatableConfig
   }),
   buildValueProperty: property => ({
     type: FieldKind.Textarea,
     title: property.title,
     description: property.description
   }),
+  buildCreationFormApiProperty: buildBaseProperty,
   getDisplayValue: value => value || "",
   getSaveReadyValue: value => value || "",
   capabilities: {translatable: true, indexable: true},

@@ -1,7 +1,8 @@
 import * as Yup from "yup";
 import {FieldKind, type FieldCreationForm, type FieldFormState, type FormError} from "./types";
 import type {Property} from "src/services/bucketService";
-export type ValidationSchema = Yup.ObjectSchema<any>;
+import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+export type ValidationSchema = Yup.ObjectSchema<Record<string, unknown>>;
 
 export const TITLE_REGEX = /^(?!(_id)$)([a-z_0-9]*)+$/; // lowercase, digits, underscore, not _id
 
@@ -54,7 +55,9 @@ export const STRING_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
 });
 export const NUMBER_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
   ...BASE_FIELD_CREATION_FORM_SCHEMA,
-  fieldValues: (BASE_FIELD_CREATION_FORM_SCHEMA.fieldValues as Yup.ObjectSchema<any>).shape({
+  fieldValues: (
+    BASE_FIELD_CREATION_FORM_SCHEMA.fieldValues as Yup.ObjectSchema<Record<string, unknown>>
+  ).shape({
     minimum: Yup.number().nullable().optional(),
     maximum: Yup.number()
       .nullable()
@@ -102,10 +105,15 @@ export const TEXTAREA_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object(
   ...BASE_FIELD_CREATION_FORM_SCHEMA
 });
 export const MULTISELECT_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
-  ...BASE_FIELD_CREATION_FORM_SCHEMA
+  ...BASE_FIELD_CREATION_FORM_SCHEMA,
+  multipleSelectionTab: Yup.object({
+    multipleSelectionType: Yup.string().required("Multiple Selection Type is required")
+  })
 });
 export const RELATION_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
-  fieldValues: (BASE_FIELD_CREATION_FORM_SCHEMA.fieldValues as Yup.ObjectSchema<any>).shape({
+  fieldValues: (
+    BASE_FIELD_CREATION_FORM_SCHEMA.fieldValues as Yup.ObjectSchema<Record<string, unknown>>
+  ).shape({
     bucket: Yup.string().required("Bucket is required"),
     relationType: Yup.string().required("Relation Type is required"),
     dependent: Yup.boolean().optional(),
@@ -117,10 +125,26 @@ export const LOCATION_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object(
   ...BASE_FIELD_CREATION_FORM_SCHEMA
 });
 export const ARRAY_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
-  ...BASE_FIELD_CREATION_FORM_SCHEMA
+  ...BASE_FIELD_CREATION_FORM_SCHEMA,
+  innerFields: Yup.array().when("fieldValues.arrayType", {
+    is: "object",
+    then: sch => sch.min(1, "At least one inner field is required"),
+    otherwise: sch => sch.optional()
+  }),
+  fieldValues: BASE_FIELD_CREATION_FORM_SCHEMA.fieldValues.shape({
+    arrayType: Yup.string().required("Array Type is required"),
+    multipleSelectionType: Yup.string().when("arrayType", {
+      is: "multiselect",
+      then: sch => sch.required("Multiple Selection Type is required"),
+      otherwise: sch => sch.optional()
+    })
+  })
 });
 export const OBJECT_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
-  ...BASE_FIELD_CREATION_FORM_SCHEMA
+  ...BASE_FIELD_CREATION_FORM_SCHEMA,
+  innerFields: Yup.array()
+    .min(1, "At least one inner field is required")
+    .required("Inner fields are required")
 });
 export const FILE_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
   ...BASE_FIELD_CREATION_FORM_SCHEMA
@@ -510,19 +534,44 @@ export const validateFieldValue = (
 export function runYupValidation(
   schema: ValidationSchema,
   form: FieldCreationForm
-): Record<string, string> | null {
+): TypeInputRepresenterError | null {
   try {
     schema.validateSync(form, {abortEarly: false, stripUnknown: false});
     return null;
   } catch (err) {
     if (err instanceof Yup.ValidationError) {
-      const out: Record<string, string> = {};
+      const flatErrors: Record<string, string> = {};
       for (const e of err.inner) {
-        if (e.path && !out[e.path]) out[e.path] = e.message;
+        if (e.path && !flatErrors[e.path]) flatErrors[e.path] = e.message;
       }
-      if (!err.inner.length && err.path) out[err.path] = err.message;
-      return Object.keys(out).length ? out : null;
+      if (!err.inner.length && err.path) flatErrors[err.path] = err.message;
+
+      if (Object.keys(flatErrors).length === 0) return null;
+
+      return createNestedErrorObject(flatErrors);
     }
     return {__root: "Validation failed"};
   }
+}
+
+function createNestedErrorObject(flatErrors: Record<string, string>) {
+  const result: TypeInputRepresenterError | string | null = {};
+
+  for (const [path, message] of Object.entries(flatErrors)) {
+    const keys = path.split(".");
+    let current = result;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      if (!(key in current)) {
+        current[key] = {};
+      }
+      current = current[key] as TypeInputRepresenterError;
+    }
+
+    const lastKey = keys[keys.length - 1];
+    current[lastKey] = message;
+  }
+
+  return result;
 }

@@ -1,4 +1,4 @@
-import {useAdaptivePosition, Portal, LocationInput, Popover} from "oziko-ui-kit";
+import {useAdaptivePosition, LocationInput, Popover} from "oziko-ui-kit";
 import {useRef, useEffect, type RefObject} from "react";
 import {OnlyRequiredConfig, BaseFields} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS, DEFAULT_COORDINATES} from "../defaults";
@@ -9,6 +9,7 @@ import {
   validateFieldValue
 } from "../validation";
 import styles from "../field-styles.module.scss";
+import {buildBaseProperty} from "../registry";
 
 type TypeLocation =
   | {lat: number; lng: number}
@@ -37,10 +38,10 @@ export const LOCATION_DEFINITION: FieldDefinition = {
   display: {label: "Location", icon: "mapMarker"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
-
     configurationValues: Object.fromEntries(
       Object.keys(OnlyRequiredConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.Location
   }),
   validateCreationForm: form => runYupValidation(LOCATION_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
@@ -55,6 +56,7 @@ export const LOCATION_DEFINITION: FieldDefinition = {
       type: FieldKind.Location,
       description: undefined
     }) as TypeProperty,
+  buildCreationFormApiProperty: buildBaseProperty,
   getDisplayValue: value => {
     const locationType = getLocationType(value);
     const normalizedLocationByType = {

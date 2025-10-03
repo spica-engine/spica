@@ -12,20 +12,21 @@ import {type IconName, Popover} from "oziko-ui-kit";
 import {FieldKind} from "../../../domain/fields";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
-import type {FormValues} from "../../../components/organisms/bucket-add-field/BucketAddFieldBusiness";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import type {PopupType} from "./BucketFieldPopupsContext";
+import type {FieldFormState} from "../../../domain/fields/types";
 
 type BucketFieldConfigurationPopupProps = {
   selectedType: FieldKind | null;
   onClose: (event?: MouseEvent) => void;
-  onSaveAndClose: (values: FormValues) => void;
+  onSaveAndClose: (values: FieldFormState) => void;
   children: ReactNode;
   isOpen: boolean;
-  initialValues?: FormValues;
-  onRegister?: (id: string) => void;
+  initialValues?: FieldFormState;
   iconName?: IconName;
   popupType?: PopupType;
+  forbiddenFieldNames?: string[];
+  popoverClassName?: string;
 };
 
 const BucketFieldConfigurationPopup = ({
@@ -35,9 +36,10 @@ const BucketFieldConfigurationPopup = ({
   children,
   isOpen,
   initialValues,
-  onRegister,
   iconName,
-  popupType
+  popupType,
+  forbiddenFieldNames,
+  popoverClassName
 }: BucketFieldConfigurationPopupProps) => {
   const innerContainerRef = useRef<HTMLDivElement>(null);
   const bucketAddFieldRef = useRef<HTMLDivElement>(null);
@@ -46,32 +48,27 @@ const BucketFieldConfigurationPopup = ({
   const {setBucketFieldPopups, bucketFieldPopups} = useBucketFieldPopups();
   const id = useId();
 
-  const {isLastPopup, offsetX, offsetY, configurationMapping, bucketAddFieldPopoverStyles} =
+  const {isLastPopup, offsetX, offsetY, bucketAddFieldPopoverStyles, isPopupRegistered} =
     useMemo(() => {
+      const isPopupRegistered = bucketFieldPopups.some(p => p.id === id);
       const popupStackEmpty = bucketFieldPopups.length === 0;
       const isFirstPopup = popupStackEmpty || bucketFieldPopups[0]?.id === id;
       const isLastPopup = popupStackEmpty || bucketFieldPopups.at(-1)?.id === id;
       const offsetX = isFirstPopup ? 200 : 0;
       const offsetY = isFirstPopup ? 0 : 10;
-  const configurationMapping = {}; // configuration now derived in Business component
-      const bucketAddFieldPopoverStyles = isFirstPopup
-        ? {}
-        : bucketFieldPopups[bucketFieldPopups.findIndex(i => i.id === id) - 1]?.innerFieldStyles ||
-          {};
+
+      const parentPopupIndex = bucketFieldPopups.findIndex(p => p.id === id) - 1;
+      const innerFieldStyles = bucketFieldPopups[parentPopupIndex]?.innerFieldStyles || {};
+      const bucketAddFieldPopoverStyles = isFirstPopup ? {} : innerFieldStyles;
 
       return {
         isLastPopup,
         offsetX,
         offsetY,
-  configurationMapping: undefined,
-        bucketAddFieldPopoverStyles
+        bucketAddFieldPopoverStyles,
+        isPopupRegistered
       };
     }, [bucketFieldPopups, id]);
-
-  const isPopupRegistered = useMemo(
-    () => bucketFieldPopups.some(p => p.id === id),
-    [bucketFieldPopups]
-  );
 
   useEffect(() => {
     if (!isOpen || !bucketAddFieldRef.current || !isPopupRegistered) return;
@@ -92,31 +89,35 @@ const BucketFieldConfigurationPopup = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    setBucketFieldPopups(prev => [
-      ...prev,
-      {
-        id,
-        innerFieldStyles,
-        fieldKind: selectedType || undefined,
-        iconName,
-        popupType,
-        initialValues
-      }
-    ]);
-    onRegister?.(id);
+    const newBucketFieldPopup = {
+      id,
+      innerFieldStyles,
+      fieldKind: selectedType || undefined,
+      iconName,
+      popupType,
+      initialValues,
+      forbiddenFieldNames: forbiddenFieldNames ?? []
+    };
+    setBucketFieldPopups(prev => [...prev, newBucketFieldPopup]);
     return () => {
       setBucketFieldPopups(prev => prev.filter(popup => popup.id !== id));
     };
   }, [isOpen, innerFieldStyles]);
 
+
+  const handleClose = (e?: MouseEvent) => {
+    setBucketFieldPopups(bucketFieldPopups.filter(popup => popup.id !== id));
+    onClose(e);
+  };
+
   return (
     <Popover
       open={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       placement="leftStart"
-      containerProps={{ref: innerContainerRef}}
+      containerProps={{ref: innerContainerRef, className: popoverClassName || ""}}
       contentProps={{
-        className: `${styles.bucketAddField} ${!isLastPopup ? styles.lowBrightness : ""}`,
+        className: `${styles.bucketAddField} ${!isLastPopup ? styles.hidden : ""}`,
         ref: bucketAddFieldRef,
         style: {
           transform: `translate(${offsetX}px, ${offsetY}px)`,
@@ -125,11 +126,16 @@ const BucketFieldConfigurationPopup = ({
       }}
       content={
         isPopupRegistered && (
-          <BucketAddField onSuccess={onClose} onSaveAndClose={onSaveAndClose} popupId={id} />
+          <BucketAddField
+            onClose={handleClose}
+            onSaveAndClose={onSaveAndClose}
+            popupId={id}
+            forbiddenFieldNames={forbiddenFieldNames}
+          />
         )
       }
     >
-      {children as any}
+      {children}
     </Popover>
   );
 };

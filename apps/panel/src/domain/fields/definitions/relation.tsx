@@ -5,17 +5,29 @@ import {
   RelationInput,
   type TypeFluidContainer
 } from "oziko-ui-kit";
-import type {TypeRelationSelect} from "oziko-ui-kit/build/dist/components/atoms/relation-input/relation-select/RelationSelect";
+import type {TypeRelationSelect} from "oziko-ui-kit/dist/components/atoms/relation-input/relation-select/RelationSelect";
 import {useRef, useEffect} from "react";
-import {MinimalConfig, BaseFields, SpecializedInputs} from "../creation-form-schemas";
+import {
+  MinimalConfig,
+  BaseFields,
+  SpecializedInputs,
+  RelationFieldConfig
+} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
-import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
+import {
+  FieldKind,
+  type FieldCreationFormProperties,
+  type FieldDefinition,
+  type TypeProperty
+} from "../types";
 import {
   runYupValidation,
   RELATION_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "../validation";
 import styles from "../field-styles.module.scss";
+import type {BucketType} from "src/services/bucketService";
+import {buildBaseProperty} from "../registry";
 
 export const RELATION_DEFINITION: FieldDefinition = {
   kind: FieldKind.Relation,
@@ -25,23 +37,29 @@ export const RELATION_DEFINITION: FieldDefinition = {
     fieldValues: {
       ...BASE_FORM_DEFAULTS.fieldValues,
       bucket: "",
-      relationType: "onetoone",
+      relationType: "",
       dependent: false
     },
-    configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false]))
+    configurationValues: Object.fromEntries(
+      Object.keys(RelationFieldConfig).map(key => [key, false])
+    ),
+    type: FieldKind.Relation
   }),
   validateCreationForm: form => runYupValidation(RELATION_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Relation, properties, required),
-  buildCreationFormProperties: () => ({
-    fieldValues: {
-      ...BaseFields,
-      bucket: SpecializedInputs.bucket,
-      relationType: SpecializedInputs.relationType,
-      dependent: SpecializedInputs.dependent
-    },
-    configurationValues: MinimalConfig
-  }),
+  buildCreationFormProperties: (_, buckets?: BucketType[]) =>
+    ({
+      fieldValues: {
+        ...BaseFields,
+        bucket: {
+          ...SpecializedInputs.bucket,
+          enum: buckets?.map(b => ({label: b.title, value: b._id})) || []
+        },
+        relationType: SpecializedInputs.relationType
+      },
+      configurationValues: RelationFieldConfig
+    }) as unknown as FieldCreationFormProperties,
   buildValueProperty: (property, relationProps) => {
     return {
       ...property,
@@ -49,6 +67,16 @@ export const RELATION_DEFINITION: FieldDefinition = {
       ...relationProps,
       description: undefined
     } as TypeProperty;
+  },
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const fv = form.fieldValues;
+    return {
+      ...base,
+      relationType: fv.relationType,
+      bucketId: fv.bucket,
+      dependent: fv.dependent || undefined
+    };
   },
   getDisplayValue: (value, property) => {
     if (!value) return null;
@@ -78,12 +106,13 @@ export const RELATION_DEFINITION: FieldDefinition = {
     };
   },
   getSaveReadyValue: (value, property) => {
-    
-    const displayValue = RELATION_DEFINITION.getDisplayValue(value, property)
-    if (property?.relationType !== "onetomany") return displayValue.value
+    const displayValue = RELATION_DEFINITION.getDisplayValue(value, property);
+    if (property?.relationType !== "onetomany") return displayValue.value;
     const payload = Array.isArray(displayValue)
       ? displayValue.map(i => i.value)
-      : displayValue?.value ? [displayValue?.value]: [];
+      : displayValue?.value
+        ? [displayValue?.value]
+        : [];
     return payload;
   },
   capabilities: {indexable: true},

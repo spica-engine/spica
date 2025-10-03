@@ -1,5 +1,10 @@
 import {Checkbox} from "oziko-ui-kit";
-import {PrimaryAndIndexConfig, BaseFields, DefaultInputs} from "../creation-form-schemas";
+import {
+  PrimaryAndIndexConfig,
+  BaseFields,
+  DefaultInputs,
+  MinimalInnerFieldConfig
+} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
 import {
@@ -8,6 +13,7 @@ import {
   validateFieldValue
 } from "../validation";
 import styles from "../field-styles.module.scss";
+import {buildBaseProperty} from "../registry";
 
 export const BOOLEAN_DEFINITION: FieldDefinition = {
   kind: FieldKind.Boolean,
@@ -17,17 +23,26 @@ export const BOOLEAN_DEFINITION: FieldDefinition = {
     configurationValues: Object.fromEntries(
       Object.keys(PrimaryAndIndexConfig).map(key => [key, false])
     ),
-    defaultValue: false
+    defaultValue: false,
+    type: FieldKind.Boolean
   }),
   getDisplayValue: value => value,
   getSaveReadyValue: value => value,
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const def = form.defaultValue;
+    return {
+      ...base,
+      default: def
+    };
+  },
   validateCreationForm: form => runYupValidation(BOOLEAN_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Boolean, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
     defaultValue: DefaultInputs.defaultBoolean,
-    configurationValues: PrimaryAndIndexConfig
+    configurationValues: isInnerField ? MinimalInnerFieldConfig : PrimaryAndIndexConfig
   }),
   buildValueProperty: property =>
     ({

@@ -4,7 +4,8 @@ import {
   MinimalConfig,
   BaseFields,
   SpecializedInputs,
-  ValidationInputs
+  ValidationInputs,
+  PresetPanel
 } from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
@@ -14,6 +15,8 @@ import {
   validateFieldValue
 } from "../validation";
 import styles from "../field-styles.module.scss";
+import {buildBaseProperty} from "../registry";
+import {applyPresetLogic} from "../presets";
 
 export const MULTISELECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Multiselect,
@@ -22,29 +25,70 @@ export const MULTISELECT_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     fieldValues: {
       ...BASE_FORM_DEFAULTS.fieldValues,
-      multipleSelectionType: "string",
-      chip: [],
+      chip: []
+    },
+    configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),
+    multipleSelectionTab: {
+      multipleSelectionType: "",
       maxItems: undefined
     },
-    configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false]))
+    type: FieldKind.Multiselect
   }),
   validateCreationForm: form => runYupValidation(MULTISELECT_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Multiselect, properties, required),
   buildCreationFormProperties: () => ({
-    fieldValues: {
-      ...BaseFields,
+    fieldValues: BaseFields,
+    configurationValues: MinimalConfig,
+    presetValues: PresetPanel,
+    multipleSelectionTab: {
       multipleSelectionType: SpecializedInputs.multipleSelectionType,
-      maxItems: ValidationInputs.maxItems,
-      chip: SpecializedInputs.chip
-    },
-    configurationValues: MinimalConfig
+      maxItems: ValidationInputs.maxItems
+    }
   }),
-  buildValueProperty: property => ({
-    ...property,
-    type: FieldKind.Multiselect,
-    description: undefined
-  } as TypeProperty),
+  buildValueProperty: property =>
+    ({
+      ...property,
+      type: FieldKind.Multiselect,
+      description: undefined
+    }) as TypeProperty,
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const fv = form.fieldValues;
+    const multipleSelectionTab = form.multipleSelectionTab;
+    return {
+      ...base,
+      items: {
+        type: multipleSelectionTab?.multipleSelectionType,
+        enum: Array.isArray(fv.chip) && fv.chip.length ? fv.chip : undefined
+      },
+      maxItems: multipleSelectionTab?.maxItems
+    };
+  },
+  applyPresetLogic: (form, oldValues) => applyPresetLogic(FieldKind.String, form, oldValues),
+  applySelectionTypeLogic: (form, properties) => {
+    const newSelectionType = form.multipleSelectionTab?.multipleSelectionType;
+    const updatedForm = {
+      ...form,
+      fieldValues: {
+        ...form.fieldValues,
+        chip:
+          newSelectionType === "string"
+            ? form.fieldValues.chip.map((v: string | number) => String(v))
+            : form.fieldValues.chip
+                .map((v: string | number) => Number(v))
+                .filter((v: number) => !isNaN(v))
+      }
+    };
+    const updatedFieldProperties = {
+      ...properties,
+      chip: {
+        ...SpecializedInputs.chip,
+        valueType: newSelectionType
+      }
+    };
+    return {updatedForm, updatedFieldProperties};
+  },
   getDisplayValue: value => value || [],
   getSaveReadyValue: value => value || [],
   capabilities: {enumerable: true, indexable: true},

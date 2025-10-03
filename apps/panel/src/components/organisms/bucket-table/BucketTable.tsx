@@ -1,4 +1,4 @@
-import {Button, Icon, Popover, type IconName} from "oziko-ui-kit";
+import {Button, Checkbox, Icon, Popover, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
@@ -8,11 +8,11 @@ import {useBucket} from "../../../contexts/BucketContext";
 import {
   FieldKind,
   FIELD_REGISTRY,
-  buildCreationFormPropertiesFromForm
 } from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
-import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
+import type {FieldFormState} from "../../../domain/fields/types";
+import type { Property } from "src/services/bucketService";
 
 type BaseColumn = {
   id: string;
@@ -132,16 +132,16 @@ const NewFieldHeader = memo(() => {
   );
 
   const handleSaveAndClose = useCallback(
-    (values: FormValues) => {
+    (values: FieldFormState, kind: FieldKind) => {
       if (!bucket) return;
 
-      const fieldProperty = buildCreationFormPropertiesFromForm(values as any);
+      const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
       return createBucketField(
         bucket,
-        fieldProperty as any,
+        fieldProperty as Property,
         requiredField ? title : undefined,
         primaryField ? title : undefined
       );
@@ -149,9 +149,17 @@ const NewFieldHeader = memo(() => {
     [bucket, createBucketField]
   );
 
+  const forbiddenFieldNames = useMemo(() => {
+    if (!bucket) return [];
+    return Object.keys(bucket.properties || {});
+  }, [bucket]);
+
   return (
     <BucketFieldPopupsProvider>
-      <BucketFieldPopup onSaveAndClose={handleSaveAndClose}>
+      <BucketFieldPopup
+        onSaveAndClose={handleSaveAndClose}
+        forbiddenFieldNames={forbiddenFieldNames}
+      >
         <Button
           variant="icon"
           className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
@@ -191,7 +199,30 @@ const defaultColumns: FormattedColumn[] = [
   }
 ];
 
-function getFormattedColumns(columns: RawColumn[], bucketId: string): FormattedColumn[] {
+// TODO: Refactor this function to render more appropriate UI elements for each field type.
+// Many field types are currently using the generic `renderDefault()`.
+function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
+  function renderDefault() {
+    return (
+      <div className={styles.defaultCell}>
+        <div className={styles.defaultCellData}>{cellData}</div>
+        {deletable && cellData && (
+          <Button variant="icon">
+            <Icon name="close" size="sm" />
+          </Button>
+        )}
+      </div>
+    );
+  }
+  if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
+  if (type) {
+    const formatted = FIELD_REGISTRY[type]?.getFormattedValue?.(cellData);
+    if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
+  }
+  return renderDefault();
+}
+
+function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
   return [
     defaultColumns[0],
     ...columns.map((col, index) => ({

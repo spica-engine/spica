@@ -1,5 +1,5 @@
-import { FIELD_REGISTRY } from "./registry";
-import {FieldKind, type FieldCreationForm} from "./types";
+import {FIELD_REGISTRY} from "./registry";
+import type {FieldCreationForm, FieldKind} from "./types";
 
 export function freezeFormDefaults(seed: FieldCreationForm): FieldCreationForm {
   Object.freeze(seed.fieldValues);
@@ -22,7 +22,7 @@ export const BASE_FORM_DEFAULTS = {
     title: "",
     description: ""
   },
-  presetValues: BASE_PRESET_DEFAULTS,
+  presetValues: BASE_PRESET_DEFAULTS
 };
 
 export function makeInnerFieldDefaults(kind: FieldKind): FieldCreationForm {

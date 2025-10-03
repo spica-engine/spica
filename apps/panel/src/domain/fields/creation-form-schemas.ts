@@ -99,7 +99,6 @@ export const PresetPanel = {
   }
 } as const;
 
-// Configuration field definitions and mappings
 export const ConfigDefs = {
   primaryField: {type: "boolean", title: "Primary Field", size: "extra-small"},
   translate: {type: "boolean", title: "Translatable", size: "extra-small"},

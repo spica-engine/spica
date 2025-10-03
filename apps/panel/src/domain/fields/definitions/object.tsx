@@ -1,5 +1,5 @@
 import {Button, Icon, ObjectInput, Popover, Portal, useAdaptivePosition} from "oziko-ui-kit";
-import {TranslatableMinimalConfig, BaseFields} from "../creation-form-schemas";
+import {TranslatableMinimalConfig, BaseFields, MinimalConfig} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {
   type FieldDefinition,
@@ -13,8 +13,8 @@ import {
   validateFieldValue
 } from "../validation";
 import styles from "../field-styles.module.scss";
-import {FIELD_REGISTRY} from "../registry";
-import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
+import {buildBaseProperty, FIELD_REGISTRY} from "../registry";
+import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import {useEffect, useRef, type RefObject} from "react";
 import type {Property} from "src/services/bucketService";
 import type {
@@ -47,7 +47,7 @@ function formatObjectFieldValues(
     }
   });
   return result;
-};
+}
 
 export const OBJECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Object,
@@ -56,15 +56,34 @@ export const OBJECT_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.Object
   }),
   validateCreationForm: form => runYupValidation(OBJECT_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Object, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
-    configurationValues: TranslatableMinimalConfig
+    configurationValues: isInnerField ? MinimalConfig : TranslatableMinimalConfig
   }),
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const properties = Array.isArray(form.innerFields)
+      ? form.innerFields.reduce<Record<string, Property>>((acc, inner) => {
+          const innerDef = FIELD_REGISTRY[inner.type as FieldKind];
+          if (innerDef?.buildCreationFormApiProperty) {
+            acc[inner.fieldValues.title] = innerDef.buildCreationFormApiProperty(inner);
+          } else {
+            throw new Error(`Cannot build property for field type ${inner?.type}`);
+          }
+          return acc;
+        }, {})
+      : undefined;
+    return {
+      ...base,
+      properties
+    } as Property;
+  },
   buildValueProperty: (rawProperty, relationHandlers) => {
     if (!rawProperty) {
       return {

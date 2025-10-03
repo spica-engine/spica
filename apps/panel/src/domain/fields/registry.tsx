@@ -5,7 +5,7 @@
  * defaults, property construction, parsing, formatting and validation.
  */
 
-import {type FieldDefinition, FieldKind} from "./types";
+import {type FieldDefinition, type FieldFormState, FieldKind} from "./types";
 import {ARRAY_DEFINITION} from "./definitions/array";
 import {BOOLEAN_DEFINITION} from "./definitions/boolean";
 import {COLOR_DEFINITION} from "./definitions/color";
@@ -20,11 +20,33 @@ import {RICHTEXT_DEFINITION} from "./definitions/richtext";
 import {MULTISELECT_DEFINITION} from "./definitions/select";
 import {STRING_DEFINITION} from "./definitions/string";
 import {TEXTAREA_DEFINITION} from "./definitions/textarea";
+import type {Property} from "../../services/bucketService";
 
 export function resolveFieldKind(input: string): FieldKind | undefined {
   if (!input) return undefined;
   if ((Object.values(FieldKind) as string[]).includes(input)) return input as FieldKind;
   return SYNONYM_MAP[input.toLowerCase()];
+}
+
+export function buildBaseProperty(values: FieldFormState): Property {
+  const {fieldValues, configurationValues, type, innerFields} = values;
+  return {
+    type,
+    title: fieldValues.title,
+    description: fieldValues.description || undefined,
+    options: {
+      position: "bottom",
+      index: configurationValues.index || undefined,
+      unique: configurationValues.uniqueValues || undefined,
+      translate: configurationValues.translate || undefined
+    },
+    required:
+      innerFields && innerFields.length > 0
+        ? innerFields
+            .filter(i => i.configurationValues.requiredField)
+            ?.map?.(i => i.fieldValues.title)
+        : undefined
+  } as Property;
 }
 
 export const FIELD_REGISTRY: Partial<Record<FieldKind, FieldDefinition>> = {

@@ -15,6 +15,7 @@ import {
   validateFieldValue
 } from "../validation";
 import styles from "../field-styles.module.scss";
+import {buildBaseProperty} from "../registry";
 
 export const NUMBER_DEFINITION: FieldDefinition = {
   kind: FieldKind.Number,
@@ -29,7 +30,8 @@ export const NUMBER_DEFINITION: FieldDefinition = {
       enumeratedValues: [],
       minimum: undefined,
       maximum: undefined
-    }
+    },
+    type: FieldKind.Number
   }),
   validateCreationForm: form => runYupValidation(NUMBER_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
@@ -59,6 +61,20 @@ export const NUMBER_DEFINITION: FieldDefinition = {
   getDefaultValue: property => property.default,
   getDisplayValue: value => value ?? undefined,
   getSaveReadyValue: value => value ?? undefined,
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const fv = form.fieldValues;
+    return {
+      ...base,
+      default: form.defaultValue,
+      minimum: fv.minimum,
+      maximum: fv.maximum,
+      enum:
+        Array.isArray(fv.enumeratedValues) && fv.enumeratedValues.length
+          ? fv.enumeratedValues
+          : undefined
+    };
+  },
   capabilities: {
     enumerable: true,
     numericConstraints: true,
