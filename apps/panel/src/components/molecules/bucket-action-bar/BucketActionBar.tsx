@@ -48,6 +48,7 @@ const DeleteWarningParagraph = ({
   const count = selectedEntries.size;
   const isSingle = count === 1;
 
+  console.log({dependentRelations, bucketData, selectedEntries});
   const relationTitles = dependentRelations.map(relation => relation.title);
   const dependentEntries =
     dependentRelations.length > 0 ? bucketData.filter(entry => selectedEntries.has(entry._id)) : [];
@@ -55,12 +56,12 @@ const DeleteWarningParagraph = ({
   const relatedIds = dependentEntries.flatMap(entry => {
     return relationTitles.flatMap(title => {
       const fieldValue = entry[title];
-
+      const relationBucketId = dependentRelations.find(r => r.title === title)?.bucketId;
       if (Array.isArray(fieldValue)) {
-        return fieldValue.map(item => item._id);
+        return fieldValue.map(item => `${relationBucketId}/${item._id}`);
       }
 
-      return fieldValue?._id || [];
+      return `${relationBucketId}/${fieldValue?._id}` || [];
     });
   });
 
