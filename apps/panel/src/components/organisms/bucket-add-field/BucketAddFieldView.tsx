@@ -5,10 +5,11 @@ import {
   FluidContainer,
   Icon,
   Tab,
-  useInputRepresenter,
   type IconName,
   type TypeFlexElement,
-  type TypeFluidContainer
+  type TypeFluidContainer,
+  Select,
+  type TypeValue
 } from "oziko-ui-kit";
 import {
   memo,
@@ -16,37 +17,43 @@ import {
   useEffect,
   useMemo,
   useState,
-  type CSSProperties,
   type FC,
   type JSX,
   type ReactNode
 } from "react";
-import type {BucketType, Property} from "src/services/bucketService";
-import type {FormErrors, FormValues} from "./BucketAddFieldBusiness";
-import {innerFieldConfigProperties, presetProperties} from "./BucketAddFieldSchema";
+import type {FormErrors} from "./BucketAddFieldBusiness";
 import styles from "./BucketAddField.module.scss";
-import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import BucketFieldConfigurationPopup from "../../molecules/bucket-field-popup/BucketFieldConfigurationPopup";
-import {fieldOptions} from "../../molecules/bucket-field-popup/BucketFieldSelectionPopup";
+import {
+  useBucketFieldPopups,
+  type PopupType
+} from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
+import {useInputRepresenter} from "oziko-ui-kit";
+import {FIELD_REGISTRY} from "../../../domain/fields/registry";
+import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type {FieldFormState} from "../../../domain/fields/types";
+import {FieldKind, type InnerFieldFormState} from "../../../domain/fields/types";
 
 type InnerFieldProps = {
-  field: FormValues;
-  bucket?: BucketType;
-  buckets: BucketType[];
-  onSaveInnerField: (values: FormValues) => void;
-  onDeleteInnerField: (field: FormValues) => void;
-  innerFieldStyles: CSSProperties;
+  field: InnerFieldFormState;
+  onSaveInnerField: (values: InnerFieldFormState) => void;
+  onDeleteInnerField: (field: FieldFormState) => void;
   forbiddenFieldNames: string[];
 };
 
+const iconsMap: Record<Exclude<PopupType, "add-field">, IconName> = {
+  "edit-inner-field": "pencil",
+  "add-inner-field": "plus"
+};
+
 const InnerField: FC<InnerFieldProps> = memo(
-  ({field, bucket, buckets, onSaveInnerField, onDeleteInnerField, innerFieldStyles, forbiddenFieldNames}) => {
+  ({field, onSaveInnerField, onDeleteInnerField, forbiddenFieldNames}) => {
     const [isEditing, setIsEditing] = useState(false);
 
     const handleToggleEdit = () => setIsEditing(prev => !prev);
 
     const handleSave = useCallback(
-      (values: FormValues) => {
+      (values: FieldFormState) => {
         onSaveInnerField({...values, id: field.id});
         handleToggleEdit();
       },
@@ -72,15 +79,13 @@ const InnerField: FC<InnerFieldProps> = memo(
               <BucketFieldConfigurationPopup
                 isOpen={isEditing}
                 selectedType={field.type}
-                bucket={bucket as BucketType}
-                buckets={buckets}
                 onClose={handleToggleEdit}
                 onSaveAndClose={handleSave}
-                initialValues={field as FormValues}
-                bucketAddFieldPopoverStyles={innerFieldStyles}
-                iconName={"pencil"}
-                configurationMapping={innerFieldConfigProperties}
-                forbiddenFieldNames={forbiddenFieldNames}
+                initialValues={field as FieldFormState}
+                popupType="edit-inner-field"
+                forbiddenFieldNames={forbiddenFieldNames.filter(
+                  name => name !== field.fieldValues.title
+                )}
               >
                 <Button color="default" variant="icon" onClick={handleToggleEdit}>
                   <Icon name="pencil" />
@@ -98,65 +103,59 @@ const InnerField: FC<InnerFieldProps> = memo(
 );
 
 type BucketAddFieldViewProps = {
-  // Display props
   className?: string;
-  innerFieldStyles: CSSProperties;
-
-  // Form data
-  formValues: FormValues;
+  formValues: FieldFormState;
   formErrors: FormErrors;
   error: string | null;
-
-  // Schema and configuration
-  mainFormInputProperties: Record<string, any>;
-  configurationInputProperties: Record<string, any>;
-  defaultInputProperty: Record<string, any>;
-
-  // State
+  mainFormInputProperties: TypeProperties;
+  configurationInputProperties: TypeProperties;
+  defaultInputProperty?: TypeProperties[keyof TypeProperties];
+  presetInputProperties?: TypeProperties;
+  multipleSelectionTabProperties?: TypeProperties;
   isLoading: boolean;
-  innerFieldExists: boolean;
-
-  // Event handlers
-  setFormValues: React.Dispatch<React.SetStateAction<FormValues>>;
+  handleFormValueChange: (
+    values: FieldFormState,
+    formValuesAttribute: keyof FieldFormState
+  ) => void;
   handleSaveAndClose: () => void;
-  handleCreateInnerField: (values: FormValues) => void;
-  handleSaveInnerField: (values: FormValues) => void;
-  handleDeleteInnerField: (values: FormValues) => void;
-
-  // External dependencies
-  bucket: BucketType;
-  buckets: BucketType[];
-
-  iconName?: IconName;
+  handleCreateInnerField: (values: FieldFormState) => void;
+  handleSaveInnerField: (values: InnerFieldFormState) => void;
+  handleDeleteInnerField: (values: FieldFormState) => void;
+  popupId?: string;
+  type: FieldKind;
 };
 
 const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   className,
-  innerFieldStyles,
   formValues,
   formErrors,
   error,
   mainFormInputProperties,
   configurationInputProperties,
   defaultInputProperty,
+  presetInputProperties,
+  multipleSelectionTabProperties,
   isLoading,
-  innerFieldExists,
-  setFormValues,
+  handleFormValueChange,
   handleSaveAndClose,
   handleCreateInnerField,
   handleSaveInnerField,
   handleDeleteInnerField,
-  bucket,
-  buckets,
-  iconName
+  popupId,
+  type
 }) => {
-  const [activeTab, setActiveTab] = useState(0);
+  const {bucketFieldPopups} = useBucketFieldPopups();
+  const {popupType} = bucketFieldPopups.find(p => p.id === popupId) as {popupType: PopupType};
 
-  // Input representers
-  const handleFormValueChange = (values: FormValues, formValuesAttribute: keyof FormValues) =>
-    setFormValues(prev => {
-      return {...prev, [formValuesAttribute]: values};
-    });
+  const iconName = iconsMap[popupType as keyof typeof iconsMap];
+  const field = FIELD_REGISTRY[type as keyof typeof FIELD_REGISTRY];
+
+  const innerFieldExists = useMemo(
+    () => field?.requiresInnerFields?.(formValues) ?? false,
+    [field, formValues.fieldValues]
+  );
+
+  const [activeTab, setActiveTab] = useState(0);
 
   const mainFormInputs = useInputRepresenter({
     properties: mainFormInputProperties,
@@ -175,34 +174,43 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   });
 
   const defaultInput = useInputRepresenter({
-    properties: defaultInputProperty,
-    value: formValues.defaultValue,
-    onChange: values => handleFormValueChange(values, "defaultValue"),
+    properties: defaultInputProperty ? ({default: defaultInputProperty} as TypeProperties) : {},
+    value: defaultInputProperty ? {default: formValues.defaultValue} : {},
+    onChange: values => handleFormValueChange(values.default, "defaultValue"),
     error: formErrors.defaultValue ?? {},
     errorClassName: styles.error
   });
 
   const presetInputs = useInputRepresenter({
-    properties: presetProperties as unknown as Property,
-    value: formValues.presetValues,
+    properties: presetInputProperties ?? {},
+    value: formValues.presetValues ?? {},
     onChange: values => handleFormValueChange(values, "presetValues"),
     error: formErrors.presetValues ?? {},
     errorClassName: styles.error
   });
 
-  const forbiddenInnerFieldNames = useMemo(() => formValues.innerFields?.map((f: FormValues) => f.fieldValues.title) || [], [formValues.innerFields]);
+  const multipleSelectionTabInputs = useInputRepresenter({
+    properties: multipleSelectionTabProperties ?? {},
+    value: formValues.multipleSelectionTab ?? {},
+    onChange: values => handleFormValueChange(values, "multipleSelectionTab"),
+    error: formErrors.multipleSelectionTab ?? {},
+    errorClassName: styles.error
+  });
+
+  const forbiddenFieldNames = useMemo(
+    () => formValues.innerFields?.map(f => f.fieldValues.title) || [],
+    [formValues.innerFields]
+  );
 
   const tabs = useMemo(() => {
     const items: TypeFluidContainer[] = [];
     let currentIndex = 0;
     const createConfig = (children: ReactNode, element: JSX.Element) => {
-      const tabIndex = currentIndex; // Capture the current index
-      const item: TypeFluidContainer = {
+      const tabIndex = currentIndex;
+      const item = {
         prefix: {
           children,
-          onClick: () => {
-            setActiveTab(tabIndex);
-          }
+          onClick: () => setActiveTab(tabIndex)
         },
         element
       } as TypeFluidContainer;
@@ -213,54 +221,41 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     if (innerFieldExists) {
       createConfig(
         "Inner Fields",
-        <div>
-          {formValues.innerFields?.map?.((field: FormValues, i: number) => (
-            <InnerField
-              key={i}
-              field={field}
-              buckets={buckets}
-              bucket={bucket}
-              onSaveInnerField={handleSaveInnerField}
-              onDeleteInnerField={handleDeleteInnerField}
-              innerFieldStyles={innerFieldStyles}
-              forbiddenFieldNames={forbiddenInnerFieldNames}
-            />
-          ))}
-        </div>
+        <>
+          {formValues?.innerFields?.length && (
+            <div>
+              {formValues.innerFields.map((field: InnerFieldFormState, i: number) => (
+                <InnerField
+                  key={i}
+                  field={field}
+                  onSaveInnerField={handleSaveInnerField}
+                  onDeleteInnerField={handleDeleteInnerField}
+                  forbiddenFieldNames={forbiddenFieldNames}
+                />
+              ))}
+            </div>
+          )}
+        </>
       );
     }
 
-    if (formValues.type === "string") {
+    if (presetInputProperties) {
       createConfig("Presets", <div className={styles.presetsContainer}>{presetInputs}</div>);
     }
 
-    if (
-      ![
-        "textarea",
-        "multiselect",
-        "relation",
-        "location",
-        "storage",
-        "richtext",
-        "array",
-        "object",
-        "json"
-      ].includes(formValues.type)
-    ) {
-      createConfig("Default", defaultInput as unknown as JSX.Element);
+    if (type === FieldKind.Multiselect) {
+      createConfig(
+        "Multiple Selection",
+        <div className={styles.multipleSelectionTab}>{multipleSelectionTabInputs}</div>
+      );
     }
 
-    createConfig("Configuration", <div className={styles.configuration}>{configurationInputs}</div>);
+    createConfig(
+      "Configuration",
+      <div className={styles.configurationOptionsContainer}>{configurationInputs}</div>
+    );
     return items;
-  }, [
-    formValues.type,
-    innerFieldExists,
-    configurationInputs,
-    presetInputs,
-    formValues.innerFields,
-    defaultInput,
-    forbiddenInnerFieldNames
-  ]);
+  }, [type, innerFieldExists, configurationInputs, formValues.innerFields, defaultInput]);
 
   const tabItems: {prefix?: TypeFlexElement}[] = useMemo(
     () => tabs.map(i => ({prefix: i.prefix})),
@@ -269,7 +264,23 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
 
   useEffect(() => {
     setActiveTab(0);
-  }, [formValues.type]);
+  }, [type]);
+
+  const [isSelectInnerFieldOpen, setIsSelectInnerFieldOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<TypeValue | null>(null);
+
+  const handleSelectInnerField = (value: TypeValue) => setSelectedType(value);
+  const handleOpenInnerField = () => setIsSelectInnerFieldOpen(true);
+
+  const handleCloseInnerField = () => {
+    setSelectedType(null);
+    setIsSelectInnerFieldOpen(false);
+  };
+
+  const handleSaveAndCloseInnerField = (values: FieldFormState) => {
+    handleCreateInnerField(values);
+    handleCloseInnerField();
+  };
 
   return (
     <FlexElement
@@ -277,7 +288,6 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
       gap={10}
       className={`${styles.contentContainer} ${className || ""}`}
     >
-      {/* Field Type Header */}
       <FluidContainer
         dimensionX="fill"
         dimensionY="hug"
@@ -286,23 +296,18 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
         root={{
           children: (
             <Text dimensionX="fill" className={styles.displayer}>
-              {formValues.type}
+              {field?.display.label}
             </Text>
           ),
           dimensionX: "fill"
         }}
         gap={10}
         prefix={{
-          children: (
-            <Icon name={fieldOptions.find(i => i.type === formValues.type)?.icon as IconName} />
-          )
+          children: <Icon name={field?.display.icon as IconName} />
         }}
         suffix={{children: iconName && <Icon name={iconName} />}}
       />
-
       {mainFormInputs}
-
-      {/* Tabs Navigation */}
       {tabItems.length > 0 && (
         <Tab
           type="underline"
@@ -314,11 +319,8 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
           className={`${styles.tab} ${tabItems.length > 2 ? styles.bigTab : styles.smallTab}`}
         />
       )}
-
-      {/* Tab Content */}
       {tabs[activeTab] && (tabs[activeTab] as {element: JSX.Element}).element}
-
-      {/* Action Buttons */}
+      {defaultInput}
       <div className={styles.buttonWrapper}>
         <Button
           className={styles.saveAndCloseButton}
@@ -331,28 +333,38 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
             root={{children: "Save and close"}}
           />
         </Button>
-
         {innerFieldExists && (
-          <BucketFieldPopup
-            buckets={buckets as BucketType[]}
-            bucket={bucket}
-            onSaveAndClose={handleCreateInnerField}
-            bucketAddFieldPopoverStyles={innerFieldStyles}
-            configurationMapping={innerFieldConfigProperties}
-            iconName={"plus"}
-            forbiddenFieldNames={forbiddenInnerFieldNames}
+          <Button
+            color="default"
+            variant="dashed"
+            className={styles.buttonInnerFields}
+            onClick={handleOpenInnerField}
           >
-            <Button color="default" variant="dashed" className={styles.buttonInnerFields}>
-              <FluidContainer
-                prefix={{children: <Icon name="plus" size="sm" />}}
-                root={{children: "Add New Inner Field"}}
-              />
-            </Button>
-          </BucketFieldPopup>
+            <FluidContainer
+              prefix={{children: <Icon name="plus" size="sm" />}}
+              root={{children: "Add New Inner Field"}}
+            />
+          </Button>
         )}
       </div>
-
-      {/* Error Display */}
+      {isSelectInnerFieldOpen && (
+        <BucketFieldConfigurationPopup
+          isOpen={!!selectedType}
+          selectedType={selectedType as FieldKind}
+          onClose={handleCloseInnerField}
+          onSaveAndClose={handleSaveAndCloseInnerField}
+          popupType="add-inner-field"
+          popoverClassName={styles.selectInnerFieldPopup}
+          forbiddenFieldNames={forbiddenFieldNames}
+        >
+          <Select
+            className={styles.selectInnerField}
+            options={Object.keys(FIELD_REGISTRY)}
+            value={selectedType ?? undefined}
+            onChange={handleSelectInnerField}
+          />
+        </BucketFieldConfigurationPopup>
+      )}
       {error && (
         <div className={innerFieldExists ? styles.innerFieldsError : styles.defaultError}>
           <div className={styles.errorTextContainer}>

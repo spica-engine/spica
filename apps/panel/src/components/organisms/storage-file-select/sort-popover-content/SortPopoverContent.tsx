@@ -4,6 +4,7 @@ import styles from "./SortPopoverContent.module.scss";
 
 export type TypeSortProp = "name_desc" | "name_asc" | "date_desc" | "date_asc";
 
+
 type TypeSortPopoverContent = {
   onClick?: (prop: TypeSortProp) => void;
 };

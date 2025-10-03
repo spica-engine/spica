@@ -29,6 +29,7 @@ type TypeDataColumn = {
   fixed?: boolean;
   selectable?: boolean;
   leftOffset?: number;
+  fixedWidth?: boolean;
 };
 
 type TypeTableData = {[k: string]: {id: string; value: string | JSX.Element}};
@@ -125,7 +126,29 @@ function getCalculatedColumnWidth(columns: TypeDataColumn[], containerWidth: num
 }
 
 const getFormattedColumns = (containerWidth: number, columns: TypeDataColumn[]) => {
-  const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth + 10);
+  const allColumnsHaveWidth =
+    columns.filter(col => (col.width !== undefined || col.width !== null)).length === columns.length;
+
+  if (allColumnsHaveWidth) {
+    const fixedWidthColumns = columns.filter(col => col.fixedWidth);
+    const resizableColumns = columns.filter(col => !col.fixedWidth);
+
+    const fixedWidthTotal = fixedWidthColumns.reduce(
+      (total, col) => total + parseWidth(col.width as string, containerWidth),
+      0
+    );
+
+    const remainingWidth = Math.max(containerWidth - fixedWidthTotal, 0);
+
+    const resizableColumnsLength = Math.max(resizableColumns.length, 1);
+    const widthPerResizableColumn = remainingWidth / resizableColumnsLength;
+
+    return columns.map(col => ({
+      ...col,
+      width: col.fixedWidth ? col.width : `${widthPerResizableColumn}px`
+    }));
+  }
+  const defaultColumnWidth = getCalculatedColumnWidth(columns, containerWidth);
 
   const columnsWithWidth = columns.map(column => {
     return {...column, width: column.width || defaultColumnWidth};
@@ -166,13 +189,20 @@ const Table: FC<TypeTable> = ({
   const [formattedColumns, setFormattedColumns] = useState<TypeDataColumn[]>([]);
   const [focusedCell, setFocusedCell] = useState<{column: string; row: number} | null>(null);
 
-  useLayoutEffect(() => {
+  const handleColumnWidthChange = useCallback(() => {
     if (!containerRef.current) return;
     const containerWidth = containerRef.current?.clientWidth ?? 0;
-    // Making it just a little bit smaller than the container to prevent unnecessary horizontal scrolls
-    const formattedColumns = getFormattedColumns(containerWidth - 15, columns);
+    const formattedColumns = getFormattedColumns(containerWidth, columns);
     setFormattedColumns(formattedColumns);
     setFocusedCell(null);
+  }, [columns]);
+
+  useLayoutEffect(() => {
+    handleColumnWidthChange();
+    window.addEventListener("resize", handleColumnWidthChange);
+    return () => {
+      window.removeEventListener("resize", handleColumnWidthChange);
+    };
   }, [columns]);
 
   const handleColumnResize = useCallback((id: string, newWidth: number) => {

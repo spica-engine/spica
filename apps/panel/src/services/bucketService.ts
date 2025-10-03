@@ -91,7 +91,11 @@ export const useBucketService = () => {
     method: "get"
   });
 
-  const {request: fetchBucketData, data: apiBucketData, loading: apiBucketDataLoading} = useApi<BucketDataType>({
+  const {
+    request: fetchBucketData,
+    data: apiBucketData,
+    loading: apiBucketDataLoading
+  } = useApi<BucketDataType>({
     endpoint: "",
     method: "get",
     deduplicateRequests: true
@@ -129,17 +133,21 @@ export const useBucketService = () => {
     method: "put"
   });
 
-    const {request: bucketLimitationRequest, loading: apiUpdateBucketLimitationFieldsLoading, error: apiUpdateBucketLimitationFieldsError} = useApi({
-    endpoint: "",
-    method: "put"
-  });
-
   const {request: postRequest} = useApi<BucketType>({
     endpoint: "/api/bucket",
     method: "post"
   });
 
   const {request: createBucketField, error: apiCreateBucketFieldError} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
+  const {
+    request: bucketLimitationRequest,
+    loading: apiUpdateBucketLimitationFieldsLoading,
+    error: apiUpdateBucketLimitationFieldsError
+  } = useApi({
     endpoint: "",
     method: "put"
   });
@@ -214,7 +222,10 @@ export const useBucketService = () => {
 
   const apiCreateBucketField = useCallback(
     async (modifiedBucket: BucketType) => {
-      return createBucketField({body: modifiedBucket, endpoint: `/api/bucket/${modifiedBucket._id}`});
+      return createBucketField({
+        body: modifiedBucket,
+        endpoint: `/api/bucket/${modifiedBucket._id}`
+      });
     },
     [createBucketField]
   );
@@ -241,23 +252,6 @@ export const useBucketService = () => {
     },
     [updateBucketRule]
   );
-
-    const apiUpdatebucketLimitiation = useCallback(
-    async (bucketId: string, body: BucketType) => {
-      return await bucketLimitationRequest({
-        endpoint: `/api/bucket/${bucketId}`,
-        body
-      });
-    },
-    [bucketLimitationRequest]
-  );
-
-  const apiUpdatebucketLimitiationFields = useCallback((bucket: BucketType) => {
-    return bucketLimitationRequest({
-      endpoint: `/api/bucket/${bucket._id}`,
-      body: bucket
-    });
-  }, [bucketLimitationRequest])
 
   const apiCreateBucket = useCallback(
     (title: string, order: number) => {
@@ -291,6 +285,26 @@ export const useBucketService = () => {
       return postRequest({body: {...bucket}});
     },
     [postRequest]
+  );
+
+  const apiUpdatebucketLimitiation = useCallback(
+    async (bucketId: string, body: BucketType) => {
+      return await bucketLimitationRequest({
+        endpoint: `/api/bucket/${bucketId}`,
+        body
+      });
+    },
+    [bucketLimitationRequest]
+  );
+
+  const apiUpdatebucketLimitiationFields = useCallback(
+    (bucket: BucketType) => {
+      return bucketLimitationRequest({
+        endpoint: `/api/bucket/${bucket._id}`,
+        body: bucket
+      });
+    },
+    [bucketLimitationRequest]
   );
 
   return {

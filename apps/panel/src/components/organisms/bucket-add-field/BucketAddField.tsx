@@ -1,7 +1,3 @@
-import BucketAddFieldBusiness, {
-  type BucketAddFieldBusinessProps,
-} from "./BucketAddFieldBusiness";
+import BucketAddFieldBusiness from "./BucketAddFieldBusiness";
 
-export default function BucketAddField(props: BucketAddFieldBusinessProps) {
-  return <BucketAddFieldBusiness {...props} />;
-}
+export default BucketAddFieldBusiness;

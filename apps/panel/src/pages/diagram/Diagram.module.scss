@@ -1,0 +1,104 @@
+.diagramWrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.diagramContainer {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  user-select: none;
+}
+
+.diagramContent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  pointer-events: none;
+}
+
+.relationsSvg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+
+.loadingMessage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: var(--font-size-xl);
+  color: var(--color-font-tertiary);
+}
+
+.relationCircle {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--border-radius-circle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-font-secondary);
+  font-weight: bold;
+  z-index: 16;
+  box-shadow: 0 var(--padding-xs) var(--padding-sm-plus) rgba(0, 0, 0, 0.2);
+}
+
+.field {
+  &.relation {
+    position: relative;
+    background-color: rgba(144, 202, 249, 0.2);
+  }
+}
+
+.relationIndicator {
+  font-size: var(--font-size-sm);
+  color: var(--color-info);
+  margin-left: var(--padding-sm-plus);
+}
+
+path {
+  &.relationPath {
+    stroke-dasharray: none;
+    transition: stroke-width 0.2s ease;
+    vector-effect: non-scaling-stroke;
+
+    &:hover {
+      stroke-width: 3px;
+      stroke: var(--color-info);
+    }
+  }
+}
+
+.nestedRelation {
+  stroke-dasharray: 5,5;
+}
+
+.relationLine {
+  z-index: 5;
+  pointer-events: none;
+  overflow: visible;
+  transition: opacity var(--transition-duration) ease, z-index var(--transition-duration) ease;
+
+  &.unfocused {
+    opacity: var(--disabled-opacity);
+  }
+
+  &.focused {
+    z-index: 10;
+  }
+}
