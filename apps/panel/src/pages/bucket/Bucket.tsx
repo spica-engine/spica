@@ -87,7 +87,7 @@ export default function Bucket() {
     [formattedColumns]
   );
 
-  const visibleColumnsStorageKey = `${bucket?._id}-visible-columns`;
+  const visibleColumnsStorageKey = `${bucketId}-visible-columns`;
   const [visibleColumns, setVisibleColumns] = useLocalStorage<{[key: string]: boolean}>(
     visibleColumnsStorageKey,
     defaultVisibleColumns
@@ -99,6 +99,21 @@ export default function Bucket() {
   );
 
   const isTableLoading = useMemo(() => !(formattedColumns.length > 1), [formattedColumns]);
+
+  useEffect(() => {
+    if (!bucketId || !formattedColumns.length) return;
+
+    const currentVisibleKeys = Object.keys(visibleColumns as unknown as {[key: string]: boolean} || {});
+    const defaultKeys = Object.keys(defaultVisibleColumns);
+    const newColumns = defaultKeys.filter(key => !currentVisibleKeys.includes(key));
+    
+    if (newColumns.length > 0) {
+      setVisibleColumns({
+        ...visibleColumns,
+        ...Object.fromEntries(newColumns.map(key => [key, true]))
+      });
+    }
+  }, [bucketId, defaultVisibleColumns, formattedColumns]);
 
   useEffect(() => {
     if (!bucketId) return;
