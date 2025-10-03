@@ -4,8 +4,8 @@ import {MIN_COLUMN_WIDTH} from "./columnUtils";
 import type {Constraints} from "./types";
 import styles from "./Table.module.scss";
 import {FlexElement, useOnClickOutside} from "oziko-ui-kit";
-import type {TypeInputRepresenterError} from "oziko-ui-kit/build/dist/custom-hooks/useInputRepresenter";
-import {FIELD_REGISTRY, type FieldKind} from "../../../domain/fields";
+import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import {FIELD_REGISTRY, FieldKind} from "../../../domain/fields";
 import type {Properties, Property} from "src/services/bucketService";
 import type {FieldDefinition, FormError} from "src/domain/fields/types";
 import useLocalStorage from "../../../hooks/useLocalStorage";
@@ -61,12 +61,12 @@ function collectBucketIds(Properties: Properties, cellValue: any): CollectedRela
 
   function traverse(property: Property, value: any) {
     if (!property || typeof property !== "object") return;
-    if (property.type === "relation") {
+    if (property.type === FieldKind.Relation) {
       const relationValue = value?.[property.title as any];
       collected.push({bucketId: property.bucketId as string, value: relationValue});
     }
 
-    if (property.type !== "relation" && (property.type === "object" || property.type === "array")) {
+    if (property.type !== FieldKind.Relation && (property.type === FieldKind.Object || property.type === FieldKind.Array)) {
       for (const prop of Object.values(property.properties || {})) {
         const childValue = value?.[(prop as Property).title];
         if (prop && (typeof childValue === "object" || !childValue))
@@ -104,7 +104,7 @@ export const Cell = memo(
 
     const bucketIds = useMemo<CollectedRelation[]>(
       () =>
-        type === "object" ? collectBucketIds(constraints?.properties as Properties, value) : [],
+        type === FieldKind.Object ? collectBucketIds(constraints?.properties as Properties, value) : [],
       [type, constraints?.properties, value]
     );
 
@@ -113,13 +113,13 @@ export const Cell = memo(
         ensureHandlers(bucketId, bucketId, relationValue);
       }
 
-      if (type === "relation" && constraints?.bucketId) {
+      if (type === FieldKind.Relation && constraints?.bucketId) {
         ensureHandlers(constraints.bucketId, id);
       }
     }, [type, constraints?.properties, constraints?.bucketId, ensureHandlers, id]);
 
     let properties: Property | undefined;
-    if (relationStates[id] && type === "relation") {
+    if (relationStates[id] && type === FieldKind.Relation) {
       // if the cell is a relation and its state is ready
       properties = field.buildValueProperty?.(constraints as Property, {
         getOptions: getOptionsMap.current[id],
@@ -128,7 +128,7 @@ export const Cell = memo(
         relationState: relationStates[id]
       }) as Property;
     } else if (
-      type === "object" &&
+      type === FieldKind.Object &&
       Object.keys(relationStates).length &&
       Object.values(relationStates).every(i => i.stateInitialized)
     ) {
@@ -138,7 +138,7 @@ export const Cell = memo(
         searchOptionsMap: searchOptionsMap.current,
         relationStates
       }) as Property;
-    } else if (type === "object" && bucketIds.length > 0) {
+    } else if (type === FieldKind.Object && bucketIds.length > 0) {
     } else {
       properties = field.buildValueProperty?.(constraints as Property) as Property;
     }
@@ -147,9 +147,9 @@ export const Cell = memo(
     const isValueInitialized = useRef(false);
     useEffect(() => {
       if (!properties || isValueInitialized.current) return; // Wait for properties to be ready and only run once
-      if (type === "relation" && !relationStates[id]) return; // Wait for relation state to be ready
+      if (type === FieldKind.Relation && !relationStates[id]) return; // Wait for relation state to be ready
       if (
-        type === "object" && // For object types, we need to ensure all bucket IDs are initialized
+        type === FieldKind.Object && // For object types, we need to ensure all bucket IDs are initialized
         bucketIds.length > 0 && // bucketIds are present
         (Object.keys(relationStates).length === 0 /* no relation states present */ ||
           !Object.values(relationStates).every(
@@ -247,7 +247,7 @@ const EditableCell = memo(
     });
 
     const handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
-      if (type === "color") {
+      if (type === FieldKind.Color) {
         // Open the color input’s native picker on first render.
         // We use requestAnimationFrame to ensure the input is fully rendered
         // and has layout before triggering .click(), so the popup appears
@@ -373,7 +373,7 @@ const EditableCell = memo(
           styles.cell,
           styles.selectableCell,
           focused ? styles.focusedCell : "",
-          type !== "date" && type !== "location" && type !== "array" ? styles.editingCell : "",
+          type !== FieldKind.Date && type !== FieldKind.Location && type !== FieldKind.Array ? styles.editingCell : "",
           props.className
         ]
           .filter(Boolean)

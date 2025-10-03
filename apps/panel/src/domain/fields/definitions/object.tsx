@@ -1,6 +1,6 @@
 import {Button, Icon, ObjectInput, Popover, Portal, useAdaptivePosition} from "oziko-ui-kit";
 import {TranslatableMinimalConfig, BaseFields, MinimalConfig} from "../creation-form-schemas";
-import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
+import {freezeFormDefaults, BASE_FORM_DEFAULTS, DEFAULT_COORDINATES} from "../defaults";
 import {
   type FieldDefinition,
   FieldKind,
@@ -24,30 +24,8 @@ import type {
   TypeSearchOptionsMap
 } from "src/hooks/useRelationInputHandlers";
 import {RELATION_DEFINITION} from "./relation";
-
-function formatObjectFieldValues(
-  value: any,
-  properties: any,
-  method: "getDisplayValue" | "getSaveReadyValue"
-): Record<string, any> {
-  const result: Record<string, any> = {};
-  const propertyArray = Object.values(properties?.properties || properties || {}) as Property[];
-  propertyArray.forEach(property => {
-    if (property.type === "object") {
-      const nestedValue = value?.[property.title];
-      result[property.title] = formatObjectFieldValues(
-        nestedValue,
-        property.properties as Property,
-        method
-      );
-    } else {
-      const field = FIELD_REGISTRY?.[property.type as FieldKind];
-      const fn = field?.[method] as ((v: any, p: Property) => any) | undefined;
-      result[property.title] = fn?.(value?.[property.title], property);
-    }
-  });
-  return result;
-}
+import { LOCATION_DEFINITION } from "./location";
+import { NUMBER_DEFINITION } from "./number";
 
 export const OBJECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Object,
@@ -148,11 +126,48 @@ export const OBJECT_DEFINITION: FieldDefinition = {
   },
   requiresInnerFields: _ => true,
   getDefaultValue: property => property.default,
-  getDisplayValue: (value, properties) =>
-    formatObjectFieldValues(value, properties, "getDisplayValue"),
-  getSaveReadyValue: (value, properties) =>
-    formatObjectFieldValues(value, properties, "getSaveReadyValue"),
-
+  getDisplayValue: (value, properties) => {
+    const result: Record<string, any> = {};
+    const propertyArray = Object.values(properties?.properties || properties || {}) as Property[];
+    propertyArray.forEach(property => {
+      if (property.type === FieldKind.Object) {
+        const nestedValue = value?.[property.title];
+        result[property.title] = OBJECT_DEFINITION.getDisplayValue(
+          nestedValue,
+          property.properties as Property
+        );
+      } else if (property.type === FieldKind.Location) {
+        const formattedValue = LOCATION_DEFINITION.getDisplayValue(value?.[property.title], property);
+        result[property.title] = formattedValue ?? DEFAULT_COORDINATES;
+      } else if (property.type === FieldKind.Number) {
+        const formattedValue = NUMBER_DEFINITION.getDisplayValue(value?.[property.title], property);
+        result[property.title] = formattedValue ?? "";
+      } else {
+        const field = FIELD_REGISTRY?.[property.type as FieldKind];
+        const fn = field?.getDisplayValue as ((v: any, p: Property) => any) | undefined;
+        result[property.title] = fn?.(value?.[property.title], property);
+      }
+    });
+    return result;
+  },
+  getSaveReadyValue: (value, properties) => {
+    const result: Record<string, any> = {};
+    const propertyArray = Object.values(properties?.properties || properties || {}) as Property[];
+    propertyArray.forEach(property => {
+      if (property.type === FieldKind.Object) {
+        const nestedValue = value?.[property.title];
+        result[property.title] = OBJECT_DEFINITION.getSaveReadyValue(
+          nestedValue,
+          property.properties as Property
+        );
+      } else {
+        const field = FIELD_REGISTRY?.[property.type as FieldKind];
+        const fn = field?.getSaveReadyValue as ((v: any, p: Property) => any) | undefined;
+        result[property.title] = fn?.(value?.[property.title], property);
+      }
+    });
+    return result;
+  },
   capabilities: {supportsInnerFields: true},
   renderValue: (value, deletable) => (
     <div>

@@ -7,12 +7,7 @@ import {
 } from "oziko-ui-kit";
 import type {TypeRelationSelect} from "oziko-ui-kit/dist/components/atoms/relation-input/relation-select/RelationSelect";
 import {useRef, useEffect} from "react";
-import {
-  MinimalConfig,
-  BaseFields,
-  SpecializedInputs,
-  RelationFieldConfig
-} from "../creation-form-schemas";
+import {BaseFields, SpecializedInputs, RelationFieldConfig} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {
   FieldKind,
@@ -82,13 +77,13 @@ export const RELATION_DEFINITION: FieldDefinition = {
     if (!value) return null;
     const primaryKey = property?.relationState?.primaryKey;
 
-    const initialFormattedValues = property?.relationState.initialFormattedValues;
+    const initialFormattedValues = property?.relationState?.initialFormattedValues;
     const getValue = (v: {_id?: string; value?: string}) => v._id ?? v.value ?? v;
     const getLabel = (v: {[key: string]: string}) =>
       v[primaryKey] ??
       v.label ??
-      initialFormattedValues.label ??
-      initialFormattedValues.find(
+      initialFormattedValues?.label ??
+      initialFormattedValues?.find(
         (i: {value: string; _id: string}) =>
           i.value === v.value || i.value === v._id || (typeof v === "string" && i.value === v)
       )?.label;
@@ -107,7 +102,7 @@ export const RELATION_DEFINITION: FieldDefinition = {
   },
   getSaveReadyValue: (value, property) => {
     const displayValue = RELATION_DEFINITION.getDisplayValue(value, property);
-    if (property?.relationType !== "onetomany") return displayValue.value;
+    if (property?.relationType !== "onetomany") return displayValue?.value;
     const payload = Array.isArray(displayValue)
       ? displayValue.map(i => i.value)
       : displayValue?.value

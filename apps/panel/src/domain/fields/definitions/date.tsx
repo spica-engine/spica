@@ -68,7 +68,7 @@ export const DATE_DEFINITION: FieldDefinition = {
     );
   },
   renderInput: ({value, onChange, ref, floatingElementRef}) => {
-    const popupId = useId(); // unique per component instance
+    const popupId = useId();
     const observer = useRef<MutationObserver | null>(null);
 
     const handleOpenChange = (open: boolean) => {
@@ -103,8 +103,9 @@ export const DATE_DEFINITION: FieldDefinition = {
         placement="bottomLeft"
         ref={ref as any}
         onOpenChange={handleOpenChange}
-        classNames={{popup: {root: popupId}}}
+        popupClassName={popupId}
         onKeyDown={handleKeyDown}
+        getPopupContainer={() => document.body}
       />
     );
   }
