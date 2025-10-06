@@ -213,6 +213,7 @@ function BucketWithVisibleColumns({
         maxHeight="88vh"
         loading={isTableLoading}
         tableRef={tableRef}
+        primaryKey={bucket.primary || "_id"}
       />
     </div>
   );

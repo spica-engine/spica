@@ -1,7 +1,7 @@
 import {Button, Checkbox, Icon, Popover, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useCallback, useMemo, type RefObject} from "react";
+import {memo, useCallback, useMemo, useState, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -9,7 +9,8 @@ import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
-import type { Property } from "src/services/bucketService";
+import type {Property} from "src/services/bucketService";
+import Confirmation from "../../../components/molecules/confirmation/Confirmation";
 
 export type ColumnType = {
   id: string;
@@ -37,6 +38,7 @@ type BucketTableProps = {
   bucketId: string;
   loading: boolean;
   tableRef?: RefObject<HTMLElement | null>;
+  primaryKey: string;
 };
 
 type ColumnHeaderProps = {
@@ -48,7 +50,7 @@ type ColumnHeaderProps = {
   onMoveLeft?: () => void;
   onSortAsc?: () => void;
   onSortDesc?: () => void;
-  onDelete?: () => void;
+  onDelete?: () => Promise<void | string>;
 };
 
 type ColumnMeta = {
@@ -77,6 +79,28 @@ const ColumnHeader = ({
   onSortDesc,
   onDelete
 }: ColumnHeaderProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const handleClose = () => setIsOpen(false);
+  const handleOpen = () => setIsOpen(true);
+
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const openConfirmation = useCallback(() => setIsConfirmationOpen(true), []);
+  const closeConfirmation = useCallback(() => setIsConfirmationOpen(false), []);
+
+  const [deleteFieldError, setDeleteFieldError] = useState<string | undefined>(undefined);
+
+  const confirmDelete = useCallback(() => {
+    setDeleteFieldError(undefined);
+    onDelete?.().then(result => {
+      if (typeof result === "string") {
+        setDeleteFieldError(result);
+        return;
+      };
+      closeConfirmation();
+      handleClose();
+    });
+  }, [onDelete]);
+
   return (
     <>
       <div className={styles.columnHeaderText}>
@@ -85,6 +109,8 @@ const ColumnHeader = ({
       </div>
       {showDropdownIcon && (
         <Popover
+          open={isOpen}
+          onClose={handleClose}
           content={
             <ColumnActionsMenu
               onEdit={onEdit}
@@ -92,18 +118,52 @@ const ColumnHeader = ({
               onMoveLeft={onMoveLeft}
               onSortAsc={onSortAsc}
               onSortDesc={onSortDesc}
-              onDelete={onDelete}
+              onDelete={onDelete ? openConfirmation : undefined}
             />
           }
           contentProps={{
             className: styles.popover
           }}
-          placement="topStart"
+          placement="bottom"
         >
-          <Button variant="icon">
+          <Button variant="icon" onClick={handleOpen}>
             <Icon name="chevronDown" size="lg" />
           </Button>
         </Popover>
+      )}
+      {isConfirmationOpen && (
+        <Confirmation
+          title="DELETE BUCKET"
+          description={
+            <>
+              <p className={styles.confirmText}>
+                This action will remove the field from bucket entries. Please confirm this action to
+                continue
+              </p>
+              <span className={styles.confirmHint}>
+                Please type <strong>agree</strong> to confirm deletion.
+              </span>
+            </>
+          }
+          inputPlaceholder="Type Here"
+          confirmLabel={
+            <>
+              <Icon name="delete" />
+              Delete
+            </>
+          }
+          cancelLabel={
+            <>
+              <Icon name="close" />
+              Cancel
+            </>
+          }
+          showInput
+          confirmCondition={val => val === "agree"}
+          onConfirm={confirmDelete}
+          onCancel={closeConfirmation}
+          error={deleteFieldError}
+        />
       )}
     </>
   );
@@ -208,22 +268,34 @@ function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
   return renderDefault();
 }
 
-function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
+function getFormattedColumns(
+  columns: ColumnType[],
+  bucketId: string,
+  handleDeleteField: (fieldKey: string) => Promise<void | string>,
+  primaryKey: string
+): ColumnType[] {
   return [
     defaultColumns[0],
-    ...columns.map((col, index) => ({
-      ...col,
-      header: (
-        <ColumnHeader
-          title={col.header}
-          icon={col.type && COLUMN_ICONS[col.type]}
-          showDropdownIcon={col.showDropdownIcon}
-        />
-      ),
-      headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      id: `${col.key}-${index}-s${bucketId}`,
-      cellClassName: styles.cell
-    })),
+    ...columns.map((col, index) => {
+      const handleDelete = () => handleDeleteField(col.key);
+      const isIdField = index === 0; // in one of the pr's, the id and select fields are specified with their role attributes
+      const isPrimaryField = col.key === primaryKey;
+
+      return {
+        ...col,
+        header: (
+          <ColumnHeader
+            title={col.header}
+            icon={col.type && COLUMN_ICONS[col.type]}
+            showDropdownIcon={col.showDropdownIcon}
+            onDelete={isIdField || isPrimaryField ? undefined : handleDelete}
+          />
+        ),
+        headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
+        id: `${col.key}-${index}-s${bucketId}`,
+        cellClassName: styles.cell
+      };
+    }),
     defaultColumns[1]
   ];
 }
@@ -268,11 +340,14 @@ const BucketTable = ({
   maxHeight,
   loading,
   bucketId,
-  tableRef
+  tableRef,
+  primaryKey
 }: BucketTableProps) => {
+  const {handleDeleteField} = useBucket();
+
   const formattedColumns = useMemo(
-    () => getFormattedColumns(columns, bucketId),
-    [columns, bucketId]
+    () => getFormattedColumns(columns, bucketId, handleDeleteField, primaryKey),
+    [columns, bucketId, handleDeleteField, primaryKey]
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(

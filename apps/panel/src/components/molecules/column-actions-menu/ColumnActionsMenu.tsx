@@ -41,7 +41,7 @@ const ColumnActionsMenu = ({
           className: styles.groupContainer
         },
         delete: {
-          value: (
+          value: onDelete && (
             <MenuActionItem icon="delete" label="Delete" onClick={onDelete} variant="danger" />
           ),
           className: styles.groupContainer

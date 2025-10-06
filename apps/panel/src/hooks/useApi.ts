@@ -84,13 +84,16 @@ function useApi<T>({
             if (abortInfoRef.current?.isDeduplicationAbort) {
               return;
             } else {
-              setError(err.message ?? "Request was cancelled unexpectedly");
+              const message = err.message ?? "Request was cancelled unexpectedly";
+              setError(message);
               onError?.();
-              return;
+              return message;
             }
           }
-          setError(err.response?.data?.message ?? err.message ?? "Something went wrong");
+          const message = err.response?.data?.message ?? err.message ?? "Something went wrong"
+          setError(message);
           onError?.();
+          return message;
         } finally {
           setLoading(false);
           abortInfoRef.current = null;
