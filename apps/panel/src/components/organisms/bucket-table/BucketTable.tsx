@@ -272,7 +272,14 @@ function renderCell(
       </div>
     );
   }
-  if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
+  if (type === FieldKind.Boolean) {
+    switch (role) {
+      case "select":
+        return <SelectionCheckbox rowId={rowId} />;
+      default:
+        return <Checkbox className={styles.checkbox} checked={!!cellData} />;
+    }
+  }
   if (type) {
     const formatted = FIELD_REGISTRY[type]?.getFormattedValue?.(cellData);
     if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
