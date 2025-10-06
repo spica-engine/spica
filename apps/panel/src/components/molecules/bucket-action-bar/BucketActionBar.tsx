@@ -66,6 +66,7 @@ const DeleteWarningParagraph = ({
   });
 
   const uniqueRelatedIds = [...new Set(relatedIds)];
+  const dependentCount = uniqueRelatedIds.length;
 
   return (
     <div className="space-y-2">
@@ -77,8 +78,8 @@ const DeleteWarningParagraph = ({
       {dependentEntries.length > 0 && (
         <div>
           <p>
-            Break all relations and delete {count} dependent document
-            {isSingle ? "" : "s"}:
+            Break all relations and delete {dependentCount} dependent document
+            {dependentCount === 1 ? "" : "s"}:
           </p>
           <ul>
             {uniqueRelatedIds.map(entryId => (
