@@ -48,7 +48,7 @@ type BucketContextType = {
     newField: Property,
     requiredField?: string,
     primaryField?: string
-  ) => Promise<any>;
+  ) => Promise<BucketType>;
   updateBucketLimitation: (bucket: BucketType) => Promise<void>;
   updateBucketLimitationFields: (
     bucket: BucketType,

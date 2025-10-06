@@ -7,13 +7,13 @@ import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopu
 import {useBucket} from "../../../contexts/BucketContext";
 import {
   FieldKind,
-  FIELD_REGISTRY,
-  buildCreationFormPropertiesFromForm
+  FIELD_REGISTRY
 } from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
-import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
+import type {FieldFormState} from "../../../domain/fields/types";
+import type { Property } from "src/services/bucketService";
 
 type TypeColumnRole = "select" | "data" | "new-field";
 
@@ -182,16 +182,16 @@ const NewFieldHeader = memo(() => {
   );
 
   const handleSaveAndClose = useCallback(
-    (values: FormValues) => {
+    (values: FieldFormState, kind: FieldKind) => {
       if (!bucket) return;
 
-      const fieldProperty = buildCreationFormPropertiesFromForm(values as any);
+      const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
       return createBucketField(
         bucket,
-        fieldProperty as any,
+        fieldProperty as Property,
         requiredField ? title : undefined,
         primaryField ? title : undefined
       );
@@ -199,9 +199,17 @@ const NewFieldHeader = memo(() => {
     [bucket, createBucketField]
   );
 
+  const forbiddenFieldNames = useMemo(() => {
+    if (!bucket) return [];
+    return Object.keys(bucket.properties || {});
+  }, [bucket]);
+
   return (
     <BucketFieldPopupsProvider>
-      <BucketFieldPopup onSaveAndClose={handleSaveAndClose}>
+      <BucketFieldPopup
+        onSaveAndClose={handleSaveAndClose}
+        forbiddenFieldNames={forbiddenFieldNames}
+      >
         <Button
           variant="icon"
           className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
@@ -264,117 +272,12 @@ function renderCell(
       </div>
     );
   }
-  switch (type) {
-    case "string":
-      return renderDefault();
-    case "number":
-      return renderDefault();
-    case "date":
-      return renderDefault();
-    case "boolean":
-      return role === "select" ? (
-        <SelectionCheckbox rowId={rowId} />
-      ) : (
-        <Checkbox className={styles.checkbox} checked={!!cellData} />
-      );
-    case "textarea":
-      return renderDefault();
-    case "multiple selection" as FieldKind:
-      return (
-        <div className={styles.multipleSelectionCell}>
-          {cellData?.slice(0, 2)?.map?.((_: any, index: number) => (
-            <Button key={index} variant="icon" className={styles.grayBox}>
-              {index + 1}
-            </Button>
-          ))}
-          {cellData.length > 2 && (
-            <Button variant="icon" className={styles.grayBox}>
-              <Icon name="dotsHorizontal" size="xs" />
-            </Button>
-          )}
-          <Button variant="icon" className={styles.grayBox}>
-            <Icon name="plus" size="xs" />
-          </Button>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "relation":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "location":
-      return (
-        <div className={styles.locationCell}>
-          <img src="/locationx.png" className={styles.locationImage} />
-          <div
-            data-full={cellData?.coordinates.join(", ")}
-            onCopy={e => {
-              e.preventDefault();
-              e.clipboardData.setData("text/plain", e.currentTarget.dataset.full || "");
-            }}
-          >
-            {cellData?.coordinates?.map((c: number) => c.toFixed(2) + "..").join(", ")}
-          </div>
-        </div>
-      );
-    case "array":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "object":
-      return (
-        <div className={styles.defaultCell}>
-          <div className={styles.defaultCellData}>{JSON.stringify(cellData)}</div>
-          {!deletable && cellData && (
-            <Button variant="icon">
-              <Icon name="close" size="sm" />
-            </Button>
-          )}
-        </div>
-      );
-    case "file" as FieldKind:
-      return (
-        <div className={styles.fileCell}>
-          <Icon name="imageMultiple" size="xs" />
-          {cellData ? (
-            <span>{cellData}</span>
-          ) : (
-            <span className={styles.grayText}>Click or Drag&Drop</span>
-          )}
-        </div>
-      );
-    case "richtext":
-      return renderDefault();
-    default: {
-      if (!cellData) {
-        return <div />;
-      }
-
-      if (typeof cellData === "string") {
-        return cellData;
-      }
-
-      return JSON.stringify(cellData);
-    }
+  if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
+  if (type) {
+    const formatted = FIELD_REGISTRY[type]?.getFormattedValue?.(cellData);
+    if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
   }
+  return renderDefault();
 }
 
 function getFormattedColumns(
