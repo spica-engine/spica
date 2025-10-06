@@ -79,15 +79,16 @@ const ColumnHeader = ({
   onSortDesc,
   onDelete
 }: ColumnHeaderProps) => {
+  const [deleteFieldError, setDeleteFieldError] = useState<string | undefined>(undefined);
+
   const [isOpen, setIsOpen] = useState(false);
-  const handleClose = () => setIsOpen(false);
+  const handleClose = () => {setIsOpen(false); setDeleteFieldError(undefined);};
   const handleOpen = () => setIsOpen(true);
 
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const openConfirmation = useCallback(() => setIsConfirmationOpen(true), []);
-  const closeConfirmation = useCallback(() => setIsConfirmationOpen(false), []);
+  const closeConfirmation = useCallback(() => {setIsConfirmationOpen(false); setDeleteFieldError(undefined);}, []);
 
-  const [deleteFieldError, setDeleteFieldError] = useState<string | undefined>(undefined);
 
   const confirmDelete = useCallback(() => {
     setDeleteFieldError(undefined);
