@@ -4,6 +4,7 @@ import {Button, FlexElement, Icon, Popover, Checkbox} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
+import StorageFileSelect from "../../organisms/storage-file-select/StorageFileSelect";
 import type {BucketType} from "src/services/bucketService";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 
@@ -31,6 +32,7 @@ const BucketActionBar = ({
   toggleColumn
 }: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
+  const [isStorageFileSelectOpen, setIsStorageFileSelectOpen] = useState(false);
 
   useEffect(() => setSearchValue(""), [bucket?._id]);
   const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
@@ -84,8 +86,13 @@ const BucketActionBar = ({
             New Entry
           </Button>
         )}
+        <Button onClick={() => setIsStorageFileSelectOpen(true)}>
+          <Icon name="plus" />
+          Storage
+        </Button>
         <Button
-          className={styles.refreshButton} variant="text"
+          className={styles.refreshButton}
+          variant="text"
           onClick={onRefresh}
           disabled={refreshLoading || searchLoading}
           loading={refreshLoading}
@@ -123,6 +130,10 @@ const BucketActionBar = ({
         </Popover>
         <BucketMorePopup bucket={bucket} />
       </FlexElement>
+      <StorageFileSelect
+        isOpen={isStorageFileSelectOpen}
+        onClose={() => setIsStorageFileSelectOpen(false)}
+      />
     </div>
   );
 };

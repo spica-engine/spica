@@ -5,8 +5,12 @@ const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
     const token = localStorage.getItem('token');
-    if (token) {
-      headers.set('authorization', `IDENTITY ${token}`);
+    const parsedToken = token ? JSON.parse(token) : null;
+    const balim = "Kardelen"
+    console.log("token", balim);
+    // console.log("header", `IDENTITY ${parsedToken}`);
+    if (parsedToken) {
+      headers.set('Authorization', `IDENTITY ${parsedToken}`);
     }
     return headers;
   },
@@ -18,12 +22,14 @@ const baseQueryWithReauth: BaseQueryFn<
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
+  console.log("result", result);
   
-  if (result.error && result.error.status === 401) {
-    // Handle token refresh or logout
-    localStorage.removeItem('token');
-    window.location.href = '/login';
-  }
+  
+  // if (result.error && result.error.status === 401) {
+  //   // Handle token refresh or logout
+  //   localStorage.removeItem('token');
+  //   window.location.href = '/passport/identify';
+  // }
   
   return result;
 };

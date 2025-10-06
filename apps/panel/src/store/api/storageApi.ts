@@ -50,9 +50,11 @@ export const storageApi = baseApi.injectEndpoints({
         if (options.skip) params.append('skip', options.skip.toString());
         if (options.sort) params.append('sort', JSON.stringify(options.sort));
         if (options.filter) params.append('filter', JSON.stringify(options.filter));
-        params.append('paginate', JSON.stringify(options.paginate || false));
+        // params.append('paginate', JSON.stringify(options.paginate || false));
+        // console.log("params", params.toString());
+        
 
-        return `/api/storage?${params.toString()}`;
+        return `/api/storage`;
       },
       providesTags: (result) =>
         result

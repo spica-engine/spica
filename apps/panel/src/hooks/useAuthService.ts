@@ -38,11 +38,11 @@ function useAuthService() {
   const logout = useCallback(async () => {
     try {
       await logoutMutation().unwrap();
-      navigate("/login");
+      navigate("/passport/identify");
     } catch (error) {
       // Even if logout fails on server, clear local state
       localStorage.removeItem('token');
-      navigate("/login");
+      navigate("/passport/identify");
     }
   }, [logoutMutation, navigate]);
 
