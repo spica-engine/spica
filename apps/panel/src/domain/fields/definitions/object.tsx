@@ -1,4 +1,4 @@
-import {Button, Icon, ObjectInput, Popover, Portal, useAdaptivePosition} from "oziko-ui-kit";
+import {Button, Icon, ObjectInput, Popover, useAdaptivePosition} from "oziko-ui-kit";
 import {TranslatableMinimalConfig, BaseFields, MinimalConfig} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS, DEFAULT_COORDINATES} from "../defaults";
 import {

@@ -66,7 +66,10 @@ function collectBucketIds(Properties: Properties, cellValue: any): CollectedRela
       collected.push({bucketId: property.bucketId as string, value: relationValue});
     }
 
-    if (property.type !== FieldKind.Relation && (property.type === FieldKind.Object || property.type === FieldKind.Array)) {
+    if (
+      property.type !== FieldKind.Relation &&
+      (property.type === FieldKind.Object || property.type === FieldKind.Array)
+    ) {
       for (const prop of Object.values(property.properties || {})) {
         const childValue = value?.[(prop as Property).title];
         if (prop && (typeof childValue === "object" || !childValue))
@@ -104,7 +107,9 @@ export const Cell = memo(
 
     const bucketIds = useMemo<CollectedRelation[]>(
       () =>
-        type === FieldKind.Object ? collectBucketIds(constraints?.properties as Properties, value) : [],
+        type === FieldKind.Object
+          ? collectBucketIds(constraints?.properties as Properties, value)
+          : [],
       [type, constraints?.properties, value]
     );
 
@@ -119,42 +124,50 @@ export const Cell = memo(
     }, [type, constraints?.properties, constraints?.bucketId, ensureHandlers, id]);
 
     let properties: Property | undefined;
-    if (relationStates[id] && type === FieldKind.Relation) {
-      // if the cell is a relation and its state is ready
+    const isRelationReady = type === FieldKind.Relation && !!relationStates[id];
+    const isObjectField = type === FieldKind.Object;
+    const isObjectWithReadyRelations =
+      isObjectField &&
+      Object.keys(relationStates).length > 0 &&
+      Object.values(relationStates).every(i => i.stateInitialized);
+    const isObjectWithPendingRelations =
+      isObjectField && bucketIds.length > 0 && !isObjectWithReadyRelations;
+
+    if (isRelationReady) {
       properties = field.buildValueProperty?.(constraints as Property, {
         getOptions: getOptionsMap.current[id],
         loadMoreOptions: loadMoreOptionsMap.current[id],
         searchOptions: searchOptionsMap.current[id],
         relationState: relationStates[id]
       }) as Property;
-    } else if (
-      type === FieldKind.Object &&
-      Object.keys(relationStates).length &&
-      Object.values(relationStates).every(i => i.stateInitialized)
-    ) {
+    } else if (isObjectWithReadyRelations) {
       properties = field.buildValueProperty?.(constraints as Property, {
         getOptionsMap: getOptionsMap.current,
         loadMoreOptionsMap: loadMoreOptionsMap.current,
         searchOptionsMap: searchOptionsMap.current,
         relationStates
       }) as Property;
-    } else if (type === FieldKind.Object && bucketIds.length > 0) {
-    } else {
+    } else if (!isObjectWithPendingRelations) {
       properties = field.buildValueProperty?.(constraints as Property) as Property;
     }
 
     const [cellValue, setCellValue] = useState();
     const isValueInitialized = useRef(false);
     useEffect(() => {
-      if (!properties || isValueInitialized.current) return; // Wait for properties to be ready and only run once
-      if (type === FieldKind.Relation && !relationStates[id]) return; // Wait for relation state to be ready
+      const propertiesReady = !!properties;
+      const valueAlreadyInitialized = isValueInitialized.current;
+      const relationStateReady = type === FieldKind.Relation ? !!relationStates[id] : true;
+      const objectTypeNeedsRelationStates =
+        type === FieldKind.Object &&
+        bucketIds.length > 0 &&
+        (Object.keys(relationStates).length === 0 ||
+          !Object.values(relationStates).every(i => i.stateInitialized));
+
       if (
-        type === FieldKind.Object && // For object types, we need to ensure all bucket IDs are initialized
-        bucketIds.length > 0 && // bucketIds are present
-        (Object.keys(relationStates).length === 0 /* no relation states present */ ||
-          !Object.values(relationStates).every(
-            i => i.stateInitialized
-          )) /* or not all relation states initialized */
+        !propertiesReady ||
+        valueAlreadyInitialized ||
+        !relationStateReady ||
+        objectTypeNeedsRelationStates
       )
         return;
 
@@ -373,7 +386,9 @@ const EditableCell = memo(
           styles.cell,
           styles.selectableCell,
           focused ? styles.focusedCell : "",
-          type !== FieldKind.Date && type !== FieldKind.Location && type !== FieldKind.Array ? styles.editingCell : "",
+          type !== FieldKind.Date && type !== FieldKind.Location && type !== FieldKind.Array
+            ? styles.editingCell
+            : "",
           props.className
         ]
           .filter(Boolean)
