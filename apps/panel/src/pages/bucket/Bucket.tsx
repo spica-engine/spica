@@ -58,18 +58,20 @@ export default function Bucket() {
     refreshBucketData
   } = useBucket();
 
+  const sortMetaKey = `${bucketId}-sort-meta`;
   const [sortMeta] = useLocalStorage<{field: string; direction: "asc" | "desc"} | null>(
-    `${bucketId}-sort-meta`,
+    sortMetaKey,
     null
   );
 
   useEffect(() => {
     if (!bucketId) return;
     const query = {};
-    if (sortMeta)
+    if (sortMeta) {
       (query as {sort: Record<string, number>}).sort = {
         [sortMeta.field]: sortMeta.direction === "asc" ? 1 : -1
       };
+    }
     getBucketData(bucketId, query as BucketDataQueryWithIdType);
   }, [bucketId, sortMeta]);
 

@@ -1,7 +1,7 @@
 import {Button, Checkbox, Icon, Popover, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useCallback, useMemo, type RefObject} from "react";
+import {memo, useCallback, useMemo, useState, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -99,10 +99,25 @@ const ColumnHeader = ({
   onSortDesc,
   onDelete
 }: ColumnHeaderProps) => {
-  const handleMoveRight = useCallback(() => onMoveRight?.(title!), [onMoveRight]);
-  const handleMoveLeft = useCallback(() => onMoveLeft?.(title!), [onMoveLeft]);
-  const handleSortAsc = useCallback(() => onSortAsc?.(title!), [onSortAsc]);
-  const handleSortDesc = useCallback(() => onSortDesc?.(title!), [onSortDesc]);
+  const [isOpen, setIsOpen] = useState(false);
+  const handleClose = () => setIsOpen(false);
+  const handleOpen = () => setIsOpen(true);
+  const handleMoveRight = useCallback(() => {
+    onMoveRight?.(title!);
+    handleClose();
+  }, [onMoveRight]);
+  const handleMoveLeft = useCallback(() => {
+    onMoveLeft?.(title!);
+    handleClose();
+  }, [onMoveLeft]);
+  const handleSortAsc = useCallback(() => {
+    onSortAsc?.(title!);
+    handleClose();
+  }, [onSortAsc]);
+  const handleSortDesc = useCallback(() => {
+    onSortDesc?.(title!);
+    handleClose();
+  }, [onSortDesc]);
 
   return (
     <>
@@ -112,6 +127,8 @@ const ColumnHeader = ({
       </div>
       {showDropdownIcon && (
         <Popover
+          open={isOpen}
+          onClose={handleClose}
           content={
             <ColumnActionsMenu
               onEdit={onEdit}
@@ -125,9 +142,9 @@ const ColumnHeader = ({
           contentProps={{
             className: styles.popover
           }}
-          placement="topStart"
+          placement="bottom"
         >
-          <Button variant="icon">
+          <Button variant="icon" onClick={handleOpen}>
             <Icon name="chevronDown" size="lg" />
           </Button>
         </Popover>
@@ -249,6 +266,7 @@ function getFormattedColumns(
       const {header, type, showDropdownIcon} = col;
       const moveRightAllowed = index !== columns.length - 1 && index !== 0;
       const moveLeftAllowed = index > 1;
+      const isIdField = index === 0; // in one of the pr's, the id and select fields are specified with their role attributes
       const icon = COLUMN_ICONS[type as string];
       return {
         ...col,
@@ -261,6 +279,8 @@ function getFormattedColumns(
             onMoveLeft={moveLeftAllowed ? onMoveLeft : undefined}
             onSortAsc={onSortAsc}
             onSortDesc={onSortDesc}
+            onEdit={isIdField ? undefined : () => {}}
+            onDelete={isIdField ? undefined : () => {}}
           />
         ),
         headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,

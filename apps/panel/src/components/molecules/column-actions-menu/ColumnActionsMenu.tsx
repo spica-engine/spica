@@ -26,7 +26,7 @@ const ColumnActionsMenu = ({
     <MenuGroup
       options={{
         edit: {
-          value: <MenuActionItem icon="pencil" label="Edit" onClick={onEdit} />,
+          value: onEdit && <MenuActionItem icon="pencil" label="Edit" onClick={onEdit} />,
           className: styles.groupContainer
         },
         actions: {
@@ -41,7 +41,7 @@ const ColumnActionsMenu = ({
           className: styles.groupContainer
         },
         delete: {
-          value: (
+          value: onDelete && (
             <MenuActionItem icon="delete" label="Delete" onClick={onDelete} variant="danger" />
           ),
           className: styles.groupContainer
