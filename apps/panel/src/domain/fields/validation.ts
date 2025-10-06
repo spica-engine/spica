@@ -493,22 +493,22 @@ export const validateFieldValue = (
       } else {
         let cur = root;
         for (let i = 0; i < parts.length; i++) {
-          const p = parts[i];
+          const part = parts[i];
           const isLast = i === parts.length - 1;
 
           if (isLast) {
             if (cur == null || typeof cur !== "object") {
               cur = {};
             }
-            cur[p] = message;
+            cur[part] = message;
           } else {
             if (cur == null || typeof cur !== "object") {
               cur = {};
             }
-            if (!cur[p]) {
-              cur[p] = {};
+            if (!cur[part]) {
+              cur[part] = {};
             }
-            cur = cur[p];
+            cur = cur[part];
           }
         }
       }

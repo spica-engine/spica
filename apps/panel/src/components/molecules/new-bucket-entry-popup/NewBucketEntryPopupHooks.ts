@@ -7,6 +7,7 @@ import {
   type RelationState
 } from "../../../hooks/useRelationInputHandlers";
 import {collectBucketIds} from "./NewBucketEntryPopupUtils";
+import { FieldKind } from "src/domain/fields";
 
 export const useValueProperties = (bucket: BucketType, authToken: string) => {
   const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers} =
@@ -34,7 +35,7 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
         continue;
       }
       let base;
-      if (kind === "relation") {
+      if (kind === FieldKind.Relation) {
         const relationProps = {
           getOptions: getOptionsMap.current[prop.bucketId],
           loadMoreOptions: loadMoreOptionsMap.current[prop.bucketId],
@@ -43,7 +44,7 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
           relationState: relationStates?.[prop.bucketId] as RelationState
         };
         base = fieldDefinition.buildValueProperty(prop, relationProps);
-      } else if (kind === "object") {
+      } else if (kind === FieldKind.Object) {
         const relationProps = {
           getOptionsMap: getOptionsMap.current,
           loadMoreOptionsMap: loadMoreOptionsMap.current,
@@ -52,7 +53,7 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
           totalOptionsLength: relationStates?.[key]?.total || 0
         };
         base = fieldDefinition.buildValueProperty(prop, relationProps);
-      } else if (kind === "array") {
+      } else if (kind === FieldKind.Array) {
         const relationProps = {
           getOptionsMap: getOptionsMap.current,
           loadMoreOptionsMap: loadMoreOptionsMap.current,
@@ -65,7 +66,7 @@ export const useValueProperties = (bucket: BucketType, authToken: string) => {
         base = fieldDefinition.buildValueProperty(prop);
       }
 
-      if (prop.type === "multiselect") {
+      if (kind === FieldKind.Multiselect) {
         base.enum = prop.items.enum || [];
       }
 

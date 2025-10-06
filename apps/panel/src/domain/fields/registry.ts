@@ -14,7 +14,8 @@ import {
   type TypeProperty,
   type FieldCreationFormProperties,
   type FieldFormState,
-  FieldKind
+  FieldKind,
+  type RelationInputRelationHandlers
 } from "./types";
 import {
   runYupValidation,
@@ -210,7 +211,7 @@ const BOOLEAN_DEFINITION: FieldDefinition = {
     type: FieldKind.Boolean
   }),
   getDefaultValue: property => property.default || false,
-  validateCreationForm: form => runYupValidation(BOOLEAN_FIELD_CREATION_FORM_SCHEMA, form) as any,
+  validateCreationForm: form => runYupValidation(BOOLEAN_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Boolean, properties, required),
   buildCreationFormProperties: isInnerField => ({
@@ -742,7 +743,7 @@ const OBJECT_DEFINITION: FieldDefinition = {
             };
             builtChild = RELATION_DEFINITION.buildValueProperty(
               property,
-              relationHandlerBundle as any
+              relationHandlerBundle as (RelationInputRelationHandlers | ObjectInputRelationHandlers)
             );
             break;
           }

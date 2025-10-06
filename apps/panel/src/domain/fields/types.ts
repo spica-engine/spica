@@ -81,7 +81,7 @@ export type FormError =
       [key: string]: string | FormError | null;
     };
 
-type RelationInputRelationHandlers = {
+export type RelationInputRelationHandlers = {
   getOptions: getOptionsHandler;
   loadMoreOptions: loadMoreOptionsHandler;
   searchOptions: searchOptionsHandler;
