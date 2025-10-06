@@ -524,7 +524,7 @@ export const validateFieldValue = (
         out = typeof out === "string" ? out : e.message;
       }
     }
-    return "Validation failed";
+    return out ?? "Validation failed";
   }
 };
 

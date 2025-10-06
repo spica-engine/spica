@@ -7,7 +7,7 @@ import {
   type RelationState
 } from "../../../hooks/useRelationInputHandlers";
 import {collectBucketIds} from "./NewBucketEntryPopupUtils";
-import { FieldKind } from "src/domain/fields";
+import { FieldKind } from "../../../domain/fields";
 
 export const useValueProperties = (bucket: BucketType, authToken: string) => {
   const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers} =
