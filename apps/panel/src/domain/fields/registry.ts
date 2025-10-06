@@ -5,14 +5,16 @@
  * defaults, property construction, parsing, formatting and validation.
  */
 
-import type {Property} from "src/services/bucketService";
+import type {BucketType, Property} from "src/services/bucketService";
 import {BASE_FORM_DEFAULTS, DEFAULT_COORDINATES, freezeFormDefaults} from "./defaults";
 import {applyPresetLogic} from "./presets";
 import {
   type FieldDefinition,
-  FieldKind,
   type ObjectInputRelationHandlers,
-  type TypeProperty
+  type TypeProperty,
+  type FieldCreationFormProperties,
+  type FieldFormState,
+  FieldKind
 } from "./types";
 import {
   runYupValidation,
@@ -32,182 +34,57 @@ import {
   COLOR_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "./validation";
-import type {TypeInputTypeMap} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import styles from "./field-styles.module.scss";
 import type {
-  TypeGetOptionsMap,
+  TypeInputTypeMap,
+  TypeProperties
+} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import {
+  BaseFields,
+  BasicConfig,
+  DefaultInputs,
+  MinimalConfig,
+  MinimalInnerFieldConfig,
+  OnlyRequiredConfig,
+  PresetPanel,
+  PrimaryAndIndexConfig,
+  RelationFieldConfig,
+  SpecializedInputs,
+  TranslatableConfig,
+  TranslatableMinimalConfig,
+  ValidationInputs
+} from "./creation-form-schemas";
+import type {
+  RelationState,
   TypeGetMoreOptionsMap,
-  TypeSearchOptionsMap,
-  RelationState
+  TypeGetOptionsMap,
+  TypeSearchOptionsMap
 } from "src/hooks/useRelationInputHandlers";
-
-export function resolveFieldKind(input: string): FieldKind | undefined {
-  if (!input) return undefined;
-  if ((Object.values(FieldKind) as string[]).includes(input)) return input as FieldKind;
-  return SYNONYM_MAP[input.toLowerCase()];
-}
-
+import styles from "./field-styles.module.scss";
 export function isFieldKind(value: string): value is FieldKind {
   return (Object.values(FieldKind) as string[]).includes(value);
 }
 
-function buildOptions(configurationValues: Record<string, any>): {
-  [key: string]: any;
-} {
-  const {index, uniqueValues, translate, readOnly, primaryField, requiredField} =
-    configurationValues || {};
+function buildBaseProperty(values: FieldFormState): Property {
+  const {fieldValues, configurationValues, type, innerFields} = values;
   return {
-    position: "bottom",
-    index: index || undefined,
-    unique: uniqueValues || undefined,
-    translate: translate || undefined,
-    primary: primaryField || undefined,
-    required: requiredField || undefined,
-    readOnly: readOnly || undefined
-  };
+    type,
+    title: fieldValues.title,
+    description: fieldValues.description || undefined,
+    options: {
+      position: "bottom",
+      index: configurationValues.index || undefined,
+      unique: configurationValues.uniqueValues || undefined,
+      translate: configurationValues.translate || undefined
+    },
+    required:
+      innerFields && innerFields.length > 0
+        ? innerFields
+            .filter(i => i.configurationValues.requiredField)
+            ?.map?.(i => i.fieldValues.title)
+        : undefined
+  } as Property;
 }
 
-/**
- * Inlined schemas from the old properties.ts to construct creation form sections.
- * These are used by buildCreationFormProperties of each field.
- */
-const BaseFields = {
-  title: {type: "string", title: "Name", required: true},
-  description: {type: "textarea", title: "Description"}
-} as const;
-
-const DefaultInputs = {
-  defaultString: {type: "string", title: "Default Value"},
-  defaultNumber: {type: "number", title: "Default Value"},
-  defaultBoolean: {type: "boolean", title: "Default value", size: "small"},
-  defaultDate: {
-    type: "string",
-    title: "Default Date",
-    enum: [
-      {label: "None", value: ""},
-      {label: "Created At", value: ":created_at"},
-      {label: "Updated At", value: ":updated_at"}
-    ] as any[]
-  }
-} as const;
-
-const ValidationInputs = {
-  minNumber: {type: "number", title: "Minimum"},
-  maxNumber: {type: "number", title: "Maximum"},
-  minItems: {type: "number", title: "Min Items"},
-  maxItems: {type: "number", title: "Max Items"},
-  definePattern: {type: "boolean", title: "Define Pattern", size: "small"},
-  regularExpression: {type: "string", title: "Regex"}
-} as const;
-
-const SpecializedInputs = {
-  preset: {
-    type: "string",
-    title: "Presets",
-    enum: ["Countries", "Days", "Email", "Phone Number"] as string[]
-  },
-  makeEnumerated: {type: "boolean", title: "Make field enumerated", size: "small"},
-  enumeratedValues: {type: "chip", title: "EnumeratedValues"},
-  multipleSelectionType: {
-    type: "string",
-    title: "Type",
-    enum: ["string", "number"] as string[],
-    required: true
-  },
-  arrayType: {
-    type: "string",
-    title: "Array Type",
-    enum: [
-      "string",
-      "date",
-      "number",
-      "textarea",
-      "boolean",
-      "color",
-      "storage",
-      "multiselect",
-      "location",
-      "richtext",
-      "object",
-      "json"
-    ] as string[],
-    required: true
-  },
-  arrayItemTitle: {type: "string", title: "Title"},
-  arrayItemDescription: {type: "string", title: "Description"},
-  chip: {type: "chip", title: ""},
-  bucket: {title: "Buckets", type: "select", enum: [] as any[]},
-  relationType: {
-    title: "Relation Type",
-    type: "select",
-    enum: [
-      {label: "One To One", value: "onetoone"},
-      {label: "One To Many", value: "onetomany"}
-    ] as any[]
-  },
-  dependent: {type: "boolean", title: "Dependent", size: "small"},
-  uniqueItems: {type: "boolean", title: "Items should be unique", size: "small"}
-} as const;
-
-// Preset panel used by string and array, and pattern for number/array
-const PresetPanel = {
-  preset: SpecializedInputs.preset,
-  makeEnumerated: SpecializedInputs.makeEnumerated,
-  enumeratedValues: {
-    ...SpecializedInputs.enumeratedValues,
-    renderCondition: {field: "makeEnumerated", equals: true}
-  },
-  definePattern: ValidationInputs.definePattern,
-  regularExpression: {
-    ...ValidationInputs.regularExpression,
-    renderCondition: {field: "definePattern", equals: true}
-  }
-} as const;
-
-// Configuration field definitions and mappings
-const ConfigDefs = {
-  primaryField: {type: "boolean", title: "Primary Field", size: "small"},
-  translate: {type: "boolean", title: "Translatable", size: "small"},
-  uniqueValues: {type: "boolean", title: "Unique Values", size: "small"},
-  requiredField: {type: "boolean", title: "Required Field", size: "small"},
-  index: {type: "boolean", title: "Indexed field in database", size: "small"}
-} as const;
-
-const BasicConfig = {
-  primaryField: ConfigDefs.primaryField,
-  uniqueValues: ConfigDefs.uniqueValues,
-  requiredField: ConfigDefs.requiredField,
-  index: ConfigDefs.index
-} as const;
-
-const TranslatableConfig = {
-  ...BasicConfig,
-  translate: ConfigDefs.translate
-} as const;
-
-const MinimalConfig = {
-  requiredField: ConfigDefs.requiredField,
-  index: ConfigDefs.index
-} as const;
-
-const OnlyRequiredConfig = {
-  requiredField: ConfigDefs.requiredField
-} as const;
-
-const PrimaryAndIndexConfig = {
-  primaryField: ConfigDefs.primaryField,
-  index: ConfigDefs.index
-} as const;
-
-const TranslatableMinimalConfig = {
-  translate: ConfigDefs.translate,
-  requiredField: ConfigDefs.requiredField,
-  index: ConfigDefs.index
-} as const;
-
-// ---------------------------------------------------------------------------
-// Field Definitions
-// ---------------------------------------------------------------------------
 const STRING_DEFINITION: FieldDefinition = {
   kind: FieldKind.String,
   display: {label: "String", icon: "formatQuoteClose"},
@@ -216,17 +93,16 @@ const STRING_DEFINITION: FieldDefinition = {
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableConfig).map(key => [key, false])
     ),
-    defaultValue: ""
+    defaultValue: "",
+    type: FieldKind.String
   }),
   getDefaultValue: property => property.default || "",
   validateCreationForm: form => runYupValidation(STRING_FIELD_CREATION_FORM_SCHEMA, form),
-  validateValue: (value, properties, required) =>
-    validateFieldValue(value, FieldKind.String, properties, required),
-  buildCreationFormProperties: () => ({
+  validateValue: (value, properties) => validateFieldValue(value, FieldKind.String, properties),
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
-    presetValues: PresetPanel,
     defaultValue: DefaultInputs.defaultString,
-    configurationValues: TranslatableConfig
+    configurationValues: isInnerField ? MinimalConfig : TranslatableConfig
   }),
   buildValueProperty: property =>
     ({
@@ -235,6 +111,14 @@ const STRING_DEFINITION: FieldDefinition = {
       id: crypto.randomUUID()
     }) as TypeProperty,
   applyPresetLogic: (form, oldValues) => applyPresetLogic(FieldKind.String, form, oldValues),
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const defaultValue = form.defaultValue?.default || form.defaultValue || "";
+    return {
+      ...base,
+      default: typeof defaultValue === "string" && defaultValue.length ? defaultValue : undefined
+    };
+  },
   getFormattedValue: value => (value == null ? "" : String(value)),
   capabilities: {
     enumerable: true,
@@ -260,13 +144,14 @@ const NUMBER_DEFINITION: FieldDefinition = {
       enumeratedValues: [],
       minimum: undefined,
       maximum: undefined
-    }
+    },
+    type: FieldKind.Number
   }),
   getDefaultValue: property => (property.enum ? property.default || [] : property.default),
   validateCreationForm: form => runYupValidation(NUMBER_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Number, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: {
       ...BaseFields,
       minimum: ValidationInputs.minNumber,
@@ -279,7 +164,7 @@ const NUMBER_DEFINITION: FieldDefinition = {
       }
     },
     defaultValue: DefaultInputs.defaultNumber,
-    configurationValues: BasicConfig
+    configurationValues: isInnerField ? MinimalConfig : BasicConfig
   }),
   buildValueProperty: property =>
     ({
@@ -287,6 +172,20 @@ const NUMBER_DEFINITION: FieldDefinition = {
       type: FieldKind.Number as keyof TypeInputTypeMap,
       id: crypto.randomUUID()
     }) as TypeProperty,
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const fv = form.fieldValues;
+    return {
+      ...base,
+      default: form.defaultValue,
+      minimum: fv.minimum,
+      maximum: fv.maximum,
+      enum:
+        Array.isArray(fv.enumeratedValues) && fv.enumeratedValues.length
+          ? fv.enumeratedValues
+          : undefined
+    };
+  },
   getFormattedValue: value => (value == null ? "" : value),
   capabilities: {
     enumerable: true,
@@ -307,16 +206,17 @@ const BOOLEAN_DEFINITION: FieldDefinition = {
     configurationValues: Object.fromEntries(
       Object.keys(PrimaryAndIndexConfig).map(key => [key, false])
     ),
-    defaultValue: false
+    defaultValue: false,
+    type: FieldKind.Boolean
   }),
   getDefaultValue: property => property.default || false,
-  validateCreationForm: form => runYupValidation(BOOLEAN_FIELD_CREATION_FORM_SCHEMA, form),
+  validateCreationForm: form => runYupValidation(BOOLEAN_FIELD_CREATION_FORM_SCHEMA, form) as any,
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Boolean, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
     defaultValue: DefaultInputs.defaultBoolean,
-    configurationValues: PrimaryAndIndexConfig
+    configurationValues: isInnerField ? MinimalInnerFieldConfig : PrimaryAndIndexConfig
   }),
   buildValueProperty: property =>
     ({
@@ -324,6 +224,14 @@ const BOOLEAN_DEFINITION: FieldDefinition = {
       type: FieldKind.Boolean as keyof TypeInputTypeMap,
       id: crypto.randomUUID()
     }) as TypeProperty,
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const def = form.defaultValue;
+    return {
+      ...base,
+      default: def
+    };
+  },
   getFormattedValue: v => (v === true ? "✔" : v === false ? "✘" : ""),
   capabilities: {hasDefaultValue: true, primaryEligible: true, indexable: true}
 };
@@ -334,7 +242,8 @@ const DATE_DEFINITION: FieldDefinition = {
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),
-    defaultValue: {defaultDate: ""}
+    defaultValue: undefined,
+    type: FieldKind.Date
   }),
   getDefaultValue: property =>
     property.default === ":created_at" || property.default === ":updated_at"
@@ -345,7 +254,7 @@ const DATE_DEFINITION: FieldDefinition = {
     validateFieldValue(value, FieldKind.Date, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
-    defaultValue: DefaultInputs.defaultDate,
+    defaultValue: DefaultInputs.defaultDate as unknown as TypeProperties[keyof TypeProperties],
     configurationValues: MinimalConfig
   }),
   buildValueProperty: property =>
@@ -354,6 +263,13 @@ const DATE_DEFINITION: FieldDefinition = {
       type: FieldKind.Date,
       id: crypto.randomUUID()
     }) as TypeProperty,
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    return {
+      ...base,
+      default: form?.defaultValue?.length ? form.defaultValue : undefined
+    };
+  },
   getFormattedValue: v => {
     if (!v) return "";
     try {
@@ -374,15 +290,16 @@ const TEXTAREA_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.Textarea
   }),
   getDefaultValue: property => property.default || "",
   validateCreationForm: form => runYupValidation(TEXTAREA_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Textarea, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
-    configurationValues: TranslatableConfig
+    configurationValues: isInnerField ? MinimalConfig : TranslatableConfig
   }),
   buildValueProperty: property =>
     ({
@@ -390,35 +307,39 @@ const TEXTAREA_DEFINITION: FieldDefinition = {
       type: FieldKind.Textarea,
       id: crypto.randomUUID()
     }) as TypeProperty,
+  buildCreationFormApiProperty: buildBaseProperty,
   getFormattedValue: v => (v == null ? "" : String(v)),
   capabilities: {translatable: true, indexable: true}
 };
 
 const MULTISELECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Multiselect,
-  display: {label: "Multiple Selection", icon: "formatListChecks"},
+  display: {label: "Select", icon: "formatListChecks"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     fieldValues: {
       ...BASE_FORM_DEFAULTS.fieldValues,
-      multipleSelectionType: "string",
-      chip: [],
+      chip: []
+    },
+    configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),
+    multipleSelectionTab: {
+      multipleSelectionType: "",
       maxItems: undefined
     },
-    configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false]))
+    type: FieldKind.Multiselect
   }),
   getDefaultValue: property => property.default || [],
   validateCreationForm: form => runYupValidation(MULTISELECT_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Multiselect, properties, required),
   buildCreationFormProperties: () => ({
-    fieldValues: {
-      ...BaseFields,
+    fieldValues: BaseFields,
+    configurationValues: MinimalConfig,
+    presetValues: PresetPanel,
+    multipleSelectionTab: {
       multipleSelectionType: SpecializedInputs.multipleSelectionType,
-      maxItems: ValidationInputs.maxItems,
-      chip: SpecializedInputs.chip
-    },
-    configurationValues: MinimalConfig
+      maxItems: ValidationInputs.maxItems
+    }
   }),
   buildValueProperty: property =>
     ({
@@ -426,6 +347,43 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
       type: FieldKind.Multiselect,
       id: crypto.randomUUID()
     }) as TypeProperty,
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const fv = form.fieldValues;
+    const multipleSelectionTab = form.multipleSelectionTab;
+    return {
+      ...base,
+      items: {
+        type: multipleSelectionTab?.multipleSelectionType,
+        enum: Array.isArray(fv.chip) && fv.chip.length ? fv.chip : undefined
+      },
+      maxItems: multipleSelectionTab?.maxItems
+    };
+  },
+  applyPresetLogic: (form, oldValues) => applyPresetLogic(FieldKind.String, form, oldValues),
+  applySelectionTypeLogic: (form, properties) => {
+    const newSelectionType = form.multipleSelectionTab?.multipleSelectionType;
+    const updatedForm = {
+      ...form,
+      fieldValues: {
+        ...form.fieldValues,
+        chip:
+          newSelectionType === "string"
+            ? form.fieldValues.chip.map((v: string | number) => String(v))
+            : form.fieldValues.chip
+                .map((v: string | number) => Number(v))
+                .filter((v: number) => !isNaN(v))
+      }
+    };
+    const updatedFieldProperties = {
+      ...properties,
+      chip: {
+        ...SpecializedInputs.chip,
+        valueType: newSelectionType
+      }
+    };
+    return {updatedForm, updatedFieldProperties};
+  },
   getFormattedValue: v => (Array.isArray(v) ? v.join(", ") : ""),
   capabilities: {enumerable: true, indexable: true}
 };
@@ -438,25 +396,19 @@ const RELATION_DEFINITION: FieldDefinition = {
     fieldValues: {
       ...BASE_FORM_DEFAULTS.fieldValues,
       bucket: "",
-      relationType: "onetoone",
+      relationType: "",
       dependent: false
     },
-    configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false]))
+    configurationValues: Object.fromEntries(
+      Object.keys(RelationFieldConfig).map(key => [key, false])
+    ),
+    type: FieldKind.Relation
   }),
   getDefaultValue: property =>
     property.default || (property.relationType === "onetomany" ? [] : undefined),
   validateCreationForm: form => runYupValidation(RELATION_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Relation, properties, required),
-  buildCreationFormProperties: () => ({
-    fieldValues: {
-      ...BaseFields,
-      bucket: SpecializedInputs.bucket,
-      relationType: SpecializedInputs.relationType,
-      dependent: SpecializedInputs.dependent
-    },
-    configurationValues: MinimalConfig
-  }),
   buildValueProperty: (property, relationProps) =>
     ({
       ...property,
@@ -492,6 +444,28 @@ const RELATION_DEFINITION: FieldDefinition = {
       label: getLabel(value)
     };
   },
+  buildCreationFormProperties: (_, buckets?: BucketType[]) =>
+    ({
+      fieldValues: {
+        ...BaseFields,
+        bucket: {
+          ...SpecializedInputs.bucket,
+          enum: buckets?.map(b => ({label: b.title, value: b._id})) || []
+        },
+        relationType: SpecializedInputs.relationType
+      },
+      configurationValues: RelationFieldConfig
+    }) as unknown as FieldCreationFormProperties,
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const fv = form.fieldValues;
+    return {
+      ...base,
+      relationType: fv.relationType,
+      bucketId: fv.bucket,
+      dependent: fv.dependent || undefined
+    };
+  },
   capabilities: {indexable: true}
 };
 
@@ -502,7 +476,8 @@ const LOCATION_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
       Object.keys(OnlyRequiredConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.Location
   }),
   getDefaultValue: property => property.default || DEFAULT_COORDINATES,
   validateCreationForm: form => runYupValidation(LOCATION_FIELD_CREATION_FORM_SCHEMA, form),
@@ -520,14 +495,14 @@ const LOCATION_DEFINITION: FieldDefinition = {
     }) as TypeProperty,
   getFormattedValue: v => {
     if (!v || typeof v !== "object") return "";
-    if (Array.isArray((v as any).coordinates)) {
-      const coords = (v as any).coordinates;
+    if (Array.isArray(v.coordinates)) {
+      const coords = v.coordinates;
       if (coords.length >= 2) return `${coords[0]},${coords[1]}`;
     }
-    if ("latitude" in (v as any) && "longitude" in (v as any))
-      return `${(v as any).latitude},${(v as any).longitude}`;
+    if ("latitude" in v && "longitude" in v) return `${v.latitude},${v.longitude}`;
     return "";
   },
+  buildCreationFormApiProperty: buildBaseProperty,
   capabilities: {indexable: true}
 };
 
@@ -538,17 +513,28 @@ const ARRAY_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     fieldValues: {
       ...BASE_FORM_DEFAULTS.fieldValues,
-      arrayType: "string"
+      arrayItemTitle: "",
+      arrayItemDescription: "",
+      arrayType: "",
+      chip: [],
+      enumeratedValues: [],
+      makeEnumerated: false,
+      definePattern: false,
+      regularExpression: "",
+      uniqueItems: false,
+      defaultString: "",
+      multipleSelectionType: ""
     },
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.Array
   }),
   getDefaultValue: property => property.default || [],
   validateCreationForm: form => runYupValidation(ARRAY_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Array, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: {
       ...BaseFields,
       arrayType: SpecializedInputs.arrayType,
@@ -583,6 +569,10 @@ const ARRAY_DEFINITION: FieldDefinition = {
         valueType: "number",
         renderCondition: {field: "makeEnumerated", equals: true}
       },
+      definePattern: {
+        ...ValidationInputs.definePattern,
+        renderCondition: {field: "arrayType", equals: "string"}
+      },
       regularExpression: {
         ...ValidationInputs.regularExpression,
         renderCondition: {field: "definePattern", equals: true}
@@ -611,13 +601,12 @@ const ARRAY_DEFINITION: FieldDefinition = {
         renderCondition: {field: "arrayType", equals: "multiselect"}
       }
     },
-    // Array reads enum/pattern for number items from presets
     presetValues: {
       definePattern: PresetPanel.definePattern,
       regularExpression: PresetPanel.regularExpression,
       enumeratedValues: PresetPanel.enumeratedValues
     },
-    configurationValues: TranslatableMinimalConfig
+    configurationValues: isInnerField ? MinimalConfig : TranslatableMinimalConfig
   }),
   buildValueProperty: (property, relationHandlers) =>
     ({
@@ -638,6 +627,51 @@ const ARRAY_DEFINITION: FieldDefinition = {
             : property.items,
       id: crypto.randomUUID()
     }) as TypeProperty,
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const fv = form.fieldValues;
+    const pv = form.presetValues || {};
+
+    const item: Property = {
+      type: fv.arrayType,
+      title: fv.arrayItemTitle,
+      description: fv.arrayItemDescription?.length ? fv.arrayItemDescription : undefined,
+      default: form.defaultValue
+    };
+
+    if (pv.enumeratedValues?.length) item.enum = pv.enumeratedValues;
+    if (pv.regularExpression?.length) item.pattern = pv.regularExpression;
+    if (fv.maxNumber != null) item.maximum = fv.maxNumber;
+    if (fv.minNumber != null) item.minimum = fv.minNumber;
+
+    if (fv.arrayType === "multiselect") {
+      item.items = {
+        type: fv.multipleSelectionType,
+        enum: Array.isArray(fv.chip) && fv.chip.length ? fv.chip : undefined
+      };
+      item.maxItems = fv.maxItems;
+    }
+
+    if (fv.arrayType === "object" && Array.isArray(form.innerFields)) {
+      item.properties = form.innerFields.reduce<Record<string, Property>>((acc, inner) => {
+        const innerDef = FIELD_REGISTRY[inner.type as FieldKind];
+        if (innerDef?.buildCreationFormApiProperty) {
+          acc[inner.fieldValues.title] = innerDef.buildCreationFormApiProperty(inner);
+        } else {
+          throw new Error(`Cannot build property for field type ${inner?.type}`);
+        }
+        return acc;
+      }, {});
+    }
+
+    return {
+      ...base,
+      maxItems: fv.arrayType === "multiselect" ? undefined : (fv.maxItems ?? undefined),
+      minItems: fv.minItems ?? undefined,
+      uniqueItems: fv.uniqueItems ?? undefined,
+      items: item
+    };
+  },
   requiresInnerFields: form => form.fieldValues?.arrayType === "object",
   applyPresetLogic: (form, oldValues) =>
     form.fieldValues.arrayType === "string"
@@ -654,15 +688,16 @@ const OBJECT_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.Object
   }),
   getDefaultValue: property => property.default || {},
   validateCreationForm: form => runYupValidation(OBJECT_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Object, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
-    configurationValues: TranslatableMinimalConfig
+    configurationValues: isInnerField ? MinimalConfig : TranslatableMinimalConfig
   }),
   buildValueProperty: (rawProperty, relationHandlers) => {
     if (!rawProperty) {
@@ -732,6 +767,24 @@ const OBJECT_DEFINITION: FieldDefinition = {
 
     return result;
   },
+  buildCreationFormApiProperty: form => {
+    const base = buildBaseProperty(form);
+    const properties = Array.isArray(form.innerFields)
+      ? form.innerFields.reduce<Record<string, Property>>((acc, inner) => {
+          const innerDef = FIELD_REGISTRY[inner.type as FieldKind];
+          if (innerDef?.buildCreationFormApiProperty) {
+            acc[inner.fieldValues.title] = innerDef.buildCreationFormApiProperty(inner);
+          } else {
+            throw new Error(`Cannot build property for field type ${inner?.type}`);
+          }
+          return acc;
+        }, {})
+      : undefined;
+    return {
+      ...base,
+      properties
+    } as Property;
+  },
   requiresInnerFields: _ => true,
   getFormattedValue: v => (v && typeof v === "object" ? `{${Object.keys(v).length}}` : ""),
   capabilities: {supportsInnerFields: true}
@@ -744,15 +797,16 @@ const FILE_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.File
   }),
   getDefaultValue: property => property.default,
   validateCreationForm: form => runYupValidation(FILE_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.File, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
-    configurationValues: TranslatableMinimalConfig
+    configurationValues: isInnerField ? MinimalConfig : TranslatableMinimalConfig
   }),
   buildValueProperty: property =>
     ({
@@ -763,9 +817,10 @@ const FILE_DEFINITION: FieldDefinition = {
   getFormattedValue: v => {
     if (!v) return "";
     if (typeof v === "string") return v;
-    if (v && typeof v === "object") return (v as any).originalName || (v as any).name || "📎";
+    if (v && typeof v === "object") return v.originalName || v.name || "📎";
     return "📎";
   },
+  buildCreationFormApiProperty: buildBaseProperty,
   capabilities: {}
 };
 
@@ -776,15 +831,16 @@ const RICHTEXT_DEFINITION: FieldDefinition = {
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
-    )
+    ),
+    type: FieldKind.Richtext
   }),
   getDefaultValue: property => property.default || "",
   validateCreationForm: form => runYupValidation(RICHTEXT_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Richtext, properties, required),
-  buildCreationFormProperties: () => ({
+  buildCreationFormProperties: isInnerField => ({
     fieldValues: BaseFields,
-    configurationValues: TranslatableMinimalConfig
+    configurationValues: isInnerField ? MinimalConfig : TranslatableMinimalConfig
   }),
   buildValueProperty: property =>
     ({
@@ -793,6 +849,7 @@ const RICHTEXT_DEFINITION: FieldDefinition = {
       id: crypto.randomUUID()
     }) as TypeProperty,
   getFormattedValue: v => (v ? "[rich]" : ""),
+  buildCreationFormApiProperty: buildBaseProperty,
   capabilities: {translatable: true}
 };
 
@@ -801,7 +858,10 @@ const JSON_DEFINITION: FieldDefinition = {
   display: {label: "JSON", icon: "dataObject"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
-    configurationValues: Object.fromEntries(Object.keys(BasicConfig).map(key => [key, false]))
+    configurationValues: Object.fromEntries(
+      Object.keys(OnlyRequiredConfig).map(key => [key, false])
+    ),
+    type: FieldKind.Json
   }),
   getDefaultValue: property => property.default,
   validateCreationForm: form => runYupValidation(JSON_FIELD_CREATION_FORM_SCHEMA, form),
@@ -809,7 +869,7 @@ const JSON_DEFINITION: FieldDefinition = {
     validateFieldValue(value, FieldKind.Json, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
-    configurationValues: BasicConfig
+    configurationValues: OnlyRequiredConfig
   }),
   buildValueProperty: property =>
     ({
@@ -826,6 +886,7 @@ const JSON_DEFINITION: FieldDefinition = {
       return "{…}";
     }
   },
+  buildCreationFormApiProperty: buildBaseProperty,
   capabilities: {indexable: true}
 };
 
@@ -834,8 +895,8 @@ const COLOR_DEFINITION: FieldDefinition = {
   display: {label: "Color", icon: "palette"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
-
-    configurationValues: Object.fromEntries(Object.keys(BasicConfig).map(key => [key, false]))
+    configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),
+    type: FieldKind.Color
   }),
   getDefaultValue: property => property.default || "",
   validateCreationForm: form => runYupValidation(COLOR_FIELD_CREATION_FORM_SCHEMA, form),
@@ -843,7 +904,7 @@ const COLOR_DEFINITION: FieldDefinition = {
     validateFieldValue(value, FieldKind.Color, properties, required),
   buildCreationFormProperties: () => ({
     fieldValues: BaseFields,
-    configurationValues: BasicConfig
+    configurationValues: MinimalConfig
   }),
   buildValueProperty: property =>
     ({
@@ -852,14 +913,15 @@ const COLOR_DEFINITION: FieldDefinition = {
       id: crypto.randomUUID()
     }) as TypeProperty,
   getFormattedValue: v => (v ? String(v).toUpperCase() : ""),
+  buildCreationFormApiProperty: buildBaseProperty,
   capabilities: {hasDefaultValue: true, indexable: true}
 };
 
 export const FIELD_REGISTRY: Partial<Record<FieldKind, FieldDefinition>> = {
   [FieldKind.String]: STRING_DEFINITION,
   [FieldKind.Number]: NUMBER_DEFINITION,
-  [FieldKind.Boolean]: BOOLEAN_DEFINITION,
   [FieldKind.Date]: DATE_DEFINITION,
+  [FieldKind.Boolean]: BOOLEAN_DEFINITION,
   [FieldKind.Textarea]: TEXTAREA_DEFINITION,
   [FieldKind.Multiselect]: MULTISELECT_DEFINITION,
   [FieldKind.Relation]: RELATION_DEFINITION,
@@ -868,15 +930,6 @@ export const FIELD_REGISTRY: Partial<Record<FieldKind, FieldDefinition>> = {
   [FieldKind.Object]: OBJECT_DEFINITION,
   [FieldKind.File]: FILE_DEFINITION,
   [FieldKind.Richtext]: RICHTEXT_DEFINITION,
-  [FieldKind.Json]: JSON_DEFINITION,
-  [FieldKind.Color]: COLOR_DEFINITION
+  [FieldKind.Color]: COLOR_DEFINITION,
+  [FieldKind.Json]: JSON_DEFINITION
 };
-
-const SYNONYM_MAP: Record<string, FieldKind> = Object.values(FIELD_REGISTRY).reduce(
-  (acc, def) => {
-    if (!def) return acc;
-    acc[def.display.label.toLowerCase()] = def.kind;
-    return acc;
-  },
-  {} as Record<string, FieldKind>
-);

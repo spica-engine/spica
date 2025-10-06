@@ -1,27 +1,15 @@
-import {
-  Button,
-  Checkbox,
-  FlexElement,
-  FluidContainer,
-  Icon,
-  Popover,
-  type IconName
-} from "oziko-ui-kit";
+import {Button, Checkbox, Icon, Popover, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
-import {
-  FieldKind,
-  formatValue,
-  FIELD_REGISTRY,
-  buildCreationFormPropertiesFromForm,
-} from "../../../domain/fields";
+import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
-import type {FormValues} from "../bucket-add-field/BucketAddFieldBusiness";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
+import type {FieldFormState} from "../../../domain/fields/types";
+import type { Property } from "src/services/bucketService";
 
 export type ColumnType = {
   id: string;
@@ -108,7 +96,7 @@ const ColumnHeader = ({
             />
           }
           contentProps={{
-            className: styles.popover,
+            className: styles.popover
           }}
           placement="topStart"
         >
@@ -130,16 +118,16 @@ const NewFieldHeader = memo(() => {
   );
 
   const handleSaveAndClose = useCallback(
-    (values: FormValues) => {
+    (values: FieldFormState, kind: FieldKind) => {
       if (!bucket) return;
 
-      const fieldProperty = buildCreationFormPropertiesFromForm(values as any);
+      const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
       return createBucketField(
         bucket,
-        fieldProperty as any,
+        fieldProperty as Property,
         requiredField ? title : undefined,
         primaryField ? title : undefined
       );
@@ -147,9 +135,17 @@ const NewFieldHeader = memo(() => {
     [bucket, createBucketField]
   );
 
+  const forbiddenFieldNames = useMemo(() => {
+    if (!bucket) return [];
+    return Object.keys(bucket.properties || {});
+  }, [bucket]);
+
   return (
     <BucketFieldPopupsProvider>
-      <BucketFieldPopup onSaveAndClose={handleSaveAndClose}>
+      <BucketFieldPopup
+        onSaveAndClose={handleSaveAndClose}
+        forbiddenFieldNames={forbiddenFieldNames}
+      >
         <Button
           variant="icon"
           className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
@@ -206,7 +202,7 @@ function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
   }
   if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
   if (type) {
-    const formatted = formatValue(type, cellData);
+    const formatted = FIELD_REGISTRY[type]?.getFormattedValue?.(cellData);
     if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
     if (typeof formatted === "object") return JSON.stringify(formatted)
   }

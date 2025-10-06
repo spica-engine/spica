@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from "react";
-import {useBucketService} from "../../services/bucketService";
+import {useBucket} from "../../contexts/BucketContext";
 import styles from "./Diagram.module.scss";
 import ZoomControl from "../../components/molecules/zoom-control/ZoomControl";
 import NodeView from "../../components/molecules/node-view/NodeView";
@@ -14,11 +14,11 @@ import {
 export default function Diagram() {
   const playgroundRef = useRef(null);
 
-  const {apiGetBuckets, apiBuckets} = useBucketService();
+  const {getBuckets, buckets} = useBucket();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const {nodes, relations} = useBucketConverter(apiBuckets);
+  const {nodes, relations} = useBucketConverter(buckets);
   const [currentNodes, setCurrentNodes] = useState(nodes);
 
   useEffect(() => {
@@ -30,8 +30,8 @@ export default function Diagram() {
   const nodeManagement = useNodeManagement(currentNodes, setCurrentNodes);
   const relationRenderer = useRelationRenderer(currentNodes);
   useEffect(() => {
-    apiGetBuckets();
-  }, [apiGetBuckets]);
+    getBuckets();
+  }, [getBuckets]);
 
   const renderRelationArrow = (relation: any, relationIndex: number) => {
     if (!focusMode.isRelationVisible(relation, relationIndex)) return null;
@@ -82,7 +82,7 @@ export default function Diagram() {
     );
   };
 
-  if (!apiBuckets || apiBuckets.length === 0) {
+  if (!buckets || buckets.length === 0) {
     return (
       <div className={styles.diagramContainer}>
         <div className={styles.loadingMessage}>Loading buckets...</div>
@@ -149,20 +149,26 @@ export default function Diagram() {
             {relations.map((relation, index) => renderRelationArrow(relation, index))}
           </svg>
 
-          {currentNodes.map(node => (
-            <NodeView
-              key={node.id}
-              node={node}
-              onMouseDown={interactions.handleMouseDown}
-              onClick={focusMode.handleNodeClick}
-              onAddField={nodeManagement.addField}
-              onRemoveField={nodeManagement.removeField}
-              dragging={interactions.dragging === node.id}
-              isFocused={focusMode.isNodeFocused(node.id)}
-              focusMode={focusMode.focusedNodeId !== null}
-              isDirectlyFocused={node.id === focusMode.focusedNodeId}
-            />
-          ))}
+          {currentNodes.map(node => {
+            const bucket = buckets?.find(b => b._id === node.id);
+            if (!bucket) return null;
+            
+            return (
+              <NodeView
+                key={node.id}
+                node={node}
+                bucket={bucket}
+                onMouseDown={interactions.handleMouseDown}
+                onClick={focusMode.handleNodeClick}
+                onAddField={nodeManagement.addField}
+                onRemoveField={nodeManagement.removeField}
+                dragging={interactions.dragging === node.id}
+                isFocused={focusMode.isNodeFocused(node.id)}
+                focusMode={focusMode.focusedNodeId !== null}
+                isDirectlyFocused={node.id === focusMode.focusedNodeId}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
