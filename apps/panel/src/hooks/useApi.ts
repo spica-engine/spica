@@ -54,6 +54,7 @@ function useApi<T>({
       };
 
       const makeRequest = async () => {
+        console.log("token", token);
         try {
           const combinedHeaders =
             token || headers

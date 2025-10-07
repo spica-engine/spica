@@ -1,17 +1,16 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import type { RootState } from '../index';
+import { selectParsedToken, clearToken } from '../slices/authSlice';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
-    
-    //TODO: Decouple persistence from transport in the fetch layer.
-    const token = localStorage.getItem('token'); 
+    // Get token from Redux store instead of localStorage
+    const token = selectParsedToken(getState() as RootState);
 
-    const parsedToken = token ? JSON.parse(token) : null;
-
-    if (parsedToken) {
-      headers.set('Authorization', `IDENTITY ${parsedToken}`);
+    if (token) {
+      headers.set('Authorization', `IDENTITY ${token}`);
     }
     return headers;
   },
@@ -25,7 +24,8 @@ const baseQueryWithReauth: BaseQueryFn<
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {
-    localStorage.removeItem('token');
+    // Clear token from Redux store (which also clears localStorage)
+    api.dispatch(clearToken());
     api.dispatch({ type: 'NAVIGATE', payload: '/passport/identify' });
   }
 
