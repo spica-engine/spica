@@ -79,25 +79,25 @@ const ColumnHeader = ({
   onSortDesc,
   onDelete
 }: ColumnHeaderProps) => {
-  const [deleteFieldError, setDeleteFieldError] = useState<string | undefined>(undefined);
+  const [fieldDeletionError, setFieldDeletionError] = useState<string | undefined>(undefined);
   const [isFieldDeletionLoading, setIsFieldDeletionLoading] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
-  const handleClose = () => {setIsOpen(false); setDeleteFieldError(undefined);};
+  const handleClose = () => {setIsOpen(false); setFieldDeletionError(undefined);};
   const handleOpen = () => setIsOpen(true);
 
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const openConfirmation = useCallback(() => setIsConfirmationOpen(true), []);
-  const closeConfirmation = useCallback(() => {setIsConfirmationOpen(false); setDeleteFieldError(undefined);}, []);
+  const closeConfirmation = useCallback(() => {setIsConfirmationOpen(false); setFieldDeletionError(undefined);}, []);
 
 
   const confirmDelete = useCallback(() => {
-    setDeleteFieldError(undefined);
+    setFieldDeletionError(undefined);
     setIsFieldDeletionLoading(true);
     onDelete?.().then(result => {
       setIsFieldDeletionLoading(false);
       if (typeof result === "string") {
-        setDeleteFieldError(result);
+        setFieldDeletionError(result);
         return;
       };
       closeConfirmation();
@@ -166,7 +166,7 @@ const ColumnHeader = ({
           confirmCondition={val => val === "agree"}
           onConfirm={confirmDelete}
           onCancel={closeConfirmation}
-          error={deleteFieldError}
+          error={fieldDeletionError}
           loading={isFieldDeletionLoading}
         />
       )}
