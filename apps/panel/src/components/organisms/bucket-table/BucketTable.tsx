@@ -83,13 +83,19 @@ const ColumnHeader = ({
   const [isFieldDeletionLoading, setIsFieldDeletionLoading] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
-  const handleClose = () => {setIsOpen(false); setFieldDeletionError(undefined);};
+  const handleClose = () => {
+    setIsOpen(false);
+    setFieldDeletionError(undefined);
+  };
   const handleOpen = () => setIsOpen(true);
 
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const openConfirmation = useCallback(() => setIsConfirmationOpen(true), []);
-  const closeConfirmation = useCallback(() => {setIsConfirmationOpen(false); setFieldDeletionError(undefined);}, []);
-
+  const closeConfirmation = useCallback(() => {
+    setIsConfirmationOpen(false);
+    setFieldDeletionError(undefined);
+    handleClose();
+  }, []);
 
   const confirmDelete = useCallback(() => {
     setFieldDeletionError(undefined);
@@ -99,9 +105,8 @@ const ColumnHeader = ({
       if (typeof result === "string") {
         setFieldDeletionError(result);
         return;
-      };
+      }
       closeConfirmation();
-      handleClose();
     });
   }, [onDelete]);
 
