@@ -4,7 +4,10 @@ import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolk
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
-    const token = localStorage.getItem('token');
+    
+    //TODO: Decouple persistence from transport in the fetch layer.
+    const token = localStorage.getItem('token'); 
+
     const parsedToken = token ? JSON.parse(token) : null;
 
     if (parsedToken) {
@@ -20,12 +23,12 @@ const baseQueryWithReauth: BaseQueryFn<
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
-  
+
   if (result.error && result.error.status === 401) {
     localStorage.removeItem('token');
-    window.location.href = '/passport/identify';
+    api.dispatch({ type: 'NAVIGATE', payload: '/passport/identify' });
   }
-  
+
   return result;
 };
 
