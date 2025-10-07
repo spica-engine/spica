@@ -6,7 +6,7 @@ import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
 import type {BucketType} from "src/services/bucketService";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
-import NewBucketEntryPopup from "../new-bucket-entry-popup/NewBucketEntryPopup";
+import NewBucketEntryDrawer from "../new-bucket-entry-drawer/NewBucketEntryDrawer";
 
 type BucketActionBarProps = {
   onRefresh: () => void;
@@ -78,7 +78,7 @@ const BucketActionBar = ({
         loading={searchLoading}
       />
       <FlexElement className={styles.actionBar}>
-        <NewBucketEntryPopup bucket={bucket} />
+        <NewBucketEntryDrawer bucket={bucket} />
         <Button
           className={styles.refreshButton} variant="text"
           onClick={onRefresh}

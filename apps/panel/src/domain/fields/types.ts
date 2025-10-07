@@ -1,6 +1,9 @@
 import type {IconName} from "oziko-ui-kit";
 import type {Property} from "../../services/bucketService";
-import type {TypeInputRepresenterError, TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+import type {
+  TypeInputRepresenterError,
+  TypeProperties
+} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import type {
   getOptionsHandler,
   loadMoreOptionsHandler,
@@ -97,7 +100,6 @@ export type ObjectInputRelationHandlers = {
   totalOptionsLength?: number;
 };
 
-
 export interface FieldDefinition {
   kind: FieldKind; // name of the field kind
   display: FieldDisplayMeta; // UI metadata
@@ -122,8 +124,8 @@ export interface FieldDefinition {
     properties: TypeProperties
   ) => {updatedForm: FieldCreationForm; updatedFieldProperties: TypeProperties}; // apply selection type logic to the form state (only for multiselect)
   // Optional formatting function for displaying values in lists, etc.
-  getFormattedValue: (value: any, properties: Property) => any;
-  // Optional builder that converts a FieldFormState to API Property definition (progressive migration from createFieldProperty.ts)
+  getDisplayValue: (value: any, properties?: Property) => any;
+  getSaveReadyValue: (value: any, properties?: Property) => any; // transform the value into a save-ready format, if needed (e.g. for uploading to server)  // Optional builder that converts a FieldFormState to API Property definition (progressive migration from createFieldProperty.ts)
   buildCreationFormApiProperty: (form: FieldFormState) => Property;
   capabilities?: FieldCapabilities;
 }

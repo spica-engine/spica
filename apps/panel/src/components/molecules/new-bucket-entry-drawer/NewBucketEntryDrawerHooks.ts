@@ -6,7 +6,7 @@ import {
   useRelationInputHandlers,
   type RelationState
 } from "../../../hooks/useRelationInputHandlers";
-import {collectBucketIds} from "./NewBucketEntryPopupUtils";
+import {collectBucketIds} from "./NewBucketEntryDrawerUtils";
 import { FieldKind } from "../../../domain/fields";
 
 export const useValueProperties = (bucket: BucketType, authToken: string) => {

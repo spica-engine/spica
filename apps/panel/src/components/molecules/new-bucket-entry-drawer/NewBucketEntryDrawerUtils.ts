@@ -111,10 +111,10 @@ export const validateValues = (
   const errors: FormError = {};
 
   for (const [key, property] of Object.entries(formattedProperties || {})) {
-    const val = value?.[key];
-    const required = requiredFields?.includes(key) ? true : property.required;
-    const kind = property.type;
+        const kind = property.type;
     const field = FIELD_REGISTRY[kind];
+    const val = field?.getSaveReadyValue(value[key], property)
+    const required = requiredFields?.includes(key) ? true : property.required;
     const msg = field?.validateValue(val, property, required);
     if (msg) errors[key] = msg as string;
   }

@@ -48,7 +48,7 @@ const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string, prima
   });
 
   if (searchValue) {
-    const searchField = primaryKey || "title";
+    const searchField = primaryKey || "_id";
     const filter = {
       $or: [
         {

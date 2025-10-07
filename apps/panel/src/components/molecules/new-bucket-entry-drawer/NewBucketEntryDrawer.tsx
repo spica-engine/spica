@@ -4,11 +4,11 @@ import {
   FlexElement,
   FluidContainer,
   Icon,
-  Modal,
-  useInputRepresenter
+  useInputRepresenter,
+  Drawer
 } from "oziko-ui-kit";
 import {useCallback, useEffect, useRef, useState} from "react";
-import styles from "./NewBucketEntryPopup.module.scss";
+import styles from "./NewBucketEntryDrawer.module.scss";
 import type {BucketType} from "src/services/bucketService";
 import {useBucket} from "../../../contexts/BucketContext";
 import useLocalStorage from "../../../hooks/useLocalStorage";
@@ -16,16 +16,16 @@ import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/use
 import {
   cleanValueRecursive,
   findFirstErrorId,
-  generateInitialValues
-} from "./NewBucketEntryPopupUtils";
-import {useValueProperties} from "./NewBucketEntryPopupHooks";
-import {validateValues} from "./NewBucketEntryPopupUtils";
+  generateInitialValues,
+  validateValues
+} from "./NewBucketEntryDrawerUtils";
+import {useValueProperties} from "./NewBucketEntryDrawerHooks";
 
-type NewBucketEntryPopupProps = {
+type NewBucketEntryDrawerProps = {
   bucket: BucketType;
 };
 
-const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
+const NewBucketEntryDrawer = ({bucket}: NewBucketEntryDrawerProps) => {
   const [authToken] = useLocalStorage("token", "");
   const {createBucketEntry, createBucketEntryError} = useBucket();
 
@@ -65,7 +65,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
     error: errors
   });
 
-  const modalBody = useRef<HTMLDivElement>(null);
+  const formContainerRef = useRef<HTMLDivElement>(null);
   const handleSubmit = useCallback(async () => {
     const validationErrors = validateValues(value, formattedProperties, bucket?.required || []);
 
@@ -77,7 +77,7 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
         const errorElement = document.getElementById(firstErrorId);
         errorElement?.scrollIntoView({behavior: "smooth", block: "center"});
       } else {
-        modalBody.current?.scrollTo({top: 0, behavior: "smooth"});
+        formContainerRef.current?.scrollTo({top: 0, behavior: "smooth"});
       }
 
       return;
@@ -113,49 +113,49 @@ const NewBucketEntryPopup = ({bucket}: NewBucketEntryPopupProps) => {
     generateInitialValues
   ]);
 
-  const handleOpenModal = () => setIsOpen(true);
-  const handleCloseModal = () => setIsOpen(false);
+  const handleOpenDrawer = () => setIsOpen(true);
+  const handleCloseDrawer = () => setIsOpen(false);
 
   return (
     <>
-      <Button onClick={handleOpenModal}>
+      <Button onClick={handleOpenDrawer}>
         <FluidContainer prefix={{children: <Icon name="plus" />}} root={{children: "New Entry"}} />
       </Button>
-      {isOpen && (
-        <Modal
-          showCloseButton={false}
-          isOpen
-          onClose={handleCloseModal}
-          title="New Bucket Entry"
-          className={styles.modalContent}
-        >
-          <Modal.Body className={styles.modalBody} ref={modalBody}>
-            <FlexElement gap={10} direction="vertical" className={styles.formContainer}>
-              {inputRepresentation}
-              <FlexElement className={styles.footer}>
-                {apiError && (
-                  <Text className={styles.errorText} variant="danger">
-                    {apiError}
-                  </Text>
-                )}
-                <Button
-                  onClick={handleSubmit}
-                  loading={isLoading}
-                  disabled={isLoading}
-                  className={styles.saveButton}
-                >
-                  <FluidContainer
-                    prefix={{children: <Icon name="save" />}}
-                    root={{children: "Save and close"}}
-                  />
-                </Button>
-              </FlexElement>
+      <Drawer
+        placement="right"
+        showCloseButton={false}
+        isOpen={isOpen}
+        onClose={handleCloseDrawer}
+        size={600}
+        contentClassName={styles.drawerContent}
+        scrollableContentClassName={styles.drawerContentScrollableContent}
+      >
+        <div className={styles.formContainer} ref={formContainerRef}>
+          <FlexElement direction="vertical" gap={10} className={styles.formContent}>
+            {inputRepresentation}
+            <FlexElement className={styles.footer}>
+              {apiError && (
+                <Text className={styles.errorText} variant="danger">
+                  {apiError}
+                </Text>
+              )}
+              <Button
+                onClick={handleSubmit}
+                loading={isLoading}
+                disabled={isLoading}
+                className={styles.saveButton}
+              >
+                <FluidContainer
+                  prefix={{children: <Icon name="save" />}}
+                  root={{children: "Save and close"}}
+                />
+              </Button>
             </FlexElement>
-          </Modal.Body>
-        </Modal>
-      )}
+          </FlexElement>
+        </div>
+      </Drawer>
     </>
   );
 };
 
-export default NewBucketEntryPopup;
+export default NewBucketEntryDrawer;

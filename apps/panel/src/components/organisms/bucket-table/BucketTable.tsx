@@ -202,7 +202,7 @@ function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
   }
   if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
   if (type) {
-    const formatted = FIELD_REGISTRY[type]?.getFormattedValue?.(cellData);
+    const formatted = FIELD_REGISTRY[type]?.getSaveReadyValue?.(cellData);
     if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
     if (typeof formatted === "object") return JSON.stringify(formatted)
   }
