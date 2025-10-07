@@ -8,6 +8,7 @@
   min-height: 0 !important;
   width: 600px !important;
   min-width: 600px !important;
+  gap: var(--gap-md) !important;
   .header {
     padding: 0 var(--padding-md) !important;
     border-bottom: var(--border-default);
@@ -23,8 +24,9 @@
   .body {
     display: flex;
     flex-direction: column !important;
-    gap: var(--gap-lg) !important;
-    padding-bottom: var(--padding-sm);
+    gap: var(--gap-md) !important;
+    padding-bottom: 0;
+    padding-top: 0;
   }
   .footer {
     padding: 0 var(--padding-md) var(--padding-md) 0;
@@ -81,4 +83,10 @@
 
 [class^="Portal-module_container__"] {
   z-index: 4;
+}
+
+.descriptionText {
+  gap: var(--gap-md);
+  display: flex;
+  flex-direction: column;
 }

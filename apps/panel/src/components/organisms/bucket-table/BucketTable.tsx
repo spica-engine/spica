@@ -80,6 +80,7 @@ const ColumnHeader = ({
   onDelete
 }: ColumnHeaderProps) => {
   const [deleteFieldError, setDeleteFieldError] = useState<string | undefined>(undefined);
+  const [isFieldDeletionLoading, setIsFieldDeletionLoading] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
   const handleClose = () => {setIsOpen(false); setDeleteFieldError(undefined);};
@@ -92,7 +93,9 @@ const ColumnHeader = ({
 
   const confirmDelete = useCallback(() => {
     setDeleteFieldError(undefined);
+    setIsFieldDeletionLoading(true);
     onDelete?.().then(result => {
+      setIsFieldDeletionLoading(false);
       if (typeof result === "string") {
         setDeleteFieldError(result);
         return;
@@ -134,14 +137,14 @@ const ColumnHeader = ({
       )}
       {isConfirmationOpen && (
         <Confirmation
-          title="DELETE BUCKET"
+          title="DELETE FIELD"
           description={
             <>
-              <p className={styles.confirmText}>
+              <span>
                 This action will remove the field from bucket entries. Please confirm this action to
                 continue
-              </p>
-              <span className={styles.confirmHint}>
+              </span>
+              <span>
                 Please type <strong>agree</strong> to confirm deletion.
               </span>
             </>
@@ -164,6 +167,7 @@ const ColumnHeader = ({
           onConfirm={confirmDelete}
           onCancel={closeConfirmation}
           error={deleteFieldError}
+          loading={isFieldDeletionLoading}
         />
       )}
     </>

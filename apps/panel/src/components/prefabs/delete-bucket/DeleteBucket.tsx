@@ -44,10 +44,10 @@ const DeleteBucket: FC<DeleteBucketProps> = ({ bucket, children }) => {
                     title="DELETE BUCKET"
                     description={
                         <>
-                            <p className={styles.confirmText}>
+                            <span className={styles.confirmText}>
                                 This action will permanently delete this bucket and remove all associated data and
                                 connections. This cannot be undone.
-                            </p>
+                            </span>
                             <span className={styles.confirmHint}>
                                 Please type <strong>{bucket.title}</strong> to confirm deletion.
                             </span>

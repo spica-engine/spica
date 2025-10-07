@@ -211,3 +211,9 @@
 .popover{
   padding: 0 !important;
 }
+
+.confirmationDescription {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+}
