@@ -14,7 +14,6 @@ export const store = configureStore({
     }).concat(baseApi.middleware),
 });
 
-// Enable automatic refetching on focus/reconnect
 setupListeners(store.dispatch);
 
 export type RootState = ReturnType<typeof store.getState>;

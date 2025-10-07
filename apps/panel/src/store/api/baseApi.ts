@@ -22,7 +22,6 @@ const baseQueryWithReauth: BaseQueryFn<
   let result = await baseQuery(args, api, extraOptions);
   
   if (result.error && result.error.status === 401) {
-    // Handle token refresh or logout
     localStorage.removeItem('token');
     window.location.href = '/passport/identify';
   }

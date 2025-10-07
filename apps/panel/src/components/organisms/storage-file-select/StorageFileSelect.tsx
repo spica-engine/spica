@@ -359,7 +359,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
     <Modal
       isOpen={isOpen}
       showCloseButton={false}
-      // onClose={handleClose}
+      onClose={handleClose}
       className={styles.container}
       dimensionX="fill"
     >
@@ -409,7 +409,6 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
           <div className={styles.emptyState}>No files found</div>
         )}
       </Modal.Body>
-      <div></div>
     </Modal>
   );
 };
