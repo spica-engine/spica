@@ -27,24 +27,24 @@ const ColumnActionsMenu = ({
       options={{
         edit: {
           value: onEdit && <MenuActionItem icon="pencil" label="Edit" onClick={onEdit} />,
-          className: styles.groupContainer
+          className: `${!onEdit ? `${styles.noPadding} ${styles.noBottomBorder}` : undefined} ${styles.groupContainer}`
         },
         actions: {
           value: (
             <>
               {onMoveRight && <MenuActionItem icon="chevronRight" label="Move Right" onClick={onMoveRight} />}
               {onMoveLeft && <MenuActionItem icon="chevronLeft" label="Move Left" onClick={onMoveLeft} />}
-              <MenuActionItem icon="chevronDown" label="Sort By Asc" onClick={onSortAsc} />
+              <MenuActionItem icon="chevronDown" label="Sort By Asc" onClick={onSortAsc}/>
               <MenuActionItem icon="chevronDown" label="Sort By Desc" onClick={onSortDesc} />
             </>
           ),
-          className: styles.groupContainer
+          className: `${!onEdit ? styles.noTopBorder : undefined} ${!onDelete ? styles.noBottomBorder : undefined} ${styles.groupContainer}`
         },
         delete: {
           value: onDelete && (
             <MenuActionItem icon="delete" label="Delete" onClick={onDelete} variant="danger" />
           ),
-          className: styles.groupContainer
+          className: `${!onEdit ? `${styles.noPadding} ${styles.noTopBorder}` : undefined} ${styles.groupContainer}`
         }
       }}
       className={styles.container}
