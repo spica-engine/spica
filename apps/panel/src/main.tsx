@@ -7,11 +7,13 @@ import {AuthProvider} from "./contexts/AuthContext";
 import {DrawerProvider} from "./contexts/DrawerContext";
 import {BucketProvider} from "./contexts/BucketContext";
 import {StorageProvider} from "./contexts/StorageContext";
-
+import { Provider } from 'react-redux';
+import { store } from './store';
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 root.render(
   <StrictMode>
+     <Provider store={store}>
     <DrawerProvider>
       <AuthProvider>
         <BucketProvider>
@@ -21,5 +23,6 @@ root.render(
         </BucketProvider>
       </AuthProvider>
     </DrawerProvider>
+        </Provider>
   </StrictMode>
 );
