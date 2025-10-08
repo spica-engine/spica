@@ -85,7 +85,8 @@ const BucketActionBar = ({
           </Button>
         )}
         <Button
-          className={styles.refreshButton} variant="text"
+          className={styles.refreshButton}
+          variant="text"
           onClick={onRefresh}
           disabled={refreshLoading || searchLoading}
           loading={refreshLoading}
