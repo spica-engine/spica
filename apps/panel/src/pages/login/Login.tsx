@@ -12,7 +12,7 @@ import {
 } from "oziko-ui-kit";
 import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
-import useAuthService from "../../services/authService";
+import useAuthService from "../../hooks/useAuthService";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import {Navigate} from "react-router-dom";
 
@@ -54,7 +54,18 @@ const Login = () => {
             <div className={styles.errorsContainer}>
               {loginError && (
                 <div className={styles.errorBox}>
-                  <div className={styles.errorText}>{loginError}</div>
+                  <div className={styles.errorText}>
+                    {typeof loginError === 'string' 
+                      ? loginError 
+                      : 'data' in loginError 
+                        ? (loginError.data as any)?.message || 'Login failed'
+                        : 'error' in loginError
+                          ? loginError.error
+                          : 'message' in loginError
+                            ? loginError.message
+                            : 'Login failed'
+                    }
+                  </div>
                 </div>
               )}
             </div>

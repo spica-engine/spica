@@ -1,5 +1,18 @@
 export { baseApi } from './baseApi';
 
+export {
+  authApi,
+  useGetStrategiesQuery,
+  useLoginMutation,
+  useLogoutMutation,
+} from './authApi';
+
+export type {
+  Strategy,
+  LoginRequest,
+  LoginResponse,
+} from './authApi';
+
 export { 
   identityApi,
   identityApiReducerPath,
