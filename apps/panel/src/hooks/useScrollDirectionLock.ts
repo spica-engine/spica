@@ -75,7 +75,7 @@ function useScrollDirectionLock(options: ScrollDirectionLockOptions = {}) {
           directionRef.current = "vertical";
           el.style.overflowX = "hidden";
         } else {
-          e.preventDefault(); // Block diagonal scroll
+          if (e.target === el) e.preventDefault();
           return;
         }
       } else {

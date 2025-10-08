@@ -1,4 +1,4 @@
-import {Button, Icon, TextAreaInput} from "oziko-ui-kit";
+import {Button, Icon, TextAreaInput, TextAreaMinimizedInput} from "oziko-ui-kit";
 import type {RefObject} from "react";
 import {TranslatableConfig, BaseFields, MinimalConfig} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
@@ -10,6 +10,7 @@ import {
 } from "../validation";
 import styles from "../field-styles.module.scss";
 import {buildBaseProperty} from "../registry";
+import {STRING_DEFINITION} from "./string";
 
 export const TEXTAREA_DEFINITION: FieldDefinition = {
   kind: FieldKind.Textarea,
@@ -31,7 +32,8 @@ export const TEXTAREA_DEFINITION: FieldDefinition = {
   buildValueProperty: property => ({
     type: FieldKind.Textarea,
     title: property.title,
-    description: property.description
+    description: property.description,
+    id: crypto.randomUUID(),
   }),
   buildCreationFormApiProperty: buildBaseProperty,
   getDisplayValue: value => value || "",
@@ -56,16 +58,17 @@ export const TEXTAREA_DEFINITION: FieldDefinition = {
       }
     };
     return (
-      <TextAreaInput
+      <TextAreaMinimizedInput
         value={value}
-        onChange={e => onChange(e.target.value)}
+        onChange={v => onChange(v)}
         title={title}
-        textAreaProps={{
-          ref: ref as RefObject<HTMLTextAreaElement>,
-          className,
-          onKeyDown: handleKeyDown
-        }}
-        titleRootProps={{className: styles.textAreaTitle}}
+        ref={ref as React.RefObject<HTMLDivElement | null>}
+        className={`${className} ${styles.textAreaInput}`}
+        rows={3}
+        cols={15}
+        suffix={undefined}
+        //onKeyDown={handleKeyDown}
+        //titleRootProps={{className: styles.textAreaTitle}}
       />
     );
   }

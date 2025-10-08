@@ -21,6 +21,8 @@ import {
 import styles from "../field-styles.module.scss";
 import {buildBaseProperty, FIELD_REGISTRY} from "../registry";
 import type {Property} from "src/services/bucketService";
+import {OBJECT_DEFINITION} from "./object";
+import {RELATION_DEFINITION} from "./relation";
 
 function formatArrayFieldValues(
   value: any,
@@ -183,12 +185,27 @@ export const ARRAY_DEFINITION: FieldDefinition = {
       items: item
     };
   },
-  buildValueProperty: property =>
-    ({
+  buildValueProperty: (property, relationHandlers) => {
+    console.log("Building array property:", property, "\nWith relation handlers:", relationHandlers);
+    return {
       ...property,
       type: FieldKind.Array,
-      description: undefined
-    }) as TypeProperty,
+      description: undefined,
+      items:
+        property.items.type === "object"
+          ? {
+              ...property.items,
+              ...OBJECT_DEFINITION.buildValueProperty(property.items, relationHandlers)
+            }
+          : property.items.type === "relation"
+            ? {
+                ...property.items,
+                ...RELATION_DEFINITION.buildValueProperty(property.items, relationHandlers)
+              }
+            : property.items,
+      id: crypto.randomUUID()
+    } as TypeProperty;
+  },
   requiresInnerFields: form => form.fieldValues?.arrayType === "object",
   applyPresetLogic: (form, oldValues) =>
     form.fieldValues.arrayType === "string"
@@ -232,19 +249,19 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     useEffect(calculatePosition, [calculatePosition]);
 
     const RenderedValue = ({value}: {value: any[]}) => ARRAY_DEFINITION.renderValue(value, false);
+
     return (
       <div ref={containerRef}>
         <RenderedValue value={value} />
         <Popover
           contentProps={{
             ref: ref as RefObject<HTMLDivElement | null>,
-            style: targetPosition as React.CSSProperties
+            style: targetPosition ?? {display: "none"}
           }}
           open
           onClose={onClose}
           content={
             <ArrayInput
-              ref={ref as RefObject<HTMLInputElement | null>}
               title={title}
               description={"description"}
               value={value}
@@ -252,9 +269,8 @@ export const ARRAY_DEFINITION: FieldDefinition = {
               minItems={properties.minItems}
               maxItems={properties.maxItems}
               items={properties.items}
-              propertyKey={properties.key}
+              propertyKey={properties.key ?? properties.items.title ?? "Item"}
               errors={properties.errors as TypeInputRepresenterError}
-              style={{...targetPosition, position: "absolute"}}
               className={styles.arrayInput}
             />
           }

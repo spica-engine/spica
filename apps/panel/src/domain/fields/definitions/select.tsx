@@ -50,7 +50,8 @@ export const MULTISELECT_DEFINITION: FieldDefinition = {
     ({
       ...property,
       type: FieldKind.Multiselect,
-      description: undefined
+      description: undefined,
+      id: crypto.randomUUID(),
     }) as TypeProperty,
   buildCreationFormApiProperty: form => {
     const base = buildBaseProperty(form);
@@ -131,6 +132,7 @@ export const MULTISELECT_DEFINITION: FieldDefinition = {
         value={value}
         multiple={true}
         onChange={onChange}
+        className={styles.enumInput}
       />
     );
   }

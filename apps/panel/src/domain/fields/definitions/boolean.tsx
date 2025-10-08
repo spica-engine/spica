@@ -48,7 +48,8 @@ export const BOOLEAN_DEFINITION: FieldDefinition = {
     ({
       ...property,
       type: FieldKind.Boolean,
-      description: undefined
+      description: undefined,
+      id: crypto.randomUUID(),
     }) as TypeProperty,
   capabilities: {hasDefaultValue: true, primaryEligible: true, indexable: true},
   renderValue: value => (

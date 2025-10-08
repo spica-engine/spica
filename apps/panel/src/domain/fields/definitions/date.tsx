@@ -1,5 +1,5 @@
 import {Button, Icon, DatePicker} from "oziko-ui-kit";
-import {useId, useRef} from "react";
+import {useEffect, useId} from "react";
 import {MinimalConfig, BaseFields, DefaultInputs} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {FieldKind, type FieldDefinition, type TypeProperty} from "../types";
@@ -32,7 +32,8 @@ export const DATE_DEFINITION: FieldDefinition = {
     ({
       ...property,
       type: FieldKind.Date,
-      description: undefined
+      description: undefined,
+      id: crypto.randomUUID(),
     }) as TypeProperty,
   buildCreationFormApiProperty: form => {
     const base = buildBaseProperty(form);
@@ -45,7 +46,7 @@ export const DATE_DEFINITION: FieldDefinition = {
   getSaveReadyValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
   capabilities: {hasDefaultValue: true, indexable: true},
   renderValue: (value, deletable) => {
-    if (DATE_DEFINITION.getDisplayValue(value) === null) return "";
+    if (!value || DATE_DEFINITION.getDisplayValue(value) === null) return "";
     const dateObj = new Date(value);
     const formattedDate = dateObj.toLocaleString("en-US", {
       month: "numeric",
@@ -67,45 +68,50 @@ export const DATE_DEFINITION: FieldDefinition = {
       </div>
     );
   },
-  renderInput: ({value, onChange, ref, floatingElementRef}) => {
+  renderInput: ({value, onChange, ref, floatingElementRef, onSave}) => {
     const popupId = useId();
-    const observer = useRef<MutationObserver | null>(null);
+    const handlePopupKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    
+    const handleKey = (e: React.KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      e.stopPropagation();
+      onSave?.();
+    }
 
-    const handleOpenChange = (open: boolean) => {
+    useEffect(() => {
       if (!floatingElementRef) return;
-
-      if (open) {
-        observer.current = new MutationObserver(() => {
-          const popupEl = document.querySelector<HTMLDivElement>(`.${popupId}`);
-          if (popupEl) {
-            floatingElementRef.current = popupEl;
-            observer.current?.disconnect();
-          }
-        });
-        observer.current.observe(document.body, {childList: true, subtree: true});
-      } else {
-        floatingElementRef.current = null;
-        observer.current?.disconnect();
+      const popupElement = document.querySelector(`.${popupId}`) as HTMLDivElement;
+      if (popupElement) {
+        floatingElementRef.current = popupElement;
+        popupElement.style.paddingTop = "5px";
+        popupElement.addEventListener("keydown", handlePopupKey);
       }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
-      if (e.key === "Enter") {
-        e.preventDefault(); // prevents popup from opening
-        e.stopPropagation(); // stops propagation to DatePicker internal handlers
-      }
-    };
+      return () => {
+        if (floatingElementRef) {
+          floatingElementRef.current = null;
+        }
+        if (popupElement) {
+          popupElement.removeEventListener("keydown", handlePopupKey);
+        }
+      };
+    }, [floatingElementRef]);
 
     return (
       <DatePicker
+        showTime
+        defaultOpen
+        format="YYYY-MM-DD HH:mm"
         value={value}
         onChange={onChange}
         placement="bottomLeft"
-        ref={ref as any}
-        onOpenChange={handleOpenChange}
+        ref={ref as React.Ref<any>}
         popupClassName={popupId}
-        onKeyDown={handleKeyDown}
-        getPopupContainer={() => document.body}
+        onKeyDown={handleKey}
       />
     );
   }

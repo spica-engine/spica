@@ -12,6 +12,8 @@ type TypeStorageFileSelect = {
   className?: string;
   isOpen?: boolean;
   onClose?: () => void;
+  onSelect?: (file: TypeFile) => void;
+  ref?: React.RefObject<HTMLDivElement>;
 };
 
 enum SORTS {
@@ -21,7 +23,7 @@ enum SORTS {
   DATE_ASC = "date_asc"
 }
 
-const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose}) => {
+const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, onSelect, ref}) => {
   const [directory, setDirectory] = useState(["/"]);
   const [fileLength, setFileLength] = useState(0);
   const [folderLength, setFolderLength] = useState(0);
@@ -279,7 +281,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
         return [...prevDirectory, folderPath];
       });
     } else {
-      console.log("Selected file:", file);
+      onSelect?.(file);
     }
   };
 
@@ -360,6 +362,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
       onClose={handleClose}
       className={styles.container}
       dimensionX="fill"
+      ref={ref}
     >
       <Modal.Header
         dimensionY="hug"

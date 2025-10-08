@@ -25,7 +25,8 @@ export const JSON_DEFINITION: FieldDefinition = {
   buildValueProperty: property =>
     ({
       ...property,
-      type: FieldKind.Object //FieldKind.Json is not in TypeInputTypeMap yet, so we use Object for now, will be fixed later
+      type: FieldKind.Object, //FieldKind.Json is not in TypeInputTypeMap yet, so we use Object for now, will be fixed later
+      id: crypto.randomUUID()
     }) as TypeProperty,
   getDisplayValue: value => JSON.parse(value),
   getSaveReadyValue: value => JSON.stringify(value),

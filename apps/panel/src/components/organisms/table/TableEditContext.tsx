@@ -1,12 +1,12 @@
 import React from "react";
 
 export type CellEditPayload = {
-  onCellSave: (value: any, columnId: string, rowId: string, formattedValue: any) => Promise<any>;
+  onCellSave: (value: any, columnId: string, rowId: string) => Promise<any>;
   isCellEditing: boolean;
 };
 
 export type TableEditContextType = {
-  onCellSave?: (value: any, columnId: string, rowId: string, formattedValue: any) => Promise<any>;
+  onCellSave?: (value: any, columnId: string, rowId: string) => Promise<any>;
   registerActiveCell: () => void;
   unregisterActiveCell: () => void;
 };

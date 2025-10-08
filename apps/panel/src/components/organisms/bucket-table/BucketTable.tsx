@@ -48,7 +48,7 @@ type BucketTableProps = {
   bucketId: string;
   loading: boolean;
   tableRef?: RefObject<HTMLElement | null>;
-  onCellSave: (value: any, columnName: string, rowId: string, formattedValue: any) => Promise<any>;
+  onCellSave: (value: any, columnName: string, rowId: string) => Promise<any>;
   updateCellDataError?: string | null;
   requiredColumns?: string[];
 };
@@ -216,7 +216,7 @@ function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
   }
   if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
   if (type) {
-    const formatted = FIELD_REGISTRY[type]?.getFormattedValue?.(cellData);
+    const formatted = FIELD_REGISTRY[type]?.getDisplayValue?.(cellData);
     if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
   }
   return renderDefault();

@@ -27,7 +27,8 @@ const isObjectEffectivelyEmpty = (obj: any): boolean => {
   });
 };
 
-const findFirstErrorId = (errors: FormError, formattedProperties: Properties): string | null => {
+const findFirstErrorId = (errors: FormError, formattedProperties?: Properties): string | null => {
+  if (!formattedProperties) return null;
   for (const [key, error] of Object.entries(errors ?? {})) {
     const property = formattedProperties[key];
 
@@ -176,9 +177,10 @@ export const Cell = memo(
       isValueInitialized.current = true;
     }, [properties, relationStates]);
 
-    const handleStartEditing = () => {
+    const handleStartEditing = (e: React.MouseEvent<HTMLTableCellElement>) => {
       if (!editable || !properties) return;
       setIsEditing(true);
+      props.onClick?.(e);
     };
 
     function handleStopEditing(newValue?: any) {
@@ -189,7 +191,7 @@ export const Cell = memo(
       // This ensures the latest value is always rendered when the cell exits edit mode without saving.
       setTimeout(() => setCellValue(formattedValue), 0);
     }
-    return isEditing && properties ? (
+    return (isEditing && properties) ? (
       <EditableCell
         {...props}
         type={type}
@@ -344,7 +346,7 @@ const EditableCell = memo(
 
       try {
         window.document.body.style.cursor = "wait";
-        const result = await onCellSave(formattedValue, columnId, rowId, formattedValue);
+        const result = await onCellSave(formattedValue, columnId, rowId);
         if (result) setError(undefined);
       } catch (err) {
         const errMsg = {
@@ -396,9 +398,15 @@ const EditableCell = memo(
       [focused, props.className, type]
     );
 
+    const containerClassName = `
+    ${![FieldKind.Boolean, FieldKind.Array].includes(type) ? styles.cellUpdateContainer : ""}
+    ${properties.enum || [FieldKind.Textarea, FieldKind.Multiselect, FieldKind.Relation].includes(type) ? styles.cellUpdateContainerPadding : ""}
+    ${(!properties.enum && ![FieldKind.Date, FieldKind.Textarea].includes(type)) ? styles.widthMaxContent : ""}
+    `;
+
     return (
       <td {...props} className={className} style={{left: leftOffset}} onClick={handleClick}>
-        <div ref={containerRef}>
+        <div ref={containerRef} className={containerClassName}>
           <InputComponent
             value={value}
             onChange={setValue}
@@ -409,6 +417,7 @@ const EditableCell = memo(
             className={styles.cellUpdateInput}
             error={error}
             onClose={handleDiscardEdit}
+            onSave={handleSave}
           />
         </div>
       </td>

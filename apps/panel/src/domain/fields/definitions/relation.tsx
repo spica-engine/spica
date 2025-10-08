@@ -60,7 +60,8 @@ export const RELATION_DEFINITION: FieldDefinition = {
       ...property,
       type: FieldKind.Relation,
       ...relationProps,
-      description: undefined
+      description: undefined,
+      id: crypto.randomUUID(),
     } as TypeProperty;
   },
   buildCreationFormApiProperty: form => {

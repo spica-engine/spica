@@ -24,8 +24,15 @@ import type {
   TypeSearchOptionsMap
 } from "src/hooks/useRelationInputHandlers";
 import {RELATION_DEFINITION} from "./relation";
-import { LOCATION_DEFINITION } from "./location";
-import { NUMBER_DEFINITION } from "./number";
+import {LOCATION_DEFINITION} from "./location";
+import {NUMBER_DEFINITION} from "./number";
+
+function isObjectEffectivelyEmpty(obj: Object): boolean {
+  if (obj === null || obj === undefined) return true;
+  if (typeof obj !== "object") return obj === "" || obj === null;
+
+  return Object.values(obj).every(value => isObjectEffectivelyEmpty(value));
+}
 
 export const OBJECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Object,
@@ -67,7 +74,8 @@ export const OBJECT_DEFINITION: FieldDefinition = {
       return {
         type: FieldKind.Object,
         properties: {},
-        description: undefined
+        description: undefined,
+        id: crypto.randomUUID(),
       } as TypeProperty;
     }
 
@@ -115,14 +123,13 @@ export const OBJECT_DEFINITION: FieldDefinition = {
       })
     );
 
-    const r = {
+    return {
       ...(rawProperty as Property),
       type: FieldKind.Object,
       properties: builtProperties,
-      description: undefined
+      description: undefined,
+      id: crypto.randomUUID(),
     } as TypeProperty;
-
-    return r;
   },
   requiresInnerFields: _ => true,
   getDefaultValue: property => property.default,
@@ -137,7 +144,10 @@ export const OBJECT_DEFINITION: FieldDefinition = {
           property.properties as Property
         );
       } else if (property.type === FieldKind.Location) {
-        const formattedValue = LOCATION_DEFINITION.getDisplayValue(value?.[property.title], property);
+        const formattedValue = LOCATION_DEFINITION.getDisplayValue(
+          value?.[property.title],
+          property
+        );
         result[property.title] = formattedValue ?? DEFAULT_COORDINATES;
       } else if (property.type === FieldKind.Number) {
         const formattedValue = NUMBER_DEFINITION.getDisplayValue(value?.[property.title], property);
@@ -169,16 +179,19 @@ export const OBJECT_DEFINITION: FieldDefinition = {
     return result;
   },
   capabilities: {supportsInnerFields: true},
-  renderValue: (value, deletable) => (
-    <div>
-      <div>{JSON.stringify(value)}</div>
-      {deletable && value && (
-        <Button variant="icon">
-          <Icon name="close" size="sm" />
-        </Button>
-      )}
-    </div>
-  ),
+  renderValue: (value, deletable) => {
+    if (isObjectEffectivelyEmpty(value)) return "";
+    return (
+      <div>
+        <div>{JSON.stringify(value)}</div>
+        {deletable && value && (
+          <Button variant="icon">
+            <Icon name="close" size="sm" />
+          </Button>
+        )}
+      </div>
+    );
+  },
   renderInput: ({value, onChange, ref, properties, title, error, onClose}) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -198,7 +211,7 @@ export const OBJECT_DEFINITION: FieldDefinition = {
         <Popover
           contentProps={{
             ref: ref as RefObject<HTMLDivElement | null>,
-            style: targetPosition as React.CSSProperties
+            style: targetPosition ?? {display: "none"}
           }}
           open
           onClose={onClose}

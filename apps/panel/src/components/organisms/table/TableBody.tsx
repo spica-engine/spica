@@ -46,14 +46,17 @@ export const TableBody = memo(
 
       const cells = formattedColumns.map(column => {
         const cellData = row[column.key];
+        const type = column.type || FieldKind.String;
         return (
           <Cell
             key={cellData.id}
             onClick={() => column.selectable !== false && handleCellClick(column.key, index)}
-            className={`${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""}`}
+            className={`${column.cellClassName || ""} ${column.fixed ? styles.fixedCell : ""} ${
+              (type === FieldKind.Multiselect || column.enum) ? styles.noBorderOnFocus : ""
+            }`}
             leftOffset={column.leftOffset}
             value={cellData.value}
-            type={column.type ?? FieldKind.String}
+            type={type}
             deletable={column.deletable}
             focused={focusedCell?.row === index && focusedCell?.column === column.key}
             title={column.title ?? "Value"}

@@ -43,7 +43,8 @@ export const STRING_DEFINITION: FieldDefinition = {
       ...property,
       type: FieldKind.String,
       className: property?.enum ? styles.enumInput : undefined,
-      description: undefined
+      description: undefined,
+      id: crypto.randomUUID(),
     }) as TypeProperty,
   applyPresetLogic: (form, oldValues) => applyPresetLogic(FieldKind.String, form, oldValues),
   getDisplayValue: value => (typeof value === "string" ? value : ""),
@@ -91,8 +92,9 @@ export const STRING_DEFINITION: FieldDefinition = {
         onChange={val => onChange(val)}
         title={title}
         externalDropdownRef={floatingElementRef}
-        className={className}
+        className={`${className} ${styles.enumInput}`}
         selectRef={selectRef}
+        root={{className: styles.enumDisplay}}
       />
     ) : (
       <Input

@@ -54,7 +54,8 @@ export const LOCATION_DEFINITION: FieldDefinition = {
     ({
       ...property,
       type: FieldKind.Location,
-      description: undefined
+      description: undefined,
+      id: crypto.randomUUID(),
     }) as TypeProperty,
   buildCreationFormApiProperty: buildBaseProperty,
   getDisplayValue: value => {
@@ -118,7 +119,7 @@ export const LOCATION_DEFINITION: FieldDefinition = {
         <Popover
           contentProps={{
             ref: ref as RefObject<HTMLDivElement | null>,
-            style: targetPosition as React.CSSProperties
+            style: targetPosition ?? {display: "none"}
           }}
           open
           onClose={onClose}

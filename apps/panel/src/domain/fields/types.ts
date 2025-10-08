@@ -135,6 +135,7 @@ export interface FieldDefinition {
     className?: string;
     error?: FormError;
     onClose?: () => void;
+    onSave?: () => void;
   }>; // custom input renderer for quick editing in tables, etc.
   buildCreationFormApiProperty: (form: FieldFormState) => Property;
 }

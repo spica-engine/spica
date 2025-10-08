@@ -22,11 +22,11 @@
   opacity: 0.7;
 }
 
-.textAreaTitle {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  display: block !important;
+.textAreaInput {
+  height: 100% !important;
+  textarea {
+    resize: none !important;
+  }
 }
 
 .multipleSelectionCell {
@@ -137,6 +137,7 @@
 
 .relationInput {
   height: 36px !important;
+  overflow: hidden;
 }
 
 .relationInputOption {
@@ -148,6 +149,31 @@
 }
 
 .relationPortal {
-  //width: unset !important;
-  //height: unset !important;
+  width: unset !important;
+  height: unset !important;
+}
+
+.fileInputContainer {
+  padding: 0 var(--padding-md);
+  padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
+}
+
+.fileInputWrapper {
+  max-height: 500px;
+  height: max-content;
+  width: 600px;
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  overflow-y: auto;
+  @include hideScrollbar;
+}
+
+.enumInput {
+  height: 32px !important;
+  //width: 98% !important;
+  margin-top: 2px !important;
+}
+
+.enumDisplay {
+  margin-left: -2px !important
 }

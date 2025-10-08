@@ -29,7 +29,8 @@ export const COLOR_DEFINITION: FieldDefinition = {
     ({
       ...property,
       type: FieldKind.Color,
-      description: undefined
+      description: undefined,
+      id: crypto.randomUUID(),
     }) as TypeProperty,
   getDefaultValue: property => property.default || "#000000",
   getDisplayValue: value => value ?? "#000000",

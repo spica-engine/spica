@@ -56,7 +56,8 @@ export const NUMBER_DEFINITION: FieldDefinition = {
       ...property,
       type: FieldKind.Number,
       className: property?.enum ? styles.enumInput : undefined,
-      description: undefined
+      description: undefined,
+      id: crypto.randomUUID(),
     }) as TypeProperty,
   getDefaultValue: property => property.default,
   getDisplayValue: value => value ?? undefined,
@@ -117,8 +118,9 @@ export const NUMBER_DEFINITION: FieldDefinition = {
         onChange={val => onChange(val)}
         title={title}
         externalDropdownRef={floatingElementRef}
-        className={className}
+        className={`${className} ${styles.enumInput}`}
         selectRef={selectRef}
+        root={{className: styles.enumDisplay}}
       />
     ) : (
       <Input
