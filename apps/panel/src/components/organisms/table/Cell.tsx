@@ -67,10 +67,7 @@ function collectBucketIds(Properties: Properties, cellValue: any): CollectedRela
       collected.push({bucketId: property.bucketId as string, value: relationValue});
     }
 
-    if (
-      property.type !== FieldKind.Relation &&
-      (property.type === FieldKind.Object || property.type === FieldKind.Array)
-    ) {
+    if (property.type === FieldKind.Object || property.type === FieldKind.Array) {
       for (const prop of Object.values(property.properties || {})) {
         const childValue = value?.[(prop as Property).title];
         if (prop && (typeof childValue === "object" || !childValue))
@@ -108,8 +105,8 @@ export const Cell = memo(
 
     const bucketIds = useMemo<CollectedRelation[]>(
       () =>
-        type === FieldKind.Object
-          ? collectBucketIds(constraints?.properties as Properties, value)
+        type === FieldKind.Object || type === FieldKind.Array
+          ? collectBucketIds((constraints?.properties ?? constraints?.items?.properties) as Properties, value)
           : [],
       [type, constraints?.properties, value]
     );
@@ -125,31 +122,39 @@ export const Cell = memo(
     }, [type, constraints?.properties, constraints?.bucketId, ensureHandlers, id]);
 
     let properties: Property | undefined;
-    const isRelationReady = type === FieldKind.Relation && !!relationStates[id];
+    const isRelationField = type === FieldKind.Relation;
     const isObjectField = type === FieldKind.Object;
-    const isObjectWithReadyRelations =
-      isObjectField &&
-      Object.keys(relationStates).length > 0 &&
-      Object.values(relationStates).every(i => i.stateInitialized);
-    const isObjectWithPendingRelations =
-      isObjectField && bucketIds.length > 0 && !isObjectWithReadyRelations;
+    const isArrayField = type === FieldKind.Array;
 
-    if (isRelationReady) {
+    const relationExists = bucketIds.length > 0 || isRelationField;
+    const isRelationReady =
+      !!relationStates[id] ||
+      (Object.keys(relationStates).length > 0 &&
+        Object.values(relationStates).every(i => i.stateInitialized));
+
+    if (!relationExists) {
+      properties = field.buildValueProperty?.(constraints as Property) as Property;
+    } else if (isRelationField && isRelationReady) {
       properties = field.buildValueProperty?.(constraints as Property, {
         getOptions: getOptionsMap.current[id],
         loadMoreOptions: loadMoreOptionsMap.current[id],
         searchOptions: searchOptionsMap.current[id],
         relationState: relationStates[id]
       }) as Property;
-    } else if (isObjectWithReadyRelations) {
+    } else if (isObjectField && isRelationReady) {
       properties = field.buildValueProperty?.(constraints as Property, {
         getOptionsMap: getOptionsMap.current,
         loadMoreOptionsMap: loadMoreOptionsMap.current,
         searchOptionsMap: searchOptionsMap.current,
         relationStates
       }) as Property;
-    } else if (!isObjectWithPendingRelations) {
-      properties = field.buildValueProperty?.(constraints as Property) as Property;
+    } else if (isArrayField && isRelationReady) {
+      properties = field.buildValueProperty?.(constraints as Property, {
+        getOptionsMap: getOptionsMap.current,
+        loadMoreOptionsMap: loadMoreOptionsMap.current,
+        searchOptionsMap: searchOptionsMap.current,
+        relationStates
+      }) as Property;
     }
 
     const [cellValue, setCellValue] = useState();
@@ -191,7 +196,7 @@ export const Cell = memo(
       // This ensures the latest value is always rendered when the cell exits edit mode without saving.
       setTimeout(() => setCellValue(formattedValue), 0);
     }
-    return (isEditing && properties) ? (
+    return isEditing && properties ? (
       <EditableCell
         {...props}
         type={type}
@@ -399,9 +404,9 @@ const EditableCell = memo(
     );
 
     const containerClassName = `
-    ${![FieldKind.Boolean, FieldKind.Array].includes(type) ? styles.cellUpdateContainer : ""}
+    ${![FieldKind.Boolean, FieldKind.Array].includes(type) ? styles.cellUpdateContainerFlex : ""}
     ${properties.enum || [FieldKind.Textarea, FieldKind.Multiselect, FieldKind.Relation].includes(type) ? styles.cellUpdateContainerPadding : ""}
-    ${(!properties.enum && ![FieldKind.Date, FieldKind.Textarea].includes(type)) ? styles.widthMaxContent : ""}
+    ${!properties.enum && ![FieldKind.Date, FieldKind.Textarea].includes(type) ? styles.widthMaxContent : ""}
     `;
 
     return (

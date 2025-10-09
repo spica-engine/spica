@@ -186,7 +186,6 @@ export const ARRAY_DEFINITION: FieldDefinition = {
     };
   },
   buildValueProperty: (property, relationHandlers) => {
-    console.log("Building array property:", property, "\nWith relation handlers:", relationHandlers);
     return {
       ...property,
       type: FieldKind.Array,
