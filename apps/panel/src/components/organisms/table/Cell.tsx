@@ -101,12 +101,17 @@ export const Cell = memo(
     const {getOptionsMap, loadMoreOptionsMap, searchOptionsMap, relationStates, ensureHandlers} =
       useRelationInputHandlers(token);
 
+    const {onCellSave} = useContext(TableEditContext);
+
     const id = useId();
 
     const bucketIds = useMemo<CollectedRelation[]>(
       () =>
         type === FieldKind.Object || type === FieldKind.Array
-          ? collectBucketIds((constraints?.properties ?? constraints?.items?.properties) as Properties, value)
+          ? collectBucketIds(
+              (constraints?.properties ?? constraints?.items?.properties) as Properties,
+              value
+            )
           : [],
       [type, constraints?.properties, value]
     );
@@ -196,19 +201,30 @@ export const Cell = memo(
       // This ensures the latest value is always rendered when the cell exits edit mode without saving.
       setTimeout(() => setCellValue(formattedValue), 0);
     }
+
+    const handleSave = async (newValue: any) => {
+      if (!onCellSave) return;
+      const formattedValue = field.getSaveReadyValue(newValue, properties as Property);
+      try {
+        return await onCellSave(formattedValue, columnId, rowId);
+      } catch (error) {
+        setCellValue(value);
+        throw error;
+      }
+    };
+
     return isEditing && properties ? (
       <EditableCell
         {...props}
         type={type}
         focused={focused}
         title={title}
-        columnId={columnId!}
-        rowId={rowId!}
         constraints={constraints}
         value={cellValue}
         onStopEdit={handleStopEditing}
         properties={properties}
         setValue={setCellValue}
+        onCellSave={handleSave}
       />
     ) : (
       <td
@@ -223,10 +239,11 @@ export const Cell = memo(
   }
 );
 
-type EditableCellProps = CellProps & {
+type EditableCellProps = Omit<CellProps, "columnId" | "rowId"> & {
   onStopEdit: (newValue?: any) => void;
   setValue: (value: any) => void;
   properties: Property;
+  onCellSave?: (newValue: any) => Promise<FormError | void>;
 };
 
 const EditableCell = memo(
@@ -240,16 +257,15 @@ const EditableCell = memo(
     leftOffset,
     constraints = {},
     properties,
-    columnId,
-    rowId,
     onStopEdit,
+    onCellSave,
     ...props
   }: EditableCellProps) => {
     const field = FIELD_REGISTRY[type || "string"] as FieldDefinition;
     const inputRef = useRef<HTMLTableCellElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const floatingElementRef = useRef<HTMLDivElement | null>(null);
-    const {onCellSave, registerActiveCell, unregisterActiveCell} = useContext(TableEditContext);
+    const {registerActiveCell, unregisterActiveCell} = useContext(TableEditContext);
     const [error, setError] = useState<TypeInputRepresenterError | undefined>(undefined);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -351,16 +367,17 @@ const EditableCell = memo(
 
       try {
         window.document.body.style.cursor = "wait";
-        const result = await onCellSave(formattedValue, columnId, rowId);
+        const result = await onCellSave(formattedValue);
         if (result) setError(undefined);
+        onStopEdit(value);
       } catch (err) {
         const errMsg = {
           [title]: String((err as Error)?.message || err)
         } as TypeInputRepresenterError;
         setError(errMsg);
+        onStopEdit();
       } finally {
         setIsSaving(false);
-        onStopEdit(value);
         window.document.body.style.cursor = "default";
       }
     }
@@ -406,7 +423,7 @@ const EditableCell = memo(
     const containerClassName = `
     ${![FieldKind.Boolean, FieldKind.Array].includes(type) ? styles.cellUpdateContainerFlex : ""}
     ${properties.enum || [FieldKind.Textarea, FieldKind.Multiselect, FieldKind.Relation].includes(type) ? styles.cellUpdateContainerPadding : ""}
-    ${!properties.enum && ![FieldKind.Date, FieldKind.Textarea].includes(type) ? styles.widthMaxContent : ""}
+    ${!properties.enum && ![FieldKind.Date, FieldKind.Textarea, FieldKind.Relation].includes(type) ? styles.widthMaxContent : ""}
     `;
 
     return (

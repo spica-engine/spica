@@ -133,6 +133,7 @@ export const MULTISELECT_DEFINITION: FieldDefinition = {
         multiple={true}
         onChange={onChange}
         className={styles.enumInput}
+        optionProps={{className: styles.enumOption}}
       />
     );
   }

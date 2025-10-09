@@ -33,7 +33,7 @@ export const DATE_DEFINITION: FieldDefinition = {
       ...property,
       type: FieldKind.Date,
       description: undefined,
-      id: crypto.randomUUID(),
+      id: crypto.randomUUID()
     }) as TypeProperty,
   buildCreationFormApiProperty: form => {
     const base = buildBaseProperty(form);
@@ -43,7 +43,8 @@ export const DATE_DEFINITION: FieldDefinition = {
     };
   },
   getDisplayValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
-  getSaveReadyValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
+  getSaveReadyValue: value =>
+    value ? (isValidDate(new Date(value)) ? new Date(value) : null) : null,
   capabilities: {hasDefaultValue: true, indexable: true},
   renderValue: (value, deletable) => {
     if (!value || DATE_DEFINITION.getDisplayValue(value) === null) return "";
@@ -75,13 +76,13 @@ export const DATE_DEFINITION: FieldDefinition = {
       e.preventDefault();
       e.stopPropagation();
     };
-    
+
     const handleKey = (e: React.KeyboardEvent) => {
       if (e.key !== "Enter") return;
       e.preventDefault();
       e.stopPropagation();
       onSave?.();
-    }
+    };
 
     useEffect(() => {
       if (!floatingElementRef) return;

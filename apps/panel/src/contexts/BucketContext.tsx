@@ -405,13 +405,15 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       setBucketData({...bucketData, data: newData});
 
       const result = await apiUpdateCellData(value, title, id, bucketData.bucketId);
-      if (!result) {
+      if (!result || typeof result === "string") {
         setBucketData(oldBucketData);
+        throw new Error(result || "Unknown error");
       }
       return result;
     },
     [apiUpdateCellData, bucketData]
   );
+
 
   const contextValue = useMemo(
     () => ({
