@@ -12,11 +12,11 @@ import styles from "./Table.module.scss";
 import InfiniteScroll from "react-infinite-scroll-component";
 import useScrollDirectionLock from "../../../hooks/useScrollDirectionLock";
 import Loader from "../../../components/atoms/loader/Loader";
-import type {TypeDataColumn, TypeTableData} from "./types";
+import type {TypeDataColumn, TypeTableData} from "./TableTypes";
 import {TableHeader} from "./TableHeader";
 import {TableBody} from "./TableBody";
 import {TableEditContext} from "./TableEditContext";
-import {getFormattedColumns, parseWidth} from "./columnUtils";
+import {getFormattedColumns, parseWidth} from "./TableUtils";
 
 export type TableProps = {
   columns: TypeDataColumn[];

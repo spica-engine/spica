@@ -1,9 +1,8 @@
 import {memo, useRef, type JSX, useEffect} from "react";
-import type {TypeDataColumn, TypeTableData} from "./types";
+import type {TypeDataColumn, TypeTableData} from "./TableTypes";
 import styles from "./Table.module.scss";
 import {Cell} from "./Cell";
 import {FieldKind} from "../../../domain/fields";
-import logger from "../../../utils/logger";
 
 type TableBodyProps = {
   formattedColumns: TypeDataColumn[];

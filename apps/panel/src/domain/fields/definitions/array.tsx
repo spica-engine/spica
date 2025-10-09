@@ -1,4 +1,4 @@
-import {Button, Icon, useAdaptivePosition, Portal, ArrayInput, Popover} from "oziko-ui-kit";
+import {Button, Icon, useAdaptivePosition, ArrayInput, Popover} from "oziko-ui-kit";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import {useRef, useEffect, type RefObject} from "react";
 import {

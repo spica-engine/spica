@@ -199,30 +199,7 @@ const defaultColumns: FormattedColumn[] = [
   }
 ];
 
-// TODO: Refactor this function to render more appropriate UI elements for each field type.
-// Many field types are currently using the generic `renderDefault()`.
-function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
-  function renderDefault() {
-    return (
-      <div className={styles.defaultCell}>
-        <div className={styles.defaultCellData}>{cellData}</div>
-        {deletable && cellData && (
-          <Button variant="icon">
-            <Icon name="close" size="sm" />
-          </Button>
-        )}
-      </div>
-    );
-  }
-  if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
-  if (type) {
-    const formatted = FIELD_REGISTRY[type]?.getDisplayValue?.(cellData);
-    if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
-  }
-  return renderDefault();
-}
-
-function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
+function getFormattedColumns(columns: FormattedColumn[], bucketId: string): FormattedColumn[] {
   return [
     defaultColumns[0],
     ...columns.map((col, index) => ({
@@ -238,7 +215,7 @@ function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnTyp
       id: `${col.key}-${index}-${bucketId}`,
       cellClassName: styles.cell,
       title: col.header
-    })),
+    })) as FormattedColumn[],
     defaultColumns[1]
   ];
 }
@@ -248,6 +225,7 @@ function buildColumnMeta(columns: FormattedColumn[]): Record<string, ColumnMeta>
     columns.map(col => [col.key, {type: col.type, deletable: col.deletable, id: col.id}])
   );
 }
+
 function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
   const allKeys = Object.keys(columnMap);
 

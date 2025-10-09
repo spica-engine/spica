@@ -1,7 +1,12 @@
 import {memo, useRef, useState, useContext, type ReactNode, useEffect, useMemo, useId} from "react";
 import {TableEditContext} from "./TableEditContext";
-import {MIN_COLUMN_WIDTH} from "./columnUtils";
-import type {Constraints} from "./types";
+import {
+  MIN_COLUMN_WIDTH,
+  collectBucketIds,
+  findFirstErrorId,
+  isObjectEffectivelyEmpty
+} from "./TableUtils";
+import type {Constraints} from "./TableTypes";
 import styles from "./Table.module.scss";
 import {FlexElement, useOnClickOutside} from "oziko-ui-kit";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
@@ -10,37 +15,7 @@ import type {Properties, Property} from "src/services/bucketService";
 import type {FieldDefinition, FormError} from "src/domain/fields/types";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import {useRelationInputHandlers} from "../../../hooks/useRelationInputHandlers";
-
-export function isValidDate(dateObject: any) {
-  return dateObject instanceof Date && !isNaN(dateObject.getTime());
-}
-
-const isObjectEffectivelyEmpty = (obj: any): boolean => {
-  if (obj == null || typeof obj !== "object") return true;
-
-  return Object.keys(obj).every(key => {
-    return (
-      obj[key] === undefined ||
-      obj[key] === null ||
-      (typeof obj[key] === "object" && isObjectEffectivelyEmpty(obj[key]))
-    );
-  });
-};
-
-const findFirstErrorId = (errors: FormError, formattedProperties?: Properties): string | null => {
-  if (!formattedProperties) return null;
-  for (const [key, error] of Object.entries(errors ?? {})) {
-    const property = formattedProperties[key];
-
-    if (typeof error === "string" && property?.id) {
-      return property.id;
-    } else if (typeof error === "object" && property?.properties) {
-      const nestedId = findFirstErrorId(error, property.properties);
-      if (nestedId) return nestedId;
-    }
-  }
-  return null;
-};
+import type {CollectedRelation} from "./TableTypes";
 
 type CellProps = React.HTMLAttributes<HTMLDivElement> & {
   leftOffset?: number;
@@ -54,32 +29,6 @@ type CellProps = React.HTMLAttributes<HTMLDivElement> & {
   rowId: string;
   constraints?: Constraints;
 };
-
-type CollectedRelation = {bucketId: string; value: any};
-
-function collectBucketIds(Properties: Properties, cellValue: any): CollectedRelation[] {
-  const collected: CollectedRelation[] = [];
-
-  function traverse(property: Property, value: any) {
-    if (!property || typeof property !== "object") return;
-    if (property.type === FieldKind.Relation) {
-      const relationValue = value?.[property.title as any];
-      collected.push({bucketId: property.bucketId as string, value: relationValue});
-    }
-
-    if (property.type === FieldKind.Object || property.type === FieldKind.Array) {
-      for (const prop of Object.values(property.properties || {})) {
-        const childValue = value?.[(prop as Property).title];
-        if (prop && (typeof childValue === "object" || !childValue))
-          traverse(prop as Property, childValue);
-      }
-    }
-  }
-  for (const prop of Object.values(Properties || {})) {
-    traverse(prop, cellValue);
-  }
-  return collected;
-}
 
 export const Cell = memo(
   ({
@@ -197,9 +146,7 @@ export const Cell = memo(
       setIsEditing(false);
       const notFormattedValue = arguments.length ? newValue : value;
       const formattedValue = field?.getDisplayValue(notFormattedValue, properties as Property);
-      // Some of the inputs (like richtext) trigger their onChange on unmount,
-      // This ensures the latest value is always rendered when the cell exits edit mode without saving.
-      setTimeout(() => setCellValue(formattedValue), 0);
+      setCellValue(formattedValue);
     }
 
     const handleSave = async (newValue: any) => {
@@ -306,7 +253,7 @@ const EditableCell = memo(
     }, [inputRef]);
 
     useEffect(() => {
-      if (!["object", "array"].includes(type) || !error) return;
+      if (![FieldKind.Object, FieldKind.Array].includes(type) || !error) return;
       const formattedValue = field.getDisplayValue(value, properties);
       handleValidate(formattedValue);
     }, [value]);
@@ -404,27 +351,48 @@ const EditableCell = memo(
 
     const InputComponent = field?.renderInput;
 
-    const className = useMemo(
-      () =>
-        [
-          styles.cell,
-          styles.selectableCell,
-          focused ? styles.focusedCell : "",
-          type !== FieldKind.Date && type !== FieldKind.Location && type !== FieldKind.Array
-            ? styles.editingCell
-            : "",
-          props.className
-        ]
-          .filter(Boolean)
-          .join(" "),
-      [focused, props.className, type]
-    );
+    const className = useMemo(() => {
+      const classes = [styles.cell, styles.selectableCell, props.className];
 
-    const containerClassName = `
-    ${![FieldKind.Boolean, FieldKind.Array].includes(type) ? styles.cellUpdateContainerFlex : ""}
-    ${properties.enum || [FieldKind.Textarea, FieldKind.Multiselect, FieldKind.Relation].includes(type) ? styles.cellUpdateContainerPadding : ""}
-    ${!properties.enum && ![FieldKind.Date, FieldKind.Textarea, FieldKind.Relation].includes(type) ? styles.widthMaxContent : ""}
-    `;
+      if (focused) {
+        classes.push(styles.focusedCell);
+      }
+
+      const noPadding =
+        type !== FieldKind.Date && type !== FieldKind.Location && type !== FieldKind.Array;
+
+      if (noPadding) {
+        classes.push(styles.noPadding);
+      }
+
+      return classes.filter(Boolean).join(" ");
+    }, [focused, props.className, type]);
+
+    const containerClassName = useMemo(() => {
+      const classes = [];
+
+      const shouldUseFlex = ![FieldKind.Boolean, FieldKind.Array].includes(type);
+      const shouldAddPadding =
+        properties.enum ||
+        [FieldKind.Textarea, FieldKind.Multiselect, FieldKind.Relation].includes(type);
+      const shouldLimitWidth =
+        !properties.enum &&
+        ![FieldKind.Date, FieldKind.Textarea, FieldKind.Relation].includes(type);
+
+      if (shouldUseFlex) {
+        classes.push(styles.cellUpdateContainerFlex);
+      }
+
+      if (shouldAddPadding) {
+        classes.push(styles.cellUpdateContainerPadding);
+      }
+
+      if (shouldLimitWidth) {
+        classes.push(styles.widthMaxContent);
+      }
+
+      return classes.filter(Boolean).join(" ");
+    }, [type, properties]);
 
     return (
       <td {...props} className={className} style={{left: leftOffset}} onClick={handleClick}>

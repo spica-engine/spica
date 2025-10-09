@@ -1,8 +1,8 @@
 import {memo, useCallback, useMemo} from "react";
-import type {TypeDataColumn} from "./types";
+import type {TypeDataColumn} from "./TableTypes";
 import styles from "./Table.module.scss";
 import { HeaderCell } from "./Cell";
-import { MIN_COLUMN_WIDTH } from "./columnUtils";
+import { MIN_COLUMN_WIDTH } from "./TableUtils";
 type TableHeaderProps = {
   formattedColumns: TypeDataColumn[];
   onColumnResize: (id: string, newWidth: number) => void;

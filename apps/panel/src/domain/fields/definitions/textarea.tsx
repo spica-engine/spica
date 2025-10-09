@@ -1,5 +1,4 @@
-import {Button, Icon, TextAreaInput, TextAreaMinimizedInput} from "oziko-ui-kit";
-import type {RefObject} from "react";
+import {Button, Icon, TextAreaMinimizedInput} from "oziko-ui-kit";
 import {TranslatableConfig, BaseFields, MinimalConfig} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {FieldKind, type FieldDefinition} from "../types";
@@ -10,7 +9,6 @@ import {
 } from "../validation";
 import styles from "../field-styles.module.scss";
 import {buildBaseProperty} from "../registry";
-import {STRING_DEFINITION} from "./string";
 
 export const TEXTAREA_DEFINITION: FieldDefinition = {
   kind: FieldKind.Textarea,
@@ -33,7 +31,7 @@ export const TEXTAREA_DEFINITION: FieldDefinition = {
     type: FieldKind.Textarea,
     title: property.title,
     description: property.description,
-    id: crypto.randomUUID(),
+    id: crypto.randomUUID()
   }),
   buildCreationFormApiProperty: buildBaseProperty,
   getDisplayValue: value => value || "",
@@ -51,25 +49,16 @@ export const TEXTAREA_DEFINITION: FieldDefinition = {
       </div>
     );
   },
-  renderInput: ({value, onChange, ref, title, className}) => {
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-      }
-    };
-    return (
-      <TextAreaMinimizedInput
-        value={value}
-        onChange={v => onChange(v)}
-        title={title}
-        ref={ref as React.RefObject<HTMLDivElement | null>}
-        className={`${className} ${styles.textAreaInput}`}
-        rows={3}
-        cols={15}
-        suffix={undefined}
-        //onKeyDown={handleKeyDown}
-        //titleRootProps={{className: styles.textAreaTitle}}
-      />
-    );
-  }
+  renderInput: ({value, onChange, ref, title, className}) => (
+    <TextAreaMinimizedInput
+      value={value}
+      onChange={onChange}
+      title={title}
+      ref={ref as React.RefObject<HTMLDivElement | null>}
+      className={`${className} ${styles.textAreaInput}`}
+      rows={3}
+      cols={15}
+      suffix={undefined}
+    />
+  )
 };

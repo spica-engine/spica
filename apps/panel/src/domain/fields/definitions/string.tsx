@@ -3,7 +3,6 @@ import {useRef, useEffect, type RefObject} from "react";
 import {
   TranslatableConfig,
   BaseFields,
-  PresetPanel,
   DefaultInputs,
   MinimalConfig
 } from "../creation-form-schemas";

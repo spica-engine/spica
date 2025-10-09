@@ -57,3 +57,5 @@ export type Constraints = {
   primary?: string;
   relationType?: RelationType;
 };
+
+export type CollectedRelation = {bucketId: string; value: any};

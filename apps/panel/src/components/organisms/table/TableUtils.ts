@@ -1,4 +1,6 @@
-import type {TypeDataColumn} from "./types";
+import type {CollectedRelation, TypeDataColumn} from "./TableTypes";
+import { FieldKind, type FormError } from "../../../domain/fields/types";
+import type { Properties, Property } from "../../../services/bucketService";
 
 export const MIN_COLUMN_WIDTH = 160;
 
@@ -76,4 +78,55 @@ export function getFormattedColumns(containerWidth: number, columns: TypeDataCol
   }
 
   return formattedColumns;
+}
+
+export const isObjectEffectivelyEmpty = (obj: any): boolean => {
+  if (obj == null || typeof obj !== "object") return true;
+
+  return Object.keys(obj).every(key => {
+    return (
+      obj[key] === undefined ||
+      obj[key] === null ||
+      (typeof obj[key] === "object" && isObjectEffectivelyEmpty(obj[key]))
+    );
+  });
+};
+
+export const findFirstErrorId = (errors: FormError, formattedProperties?: Properties): string | null => {
+  if (!formattedProperties) return null;
+  for (const [key, error] of Object.entries(errors ?? {})) {
+    const property = formattedProperties[key];
+
+    if (typeof error === "string" && property?.id) {
+      return property.id;
+    } else if (typeof error === "object" && property?.properties) {
+      const nestedId = findFirstErrorId(error, property.properties);
+      if (nestedId) return nestedId;
+    }
+  }
+  return null;
+};
+
+export function collectBucketIds(Properties: Properties, cellValue: any): CollectedRelation[] {
+  const collected: CollectedRelation[] = [];
+
+  function traverse(property: Property, value: any) {
+    if (!property || typeof property !== "object") return;
+    if (property.type === FieldKind.Relation) {
+      const relationValue = value?.[property.title as any];
+      collected.push({bucketId: property.bucketId as string, value: relationValue});
+    }
+
+    if (property.type === FieldKind.Object || property.type === FieldKind.Array) {
+      for (const prop of Object.values(property.properties || {})) {
+        const childValue = value?.[(prop as Property).title];
+        if (prop && (typeof childValue === "object" || !childValue))
+          traverse(prop as Property, childValue);
+      }
+    }
+  }
+  for (const prop of Object.values(Properties || {})) {
+    traverse(prop, cellValue);
+  }
+  return collected;
 }
