@@ -58,4 +58,40 @@ function sanitizeFormByCapabilities(form: FieldFormState, def?: FieldDefinition)
   return form;
 }
 
-export {initForm, FieldKind, FIELD_REGISTRY};
+import {
+  addInnerField,
+  updateInnerField,
+  removeInnerField,
+} from "./inner-fields";
+import type { Property } from "src/services/bucketService";
+
+export {
+  addInnerField,
+  updateInnerField,
+  removeInnerField,
+  FieldKind,
+  initForm,
+  FIELD_REGISTRY
+};
+
+
+export function buildBaseProperty(values: FieldFormState): Property {
+  const {fieldValues, configurationValues, type, innerFields} = values;
+  return {
+    type,
+    title: fieldValues.title,
+    description: fieldValues.description || undefined,
+    options: {
+      position: "bottom",
+      index: configurationValues.index || undefined,
+      unique: configurationValues.uniqueValues || undefined,
+      translate: configurationValues.translate || undefined
+    },
+    required:
+      innerFields && innerFields.length > 0
+        ? innerFields
+            .filter(i => i.configurationValues.requiredField)
+            ?.map?.(i => i.fieldValues.title)
+        : undefined
+  } as Property;
+}

@@ -111,3 +111,11 @@
   @include textEllipsis(2, !important);
   padding: 0 var(--padding-md);
 }
+
+@mixin hideScrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera*/
+  }
+}

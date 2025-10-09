@@ -1,4 +1,6 @@
+import styles from "./field-styles.module.scss";
 
+// Common field definitions used in creation forms
 export const BaseFields = {
   title: {type: "string", title: "Name", required: true},
   description: {
@@ -17,10 +19,10 @@ export const DefaultInputs = {
     type: "string",
     title: "Default Date",
     enum: [
-      {label: "No Default", value: ""},
-      {label: "Current Date", value: "now"},
-      {label: "Custom Date", value: "custom"}
-    ]
+      {label: "None", value: ""},
+      {label: "Created At", value: ":created_at"},
+      {label: "Updated At", value: ":updated_at"}
+    ] as any[]
   }
 } as const;
 
@@ -68,24 +70,27 @@ export const SpecializedInputs = {
   arrayItemTitle: {type: "string", title: "Title"},
   arrayItemDescription: {type: "string", title: "Description"},
   chip: {type: "chip", title: ""},
-  bucket: {title: "Buckets", type: "string", enum: []},
+  bucket: {title: "Buckets", type: "string", enum: [] as any[]},
   relationType: {
     title: "Relation Type",
     type: "string",
     enum: [
       {label: "One To One", value: "onetoone"},
       {label: "One To Many", value: "onetomany"}
-    ]
+    ] as any[]
   },
+  dependent: {type: "boolean", title: "Dependent", size: "small"},
   uniqueItems: {type: "boolean", title: "Items should be unique", size: "extra-small"}
 } as const;
 
+// Preset panel used by string and array, and pattern for number/array
 export const PresetPanel = {
   preset: SpecializedInputs.preset,
   makeEnumerated: SpecializedInputs.makeEnumerated,
   enumeratedValues: {
     ...SpecializedInputs.enumeratedValues,
     renderCondition: {field: "makeEnumerated", equals: true},
+    className: styles.presetsEnumeratedValues
   },
   definePattern: ValidationInputs.definePattern,
   regularExpression: {

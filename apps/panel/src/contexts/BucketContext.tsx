@@ -48,7 +48,8 @@ type BucketContextType = {
     newField: Property,
     requiredField?: string,
     primaryField?: string
-  ) => Promise<BucketType>;
+  ) => Promise<any>;
+  updateCellData: (value: any, title: string, id: string) => Promise<BucketDataType["data"][0] | void>;
   updateBucketLimitation: (bucket: BucketType) => Promise<void>;
   updateBucketLimitationFields: (
     bucket: BucketType,
@@ -99,6 +100,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiUpdateBucketRule,
     apiCreateBucket,
     apiCreateBucketField,
+    apiUpdateCellData,
     apiUpdatebucketLimitiation,
     apiUpdatebucketLimitiationFields,
     apiBuckets,
@@ -109,6 +111,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucketHistoryError,
     apiCreateBucketFieldError,
     apiUpdateBucketLimitationFieldsLoading,
+    apiUpdateCellDataError,
     apiUpdateBucketLimitationFieldsError
   } = useBucketService();
 
@@ -388,6 +391,30 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [buckets, apiCreateBucket]
   );
 
+  const updateCellData = useCallback(
+    async (value: any, title: string, id: string) => {
+      const oldBucketData = bucketData;
+
+      const index = bucketData.data.findIndex(row => row._id === id);
+      if (index === -1) return;
+
+      const newData = bucketData.data.map((row, i) =>
+        i === index ? {...row, [title]:  value} : row
+      );
+
+      setBucketData({...bucketData, data: newData});
+
+      const result = await apiUpdateCellData(value, title, id, bucketData.bucketId);
+      if (!result || typeof result === "string") {
+        setBucketData(oldBucketData);
+        throw new Error(result || "Unknown error");
+      }
+      return result;
+    },
+    [apiUpdateCellData, bucketData]
+  );
+
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -417,8 +444,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       deleteBucketHistoryError: apiDeleteBucketHistoryError,
       updateBucketLimitationFieldsLoading: apiUpdateBucketLimitationFieldsLoading,
       updateBucketLimitationFieldsError: apiUpdateBucketLimitationFieldsError,
+      updateCellData,
       nextbucketDataQuery,
-      createBucketFieldError: apiCreateBucketFieldError
+      createBucketFieldError: apiCreateBucketFieldError,
     }),
     [
       getBucketData,
@@ -450,10 +478,11 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiDeleteBucketHistoryError,
       apiUpdateBucketLimitationFieldsLoading,
       apiUpdateBucketLimitationFieldsError,
+      updateCellData,
       apiUpdateBucketLimitationFieldsLoading,
       apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,
-      apiCreateBucketFieldError
+      apiCreateBucketFieldError,
     ]
   );
 

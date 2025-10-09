@@ -5,15 +5,17 @@ import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
-import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
+import {
+  FieldKind,
+  FIELD_REGISTRY,
+} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type { Property } from "src/services/bucketService";
 
-export type ColumnType = {
+type BaseColumn = {
   id: string;
-  header: any;
   key: string;
   type?: FieldKind;
   width?: string;
@@ -26,21 +28,33 @@ export type ColumnType = {
   selectable?: boolean;
   leftOffset?: number;
   fixedWidth?: boolean;
+  title?: string;
+};
+
+export type RawColumn = BaseColumn & {
+  header: string;
+};
+
+export type FormattedColumn = BaseColumn & {
+  header: string | React.ReactNode;
 };
 
 type BucketTableProps = {
   data: Record<string, any>[];
-  columns: ColumnType[];
+  columns: RawColumn[];
   onScrollEnd?: () => void;
   totalDataLength: number;
   maxHeight?: string | number;
   bucketId: string;
   loading: boolean;
   tableRef?: RefObject<HTMLElement | null>;
+  onCellSave: (value: any, columnName: string, rowId: string) => Promise<any>;
+  updateCellDataError?: string | null;
+  requiredColumns?: string[];
 };
 
 type ColumnHeaderProps = {
-  title?: string;
+  title?: string | React.ReactNode;
   icon?: IconName;
   showDropdownIcon?: boolean;
   onEdit?: () => void;
@@ -158,7 +172,7 @@ const NewFieldHeader = memo(() => {
   );
 });
 
-const defaultColumns: ColumnType[] = [
+const defaultColumns: FormattedColumn[] = [
   {
     id: "0",
     header: <ColumnHeader />,
@@ -185,30 +199,7 @@ const defaultColumns: ColumnType[] = [
   }
 ];
 
-// TODO: Refactor this function to render more appropriate UI elements for each field type.
-// Many field types are currently using the generic `renderDefault()`.
-function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
-  function renderDefault() {
-    return (
-      <div className={styles.defaultCell}>
-        <div className={styles.defaultCellData}>{cellData}</div>
-        {deletable && cellData && (
-          <Button variant="icon">
-            <Icon name="close" size="sm" />
-          </Button>
-        )}
-      </div>
-    );
-  }
-  if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
-  if (type) {
-    const formatted = FIELD_REGISTRY[type]?.getFormattedValue?.(cellData);
-    if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
-  }
-  return renderDefault();
-}
-
-function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
+function getFormattedColumns(columns: FormattedColumn[], bucketId: string): FormattedColumn[] {
   return [
     defaultColumns[0],
     ...columns.map((col, index) => ({
@@ -221,18 +212,20 @@ function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnTyp
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      id: `${col.key}-${index}-s${bucketId}`,
-      cellClassName: styles.cell
-    })),
+      id: `${col.key}-${index}-${bucketId}`,
+      cellClassName: styles.cell,
+      title: col.header
+    })) as FormattedColumn[],
     defaultColumns[1]
   ];
 }
 
-function buildColumnMeta(columns: ColumnType[]): Record<string, ColumnMeta> {
+function buildColumnMeta(columns: FormattedColumn[]): Record<string, ColumnMeta> {
   return Object.fromEntries(
     columns.map(col => [col.key, {type: col.type, deletable: col.deletable, id: col.id}])
   );
 }
+
 function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
   const allKeys = Object.keys(columnMap);
 
@@ -251,10 +244,7 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
     return Object.fromEntries(
       Object.entries(fullRow).map(([key, value]) => {
         const meta = columnMap[key] || {};
-        return [
-          key,
-          {id: `${meta.id}-${fullRow._id}`, value: renderCell(value, meta.type, meta.deletable)}
-        ];
+        return [key, {id: `${meta.id}-${fullRow._id}`, value}];
       })
     );
   });
@@ -268,7 +258,9 @@ const BucketTable = ({
   maxHeight,
   loading,
   bucketId,
-  tableRef
+  tableRef,
+  onCellSave,
+  requiredColumns = []
 }: BucketTableProps) => {
   const formattedColumns = useMemo(
     () => getFormattedColumns(columns, bucketId),
@@ -291,6 +283,8 @@ const BucketTable = ({
       onScrollEnd={onScrollEnd}
       totalDataLength={totalDataLength}
       tableRef={tableRef}
+      onCellSave={onCellSave}
+      requiredColumns={requiredColumns}
     />
   );
 };

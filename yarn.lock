@@ -2144,7 +2144,7 @@
   resolved "https://registry.yarnpkg.com/@emotion/memoize/-/memoize-0.9.0.tgz#745969d649977776b43fc7648c556aaa462b4102"
   integrity sha512-30FAj7/EoJ5mwVPOWhAyCX+FPfMDrVecJAM+Iw9NRoSl4BBAQeqj4cApHHUXOVvIPgLVDsCFoz/hGD+5QQD1GQ==
 
-"@emotion/react@^11.14.0":
+"@emotion/react@^11.11.1", "@emotion/react@^11.14.0":
   version "11.14.0"
   resolved "https://registry.yarnpkg.com/@emotion/react/-/react-11.14.0.tgz#cfaae35ebc67dd9ef4ea2e9acc6cd29e157dd05d"
   integrity sha512-O000MLDBDdk/EohJPFUqvnp4qnHeYkVP5B0xEG0D/L7cOKP9kefu2DXn8dj74cQfsEzUqh+sr1RzFqiL1o+PpA==
@@ -2174,7 +2174,7 @@
   resolved "https://registry.yarnpkg.com/@emotion/sheet/-/sheet-1.4.0.tgz#c9299c34d248bc26e82563735f78953d2efca83c"
   integrity sha512-fTBW9/8r2w3dXWYM4HCB1Rdp8NLibOw2+XELH5m5+AkWiL/KqYX6dc0kKYlaYyKjrQ6ds33MCdMPEwgs2z1rqg==
 
-"@emotion/styled@^11.14.0":
+"@emotion/styled@^11.*", "@emotion/styled@^11.11.0", "@emotion/styled@^11.14.0":
   version "11.14.1"
   resolved "https://registry.yarnpkg.com/@emotion/styled/-/styled-11.14.1.tgz#8c34bed2948e83e1980370305614c20955aacd1c"
   integrity sha512-qEEJt42DuToa3gurlH4Qqc1kVpNq8wO8cJtDzU46TjlzWjDlsVyevtYCRijVq3SrHsROS+gVQ8Fnea108GnKzw==
@@ -5547,6 +5547,74 @@
   version "2.11.8"
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
+
+"@projectstorm/geometry@7.0.3":
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/@projectstorm/geometry/-/geometry-7.0.3.tgz#0e24f56fccf38dd3fc2cc9c2899b8f04266db270"
+  integrity sha512-cwQ9IiOcLhMwVh9NsX0srcACGkpasXY1NA6659Tc9PeSYtAGySH5XC8DfL/nvPMXEdrBYS0S5zAdPC3RPcewog==
+  dependencies:
+    lodash "^4.17.21"
+
+"@projectstorm/react-canvas-core@7.0.3", "@projectstorm/react-canvas-core@^7.0.3":
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/@projectstorm/react-canvas-core/-/react-canvas-core-7.0.3.tgz#9151a0ce07240f71a050f568c63b9a99f4d45b62"
+  integrity sha512-Vm19AprUGx3ea0uWSMPFfpTRclaEW/7s1/hbnRDFu9WSF1VScYhw2f/cVC95qfiedip/usn4YMsg3Av6M84d0g==
+  dependencies:
+    "@emotion/react" "^11.11.1"
+    "@emotion/styled" "^11.11.0"
+    "@projectstorm/geometry" "7.0.3"
+    lodash "^4.17.21"
+    react "^18.2.0"
+
+"@projectstorm/react-diagrams-core@7.0.3":
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/@projectstorm/react-diagrams-core/-/react-diagrams-core-7.0.3.tgz#930a12ebf665954bf5704ea4b1e6b84fdc936c3c"
+  integrity sha512-sbCy5Bk4OLfEvTtYrFK/qDc1WdgMhZzVY1rxmToVnCMP6bYiThHdopYNBX59fPHqKQebAHYER0vmlWyepqEZLQ==
+  dependencies:
+    "@emotion/styled" "^11.11.0"
+    "@projectstorm/geometry" "7.0.3"
+    "@projectstorm/react-canvas-core" "7.0.3"
+    lodash "^4.17.21"
+    react "^18.2.0"
+    resize-observer-polyfill "^1.5.1"
+
+"@projectstorm/react-diagrams-defaults@7.1.3":
+  version "7.1.3"
+  resolved "https://registry.yarnpkg.com/@projectstorm/react-diagrams-defaults/-/react-diagrams-defaults-7.1.3.tgz#a1c680a589d5f3a20cd30a3c369da1e7c24cdd07"
+  integrity sha512-T4KGgKiy4sUiH4pIq8VjR7Q+iM5SMDnVWyiwzpVFsx3D98V6r2w9qzWt3+9St/uZOKLrXj8VSCy73lmmkfNomQ==
+  dependencies:
+    "@emotion/react" "^11.11.1"
+    "@emotion/styled" "^11.*"
+    "@projectstorm/geometry" "7.0.3"
+    "@projectstorm/react-canvas-core" "7.0.3"
+    "@projectstorm/react-diagrams-core" "7.0.3"
+    lodash "^4.17.21"
+    react "^18.2.0"
+
+"@projectstorm/react-diagrams-routing@7.1.3":
+  version "7.1.3"
+  resolved "https://registry.yarnpkg.com/@projectstorm/react-diagrams-routing/-/react-diagrams-routing-7.1.3.tgz#25348377b2ad6ae7fd7b68d2ec9b75366254e70c"
+  integrity sha512-/Gbc7+8zoKQ3int6vVxoYMZ4hnqhIFwgulXUCuzYs21M7llnlaeOjOBEoifa3cNH6f8M4ht8xMhvEgg/gHiLiw==
+  dependencies:
+    "@projectstorm/geometry" "7.0.3"
+    "@projectstorm/react-canvas-core" "7.0.3"
+    "@projectstorm/react-diagrams-core" "7.0.3"
+    "@projectstorm/react-diagrams-defaults" "7.1.3"
+    dagre "^0.8.5"
+    lodash "^4.17.21"
+    pathfinding "^0.4.18"
+    paths-js "^0.4.11"
+    react "^18.2.0"
+
+"@projectstorm/react-diagrams@^7.0.4":
+  version "7.0.4"
+  resolved "https://registry.yarnpkg.com/@projectstorm/react-diagrams/-/react-diagrams-7.0.4.tgz#9bd2e332ce5e212c222dd1864fbabf1aa95dbca4"
+  integrity sha512-GJLpo3zhJzjcmx3PfztNDTS7jpePj9TPjXV2CgJmCDZAPHDU8q/f4AyXoJfqvoWlmVnjrzQgtcOU2KbUlNu3dQ==
+  dependencies:
+    "@projectstorm/react-canvas-core" "7.0.3"
+    "@projectstorm/react-diagrams-core" "7.0.3"
+    "@projectstorm/react-diagrams-defaults" "7.1.3"
+    "@projectstorm/react-diagrams-routing" "7.1.3"
 
 "@protobufjs/aspromise@^1.1.1", "@protobufjs/aspromise@^1.1.2":
   version "1.1.2"
@@ -10231,6 +10299,14 @@ d@1, d@^1.0.1, d@^1.0.2:
     es5-ext "^0.10.64"
     type "^2.7.2"
 
+dagre@^0.8.5:
+  version "0.8.5"
+  resolved "https://registry.yarnpkg.com/dagre/-/dagre-0.8.5.tgz#ba30b0055dac12b6c1fcc247817442777d06afee"
+  integrity sha512-/aTqmnRta7x7MCCpExk7HQL2O4owCT2h8NT//9I1OQ9vt29Pa0BzSAkR5lwFUcQ7491yVi/3CXU9jQ5o0Mn2Sw==
+  dependencies:
+    graphlib "^2.1.8"
+    lodash "^4.17.15"
+
 damerau-levenshtein@^1.0.8:
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/damerau-levenshtein/-/damerau-levenshtein-1.0.8.tgz#b43d286ccbd36bc5b2f7ed41caf2d0aba1f8a6e7"
@@ -12792,6 +12868,13 @@ graphemer@^1.4.0:
   resolved "https://registry.yarnpkg.com/graphemer/-/graphemer-1.4.0.tgz#fb2f1d55e0e3a1849aeffc90c4fa0dd53a0e66c6"
   integrity sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==
 
+graphlib@^2.1.8:
+  version "2.1.8"
+  resolved "https://registry.yarnpkg.com/graphlib/-/graphlib-2.1.8.tgz#5761d414737870084c92ec7b5dbcb0592c9d35da"
+  integrity sha512-jcLLfkpoVGmH7/InMC/1hIvOPSUh38oJtGhvrOFGzioE1DZ+0YW16RgmOJhHiuWTvGiJQ9Z1Ik43JvkRPRvE+A==
+  dependencies:
+    lodash "^4.17.15"
+
 graphql@^16.10.0:
   version "16.11.0"
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-16.11.0.tgz#96d17f66370678027fdf59b2d4c20b4efaa8a633"
@@ -12995,6 +13078,11 @@ header-case@^1.0.0:
   dependencies:
     no-case "^2.2.0"
     upper-case "^1.1.3"
+
+heap@0.2.5:
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/heap/-/heap-0.2.5.tgz#713b65590ebcc40fcbeeaf55e851694092b39af1"
+  integrity sha512-G7HLD+WKcrOyJP5VQwYZNC3Z6FcQ7YYjEFiFoIj8PfEr73mu421o8B1N5DKUcc8K37EsJ2XXWA8DtrDz/2dReg==
 
 highlight.js@^10.0.0:
   version "10.7.3"
@@ -15785,7 +15873,7 @@ long@^5.0.0:
   resolved "https://registry.yarnpkg.com/long/-/long-5.3.2.tgz#1d84463095999262d7d7b7f8bfd4a8cc55167f83"
   integrity sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==
 
-loose-envify@^1.4.0:
+loose-envify@^1.1.0, loose-envify@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.4.0.tgz#71ee51fa7be4caec1a63839f7e682d8132d30caf"
   integrity sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==
@@ -17611,6 +17699,18 @@ path-type@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/path-type/-/path-type-4.0.0.tgz#84ed01c0a7ba380afe09d90a8c180dcd9d03043b"
   integrity sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==
+
+pathfinding@^0.4.18:
+  version "0.4.18"
+  resolved "https://registry.yarnpkg.com/pathfinding/-/pathfinding-0.4.18.tgz#a9990f6fa22b7ef196e5651b049165403a045fe8"
+  integrity sha512-R0TGEQ9GRcFCDvAWlJAWC+KGJ9SLbW4c0nuZRcioVlXVTlw+F5RvXQ8SQgSqI9KXWC1ew95vgmIiyaWTlCe9Ag==
+  dependencies:
+    heap "0.2.5"
+
+paths-js@^0.4.11:
+  version "0.4.11"
+  resolved "https://registry.yarnpkg.com/paths-js/-/paths-js-0.4.11.tgz#b2a9d5f94ee9949aa8fee945f78a12abff44599e"
+  integrity sha512-3mqcLomDBXOo7Fo+UlaenG6f71bk1ZezPQy2JCmYHy2W2k5VKpP+Jbin9H0bjXynelTbglCqdFhSEkeIkKTYUA==
 
 pause@0.0.1:
   version "0.0.1"
@@ -19442,6 +19542,13 @@ react-transition-group@^4.4.5:
     dom-helpers "^5.0.1"
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
+
+react@^18.2.0:
+  version "18.3.1"
+  resolved "https://registry.yarnpkg.com/react/-/react-18.3.1.tgz#49ab892009c53933625bd16b2533fc754cab2891"
+  integrity sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==
+  dependencies:
+    loose-envify "^1.1.0"
 
 react@^19.0.0:
   version "19.1.1"

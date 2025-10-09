@@ -18,7 +18,7 @@ export type BucketType = {
   [key: string]: any;
 };
 
-type Properties = {[key: string]: Property};
+export type Properties = {[key: string]: Property};
 
 export type Property =
   | BasicProperty
@@ -104,6 +104,11 @@ export const useBucketService = () => {
   const {request: bucketOrderRequest} = useApi({endpoint: "", method: "patch"});
 
   const {request: patchRequest} = useApi({endpoint: "/api/bucket", method: "patch"});
+
+  const {request: updateCellData, error: apiUpdateCellDataError} = useApi({
+    endpoint: "",
+    method: "patch"
+  });
 
   const {request: deleteRequest} = useApi({
     endpoint: "",
@@ -211,6 +216,15 @@ export const useBucketService = () => {
     [patchRequest]
   );
 
+  const apiCreateBucketField = useCallback(
+    async (modifiedBucket: BucketType) => {
+      return createBucketField({
+        body: modifiedBucket,
+        endpoint: `/api/bucket/${modifiedBucket._id}`
+      });
+    },
+    [createBucketField]
+  );
   const apiDeleteBucketHistory = useCallback(
     async (bucket: BucketType) => {
       return await deleteHistoty({
@@ -220,14 +234,14 @@ export const useBucketService = () => {
     [deleteHistoty]
   );
 
-  const apiCreateBucketField = useCallback(
-    async (modifiedBucket: BucketType) => {
-      return createBucketField({
-        body: modifiedBucket,
-        endpoint: `/api/bucket/${modifiedBucket._id}`
+  const apiUpdateCellData = useCallback(
+    (value: any, title: string, id: string, bucketId: string) => {
+      return updateCellData({
+        endpoint: `/api/bucket/${bucketId}/data/${id}`,
+        body: {[title]: value ?? null}
       });
     },
-    [createBucketField]
+    [updateCellData]
   );
 
   const apiUpdateBucketReadonly = useCallback(
@@ -322,6 +336,7 @@ export const useBucketService = () => {
     apiUpdatebucketLimitiationFields,
     apiCreateBucket,
     apiCreateBucketField,
+    apiUpdateCellData,
     apiBuckets,
     apiBucketData,
     apiUpdateBucketRuleLoading,
@@ -331,6 +346,7 @@ export const useBucketService = () => {
     apiDeleteBucketHistoryError,
     apiUpdateBucketLimitationFieldsLoading,
     apiUpdateBucketLimitationFieldsError,
-    apiCreateBucketFieldError
+    apiCreateBucketFieldError,
+    apiUpdateCellDataError
   };
 };

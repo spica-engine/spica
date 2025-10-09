@@ -1,4 +1,5 @@
-import type {FieldCreationForm} from "./types";
+import {FIELD_REGISTRY} from "./registry";
+import type {FieldCreationForm, FieldKind} from "./types";
 
 export function freezeFormDefaults(seed: FieldCreationForm): FieldCreationForm {
   Object.freeze(seed.fieldValues);
@@ -23,3 +24,18 @@ export const BASE_FORM_DEFAULTS = {
   },
   presetValues: BASE_PRESET_DEFAULTS
 };
+
+export function makeInnerFieldDefaults(kind: FieldKind): FieldCreationForm {
+  const base = FIELD_REGISTRY[kind]?.creationFormDefaultValues;
+  if (!base) throw new Error(`makeInnerFieldDefaults: unknown field kind '${kind}'`);
+  return {
+    ...base,
+    fieldValues: {
+      ...base.fieldValues,
+      title: "New Inner Field",
+      description: ""
+    }
+  };
+}
+
+export const DEFAULT_COORDINATES = {lat: 36.966667, lng: 30.666667};

@@ -5,7 +5,7 @@ import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
 import type {BucketType} from "src/services/bucketService";
-import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
+import type {FormattedColumn} from "../../../components/organisms/bucket-table/BucketTable";
 
 type BucketActionBarProps = {
   onRefresh: () => void;
@@ -13,7 +13,7 @@ type BucketActionBarProps = {
   bucket: BucketType;
   searchLoading?: boolean;
   refreshLoading?: boolean;
-  columns: ColumnType[];
+  columns: FormattedColumn[];
   visibleColumns: Record<string, boolean>;
   toggleColumn: (key?: string) => void;
 };

@@ -56,21 +56,6 @@
   }
 }
 
-.multipleSelectionCell {
-  display: flex;
-  gap: var(--gap-md);
-
-  .grayBox {
-    width: 22px;
-    height: 22px;
-    border-radius: var(--border-radius-md);
-    background-color: var(--color-border);
-    font-family: var(--font-family-base);
-    font-size: var(--font-size-md);
-    line-height: 0 !important;
-  }
-}
-
 .columnHeader {
   justify-content: space-between !important;
   background-color: var(--color-border);
@@ -107,24 +92,6 @@
   border-left: var(--border-default);
 }
 
-.checkbox {
-  label {
-    width: 20px !important;
-    height: 20px !important;
-    border-color: var(--color-border) !important;
-    border-radius: var(--border-radius-md) !important;
-    cursor: pointer !important;
-    position: relative !important;
-  }
-
-  div:nth-child(2) {
-    display: none;
-  }
-
-  height: min-content !important;
-  margin-top: -2px;
-}
-
 .selectColumn {
   min-width: 60px !important;
   flex: none !important;
@@ -145,31 +112,6 @@
   border-bottom: var(--border-default) !important;
   padding: var(--padding-md) !important;
   border-right: none !important;
-}
-
-.locationCell {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.locationImage {
-  width: 20px;
-  height: 20px;
-  border-radius: var(--border-radius-md);
-}
-
-.fileCell {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-sm);
-  overflow: hidden;
-  span {
-    width: 90%;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
 }
 
 .newFieldColumn {

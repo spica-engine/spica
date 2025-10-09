@@ -1,7 +1,7 @@
 import styles from "./Bucket.module.scss";
 import {useBucket} from "../../contexts/BucketContext";
 import {useParams} from "react-router-dom";
-import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
+import BucketTable, {type RawColumn} from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
@@ -55,7 +55,8 @@ export default function Bucket() {
     getBucketData,
     loadMoreBucketData,
     bucketDataLoading,
-    refreshBucketData
+    refreshBucketData,
+    updateCellData,
   } = useBucket();
 
   useEffect(() => {
@@ -65,8 +66,13 @@ export default function Bucket() {
 
   const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
 
-  const formattedColumns: ColumnType[] = useMemo(() => {
-    const columns = Object.values(bucket?.properties ?? {});
+  const formattedColumns = useMemo(() => {
+    const columns = Object.entries(bucket?.properties ?? {}).map(([key, value]) => ({
+      ...value,
+      key,
+      title: value.title || key
+    }));
+
     return [
       {
         header: "_id",
@@ -78,8 +84,8 @@ export default function Bucket() {
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
-    ] as ColumnType[];
+      ...columns.map(i => ({...i, header: i.title, showDropdownIcon: true}))
+    ] as RawColumn[];
   }, [bucket]);
 
   const searchableColumns = formattedColumns
@@ -113,7 +119,7 @@ export default function Bucket() {
   return (
     <BucketWithVisibleColumns
       bucket={bucket}
-      formattedColumns={formattedColumns as ColumnType[]}
+      formattedColumns={formattedColumns as RawColumn[]}
       bucketData={bucketData}
       handleScrollEnd={loadMoreBucketData}
       bucketDataLoading={bucketDataLoading}
@@ -122,13 +128,14 @@ export default function Bucket() {
       handleRefresh={handleRefresh}
       refreshLoading={refreshLoading}
       tableRef={tableRef}
+      handleCellSave={updateCellData}
     />
   );
 }
 
 type BucketWithVisibleColumnsProps = {
   bucket: BucketType;
-  formattedColumns: ColumnType[];
+  formattedColumns: RawColumn[];
   bucketData: any;
   handleScrollEnd: () => void;
   bucketDataLoading: boolean;
@@ -137,6 +144,7 @@ type BucketWithVisibleColumnsProps = {
   handleRefresh: () => Promise<void>;
   refreshLoading: boolean;
   tableRef: React.RefObject<HTMLElement | null>;
+  handleCellSave: (value: any, columnName: string, rowId: string) => Promise<any>;
 };
 
 function BucketWithVisibleColumns({
@@ -149,7 +157,8 @@ function BucketWithVisibleColumns({
   handleSearch,
   handleRefresh,
   refreshLoading,
-  tableRef
+  tableRef,
+  handleCellSave,
 }: BucketWithVisibleColumnsProps) {
   const defaultVisibleColumns = useMemo(
     () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
@@ -213,6 +222,8 @@ function BucketWithVisibleColumns({
         maxHeight="88vh"
         loading={isTableLoading}
         tableRef={tableRef}
+        onCellSave={handleCellSave}
+        requiredColumns={bucket.required ?? []}
       />
     </div>
   );

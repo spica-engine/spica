@@ -1,0 +1,186 @@
+@import "../../styles/mixins";
+
+.checkbox {
+  label {
+    width: 20px !important;
+    height: 20px !important;
+    border-color: var(--color-border) !important;
+    border-radius: var(--border-radius-md) !important;
+    cursor: pointer !important;
+    position: relative !important;
+  }
+
+  div:nth-child(2) {
+    display: none;
+  }
+
+  height: min-content !important;
+  margin-top: -2px;
+}
+
+.booleanValue {
+  opacity: 0.7;
+}
+
+.textAreaInput {
+  height: 100% !important;
+  textarea {
+    resize: none !important;
+  }
+}
+
+.multipleSelectionCell {
+  display: flex;
+  gap: var(--gap-md);
+
+  .grayBox {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-border);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-md);
+    line-height: 0 !important;
+  }
+
+  .grayBox:last-child:hover {
+    background-color: var(--color-background);
+  }
+}
+
+.locationCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  gap: var(--gap-md)
+}
+
+.locationImage {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--border-radius-md);
+}
+
+.objectInputContainer {
+  padding: 0 var(--padding-md);
+  padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
+}
+
+.objectInputWrapper {
+  max-height: 500px;
+  height: max-content;
+  width: max-content;
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  overflow-y: auto;
+  @include hideScrollbar;
+}
+
+.objectInput {
+  border: none !important;
+}
+
+.arrayInput,
+.objectInput {
+  width: 500px !important;
+  overflow-x: hidden !important;
+}
+
+.innerObjectInput > div,
+.objectInput > div {
+  flex-shrink: 0;
+}
+
+.arrayContent {
+  max-height: 350px;
+}
+
+.richTextInputContainer {
+  max-width: 600px;
+  position: absolute;
+  width: 580px;
+  height: 330px;
+}
+
+.richTextInput {
+  height: 100% !important;
+  padding: var(--padding-xl) var(--padding-md) !important;
+}
+
+.richTextInputContent {
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  background: var(--color-soft-light);
+  height: 100% !important;
+  > div {
+    @include hideScrollbar;
+  }
+}
+
+.editingRichTextCell {
+  padding-left: var(--padding-md) !important;
+}
+
+.objectProperty {
+  max-height: 300px;
+}
+
+.enumInput > div:nth-child(2) span {
+  max-width: unset !important;
+  min-width: calc(100% + 100px);
+}
+
+.relationSelect {
+  @include hideScrollbar;
+}
+
+.relationInput {
+  height: 36px !important;
+  overflow: hidden;
+}
+
+.relationInputOption {
+  width: 100% !important;
+}
+
+.relationRoot {
+  max-width: unset !important;
+}
+
+.relationPortal {
+  width: unset !important;
+  height: unset !important;
+}
+
+.fileInputContainer {
+  padding: 0 var(--padding-md);
+  padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
+}
+
+.fileInputWrapper {
+  max-height: 500px;
+  height: max-content;
+  width: 600px;
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  overflow-y: auto;
+  @include hideScrollbar;
+}
+
+.enumInput {
+  height: 32px !important;
+  margin-top: 2px !important;
+}
+
+.enumDisplay {
+  margin-left: -2px !important
+}
+
+.relationSelectDropdown {
+  min-width: 300px
+}
+
+.enumOption {
+  max-width: 156px
+}
