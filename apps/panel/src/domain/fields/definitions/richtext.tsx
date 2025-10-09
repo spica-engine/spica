@@ -1,5 +1,4 @@
-import {Button, Icon, useAdaptivePosition, RichTextInput, Popover} from "oziko-ui-kit";
-import {useRef, useEffect, type RefObject} from "react";
+import {Button, Icon} from "oziko-ui-kit";
 import {TranslatableMinimalConfig, BaseFields, MinimalConfig} from "../creation-form-schemas";
 import {freezeFormDefaults, BASE_FORM_DEFAULTS} from "../defaults";
 import {type FieldDefinition, FieldKind, type TypeProperty} from "../types";
@@ -8,7 +7,6 @@ import {
   RICHTEXT_FIELD_CREATION_FORM_SCHEMA,
   validateFieldValue
 } from "../validation";
-import styles from "../field-styles.module.scss";
 import {buildBaseProperty} from "../registry";
 import { STRING_DEFINITION } from "./string";
 

@@ -245,7 +245,11 @@ export const ARRAY_DEFINITION: FieldDefinition = {
       initialPlacement: "bottom"
     });
 
-    useEffect(calculatePosition, [calculatePosition]);
+    useEffect(() => {
+      if (ref.current && ref.current.offsetHeight > 0 && ref.current.offsetWidth > 0) {
+        calculatePosition();
+      }
+    }, [calculatePosition, ref, ref.current?.offsetHeight, ref.current?.offsetWidth]);
 
     const RenderedValue = ({value}: {value: any[]}) => ARRAY_DEFINITION.renderValue(value, false);
 
@@ -255,7 +259,7 @@ export const ARRAY_DEFINITION: FieldDefinition = {
         <Popover
           contentProps={{
             ref: ref as RefObject<HTMLDivElement | null>,
-            style: targetPosition ?? {display: "none"}
+            style: targetPosition ?? {opacity: 0}
           }}
           open
           onClose={onClose}

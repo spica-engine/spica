@@ -62,6 +62,7 @@ export const RELATION_DEFINITION: FieldDefinition = {
       ...relationProps,
       description: undefined,
       id: crypto.randomUUID(),
+      popupClassName: styles.relationSelectDropdown,
     } as TypeProperty;
   },
   buildCreationFormApiProperty: form => {

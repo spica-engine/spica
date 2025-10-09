@@ -75,7 +75,7 @@ export const OBJECT_DEFINITION: FieldDefinition = {
         type: FieldKind.Object,
         properties: {},
         description: undefined,
-        id: crypto.randomUUID(),
+        id: crypto.randomUUID()
       } as TypeProperty;
     }
 
@@ -128,7 +128,7 @@ export const OBJECT_DEFINITION: FieldDefinition = {
       type: FieldKind.Object,
       properties: builtProperties,
       description: undefined,
-      id: crypto.randomUUID(),
+      id: crypto.randomUUID()
     } as TypeProperty;
   },
   requiresInnerFields: _ => true,
@@ -201,7 +201,11 @@ export const OBJECT_DEFINITION: FieldDefinition = {
       initialPlacement: "bottom"
     });
 
-    useEffect(calculatePosition, [calculatePosition]);
+    useEffect(() => {
+      if (ref.current && ref.current.offsetHeight > 0 && ref.current.offsetWidth > 0) {
+        calculatePosition();
+      }
+    }, [calculatePosition, ref, ref.current?.offsetHeight, ref.current?.offsetWidth]);
 
     const RenderedValue = ({value}: {value: Object}) => OBJECT_DEFINITION.renderValue(value, false);
 
@@ -211,7 +215,7 @@ export const OBJECT_DEFINITION: FieldDefinition = {
         <Popover
           contentProps={{
             ref: ref as RefObject<HTMLDivElement | null>,
-            style: targetPosition ?? {display: "none"}
+            style: targetPosition ?? {opacity: 0}
           }}
           open
           onClose={onClose}

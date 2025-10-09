@@ -170,10 +170,13 @@
 
 .enumInput {
   height: 32px !important;
-  //width: 98% !important;
   margin-top: 2px !important;
 }
 
 .enumDisplay {
   margin-left: -2px !important
+}
+
+.relationSelectDropdown {
+  min-width: 300px
 }

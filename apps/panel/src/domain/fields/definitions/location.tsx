@@ -55,7 +55,7 @@ export const LOCATION_DEFINITION: FieldDefinition = {
       ...property,
       type: FieldKind.Location,
       description: undefined,
-      id: crypto.randomUUID(),
+      id: crypto.randomUUID()
     }) as TypeProperty,
   buildCreationFormApiProperty: buildBaseProperty,
   getDisplayValue: value => {
@@ -102,7 +102,11 @@ export const LOCATION_DEFINITION: FieldDefinition = {
       initialPlacement: "bottom"
     });
 
-    useEffect(calculatePosition, [calculatePosition]);
+    useEffect(() => {
+      if (ref.current && ref.current.offsetHeight > 0 && ref.current.offsetWidth > 0) {
+        calculatePosition();
+      }
+    }, [calculatePosition, ref, ref.current?.offsetHeight, ref.current?.offsetWidth]);
 
     const RenderedValue = ({value}: {value: TypeLocation}) =>
       LOCATION_DEFINITION.renderValue(value, false);
@@ -119,7 +123,7 @@ export const LOCATION_DEFINITION: FieldDefinition = {
         <Popover
           contentProps={{
             ref: ref as RefObject<HTMLDivElement | null>,
-            style: targetPosition ?? {display: "none"}
+            style: targetPosition ?? {opacity: 0}
           }}
           open
           onClose={onClose}
