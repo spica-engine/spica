@@ -33,6 +33,54 @@ function getLocationType(value: any): "geojson" | "latlng" | "unknown" | "none" 
   return "unknown";
 }
 
+function normalizeCoordinate(num: number) {
+  // If already in range, return as-is
+  if (num >= -180 && num <= 180) {
+    return num;
+  }
+
+  if (num < -180) {
+    // Calculate how far below -180 we are
+    const offset = -180 - num;
+
+    // Determine which 360-block we're in (0-indexed)
+    const blockIndex = Math.floor(offset / 360);
+
+    // Position within the current block (0-359)
+    const positionInBlock = offset % 360;
+
+    // Even blocks (0, 2, 4...): reflect upward from -180 toward 180
+    // Odd blocks (1, 3, 5...): reflect downward from 180 toward -180
+    if (blockIndex % 2 === 0) {
+      // Even block: -180 → 180 (reflecting upward)
+      return -1 * (-180 + positionInBlock);
+    } else {
+      // Odd block: 180 → -180 (reflecting downward)
+      return 180 - positionInBlock;
+    }
+  } else {
+    // num > 180
+    // Calculate how far above 180 we are
+    const offset = num - 180;
+
+    // Determine which 360-block we're in (0-indexed)
+    const blockIndex = Math.floor(offset / 360);
+
+    // Position within the current block (0-359)
+    const positionInBlock = offset % 360;
+
+    // Even blocks (0, 2, 4...): reflect downward from 180 toward -180
+    // Odd blocks (1, 3, 5...): reflect upward from -180 toward 180
+    if (blockIndex % 2 === 0) {
+      // Even block: 180 → -180 (reflecting downward)
+      return -1 * (180 - positionInBlock);
+    } else {
+      // Odd block: -180 → 180 (reflecting upward)
+      return -180 + positionInBlock;
+    }
+  }
+}
+
 export const LOCATION_DEFINITION: FieldDefinition = {
   kind: FieldKind.Location,
   display: {label: "Location", icon: "mapMarker"},
@@ -60,9 +108,21 @@ export const LOCATION_DEFINITION: FieldDefinition = {
   buildCreationFormApiProperty: buildBaseProperty,
   getDisplayValue: value => {
     const locationType = getLocationType(value);
+    const lng = locationType === "geojson" ? value?.coordinates?.[1] : value?.lng;
+    const lat = locationType === "geojson" ? value?.coordinates?.[0] : value?.lat;
+    const normalizedLng = normalizeCoordinate(lng);
+    const normalizedLat = lat;
+
+    let coordinates = [normalizedLat, normalizedLng];
+    if (normalizedLat > 90 || normalizedLat < -90) {
+      coordinates = [normalizedLng, normalizedLat];
+    }
+
+    const normalizedValue = {type: "Point", coordinates};
+    
     const normalizedLocationByType = {
-      geojson: value,
-      latlng: {type: "Point", coordinates: [value?.lat, value?.lng]},
+      geojson: normalizedValue,
+      latlng: normalizedValue,
       none: null,
       unknown: DEFAULT_COORDINATES
     };
@@ -71,7 +131,13 @@ export const LOCATION_DEFINITION: FieldDefinition = {
   getSaveReadyValue: value => {
     const displayValue = LOCATION_DEFINITION.getDisplayValue(value);
     if (displayValue === null) return null;
-    return {lat: displayValue.coordinates[0], lng: displayValue.coordinates[1]};
+    if (displayValue.coordinates[1] > 90 || displayValue.coordinates[1] < -90) {
+      return {
+        type: "Point",
+        coordinates: [displayValue.coordinates[1], displayValue.coordinates[0]]
+      };
+    }
+    return {type: "Point", coordinates: [displayValue.coordinates[0], displayValue.coordinates[1]]};
   },
   capabilities: {indexable: true},
   renderValue: value => {
