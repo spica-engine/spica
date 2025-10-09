@@ -51,7 +51,10 @@ export default function Bucket() {
   const [searchQuery, setSearchQuery] = useState<BucketDataQueryWithIdType | undefined>();
   const {bucketId} = useParams<{bucketId: string}>();
   
-  // Use RTK Query hooks
+  useEffect(() => {
+    setSearchQuery(undefined);
+  }, [bucketId]);
+  
   const { data: buckets = [] } = useGetBucketsQuery();
   const { 
     data: bucketDataResponse,
@@ -65,7 +68,11 @@ export default function Bucket() {
       limit: 25,
       sort: { _id: -1 }
     },
-    { skip: !bucketId }
+    { 
+      skip: !bucketId,
+      refetchOnMountOrArgChange: 10,
+      refetchOnFocus: true,
+    }
   );
   
   const bucketData = bucketDataResponse ? {
@@ -106,8 +113,6 @@ export default function Bucket() {
   );
   
   const loadMoreBucketData = useCallback(async () => {
-    // For now, implement basic pagination
-    // In a full implementation, you'd need to track current page and load more
     console.log('Load more data - implement pagination logic here');
   }, []);
 

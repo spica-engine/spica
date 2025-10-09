@@ -19,7 +19,7 @@ import React, {
   useState,
   type Ref
 } from "react";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {DndProvider, useDrag, useDragLayer, useDrop} from "react-dnd";
 import {getEmptyImage, HTML5Backend} from "react-dnd-html5-backend";
 import type {ReorderableItemGroup, TypeNavigatorItems} from "../SideBar";
@@ -61,6 +61,43 @@ type TypeCustomDragLayerProps = {
 };
 
 type TypeReorderableListProps = ReorderableItemGroup;
+
+// Custom hooks to eliminate code duplication
+const useNavigatorItemSelection = (itemId: string) => {
+  const params = useParams();
+  return useMemo(() => {
+    return params.bucketId === itemId;
+  }, [params.bucketId, itemId]);
+};
+
+const useNavigatorItemClick = (item: any, isCurrentlySelected: boolean) => {
+  const navigate = useNavigate();
+  return useCallback(() => {
+    if (!isCurrentlySelected) {
+      navigate(`/${item?.section}/${item?._id}`);
+    }
+  }, [navigate, item?.section, item?._id, isCurrentlySelected]);
+};
+
+// Component for accordion navigator items to eliminate duplication
+const AccordionNavigatorItem = ({item, index}: {item: any; index: number}) => {
+  const isCurrentlySelected = useNavigatorItemSelection(item._id);
+  const handleClick = useNavigatorItemClick(item, isCurrentlySelected);
+
+  return (
+    <div className={styles.accordionItemContainer} key={index}>
+      <NavigatorItem
+        key={item?._id}
+        label={item?.title}
+        prefix={{children: <Icon name={"help"} />}}
+        suffixIcons={[{name: "dragHorizontalVariant"}]}
+        onClick={handleClick}
+        bucket={item}
+        className={`${styles.navigatorItem} ${isCurrentlySelected ? styles.selected : ""}`}
+      />
+    </div>
+  );
+};
 
 const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
   return (
@@ -127,7 +164,6 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
       <div style={{transform, WebkitTransform: transform}}>
         <NavigatorItem
           label={item?.title ?? ""}
-          //prefixIcon={item?.icon}
           suffixIcons={[{name: "dragHorizontalVariant"}]}
           className={styles.navigatorItem}
           bucket={item}
@@ -144,9 +180,12 @@ const DraggableItem = ({
   justDropped,
   setJustDropped
 }: TypeDraggableItemProps) => {
-  const navigate = useNavigate();
   const innerRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  // Use custom hooks to eliminate code duplication
+  const isCurrentlySelected = useNavigatorItemSelection(item._id);
+  const handleClick = useNavigatorItemClick(item, isCurrentlySelected);
 
   const [{handlerId}, drop] = useDrop({
     accept: "NAVIGATOR_ITEM",
@@ -164,8 +203,6 @@ const DraggableItem = ({
     }
   });
 
-  // We intentionally use useDragLayer instead useDrag for isDragging
-  // because useDrag's isDragging can be inconsistent. useDragLayer is more reliable.
   const {dragLayerItem, isDragging} = useDragLayer(monitor => ({
     dragLayerItem: monitor.getItem(),
     isDragging: monitor.isDragging()
@@ -192,13 +229,10 @@ const DraggableItem = ({
       data-handler-id={handlerId}
       ref={innerRef}
       label={item?.title ?? ""}
-      //prefixIcon={item?.icon}
       style={{opacity}}
       suffixIcons={[{name: "dragHorizontalVariant", ref: buttonRef}]}
-      onClick={() => {
-        navigate(`/${item?.section}/${item?._id}`);
-      }}
-      className={`${styles.navigatorItem} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} `}
+      onClick={handleClick}
+      className={`${styles.navigatorItem} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} ${isCurrentlySelected ? styles.selected : ""}`}
       bucket={item as BucketType}
     />
   );
@@ -235,7 +269,6 @@ const ReorderableList = ({items, onOrderChange, completeOrderChange}: TypeReorde
 };
 
 const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps) => {
-  const navigate = useNavigate();
   const groupObjectsByCategory = (object: {items: any[]}) => {
     const groupedMap = new Map<string, TypeNavigatorItems[]>();
     const ungrouped: TypeNavigatorItems[] = [];
@@ -259,25 +292,13 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
   const {grouped, ungrouped} = groupObjectsByCategory({
     items: items?.items ?? []
   });
+  
   const accordionItems = grouped?.map(item => ({
     title: helperUtils.capitalize(item?.[0]?.category ?? ""),
     content: (
       <>
         {item.map((item: any, index: number) => (
-          <div className={styles.accordionItemContainer} key={index}>
-            <NavigatorItem
-              key={item?._id}
-              label={item?.title}
-              prefix={{children: <Icon name={"help"} />}} //item?.icon
-              //prefixIcon={item?.icon}
-              suffixIcons={[{name: "dragHorizontalVariant"}]}
-              onClick={() => {
-                navigate(`/${item?.section}/${item?._id}`);
-              }}
-              bucket={item}
-              className={styles.navigatorItem}
-            />
-          </div>
+          <AccordionNavigatorItem key={item._id} item={item} index={index} />
         ))}
       </>
     ),
@@ -301,8 +322,6 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
             className={`${styles.accordion} accordion`}
             openClassName={styles.accordionOpen}
             gap={0}
-
-            //TODO: add hoverable api
           />
         ))}
 
