@@ -1,7 +1,7 @@
 import * as Yup from "yup";
 import {FieldKind, type FieldFormState} from "./types";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import type {Property} from "src/services/bucketService";
+import type {Property} from "src/store/api/bucketApi";
 export type ValidationSchema = Yup.ObjectSchema<Record<string, unknown>>;
 
 export const TITLE_REGEX = /^(?!(_id)$)([a-z_0-9]*)+$/; // lowercase, digits, underscore, not _id

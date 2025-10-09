@@ -23,7 +23,7 @@ import {useNavigate} from "react-router-dom";
 import {DndProvider, useDrag, useDragLayer, useDrop} from "react-dnd";
 import {getEmptyImage, HTML5Backend} from "react-dnd-html5-backend";
 import type {ReorderableItemGroup, TypeNavigatorItems} from "../SideBar";
-import type {BucketType} from "src/services/bucketService";
+import type {BucketType} from "src/store/api/bucketApi";
 import AddBucketPopup from "../../../../components/molecules/add-bucket-popup/AddBucketPopup";
 
 type TypeNavigatorProps = {

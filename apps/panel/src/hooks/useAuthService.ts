@@ -25,7 +25,6 @@ function useAuthService() {
 
   const login = useCallback(
     async (identifier: string, password: string) => {
-      console.log("Attempting login with identifier:", identifier);
       
       try {
         const loginData = await loginMutation({ identifier, password }).unwrap();

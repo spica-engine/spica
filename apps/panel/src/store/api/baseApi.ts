@@ -8,7 +8,8 @@ const baseQuery = fetchBaseQuery({
   prepareHeaders: (headers, { getState }) => {
     // Get token from Redux store instead of localStorage
     const token = selectParsedToken(getState() as RootState);
-
+    console.log("Using token from Redux store:", token);
+    
     if (token) {
       headers.set('Authorization', `IDENTITY ${token}`);
     }
@@ -24,7 +25,6 @@ const baseQueryWithReauth: BaseQueryFn<
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {
-    // Clear token from Redux store (which also clears localStorage)
     api.dispatch(clearToken());
     api.dispatch({ type: 'NAVIGATE', payload: '/passport/identify' });
   }

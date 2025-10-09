@@ -1,7 +1,7 @@
 import React, {type FC, memo, useState} from "react";
 import styles from "./NavigatorItem.module.scss";
 import BucketNavigatorPopup from "../bucket-navigator-popup/BucketNavigatorPopup";
-import type {BucketType} from "src/services/bucketService";
+import type {BucketType} from "src/store/api/bucketApi";
 import {Text, Icon, FluidContainer, type TypeFluidContainer, type IconName} from "oziko-ui-kit";
 import Button from "../../atoms/button/Button";
 

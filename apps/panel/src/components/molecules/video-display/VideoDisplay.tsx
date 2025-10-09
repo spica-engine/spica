@@ -1,6 +1,7 @@
-import {FlexElement} from "oziko-ui-kit";
+import {FlexElement, Button} from "oziko-ui-kit";
 import styles from "./VideoDisplay.module.scss";
 import {memo, type FC} from "react";
+import useAuthService from "../../../hooks/useAuthService";
 
 type TypeVideoDisplay = {
   width?: string;
@@ -17,8 +18,14 @@ const VideoDisplay: FC<TypeVideoDisplay> = ({
   title = "Simple Identity Management + Angular | Spica Examples 2",
   className
 }) => {
+  const { logout } = useAuthService();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
-    <FlexElement dimensionX={"fill"}>
+    <FlexElement dimensionX={"fill"} direction="vertical" gap={10}>
       <iframe
         className={`${styles.video} ${className}`}
         width={width}
@@ -29,6 +36,14 @@ const VideoDisplay: FC<TypeVideoDisplay> = ({
         referrerPolicy="strict-origin-when-cross-origin"
         allowFullScreen
       ></iframe>
+      <Button
+        onClick={handleLogout}
+        variant="outlined"
+        color="danger"
+        className={styles.logoutButton}
+      >
+        Logout
+      </Button>
     </FlexElement>
   );
 };
