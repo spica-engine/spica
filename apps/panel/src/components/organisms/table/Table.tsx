@@ -18,7 +18,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import useScrollDirectionLock from "../../../hooks/useScrollDirectionLock";
 import Loader from "../../../components/atoms/loader/Loader";
 
-type TypeDataColumn = {
+export type TypeDataColumn = {
   header: string | ReactNode;
   key: string;
   id: string;

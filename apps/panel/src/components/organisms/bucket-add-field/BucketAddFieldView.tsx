@@ -41,7 +41,7 @@ type InnerFieldProps = {
   forbiddenFieldNames: string[];
 };
 
-const iconsMap: Record<Exclude<PopupType, "add-field">, IconName> = {
+const iconsMap: Record<Exclude<PopupType, "add-field" | "edit-field">, IconName> = {
   "edit-inner-field": "pencil",
   "add-inner-field": "plus"
 };

@@ -49,6 +49,12 @@ type BucketContextType = {
     requiredField?: string,
     primaryField?: string
   ) => Promise<BucketType>;
+  updateBucketField: (
+    bucket: BucketType,
+    updatedField: Property,
+    required?: boolean,
+    primary?: boolean
+  ) => Promise<BucketType>;
   updateBucketLimitation: (bucket: BucketType) => Promise<void>;
   updateBucketLimitationFields: (
     bucket: BucketType,
@@ -331,6 +337,26 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [apiCreateBucketField]
   );
 
+  const updateBucketField = useCallback(
+    async (bucket: BucketType, updatedField: Property, required?: boolean, primary?: boolean) => {
+      if (!bucket.properties[updatedField.key]) return;
+      const modifiedBucket = {
+        ...bucket,
+        properties: {...bucket.properties, [updatedField.key]: updatedField},
+        required:
+          !bucket.required?.includes(updatedField.key) && required
+            ? [...(bucket.required || []), updatedField.key]
+            : bucket.required,
+        primary: (bucket.primary !== updatedField.key && primary) ? updatedField.key : bucket.primary
+      };
+      return apiCreateBucketField(modifiedBucket).then(result => {
+        apiGetBuckets();
+        return result;
+      });
+    },
+    [apiCreateBucketField]
+  );
+
   const updateBucketLimitation = useCallback(
     async (bucket: BucketType) => {
       const hasSettings = Boolean(bucket.documentSettings);
@@ -407,6 +433,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketLimitationFields,
       createBucket,
       createBucketField,
+      updateBucketField,
       buckets,
       bucketData,
       updateBucketRuleLoading: apiUpdateBucketRuleLoading,
