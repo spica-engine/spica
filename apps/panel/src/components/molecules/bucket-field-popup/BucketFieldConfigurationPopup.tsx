@@ -2,6 +2,7 @@ import {
   memo,
   useEffect,
   useId,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -15,6 +16,7 @@ import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
 import {useBucketFieldPopups} from "./BucketFieldPopupsContext";
 import type {PopupType} from "./BucketFieldPopupsContext";
 import type {FieldFormState} from "../../../domain/fields/types";
+import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
 
 type BucketFieldConfigurationPopupProps = {
   selectedType: FieldKind | null;
@@ -27,6 +29,8 @@ type BucketFieldConfigurationPopupProps = {
   popupType?: PopupType;
   forbiddenFieldNames?: string[];
   popoverClassName?: string;
+  popoverContentStyles?: CSSProperties;
+  externalBucketAddFieldRef?: React.RefObject<HTMLDivElement>;
 };
 
 const BucketFieldConfigurationPopup = ({
@@ -39,10 +43,18 @@ const BucketFieldConfigurationPopup = ({
   iconName,
   popupType,
   forbiddenFieldNames,
-  popoverClassName
+  popoverClassName,
+  popoverContentStyles,
+  externalBucketAddFieldRef
 }: BucketFieldConfigurationPopupProps) => {
   const innerContainerRef = useRef<HTMLDivElement>(null);
   const bucketAddFieldRef = useRef<HTMLDivElement>(null);
+
+  useImperativeHandle(
+    externalBucketAddFieldRef ?? {current: null},
+    () => bucketAddFieldRef.current as HTMLDivElement
+  );
+
   const [innerFieldStyles, setInnerFieldStyles] = useState<CSSProperties>({});
 
   const {setBucketFieldPopups, bucketFieldPopups} = useBucketFieldPopups();
@@ -104,7 +116,6 @@ const BucketFieldConfigurationPopup = ({
     };
   }, [isOpen, innerFieldStyles]);
 
-
   const handleClose = (e?: MouseEvent) => {
     setBucketFieldPopups(bucketFieldPopups.filter(popup => popup.id !== id));
     onClose(e);
@@ -121,7 +132,8 @@ const BucketFieldConfigurationPopup = ({
         ref: bucketAddFieldRef,
         style: {
           transform: `translate(${offsetX}px, ${offsetY}px)`,
-          ...bucketAddFieldPopoverStyles
+          ...bucketAddFieldPopoverStyles,
+          ...(popoverContentStyles ?? {})
         }
       }}
       content={

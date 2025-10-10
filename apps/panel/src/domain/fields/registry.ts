@@ -328,14 +328,16 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
   buildCreationFormApiProperty: form => {
     const base = buildBaseProperty(form);
     const fv = form.fieldValues;
-    const multipleSelectionTab = form.multipleSelectionTab;
+    const ms = form.multipleSelectionTab;
+    const pv = form.presetValues
     return {
       ...base,
       items: {
-        type: multipleSelectionTab?.multipleSelectionType,
-        enum: Array.isArray(fv.chip) && fv.chip.length ? fv.chip : undefined
+        type: ms?.multipleSelectionType,
+        enum: pv.enumeratedValues,
+        pattern: pv.regularExpression
       },
-      maxItems: multipleSelectionTab?.maxItems
+      maxItems: ms?.maxItems
     };
   },
   applyPresetLogic: (form, oldValues) => applyPresetLogic(FieldKind.String, form, oldValues),

@@ -2,7 +2,7 @@ import {createContext, useContext, useState, type CSSProperties, type ReactNode}
 import {FieldKind} from "../../../domain/fields";
 import type {FieldFormState} from "../../../domain/fields/types";
 
-export type PopupType = "add-field" | "edit-inner-field" | "add-inner-field";
+export type PopupType = "edit-field" | "add-field" | "edit-inner-field" | "add-inner-field";
 export type BucketFieldPopup = {
   id: string;
   innerFieldStyles?: CSSProperties;

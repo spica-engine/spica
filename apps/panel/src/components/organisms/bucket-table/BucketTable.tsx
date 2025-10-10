@@ -1,7 +1,7 @@
-import {Button, Checkbox, Icon, Popover, type IconName} from "oziko-ui-kit";
-import Table from "../table/Table";
+import {Button, Checkbox, Icon, Popover, useAdaptivePosition, type IconName} from "oziko-ui-kit";
+import Table, {type TypeDataColumn} from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useCallback, useMemo, type RefObject} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {useBucket} from "../../../contexts/BucketContext";
@@ -9,9 +9,10 @@ import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
-import type { Property } from "src/services/bucketService";
+import type {Property} from "src/services/bucketService";
+import BucketFieldConfigurationPopup from "../../../components/molecules/bucket-field-popup/BucketFieldConfigurationPopup";
 
-export type ColumnType = {
+export type ColumnType = Partial<Property> & {
   id: string;
   header: any;
   key: string;
@@ -49,6 +50,8 @@ type ColumnHeaderProps = {
   onSortAsc?: () => void;
   onSortDesc?: () => void;
   onDelete?: () => void;
+  type?: FieldKind | null;
+  property?: Property;
 };
 
 type ColumnMeta = {
@@ -70,13 +73,108 @@ const ColumnHeader = ({
   title,
   icon,
   showDropdownIcon,
-  onEdit,
   onMoveRight,
   onMoveLeft,
   onSortAsc,
   onSortDesc,
-  onDelete
+  onDelete,
+  type,
+  property
 }: ColumnHeaderProps) => {
+  const [isFieldEditPopupOpen, setIsFieldEditPopupOpen] = useState(false);
+  const {buckets, bucketData, updateBucketField} = useBucket();
+
+  const bucket = useMemo(
+    () => buckets.find(i => i._id === bucketData?.bucketId),
+    [buckets, bucketData?.bucketId]
+  );
+
+  const handleSaveAndClose = useCallback(
+    (values: FieldFormState) => {
+      if (!bucket) return;
+      console.log("Updating field with values:", {values, property, bucket});
+
+      if (bucket.primary === property?.key && !values.configurationValues.primaryField) {
+        // Trying to unset primary field
+        // The validation should be handled from the popup, this is just a temporary safeguard
+        // We gonna remove this later
+        alert("You must set another field as primary before unsetting this field.");
+        return;
+      }
+
+      const fieldProperty = FIELD_REGISTRY[type as FieldKind]?.buildCreationFormApiProperty(values);
+      const {requiredField, primaryField} = values.configurationValues;
+      if (fieldProperty) {
+        fieldProperty.key = property?.key || property?.title;
+      }
+      return updateBucketField(bucket, fieldProperty as Property, requiredField, primaryField);
+    },
+    [bucket, updateBucketField]
+  );
+
+  const forbiddenFieldNames = useMemo(() => {
+    if (!bucket) return [];
+    return Object.values(bucket.properties || {}).map(i => i.title).filter(k => k !== property?.title);
+  }, [bucket]);
+
+  const onEdit = useCallback(() => {
+    setIsFieldEditPopupOpen(true);
+  }, []);
+
+  const fieldEditPopoverRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const {targetPosition, calculatePosition} = useAdaptivePosition({
+    containerRef,
+    targetRef: fieldEditPopoverRef,
+    initialPlacement: "leftStart"
+  });
+
+  useEffect(calculatePosition, [
+    calculatePosition,
+    fieldEditPopoverRef.current,
+    isFieldEditPopupOpen
+  ]);
+
+  const field = FIELD_REGISTRY[type!];
+  const defaultFormValues = field?.creationFormDefaultValues!;
+
+  const formValues = {
+    ...defaultFormValues,
+    type,
+    fieldValues: {
+      ...defaultFormValues?.fieldValues,
+      title: property?.title,
+      description: property?.description ?? defaultFormValues?.fieldValues?.description,
+      maximum: property?.maximum ?? defaultFormValues?.fieldValues?.maximum,
+      minimum: property?.minimum ?? defaultFormValues?.fieldValues?.minimum,
+    },
+    configurationValues: {
+      ...defaultFormValues?.configurationValues,
+      requiredField: bucket?.required?.includes(property?.key),
+      uniqueValues: property?.options?.unique || false,
+      primaryField: bucket?.primary === property?.key,
+      index: property?.options?.index || false,
+      translate: property?.options?.translate || false
+    },
+    presetValues: defaultFormValues?.presetValues
+      ? {
+          ...defaultFormValues?.presetValues,
+          makeEnumerated: type === FieldKind.Multiselect ? true : undefined,
+          definePattern: property?.items?.pattern ? true : undefined,
+          enumeratedValues: property?.items?.enum,
+          pattern: property?.items?.pattern
+        }
+      : undefined,
+    multipleSelectionTab: defaultFormValues?.multipleSelectionTab
+      ? {
+          ...defaultFormValues?.multipleSelectionTab,
+          multipleSelectionType: property?.items.type,
+          maxItems: property?.maxItems
+        }
+      : undefined,
+    defaultValue: property?.default
+  };
+
   return (
     <>
       <div className={styles.columnHeaderText}>
@@ -84,26 +182,46 @@ const ColumnHeader = ({
         <span>{title || "\u00A0"}</span>
       </div>
       {showDropdownIcon && (
-        <Popover
-          content={
-            <ColumnActionsMenu
-              onEdit={onEdit}
-              onMoveRight={onMoveRight}
-              onMoveLeft={onMoveLeft}
-              onSortAsc={onSortAsc}
-              onSortDesc={onSortDesc}
-              onDelete={onDelete}
-            />
-          }
-          contentProps={{
-            className: styles.popover
-          }}
-          placement="topStart"
-        >
-          <Button variant="icon">
-            <Icon name="chevronDown" size="lg" />
-          </Button>
-        </Popover>
+        <>
+          <Popover
+            portalClassName={isFieldEditPopupOpen ? styles.noOpacity : undefined}
+            content={
+              <ColumnActionsMenu
+                onEdit={onEdit}
+                onMoveRight={onMoveRight}
+                onMoveLeft={onMoveLeft}
+                onSortAsc={onSortAsc}
+                onSortDesc={onSortDesc}
+                onDelete={onDelete}
+              />
+            }
+            contentProps={{
+              ref: containerRef,
+              className: styles.popover
+            }}
+            placement="topStart"
+          >
+            <Button variant="icon">
+              <Icon name="chevronDown" size="lg" />
+            </Button>
+          </Popover>
+          <BucketFieldPopupsProvider>
+            <BucketFieldConfigurationPopup
+              isOpen={isFieldEditPopupOpen}
+              selectedType={type ?? null}
+              onClose={() => setIsFieldEditPopupOpen(false)}
+              onSaveAndClose={handleSaveAndClose}
+              popupType="edit-field"
+              forbiddenFieldNames={forbiddenFieldNames}
+              popoverClassName={styles.fieldConfigPopover}
+              popoverContentStyles={targetPosition ?? undefined}
+              externalBucketAddFieldRef={fieldEditPopoverRef as React.RefObject<HTMLDivElement>}
+              initialValues={formValues as FieldFormState}
+            >
+              <div />
+            </BucketFieldConfigurationPopup>
+          </BucketFieldPopupsProvider>
+        </>
       )}
     </>
   );
@@ -125,6 +243,7 @@ const NewFieldHeader = memo(() => {
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
+      //console.log("Creating field with values:", {values, kind, fieldProperty});
       return createBucketField(
         bucket,
         fieldProperty as Property,
@@ -158,12 +277,21 @@ const NewFieldHeader = memo(() => {
   );
 });
 
+
+// DELETE THIS COMPONENT WHILE MERGING TO THE PANEL, AS A COMPONENT ALREADY EXISTS IN THE PANEL
+// FOR THE SELECT HEADERS, WE NEEDED IT HERE FOR THE TIME BEING TO AVOID ERRORS
+const SelectHeader = () => (
+  <div className={styles.selectHeader}>
+    <Checkbox className={styles.headerCheckbox} />
+  </div>
+);
+
 const defaultColumns: ColumnType[] = [
   {
     id: "0",
-    header: <ColumnHeader />,
+    header: <SelectHeader />,
     key: "select",
-    type: FieldKind.Boolean,
+    type: FieldKind.Boolean as any,
     width: "41px",
     fixedWidth: true,
     headerClassName: styles.columnHeader,
@@ -218,6 +346,8 @@ function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnTyp
           title={col.header}
           icon={col.type && COLUMN_ICONS[col.type]}
           showDropdownIcon={col.showDropdownIcon}
+          type={col.type}
+          property={col as Property}
         />
       ),
       headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,

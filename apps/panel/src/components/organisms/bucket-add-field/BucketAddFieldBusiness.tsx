@@ -57,7 +57,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   const currentPopup = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
   const {fieldKind: fieldType, popupType, initialValues} = currentPopup;
   const fieldDefinition = FIELD_REGISTRY[fieldType as FieldKind] as FieldDefinition;
-  const isInnerField = popupType !== "add-field";
+  const isInnerField = popupType !== "add-field" && popupType !== "edit-field";
 
   const {
     fieldValues: initialMainFormProperties,
@@ -182,6 +182,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       return {...prev, [formValuesAttribute]: values};
     });
 
+    console.log("formValues:", formValues);
   return (
     <BucketAddFieldView
       className={className}

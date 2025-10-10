@@ -17,9 +17,9 @@ export const DefaultInputs = {
     type: "string",
     title: "Default Date",
     enum: [
-      {label: "No Default", value: ""},
-      {label: "Current Date", value: "now"},
-      {label: "Custom Date", value: "custom"}
+      {label: "None", value: ""},
+      {label: "Created At", value: ":created_at"},
+      {label: "Updated At", value: ":updated_at"}
     ]
   }
 } as const;

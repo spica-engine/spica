@@ -74,12 +74,12 @@ export default function Bucket() {
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
+      ...columns.map(i => ({...i, header: i.title, key: i.key || i.title, showDropdownIcon: true}))
     ] as ColumnType[];
   }, [bucket]);
 
   const searchableColumns = formattedColumns
-    .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
+    .filter(({type}) => ["string", "textarea", "richtext"].includes(type as unknown as string))
     .map(({key}) => key);
 
   const defaultVisibleColumns = useMemo(
