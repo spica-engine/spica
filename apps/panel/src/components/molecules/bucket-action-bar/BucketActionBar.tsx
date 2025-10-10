@@ -4,7 +4,7 @@ import {Button, FlexElement, Icon, Popover, Checkbox} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
-import type {BucketType} from "src/services/bucketService";
+import type {BucketType} from "../../../store/api/bucketApi";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 
 type BucketActionBarProps = {

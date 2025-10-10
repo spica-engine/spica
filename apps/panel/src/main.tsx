@@ -5,7 +5,6 @@ import "oziko-ui-kit/dist/index.css";
 import "./styles.scss";
 import {AuthProvider} from "./contexts/AuthContext";
 import {DrawerProvider} from "./contexts/DrawerContext";
-import {BucketProvider} from "./contexts/BucketContext";
 import {StorageProvider} from "./contexts/StorageContext";
 import { Provider } from 'react-redux';
 import { store } from './store';
@@ -16,11 +15,9 @@ root.render(
      <Provider store={store}>
     <DrawerProvider>
       <AuthProvider>
-        <BucketProvider>
           <StorageProvider>
             <AppRouter />
           </StorageProvider>
-        </BucketProvider>
       </AuthProvider>
     </DrawerProvider>
         </Provider>

@@ -12,7 +12,7 @@ import {
 } from "oziko-ui-kit";
 import styles from "./Login.module.scss";
 import Logo from "../../components/atoms/logo/Logo";
-import useAuthService from "../../services/authService";
+import useAuthService from "../../hooks/useAuthService";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import {Navigate} from "react-router-dom";
 
@@ -26,6 +26,13 @@ const Login = () => {
     validateOnChange: false,
     validateOnBlur: false
   });
+
+  const getErrorMessage = (error: any): string => {
+    if (typeof error === 'string') return error;
+    if (!error || typeof error !== 'object') return 'Login failed';
+    
+    return error.data?.message || error.error || error.message || 'Login failed';
+  };
 
   useEffect(() => {
     fetchStrategies();
@@ -54,7 +61,9 @@ const Login = () => {
             <div className={styles.errorsContainer}>
               {loginError && (
                 <div className={styles.errorBox}>
-                  <div className={styles.errorText}>{loginError}</div>
+                  <div className={styles.errorText}>
+                    {getErrorMessage(loginError)}
+                  </div>
                 </div>
               )}
             </div>

@@ -4,12 +4,12 @@ import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
-import {useBucket} from "../../../contexts/BucketContext";
+import {useGetBucketsQuery, useGetBucketDataQuery, useCreateBucketFieldMutation, type BucketType} from "../../../store/api/bucketApi";
 import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
-import type { Property } from "src/services/bucketService";
+import type { Property } from "src/store/api/bucketApi";
 
 export type ColumnType = {
   id: string;
@@ -109,28 +109,45 @@ const ColumnHeader = ({
   );
 };
 
-const NewFieldHeader = memo(() => {
-  const {buckets, bucketData, createBucketField} = useBucket();
+const NewFieldHeader = memo(({bucketId}: {bucketId: string}) => {
+  const {data: buckets = []} = useGetBucketsQuery();
+  const [createBucketField] = useCreateBucketFieldMutation();
 
   const bucket = useMemo(
-    () => buckets.find(i => i._id === bucketData?.bucketId),
-    [buckets, bucketData?.bucketId]
+    () => buckets.find(i => i._id === bucketId),
+    [buckets, bucketId]
   );
 
   const handleSaveAndClose = useCallback(
-    (values: FieldFormState, kind: FieldKind) => {
-      if (!bucket) return;
+    async (values: FieldFormState, kind: FieldKind): Promise<BucketType> => {
+      if (!bucket) {
+        throw new Error('No bucket available');
+      }
 
       const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
-      return createBucketField(
-        bucket,
-        fieldProperty as Property,
-        requiredField ? title : undefined,
-        primaryField ? title : undefined
-      );
+      // Build the modified bucket with new field
+      const modifiedBucket = {
+        ...bucket,
+        properties: {
+          ...bucket.properties,
+          [title]: fieldProperty as Property
+        },
+        // Add to required array if requiredField is true
+        required: requiredField 
+          ? [...(bucket.required || []), title]
+          : bucket.required,
+        // Set as primary if primaryField is true
+        primary: primaryField ? title : bucket.primary
+      };
+
+      const result = await createBucketField(modifiedBucket);
+      if (!result.data) {
+        throw new Error('Failed to create bucket field');
+      }
+      return result.data;
     },
     [bucket, createBucketField]
   );
@@ -158,32 +175,34 @@ const NewFieldHeader = memo(() => {
   );
 });
 
-const defaultColumns: ColumnType[] = [
-  {
-    id: "0",
-    header: <ColumnHeader />,
-    key: "select",
-    type: FieldKind.Boolean,
-    width: "41px",
-    fixedWidth: true,
-    headerClassName: styles.columnHeader,
-    cellClassName: `${styles.selectCell} ${styles.cell}`,
-    resizable: false,
-    fixed: true,
-    selectable: false
-  },
-  {
-    id: "1",
-    header: <NewFieldHeader />,
-    key: "new field",
-    width: "125px",
-    headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,
-    cellClassName: `${styles.newFieldCell} ${styles.cell}`,
-    resizable: false,
-    fixed: true,
-    selectable: false
-  }
-];
+function getDefaultColumns(bucketId: string): ColumnType[] {
+  return [
+    {
+      id: "0",
+      header: <ColumnHeader />,
+      key: "select",
+      type: FieldKind.Boolean,
+      width: "41px",
+      fixedWidth: true,
+      headerClassName: styles.columnHeader,
+      cellClassName: `${styles.selectCell} ${styles.cell}`,
+      resizable: false,
+      fixed: true,
+      selectable: false
+    },
+    {
+      id: "1",
+      header: <NewFieldHeader bucketId={bucketId} />,
+      key: "new field",
+      width: "125px",
+      headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,
+      cellClassName: `${styles.newFieldCell} ${styles.cell}`,
+      resizable: false,
+      fixed: true,
+      selectable: false
+    }
+  ];
+}
 
 // TODO: Refactor this function to render more appropriate UI elements for each field type.
 // Many field types are currently using the generic `renderDefault()`.
@@ -209,6 +228,7 @@ function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
 }
 
 function getFormattedColumns(columns: ColumnType[], bucketId: string): ColumnType[] {
+  const defaultColumns = getDefaultColumns(bucketId);
   return [
     defaultColumns[0],
     ...columns.map((col, index) => ({
