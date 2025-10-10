@@ -115,3 +115,30 @@ export {
 export {
   useBucket,
 } from '../../hooks/useBucket';
+
+export {
+  storageApi,
+  useGetStorageItemsQuery,
+  useGetStorageItemQuery,
+  useUploadFilesMutation,
+  useUpdateStorageItemMutation,
+  useDeleteStorageItemMutation,
+  useUpdateStorageNameMutation,
+  useGetSubResourcesQuery,
+} from './storageApi';
+
+export type {
+  Storage,
+  StorageListResponse,
+  StorageOptions,
+  UploadFilesRequest,
+  UpdateStorageItemRequest,
+  UpdateStorageNameRequest,
+} from './storageApi';
+
+export {
+  useStorageData,
+  useStorageItem,
+} from '../../hooks/useStorageData';
+
+export { default as useStorageService } from '../../hooks/useStorage';

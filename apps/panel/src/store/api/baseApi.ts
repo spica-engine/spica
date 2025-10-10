@@ -6,9 +6,7 @@ import { selectParsedToken, clearToken } from '../slices/authSlice';
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
-    // Get token from Redux store instead of localStorage
     const token = selectParsedToken(getState() as RootState);
-    console.log("Using token from Redux store:", token);
     
     if (token) {
       headers.set('Authorization', `IDENTITY ${token}`);

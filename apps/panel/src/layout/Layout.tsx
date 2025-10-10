@@ -10,27 +10,20 @@ import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
 import { useGetBucketsQuery, useUpdateBucketOrderMutation } from "../store/api/bucketApi";
 import {useRequestTracker} from "../hooks/useRequestTracker";
-import { useSelector } from "react-redux";
 
 const Layout = () => {
   const navigate = useNavigate();
   const [token] = useLocalStorage<string>("token", "");
-  const sliceToken = useSelector((state: any) => state.auth.token);
-  console.log("sliceToken", sliceToken);
   
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
-  // Use RTK Query hooks directly
   const { data: buckets = [], refetch: getBuckets } = useGetBucketsQuery();
-  console.log("buckets", buckets);
   
   const [updateBucketOrder] = useUpdateBucketOrderMutation();
   
-  // Memoize buckets to prevent unnecessary re-renders
   const memoizedBuckets = useMemo(() => buckets, [JSON.stringify(buckets.map(b => b._id))]);
   
-  // Local state for drag-and-drop reordering
   const [localBuckets, setLocalBuckets] = useState(memoizedBuckets);
   
   useEffect(() => {
@@ -49,7 +42,6 @@ const Layout = () => {
       await updateBucketOrder({ bucketId, order });
     } catch (error) {
       console.error('Failed to update bucket order:', error);
-      // Revert to original order on error
       setLocalBuckets(memoizedBuckets);
     }
   };
@@ -99,8 +91,6 @@ const Layout = () => {
     }
   }, [token]);
 
-  // RTK Query automatically fetches data on mount, no need for manual useEffect
-  
   const sideBarElement = (
     <div className={styles.sidebar}>
       <SideBar
