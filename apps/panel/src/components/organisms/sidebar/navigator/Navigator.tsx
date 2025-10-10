@@ -53,6 +53,7 @@ type TypeDraggableItemProps = {
   ref: Ref<HTMLDivElement>;
   justDropped: boolean;
   setJustDropped: React.Dispatch<React.SetStateAction<boolean>>;
+  className?: string;
 };
 
 type TypeCustomDragLayerProps = {
@@ -142,7 +143,8 @@ const DraggableItem = ({
   completeMoving,
   ref,
   justDropped,
-  setJustDropped
+  setJustDropped,
+  className
 }: TypeDraggableItemProps) => {
   const navigate = useNavigate();
   const innerRef = useRef<HTMLDivElement | null>(null);
@@ -198,7 +200,7 @@ const DraggableItem = ({
       onClick={() => {
         navigate(`/${item?.section}/${item?._id}`);
       }}
-      className={`${styles.navigatorItem} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} `}
+      className={`${styles.navigatorItem} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} ${className ?? ""}`}
       bucket={item as BucketType}
     />
   );
@@ -228,6 +230,7 @@ const ReorderableList = ({items, onOrderChange, completeOrderChange}: TypeReorde
           ref={(el: HTMLDivElement) => setItemRef(el, index)}
           justDropped={justDropped}
           setJustDropped={setJustDropped}
+          className={item.isActive ? styles.activeItem : ""}
         />
       ))}
     </DndProvider>
@@ -275,7 +278,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
                 navigate(`/${item?.section}/${item?._id}`);
               }}
               bucket={item}
-              className={styles.navigatorItem}
+              className={`${styles.navigatorItem} ${item?.isActive ? styles.activeItem : ""}`}
             />
           </div>
         ))}

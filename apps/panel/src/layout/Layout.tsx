@@ -16,7 +16,8 @@ const Layout = () => {
   const [token] = useLocalStorage<string>("token", "");
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const {bucketData, buckets, getBuckets, updateBucketOrderOnServer, updateBucketOrderLocally} = useBucket();
+  const {bucketData, buckets, getBuckets, updateBucketOrderOnServer, updateBucketOrderLocally} =
+    useBucket();
 
   const menuItems = getMenuItems(navigate);
 
@@ -30,7 +31,9 @@ const Layout = () => {
       ])
     ),
     bucket: {
-      items: buckets?.map(i => ({...i, section: "bucket"})) ?? [],
+      items:
+        buckets?.map(i => ({...i, section: "bucket", isActive: i._id === bucketData?.bucketId})) ??
+        [],
       onOrderChange: updateBucketOrderLocally,
       completeOrderChange: updateBucketOrderOnServer
     }
@@ -66,7 +69,6 @@ const Layout = () => {
   useEffect(() => {
     getBuckets();
   }, []);
-
 
   const sideBarElement = (
     <div className={styles.sidebar}>
@@ -108,7 +110,12 @@ const Layout = () => {
       </div>
       <div className={styles.main}>
         <div className={styles.toolbar}>
-          <Toolbar bucketId={bucketData?.bucketId} token={token} name={name} onDrawerOpen={openDrawer} />
+          <Toolbar
+            bucketId={bucketData?.bucketId}
+            token={token}
+            name={name}
+            onDrawerOpen={openDrawer}
+          />
         </div>
         <div className={styles.content}>
           <Outlet />
