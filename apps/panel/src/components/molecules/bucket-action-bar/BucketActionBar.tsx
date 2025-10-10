@@ -67,6 +67,15 @@ const BucketActionBar = ({
     [debouncedSearch]
   );
 
+  const {allColumnsVisible, someColumnsVisible} = useMemo(() => {
+    const {_id, ...otherColumnsVisibility} = visibleColumns;
+    const otherColumnsValues = Object.values(otherColumnsVisibility);
+    const allColumnsVisible = otherColumnsValues.every(isVisible => isVisible);
+    const someColumnsVisible =
+      !allColumnsVisible && otherColumnsValues.some(isVisible => isVisible);
+    return {allColumnsVisible, someColumnsVisible};
+  }, [visibleColumns]);
+
   return (
     <div className={styles.container}>
       <SearchBar
@@ -80,7 +89,8 @@ const BucketActionBar = ({
       <FlexElement className={styles.actionBar}>
         <NewBucketEntryDrawer bucket={bucket} />
         <Button
-          className={styles.refreshButton} variant="text"
+          className={styles.refreshButton}
+          variant="text"
           onClick={onRefresh}
           disabled={refreshLoading || searchLoading}
           loading={refreshLoading}
@@ -96,7 +106,8 @@ const BucketActionBar = ({
             <div>
               <Checkbox
                 label="Display All"
-                checked={Object.values(visibleColumns).every(v => v)}
+                checked={allColumnsVisible}
+                indeterminate={someColumnsVisible}
                 onChange={() => toggleColumn()}
                 className={styles.displayAllCheckbox}
               />

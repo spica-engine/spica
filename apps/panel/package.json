@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@reduxjs/toolkit": "^2.9.0",
     "formik": "^2.4.6",
     "jwt-decode": "^4.0.0",
     "monaco-editor": "^0.52.2",
@@ -14,6 +15,7 @@
     "react-dom": "^19.0.0",
     "react-grid-layout": "^1.5.1",
     "react-infinite-scroll-component": "^6.1.0",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^6.11.2",
     "yup": "^1.7.0"
   },
