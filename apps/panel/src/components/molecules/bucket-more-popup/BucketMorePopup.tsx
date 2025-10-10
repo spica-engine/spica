@@ -72,8 +72,6 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
 
   const handleConfigureLimitation = async () => {
     if (!isLimitationChecked) return;
-    // This functionality may need to be implemented in the API
-    console.log('Limitation configuration not yet implemented');
     setBucketLimitationValues(getInitialBucketLimitations());
   };
 

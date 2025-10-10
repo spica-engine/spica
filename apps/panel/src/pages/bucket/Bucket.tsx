@@ -140,10 +140,6 @@ export default function Bucket() {
     }
   }, [bucketId, defaultVisibleColumns, formattedColumns]);
 
-  // useEffect(() => {
-  //   if (!bucketId) return;
-  //   getBucketData(bucketId);
-  // }, [bucketId]);
 
   const handleSearch = useCallback(
     async (search: string) => {

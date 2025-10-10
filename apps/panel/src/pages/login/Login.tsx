@@ -27,6 +27,13 @@ const Login = () => {
     validateOnBlur: false
   });
 
+  const getErrorMessage = (error: any): string => {
+    if (typeof error === 'string') return error;
+    if (!error || typeof error !== 'object') return 'Login failed';
+    
+    return error.data?.message || error.error || error.message || 'Login failed';
+  };
+
   useEffect(() => {
     fetchStrategies();
   }, []);
@@ -55,16 +62,7 @@ const Login = () => {
               {loginError && (
                 <div className={styles.errorBox}>
                   <div className={styles.errorText}>
-                    {typeof loginError === 'string' 
-                      ? loginError 
-                      : 'data' in loginError 
-                        ? (loginError.data as any)?.message || 'Login failed'
-                        : 'error' in loginError
-                          ? loginError.error
-                          : 'message' in loginError
-                            ? loginError.message
-                            : 'Login failed'
-                    }
+                    {getErrorMessage(loginError)}
                   </div>
                 </div>
               )}

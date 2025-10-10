@@ -31,7 +31,6 @@ function useApi<T>({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<T | null>(null);
-  // const [token] = useLocalStorage("token", null);
   const token = useSelector((state: any) => state.auth.token);
 
   const abortInfoRef = useRef<AbortInfo | null>(null);
