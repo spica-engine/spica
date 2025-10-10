@@ -15,9 +15,10 @@
 .columnsPopoverContent {
   z-index: 4;
   > div {
-    max-height: 400px;
+    max-height: 415px;
     overflow-y: auto;
     width: 100%;
+    @include mixins.hideScrollbar;
   }
   min-width: 200px;
 }

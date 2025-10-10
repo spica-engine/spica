@@ -39,6 +39,8 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("local-storage-update", handleCustomEvent as EventListener);
 
+    setStoredValue(readValue());
+
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("local-storage-update", handleCustomEvent as EventListener);
