@@ -22,10 +22,12 @@
   opacity: 0.7;
 }
 
-.textAreaInput {
+.textAreaCellInput {
   height: 100% !important;
+  background: transparent !important;
   textarea {
     resize: none !important;
+    background: transparent;
   }
 }
 
