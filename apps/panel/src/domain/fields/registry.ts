@@ -178,7 +178,7 @@ const NUMBER_DEFINITION: FieldDefinition = {
   }),
   getDefaultValue: property => (property.enum ? property.default || "" : (property.default ?? "")),
   getDisplayValue: value => value ?? undefined,
-  getSaveReadyValue: value => typeof value === "number" ? value : undefined,
+  getSaveReadyValue: value => (typeof value === "number" ? value : undefined),
   validateCreationForm: form => runYupValidation(NUMBER_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Number, properties, required),
@@ -278,10 +278,26 @@ const DATE_DEFINITION: FieldDefinition = {
     defaultValue: undefined,
     type: FieldKind.Date
   }),
-  getDefaultValue: property =>
-    property.default === ":created_at" || property.default === ":updated_at" ? new Date() : "",
-  getDisplayValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
-  getSaveReadyValue: value => (isValidDate(new Date(value)) ? new Date(value) : null),
+  getDefaultValue: property => {
+    const defaultDateLabels: {[key: string]: string} = {
+      ":created_at": "Created At",
+      ":updated_at": "Updated At"
+    };
+    return defaultDateLabels[property.default] || "";
+  },
+  getDisplayValue: value => {
+    const date = new Date(value);
+    return isValidDate(date) ? date : null;
+  },
+  getSaveReadyValue: value => {
+    const defaultDateLabels: {[key: string]: string} = {
+      "Created At": ":created_at",
+      "Updated At": ":updated_at"
+    };
+    if (defaultDateLabels[value]) return new Date();
+    const date = new Date(value);
+    return isValidDate(date) ? date : null;
+  },
   validateCreationForm: form => runYupValidation(DATE_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>
     validateFieldValue(value, FieldKind.Date, properties, required),
@@ -686,7 +702,8 @@ const ARRAY_DEFINITION: FieldDefinition = {
               }
             : property.items,
       id: crypto.randomUUID(),
-      description: undefined
+      description: undefined,
+      className: styles.arrayInput,
     }) as TypeProperty,
   buildCreationFormApiProperty: form => {
     const base = buildBaseProperty(form);
@@ -810,7 +827,8 @@ const OBJECT_DEFINITION: FieldDefinition = {
         type: FieldKind.Object,
         properties: {},
         description: undefined,
-        id: crypto.randomUUID()
+        id: crypto.randomUUID(),
+        className: styles.objectInput
       } as TypeProperty;
     }
 
@@ -867,7 +885,8 @@ const OBJECT_DEFINITION: FieldDefinition = {
       type: FieldKind.Object,
       properties: builtProperties,
       description: undefined,
-      id: crypto.randomUUID()
+      id: crypto.randomUUID(),
+      className: styles.objectInput
     } as TypeProperty;
 
     return result;
@@ -950,7 +969,8 @@ const RICHTEXT_DEFINITION: FieldDefinition = {
       ...property,
       type: FieldKind.Richtext,
       id: crypto.randomUUID(),
-      description: undefined
+      description: undefined,
+      placeholder: "Enter your text here"
     }) as TypeProperty,
   buildCreationFormApiProperty: buildBaseProperty,
   capabilities: {translatable: true}

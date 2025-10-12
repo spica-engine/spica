@@ -20,6 +20,7 @@ import {
   validateValues
 } from "./NewBucketEntryDrawerUtils";
 import {useValueProperties} from "./NewBucketEntryDrawerHooks";
+import {FIELD_REGISTRY} from "../../../domain/fields";
 
 type NewBucketEntryDrawerProps = {
   bucket: BucketType;
@@ -56,7 +57,8 @@ const NewBucketEntryDrawer = ({bucket}: NewBucketEntryDrawerProps) => {
     setErrors((newErrors as TypeInputRepresenterError) || {});
   }, [value, validateValues, formattedProperties, bucket?.required]);
 
-  const normalizedValue = Object.keys(value).length === 0 && value.constructor === Object ? "" : value;
+  const normalizedValue =
+    Object.keys(value).length === 0 && value.constructor === Object ? "" : value;
   const inputRepresentation = useInputRepresenter({
     properties: formattedProperties,
     onChange: setValue,
@@ -83,13 +85,20 @@ const NewBucketEntryDrawer = ({bucket}: NewBucketEntryDrawerProps) => {
       return;
     }
 
+    let normalized: Record<string, any> = {};
+    for (const [key, property] of Object.entries(formattedProperties || {})) {
+      const kind = property.type as keyof typeof FIELD_REGISTRY;
+      const field = FIELD_REGISTRY[kind];
+      const val = field?.getSaveReadyValue(value[key], property);
+      normalized[key] = val;
+    }
+
     const cleaned = Object.fromEntries(
-      Object.entries(value).map(([key, val]) => [
+      Object.entries(normalized).map(([key, val]) => [
         key,
         cleanValueRecursive(val, formattedProperties[key], bucket.required?.includes(key), true)
       ])
     );
-
     try {
       setIsLoading(true);
       const result = await createBucketEntry(bucket._id, cleaned);
