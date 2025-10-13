@@ -1,12 +1,13 @@
 import styles from "./Bucket.module.scss";
-import { useGetBucketsQuery, useGetBucketDataQuery } from "../../store/api/bucketApi";
+import {useGetBucketsQuery, useGetBucketDataQuery} from "../../store/api/bucketApi";
 import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketDataQueryWithIdType, BucketType} from "src/store/api/bucketApi";
+import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import Loader from "../../components/atoms/loader/Loader";
+import {EntrySelectionProvider} from "../../contexts/EntrySelectionContext";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
@@ -47,16 +48,15 @@ function smoothScrollToTop(el: HTMLElement): Promise<void> {
 }
 
 export default function Bucket() {
-
   const [searchQuery, setSearchQuery] = useState<BucketDataQueryWithIdType | undefined>();
   const {bucketId} = useParams<{bucketId: string}>();
-  
+
   useEffect(() => {
     setSearchQuery(undefined);
   }, [bucketId]);
-  
-  const { data: buckets = [] } = useGetBucketsQuery();
-  const { 
+
+  const {data: buckets = []} = useGetBucketsQuery();
+  const {
     data: bucketDataResponse,
     isLoading: bucketDataLoading,
     refetch: refreshBucketData
@@ -66,25 +66,29 @@ export default function Bucket() {
       paginate: true,
       relation: true,
       limit: 25,
-      sort: { _id: -1 }
+      sort: {_id: -1}
     },
-    { 
+    {
       skip: !bucketId,
       refetchOnMountOrArgChange: 10,
-      refetchOnFocus: true,
+      refetchOnFocus: true
     }
   );
-  
-  const bucketData = bucketDataResponse ? {
-    ...bucketDataResponse,
-    bucketId: bucketId!
-  } : null;
 
-  const bucket = useMemo(() => buckets?.find((i: BucketType) => i._id === bucketId), [buckets, bucketId]);
+  const bucketData = bucketDataResponse
+    ? {
+        ...bucketDataResponse,
+        bucketId: bucketId!
+      }
+    : null;
+
+  const bucket = useMemo(
+    () => buckets?.find((i: BucketType) => i._id === bucketId),
+    [buckets, bucketId]
+  );
 
   const [refreshLoading, setRefreshLoading] = useState(false);
   const tableRef = useRef<HTMLElement | null>(null);
-
 
   const formattedColumns: ColumnType[] = useMemo(() => {
     const columns = Object.values(bucket?.properties ?? {});
@@ -128,10 +132,12 @@ export default function Bucket() {
   useEffect(() => {
     if (!bucketId || !formattedColumns.length) return;
 
-    const currentVisibleKeys = Object.keys(visibleColumns as unknown as {[key: string]: boolean} || {});
+    const currentVisibleKeys = Object.keys(
+      (visibleColumns as unknown as {[key: string]: boolean}) || {}
+    );
     const defaultKeys = Object.keys(defaultVisibleColumns);
     const newColumns = defaultKeys.filter(key => !currentVisibleKeys.includes(key));
-    
+
     if (newColumns.length > 0) {
       setVisibleColumns({
         ...visibleColumns,
@@ -140,25 +146,25 @@ export default function Bucket() {
     }
   }, [bucketId, defaultVisibleColumns, formattedColumns]);
 
-
   const handleSearch = useCallback(
     async (search: string) => {
       const trimmed = search.trim();
       const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
-      setSearchQuery(query ? { bucketId: bucketId!, ...query } : undefined);
+      setSearchQuery(query ? {bucketId: bucketId!, ...query} : undefined);
     },
     [bucketId, searchableColumns]
   );
-  
+
   const loadMoreBucketData = useCallback(async () => {
-    console.log('Load more data - implement pagination logic here');
+    console.log("Load more data - implement pagination logic here");
   }, []);
 
   const handleRefresh = useCallback(async () => {
     if (tableRef.current) await smoothScrollToTop(tableRef.current);
     setRefreshLoading(true);
-    await refreshBucketData();
+    const result = await refreshBucketData();
     setRefreshLoading(false);
+    return result;
   }, [bucketId, refreshBucketData]);
 
   const toggleColumn = (key?: string) => {
@@ -181,33 +187,34 @@ export default function Bucket() {
       );
     }
   };
-
   if (formattedColumns.length <= 1 || !bucket) {
     return <Loader />;
   }
 
   return (
-    <div className={styles.container}>
-      <BucketActionBar
-        onSearch={handleSearch}
-        bucket={bucket as BucketType}
-        onRefresh={handleRefresh}
-        columns={formattedColumns}
-        visibleColumns={visibleColumns}
-        toggleColumn={toggleColumn}
-        searchLoading={bucketDataLoading && !isTableLoading}
-        refreshLoading={refreshLoading}
-      />
-      <BucketTable
-        bucketId={bucket._id}
-        columns={filteredColumns}
-        data={bucketData?.data ?? []}
-        onScrollEnd={loadMoreBucketData}
-        totalDataLength={bucketData?.meta?.total ?? 0}
-        maxHeight="88vh"
-        loading={isTableLoading}
-        tableRef={tableRef}
-      />
-    </div>
+    <EntrySelectionProvider>
+      <div className={styles.container}>
+        <BucketActionBar
+          onSearch={handleSearch}
+          bucket={bucket as BucketType}
+          onRefresh={handleRefresh}
+          columns={formattedColumns}
+          visibleColumns={visibleColumns}
+          toggleColumn={toggleColumn}
+          searchLoading={bucketDataLoading && !isTableLoading}
+          refreshLoading={refreshLoading}
+        />
+        <BucketTable
+          bucketId={bucket._id}
+          columns={filteredColumns}
+          data={bucketData?.data ?? []}
+          onScrollEnd={loadMoreBucketData}
+          totalDataLength={bucketData?.meta?.total ?? 0}
+          maxHeight="88vh"
+          loading={isTableLoading}
+          tableRef={tableRef}
+        />
+      </div>
+    </EntrySelectionProvider>
   );
 }
