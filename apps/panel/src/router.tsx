@@ -15,55 +15,35 @@ const router = createBrowserRouter([
     element: <Login />
   },
   {
-    element: <Layout />,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
-        element: (
-          <ProtectedRoute>
-            <Navigate to="dashboard" replace />
-          </ProtectedRoute>
-        )
+        element: <Navigate to="dashboard" replace />
       },
       {
         path: "app",
-        element: (
-          <ProtectedRoute>
-            <App />
-          </ProtectedRoute>
-        )
+        element: <App />
       },
       {
         path: "dashboard",
-        element: (
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        )
+        element: <Home />
       },
       {
         path: "bucket/:bucketId",
-        element: (
-          <ProtectedRoute>
-            <Bucket />
-          </ProtectedRoute>
-        )
+        element: <Bucket />
       },
       {
         path: "passport/identity",
-        element: (
-          <ProtectedRoute>
-            <Identity />
-          </ProtectedRoute>
-        )
+        element: <Identity />
       },
       {
         path: "diagram",
-        element: (
-          <ProtectedRoute>
-            <Diagram />
-          </ProtectedRoute>
-        )
+        element: <Diagram />
       }
     ]
   }
