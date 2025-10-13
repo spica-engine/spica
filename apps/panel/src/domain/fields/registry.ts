@@ -327,7 +327,6 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
   }),
   buildCreationFormApiProperty: form => {
     const base = buildBaseProperty(form);
-    const fv = form.fieldValues;
     const ms = form.multipleSelectionTab;
     const pv = form.presetValues;
     return {
@@ -337,7 +336,7 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
         enum: pv.enumeratedValues,
         pattern: pv.pattern
       },
-      maxItems: ms?.maxItems
+      maxItems: ms?.maxItems === "" ? undefined : ms?.maxItems
     };
   },
   applyPresetLogic: (form, oldValues) => applyPresetLogic(FieldKind.String, form, oldValues),
@@ -481,12 +480,11 @@ const ARRAY_DEFINITION: FieldDefinition = {
       defaultString: "",
       multipleSelectionType: "",
       minItems: "",
-      maxItems: "",
+      maxItems: ""
     },
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
     ),
-    
     type: FieldKind.Array
   }),
   getDefaultValue: property => property.default,
@@ -524,7 +522,7 @@ const ARRAY_DEFINITION: FieldDefinition = {
       },
       enumeratedValues: {
         ...SpecializedInputs.enumeratedValues,
-        valueType: "number",
+        valueType: "string",
         renderCondition: {field: "makeEnumerated", equals: true}
       },
       definePattern: {
@@ -590,17 +588,17 @@ const ARRAY_DEFINITION: FieldDefinition = {
       default: defaultValueMap[fv.arrayType]
     };
 
-    if (pv.enumeratedValues?.length) item.enum = pv.enumeratedValues;
+    if (fv.enumeratedValues?.length) item.enum = fv.enumeratedValues;
     if (pv.pattern?.length) item.pattern = pv.pattern;
-    if (fv.maxNumber != null) item.maximum = fv.maxNumber;
-    if (fv.minNumber != null) item.minimum = fv.minNumber;
+    if (fv.maxNumber != null) item.maximum = fv.maxNumber === "" ? undefined : fv.maxNumber;
+    if (fv.minNumber != null) item.minimum = fv.minNumber === "" ? undefined : fv.minNumber;
 
     if (fv.arrayType === "multiselect") {
       item.items = {
         type: fv.multipleSelectionType,
         enum: Array.isArray(fv.chip) && fv.chip.length ? fv.chip : undefined
       };
-      item.maxItems = fv.maxItems;
+      item.maxItems = fv.maxItems === "" ? undefined : fv.maxItems;
     }
 
     if (fv.arrayType === "object" && Array.isArray(form.innerFields)) {
@@ -617,9 +615,10 @@ const ARRAY_DEFINITION: FieldDefinition = {
 
     return {
       ...base,
-      maxItems: fv.arrayType === "multiselect" ? undefined : (fv.maxItems ?? undefined),
-      minItems: fv.minItems ?? undefined,
-      uniqueItems: fv.uniqueItems ?? undefined,
+      maxItems:
+        fv.arrayType === "multiselect" ? undefined : fv.maxItems === "" ? undefined : fv.maxItems,
+      minItems: (fv.minItems === "" ? undefined : fv.minItems) ?? undefined,
+      uniqueItems: (fv.uniqueItems === "" ? undefined : fv.uniqueItems) ?? undefined,
       items: item
     };
   },
@@ -637,9 +636,14 @@ const ARRAY_DEFINITION: FieldDefinition = {
         enumeratedValues:
           newSelectionType === "string"
             ? form.fieldValues.enumeratedValues.map((v: string | number) => String(v))
-            : form.fieldValues.enumeratedValues
-                .map((v: string | number) => Number(v))
-                .filter((v: number) => !isNaN(v))
+            : newSelectionType === "number"
+              ? form.fieldValues.enumeratedValues
+                  .map((v: string | number) => Number(v))
+                  .filter((v: number) => !isNaN(v))
+              : undefined,
+        makeEnumerated: ["string", "number"].includes(newSelectionType)
+          ? form.fieldValues.makeEnumerated
+          : false
       }
     };
     const updatedFieldProperties = {

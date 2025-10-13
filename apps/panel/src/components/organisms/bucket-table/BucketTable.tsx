@@ -154,7 +154,7 @@ const ColumnHeader = ({
         arrayType: property?.items?.type,
         arrayItemTitle: property?.items?.title,
         arrayItemDescription: property?.items?.description || "",
-        defaultString: property?.items?.default,
+        defaultString: property?.items?.default || "",
         defaultBoolean: property?.items?.default,
         defaultNumber: property?.items?.default || "",
         minNumber: property?.items?.minimum || "",
@@ -169,13 +169,8 @@ const ColumnHeader = ({
               renderCondition: {field: "arrayType", equals: "multiselect"}
             },*/
         minItems: property?.minItems || "",
-        maxItems: property?.maxItems || ""
-        //chip: {
-        //  ...SpecializedInputs.chip,
-        //  renderCondition: {field: "arrayType", equals: "multiselect"}
-        //}
-
-        //makeEnumerated: property?.items?.enum ? true : false,
+        maxItems: property?.maxItems || "",
+        chip: [],//property?.items?.enum || [],
       },
       configurationValues: {
         ...defaultFormValues?.configurationValues,
@@ -190,7 +185,7 @@ const ColumnHeader = ({
         ? {
             ...defaultFormValues?.presetValues,
             makeEnumerated: type === FieldKind.Multiselect ? true : undefined,
-            enumeratedValues: property?.items?.enum,
+            enumeratedValues: property?.items?.enum || [],
             definePattern: type === FieldKind.Array ? Boolean(property?.items?.pattern) : undefined,
             pattern: type === FieldKind.Array ? property?.items?.pattern : undefined
           }
@@ -202,11 +197,10 @@ const ColumnHeader = ({
             maxItems: property?.maxItems
           }
         : undefined,
-      defaultValue: property?.default
+      defaultValue: property?.default || ""
     }),
     [defaultFormValues, property, type, bucket]
   );
-
   return (
     <>
       <div className={styles.columnHeaderText}>

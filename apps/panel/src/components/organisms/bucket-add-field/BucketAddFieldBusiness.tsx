@@ -120,7 +120,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     fieldType,
     isInitialized,
     formValues.multipleSelectionTab?.multipleSelectionType,
-    formValues.fieldValues?.arrayType
+    formValues.fieldValues?.arrayType,
   ]);
 
   const validateForm = useCallback(async () => {
@@ -183,12 +183,12 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   const handleFormValueChange = (
     values: FieldFormState,
     formValuesAttribute: keyof FieldFormState
-  ) =>
+  ) =>{
     setFormValues(prev => {
       return {...prev, [formValuesAttribute]: values};
-    });
+    });}
 
-  //console.log("Rendering BucketAddFieldBusiness", formValues);
+    
   return (
     <BucketAddFieldView
       className={className}

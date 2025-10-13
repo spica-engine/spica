@@ -292,8 +292,6 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     </div>
   );
 
-
-  //console.log("formValues: ", formValues)
   return (
     <FlexElement
       direction="vertical"
