@@ -27,7 +27,9 @@ import yargs from "yargs/yargs";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
-const args = yargs(process.argv.slice(2))
+const yargsInstance = yargs(process.argv.slice(2)) as any;
+
+const args = yargsInstance
   /* TLS Options */
   .options({
     "cert-file": {
