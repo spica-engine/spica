@@ -1,9 +1,9 @@
 import React, { useState, type FC, type ReactNode } from 'react'
 import Confirmation from '../../molecules/confirmation/Confirmation'
-import type {BucketType} from "../../../services/bucketService";
+import type {BucketType} from "../../../store/api/bucketApi";
 import { Icon } from 'oziko-ui-kit';
 import styles from "./DeleteBucket.module.scss"
-import { useBucket } from '../../../contexts/BucketContext';
+import { useDeleteBucketMutation } from '../../../store/api/bucketApi';
 
 type DeleteBucketProps = {
     bucket: BucketType;
@@ -15,7 +15,7 @@ type DeleteBucketProps = {
 }
 
 const DeleteBucket: FC<DeleteBucketProps> = ({ bucket, children }) => {
-    const { deleteBucket } = useBucket();
+    const [deleteBucket] = useDeleteBucketMutation();
     const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
     
     const handleDeleteBucket = async () => {

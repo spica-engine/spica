@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from "react";
-import {useBucket} from "../../contexts/BucketContext";
+import {useGetBucketsQuery} from "../../store/api/bucketApi";
 import styles from "./Diagram.module.scss";
 import ZoomControl from "../../components/molecules/zoom-control/ZoomControl";
 import NodeView from "../../components/molecules/node-view/NodeView";
@@ -14,11 +14,11 @@ import {
 export default function Diagram() {
   const playgroundRef = useRef(null);
 
-  const {getBuckets, buckets} = useBucket();
+  const { data: buckets = [], refetch: getBuckets } = useGetBucketsQuery();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const {nodes, relations} = useBucketConverter(buckets);
+  const {nodes, relations} = useBucketConverter(buckets || null);
   const [currentNodes, setCurrentNodes] = useState(nodes);
 
   useEffect(() => {

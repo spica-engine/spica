@@ -10,7 +10,7 @@ import {
 import styles from "./CategorySelectCreate.module.scss";
 import {memo, useCallback, useMemo, useState} from "react";
 import truncateText from "../../../utils/truncate-text";
-import type {BucketType} from "src/services/bucketService";
+import type {BucketType} from "../../../store/api/bucketApi";
 
 type CategorySelectCreateProps = {
   bucket: BucketType;

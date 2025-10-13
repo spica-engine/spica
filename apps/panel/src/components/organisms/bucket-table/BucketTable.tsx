@@ -4,9 +4,14 @@ import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, useState, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
-import {useBucket} from "../../../contexts/BucketContext";
+import {
+  useGetBucketsQuery,
+  useCreateBucketFieldMutation,
+  type BucketType
+} from "../../../store/api/bucketApi";
 import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
+import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type {Property} from "src/services/bucketService";
@@ -31,10 +36,13 @@ function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
   return arr;
 }
 
+type TypeColumnRole = "select" | "data" | "new-field";
+
 export type ColumnType = {
   id: string;
   header: any;
   key: string;
+  role?: TypeColumnRole;
   type?: FieldKind;
   width?: string;
   deletable?: boolean;
@@ -77,6 +85,7 @@ type ColumnMeta = {
   type?: FieldKind;
   deletable?: boolean;
   id: string;
+  role?: TypeColumnRole;
 };
 
 const COLUMN_ICONS: Record<string, IconName> = Object.values(FieldKind).reduce(
@@ -153,28 +162,96 @@ const ColumnHeader = ({
   );
 };
 
-const NewFieldHeader = memo(() => {
-  const {buckets, bucketData, createBucketField} = useBucket();
+const SelectColumnHeader = ({
+  visibleIds,
+  dataExists
+}: {
+  visibleIds: string[];
+  dataExists: boolean;
+}) => {
+  return dataExists ? (
+    <div className={styles.selectColumnHeader}>
+      <span>
+        <SelectionCheckbox rowId="select-all" visibleIds={visibleIds} />
+      </span>
+    </div>
+  ) : null;
+};
 
-  const bucket = useMemo(
-    () => buckets.find(i => i._id === bucketData?.bucketId),
-    [buckets, bucketData?.bucketId]
+function SelectionCheckbox({rowId, visibleIds}: {rowId: string; visibleIds?: string[]}) {
+  const {selectEntry, deselectEntry, selectedEntries} = useEntrySelection();
+
+  const isHeader = rowId === "select-all";
+  const headerVisibleIds = isHeader ? visibleIds || [] : [];
+  const selectedCount = isHeader
+    ? headerVisibleIds.filter(id => selectedEntries.has(id)).length
+    : undefined;
+  const total = isHeader ? headerVisibleIds.length : undefined;
+
+  const checked = isHeader ? total! > 0 && selectedCount === total : selectedEntries.has(rowId);
+  const indeterminate = isHeader
+    ? !!total && !!selectedCount && selectedCount! > 0 && selectedCount! < total!
+    : false;
+
+  const handleChange = () => {
+    if (isHeader) {
+      // If all are selected, deselect all visible; otherwise select all visible
+      const shouldDeselect = checked;
+      if (shouldDeselect) {
+        headerVisibleIds.forEach(id => deselectEntry(id));
+      } else {
+        headerVisibleIds.forEach(id => selectEntry(id));
+      }
+    } else {
+      if (!checked) selectEntry(rowId);
+      else deselectEntry(rowId);
+    }
+  };
+
+  return (
+    <Checkbox
+      className={styles.checkbox}
+      checked={!!checked}
+      indeterminate={!!indeterminate}
+      onChange={handleChange}
+    />
   );
+}
+
+const NewFieldHeader = memo(({bucketId}: {bucketId: string}) => {
+  const {data: buckets = []} = useGetBucketsQuery();
+  const [createBucketField] = useCreateBucketFieldMutation();
+
+  const bucket = useMemo(() => buckets.find(i => i._id === bucketId), [buckets, bucketId]);
 
   const handleSaveAndClose = useCallback(
-    (values: FieldFormState, kind: FieldKind) => {
-      if (!bucket) return;
+    async (values: FieldFormState, kind: FieldKind): Promise<BucketType> => {
+      if (!bucket) {
+        throw new Error("No bucket available");
+      }
 
       const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
-      return createBucketField(
-        bucket,
-        fieldProperty as Property,
-        requiredField ? title : undefined,
-        primaryField ? title : undefined
-      );
+      // Build the modified bucket with new field
+      const modifiedBucket = {
+        ...bucket,
+        properties: {
+          ...bucket.properties,
+          [title]: fieldProperty as Property
+        },
+        // Add to required array if requiredField is true
+        required: requiredField ? [...(bucket.required || []), title] : bucket.required,
+        // Set as primary if primaryField is true
+        primary: primaryField ? title : bucket.primary
+      };
+
+      const result = await createBucketField(modifiedBucket);
+      if (!result.data) {
+        throw new Error("Failed to create bucket field");
+      }
+      return result.data;
     },
     [bucket, createBucketField]
   );
@@ -202,11 +279,16 @@ const NewFieldHeader = memo(() => {
   );
 });
 
-const defaultColumns: ColumnType[] = [
+const buildDefaultColumns = (
+  visibleIds: string[],
+  dataExists: boolean,
+  bucketId: string
+): ColumnType[] => [
   {
     id: "0",
-    header: <ColumnHeader />,
+    header: <SelectColumnHeader visibleIds={visibleIds} dataExists={dataExists} />,
     key: "select",
+    role: "select",
     type: FieldKind.Boolean,
     width: "41px",
     fixedWidth: true,
@@ -218,8 +300,9 @@ const defaultColumns: ColumnType[] = [
   },
   {
     id: "1",
-    header: <NewFieldHeader />,
+    header: <NewFieldHeader bucketId={bucketId} />,
     key: "new field",
+    role: "new-field",
     width: "125px",
     headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,
     cellClassName: `${styles.newFieldCell} ${styles.cell}`,
@@ -231,7 +314,13 @@ const defaultColumns: ColumnType[] = [
 
 // TODO: Refactor this function to render more appropriate UI elements for each field type.
 // Many field types are currently using the generic `renderDefault()`.
-function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
+function renderCell(
+  cellData: any,
+  rowId: string,
+  type?: FieldKind,
+  deletable?: boolean,
+  role?: TypeColumnRole
+) {
   function renderDefault() {
     return (
       <div className={styles.defaultCell}>
@@ -244,7 +333,14 @@ function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
       </div>
     );
   }
-  if (type === FieldKind.Boolean) return <Checkbox className={styles.checkbox} />;
+  if (type === FieldKind.Boolean) {
+    switch (role) {
+      case "select":
+        return <SelectionCheckbox rowId={rowId} />;
+      default:
+        return <Checkbox className={styles.checkbox} checked={!!cellData} />;
+    }
+  }
   if (type) {
     const formatted = FIELD_REGISTRY[type]?.getFormattedValue?.(cellData);
     if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
@@ -255,11 +351,14 @@ function renderCell(cellData: any, type?: FieldKind, deletable?: boolean) {
 function getFormattedColumns(
   columns: ColumnType[],
   bucketId: string,
+  visibleIds: string[],
+  dataExists: boolean,
   onMoveLeft?: (fieldTitle: string) => void,
   onMoveRight?: (fieldTitle: string) => void,
   onSortAsc?: (fieldTitle: string) => void,
-  onSortDesc?: (fieldTitle: string) => void
+  onSortDesc?: (fieldTitle: string) => void,
 ): ColumnType[] {
+  const defaultColumns = buildDefaultColumns(visibleIds, dataExists, bucketId);
   return [
     defaultColumns[0],
     ...columns.map((col, index) => {
@@ -294,7 +393,10 @@ function getFormattedColumns(
 
 function buildColumnMeta(columns: ColumnType[]): Record<string, ColumnMeta> {
   return Object.fromEntries(
-    columns.map(col => [col.key, {type: col.type, deletable: col.deletable, id: col.id}])
+    columns.map(col => [
+      col.key,
+      {type: col.type, deletable: col.deletable, id: col.id, role: col.role}
+    ])
   );
 }
 function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
@@ -317,7 +419,10 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
         const meta = columnMap[key] || {};
         return [
           key,
-          {id: `${meta.id}-${fullRow._id}`, value: renderCell(value, meta.type, meta.deletable)}
+          {
+            id: `${meta.id}-${fullRow._id}`,
+            value: renderCell(value, fullRow._id, meta.type, meta.deletable, meta.role)
+          }
         ];
       })
     );
@@ -334,6 +439,7 @@ const BucketTable = ({
   bucketId,
   tableRef
 }: BucketTableProps) => {
+
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, [
     ...columns.slice(1).map(i => i.key)
   ]);
@@ -348,8 +454,13 @@ const BucketTable = ({
       const newOrder = moveElement(fieldsOrder, "left", fieldsOrder[oldIndex]);
       setFieldsOrder(newOrder);
     },
-    [columns, bucketId]
+    [columns, bucketId])
+
+    const visibleIds = useMemo(
+    () => (data?.map?.(r => r._id).filter(Boolean) as string[]) || [],
+    [data]
   );
+  const dataExists = data.length > 0;
 
   const onMoveRight = useCallback(
     (fieldTitle: string) => {
@@ -375,8 +486,8 @@ const BucketTable = ({
   );
 
   const formattedColumns = useMemo(
-    () => getFormattedColumns(columns, bucketId, onMoveLeft, onMoveRight, onSortAsc, onSortDesc),
-    [columns, bucketId, onMoveLeft, onMoveRight, onSortAsc, onSortDesc]
+    () => getFormattedColumns(columns, bucketId, visibleIds, dataExists, onMoveLeft, onMoveRight, onSortAsc, onSortDesc),
+    [columns, bucketId, visibleIds, dataExists, onMoveLeft, onMoveRight, onSortAsc, onSortDesc]
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(
