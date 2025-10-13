@@ -7,6 +7,7 @@ import Layout from "./layout/Layout";
 import Bucket from "./pages/bucket/Bucket";
 import Identity from "./pages/identity/Identity";
 import Diagram from "./pages/diagram/Diagram";
+import ProtectedRoute from "./components/guards/ProtectedRoute";
 
 const router = createBrowserRouter([
   {
@@ -18,27 +19,51 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="dashboard" replace />
+        element: (
+          <ProtectedRoute>
+            <Navigate to="dashboard" replace />
+          </ProtectedRoute>
+        )
       },
       {
         path: "app",
-        element: <App />
+        element: (
+          <ProtectedRoute>
+            <App />
+          </ProtectedRoute>
+        )
       },
       {
         path: "dashboard",
-        element: <Home />
+        element: (
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        )
       },
       {
         path: "bucket/:bucketId",
-        element: <Bucket />
+        element: (
+          <ProtectedRoute>
+            <Bucket />
+          </ProtectedRoute>
+        )
       },
       {
         path: "passport/identity",
-        element: <Identity />
+        element: (
+          <ProtectedRoute>
+            <Identity />
+          </ProtectedRoute>
+        )
       },
-         {
+      {
         path: "diagram",
-        element: <Diagram />
+        element: (
+          <ProtectedRoute>
+            <Diagram />
+          </ProtectedRoute>
+        )
       }
     ]
   }
