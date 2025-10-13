@@ -1,7 +1,7 @@
 import {Button, Checkbox, Icon, Popover, type IconName} from "oziko-ui-kit";
 import Table from "../table/Table";
 import styles from "./BucketTable.module.scss";
-import {memo, useCallback, useMemo, type RefObject} from "react";
+import {memo, useCallback, useMemo, useState, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {
@@ -14,7 +14,27 @@ import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/Buck
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
-import type {Property} from "src/store/api/bucketApi";
+import type {Property} from "src/services/bucketService";
+import useLocalStorage from "../../../hooks/useLocalStorage";
+
+function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
+  const index = arr.indexOf(target);
+  if (index === -1) return arr;
+
+  if (direction === "left" && index > 0) {
+    const newArr = [...arr];
+    [newArr[index - 1], newArr[index]] = [newArr[index], newArr[index - 1]];
+    return newArr;
+  }
+
+  if (direction === "right" && index < arr.length - 1) {
+    const newArr = [...arr];
+    [newArr[index], newArr[index + 1]] = [newArr[index + 1], newArr[index]];
+    return newArr;
+  }
+
+  return arr;
+}
 
 type TypeColumnRole = "select" | "data" | "new-field";
 
@@ -45,6 +65,8 @@ type BucketTableProps = {
   bucketId: string;
   loading: boolean;
   tableRef?: RefObject<HTMLElement | null>;
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
 };
 
 type ColumnHeaderProps = {
@@ -52,10 +74,10 @@ type ColumnHeaderProps = {
   icon?: IconName;
   showDropdownIcon?: boolean;
   onEdit?: () => void;
-  onMoveRight?: () => void;
-  onMoveLeft?: () => void;
-  onSortAsc?: () => void;
-  onSortDesc?: () => void;
+  onMoveRight?: (fieldTitle: string) => void;
+  onMoveLeft?: (fieldTitle: string) => void;
+  onSortAsc?: (fieldTitle: string) => void;
+  onSortDesc?: (fieldTitle: string) => void;
   onDelete?: () => void;
 };
 
@@ -86,6 +108,26 @@ const ColumnHeader = ({
   onSortDesc,
   onDelete
 }: ColumnHeaderProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const handleClose = () => setIsOpen(false);
+  const handleOpen = () => setIsOpen(true);
+  const handleMoveRight = useCallback(() => {
+    onMoveRight?.(title!);
+    handleClose();
+  }, [onMoveRight]);
+  const handleMoveLeft = useCallback(() => {
+    onMoveLeft?.(title!);
+    handleClose();
+  }, [onMoveLeft]);
+  const handleSortAsc = useCallback(() => {
+    onSortAsc?.(title!);
+    handleClose();
+  }, [onSortAsc]);
+  const handleSortDesc = useCallback(() => {
+    onSortDesc?.(title!);
+    handleClose();
+  }, [onSortDesc]);
+
   return (
     <>
       <div className={styles.columnHeaderText}>
@@ -94,22 +136,24 @@ const ColumnHeader = ({
       </div>
       {showDropdownIcon && (
         <Popover
+          open={isOpen}
+          onClose={handleClose}
           content={
             <ColumnActionsMenu
               onEdit={onEdit}
-              onMoveRight={onMoveRight}
-              onMoveLeft={onMoveLeft}
-              onSortAsc={onSortAsc}
-              onSortDesc={onSortDesc}
+              onMoveRight={onMoveRight ? handleMoveRight : undefined}
+              onMoveLeft={onMoveLeft ? handleMoveLeft : undefined}
+              onSortAsc={handleSortAsc}
+              onSortDesc={handleSortDesc}
               onDelete={onDelete}
             />
           }
           contentProps={{
             className: styles.popover
           }}
-          placement="topStart"
+          placement="bottom"
         >
-          <Button variant="icon">
+          <Button variant="icon" onClick={handleOpen}>
             <Icon name="chevronDown" size="lg" />
           </Button>
         </Popover>
@@ -308,24 +352,41 @@ function getFormattedColumns(
   columns: ColumnType[],
   bucketId: string,
   visibleIds: string[],
-  dataExists: boolean
+  dataExists: boolean,
+  onMoveLeft?: (fieldTitle: string) => void,
+  onMoveRight?: (fieldTitle: string) => void,
+  onSortAsc?: (fieldTitle: string) => void,
+  onSortDesc?: (fieldTitle: string) => void,
 ): ColumnType[] {
   const defaultColumns = buildDefaultColumns(visibleIds, dataExists, bucketId);
   return [
     defaultColumns[0],
-    ...columns.map((col, index) => ({
-      ...col,
-      header: (
-        <ColumnHeader
-          title={col.header}
-          icon={col.type && COLUMN_ICONS[col.type]}
-          showDropdownIcon={col.showDropdownIcon}
-        />
-      ),
-      headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-      id: `${col.key}-${index}-s${bucketId}`,
-      cellClassName: styles.cell
-    })),
+    ...columns.map((col, index) => {
+      const {header, type, showDropdownIcon} = col;
+      const moveRightAllowed = index !== columns.length - 1 && index !== 0;
+      const moveLeftAllowed = index > 1;
+      const isIdField = index === 0; // in one of the pr's, the id and select fields are specified with their role attributes
+      const icon = COLUMN_ICONS[type as string];
+      return {
+        ...col,
+        header: (
+          <ColumnHeader
+            title={header}
+            icon={icon}
+            showDropdownIcon={showDropdownIcon}
+            onMoveRight={moveRightAllowed ? onMoveRight : undefined}
+            onMoveLeft={moveLeftAllowed ? onMoveLeft : undefined}
+            onSortAsc={onSortAsc}
+            onSortDesc={onSortDesc}
+            onEdit={isIdField ? undefined : () => {}}
+            onDelete={isIdField ? undefined : () => {}}
+          />
+        ),
+        headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
+        id: `${col.key}-${index}-s${bucketId}`,
+        cellClassName: styles.cell
+      };
+    }),
     defaultColumns[1]
   ];
 }
@@ -378,14 +439,55 @@ const BucketTable = ({
   bucketId,
   tableRef
 }: BucketTableProps) => {
-  const visibleIds = useMemo(
+
+  const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, [
+    ...columns.slice(1).map(i => i.key)
+  ]);
+
+  const [sortMeta, setSortMeta] = useLocalStorage<{
+    field: string;
+    direction: "asc" | "desc";
+  } | null>(`${bucketId}-sort-meta`, null);
+  const onMoveLeft = useCallback(
+    (fieldTitle: string) => {
+      const oldIndex = fieldsOrder.indexOf(fieldTitle);
+      const newOrder = moveElement(fieldsOrder, "left", fieldsOrder[oldIndex]);
+      setFieldsOrder(newOrder);
+    },
+    [columns, bucketId])
+
+    const visibleIds = useMemo(
     () => (data?.map?.(r => r._id).filter(Boolean) as string[]) || [],
     [data]
   );
   const dataExists = data.length > 0;
+
+  const onMoveRight = useCallback(
+    (fieldTitle: string) => {
+      const oldIndex = fieldsOrder.indexOf(fieldTitle);
+      const newOrder = moveElement(fieldsOrder, "right", fieldsOrder[oldIndex]);
+      setFieldsOrder(newOrder);
+    },
+    [columns, bucketId]
+  );
+
+  const onSortAsc = useCallback(
+    (fieldTitle: string) => {
+      setSortMeta({field: fieldTitle, direction: "asc"});
+    },
+    [bucketId]
+  );
+
+  const onSortDesc = useCallback(
+    (fieldTitle: string) => {
+      setSortMeta({field: fieldTitle, direction: "desc"});
+    },
+    [bucketId]
+  );
+
   const formattedColumns = useMemo(
-    () => getFormattedColumns(columns, bucketId, visibleIds, dataExists),
-    [columns, bucketId, visibleIds, dataExists]
+    () => getFormattedColumns(columns, bucketId, visibleIds, dataExists, onMoveLeft, onMoveRight, onSortAsc, onSortDesc),
+    [columns, bucketId, visibleIds, dataExists, onMoveLeft, onMoveRight, onSortAsc, onSortDesc]
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(

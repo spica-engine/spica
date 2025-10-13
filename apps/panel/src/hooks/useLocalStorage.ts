@@ -14,6 +14,10 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
 
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
+  useEffect(() => {
+    setStoredValue(readValue());
+  }, [key]);
+
   const setValue = (value: T) => {
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value;

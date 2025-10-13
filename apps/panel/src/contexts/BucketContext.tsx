@@ -206,7 +206,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       const result = await apiGetBucketData(nextbucketDataQuery.bucketId, queryString);
       if (!result) return;
       const existingIds = new Set(bucketData.data.map(item => item._id));
-      const newItems = result.data.filter((item: {_id: string}) => !existingIds.has(item._id));
+      const newItems = (result.data ? result.data : (result ?? [])).filter(
+        (item: {_id: string}) => !existingIds.has(item._id)
+      );
       const newData =
         newItems.length > 0 ? {...bucketData, data: [...bucketData.data, ...newItems]} : bucketData;
       setBucketData(newData);

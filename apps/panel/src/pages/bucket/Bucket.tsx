@@ -51,6 +51,12 @@ export default function Bucket() {
   const [searchQuery, setSearchQuery] = useState<BucketDataQueryWithIdType | undefined>();
   const {bucketId} = useParams<{bucketId: string}>();
 
+  const sortMetaKey = `${bucketId}-sort-meta`;
+  const [sortMeta] = useLocalStorage<{field: string; direction: "asc" | "desc"} | null>(
+    sortMetaKey,
+    null
+  );
+
   useEffect(() => {
     setSearchQuery(undefined);
   }, [bucketId]);
@@ -90,8 +96,17 @@ export default function Bucket() {
   const [refreshLoading, setRefreshLoading] = useState(false);
   const tableRef = useRef<HTMLElement | null>(null);
 
+  const [fieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, []);
+
   const formattedColumns: ColumnType[] = useMemo(() => {
     const columns = Object.values(bucket?.properties ?? {});
+
+    const orderedColumns = fieldsOrder.length
+      ? (fieldsOrder
+          .map(orderKey => columns.find(c => c.title === orderKey))
+          .filter(Boolean) as ColumnType[] as typeof columns)
+      : columns;
+
     return [
       {
         header: "_id",
@@ -103,9 +118,9 @@ export default function Bucket() {
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
+      ...orderedColumns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
     ] as ColumnType[];
-  }, [bucket]);
+  }, [bucket, fieldsOrder]);
 
   const searchableColumns = formattedColumns
     .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
@@ -192,7 +207,7 @@ export default function Bucket() {
   }
 
   return (
-    <EntrySelectionProvider>
+    <EntrySelectionProvider currentBucketId={bucket._id}>
       <div className={styles.container}>
         <BucketActionBar
           onSearch={handleSearch}
