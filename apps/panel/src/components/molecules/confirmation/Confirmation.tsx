@@ -56,7 +56,7 @@ function Confirmation({
         className={styles.header}
       />
       <Modal.Body className={styles.body}>
-        {description && <span>{description}</span>}
+        {description && <span className={styles.descriptionText}>{description}</span>}
         {showInput && (
           <FlexElement gap={5} className={styles.inputContainer}>
             <Icon name="formatQuoteClose" size="md" />
@@ -70,13 +70,13 @@ function Confirmation({
             />
           </FlexElement>
         )}
-        <div className={styles.errorTextContainer}>
-          {error && (
+        {error && (
+          <div className={styles.errorTextContainer}>
             <Text className={styles.errorText} variant="danger">
               {error}
             </Text>
-          )}
-        </div>
+          </div>
+        )}
       </Modal.Body>
       <Modal.Footer
         dimensionX="fill"

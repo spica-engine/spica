@@ -15,7 +15,9 @@ import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type {Property} from "src/services/bucketService";
+import Confirmation from "../../../components/molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
+import {useBucket} from "../../../contexts/BucketContext";
 
 function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
   const index = arr.indexOf(target);
@@ -65,6 +67,7 @@ type BucketTableProps = {
   bucketId: string;
   loading: boolean;
   tableRef?: RefObject<HTMLElement | null>;
+  primaryKey: string;
   onMoveLeft?: () => void;
   onMoveRight?: () => void;
 };
@@ -78,7 +81,7 @@ type ColumnHeaderProps = {
   onMoveLeft?: (fieldTitle: string) => void;
   onSortAsc?: (fieldTitle: string) => void;
   onSortDesc?: (fieldTitle: string) => void;
-  onDelete?: () => void;
+  onDelete?: () => Promise<void | string>;
 };
 
 type ColumnMeta = {
@@ -108,9 +111,37 @@ const ColumnHeader = ({
   onSortDesc,
   onDelete
 }: ColumnHeaderProps) => {
+  const [fieldDeletionError, setFieldDeletionError] = useState<string | undefined>(undefined);
+  const [isFieldDeletionLoading, setIsFieldDeletionLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const handleClose = () => setIsOpen(false);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setFieldDeletionError(undefined);
+  };
   const handleOpen = () => setIsOpen(true);
+
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const openConfirmation = useCallback(() => setIsConfirmationOpen(true), []);
+  const closeConfirmation = useCallback(() => {
+    setIsConfirmationOpen(false);
+    setFieldDeletionError(undefined);
+    handleClose();
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    setFieldDeletionError(undefined);
+    setIsFieldDeletionLoading(true);
+    onDelete?.().then(result => {
+      setIsFieldDeletionLoading(false);
+      if (typeof result === "string") {
+        setFieldDeletionError(result);
+        return;
+      }
+      closeConfirmation();
+    });
+  }, [onDelete]);
+
   const handleMoveRight = useCallback(() => {
     onMoveRight?.(title!);
     handleClose();
@@ -145,7 +176,7 @@ const ColumnHeader = ({
               onMoveLeft={onMoveLeft ? handleMoveLeft : undefined}
               onSortAsc={handleSortAsc}
               onSortDesc={handleSortDesc}
-              onDelete={onDelete}
+              onDelete={onDelete ? openConfirmation : undefined}
             />
           }
           contentProps={{
@@ -157,6 +188,41 @@ const ColumnHeader = ({
             <Icon name="chevronDown" size="lg" />
           </Button>
         </Popover>
+      )}
+      {isConfirmationOpen && (
+        <Confirmation
+          title="DELETE FIELD"
+          description={
+            <>
+              <span>
+                This action will remove the field from bucket entries. Please confirm this action to
+                continue
+              </span>
+              <span>
+                Please type <strong>agree</strong> to confirm deletion.
+              </span>
+            </>
+          }
+          inputPlaceholder="Type Here"
+          confirmLabel={
+            <>
+              <Icon name="delete" />
+              Delete
+            </>
+          }
+          cancelLabel={
+            <>
+              <Icon name="close" />
+              Cancel
+            </>
+          }
+          showInput
+          confirmCondition={val => val === "agree"}
+          onConfirm={confirmDelete}
+          onCancel={closeConfirmation}
+          error={fieldDeletionError}
+          loading={isFieldDeletionLoading}
+        />
       )}
     </>
   );
@@ -351,26 +417,33 @@ function renderCell(
 function getFormattedColumns(
   columns: ColumnType[],
   bucketId: string,
+  handleDeleteField: (fieldKey: string) => Promise<void | string>,
+  primaryKey: string,
   visibleIds: string[],
   dataExists: boolean,
   onMoveLeft?: (fieldTitle: string) => void,
   onMoveRight?: (fieldTitle: string) => void,
   onSortAsc?: (fieldTitle: string) => void,
-  onSortDesc?: (fieldTitle: string) => void,
+  onSortDesc?: (fieldTitle: string) => void
 ): ColumnType[] {
   const defaultColumns = buildDefaultColumns(visibleIds, dataExists, bucketId);
   return [
     defaultColumns[0],
     ...columns.map((col, index) => {
+      const handleDelete = () => handleDeleteField(col.key);
+      const isIdField = index === 0; // in one of the pr's, the id and select fields are specified with their role attributes
+      const isPrimaryField = col.key === primaryKey;
       const {header, type, showDropdownIcon} = col;
       const moveRightAllowed = index !== columns.length - 1 && index !== 0;
       const moveLeftAllowed = index > 1;
-      const isIdField = index === 0; // in one of the pr's, the id and select fields are specified with their role attributes
       const icon = COLUMN_ICONS[type as string];
       return {
         ...col,
         header: (
           <ColumnHeader
+            title={col.header}
+            icon={col.type && COLUMN_ICONS[col.type]}
+            showDropdownIcon={col.showDropdownIcon}
             title={header}
             icon={icon}
             showDropdownIcon={showDropdownIcon}
@@ -379,7 +452,7 @@ function getFormattedColumns(
             onSortAsc={onSortAsc}
             onSortDesc={onSortDesc}
             onEdit={isIdField ? undefined : () => {}}
-            onDelete={isIdField ? undefined : () => {}}
+            onDelete={isIdField || isPrimaryField ? undefined : handleDelete}
           />
         ),
         headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
@@ -437,8 +510,10 @@ const BucketTable = ({
   maxHeight,
   loading,
   bucketId,
-  tableRef
+  tableRef,
+  primaryKey
 }: BucketTableProps) => {
+  const {handleDeleteField} = useBucket();
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, [
     ...columns.slice(1).map(i => i.key)
@@ -454,9 +529,10 @@ const BucketTable = ({
       const newOrder = moveElement(fieldsOrder, "left", fieldsOrder[oldIndex]);
       setFieldsOrder(newOrder);
     },
-    [columns, bucketId])
+    [columns, bucketId]
+  );
 
-    const visibleIds = useMemo(
+  const visibleIds = useMemo(
     () => (data?.map?.(r => r._id).filter(Boolean) as string[]) || [],
     [data]
   );
@@ -486,8 +562,31 @@ const BucketTable = ({
   );
 
   const formattedColumns = useMemo(
-    () => getFormattedColumns(columns, bucketId, visibleIds, dataExists, onMoveLeft, onMoveRight, onSortAsc, onSortDesc),
-    [columns, bucketId, visibleIds, dataExists, onMoveLeft, onMoveRight, onSortAsc, onSortDesc]
+    () =>
+      getFormattedColumns(
+        columns,
+        bucketId,
+        handleDeleteField,
+        primaryKey,
+        visibleIds,
+        dataExists,
+        onMoveLeft,
+        onMoveRight,
+        onSortAsc,
+        onSortDesc
+      ),
+    [
+      columns,
+      bucketId,
+      handleDeleteField,
+      primaryKey,
+      visibleIds,
+      dataExists,
+      onMoveLeft,
+      onMoveRight,
+      onSortAsc,
+      onSortDesc
+    ]
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(

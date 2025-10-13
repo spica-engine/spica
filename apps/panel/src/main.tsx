@@ -6,20 +6,23 @@ import "./styles.scss";
 import {AuthProvider} from "./contexts/AuthContext";
 import {DrawerProvider} from "./contexts/DrawerContext";
 import {StorageProvider} from "./contexts/StorageContext";
-import { Provider } from 'react-redux';
-import { store } from './store';
+import {Provider} from "react-redux";
+import {store} from "./store";
+import {BucketProvider} from "./contexts/BucketContext";
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 root.render(
   <StrictMode>
-     <Provider store={store}>
-    <DrawerProvider>
-      <AuthProvider>
-          <StorageProvider>
-            <AppRouter />
-          </StorageProvider>
-      </AuthProvider>
-    </DrawerProvider>
-        </Provider>
+    <Provider store={store}>
+      <DrawerProvider>
+        <AuthProvider>
+          <BucketProvider>
+            <StorageProvider>
+              <AppRouter />
+            </StorageProvider>
+          </BucketProvider>
+        </AuthProvider>
+      </DrawerProvider>
+    </Provider>
   </StrictMode>
 );

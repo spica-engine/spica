@@ -213,7 +213,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           inputPlaceholder="Type Here"
           description={
             <>
-              <p className={styles.confirmText}>This action will permanently delete the history.</p>
+              <span className={styles.confirmText}>This action will permanently delete the history.</span>
               <span>
                 Please type <strong>Delete History</strong> to confirm deletion.
               </span>

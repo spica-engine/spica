@@ -158,6 +158,11 @@ export const useBucketService = () => {
     deduplicateRequests: false
   });
 
+  const {request: deleteFieldRequest} = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
   const apiGetBucketData = useCallback(
     (bucketId: string, queryString?: string) => {
       return fetchBucketData({
@@ -322,6 +327,16 @@ export const useBucketService = () => {
     [bucketLimitationRequest]
   );
 
+  const apiDeleteBucketField = useCallback(
+    (modifiedBucket: BucketType) => {
+      return deleteFieldRequest({
+        endpoint: `/api/bucket/${modifiedBucket._id}`,
+        body: modifiedBucket
+      });
+    },
+    [deleteFieldRequest]
+  );
+
   return {
     apiGetBucketData,
     apiGetBuckets: fetchBuckets,
@@ -337,6 +352,7 @@ export const useBucketService = () => {
     apiUpdatebucketLimitiationFields,
     apiCreateBucket,
     apiCreateBucketField,
+    apiDeleteBucketField,
     apiDeleteBucketEntry,
     apiBuckets,
     apiBucketData,
@@ -347,6 +363,6 @@ export const useBucketService = () => {
     apiDeleteBucketHistoryError,
     apiUpdateBucketLimitationFieldsLoading,
     apiUpdateBucketLimitationFieldsError,
-    apiCreateBucketFieldError
+    apiCreateBucketFieldError,
   };
 };
