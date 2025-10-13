@@ -3,7 +3,7 @@ import styles from "./SideBar.module.scss";
 import {Icon, type IconName} from "oziko-ui-kit";
 import Navigator, {type TypeNavigatorHeader} from "./navigator/Navigator";
 import Logo from "../../atoms/logo/Logo";
-import type {BucketType} from "src/services/bucketService";
+import type {BucketType} from "src/store/api/bucketApi";
 
 export type TypeMenuItems = {
   name?: string;

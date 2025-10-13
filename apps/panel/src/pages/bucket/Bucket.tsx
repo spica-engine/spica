@@ -1,5 +1,5 @@
 import styles from "./Bucket.module.scss";
-import {useBucket} from "../../contexts/BucketContext";
+import {useGetBucketsQuery, useGetBucketDataQuery} from "../../store/api/bucketApi";
 import {useParams} from "react-router-dom";
 import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
@@ -7,6 +7,7 @@ import BucketActionBar from "../../components/molecules/bucket-action-bar/Bucket
 import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import Loader from "../../components/atoms/loader/Loader";
+import {EntrySelectionProvider} from "../../contexts/EntrySelectionContext";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
@@ -14,11 +15,11 @@ const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
     paginate: true,
     relation: true,
     limit: 25,
-    filter: JSON.stringify({
+    filter: {
       $or: searchableColumns.map(col => ({
         [col]: {$regex: escapeForRegex(searchText), $options: "i"}
       }))
-    })
+    }
   }) as const;
 
 function smoothScrollToTop(el: HTMLElement): Promise<void> {
@@ -47,26 +48,65 @@ function smoothScrollToTop(el: HTMLElement): Promise<void> {
 }
 
 export default function Bucket() {
-  const [refreshLoading, setRefreshLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<BucketDataQueryWithIdType | undefined>();
   const {bucketId} = useParams<{bucketId: string}>();
-  const {
-    buckets,
-    bucketData,
-    getBucketData,
-    loadMoreBucketData,
-    bucketDataLoading,
-    refreshBucketData
-  } = useBucket();
+
+  const sortMetaKey = `${bucketId}-sort-meta`;
+  const [sortMeta] = useLocalStorage<{field: string; direction: "asc" | "desc"} | null>(
+    sortMetaKey,
+    null
+  );
 
   useEffect(() => {
-    if (!bucketId) return;
-    getBucketData(bucketId);
+    setSearchQuery(undefined);
   }, [bucketId]);
 
-  const bucket = useMemo(() => buckets?.find(i => i._id === bucketId), [buckets, bucketId]);
+  const {data: buckets = []} = useGetBucketsQuery();
+  const {
+    data: bucketDataResponse,
+    isLoading: bucketDataLoading,
+    refetch: refreshBucketData
+  } = useGetBucketDataQuery(
+    searchQuery || {
+      bucketId: bucketId!,
+      paginate: true,
+      relation: true,
+      limit: 25,
+      sort: {_id: -1}
+    },
+    {
+      skip: !bucketId,
+      refetchOnMountOrArgChange: 10,
+      refetchOnFocus: true
+    }
+  );
+
+  const bucketData = bucketDataResponse
+    ? {
+        ...bucketDataResponse,
+        bucketId: bucketId!
+      }
+    : null;
+
+  const bucket = useMemo(
+    () => buckets?.find((i: BucketType) => i._id === bucketId),
+    [buckets, bucketId]
+  );
+
+  const [refreshLoading, setRefreshLoading] = useState(false);
+  const tableRef = useRef<HTMLElement | null>(null);
+
+  const [fieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, []);
 
   const formattedColumns: ColumnType[] = useMemo(() => {
     const columns = Object.values(bucket?.properties ?? {});
+
+    const orderedColumns = fieldsOrder.length
+      ? (fieldsOrder
+          .map(orderKey => columns.find(c => c.title === orderKey))
+          .filter(Boolean) as ColumnType[] as typeof columns)
+      : columns;
+
     return [
       {
         header: "_id",
@@ -78,99 +118,69 @@ export default function Bucket() {
         fixed: true,
         selectable: false
       },
-      ...columns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
+      ...orderedColumns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
     ] as ColumnType[];
-  }, [bucket]);
+  }, [bucket, fieldsOrder]);
 
   const searchableColumns = formattedColumns
     .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
     .map(({key}) => key);
 
-  const handleSearch = useCallback(
-    async (search: string) => {
-      const trimmed = search.trim();
-      const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
-      await getBucketData(bucketId as string, query as unknown as BucketDataQueryWithIdType);
-    },
-    [bucketId, searchableColumns, getBucketData]
-  );
-
-  const isTableLoading = useMemo(() => !(formattedColumns.length > 1), [formattedColumns]);
-
-  const tableRef = useRef<HTMLElement | null>(null);
-
-  const handleRefresh = useCallback(async () => {
-    if (tableRef.current) await smoothScrollToTop(tableRef.current);
-    setRefreshLoading(true);
-    await refreshBucketData();
-    setRefreshLoading(false);
-  }, [bucketId, refreshBucketData]);
-
-  if (formattedColumns.length <= 1 || !bucket) {
-    return <Loader />;
-  }
-
-  return (
-    <BucketWithVisibleColumns
-      bucket={bucket}
-      formattedColumns={formattedColumns as ColumnType[]}
-      bucketData={bucketData}
-      handleScrollEnd={loadMoreBucketData}
-      bucketDataLoading={bucketDataLoading}
-      isTableLoading={isTableLoading}
-      handleSearch={handleSearch}
-      handleRefresh={handleRefresh}
-      refreshLoading={refreshLoading}
-      tableRef={tableRef}
-    />
-  );
-}
-
-type BucketWithVisibleColumnsProps = {
-  bucket: BucketType;
-  formattedColumns: ColumnType[];
-  bucketData: any;
-  handleScrollEnd: () => void;
-  bucketDataLoading: boolean;
-  isTableLoading: boolean;
-  handleSearch: (search: string) => Promise<void>;
-  handleRefresh: () => Promise<void>;
-  refreshLoading: boolean;
-  tableRef: React.RefObject<HTMLElement | null>;
-};
-
-function BucketWithVisibleColumns({
-  bucket,
-  formattedColumns,
-  bucketData,
-  handleScrollEnd,
-  bucketDataLoading,
-  isTableLoading,
-  handleSearch,
-  handleRefresh,
-  refreshLoading,
-  tableRef
-}: BucketWithVisibleColumnsProps) {
   const defaultVisibleColumns = useMemo(
     () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
     [formattedColumns]
   );
 
+  const visibleColumnsStorageKey = `${bucketId}-visible-columns`;
   const [visibleColumns, setVisibleColumns] = useLocalStorage<{[key: string]: boolean}>(
-    `${bucket._id}-visible-columns`,
+    visibleColumnsStorageKey,
     defaultVisibleColumns
   );
 
-  useEffect(() => {
-    if (Object.keys(defaultVisibleColumns).length > Object.keys(visibleColumns).length) {
-      setVisibleColumns(defaultVisibleColumns);
-    }
-  }, [defaultVisibleColumns, visibleColumns]);
-
   const filteredColumns = useMemo(
-    () => formattedColumns.filter(i => visibleColumns?.[i.key]),
+    () => formattedColumns.filter(column => visibleColumns?.[column.key]),
     [formattedColumns, visibleColumns]
   );
+
+  const isTableLoading = useMemo(() => !(formattedColumns.length > 1), [formattedColumns]);
+
+  useEffect(() => {
+    if (!bucketId || !formattedColumns.length) return;
+
+    const currentVisibleKeys = Object.keys(
+      (visibleColumns as unknown as {[key: string]: boolean}) || {}
+    );
+    const defaultKeys = Object.keys(defaultVisibleColumns);
+    const newColumns = defaultKeys.filter(key => !currentVisibleKeys.includes(key));
+
+    if (newColumns.length > 0) {
+      setVisibleColumns({
+        ...visibleColumns,
+        ...Object.fromEntries(newColumns.map(key => [key, true]))
+      });
+    }
+  }, [bucketId, defaultVisibleColumns, formattedColumns]);
+
+  const handleSearch = useCallback(
+    async (search: string) => {
+      const trimmed = search.trim();
+      const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
+      setSearchQuery(query ? {bucketId: bucketId!, ...query} : undefined);
+    },
+    [bucketId, searchableColumns]
+  );
+
+  const loadMoreBucketData = useCallback(async () => {
+    console.log("Load more data - implement pagination logic here");
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    if (tableRef.current) await smoothScrollToTop(tableRef.current);
+    setRefreshLoading(true);
+    const result = await refreshBucketData();
+    setRefreshLoading(false);
+    return result;
+  }, [bucketId, refreshBucketData]);
 
   const toggleColumn = (key?: string) => {
     if (key) {
@@ -181,40 +191,46 @@ function BucketWithVisibleColumns({
       return;
     }
 
-    const hasHidden = Object.values(visibleColumns).some(v => !v);
-    if (hasHidden) {
-      setVisibleColumns({...defaultVisibleColumns});
+    const hasHiddenColumns = Object.values(visibleColumns).some(isVisible => !isVisible);
+
+    if (hasHiddenColumns) {
+      setVisibleColumns(defaultVisibleColumns);
     } else {
-      setVisibleColumns({
-        ...Object.fromEntries(Object.keys(defaultVisibleColumns).map(k => [k, false])),
-        _id: true
-      });
+      // Hide all columns except _id
+      setVisibleColumns(
+        Object.fromEntries(formattedColumns.map(col => [col.key, col.key === "_id"]))
+      );
     }
   };
+  if (formattedColumns.length <= 1 || !bucket) {
+    return <Loader />;
+  }
 
   return (
-    <div className={styles.container}>
-      <BucketActionBar
-        onSearch={handleSearch}
-        bucket={bucket as BucketType}
-        onRefresh={handleRefresh}
-        columns={filteredColumns}
-        visibleColumns={visibleColumns}
-        toggleColumn={toggleColumn}
-        searchLoading={bucketDataLoading && !isTableLoading}
-        refreshLoading={refreshLoading}
-      />
-      <BucketTable
-        bucketId={bucket._id}
-        columns={filteredColumns}
-        data={bucketData?.data ?? []}
-        onScrollEnd={handleScrollEnd}
-        totalDataLength={bucketData?.meta?.total ?? 0}
-        maxHeight="88vh"
-        loading={isTableLoading}
-        tableRef={tableRef}
-        primaryKey={bucket.primary || "_id"}
-      />
-    </div>
+    <EntrySelectionProvider currentBucketId={bucket._id}>
+      <div className={styles.container}>
+        <BucketActionBar
+          onSearch={handleSearch}
+          bucket={bucket as BucketType}
+          onRefresh={handleRefresh}
+          columns={formattedColumns}
+          visibleColumns={visibleColumns}
+          toggleColumn={toggleColumn}
+          searchLoading={bucketDataLoading && !isTableLoading}
+          refreshLoading={refreshLoading}
+        />
+        <BucketTable
+          bucketId={bucket._id}
+          columns={filteredColumns}
+          data={bucketData?.data ?? []}
+          onScrollEnd={loadMoreBucketData}
+          totalDataLength={bucketData?.meta?.total ?? 0}
+          maxHeight="88vh"
+          loading={isTableLoading}
+          tableRef={tableRef}
+          primaryKey={bucket.primary || "_id"}
+        />
+      </div>
+    </EntrySelectionProvider>
   );
 }

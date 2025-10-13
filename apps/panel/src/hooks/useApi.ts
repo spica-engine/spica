@@ -1,6 +1,7 @@
 import axios, { type AxiosRequestHeaders } from "axios";
 import { useCallback, useMemo, useRef, useState } from "react";
 import useLocalStorage from "./useLocalStorage";
+import { useSelector } from "react-redux";
 
 type ApiRequestOptions = {
   endpoint: string;
@@ -30,7 +31,7 @@ function useApi<T>({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<T | null>(null);
-  const [token] = useLocalStorage("token", null);
+  const token = useSelector((state: any) => state.auth.token);
 
   const abortInfoRef = useRef<AbortInfo | null>(null);
 

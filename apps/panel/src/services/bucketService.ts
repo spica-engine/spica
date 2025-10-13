@@ -133,6 +133,15 @@ export const useBucketService = () => {
     method: "put"
   });
 
+  const {
+    request: bucketLimitationRequest,
+    loading: apiUpdateBucketLimitationFieldsLoading,
+    error: apiUpdateBucketLimitationFieldsError
+  } = useApi({
+    endpoint: "",
+    method: "put"
+  });
+
   const {request: postRequest} = useApi<BucketType>({
     endpoint: "/api/bucket",
     method: "post"
@@ -143,13 +152,10 @@ export const useBucketService = () => {
     method: "put"
   });
 
-  const {
-    request: bucketLimitationRequest,
-    loading: apiUpdateBucketLimitationFieldsLoading,
-    error: apiUpdateBucketLimitationFieldsError
-  } = useApi({
+  const {request: deleteBucketEntry} = useApi<BucketDataType>({
     endpoint: "",
-    method: "put"
+    method: "delete",
+    deduplicateRequests: false
   });
 
   const {request: deleteFieldRequest} = useApi({
@@ -292,6 +298,15 @@ export const useBucketService = () => {
     [postRequest]
   );
 
+  const apiDeleteBucketEntry = useCallback(
+    (entryId: string, bucketId: string) => {
+      return deleteBucketEntry({
+        endpoint: `/api/bucket/${bucketId}/data/${entryId}`,
+      });
+    },
+    [deleteBucketEntry]
+  );
+
   const apiUpdatebucketLimitiation = useCallback(
     async (bucketId: string, body: BucketType) => {
       return await bucketLimitationRequest({
@@ -338,6 +353,7 @@ export const useBucketService = () => {
     apiCreateBucket,
     apiCreateBucketField,
     apiDeleteBucketField,
+    apiDeleteBucketEntry,
     apiBuckets,
     apiBucketData,
     apiUpdateBucketRuleLoading,

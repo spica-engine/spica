@@ -7,6 +7,7 @@ import Layout from "./layout/Layout";
 import Bucket from "./pages/bucket/Bucket";
 import Identity from "./pages/identity/Identity";
 import Diagram from "./pages/diagram/Diagram";
+import ProtectedRoute from "./components/guards/ProtectedRoute";
 
 const router = createBrowserRouter([
   {
@@ -14,7 +15,11 @@ const router = createBrowserRouter([
     element: <Login />
   },
   {
-    element: <Layout />,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -36,7 +41,7 @@ const router = createBrowserRouter([
         path: "passport/identity",
         element: <Identity />
       },
-         {
+      {
         path: "diagram",
         element: <Diagram />
       }
