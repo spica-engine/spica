@@ -100,10 +100,11 @@
 }
 
 .defaultError {
-  position: absolute;
-  bottom: 15px;
+  position: relative;
+  bottom: 0;
   left: 10px;
-  max-width: calc(100% - 155px);
+  max-width: 200px;
+  padding-bottom: var(--padding-xl);
 }
 
 .innerFieldsError {

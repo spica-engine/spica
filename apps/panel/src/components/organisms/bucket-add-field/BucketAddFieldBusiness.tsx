@@ -110,12 +110,18 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   ]);
 
   useEffect(() => {
-    if (fieldType !== "multiselect" || !isInitialized) return;
+    if ((fieldType !== FieldKind.Multiselect && fieldType !== FieldKind.Array) || !isInitialized)
+      return;
     const {updatedForm, updatedFieldProperties} =
       fieldDefinition.applySelectionTypeLogic?.(formValues, mainFormProperties) ?? {};
     setFormValues(updatedForm ?? formValues);
     setMainFormProperties(updatedFieldProperties ?? mainFormProperties);
-  }, [fieldType, isInitialized, formValues.multipleSelectionTab?.multipleSelectionType]);
+  }, [
+    fieldType,
+    isInitialized,
+    formValues.multipleSelectionTab?.multipleSelectionType,
+    formValues.fieldValues?.arrayType
+  ]);
 
   const validateForm = useCallback(async () => {
     setApiError(null);
@@ -182,7 +188,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       return {...prev, [formValuesAttribute]: values};
     });
 
-    console.log("formValues:", formValues);
+  //console.log("Rendering BucketAddFieldBusiness", formValues);
   return (
     <BucketAddFieldView
       className={className}

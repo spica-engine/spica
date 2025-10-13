@@ -30,7 +30,7 @@ export const ValidationInputs = {
   minItems: {type: "number", title: "Min Items"},
   maxItems: {type: "number", title: "Max Items"},
   definePattern: {type: "boolean", title: "Define Pattern", size: "extra-small"},
-  regularExpression: {type: "string", title: "Regex"}
+  pattern: {type: "string", title: "Regex"}
 } as const;
 
 export const SpecializedInputs = {
@@ -88,8 +88,8 @@ export const PresetPanel = {
     renderCondition: {field: "makeEnumerated", equals: true},
   },
   definePattern: ValidationInputs.definePattern,
-  regularExpression: {
-    ...ValidationInputs.regularExpression,
+  pattern: {
+    ...ValidationInputs.pattern,
     renderCondition: {field: "definePattern", equals: true}
   }
 } as const;

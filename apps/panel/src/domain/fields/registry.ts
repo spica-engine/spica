@@ -329,13 +329,13 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
     const base = buildBaseProperty(form);
     const fv = form.fieldValues;
     const ms = form.multipleSelectionTab;
-    const pv = form.presetValues
+    const pv = form.presetValues;
     return {
       ...base,
       items: {
         type: ms?.multipleSelectionType,
         enum: pv.enumeratedValues,
-        pattern: pv.regularExpression
+        pattern: pv.pattern
       },
       maxItems: ms?.maxItems
     };
@@ -412,11 +412,12 @@ const RELATION_DEFINITION: FieldDefinition = {
   buildCreationFormApiProperty: form => {
     const base = buildBaseProperty(form);
     const fv = form.fieldValues;
+    const cv = form.configurationValues;
     return {
       ...base,
       relationType: fv.relationType,
       bucketId: fv.bucket,
-      dependent: fv.dependent || undefined
+      dependent: cv.dependent || undefined
     };
   },
   getFormattedValue: v => {
@@ -475,14 +476,17 @@ const ARRAY_DEFINITION: FieldDefinition = {
       enumeratedValues: [],
       makeEnumerated: false,
       definePattern: false,
-      regularExpression: "",
+      pattern: "",
       uniqueItems: false,
       defaultString: "",
-      multipleSelectionType: ""
+      multipleSelectionType: "",
+      minItems: "",
+      maxItems: "",
     },
     configurationValues: Object.fromEntries(
       Object.keys(TranslatableMinimalConfig).map(key => [key, false])
     ),
+    
     type: FieldKind.Array
   }),
   getDefaultValue: property => property.default,
@@ -527,8 +531,8 @@ const ARRAY_DEFINITION: FieldDefinition = {
         ...ValidationInputs.definePattern,
         renderCondition: {field: "arrayType", equals: "string"}
       },
-      regularExpression: {
-        ...ValidationInputs.regularExpression,
+      pattern: {
+        ...ValidationInputs.pattern,
         renderCondition: {field: "definePattern", equals: true}
       },
       uniqueItems: {
@@ -557,7 +561,7 @@ const ARRAY_DEFINITION: FieldDefinition = {
     },
     presetValues: {
       definePattern: PresetPanel.definePattern,
-      regularExpression: PresetPanel.regularExpression,
+      pattern: PresetPanel.pattern,
       enumeratedValues: PresetPanel.enumeratedValues
     },
     configurationValues: isInnerField ? MinimalConfig : TranslatableMinimalConfig
@@ -573,15 +577,21 @@ const ARRAY_DEFINITION: FieldDefinition = {
     const fv = form.fieldValues;
     const pv = form.presetValues || {};
 
+    const defaultValueMap: {[key: string]: number | string | boolean} = {
+      string: fv.defaultString,
+      number: fv.defaultNumber,
+      boolean: fv.defaultBoolean
+    };
+
     const item: Property = {
       type: fv.arrayType,
       title: fv.arrayItemTitle,
       description: fv.arrayItemDescription?.length ? fv.arrayItemDescription : undefined,
-      default: form.defaultValue
+      default: defaultValueMap[fv.arrayType]
     };
 
     if (pv.enumeratedValues?.length) item.enum = pv.enumeratedValues;
-    if (pv.regularExpression?.length) item.pattern = pv.regularExpression;
+    if (pv.pattern?.length) item.pattern = pv.pattern;
     if (fv.maxNumber != null) item.maximum = fv.maxNumber;
     if (fv.minNumber != null) item.minimum = fv.minNumber;
 
@@ -618,6 +628,30 @@ const ARRAY_DEFINITION: FieldDefinition = {
     form.fieldValues.arrayType === "string"
       ? applyPresetLogic(FieldKind.String, form, oldValues)
       : form,
+  applySelectionTypeLogic: (form, properties) => {
+    const newSelectionType = form.fieldValues?.arrayType;
+    const updatedForm = {
+      ...form,
+      fieldValues: {
+        ...form.fieldValues,
+        enumeratedValues:
+          newSelectionType === "string"
+            ? form.fieldValues.enumeratedValues.map((v: string | number) => String(v))
+            : form.fieldValues.enumeratedValues
+                .map((v: string | number) => Number(v))
+                .filter((v: number) => !isNaN(v))
+      }
+    };
+    const updatedFieldProperties = {
+      ...properties,
+      enumeratedValues: {
+        ...SpecializedInputs.enumeratedValues,
+        renderCondition: {field: "makeEnumerated", equals: true},
+        valueType: newSelectionType
+      }
+    };
+    return {updatedForm, updatedFieldProperties};
+  },
   getFormattedValue: v => (Array.isArray(v) ? `${v.length} item${v.length === 1 ? "" : "s"}` : ""),
   capabilities: {supportsInnerFields: true}
 };

@@ -92,7 +92,6 @@ const ColumnHeader = ({
   const handleSaveAndClose = useCallback(
     (values: FieldFormState) => {
       if (!bucket) return;
-      console.log("Updating field with values:", {values, property, bucket});
 
       if (bucket.primary === property?.key && !values.configurationValues.primaryField) {
         // Trying to unset primary field
@@ -114,8 +113,10 @@ const ColumnHeader = ({
 
   const forbiddenFieldNames = useMemo(() => {
     if (!bucket) return [];
-    return Object.values(bucket.properties || {}).map(i => i.title).filter(k => k !== property?.title);
-  }, [bucket]);
+    return Object.values(bucket.properties || {})
+      .map(i => i.title)
+      .filter(k => k !== property?.title);
+  }, [bucket, property?.title]);
 
   const onEdit = useCallback(() => {
     setIsFieldEditPopupOpen(true);
@@ -138,42 +139,73 @@ const ColumnHeader = ({
   const field = FIELD_REGISTRY[type!];
   const defaultFormValues = field?.creationFormDefaultValues!;
 
-  const formValues = {
-    ...defaultFormValues,
-    type,
-    fieldValues: {
-      ...defaultFormValues?.fieldValues,
-      title: property?.title,
-      description: property?.description ?? defaultFormValues?.fieldValues?.description,
-      maximum: property?.maximum ?? defaultFormValues?.fieldValues?.maximum,
-      minimum: property?.minimum ?? defaultFormValues?.fieldValues?.minimum,
-    },
-    configurationValues: {
-      ...defaultFormValues?.configurationValues,
-      requiredField: bucket?.required?.includes(property?.key),
-      uniqueValues: property?.options?.unique || false,
-      primaryField: bucket?.primary === property?.key,
-      index: property?.options?.index || false,
-      translate: property?.options?.translate || false
-    },
-    presetValues: defaultFormValues?.presetValues
-      ? {
-          ...defaultFormValues?.presetValues,
-          makeEnumerated: type === FieldKind.Multiselect ? true : undefined,
-          definePattern: property?.items?.pattern ? true : undefined,
-          enumeratedValues: property?.items?.enum,
-          pattern: property?.items?.pattern
-        }
-      : undefined,
-    multipleSelectionTab: defaultFormValues?.multipleSelectionTab
-      ? {
-          ...defaultFormValues?.multipleSelectionTab,
-          multipleSelectionType: property?.items.type,
-          maxItems: property?.maxItems
-        }
-      : undefined,
-    defaultValue: property?.default
-  };
+  const formValues = useMemo(
+    () => ({
+      ...defaultFormValues,
+      type,
+      fieldValues: {
+        ...defaultFormValues?.fieldValues,
+        title: property?.title,
+        description: property?.description ?? defaultFormValues?.fieldValues?.description,
+        maximum: property?.maximum ?? defaultFormValues?.fieldValues?.maximum,
+        minimum: property?.minimum ?? defaultFormValues?.fieldValues?.minimum,
+        bucket: property?.bucketId,
+        relationType: property?.relationType,
+        arrayType: property?.items?.type,
+        arrayItemTitle: property?.items?.title,
+        arrayItemDescription: property?.items?.description || "",
+        defaultString: property?.items?.default,
+        defaultBoolean: property?.items?.default,
+        defaultNumber: property?.items?.default || "",
+        minNumber: property?.items?.minimum || "",
+        maxNumber: property?.items?.maximum || "",
+        makeEnumerated: Boolean(property?.items?.enum),
+        enumeratedValues: property?.items?.enum || [],
+        definePattern: type !== FieldKind.Array ? Boolean(property?.items?.pattern) : undefined,
+        pattern: type !== FieldKind.Array ? property?.items?.pattern : undefined,
+        uniqueItems: property?.uniqueItems || false,
+        /*      multipleSelectionType: {
+              ...SpecializedInputs.multipleSelectionType,
+              renderCondition: {field: "arrayType", equals: "multiselect"}
+            },*/
+        minItems: property?.minItems || "",
+        maxItems: property?.maxItems || ""
+        //chip: {
+        //  ...SpecializedInputs.chip,
+        //  renderCondition: {field: "arrayType", equals: "multiselect"}
+        //}
+
+        //makeEnumerated: property?.items?.enum ? true : false,
+      },
+      configurationValues: {
+        ...defaultFormValues?.configurationValues,
+        requiredField: bucket?.required?.includes(property?.key),
+        uniqueValues: property?.options?.unique || false,
+        primaryField: bucket?.primary === property?.key,
+        index: property?.options?.index || false,
+        translate: property?.options?.translate || false,
+        dependent: property?.dependent
+      },
+      presetValues: defaultFormValues?.presetValues
+        ? {
+            ...defaultFormValues?.presetValues,
+            makeEnumerated: type === FieldKind.Multiselect ? true : undefined,
+            enumeratedValues: property?.items?.enum,
+            definePattern: type === FieldKind.Array ? Boolean(property?.items?.pattern) : undefined,
+            pattern: type === FieldKind.Array ? property?.items?.pattern : undefined
+          }
+        : undefined,
+      multipleSelectionTab: defaultFormValues?.multipleSelectionTab
+        ? {
+            ...defaultFormValues?.multipleSelectionTab,
+            multipleSelectionType: property?.items.type,
+            maxItems: property?.maxItems
+          }
+        : undefined,
+      defaultValue: property?.default
+    }),
+    [defaultFormValues, property, type, bucket]
+  );
 
   return (
     <>
@@ -243,7 +275,6 @@ const NewFieldHeader = memo(() => {
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
-      //console.log("Creating field with values:", {values, kind, fieldProperty});
       return createBucketField(
         bucket,
         fieldProperty as Property,
@@ -276,7 +307,6 @@ const NewFieldHeader = memo(() => {
     </BucketFieldPopupsProvider>
   );
 });
-
 
 // DELETE THIS COMPONENT WHILE MERGING TO THE PANEL, AS A COMPONENT ALREADY EXISTS IN THE PANEL
 // FOR THE SELECT HEADERS, WE NEEDED IT HERE FOR THE TIME BEING TO AVOID ERRORS

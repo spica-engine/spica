@@ -13,7 +13,7 @@ export const BASE_PRESET_DEFAULTS = {
   makeEnumerated: false,
   enumeratedValues: [] as string[],
   definePattern: false,
-  regularExpression: ""
+  pattern: ""
 } as const;
 
 export const BASE_FORM_DEFAULTS = {

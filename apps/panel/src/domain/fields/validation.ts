@@ -37,7 +37,7 @@ export const STRING_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
         otherwise: sch => sch
       }),
     definePattern: Yup.boolean().default(false),
-    regularExpression: Yup.string().when("definePattern", {
+    pattern: Yup.string().when("definePattern", {
       is: true,
       then: sch =>
         sch.min(1, "Pattern required").test("valid-regex", "Invalid pattern", val => {
@@ -79,7 +79,7 @@ export const NUMBER_FIELD_CREATION_FORM_SCHEMA: ValidationSchema = Yup.object({
   }),
   presetValues: Yup.object({
     definePattern: Yup.boolean().default(false),
-    regularExpression: Yup.string().when("definePattern", {
+    pattern: Yup.string().when("definePattern", {
       is: true,
       then: sch =>
         sch.min(1, "Pattern required").test("valid-regex", "Invalid pattern", val => {

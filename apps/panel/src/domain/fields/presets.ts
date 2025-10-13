@@ -285,13 +285,13 @@ export function applyPresetLogic(kind: FieldKind, form: FieldCreationForm, oldVa
       next.presetValues.makeEnumerated = true;
       next.presetValues.definePattern = false;
       next.presetValues.enumeratedValues = [...values];
-      next.presetValues.regularExpression = "";
+      next.presetValues.pattern = "";
     } else if (REGEX_PRESETS[presetKey as RegexPresetKey]) {
       const regex = REGEX_PRESETS[presetKey as RegexPresetKey];
       next.presetValues.definePattern = true;
       next.presetValues.makeEnumerated = false;
       next.presetValues.enumeratedValues = [];
-      next.presetValues.regularExpression = regex.source;
+      next.presetValues.pattern = regex.source;
     }
   }
 
@@ -322,7 +322,7 @@ function enforceToggleCleanup(form: FieldCreationForm, presetKey: string): Field
       ...next,
       presetValues: {
         ...next.presetValues,
-        regularExpression: "",
+        pattern: "",
         preset: ""
       }
     } as FieldCreationForm;

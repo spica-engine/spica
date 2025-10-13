@@ -282,6 +282,18 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
     handleCloseInnerField();
   };
 
+  const Error = error && (
+    <div className={innerFieldExists ? styles.innerFieldsError : styles.defaultError}>
+      <div className={styles.errorTextContainer}>
+        <Text className={styles.errorText} variant="danger">
+          {error}
+        </Text>
+      </div>
+    </div>
+  );
+
+
+  //console.log("formValues: ", formValues)
   return (
     <FlexElement
       direction="vertical"
@@ -333,6 +345,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
             root={{children: "Save and close"}}
           />
         </Button>
+        {!innerFieldExists && Error}
         {innerFieldExists && (
           <Button
             color="default"
@@ -365,15 +378,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
           />
         </BucketFieldConfigurationPopup>
       )}
-      {error && (
-        <div className={innerFieldExists ? styles.innerFieldsError : styles.defaultError}>
-          <div className={styles.errorTextContainer}>
-            <Text className={styles.errorText} variant="danger">
-              {error}
-            </Text>
-          </div>
-        </div>
-      )}
+      {innerFieldExists && Error}
     </FlexElement>
   );
 };
