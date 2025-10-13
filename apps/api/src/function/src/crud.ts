@@ -59,6 +59,9 @@ export async function findByName<ER extends EnvRelation = EnvRelation.NotResolve
   name: string,
   options?: {resolveEnvRelations?: ER}
 ): Promise<Function<ER> | null> {
+  if (typeof name != "string" || name.trim() == "") {
+    throw new BadRequestException("Function name must be a non-empty string.");
+  }
   const fn = await fs.findOne({name});
   if (!fn) return null;
   if (options?.resolveEnvRelations) {

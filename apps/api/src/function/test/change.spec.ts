@@ -64,6 +64,7 @@ describe("Change", () => {
         target: {
           id: "fn_id",
           handler: "default",
+          name: "my_fn",
           context: {
             env: {
               IGNORE_ERRORS: "true",
@@ -82,6 +83,7 @@ describe("Change", () => {
         target: {
           id: "fn_id",
           handler: "another",
+          name: "my_fn",
           context: {
             env: {
               IGNORE_ERRORS: "true",

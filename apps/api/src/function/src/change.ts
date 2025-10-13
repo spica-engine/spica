@@ -89,7 +89,8 @@ export function createTargetChanges<CK extends ChangeKind>(
       type: trigger.type,
       target: {
         id: fn._id.toString(),
-        handler
+        handler,
+        name: fn.name
       }
     };
 

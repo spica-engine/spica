@@ -89,7 +89,8 @@ describe("Engine", () => {
       kind: ChangeKind.Added,
       target: {
         id: "test_id",
-        handler: "test_handler"
+        handler: "test_handler",
+        name: "test_function"
       }
     };
 
@@ -105,7 +106,8 @@ describe("Engine", () => {
       kind: ChangeKind.Removed,
       target: {
         id: "test_id",
-        handler: "test_handler"
+        handler: "test_handler",
+        name: "test_function"
       }
     };
 
@@ -123,7 +125,8 @@ describe("Engine", () => {
         kind: ChangeKind.Updated,
         target: {
           id: "test_id",
-          handler: "test_handler"
+          handler: "test_handler",
+          name: "test_function"
         }
       }
     ];
@@ -143,14 +146,16 @@ describe("Engine", () => {
         kind: ChangeKind.Updated,
         target: {
           id: "test_id",
-          handler: "test_handler"
+          handler: "test_handler",
+          name: "test_function"
         }
       },
       {
         kind: ChangeKind.Removed,
         target: {
           id: "test_id",
-          handler: "test_handler2"
+          handler: "test_handler2",
+          name: "test_function"
         }
       }
     ];
@@ -164,6 +169,7 @@ describe("Engine", () => {
       target: {
         id: "test_id",
         handler: "test_handler",
+        name: "test_function",
         context: {
           env: {
             TEST: "true"
@@ -186,7 +192,7 @@ describe("Engine", () => {
     engine["categorizeChanges"]([changes]);
     expect(httpSubscribe.mock.calls[httpSubscribe.mock.calls.length - 1][0].toObject()).toEqual({
       id: "test_id",
-      cwd: "test_root/test_id",
+      cwd: "test_root/test_function",
       handler: "test_handler",
       context: {
         env: [{key: "TEST", value: "true"}],
@@ -211,6 +217,7 @@ describe("Engine", () => {
         target: {
           id: hexString,
           handler: "test_handler",
+          name: "my_fn",
           context: {
             env: {},
             timeout: 10
@@ -250,6 +257,7 @@ describe("Engine", () => {
       target: {
         id: hexString,
         handler: "test_handler",
+        name: "my_fn",
         context: {
           env: {IGNORE_ME: "YES"},
           timeout: 10
@@ -289,6 +297,7 @@ describe("Engine", () => {
       target: {
         id: hexString,
         handler: "test_handler",
+        name: "my_fn",
         context: {
           env: {},
           timeout: 10
