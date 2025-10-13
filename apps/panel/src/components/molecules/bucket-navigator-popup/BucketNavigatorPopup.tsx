@@ -3,9 +3,9 @@ import {memo, useRef, useState, type FC} from "react";
 import styles from "./BucketNavigatorPopup.module.scss";
 import Confirmation from "../confirmation/Confirmation";
 import EditBucket from "../../prefabs/edit-bucket/EditBucket";
-import type {BucketType} from "../../../services/bucketService";
+import type {BucketType} from "../../../store/api/bucketApi";
 import CategorySelectCreate from "../category-select-create/CategorySelectCreate";
-import {useBucket} from "../../../contexts/BucketContext";
+import {useGetBucketsQuery, useChangeBucketCategoryMutation, useRenameBucketMutation} from "../../../store/api/bucketApi";
 import DeleteBucket from "../../prefabs/delete-bucket/DeleteBucket";
 
 type TypeBucketNavigatorPopup = {
@@ -31,7 +31,17 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
   const contentRef = useRef(null);
   const [isCategorySelectCreateOpen, setIsCategorySelectCreateOpen] = useState(false);
 
-  const {bucketCategories, changeBucketCategory, renameBucket} = useBucket();
+  const {data: buckets = []} = useGetBucketsQuery();
+  const [changeBucketCategory] = useChangeBucketCategoryMutation();
+  const [renameBucket] = useRenameBucketMutation();
+
+  // Derive bucket categories from buckets data
+  const bucketCategories = Array.from(new Set(buckets.map(bucket => bucket.category).filter(Boolean))) as string[];
+
+  // Wrapper function to match expected signature
+  const handleChangeBucketCategory = async (bucketId: string, category: string) => {
+    return changeBucketCategory({ bucketId, category });
+  };
 
 
   const handleOpenCategorySelectCreate = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -120,7 +130,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
       </Popover>
       {isCategorySelectCreateOpen && (
         <CategorySelectCreate
-          changeCategory={changeBucketCategory}
+          changeCategory={handleChangeBucketCategory}
           bucket={bucket}
           categories={bucketCategories}
           onCancel={handleCancelCategorySelectCreate}

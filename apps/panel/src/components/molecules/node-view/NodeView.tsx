@@ -3,7 +3,7 @@ import styles from "./NodeView.module.scss";
 import {Button, Icon} from "oziko-ui-kit";
 import {useNavigate} from "react-router-dom";
 import DeleteBucket from "../../prefabs/delete-bucket/DeleteBucket";
-import type {BucketType} from "../../../services/bucketService";
+import type {BucketType} from "../../../store/api/bucketApi";
 import EditBucket from "../../prefabs/edit-bucket/EditBucket";
 
 export interface Field {

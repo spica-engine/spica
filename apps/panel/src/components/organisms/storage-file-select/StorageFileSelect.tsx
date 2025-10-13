@@ -4,7 +4,7 @@ import {Modal, StorageFileCard, type TypeFile, type TypeFilterValue} from "oziko
 import {type TypeSortProp} from "./sort-popover-content/SortPopoverContent";
 import StorageModalHeading from "./storage-modal-heading/StorageModalHeading";
 import StorageFileCardSkeleton from "./storage-file-card-skeleton/StorageFileCardSkeleton";
-import {useStorage, type Storage} from "../../../contexts/StorageContext";
+import {useGetStorageItemsQuery, type Storage, type StorageOptions} from "../../../store/api/storageApi";
 import { convertQuickDateToRange, convertToBytes } from "../../../utils/storage";
 
 
@@ -33,8 +33,29 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
   const [sortBy, setSortBy] = useState<TypeSortProp>(SORTS.NAME_ASC);
   const [activeFilter, setActiveFilter] = useState<TypeFilterValue | null>(null);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const [storageOptions, setStorageOptions] = useState<StorageOptions>({});
+  const [folderStorageOptions, setFolderStorageOptions] = useState<StorageOptions>({});
 
-  const {getAll, loading} = useStorage();
+  const {
+    data: storageResponse,
+    isLoading: isStorageLoading,
+    isFetching: isStorageFetching,
+    refetch: refetchStorage
+  } = useGetStorageItemsQuery(storageOptions, {
+    skip: !hasInitialLoad && !storageOptions.filter
+  });
+
+  const {
+    data: folderResponse,
+    isLoading: isFolderLoading,
+    isFetching: isFolderFetching,
+    refetch: refetchFolders
+  } = useGetStorageItemsQuery(folderStorageOptions, {
+    skip: !hasInitialLoad && !folderStorageOptions.filter,
+    refetchOnMountOrArgChange: 10,
+    refetchOnFocus: true,
+  });
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   const ITEMS_PER_PAGE = 20;
@@ -195,70 +216,64 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
     return sortMap[sortBy];
   }, [sortBy]);
 
-  const loadData = useCallback(
-    async (reset = false) => {
-      if ((!hasNextPage && !reset) || isLoadingMore) return;
+  const updateStorageOptions = useCallback(() => {
+    const filter = buildCompleteFilter();
+    const sort = buildSortOptions();
 
-      if (reset) {
-        setIsRefreshing(true);
-        setData([]);
+    const options: StorageOptions = {
+      filter,
+      sort,
+      limit: ITEMS_PER_PAGE,
+      skip: 0,
+      paginate: true
+    };
+
+    const folderOptions: StorageOptions = {
+      filter: {"content.type": "application/octet-stream"},
+      sort,
+      limit: 1,
+      paginate: true
+    };
+
+    setStorageOptions(options);
+    setFolderStorageOptions(folderOptions);
+    setHasInitialLoad(true);
+  }, [buildCompleteFilter, buildSortOptions]);
+
+  useEffect(() => {
+    if (storageResponse && isOpen) {
+      const convertedData = storageResponse.data.map(convertStorageToTypeFile);
+      console.log('Fetched data:', convertedData);
+      if (storageOptions.skip === 0) {
+        setData(convertedData);
       } else {
-        setIsLoadingMore(true);
+        setData(prev => [...prev, ...convertedData]);
       }
+      
+      setFileLength(storageResponse.meta.total);
+      setHasNextPage(convertedData.length === ITEMS_PER_PAGE);
+      setIsLoadingMore(false);
+    }
+  }, [isOpen, storageResponse, storageOptions.skip]);
 
-      try {
-        const filter = buildCompleteFilter();
-        const sort = buildSortOptions();
+  useEffect(() => {
+    if (folderResponse) {
+      setFolderLength(folderResponse.meta.total);
+    }
+  }, [folderResponse]);
 
-        const options = {
-          filter,
-          sort,
-          limit: ITEMS_PER_PAGE,
-          skip: reset ? 0 : data.length,
-          paginate: true
-        };
+  const loadMoreData = useCallback(async () => {
+    if (!hasNextPage || isLoadingMore || !storageResponse) return;
 
-        const optionsForFolders = {
-          filter: {"content.type": "application/octet-stream"},
-          sort,
-          limit: 1,
-          paginate: true
-        };
-        const response = await getAll(options);
-        const folders = await getAll(optionsForFolders);
+    setIsLoadingMore(true);
+    
+    const newOptions: StorageOptions = {
+      ...storageOptions,
+      skip: data.length
+    };
 
-        const convertedData = response.data.map(convertStorageToTypeFile);
-
-        if (reset) {
-          setData(convertedData);
-        } else {
-          setData(prev => [...prev, ...convertedData]);
-        }
-        setFileLength(response.meta.total);
-        setFolderLength(folders.meta.total);
-
-        setHasNextPage(convertedData.length === ITEMS_PER_PAGE);
-      } catch (error) {
-        console.error("Failed to load storage data:", error);
-      } finally {
-        setIsLoadingMore(false);
-        setIsRefreshing(false);
-        if (reset) {
-          setHasInitialLoad(true);
-        }
-      }
-    },
-    [
-      buildCompleteFilter,
-      buildSortOptions,
-      data.length,
-      hasNextPage,
-      isLoadingMore,
-      isRefreshing,
-      getAll,
-      convertStorageToTypeFile
-    ]
-  );
+    setStorageOptions(newOptions);
+  }, [hasNextPage, isLoadingMore, storageResponse, storageOptions, data.length]);
 
   const handleClickSortProp = (prop: TypeSortProp) => {
     if (sortBy !== prop) {
@@ -315,11 +330,11 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
       const {scrollTop, scrollHeight, clientHeight} = target;
       const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
 
-      if (isNearBottom && hasNextPage && !isLoadingMore && !isRefreshing) {
-        loadData(false);
+      if (isNearBottom && hasNextPage && !isLoadingMore && !isStorageFetching) {
+        loadMoreData();
       }
     },
-    [hasNextPage, isLoadingMore, isRefreshing, loadData]
+    [hasNextPage, isLoadingMore, isStorageFetching, loadMoreData]
   );
 
   const handleChangeDirectory = (index: number) => {
@@ -340,10 +355,27 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
   };
 
   useEffect(() => {
-    if (isOpen) {
-      loadData(true);
+    if (isOpen && (sortBy || searchTerm || directory.length > 1 || activeFilter || !hasInitialLoad)) {
+      updateStorageOptions();
     }
-  }, [isOpen, sortBy, searchTerm, directory, activeFilter]);
+  }, [isOpen, sortBy, searchTerm, directory, activeFilter, updateStorageOptions, hasInitialLoad]);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (hasInitialLoad) {
+        setHasNextPage(true);
+        
+        const currentOptions = {
+          ...storageOptions,
+          skip: 0
+        };
+        setStorageOptions({...currentOptions});
+        setFolderStorageOptions({...folderStorageOptions});
+      }
+    } else {
+      setData([]);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -352,6 +384,11 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
     container.addEventListener("scroll", handleScroll);
     return () => container.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
+
+  const isLoading = isStorageLoading || isFolderLoading;
+  const isFetching = isStorageFetching || isFolderFetching;
+
+
 
   return (
     <Modal
@@ -393,17 +430,17 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
             className={styles.file}
           />
         ))}
-        {(isLoadingMore || (isRefreshing && data.length === 0)) && (
+        {(isLoadingMore || (isFetching && data.length === 0)) && (
           <>
             {[...Array(5)].map((_, index) => (
               <StorageFileCardSkeleton key={`skeleton-${index}`} className={styles.file} />
             ))}
           </>
         )}
-        {!hasNextPage && data.length > 0 && !isRefreshing && (
+        {!hasNextPage && data.length > 0 && !isFetching && (
           <div className={styles.endIndicator}>No more files to load</div>
         )}
-        {data.length === 0 && !loading && !isLoadingMore && !isRefreshing && hasInitialLoad && (
+        {data.length === 0 && !isLoading && !isLoadingMore && !isFetching  && (
           <div className={styles.emptyState}>No files found</div>
         )}
       </Modal.Body>

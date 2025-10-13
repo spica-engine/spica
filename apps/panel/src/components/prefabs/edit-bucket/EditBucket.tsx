@@ -1,8 +1,8 @@
 import React, { useState, type FC, type ReactNode } from 'react'
 import { Button, FluidContainer, Icon, Text, FlexElement, Modal, Input } from "oziko-ui-kit";
-import type { BucketType } from "../../../services/bucketService";
+import type { BucketType } from "../../../store/api/bucketApi";
 import styles from "./EditBucket.module.scss";
-import { useBucket } from '../../../contexts/BucketContext';
+import { useRenameBucketMutation, useCreateBucketMutation, type CreateBucketRequest } from '../../../store/api/bucketApi';
 
 type EditBucketProps = {
     bucket?: BucketType;
@@ -16,7 +16,8 @@ type EditBucketProps = {
 }
 
 const EditBucket: FC<EditBucketProps> = ({ bucket, mode = 'edit', initialValue = 'New Bucket', children }) => {
-    const { renameBucket, createBucket } = useBucket();
+    const [renameBucket] = useRenameBucketMutation();
+    const [createBucket] = useCreateBucketMutation();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [value, setValue] = useState(bucket?.title || initialValue);
     const [loading, setLoading] = useState(false);
@@ -45,12 +46,16 @@ const EditBucket: FC<EditBucketProps> = ({ bucket, mode = 'edit', initialValue =
             }
             
             if (isCreateMode) {
-                const result = await createBucket(value);
-                if (result) {
+                const createBucketRequest: CreateBucketRequest = {
+                    title: value,
+                    order: 0 // You might want to pass this as a prop or calculate it
+                };
+                const result = await createBucket(createBucketRequest);
+                if (result.data) {
                     setIsModalOpen(false);
                 }
             } else {
-                await renameBucket(value, bucket!);
+                await renameBucket({ newTitle: value, bucket: bucket! });
                 setIsModalOpen(false);
             }
         } catch (err) {

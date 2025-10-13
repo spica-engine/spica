@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Property, BucketType } from "../../../services/bucketService";
+import type { Property, BucketType } from "../../../store/api/bucketApi";
 
 export interface Field {
   id: string;

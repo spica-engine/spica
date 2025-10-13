@@ -4,16 +4,17 @@ import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
-import {useBucket} from "../../../contexts/BucketContext";
 import {
-  FieldKind,
-  FIELD_REGISTRY
-} from "../../../domain/fields";
+  useGetBucketsQuery,
+  useCreateBucketFieldMutation,
+  type BucketType
+} from "../../../store/api/bucketApi";
+import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
-import type { Property } from "src/services/bucketService";
+import type {Property} from "src/store/api/bucketApi";
 
 type TypeColumnRole = "select" | "data" | "new-field";
 
@@ -173,28 +174,40 @@ function SelectionCheckbox({rowId, visibleIds}: {rowId: string; visibleIds?: str
   );
 }
 
-const NewFieldHeader = memo(() => {
-  const {buckets, bucketData, createBucketField} = useBucket();
+const NewFieldHeader = memo(({bucketId}: {bucketId: string}) => {
+  const {data: buckets = []} = useGetBucketsQuery();
+  const [createBucketField] = useCreateBucketFieldMutation();
 
-  const bucket = useMemo(
-    () => buckets.find(i => i._id === bucketData?.bucketId),
-    [buckets, bucketData?.bucketId]
-  );
+  const bucket = useMemo(() => buckets.find(i => i._id === bucketId), [buckets, bucketId]);
 
   const handleSaveAndClose = useCallback(
-    (values: FieldFormState, kind: FieldKind) => {
-      if (!bucket) return;
+    async (values: FieldFormState, kind: FieldKind): Promise<BucketType> => {
+      if (!bucket) {
+        throw new Error("No bucket available");
+      }
 
       const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
-      return createBucketField(
-        bucket,
-        fieldProperty as Property,
-        requiredField ? title : undefined,
-        primaryField ? title : undefined
-      );
+      // Build the modified bucket with new field
+      const modifiedBucket = {
+        ...bucket,
+        properties: {
+          ...bucket.properties,
+          [title]: fieldProperty as Property
+        },
+        // Add to required array if requiredField is true
+        required: requiredField ? [...(bucket.required || []), title] : bucket.required,
+        // Set as primary if primaryField is true
+        primary: primaryField ? title : bucket.primary
+      };
+
+      const result = await createBucketField(modifiedBucket);
+      if (!result.data) {
+        throw new Error("Failed to create bucket field");
+      }
+      return result.data;
     },
     [bucket, createBucketField]
   );
@@ -222,7 +235,11 @@ const NewFieldHeader = memo(() => {
   );
 });
 
-const buildDefaultColumns = (visibleIds: string[], dataExists: boolean): ColumnType[] => [
+const buildDefaultColumns = (
+  visibleIds: string[],
+  dataExists: boolean,
+  bucketId: string
+): ColumnType[] => [
   {
     id: "0",
     header: <SelectColumnHeader visibleIds={visibleIds} dataExists={dataExists} />,
@@ -239,7 +256,7 @@ const buildDefaultColumns = (visibleIds: string[], dataExists: boolean): ColumnT
   },
   {
     id: "1",
-    header: <NewFieldHeader />,
+    header: <NewFieldHeader bucketId={bucketId} />,
     key: "new field",
     role: "new-field",
     width: "125px",
@@ -293,7 +310,7 @@ function getFormattedColumns(
   visibleIds: string[],
   dataExists: boolean
 ): ColumnType[] {
-  const defaultColumns = buildDefaultColumns(visibleIds, dataExists);
+  const defaultColumns = buildDefaultColumns(visibleIds, dataExists, bucketId);
   return [
     defaultColumns[0],
     ...columns.map((col, index) => ({
