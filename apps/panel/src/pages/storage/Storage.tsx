@@ -83,7 +83,7 @@ export default function StoragePage() {
       return i;
     });
 
-    if (JSON.stringify(files[targetColumnIndex-1]) === JSON.stringify(transformedData)) return;
+    if (JSON.stringify(files[targetColumnIndex - 1]) === JSON.stringify(transformedData)) return;
     const newFiles: TypeFiles = [...files];
     newFiles[targetColumnIndex] = transformedData;
 
@@ -254,7 +254,10 @@ export default function StoragePage() {
                       <FlexElement direction="vertical" gap={10}>
                         <Text className={styles.metadataName}>{previewFile?.name}</Text>
                         <Text>{previewFile?.content?.type}</Text>
-                        <Text>Date Will be INHER</Text>
+                        {/* The previewFile does not have no date value but the figma has a date in here */}
+                        {(previewFile as any)?.createdAt && (
+                          <Text>{new Date((previewFile as any).createdAt).toLocaleString()}</Text>
+                        )}
                       </FlexElement>
                       <FlexElement gap={10}>
                         <Button className={styles.metadataButton} variant="icon">

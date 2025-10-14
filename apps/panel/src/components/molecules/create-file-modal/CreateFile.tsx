@@ -42,7 +42,7 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
         
         await uploadFiles({files: dataTransfer.files as any});
       } catch (error) {
-        console.error('File upload failed:', error);
+        console.error("File upload failed:", error);
       }
     }
     // Reset the input so the same file can be selected again
