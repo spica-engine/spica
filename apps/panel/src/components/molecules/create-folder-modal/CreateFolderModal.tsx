@@ -84,7 +84,7 @@ const CreateFolder: FC<CreateFolderProps> = ({initialValue = "New Folder", prefi
               children: (
                 <div className={styles.header}>
                   <Text className={styles.headerText}>
-                    ADD NEW FOLDER
+                    CREATE NEW FOLDER
                   </Text>
                 </div>
               )
