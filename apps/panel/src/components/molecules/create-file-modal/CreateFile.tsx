@@ -29,14 +29,12 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       try {
-        // Prepend prefix to each file name, similar to CreateFolderModal
         const filesWithPrefix = Array.from(files).map(file => {
           const fileName = prefix + file.name;
           const encodedFileName = encodeURIComponent(fileName);
           return new File([file], encodedFileName, { type: file.type });
         });
         
-        // Convert back to FileList-like object
         const dataTransfer = new DataTransfer();
         filesWithPrefix.forEach(file => dataTransfer.items.add(file));
         
@@ -45,7 +43,7 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
         console.error("File upload failed:", error);
       }
     }
-    // Reset the input so the same file can be selected again
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
