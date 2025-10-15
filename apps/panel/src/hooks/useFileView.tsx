@@ -47,12 +47,10 @@ const WordDocViewer = ({url, className}: {url: string; className?: string}) => {
 
         const arrayBuffer = await response.arrayBuffer();
         
-        // Check if arrayBuffer has valid data
         if (arrayBuffer.byteLength === 0) {
           throw new Error('Received empty file');
         }
 
-        // Check for ZIP signature (all .docx files are ZIP archives)
         const uint8Array = new Uint8Array(arrayBuffer);
         const signature = uint8Array.slice(0, 4);
         const isValidZip = signature[0] === 0x50 && signature[1] === 0x4B && 
