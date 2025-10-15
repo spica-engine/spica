@@ -57,7 +57,7 @@ const CreateFolder: FC<CreateFolderProps> = ({
 
       const encodedFolderName = encodeURIComponent(folderName);
       const emptyFolder = new File([], encodedFolderName);
-      await createFolder({files: [emptyFolder] as any});
+      await createFolder({files: [emptyFolder] as unknown as FileList});
       setIsModalOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

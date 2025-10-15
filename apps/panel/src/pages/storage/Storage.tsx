@@ -279,7 +279,8 @@ export default function StoragePage() {
   const handleFolderClick = (folderName: string, directoryDepth: TypeDirectoryDepth) => {
     let newDirectories = [...directory];
     if (directoryDepth === 1) {
-      newDirectories[Math.max(directory.length - 1, 2)] = undefined;
+      const directoryToRemove = Math.max(directory.length - 1, 2)
+      newDirectories[directoryToRemove] = undefined;
       newDirectories[directoryDepth] = folderName;
       targetColumnIndex.current = directoryDepth;
     } else if (directoryDepth === 2) {

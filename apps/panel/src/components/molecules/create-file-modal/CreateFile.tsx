@@ -38,7 +38,7 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
         const dataTransfer = new DataTransfer();
         filesWithPrefix.forEach(file => dataTransfer.items.add(file));
         
-        await uploadFiles({files: dataTransfer.files as any});
+        await uploadFiles({files: dataTransfer.files});
       } catch (error) {
         console.error("File upload failed:", error);
       }
