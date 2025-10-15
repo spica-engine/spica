@@ -8,6 +8,9 @@
 
     {
       "path": "../../interface/core"
+    },
+    {
+      "path": "../../../apps/api/src/bucket/common"
     }
   ]
 }

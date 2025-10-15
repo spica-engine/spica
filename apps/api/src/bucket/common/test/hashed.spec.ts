@@ -4,12 +4,16 @@ import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {OBJECTID_STRING, OBJECT_ID, DATE_TIME} from "@spica-server/core/schema/formats";
+import {
+  OBJECTID_STRING,
+  OBJECT_ID,
+  DATE_TIME,
+  createHashedFormat
+} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId, DatabaseService} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {hashValue} from "../src/hash";
 
 describe("Hashed Field", () => {
   let app: INestApplication;
@@ -20,15 +24,11 @@ describe("Hashed Field", () => {
   const HASHING_KEY = "test-hashing-key-123";
   let bucketId: string;
 
-  function hash(value: string): string {
-    return hashValue(value, HASHING_KEY);
-  }
-
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME],
+          formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME, createHashedFormat(HASHING_KEY)],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
@@ -101,10 +101,9 @@ describe("Hashed Field", () => {
 
       expect(dbDoc).toMatchObject({
         username: "john_doe",
-        password: hash("mysecretpassword"),
+        password: "825f4c68bab8ef1a7f11ef9426c8e0f6d860267f71cef3aeaccbdcf037237754",
         age: 30
       });
-      expect(dbDoc.password).not.toBe("mysecretpassword");
     });
 
     it("should hash password on replace", async () => {
@@ -131,10 +130,9 @@ describe("Hashed Field", () => {
 
       expect(dbDoc).toMatchObject({
         username: "jane_updated",
-        password: hash("newpassword"),
+        password: "24c65f4d6692a34b63050b6e116d8adf9b2469c8c7172397ddee7b9eeda5f29a",
         age: 26
       });
-      expect(dbDoc.password).not.toBe("newpassword");
     });
 
     it("should hash password on patch", async () => {
@@ -159,10 +157,9 @@ describe("Hashed Field", () => {
 
       expect(dbDoc).toMatchObject({
         username: "bob_smith",
-        password: hash("patchedpassword"),
+        password: "b320e73558e1bacf17be988e4ab050ecea799aff631b54e58afdea4482d5839f",
         age: 35
       });
-      expect(dbDoc.password).not.toBe("patchedpassword");
     });
   });
 
@@ -190,13 +187,13 @@ describe("Hashed Field", () => {
 
       expect(user1).toMatchObject({
         username: "user1",
-        password: hash("password123"),
+        password: "489b20c2a40cafadca5152412b5fd2c277a309f70da2d1c26099938f4427285a",
         age: 25
       });
 
       expect(user2).toMatchObject({
         username: "user2",
-        password: hash("password456"),
+        password: "41b5b2d2d22a95e6102730a4a80c5b5695fd3bd614e63410443434277acc57c6",
         age: 30
       });
     });
@@ -232,7 +229,7 @@ describe("Hashed Field", () => {
       expect(response.body.length).toBe(1);
       expect(response.body[0]).toMatchObject({
         username: "bob",
-        password: hash("bobpass"),
+        password: "689ebe21fda952729d34c56e22d876c9fa8230ea70434cc5e117f2044e83fe94",
         age: 32
       });
     });
@@ -259,7 +256,7 @@ describe("Hashed Field", () => {
       expect(response.body.length).toBe(1);
       expect(response.body[0]).toMatchObject({
         username: "alice",
-        password: hash("alicepass"),
+        password: "02b906806b7c66f6f196731e102f46d56d96738450dc69f86a7f67cd8577c0ac",
         age: 28
       });
     });
@@ -268,11 +265,16 @@ describe("Hashed Field", () => {
       const response = await req.get(`/bucket/${bucketId}/data`, {
         filter: JSON.stringify({
           password: "bobpass",
-          age: {$lte: 30}
+          age: {$gte: 30}
         })
       });
 
-      expect(response.body.length).toBe(0);
+      expect(response.body.length).toBe(1);
+      expect(response.body[0]).toMatchObject({
+        username: "bob",
+        password: "689ebe21fda952729d34c56e22d876c9fa8230ea70434cc5e117f2044e83fe94",
+        age: 32
+      });
     });
 
     it("should return empty array when filter does not match", async () => {

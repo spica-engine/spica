@@ -282,8 +282,7 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         deleteOne: documentId => this.deleteOne(req, bucketId, documentId),
         authResolver: this.authResolver
-      },
-      this.hashingKey
+      }
     ).catch(this.errorHandler);
 
     if (!document) {
@@ -342,9 +341,7 @@ export class BucketDataController {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         authResolver: this.authResolver
-      },
-      undefined,
-      this.hashingKey
+      }
     ).catch(this.errorHandler);
 
     if (!previousDocument) {
@@ -422,8 +419,7 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         authResolver: this.authResolver
       },
-      {returnDocument: ReturnDocument.AFTER},
-      this.hashingKey
+      {returnDocument: ReturnDocument.AFTER}
     ).catch(this.errorHandler);
 
     if (!currentDocument) {

@@ -13,7 +13,7 @@ import {
   ForbiddenException
 } from "./exception";
 import {IAuthResolver} from "@spica-server/interface/bucket/common";
-import {categorizePropertyMap, handleDataHashing} from "./helpers";
+import {categorizePropertyMap} from "./helpers";
 import {BucketPipelineBuilder} from "./pipeline.builder";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {
@@ -54,7 +54,7 @@ export async function findDocuments<T>(
   hashingKey?: string
 ): Promise<unknown> {
   const collection = factories.collection(schema);
-  const pipelineBuilder = new BucketPipelineBuilder(schema, factories);
+  const pipelineBuilder = new BucketPipelineBuilder(schema, factories, hashingKey);
   const seekingPipelineBuilder = new PipelineBuilder();
 
   let rulePropertyMap;
@@ -85,7 +85,7 @@ export async function findDocuments<T>(
   // Reset those relations which have been requested by acl rules.
   const filtersAppliedPipeline = await rulesAppliedPipeline
     .attachToPipeline(!!ruleResetStage, ruleResetStage)
-    .filterByUserRequest(handleDataHashing(params.filter, schema, hashingKey, true));
+    .filterByUserRequest(params.filter);
 
   const seekingPipeline = seekingPipelineBuilder
     .sort(params.sort)
@@ -170,17 +170,14 @@ export async function insertDocument(
     schema: (id: string | ObjectId) => Promise<Bucket>;
     deleteOne: (documentId: ObjectId) => Promise<void>;
     authResolver: IAuthResolver;
-  },
-  hashingKey?: string
+  }
 ) {
   const collection = factories.collection(schema);
-
-  const controlledDocument = handleDataHashing(document, schema, hashingKey);
 
   await executeWriteRule(
     schema,
     factories.schema,
-    controlledDocument,
+    document,
     // unlike others, we have to run this pipeline against buckets in case the target
     // collection is empty.
     collection.collection("buckets"),
@@ -202,7 +199,7 @@ export async function insertDocument(
     }
   }
 
-  return collection.insertOne(controlledDocument).catch(handleWriteErrors);
+  return collection.insertOne(document).catch(handleWriteErrors);
 }
 
 export async function replaceDocument(
@@ -218,27 +215,24 @@ export async function replaceDocument(
   },
   options: {
     returnDocument: ReturnDocument;
-  } = {returnDocument: ReturnDocument.BEFORE},
-  hashingKey?: string
+  } = {returnDocument: ReturnDocument.BEFORE}
 ) {
   const collection = factories.collection(schema);
-
-  const controlledDocument = handleDataHashing(document, schema, hashingKey);
 
   await executeWriteRule(
     schema,
     factories.schema,
-    controlledDocument,
+    document,
     collection,
     params.req.user,
     factories.authResolver
   );
 
-  const documentId = controlledDocument._id;
-  delete controlledDocument._id;
+  const documentId = document._id;
+  delete document._id;
 
   return collection
-    .findOneAndReplace({_id: documentId}, controlledDocument, {
+    .findOneAndReplace({_id: documentId}, document, {
       returnDocument: options.returnDocument
     })
     .catch(handleWriteErrors);
@@ -258,26 +252,22 @@ export async function patchDocument(
   },
   options: {
     returnDocument: ReturnDocument;
-  } = {returnDocument: ReturnDocument.BEFORE},
-  hashingKey?: string
+  } = {returnDocument: ReturnDocument.BEFORE}
 ) {
   const collection = factories.collection(schema);
-
-  const transformedPatch = handleDataHashing(patch, schema, hashingKey);
-  const controlledDocument = handleDataHashing(document, schema, hashingKey);
 
   await executeWriteRule(
     schema,
     factories.schema,
-    controlledDocument,
+    document,
     collection,
     params.req.user,
     factories.authResolver
   );
 
-  delete transformedPatch._id;
+  delete patch._id;
 
-  const updateQuery = getUpdateQueryForPatch(transformedPatch, controlledDocument);
+  const updateQuery = getUpdateQueryForPatch(patch, document);
 
   return collection
     .findOneAndUpdate({_id: document._id}, updateQuery, {
