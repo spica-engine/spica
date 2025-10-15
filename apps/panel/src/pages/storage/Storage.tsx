@@ -16,9 +16,8 @@ import SearchBar from "../../components/atoms/search-bar/SearchBar";
 import CreateFolder from "../../components/molecules/create-folder-modal/CreateFolderModal";
 import CreateFile from "../../components/molecules/create-file-modal/CreateFile";
 
-type TypeDirectories = [string, string?, string?];
 type TypeFiles = [TypeFile[]?, TypeFile[]?, TypeFile[]?];
-type TypeDirectoryDepth = 0 | 1 | 2
+type TypeDirectoryDepth = 1 | 2 | 3;
 
 interface FilePreviewProps {
   handleClosePreview: () => void;
@@ -150,7 +149,7 @@ const StorageItem = memo(({item, onFolderClick, onFileClick}: StorageItemProps) 
 });
 
 interface ActionButtonsProps {
-  directory: TypeDirectories;
+  directory: string[];
   files: TypeFiles;
 }
 
@@ -199,7 +198,7 @@ interface StorageItemColumnsProps {
   files: TypeFiles;
   handleFolderClick: (folderName: string, depth: TypeDirectoryDepth) => void;
   setPreviewFile: (file: TypeFile) => void;
-  directory: TypeDirectories;
+  directory: string[];
 }
 
 const StorageItemColumns = memo(
@@ -218,7 +217,7 @@ const StorageItemColumns = memo(
               files={files[0]}
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
-              depth={0}
+              depth={1}
             />
           )
         }}
@@ -229,7 +228,7 @@ const StorageItemColumns = memo(
               files={files[1]}
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
-              depth={1}
+              depth={2}
             />
           )
         }}
@@ -240,7 +239,7 @@ const StorageItemColumns = memo(
               files={files[2]}
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
-              depth={2}
+              depth={3}
             />
           )
         }}
@@ -250,7 +249,7 @@ const StorageItemColumns = memo(
 );
 
 export default function StoragePage() {
-  const [directory, setDirectory] = useState<TypeDirectories>(["/"]);
+  const [directory, setDirectory] = useState<(string | undefined)[]>(["/"]);
   const targetColumnIndex = useRef(0);
   const {buildDirectoryFilter, convertStorageToTypeFile} = useStorage();
   const filter = useMemo(() => buildDirectoryFilter(directory as string[]), [directory]);
@@ -260,16 +259,20 @@ export default function StoragePage() {
   const [previewFile, setPreviewFile] = useState<TypeFile>();
 
   const handleFolderClick = (folderName: string, directoryDepth: TypeDirectoryDepth) => {
-    let newDirectories: TypeDirectories = [...directory];
-    if (directoryDepth === 0) {
-      newDirectories[2] = undefined;
+    let newDirectories = [...directory];
+    if (directoryDepth === 1) {
+      newDirectories[Math.max(directory.length - 1, 2)] = undefined;
+      newDirectories[directoryDepth] = folderName;
+      targetColumnIndex.current = directoryDepth;
     } else if (directoryDepth === 2) {
-      newDirectories = newDirectories.slice(-3) as TypeDirectories;
+      newDirectories[directoryDepth] = folderName;
+      targetColumnIndex.current = directoryDepth;
+    } else if (directoryDepth === 3) {
+      newDirectories = [...directory, folderName];
       const newFiles = [files[1], files[2]];
       setFiles(newFiles as TypeFiles);
+      targetColumnIndex.current = 2;
     }
-    newDirectories[directoryDepth + 1] = folderName;
-    targetColumnIndex.current = directoryDepth + 1;
     setDirectory(newDirectories);
   };
 
@@ -277,37 +280,30 @@ export default function StoragePage() {
     const convertedData = (storageData?.data ?? (storageData as unknown as TypeFile[]))?.map(
       convertStorageToTypeFile
     );
-
     if (!convertedData) return;
-
     const transformedData = convertedData.map(i => {
       const isFolder = i.content?.type === "inode/directory";
-      const isInRoot = targetColumnIndex.current === 0;
+      const isInRoot = targetColumnIndex.current === 1;
       const nameParts = i.name.split("/").filter(Boolean);
       const resolvedName = nameParts[nameParts.length - 1] + (isFolder ? "/" : "");
       if (isFolder || !isInRoot) return {...i, name: resolvedName};
       return i;
     });
-
     const newFiles: TypeFiles = [...files];
     newFiles[targetColumnIndex.current] = transformedData;
-
-    for (let i = targetColumnIndex.current + 1; i < 3; i++) {
-      newFiles[i] = undefined;
-    }
-
     setFiles(newFiles);
   }, [storageData]);
 
   const handleClosePreview = () => setPreviewFile(undefined);
 
+  const lastThreeDirectory = directory.slice(-3).filter(Boolean) as string[];
   return (
     <div className={styles.container}>
       <FluidContainer
         className={styles.actionBar}
         prefix={{children: <SearchBar />}}
         suffix={{
-          children: <ActionButtons directory={directory} files={files} />
+          children: <ActionButtons directory={lastThreeDirectory} files={files} />
         }}
       />
       <FluidContainer
@@ -319,7 +315,7 @@ export default function StoragePage() {
               files={files}
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
-              directory={directory}
+              directory={lastThreeDirectory}
             />
           )
         }}
