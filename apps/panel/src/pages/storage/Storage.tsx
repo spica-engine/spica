@@ -64,7 +64,7 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
             <FlexElement direction="vertical" gap={10}>
               <Text className={styles.metadataName}>{previewFile?.name}</Text>
               <Text>{previewFile?.content?.type}</Text>
-              {/* The previewFile does not have no date value but the figma has a date in here */}
+              {/* The previewFile does not have a date value but the figma has a date in here */}
               {(previewFile as any)?.createdAt && (
                 <Text>{new Date((previewFile as any).createdAt).toLocaleString()}</Text>
               )}
