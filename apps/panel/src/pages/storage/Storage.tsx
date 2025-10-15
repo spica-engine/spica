@@ -223,8 +223,13 @@ interface StorageItemColumnsProps {
 
 const StorageItemColumns = memo(
   ({files, handleFolderClick, setPreviewFile, directory, previewFile}: StorageItemColumnsProps) => {
-    const renderSecondRow = directory[directory.length - 2] !== undefined;
-    const renderThirdRow = directory[directory.length - 1] !== undefined;
+    const {renderSecondRow, renderThirdRow} = useMemo(
+      () => ({
+        renderSecondRow: directory[directory.length - 2] !== undefined,
+        renderThirdRow: directory[directory.length - 1] !== undefined
+      }),
+      [directory]
+    );
 
     return (
       <FluidContainer
@@ -274,6 +279,14 @@ const StorageItemColumns = memo(
   }
 );
 
+function unsetLastDefined<T>(arr: (T | undefined)[]): (T | undefined)[] {
+  const lastDefinedIndex = arr.map(v => v !== undefined).lastIndexOf(true);
+  if (lastDefinedIndex !== -1) {
+    arr[lastDefinedIndex] = undefined;
+  }
+  return arr;
+}
+
 export default function StoragePage() {
   const [directory, setDirectory] = useState<(string | undefined)[]>(["/"]);
   const targetColumnIndex = useRef(0);
@@ -289,34 +302,39 @@ export default function StoragePage() {
     directoryDepth: TypeDirectoryDepth,
     isActive: boolean
   ) => {
-    if (isActive) return;
-
     let newDirectories = [...directory];
     let newFiles = [...files];
-    switch (directoryDepth) {
-      case 1:
-        const lastDirectoryIndex = Math.max(directory.length - 1, 2);
-        newDirectories[lastDirectoryIndex] = undefined;
-        if (newDirectories[lastDirectoryIndex + 1])
-          newDirectories[lastDirectoryIndex + 1] = undefined;
-        const lastFilesIndex = Math.max(files.length - 1, 2);
-        delete newFiles[lastFilesIndex];
-        newDirectories[Math.max(directory.length - 2, 1)] = folderName;
-        targetColumnIndex.current = 1;
-        break;
 
-      case 2:
-        newDirectories[Math.max(directory.length - 1, 2)] = folderName;
-        targetColumnIndex.current = 2;
-        break;
+    if (isActive && directory.length <= 3) {
+      newDirectories = unsetLastDefined(newDirectories);
+      newFiles = unsetLastDefined(newFiles);
+    } else if (isActive) {
+      console.log("i cant");
+    } else {
+      switch (directoryDepth) {
+        case 1:
+          const lastDirectoryIndex = Math.max(directory.length - 1, 2);
+          newDirectories[lastDirectoryIndex] = undefined;
+          if (newDirectories[lastDirectoryIndex + 1])
+            newDirectories[lastDirectoryIndex + 1] = undefined;
+          const lastFilesIndex = Math.max(files.length - 1, 2);
+          delete newFiles[lastFilesIndex];
+          newDirectories[Math.max(directory.length - 2, 1)] = folderName;
+          targetColumnIndex.current = 1;
+          break;
 
-      case 3:
-        newDirectories = [...directory, folderName];
-        newFiles = [files[1], files[2]];
-        targetColumnIndex.current = 2;
-        break;
+        case 2:
+          newDirectories[Math.max(directory.length - 1, 2)] = folderName;
+          targetColumnIndex.current = 2;
+          break;
+
+        case 3:
+          newDirectories = [...directory, folderName];
+          newFiles = [files[1], files[2]];
+          targetColumnIndex.current = 2;
+          break;
+      }
     }
-
     setFiles(newFiles as TypeFiles);
     setDirectory(newDirectories);
   };
