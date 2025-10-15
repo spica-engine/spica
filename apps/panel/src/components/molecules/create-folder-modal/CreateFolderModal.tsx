@@ -1,7 +1,7 @@
 import React, {useState, type FC, type ReactNode} from "react";
 import {Button, FluidContainer, Icon, Text, FlexElement, Modal, Input} from "oziko-ui-kit";
 import styles from "./CreateFolderModal.module.scss";
-import { useUploadFilesMutation } from "../../../store/api/storageApi";
+import {useUploadFilesMutation} from "../../../store/api/storageApi";
 
 type CreateFolderProps = {
   initialValue?: string;
@@ -11,10 +11,15 @@ type CreateFolderProps = {
     onOpen: (e: React.MouseEvent) => void;
     onClose: () => void;
   }) => ReactNode;
+  currentItemNames?: string[];
 };
 
-
-const CreateFolder: FC<CreateFolderProps> = ({initialValue = "New Folder", prefix = "", children}) => {
+const CreateFolder: FC<CreateFolderProps> = ({
+  initialValue = "New Folder",
+  prefix = "",
+  children,
+  currentItemNames
+}) => {
   const [createFolder] = useUploadFilesMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [value, setValue] = useState(initialValue);
@@ -41,8 +46,15 @@ const CreateFolder: FC<CreateFolderProps> = ({initialValue = "New Folder", prefi
         return;
       }
 
-      const rawFolderName = value.trim()
-      const folderName = prefix + (rawFolderName.endsWith('/') ? rawFolderName : rawFolderName + '/');
+      const rawFolderName = value.trim();
+      const folderName =
+        prefix + (rawFolderName.endsWith("/") ? rawFolderName : rawFolderName + "/");
+
+      if (currentItemNames?.some(name => name === folderName)) {
+        setError("A file or folder with this name already exists.");
+        return;
+      }
+
       const encodedFolderName = encodeURIComponent(folderName);
       const emptyFolder = new File([], encodedFolderName);
       await createFolder({files: [emptyFolder] as any});
@@ -83,9 +95,7 @@ const CreateFolder: FC<CreateFolderProps> = ({initialValue = "New Folder", prefi
             prefix={{
               children: (
                 <div className={styles.header}>
-                  <Text className={styles.headerText}>
-                    CREATE NEW FOLDER
-                  </Text>
+                  <Text className={styles.headerText}>CREATE NEW FOLDER</Text>
                 </div>
               )
             }}

@@ -103,6 +103,8 @@ export default function StoragePage() {
 
   const currentPrefix = directory.slice(1).join("");
 
+  const currentItemNames = files.flat().map(f => f?.name).filter(Boolean) as string[];
+
   return (
     <div className={styles.container}>
       <FluidContainer
@@ -127,7 +129,7 @@ export default function StoragePage() {
                   </Button>
                 )}
               </CreateFile>
-              <CreateFolder prefix={currentPrefix}>
+              <CreateFolder prefix={currentPrefix} currentItemNames={currentItemNames}>
                 {({onOpen}) => (
                   <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
                     <Icon name="plus" />
