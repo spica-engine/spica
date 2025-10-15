@@ -4,7 +4,12 @@ import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {
+  DATE_TIME,
+  OBJECTID_STRING,
+  OBJECT_ID,
+  createHashedFormat
+} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
@@ -14,6 +19,8 @@ export function getBucketName(id: string | ObjectId) {
   return `Bucket_${id}`;
 }
 
+const HASHING_KEY = "test-graphql-hashing-key";
+
 describe("GraphQLController", () => {
   let app: INestApplication;
   let req: Request;
@@ -22,7 +29,7 @@ describe("GraphQLController", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
+          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING, createHashedFormat(HASHING_KEY)],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
@@ -34,7 +41,8 @@ describe("GraphQLController", () => {
           history: false,
           realtime: false,
           cache: false,
-          graphql: true
+          graphql: true,
+          hashingKey: HASHING_KEY
         }),
         ActivityModule.forRoot({expireAfterSeconds: 10})
       ]
