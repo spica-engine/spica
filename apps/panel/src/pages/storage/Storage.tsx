@@ -101,10 +101,12 @@ interface StorageItemColumnProps {
   handleFolderClick: (folderName: string, depth: TypeDirectoryDepth) => void;
   setPreviewFile: (file: TypeFile) => void;
   depth: TypeDirectoryDepth;
+  directory: string[];
+  previewFile?: TypeFile;
 }
 
 const StorageItemColumn = memo(
-  ({files, handleFolderClick, setPreviewFile, depth}: StorageItemColumnProps) => {
+  ({files, handleFolderClick, setPreviewFile, depth, directory, previewFile}: StorageItemColumnProps) => {
     return (
       <FlexElement
         className={styles.storageItemColumn}
@@ -112,14 +114,22 @@ const StorageItemColumn = memo(
         alignment={"left" as TypeAlignment}
         gap={10}
       >
-        {files?.map((item, index) => (
-          <StorageItem
-            key={index}
-            item={item}
-            onFolderClick={folderName => handleFolderClick(folderName, depth)}
-            onFileClick={setPreviewFile}
-          />
-        ))}
+        {files?.map((item, index) => {
+          const isFolder = item?.content?.type === "inode/directory";
+          const isActive = isFolder
+            ? directory[depth] === item.name
+            : previewFile?.name === item.name;
+          
+          return (
+            <StorageItem
+              key={index}
+              item={item}
+              onFolderClick={folderName => handleFolderClick(folderName, depth)}
+              onFileClick={setPreviewFile}
+              isActive={isActive}
+            />
+          );
+        })}
       </FlexElement>
     );
   }
@@ -129,16 +139,17 @@ interface StorageItemProps {
   item: TypeFile;
   onFolderClick?: (folderName: string) => void;
   onFileClick: (file: TypeFile) => void;
+  isActive: boolean;
 }
 
-const StorageItem = memo(({item, onFolderClick, onFileClick}: StorageItemProps) => {
+const StorageItem = memo(({item, onFolderClick, onFileClick, isActive}: StorageItemProps) => {
   const isFolder = item?.content?.type === "inode/directory";
   const handleFolderClick = () => onFolderClick?.(item.name);
   const handleFileClick = () => onFileClick(item);
   return (
     <FlexElement
       onClick={isFolder ? handleFolderClick : handleFileClick}
-      className={`${styles.storageItem} ${isFolder ? styles.folder : styles.file}`}
+      className={`${styles.storageItem} ${isFolder ? styles.folder : styles.file} ${isActive ? styles.activeStorageItem : ""}`}
     >
       <Icon name={isFolder ? "folder" : "fileDocument"} size={14} />
       <Text className={styles.storageItemText} size="medium">
@@ -199,10 +210,11 @@ interface StorageItemColumnsProps {
   handleFolderClick: (folderName: string, depth: TypeDirectoryDepth) => void;
   setPreviewFile: (file: TypeFile) => void;
   directory: string[];
+  previewFile?: TypeFile;
 }
 
 const StorageItemColumns = memo(
-  ({files, handleFolderClick, setPreviewFile, directory}: StorageItemColumnsProps) => {
+  ({files, handleFolderClick, setPreviewFile, directory, previewFile}: StorageItemColumnsProps) => {
     const renderSecondRow = directory[1] !== undefined;
     const renderThirdRow = directory[2] !== undefined;
 
@@ -218,6 +230,8 @@ const StorageItemColumns = memo(
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
               depth={1}
+              directory={directory}
+              previewFile={previewFile}
             />
           )
         }}
@@ -229,6 +243,8 @@ const StorageItemColumns = memo(
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
               depth={2}
+              directory={directory}
+              previewFile={previewFile}
             />
           )
         }}
@@ -240,6 +256,8 @@ const StorageItemColumns = memo(
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
               depth={3}
+              directory={directory}
+              previewFile={previewFile}
             />
           )
         }}
@@ -316,6 +334,7 @@ export default function StoragePage() {
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
               directory={lastThreeDirectory}
+              previewFile={previewFile}
             />
           )
         }}
