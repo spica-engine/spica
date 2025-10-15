@@ -11,7 +11,7 @@
   width: 100% !important;
   height: 100% !important;
   border-radius: var(--border-radius-md);
-  overflow-y: scroll;
+  overflow-y: auto;
   @include mixins.hideScrollbar;
 }
 
@@ -157,10 +157,10 @@
 
 .doc {
   display: block !important;
-  overflow-y: scroll;
+  overflow-y: auto;
   > div > section {
     width: 100% !important;
-    overflow-x: scroll;
+    overflow-x: auto;
   }
   width: 100%;
   height: 100%;
