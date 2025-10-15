@@ -37,7 +37,7 @@ const WordDocViewer = ({url, className}: {url: string; className?: string}) => {
         const response = await fetch(url, {
           method: 'GET',
           headers: {
-            'Accept': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword'
+            'Accept': "application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword"
           }
         });
         
