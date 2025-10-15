@@ -18,9 +18,9 @@ export function categorizePropertyMap(propertyMap: string[][]) {
  * Transform data by applying hashing to 'hashed' type fields.
  *
  * This function serves as a preprocessing step for both write operations (documents)
- * and read operations (filters). When a hashingKey is provided and the schema contains
- * 'hashed' type fields, it transforms the data accordingly. If no hashingKey is provided
- * or no hashed fields exist, the data passes through unchanged.
+ * and for transforming filter objects used in query operations (filters). When a hashingKey is provided
+ * and the schema contains 'hashed' type fields, it transforms the data or filter accordingly.
+ * If no hashingKey is provided or no hashed fields exist, the data passes through unchanged.
  */
 export function handleDataHashing<T>(
   data: T,
@@ -134,7 +134,7 @@ function hashObjectValues(obj: any, fieldName: string, schema: Bucket, hashingKe
 
   if (typeof obj === "object" && obj !== null) {
     // Handle objects: { $eq: "value" } -> { $eq: "hashedValue" }
-    const result = {};
+    const result: Record<string, any> = {};
     for (const [key, value] of Object.entries(obj)) {
       if (typeof value === "string") {
         result[key] = hashSingleFieldValue(fieldName, value, schema, hashingKey);
