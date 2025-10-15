@@ -34,6 +34,9 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
       case "storage":
       case "richtext":
       case "textarea":
+        schema.type = "string";
+        break;
+
       case "hashed":
         schema.type = "string";
         schema.format = "hashed";
