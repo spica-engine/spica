@@ -1,5 +1,3 @@
-import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
-
 export function categorizePropertyMap(propertyMap: string[][]) {
   const documentPropertyMap: string[][] = [];
   const authPropertyMap: string[][] = [];
