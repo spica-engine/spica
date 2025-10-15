@@ -103,7 +103,13 @@ export default function StoragePage() {
 
   const currentPrefix = directory.slice(1).join("");
 
-  const currentItemNames = files.flat().map(f => f?.name).filter(Boolean) as string[];
+  const currentItemNames = files
+    .map((filesArray, index) =>
+      filesArray?.map(f => {
+        return `${index === 0 ? "" : directory[index]}${f.name}`;
+      })
+    )
+    .flat();
 
   return (
     <div className={styles.container}>
