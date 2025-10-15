@@ -173,7 +173,7 @@ interface ActionButtonsProps {
 
 const ActionButtons = memo(({directory, files}: ActionButtonsProps) => {
   const currentPrefix = directory.slice(1).join("");
-  const lastThreeDirectory = directory.slice(-3).filter(Boolean)
+  const lastThreeDirectory = directory.slice(-3).filter(Boolean);
   const currentItemNames = files
     .map((filesArray, index) =>
       filesArray?.map(f => {
@@ -223,8 +223,8 @@ interface StorageItemColumnsProps {
 
 const StorageItemColumns = memo(
   ({files, handleFolderClick, setPreviewFile, directory, previewFile}: StorageItemColumnsProps) => {
-    const renderSecondRow = directory[1] !== undefined;
-    const renderThirdRow = directory[2] !== undefined;
+    const renderSecondRow = directory[directory.length - 2] !== undefined;
+    const renderThirdRow = directory[directory.length - 1] !== undefined;
 
     return (
       <FluidContainer
@@ -290,21 +290,34 @@ export default function StoragePage() {
     isActive: boolean
   ) => {
     if (isActive) return;
+
     let newDirectories = [...directory];
-    if (directoryDepth === 1) {
-      const directoryToRemove = Math.max(directory.length - 1, 2);
-      newDirectories[directoryToRemove] = undefined;
-      newDirectories[directoryDepth] = folderName;
-      targetColumnIndex.current = directoryDepth;
-    } else if (directoryDepth === 2) {
-      newDirectories[directoryDepth] = folderName;
-      targetColumnIndex.current = directoryDepth;
-    } else if (directoryDepth === 3) {
-      newDirectories = [...directory, folderName];
-      const newFiles = [files[1], files[2]];
-      setFiles(newFiles as TypeFiles);
-      targetColumnIndex.current = 2;
+    let newFiles = [...files];
+    switch (directoryDepth) {
+      case 1:
+        const lastDirectoryIndex = Math.max(directory.length - 1, 2);
+        newDirectories[lastDirectoryIndex] = undefined;
+        if (newDirectories[lastDirectoryIndex + 1])
+          newDirectories[lastDirectoryIndex + 1] = undefined;
+        const lastFilesIndex = Math.max(files.length - 1, 2);
+        delete newFiles[lastFilesIndex];
+        newDirectories[Math.max(directory.length - 2, 1)] = folderName;
+        targetColumnIndex.current = 1;
+        break;
+
+      case 2:
+        newDirectories[Math.max(directory.length - 1, 2)] = folderName;
+        targetColumnIndex.current = 2;
+        break;
+
+      case 3:
+        newDirectories = [...directory, folderName];
+        newFiles = [files[1], files[2]];
+        targetColumnIndex.current = 2;
+        break;
     }
+
+    setFiles(newFiles as TypeFiles);
     setDirectory(newDirectories);
   };
 
@@ -334,12 +347,7 @@ export default function StoragePage() {
         className={styles.actionBar}
         prefix={{children: <SearchBar />}}
         suffix={{
-          children: (
-            <ActionButtons
-              directory={directory}
-              files={files}
-            />
-          )
+          children: <ActionButtons directory={directory} files={files} />
         }}
       />
       <FluidContainer
