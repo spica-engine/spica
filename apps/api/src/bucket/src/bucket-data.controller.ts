@@ -58,6 +58,7 @@ import {
 import {applyPatch} from "@spica-server/core/patch";
 import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {BucketDocument} from "@spica-server/interface/bucket";
+import {BUCKET_DATA_HASHING_KEY} from "@spica-server/interface/bucket";
 
 /**
  * All APIs related to bucket documents.
@@ -72,7 +73,8 @@ export class BucketDataController {
     @Inject(AUTH_RESOLVER) private authResolver: IAuthResolver,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
-    @Optional() @Inject() private activityService: ActivityService
+    @Optional() @Inject() private activityService: ActivityService,
+    @Optional() @Inject(BUCKET_DATA_HASHING_KEY) private hashingKey?: string
   ) {}
 
   /**
@@ -140,7 +142,8 @@ export class BucketDataController {
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         authResolver: this.authResolver
-      }
+      },
+      this.hashingKey
     ).catch(this.errorHandler);
   }
 
@@ -225,7 +228,8 @@ export class BucketDataController {
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         authResolver: this.authResolver
-      }
+      },
+      this.hashingKey
     ).catch(this.errorHandler);
 
     return document;
@@ -278,7 +282,8 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         deleteOne: documentId => this.deleteOne(req, bucketId, documentId),
         authResolver: this.authResolver
-      }
+      },
+      this.hashingKey
     ).catch(this.errorHandler);
 
     if (!document) {
@@ -337,7 +342,9 @@ export class BucketDataController {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         authResolver: this.authResolver
-      }
+      },
+      undefined,
+      this.hashingKey
     ).catch(this.errorHandler);
 
     if (!previousDocument) {
@@ -415,7 +422,8 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         authResolver: this.authResolver
       },
-      {returnDocument: ReturnDocument.AFTER}
+      {returnDocument: ReturnDocument.AFTER},
+      this.hashingKey
     ).catch(this.errorHandler);
 
     if (!currentDocument) {

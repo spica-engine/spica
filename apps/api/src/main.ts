@@ -118,6 +118,10 @@ const args = yargsInstance
       boolean: true,
       description: "Whether Bucket GraphQL feature is enabled.",
       default: false
+    },
+    "bucket-data-hashing-key": {
+      string: true,
+      description: "Secret key for hashing of bucket data hashed fields."
     }
   })
   /* Passport Options  */
@@ -596,7 +600,8 @@ const modules = [
     cache: args["bucket-cache"],
     cacheTtl: args["bucket-cache-ttl"],
     bucketDataLimit: args["bucket-data-limit"],
-    graphql: args["bucket-graphql"]
+    graphql: args["bucket-graphql"],
+    hashingKey: args["bucket-data-hashing-key"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",
