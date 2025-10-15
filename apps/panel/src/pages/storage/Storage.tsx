@@ -98,15 +98,22 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
 
 interface StorageItemColumnProps {
   files?: TypeFile[];
-  handleFolderClick: (folderName: string, depth: TypeDirectoryDepth) => void;
+  handleFolderClick: (folderName: string, depth: TypeDirectoryDepth, isActive: boolean) => void;
   setPreviewFile: (file: TypeFile) => void;
   depth: TypeDirectoryDepth;
-  directory: string[];
+  directory: (string | undefined)[];
   previewFile?: TypeFile;
 }
 
 const StorageItemColumn = memo(
-  ({files, handleFolderClick, setPreviewFile, depth, directory, previewFile}: StorageItemColumnProps) => {
+  ({
+    files,
+    handleFolderClick,
+    setPreviewFile,
+    depth,
+    directory,
+    previewFile
+  }: StorageItemColumnProps) => {
     return (
       <FlexElement
         className={styles.storageItemColumn}
@@ -117,14 +124,14 @@ const StorageItemColumn = memo(
         {files?.map((item, index) => {
           const isFolder = item?.content?.type === "inode/directory";
           const isActive = isFolder
-            ? directory[depth] === item.name
+            ? directory.slice(-3)[depth] === item.name
             : previewFile?.name === item.name;
-          
+
           return (
             <StorageItem
               key={index}
               item={item}
-              onFolderClick={folderName => handleFolderClick(folderName, depth)}
+              onFolderClick={folderName => handleFolderClick(folderName, depth, isActive)}
               onFileClick={setPreviewFile}
               isActive={isActive}
             />
@@ -160,16 +167,17 @@ const StorageItem = memo(({item, onFolderClick, onFileClick, isActive}: StorageI
 });
 
 interface ActionButtonsProps {
-  directory: string[];
+  directory: (string | undefined)[];
   files: TypeFiles;
 }
 
 const ActionButtons = memo(({directory, files}: ActionButtonsProps) => {
   const currentPrefix = directory.slice(1).join("");
+  const lastThreeDirectory = directory.slice(-3).filter(Boolean)
   const currentItemNames = files
     .map((filesArray, index) =>
       filesArray?.map(f => {
-        return `${index === 0 ? "" : directory[index]}${f.name}`;
+        return `${index === 0 ? "" : lastThreeDirectory[index]}${f.name}`;
       })
     )
     .flat()
@@ -207,9 +215,9 @@ const ActionButtons = memo(({directory, files}: ActionButtonsProps) => {
 
 interface StorageItemColumnsProps {
   files: TypeFiles;
-  handleFolderClick: (folderName: string, depth: TypeDirectoryDepth) => void;
+  handleFolderClick: (folderName: string, depth: TypeDirectoryDepth, isActive: boolean) => void;
   setPreviewFile: (file: TypeFile) => void;
-  directory: string[];
+  directory: (string | undefined)[];
   previewFile?: TypeFile;
 }
 
@@ -276,10 +284,15 @@ export default function StoragePage() {
   const [files, setFiles] = useState<TypeFiles>([]);
   const [previewFile, setPreviewFile] = useState<TypeFile>();
 
-  const handleFolderClick = (folderName: string, directoryDepth: TypeDirectoryDepth) => {
+  const handleFolderClick = (
+    folderName: string,
+    directoryDepth: TypeDirectoryDepth,
+    isActive: boolean
+  ) => {
+    if (isActive) return;
     let newDirectories = [...directory];
     if (directoryDepth === 1) {
-      const directoryToRemove = Math.max(directory.length - 1, 2)
+      const directoryToRemove = Math.max(directory.length - 1, 2);
       newDirectories[directoryToRemove] = undefined;
       newDirectories[directoryDepth] = folderName;
       targetColumnIndex.current = directoryDepth;
@@ -315,14 +328,18 @@ export default function StoragePage() {
 
   const handleClosePreview = () => setPreviewFile(undefined);
 
-  const lastThreeDirectory = directory.slice(-3).filter(Boolean) as string[];
   return (
     <div className={styles.container}>
       <FluidContainer
         className={styles.actionBar}
         prefix={{children: <SearchBar />}}
         suffix={{
-          children: <ActionButtons directory={lastThreeDirectory} files={files} />
+          children: (
+            <ActionButtons
+              directory={directory}
+              files={files}
+            />
+          )
         }}
       />
       <FluidContainer
@@ -334,7 +351,7 @@ export default function StoragePage() {
               files={files}
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
-              directory={lastThreeDirectory}
+              directory={directory}
               previewFile={previewFile}
             />
           )

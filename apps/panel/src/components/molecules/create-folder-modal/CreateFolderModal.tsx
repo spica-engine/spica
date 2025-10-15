@@ -36,11 +36,6 @@ const CreateFolder: FC<CreateFolderProps> = ({
         return;
       }
 
-      if (value.length < 4) {
-        setError("This field must be at least 4 characters long");
-        return;
-      }
-
       if (value.length > 100) {
         setError("This field cannot exceed 100 characters");
         return;
