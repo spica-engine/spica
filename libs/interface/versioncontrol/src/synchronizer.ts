@@ -17,62 +17,76 @@ export interface Resource {
   [key: string]: any;
 }
 
-interface Change<R extends ManagerResource> {
+interface Change<R extends ManagerResource<any>> {
   resourceType: ResourceType;
   changeType: ChangeTypes;
   resource: R;
 }
 
-export interface DocChange<R extends Resource = Resource> extends Change<R> {
+export interface DocChange<R extends ManagerResource<any> = ManagerResource<any>>
+  extends Change<R> {
   resourceType: ResourceType.DOCUMENT;
 }
 
-export interface RepChange<R extends Resource = Resource> extends Change<R> {
+export interface RepChange<R extends ManagerResource<any> = ManagerResource<any>>
+  extends Change<R> {
   resourceType: ResourceType.REPRESENTATIVE;
 }
 
 interface Converter<
-  Src extends Resource,
-  Target extends Resource,
+  Src extends ManagerResource<any>,
+  Target extends ManagerResource<any>,
   In extends Change<Src> = Change<Src>,
   Out extends Change<Target> = Change<Target>
 > {
   convert(change: In): Out;
 }
 
-type DocToRepConverter<Src extends Resource, Target extends Resource> = Converter<
-  Src,
-  Target,
-  DocChange<Src>,
-  RepChange<Target>
->;
-type RepToDocConverter<Src extends Resource, Target extends Resource> = Converter<
-  Src,
-  Target,
-  RepChange<Src>,
-  DocChange<Target>
->;
+type DocToRepConverter<
+  Src extends ManagerResource<any>,
+  Target extends ManagerResource<any>
+> = Converter<Src, Target, DocChange<Src>, RepChange<Target>>;
+type RepToDocConverter<
+  Src extends ManagerResource<any>,
+  Target extends ManagerResource<any>
+> = Converter<Src, Target, RepChange<Src>, DocChange<Target>>;
 
-interface Watcher<R extends Resource, T extends ResourceType, RC extends Change<R> = Change<R>> {
+interface Watcher<
+  R extends ManagerResource<any>,
+  T extends ResourceType,
+  RC extends Change<R> = Change<R>
+> {
   resourceType: T;
   watch(): Observable<RC>;
 }
 
-interface Applier<R extends Resource, RT extends ResourceType, RC extends Change<R> = Change<R>> {
+interface Applier<
+  R extends ManagerResource<any>,
+  RT extends ResourceType,
+  RC extends Change<R> = Change<R>
+> {
   resourceType: RT;
   apply(change: RC): Promise<any>;
 }
 
-type DocWatcher<R extends Resource> = Watcher<R, ResourceType.DOCUMENT, DocChange<R>>;
-type RepWatcher<R extends Resource> = Watcher<R, ResourceType.REPRESENTATIVE, RepChange<R>>;
+type DocWatcher<R extends ManagerResource<any>> = Watcher<R, ResourceType.DOCUMENT, DocChange<R>>;
+type RepWatcher<R extends ManagerResource<any>> = Watcher<
+  R,
+  ResourceType.REPRESENTATIVE,
+  RepChange<R>
+>;
 
-type DocApplier<R extends Resource> = Applier<R, ResourceType.DOCUMENT, DocChange<R>>;
-type RepApplier<R extends Resource> = Applier<R, ResourceType.REPRESENTATIVE, RepChange<R>>;
+type DocApplier<R extends ManagerResource<any>> = Applier<R, ResourceType.DOCUMENT, DocChange<R>>;
+type RepApplier<R extends ManagerResource<any>> = Applier<
+  R,
+  ResourceType.REPRESENTATIVE,
+  RepChange<R>
+>;
 
 interface Sync<
-  Src extends Resource,
+  Src extends ManagerResource<any>,
   SrcType extends ResourceType,
-  Target extends Resource,
+  Target extends ManagerResource<any>,
   TargetType extends ResourceType,
   C extends Converter<Src, Target>,
   W extends Watcher<Src, SrcType> = Watcher<Src, SrcType>,
@@ -83,7 +97,7 @@ interface Sync<
   applier: A;
 }
 
-export type DocSync<Src extends Resource, Target extends Resource> = Sync<
+export type DocSync<Src extends ManagerResource<any>, Target extends ManagerResource<any>> = Sync<
   Src,
   ResourceType.DOCUMENT,
   Target,
@@ -93,7 +107,7 @@ export type DocSync<Src extends Resource, Target extends Resource> = Sync<
   RepApplier<Target>
 >;
 
-export type RepSync<Src extends Resource, Target extends Resource> = Sync<
+export type RepSync<Src extends ManagerResource<any>, Target extends ManagerResource<any>> = Sync<
   Src,
   ResourceType.REPRESENTATIVE,
   Target,
@@ -103,7 +117,7 @@ export type RepSync<Src extends Resource, Target extends Resource> = Sync<
   DocApplier<Target>
 >;
 
-export type SynchronizerArgs<R1 extends Resource, R2 extends Resource> = {
+export type SynchronizerArgs<R1 extends ManagerResource<any>, R2 extends ManagerResource<any>> = {
   syncs: [DocSync<R1, R2>, RepSync<R2, R1>];
   moduleName: string;
   subModuleName: string;
@@ -119,7 +133,10 @@ export interface ChangeMeta {
   submodule: string;
 }
 
-export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
+export abstract class Synchronizer<
+  R1 extends ManagerResource<any>,
+  R2 extends ManagerResource<any>
+> {
   constructor(private args: SynchronizerArgs<R1, R2>) {
     if (args.commander) {
       args.commander.register(
@@ -128,18 +145,16 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
           this.addDocToRepAction,
           this.addRepToDocAction,
           this.removeDocToRepAction,
-          this.addRepToDocAction
+          this.removeRepToDocAction
         ],
         CommandType.SYNC
       );
     }
   }
 
-  // Map to store id-slug pairs for resource identification
   private idSlugMap = new Map<string, string>(); // id -> slug
   private slugIdMap = new Map<string, string>(); // slug -> id
 
-  // Updated action tracking using meta objects instead of just ids
   docToRepActions = new Set<ChangeMeta>();
   repToDocActions = new Set<ChangeMeta>();
 
@@ -154,10 +169,10 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
       this.storeIdSlugMapping(idStr, meta.slug);
     }
   }
+
   addRepToDocAction(meta: ChangeMeta) {
     this.repToDocActions.add(meta);
 
-    // Store mapping when we have both id and slug
     if (meta.id && meta.slug) {
       const idStr = String(meta.id);
 
@@ -178,80 +193,71 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     for (const action of this.repToDocActions) {
       if (this.compareMetaActions(action, meta)) {
         this.repToDocActions.delete(action);
-        // Remove from id-slug map to prevent memory leak
-        if (action.id && action.slug) {
-          this.idSlugMap.delete(action.id);
-          this.slugIdMap.delete(action.slug);
-        }
         break;
       }
     }
   }
 
-  // Helper method to store id-slug mapping
   storeIdSlugMapping(id: string, slug: string) {
     this.idSlugMap.set(id, slug);
     this.slugIdMap.set(slug, id);
   }
 
-  // Helper method to get slug from id
   getSlugFromId(id: string): string | undefined {
     return this.idSlugMap.get(id);
   }
 
-  // Helper method to get id from slug
   getIdFromSlug(slug: string): string | undefined {
     return this.slugIdMap.get(slug);
   }
 
-  // Resolve missing id or slug using the stored maps. If one side is present,
-  // try to find the other. If both are found, persist the mapping.
   private resolveIdAndSlug(
     resourceId?: string,
     slug?: string
   ): {resourceId?: string; slug?: string} {
     let id = resourceId;
 
-    // If slug is missing but id exists, try to lookup slug
     if (!slug && id) {
       const mapped = this.getSlugFromId(id);
       if (mapped) slug = mapped;
     }
 
-    // If id is missing but slug exists, try to lookup id
     if (!id && slug) {
       const mappedId = this.getIdFromSlug(slug);
       if (mappedId) id = mappedId;
     }
 
-    // If we have both now, store mapping
     if (id && slug) {
       this.storeIdSlugMapping(id, slug);
     }
     return {resourceId: id, slug};
   }
 
-  // Helper method to compare meta actions for infinite synchronization prevention
   private compareMetaActions(action1: ChangeMeta, action2: ChangeMeta): boolean {
-    // First check if they're from the same module/submodule
     if (action1.module !== action2.module || action1.submodule !== action2.submodule) {
       return false;
     }
 
-    // If both have IDs, compare them directly
     if (action1.id && action2.id) {
       return action1.id === action2.id;
     }
 
-    // If both have slugs, compare them directly
     if (action1.slug && action2.slug) {
       return action1.slug === action2.slug;
     }
 
+    if (action1.id && action2.slug) {
+      const slug1 = this.getSlugFromId(action1.id);
+      return slug1 === action2.slug;
+    }
+
+    if (action1.slug && action2.id) {
+      const id1 = this.getIdFromSlug(action1.slug);
+      return id1 === action2.id;
+    }
     return false;
   }
 
-  // Helper method to check if action exists and should be ignored
   private hasMatchingAction(meta: ChangeMeta, actions: Set<ChangeMeta>): boolean {
     for (const action of actions) {
       if (this.compareMetaActions(action, meta)) {
@@ -292,7 +298,17 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
       this.addDocToRepAction(meta);
 
-      const convertedChange = docSync.converter.convert(change);
+      // Update the change with resolved resourceId and slug
+      const updatedChange: DocChange<R1> = {
+        ...change,
+        resource: {
+          ...change.resource,
+          _id: resourceId,
+          slug: slug
+        }
+      };
+
+      const convertedChange = docSync.converter.convert(updatedChange);
 
       docSync.applier.apply(convertedChange).catch(this.errorHandler);
     };
@@ -300,10 +316,10 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
     docSync.watcher.watch().subscribe({
       next: change => {
         const rawResourceId = change.resource._id;
-        // const rawSlug = change.resource.slug;
-        console.log("doc to rep sync: ", change);
-        // console.log("rep rawResourceId:", rawResourceId, "rep rawSlug: ", rawSlug);
-        const rawSlug = change.resource.slug || change.resource.title || change.resource.name;
+        const rawSlug =
+          change.resource.slug ||
+          (change.resource.content as any)?.title ||
+          (change.resource.content as any)?.name;
 
         const resolved = this.resolveIdAndSlug(rawResourceId, rawSlug);
         const resourceId = resolved.resourceId;
@@ -340,7 +356,17 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
 
       this.addRepToDocAction(meta);
 
-      const convertedChange = repSync.converter.convert(change);
+      // Update the change resource with resolved resourceId and slug
+      const updatedChange: RepChange<R2> = {
+        ...change,
+        resource: {
+          ...change.resource,
+          _id: resourceId,
+          slug: slug || change.resource.slug
+        }
+      };
+
+      const convertedChange = repSync.converter.convert(updatedChange);
 
       const retry = (delays: number[]) => {
         repSync.applier.apply(convertedChange).catch(err => {
@@ -362,8 +388,7 @@ export abstract class Synchronizer<R1 extends Resource, R2 extends Resource> {
       next: change => {
         const rawResourceId = change.resource._id;
         const rawSlug = change.resource.slug;
-        console.log("rep to doc sync: ", change);
-        // console.log("rep rawResourceId:", rawResourceId, "rep rawSlug: ", rawSlug);
+
         const resolved = this.resolveIdAndSlug(rawResourceId, rawSlug);
         const resourceId = resolved.resourceId;
         const slug = resolved.slug;
@@ -391,7 +416,7 @@ export type ManagerResource<T> = {
 };
 
 export type VCSynchronizerArgs<R1 extends Resource> = Omit<
-  SynchronizerArgs<R1, RepresentativeManagerResource>,
+  SynchronizerArgs<DocumentManagerResource<R1>, RepresentativeManagerResource>,
   "syncs"
 > & {
   syncs: [
@@ -403,7 +428,7 @@ export type VCSynchronizerArgs<R1 extends Resource> = Omit<
           }
         | {
             collectionService?: never;
-            docWatcher: () => Observable<DocChange<R1>>;
+            docWatcher: () => Observable<DocChange<DocumentManagerResource<R1>>>;
           };
       converter: {
         convertToRepResource: (
@@ -431,7 +456,7 @@ export type VCSynchronizerArgs<R1 extends Resource> = Omit<
 
 export type RegisterVCSynchronizer<R1 extends Resource> = (
   args: VCSynchronizerArgs<R1>
-) => Synchronizer<R1, RepresentativeManagerResource>;
+) => Synchronizer<DocumentManagerResource<R1>, RepresentativeManagerResource>;
 
 export const REGISTER_VC_SYNCHRONIZER = Symbol.for("REGISTER_VC_SYNCHRONIZER");
 

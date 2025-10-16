@@ -22,8 +22,8 @@ export const getSynchronizer = (
   const extension = "yaml";
 
   const convertToRepResource = (change: DocChange<DocumentManagerResource<Bucket>>) => ({
-    _id: change.resource.content._id.toString(),
-    slug: change.resource.content.title,
+    _id: change.resource._id || change.resource.content._id?.toString(),
+    slug: change.resource.slug || change.resource.content.title,
     content: YAML.stringify(change.resource.content)
   });
 

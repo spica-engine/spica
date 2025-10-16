@@ -2,6 +2,7 @@ import {FunctionService} from "@spica-server/function/services";
 import {
   ChangeTypes,
   DocChange,
+  DocumentManagerResource,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
@@ -21,10 +22,10 @@ export const getSchemaSynchronizer = (
   const fileName = "schema";
   const extension = "yaml";
 
-  const convertToRepResource = (change: DocChange<Function>) => ({
-    _id: change.resource._id.toString(),
-    slug: change.resource.name,
-    content: YAML.stringify(change.resource)
+  const convertToRepResource = (change: DocChange<DocumentManagerResource<Function>>) => ({
+    _id: change.resource._id || change.resource.content._id?.toString(),
+    slug: change.resource.slug || change.resource.content.name,
+    content: YAML.stringify(change.resource.content)
   });
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {

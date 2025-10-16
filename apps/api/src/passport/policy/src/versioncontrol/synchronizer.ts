@@ -1,5 +1,6 @@
 import {
   DocChange,
+  DocumentManagerResource,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
@@ -14,10 +15,10 @@ export const getSynchronizer = (ps: PolicyService): VCSynchronizerArgs<Policy> =
   const fileName = "schema";
   const extension = "yaml";
 
-  const convertToRepResource = (change: DocChange<Policy>) => ({
-    _id: change.resource._id.toString(),
-    slug: change.resource.name,
-    content: YAML.stringify(change.resource)
+  const convertToRepResource = (change: DocChange<DocumentManagerResource<Policy>>) => ({
+    _id: change.resource._id || change.resource.content._id?.toString(),
+    slug: change.resource.slug || change.resource.content.name,
+    content: YAML.stringify(change.resource.content)
   });
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {

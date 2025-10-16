@@ -1,6 +1,7 @@
 import {
   ChangeTypes,
   DocChange,
+  DocumentManagerResource,
   RepChange,
   RepresentativeManagerResource,
   VCSynchronizerArgs
@@ -15,10 +16,10 @@ export const getSynchronizer = (evs: EnvVarService): VCSynchronizerArgs<EnvVar> 
   const fileName = "schema";
   const extension = "yaml";
 
-  const convertToRepResource = (change: DocChange<EnvVar>) => ({
-    _id: change.resource._id.toString(),
-    slug: change.resource.key,
-    content: YAML.stringify(change.resource)
+  const convertToRepResource = (change: DocChange<DocumentManagerResource<EnvVar>>) => ({
+    _id: change.resource._id || change.resource.content._id?.toString(),
+    slug: change.resource.slug || change.resource.content.key,
+    content: YAML.stringify(change.resource.content)
   });
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {

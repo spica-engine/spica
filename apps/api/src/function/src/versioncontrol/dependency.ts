@@ -20,13 +20,17 @@ export const getDependencySynchronizer = (
   const extension = "json";
 
   const docWatcher = () =>
-    new Observable<DocChange<FunctionWithContent>>(observer => {
+    new Observable<DocChange<DocumentManagerResource<FunctionWithContent>>>(observer => {
       engine.watch("dependency").subscribe({
         next: (change: FunctionWithContent) => {
-          const docChange: DocChange<FunctionWithContent> = {
+          const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
             resourceType: ResourceType.DOCUMENT,
             changeType: ChangeTypes.INSERT,
-            resource: change
+            resource: {
+              _id: change._id.toString(),
+              slug: change.name,
+              content: change
+            }
           };
 
           observer.next(docChange);
@@ -42,8 +46,8 @@ export const getDependencySynchronizer = (
     const dependencies = parsed.dependencies || {};
 
     return {
-      _id: change.resource.content._id.toString(),
-      slug: change.resource.content.name,
+      _id: change.resource._id || change.resource.content._id?.toString(),
+      slug: change.resource.slug || change.resource.content.name,
       content: JSON.stringify({dependencies})
     };
   };
