@@ -29,7 +29,7 @@ export const getSynchronizer = (
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-    const id = change.resource._id || parsed._id;
+    const id = parsed._id || change.resource._id;
     return {...parsed, _id: new ObjectId(id)};
   };
 

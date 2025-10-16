@@ -30,7 +30,8 @@ export const getSchemaSynchronizer = (
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {
     const parsed = change.resource.content ? YAML.parse(change.resource.content) : {};
-    return {...parsed, _id: new ObjectId(change.resource._id)};
+    const id = parsed._id || change.resource._id;
+    return {...parsed, _id: new ObjectId(id)};
   };
 
   const insert = async (fn: Function) => {

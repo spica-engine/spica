@@ -131,7 +131,7 @@ describe("Representative", () => {
           expect(change).toEqual({
             resourceType: ResourceType.REPRESENTATIVE,
             changeType: ChangeTypes.INSERT,
-            resource: {_id: id, content: {title: "hi"}}
+            resource: {slug: "module5", content: {title: "hi"}}
           });
           done();
         }
@@ -154,7 +154,7 @@ describe("Representative", () => {
           expect(change).toEqual({
             resourceType: ResourceType.REPRESENTATIVE,
             changeType: ChangeTypes.UPDATE,
-            resource: {_id: id, content: {title: "hello"}}
+            resource: {slug: "module6", content: {title: "hello"}}
           });
           done();
         }
@@ -179,7 +179,7 @@ describe("Representative", () => {
           expect(change).toEqual({
             resourceType: ResourceType.REPRESENTATIVE,
             changeType: ChangeTypes.DELETE,
-            resource: {_id: id, content: ""}
+            resource: {slug: "module7", content: ""}
           });
           done();
         }

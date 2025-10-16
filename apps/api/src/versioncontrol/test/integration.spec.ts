@@ -199,6 +199,7 @@ describe("Versioning", () => {
               {scope: "passport"},
               {$set: {"identity.attributes.properties.name.type": "number"}}
             );
+            await sleep();
 
             const file = await readResource("preference", "identity");
             const parsedFile = {
