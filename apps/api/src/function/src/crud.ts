@@ -40,7 +40,7 @@ export async function find<ER extends EnvRelation = EnvRelation.NotResolved>(
   return fns;
 }
 
-export function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
+export async function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
   fs: FunctionService,
   id: ObjectId,
   options: {
@@ -51,7 +51,13 @@ export function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
     .findOneIfRequested(id)
     .resolveEnvRelation(options.resolveEnvRelations)
     .result();
-  return fs.aggregate<Function<ER>>(pipeline).next();
+
+  const res = await fs.aggregate<Function<ER>>(pipeline).next();
+  if (!res) {
+    throw new NotFoundException(`Couldn't find the function with id ${id}`);
+  }
+
+  return res;
 }
 
 export async function findByName<ER extends EnvRelation = EnvRelation.NotResolved>(
@@ -77,9 +83,19 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
     fn._id = new ObjectId(fn._id);
   }
 
-  const insertedFn = await fs
-    .insertOne(fn)
-    .then(r => findOne(fs, r._id, {resolveEnvRelations: EnvRelation.Resolved}));
+  let insertedFn;
+  try {
+    const r = await fs.insertOne(fn);
+    insertedFn = await findOne(fs, r._id, {resolveEnvRelations: EnvRelation.Resolved});
+  } catch (error: any) {
+    if (error && error.code === 11000) {
+      throw new BadRequestException(
+        `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
+      );
+    }
+
+    throw new InternalServerErrorException(error?.message || error);
+  }
 
   const changes = createTargetChanges(insertedFn, ChangeKind.Added);
   engine.categorizeChanges(changes);

@@ -41,7 +41,9 @@ COPY *.env ./
 ARG PROJECTS=""
 ARG EXCLUDE=""
 ARG RABBITMQ_URL=""
+ARG MAILER_URL=""
 ENV RABBITMQ_URL=$RABBITMQ_URL
+ENV MAILER_URL=$MAILER_URL
 RUN yarn nx run-many -t test --projects=$PROJECTS --exclude=$EXCLUDE 
 
 # start app from tools, because app uses git

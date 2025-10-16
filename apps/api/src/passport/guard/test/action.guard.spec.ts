@@ -31,7 +31,12 @@ describe("ActionGuard", () => {
     class TestingController {}
 
     if (options.resourceFilter) {
-      Reflect.defineMetadata("resourceFilter", {key: "testing", index: 0}, TestingController);
+      Reflect.defineMetadata(
+        "resourceFilter",
+        {key: "testing", index: 0},
+        TestingController,
+        "testing"
+      );
     }
 
     const ctx = {
