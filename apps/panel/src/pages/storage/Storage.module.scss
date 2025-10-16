@@ -15,6 +15,15 @@
   @include mixins.hideScrollbar;
 }
 
+.storageItemColumnContainer {
+  height: 100% !important;
+  width: 100% !important;
+  border-right: var(--border-default);
+  justify-content: flex-start !important;
+  padding: var(--padding-xl) 0;
+  width: 280px !important;
+}
+
 .storageItemColumns {
   display: flex;
   height: 100% !important;
@@ -22,24 +31,30 @@
 
 .storageItemColumn {
   height: 100% !important;
-  max-width: 100% !important;
-}
-
-.storageItemColumnContainer {
-  height: 100% !important;
   width: 100% !important;
-  border-right: var(--border-default);
-  justify-content: flex-start !important;
-  padding: var(--padding-xl);
-  width: 280px !important;
+  overflow-y: scroll;
+  @include mixins.hideScrollbar;
 }
 
 .storageItem {
-  max-width: 100%;
   cursor: pointer;
+  width: 100% !important;
+  height: 28px !important;
+  padding: var(--padding-sm) var(--padding-xl);
+  justify-content: flex-start !important;
 }
 
-.storageItem.folder {
+.storageItem:hover {
+  background-color: var(--color-hover);
+}
+
+.activeStorageItem {
+  background-color: var(--color-hover);
+}
+
+
+.storageItemIcon {
+  color: var(--color-font-primary);
 }
 
 .storageItemText {
@@ -151,8 +166,4 @@
 
 .hidden {
   display: none !important;
-}
-
-.activeStorageItem {
-  font-weight: 700;
 }
