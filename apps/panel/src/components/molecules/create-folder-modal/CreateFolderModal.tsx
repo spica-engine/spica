@@ -15,7 +15,7 @@ type CreateFolderProps = {
 };
 
 const CreateFolder: FC<CreateFolderProps> = ({
-  initialValue = "New Folder",
+  initialValue = "",
   prefix = "",
   children,
   currentItemNames
@@ -31,7 +31,7 @@ const CreateFolder: FC<CreateFolderProps> = ({
       setLoading(true);
       setError("");
 
-      if (!value.trim()) {
+      if (!value?.trim()) {
         setError("This field cannot be left empty.");
         return;
       }

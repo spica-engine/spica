@@ -1,24 +1,14 @@
-import React, {useState, useRef, type FC, type ReactNode} from "react";
-import { Input } from "oziko-ui-kit";
-import { useUploadFilesMutation } from "../../../store/api/storageApi";
+import React, {useRef, type FC, type ReactNode} from "react";
+import {useUploadFilesMutation} from "../../../store/api/storageApi";
 
 type CreateFileProps = {
   prefix?: string;
-  children: (props: {
-    isOpen: boolean;
-    onOpen: (e: React.MouseEvent) => void;
-    onClose: () => void;
-  }) => ReactNode;
+  children: (props: {onOpen: (e: React.MouseEvent) => void}) => ReactNode;
 };
 
 const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
   const [uploadFiles, {isLoading}] = useUploadFilesMutation();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleClose = () => {
-    setIsModalOpen(false);
-  };
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -32,12 +22,12 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
         const filesWithPrefix = Array.from(files).map(file => {
           const fileName = prefix + file.name;
           const encodedFileName = encodeURIComponent(fileName);
-          return new File([file], encodedFileName, { type: file.type });
+          return new File([file], encodedFileName, {type: file.type});
         });
-        
+
         const dataTransfer = new DataTransfer();
         filesWithPrefix.forEach(file => dataTransfer.items.add(file));
-        
+
         await uploadFiles({files: dataTransfer.files});
       } catch (error) {
         console.error("File upload failed:", error);
@@ -45,16 +35,14 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
     }
 
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   return (
     <>
       {children({
-        isOpen: isModalOpen,
-        onOpen: handleOpen,
-        onClose: handleClose
+        onOpen: handleOpen
       })}
       <input
         ref={fileInputRef}
