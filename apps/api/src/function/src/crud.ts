@@ -199,7 +199,7 @@ export namespace index {
   ): Promise<Function<EnvRelation>[]> {
     const foundFns = [];
     const promises = fns.map(fn => {
-      const entrypoint = engine.getFunctionBuildEntrypoint(fn);
+      const entrypoint = engine.getFunctionCompiledEntrypoint(fn);
       return doesFileIncludeText(entrypoint, text)
         .then(doesInclude => {
           if (doesInclude) {
