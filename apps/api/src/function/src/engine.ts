@@ -133,13 +133,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.scheduler.pkgmanagers.get("node");
   }
 
-  private sanitizeFunctionName(name: string): string {
-    return name.replace(/[^a-zA-Z0-9_-]/g, "_");
-  }
-
   private getFunctionRoot(fn: Function) {
-    const sanitizedName = this.sanitizeFunctionName(fn.name);
-    return path.join(this.options.root, sanitizedName);
+    return path.join(this.options.root, fn.name);
   }
 
   getPackages(fn: Function): Promise<Package[]> {
@@ -160,7 +155,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
-      name: this.sanitizeFunctionName(fn.name).replace(" ", "-").toLowerCase(),
+      name: fn.name.replace(/ /g, "-").toLowerCase(),
       description: fn.description || "No description.",
       version: "0.0.1",
       private: true,
@@ -169,7 +164,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       main: path.join(
         ".",
         this.options.outDir,
-        this.sanitizeFunctionName(fn.name),
+        fn.name,
         functionLanguage.description.entrypoints.runtime
       )
     };
@@ -182,17 +177,13 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   deleteFunction(fn: Function) {
     const functionRoot = this.getFunctionRoot(fn);
-    const buildDir = path.join(
-      this.options.root,
-      this.options.outDir,
-      this.sanitizeFunctionName(fn.name)
-    );
+    const buildDir = path.join(this.options.root, this.options.outDir, fn.name);
     return Promise.all([rimraf(functionRoot), rimraf(buildDir)]);
   }
 
   compile(fn: Function) {
     const language = this.getFunctionLanguage(fn);
-    const outDirRelative = path.join("..", this.options.outDir, this.sanitizeFunctionName(fn.name));
+    const outDirRelative = path.join("..", this.options.outDir, fn.name);
     return language.compile({
       cwd: this.getFunctionRoot(fn),
       outDir: outDirRelative,
@@ -290,10 +281,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   private subscribe(change: TargetChange) {
     const enqueuer = this.getEnqueuer(change.type);
     if (enqueuer) {
-      const sanitizedName = this.sanitizeFunctionName(change.target.name);
       const target = new event.Target({
         id: change.target.id,
-        cwd: path.join(this.options.root, sanitizedName),
+        cwd: path.join(this.options.root, change.target.name),
         handler: change.target.handler,
         context: new event.SchedulingContext({
           env: Object.keys(change.target.context.env).reduce((envs, key) => {
@@ -321,10 +311,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   private unsubscribe(change: TargetChange) {
     for (const enqueuer of this.scheduler.enqueuers) {
-      const sanitizedName = this.sanitizeFunctionName(change.target.name);
       const target = new event.Target({
         id: change.target.id,
-        cwd: path.join(this.options.root, sanitizedName),
+        cwd: path.join(this.options.root, change.target.name),
         handler: change.target.handler
       });
       enqueuer.unsubscribe(target);
@@ -340,7 +329,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return path.join(
       this.options.root,
       this.options.outDir,
-      this.sanitizeFunctionName(fn.name),
+      fn.name,
       language.description.entrypoints.build
     );
   }
