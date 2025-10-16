@@ -123,7 +123,7 @@ interface StorageItemColumnProps {
   directory: TypeDirectories;
   previewFileFullPath?: string;
   prefix: string;
-  onUploadComplete: () => void;
+  onUploadComplete: (file: TypeFile & {prefix?: string}) => void;
 }
 
 const StorageItemColumn = memo(
@@ -169,8 +169,11 @@ const StorageItemColumn = memo(
           const dataTransfer = new DataTransfer();
           filesWithPrefix.forEach(file => dataTransfer.items.add(file));
 
-          await uploadFiles({files: dataTransfer.files});
-          onUploadComplete();
+          const response = await uploadFiles({files: dataTransfer.files});
+          const uploadedFile = (response as any)?.data?.[0] as TypeFile | undefined;
+          if (uploadedFile) {
+            onUploadComplete({...uploadedFile, prefix});
+          }
         } catch (error) {
           console.error("File upload failed:", error);
         }
@@ -292,7 +295,7 @@ interface StorageItemColumnsProps {
   setPreviewFile: (file?: TypeFile) => void;
   directory: TypeDirectories;
   previewFile?: TypeFile;
-  onUploadComplete: () => void;
+  onUploadComplete: (file: TypeFile & {prefix?: string}) => void;
 }
 
 const StorageItemColumns = memo(
@@ -500,9 +503,21 @@ export default function StoragePage() {
 
   const handleClosePreview = () => setPreviewFile(undefined);
 
-  const onUploadComplete = () => {
-    console.log("we need to handle upload complete");
+  const onUploadComplete = (file: TypeFile & {prefix?: string}) => {
+    const newDirectories = directory.map(dir => {
+      const {...fileWithoutPrefix} = file;
+      const convertedFile = convertData([fileWithoutPrefix])[0];
+      if (dir.fullPath === file.prefix) {
+        return {
+          ...dir,
+          items: dir.items ? [...dir.items, convertedFile] : [convertedFile]
+        };
+      }
+      return dir;
+    });
+    setDirectory(newDirectories);
   };
+
   return (
     <div className={styles.container}>
       <FluidContainer
