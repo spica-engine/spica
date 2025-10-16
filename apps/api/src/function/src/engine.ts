@@ -218,8 +218,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     switch (scope) {
       case "index":
         files = ["index.mjs", "index.ts"];
-        // Watch the build output directory for index files
-        watchDir = path.join(this.options.root, this.options.outDir);
+        // Watch the function root directory for source index files
+        watchDir = this.options.root;
         break;
       case "dependency":
         files = ["package.json"];
@@ -330,12 +330,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   getFunctionBuildEntrypoint(fn: Function) {
     const language = this.getFunctionLanguage(fn);
-    return path.join(
-      this.options.root,
-      this.options.outDir,
-      fn.name,
-      language.description.entrypoints.build
-    );
+    return path.join(this.options.root, fn.name, language.description.entrypoints.build);
   }
 }
 
