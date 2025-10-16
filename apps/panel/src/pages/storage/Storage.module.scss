@@ -149,6 +149,15 @@
   background-color: var(--color-soft-light) !important;
 }
 
+
+.hidden {
+  display: none !important;
+}
+
+.activeStorageItem {
+  font-weight: 700;
+}
+
 .video {
   width: 100%;
   height: 100%;
