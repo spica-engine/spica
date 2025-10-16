@@ -189,16 +189,14 @@ interface ActionButtonsProps {
 }
 
 const ActionButtons = memo(({directory}: ActionButtonsProps) => {
-  const currentPrefix = directory.slice(1).join("");
-  const lastThreeDirectory = directory.slice(-3).filter(Boolean);
-  const currentItemNames = Object.values(directory)
-    .map((filesArray, index) =>
-      Array.isArray(filesArray)
-        ? filesArray.map(f => `${index === 0 ? "" : lastThreeDirectory[index]}${f.name}`)
-        : []
-    )
-    .flat()
-    .filter(Boolean) as string[];
+  const visibleDirectories = directory.filter(dir => dir.currentDepth);
+  const currentPrefix = visibleDirectories
+    .filter(i => i.fullPath !== ROOT_PATH)
+    .map(i => i.label)
+    .join("");
+  const currentItemNames = visibleDirectories
+    .map(dir => dir.items?.map(item => item.name).filter(Boolean) || [])
+    .flat();
 
   return (
     <FlexElement>
