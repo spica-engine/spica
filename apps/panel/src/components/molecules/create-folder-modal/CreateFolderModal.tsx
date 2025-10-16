@@ -96,7 +96,7 @@ const CreateFolder: FC<CreateFolderProps> = ({
             }}
             root={{
               children: (
-                <div>
+                <div className={styles.content}>
                   <FlexElement gap={5} className={styles.inputContainer}>
                     <Icon name="formatQuoteClose" size="md" />
                     <Input
