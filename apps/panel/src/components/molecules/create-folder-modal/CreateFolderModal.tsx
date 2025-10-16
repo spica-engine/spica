@@ -1,5 +1,5 @@
 import React, {useState, type FC, type ReactNode} from "react";
-import {Button, FluidContainer, Icon, Text, FlexElement, Modal, Input} from "oziko-ui-kit";
+import {Button, FluidContainer, Icon, Text, FlexElement, Modal, StringInput} from "oziko-ui-kit";
 import styles from "./CreateFolderModal.module.scss";
 import {useUploadFilesMutation} from "../../../store/api/storageApi";
 
@@ -41,6 +41,13 @@ const CreateFolder: FC<CreateFolderProps> = ({
         return;
       }
 
+      // Validate folder name pattern (no forward slashes, spaces, or dots at the start)
+      const folderNamePattern = /^[^\/\ \.]+/;
+      if (!folderNamePattern.test(value.trim())) {
+        setError("Folder name cannot start with a dot, space, or contain forward slashes.");
+        return;
+      }
+
       const rawFolderName = value.trim();
       const folderName =
         prefix + (rawFolderName.endsWith("/") ? rawFolderName : rawFolderName + "/");
@@ -73,6 +80,16 @@ const CreateFolder: FC<CreateFolderProps> = ({
     setIsModalOpen(true);
   };
 
+  const handleChange = (value: string) => {
+    setValue(value);
+    if (error && value.trim()) {
+      const folderNamePattern = /^[^\/\ \.]+/;
+      if (folderNamePattern.test(value.trim())) {
+        setError("");
+      }
+    }
+  };
+
   return (
     <>
       {children({
@@ -97,16 +114,12 @@ const CreateFolder: FC<CreateFolderProps> = ({
             root={{
               children: (
                 <div className={styles.content}>
-                  <FlexElement gap={5} className={styles.inputContainer}>
-                    <Icon name="formatQuoteClose" size="md" />
-                    <Input
-                      className={styles.input}
-                      onChange={e => setValue(e.target.value)}
-                      placeholder="Name"
-                      value={value}
-                      pattern="^[^\/\ \.]+"
-                    />
-                  </FlexElement>
+                  <StringInput
+                    className={styles.input}
+                    onChange={handleChange}
+                    value={value}
+                    label="Folder Name"
+                  />
                   {error && (
                     <Text variant="danger" className={styles.errorText}>
                       {error}

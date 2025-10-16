@@ -60,21 +60,14 @@
   }
 
   .content {
-    padding-top: var(--padding-md)
+    padding-top: var(--padding-md);
   }
 
-  .inputContainer {
-    width: 340px !important;
-    height: 44px;
-    padding: 0 var(--padding-md);
-    border-radius: var(--border-radius-md);
-    border: var(--border-default);
-    background-color: var(--color-input-background);
-  }
   .input {
-    height: 44px;
     font-family: var(--font-family-base);
     font-size: var(--font-size-md);
+    width: 340px !important;
+    height: 44px !important;
   }
 }
 
