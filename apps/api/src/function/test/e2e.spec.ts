@@ -478,7 +478,7 @@ describe("Queue shifting", () => {
     afterEach(async () => await app.close());
 
     it("should filter functions by index", async () => {
-      const fn1 = await request.post("/function", fnSchema).then(r => r.body);
+      const fn1 = await request.post("/function", {...fnSchema, name: "func1"}).then(r => r.body);
       await request.post(`/function/${fn1._id}/index`, {
         index: `
   export function findMe(){ 
@@ -486,7 +486,7 @@ describe("Queue shifting", () => {
   }`
       });
 
-      const fn2 = await request.post("/function", fnSchema).then(r => r.body);
+      const fn2 = await request.post("/function", {...fnSchema, name: "func2"}).then(r => r.body);
       await request.post(`/function/${fn2._id}/index`, {
         index: `
   export function dontFindMe(){ 
@@ -501,7 +501,7 @@ describe("Queue shifting", () => {
     });
 
     it("should throw bad request exception if filter is mistaken", async () => {
-      const fn1 = await request.post("/function", fnSchema).then(r => r.body);
+      const fn1 = await request.post("/function", {...fnSchema, name: "func3"}).then(r => r.body);
       await request.post(`/function/${fn1._id}/index`, {
         index: `
   export function findMe(){ 
