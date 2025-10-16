@@ -505,7 +505,7 @@ export default function StoragePage() {
 
   const onUploadComplete = (file: TypeFile & {prefix?: string}) => {
     const newDirectories = directory.map(dir => {
-      const {...fileWithoutPrefix} = file;
+      const fileWithoutPrefix = {...file}; delete fileWithoutPrefix.prefix;
       const convertedFile = convertData([fileWithoutPrefix])[0];
       if (dir.fullPath === file.prefix) {
         return {
