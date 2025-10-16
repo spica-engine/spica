@@ -6,4 +6,3 @@ export * from "./src/locale";
 export * from "./src/activity.resource";
 export * from "./src/filter";
 export * from "./src/schema";
-export * from "./src/hash";

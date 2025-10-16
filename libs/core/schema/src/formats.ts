@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {Format} from "@spica-server/interface/core";
-import {hashValue} from "@spica-server/bucket/common";
+import {hashValue} from "./hash";
 
 export const OBJECT_ID: Format = {
   name: "objectid",

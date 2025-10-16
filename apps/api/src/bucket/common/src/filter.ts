@@ -9,7 +9,7 @@ import {
 import {ValueConstructor} from "@spica-server/interface/filter";
 import {FilterReplacer, RelationResolver} from "@spica-server/interface/bucket/common";
 import {Bucket} from "@spica-server/interface/bucket";
-import {hashValue} from "./hash";
+import {hashValue} from "@spica-server/core/schema";
 // this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
 export function filterReviver(k: string, v: string, hashingKey?: string) {
   const availableConstructors = {

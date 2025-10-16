@@ -2,7 +2,7 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule, hashValue} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {
   OBJECTID_STRING,
