@@ -82,7 +82,7 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
             </FlexElement>
             <FlexElement gap={10}>
               <Button className={styles.metadataButton} variant="icon">
-                <Icon name="folder" size={14} />
+                <Icon name="fileMultiple" size={14} />
                 Copy
               </Button>
               <Button className={styles.metadataButton} variant="icon">
@@ -90,7 +90,7 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
                 Edit
               </Button>
               <Button className={styles.metadataButton} variant="icon">
-                <Icon name="close" size={14} />
+                <Icon name="swapHorizontal" size={14} />
                 Replace
               </Button>
               <Button
