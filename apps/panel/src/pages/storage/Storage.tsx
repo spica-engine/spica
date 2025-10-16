@@ -6,7 +6,8 @@ import {
   Text,
   type TypeFile,
   Button,
-  type TypeFluidContainer
+  type TypeFluidContainer,
+  Spinner
 } from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import {useGetStorageItemsQuery} from "../../store/api";
@@ -255,9 +256,12 @@ const StorageItemColumns = memo(
       <FluidContainer
         dimensionY="fill"
         dimensionX="fill"
+        gap={0}
         {...columns.reduce((acc, depth) => {
-          const items = directory.find(dir => dir.currentDepth === depth)?.items;
-          if (!items) return acc;
+          const currentDirectory = directory.find(dir => dir.currentDepth === depth);
+          if (!currentDirectory) return acc;
+          const items = currentDirectory?.items;
+
           let key: string;
           switch (depth) {
             case 1:
@@ -275,7 +279,7 @@ const StorageItemColumns = memo(
 
           acc[key as keyof TypeFluidContainer] = {
             className: styles.storageItemColumnContainer,
-            children: (
+            children: items ? (
               <StorageItemColumn
                 items={items}
                 handleFolderClick={handleFolderClick}
@@ -284,7 +288,7 @@ const StorageItemColumns = memo(
                 directory={directory}
                 previewFileFullPath={previewFile?.name}
               />
-            )
+            ) : <div className={styles.columnLoaderContainer}><Spinner /></div>
           };
           return acc;
         }, {} as TypeFluidContainer)}
