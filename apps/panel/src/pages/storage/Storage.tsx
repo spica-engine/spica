@@ -11,7 +11,8 @@ import {
 } from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import {useGetStorageItemsQuery} from "../../store/api";
-import {memo, useEffect, useMemo, useState} from "react";
+import {useUploadFilesMutation} from "../../store/api/storageApi";
+import {memo, useEffect, useMemo, useState, type DragEventHandler} from "react";
 import useStorage from "../../hooks/useStorage";
 import useFileView from "../../hooks/useFileView";
 import SearchBar from "../../components/atoms/search-bar/SearchBar";
@@ -121,6 +122,8 @@ interface StorageItemColumnProps {
   depth: TypeDirectoryDepth;
   directory: TypeDirectories;
   previewFileFullPath?: string;
+  prefix: string;
+  onUploadComplete: () => void;
 }
 
 const StorageItemColumn = memo(
@@ -130,20 +133,58 @@ const StorageItemColumn = memo(
     setPreviewFile,
     depth,
     directory,
-    previewFileFullPath
+    previewFileFullPath,
+    prefix,
+    onUploadComplete
   }: StorageItemColumnProps) => {
+    const [uploadFiles] = useUploadFilesMutation();
+
     const orderedItems = useMemo(() => {
       if (!items) return [];
-      const folders = items.filter(item => item.content.type === "inode/directory").sort((a, b) => a.name.localeCompare(b.name));
-      const files = items.filter(item => item.content.type !== "inode/directory").sort((a, b) => a.name.localeCompare(b.name));
+      const folders = items
+        .filter(item => item.content.type === "inode/directory")
+        .sort((a, b) => a.name.localeCompare(b.name));
+      const files = items
+        .filter(item => item.content.type !== "inode/directory")
+        .sort((a, b) => a.name.localeCompare(b.name));
       return [...folders, ...files];
     }, [items]);
+
+    const handleDragOver: DragEventHandler<HTMLDivElement> = e => {
+      e.preventDefault();
+    };
+
+    const handleDrop: DragEventHandler<HTMLDivElement> = async e => {
+      e.preventDefault();
+      const files = e.dataTransfer.files;
+
+      if (files && files.length > 0) {
+        try {
+          const filesWithPrefix = Array.from(files).map(file => {
+            const fileName = prefix + file.name;
+            const encodedFileName = encodeURIComponent(fileName);
+            return new File([file], encodedFileName, {type: file.type});
+          });
+
+          const dataTransfer = new DataTransfer();
+          filesWithPrefix.forEach(file => dataTransfer.items.add(file));
+
+          await uploadFiles({files: dataTransfer.files});
+          onUploadComplete();
+        } catch (error) {
+          console.error("File upload failed:", error);
+        }
+      }
+    };
+
     return (
       <FlexElement
         className={styles.storageItemColumn}
         direction="vertical"
         alignment={"left" as TypeAlignment}
         gap={10}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
       >
         {orderedItems?.map((item, index) => {
           const isFolder = item?.content?.type === "inode/directory";
@@ -178,14 +219,18 @@ const StorageItem = memo(({item, onFolderClick, onFileClick, isActive}: StorageI
   const itemName = (item as TypeDirectory).label || (item as TypeFile).name;
   const isFolder = item?.content?.type === "inode/directory";
   const handleFolderClick = () => onFolderClick?.(itemName);
-  const handleFileClick = () => onFileClick(isActive ? undefined : item as TypeFile);
+  const handleFileClick = () => onFileClick(isActive ? undefined : (item as TypeFile));
   return (
     <FlexElement
       onClick={isFolder ? handleFolderClick : handleFileClick}
       className={`${styles.storageItem} ${isFolder ? styles.folder : styles.file} ${isActive ? styles.activeStorageItem : ""}`}
       gap={10}
     >
-      <Icon name={isFolder ? "folder" : "fileDocument"} size={14} className={styles.storageItemIcon} />
+      <Icon
+        name={isFolder ? "folder" : "fileDocument"}
+        size={14}
+        className={styles.storageItemIcon}
+      />
       <Text className={styles.storageItemText} size="medium">
         {isFolder ? itemName.slice(0, -1) : itemName}
       </Text>
@@ -247,10 +292,17 @@ interface StorageItemColumnsProps {
   setPreviewFile: (file?: TypeFile) => void;
   directory: TypeDirectories;
   previewFile?: TypeFile;
+  onUploadComplete: () => void;
 }
 
 const StorageItemColumns = memo(
-  ({handleFolderClick, setPreviewFile, directory, previewFile}: StorageItemColumnsProps) => {
+  ({
+    handleFolderClick,
+    setPreviewFile,
+    directory,
+    previewFile,
+    onUploadComplete
+  }: StorageItemColumnsProps) => {
     const columns = [1, 2, 3] as TypeDirectoryDepth[];
     return (
       <FluidContainer
@@ -277,6 +329,11 @@ const StorageItemColumns = memo(
               key = "";
           }
 
+          const prefix =
+            currentDirectory.fullPath === "/"
+              ? ""
+              : currentDirectory.fullPath.split("/").filter(Boolean).join("/") + "/";
+
           acc[key as keyof TypeFluidContainer] = {
             className: styles.storageItemColumnContainer,
             children: items ? (
@@ -287,8 +344,14 @@ const StorageItemColumns = memo(
                 depth={depth}
                 directory={directory}
                 previewFileFullPath={previewFile?.name}
+                prefix={prefix}
+                onUploadComplete={onUploadComplete}
               />
-            ) : <div className={styles.columnLoaderContainer}><Spinner /></div>
+            ) : (
+              <div className={styles.columnLoaderContainer}>
+                <Spinner />
+              </div>
+            )
           };
           return acc;
         }, {} as TypeFluidContainer)}
@@ -402,8 +465,7 @@ export default function StoragePage() {
     setDirectory(newDirectories);
   };
 
-  useEffect(() => {
-    const data = storageData?.data ?? (storageData as unknown as TypeFile[]);
+  const convertData = (data: TypeFile[]) => {
     const convertedData = data?.map(storage => {
       const typeFile = convertStorageToTypeFile(storage);
       const nameParts = typeFile.name.split("/").filter(Boolean);
@@ -419,6 +481,12 @@ export default function StoragePage() {
         isActive: false
       };
     });
+    return convertedData;
+  };
+
+  useEffect(() => {
+    const data = storageData?.data ?? (storageData as unknown as TypeFile[]);
+    const convertedData = convertData(data as TypeFile[]);
     if (!convertedData) return;
     let newDirectories = [...directory];
     const dirToChange = findMaxDepthDirectory(newDirectories) ?? newDirectories[0];
@@ -432,6 +500,9 @@ export default function StoragePage() {
 
   const handleClosePreview = () => setPreviewFile(undefined);
 
+  const onUploadComplete = () => {
+    console.log("we need to handle upload complete");
+  };
   return (
     <div className={styles.container}>
       <FluidContainer
@@ -451,6 +522,7 @@ export default function StoragePage() {
               setPreviewFile={setPreviewFile}
               directory={directory}
               previewFile={previewFile}
+              onUploadComplete={onUploadComplete}
             />
           )
         }}
