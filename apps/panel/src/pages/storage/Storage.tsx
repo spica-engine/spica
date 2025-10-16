@@ -34,8 +34,16 @@ interface FilePreviewProps {
 }
 
 const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) => {
-  const fileView = useFileView({file: previewFile});
+  const fileView = useFileView({
+    file: previewFile,
+    classNames: {video: styles.video, doc: styles.doc}
+  });
 
+  const handleCopy = () => {
+    if (!previewFile) return;
+    const origin = window.location.origin
+    navigator.clipboard.writeText(origin + "/storage-view/" + previewFile._id);
+  };
   return (
     <FluidContainer
       className={styles.filePreviewContent}
@@ -78,8 +86,8 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
               )}
             </FlexElement>
             <FlexElement gap={10}>
-              <Button className={styles.metadataButton} variant="icon">
-                <Icon name="folder" size={14} />
+              <Button className={styles.metadataButton} variant="icon" onClick={handleCopy}>
+                <Icon name="fileMultiple" size={14} />
                 Copy
               </Button>
               <Button className={styles.metadataButton} variant="icon">
@@ -87,7 +95,7 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
                 Edit
               </Button>
               <Button className={styles.metadataButton} variant="icon">
-                <Icon name="close" size={14} />
+                <Icon name="swapHorizontal" size={14} />
                 Replace
               </Button>
               <Button
