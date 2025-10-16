@@ -5,7 +5,8 @@ import {
   type TypeAlignment,
   Text,
   type TypeFile,
-  Button
+  Button,
+  type TypeFluidContainer
 } from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import {useGetStorageItemsQuery} from "../../store/api";
@@ -247,42 +248,39 @@ const StorageItemColumns = memo(
       <FluidContainer
         dimensionY="fill"
         dimensionX="fill"
-        {...columns.reduce(
-          (acc, depth) => {
-            const files = directory.find(dir => dir.currentDepth === depth)?.items;
-            if (!files) return acc;
-            let key: string;
-            switch (depth) {
-              case 1:
-                key = "prefix";
-                break;
-              case 2:
-                key = "root";
-                break;
-              case 3:
-                key = "suffix";
-                break;
-              default:
-                key = "";
-            }
+        {...columns.reduce((acc, depth) => {
+          const files = directory.find(dir => dir.currentDepth === depth)?.items;
+          if (!files) return acc;
+          let key: string;
+          switch (depth) {
+            case 1:
+              key = "prefix";
+              break;
+            case 2:
+              key = "root";
+              break;
+            case 3:
+              key = "suffix";
+              break;
+            default:
+              key = "";
+          }
 
-            acc[key] = {
-              className: styles.storageItemColumnContainer,
-              children: (
-                <StorageItemColumn
-                  files={files}
-                  handleFolderClick={handleFolderClick}
-                  setPreviewFile={setPreviewFile}
-                  depth={depth}
-                  directory={directory}
-                  previewFileFullPath={previewFile?.name}
-                />
-              )
-            };
-            return acc;
-          },
-          {} as Record<string, any>
-        )}
+          acc[key as keyof TypeFluidContainer] = {
+            className: styles.storageItemColumnContainer,
+            children: (
+              <StorageItemColumn
+                files={files}
+                handleFolderClick={handleFolderClick}
+                setPreviewFile={setPreviewFile}
+                depth={depth}
+                directory={directory}
+                previewFileFullPath={previewFile?.name}
+              />
+            )
+          };
+          return acc;
+        }, {} as TypeFluidContainer)}
       />
     );
   }
