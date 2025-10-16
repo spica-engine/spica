@@ -291,7 +291,7 @@ export abstract class Synchronizer<
       };
 
       const isSynchronizerAction = this.hasMatchingAction(meta, this.repToDocActions);
-      console.log("doc to rep: isSynchronizerAction", isSynchronizerAction);
+
       if (isSynchronizerAction) {
         return this.removeRepToDocAction(meta);
       }
@@ -348,7 +348,6 @@ export abstract class Synchronizer<
       };
 
       const isSynchronizerAction = this.hasMatchingAction(meta, this.docToRepActions);
-      console.log("rep to doc: isSynchronizerAction", isSynchronizerAction);
 
       if (isSynchronizerAction) {
         return this.removeDocToRepAction(meta);
