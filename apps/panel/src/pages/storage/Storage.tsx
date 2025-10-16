@@ -9,15 +9,26 @@ import {
 } from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import {useGetStorageItemsQuery} from "../../store/api";
-import {memo, useEffect, useMemo, useRef, useState} from "react";
+import {memo, useEffect, useMemo, useState} from "react";
 import useStorage from "../../hooks/useStorage";
 import useFileView from "../../hooks/useFileView";
 import SearchBar from "../../components/atoms/search-bar/SearchBar";
 import CreateFolder from "../../components/molecules/create-folder-modal/CreateFolderModal";
 import CreateFile from "../../components/molecules/create-file-modal/CreateFile";
 
-type TypeFiles = [TypeFile[]?, TypeFile[]?, TypeFile[]?];
 type TypeDirectoryDepth = 1 | 2 | 3;
+type TypeDirectory = {
+  items?: TypeFile[];
+  label: string;
+  fullPath: string;
+  currentDepth?: TypeDirectoryDepth;
+  isActive: boolean;
+  content: {
+    type: string;
+    size: number;
+  };
+};
+type TypeDirectories = TypeDirectory[];
 
 interface FilePreviewProps {
   handleClosePreview: () => void;
@@ -98,11 +109,16 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
 
 interface StorageItemColumnProps {
   files?: TypeFile[];
-  handleFolderClick: (folderName: string, depth: TypeDirectoryDepth, isActive: boolean) => void;
+  handleFolderClick: (
+    folderName: string,
+    fullPath: string,
+    depth: TypeDirectoryDepth,
+    isActive: boolean
+  ) => void;
   setPreviewFile: (file: TypeFile) => void;
   depth: TypeDirectoryDepth;
-  directory: (string | undefined)[];
-  previewFile?: TypeFile;
+  directory: TypeDirectories;
+  previewFileFullPath?: string;
 }
 
 const StorageItemColumn = memo(
@@ -112,7 +128,7 @@ const StorageItemColumn = memo(
     setPreviewFile,
     depth,
     directory,
-    previewFile
+    previewFileFullPath
   }: StorageItemColumnProps) => {
     return (
       <FlexElement
@@ -123,15 +139,16 @@ const StorageItemColumn = memo(
       >
         {files?.map((item, index) => {
           const isFolder = item?.content?.type === "inode/directory";
+          const fullPath = item.name;
           const isActive = isFolder
-            ? directory.slice(-3)[depth] === item.name
-            : previewFile?.name === item.name;
+            ? directory.find(i => i.fullPath === fullPath)?.isActive || false
+            : previewFileFullPath === fullPath;
 
           return (
             <StorageItem
               key={index}
               item={item}
-              onFolderClick={folderName => handleFolderClick(folderName, depth, isActive)}
+              onFolderClick={folderName => handleFolderClick(folderName, fullPath, depth, isActive)}
               onFileClick={setPreviewFile}
               isActive={isActive}
             />
@@ -143,16 +160,17 @@ const StorageItemColumn = memo(
 );
 
 interface StorageItemProps {
-  item: TypeFile;
+  item: TypeFile | TypeDirectory;
   onFolderClick?: (folderName: string) => void;
   onFileClick: (file: TypeFile) => void;
   isActive: boolean;
 }
 
 const StorageItem = memo(({item, onFolderClick, onFileClick, isActive}: StorageItemProps) => {
+  const folderName = (item as TypeDirectory).label || (item as TypeFile).name;
   const isFolder = item?.content?.type === "inode/directory";
-  const handleFolderClick = () => onFolderClick?.(item.name);
-  const handleFileClick = () => onFileClick(item);
+  const handleFolderClick = () => onFolderClick?.(folderName);
+  const handleFileClick = () => onFileClick(item as TypeFile);
   return (
     <FlexElement
       onClick={isFolder ? handleFolderClick : handleFileClick}
@@ -160,25 +178,24 @@ const StorageItem = memo(({item, onFolderClick, onFileClick, isActive}: StorageI
     >
       <Icon name={isFolder ? "folder" : "fileDocument"} size={14} />
       <Text className={styles.storageItemText} size="medium">
-        {item.name}
+        {folderName}
       </Text>
     </FlexElement>
   );
 });
 
 interface ActionButtonsProps {
-  directory: (string | undefined)[];
-  files: TypeFiles;
+  directory: TypeDirectories;
 }
 
-const ActionButtons = memo(({directory, files}: ActionButtonsProps) => {
+const ActionButtons = memo(({directory}: ActionButtonsProps) => {
   const currentPrefix = directory.slice(1).join("");
   const lastThreeDirectory = directory.slice(-3).filter(Boolean);
-  const currentItemNames = files
+  const currentItemNames = Object.values(directory)
     .map((filesArray, index) =>
-      filesArray?.map(f => {
-        return `${index === 0 ? "" : lastThreeDirectory[index]}${f.name}`;
-      })
+      Array.isArray(filesArray)
+        ? filesArray.map(f => `${index === 0 ? "" : lastThreeDirectory[index]}${f.name}`)
+        : []
     )
     .flat()
     .filter(Boolean) as string[];
@@ -214,147 +231,195 @@ const ActionButtons = memo(({directory, files}: ActionButtonsProps) => {
 });
 
 interface StorageItemColumnsProps {
-  files: TypeFiles;
-  handleFolderClick: (folderName: string, depth: TypeDirectoryDepth, isActive: boolean) => void;
+  handleFolderClick: (
+    folderName: string,
+    fullPath: string,
+    depth: TypeDirectoryDepth,
+    isActive: boolean
+  ) => void;
   setPreviewFile: (file: TypeFile) => void;
-  directory: (string | undefined)[];
+  directory: TypeDirectories;
   previewFile?: TypeFile;
 }
 
 const StorageItemColumns = memo(
-  ({files, handleFolderClick, setPreviewFile, directory, previewFile}: StorageItemColumnsProps) => {
-    const {renderSecondRow, renderThirdRow} = useMemo(
-      () => ({
-        renderSecondRow: directory[directory.length - 2] !== undefined,
-        renderThirdRow: directory[directory.length - 1] !== undefined
-      }),
-      [directory]
-    );
-
+  ({handleFolderClick, setPreviewFile, directory, previewFile}: StorageItemColumnsProps) => {
+    const columns = [1, 2, 3] as TypeDirectoryDepth[];
     return (
       <FluidContainer
         dimensionY="fill"
         dimensionX="fill"
-        prefix={{
-          className: styles.storageItemColumnContainer,
-          children: (
-            <StorageItemColumn
-              files={files[0]}
-              handleFolderClick={handleFolderClick}
-              setPreviewFile={setPreviewFile}
-              depth={1}
-              directory={directory}
-              previewFile={previewFile}
-            />
-          )
-        }}
-        root={{
-          className: `${styles.storageItemColumnContainer} ${renderSecondRow ? "" : styles.hidden}`,
-          children: (
-            <StorageItemColumn
-              files={files[1]}
-              handleFolderClick={handleFolderClick}
-              setPreviewFile={setPreviewFile}
-              depth={2}
-              directory={directory}
-              previewFile={previewFile}
-            />
-          )
-        }}
-        suffix={{
-          className: `${styles.storageItemColumnContainer} ${renderThirdRow ? "" : styles.hidden}`,
-          children: (
-            <StorageItemColumn
-              files={files[2]}
-              handleFolderClick={handleFolderClick}
-              setPreviewFile={setPreviewFile}
-              depth={3}
-              directory={directory}
-              previewFile={previewFile}
-            />
-          )
-        }}
+        {...columns.reduce(
+          (acc, depth) => {
+            const files = directory.find(dir => dir.currentDepth === depth)?.items;
+            if (!files) return acc;
+            let key: string;
+            switch (depth) {
+              case 1:
+                key = "prefix";
+                break;
+              case 2:
+                key = "root";
+                break;
+              case 3:
+                key = "suffix";
+                break;
+              default:
+                key = "";
+            }
+
+            acc[key] = {
+              className: styles.storageItemColumnContainer,
+              children: (
+                <StorageItemColumn
+                  files={files}
+                  handleFolderClick={handleFolderClick}
+                  setPreviewFile={setPreviewFile}
+                  depth={depth}
+                  directory={directory}
+                  previewFileFullPath={previewFile?.name}
+                />
+              )
+            };
+            return acc;
+          },
+          {} as Record<string, any>
+        )}
       />
     );
   }
 );
 
-function unsetLastDefined<T>(arr: (T | undefined)[]): (T | undefined)[] {
-  const lastDefinedIndex = arr.map(v => v !== undefined).lastIndexOf(true);
-  if (lastDefinedIndex !== -1) {
-    arr[lastDefinedIndex] = undefined;
-  }
-  return arr;
+const ROOT_PATH = "/";
+const getParentPath = (fullPath: string) => {
+  const res =
+    fullPath.replace(/\/[^/]+\/?$/, "") === fullPath
+      ? "/"
+      : fullPath.replace(/\/[^/]+\/?$/, "") || "/";
+  return res === "/" ? res : res + "/";
+};
+
+function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
+  return arr.reduce<T | undefined>((max, obj) => {
+    if (obj.currentDepth === undefined) return max;
+    if (!max || max.currentDepth === undefined || obj.currentDepth > max.currentDepth) return obj;
+    return max;
+  }, undefined);
 }
 
 export default function StoragePage() {
-  const [directory, setDirectory] = useState<(string | undefined)[]>(["/"]);
-  const targetColumnIndex = useRef(0);
+  const [directory, setDirectory] = useState<TypeDirectories>([
+    {
+      items: undefined,
+      label: "",
+      fullPath: ROOT_PATH,
+      currentDepth: 1,
+      isActive: true,
+      content: {type: "inode/directory", size: 0}
+    }
+  ]);
   const {buildDirectoryFilter, convertStorageToTypeFile} = useStorage();
-  const filter = useMemo(() => buildDirectoryFilter(directory as string[]), [directory]);
+  const filterArray = [
+    "/",
+    ...(findMaxDepthDirectory(directory)
+      ?.fullPath.split("/")
+      .filter(Boolean)
+      .map(i => `${i}/`) || [])
+  ];
+  const filter = useMemo(() => buildDirectoryFilter(filterArray), [filterArray]);
   const {data: storageData} = useGetStorageItemsQuery({filter});
-
-  const [files, setFiles] = useState<TypeFiles>([]);
   const [previewFile, setPreviewFile] = useState<TypeFile>();
 
   const handleFolderClick = (
     folderName: string,
+    fullPath: string,
     directoryDepth: TypeDirectoryDepth,
-    isActive: boolean
+    wasActive: boolean
   ) => {
-    let newDirectories = [...directory];
-    let newFiles = [...files];
+    if (wasActive) {
+      const cleanDirectories = directory.map(dir => ({
+        ...dir,
+        isActive: false,
+        currentDepth: undefined
+      }));
+      const dirToChange = findMaxDepthDirectory(directory);
+      const newDirectories = cleanDirectories.map(dir => {
+        if (dir.fullPath === getParentPath(dirToChange?.fullPath!)) {
+          return {...dir, isActive: true, currentDepth: dirToChange?.currentDepth};
+        } else if (dir.fullPath === getParentPath(getParentPath(dirToChange?.fullPath!))) {
+          const newDepth = (dirToChange?.currentDepth! - 1) as TypeDirectoryDepth;
+          return {...dir, isActive: true, currentDepth: newDepth > 0 ? newDepth : undefined};
+        }
+        return dir;
+      });
+      setDirectory(newDirectories);
 
-    if (isActive && directory.length <= 3) {
-      newDirectories = unsetLastDefined(newDirectories);
-      newFiles = unsetLastDefined(newFiles);
-    } else if (isActive) {
-      console.log("i cant");
-    } else {
-      switch (directoryDepth) {
-        case 1:
-          const lastDirectoryIndex = Math.max(directory.length - 1, 2);
-          newDirectories[lastDirectoryIndex] = undefined;
-          if (newDirectories[lastDirectoryIndex + 1])
-            newDirectories[lastDirectoryIndex + 1] = undefined;
-          const lastFilesIndex = Math.max(files.length - 1, 2);
-          delete newFiles[lastFilesIndex];
-          newDirectories[Math.max(directory.length - 2, 1)] = folderName;
-          targetColumnIndex.current = 1;
-          break;
-
-        case 2:
-          newDirectories[Math.max(directory.length - 1, 2)] = folderName;
-          targetColumnIndex.current = 2;
-          break;
-
-        case 3:
-          newDirectories = [...directory, folderName];
-          newFiles = [files[1], files[2]];
-          targetColumnIndex.current = 2;
-          break;
-      }
+      return;
     }
-    setFiles(newFiles as TypeFiles);
+
+    const depthToGive = Math.min(directoryDepth + 1, 3) as TypeDirectoryDepth;
+    let theDirectory = directory.find(dir => dir.fullPath === fullPath);
+    if (!theDirectory) {
+      theDirectory = {
+        items: undefined,
+        label: folderName,
+        fullPath: fullPath,
+        currentDepth: depthToGive,
+        isActive: true,
+        content: {type: "inode/directory", size: 0}
+      };
+    } else {
+      theDirectory = {...theDirectory, currentDepth: depthToGive, isActive: true};
+    }
+    const cleanDirectories = directory.map(dir => ({
+      ...dir,
+      isActive: false,
+      currentDepth: undefined
+    }));
+    const newDirectories = cleanDirectories.map(dir => {
+      if (getParentPath(theDirectory.fullPath) === dir.fullPath) {
+        const newDepth = (theDirectory!.currentDepth! - 1) as TypeDirectoryDepth;
+        return {...dir, isActive: newDepth > 0, currentDepth: newDepth > 0 ? newDepth : undefined};
+      } else if (getParentPath(getParentPath(theDirectory.fullPath)) === dir.fullPath) {
+        const newDepth = (theDirectory!.currentDepth! - 2) as TypeDirectoryDepth;
+        return {...dir, isActive: newDepth > 0, currentDepth: newDepth > 0 ? newDepth : undefined};
+      } else if (dir.fullPath === theDirectory!.fullPath) {
+        return theDirectory!;
+      }
+      return dir;
+    });
+    if (!newDirectories.find(dir => dir.fullPath === theDirectory.fullPath)) {
+      newDirectories.push(theDirectory);
+    }
     setDirectory(newDirectories);
   };
 
   useEffect(() => {
-    const convertedData = (storageData?.data ?? (storageData as unknown as TypeFile[]))?.map(
-      convertStorageToTypeFile
-    );
-    if (!convertedData) return;
-    const transformedData = convertedData.map(i => {
-      const isFolder = i.content?.type === "inode/directory";
-      const isInRoot = targetColumnIndex.current === 1;
-      const nameParts = i.name.split("/").filter(Boolean);
+    const data = storageData?.data ?? (storageData as unknown as TypeFile[]);
+    const convertedData = data?.map(storage => {
+      const typeFile = convertStorageToTypeFile(storage);
+      const nameParts = typeFile.name.split("/").filter(Boolean);
+      const isFolder = typeFile.content.type === "inode/directory";
       const resolvedName = nameParts[nameParts.length - 1] + (isFolder ? "/" : "");
-      if (isFolder || !isInRoot) return {...i, name: resolvedName};
-      return i;
+
+      return {
+        ...typeFile,
+        items: undefined,
+        label: resolvedName,
+        fullPath: storage.name,
+        currentDepth: Math.min(directory.filter(dir => dir.currentDepth).length, 3),
+        isActive: false
+      };
     });
-    const newFiles: TypeFiles = [...files];
-    newFiles[targetColumnIndex.current] = transformedData;
-    setFiles(newFiles);
+    if (!convertedData) return;
+    let newDirectories = [...directory];
+    const dirToChange = findMaxDepthDirectory(newDirectories) ?? newDirectories[0];
+    if (dirToChange) {
+      newDirectories = newDirectories.map(i =>
+        i.fullPath === dirToChange.fullPath ? {...i, items: convertedData} : i
+      );
+    }
+    setDirectory(newDirectories);
   }, [storageData]);
 
   const handleClosePreview = () => setPreviewFile(undefined);
@@ -365,7 +430,7 @@ export default function StoragePage() {
         className={styles.actionBar}
         prefix={{children: <SearchBar />}}
         suffix={{
-          children: <ActionButtons directory={directory} files={files} />
+          children: <ActionButtons directory={directory} />
         }}
       />
       <FluidContainer
@@ -374,7 +439,6 @@ export default function StoragePage() {
           className: styles.storageItemColumns,
           children: (
             <StorageItemColumns
-              files={files}
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
               directory={directory}
