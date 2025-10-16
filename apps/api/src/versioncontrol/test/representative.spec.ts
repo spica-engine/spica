@@ -8,7 +8,6 @@ import {v4 as uuidv4} from "uuid";
 import os from "os";
 
 const sleep = () => new Promise(r => setTimeout(r, 5000));
-const getRepId = (name: string, id: typeof ObjectId | string) => `${name}(${id.toString()})`;
 
 async function readResource(
   representative: VCRepresentativeManager,
@@ -59,9 +58,9 @@ describe("Representative", () => {
   describe("write", () => {
     it("should write yaml", async () => {
       const stringified = YAML.stringify({write_me: "ok"});
-      await representative.write("module1", getRepId("module1", id), "schema", stringified, "yaml");
+      await representative.write("module1", "module1", "schema", stringified, "yaml");
 
-      const directory = path.join(cwd, "module1", getRepId("module1", id));
+      const directory = path.join(cwd, "module1", "module1");
       expect(fs.existsSync(directory)).toEqual(true);
 
       const fileNames = fs.readdirSync(directory);
@@ -74,28 +73,18 @@ describe("Representative", () => {
     });
 
     it("should write js file", async () => {
-      await representative.write(
-        "module2",
-        getRepId("module2", id),
-        "index",
-        "console.log()",
-        "js"
-      );
+      await representative.write("module2", "module2", "index", "console.log()", "js");
 
-      const fileContent = fs.readFileSync(
-        path.join(cwd, "module2", getRepId("module2", id), "index.js")
-      );
+      const fileContent = fs.readFileSync(path.join(cwd, "module2", "module2", "index.js"));
 
       expect(fileContent.toString()).toEqual("console.log()");
     });
 
     it("should write json file", async () => {
       const stringified = JSON.stringify({imjson: "ok"});
-      await representative.write("module3", getRepId("module3", id), "index", stringified, "json");
+      await representative.write("module3", "module3", "index", stringified, "json");
 
-      const fileContent = fs.readFileSync(
-        path.join(cwd, "module3", getRepId("module3", id), "index.json")
-      );
+      const fileContent = fs.readFileSync(path.join(cwd, "module3", "module3", "index.json"));
 
       expect(fileContent.toString()).toEqual('{"imjson":"ok"}');
     });
@@ -104,31 +93,13 @@ describe("Representative", () => {
   describe("read", () => {
     it("should read content of files", async () => {
       const stringifiedJSON = JSON.stringify({dependencies: {dep1: "1.1"}});
-      await representative.write(
-        "module4",
-        getRepId("module4", id),
-        "package",
-        stringifiedJSON,
-        "json"
-      );
+      await representative.write("module4", "module4", "package", stringifiedJSON, "json");
       const stringifiedYAML = YAML.stringify({title: "hi"});
-      await representative.write(
-        "module4",
-        getRepId("module4", id),
-        "schema",
-        stringifiedYAML,
-        "yaml"
-      );
-      await representative.write(
-        "module4",
-        getRepId("module4", id),
-        "index",
-        "console.log(123)",
-        "js"
-      );
+      await representative.write("module4", "module4", "schema", stringifiedYAML, "yaml");
+      await representative.write("module4", "module4", "index", "console.log(123)", "js");
       await sleep();
 
-      const resource = await readResource(representative, "module4", getRepId("module4", id));
+      const resource = await readResource(representative, "module4", "module4");
       const parsed = {
         ...resource,
         contents: {
@@ -138,7 +109,7 @@ describe("Representative", () => {
         }
       };
       expect(parsed).toEqual({
-        _id: getRepId("module4", id),
+        _id: "module4",
         contents: {
           package: {dependencies: {dep1: "1.1"}},
           schema: {title: "hi"},
@@ -168,13 +139,7 @@ describe("Representative", () => {
 
       setTimeout(async () => {
         const stringified = YAML.stringify({title: "hi"});
-        await representative.write(
-          "module5",
-          getRepId("module5", id),
-          "schema",
-          stringified,
-          "yaml"
-        );
+        await representative.write("module5", "module5", "schema", stringified, "yaml");
       }, 1000);
     });
 
@@ -197,18 +162,12 @@ describe("Representative", () => {
 
       setTimeout(async () => {
         const stringified = YAML.stringify({title: "hi"});
-        await representative.write(
-          "module6",
-          getRepId("module6", id),
-          "schema",
-          stringified,
-          "yaml"
-        );
+        await representative.write("module6", "module6", "schema", stringified, "yaml");
       }, 1000);
 
       setTimeout(async () => {
         const updated = YAML.stringify({title: "hello"});
-        await representative.write("module6", getRepId("module6", id), "schema", updated, "yaml");
+        await representative.write("module6", "module6", "schema", updated, "yaml");
       }, 2000);
     });
 
@@ -228,17 +187,11 @@ describe("Representative", () => {
 
       setTimeout(async () => {
         const stringified = YAML.stringify({title: "hi"});
-        await representative.write(
-          "module7",
-          getRepId("module7", id),
-          "schema",
-          stringified,
-          "yaml"
-        );
+        await representative.write("module7", "module7", "schema", stringified, "yaml");
       }, 1000);
 
       setTimeout(async () => {
-        await representative.rm("module7", getRepId("module7", id));
+        await representative.rm("module7", "module7");
       }, 2000);
     });
   });
