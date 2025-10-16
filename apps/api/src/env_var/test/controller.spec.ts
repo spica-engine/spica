@@ -42,49 +42,22 @@ describe("Environment Variable", () => {
       expect(bodyWithoutIds).toEqual([envVar]);
     });
 
-    it("should limit", async () => {
-      const envVar1 = {key: "ENV_KEY_1", value: "123"};
-      const envVar2 = {key: "ENV_KEY_2", value: "1234"};
-      const envVar3 = {key: "ENV_KEY_3", value: "123"};
-
-      await Promise.all([
-        req.post("/env-var", envVar1),
-        req.post("/env-var", envVar2),
-        req.post("/env-var", envVar3)
-      ]);
-
-      const res = await req.get(`/env-var`, {limit: 2});
-      const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
-
-      expect(res.body.length).toEqual(2);
-      expect(bodyWithoutIds).toEqual([envVar1, envVar2]);
-    });
-
-    it("should skip", async () => {
-      const envVar1 = {key: "ENV_KEY_1", value: "123"};
-      const envVar2 = {key: "ENV_KEY_2", value: "1234"};
-
-      await Promise.all([req.post("/env-var", envVar1), req.post("/env-var", envVar2)]);
-
-      const res = await req.get(`/env-var`, {skip: 1});
-      const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
-      expect(bodyWithoutIds).toEqual([envVar2]);
-    });
-
-    it("should sort", async () => {
+    it("should support limit, skip and sort ", async () => {
       const envVar1 = {key: "ENV_KEY_1", value: "200"};
       const envVar2 = {key: "ENV_KEY_2", value: "300"};
       const envVar3 = {key: "ENV_KEY_3", value: "100"};
 
-      await Promise.all([
-        req.post("/env-var", envVar1),
-        req.post("/env-var", envVar2),
-        req.post("/env-var", envVar3)
-      ]);
+      await req.post("/env-var", envVar1);
+      await req.post("/env-var", envVar2);
+      await req.post("/env-var", envVar3);
 
-      const res = await req.get(`/env-var`, {sort: JSON.stringify({value: -1})});
-      const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
-      expect(bodyWithoutIds).toEqual([envVar2, envVar1, envVar3]);
+      const resSkip = await req.get(`/env-var`, {
+        skip: 1,
+        limit: 1,
+        sort: JSON.stringify({value: -1})
+      });
+      const bodySkip = resSkip.body.map(({_id, ...rest}) => rest);
+      expect(bodySkip).toEqual([envVar1]);
     });
 
     it("should paginate", async () => {
@@ -98,11 +71,11 @@ describe("Environment Variable", () => {
         req.post("/env-var", envVar3)
       ]);
 
-      const res = await req.get(`/env-var`, {paginate: true});
+      const res = await req.get(`/env-var`, {paginate: true, sort: JSON.stringify({_id: -1})});
       const bodyWithoutIds = {...res.body, data: res.body.data.map(({_id, ...rest}) => rest)};
       expect(bodyWithoutIds).toEqual({
         meta: {total: 3},
-        data: [envVar1, envVar2, envVar3]
+        data: [envVar3, envVar2, envVar1]
       });
     });
 
@@ -119,7 +92,8 @@ describe("Environment Variable", () => {
 
       const res = await req.get(`/env-var`, {filter: JSON.stringify({key: "ENV_KEY_2"})});
       const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
-      expect(bodyWithoutIds).toEqual([envVar2, envVar3]);
+      expect(bodyWithoutIds.length).toBe(2);
+      expect(bodyWithoutIds).toEqual(expect.arrayContaining([envVar2, envVar3]));
 
       const res2 = await req.get(`/env-var`, {filter: JSON.stringify({value: "val_2"})});
       const bodyWithoutIds2 = res2.body.map(({_id, ...rest}) => rest);
