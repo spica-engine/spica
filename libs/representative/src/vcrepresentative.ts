@@ -100,7 +100,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         switch (event) {
           case "add":
             changeType = ChangeTypes.INSERT;
-            resource = {content: this.readFile(path), slug: parts[0]}; // _id removed since it will be empty not needed to pass
+            resource = {content: this.readFile(path), slug: parts[0]};
             break;
 
           case "change":
