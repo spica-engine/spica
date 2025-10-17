@@ -41,7 +41,6 @@ const CreateFolder: FC<CreateFolderProps> = ({
         return;
       }
 
-      // Validate folder name pattern (no forward slashes, spaces, or dots at the start)
       const folderNamePattern = /^[^\/\ \.]+/;
       if (!folderNamePattern.test(value.trim())) {
         setError("Folder name cannot start with a dot, space, or contain forward slashes.");
