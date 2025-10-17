@@ -218,7 +218,7 @@ const StorageItemColumn = memo(
 
           return (
             <StorageItem
-              key={index}
+              key={item._id}
               item={item}
               onFolderClick={folderName => handleFolderClick(folderName, fullPath, depth, isActive)}
               onFileClick={setPreviewFile}
