@@ -23,7 +23,7 @@ describe("Hash Field", () => {
 
   const HASH_SECRET = "test-hash-secret-123";
   let bucketId: string;
-
+  let bucketId2: string;
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -55,6 +55,8 @@ describe("Hash Field", () => {
 
     // Create a bucket with hash field
     bucketId = new ObjectId().toHexString();
+    bucketId2 = new ObjectId().toHexString();
+
     const bucket = {
       _id: bucketId,
       title: "User Bucket",
@@ -78,8 +80,50 @@ describe("Hash Field", () => {
         }
       }
     };
+    const bucket2 = {
+      _id: bucketId2,
+      title: "User Bucket2",
+      description: "Bucket with nested hash password field",
+      icon: "person",
+      primary: "username",
+      readOnly: false,
+      acl: {write: "true==true", read: "true==true"},
+      properties: {
+        username: {
+          type: "string",
+          title: "Username"
+        },
+        email: {
+          type: "string",
+          title: "Email"
+        },
+        user: {
+          type: "object",
+          title: "User",
+          properties: {
+            name: {
+              type: "string",
+              title: "Name"
+            },
+            surname: {
+              type: "string",
+              title: "Surname"
+            },
+            password: {
+              type: "hash",
+              title: "Password"
+            },
+            age: {
+              type: "number",
+              title: "Age"
+            }
+          }
+        }
+      }
+    };
 
     await req.post("/bucket", bucket);
+    await req.post("/bucket", bucket2);
   });
 
   afterEach(() => app.close());
@@ -101,7 +145,7 @@ describe("Hash Field", () => {
 
       expect(dbDoc).toMatchObject({
         username: "john_doe",
-        password: "825f4c68bab8ef1a7f11ef9426c8e0f6d860267f71cef3aeaccbdcf037237754",
+        password: "1787bc90cb1d226e67065da0ae7ce8af44c7ed7b689c951ae00f590f9a6d794a",
         age: 30
       });
     });
@@ -130,7 +174,7 @@ describe("Hash Field", () => {
 
       expect(dbDoc).toMatchObject({
         username: "jane_updated",
-        password: "24c65f4d6692a34b63050b6e116d8adf9b2469c8c7172397ddee7b9eeda5f29a",
+        password: "ccdc74486930c5a0bfef0f296a7ccd9720606b4d50dbee3116e47bef65316ea2",
         age: 26
       });
     });
@@ -157,7 +201,7 @@ describe("Hash Field", () => {
 
       expect(dbDoc).toMatchObject({
         username: "bob_smith",
-        password: "b320e73558e1bacf17be988e4ab050ecea799aff631b54e58afdea4482d5839f",
+        password: "7607df5f375b3c5da191f6d052aa7d1f43ea28c6f8d5e5460898f0f7eaf854c9",
         age: 35
       });
     });
@@ -187,13 +231,13 @@ describe("Hash Field", () => {
 
       expect(user1).toMatchObject({
         username: "user1",
-        password: "489b20c2a40cafadca5152412b5fd2c277a309f70da2d1c26099938f4427285a",
+        password: "142fec0c8e7a398e198660cf228c7158039dd839c913dc37bcc53e1e3cdafed7",
         age: 25
       });
 
       expect(user2).toMatchObject({
         username: "user2",
-        password: "41b5b2d2d22a95e6102730a4a80c5b5695fd3bd614e63410443434277acc57c6",
+        password: "f9414d8b2d69d0341a72d3e8a1d1f5cd17e0bde5697603e362e12a0f80d2859a",
         age: 30
       });
     });
@@ -229,7 +273,7 @@ describe("Hash Field", () => {
       expect(response.body.length).toBe(1);
       expect(response.body[0]).toMatchObject({
         username: "bob",
-        password: "689ebe21fda952729d34c56e22d876c9fa8230ea70434cc5e117f2044e83fe94",
+        password: "a21a300c2bf7a71d840c9aff3e0b9f3c38e7fb7f6a299a96f434178087616bb8",
         age: 32
       });
     });
@@ -256,7 +300,7 @@ describe("Hash Field", () => {
       expect(response.body.length).toBe(1);
       expect(response.body[0]).toMatchObject({
         username: "alice",
-        password: "02b906806b7c66f6f196731e102f46d56d96738450dc69f86a7f67cd8577c0ac",
+        password: "f36835b0ac86db4982ae60b3bf5f8bd3eff02c83cb4324f8140184222867f42d",
         age: 28
       });
     });
@@ -272,7 +316,7 @@ describe("Hash Field", () => {
       expect(response.body.length).toBe(1);
       expect(response.body[0]).toMatchObject({
         username: "bob",
-        password: "689ebe21fda952729d34c56e22d876c9fa8230ea70434cc5e117f2044e83fe94",
+        password: "a21a300c2bf7a71d840c9aff3e0b9f3c38e7fb7f6a299a96f434178087616bb8",
         age: 32
       });
     });
@@ -283,6 +327,39 @@ describe("Hash Field", () => {
       });
 
       expect(response.body.length).toBe(0);
+    });
+  });
+
+  describe("should hash nested fields", () => {
+    beforeEach(async () => {
+      await req.post(`/bucket/${bucketId2}/data`, {
+        username: "alice123",
+        email: "alice@example.com",
+        user: {
+          name: "Alice",
+          surname: "Wonderland",
+          password: "alicepass",
+          age: 28
+        }
+      });
+    });
+
+    it("should hash nested object field", async () => {
+      const response = await req.get(`/bucket/${bucketId2}/data`, {
+        filter: JSON.stringify({"user.password": "alicepass"})
+      });
+
+      expect(response.body.length).toBe(1);
+      expect(response.body[0]).toMatchObject({
+        username: "alice123",
+        email: "alice@example.com",
+        user: {
+          name: "Alice",
+          surname: "Wonderland",
+          password: "f36835b0ac86db4982ae60b3bf5f8bd3eff02c83cb4324f8140184222867f42d",
+          age: 28
+        }
+      });
     });
   });
 });
