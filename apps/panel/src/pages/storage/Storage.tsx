@@ -236,7 +236,7 @@ const FilePreview = memo(
             description={
               <>
                 <span className={styles.confirmText}>
-                  This action will permanently delete the history.
+                  This action will permanently delete the file.
                 </span>
                 <span>
                   Please type <strong>agree</strong> to confirm deletion.
