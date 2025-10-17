@@ -622,6 +622,7 @@ describe("Versioning", () => {
 
         const updated = YAML.stringify({...envVar, value: "false"});
         await rep.write("env-var", envVar.key, "schema", updated, "yaml");
+        await sleep();
 
         const envVars = await evs.find({});
         expect(envVars).toEqual([
