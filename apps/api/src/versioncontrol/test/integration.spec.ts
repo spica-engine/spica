@@ -623,8 +623,6 @@ describe("Versioning", () => {
         const updated = YAML.stringify({...envVar, value: "false"});
         await rep.write("env-var", envVar.key, "schema", updated, "yaml");
 
-        await new Promise(r => setTimeout(r, 5000)); // added to avoid test flakiness
-
         const envVars = await evs.find({});
         expect(envVars).toEqual([
           {
