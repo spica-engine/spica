@@ -98,7 +98,7 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
                 {previewFile?.name} - {formatFileSize(previewFile?.content?.size || 0)}
               </Text>
               <Text>{previewFile?.content?.type}</Text>
-              <Text>{createdAt.toLocaleString()}</Text>
+              <Text>{createdAt}</Text>
             </FlexElement>
             <FlexElement gap={10}>
               <Button className={styles.metadataButton} variant="text">
