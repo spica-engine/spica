@@ -16,8 +16,6 @@ import {memo, useEffect, useMemo, useState, type DragEventHandler} from "react";
 import useStorage from "../../hooks/useStorage";
 import useFileView from "../../hooks/useFileView";
 import SearchBar from "../../components/atoms/search-bar/SearchBar";
-import CreateFolder from "../../components/molecules/create-folder-modal/CreateFolderModal";
-import CreateFile from "../../components/molecules/create-file-modal/CreateFile";
 
 type TypeDirectoryDepth = 1 | 2 | 3;
 type TypeDirectory = {
@@ -265,22 +263,14 @@ const ActionButtons = memo(({directory}: ActionButtonsProps) => {
         <Icon name="refresh" />
         Refresh
       </Button>
-      <CreateFile prefix={currentPrefix}>
-        {({onOpen}) => (
-          <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
-            <Icon name="plus" />
-            Upload Files
-          </Button>
-        )}
-      </CreateFile>
-      <CreateFolder prefix={currentPrefix} currentItemNames={currentItemNames}>
-        {({onOpen}) => (
-          <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
-            <Icon name="plus" />
-            Create New Folder
-          </Button>
-        )}
-      </CreateFolder>
+      <Button className={styles.actionBarButton} variant="filled">
+        <Icon name="plus" />
+        Upload Files
+      </Button>
+      <Button className={styles.actionBarButton} variant="filled">
+        <Icon name="plus" />
+        Create New Folder
+      </Button>
     </FlexElement>
   );
 });
