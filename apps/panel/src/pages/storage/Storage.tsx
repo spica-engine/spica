@@ -329,7 +329,7 @@ const StorageItemColumn = memo(
           filesWithPrefix.forEach(file => dataTransfer.items.add(file));
 
           const response = await uploadFiles({files: dataTransfer.files});
-          const uploadedFile = (response as any)?.data?.[0] as DirectoryItem | undefined;
+          const uploadedFile = response?.data?.[0] as DirectoryItem | undefined;
           if (uploadedFile) {
             onUploadComplete({...uploadedFile, prefix});
           }
