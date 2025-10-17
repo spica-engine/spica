@@ -59,7 +59,7 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
     second: "2-digit",
     hour12: true
   });
-  
+
   return (
     <FluidContainer
       className={styles.filePreviewContent}
@@ -141,7 +141,7 @@ interface StorageItemColumnProps {
   setPreviewFile: (file?: TypeFile) => void;
   depth: TypeDirectoryDepth;
   directory: TypeDirectories;
-  previewFileFullPath?: string;
+  previewFileId?: string;
   prefix: string;
   onUploadComplete: (file: TypeFile & {prefix?: string}) => void;
 }
@@ -153,7 +153,7 @@ const StorageItemColumn = memo(
     setPreviewFile,
     depth,
     directory,
-    previewFileFullPath,
+    previewFileId,
     prefix,
     onUploadComplete
   }: StorageItemColumnProps) => {
@@ -214,7 +214,7 @@ const StorageItemColumn = memo(
           const fullPath = item.name;
           const isActive = isFolder
             ? directory.find(i => i.fullPath === fullPath)?.isActive || false
-            : previewFileFullPath === fullPath;
+            : previewFileId === item._id;
 
           return (
             <StorageItem
@@ -261,20 +261,7 @@ const StorageItem = memo(({item, onFolderClick, onFileClick, isActive}: StorageI
   );
 });
 
-interface ActionButtonsProps {
-  directory: TypeDirectories;
-}
-
-const ActionButtons = memo(({directory}: ActionButtonsProps) => {
-  const visibleDirectories = directory.filter(dir => dir.currentDepth);
-  const currentPrefix = visibleDirectories
-    .filter(i => i.fullPath !== ROOT_PATH)
-    .map(i => i.label)
-    .join("");
-  const currentItemNames = visibleDirectories
-    .map(dir => dir.items?.map(item => item.name).filter(Boolean) || [])
-    .flat();
-
+const ActionButtons = memo(() => {
   return (
     <FlexElement>
       <Button className={styles.actionBarButton} variant="filled">
@@ -358,7 +345,7 @@ const StorageItemColumns = memo(
                 setPreviewFile={setPreviewFile}
                 depth={depth}
                 directory={directory}
-                previewFileFullPath={previewFile?.name}
+                previewFileId={previewFile?._id}
                 prefix={prefix}
                 onUploadComplete={onUploadComplete}
               />
@@ -535,9 +522,7 @@ export default function StoragePage() {
       <FluidContainer
         className={styles.actionBar}
         prefix={{children: <SearchBar />}}
-        suffix={{
-          children: <ActionButtons directory={directory} />
-        }}
+        suffix={{children: <ActionButtons />}}
       />
       <FluidContainer
         className={styles.storageItemContainer}
