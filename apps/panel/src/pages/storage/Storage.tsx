@@ -11,15 +11,16 @@ import {
 } from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import {useGetStorageItemsQuery} from "../../store/api";
-import {useUploadFilesMutation} from "../../store/api/storageApi";
-import {memo, useEffect, useMemo, useState, type DragEventHandler} from "react";
+import {useUpdateStorageItemMutation, useUploadFilesMutation} from "../../store/api/storageApi";
+import {memo, useEffect, useMemo, useRef, useState, type DragEventHandler} from "react";
 import useStorage from "../../hooks/useStorage";
 import useFileView from "../../hooks/useFileView";
 import SearchBar from "../../components/atoms/search-bar/SearchBar";
 
 type TypeDirectoryDepth = 1 | 2 | 3;
+type DirectoryItem = TypeFile & {fullPath: string};
 type TypeDirectory = {
-  items?: TypeFile[];
+  items?: DirectoryItem[];
   label: string;
   fullPath: string;
   currentDepth?: TypeDirectoryDepth;
@@ -31,11 +32,6 @@ type TypeDirectory = {
 };
 type TypeDirectories = TypeDirectory[];
 
-interface FilePreviewProps {
-  handleClosePreview: () => void;
-  previewFile?: TypeFile;
-}
-
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
 
@@ -46,10 +42,21 @@ function formatFileSize(bytes: number): string {
   return `${parseFloat(value.toFixed(2))} ${units[i]}`;
 }
 
-const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) => {
-  const fileView = useFileView({file: previewFile});
+interface FilePreviewProps {
+  handleClosePreview: () => void;
+  previewFile?: DirectoryItem;
+  onFileReplaced?: (updatedFile: DirectoryItem) => void;
+}
+
+const FilePreview = memo(({handleClosePreview, previewFile, onFileReplaced}: FilePreviewProps) => {
+  const [updateStorageItem] = useUpdateStorageItemMutation();
   const isImage = previewFile?.content?.type.startsWith("image/");
   const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
+  const urlWithTimestamp = previewFile?.url + "?timestamp=" + timestamp + "&t=" + Date.now();
+  const fileView = useFileView({
+    file: {...previewFile, url: urlWithTimestamp} as TypeFile
+  });
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const createdAt = new Date(timestamp).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -59,6 +66,36 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
     second: "2-digit",
     hour12: true
   });
+
+  const handleCopy = () => {
+    if (!previewFile) return;
+    const origin = window.location.origin;
+    navigator.clipboard.writeText(origin + "/storage-view/" + previewFile._id);
+  };
+
+  const handleReplace = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !previewFile?._id) return;
+    try {
+      const rawFile = files[0];
+      const parentPath = getParentPath(previewFile.fullPath);
+      const fileName = `${parentPath === ROOT_PATH ? "" : parentPath}${rawFile.name}`;
+      const encodedFileName = encodeURIComponent(fileName);
+      const fileToUpload = new File([rawFile], encodedFileName, {type: rawFile.type});
+
+      const updatedFile = await updateStorageItem({
+        id: previewFile._id,
+        file: fileToUpload
+      }).unwrap();
+
+      const directoryItem = {...updatedFile, label: rawFile.name, fullPath: fileName};
+      if (updatedFile) onFileReplaced?.(directoryItem as DirectoryItem);
+
+      e.target.value = "";
+    } catch (error) {
+      console.error("File replacement failed:", error);
+    }
+  };
 
   return (
     <FluidContainer
@@ -101,7 +138,7 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
               <Text>{createdAt}</Text>
             </FlexElement>
             <FlexElement gap={10}>
-              <Button className={styles.metadataButton} variant="text">
+              <Button className={styles.metadataButton} variant="text" onClick={handleCopy}>
                 <Icon name="fileMultiple" size={14} />
                 Copy
               </Button>
@@ -111,10 +148,21 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
                   Edit
                 </Button>
               )}
-              <Button className={styles.metadataButton} variant="text">
+              <Button
+                className={styles.metadataButton}
+                variant="text"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <Icon name="swapHorizontal" size={14} />
                 Replace
               </Button>
+              <input
+                id="replace-file-input"
+                type="file"
+                style={{display: "none"}}
+                onChange={handleReplace}
+                ref={fileInputRef}
+              />
               <Button
                 className={`${styles.metadataButton} ${styles.metadataClearButton}`}
                 color="danger"
@@ -131,19 +179,19 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
 });
 
 interface StorageItemColumnProps {
-  items?: TypeFile[];
+  items?: DirectoryItem[];
   handleFolderClick: (
     folderName: string,
     fullPath: string,
     depth: TypeDirectoryDepth,
     isActive: boolean
   ) => void;
-  setPreviewFile: (file?: TypeFile) => void;
+  setPreviewFile: (file?: DirectoryItem) => void;
   depth: TypeDirectoryDepth;
   directory: TypeDirectories;
   previewFileId?: string;
   prefix: string;
-  onUploadComplete: (file: TypeFile & {prefix?: string}) => void;
+  onUploadComplete: (file: DirectoryItem & {prefix?: string}) => void;
 }
 
 const StorageItemColumn = memo(
@@ -190,7 +238,7 @@ const StorageItemColumn = memo(
           filesWithPrefix.forEach(file => dataTransfer.items.add(file));
 
           const response = await uploadFiles({files: dataTransfer.files});
-          const uploadedFile = (response as any)?.data?.[0] as TypeFile | undefined;
+          const uploadedFile = (response as any)?.data?.[0] as DirectoryItem | undefined;
           if (uploadedFile) {
             onUploadComplete({...uploadedFile, prefix});
           }
@@ -232,17 +280,17 @@ const StorageItemColumn = memo(
 );
 
 interface StorageItemProps {
-  item: TypeFile | TypeDirectory;
+  item: DirectoryItem | TypeDirectory;
   onFolderClick?: (folderName: string) => void;
-  onFileClick: (file?: TypeFile) => void;
+  onFileClick: (file?: DirectoryItem) => void;
   isActive: boolean;
 }
 
 const StorageItem = memo(({item, onFolderClick, onFileClick, isActive}: StorageItemProps) => {
-  const itemName = (item as TypeDirectory).label || (item as TypeFile).name;
+  const itemName = (item as TypeDirectory).label || (item as DirectoryItem).name;
   const isFolder = item?.content?.type === "inode/directory";
   const handleFolderClick = () => onFolderClick?.(itemName);
-  const handleFileClick = () => onFileClick(isActive ? undefined : (item as TypeFile));
+  const handleFileClick = () => onFileClick(isActive ? undefined : (item as DirectoryItem));
   return (
     <FlexElement
       onClick={isFolder ? handleFolderClick : handleFileClick}
@@ -291,10 +339,10 @@ interface StorageItemColumnsProps {
     depth: TypeDirectoryDepth,
     isActive: boolean
   ) => void;
-  setPreviewFile: (file?: TypeFile) => void;
+  setPreviewFile: (file?: DirectoryItem) => void;
   directory: TypeDirectories;
-  previewFile?: TypeFile;
-  onUploadComplete: (file: TypeFile & {prefix?: string}) => void;
+  previewFile?: DirectoryItem;
+  onUploadComplete: (file: DirectoryItem & {prefix?: string}) => void;
 }
 
 const StorageItemColumns = memo(
@@ -363,11 +411,11 @@ const StorageItemColumns = memo(
 );
 
 const ROOT_PATH = "/";
-const getParentPath = (fullPath: string) => {
+const getParentPath = (fullPath?: string) => {
   const res =
-    fullPath.replace(/\/[^/]+\/?$/, "") === fullPath
+    fullPath?.replace(/\/[^/]+\/?$/, "") === fullPath
       ? "/"
-      : fullPath.replace(/\/[^/]+\/?$/, "") || "/";
+      : fullPath?.replace(/\/[^/]+\/?$/, "") || "/";
   return res === "/" ? res : res + "/";
 };
 
@@ -400,7 +448,7 @@ export default function StoragePage() {
   ];
   const filter = useMemo(() => buildDirectoryFilter(filterArray), [filterArray]);
   const {data: storageData} = useGetStorageItemsQuery({filter});
-  const [previewFile, setPreviewFile] = useState<TypeFile>();
+  const [previewFile, setPreviewFile] = useState<DirectoryItem>();
 
   const handleFolderClick = (
     folderName: string,
@@ -451,10 +499,12 @@ export default function StoragePage() {
     }));
     const newDirectories = cleanDirectories.map(dir => {
       if (getParentPath(theDirectory.fullPath) === dir.fullPath) {
-        const newDepth = ((theDirectory.currentDepth as TypeDirectoryDepth) - 1) as TypeDirectoryDepth;
+        const newDepth = ((theDirectory.currentDepth as TypeDirectoryDepth) -
+          1) as TypeDirectoryDepth;
         return {...dir, isActive: newDepth > 0, currentDepth: newDepth > 0 ? newDepth : undefined};
       } else if (getParentPath(getParentPath(theDirectory.fullPath)) === dir.fullPath) {
-        const newDepth = ((theDirectory.currentDepth as TypeDirectoryDepth) - 2) as TypeDirectoryDepth;
+        const newDepth = ((theDirectory.currentDepth as TypeDirectoryDepth) -
+          2) as TypeDirectoryDepth;
         return {...dir, isActive: newDepth > 0, currentDepth: newDepth > 0 ? newDepth : undefined};
       } else if (dir.fullPath === theDirectory.fullPath) {
         return theDirectory;
@@ -517,6 +567,23 @@ export default function StoragePage() {
     setDirectory(newDirectories);
   };
 
+  const onFileReplaced = (updatedFile: TypeFile) => {
+    const newDirectories = directory.map(dir => {
+      if (dir.items) {
+        const updatedItems = dir.items.map(item =>
+          item._id === updatedFile._id ? updatedFile : item
+        );
+        return {
+          ...dir,
+          items: updatedItems
+        };
+      }
+      return dir;
+    });
+    setDirectory(newDirectories as TypeDirectories);
+    setPreviewFile(updatedFile as DirectoryItem);
+  };
+
   return (
     <div className={styles.container}>
       <FluidContainer
@@ -542,7 +609,11 @@ export default function StoragePage() {
           previewFile && {
             className: styles.preview,
             children: (
-              <FilePreview handleClosePreview={handleClosePreview} previewFile={previewFile} />
+              <FilePreview
+                handleClosePreview={handleClosePreview}
+                previewFile={previewFile}
+                onFileReplaced={onFileReplaced}
+              />
             )
           }
         }
