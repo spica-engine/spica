@@ -6,6 +6,7 @@ import StorageModalHeading from "./storage-modal-heading/StorageModalHeading";
 import StorageFileCardSkeleton from "./storage-file-card-skeleton/StorageFileCardSkeleton";
 import {useGetStorageItemsQuery, type Storage, type StorageOptions} from "../../../store/api/storageApi";
 import { convertQuickDateToRange, convertToBytes } from "../../../utils/storage";
+import useStorage from "../../../hooks/useStorage";
 
 
 type TypeStorageFileSelect = {
@@ -35,6 +36,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [storageOptions, setStorageOptions] = useState<StorageOptions>({});
   const [folderStorageOptions, setFolderStorageOptions] = useState<StorageOptions>({});
+  const { convertStorageToTypeFile, buildDirectoryFilter } = useStorage();
 
   const {
     data: storageResponse,
@@ -59,44 +61,6 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
   const containerRef = useRef<HTMLDivElement>(null);
 
   const ITEMS_PER_PAGE = 20;
-
-  const convertStorageToTypeFile = (storage: Storage): TypeFile => ({
-    _id: storage._id || "",
-    name: storage.name,
-    content: {
-      type: storage.name.endsWith("/")
-        ? "inode/directory"
-        : storage.content?.type || "application/octet-stream",
-      size: storage.content?.size || 0
-    },
-    url: storage.url || ""
-  });
-
-  const buildDirectoryFilter = useCallback(() => {
-    const currentDirectory = directory.length === 1 ? "/" : directory.slice(1).join("");
-
-    if (currentDirectory === "/") {
-      return {
-        $or: [
-          {name: {$regex: "^[^/]+$"}},
-          {name: {$regex: "^[^/]+/$"}}
-        ]
-      };
-    } else {
-      const escapedDirectory = currentDirectory.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      return {
-        $and: [
-          {name: {$regex: `^${escapedDirectory}`}},
-          {
-            $or: [
-              {name: {$regex: `^${escapedDirectory}[^/]+$`}},
-              {name: {$regex: `^${escapedDirectory}[^/]+/$`}}
-            ]
-          }
-        ]
-      };
-    }
-  }, [directory]);
 
   const buildSearchFilter = useCallback(() => {
     return searchTerm
@@ -189,7 +153,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
   const buildCompleteFilter = useCallback(() => {
     const allConditions: any[] = [];
 
-    const directoryFilter = buildDirectoryFilter();
+    const directoryFilter = buildDirectoryFilter(directory);
     allConditions.push(directoryFilter);
 
     const searchFilter = buildSearchFilter();

@@ -1,16 +1,16 @@
-import { useCallback, useState } from "react";
+import {useCallback, useState} from "react";
 import {
   useUploadFilesMutation,
   useUpdateStorageItemMutation,
   useDeleteStorageItemMutation,
   useUpdateStorageNameMutation,
-  type Storage,
+  type Storage
 } from "../store/api";
-import type { TypeFile } from "oziko-ui-kit";
+import type {TypeFile} from "oziko-ui-kit";
 
 function useStorageService() {
   const [uploadProgress, setUploadProgress] = useState(0);
-  
+
   const [uploadFiles, uploadResult] = useUploadFilesMutation();
   const [updateStorageItem] = useUpdateStorageItemMutation();
   const [deleteStorageItem] = useDeleteStorageItemMutation();
@@ -20,9 +20,9 @@ function useStorageService() {
     async (files: FileList, prefix?: string) => {
       try {
         setUploadProgress(0);
-        
+
         const progressInterval = setInterval(() => {
-          setUploadProgress((prev) => {
+          setUploadProgress(prev => {
             if (prev >= 90) {
               clearInterval(progressInterval);
               return prev;
@@ -31,17 +31,17 @@ function useStorageService() {
           });
         }, 100);
 
-        const result = await uploadFiles({ files, prefix }).unwrap();
-        
+        const result = await uploadFiles({files, prefix}).unwrap();
+
         clearInterval(progressInterval);
         setUploadProgress(100);
-        
+
         setTimeout(() => setUploadProgress(0), 1000);
-        
+
         return result;
       } catch (error) {
         setUploadProgress(0);
-        console.error('Upload failed:', error);
+        console.error("Upload failed:", error);
         throw error;
       }
     },
@@ -51,9 +51,9 @@ function useStorageService() {
   const updateOne = useCallback(
     async (id: string, file: File) => {
       try {
-        return await updateStorageItem({ id, file }).unwrap();
+        return await updateStorageItem({id, file}).unwrap();
       } catch (error) {
-        console.error('Update failed:', error);
+        console.error("Update failed:", error);
         throw error;
       }
     },
@@ -65,7 +65,7 @@ function useStorageService() {
       try {
         await deleteStorageItem(id).unwrap();
       } catch (error) {
-        console.error('Delete failed:', error);
+        console.error("Delete failed:", error);
         throw error;
       }
     },
@@ -75,9 +75,9 @@ function useStorageService() {
   const updateName = useCallback(
     async (id: string, name: string) => {
       try {
-        return await updateStorageName({ id, name }).unwrap();
+        return await updateStorageName({id, name}).unwrap();
       } catch (error) {
-        console.error('Name update failed:', error);
+        console.error("Name update failed:", error);
         throw error;
       }
     },
@@ -102,10 +102,7 @@ function useStorageService() {
 
     if (currentDirectory === "/") {
       return {
-        $or: [
-          {name: {$regex: "^[^/]+$"}},
-          {name: {$regex: "^[^/]+/$"}}
-        ]
+        $or: [{name: {$regex: "^[^/]+$"}}, {name: {$regex: "^[^/]+/$"}}]
       };
     } else {
       const escapedDirectory = currentDirectory.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -123,19 +120,20 @@ function useStorageService() {
     }
   }, []);
 
+
   return {
     uploadFiles: uploadFilesWithProgress,
     updateOne,
     deleteOne,
     updateName,
-    
+    buildDirectoryFilter,
+    convertStorageToTypeFile,
+
     uploadLoading: uploadResult.isLoading,
     uploadProgress,
     
     uploadError: uploadResult.error,
 
-    convertStorageToTypeFile,
-    buildDirectoryFilter
   };
 }
 
