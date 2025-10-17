@@ -8,6 +8,8 @@ import {parentPort} from "worker_threads";
 const ROOT_TSCONFIG_PATH = path.join(os.tmpdir(), "_tsconfig.json");
 
 let diagnosticMap = new WeakMap<ts.EmitAndSemanticDiagnosticsBuilderProgram, ts.Diagnostic[]>();
+let compilationMap = new WeakMap<ts.EmitAndSemanticDiagnosticsBuilderProgram, Compilation>();
+let compilationByCwd = new Map<string, Compilation>();
 let builder: ts.SolutionBuilder<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
 let host: ts.SolutionBuilderHost<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
 const astCache = new Map<string, ts.SourceFile>();
@@ -79,6 +81,11 @@ function createEmitAndSemanticDiagnosticsBuilderProgram(
 
   diagnosticMap.set(program, []);
 
+  // Associate the program with its compilation using baseUrl
+  if (options?.baseUrl && compilationByCwd.has(options.baseUrl)) {
+    compilationMap.set(program, compilationByCwd.get(options.baseUrl));
+  }
+
   host.reportDiagnostic = diagnostic => {
     diagnosticMap.get(program).push(diagnostic);
   };
@@ -90,6 +97,9 @@ function build(compilation: Compilation) {
   const referencedProject = `${compilation.cwd.replace(/\//g, "_")}_tsconfig.json`;
 
   astCache.delete(path.join(compilation.cwd, compilation.entrypoints.build));
+
+  // Store compilation by cwd for lookup in createEmitAndSemanticDiagnosticsBuilderProgram
+  compilationByCwd.set(compilation.cwd, compilation);
 
   const rootTsConfig: any = readRootTsConfig();
 
@@ -112,12 +122,14 @@ function build(compilation: Compilation) {
       declaration: true
     };
 
+    const excludePattern = path.resolve(outDirAbsolutePath);
+
     fs.writeFileSync(
       path.join(os.tmpdir(), referencedProject),
       JSON.stringify({
         compilerOptions: options,
         files: [path.join(compilation.cwd, compilation.entrypoints.build)],
-        exclude: [`**/${compilation.outDir}/**`]
+        exclude: [excludePattern]
       })
     );
 
@@ -130,16 +142,21 @@ function build(compilation: Compilation) {
   builder.build();
 }
 
-function renameJsToMjs(baseUrl: string) {
-  const buildFolder = path.join(baseUrl, ".build");
-  fs.renameSync(path.join(buildFolder, "index.js"), path.join(buildFolder, "index.mjs"));
+function renameJsToMjs(compilation: Compilation) {
+  const outDirAbsolutePath = path.join(compilation.cwd, compilation.outDir);
+  const jsFile = path.join(outDirAbsolutePath, "index.js");
+  const mjsFile = path.join(outDirAbsolutePath, "index.mjs");
+
+  if (fs.existsSync(jsFile)) {
+    fs.renameSync(jsFile, mjsFile);
+  }
 }
 
-function postCompilation(baseUrl: string, diagnostics: ts.Diagnostic[]) {
-  renameJsToMjs(baseUrl);
+function postCompilation(compilation: Compilation, diagnostics: ts.Diagnostic[]) {
+  renameJsToMjs(compilation);
 
   parentPort.postMessage({
-    baseUrl: baseUrl,
+    baseUrl: compilation.cwd,
     diagnostics: diagnostics
       .filter(d => d.file)
       .map((diagnostic: ts.Diagnostic) => {
@@ -192,8 +209,17 @@ function main() {
   host.reportSolutionBuilderStatus = () => {};
 
   host.afterProgramEmitAndDiagnostics = program => {
-    postCompilation(program.getCompilerOptions().baseUrl, diagnosticMap.get(program));
+    const compilation = compilationMap.get(program);
+    if (compilation) {
+      postCompilation(compilation, diagnosticMap.get(program));
+      // Clean up to prevent memory leaks
+      const baseUrl = program.getCompilerOptions().baseUrl;
+      if (baseUrl) {
+        compilationByCwd.delete(baseUrl);
+      }
+    }
     diagnosticMap.delete(program);
+    compilationMap.delete(program);
     host.reportDiagnostic = () => {};
   };
 

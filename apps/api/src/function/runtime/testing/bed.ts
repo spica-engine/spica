@@ -4,31 +4,21 @@ import path from "path";
 
 export class FunctionTestBed {
   static initialize(index: string, compilation: Compilation): string {
-    // Create a unique function directory
-    const functionName = `fn-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    const testRoot = process.env.TEST_TMPDIR;
-    const functionDir = path.join(testRoot, functionName);
-
-    // Create function directory
-    fs.mkdirSync(functionDir, {recursive: true});
-
-    // Write source file
-    fs.writeFileSync(path.join(functionDir, compilation.entrypoints.build), index);
-
-    // Write package.json pointing to build
+    const tmpdir = fs.mkdtempSync(path.join(process.env.TEST_TMPDIR, "fn"));
+    fs.writeFileSync(path.join(tmpdir, compilation.entrypoints.build), index);
     fs.writeFileSync(
-      path.join(functionDir, "package.json"),
+      path.join(tmpdir, "package.json"),
       `{
-          "name": "${functionName}",
+          "name": "testbed-fn",
           "description": "No description.",
           "version": "0.0.1",
           "private": true,
           "keywords": ["spica", "function", "node.js"],
           "license": "UNLICENSED",
-          "main": "${path.join("..", compilation.outDir, functionName, compilation.entrypoints.runtime)}"
+          "main": "${path.join(".", compilation.outDir, compilation.entrypoints.runtime)}"
       }`
     );
 
-    return functionDir;
+    return tmpdir;
   }
 }
