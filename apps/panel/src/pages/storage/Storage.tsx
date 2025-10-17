@@ -36,9 +36,30 @@ interface FilePreviewProps {
   previewFile?: TypeFile;
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return "0 B";
+
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const value = bytes / Math.pow(1024, i);
+
+  return `${parseFloat(value.toFixed(2))} ${units[i]}`;
+}
+
 const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) => {
   const fileView = useFileView({file: previewFile});
-
+  const isImage = previewFile?.content?.type.startsWith("image/");
+  const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
+  const createdAt = new Date(timestamp).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
+  
   return (
     <FluidContainer
       className={styles.filePreviewContent}
@@ -73,24 +94,25 @@ const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) =
         children: (
           <FlexElement direction="vertical" className={styles.metadataContent}>
             <FlexElement direction="vertical" gap={10}>
-              <Text className={styles.metadataName}>{previewFile?.name}</Text>
+              <Text className={styles.metadataName}>
+                {previewFile?.name} - {formatFileSize(previewFile?.content?.size || 0)}
+              </Text>
               <Text>{previewFile?.content?.type}</Text>
-              {/* The previewFile does not have a date value but the figma has a date in here */}
-              {(previewFile as any)?.createdAt && (
-                <Text>{new Date((previewFile as any).createdAt).toLocaleString()}</Text>
-              )}
+              <Text>{createdAt.toLocaleString()}</Text>
             </FlexElement>
             <FlexElement gap={10}>
-              <Button className={styles.metadataButton} variant="icon">
-                <Icon name="folder" size={14} />
+              <Button className={styles.metadataButton} variant="text">
+                <Icon name="fileMultiple" size={14} />
                 Copy
               </Button>
-              <Button className={styles.metadataButton} variant="icon">
-                <Icon name="pencil" size={14} />
-                Edit
-              </Button>
-              <Button className={styles.metadataButton} variant="icon">
-                <Icon name="close" size={14} />
+              {isImage && (
+                <Button className={styles.metadataButton} variant="text">
+                  <Icon name="pencil" size={14} />
+                  Edit
+                </Button>
+              )}
+              <Button className={styles.metadataButton} variant="text">
+                <Icon name="swapHorizontal" size={14} />
                 Replace
               </Button>
               <Button
