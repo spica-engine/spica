@@ -11,11 +11,16 @@ import {
 } from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import {useGetStorageItemsQuery} from "../../store/api";
-import {useUpdateStorageItemMutation, useUploadFilesMutation} from "../../store/api/storageApi";
+import {
+  useUpdateStorageItemMutation,
+  useUploadFilesMutation,
+  useDeleteStorageItemMutation
+} from "../../store/api/storageApi";
 import {memo, useEffect, useMemo, useRef, useState, type DragEventHandler} from "react";
 import useStorage from "../../hooks/useStorage";
 import useFileView from "../../hooks/useFileView";
 import SearchBar from "../../components/atoms/search-bar/SearchBar";
+import Confirmation from "../../components/molecules/confirmation/Confirmation";
 
 type TypeDirectoryDepth = 1 | 2 | 3;
 type DirectoryItem = TypeFile & {fullPath: string};
@@ -32,6 +37,24 @@ type TypeDirectory = {
 };
 type TypeDirectories = TypeDirectory[];
 
+
+const ROOT_PATH = "/";
+const getParentPath = (fullPath?: string) => {
+  const res =
+    fullPath?.replace(/\/[^/]+\/?$/, "") === fullPath
+      ? "/"
+      : fullPath?.replace(/\/[^/]+\/?$/, "") || "/";
+  return res === "/" ? res : res + "/";
+};
+
+function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
+  return arr.reduce<T | undefined>((max, obj) => {
+    if (obj.currentDepth === undefined) return max;
+    if (!max || max.currentDepth === undefined || obj.currentDepth > max.currentDepth) return obj;
+    return max;
+  }, undefined);
+}
+
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
 
@@ -46,137 +69,205 @@ interface FilePreviewProps {
   handleClosePreview: () => void;
   previewFile?: DirectoryItem;
   onFileReplaced?: (updatedFile: DirectoryItem) => void;
+  onFileDeleted?: (fileId: string) => void;
 }
 
-const FilePreview = memo(({handleClosePreview, previewFile, onFileReplaced}: FilePreviewProps) => {
-  const [updateStorageItem] = useUpdateStorageItemMutation();
-  const isImage = previewFile?.content?.type.startsWith("image/");
-  const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
-  const urlWithTimestamp = previewFile?.url + "?timestamp=" + timestamp + "&t=" + Date.now();
-  const fileView = useFileView({
-    file: {...previewFile, url: urlWithTimestamp} as TypeFile
-  });
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const createdAt = new Date(timestamp).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true
-  });
+const FilePreview = memo(
+  ({handleClosePreview, previewFile, onFileReplaced, onFileDeleted}: FilePreviewProps) => {
+    const [updateStorageItem] = useUpdateStorageItemMutation();
+    const [deleteStorageItem] = useDeleteStorageItemMutation();
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+    const isImage = previewFile?.content?.type.startsWith("image/");
+    const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
+    const urlWithTimestamp = previewFile?.url + "?timestamp=" + timestamp + "&t=" + Date.now();
+    const fileView = useFileView({
+      file: {...previewFile, url: urlWithTimestamp} as TypeFile
+    });
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const createdAt = new Date(timestamp).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    });
 
-  const handleCopy = () => {
-    if (!previewFile) return;
-    const origin = window.location.origin;
-    navigator.clipboard.writeText(origin + "/storage-view/" + previewFile._id);
-  };
+    const handleCopy = () => {
+      if (!previewFile) return;
+      const origin = window.location.origin;
+      navigator.clipboard.writeText(origin + "/storage-view/" + previewFile._id);
+    };
 
-  const handleReplace = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0 || !previewFile?._id) return;
-    try {
-      const rawFile = files[0];
-      const parentPath = getParentPath(previewFile.fullPath);
-      const fileName = `${parentPath === ROOT_PATH ? "" : parentPath}${rawFile.name}`;
-      const encodedFileName = encodeURIComponent(fileName);
-      const fileToUpload = new File([rawFile], encodedFileName, {type: rawFile.type});
+    const handleReplace = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0 || !previewFile?._id) return;
+      try {
+        const rawFile = files[0];
+        const parentPath = getParentPath(previewFile.fullPath);
+        const fileName = `${parentPath === ROOT_PATH ? "" : parentPath}${rawFile.name}`;
+        const encodedFileName = encodeURIComponent(fileName);
+        const fileToUpload = new File([rawFile], encodedFileName, {type: rawFile.type});
 
-      const updatedFile = await updateStorageItem({
-        id: previewFile._id,
-        file: fileToUpload
-      }).unwrap();
+        const updatedFile = await updateStorageItem({
+          id: previewFile._id,
+          file: fileToUpload
+        }).unwrap();
 
-      const directoryItem = {...updatedFile, label: rawFile.name, fullPath: fileName};
-      if (updatedFile) onFileReplaced?.(directoryItem as DirectoryItem);
+        const directoryItem = {...updatedFile, label: rawFile.name, fullPath: fileName};
+        if (updatedFile) onFileReplaced?.(directoryItem as DirectoryItem);
 
-      e.target.value = "";
-    } catch (error) {
-      console.error("File replacement failed:", error);
-    }
-  };
+        e.target.value = "";
+      } catch (error) {
+        console.error("File replacement failed:", error);
+      }
+    };
 
-  return (
-    <FluidContainer
-      className={styles.filePreviewContent}
-      gap={10}
-      direction="vertical"
-      dimensionY="fill"
-      root={{
-        children: (
-          <FlexElement gap={10} direction="vertical">
-            <FluidContainer
-              dimensionX="fill"
-              alignment="rightCenter"
-              suffix={{
-                children: (
-                  <Button
-                    className={styles.closePreviewButton}
-                    variant="icon"
-                    onClick={handleClosePreview}
-                  >
-                    <Icon name="close" />
+    const handleDeleteConfirm = async () => {
+      if (!previewFile?._id) return;
+
+      try {
+        setDeleteLoading(true);
+        setDeleteError(null);
+        await deleteStorageItem(previewFile._id).unwrap();
+        onFileDeleted?.(previewFile._id);
+        setShowDeleteConfirmation(false);
+        handleClosePreview();
+      } catch (error) {
+        console.error("File deletion failed:", error);
+        setDeleteError(error instanceof Error ? error.message : "Failed to delete file");
+      } finally {
+        setDeleteLoading(false);
+      }
+    };
+
+    const handleDeleteCancel = () => {
+      setShowDeleteConfirmation(false);
+      setDeleteError(null);
+    };
+
+    return (
+      <>
+        <FluidContainer
+          className={styles.filePreviewContent}
+          gap={10}
+          direction="vertical"
+          dimensionY="fill"
+          root={{
+            children: (
+              <FlexElement gap={10} direction="vertical">
+                <FluidContainer
+                  dimensionX="fill"
+                  alignment="rightCenter"
+                  suffix={{
+                    children: (
+                      <Button
+                        className={styles.closePreviewButton}
+                        variant="icon"
+                        onClick={handleClosePreview}
+                      >
+                        <Icon name="close" />
+                      </Button>
+                    )
+                  }}
+                />
+                <FlexElement className={styles.fileView}>{fileView}</FlexElement>
+              </FlexElement>
+            ),
+            className: styles.fileViewContainer
+          }}
+          suffix={{
+            className: styles.metadata,
+            children: (
+              <FlexElement direction="vertical" className={styles.metadataContent}>
+                <FlexElement direction="vertical" gap={10}>
+                  <Text className={styles.metadataName}>
+                    {previewFile?.name} - {formatFileSize(previewFile?.content?.size || 0)}
+                  </Text>
+                  <Text>{previewFile?.content?.type}</Text>
+                  <Text>{createdAt}</Text>
+                </FlexElement>
+                <FlexElement gap={10}>
+                  <Button className={styles.metadataButton} variant="text" onClick={handleCopy}>
+                    <Icon name="fileMultiple" size={14} />
+                    Copy
                   </Button>
-                )
-              }}
-            />
-            <FlexElement className={styles.fileView}>{fileView}</FlexElement>
-          </FlexElement>
-        ),
-        className: styles.fileViewContainer
-      }}
-      suffix={{
-        className: styles.metadata,
-        children: (
-          <FlexElement direction="vertical" className={styles.metadataContent}>
-            <FlexElement direction="vertical" gap={10}>
-              <Text className={styles.metadataName}>
-                {previewFile?.name} - {formatFileSize(previewFile?.content?.size || 0)}
-              </Text>
-              <Text>{previewFile?.content?.type}</Text>
-              <Text>{createdAt}</Text>
-            </FlexElement>
-            <FlexElement gap={10}>
-              <Button className={styles.metadataButton} variant="text" onClick={handleCopy}>
-                <Icon name="fileMultiple" size={14} />
-                Copy
-              </Button>
-              {isImage && (
-                <Button className={styles.metadataButton} variant="text">
-                  <Icon name="pencil" size={14} />
-                  Edit
-                </Button>
-              )}
-              <Button
-                className={styles.metadataButton}
-                variant="text"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Icon name="swapHorizontal" size={14} />
-                Replace
-              </Button>
-              <input
-                id="replace-file-input"
-                type="file"
-                style={{display: "none"}}
-                onChange={handleReplace}
-                ref={fileInputRef}
-              />
-              <Button
-                className={`${styles.metadataButton} ${styles.metadataClearButton}`}
-                color="danger"
-              >
-                <Icon name="delete" size={14} />
+                  {isImage && (
+                    <Button className={styles.metadataButton} variant="text">
+                      <Icon name="pencil" size={14} />
+                      Edit
+                    </Button>
+                  )}
+                  <Button
+                    className={styles.metadataButton}
+                    variant="text"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Icon name="swapHorizontal" size={14} />
+                    Replace
+                  </Button>
+                  <input
+                    id="replace-file-input"
+                    type="file"
+                    style={{display: "none"}}
+                    onChange={handleReplace}
+                    ref={fileInputRef}
+                  />
+                  <Button
+                    className={`${styles.metadataButton} ${styles.metadataClearButton}`}
+                    color="danger"
+                    onClick={() => setShowDeleteConfirmation(true)}
+                  >
+                    <Icon name="delete" size={14} />
+                    Delete
+                  </Button>
+                </FlexElement>
+              </FlexElement>
+            )
+          }}
+        />
+        {showDeleteConfirmation && (
+          <Confirmation
+            title="DELETE FILE"
+            inputPlaceholder="Type Here"
+            description={
+              <>
+                <span className={styles.confirmText}>
+                  This action will permanently delete the history.
+                </span>
+                <span>
+                  Please type <strong>agree</strong> to confirm deletion.
+                </span>
+              </>
+            }
+            confirmLabel={
+              <>
+                <Icon name="delete" />
                 Delete
-              </Button>
-            </FlexElement>
-          </FlexElement>
-        )
-      }}
-    />
-  );
-});
+              </>
+            }
+            cancelLabel={
+              <>
+                <Icon name="close" />
+                Cancel
+              </>
+            }
+            confirmCondition={input => input === "agree"}
+            showInput={true}
+            onConfirm={handleDeleteConfirm}
+            onCancel={handleDeleteCancel}
+            loading={deleteLoading}
+            error={deleteError}
+
+          />
+        )}
+      </>
+    );
+  }
+);
 
 interface StorageItemColumnProps {
   items?: DirectoryItem[];
@@ -410,23 +501,6 @@ const StorageItemColumns = memo(
   }
 );
 
-const ROOT_PATH = "/";
-const getParentPath = (fullPath?: string) => {
-  const res =
-    fullPath?.replace(/\/[^/]+\/?$/, "") === fullPath
-      ? "/"
-      : fullPath?.replace(/\/[^/]+\/?$/, "") || "/";
-  return res === "/" ? res : res + "/";
-};
-
-function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
-  return arr.reduce<T | undefined>((max, obj) => {
-    if (obj.currentDepth === undefined) return max;
-    if (!max || max.currentDepth === undefined || obj.currentDepth > max.currentDepth) return obj;
-    return max;
-  }, undefined);
-}
-
 export default function StoragePage() {
   const [directory, setDirectory] = useState<TypeDirectories>([
     {
@@ -584,6 +658,21 @@ export default function StoragePage() {
     setPreviewFile(updatedFile as DirectoryItem);
   };
 
+  const onFileDeleted = (fileId: string) => {
+    const newDirectories = directory.map(dir => {
+      if (dir.items) {
+        const filteredItems = dir.items.filter(item => item._id !== fileId);
+        return {
+          ...dir,
+          items: filteredItems
+        };
+      }
+      return dir;
+    });
+    setDirectory(newDirectories as TypeDirectories);
+    setPreviewFile(undefined);
+  };
+
   return (
     <div className={styles.container}>
       <FluidContainer
@@ -613,6 +702,7 @@ export default function StoragePage() {
                 handleClosePreview={handleClosePreview}
                 previewFile={previewFile}
                 onFileReplaced={onFileReplaced}
+                onFileDeleted={onFileDeleted}
               />
             )
           }
