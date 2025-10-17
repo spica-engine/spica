@@ -198,7 +198,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   read(fn: Function): Promise<string> {
-    const filePath = this.getFunctionCompiledEntrypoint(fn);
+    const filePath = this.getFunctionBuildEntrypoint(fn);
 
     return fs.promises
       .readFile(filePath)
@@ -331,16 +331,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   getFunctionBuildEntrypoint(fn: Function) {
     const language = this.getFunctionLanguage(fn);
     return path.join(this.options.root, fn.name, language.description.entrypoints.build);
-  }
-
-  getFunctionCompiledEntrypoint(fn: Function) {
-    const language = this.getFunctionLanguage(fn);
-    return path.join(
-      this.options.root,
-      this.options.outDir,
-      fn.name,
-      language.description.entrypoints.runtime
-    );
   }
 }
 
