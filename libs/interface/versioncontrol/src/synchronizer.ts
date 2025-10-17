@@ -152,17 +152,15 @@ export abstract class Synchronizer<
     }
   }
 
-  private idSlugMap = new Map<string, string>(); // id -> slug
-  private slugIdMap = new Map<string, string>(); // slug -> id
+  private idSlugMap = new Map<string, string>();
+  private slugIdMap = new Map<string, string>();
 
   docToRepActions = new Set<ChangeMeta>();
   repToDocActions = new Set<ChangeMeta>();
 
-  // New meta-based action tracking methods
   addDocToRepAction(meta: ChangeMeta) {
     this.docToRepActions.add(meta);
 
-    // Store mapping when we have both id and slug
     if (meta.id && meta.slug) {
       const idStr = String(meta.id);
 
