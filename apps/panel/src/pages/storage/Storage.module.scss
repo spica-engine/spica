@@ -37,13 +37,8 @@
 }
 
 .storageItem {
+  cursor: pointer;
   max-width: 100%;
-  cursor: pointer;
- 
-}
-
-.storageItem {
-  cursor: pointer;
   width: 100% !important;
   height: 28px !important;
   padding: var(--padding-sm) var(--padding-xl);
@@ -175,10 +170,6 @@
 
 .hidden {
   display: none !important;
-}
-
-.activeStorageItem {
-  font-weight: 700;
 }
 
 .video {

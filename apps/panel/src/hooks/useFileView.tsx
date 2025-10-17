@@ -176,14 +176,6 @@ const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
         <TextViewer fileUrl={file.url} height={styles?.text?.height || 400} 
           style={styles?.text} className={classNames?.text}
         />
-        /**
-         <iframe
-          //type={file.content.type}
-          src={file.url}
-          style={styles?.text}
-          className={classNames?.text}
-        />
-       */
       )
     },
     {
