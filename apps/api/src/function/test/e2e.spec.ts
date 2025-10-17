@@ -233,7 +233,7 @@ describe("Queue shifting", () => {
 
     afterEach(async () => await app2.close());
 
-    fit("should wait until current event completed, return 503 for ones in queue", done => {
+    it("should wait until current event completed, return 503 for ones in queue", done => {
       let firstResponse;
       let secondResponse;
 
@@ -285,7 +285,7 @@ describe("Queue shifting", () => {
       return req.put(`/function/${fn._id}`, fn).then(res => res.body);
     }
 
-    fit("should shift the event", done => {
+    it("should shift the event", done => {
       let event1;
       let event2;
 
