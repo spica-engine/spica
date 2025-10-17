@@ -1,8 +1,8 @@
 import * as crypto from "crypto";
 
-export function hashValue(value: string, secret: string): string {
+export function hash(value: string, secret: string): string {
   if (!secret) {
-    throw new Error("Hashing secret is required for hashed field types");
+    throw new Error("Hash secret is required.");
   }
 
   return crypto.createHmac("sha256", secret).update(value).digest("hex");

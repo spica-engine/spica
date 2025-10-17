@@ -30,31 +30,31 @@ export async function findDocuments<T>(
   params: CrudParams,
   options: CrudOptions<false>,
   factories: CrudFactories<T>,
-  hashingKey?: string
+  hashSecret?: string
 ): Promise<T[]>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<true>,
   factories: CrudFactories<T>,
-  hashingKey?: string
+  hashSecret?: string
 ): Promise<CrudPagination<T>>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<boolean>,
   factories: CrudFactories<T>,
-  hashingKey?: string
+  hashSecret?: string
 ): Promise<T[] | CrudPagination<T>>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<boolean>,
   factories: CrudFactories<T>,
-  hashingKey?: string
+  hashSecret?: string
 ): Promise<unknown> {
   const collection = factories.collection(schema);
-  const pipelineBuilder = new BucketPipelineBuilder(schema, factories, hashingKey);
+  const pipelineBuilder = new BucketPipelineBuilder(schema, factories, hashSecret);
   const seekingPipelineBuilder = new PipelineBuilder();
 
   let rulePropertyMap;

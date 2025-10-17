@@ -2,33 +2,33 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
-import {SchemaModule, hashValue} from "@spica-server/core/schema";
+import {SchemaModule, hash} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {
   OBJECTID_STRING,
   OBJECT_ID,
   DATE_TIME,
-  createHashedFormat
+  createHashFormat
 } from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId, DatabaseService} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
-describe("Hashed Field", () => {
+describe("Hash Field", () => {
   let app: INestApplication;
   let req: Request;
   let database: DatabaseService;
   let module: TestingModule;
 
-  const HASHING_KEY = "test-hashing-key-123";
+  const HASH_SECRET = "test-hash-secret-123";
   let bucketId: string;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME, createHashedFormat(HASHING_KEY)],
+          formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME, createHashFormat(HASH_SECRET)],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
@@ -41,7 +41,7 @@ describe("Hashed Field", () => {
           realtime: false,
           cache: false,
           graphql: false,
-          hashingKey: HASHING_KEY
+          hashSecret: HASH_SECRET
         })
       ]
     }).compile();
@@ -53,12 +53,12 @@ describe("Hashed Field", () => {
     app.use(Middlewares.MergePatchJsonParser(10));
     await app.listen(req.socket);
 
-    // Create a bucket with hashed field
+    // Create a bucket with hash field
     bucketId = new ObjectId().toHexString();
     const bucket = {
       _id: bucketId,
       title: "User Bucket",
-      description: "Bucket with hashed password field",
+      description: "Bucket with hash password field",
       icon: "person",
       primary: "username",
       readOnly: false,
@@ -69,7 +69,7 @@ describe("Hashed Field", () => {
           title: "Username"
         },
         password: {
-          type: "hashed",
+          type: "hash",
           title: "Password"
         },
         age: {
@@ -84,7 +84,7 @@ describe("Hashed Field", () => {
 
   afterEach(() => app.close());
 
-  describe("Write Operations - Field value will be stored as hashed", () => {
+  describe("Write Operations - Field value will be stored as hash", () => {
     it("should hash password on insert", async () => {
       const document = {
         username: "john_doe",
@@ -163,7 +163,7 @@ describe("Hashed Field", () => {
     });
   });
 
-  describe("Read Operations - Find request returns hashed data", () => {
+  describe("Read Operations - Find request returns hash data", () => {
     beforeEach(async () => {
       await req.post(`/bucket/${bucketId}/data`, {
         username: "user1",
@@ -178,7 +178,7 @@ describe("Hashed Field", () => {
       });
     });
 
-    it("should return documents with hashed passwords", async () => {
+    it("should return documents with hash passwords", async () => {
       const response = await req.get(`/bucket/${bucketId}/data`, {});
       const docs = response.body;
 
@@ -199,7 +199,7 @@ describe("Hashed Field", () => {
     });
   });
 
-  describe("Filter Operations - Filter should work with hashed fields", () => {
+  describe("Filter Operations - Filter should work with hash fields", () => {
     beforeEach(async () => {
       // Insert test documents
       await req.post(`/bucket/${bucketId}/data`, {
@@ -221,7 +221,7 @@ describe("Hashed Field", () => {
       });
     });
 
-    it("should filter by hashed field using plain text value", async () => {
+    it("should filter by hash field using plain text value", async () => {
       const response = await req.get(`/bucket/${bucketId}/data`, {
         filter: JSON.stringify({password: "bobpass"})
       });
@@ -234,7 +234,7 @@ describe("Hashed Field", () => {
       });
     });
 
-    it("should filter with $in operator on hashed field", async () => {
+    it("should filter with $in operator on hash field", async () => {
       const response = await req.get(`/bucket/${bucketId}/data`, {
         filter: JSON.stringify({
           password: {$in: ["alicepass", "charliepass"]}
@@ -246,7 +246,7 @@ describe("Hashed Field", () => {
       expect(usernames).toEqual(["alice", "charlie"]);
     });
 
-    it("should filter with $eq operator on hashed field", async () => {
+    it("should filter with $eq operator on hash field", async () => {
       const response = await req.get(`/bucket/${bucketId}/data`, {
         filter: JSON.stringify({
           password: {$eq: "alicepass"}
@@ -261,7 +261,7 @@ describe("Hashed Field", () => {
       });
     });
 
-    it("should combine hashed field filter with non-hashed field filter", async () => {
+    it("should combine hash field filter with non-hash field filter", async () => {
       const response = await req.get(`/bucket/${bucketId}/data`, {
         filter: JSON.stringify({
           password: "bobpass",

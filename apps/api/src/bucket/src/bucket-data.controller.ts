@@ -58,7 +58,7 @@ import {
 import {applyPatch} from "@spica-server/core/patch";
 import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {BucketDocument} from "@spica-server/interface/bucket";
-import {BUCKET_DATA_HASHING_KEY} from "@spica-server/interface/bucket";
+import {BUCKET_DATA_HASH_SECRET} from "@spica-server/interface/bucket";
 
 /**
  * All APIs related to bucket documents.
@@ -74,7 +74,7 @@ export class BucketDataController {
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
     @Optional() @Inject() private activityService: ActivityService,
-    @Optional() @Inject(BUCKET_DATA_HASHING_KEY) private hashingKey?: string
+    @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string
   ) {}
 
   /**
@@ -143,7 +143,7 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         authResolver: this.authResolver
       },
-      this.hashingKey
+      this.hashSecret
     ).catch(this.errorHandler);
   }
 
@@ -229,7 +229,7 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         authResolver: this.authResolver
       },
-      this.hashingKey
+      this.hashSecret
     ).catch(this.errorHandler);
 
     return document;

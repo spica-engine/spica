@@ -12,4 +12,4 @@ export type ExtendedJSONSchema7Type =
   | "date"
   | "location"
   | "json"
-  | "hashed";
+  | "hash";

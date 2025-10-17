@@ -9,13 +9,13 @@ import {
 import {ValueConstructor} from "@spica-server/interface/filter";
 import {FilterReplacer, RelationResolver} from "@spica-server/interface/bucket/common";
 import {Bucket} from "@spica-server/interface/bucket";
-import {hashValue} from "@spica-server/core/schema";
+import {hash} from "@spica-server/core/schema";
 // this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
-export function filterReviver(k: string, v: string, hashingKey?: string) {
+export function filterReviver(k: string, v: string, hashSecret?: string) {
   const availableConstructors = {
     Date: v => new Date(v),
     ObjectId: v => new ObjectId(v),
-    ...(hashingKey && {Hashed: v => hashValue(v, hashingKey)})
+    ...(hashSecret && {Hash: v => hash(v, hashSecret)})
   };
   const ctr = /^([a-zA-Z]+)\((.*?)\)$/;
   if (typeof v == "string" && ctr.test(v)) {
@@ -40,12 +40,12 @@ export const constructFilterValues = async (
   filter: object,
   bucket: Bucket,
   relationResolver: RelationResolver,
-  hashingKey?: string
+  hashSecret?: string
 ) => {
   const replacers: FilterReplacer[] = [
     replaceFilterObjectIds,
     replaceFilterDates,
-    (filter, bucket, resolver) => replaceFilterHashed(filter, bucket, resolver, hashingKey)
+    (filter, bucket, resolver) => replaceFilterHash(filter, bucket, resolver, hashSecret)
   ];
   for (let replacer of replacers) {
     filter = await replacer(filter, bucket, relationResolver);
@@ -80,13 +80,13 @@ function DateIfValid(val: any): Date | typeof val {
   return !isNaN(Date.parse(val)) ? new Date(val) : val;
 }
 
-export async function replaceFilterHashed(
+export async function replaceFilterHash(
   filter: object,
   bucket: Bucket,
   relationResolver: RelationResolver,
-  hashingKey?: string
+  hashSecret?: string
 ) {
-  if (!hashingKey) {
+  if (!hashSecret) {
     return filter;
   }
 
@@ -101,13 +101,13 @@ export async function replaceFilterHashed(
       const property = getPropertyByPath(relationResolvedSchema.properties, key);
       return (
         property &&
-        (property.type == "hashed" || (property.type == "array" && property.items.type == "hashed"))
+        (property.type == "hash" || (property.type == "array" && property.items.type == "hash"))
       );
     }
   ];
-  return replaceFilter(filter, keyValidators, val => HashIfValid(val, hashingKey));
+  return replaceFilter(filter, keyValidators, val => HashIfValid(val, hashSecret));
 }
 
-function HashIfValid(val: any, hashingKey: string): string {
-  return typeof val === "string" ? hashValue(val, hashingKey) : val;
+function HashIfValid(val: any, hashSecret: string): string {
+  return typeof val === "string" ? hash(val, hashSecret) : val;
 }

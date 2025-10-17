@@ -9,7 +9,7 @@ import {
   DATE_TIME,
   OBJECTID_STRING,
   OBJECT_ID,
-  createHashedFormat
+  createHashFormat
 } from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
@@ -124,9 +124,9 @@ const args = yargsInstance
       description: "Whether Bucket GraphQL feature is enabled.",
       default: false
     },
-    "bucket-data-hashing-key": {
+    "bucket-data-hash-secret": {
       string: true,
-      description: "Secret key for hashing of bucket data hashed fields."
+      description: "Secret to be used for hashing values in bucket data."
     }
   })
   /* Passport Options  */
@@ -599,7 +599,7 @@ const modules = [
       OBJECT_ID,
       DATE_TIME,
       OBJECTID_STRING,
-      createHashedFormat(args["bucket-data-hashing-key"])
+      createHashFormat(args["bucket-data-hash-secret"])
     ],
     defaults: [CREATED_AT, UPDATED_AT]
   }),
@@ -611,7 +611,7 @@ const modules = [
     cacheTtl: args["bucket-cache-ttl"],
     bucketDataLimit: args["bucket-data-limit"],
     graphql: args["bucket-graphql"],
-    hashingKey: args["bucket-data-hashing-key"]
+    hashSecret: args["bucket-data-hash-secret"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",
