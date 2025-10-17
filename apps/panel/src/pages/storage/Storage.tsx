@@ -451,10 +451,10 @@ export default function StoragePage() {
     }));
     const newDirectories = cleanDirectories.map(dir => {
       if (getParentPath(theDirectory.fullPath) === dir.fullPath) {
-        const newDepth = (theDirectory.currentDepth - 1) as TypeDirectoryDepth;
+        const newDepth = ((theDirectory.currentDepth as TypeDirectoryDepth) - 1) as TypeDirectoryDepth;
         return {...dir, isActive: newDepth > 0, currentDepth: newDepth > 0 ? newDepth : undefined};
       } else if (getParentPath(getParentPath(theDirectory.fullPath)) === dir.fullPath) {
-        const newDepth = (theDirectory.currentDepth - 2) as TypeDirectoryDepth;
+        const newDepth = ((theDirectory.currentDepth as TypeDirectoryDepth) - 2) as TypeDirectoryDepth;
         return {...dir, isActive: newDepth > 0, currentDepth: newDepth > 0 ? newDepth : undefined};
       } else if (dir.fullPath === theDirectory.fullPath) {
         return theDirectory;
