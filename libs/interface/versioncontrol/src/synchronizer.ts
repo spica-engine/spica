@@ -316,9 +316,9 @@ export abstract class Synchronizer<
         const rawResourceId = change.resource._id;
         const rawSlug =
           change.resource.slug ||
-          (change.resource.content as any)?.title ||
-          (change.resource.content as any)?.name ||
-          (change.resource.content as any)?.key;
+          change.resource.content.title ||
+          change.resource.content.name ||
+          change.resource.content.key;
 
         const resolved = this.resolveIdAndSlug(rawResourceId, rawSlug);
         const resourceId = resolved.resourceId;

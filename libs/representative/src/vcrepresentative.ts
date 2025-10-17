@@ -19,12 +19,6 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return path.join(this.cwd, module);
   }
 
-  findFolder(module: string, id: string) {
-    return fs.promises
-      .readdir(this.getModuleDir(module))
-      .then(folders => folders.find(folder => this.extractId(folder) == id));
-  }
-
   write(module: string, id: string, fileName: string, content: string, extension: string) {
     const resourcesDirectory = path.join(this.cwd, module, id);
     if (!fs.existsSync(resourcesDirectory)) {
@@ -63,12 +57,6 @@ export class VCRepresentativeManager implements IRepresentativeManager {
   // delete later
   async read() {
     return [];
-  }
-  extractId(part: string): string | undefined {
-    if (part === "identity") return "identity";
-    // Since we're now using slug-only folder names, we return the folder name as the identifier
-    // The actual mapping between slug and MongoDB ObjectId will be handled by the Synchronizer
-    return part;
   }
 
   watch(module: string, files: string[], events: string[] = ["add", "change", "unlink"]) {

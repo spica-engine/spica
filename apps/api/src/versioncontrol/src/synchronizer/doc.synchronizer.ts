@@ -41,7 +41,8 @@ export function getDocWatcher<R extends Resource>(
             changeType = ChangeTypes.INSERT;
             resource = {
               _id: change.fullDocument!._id?.toString(),
-              slug: (change.fullDocument as any).name || (change.fullDocument as any).title,
+              slug:
+                change.fullDocument.name || change.fullDocument.title || change.fullDocument.key,
               content: change.fullDocument!
             };
             break;
@@ -51,7 +52,8 @@ export function getDocWatcher<R extends Resource>(
             changeType = ChangeTypes.UPDATE;
             resource = {
               _id: change.fullDocument!._id?.toString(),
-              slug: (change.fullDocument as any).name || (change.fullDocument as any).title,
+              slug:
+                change.fullDocument.name || change.fullDocument.title || change.fullDocument.key,
               content: change.fullDocument!
             };
             break;
@@ -90,7 +92,7 @@ export function getDocWatcher<R extends Resource>(
               changeType: ChangeTypes.INSERT,
               resource: {
                 _id: resource._id?.toString(),
-                slug: (resource as any).name || (resource as any).title,
+                slug: resource.name || resource.title || resource.key,
                 content: resource as R
               }
             };
