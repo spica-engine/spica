@@ -165,7 +165,7 @@ const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
       regex: /^video\//,
       viewer: (file: TypeFile) => (
         <video controls style={styles?.video} className={classNames?.video}>
-          <source src={file.url} type={"video/mp4"} />
+          <source src={file.url} type={file.content.type} />
           Your browser does not support the video tag.
         </video>
       )
