@@ -110,6 +110,9 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
       <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="UTF-8">
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src *;">
+          <meta http-equiv="X-Content-Type-Options" content="nosniff">
           <style>
             body {
               background: white;
@@ -118,19 +121,34 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
               white-space: pre-wrap;
               padding: 1rem;
               margin: 0;
+              overflow-wrap: break-word;
+              word-break: break-word;
             }
           </style>
         </head>
         <body>Loading...</body>
         <script>
-          fetch(${JSON.stringify(fileUrl)})
-            .then(r => r.text())
-            .then(t => {
-              document.body.textContent = t;
-            })
-            .catch(err => {
-              document.body.textContent = "Failed to load file: " + err.message;
-            });
+          (function() {
+            'use strict';
+            const fileUrl = ${JSON.stringify(fileUrl)};
+            
+            fetch(fileUrl)
+              .then(function(response) {
+                if (!response.ok) {
+                  throw new Error('Failed to load file');
+                }
+                return response.text();
+              })
+              .then(function(text) {
+                // Use textContent to prevent any HTML/script injection
+                document.body.textContent = text;
+              })
+              .catch(function(err) {
+                // Generic error message to avoid information leakage
+                document.body.textContent = 'Failed to load file content';
+                console.error('Error loading file:', err);
+              });
+          })();
         </script>
       </html>
     `;
@@ -139,6 +157,15 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
     return URL.createObjectURL(blob);
   }, [fileUrl]);
 
+  useEffect(() => {
+    // Cleanup blob URL when component unmounts
+    return () => {
+      if (iframeSrc.startsWith("blob:")) {
+        URL.revokeObjectURL(iframeSrc);
+      }
+    };
+  }, [iframeSrc]);
+
   return (
     <iframe
       src={iframeSrc}
@@ -146,6 +173,9 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
       height={height}
       style={{border: "none", ...(style || {})}}
       className={className}
+      sandbox="allow-scripts"
+      referrerPolicy="no-referrer"
+      title="Text file viewer"
     />
   );
 };
