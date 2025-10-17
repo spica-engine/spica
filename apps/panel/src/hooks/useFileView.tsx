@@ -78,6 +78,7 @@ const WordDocViewer = ({url, className}: WordDocProps) => {
       } catch (error) {
         console.error("Failed to render docx:", error);
         if (!isCancelled && containerRef.current) {
+          containerRef.current.innerHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Failed to load document: ${error instanceof Error ? error.message : "Unknown error"}</div>`;
         }
       }
     })();

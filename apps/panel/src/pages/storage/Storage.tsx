@@ -539,6 +539,7 @@ export default function StoragePage() {
         currentDepth: undefined
       }));
       const dirToChange = findMaxDepthDirectory(directory);
+      if (!dirToChange) return;
       const newDirectories = cleanDirectories.map(dir => {
         if (dir.fullPath === getParentPath(dirToChange?.fullPath!)) {
           return {...dir, isActive: true, currentDepth: dirToChange?.currentDepth};
