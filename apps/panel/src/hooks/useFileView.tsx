@@ -139,6 +139,7 @@ const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
   ];
 
   const match = contentTypeMapping.find(({regex}) => regex.test(file.content.type));
+  const match = contentTypeMapping.find(({regex}) => regex.test(file.content.type));
 
   if (match) {
     return match.viewer(file);
