@@ -155,7 +155,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
-      name: fn.name.replace(/ /g, "-").toLowerCase(),
+      name: fn.name.replace(" ", "-").toLowerCase(),
       description: fn.description || "No description.",
       version: "0.0.1",
       private: true,
