@@ -13,7 +13,7 @@ import {useUploadFilesMutation} from "../../../store/api/storageApi";
 import {memo, useMemo, type DragEventHandler} from "react";
 
 export type TypeDirectoryDepth = 1 | 2 | 3;
-export type DirectoryItem = TypeFile & {fullPath: string};
+export type DirectoryItem = TypeFile & {fullPath: string, label?: string};
 export type TypeDirectory = {
   items?: DirectoryItem[];
   label: string;
@@ -71,7 +71,7 @@ interface StorageItemColumnProps {
   directory: TypeDirectories;
   previewFileId?: string;
   prefix: string;
-  onUploadComplete: (file: DirectoryItem & {prefix?: string}) => void;
+  onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
 }
 
 const StorageItemColumn = memo(
@@ -120,7 +120,7 @@ const StorageItemColumn = memo(
           const response = await uploadFiles({files: dataTransfer.files});
           const uploadedFile = response?.data?.[0] as DirectoryItem | undefined;
           if (uploadedFile) {
-            onUploadComplete({...uploadedFile, prefix});
+            onUploadComplete?.({...uploadedFile, prefix});
           }
         } catch (error) {
           console.error("File upload failed:", error);
@@ -159,80 +159,80 @@ const StorageItemColumn = memo(
   }
 );
 
-interface StorageItemColumnsProps {
+export interface StorageItemColumnsProps {
   handleFolderClick: (
     folderName: string,
     fullPath: string,
-    depth: TypeDirectoryDepth,
-    isActive: boolean
+    directoryDepth: TypeDirectoryDepth,
+    wasActive: boolean
   ) => void;
-  setPreviewFile: (file?: DirectoryItem) => void;
+  setPreviewFile: (file: DirectoryItem | undefined) => void;
   directory: TypeDirectories;
   previewFile?: DirectoryItem;
-  onUploadComplete: (file: DirectoryItem & {prefix?: string}) => void;
+  onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
+  isDraggingDisabled?: boolean;
 }
 
-export const StorageItemColumns = memo(
-  ({
-    handleFolderClick,
-    setPreviewFile,
-    directory,
-    previewFile,
-    onUploadComplete
-  }: StorageItemColumnsProps) => {
-    const columns = [1, 2, 3] as TypeDirectoryDepth[];
-    return (
-      <FluidContainer
-        dimensionY="fill"
-        dimensionX="fill"
-        gap={0}
-        {...columns.reduce((acc, depth) => {
-          const currentDirectory = directory.find(dir => dir.currentDepth === depth);
-          if (!currentDirectory) return acc;
-          const items = currentDirectory?.items;
+export const StorageItemColumns: React.FC<StorageItemColumnsProps> = ({
+  handleFolderClick,
+  setPreviewFile,
+  directory,
+  previewFile,
+  onUploadComplete,
+  isDraggingDisabled = false
+}) => {
+  const columns = [1, 2, 3] as TypeDirectoryDepth[];
+  return (
+    <FluidContainer
+      dimensionY="fill"
+      dimensionX="fill"
+      gap={0}
+      {...columns.reduce((acc, depth) => {
+        const currentDirectory = directory.find(dir => dir.currentDepth === depth);
+        if (!currentDirectory) return acc;
+        const items = currentDirectory?.items;
 
-          let key: string;
-          switch (depth) {
-            case 1:
-              key = "prefix";
-              break;
-            case 2:
-              key = "root";
-              break;
-            case 3:
-              key = "suffix";
-              break;
-            default:
-              key = "";
-          }
+        let key: string;
+        switch (depth) {
+          case 1:
+            key = "prefix";
+            break;
+          case 2:
+            key = "root";
+            break;
+          case 3:
+            key = "suffix";
+            break;
+          default:
+            key = "";
+        }
 
-          const prefix =
-            currentDirectory.fullPath === "/"
-              ? ""
-              : currentDirectory.fullPath.split("/").filter(Boolean).join("/") + "/";
+        const prefix =
+          currentDirectory.fullPath === "/"
+            ? ""
+            : currentDirectory.fullPath.split("/").filter(Boolean).join("/") + "/";
 
-          acc[key as keyof TypeFluidContainer] = {
-            className: styles.storageItemColumnContainer,
-            children: items ? (
-              <StorageItemColumn
-                items={items}
-                handleFolderClick={handleFolderClick}
-                setPreviewFile={setPreviewFile}
-                depth={depth}
-                directory={directory}
-                previewFileId={previewFile?._id}
-                prefix={prefix}
-                onUploadComplete={onUploadComplete}
-              />
-            ) : (
-              <div className={styles.columnLoaderContainer}>
-                <Spinner />
-              </div>
-            )
-          };
-          return acc;
-        }, {} as TypeFluidContainer)}
-      />
-    );
-  }
-);
+        acc[key as keyof TypeFluidContainer] = {
+          className: styles.storageItemColumnContainer,
+          children: items ? (
+            <StorageItemColumn
+              items={items}
+              handleFolderClick={handleFolderClick}
+              setPreviewFile={setPreviewFile}
+              depth={depth}
+              directory={directory}
+              previewFileId={previewFile?._id}
+              prefix={prefix}
+              onUploadComplete={onUploadComplete}
+            />
+          ) : (
+            <div className={styles.columnLoaderContainer}>
+              <Spinner />
+            </div>
+          )
+        };
+        return acc;
+      }, {} as TypeFluidContainer)}
+    />
+  );
+};
