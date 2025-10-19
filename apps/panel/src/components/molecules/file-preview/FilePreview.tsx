@@ -13,6 +13,7 @@ import {type DirectoryItem} from "../../organisms/storage-columns/StorageColumns
 import { useDeleteStorageItemMutation, useUpdateStorageItemMutation } from "../../../store/api";
 import useFileView from "../../../hooks/useFileView";
 import Confirmation from "../confirmation/Confirmation";
+import { getParentPath, ROOT_PATH } from "src/pages/storage/StorageHooks";
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -23,15 +24,6 @@ function formatFileSize(bytes: number): string {
 
   return `${parseFloat(value.toFixed(2))} ${units[i]}`;
 }
-
-const ROOT_PATH = "/";
-const getParentPath = (fullPath?: string) => {
-  const res =
-    fullPath?.replace(/\/[^/]+\/?$/, "") === fullPath
-      ? "/"
-      : fullPath?.replace(/\/[^/]+\/?$/, "") || "/";
-  return res === "/" ? res : res + "/";
-};
 
 interface FilePreviewProps {
   handleClosePreview: () => void;

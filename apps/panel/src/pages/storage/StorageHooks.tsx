@@ -7,9 +7,9 @@ import type {
   TypeDirectoryDepth
 } from "../../components/organisms/storage-columns/StorageColumns";
 
-const ROOT_PATH = "/";
+export const ROOT_PATH = "/";
 
-const getParentPath = (fullPath?: string) => {
+export const getParentPath = (fullPath?: string) => {
   const res =
     fullPath?.replace(/\/[^/]+\/?$/, "") === fullPath
       ? "/"

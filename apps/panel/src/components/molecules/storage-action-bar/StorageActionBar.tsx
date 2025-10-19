@@ -4,6 +4,7 @@ import styles from "./StorageActionBar.module.scss";
 import CreateFile from "../create-file-modal/CreateFile";
 import CreateFolder from "../create-folder-modal/CreateFolderModal";
 import type {TypeDirectories} from "src/components/organisms/storage-columns/StorageColumn";
+import { ROOT_PATH } from "src/pages/storage/StorageHooks";
 
 interface StorageActionBarProps {
   directory: TypeDirectories;
@@ -12,7 +13,7 @@ interface StorageActionBarProps {
 export default function StorageActionBar({directory}: StorageActionBarProps) {
   const visibleDirectories = directory.filter(dir => dir.currentDepth);
   const currentPrefix = visibleDirectories
-    .filter(i => i.fullPath !== "/")
+    .filter(i => i.fullPath !== ROOT_PATH)
     .map(i => i.label)
     .join("");
   const currentItemNames = visibleDirectories

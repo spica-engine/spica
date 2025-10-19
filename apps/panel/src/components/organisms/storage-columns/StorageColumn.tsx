@@ -11,6 +11,7 @@ import {
 import styles from "./StorageColumns.module.scss";
 import {useUploadFilesMutation} from "../../../store/api/storageApi";
 import {memo, useMemo, type DragEventHandler} from "react";
+import { ROOT_PATH } from "src/pages/storage/StorageHooks";
 
 export type TypeDirectoryDepth = 1 | 2 | 3;
 export type DirectoryItem = TypeFile & {fullPath: string, label?: string};
@@ -208,7 +209,7 @@ export const StorageItemColumns: React.FC<StorageItemColumnsProps> = ({
         }
 
         const prefix =
-          currentDirectory.fullPath === "/"
+          currentDirectory.fullPath === ROOT_PATH
             ? ""
             : currentDirectory.fullPath.split("/").filter(Boolean).join("/") + "/";
 
