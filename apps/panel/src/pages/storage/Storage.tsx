@@ -7,8 +7,6 @@ import {
   useDirectoryNavigation,
   useSearchAndFilter,
   useFilePreview,
-  useStorageData,
-  useStorageConverter,
   useFilteredDirectory,
   useStorageDataSync,
   useFileOperations
@@ -21,31 +19,30 @@ export default function StoragePage() {
     searchQuery,
     setSearchQuery,
     filterValue,
+    apiFilter,
     isFilteringOrSearching,
     handleApplyFilter,
-    filterItemsBySearch
+    filterItemsBySearch,
+    filterItemsByFilter
   } = useSearchAndFilter();
 
   const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
-
-  const {storageData} = useStorageData(directory);
-
-  const {convertData} = useStorageConverter(directory);
-
-  useStorageDataSync(storageData, directory, setDirectory, convertData);
 
   const {displayedDirectory} = useFilteredDirectory(
     directory,
     searchQuery,
     filterValue,
-    filterItemsBySearch
+    filterItemsBySearch,
+    filterItemsByFilter,
+    isFilteringOrSearching
   );
+
+  useStorageDataSync(apiFilter, directory, setDirectory);
 
   const {onUploadComplete, onFileReplaced, onFileDeleted} = useFileOperations(
     directory,
     setDirectory,
     setPreviewFile,
-    convertData
   );
 
   const handleFolderClick = (
