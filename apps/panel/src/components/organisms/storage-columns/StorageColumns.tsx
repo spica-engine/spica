@@ -11,7 +11,7 @@ import {
 import styles from "./StorageColumns.module.scss";
 import {useUploadFilesMutation} from "../../../store/api/storageApi";
 import {memo, useMemo, type DragEventHandler} from "react";
-import { ROOT_PATH } from "src/pages/storage/StorageHooks";
+import { ROOT_PATH } from "../../../pages/storage/StorageHooks";
 
 export type TypeDirectoryDepth = 1 | 2 | 3;
 export type DirectoryItem = TypeFile & {fullPath: string, label?: string};

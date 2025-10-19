@@ -13,7 +13,7 @@ import {type DirectoryItem} from "../../organisms/storage-columns/StorageColumns
 import { useDeleteStorageItemMutation, useUpdateStorageItemMutation } from "../../../store/api";
 import useFileView from "../../../hooks/useFileView";
 import Confirmation from "../confirmation/Confirmation";
-import { getParentPath, ROOT_PATH } from "src/pages/storage/StorageHooks";
+import { getParentPath, ROOT_PATH } from "../../../pages/storage/StorageHooks";
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
