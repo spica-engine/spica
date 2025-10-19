@@ -37,6 +37,11 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
         schema.type = "string";
         break;
 
+      case "hash":
+        schema.type = "string";
+        schema.format = "hash";
+        break;
+
       case "color":
         schema.type = "string";
         break;

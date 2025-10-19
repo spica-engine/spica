@@ -9,12 +9,13 @@ import {
 import {ValueConstructor} from "@spica-server/interface/filter";
 import {FilterReplacer, RelationResolver} from "@spica-server/interface/bucket/common";
 import {Bucket} from "@spica-server/interface/bucket";
-
+import {hash} from "@spica-server/core/schema";
 // this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
-export function filterReviver(k: string, v: string) {
+export function filterReviver(k: string, v: string, hashSecret?: string) {
   const availableConstructors = {
     Date: v => new Date(v),
-    ObjectId: v => new ObjectId(v)
+    ObjectId: v => new ObjectId(v),
+    ...(hashSecret && {Hash: v => hash(v, hashSecret)})
   };
   const ctr = /^([a-zA-Z]+)\((.*?)\)$/;
   if (typeof v == "string" && ctr.test(v)) {
@@ -38,9 +39,14 @@ export function isJSONFilter(value: any) {
 export const constructFilterValues = async (
   filter: object,
   bucket: Bucket,
-  relationResolver: RelationResolver
+  relationResolver: RelationResolver,
+  hashSecret?: string
 ) => {
-  const replacers: FilterReplacer[] = [replaceFilterObjectIds, replaceFilterDates];
+  const replacers: FilterReplacer[] = [
+    replaceFilterObjectIds,
+    replaceFilterDates,
+    (filter, bucket, resolver) => replaceFilterHash(filter, bucket, resolver, hashSecret)
+  ];
   for (let replacer of replacers) {
     filter = await replacer(filter, bucket, relationResolver);
   }
@@ -69,6 +75,39 @@ export async function replaceFilterDates(
   ];
   return replaceFilter(filter, keyValidators, DateIfValid);
 }
-function DateIfValid(val): ValueConstructor<Date> {
+
+function DateIfValid(val: any): Date | typeof val {
   return !isNaN(Date.parse(val)) ? new Date(val) : val;
+}
+
+export async function replaceFilterHash(
+  filter: object,
+  bucket: Bucket,
+  relationResolver: RelationResolver,
+  hashSecret?: string
+) {
+  if (!hashSecret) {
+    return filter;
+  }
+
+  const propertyMap = extractFilterPropertyMap(filter);
+  const relationResolvedSchema = await Relation.getRelationResolvedBucketSchema(
+    bucket,
+    propertyMap,
+    relationResolver
+  );
+  const keyValidators = [
+    key => {
+      const property = getPropertyByPath(relationResolvedSchema.properties, key);
+      return (
+        property &&
+        (property.type == "hash" || (property.type == "array" && property.items.type == "hash"))
+      );
+    }
+  ];
+  return replaceFilter(filter, keyValidators, val => HashIfValid(val, hashSecret));
+}
+
+function HashIfValid(val: any, hashSecret: string): string {
+  return typeof val === "string" ? hash(val, hashSecret) : val;
 }

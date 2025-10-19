@@ -5,7 +5,12 @@ import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {
+  DATE_TIME,
+  OBJECTID_STRING,
+  OBJECT_ID,
+  createHashFormat
+} from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
@@ -118,6 +123,10 @@ const args = yargsInstance
       boolean: true,
       description: "Whether Bucket GraphQL feature is enabled.",
       default: false
+    },
+    "bucket-data-hash-secret": {
+      string: true,
+      description: "Secret to be used for hashing values in bucket data."
     }
   })
   /* Passport Options  */
@@ -586,7 +595,12 @@ const modules = [
     }
   }),
   SchemaModule.forRoot({
-    formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
+    formats: [
+      OBJECT_ID,
+      DATE_TIME,
+      OBJECTID_STRING,
+      createHashFormat(args["bucket-data-hash-secret"])
+    ],
     defaults: [CREATED_AT, UPDATED_AT]
   }),
   BucketModule.forRoot({
@@ -596,7 +610,8 @@ const modules = [
     cache: args["bucket-cache"],
     cacheTtl: args["bucket-cache-ttl"],
     bucketDataLimit: args["bucket-data-limit"],
-    graphql: args["bucket-graphql"]
+    graphql: args["bucket-graphql"],
+    hashSecret: args["bucket-data-hash-secret"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",

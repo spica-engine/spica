@@ -14,14 +14,16 @@ export class BucketPipelineBuilder extends PipelineBuilder {
   private factories: CrudFactories<any>;
   private usedRelationPaths: string[] = [];
   private locale: Locale;
+  private hashSecret?: string;
 
   private defaultRule = "true==true";
   private isRuleFilteringDocuments: boolean;
 
-  constructor(schema: Bucket, factories: CrudFactories<any>) {
+  constructor(schema: Bucket, factories: CrudFactories<any>, hashSecret?: string) {
     super();
     this.schema = schema;
     this.factories = factories;
+    this.hashSecret = hashSecret;
   }
 
   private buildRelationMap(propertyMap: string[][]): Promise<RelationMap[]> {
@@ -95,7 +97,8 @@ export class BucketPipelineBuilder extends PipelineBuilder {
         filterByUserRequest = await constructFilterValues(
           filterByUserRequest,
           this.schema,
-          this.factories.schema
+          this.factories.schema,
+          this.hashSecret
         );
 
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
