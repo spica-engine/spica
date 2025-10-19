@@ -18,7 +18,7 @@ export const getParentPath = (fullPath?: string) => {
   return res === "/" ? res : res + "/";
 };
 
-function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
+export function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
   return arr.reduce<T | undefined>((max, obj) => {
     if (obj.currentDepth === undefined) return max;
     if (!max || max.currentDepth === undefined || obj.currentDepth > max.currentDepth) return obj;

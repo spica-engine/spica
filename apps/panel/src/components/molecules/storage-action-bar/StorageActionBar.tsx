@@ -4,7 +4,7 @@ import styles from "./StorageActionBar.module.scss";
 import CreateFile from "../create-file-modal/CreateFile";
 import CreateFolder from "../create-folder-modal/CreateFolderModal";
 import type {TypeDirectories} from "src/components/organisms/storage-columns/StorageColumns";
-import { ROOT_PATH } from "../../../pages/storage/StorageHooks";
+import {findMaxDepthDirectory, ROOT_PATH} from "../../../pages/storage/StorageHooks";
 
 interface StorageActionBarProps {
   directory: TypeDirectories;
@@ -12,13 +12,15 @@ interface StorageActionBarProps {
 
 export default function StorageActionBar({directory}: StorageActionBarProps) {
   const visibleDirectories = directory.filter(dir => dir.currentDepth);
-  const currentPrefix = visibleDirectories
-    .filter(i => i.fullPath !== ROOT_PATH)
-    .map(i => i.label)
-    .join("");
   const currentItemNames = visibleDirectories
     .map(dir => dir.items?.map(item => item.name).filter(Boolean) || [])
     .flat();
+
+  const deepestPath = findMaxDepthDirectory(directory)?.fullPath;
+  const prefix =
+    !deepestPath || deepestPath === ROOT_PATH
+      ? ""
+      : deepestPath.split("/").filter(Boolean).join("/") + "/";
 
   return (
     <FluidContainer
@@ -37,7 +39,7 @@ export default function StorageActionBar({directory}: StorageActionBarProps) {
               <Icon name="refresh" />
               Refresh
             </Button>
-            <CreateFile prefix={currentPrefix}>
+            <CreateFile prefix={prefix}>
               {({onOpen}) => (
                 <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
                   <Icon name="plus" />
@@ -45,7 +47,7 @@ export default function StorageActionBar({directory}: StorageActionBarProps) {
                 </Button>
               )}
             </CreateFile>
-            <CreateFolder prefix={currentPrefix} currentItemNames={currentItemNames}>
+            <CreateFolder prefix={prefix} currentItemNames={currentItemNames}>
               {({onOpen}) => (
                 <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
                   <Icon name="plus" />
