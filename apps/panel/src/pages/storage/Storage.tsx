@@ -1,4 +1,4 @@
-import {FluidContainer} from "oziko-ui-kit";
+import {FluidContainer, type TypeFile} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import {StorageItemColumns} from "../../components/organisms/storage-columns/StorageColumns";
 import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
@@ -15,7 +15,7 @@ export default function StoragePage() {
 
   const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
   useStorageDataSync(directory, setDirectory);
-  const {onUploadComplete} = useFileOperations(directory, setDirectory, setPreviewFile);
+  const {onUploadComplete, onFileReplaced, onFileDeleted} = useFileOperations(directory, setDirectory, setPreviewFile);
 
   const handleFolderClick = (
     folderName: string,
@@ -27,41 +27,9 @@ export default function StoragePage() {
     onFolderClick(folderName, fullPath, directoryDepth, wasActive);
   };
 
-  const onFileReplaced = (updatedFile: TypeFile) => {
-    const newDirectories = directory.map(dir => {
-      if (dir.items) {
-        const updatedItems = dir.items.map(item =>
-          item._id === updatedFile._id ? updatedFile : item
-        );
-        return {
-          ...dir,
-          items: updatedItems
-        };
-      }
-      return dir;
-    });
-    setDirectory(newDirectories as TypeDirectories);
-    setPreviewFile(updatedFile as DirectoryItem);
-  };
-
-  const onFileDeleted = (fileId: string) => {
-    const newDirectories = directory.map(dir => {
-      if (dir.items) {
-        const filteredItems = dir.items.filter(item => item._id !== fileId);
-        return {
-          ...dir,
-          items: filteredItems
-        };
-      }
-      return dir;
-    });
-    setDirectory(newDirectories as TypeDirectories);
-    setPreviewFile(undefined);
-  };
-
   return (
     <div className={styles.container}>
-      <StorageActionBar directory={directory} />
+      <StorageActionBar />
       <FluidContainer
         className={styles.storageItemContainer}
         root={{
