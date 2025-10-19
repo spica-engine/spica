@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import useStorage from "../../hooks/useStorage";
 import type {TypeFile} from "oziko-ui-kit";
 import type {
@@ -6,6 +6,7 @@ import type {
   DirectoryItem,
   TypeDirectoryDepth
 } from "../../components/organisms/storage-columns/StorageColumns";
+import {useGetStorageItemsQuery} from "../../store/api";
 
 export const ROOT_PATH = "/";
 
@@ -49,6 +50,25 @@ function useStorageConverter(directory: TypeDirectories) {
 
   return {convertData};
 }
+
+export function useStorageData(directory: TypeDirectories) {
+  const { buildDirectoryFilter } = useStorage();
+
+  const filterArray = [
+    "/",
+    ...(findMaxDepthDirectory(directory)
+      ?.fullPath.split("/")
+      .filter(Boolean)
+      .map(i => `${i}/`) || [])
+  ];
+
+  const directoryFilter = useMemo(() => buildDirectoryFilter(filterArray), [filterArray]);
+
+  const { data: storageData } = useGetStorageItemsQuery({ filter: directoryFilter });
+
+  return { storageData };
+}
+  
 
 export function useDirectoryNavigation() {
   const [directory, setDirectory] = useState<TypeDirectories>([
@@ -145,6 +165,28 @@ export function useFilePreview() {
     setPreviewFile,
     handleClosePreview
   };
+}
+
+export function useStorageDataSync(
+  directory: TypeDirectories,
+  setDirectory: (dirs: TypeDirectories) => void,
+) {
+  const {storageData} = useStorageData(directory);
+  const {convertData} = useStorageConverter(directory);
+
+  useEffect(() => {
+    const data = storageData?.data ?? (storageData as unknown as TypeFile[]);
+    const convertedData = convertData(data as TypeFile[]);
+    if (!convertedData) return;
+    let newDirectories = [...directory];
+    const dirToChange = findMaxDepthDirectory(newDirectories) ?? newDirectories[0];
+    if (dirToChange) {
+      newDirectories = newDirectories.map(i =>
+        i.fullPath === dirToChange.fullPath ? {...i, items: convertedData} : i
+      );
+    }
+    setDirectory(newDirectories);
+  }, [storageData]);
 }
 
 export function useFileOperations(

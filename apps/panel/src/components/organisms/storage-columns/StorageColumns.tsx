@@ -171,7 +171,6 @@ export interface StorageItemColumnsProps {
   directory: TypeDirectories;
   previewFile?: DirectoryItem;
   onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
-  isDraggingDisabled?: boolean;
 }
 
 export const StorageItemColumns: React.FC<StorageItemColumnsProps> = ({
@@ -180,7 +179,6 @@ export const StorageItemColumns: React.FC<StorageItemColumnsProps> = ({
   directory,
   previewFile,
   onUploadComplete,
-  isDraggingDisabled = false
 }) => {
   const columns = [1, 2, 3] as TypeDirectoryDepth[];
   return (

@@ -3,13 +3,18 @@ import styles from "./Storage.module.scss";
 import {StorageItemColumns} from "../../components/organisms/storage-columns/StorageColumns";
 import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
 import StorageActionBar from "../../components/molecules/storage-action-bar/StorageActionBar";
-import {useDirectoryNavigation, useFilePreview, useFileOperations} from "./StorageHooks";
+import {
+  useDirectoryNavigation,
+  useFilePreview,
+  useFileOperations,
+  useStorageDataSync
+} from "./StorageHooks";
 
 export default function StoragePage() {
   const {directory, setDirectory, handleFolderClick: onFolderClick} = useDirectoryNavigation();
 
   const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
-
+  useStorageDataSync(directory, setDirectory);
   const {onUploadComplete} = useFileOperations(directory, setDirectory, setPreviewFile);
 
   const handleFolderClick = (
