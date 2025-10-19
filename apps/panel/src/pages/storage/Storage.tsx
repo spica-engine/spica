@@ -29,7 +29,7 @@ export default function StoragePage() {
 
   return (
     <div className={styles.container}>
-      <StorageActionBar directory={directory} />
+      <StorageActionBar />
       <FluidContainer
         className={styles.storageItemContainer}
         root={{
