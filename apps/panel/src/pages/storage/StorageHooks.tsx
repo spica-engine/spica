@@ -11,9 +11,6 @@ import type {
 const ROOT_PATH = "/";
 type TypeFileSizeUnit = "kb" | "mb" | "gb" | "tb";
 
-/**
- * Utility function to get the parent path of a given path
- */
 const getParentPath = (fullPath?: string) => {
   const res =
     fullPath?.replace(/\/[^/]+\/?$/, "") === fullPath
@@ -22,10 +19,7 @@ const getParentPath = (fullPath?: string) => {
   return res === "/" ? res : res + "/";
 };
 
-/**
- * Utility function to find the directory with the maximum depth
- */
-function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
+export function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
   return arr.reduce<T | undefined>((max, obj) => {
     if (obj.currentDepth === undefined) return max;
     if (!max || max.currentDepth === undefined || obj.currentDepth > max.currentDepth) return obj;
@@ -38,18 +32,14 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
 
   const filter: any = {};
 
-  // 1. Type filtering
   if (filterValue.type?.length) {
-    // Match files with any of the selected extensions
     const typeRegexes = filterValue.type.map(ext => new RegExp(`\\.${ext}$`, "i").toString());
     filter["content.type"] = {$in: typeRegexes};
   }
 
-  // 2. File size filtering
   if (filterValue.fileSize) {
     const sizeFilter: any = {};
 
-    // Convert units to bytes
     const getByteSize = (value: number, unit: TypeFileSizeUnit) => {
       const multipliers: Record<TypeFileSizeUnit, number> = {
         kb: 1024,
@@ -79,11 +69,9 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
     }
   }
 
-  // 3. Date filtering
   if (filterValue.quickdate || filterValue.dateRange?.from || filterValue.dateRange?.to) {
     const dateFilter: any = {};
 
-    // Handle quick date selections
     if (filterValue.quickdate) {
       const now = new Date();
       let fromDate;
@@ -106,7 +94,6 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
         dateFilter.$lte = now.toISOString();
       }
     } else {
-      // Handle custom date range
       if (filterValue.dateRange?.from) {
         dateFilter.$gte = filterValue.dateRange.from;
       }
@@ -116,7 +103,6 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
     }
 
     if (Object.keys(dateFilter).length) {
-      // Using _id to filter by date since ObjectIds contain creation timestamp
       filter["_id"] = dateFilter;
     }
   }
@@ -124,11 +110,8 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
   return filter;
 }
 
-/**
- * Hook to fetch storage data based on directory filter
- */
 function useStorageData(directory: TypeDirectories, apiFilter: object = {}) {
-  const { buildDirectoryFilter } = useStorage();
+  const {buildDirectoryFilter} = useStorage();
 
   const filterArray = [
     "/",
@@ -138,23 +121,18 @@ function useStorageData(directory: TypeDirectories, apiFilter: object = {}) {
       .map(i => `${i}/`) || [])
   ];
 
-  // Combine directory filter with API filter
   const directoryFilter = useMemo(() => buildDirectoryFilter(filterArray), [filterArray]);
   const combinedFilter = useMemo(() => {
     if (Object.keys(apiFilter).length === 0) return directoryFilter;
-    
-    // Merge directory filter with API filter using $and
-    return { $and: [directoryFilter, apiFilter] };
-  }, [directoryFilter, apiFilter]);
-  
-  const { data: storageData } = useGetStorageItemsQuery({ filter: combinedFilter });
 
-  return { storageData };
+    return {$and: [directoryFilter, apiFilter]};
+  }, [directoryFilter, apiFilter]);
+
+  const {data: storageData} = useGetStorageItemsQuery({filter: combinedFilter});
+
+  return {storageData};
 }
 
-/**
- * Hook to convert storage data to directory items
- */
 function useStorageConverter(directory: TypeDirectories) {
   const {convertStorageToTypeFile} = useStorage();
 
@@ -180,9 +158,6 @@ function useStorageConverter(directory: TypeDirectories) {
   return {convertData};
 }
 
-/**
- * Hook to manage directory state and navigation
- */
 export function useDirectoryNavigation() {
   const [directory, setDirectory] = useState<TypeDirectories>([
     {
@@ -271,9 +246,6 @@ export function useDirectoryNavigation() {
   };
 }
 
-/**
- * Hook to manage search and filter state
- */
 export function useSearchAndFilter() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterValue, setFilterValue] = useState<TypeFilterValue | null>(null);
@@ -284,7 +256,6 @@ export function useSearchAndFilter() {
   const handleApplyFilter = (filter: TypeFilterValue) => {
     setFilterValue(filter);
 
-    // Transform UI filter to API filter
     const newApiFilter = buildApiFilter(filter);
     setApiFilter(newApiFilter);
   };
@@ -295,7 +266,6 @@ export function useSearchAndFilter() {
     return items.filter(item => item?.label?.toLowerCase().includes(lowerQuery));
   };
 
-  // Apply client-side filtering for items already loaded
   const filterItemsByFilter = (
     items: DirectoryItem[],
     filter: TypeFilterValue
@@ -305,13 +275,11 @@ export function useSearchAndFilter() {
     return items.filter(item => {
       let matches = true;
 
-      // 1. Type filtering
       if (filter.type?.length) {
         const extension = item.label?.split(".").pop()?.toLowerCase();
         matches = matches && extension ? filter.type.includes(extension) : false;
       }
 
-      // 2. Size filtering
       if (matches && filter.fileSize && item.content?.size) {
         const getByteSize = (value: number, unit: TypeFileSizeUnit) => {
           const multipliers: Record<TypeFileSizeUnit, number> = {
@@ -340,9 +308,7 @@ export function useSearchAndFilter() {
         }
       }
 
-      // 3. Date filtering - more complex, requires object ID parsing
       if (matches && (filter.quickdate || filter.dateRange)) {
-        // Extract timestamp from ObjectId if available
         if (item._id) {
           const timestamp = parseInt(item._id.substring(0, 8), 16) * 1000;
           const itemDate = new Date(timestamp);
@@ -389,9 +355,6 @@ export function useSearchAndFilter() {
   };
 }
 
-/**
- * Hook to manage file preview state
- */
 export function useFilePreview() {
   const [previewFile, setPreviewFile] = useState<DirectoryItem>();
 
@@ -404,9 +367,6 @@ export function useFilePreview() {
   };
 }
 
-/**
- * Hook to handle filtered directory display
- */
 export function useFilteredDirectory(
   directory: TypeDirectories,
   searchQuery: string,
@@ -415,7 +375,6 @@ export function useFilteredDirectory(
   filterItemsByFilter: (items: DirectoryItem[], filter: TypeFilterValue) => DirectoryItem[],
   isFilteringOrSearching: boolean
 ) {
-
   const getFilteredDirectory = (): TypeDirectories => {
     if (!isFilteringOrSearching) return directory;
 
@@ -432,7 +391,6 @@ export function useFilteredDirectory(
       filteredItems = filterItemsBySearch(filteredItems, searchQuery);
     }
 
-    // Apply filterValue logic for type, file size, and date filtering
     if (filterValue) {
       filteredItems = filterItemsByFilter(filteredItems, filterValue);
     }
@@ -454,13 +412,11 @@ export function useFilteredDirectory(
     isFilteringOrSearching
   };
 }
-/**
- * Hook to sync storage data with directory state
- */
+
 export function useStorageDataSync(
   apiFilter: object = {},
   directory: TypeDirectories,
-  setDirectory: (dirs: TypeDirectories) => void,
+  setDirectory: (dirs: TypeDirectories) => void
 ) {
   const {storageData} = useStorageData(directory, apiFilter);
   const {convertData} = useStorageConverter(directory);
@@ -480,13 +436,10 @@ export function useStorageDataSync(
   }, [storageData]);
 }
 
-/**
- * Hook to handle file operations (upload, replace, delete)
- */
 export function useFileOperations(
   directory: TypeDirectories,
   setDirectory: (dirs: TypeDirectories) => void,
-  setPreviewFile: (file: DirectoryItem | undefined) => void,
+  setPreviewFile: (file: DirectoryItem | undefined) => void
 ) {
   const {convertData} = useStorageConverter(directory);
 

@@ -3,25 +3,23 @@ import {FlexElement, FluidContainer, Icon, Button, Popover} from "oziko-ui-kit";
 import SearchBar from "../../atoms/search-bar/SearchBar";
 import StorageFilter from "../storage-filter/StorageFilter";
 import styles from "./StorageActionBar.module.scss";
+import CreateFile from "../create-file-modal/CreateFile";
+import CreateFolder from "../create-folder-modal/CreateFolderModal";
+import type {TypeDirectories} from "src/components/organisms/storage-columns/StorageColumns";
+import {findMaxDepthDirectory, ROOT_PATH} from "../../../pages/storage/StorageHooks";
 
 interface StorageActionBarProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onApplyFilter: (filter: any) => void;
-  onSort?: () => void;
-  onRefresh?: () => void;
-  onUploadFiles?: () => void;
-  onCreateFolder?: () => void;
+  directory: TypeDirectories;
 }
 
 export default function StorageActionBar({
   searchQuery,
   onSearchChange,
   onApplyFilter,
-  onSort,
-  onRefresh,
-  onUploadFiles,
-  onCreateFolder
+  directory
 }: StorageActionBarProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -44,6 +42,17 @@ export default function StorageActionBar({
     setIsFilterOpen(false);
   };
 
+  const visibleDirectories = directory.filter(dir => dir.currentDepth);
+  const currentItemNames = visibleDirectories
+    .map(dir => dir.items?.map(item => item.name).filter(Boolean) || [])
+    .flat();
+
+  const deepestPath = findMaxDepthDirectory(directory)?.fullPath;
+  const prefix =
+    !deepestPath || deepestPath === ROOT_PATH
+      ? ""
+      : deepestPath.split("/").filter(Boolean).join("/") + "/";
+
   return (
     <FluidContainer
       className={styles.actionBar}
@@ -61,7 +70,11 @@ export default function StorageActionBar({
               onClose={handleOnFilterClose}
               content={<StorageFilter onApply={handleApplyFilter} onCancel={handleCancelFilter} />}
             >
-              <Button className={styles.actionBarButton} variant={"filled"} onClick={handleOpenFilter}>
+              <Button
+                className={styles.actionBarButton}
+                variant={"filled"}
+                onClick={handleOpenFilter}
+              >
                 <Icon name="filter" />
                 Filter
               </Button>
@@ -72,22 +85,30 @@ export default function StorageActionBar({
       suffix={{
         children: (
           <FlexElement>
-            <Button className={styles.actionBarButton} variant="filled" onClick={onSort}>
+            <Button className={styles.actionBarButton} variant="filled">
               <Icon name="sort" />
               Sort
             </Button>
-            <Button className={styles.actionBarButton} variant="filled" onClick={onRefresh}>
+            <Button className={styles.actionBarButton} variant="filled">
               <Icon name="refresh" />
               Refresh
             </Button>
-            <Button className={styles.actionBarButton} variant="filled" onClick={onUploadFiles}>
-              <Icon name="plus" />
-              Upload Files
-            </Button>
-            <Button className={styles.actionBarButton} variant="filled" onClick={onCreateFolder}>
-              <Icon name="plus" />
-              Create New Folder
-            </Button>
+            <CreateFile prefix={prefix}>
+              {({onOpen}) => (
+                <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
+                  <Icon name="plus" />
+                  Upload Files
+                </Button>
+              )}
+            </CreateFile>
+            <CreateFolder prefix={prefix} currentItemNames={currentItemNames}>
+              {({onOpen}) => (
+                <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
+                  <Icon name="plus" />
+                  Create New Folder
+                </Button>
+              )}
+            </CreateFolder>
           </FlexElement>
         )
       }}

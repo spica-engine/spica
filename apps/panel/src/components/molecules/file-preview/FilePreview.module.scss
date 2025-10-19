@@ -19,12 +19,6 @@
   }
 }
 
-.metadataClearButton {
-  min-width: 74px !important;
-  width: 74px !important;
-  color: var(--color-font-secondary) !important;
-}
-
 .closePreviewButton {
   padding: 0 !important;
 }
@@ -63,4 +57,10 @@
   align-items: center !important;
   display: flex;
   color: var(--color-font-primary) !important;
+}
+
+.metadataClearButton {
+  min-width: 74px !important;
+  width: 74px !important;
+  color: var(--color-font-secondary) !important;
 }

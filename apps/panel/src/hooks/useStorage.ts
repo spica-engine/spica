@@ -84,7 +84,6 @@ function useStorageService() {
     [updateStorageName]
   );
 
-
   const convertStorageToTypeFile = (storage: Storage): TypeFile => ({
     _id: storage._id || "",
     name: storage.name,
@@ -120,7 +119,6 @@ function useStorageService() {
     }
   }, []);
 
-
   return {
     uploadFiles: uploadFilesWithProgress,
     updateOne,
@@ -131,9 +129,7 @@ function useStorageService() {
 
     uploadLoading: uploadResult.isLoading,
     uploadProgress,
-    
-    uploadError: uploadResult.error,
-
+    uploadError: uploadResult.error
   };
 }
 
