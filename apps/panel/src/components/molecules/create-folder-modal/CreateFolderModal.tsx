@@ -14,6 +14,8 @@ type CreateFolderProps = {
   currentItemNames?: string[];
 };
 
+const FOLDER_NAME_PATTERN = /^[^\/\ \.]+/;
+
 const CreateFolder: FC<CreateFolderProps> = ({
   initialValue = "",
   prefix = "",
@@ -41,8 +43,7 @@ const CreateFolder: FC<CreateFolderProps> = ({
         return;
       }
 
-      const folderNamePattern = /^[^\/\ \.]+/;
-      if (!folderNamePattern.test(value.trim())) {
+      if (!FOLDER_NAME_PATTERN.test(value.trim())) {
         setError("Folder name cannot start with a dot, space, or contain forward slashes.");
         return;
       }
@@ -81,11 +82,8 @@ const CreateFolder: FC<CreateFolderProps> = ({
 
   const handleChange = (value: string) => {
     setValue(value);
-    if (error && value.trim()) {
-      const folderNamePattern = /^[^\/\ \.]+/;
-      if (folderNamePattern.test(value.trim())) {
-        setError("");
-      }
+    if (error && value.trim() && FOLDER_NAME_PATTERN.test(value.trim())) {
+      setError("");
     }
   };
 
