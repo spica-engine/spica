@@ -67,7 +67,7 @@ const useNavigatorItemClick = (item: any, isCurrentlySelected: boolean) => {
   const navigate = useNavigate();
   return useCallback(() => {
     if (item.section === "storage") navigate("/storage");
-    if (!isCurrentlySelected) {
+    else if (!isCurrentlySelected) {
       navigate(`/${item?.section}/${item?._id}`);
     }
   }, [navigate, item?.section, item?._id, isCurrentlySelected]);
