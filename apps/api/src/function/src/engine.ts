@@ -213,32 +213,27 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
     let files = [];
-    let watchDir: string;
 
     switch (scope) {
       case "index":
         files = ["index.mjs", "index.ts"];
-        // Watch the function root directory for source index files
-        watchDir = this.options.root;
         break;
       case "dependency":
         files = ["package.json"];
-        // Watch the function root directory for package.json
-        watchDir = this.options.root;
         break;
     }
-
-    fs.mkdirSync(watchDir, {recursive: true});
+    const moduleDir = this.options.root;
+    fs.mkdirSync(moduleDir, {recursive: true});
 
     return new Observable<FunctionWithContent>(observer => {
-      const watcher = chokidar.watch(watchDir, {
+      const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
         persistent: true,
         depth: 2
       });
 
       const handleFileEvent = async (path: string) => {
-        const relativePath = path.slice(watchDir.length + 1);
+        const relativePath = path.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
 
         const isCorrectDepth = parts.length == 2;
