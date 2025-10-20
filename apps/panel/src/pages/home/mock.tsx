@@ -78,6 +78,6 @@ export const navigatorItems: { [key: string]: TypeNavigatorItems[] } = {
     { _id: "4", title: "Security", icon: "lock", section: "bucket" }
   ],
   storage: [
-    { _id: "", title: "/", icon: "folder", section: "storage" },
+    { _id: "5", title: "/", icon: "folder", section: "storage" },
   ],
 };
