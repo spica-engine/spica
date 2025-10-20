@@ -81,7 +81,6 @@ function createEmitAndSemanticDiagnosticsBuilderProgram(
 
   diagnosticMap.set(program, []);
 
-  // Associate the program with its compilation using baseUrl
   if (options?.baseUrl && compilationByCwd.has(options.baseUrl)) {
     compilationMap.set(program, compilationByCwd.get(options.baseUrl));
   }
@@ -98,7 +97,6 @@ function build(compilation: Compilation) {
 
   astCache.delete(path.join(compilation.cwd, compilation.entrypoints.build));
 
-  // Store compilation by cwd for lookup in createEmitAndSemanticDiagnosticsBuilderProgram
   compilationByCwd.set(compilation.cwd, compilation);
 
   const rootTsConfig: any = readRootTsConfig();
@@ -212,7 +210,6 @@ function main() {
     const compilation = compilationMap.get(program);
     if (compilation) {
       postCompilation(compilation, diagnosticMap.get(program));
-      // Clean up to prevent memory leaks
       const baseUrl = program.getCompilerOptions().baseUrl;
       if (baseUrl) {
         compilationByCwd.delete(baseUrl);
