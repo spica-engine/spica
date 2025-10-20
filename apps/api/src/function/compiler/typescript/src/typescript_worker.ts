@@ -8,8 +8,6 @@ import {parentPort} from "worker_threads";
 const ROOT_TSCONFIG_PATH = path.join(os.tmpdir(), "_tsconfig.json");
 
 let diagnosticMap = new WeakMap<ts.EmitAndSemanticDiagnosticsBuilderProgram, ts.Diagnostic[]>();
-let compilationMap = new WeakMap<ts.EmitAndSemanticDiagnosticsBuilderProgram, Compilation>();
-let compilationByCwd = new Map<string, Compilation>();
 let builder: ts.SolutionBuilder<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
 let host: ts.SolutionBuilderHost<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
 const astCache = new Map<string, ts.SourceFile>();
@@ -81,10 +79,6 @@ function createEmitAndSemanticDiagnosticsBuilderProgram(
 
   diagnosticMap.set(program, []);
 
-  if (options?.baseUrl && compilationByCwd.has(options.baseUrl)) {
-    compilationMap.set(program, compilationByCwd.get(options.baseUrl));
-  }
-
   host.reportDiagnostic = diagnostic => {
     diagnosticMap.get(program).push(diagnostic);
   };
@@ -96,8 +90,6 @@ function build(compilation: Compilation) {
   const referencedProject = `${compilation.cwd.replace(/\//g, "_")}_tsconfig.json`;
 
   astCache.delete(path.join(compilation.cwd, compilation.entrypoints.build));
-
-  compilationByCwd.set(compilation.cwd, compilation);
 
   const rootTsConfig: any = readRootTsConfig();
 
@@ -140,21 +132,20 @@ function build(compilation: Compilation) {
   builder.build();
 }
 
-function renameJsToMjs(compilation: Compilation) {
-  const outDirAbsolutePath = path.join(compilation.cwd, compilation.outDir);
-  const jsFile = path.join(outDirAbsolutePath, "index.js");
-  const mjsFile = path.join(outDirAbsolutePath, "index.mjs");
+function renameJsToMjs(outDir: string) {
+  const jsFile = path.join(outDir, "index.js");
+  const mjsFile = path.join(outDir, "index.mjs");
 
   if (fs.existsSync(jsFile)) {
     fs.renameSync(jsFile, mjsFile);
   }
 }
 
-function postCompilation(compilation: Compilation, diagnostics: ts.Diagnostic[]) {
-  renameJsToMjs(compilation);
+function postCompilation(baseUrl: string, outDir: string, diagnostics: ts.Diagnostic[]) {
+  renameJsToMjs(outDir);
 
   parentPort.postMessage({
-    baseUrl: compilation.cwd,
+    baseUrl: baseUrl,
     diagnostics: diagnostics
       .filter(d => d.file)
       .map((diagnostic: ts.Diagnostic) => {
@@ -207,16 +198,9 @@ function main() {
   host.reportSolutionBuilderStatus = () => {};
 
   host.afterProgramEmitAndDiagnostics = program => {
-    const compilation = compilationMap.get(program);
-    if (compilation) {
-      postCompilation(compilation, diagnosticMap.get(program));
-      const baseUrl = program.getCompilerOptions().baseUrl;
-      if (baseUrl) {
-        compilationByCwd.delete(baseUrl);
-      }
-    }
+    const options = program.getCompilerOptions();
+    postCompilation(options.baseUrl, options.outDir, diagnosticMap.get(program));
     diagnosticMap.delete(program);
-    compilationMap.delete(program);
     host.reportDiagnostic = () => {};
   };
 
