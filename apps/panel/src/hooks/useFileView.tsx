@@ -158,7 +158,6 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
   }, [fileUrl]);
 
   useEffect(() => {
-    // Cleanup blob URL when component unmounts
     return () => {
       if (iframeSrc.startsWith("blob:")) {
         URL.revokeObjectURL(iframeSrc);

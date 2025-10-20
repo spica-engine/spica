@@ -91,13 +91,12 @@ const StorageItemColumn = memo(
 
     const orderedItems = useMemo(() => {
       if (!items) return [];
-      const folders = items
-        .filter(item => item.content.type === "inode/directory")
-        .sort((a, b) => a.name.localeCompare(b.name));
-      const files = items
-        .filter(item => item.content.type !== "inode/directory")
-        .sort((a, b) => a.name.localeCompare(b.name));
-      return [...folders, ...files];
+      return [...items].sort((a, b) => {
+        const aIsDir = a.content?.type === "inode/directory";
+        const bIsDir = b.content?.type === "inode/directory";
+        if (aIsDir !== bIsDir) return aIsDir ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
     }, [items]);
 
     const handleDragOver: DragEventHandler<HTMLDivElement> = e => {

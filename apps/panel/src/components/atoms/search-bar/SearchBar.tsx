@@ -1,4 +1,5 @@
 import {Icon, InputWithIcon, type TypeInput} from "oziko-ui-kit";
+import React from "react";
 import styles from "./SearchBar.module.scss";
 import {memo} from "react";
 import Loader from "../loader/Loader";

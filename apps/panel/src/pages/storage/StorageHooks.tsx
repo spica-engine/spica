@@ -126,17 +126,6 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
   return filter;
 }
 
-function buildSearchFilter(searchQuery: string): object {
-  if (!searchQuery) return {};
-
-  return {
-    name: {
-      $regex: searchQuery,
-      $options: "i"
-    }
-  };
-}
-
 function useStorageData(
   directory: TypeDirectories,
   apiFilter: object = {},
@@ -157,7 +146,17 @@ function useStorageData(
     if (isFilteringOrSearching) return {};
     return buildDirectoryFilter(filterArray);
   }, [filterArray, isFilteringOrSearching]);
-  const searchFilter = useMemo(() => buildSearchFilter(searchQuery), [searchQuery]);
+
+  const searchFilter = useMemo(() => {
+    if (!searchQuery) return {};
+
+    return {
+      name: {
+        $regex: searchQuery,
+        $options: "i"
+      }
+    };
+  }, [searchQuery]);
 
   const combinedFilter = useMemo(() => {
     const filters: object[] = [];
@@ -342,7 +341,13 @@ export function useFilteredDirectory(directory: TypeDirectories, isFilteringOrSe
       return acc;
     }, []);
 
-    const filteredItems = allItems.filter(item => item.content.type !== "inode/directory");
+    const seen = new Set();
+    const filteredItems = allItems.filter(item => {
+      if (item.content.type === "inode/directory") return false;
+      if (seen.has(item._id)) return false;
+      seen.add(item._id);
+      return true;
+    });
 
     return [
       {
