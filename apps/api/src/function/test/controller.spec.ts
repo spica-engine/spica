@@ -74,18 +74,18 @@ describe("Function Controller", () => {
   afterEach(async () => await app.close());
 
   describe("filtering", () => {
-    fit("should filter functions by index", async () => {
+    it("should filter functions by index", async () => {
       const fn1 = await request
         .post("/function", {...fnSchema, name: "test_fn1"})
         .then(r => r.body);
-      console.log("fn1", fn1);
+
       const response = await request.post(`/function/${fn1._id}/index`, {
         index: `
   export function findMe(){ 
     return 'OK' ;
   }`
       });
-      console.log("response", response);
+
       const fn2 = await request
         .post("/function", {...fnSchema, name: "test_fn2"})
         .then(r => r.body);
