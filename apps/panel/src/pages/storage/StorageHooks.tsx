@@ -7,7 +7,7 @@ import type {
   DirectoryItem,
   TypeDirectoryDepth
 } from "../../components/organisms/storage-columns/StorageColumns";
-import {createdAtArr} from "../../components/molecules/storage-filter/StorageFilter";
+import {convertQuickDateToRange} from "../../utils/storage";
 
 export const ROOT_PATH = "/";
 
@@ -46,13 +46,12 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
   const filter: {
     "content.type"?: {$in: string[]};
     "content.size"?: {$gte?: number; $lte?: number};
-    _id?: {$gte?: string; $lte?: string};
+    created_at?: {$gte?: string; $lte?: string};
     name?: {$regex: string; $options: string};
   } = {};
 
   if (filterValue.type?.length) {
-    const typeRegexes = filterValue.type.map(ext => new RegExp(`\\.${ext}$`, "i").toString());
-    filter["content.type"] = {$in: typeRegexes};
+    filter["content.type"] = {$in: filterValue.type};
   }
 
   if (filterValue.fileSize) {
@@ -91,106 +90,36 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
     const dateFilter: {$gte?: string; $lte?: string} = {};
 
     if (filterValue.quickdate) {
-      const now = new Date();
       const quickdateValue = filterValue.quickdate as string;
-
-      const dateRange = (() => {
-        // Parse time-based filters (last_X_hour, last_X_days)
-        const hourMatch = quickdateValue.match(/^last_(\d+)_hour$/);
-        if (hourMatch) {
-          const hours = parseInt(hourMatch[1], 10);
-          return {
-            from: new Date(now.getTime() - hours * 60 * 60 * 1000),
-            to: now
-          };
-        }
-
-        const dayMatch = quickdateValue.match(/^last_(\d+)_days?$/);
-        if (dayMatch) {
-          const days = parseInt(dayMatch[1], 10);
-          return {
-            from: new Date(now.getTime() - days * 24 * 60 * 60 * 1000),
-            to: now
-          };
-        }
-
-        const specialFilters: Record<string, () => {from: Date; to: Date}> = {
-          today: () => ({
-            from: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0),
-            to: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
-          }),
-          yesterday: () => ({
-            from: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0),
-            to: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999)
-          }),
-          this_week: () => {
-            const dayOfWeek = now.getDay();
-            const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-            return {
-              from: new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                now.getDate() + diffToMonday,
-                0,
-                0,
-                0,
-                0
-              ),
-              to: new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                now.getDate() + diffToMonday + 6,
-                23,
-                59,
-                59,
-                999
-              )
-            };
-          },
-          last_week: () => {
-            const dayOfWeek = now.getDay();
-            const diffToLastMonday = dayOfWeek === 0 ? -13 : -6 - dayOfWeek;
-            return {
-              from: new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                now.getDate() + diffToLastMonday,
-                0,
-                0,
-                0,
-                0
-              ),
-              to: new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                now.getDate() + diffToLastMonday + 6,
-                23,
-                59,
-                59,
-                999
-              )
-            };
+      const range = convertQuickDateToRange(quickdateValue);
+      const quickdateFilter = range
+        ? {
+            $gte: range.from?.toISOString(),
+            $lte: range.to?.toISOString()
           }
-        };
-
-        return specialFilters[quickdateValue]?.();
-      })();
-
-      if (dateRange) {
-        dateFilter.$gte = dateRange.from.toISOString();
-        dateFilter.$lte = dateRange.to.toISOString();
+        : null;
+      if (quickdateFilter) {
+        Object.assign(dateFilter, quickdateFilter);
       }
     } else {
       if (filterValue.dateRange?.from) {
-        dateFilter.$gte = filterValue.dateRange.from;
+        const fromDate =
+          typeof filterValue.dateRange.from === "string"
+            ? new Date(filterValue.dateRange.from)
+            : filterValue.dateRange.from;
+        dateFilter.$gte = fromDate.toISOString();
       }
       if (filterValue.dateRange?.to) {
-        dateFilter.$lte = filterValue.dateRange.to;
+        const toDate =
+          typeof filterValue.dateRange.to === "string"
+            ? new Date(filterValue.dateRange.to)
+            : filterValue.dateRange.to;
+        dateFilter.$lte = toDate.toISOString();
       }
     }
 
     if (Object.keys(dateFilter).length) {
-      filter["_id"] = dateFilter;
+      filter["created_at"] = dateFilter;
     }
   }
 

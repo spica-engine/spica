@@ -21,9 +21,39 @@ type TypeStorageFilter = {
 };
 
 const types = [
-  {value: "jpg", label: "JPG"},
-  {value: "png", label: "PNG"},
-  {value: "mp4", label: "MP4"}
+  {value: "image/jpeg", label: "JPEG/JPG"},
+  {value: "image/png", label: "PNG"},
+  {value: "image/gif", label: "GIF"},
+  {value: "image/svg+xml", label: "SVG"},
+  {value: "image/bmp", label: "BMP"},
+  {value: "image/webp", label: "WEBP"},
+  {value: "image/tiff", label: "TIFF"},
+  {value: "image/heic", label: "HEIC"},
+  {value: "video/mp4", label: "MP4"},
+  {value: "video/quicktime", label: "MOV"},
+  {value: "video/x-msvideo", label: "AVI"},
+  {value: "video/x-matroska", label: "MKV"},
+  {value: "video/webm", label: "WEBM"},
+  {value: "audio/mpeg", label: "MP3"},
+  {value: "audio/wav", label: "WAV"},
+  {value: "audio/flac", label: "FLAC"},
+  {value: "application/pdf", label: "PDF"},
+  {value: "application/msword", label: "DOC"},
+  {value: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", label: "DOCX"},
+  {value: "application/vnd.ms-excel", label: "XLS"},
+  {value: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", label: "XLSX"},
+  {value: "application/vnd.ms-powerpoint", label: "PPT"},
+  {value: "application/vnd.openxmlformats-officedocument.presentationml.presentation", label: "PPTX"},
+  {value: "text/plain", label: "TXT"},
+  {value: "text/csv", label: "CSV"},
+  {value: "text/html", label: "HTML"},
+  {value: "text/javascript", label: "JavaScript"},
+  {value: "application/zip", label: "ZIP"},
+  {value: "application/x-rar-compressed", label: "RAR"},
+  {value: "application/x-7z-compressed", label: "7Z"},
+  {value: "application/x-tar", label: "TAR"},
+  {value: "application/gzip", label: "GZ"},
+  {value: "application/octet-stream", label: "Binary/Other"}
 ];
 
 const units = ["kb", "mb", "gb", "tb"];
@@ -46,7 +76,7 @@ export const createdAtArr = [
 const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}) => {
   const formik = useFormik({
     initialValues: {
-      type: currentFilter?.type || ["jpg", "png", "mp4"],
+      type: currentFilter?.type || ["image/jpeg", "image/png", "video/mp4"],
       fileSize: currentFilter?.fileSize || {
         min: {
           value: 1,

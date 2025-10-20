@@ -101,16 +101,14 @@ export default function StorageActionBar({
       prefix={{
         children: (
           <FlexElement gap={8}>
-            <div className={!isLoading ? styles.loadingOffset : ""}>
-              <SearchBar
-                inputProps={{
-                  onKeyDown: handleKeyDown,
-                  value: searchValue,
-                  onChange: handleSearchChange
-                }}
-                loading={isLoading}
-              />
-            </div>
+            <SearchBar
+              inputProps={{
+                onKeyDown: handleKeyDown,
+                value: searchValue,
+                onChange: handleSearchChange
+              }}
+              loading={isLoading}
+            />
             <Popover
               open={isFilterOpen}
               onClose={handleOnFilterClose}
