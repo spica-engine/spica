@@ -76,5 +76,8 @@ export const navigatorItems: { [key: string]: TypeNavigatorItems[] } = {
   bucket: [
     { _id: "3", title: "Profile", icon: "bucket", section: "bucket" },
     { _id: "4", title: "Security", icon: "lock", section: "bucket" }
-  ]
+  ],
+  storage: [
+    { _id: "", title: "/", icon: "folder", section: "storage" },
+  ],
 };

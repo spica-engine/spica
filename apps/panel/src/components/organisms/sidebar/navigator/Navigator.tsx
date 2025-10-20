@@ -234,6 +234,7 @@ const DraggableItem = ({
       onClick={handleClick}
       className={`${styles.navigatorItem} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} ${isCurrentlySelected ? styles.selected : ""}`}
       bucket={item as BucketType}
+      icon={item.icon as IconName}
     />
   );
 };
