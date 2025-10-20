@@ -1,6 +1,6 @@
 import {FluidContainer} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
-import {StorageItemColumns} from "../../components/organisms/storage-columns/StorageColumns";
+import {StorageItemColumns, type TypeDirectoryDepth} from "../../components/organisms/storage-columns/StorageColumns";
 import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
 import StorageActionBar from "../../components/molecules/storage-action-bar/StorageActionBar";
 import {
@@ -21,34 +21,25 @@ export default function StoragePage() {
     filterValue,
     apiFilter,
     isFilteringOrSearching,
-    handleApplyFilter,
-    filterItemsBySearch,
-    filterItemsByFilter
+    handleApplyFilter
   } = useSearchAndFilter();
 
   const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
 
-  const {displayedDirectory} = useFilteredDirectory(
-    directory,
-    searchQuery,
-    filterValue,
-    filterItemsBySearch,
-    filterItemsByFilter,
-    isFilteringOrSearching
-  );
+  const {displayedDirectory} = useFilteredDirectory(directory, isFilteringOrSearching);
 
-  useStorageDataSync(apiFilter, directory, setDirectory);
+  const {isLoading} = useStorageDataSync(apiFilter, directory, setDirectory, searchQuery, isFilteringOrSearching);
 
   const {onUploadComplete, onFileReplaced, onFileDeleted} = useFileOperations(
     directory,
     setDirectory,
-    setPreviewFile,
+    setPreviewFile
   );
 
   const handleFolderClick = (
     folderName: string,
     fullPath: string,
-    directoryDepth: any,
+    directoryDepth: TypeDirectoryDepth,
     wasActive: boolean
   ) => {
     handleClosePreview();
@@ -58,9 +49,11 @@ export default function StoragePage() {
   return (
     <div className={styles.container}>
       <StorageActionBar
-        searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onApplyFilter={handleApplyFilter}
+        directory={directory}
+        currentFilter={filterValue || undefined}
+        isLoading={isFilteringOrSearching && isLoading}
       />
       <FluidContainer
         className={styles.storageItemContainer}

@@ -6,15 +6,15 @@ import {
   Text,
   type TypeFluidContainer,
   Spinner,
-  type TypeFile,
+  type TypeFile
 } from "oziko-ui-kit";
 import styles from "./StorageColumns.module.scss";
 import {useUploadFilesMutation} from "../../../store/api/storageApi";
 import {memo, useMemo, type DragEventHandler} from "react";
-import { ROOT_PATH } from "../../../pages/storage/StorageHooks";
+import {ROOT_PATH} from "../../../pages/storage/StorageHooks";
 
 export type TypeDirectoryDepth = 1 | 2 | 3;
-export type DirectoryItem = TypeFile & {fullPath: string, label?: string};
+export type DirectoryItem = TypeFile & {fullPath: string; label?: string};
 export type TypeDirectory = {
   items?: DirectoryItem[];
   label: string;
@@ -58,7 +58,6 @@ const StorageItem = memo(({item, onFolderClick, onFileClick, isActive}: StorageI
   );
 });
 
-
 interface StorageItemColumnProps {
   items?: DirectoryItem[];
   handleFolderClick: (
@@ -73,6 +72,7 @@ interface StorageItemColumnProps {
   previewFileId?: string;
   prefix: string;
   onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
+  isDraggingDisabled: boolean;
 }
 
 const StorageItemColumn = memo(
@@ -84,7 +84,8 @@ const StorageItemColumn = memo(
     directory,
     previewFileId,
     prefix,
-    onUploadComplete
+    onUploadComplete,
+    isDraggingDisabled
   }: StorageItemColumnProps) => {
     const [uploadFiles] = useUploadFilesMutation();
 
@@ -100,11 +101,13 @@ const StorageItemColumn = memo(
     }, [items]);
 
     const handleDragOver: DragEventHandler<HTMLDivElement> = e => {
+      if (isDraggingDisabled) return;
       e.preventDefault();
     };
 
     const handleDrop: DragEventHandler<HTMLDivElement> = async e => {
       e.preventDefault();
+      if (isDraggingDisabled) return;
       const files = e.dataTransfer.files;
 
       if (files && files.length > 0) {
@@ -138,23 +141,31 @@ const StorageItemColumn = memo(
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        {orderedItems?.map((item, index) => {
-          const isFolder = item?.content?.type === "inode/directory";
-          const fullPath = item.name;
-          const isActive = isFolder
-            ? directory.find(i => i.fullPath === fullPath)?.isActive || false
-            : previewFileId === item._id;
+        {orderedItems.length ? (
+          orderedItems.map((item, index) => {
+            const isFolder = item?.content?.type === "inode/directory";
+            const fullPath = item.name;
+            const isActive = isFolder
+              ? directory.find(i => i.fullPath === fullPath)?.isActive || false
+              : previewFileId === item._id;
 
-          return (
-            <StorageItem
-              key={item._id}
-              item={item}
-              onFolderClick={folderName => handleFolderClick(folderName, fullPath, depth, isActive)}
-              onFileClick={setPreviewFile}
-              isActive={isActive}
-            />
-          );
-        })}
+            return (
+              <StorageItem
+                key={item._id}
+                item={item}
+                onFolderClick={folderName =>
+                  handleFolderClick(folderName, fullPath, depth, isActive)
+                }
+                onFileClick={setPreviewFile}
+                isActive={isActive}
+              />
+            );
+          })
+        ) : (
+          <Text size="large" variant="secondary" className={styles.noItemsText}>
+            No items found.
+          </Text>
+        )}
       </FlexElement>
     );
   }
@@ -225,6 +236,7 @@ export const StorageItemColumns: React.FC<StorageItemColumnsProps> = ({
               previewFileId={previewFile?._id}
               prefix={prefix}
               onUploadComplete={onUploadComplete}
+              isDraggingDisabled={isDraggingDisabled}
             />
           ) : (
             <div className={styles.columnLoaderContainer}>

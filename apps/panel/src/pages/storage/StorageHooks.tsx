@@ -7,8 +7,21 @@ import type {
   DirectoryItem,
   TypeDirectoryDepth
 } from "../../components/organisms/storage-columns/StorageColumns";
+import {createdAtArr} from "../../components/molecules/storage-filter/StorageFilter";
 
-const ROOT_PATH = "/";
+export const ROOT_PATH = "/";
+
+const INITIAL_DIRECTORIES: TypeDirectories = [
+  {
+    items: undefined,
+    label: "",
+    fullPath: ROOT_PATH,
+    currentDepth: 1,
+    isActive: true,
+    content: {type: "inode/directory", size: 0}
+  }
+];
+
 type TypeFileSizeUnit = "kb" | "mb" | "gb" | "tb";
 
 const getParentPath = (fullPath?: string) => {
@@ -30,7 +43,12 @@ export function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[
 function buildApiFilter(filterValue: TypeFilterValue): object {
   if (!filterValue) return {};
 
-  const filter: any = {};
+  const filter: {
+    "content.type"?: {$in: string[]};
+    "content.size"?: {$gte?: number; $lte?: number};
+    _id?: {$gte?: string; $lte?: string};
+    name?: {$regex: string; $options: string};
+  } = {};
 
   if (filterValue.type?.length) {
     const typeRegexes = filterValue.type.map(ext => new RegExp(`\\.${ext}$`, "i").toString());
@@ -38,7 +56,7 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
   }
 
   if (filterValue.fileSize) {
-    const sizeFilter: any = {};
+    const sizeFilter: {$gte?: number; $lte?: number} = {};
 
     const getByteSize = (value: number, unit: TypeFileSizeUnit) => {
       const multipliers: Record<TypeFileSizeUnit, number> = {
@@ -70,28 +88,97 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
   }
 
   if (filterValue.quickdate || filterValue.dateRange?.from || filterValue.dateRange?.to) {
-    const dateFilter: any = {};
+    const dateFilter: {$gte?: string; $lte?: string} = {};
 
     if (filterValue.quickdate) {
       const now = new Date();
-      let fromDate;
+      const quickdateValue = filterValue.quickdate as string;
 
-      switch (filterValue.quickdate) {
-        case "last_1_hour":
-          fromDate = new Date(now.getTime() - 60 * 60 * 1000);
-          break;
-        case "last_24_hour":
-          fromDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-          break;
-        // Add other cases as needed
-        case "today":
-          fromDate = new Date(now.setHours(0, 0, 0, 0));
-          break;
-      }
+      const dateRange = (() => {
+        // Parse time-based filters (last_X_hour, last_X_days)
+        const hourMatch = quickdateValue.match(/^last_(\d+)_hour$/);
+        if (hourMatch) {
+          const hours = parseInt(hourMatch[1], 10);
+          return {
+            from: new Date(now.getTime() - hours * 60 * 60 * 1000),
+            to: now
+          };
+        }
 
-      if (fromDate) {
-        dateFilter.$gte = fromDate.toISOString();
-        dateFilter.$lte = now.toISOString();
+        const dayMatch = quickdateValue.match(/^last_(\d+)_days?$/);
+        if (dayMatch) {
+          const days = parseInt(dayMatch[1], 10);
+          return {
+            from: new Date(now.getTime() - days * 24 * 60 * 60 * 1000),
+            to: now
+          };
+        }
+
+        const specialFilters: Record<string, () => {from: Date; to: Date}> = {
+          today: () => ({
+            from: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0),
+            to: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+          }),
+          yesterday: () => ({
+            from: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0),
+            to: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999)
+          }),
+          this_week: () => {
+            const dayOfWeek = now.getDay();
+            const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            return {
+              from: new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate() + diffToMonday,
+                0,
+                0,
+                0,
+                0
+              ),
+              to: new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate() + diffToMonday + 6,
+                23,
+                59,
+                59,
+                999
+              )
+            };
+          },
+          last_week: () => {
+            const dayOfWeek = now.getDay();
+            const diffToLastMonday = dayOfWeek === 0 ? -13 : -6 - dayOfWeek;
+            return {
+              from: new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate() + diffToLastMonday,
+                0,
+                0,
+                0,
+                0
+              ),
+              to: new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate() + diffToLastMonday + 6,
+                23,
+                59,
+                59,
+                999
+              )
+            };
+          }
+        };
+
+        return specialFilters[quickdateValue]?.();
+      })();
+
+      if (dateRange) {
+        dateFilter.$gte = dateRange.from.toISOString();
+        dateFilter.$lte = dateRange.to.toISOString();
       }
     } else {
       if (filterValue.dateRange?.from) {
@@ -110,7 +197,23 @@ function buildApiFilter(filterValue: TypeFilterValue): object {
   return filter;
 }
 
-function useStorageData(directory: TypeDirectories, apiFilter: object = {}) {
+function buildSearchFilter(searchQuery: string): object {
+  if (!searchQuery) return {};
+
+  return {
+    name: {
+      $regex: searchQuery,
+      $options: "i"
+    }
+  };
+}
+
+function useStorageData(
+  directory: TypeDirectories,
+  apiFilter: object = {},
+  searchQuery: string = "",
+  isFilteringOrSearching: boolean = false
+) {
   const {buildDirectoryFilter} = useStorage();
 
   const filterArray = [
@@ -121,16 +224,41 @@ function useStorageData(directory: TypeDirectories, apiFilter: object = {}) {
       .map(i => `${i}/`) || [])
   ];
 
-  const directoryFilter = useMemo(() => buildDirectoryFilter(filterArray), [filterArray]);
+  const directoryFilter = useMemo(() => {
+    if (isFilteringOrSearching) return {};
+    return buildDirectoryFilter(filterArray);
+  }, [filterArray, isFilteringOrSearching]);
+  const searchFilter = useMemo(() => buildSearchFilter(searchQuery), [searchQuery]);
+
   const combinedFilter = useMemo(() => {
-    if (Object.keys(apiFilter).length === 0) return directoryFilter;
+    const filters: object[] = [];
 
-    return {$and: [directoryFilter, apiFilter]};
-  }, [directoryFilter, apiFilter]);
+    if (Object.keys(directoryFilter).length > 0) {
+      filters.push(directoryFilter);
+    }
 
-  const {data: storageData} = useGetStorageItemsQuery({filter: combinedFilter});
+    if (Object.keys(apiFilter).length > 0) {
+      filters.push(apiFilter);
+    }
 
-  return {storageData};
+    if (Object.keys(searchFilter).length > 0) {
+      filters.push(searchFilter);
+    }
+
+    if (filters.length === 1) {
+      return filters[0];
+    }
+
+    return {$and: filters};
+  }, [directoryFilter, apiFilter, searchFilter]);
+
+  const {
+    data: storageData,
+    isFetching,
+    isLoading
+  } = useGetStorageItemsQuery({filter: combinedFilter});
+
+  return {storageData, isLoading: isFetching || isLoading};
 }
 
 function useStorageConverter(directory: TypeDirectories) {
@@ -159,16 +287,7 @@ function useStorageConverter(directory: TypeDirectories) {
 }
 
 export function useDirectoryNavigation() {
-  const [directory, setDirectory] = useState<TypeDirectories>([
-    {
-      items: undefined,
-      label: "",
-      fullPath: ROOT_PATH,
-      currentDepth: 1,
-      isActive: true,
-      content: {type: "inode/directory", size: 0}
-    }
-  ]);
+  const [directory, setDirectory] = useState<TypeDirectories>(INITIAL_DIRECTORIES);
 
   const handleFolderClick = (
     folderName: string,
@@ -260,88 +379,6 @@ export function useSearchAndFilter() {
     setApiFilter(newApiFilter);
   };
 
-  const filterItemsBySearch = (items: DirectoryItem[], query: string): DirectoryItem[] => {
-    if (!query) return items;
-    const lowerQuery = query.toLowerCase();
-    return items.filter(item => item?.label?.toLowerCase().includes(lowerQuery));
-  };
-
-  const filterItemsByFilter = (
-    items: DirectoryItem[],
-    filter: TypeFilterValue
-  ): DirectoryItem[] => {
-    if (!filter) return items;
-
-    return items.filter(item => {
-      let matches = true;
-
-      if (filter.type?.length) {
-        const extension = item.label?.split(".").pop()?.toLowerCase();
-        matches = matches && extension ? filter.type.includes(extension) : false;
-      }
-
-      if (matches && filter.fileSize && item.content?.size) {
-        const getByteSize = (value: number, unit: TypeFileSizeUnit) => {
-          const multipliers: Record<TypeFileSizeUnit, number> = {
-            kb: 1024,
-            mb: 1024 ** 2,
-            gb: 1024 ** 3,
-            tb: 1024 ** 4
-          };
-          return value * multipliers[unit];
-        };
-
-        if (filter.fileSize.min?.value) {
-          const minBytes = getByteSize(
-            filter.fileSize.min.value,
-            filter.fileSize.min.unit as TypeFileSizeUnit
-          );
-          matches = matches && item.content.size >= minBytes;
-        }
-
-        if (filter.fileSize.max?.value) {
-          const maxBytes = getByteSize(
-            filter.fileSize.max.value,
-            filter.fileSize.max.unit as TypeFileSizeUnit
-          );
-          matches = matches && item.content.size <= maxBytes;
-        }
-      }
-
-      if (matches && (filter.quickdate || filter.dateRange)) {
-        if (item._id) {
-          const timestamp = parseInt(item._id.substring(0, 8), 16) * 1000;
-          const itemDate = new Date(timestamp);
-
-          if (filter.quickdate) {
-            const now = new Date();
-            let fromDate;
-
-            switch (filter.quickdate) {
-              case "last_1_hour":
-                fromDate = new Date(now.getTime() - 60 * 60 * 1000);
-                break;
-              // Other cases...
-            }
-
-            if (fromDate) {
-              matches = matches && itemDate >= fromDate && itemDate <= now;
-            }
-          } else if (filter.dateRange) {
-            if (filter.dateRange.from) {
-              matches = matches && itemDate >= new Date(filter.dateRange.from);
-            }
-            if (filter.dateRange.to) {
-              matches = matches && itemDate <= new Date(filter.dateRange.to);
-            }
-          }
-        }
-      }
-
-      return matches;
-    });
-  };
-
   return {
     searchQuery,
     setSearchQuery,
@@ -349,9 +386,7 @@ export function useSearchAndFilter() {
     setFilterValue,
     apiFilter,
     isFilteringOrSearching,
-    handleApplyFilter,
-    filterItemsBySearch,
-    filterItemsByFilter
+    handleApplyFilter
   };
 }
 
@@ -367,14 +402,7 @@ export function useFilePreview() {
   };
 }
 
-export function useFilteredDirectory(
-  directory: TypeDirectories,
-  searchQuery: string,
-  filterValue: TypeFilterValue | null,
-  filterItemsBySearch: (items: DirectoryItem[], query: string) => DirectoryItem[],
-  filterItemsByFilter: (items: DirectoryItem[], filter: TypeFilterValue) => DirectoryItem[],
-  isFilteringOrSearching: boolean
-) {
+export function useFilteredDirectory(directory: TypeDirectories, isFilteringOrSearching: boolean) {
   const getFilteredDirectory = (): TypeDirectories => {
     if (!isFilteringOrSearching) return directory;
 
@@ -385,15 +413,7 @@ export function useFilteredDirectory(
       return acc;
     }, []);
 
-    let filteredItems = allItems.filter(item => item.content.type !== "inode/directory");
-
-    if (searchQuery) {
-      filteredItems = filterItemsBySearch(filteredItems, searchQuery);
-    }
-
-    if (filterValue) {
-      filteredItems = filterItemsByFilter(filteredItems, filterValue);
-    }
+    const filteredItems = allItems.filter(item => item.content.type !== "inode/directory");
 
     return [
       {
@@ -416,15 +436,26 @@ export function useFilteredDirectory(
 export function useStorageDataSync(
   apiFilter: object = {},
   directory: TypeDirectories,
-  setDirectory: (dirs: TypeDirectories) => void
+  setDirectory: (dirs: TypeDirectories) => void,
+  searchQuery: string = "",
+  isFilteringOrSearching: boolean = false
 ) {
-  const {storageData} = useStorageData(directory, apiFilter);
+  const {storageData, isLoading} = useStorageData(
+    directory,
+    apiFilter,
+    searchQuery,
+    isFilteringOrSearching
+  );
   const {convertData} = useStorageConverter(directory);
 
   useEffect(() => {
     const data = storageData?.data ?? (storageData as unknown as TypeFile[]);
     const convertedData = convertData(data as TypeFile[]);
     if (!convertedData) return;
+    if (convertedData.length == 0 && isFilteringOrSearching) {
+      setDirectory(INITIAL_DIRECTORIES);
+      return;
+    }
     let newDirectories = [...directory];
     const dirToChange = findMaxDepthDirectory(newDirectories) ?? newDirectories[0];
     if (dirToChange) {
@@ -434,6 +465,8 @@ export function useStorageDataSync(
     }
     setDirectory(newDirectories);
   }, [storageData]);
+
+  return {isLoading};
 }
 
 export function useFileOperations(
