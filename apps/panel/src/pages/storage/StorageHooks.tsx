@@ -387,7 +387,7 @@ export function useStorageDataSync(
     const data = storageData?.data ?? (storageData as unknown as TypeFile[]);
     const convertedData = convertData(data as TypeFile[]);
     if (!convertedData) return;
-    if (convertedData.length == 0 && isFilteringOrSearching) {
+    if (convertedData.length === 0 && isFilteringOrSearching) {
       setDirectory(INITIAL_DIRECTORIES);
       return;
     }
