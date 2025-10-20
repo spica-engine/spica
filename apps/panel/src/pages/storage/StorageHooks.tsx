@@ -10,6 +10,7 @@ import type {
 import {convertQuickDateToRange} from "../../utils/storage";
 
 export const ROOT_PATH = "/";
+const MAX_DIRECTORY_DEPTH = 3;
 
 const INITIAL_DIRECTORIES: TypeDirectories = [
   {
@@ -204,7 +205,7 @@ function useStorageConverter(directory: TypeDirectories) {
         items: undefined,
         label: resolvedName,
         fullPath: storage.name,
-        currentDepth: Math.min(directory.filter(dir => dir.currentDepth).length, 3),
+        currentDepth: Math.min(directory.filter(dir => dir.currentDepth).length, MAX_DIRECTORY_DEPTH),
         isActive: false
       };
     });
