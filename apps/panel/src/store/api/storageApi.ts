@@ -73,7 +73,7 @@ export const storageApi = baseApi.injectEndpoints({
     uploadFiles: builder.mutation<Storage[], UploadFilesRequest>({
       query: ({ files, prefix }) => {
         const formData = new FormData();
-        Array.from(files).forEach((file) => formData.append('file', file));
+        Array.from(files).forEach((file) => formData.append('files', file));
         if (prefix) formData.append('prefix', prefix);
 
         return {
