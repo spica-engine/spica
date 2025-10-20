@@ -248,7 +248,7 @@ export function useDirectoryNavigation() {
       return;
     }
 
-    const depthToGive = Math.min(directoryDepth + 1, 3) as TypeDirectoryDepth;
+    const depthToGive = Math.min(directoryDepth + 1, MAX_DIRECTORY_DEPTH) as TypeDirectoryDepth;
     let theDirectory = directory.find(dir => dir.fullPath === fullPath);
     if (!theDirectory) {
       theDirectory = {
