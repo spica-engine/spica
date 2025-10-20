@@ -8,3 +8,4 @@ export {
   CodeKeywordDefinition,
   KeywordCxt
 } from "./src/validator";
+export {hash} from "./src/hash";

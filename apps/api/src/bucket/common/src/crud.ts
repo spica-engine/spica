@@ -29,28 +29,32 @@ export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<false>,
-  factories: CrudFactories<T>
+  factories: CrudFactories<T>,
+  hashSecret?: string
 ): Promise<T[]>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<true>,
-  factories: CrudFactories<T>
+  factories: CrudFactories<T>,
+  hashSecret?: string
 ): Promise<CrudPagination<T>>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<boolean>,
-  factories: CrudFactories<T>
+  factories: CrudFactories<T>,
+  hashSecret?: string
 ): Promise<T[] | CrudPagination<T>>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<boolean>,
-  factories: CrudFactories<T>
+  factories: CrudFactories<T>,
+  hashSecret?: string
 ): Promise<unknown> {
   const collection = factories.collection(schema);
-  const pipelineBuilder = new BucketPipelineBuilder(schema, factories);
+  const pipelineBuilder = new BucketPipelineBuilder(schema, factories, hashSecret);
   const seekingPipelineBuilder = new PipelineBuilder();
 
   let rulePropertyMap;
@@ -169,6 +173,7 @@ export async function insertDocument(
   }
 ) {
   const collection = factories.collection(schema);
+
   await executeWriteRule(
     schema,
     factories.schema,

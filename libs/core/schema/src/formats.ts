@@ -1,5 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {Format} from "@spica-server/interface/core";
+import {hash} from "./hash";
 
 export const OBJECT_ID: Format = {
   name: "objectid",
@@ -30,3 +31,16 @@ export const DATE_TIME: Format = {
     );
   }
 };
+
+export function createHashFormat(hashSecret: string): Format {
+  return {
+    name: "hash",
+    type: "string",
+    coerce: (value: string) => {
+      return hash(value, hashSecret);
+    },
+    validate: (value: string) => {
+      return typeof value === "string" && value.length > 0;
+    }
+  };
+}
