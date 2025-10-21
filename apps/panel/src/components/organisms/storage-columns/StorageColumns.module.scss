@@ -1,5 +1,12 @@
 @use "../../../styles/mixins";
 
+.container {
+  height: 100% !important;
+  max-width: 840px !important;
+  overflow-x: auto;
+  justify-content: flex-start !important;
+}
+
 .storageItem {
   cursor: pointer;
   max-width: 100%;
@@ -15,10 +22,6 @@
 
 .activeStorageItem {
   background-color: var(--color-hover);
-}
-
-.storageItemIcon {
-  color: var(--color-font-primary);
 }
 
 .storageItemText {
@@ -38,11 +41,11 @@
 
 .storageItemColumnContainer {
   height: 100% !important;
-  width: 100% !important;
-  border-right: var(--border-default);
+  border-right: var(--border-default) !important;
   justify-content: flex-start !important;
   padding: var(--padding-xl) 0;
   width: 280px !important;
+  min-width: 280px !important;
 }
 
 .columnLoaderContainer {
@@ -51,4 +54,30 @@
   height: 100%;
   justify-content: center;
   align-items: center;
+}
+
+.noItemsText {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.storageItemColumnContainer {
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  min-height: 0;
+  
+  &:last-child {
+    border-right: none;
+  }
+}
+
+.columnLoaderContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
 }

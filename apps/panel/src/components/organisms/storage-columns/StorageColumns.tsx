@@ -1,20 +1,11 @@
-import {
-  FlexElement,
-  FluidContainer,
-  Icon,
-  type TypeAlignment,
-  Text,
-  type TypeFluidContainer,
-  Spinner,
-  type TypeFile,
-} from "oziko-ui-kit";
+import {FlexElement, Icon, type TypeAlignment, Text, Spinner, type TypeFile} from "oziko-ui-kit";
 import styles from "./StorageColumns.module.scss";
 import {useUploadFilesMutation} from "../../../store/api/storageApi";
 import {memo, useMemo, type DragEventHandler} from "react";
-import { ROOT_PATH } from "../../../pages/storage/StorageHooks";
+import {getVisibleDirectories, ROOT_PATH} from "../../../pages/storage/StorageHooks";
 
-export type TypeDirectoryDepth = 1 | 2 | 3;
-export type DirectoryItem = TypeFile & {fullPath: string, label?: string};
+export type TypeDirectoryDepth = number;
+export type DirectoryItem = TypeFile & {fullPath: string; label?: string};
 export type TypeDirectory = {
   items?: DirectoryItem[];
   label: string;
@@ -58,7 +49,6 @@ const StorageItem = memo(({item, onFolderClick, onFileClick, isActive}: StorageI
   );
 });
 
-
 interface StorageItemColumnProps {
   items?: DirectoryItem[];
   handleFolderClick: (
@@ -73,6 +63,7 @@ interface StorageItemColumnProps {
   previewFileId?: string;
   prefix: string;
   onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
+  isDraggingDisabled: boolean;
 }
 
 const StorageItemColumn = memo(
@@ -84,27 +75,29 @@ const StorageItemColumn = memo(
     directory,
     previewFileId,
     prefix,
-    onUploadComplete
+    onUploadComplete,
+    isDraggingDisabled
   }: StorageItemColumnProps) => {
     const [uploadFiles] = useUploadFilesMutation();
 
     const orderedItems = useMemo(() => {
       if (!items) return [];
-      const folders = items
-        .filter(item => item.content.type === "inode/directory")
-        .sort((a, b) => a.name.localeCompare(b.name));
-      const files = items
-        .filter(item => item.content.type !== "inode/directory")
-        .sort((a, b) => a.name.localeCompare(b.name));
-      return [...folders, ...files];
+      return [...items].sort((a, b) => {
+        const aIsDir = a.content?.type === "inode/directory";
+        const bIsDir = b.content?.type === "inode/directory";
+        if (aIsDir !== bIsDir) return aIsDir ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
     }, [items]);
 
     const handleDragOver: DragEventHandler<HTMLDivElement> = e => {
+      if (isDraggingDisabled) return;
       e.preventDefault();
     };
 
     const handleDrop: DragEventHandler<HTMLDivElement> = async e => {
       e.preventDefault();
+      if (isDraggingDisabled) return;
       const files = e.dataTransfer.files;
 
       if (files && files.length > 0) {
@@ -138,23 +131,31 @@ const StorageItemColumn = memo(
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        {orderedItems?.map((item, index) => {
-          const isFolder = item?.content?.type === "inode/directory";
-          const fullPath = item.name;
-          const isActive = isFolder
-            ? directory.find(i => i.fullPath === fullPath)?.isActive || false
-            : previewFileId === item._id;
+        {orderedItems.length ? (
+          orderedItems.map((item, index) => {
+            const isFolder = item?.content?.type === "inode/directory";
+            const fullPath = item.name;
+            const isActive = isFolder
+              ? directory.find(i => i.fullPath === fullPath)?.isActive || false
+              : previewFileId === item._id;
 
-          return (
-            <StorageItem
-              key={item._id}
-              item={item}
-              onFolderClick={folderName => handleFolderClick(folderName, fullPath, depth, isActive)}
-              onFileClick={setPreviewFile}
-              isActive={isActive}
-            />
-          );
-        })}
+            return (
+              <StorageItem
+                key={item._id}
+                item={item}
+                onFolderClick={folderName =>
+                  handleFolderClick(folderName, fullPath, depth, isActive)
+                }
+                onFileClick={setPreviewFile}
+                isActive={isActive}
+              />
+            );
+          })
+        ) : (
+          <Text size="large" variant="secondary" className={styles.noItemsText}>
+            No items found.
+          </Text>
+        )}
       </FlexElement>
     );
   }
@@ -171,6 +172,7 @@ export interface StorageItemColumnsProps {
   directory: TypeDirectories;
   previewFile?: DirectoryItem;
   onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
+  isDraggingDisabled?: boolean;
 }
 
 export const StorageItemColumns: React.FC<StorageItemColumnsProps> = ({
@@ -179,59 +181,59 @@ export const StorageItemColumns: React.FC<StorageItemColumnsProps> = ({
   directory,
   previewFile,
   onUploadComplete,
+  isDraggingDisabled = false
 }) => {
-  const columns = [1, 2, 3] as TypeDirectoryDepth[];
+  const visibleDirectories = useMemo(() => getVisibleDirectories(directory), [directory]);
+  console.log("Visible Directories:", visibleDirectories);
+  const columnProps = useMemo(() => {
+    const props: Record<string, any> = {};
+
+    visibleDirectories.forEach((dir, index) => {
+      const depth = dir.currentDepth!;
+      const prefix =
+        dir.fullPath === ROOT_PATH ? "" : dir.fullPath.split("/").filter(Boolean).join("/") + "/";
+
+      const key = `col_${index}`;
+
+      props[key] = {
+        className: styles.storageItemColumnContainer,
+        children: dir.items ? (
+          <StorageItemColumn
+            items={dir.items}
+            handleFolderClick={handleFolderClick}
+            setPreviewFile={setPreviewFile}
+            depth={depth}
+            directory={directory}
+            previewFileId={previewFile?._id}
+            prefix={prefix}
+            onUploadComplete={onUploadComplete}
+            isDraggingDisabled={isDraggingDisabled}
+          />
+        ) : (
+          <div className={styles.columnLoaderContainer}>
+            <Spinner />
+          </div>
+        )
+      };
+    });
+    return props;
+  }, [
+    visibleDirectories,
+    directory,
+    handleFolderClick,
+    setPreviewFile,
+    previewFile,
+    onUploadComplete,
+    isDraggingDisabled
+  ]);
+
   return (
-    <FluidContainer
-      dimensionY="fill"
-      dimensionX="fill"
-      gap={0}
-      {...columns.reduce((acc, depth) => {
-        const currentDirectory = directory.find(dir => dir.currentDepth === depth);
-        if (!currentDirectory) return acc;
-        const items = currentDirectory?.items;
-
-        let key: string;
-        switch (depth) {
-          case 1:
-            key = "prefix";
-            break;
-          case 2:
-            key = "root";
-            break;
-          case 3:
-            key = "suffix";
-            break;
-          default:
-            key = "";
-        }
-
-        const prefix =
-          currentDirectory.fullPath === ROOT_PATH
-            ? ""
-            : currentDirectory.fullPath.split("/").filter(Boolean).join("/") + "/";
-
-        acc[key as keyof TypeFluidContainer] = {
-          className: styles.storageItemColumnContainer,
-          children: items ? (
-            <StorageItemColumn
-              items={items}
-              handleFolderClick={handleFolderClick}
-              setPreviewFile={setPreviewFile}
-              depth={depth}
-              directory={directory}
-              previewFileId={previewFile?._id}
-              prefix={prefix}
-              onUploadComplete={onUploadComplete}
-            />
-          ) : (
-            <div className={styles.columnLoaderContainer}>
-              <Spinner />
-            </div>
-          )
-        };
-        return acc;
-      }, {} as TypeFluidContainer)}
-    />
+    <FlexElement className={styles.container} gap={0}>
+      {visibleDirectories.map((dir, index) => (
+        <div key={`column-${dir.fullPath}-${index}`} className={styles.storageItemColumnContainer}>
+          {columnProps[`col_${index}`]?.children}
+        </div>
+      ))}
+    </FlexElement>
   );
 };

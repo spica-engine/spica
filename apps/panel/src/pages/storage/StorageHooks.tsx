@@ -10,6 +10,17 @@ import {useGetStorageItemsQuery} from "../../store/api";
 
 export const ROOT_PATH = "/";
 
+const INITIAL_DIRECTORIES: TypeDirectories = [
+  {
+    items: undefined,
+    label: "",
+    fullPath: ROOT_PATH,
+    currentDepth: 1,
+    isActive: true,
+    content: {type: "inode/directory", size: 0}
+  }
+];
+
 export const getParentPath = (fullPath?: string) => {
   const res =
     fullPath?.replace(/\/[^/]+\/?$/, "") === fullPath
@@ -24,6 +35,12 @@ export function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[
     if (!max || max.currentDepth === undefined || obj.currentDepth > max.currentDepth) return obj;
     return max;
   }, undefined);
+}
+
+export function getVisibleDirectories(directories: TypeDirectories): TypeDirectories {
+  return directories
+    .filter(dir => dir.currentDepth !== undefined && dir.currentDepth > 0)
+    .sort((a, b) => (a.currentDepth || 0) - (b.currentDepth || 0));
 }
 
 function useStorageConverter(directory: TypeDirectories) {
@@ -41,7 +58,7 @@ function useStorageConverter(directory: TypeDirectories) {
         items: undefined,
         label: resolvedName,
         fullPath: storage.name,
-        currentDepth: Math.min(directory.filter(dir => dir.currentDepth).length, 3),
+        currentDepth: directory.filter(dir => dir.currentDepth).length,
         isActive: false
       };
     });
@@ -52,7 +69,7 @@ function useStorageConverter(directory: TypeDirectories) {
 }
 
 export function useStorageData(directory: TypeDirectories) {
-  const { buildDirectoryFilter } = useStorage();
+  const {buildDirectoryFilter} = useStorage();
 
   const filterArray = [
     "/",
@@ -64,52 +81,43 @@ export function useStorageData(directory: TypeDirectories) {
 
   const directoryFilter = useMemo(() => buildDirectoryFilter(filterArray), [filterArray]);
 
-  const { data: storageData } = useGetStorageItemsQuery({ filter: directoryFilter });
+  const {data: storageData} = useGetStorageItemsQuery({filter: directoryFilter});
 
-  return { storageData };
+  return {storageData};
 }
-  
 
 export function useDirectoryNavigation() {
-  const [directory, setDirectory] = useState<TypeDirectories>([
-    {
-      items: undefined,
-      label: "",
-      fullPath: ROOT_PATH,
-      currentDepth: 1,
-      isActive: true,
-      content: {type: "inode/directory", size: 0}
-    }
-  ]);
+  const [directory, setDirectory] = useState<TypeDirectories>(INITIAL_DIRECTORIES);
 
   const handleFolderClick = (
     folderName: string,
     fullPath: string,
     directoryDepth: TypeDirectoryDepth,
-    wasActive: boolean
+    wasActive: boolean,
+    isFilteringOrSearching: boolean
   ) => {
+    if (isFilteringOrSearching) return;
+
     if (wasActive) {
-      const cleanDirectories = directory.map(dir => ({
-        ...dir,
-        isActive: false,
-        currentDepth: undefined
-      }));
-      const dirToChange = findMaxDepthDirectory(directory);
-      if (!dirToChange) return;
-      const newDirectories = cleanDirectories.map(dir => {
-        if (dir.fullPath === getParentPath(dirToChange?.fullPath!)) {
-          return {...dir, isActive: true, currentDepth: dirToChange?.currentDepth};
-        } else if (dir.fullPath === getParentPath(getParentPath(dirToChange?.fullPath!))) {
-          const newDepth = (dirToChange?.currentDepth! - 1) as TypeDirectoryDepth;
-          return {...dir, isActive: true, currentDepth: newDepth > 0 ? newDepth : undefined};
+      const newDirectories = directory.map(dir => {
+        if (dir.currentDepth !== undefined && dir.currentDepth <= directoryDepth) {
+          return {
+            ...dir,
+            isActive: true
+          };
         }
-        return dir;
+
+        return {
+          ...dir,
+          isActive: false,
+          currentDepth: undefined
+        };
       });
       setDirectory(newDirectories);
       return;
     }
 
-    const depthToGive = Math.min(directoryDepth + 1, 3) as TypeDirectoryDepth;
+    const depthToGive = directoryDepth + 1;
     let theDirectory = directory.find(dir => dir.fullPath === fullPath);
     if (!theDirectory) {
       theDirectory = {
@@ -123,26 +131,37 @@ export function useDirectoryNavigation() {
     } else {
       theDirectory = {...theDirectory, currentDepth: depthToGive, isActive: true};
     }
-    const cleanDirectories = directory.map(dir => ({
-      ...dir,
-      isActive: false,
-      currentDepth: undefined
-    }));
-    const newDirectories = cleanDirectories.map(dir => {
-      if (getParentPath(theDirectory.fullPath) === dir.fullPath) {
-        const newDepth = ((theDirectory.currentDepth as TypeDirectoryDepth) -
-          1) as TypeDirectoryDepth;
-        return {...dir, isActive: newDepth > 0, currentDepth: newDepth > 0 ? newDepth : undefined};
-      } else if (getParentPath(getParentPath(theDirectory.fullPath)) === dir.fullPath) {
-        const newDepth = ((theDirectory.currentDepth as TypeDirectoryDepth) -
-          2) as TypeDirectoryDepth;
-        return {...dir, isActive: newDepth > 0, currentDepth: newDepth > 0 ? newDepth : undefined};
-      } else if (dir.fullPath === theDirectory.fullPath) {
+    const ancestorPaths = new Set<string>();
+    let currentPath = fullPath;
+    while (currentPath !== ROOT_PATH) {
+      ancestorPaths.add(currentPath);
+      currentPath = getParentPath(currentPath);
+    }
+    ancestorPaths.add(ROOT_PATH);
+
+    const newDirectories = directory.map(dir => {
+      if (dir.fullPath === fullPath) {
         return theDirectory;
       }
-      return dir;
+
+      if (ancestorPaths.has(dir.fullPath)) {
+        const pathDepth =
+          dir.fullPath === ROOT_PATH ? 1 : dir.fullPath.split("/").filter(Boolean).length + 1;
+        return {
+          ...dir,
+          isActive: true,
+          currentDepth: pathDepth as TypeDirectoryDepth
+        };
+      }
+
+      return {
+        ...dir,
+        isActive: false,
+        currentDepth: undefined
+      };
     });
-    if (!newDirectories.find(dir => dir.fullPath === theDirectory.fullPath)) {
+
+    if (!newDirectories.find(dir => dir.fullPath === theDirectory!.fullPath)) {
       newDirectories.push(theDirectory);
     }
     setDirectory(newDirectories);
@@ -169,7 +188,7 @@ export function useFilePreview() {
 
 export function useStorageDataSync(
   directory: TypeDirectories,
-  setDirectory: (dirs: TypeDirectories) => void,
+  setDirectory: (dirs: TypeDirectories) => void
 ) {
   const {storageData} = useStorageData(directory);
   const {convertData} = useStorageConverter(directory);
