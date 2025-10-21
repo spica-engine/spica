@@ -75,15 +75,20 @@ describe("Function Controller", () => {
 
   describe("filtering", () => {
     it("should filter functions by index", async () => {
-      const fn1 = await request.post("/function", fnSchema).then(r => r.body);
-      await request.post(`/function/${fn1._id}/index`, {
+      const fn1 = await request
+        .post("/function", {...fnSchema, name: "test_fn1"})
+        .then(r => r.body);
+
+      const response = await request.post(`/function/${fn1._id}/index`, {
         index: `
   export function findMe(){ 
     return 'OK' ;
   }`
       });
 
-      const fn2 = await request.post("/function", fnSchema).then(r => r.body);
+      const fn2 = await request
+        .post("/function", {...fnSchema, name: "test_fn2"})
+        .then(r => r.body);
       await request.post(`/function/${fn2._id}/index`, {
         index: `
   export function dontFindMe(){ 
