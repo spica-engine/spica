@@ -78,6 +78,7 @@ export interface TargetChange {
     id: string;
     handler?: string;
     context?: Context;
+    name?: string;
   };
 }
 

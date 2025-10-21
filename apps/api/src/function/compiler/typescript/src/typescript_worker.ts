@@ -112,12 +112,14 @@ function build(compilation: Compilation) {
       declaration: true
     };
 
+    const excludePattern = path.resolve(outDirAbsolutePath);
+
     fs.writeFileSync(
       path.join(os.tmpdir(), referencedProject),
       JSON.stringify({
         compilerOptions: options,
         files: [path.join(compilation.cwd, compilation.entrypoints.build)],
-        exclude: [`**/${compilation.outDir}/**`]
+        exclude: [excludePattern]
       })
     );
 
@@ -130,13 +132,17 @@ function build(compilation: Compilation) {
   builder.build();
 }
 
-function renameJsToMjs(baseUrl: string) {
-  const buildFolder = path.join(baseUrl, ".build");
-  fs.renameSync(path.join(buildFolder, "index.js"), path.join(buildFolder, "index.mjs"));
+function renameJsToMjs(outDir: string) {
+  const jsFile = path.join(outDir, "index.js");
+  const mjsFile = path.join(outDir, "index.mjs");
+
+  if (fs.existsSync(jsFile)) {
+    fs.renameSync(jsFile, mjsFile);
+  }
 }
 
-function postCompilation(baseUrl: string, diagnostics: ts.Diagnostic[]) {
-  renameJsToMjs(baseUrl);
+function postCompilation(baseUrl: string, outDir: string, diagnostics: ts.Diagnostic[]) {
+  renameJsToMjs(outDir);
 
   parentPort.postMessage({
     baseUrl: baseUrl,
@@ -192,7 +198,8 @@ function main() {
   host.reportSolutionBuilderStatus = () => {};
 
   host.afterProgramEmitAndDiagnostics = program => {
-    postCompilation(program.getCompilerOptions().baseUrl, diagnosticMap.get(program));
+    const options = program.getCompilerOptions();
+    postCompilation(options.baseUrl, options.outDir, diagnosticMap.get(program));
     diagnosticMap.delete(program);
     host.reportDiagnostic = () => {};
   };
