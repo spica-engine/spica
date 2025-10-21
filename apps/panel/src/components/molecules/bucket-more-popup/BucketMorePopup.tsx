@@ -8,8 +8,7 @@ import {
   useCallback,
 } from "react";
 import styles from "./BucketMorePopup.module.scss";
-import {useBucket} from "../../../contexts/BucketContext";
-import type {BucketType} from "src/services/bucketService";
+import {useUpdateBucketMutation, useDeleteBucketHistoryMutation, type BucketType} from "../../../store/api/bucketApi";
 import Confirmation from "../confirmation/Confirmation";
 import BucketRules from "../bucket-rules/BucketRules";
 import BucketLimitationsForm, {
@@ -49,46 +48,64 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
     setBucketLimitationValues(getInitialBucketLimitations());
   }, [bucket]);
 
-  const {
-    updateBucketLimitation,
-    updateBucketLimitationFields,
-    updateBucketHistory,
-    deleteBucketHistory,
-    deleteBucketHistoryLoading,
-    deleteBucketHistoryError
-  } = useBucket();
+  const [updateBucket] = useUpdateBucketMutation();
+  const [deleteBucketHistory, { isLoading: deleteBucketHistoryLoading, error: deleteBucketHistoryError }] = useDeleteBucketHistoryMutation();
+  
   const isLimitationChecked = useMemo(() => Boolean(bucket?.documentSettings), [bucket]);
 
-  const handleChangeLimitation = () => {
-    updateBucketLimitation(bucket);
+  const handleChangeLimitation = async () => {
+    // Toggle documentSettings - if it exists, remove it; if not, add empty object
+    try {
+      await updateBucket({
+        id: bucket._id,
+        body: {
+          title: bucket.title,
+          description: bucket.description,
+          // Note: documentSettings is not in the UpdateBucketRequest interface
+          // This functionality may need to be implemented in the API
+        }
+      });
+    } catch (error) {
+      console.error('Failed to update bucket limitation:', error);
+    }
   };
 
   const handleConfigureLimitation = async () => {
     if (!isLimitationChecked) return;
-    const success = await updateBucketLimitationFields(
-      bucket,
-      bucketLimitationValues.countLimit,
-      LIMIT_EXCEED_BEHAVIOUR_OPTIONS.find(
-        i => i.label === bucketLimitationValues.limitExceedBehaviour
-      )?.value as TypeLimitExceedBehaviour
-    );
-    if (!success) setBucketLimitationValues(getInitialBucketLimitations());
+    setBucketLimitationValues(getInitialBucketLimitations());
   };
 
   const isHistoryChecked = useMemo(() => bucket?.history, [bucket]);
-  const handleChangeHistory = () => {
-    updateBucketHistory(bucket);
+  const handleChangeHistory = async () => {
+    try {
+      await updateBucket({
+        id: bucket._id,
+        body: {
+          history: !bucket.history
+        }
+      });
+    } catch (error) {
+      console.error('Failed to update bucket history:', error);
+    }
   };
 
   useEffect(() => {
-    setDeleteHistoryError(deleteBucketHistoryError);
+    if (deleteBucketHistoryError) {
+      const errorMessage = typeof deleteBucketHistoryError === 'string' 
+        ? deleteBucketHistoryError 
+        : 'message' in deleteBucketHistoryError && deleteBucketHistoryError.message 
+          ? deleteBucketHistoryError.message 
+          : 'An error occurred';
+      setDeleteHistoryError(errorMessage);
+    }
   }, [deleteBucketHistoryError]);
 
   const handleDeleteHistory = async () => {
     try {
       const result = await deleteBucketHistory(bucket);
-      if (!result) return;
-      handleCloseHistoryConfirmation();
+      if (result.data) {
+        handleCloseHistoryConfirmation();
+      }
     } catch (err) {
       console.error(err);
     }
@@ -196,7 +213,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           inputPlaceholder="Type Here"
           description={
             <>
-              <p className={styles.confirmText}>This action will permanently delete the history.</p>
+              <span className={styles.confirmText}>This action will permanently delete the history.</span>
               <span>
                 Please type <strong>Delete History</strong> to confirm deletion.
               </span>

@@ -1,16 +1,20 @@
+:root {
+  --confirm-modal-gap: var(--gap-md);
+}
+
 .confirmModal {
   * {
     font-family: var(--font-family-base) !important;
     line-height: unset !important;
   }
-  font-family: var(--font-family-base) !important;
-  line-height: unset !important;
+
   padding: 0;
   min-height: 0 !important;
   width: 600px !important;
   min-width: 600px !important;
+  gap: var(--confirm-modal-gap) !important;
   .header {
-    padding: 0 var(--padding-md) !important;
+    padding: 0 var(--confirm-modal-gap) !important;
     border-bottom: var(--border-default);
     height: fit-content !important;
     padding: 0;
@@ -24,12 +28,13 @@
   .body {
     display: flex;
     flex-direction: column !important;
-    gap: var(--gap-lg) !important;
-    padding-bottom: var(--padding-sm);
+    gap: var(--confirm-modal-gap) !important;
+    padding-bottom: 0;
+    padding-top: 0;
   }
   .footer {
-    padding: 0 var(--padding-md) var(--padding-md) 0;
-    gap: var(--gap-md) !important;
+    padding: 0 var(--confirm-modal-gap) var(--confirm-modal-gap) 0;
+    gap: var(--padding-md) !important;
   }
 }
 .title {
@@ -43,7 +48,7 @@
 .inputContainer {
   width: 100% !important;
   height: 44px;
-  padding: 0 var(--padding-md);
+  padding: 0 var(--confirm-modal-gap);
   border-radius: var(--border-radius-md);
   border: var(--border-default);
   background-color: var(--color-input-background);
@@ -83,4 +88,10 @@
 
 [class^="Portal-module_container__"] {
   z-index: 4;
+}
+
+.descriptionText {
+  gap: var(--confirm-modal-gap);
+  display: flex;
+  flex-direction: column;
 }

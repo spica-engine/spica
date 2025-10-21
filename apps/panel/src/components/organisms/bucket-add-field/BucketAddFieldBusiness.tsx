@@ -1,6 +1,6 @@
 import {type FC, useMemo, useState, useCallback, useEffect, memo, useRef} from "react";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
-import {useBucket} from "../../../contexts/BucketContext";
+import {useGetBucketsQuery, useCreateBucketFieldMutation} from "../../../store/api/bucketApi";
 import BucketAddFieldView from "./BucketAddFieldView";
 import {
   useBucketFieldPopups,
@@ -18,7 +18,7 @@ import {
   updateInnerField
 } from "../../../domain/fields/inner-fields";
 import {useFormState} from "./BucketAddFieldHooks";
-import type {BucketType} from "src/services/bucketService";
+import type {BucketType} from "src/store/api/bucketApi";
 
 function isObjectEffectivelyEmpty(obj: Object): boolean {
   if (obj === null || obj === undefined) return true;
@@ -52,7 +52,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   forbiddenFieldNames
 }) => {
   const {bucketFieldPopups} = useBucketFieldPopups();
-  const {buckets, createBucketFieldError} = useBucket();
+  const {data: buckets = []} = useGetBucketsQuery();
+  const [, { error: createBucketFieldError }] = useCreateBucketFieldMutation({
+    fixedCacheKey: 'shared-create-bucket-field'
+  });
 
   const currentPopup = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
   const {fieldKind: fieldType, popupType, initialValues} = currentPopup;
@@ -84,15 +87,15 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   );
 
   const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState(createBucketFieldError);
 
-  useEffect(() => {
-    setApiError(createBucketFieldError);
-  }, [createBucketFieldError]);
-
-  useEffect(() => {
-    setApiError(null);
-  }, []);
+  // Helper to format error message
+  const getErrorMessage = (error: any): string | null => {
+    if (!error) return null;
+    if (typeof error === 'string') return error;
+    if (error.message) return error.message;
+    if (error.data?.message) return error.data.message;
+    return 'An error occurred';
+  };
 
   const oldValues = useRef(formValues);
   useEffect(() => {
@@ -118,7 +121,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   }, [fieldType, isInitialized, formValues.multipleSelectionTab?.multipleSelectionType]);
 
   const validateForm = useCallback(async () => {
-    setApiError(null);
+    // No need to manually clear API error since RTK Query handles it
     if (!fieldType) return false;
 
     const errors = fieldDefinition.validateCreationForm({...formValues, type: fieldType});
@@ -187,7 +190,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       className={className}
       formValues={formValues}
       formErrors={formErrors}
-      error={(apiError || formErrors?.innerFields) ?? null}
+      error={(getErrorMessage(createBucketFieldError) || formErrors?.innerFields) ?? null}
       mainFormInputProperties={mainFormProperties}
       configurationInputProperties={configurationProperties}
       defaultInputProperty={defaultValueProperties}

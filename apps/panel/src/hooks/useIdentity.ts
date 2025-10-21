@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useDispatch } from 'react-redux';
 import {
   useGetIdentitiesQuery,
   useGetIdentityQuery,
@@ -13,8 +14,10 @@ import {
   type CreateIdentityRequest,
   type UpdateIdentityRequest,
 } from '../store/api/identityApi';
+import { setToken } from '../store';
 
 export function useIdentityManagement() {
+  const dispatch = useDispatch();
   const [createIdentity, createIdentityResult] = useCreateIdentityMutation();
   const [updateIdentity, updateIdentityResult] = useUpdateIdentityMutation();
   const [deleteIdentity, deleteIdentityResult] = useDeleteIdentityMutation();
@@ -60,13 +63,14 @@ export function useIdentityManagement() {
     async (credentials: { identifier: string; password: string }) => {
       try {
         const result = await authenticate(credentials).unwrap();
-        localStorage.setItem('token', JSON.stringify(result.token));
+        // Store token in Redux store (which also persists to localStorage)
+        dispatch(setToken(result.token));
         return { success: true, data: result };
       } catch (error) {
         return { success: false, error };
       }
     },
-    [authenticate]
+    [authenticate, dispatch]
   );
 
   return {

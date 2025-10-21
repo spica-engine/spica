@@ -7,7 +7,7 @@ import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {FieldFormState} from "../../../domain/fields/types";
-import type {BucketType} from "src/services/bucketService";
+import type {BucketType} from "../../../store/api/bucketApi";
 
 type BucketFieldSelectionPopupProps = {
   children: ReactNode;

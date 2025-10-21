@@ -1,9 +1,9 @@
 import React, { useState, type FC, type ReactNode } from 'react'
 import Confirmation from '../../molecules/confirmation/Confirmation'
-import type {BucketType} from "../../../services/bucketService";
+import type {BucketType} from "../../../store/api/bucketApi";
 import { Icon } from 'oziko-ui-kit';
 import styles from "./DeleteBucket.module.scss"
-import { useBucket } from '../../../contexts/BucketContext';
+import { useDeleteBucketMutation } from '../../../store/api/bucketApi';
 
 type DeleteBucketProps = {
     bucket: BucketType;
@@ -15,7 +15,7 @@ type DeleteBucketProps = {
 }
 
 const DeleteBucket: FC<DeleteBucketProps> = ({ bucket, children }) => {
-    const { deleteBucket } = useBucket();
+    const [deleteBucket] = useDeleteBucketMutation();
     const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
     
     const handleDeleteBucket = async () => {
@@ -44,10 +44,10 @@ const DeleteBucket: FC<DeleteBucketProps> = ({ bucket, children }) => {
                     title="DELETE BUCKET"
                     description={
                         <>
-                            <p className={styles.confirmText}>
+                            <span className={styles.confirmText}>
                                 This action will permanently delete this bucket and remove all associated data and
                                 connections. This cannot be undone.
-                            </p>
+                            </span>
                             <span className={styles.confirmHint}>
                                 Please type <strong>{bucket.title}</strong> to confirm deletion.
                             </span>
