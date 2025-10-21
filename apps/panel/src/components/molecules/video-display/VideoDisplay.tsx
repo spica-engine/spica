@@ -17,8 +17,9 @@ const VideoDisplay: FC<TypeVideoDisplay> = ({
   title = "Simple Identity Management + Angular | Spica Examples 2",
   className
 }) => {
+
   return (
-    <FlexElement dimensionX={"fill"}>
+    <FlexElement dimensionX={"fill"} direction="vertical" gap={10}>
       <iframe
         className={`${styles.video} ${className}`}
         width={width}

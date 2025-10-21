@@ -21,10 +21,6 @@
     background-color: var(--color-hover);
   }
 
-  .activeItem {
-    background-color: var(--color-hover);
-  }
-
   .header {
     padding: 0 !important;
     span {
@@ -99,4 +95,8 @@
 
 .accordion > div:has(.accordionOpen) > div:nth-child(2) {
   padding: var(--padding-md) 0 !important;
+}
+
+.selected {
+  background-color: var(--color-hover);
 }

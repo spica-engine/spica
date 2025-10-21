@@ -6,8 +6,8 @@ import * as monaco from "monaco-editor";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
-import type {BucketType} from "src/services/bucketService";
-import {useBucket} from "../../../contexts/BucketContext";
+import type {BucketType} from "../../../store/api/bucketApi";
+import {useUpdateBucketRulesMutation} from "../../../store/api/bucketApi";
 
 type EditorFormProps = {
   bucket: BucketType;
@@ -276,15 +276,11 @@ function handleEditorWillMount(
 const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
   const [error, setError] = useState<string | null>(null);
   const [value, setValue] = useState<string>(`{ 
-    read: ${bucket.acl.read},
-    write: ${bucket.acl.write}
+    read: ${bucket.acl?.read || 'true==true'},
+    write: ${bucket.acl?.write || 'true==true'}
 }`);
 
-  const {
-    updateBucketRule,
-    updateBucketRuleLoading: loading,
-    updateBucketRuleError: apiError
-  } = useBucket();
+  const [updateBucketRule, { isLoading: loading, error: apiError }] = useUpdateBucketRulesMutation();
 
   const [token] = useLocalStorage("token", "");
 
@@ -304,7 +300,11 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
   }, [bucket, token]);
 
   useEffect(() => {
-    setError(apiError);
+    if (apiError) {
+      setError(typeof apiError === 'string' ? apiError : 'An error occurred');
+    } else {
+      setError(null);
+    }
   }, [apiError]);
 
   useEffect(() => {
@@ -329,11 +329,14 @@ const EditorForm = ({bucket, handleClose}: EditorFormProps) => {
           return;
         }
 
-        updateBucketRule(bucket, {
-          write: rules.write,
-          read: rules.read
-        }).then(result => {
-          if (result) {
+        updateBucketRule({
+          bucket,
+          newRules: {
+            write: rules.write,
+            read: rules.read
+          }
+        }).then((result: any) => {
+          if (result.data) {
             handleClose();
             return;
           }

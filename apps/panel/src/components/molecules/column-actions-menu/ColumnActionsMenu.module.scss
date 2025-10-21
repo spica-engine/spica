@@ -5,4 +5,16 @@
     gap: 0 !important;
     padding: var(--padding-sm) 0 !important;
   }
+
+  .noTopBorder {
+    border-top: none !important;
+  }
+
+  .noBottomBorder {
+    border-bottom: none !important;
+  }
+
+  .noPadding {
+    padding: 0 !important;
+  }
 }

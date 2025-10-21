@@ -35,7 +35,7 @@ import type {
   TypeInputTypeMap,
   TypeProperties
 } from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
-import type {BucketType, Property} from "src/services/bucketService";
+import type {BucketType, Property} from "src/store/api/bucketApi";
 import {
   BaseFields,
   BasicConfig,

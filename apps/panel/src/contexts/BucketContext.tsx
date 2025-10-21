@@ -32,8 +32,8 @@ type BucketContextType = {
   renameBucket: (newTitle: string, bucket: BucketType) => void;
   deleteBucket: (bucketId: string) => Promise<any>;
   updateBucketHistory: (bucket: BucketType) => Promise<any>;
-  deleteBucketHistory: (bucket: BucketType) => Promise<any>;
-  refreshBucketData: () => Promise<void>;
+  deleteBucketHistory: (bucket: BucketType) => Promise<string | null>;
+  refreshBucketData: () => Promise<BucketDataType | void>;
   updateBucketReadonly: (bucket: BucketType) => Promise<any>;
   updateBucketRule: (
     bucket: BucketType,
@@ -55,6 +55,8 @@ type BucketContextType = {
     countLimit: number,
     limitExceedBehaviour: "prevent" | "remove"
   ) => Promise<void>;
+  handleDeleteField: (fieldKey: string) => Promise<string | void>;
+  deleteBucketEntry: (entryId: string, bucketId: string) => Promise<string | null>;
   buckets: BucketType[];
   bucketCategories: string[];
   bucketData: BucketDataWithIdType | null;
@@ -101,6 +103,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiCreateBucketField,
     apiUpdatebucketLimitiation,
     apiUpdatebucketLimitiationFields,
+    apiDeleteBucketField,
     apiBuckets,
     apiUpdateBucketRuleError,
     apiUpdateBucketRuleLoading,
@@ -109,7 +112,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     apiDeleteBucketHistoryError,
     apiCreateBucketFieldError,
     apiUpdateBucketLimitationFieldsLoading,
-    apiUpdateBucketLimitationFieldsError
+    apiUpdateBucketLimitationFieldsError,
+    apiDeleteBucketEntry
   } = useBucketService();
 
   const [lastUsedBucketDataQuery, setLastUsedBucketDataQuery] =
@@ -178,7 +182,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
   const refreshBucketData = useCallback(async () => {
     if (!lastUsedBucketDataQuery?.bucketId) return;
     try {
-      await getBucketData(lastUsedBucketDataQuery.bucketId, {
+      return await getBucketData(lastUsedBucketDataQuery.bucketId, {
         ...lastUsedBucketDataQuery,
         skip: 0
       });
@@ -204,7 +208,9 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       const result = await apiGetBucketData(nextbucketDataQuery.bucketId, queryString);
       if (!result) return;
       const existingIds = new Set(bucketData.data.map(item => item._id));
-      const newItems = result.data.filter((item: {_id: string}) => !existingIds.has(item._id));
+      const newItems = (result.data ? result.data : (result ?? [])).filter(
+        (item: {_id: string}) => !existingIds.has(item._id)
+      );
       const newData =
         newItems.length > 0 ? {...bucketData, data: [...bucketData.data, ...newItems]} : bucketData;
       setBucketData(newData);
@@ -388,6 +394,43 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
     [buckets, apiCreateBucket]
   );
 
+  const handleDeleteField = useCallback(
+    async (fieldKey: string) => {
+      const bucketId = bucketData?.bucketId;
+      if (!bucketId) return;
+
+      const currentBuckets = [...(buckets ?? [])];
+      const bucket = currentBuckets.find(b => b._id === bucketId);
+      if (!bucket) return;
+
+      const {[fieldKey]: removed, ...updatedProperties} = bucket.properties;
+
+      const updatedRequired = bucket.required?.filter(r => r !== fieldKey) ?? [];
+      const updatedPrimary = bucket.primary === fieldKey ? "title" : bucket.primary;
+
+      const updatedBucket = {
+        ...bucket,
+        properties: updatedProperties,
+        required: updatedRequired,
+        primary: updatedPrimary
+      };
+
+      const result = await apiDeleteBucketField(updatedBucket);
+      if (typeof result !== "string") {
+        setBuckets(prev => (prev ? prev.map(b => (b._id === bucket._id ? updatedBucket : b)) : []));
+      }
+      return result;
+    },
+    [apiDeleteBucketField, buckets, bucketData]
+  );
+
+  const deleteBucketEntry = useCallback(
+    async (entryId: string, bucketId: string) => {
+      return await apiDeleteBucketEntry(entryId, bucketId);
+    },
+    [apiDeleteBucketEntry]
+  );
+
   const contextValue = useMemo(
     () => ({
       getBucketData,
@@ -407,6 +450,8 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketLimitationFields,
       createBucket,
       createBucketField,
+      handleDeleteField,
+      deleteBucketEntry,
       buckets,
       bucketData,
       updateBucketRuleLoading: apiUpdateBucketRuleLoading,
@@ -418,7 +463,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketLimitationFieldsLoading: apiUpdateBucketLimitationFieldsLoading,
       updateBucketLimitationFieldsError: apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,
-      createBucketFieldError: apiCreateBucketFieldError
+      createBucketFieldError: apiCreateBucketFieldError,
     }),
     [
       getBucketData,
@@ -440,6 +485,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       updateBucketLimitationFields,
       createBucket,
       createBucketField,
+      deleteBucketEntry,
       buckets,
       bucketData,
       apiUpdateBucketRuleLoading,
@@ -453,7 +499,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
       apiUpdateBucketLimitationFieldsLoading,
       apiUpdateBucketLimitationFieldsError,
       nextbucketDataQuery,
-      apiCreateBucketFieldError
+      apiCreateBucketFieldError,
     ]
   );
 
