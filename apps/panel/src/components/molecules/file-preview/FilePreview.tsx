@@ -1,16 +1,8 @@
-
 import {memo, useRef, useState} from "react";
-import {
-  FluidContainer,
-  FlexElement,
-  Icon,
-  Text,
-  Button,
-  type TypeFile,
-} from "oziko-ui-kit";
+import {FluidContainer, FlexElement, Icon, Text, Button, type TypeFile} from "oziko-ui-kit";
 import styles from "./FilePreview.module.scss";
 import {type DirectoryItem} from "../../organisms/storage-columns/StorageColumns";
-import { useDeleteStorageItemMutation, useUpdateStorageItemMutation } from "../../../store/api";
+import {useDeleteStorageItemMutation, useUpdateStorageItemMutation} from "../../../store/api";
 import useFileView from "../../../hooks/useFileView";
 import Confirmation from "../confirmation/Confirmation";
 
@@ -49,7 +41,10 @@ export const FilePreview = memo(
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const isImage = previewFile?.content?.type.startsWith("image/");
     const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
-    const urlWithTimestamp = previewFile?.url + "?timestamp=" + timestamp + "&t=" + Date.now();
+    const url = new URL(previewFile?.url ?? window.location.origin);
+    url.searchParams.set("timestamp", String(timestamp));
+    url.searchParams.set("t", String(Date.now()));
+    const urlWithTimestamp = url.toString();
     const fileView = useFileView({
       file: {...previewFile, url: urlWithTimestamp} as TypeFile
     });
