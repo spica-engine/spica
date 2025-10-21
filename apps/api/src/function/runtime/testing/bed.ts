@@ -4,7 +4,11 @@ import path from "path";
 
 export class FunctionTestBed {
   static initialize(index: string, compilation: Compilation): string {
-    const tmpdir = fs.mkdtempSync(path.join(process.env.TEST_TMPDIR, "fn"));
+    const functionsRoot = fs.mkdtempSync(path.join(process.env.TEST_TMPDIR, "functions-"));
+
+    const tmpdir = path.join(functionsRoot, "testbed-fn");
+    fs.mkdirSync(tmpdir, {recursive: true});
+
     fs.writeFileSync(path.join(tmpdir, compilation.entrypoints.build), index);
     fs.writeFileSync(
       path.join(tmpdir, "package.json"),
