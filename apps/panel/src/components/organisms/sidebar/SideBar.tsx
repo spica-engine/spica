@@ -19,7 +19,6 @@ export type TypeNavigatorItems = {
   title?: string;
   icon?: IconName;
   category?: string;
-  isActive?: boolean;
 };
 
 export type ReorderableItemGroup = {

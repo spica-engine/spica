@@ -46,7 +46,6 @@ type TypeDraggableItemProps = {
   ref: Ref<HTMLDivElement>;
   justDropped: boolean;
   setJustDropped: React.Dispatch<React.SetStateAction<boolean>>;
-  className?: string;
 };
 
 type TypeCustomDragLayerProps = {
@@ -172,8 +171,7 @@ const DraggableItem = ({
   completeMoving,
   ref,
   justDropped,
-  setJustDropped,
-  className
+  setJustDropped
 }: TypeDraggableItemProps) => {
   const innerRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
