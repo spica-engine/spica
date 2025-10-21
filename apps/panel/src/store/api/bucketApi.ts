@@ -550,6 +550,18 @@ export const bucketApi = baseApi.injectEndpoints({
         'Bucket',
       ],
     }),
+
+    // Delete bucket entry
+    deleteBucketEntry: builder.mutation<{ message: string }, { entryId: string; bucketId: string }>({
+      query: ({ entryId, bucketId }) => ({
+        url: `api/bucket/${bucketId}/data/${entryId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { bucketId }) => [
+        { type: 'BucketData', id: bucketId },
+        'BucketData',
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -570,6 +582,7 @@ export const {
   useRenameBucketMutation,
   useUpdateBucketLimitationMutation,
   useUpdateBucketLimitationFieldsMutation,
+  useDeleteBucketEntryMutation,
 } = bucketApi;
 
 export const bucketApiReducerPath = bucketApi.reducerPath;
