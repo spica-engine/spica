@@ -260,7 +260,10 @@ export function useDragAndDrop(
 
     const oldFullName = draggedItem.fullPath || "";
     const itemName = draggedItem.label;
-    const newFullName = newParent + itemName;
+    
+    // For root directory, omit the leading slash
+    const isRootTarget = newParent === "/";
+    const newFullName = isRootTarget ? itemName : newParent + itemName;
 
     try {
       const updatedDirectories = updateDirectoryLists({
@@ -274,7 +277,7 @@ export function useDragAndDrop(
       await updateStorageNames(
         draggedItem,
         oldFullName,
-        newFullName,
+        newFullName as string,
         params => updateStorageName(params).unwrap(),
         async params => {
           const {data} = await getStorageItems(params);
