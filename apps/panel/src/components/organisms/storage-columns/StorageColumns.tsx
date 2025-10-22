@@ -78,7 +78,7 @@ export function StorageItemColumns({
               handleDrop={handleDrop}
             />
           ) : (
-            <div className={styles.columnLoaderContainer}>
+            <div className={styles.columnLoaderContainer} key={dir.fullPath}>
               <Spinner />
             </div>
           )
