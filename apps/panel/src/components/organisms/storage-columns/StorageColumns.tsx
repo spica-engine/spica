@@ -28,7 +28,7 @@ function getVisibleDirectories(directories: TypeDirectories): TypeDirectories {
     .sort((a, b) => (a.currentDepth || 0) - (b.currentDepth || 0));
 }
 
-export interface StorageItemColumnsProps {
+interface StorageItemColumnsProps {
   handleFolderClick: (
     folderName: string,
     fullPath: string,
