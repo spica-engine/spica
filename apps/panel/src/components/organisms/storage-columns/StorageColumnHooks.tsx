@@ -16,16 +16,8 @@ export interface DragItem {
   parentPath: string;
 }
 
-// Path utility functions
-export function normalizePathWithTrailingSlash(path: string): string {
+function normalizePathWithTrailingSlash(path: string): string {
   return path.endsWith("/") ? path : path + "/";
-}
-
-export function isDescendantOf(childPath: string, parentPath: string): boolean {
-  if (childPath === parentPath) return true;
-  const normalizedChild = normalizePathWithTrailingSlash(childPath);
-  const normalizedParent = normalizePathWithTrailingSlash(parentPath);
-  return normalizedChild.startsWith(normalizedParent);
 }
 
 export function getParentPath(fullPath: string): string {
@@ -65,7 +57,10 @@ function isNotMovingFolderIntoChild(
 ): boolean {
   if (!item.content || item.content.type !== "inode/directory") return true;
   const itemPath = normalizePathWithTrailingSlash(item.fullPath);
-  return !isDescendantOf(newParent, itemPath);
+  if (newParent === itemPath) return true;
+  const normalizedChild = normalizePathWithTrailingSlash(newParent);
+  const normalizedParent = normalizePathWithTrailingSlash(itemPath);
+  return normalizedChild.startsWith(normalizedParent);
 }
 
 export function getCanDropChecks(): CanDropCheck[] {
@@ -76,7 +71,6 @@ export function getCanDropChecks(): CanDropCheck[] {
   ];
 }
 
-// Validation helper
 function validateDrop(
   draggedItem: DirectoryItem,
   oldParent: string,
@@ -87,24 +81,11 @@ function validateDrop(
   return checks.every(check => check(oldParent, newParent, draggedItem, allItems));
 }
 
-// Directory update helpers
-interface DirectoryUpdateParams {
-  directory: TypeDirectories;
-  item: DirectoryItem;
-  fromPath: string;
-  toPath: string;
-}
-
-function removeItemFromDirectory(
-  dir: TypeDirectories[0],
-  fromPath: string,
-  itemId: string
-): TypeDirectories[0] {
+function removeItemFromDirectory(dir: TypeDirectories[0], itemId: string): TypeDirectories[0] {
   if (!dir.items) return dir;
 
-  // Check if any item in this directory matches the one we want to remove
   const hasItem = dir.items.some(i => i._id === itemId);
-  
+
   if (hasItem) {
     return {
       ...dir,
@@ -122,18 +103,16 @@ function addItemToDirectory(
 ): TypeDirectories[0] {
   if (!dir.items) return dir;
 
-  // Normalize paths for comparison
   const normalizedDirPath = normalizePathWithTrailingSlash(dir.fullPath);
   const normalizedToPath = normalizePathWithTrailingSlash(toPath);
 
-  // Check if this directory is the target directory we're adding to
   const shouldAdd = normalizedDirPath === normalizedToPath;
 
   if (shouldAdd) {
     const isDirectory = item.content?.type === "inode/directory";
     const itemName = item.label || item.name;
     const newFullPath = toPath + itemName + (isDirectory && !itemName.endsWith("/") ? "/" : "");
-    
+
     const newItem = {
       ...item,
       fullPath: newFullPath
@@ -147,21 +126,22 @@ function addItemToDirectory(
   return dir;
 }
 
-function updateDirectoryLists({
-  directory,
-  item,
-  fromPath,
-  toPath
-}: DirectoryUpdateParams): TypeDirectories {
+interface DirectoryUpdateParams {
+  directory: TypeDirectories;
+  item: DirectoryItem;
+  toPath: string;
+}
+
+function updateDirectoryLists({directory, item, toPath}: DirectoryUpdateParams): TypeDirectories {
   return directory.map(dir => {
-    let updatedDir = removeItemFromDirectory(dir, fromPath, item._id!);
+    let updatedDir = removeItemFromDirectory(dir, item._id!);
     updatedDir = addItemToDirectory(updatedDir, toPath, item);
-    
+
     if (dir.fullPath === item.fullPath) {
       const isDirectory = item.content?.type === "inode/directory";
       const itemName = item.label || item.name;
       const newFullPath = toPath + itemName + (isDirectory && !itemName.endsWith("/") ? "/" : "");
-      
+
       return {
         ...updatedDir,
         fullPath: newFullPath,
@@ -169,12 +149,11 @@ function updateDirectoryLists({
         currentDepth: undefined
       };
     }
-    
+
     return updatedDir;
   });
 }
 
-// Storage update helpers
 interface StorageUpdateParams {
   item: DirectoryItem;
   oldFullName: string;
@@ -194,11 +173,11 @@ async function updateDirectoryStorage({
 
   const result = await getStorageItems({
     filter: {
-      name: {$regex: `^${item.fullPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`}
+      name: {$regex: `^${item.fullPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`}
     }
   });
 
-  const subResources = result
+  const subResources = result;
 
   const updates = subResources.map((storage: any) => {
     const updatedName = storage.name.replace(oldFullName, newFullName);
@@ -250,7 +229,6 @@ async function updateStorageNames(
   }
 }
 
-// Main hook
 export function useDragAndDrop(
   directory: TypeDirectories,
   setDirectory: (dirs: TypeDirectories) => void
@@ -267,7 +245,6 @@ export function useDragAndDrop(
     const oldParent = getParentPath(draggedItem.fullPath);
     const newParent = normalizePathWithTrailingSlash(targetFolderPath);
 
-    // Validate drop operation
     const allItems = [...sourceItems, ...targetItems];
     const canDrop = validateDrop(draggedItem, oldParent, newParent, allItems);
 
@@ -278,8 +255,7 @@ export function useDragAndDrop(
 
     const oldFullName = draggedItem.fullPath || "";
     const itemName = draggedItem.label;
-    
-    // For root directory, omit the leading slash
+
     const isRootTarget = newParent === "/";
     const newFullName = isRootTarget ? itemName : newParent + itemName;
 
@@ -287,7 +263,6 @@ export function useDragAndDrop(
       const updatedDirectories = updateDirectoryLists({
         directory,
         item: draggedItem,
-        fromPath: oldParent,
         toPath: newParent
       });
       setDirectory(updatedDirectories);
@@ -310,7 +285,6 @@ export function useDragAndDrop(
       const revertedDirectories = updateDirectoryLists({
         directory,
         item: draggedItem,
-        fromPath: newParent,
         toPath: oldParent
       });
       setDirectory(revertedDirectories);
@@ -319,7 +293,5 @@ export function useDragAndDrop(
     }
   };
 
-  return {
-    handleDrop
-  };
+  return {handleDrop};
 }
