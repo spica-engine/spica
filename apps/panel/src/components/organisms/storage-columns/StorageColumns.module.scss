@@ -66,7 +66,7 @@
 }
 
 .storageItemColumnContainer {
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: var(--border-default);
   overflow-y: auto;
   min-height: 0;
   
