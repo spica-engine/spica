@@ -40,16 +40,12 @@ function DroppableColumn({folderPath, items, children, onDrop, className}: Dropp
 
         const targetPath = folderPath.endsWith("/") ? folderPath : folderPath + "/";
 
-        // Get source items (items from the parent of dragged item)
         const sourceItems = items.filter(item => {
           const itemParent = item.fullPath.substring(0, item.fullPath.lastIndexOf("/") + 1);
           return itemParent === dragItem.parentPath;
         });
 
-        // fire the async onDrop but do not await it so the drop handler stays synchronous
         void onDrop(draggedItem, targetPath, sourceItems, items).catch(err => {
-          // optional: log the error, do not change return type
-          // eslint-disable-next-line no-console
           console.error("onDrop failed", err);
         });
 
@@ -68,7 +64,6 @@ function DroppableColumn({folderPath, items, children, onDrop, className}: Dropp
           },
           name: dragItem.name,
           url: "",
-          //currentDepth: undefined,
           isActive: false
         };
 
@@ -81,14 +76,14 @@ function DroppableColumn({folderPath, items, children, onDrop, className}: Dropp
     }
   );
 
-  const droppable = isOver && canDrop;
+  const active = isOver && canDrop;
   const ref = useRef(null);
   drop(ref);
 
   return (
     <div
       ref={ref}
-      className={`${droppable ? styles.droppableColumnActive : ""} ${styles.droppableColumn} ${className || ""}`}
+      className={`${active ? styles.droppableColumnActive : ""} ${styles.droppableColumn} ${className || ""}`}
     >
       {children}
     </div>
