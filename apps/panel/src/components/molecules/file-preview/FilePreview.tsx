@@ -1,16 +1,8 @@
-
 import {memo, useRef, useState} from "react";
-import {
-  FluidContainer,
-  FlexElement,
-  Icon,
-  Text,
-  Button,
-  type TypeFile,
-} from "oziko-ui-kit";
+import {FluidContainer, FlexElement, Icon, Text, Button, type TypeFile} from "oziko-ui-kit";
 import styles from "./FilePreview.module.scss";
 import {type DirectoryItem} from "../../organisms/storage-columns/StorageColumns";
-import { useDeleteStorageItemMutation, useUpdateStorageItemMutation } from "../../../store/api";
+import {useDeleteStorageItemMutation, useUpdateStorageItemMutation} from "../../../store/api";
 import useFileView from "../../../hooks/useFileView";
 import Confirmation from "../confirmation/Confirmation";
 
@@ -152,10 +144,10 @@ export const FilePreview = memo(
             children: (
               <FlexElement direction="vertical" className={styles.metadataContent}>
                 <FlexElement direction="vertical" gap={10}>
-                  <Text className={styles.metadataName}>
-                    {previewFile?.name} - {formatFileSize(previewFile?.content?.size || 0)}
+                  <Text className={styles.metadataName}>{previewFile?.name}</Text>
+                  <Text>
+                    {previewFile?.content?.type} - {formatFileSize(previewFile?.content?.size || 0)}
                   </Text>
-                  <Text>{previewFile?.content?.type}</Text>
                   <Text>{createdAt}</Text>
                 </FlexElement>
                 <FlexElement gap={10}>

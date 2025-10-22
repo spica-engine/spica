@@ -2,7 +2,7 @@
 
 .container {
   height: 93% !important;
-  padding: 10px;
+  padding: var(--padding-md);
   font-family: var(--font-family-base);
 }
 
@@ -51,11 +51,6 @@
 
 .activeStorageItem {
   background-color: var(--color-hover);
-}
-
-
-.storageItemIcon {
-  color: var(--color-font-primary);
 }
 
 .storageItemText {

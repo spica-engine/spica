@@ -3,7 +3,6 @@ import SearchBar from "../../atoms/search-bar/SearchBar";
 import styles from "./StorageActionBar.module.scss";
 
 export default function StorageActionBar() {
-
   return (
     <FluidContainer
       className={styles.actionBar}
