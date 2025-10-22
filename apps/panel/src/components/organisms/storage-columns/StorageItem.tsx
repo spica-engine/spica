@@ -12,18 +12,16 @@ interface DraggableStorageItemProps {
 
 function DraggableStorageItem({item, children}: DraggableStorageItemProps) {
   const isDirectory = item.content?.type === "inode/directory";
-  
-  const pathWithoutTrailingSlash = isDirectory 
-    ? item.fullPath.slice(0, -1) 
-    : item.fullPath;
-  
+
+  const pathWithoutTrailingSlash = isDirectory ? item.fullPath.slice(0, -1) : item.fullPath;
+
   const calculatedParentPath = pathWithoutTrailingSlash.substring(
-    0, 
+    0,
     pathWithoutTrailingSlash.lastIndexOf("/") + 1
   );
 
   const parentPath = calculatedParentPath === "" ? "/" : calculatedParentPath;
-  
+
   const [{isDragging}, drag] = useDrag<DragItem, unknown, {isDragging: boolean}>({
     type: ItemTypes.STORAGE_ITEM,
     item: {
@@ -65,6 +63,7 @@ export const StorageItem = memo(
   ({item, onFolderClick, onFileClick, isActive}: StorageItemProps) => {
     const itemName = (item as TypeDirectory).label || (item as DirectoryItem).name;
     const isFolder = item?.content?.type === "inode/directory";
+    const displayName = isFolder ? itemName.slice(0, -1) : itemName;
     const handleFolderClick = () => onFolderClick?.(itemName);
     const handleFileClick = () => onFileClick(isActive ? undefined : (item as DirectoryItem));
     return (
@@ -80,7 +79,7 @@ export const StorageItem = memo(
             className={styles.storageItemIcon}
           />
           <Text className={styles.storageItemText} size="medium">
-            {isFolder ? itemName.slice(0, -1) : itemName}
+            {displayName}
           </Text>
         </FlexElement>
       </DraggableStorageItem>
