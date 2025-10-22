@@ -55,13 +55,13 @@ function isNotMovingFolderIntoChild(
 ): boolean {
   if (!item.content || item.content.type !== "inode/directory") return true;
   const itemPath = normalizePathWithTrailingSlash(item.fullPath);
-  if (newParent === itemPath) return true;
+  if (newParent === itemPath) return false;
   const normalizedChild = normalizePathWithTrailingSlash(newParent);
   const normalizedParent = normalizePathWithTrailingSlash(itemPath);
-  return normalizedChild.startsWith(normalizedParent);
+  return !normalizedChild.startsWith(normalizedParent);
 }
 
-function getCanDropChecks(): CanDropCheck[] {
+export function getCanDropChecks(): CanDropCheck[] {
   return [
     (oldParent, newParent) => isDifferentLocation(oldParent, newParent),
     (oldParent, newParent, item, items) => hasUniqueNameInTarget(oldParent, newParent, item, items),
