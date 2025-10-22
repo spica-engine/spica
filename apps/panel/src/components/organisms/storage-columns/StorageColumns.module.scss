@@ -1,5 +1,18 @@
 @use "../../../styles/mixins";
 
+.container {
+  height: 100% !important;
+  overflow-x: auto;
+  display: flex;
+}
+
+.columns {
+  max-width: 840px !important;
+  height: 100% !important;
+  justify-content: flex-start !important;
+  align-items: start !important;
+}
+
 .storageItem {
   cursor: pointer;
   max-width: 100%;
@@ -15,10 +28,6 @@
 
 .activeStorageItem {
   background-color: var(--color-hover);
-}
-
-.storageItemIcon {
-  color: var(--color-font-primary);
 }
 
 .storageItemText {
@@ -38,17 +47,63 @@
 
 .storageItemColumnContainer {
   height: 100% !important;
-  width: 100% !important;
-  border-right: var(--border-default);
+  border-right: var(--border-default) !important;
   justify-content: flex-start !important;
   padding: var(--padding-xl) 0;
   width: 280px !important;
+  min-width: 280px !important;
 }
 
 .columnLoaderContainer {
   display: flex;
-  width: 100%;
+  width: 280px;
   height: 100%;
   justify-content: center;
   align-items: center;
+}
+
+.noItemsText {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.storageItemColumnContainer {
+  border-right: var(--border-default);
+  overflow-y: auto;
+  min-height: 0;
+  
+  &:last-child {
+    border-right: none;
+  }
+}
+
+.droppableColumn {
+  min-height: 100px;
+  transition: background-color var(--transition-duration) ease;
+  background-color: var(--color-transparent);
+}
+
+.droppableColumnActive {
+  background-color: var(--color-menu-contrast);
+}
+
+.draggableStorageItem {
+  transition: opacity var(--transition-duration) ease, cursor var(--transition-duration) ease;
+  opacity: 1;
+  cursor: move;
+}
+
+.draggingStorageItem {
+  opacity: 0.5;
+}
+
+.storageItemIcon {
+  color: var(--color-font-primary);
+}
+
+.lastColumn {
+  border-right: none !important;
 }

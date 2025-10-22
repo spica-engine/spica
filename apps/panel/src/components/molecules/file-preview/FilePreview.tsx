@@ -72,9 +72,9 @@ export const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewP
             <FlexElement direction="vertical" className={styles.metadataContent}>
               <FlexElement direction="vertical" gap={10}>
                 <Text className={styles.metadataName}>
-                  {previewFile?.name} - {formatFileSize(previewFile?.content?.size || 0)}
+                  {previewFile?.name}
                 </Text>
-                <Text>{previewFile?.content?.type}</Text>
+                <Text>{previewFile?.content?.type} - {formatFileSize(previewFile?.content?.size || 0)}</Text>
                 <Text>{createdAt}</Text>
               </FlexElement>
               <FlexElement gap={10}>

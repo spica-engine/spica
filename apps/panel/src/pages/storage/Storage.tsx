@@ -1,6 +1,6 @@
 import {FluidContainer} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
-import {StorageItemColumns} from "../../components/organisms/storage-columns/StorageColumns";
+import {StorageItemColumns, type TypeDirectoryDepth} from "../../components/organisms/storage-columns/StorageColumns";
 import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
 import StorageActionBar from "../../components/molecules/storage-action-bar/StorageActionBar";
 import {
@@ -20,17 +20,18 @@ export default function StoragePage() {
   const handleFolderClick = (
     folderName: string,
     fullPath: string,
-    directoryDepth: any,
+    directoryDepth: TypeDirectoryDepth,
     wasActive: boolean
   ) => {
     handleClosePreview();
-    onFolderClick(folderName, fullPath, directoryDepth, wasActive);
+    onFolderClick(folderName, fullPath, directoryDepth, wasActive, false);
   };
 
   return (
     <div className={styles.container}>
       <StorageActionBar />
       <FluidContainer
+        gap={0}
         className={styles.storageItemContainer}
         root={{
           className: styles.storageItemColumns,
@@ -39,6 +40,7 @@ export default function StoragePage() {
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
               directory={directory}
+              setDirectory={setDirectory}
               previewFile={previewFile}
               onUploadComplete={onUploadComplete}
             />
