@@ -130,9 +130,13 @@ function addItemToDirectory(
   const shouldAdd = normalizedDirPath === normalizedToPath;
 
   if (shouldAdd) {
+    const isDirectory = item.content?.type === "inode/directory";
+    const itemName = item.label || item.name;
+    const newFullPath = toPath + itemName + (isDirectory && !itemName.endsWith("/") ? "/" : "");
+    
     const newItem = {
       ...item,
-      fullPath: toPath + item.label
+      fullPath: newFullPath
     };
     return {
       ...dir,
@@ -152,6 +156,20 @@ function updateDirectoryLists({
   return directory.map(dir => {
     let updatedDir = removeItemFromDirectory(dir, fromPath, item._id!);
     updatedDir = addItemToDirectory(updatedDir, toPath, item);
+    
+    if (dir.fullPath === item.fullPath) {
+      const isDirectory = item.content?.type === "inode/directory";
+      const itemName = item.label || item.name;
+      const newFullPath = toPath + itemName + (isDirectory && !itemName.endsWith("/") ? "/" : "");
+      
+      return {
+        ...updatedDir,
+        fullPath: newFullPath,
+        isActive: false,
+        currentDepth: undefined
+      };
+    }
+    
     return updatedDir;
   });
 }

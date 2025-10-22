@@ -193,7 +193,7 @@ export const StorageItemColumn = memo(
           {orderedItems.length ? (
             orderedItems.map(item => {
               const isFolder = item?.content?.type === "inode/directory";
-              const fullPath = item.name;
+              const fullPath = item.fullPath || item.name;
               const isActive = isFolder
                 ? directory.find(i => i.fullPath === fullPath)?.isActive || false
                 : previewFileId === item._id;
