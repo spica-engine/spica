@@ -1,5 +1,5 @@
 import {useDrop} from "react-dnd";
-import {ItemTypes, getCanDropChecks, getParentPath, type DragItem} from "./StorageColumnHooks";
+import {ItemTypes, getCanDropChecks, type DragItem} from "./StorageColumnHooks";
 import type {DirectoryItem, TypeDirectories, TypeDirectoryDepth} from "./StorageColumns";
 import {memo, useMemo, useRef, type DragEventHandler} from "react";
 import {FlexElement, type TypeAlignment, type TypeFile, Text} from "oziko-ui-kit";
