@@ -1,11 +1,11 @@
 import {Spinner, type TypeFile} from "oziko-ui-kit";
 import styles from "./StorageColumns.module.scss";
 import {useMemo} from "react";
-import {getVisibleDirectories, ROOT_PATH} from "../../../pages/storage/StorageHooks";
+import {ROOT_PATH} from "../../../pages/storage/StorageHooks";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {useDragAndDrop} from "./StorageColumnHooks";
-import { StorageItemColumn } from "./StorageColumn";
+import {StorageItemColumn} from "./StorageColumn";
 
 export type TypeDirectoryDepth = number;
 export type DirectoryItem = TypeFile & {fullPath: string; label?: string; isActive?: boolean};
@@ -22,6 +22,11 @@ export type TypeDirectory = {
 };
 export type TypeDirectories = TypeDirectory[];
 
+function getVisibleDirectories(directories: TypeDirectories): TypeDirectories {
+  return directories
+    .filter(dir => dir.currentDepth)
+    .sort((a, b) => (a.currentDepth || 0) - (b.currentDepth || 0));
+}
 
 export interface StorageItemColumnsProps {
   handleFolderClick: (
@@ -53,7 +58,7 @@ export function StorageItemColumns({
   return (
     <DndProvider backend={HTML5Backend}>
       <div className={styles.container}>
-        {visibleDirectories.map((dir) =>
+        {visibleDirectories.map(dir =>
           dir.items ? (
             <StorageItemColumn
               key={dir.fullPath}
