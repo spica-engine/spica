@@ -4,6 +4,7 @@
   height: 100% !important;
   max-width: 840px !important;
   overflow-x: auto;
+  display: flex;
   justify-content: flex-start !important;
 }
 
@@ -80,4 +81,14 @@
   justify-content: center;
   height: 100%;
   width: 100%;
+}
+
+.droppableColumn {
+  min-height: 100px;
+  transition: background-color var(--transition-duration) ease;
+  background-color: var(--color-transparent);
+}
+
+.droppableColumnActive {
+  background-color: rgba(0, 150, 255, 0.1);
 }

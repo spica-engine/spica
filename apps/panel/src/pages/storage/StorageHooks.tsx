@@ -39,7 +39,7 @@ export function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[
 
 export function getVisibleDirectories(directories: TypeDirectories): TypeDirectories {
   return directories
-    .filter(dir => dir.currentDepth !== undefined && dir.currentDepth > 0)
+    .filter(dir => dir.currentDepth)
     .sort((a, b) => (a.currentDepth || 0) - (b.currentDepth || 0));
 }
 
