@@ -47,7 +47,7 @@ export default function StorageActionBar({directory}: StorageActionBarProps) {
                 </Button>
               )}
             </CreateFile>
-            <CreateFolder prefix={prefix} currentItemNames={currentItemNames}>
+            <CreateFolder prefix={prefix} forbiddenNames={currentItemNames}>
               {({onOpen}) => (
                 <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
                   <Icon name="plus" />
