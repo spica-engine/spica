@@ -20,11 +20,10 @@ function normalizePathWithTrailingSlash(path: string): string {
   return path.endsWith("/") ? path : path + "/";
 }
 
-export function getParentPath(fullPath: string): string {
+function getParentPath(fullPath: string): string {
   return fullPath.substring(0, fullPath.lastIndexOf("/") + 1);
 }
 
-// Validation check types
 type CanDropCheck = (
   oldParent: string,
   newParent: string,
@@ -32,7 +31,6 @@ type CanDropCheck = (
   items: DirectoryItem[]
 ) => boolean;
 
-// Validation checks
 function isDifferentLocation(oldParent: string, newParent: string): boolean {
   return oldParent !== newParent;
 }
@@ -63,7 +61,7 @@ function isNotMovingFolderIntoChild(
   return normalizedChild.startsWith(normalizedParent);
 }
 
-export function getCanDropChecks(): CanDropCheck[] {
+function getCanDropChecks(): CanDropCheck[] {
   return [
     (oldParent, newParent) => isDifferentLocation(oldParent, newParent),
     (oldParent, newParent, item, items) => hasUniqueNameInTarget(oldParent, newParent, item, items),
