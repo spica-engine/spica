@@ -168,17 +168,16 @@ async function updateDirectoryStorage({
   getStorageItems
 }: StorageUpdateParams): Promise<void> {
   if (!item.fullPath) return;
-
+  const normalizedPath = oldFullName.startsWith("/") ? oldFullName.slice(1) : oldFullName;
   const result = await getStorageItems({
     filter: {
-      name: {$regex: `^${item.fullPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`}
+      name: {$regex: `^${normalizedPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`}
     }
   });
-
   const subResources = result;
 
   const updates = subResources.map((storage: any) => {
-    const updatedName = storage.name.replace(oldFullName, newFullName);
+    const updatedName = storage.name.replace(normalizedPath, newFullName);
     return updateStorageName({
       id: storage._id,
       name: updatedName
