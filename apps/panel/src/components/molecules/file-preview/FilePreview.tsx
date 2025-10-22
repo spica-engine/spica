@@ -22,9 +22,10 @@ interface FilePreviewProps {
 export const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewProps) => {
   const isImage = previewFile?.content?.type.startsWith("image/");
   const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
-  const urlWithTimestamp = previewFile?.url + "?timestamp=" + timestamp + "&t=" + Date.now();
+  const urlWithTimestamp = previewFile?.url + "?timestamp=" + timestamp// + "&t=" + Date.now();
+  const file: TypeFile | undefined = {...previewFile, url: urlWithTimestamp} as TypeFile;
   const fileView = useFileView({
-    file: {...previewFile, url: urlWithTimestamp} as TypeFile
+    file
   });
   const createdAt = new Date(timestamp).toLocaleString("en-US", {
     month: "short",
@@ -71,10 +72,10 @@ export const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewP
           children: (
             <FlexElement direction="vertical" className={styles.metadataContent}>
               <FlexElement direction="vertical" gap={10}>
-                <Text className={styles.metadataName}>
-                  {previewFile?.name}
+                <Text className={styles.metadataName}>{previewFile?.name}</Text>
+                <Text>
+                  {previewFile?.content?.type} - {formatFileSize(previewFile?.content?.size || 0)}
                 </Text>
-                <Text>{previewFile?.content?.type} - {formatFileSize(previewFile?.content?.size || 0)}</Text>
                 <Text>{createdAt}</Text>
               </FlexElement>
               <FlexElement gap={10}>

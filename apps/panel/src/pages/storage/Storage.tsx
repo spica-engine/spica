@@ -1,6 +1,10 @@
 import {FluidContainer} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
-import {StorageItemColumns, type TypeDirectoryDepth} from "../../components/organisms/storage-columns/StorageColumns";
+import {
+  StorageItemColumns,
+  type DirectoryItem,
+  type TypeDirectoryDepth
+} from "../../components/organisms/storage-columns/StorageColumns";
 import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
 import StorageActionBar from "../../components/molecules/storage-action-bar/StorageActionBar";
 import {
@@ -27,6 +31,23 @@ export default function StoragePage() {
     onFolderClick(folderName, fullPath, directoryDepth, wasActive, false);
   };
 
+  const handleCloseFolder = (depthToClose: TypeDirectoryDepth) => {
+    const folder = directory.find(dir => dir.currentDepth === depthToClose) as DirectoryItem;
+    if (!folder) return;
+    onFolderClick(folder.name, folder.fullPath, depthToClose, true, false);
+  };
+
+  const handleFileClick = (file?: DirectoryItem) => {
+    if (!file) {
+      setPreviewFile(undefined);
+      return;
+    }
+
+    handleCloseFolder(file.currentDepth as TypeDirectoryDepth);
+    setPreviewFile(undefined);
+    setPreviewFile(file);
+  };
+
   return (
     <div className={styles.container}>
       <StorageActionBar />
@@ -38,7 +59,7 @@ export default function StoragePage() {
           children: (
             <StorageItemColumns
               handleFolderClick={handleFolderClick}
-              setPreviewFile={setPreviewFile}
+              setPreviewFile={handleFileClick}
               directory={directory}
               setDirectory={setDirectory}
               previewFile={previewFile}
@@ -50,7 +71,11 @@ export default function StoragePage() {
           previewFile && {
             className: styles.preview,
             children: (
-              <FilePreview handleClosePreview={handleClosePreview} previewFile={previewFile} />
+              <FilePreview
+                key={previewFile?._id}
+                handleClosePreview={handleClosePreview}
+                previewFile={previewFile}
+              />
             )
           }
         }

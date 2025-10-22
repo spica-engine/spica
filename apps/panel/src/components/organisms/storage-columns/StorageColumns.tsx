@@ -8,7 +8,7 @@ import {useDragAndDrop} from "./StorageColumnHooks";
 import {StorageItemColumn} from "./StorageColumn";
 
 export type TypeDirectoryDepth = number;
-export type DirectoryItem = TypeFile & {fullPath: string; label?: string; isActive?: boolean};
+export type DirectoryItem = TypeFile & {fullPath: string; label?: string; isActive?: boolean, currentDepth?: TypeDirectoryDepth};
 export type TypeDirectory = {
   items?: DirectoryItem[];
   label: string;
@@ -58,7 +58,6 @@ export function StorageItemColumns({
   const maxDepth = useMemo(() => {
     return Math.max(...visibleDirectories.map(dir => dir.currentDepth || 0), 0);
   }, [visibleDirectories]);
-  console.log("maxDepth", maxDepth, "visibleDirectories", visibleDirectories);
   return (
     <DndProvider backend={HTML5Backend}>
       <div className={styles.container}>
