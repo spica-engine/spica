@@ -1,5 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {
+  DocumentManagerResource,
   DocSync,
   RepSync,
   Resource,
@@ -16,7 +17,7 @@ import {ClassCommander, JobReducer} from "@spica-server/replication";
 
 @Injectable()
 export class VCSynchronizer<R extends Resource> extends Synchronizer<
-  R,
+  DocumentManagerResource<R>,
   RepresentativeManagerResource
 > {
   constructor(
@@ -38,8 +39,8 @@ export class VCSynchronizer<R extends Resource> extends Synchronizer<
     const docApplier = getDocApplier<R>(repSync.applier);
 
     const syncs: [
-      DocSync<R, RepresentativeManagerResource>,
-      RepSync<RepresentativeManagerResource, R>
+      DocSync<DocumentManagerResource<R>, RepresentativeManagerResource>,
+      RepSync<RepresentativeManagerResource, DocumentManagerResource<R>>
     ] = [
       {
         watcher: {
@@ -69,7 +70,10 @@ export class VCSynchronizer<R extends Resource> extends Synchronizer<
       }
     ];
 
-    const synchronizerArgs: SynchronizerArgs<R, RepresentativeManagerResource> = {
+    const synchronizerArgs: SynchronizerArgs<
+      DocumentManagerResource<R>,
+      RepresentativeManagerResource
+    > = {
       syncs,
       moduleName: args.moduleName,
       subModuleName: args.subModuleName,

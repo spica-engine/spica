@@ -94,9 +94,9 @@ describe("Versioning e2e", () => {
     fs.rmSync(functionsDir, {recursive: true, force: true});
   });
 
-  function getEmptyBucket() {
+  function getEmptyBucket(title = "bucket1") {
     return {
-      title: "bucket1",
+      title: title,
       description: "Description of bucket1",
       history: false,
       icon: "view_stream",
@@ -205,11 +205,11 @@ describe("Versioning e2e", () => {
         const changes = res.body.message.split("\n").filter(c => c != "");
         expect(changes).toEqual([
           //bucket
-          `bucket/${bucket.title}(${bucket._id})/schema.yaml`,
+          `bucket/${bucket.title}/schema.yaml`,
           //fn
-          `function/${fn.name}(${fn._id})/index.js`,
-          `function/${fn.name}(${fn._id})/package.json`,
-          `function/${fn.name}(${fn._id})/schema.yaml`
+          `function/${fn.name}/index.js`,
+          `function/${fn.name}/package.json`,
+          `function/${fn.name}/schema.yaml`
         ]);
       });
 
@@ -222,9 +222,9 @@ describe("Versioning e2e", () => {
 
         const changes = stringToArray(res.body.message);
         expect(changes).toEqual([
-          `function/${fn.name}(${fn._id})/index.js`,
-          `function/${fn.name}(${fn._id})/package.json`,
-          `function/${fn.name}(${fn._id})/schema.yaml`
+          `function/${fn.name}/index.js`,
+          `function/${fn.name}/package.json`,
+          `function/${fn.name}/schema.yaml`
         ]);
       });
     });
@@ -287,11 +287,11 @@ describe("Versioning e2e", () => {
 
     describe("reset", () => {
       it("should reset to previous commit", async () => {
-        await insertBucket(getEmptyBucket());
+        await insertBucket(getEmptyBucket("bucket1"));
         await sleep();
         await commit("first commit");
 
-        const bucket2 = await insertBucket(getEmptyBucket());
+        const bucket2 = await insertBucket(getEmptyBucket("bucket2"));
         await sleep();
         await commit("second commit");
 
@@ -323,11 +323,11 @@ describe("Versioning e2e", () => {
 
     describe("stash", () => {
       it("should stash changes", async () => {
-        await insertBucket(getEmptyBucket());
+        await insertBucket(getEmptyBucket("bucket1"));
         await sleep();
         await commit("first commit");
 
-        const bucket2 = await insertBucket(getEmptyBucket());
+        const bucket2 = await insertBucket(getEmptyBucket("bucket2"));
         await sleep();
         await req.post("/versioncontrol/commands/stash", {
           args: ["push", "-m", "wip", "--include-untracked"]
@@ -352,13 +352,13 @@ describe("Versioning e2e", () => {
 
     describe("merge", () => {
       it("should merge branches", async () => {
-        await insertBucket(getEmptyBucket());
+        await insertBucket(getEmptyBucket("bucket1"));
         await commit("first commit");
 
         await branch("fix");
         await checkout("fix");
 
-        await insertBucket(getEmptyBucket());
+        await insertBucket(getEmptyBucket("bucket2"));
         await commit("bucket 2 inserted");
 
         await checkout("master");
@@ -371,19 +371,19 @@ describe("Versioning e2e", () => {
 
     describe("rebase", () => {
       it("should rebase branches", async () => {
-        await insertBucket(getEmptyBucket());
+        await insertBucket(getEmptyBucket("bucket 1"));
         await commit("first commit");
 
         await branch("fix");
         await checkout("fix");
 
-        await insertBucket(getEmptyBucket());
+        await insertBucket(getEmptyBucket("bucket 2"));
         await commit("bucket 2 inserted");
 
         await branch("master");
         await checkout("master");
 
-        await insertBucket(getEmptyBucket());
+        await insertBucket(getEmptyBucket("bucket 3"));
         await commit("bucket 3 inserted");
 
         await req.post("/versioncontrol/commands/rebase", {args: ["fix"]});
@@ -451,9 +451,9 @@ describe("Versioning e2e", () => {
       });
 
       it("should pull", async () => {
-        await insertBucket(getEmptyBucket());
+        await insertBucket(getEmptyBucket("bucket1"));
         await commit("initial commit");
-        await insertBucket(getEmptyBucket());
+        await insertBucket(getEmptyBucket("bucket2"));
         await commit("second commit");
 
         await req.post("/versioncontrol/commands/remote", {args: ["add", "origin", bareRepo]});

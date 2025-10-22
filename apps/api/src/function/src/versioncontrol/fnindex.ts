@@ -2,7 +2,7 @@ import {FunctionService} from "@spica-server/function/services";
 import {
   ChangeTypes,
   DocChange,
-  getDisplayableName,
+  DocumentManagerResource,
   RepChange,
   RepresentativeManagerResource,
   ResourceType,
@@ -21,13 +21,17 @@ export const getIndexSynchronizer = (
   const fileName = "index";
 
   const docWatcher = () =>
-    new Observable<DocChange<FunctionWithContent>>(observer => {
+    new Observable<DocChange<DocumentManagerResource<FunctionWithContent>>>(observer => {
       engine.watch("index").subscribe({
         next: (change: FunctionWithContent) => {
-          const docChange: DocChange<FunctionWithContent> = {
+          const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
             resourceType: ResourceType.DOCUMENT,
             changeType: ChangeTypes.INSERT,
-            resource: {...change, content: change.content}
+            resource: {
+              _id: change._id.toString(),
+              slug: change.name,
+              content: {...change, content: change.content}
+            }
           };
 
           observer.next(docChange);
@@ -37,10 +41,10 @@ export const getIndexSynchronizer = (
     });
 
   const convertToRepResource = change => ({
-    _id: change.resource._id.toString(),
-    displayableName: getDisplayableName(change, change.resource.name),
-    content: change.resource.content,
-    additionalParameters: {language: change.resource.language}
+    _id: change.resource._id || change.resource.content._id?.toString(),
+    slug: change.resource.slug || change.resource.content.name,
+    content: change.resource.content.content,
+    additionalParameters: {language: change.resource.content.language}
   });
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) =>

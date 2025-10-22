@@ -3,6 +3,7 @@ import {Preference} from "@spica-server/interface/preference";
 import {
   ChangeTypes,
   DocChange,
+  DocumentManagerResource,
   RepChange,
   RepresentativeManagerResource,
   ResourceType,
@@ -18,19 +19,27 @@ export const getSynchronizer = (
   const fileName = "schema";
   const extension = "yaml";
 
-  const docWatcher = (): Observable<DocChange<Identity["attributes"]>> => {
+  const docWatcher = (): Observable<DocChange<DocumentManagerResource<Identity["attributes"]>>> => {
     return prefService.watch("passport", {propagateOnStart: true}).pipe(
       map((preference: Preference) => ({
         resourceType: ResourceType.DOCUMENT,
         changeType: ChangeTypes.UPDATE,
-        resource: {...preference.identity, _id: "identity"}
+        resource: {
+          _id: "identity",
+          slug: "identity",
+          content: {...preference.identity, _id: "identity"}
+        }
       }))
     );
   };
 
-  const convertToRepResource = (change: DocChange<Identity["attributes"]>) => {
-    const {_id, ...resourceWithoutID} = change.resource;
-    return {_id, displayableName: _id, content: YAML.stringify(resourceWithoutID)};
+  const convertToRepResource = (
+    change: DocChange<DocumentManagerResource<Identity["attributes"]>>
+  ) => {
+    const id = change.resource._id || change.resource.content._id;
+    const slug = change.resource.slug || id;
+    const {_id, ...resourceWithoutID} = change.resource.content;
+    return {_id: id, slug, content: YAML.stringify(resourceWithoutID)};
   };
 
   const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) => {

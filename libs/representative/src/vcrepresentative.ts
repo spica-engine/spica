@@ -19,12 +19,6 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return path.join(this.cwd, module);
   }
 
-  findFolder(module: string, id: string) {
-    return fs.promises
-      .readdir(this.getModuleDir(module))
-      .then(folders => folders.find(folder => this.extractId(folder) == id));
-  }
-
   write(module: string, id: string, fileName: string, content: string, extension: string) {
     const resourcesDirectory = path.join(this.cwd, module, id);
     if (!fs.existsSync(resourcesDirectory)) {
@@ -64,11 +58,6 @@ export class VCRepresentativeManager implements IRepresentativeManager {
   async read() {
     return [];
   }
-  extractId(part: string): string | undefined {
-    if (part === "identity") return "identity";
-    const match = part.match(/\(([\da-f]{24})\)/i);
-    return match?.[1];
-  }
 
   watch(module: string, files: string[], events: string[] = ["add", "change", "unlink"]) {
     const moduleDir = this.getModuleDir(module);
@@ -93,25 +82,23 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         const isTrackedFile = files.some(file => parts[1] == file);
         if (!isCorrectDepth || !isTrackedFile) return;
 
-        const _id = this.extractId(parts[0]);
-
         let changeType: ChangeTypes;
         let resource: RepresentativeManagerResource;
 
         switch (event) {
           case "add":
             changeType = ChangeTypes.INSERT;
-            resource = {_id, content: this.readFile(path)};
+            resource = {content: this.readFile(path), slug: parts[0]};
             break;
 
           case "change":
             changeType = ChangeTypes.UPDATE;
-            resource = {_id, content: this.readFile(path)};
+            resource = {content: this.readFile(path), slug: parts[0]};
             break;
 
           case "unlink":
             changeType = ChangeTypes.DELETE;
-            resource = {_id, content: ""};
+            resource = {content: "", slug: parts[0]};
             break;
 
           default:

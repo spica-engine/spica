@@ -1,7 +1,7 @@
 import {
   ChangeTypes,
   DocChange,
-  getDisplayableName,
+  DocumentManagerResource,
   RepChange,
   RepresentativeManagerResource,
   ResourceType,
@@ -20,13 +20,17 @@ export const getDependencySynchronizer = (
   const extension = "json";
 
   const docWatcher = () =>
-    new Observable<DocChange<FunctionWithContent>>(observer => {
+    new Observable<DocChange<DocumentManagerResource<FunctionWithContent>>>(observer => {
       engine.watch("dependency").subscribe({
         next: (change: FunctionWithContent) => {
-          const docChange: DocChange<FunctionWithContent> = {
+          const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
             resourceType: ResourceType.DOCUMENT,
             changeType: ChangeTypes.INSERT,
-            resource: change
+            resource: {
+              _id: change._id.toString(),
+              slug: change.name,
+              content: change
+            }
           };
 
           observer.next(docChange);
@@ -35,13 +39,15 @@ export const getDependencySynchronizer = (
       });
     });
 
-  const convertToRepResource = (change: DocChange<FunctionWithContent>) => {
-    const parsed = JSON.parse(change.resource.content);
+  const convertToRepResource = (
+    change: DocChange<DocumentManagerResource<FunctionWithContent>>
+  ) => {
+    const parsed = JSON.parse(change.resource.content.content);
     const dependencies = parsed.dependencies || {};
 
     return {
-      _id: change.resource._id.toString(),
-      displayableName: getDisplayableName(change, change.resource.name),
+      _id: change.resource._id || change.resource.content._id?.toString(),
+      slug: change.resource.slug || change.resource.content.name,
       content: JSON.stringify({dependencies})
     };
   };

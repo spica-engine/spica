@@ -1,6 +1,7 @@
 import {
   ChangeTypes,
   DocChange,
+  DocumentManagerResource,
   RepChange,
   RepresentativeManagerResource,
   Resource,
@@ -15,7 +16,10 @@ import YAML from "yaml";
 
 export function getDocWatcher<R extends Resource>(
   props: VCSynchronizerArgs<R>["syncs"][0]["watcher"]
-): SynchronizerArgs<R, RepresentativeManagerResource>["syncs"][0]["watcher"]["watch"] {
+): SynchronizerArgs<
+  DocumentManagerResource<R>,
+  RepresentativeManagerResource
+>["syncs"][0]["watcher"]["watch"] {
   if (props.docWatcher) {
     return props.docWatcher;
   }
@@ -23,37 +27,50 @@ export function getDocWatcher<R extends Resource>(
   const service = props.collectionService;
 
   return () =>
-    new Observable<DocChange<R>>(observer => {
+    new Observable<DocChange<DocumentManagerResource<R>>>(observer => {
       const changeStream = service._coll.watch([], {
         fullDocument: "updateLookup"
       });
 
       changeStream.on("change", (change: ChangeStreamDocument<R>) => {
         let changeType: ChangeTypes;
-        let resource: R;
+        let resource: DocumentManagerResource<R>;
 
         switch (change.operationType) {
           case "insert":
             changeType = ChangeTypes.INSERT;
-            resource = change.fullDocument!;
+            resource = {
+              _id: change.fullDocument!._id?.toString(),
+              slug:
+                change.fullDocument.name || change.fullDocument.title || change.fullDocument.key,
+              content: change.fullDocument!
+            };
             break;
 
           case "replace":
           case "update":
             changeType = ChangeTypes.UPDATE;
-            resource = change.fullDocument!;
+            resource = {
+              _id: change.fullDocument!._id?.toString(),
+              slug:
+                change.fullDocument.name || change.fullDocument.title || change.fullDocument.key,
+              content: change.fullDocument!
+            };
             break;
 
           case "delete":
             changeType = ChangeTypes.DELETE;
-            resource = {_id: change.documentKey._id} as unknown as R;
+            resource = {
+              _id: change.documentKey._id?.toString(),
+              content: {_id: change.documentKey._id} as unknown as R
+            };
             break;
 
           default:
             return;
         }
 
-        const docChange: DocChange<R> = {
+        const docChange: DocChange<DocumentManagerResource<R>> = {
           resourceType: ResourceType.DOCUMENT,
           changeType,
           resource
@@ -70,10 +87,14 @@ export function getDocWatcher<R extends Resource>(
         .toArray()
         .then(resources => {
           resources.forEach(resource => {
-            const docChange: DocChange<R> = {
+            const docChange: DocChange<DocumentManagerResource<R>> = {
               resourceType: ResourceType.DOCUMENT,
               changeType: ChangeTypes.INSERT,
-              resource: resource as R
+              resource: {
+                _id: resource._id?.toString(),
+                slug: resource.name || resource.title || resource.key,
+                content: resource as R
+              }
             };
 
             observer.next(docChange);
@@ -86,7 +107,10 @@ export function getDocWatcher<R extends Resource>(
 
 export function getDocToRepConverter<R extends Resource>(
   props: VCSynchronizerArgs<R>["syncs"][0]["converter"]
-): SynchronizerArgs<R, RepresentativeManagerResource>["syncs"][0]["converter"]["convert"] {
+): SynchronizerArgs<
+  DocumentManagerResource<R>,
+  RepresentativeManagerResource
+>["syncs"][0]["converter"]["convert"] {
   return change => ({
     changeType: change.changeType,
     resourceType: ResourceType.REPRESENTATIVE,
@@ -98,12 +122,15 @@ export function getRepApplier<R extends Resource>(
   vcRepresentativeManager: VCRepresentativeManager,
   moduleName: VCSynchronizerArgs<R>["moduleName"],
   props: VCSynchronizerArgs<R>["syncs"][0]["applier"]
-): SynchronizerArgs<R, RepresentativeManagerResource>["syncs"][0]["applier"]["apply"] {
+): SynchronizerArgs<
+  DocumentManagerResource<R>,
+  RepresentativeManagerResource
+>["syncs"][0]["applier"]["apply"] {
   return change => {
     const write = (resource: RepresentativeManagerResource) => {
       return vcRepresentativeManager.write(
         moduleName,
-        resource.displayableName || resource._id,
+        resource.slug,
         props.fileName,
         resource.content,
         props.getExtension(change)
@@ -111,9 +138,7 @@ export function getRepApplier<R extends Resource>(
     };
 
     const rm = async (resource: RepresentativeManagerResource) => {
-      const id =
-        resource.displayableName ??
-        (await vcRepresentativeManager.findFolder(moduleName, resource._id.toString()));
+      const id = resource.slug;
       return vcRepresentativeManager.rm(moduleName, id);
     };
 

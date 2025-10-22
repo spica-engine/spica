@@ -24,8 +24,7 @@ import * as fnCRUD from "@spica-server/function/src/crud";
 import {v4 as uuidv4} from "uuid";
 import {PolicyModule, PolicyService} from "@spica-server/passport/policy";
 
-const sleep = () => new Promise(r => setTimeout(r, 1000));
-const getRepId = (name: string, id: ObjectId | string) => `${name}(${id.toString()})`;
+const sleep = (value = 1000) => new Promise(r => setTimeout(r, value));
 
 describe("Versioning", () => {
   let module: TestingModule;
@@ -200,11 +199,12 @@ describe("Versioning", () => {
               {scope: "passport"},
               {$set: {"identity.attributes.properties.name.type": "number"}}
             );
+            await sleep();
 
             const file = await readResource("preference", "identity");
             const parsedFile = {
               ...file,
-              displayableName: "identity",
+              slug: "identity",
               contents: {schema: YAML.parse(file.contents.schema)}
             };
 
@@ -213,7 +213,7 @@ describe("Versioning", () => {
 
             expect(parsedFile).toEqual({
               _id: "identity",
-              displayableName: "identity",
+              slug: "identity",
               contents: {schema: expectedSchema}
             });
           });
@@ -286,11 +286,11 @@ describe("Versioning", () => {
         await bs.insertOne(bucket);
         await sleep();
 
-        const file = await readResource("bucket", `${bucket.title}(${id.toString()})`);
+        const file = await readResource("bucket", bucket.title);
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
-          _id: `${bucket.title}(${id.toString()})`,
+          _id: bucket.title,
           contents: {schema: {...bucket, _id: id.toString()}}
         });
       });
@@ -302,14 +302,14 @@ describe("Versioning", () => {
         await bs.updateOne({_id: id}, {$set: {"properties.title.type": "number"}});
         await sleep();
 
-        const file = await readResource("bucket", `${bucket.title}(${id.toString()})`);
+        const file = await readResource("bucket", bucket.title);
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         const expectedBucket = {...bucket, _id: id.toString()};
         expectedBucket.properties.title.type = "number";
 
         expect(parsedFile).toEqual({
-          _id: `${bucket.title}(${id.toString()})`,
+          _id: bucket.title,
           contents: {
             schema: expectedBucket
           }
@@ -320,10 +320,10 @@ describe("Versioning", () => {
         await bs.insertOne(bucket);
         await sleep();
 
-        await bs.findOneAndDelete({_id: id});
+        await bs.deleteOne({_id: id});
         await sleep();
 
-        const file = await readResource("bucket", `${bucket.title}(${id.toString()})`);
+        const file = await readResource("bucket", bucket.title);
         expect(file).toEqual({});
       });
     });
@@ -331,7 +331,7 @@ describe("Versioning", () => {
     describe("Synchronization from files to database", () => {
       it("should make first synchronization", async () => {
         const stringified = YAML.stringify(bucket);
-        await rep.write("bucket", getRepId(bucket.title, id), "schema", stringified, "yaml");
+        await rep.write("bucket", bucket.title, "schema", stringified, "yaml");
         await sleep();
 
         const buckets = await bs.find();
@@ -340,11 +340,11 @@ describe("Versioning", () => {
 
       it("should update if schema has changes", async () => {
         const stringified = YAML.stringify(bucket);
-        await rep.write("bucket", getRepId(bucket.title, id), "schema", stringified, "yaml");
+        await rep.write("bucket", bucket.title, "schema", stringified, "yaml");
         await sleep();
 
         const updated = YAML.stringify({...bucket, title: "new title"});
-        await rep.write("bucket", getRepId(bucket.title, id), "schema", updated, "yaml");
+        await rep.write("bucket", bucket.title, "schema", updated, "yaml");
         await sleep();
 
         const buckets = await bs.find({});
@@ -353,9 +353,9 @@ describe("Versioning", () => {
 
       it("should delete if schema has been deleted", async () => {
         const stringified = YAML.stringify(bucket);
-        await rep.write("bucket", getRepId(bucket.title, id), "schema", stringified, "yaml");
+        await rep.write("bucket", bucket.title, "schema", stringified, "yaml");
         await sleep();
-        await rep.rm("bucket", getRepId(bucket.title, id));
+        await rep.rm("bucket", bucket.title);
         await sleep();
 
         const buckets = await bs.find({});
@@ -384,7 +384,7 @@ describe("Versioning", () => {
 
         await sleep();
 
-        let file = await readResource("function", `${fn.name}(${id.toString()})`);
+        let file = await readResource("function", fn.name);
         let parsedFile = {
           ...file,
           contents: {
@@ -396,7 +396,7 @@ describe("Versioning", () => {
         const expectedSchema = {...fn, _id: id.toHexString()};
 
         expect(parsedFile).toEqual({
-          _id: `${fn.name}(${id.toString()})`,
+          _id: fn.name,
           contents: {
             index: "",
             package: {dependencies: {}},
@@ -413,7 +413,7 @@ describe("Versioning", () => {
         await fnservice.findOneAndUpdate({_id: id}, {$set: {"triggers.onCall": onCall}});
         await sleep();
 
-        file = await readResource("function", `${fn.name}(${id.toString()})`);
+        file = await readResource("function", fn.name);
         parsedFile = {
           ...file,
           contents: {
@@ -424,7 +424,7 @@ describe("Versioning", () => {
         };
 
         expect(parsedFile).toEqual({
-          _id: `${fn.name}(${id.toString()})`,
+          _id: fn.name,
           contents: {
             index: "",
             package: {dependencies: {}},
@@ -436,7 +436,7 @@ describe("Versioning", () => {
         await engine.update(fn, "console.log(123)");
         await sleep();
 
-        file = await readResource("function", `${fn.name}(${id.toString()})`);
+        file = await readResource("function", fn.name);
         parsedFile = {
           ...file,
           contents: {
@@ -447,7 +447,7 @@ describe("Versioning", () => {
         };
 
         expect(parsedFile).toEqual({
-          _id: `${fn.name}(${id.toString()})`,
+          _id: fn.name,
           contents: {
             index: "console.log(123)",
             package: {dependencies: {}},
@@ -459,7 +459,7 @@ describe("Versioning", () => {
         await fnservice.findOneAndDelete({_id: id});
         await sleep();
 
-        file = await readResource("function", `${fn.name}(${id.toString()})`);
+        file = await readResource("function", fn.name);
         expect(file).toEqual({});
         // we can not install dependency on test environment
       });
@@ -477,18 +477,18 @@ describe("Versioning", () => {
           triggers: {}
         };
         const stringified = YAML.stringify(fn);
-        await rep.write("function", getRepId(fn.name, id), "schema", stringified, "yaml");
+        await rep.write("function", fn.name, "schema", stringified, "yaml");
         await sleep();
 
         let index = "console.log('hi')";
-        await rep.write("function", getRepId(fn.name, id), "index", index, "ts");
-        await sleep();
+        await rep.write("function", fn.name, "index", index, "ts");
+        await sleep(5000);
 
         let packages: any = {
           dependencies: {}
         };
         const stringifiedPackages = YAML.stringify(packages);
-        await rep.write("function", getRepId(fn.name, id), "package", stringifiedPackages, "json");
+        await rep.write("function", fn.name, "package", stringifiedPackages, "json");
         await sleep();
 
         let fns = await fnservice.find();
@@ -512,7 +512,7 @@ describe("Versioning", () => {
           options: {}
         };
         const stringifiedSchema = YAML.stringify({...fn, triggers: {onCall}});
-        await rep.write("function", getRepId(fn.name, id), "schema", stringifiedSchema, "yaml");
+        await rep.write("function", fn.name, "schema", stringifiedSchema, "yaml");
         await sleep();
 
         fns = await fnservice.find();
@@ -526,14 +526,14 @@ describe("Versioning", () => {
 
         // INDEX UPDATES
         index = "console.log('hi2')";
-        await rep.write("function", getRepId(fn.name, id), "index", index, "ts");
+        await rep.write("function", fn.name, "index", index, "ts");
         await sleep();
 
         index = await engine.read(fn);
         expect(index).toEqual("console.log('hi2')");
 
         // SCHEMA DELETE
-        await rep.rm("function", getRepId(fn.name, id));
+        await rep.rm("function", fn.name);
         await sleep();
 
         fns = await fnservice.find();
@@ -568,11 +568,11 @@ describe("Versioning", () => {
         await evs.insertOne(envVar);
         await sleep();
 
-        const file = await readResource("env-var", `${envVar.key}(${id.toString()})`);
+        const file = await readResource("env-var", envVar.key);
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
-          _id: `${envVar.key}(${id.toString()})`,
+          _id: envVar.key,
           contents: {schema: {_id: id.toString(), key: "IGNORE_ERRORS", value: "true"}}
         });
       });
@@ -584,11 +584,11 @@ describe("Versioning", () => {
         await evs.updateOne({_id: id}, {$set: {value: "false"}});
         await sleep();
 
-        const file = await readResource("env-var", `${envVar.key}(${id.toString()})`);
+        const file = await readResource("env-var", envVar.key);
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
-          _id: `${envVar.key}(${id.toString()})`,
+          _id: envVar.key,
           contents: {schema: {_id: id.toString(), key: "IGNORE_ERRORS", value: "false"}}
         });
       });
@@ -600,7 +600,7 @@ describe("Versioning", () => {
         await evs.findOneAndDelete({_id: id});
         await sleep();
 
-        const file = await readResource("env-var", `${envVar.key}(${id.toString()})`);
+        const file = await readResource("env-var", envVar.key);
         expect(file).toEqual({});
       });
     });
@@ -608,7 +608,7 @@ describe("Versioning", () => {
     describe("Synchronization from files to database", () => {
       it("should make first synchronization", async () => {
         const stringified = YAML.stringify(envVar);
-        await rep.write("env-var", getRepId(envVar.key, id), "schema", stringified, "yaml");
+        await rep.write("env-var", envVar.key, "schema", stringified, "yaml");
         await sleep();
 
         const envVars = await evs.find();
@@ -617,11 +617,11 @@ describe("Versioning", () => {
 
       it("should update if schema has changes", async () => {
         const stringified = YAML.stringify(envVar);
-        await rep.write("env-var", getRepId(envVar.key, id), "schema", stringified, "yaml");
+        await rep.write("env-var", envVar.key, "schema", stringified, "yaml");
         await sleep();
 
         const updated = YAML.stringify({...envVar, value: "false"});
-        await rep.write("env-var", getRepId(envVar.key, id), "schema", updated, "yaml");
+        await rep.write("env-var", envVar.key, "schema", updated, "yaml");
         await sleep();
 
         const envVars = await evs.find({});
@@ -636,10 +636,10 @@ describe("Versioning", () => {
 
       it("should delete if schema has been deleted", async () => {
         const stringified = YAML.stringify(envVar);
-        await rep.write("env-var", getRepId(envVar.key, id), "schema", stringified, "yaml");
+        await rep.write("env-var", envVar.key, "schema", stringified, "yaml");
         await sleep();
 
-        await rep.rm("env-var", getRepId(envVar.key, id));
+        await rep.rm("env-var", envVar.key);
         await sleep();
 
         const envVars = await evs.find({});
@@ -674,12 +674,12 @@ describe("Versioning", () => {
         await ps.insertOne(policy);
         await sleep();
 
-        const file = await readResource("policy", `${policy.name}(${id.toString()})`);
+        const file = await readResource("policy", policy.name);
 
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
-          _id: `${policy.name}(${id.toString()})`,
+          _id: policy.name,
           contents: {
             schema: {
               _id: id.toString(),
@@ -704,11 +704,11 @@ describe("Versioning", () => {
         await ps.updateOne({_id: id as any}, {$set: {value: "false"}});
         await sleep();
 
-        const file = await readResource("policy", `${policy.name}(${id.toString()})`);
+        const file = await readResource("policy", policy.name);
         const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
         expect(parsedFile).toEqual({
-          _id: `${policy.name}(${id.toString()})`,
+          _id: policy.name,
           contents: {
             schema: {
               _id: id.toString(),
@@ -734,7 +734,7 @@ describe("Versioning", () => {
         await ps.findOneAndDelete({_id: id as any});
         await sleep();
 
-        const file = await readResource("policy", `${policy.name}(${id.toString()})`);
+        const file = await readResource("policy", policy.name);
         expect(file).toEqual({});
       });
     });
@@ -742,7 +742,7 @@ describe("Versioning", () => {
     describe("Synchronization from files to database", () => {
       it("should make first synchronization", async () => {
         const stringified = YAML.stringify(policy);
-        await rep.write("policy", getRepId(policy.name, id), "schema", stringified, "yaml");
+        await rep.write("policy", policy.name, "schema", stringified, "yaml");
         await sleep();
 
         const policies = await ps.find();
@@ -751,11 +751,11 @@ describe("Versioning", () => {
 
       it("should update if schema has changes", async () => {
         const stringified = YAML.stringify(policy);
-        await rep.write("policy", getRepId(policy.name, id), "schema", stringified, "yaml");
+        await rep.write("policy", policy.name, "schema", stringified, "yaml");
         await sleep();
 
         const updated = YAML.stringify({...policy, value: "false"});
-        await rep.write("policy", getRepId(policy.name, id), "schema", updated, "yaml");
+        await rep.write("policy", policy.name, "schema", updated, "yaml");
         await sleep();
 
         const policies = await ps.find({});
@@ -778,10 +778,10 @@ describe("Versioning", () => {
 
       it("should delete if schema has been deleted", async () => {
         const stringified = YAML.stringify(policy);
-        await rep.write("policy", getRepId(policy.name, id), "schema", stringified, "yaml");
+        await rep.write("policy", policy.name, "schema", stringified, "yaml");
         await sleep();
 
-        await rep.rm("policy", getRepId(policy.name, id));
+        await rep.rm("policy", policy.name);
         await sleep();
 
         const policies = await ps.find({});
