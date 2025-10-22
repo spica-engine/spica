@@ -42,10 +42,7 @@ function DraggableStorageItem({item, children}: DraggableStorageItemProps) {
   return (
     <div
       ref={ref}
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-        cursor: "move"
-      }}
+      className={`${styles.draggableStorageItem} ${isDragging ? styles.draggingStorageItem : ""}`}
     >
       {children}
     </div>
