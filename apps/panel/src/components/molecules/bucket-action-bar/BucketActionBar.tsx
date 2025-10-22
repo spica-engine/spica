@@ -218,12 +218,12 @@ const BucketActionBar = ({
             Delete
           </Button>
         )}
-        {!bucket?.readonly && (
+        {/* {!bucket?.readonly && (
           <Button onClick={() => {}}>
             <Icon name="plus" />
             New Entry
           </Button>
-        )}
+        )} */}
         <Button
           className={styles.refreshButton}
           variant="text"
