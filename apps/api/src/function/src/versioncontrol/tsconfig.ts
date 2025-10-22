@@ -46,8 +46,7 @@ export const getTsconfigSynchronizer = (
     return {
       _id: change.resource._id || change.resource.content._id?.toString(),
       slug: change.resource.slug || change.resource.content.name,
-      content: JSON.stringify(parsed),
-      additionalParameters: {readonly: "true"}
+      content: JSON.stringify(parsed)
     };
   };
 
@@ -74,6 +73,8 @@ export const getTsconfigSynchronizer = (
           eventsToWatch: ["add", "change"]
         },
         converter: {convertToDocResource},
+        // These applier methods are intentionally no-ops because tsconfig files are read-only.
+        // Modifications (insert, update, delete) are ignored.
         applier: {
           insert: () => {},
           update: () => {},
