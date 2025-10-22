@@ -21,7 +21,7 @@ const INITIAL_DIRECTORIES: TypeDirectories = [
   }
 ];
 
-export const getParentPath = (fullPath?: string) => {
+const getParentPath = (fullPath?: string) => {
   const res =
     fullPath?.replace(/\/[^/]+\/?$/, "") === fullPath
       ? "/"
@@ -62,7 +62,7 @@ function useStorageConverter(directory: TypeDirectories) {
   return {convertData};
 }
 
-export function useStorageData(directory: TypeDirectories) {
+function useStorageData(directory: TypeDirectories) {
   const {buildDirectoryFilter} = useStorage();
 
   const filterArray = [
