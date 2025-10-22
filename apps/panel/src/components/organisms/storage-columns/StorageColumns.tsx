@@ -1,4 +1,4 @@
-import {Spinner, type TypeFile} from "oziko-ui-kit";
+import {FlexElement, Spinner, type TypeFile} from "oziko-ui-kit";
 import styles from "./StorageColumns.module.scss";
 import {useMemo} from "react";
 import {ROOT_PATH} from "../../../pages/storage/StorageHooks";
@@ -55,34 +55,41 @@ export function StorageItemColumns({
   const {handleDrop} = useDragAndDrop(directory, setDirectory);
 
   const visibleDirectories = useMemo(() => getVisibleDirectories(directory), [directory]);
+  const maxDepth = useMemo(() => {
+    return Math.max(...visibleDirectories.map(dir => dir.currentDepth || 0), 0);
+  }, [visibleDirectories]);
+  console.log("maxDepth", maxDepth, "visibleDirectories", visibleDirectories);
   return (
     <DndProvider backend={HTML5Backend}>
       <div className={styles.container}>
-        {visibleDirectories.map(dir =>
-          dir.items ? (
-            <StorageItemColumn
-              key={dir.fullPath}
-              items={dir.items || []}
-              handleFolderClick={handleFolderClick}
-              setPreviewFile={setPreviewFile}
-              depth={dir.currentDepth!}
-              directory={directory}
-              previewFileId={previewFile?._id}
-              prefix={
-                dir.fullPath === ROOT_PATH
-                  ? ""
-                  : dir.fullPath.split("/").filter(Boolean).join("/") + "/"
-              }
-              onUploadComplete={onUploadComplete}
-              isDraggingDisabled={isDraggingDisabled}
-              handleDrop={handleDrop}
-            />
-          ) : (
-            <div className={styles.columnLoaderContainer} key={dir.fullPath}>
-              <Spinner />
-            </div>
-          )
-        )}
+        <FlexElement className={styles.columns} gap={0}>
+          {visibleDirectories.map(dir =>
+            dir.items ? (
+              <StorageItemColumn
+                key={dir.fullPath}
+                items={dir.items || []}
+                handleFolderClick={handleFolderClick}
+                setPreviewFile={setPreviewFile}
+                depth={dir.currentDepth!}
+                directory={directory}
+                previewFileId={previewFile?._id}
+                prefix={
+                  dir.fullPath === ROOT_PATH
+                    ? ""
+                    : dir.fullPath.split("/").filter(Boolean).join("/") + "/"
+                }
+                onUploadComplete={onUploadComplete}
+                isDraggingDisabled={isDraggingDisabled}
+                handleDrop={handleDrop}
+                className={maxDepth === dir.currentDepth ? styles.lastColumn : ""}
+              />
+            ) : (
+              <div className={styles.columnLoaderContainer} key={dir.fullPath}>
+                <Spinner />
+              </div>
+            )
+          )}
+        </FlexElement>
       </div>
     </DndProvider>
   );

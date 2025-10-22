@@ -31,6 +31,7 @@ export default function StoragePage() {
     <div className={styles.container}>
       <StorageActionBar directory={directory} />
       <FluidContainer
+        gap={0}
         className={styles.storageItemContainer}
         root={{
           className: styles.storageItemColumns,

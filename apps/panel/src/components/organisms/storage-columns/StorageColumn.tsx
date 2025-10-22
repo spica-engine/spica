@@ -111,6 +111,7 @@ interface StorageItemColumnProps {
     sourceItems: DirectoryItem[],
     targetItems: DirectoryItem[]
   ) => Promise<boolean>;
+  className?: string;
 }
 
 export const StorageItemColumn = memo(
@@ -124,7 +125,8 @@ export const StorageItemColumn = memo(
     prefix,
     onUploadComplete,
     isDraggingDisabled,
-    handleDrop: handleDrop_
+    handleDrop: handleStorageItemDrop,
+    className
   }: StorageItemColumnProps) => {
     const [uploadFiles] = useUploadFilesMutation();
 
@@ -174,8 +176,8 @@ export const StorageItemColumn = memo(
       <DroppableColumn
         folderPath={prefix}
         items={orderedItems || []}
-        onDrop={handleDrop_}
-        className={styles.storageItemColumnContainer}
+        onDrop={handleStorageItemDrop}
+        className={`${styles.storageItemColumnContainer} ${className || ""}`}
       >
         <FlexElement
           className={styles.storageItemColumn}
