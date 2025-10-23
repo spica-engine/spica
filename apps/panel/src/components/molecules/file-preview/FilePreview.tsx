@@ -56,6 +56,32 @@ function formatUrlForGoogleStorage(url: string) {
   return `${parsed.protocol}//${parsed.host}/${projectName}/${objectId}`;
 }
 
+const handleCopy = (previewFile?: TypeFile) => {
+  if (!previewFile) return;
+
+  const serverUrl = import.meta.env.VITE_BASE_URL as string;
+  const isLocal = isLocalServerUrl(serverUrl);
+  const origin = window.location.origin;
+
+  if (isLocal) {
+    navigator.clipboard.writeText(`${origin}/storage-view/${previewFile._id}`);
+    return;
+  }
+
+  const url = new URL(previewFile.url);
+
+  if (url.hostname === "storage.googleapis.com") {
+    const formattedUrl = formatUrlForGoogleStorage(previewFile.url);
+
+    if (formattedUrl) {
+      navigator.clipboard.writeText(formattedUrl);
+      return;
+    }
+  }
+
+  navigator.clipboard.writeText(`${origin}/storage-view/${previewFile._id}`);
+};
+
 interface FilePreviewProps {
   handleClosePreview: () => void;
   previewFile?: DirectoryItem;
@@ -63,251 +89,231 @@ interface FilePreviewProps {
   onFileDeleted?: (fileId: string) => void;
 }
 
-export const FilePreview = memo(
-  ({handleClosePreview, previewFile, onFileReplaced, onFileDeleted}: FilePreviewProps) => {
-    const [updateStorageItem] = useUpdateStorageItemMutation();
-    const [deleteStorageItem] = useDeleteStorageItemMutation();
-    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-    const [deleteLoading, setDeleteLoading] = useState(false);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
-    const isImage = previewFile?.content?.type.startsWith("image/");
-    const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
-    const url = new URL(previewFile?.url ?? window.location.origin);
-    url.searchParams.set("timestamp", String(timestamp));
-    const urlWithTimestamp = url.toString();
-    const fileView = useFileView({
-      file: {...previewFile, url: urlWithTimestamp} as TypeFile
-    });
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const createdAt = new Date(timestamp).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true
-    });
+export const FilePreview = ({
+  handleClosePreview,
+  previewFile,
+  onFileReplaced,
+  onFileDeleted
+}: FilePreviewProps) => {
+  const [updateStorageItem, {isLoading}] = useUpdateStorageItemMutation();
+  const [deleteStorageItem] = useDeleteStorageItemMutation();
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const isImage = previewFile?.content?.type.startsWith("image/");
+  const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
+  const url = new URL(previewFile?.url ?? window.location.origin);
+  url.searchParams.set("timestamp", String(timestamp));
+  const urlWithTimestamp = url.toString();
+  const fileView = useFileView({
+    file: {...previewFile, url: urlWithTimestamp} as TypeFile,
+    isLoading
+  });
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const createdAt = new Date(timestamp).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
 
-    const handleCopy = () => {
-      if (!previewFile) return;
+  const handleReplace = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !previewFile?._id) return;
 
-      const serverUrl = import.meta.env.VITE_BASE_URL as string;
-      const isLocal = isLocalServerUrl(serverUrl);
-      const origin = window.location.origin;
+    const rawFile = files[0];
+    const parentPath = getParentPath(previewFile.fullPath);
+    const fileName = `${parentPath === ROOT_PATH ? "" : parentPath}${rawFile.name}`;
+    const encodedFileName = encodeURIComponent(fileName);
+    const fileToUpload = new File([rawFile], encodedFileName, {type: rawFile.type});
 
-      if (isLocal) {
-        navigator.clipboard.writeText(`${origin}/storage-view/${previewFile._id}`);
-        return;
+    const originalFile = previewFile;
+    const optimisticUpdate = {
+      ...previewFile,
+      name: fileName,
+      label: rawFile.name,
+      content: {
+        type: rawFile.type,
+        size: rawFile.size
       }
+    };
 
-      const url = new URL(previewFile.url);
+    onFileReplaced?.(optimisticUpdate);
 
-      if (url.hostname === "storage.googleapis.com") {
-        const formattedUrl = formatUrlForGoogleStorage(previewFile.url);
-
-        if (formattedUrl) {
-          navigator.clipboard.writeText(formattedUrl);
+    updateStorageItem({id: previewFile._id, file: fileToUpload})
+      .unwrap()
+      .then(updatedFile => {
+        if (!updatedFile) {
+          onFileReplaced?.(originalFile);
           return;
         }
-      }
 
-      navigator.clipboard.writeText(`${origin}/storage-view/${previewFile._id}`);
-    };
-    const handleReplace = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (!files || files.length === 0 || !previewFile?._id) return;
+        const baseUrl = updatedFile.url || previewFile.url;
+        const url = new URL(baseUrl);
+        url.searchParams.set("updated", String(Date.now()));
 
-      const rawFile = files[0];
-      const parentPath = getParentPath(previewFile.fullPath);
-      const fileName = `${parentPath === ROOT_PATH ? "" : parentPath}${rawFile.name}`;
-      const encodedFileName = encodeURIComponent(fileName);
-      const fileToUpload = new File([rawFile], encodedFileName, {type: rawFile.type});
+        const directoryItem = {
+          ...updatedFile,
+          label: rawFile.name,
+          fullPath: fileName,
+          url: url.toString()
+        } as DirectoryItem;
 
-      // Store original file for rollback
-      const originalFile = previewFile;
+        onFileReplaced?.(directoryItem);
+      })
+      .catch(error => {
+        console.error("File replacement failed:", error);
+        onFileReplaced?.(originalFile);
+      });
 
-      // Create proper optimistic update that matches DirectoryItem structure
-      const optimisticUpdate = {
-        ...previewFile, // Keep all original fields
-        name: fileName, // Update name (this is the storage name, not label)
-        label: rawFile.name, // Update display label
-        content: {
-          type: rawFile.type,
-          size: rawFile.size
-        }
-        // Keep fullPath, _id, url, isActive from original
-      };
+    e.target.value = "";
+  };
 
-      // Apply optimistic update
-      onFileReplaced?.(optimisticUpdate);
+  const handleDeleteConfirm = async () => {
+    if (!previewFile?._id) return;
 
-      updateStorageItem({id: previewFile._id, file: fileToUpload})
-        .unwrap()
-        .then(updatedFile => {
-          if (!updatedFile) {
-            // Rollback on empty response
-            onFileReplaced?.(originalFile);
-            return;
-          }
-
-          // Convert API response to DirectoryItem
-          const directoryItem = {
-            ...updatedFile,
-            label: updatedFile.name.split("/").filter(Boolean).pop() || updatedFile.name,
-            fullPath: updatedFile.name,
-            isActive: previewFile.isActive
-          } as DirectoryItem;
-          
-          onFileReplaced?.(directoryItem);
-        })
-        .catch(error => {
-          console.error("File replacement failed:", error);
-          // Rollback to original file on error
-          onFileReplaced?.(originalFile);
-        });
-
-      e.target.value = ""; // reset input
-    };
-
-    const handleDeleteConfirm = async () => {
-      if (!previewFile?._id) return;
-
-      try {
-        setDeleteLoading(true);
-        setDeleteError(null);
-        await deleteStorageItem(previewFile._id).unwrap();
-        onFileDeleted?.(previewFile._id);
-        setShowDeleteConfirmation(false);
-        handleClosePreview();
-      } catch (error) {
-        console.error("File deletion failed:", error);
-        setDeleteError(error instanceof Error ? error.message : "Failed to delete file");
-      } finally {
-        setDeleteLoading(false);
-      }
-    };
-
-    const handleDeleteCancel = () => {
-      setShowDeleteConfirmation(false);
+    try {
+      setDeleteLoading(true);
       setDeleteError(null);
-    };
+      await deleteStorageItem(previewFile._id).unwrap();
+      onFileDeleted?.(previewFile._id);
+      setShowDeleteConfirmation(false);
+      handleClosePreview();
+    } catch (error) {
+      console.error("File deletion failed:", error);
+      setDeleteError(error instanceof Error ? error.message : "Failed to delete file");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
-    return (
-      <>
-        <FluidContainer
-          className={styles.filePreviewContent}
-          gap={10}
-          direction="vertical"
-          dimensionY="fill"
-          root={{
-            children: (
-              <FlexElement gap={10} direction="vertical">
-                <FluidContainer
-                  dimensionX="fill"
-                  alignment="rightCenter"
-                  suffix={{
-                    children: (
-                      <Button
-                        className={styles.closePreviewButton}
-                        variant="icon"
-                        onClick={handleClosePreview}
-                      >
-                        <Icon name="close" />
-                      </Button>
-                    )
-                  }}
-                />
-                <FlexElement className={styles.fileView}>{fileView}</FlexElement>
-              </FlexElement>
-            ),
-            className: styles.fileViewContainer
-          }}
-          suffix={{
-            className: styles.metadata,
-            children: (
-              <FlexElement direction="vertical" className={styles.metadataContent}>
-                <FlexElement direction="vertical" gap={10}>
-                  <Text className={styles.metadataName}>{previewFile?.name}</Text>
-                  <Text>
-                    {previewFile?.content?.type} - {formatFileSize(previewFile?.content?.size || 0)}
-                  </Text>
-                  <Text>{createdAt}</Text>
-                </FlexElement>
-                <FlexElement gap={10}>
-                  <Button className={styles.metadataButton} variant="text" onClick={handleCopy}>
-                    <Icon name="fileMultiple" size={14} />
-                    Copy
-                  </Button>
-                  {isImage && (
-                    <Button className={styles.metadataButton} variant="text">
-                      <Icon name="pencil" size={14} />
-                      Edit
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirmation(false);
+    setDeleteError(null);
+  };
+
+  return (
+    <>
+      <FluidContainer
+        className={styles.filePreviewContent}
+        gap={10}
+        direction="vertical"
+        dimensionY="fill"
+        root={{
+          children: (
+            <FlexElement gap={10} direction="vertical">
+              <FluidContainer
+                dimensionX="fill"
+                alignment="rightCenter"
+                suffix={{
+                  children: (
+                    <Button
+                      className={styles.closePreviewButton}
+                      variant="icon"
+                      onClick={handleClosePreview}
+                    >
+                      <Icon name="close" />
                     </Button>
-                  )}
-                  <Button
-                    className={styles.metadataButton}
-                    variant="text"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Icon name="swapHorizontal" size={14} />
-                    Replace
-                  </Button>
-                  <input
-                    id="replace-file-input"
-                    type="file"
-                    style={{display: "none"}}
-                    onChange={handleReplace}
-                    ref={fileInputRef}
-                  />
-                  <Button
-                    className={`${styles.metadataButton} ${styles.metadataClearButton}`}
-                    color="danger"
-                    onClick={() => setShowDeleteConfirmation(true)}
-                  >
-                    <Icon name="delete" size={14} />
-                    Delete
-                  </Button>
-                </FlexElement>
+                  )
+                }}
+              />
+              <FlexElement className={styles.fileView}>{fileView}</FlexElement>
+            </FlexElement>
+          ),
+          className: styles.fileViewContainer
+        }}
+        suffix={{
+          className: styles.metadata,
+          children: (
+            <FlexElement direction="vertical" className={styles.metadataContent}>
+              <FlexElement direction="vertical" gap={10}>
+                <Text className={styles.metadataName}>{previewFile?.label}</Text>
+                <Text>
+                  {previewFile?.content?.type} - {formatFileSize(previewFile?.content?.size || 0)}
+                </Text>
+                <Text>{createdAt}</Text>
               </FlexElement>
-            )
-          }}
+              <FlexElement gap={10}>
+                <Button
+                  className={styles.metadataButton}
+                  variant="text"
+                  onClick={() => handleCopy(previewFile)}
+                >
+                  <Icon name="fileMultiple" size={14} />
+                  Copy
+                </Button>
+                {isImage && (
+                  <Button className={styles.metadataButton} variant="text">
+                    <Icon name="pencil" size={14} />
+                    Edit
+                  </Button>
+                )}
+                <Button
+                  className={styles.metadataButton}
+                  variant="text"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading}
+                >
+                  <Icon name="swapHorizontal" size={14} />
+                  Replace
+                </Button>
+                <input
+                  id="replace-file-input"
+                  type="file"
+                  style={{display: "none"}}
+                  onChange={handleReplace}
+                  ref={fileInputRef}
+                />
+                <Button
+                  className={`${styles.metadataButton} ${styles.metadataClearButton}`}
+                  color="danger"
+                  onClick={() => setShowDeleteConfirmation(true)}
+                >
+                  <Icon name="delete" size={14} />
+                  Delete
+                </Button>
+              </FlexElement>
+            </FlexElement>
+          )
+        }}
+      />
+      {showDeleteConfirmation && (
+        <Confirmation
+          title="DELETE FILE"
+          inputPlaceholder="Type Here"
+          description={
+            <>
+              <span className={styles.confirmText}>
+                This action will permanently delete the file.
+              </span>
+              <span>
+                Please type <strong>agree</strong> to confirm deletion.
+              </span>
+            </>
+          }
+          confirmLabel={
+            <>
+              <Icon name="delete" />
+              Delete
+            </>
+          }
+          cancelLabel={
+            <>
+              <Icon name="close" />
+              Cancel
+            </>
+          }
+          confirmCondition={input => input === "agree"}
+          showInput={true}
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+          loading={deleteLoading}
+          error={deleteError}
         />
-        {showDeleteConfirmation && (
-          <Confirmation
-            title="DELETE FILE"
-            inputPlaceholder="Type Here"
-            description={
-              <>
-                <span className={styles.confirmText}>
-                  This action will permanently delete the file.
-                </span>
-                <span>
-                  Please type <strong>agree</strong> to confirm deletion.
-                </span>
-              </>
-            }
-            confirmLabel={
-              <>
-                <Icon name="delete" />
-                Delete
-              </>
-            }
-            cancelLabel={
-              <>
-                <Icon name="close" />
-                Cancel
-              </>
-            }
-            confirmCondition={input => input === "agree"}
-            showInput={true}
-            onConfirm={handleDeleteConfirm}
-            onCancel={handleDeleteCancel}
-            loading={deleteLoading}
-            error={deleteError}
-          />
-        )}
-      </>
-    );
-  }
-);
+      )}
+    </>
+  );
+};
