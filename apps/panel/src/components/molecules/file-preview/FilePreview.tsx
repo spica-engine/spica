@@ -151,7 +151,6 @@ export const FilePreview = ({
           label: rawFile.name,
           fullPath: fileName
         } as DirectoryItem;
-        console.log("File replaced successfully:", directoryItem, "updatedFile:", updatedFile);
         onFileReplaced?.(directoryItem);
       })
       .catch(error => {
