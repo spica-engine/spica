@@ -49,10 +49,10 @@ export const getDependencySynchronizer = (
     let buildScript: string;
     switch (language) {
       case "javascript":
-        buildScript = `mkdir -p .build/${functionName} && cp index.mjs .build/${functionName}/index.mjs`;
+        buildScript = `mkdir -p .build/${functionName} && ln -sf ../../node_modules .build/${functionName}/node_modules && cp index.mjs .build/${functionName}/index.mjs`;
         break;
       case "typescript":
-        buildScript = `mkdir -p .build/${functionName} && tsc --module ES2022 --target ES2022 --outDir .build/${functionName} && mv .build/${functionName}/index.js .build/${functionName}/index.mjs`;
+        buildScript = `mkdir -p .build/${functionName} && ln -sf ../../node_modules .build/${functionName}/node_modules && tsc --module ES2022 --target ES2022 --outDir .build/${functionName} && mv .build/${functionName}/index.js .build/${functionName}/index.mjs`;
         break;
       default:
         buildScript = "";
