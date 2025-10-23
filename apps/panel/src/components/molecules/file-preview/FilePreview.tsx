@@ -2,9 +2,9 @@ import {memo, useRef, useState} from "react";
 import {FluidContainer, FlexElement, Icon, Text, Button, type TypeFile} from "oziko-ui-kit";
 import styles from "./FilePreview.module.scss";
 import {type DirectoryItem} from "../../organisms/storage-columns/StorageColumns";
-import {useDeleteStorageItemMutation, useUpdateStorageItemMutation} from "../../../store/api";
+import {useUpdateStorageItemMutation} from "../../../store/api";
 import useFileView from "../../../hooks/useFileView";
-import Confirmation from "../confirmation/Confirmation";
+import {DeleteFileButton} from "./DeleteFileButton";
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -96,15 +96,10 @@ export const FilePreview = ({
   onFileDeleted
 }: FilePreviewProps) => {
   const [updateStorageItem, {isLoading}] = useUpdateStorageItemMutation();
-  const [deleteStorageItem] = useDeleteStorageItemMutation();
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const isImage = previewFile?.content?.type.startsWith("image/");
   const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
   const url = new URL(previewFile?.url ?? window.location.origin);
   url.searchParams.set("timestamp", String(timestamp));
-  url.searchParams.set("t", String(Date.now()));
   const urlWithTimestamp = url.toString();
   const fileView = useFileView({
     file: {...previewFile, url: urlWithTimestamp} as TypeFile,
@@ -154,7 +149,7 @@ export const FilePreview = ({
         const directoryItem = {
           ...updatedFile,
           label: rawFile.name,
-          fullPath: fileName,
+          fullPath: fileName
         } as DirectoryItem;
         console.log("File replaced successfully:", directoryItem, "updatedFile:", updatedFile);
         onFileReplaced?.(directoryItem);
@@ -165,29 +160,6 @@ export const FilePreview = ({
       });
 
     e.target.value = "";
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!previewFile?._id) return;
-
-    try {
-      setDeleteLoading(true);
-      setDeleteError(null);
-      await deleteStorageItem(previewFile._id).unwrap();
-      onFileDeleted?.(previewFile._id);
-      setShowDeleteConfirmation(false);
-      handleClosePreview();
-    } catch (error) {
-      console.error("File deletion failed:", error);
-      setDeleteError(error instanceof Error ? error.message : "Failed to delete file");
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setShowDeleteConfirmation(false);
-    setDeleteError(null);
   };
 
   return (
@@ -262,53 +234,18 @@ export const FilePreview = ({
                   onChange={handleReplace}
                   ref={fileInputRef}
                 />
-                <Button
-                  className={`${styles.metadataButton} ${styles.metadataClearButton}`}
-                  color="danger"
-                  onClick={() => setShowDeleteConfirmation(true)}
-                >
-                  <Icon name="delete" size={14} />
-                  Delete
-                </Button>
+                {previewFile?._id && onFileDeleted && (
+                  <DeleteFileButton
+                    fileId={previewFile._id}
+                    onFileDeleted={onFileDeleted}
+                    onClose={handleClosePreview}
+                  />
+                )}
               </FlexElement>
             </FlexElement>
           )
         }}
       />
-      {showDeleteConfirmation && (
-        <Confirmation
-          title="DELETE FILE"
-          inputPlaceholder="Type Here"
-          description={
-            <>
-              <span className={styles.confirmText}>
-                This action will permanently delete the file.
-              </span>
-              <span>
-                Please type <strong>agree</strong> to confirm deletion.
-              </span>
-            </>
-          }
-          confirmLabel={
-            <>
-              <Icon name="delete" />
-              Delete
-            </>
-          }
-          cancelLabel={
-            <>
-              <Icon name="close" />
-              Cancel
-            </>
-          }
-          confirmCondition={input => input === "agree"}
-          showInput={true}
-          onConfirm={handleDeleteConfirm}
-          onCancel={handleDeleteCancel}
-          loading={deleteLoading}
-          error={deleteError}
-        />
-      )}
     </>
   );
 };
