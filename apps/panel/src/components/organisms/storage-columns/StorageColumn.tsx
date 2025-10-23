@@ -130,15 +130,13 @@ export const StorageItemColumn = memo(
   }: StorageItemColumnProps) => {
     const [uploadFiles] = useUploadFilesMutation();
 
-    const orderedItems = useMemo(() => {
-      if (!items) return [];
-      return [...items].sort((a, b) => {
+    const orderedItems =
+      items?.sort((a, b) => {
         const aIsDir = a.content?.type === "inode/directory";
         const bIsDir = b.content?.type === "inode/directory";
         if (aIsDir !== bIsDir) return aIsDir ? -1 : 1;
         return a.name.localeCompare(b.name);
-      });
-    }, [items]);
+      }) ?? [];
 
     const handleDragOver: DragEventHandler<HTMLDivElement> = e => {
       if (isDraggingDisabled) return;

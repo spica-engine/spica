@@ -104,6 +104,7 @@ export const FilePreview = ({
   const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
   const url = new URL(previewFile?.url ?? window.location.origin);
   url.searchParams.set("timestamp", String(timestamp));
+  url.searchParams.set("t", String(Date.now()));
   const urlWithTimestamp = url.toString();
   const fileView = useFileView({
     file: {...previewFile, url: urlWithTimestamp} as TypeFile,
@@ -130,8 +131,7 @@ export const FilePreview = ({
     const encodedFileName = encodeURIComponent(fileName);
     const fileToUpload = new File([rawFile], encodedFileName, {type: rawFile.type});
 
-    const originalFile = previewFile;
-    const optimisticUpdate = {
+    const temporaryFile = {
       ...previewFile,
       name: fileName,
       label: rawFile.name,
@@ -141,32 +141,32 @@ export const FilePreview = ({
       }
     };
 
-    onFileReplaced?.(optimisticUpdate);
+    onFileReplaced?.(temporaryFile);
 
     updateStorageItem({id: previewFile._id, file: fileToUpload})
       .unwrap()
       .then(updatedFile => {
         if (!updatedFile) {
-          onFileReplaced?.(originalFile);
+          onFileReplaced?.(previewFile);
           return;
         }
 
-        const baseUrl = updatedFile.url || previewFile.url;
-        const url = new URL(baseUrl);
-        url.searchParams.set("updated", String(Date.now()));
+        //const baseUrl = updatedFile.url || previewFile.url;
+        //const url = new URL(baseUrl);
+        //url.searchParams.set("updated", String(Date.now()));
 
         const directoryItem = {
           ...updatedFile,
           label: rawFile.name,
           fullPath: fileName,
-          url: url.toString()
+          url: url.toString(),
         } as DirectoryItem;
-
+        console.log("File replaced successfully:", directoryItem, "updatedFile:", updatedFile);
         onFileReplaced?.(directoryItem);
       })
       .catch(error => {
         console.error("File replacement failed:", error);
-        onFileReplaced?.(originalFile);
+        onFileReplaced?.(previewFile);
       });
 
     e.target.value = "";
