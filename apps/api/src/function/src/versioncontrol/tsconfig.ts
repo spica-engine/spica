@@ -50,12 +50,6 @@ export const getTsconfigSynchronizer = (
     };
   };
 
-  const convertToDocResource = (change: RepChange<RepresentativeManagerResource>) =>
-    ({
-      _id: new ObjectId(change.resource._id),
-      content: change.resource.content
-    }) as FunctionWithContent;
-
   return {
     syncs: [
       {
@@ -68,13 +62,16 @@ export const getTsconfigSynchronizer = (
         }
       },
       {
-        watcher: {
-          filesToWatch: [{name: fileName, extension}],
-          eventsToWatch: ["add", "change"]
-        },
-        converter: {convertToDocResource},
-        // These applier methods are intentionally no-ops because tsconfig files are read-only.
+        // These methods are intentionally no-ops because tsconfig files are read-only.
         // Modifications (insert, update, delete) are ignored.
+        // reducing CPU usage by avoiding unnecessary file system monitoring and conversion.
+        watcher: {
+          filesToWatch: [],
+          eventsToWatch: []
+        },
+        converter: {
+          convertToDocResource: () => undefined
+        },
         applier: {
           insert: () => {},
           update: () => {},

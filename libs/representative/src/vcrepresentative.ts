@@ -76,6 +76,12 @@ export class VCRepresentativeManager implements IRepresentativeManager {
   }
 
   watch(module: string, files: string[], events: string[] = ["add", "change", "unlink"]) {
+    if (files.length == 0) {
+      console.warn(`VCRepresentativeManager.watch: No watch files specified for ${module}.`);
+      return new Observable<RepChange<RepresentativeManagerResource>>(observer => {
+        return () => observer.complete();
+      });
+    }
     const moduleDir = this.getModuleDir(module);
 
     this.createModuleDirectory(moduleDir);
