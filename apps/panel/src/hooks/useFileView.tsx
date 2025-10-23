@@ -1,6 +1,6 @@
-import {Icon, type TypeFile} from "oziko-ui-kit";
+import {Icon, Spinner, type TypeFile} from "oziko-ui-kit";
 import type {CSSProperties} from "react";
-import {useEffect, useRef} from "react";
+import {memo, useEffect, useRef, useState} from "react";
 import {renderAsync} from "docx-preview";
 import React, {useMemo} from "react";
 
@@ -180,6 +180,24 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
   );
 };
 
+const ImageViewer = memo(({file, style, className}: {file: TypeFile; style?: CSSProperties; className?: string}) => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <div style={{position: "relative", display: "inline-block"}}>
+      {isLoading && <Spinner />}
+      <img
+        src={file.url}
+        alt={file.name}
+        style={{...(style || {}), display: isLoading ? "none" : "block"}}
+        className={className}
+        onLoad={() => setIsLoading(false)}
+        onError={() => setIsLoading(false)}
+      />
+    </div>
+  );
+});
+
 const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
   if (!file) {
     return null;
@@ -188,9 +206,9 @@ const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
   const contentTypeMapping = [
     {
       regex: /^image\//,
-      viewer: (file: TypeFile) => (
-        <img src={file.url} alt={file.name} style={styles?.image} className={classNames?.image} />
-      )
+      viewer: (file: TypeFile) => {
+        return <ImageViewer key={file.url} file={file}/>;
+      }
     },
     {
       regex: /^video\//,
