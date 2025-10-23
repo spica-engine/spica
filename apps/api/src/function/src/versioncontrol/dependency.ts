@@ -55,6 +55,7 @@ export const getDependencySynchronizer = (
         buildScript = `mkdir -p .build/${functionName} && tsc --module ES2022 --target ES2022 --outDir .build/${functionName} && mv .build/${functionName}/index.js .build/${functionName}/index.mjs`;
         break;
       default:
+        buildScript = "";
         break;
     }
 
