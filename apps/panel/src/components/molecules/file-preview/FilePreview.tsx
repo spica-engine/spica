@@ -41,7 +41,10 @@ export const FilePreview = memo(
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const isImage = previewFile?.content?.type.startsWith("image/");
     const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
-    const urlWithTimestamp = previewFile?.url + "?timestamp=" + timestamp + "&t=" + Date.now();
+    const url = new URL(previewFile?.url ?? window.location.origin);
+    url.searchParams.set("timestamp", String(timestamp));
+    url.searchParams.set("t", String(Date.now()));
+    const urlWithTimestamp = url.toString();
     const fileView = useFileView({
       file: {...previewFile, url: urlWithTimestamp} as TypeFile
     });
