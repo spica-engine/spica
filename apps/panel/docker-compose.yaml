@@ -1,0 +1,96 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7.0.16
+    container_name: mongo
+    command: ["--replSet","rs0","--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - spica
+
+  repl-init:
+    platform: linux/amd64
+    image: spicaengine/mongoreplicationcontroller:master
+    container_name: repl-init
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: ["--from-srv","false","--nodes","mongo","--debug", "true"]
+    restart: "no"
+    networks:
+      - spica
+
+  # spica-web:
+  #   image: spicaengine/spica:master
+  #   container_name: spica-web
+  #   environment:
+  #     - BASE_URL=/spica/
+  #   ports:
+  #     - "80:80"        
+  #   depends_on:
+  #     - repl-init
+  #   networks:
+  #     - spica
+
+  spica-api:
+    image: spicaengine/api:master
+    platform: linux/amd64
+    container_name: spica-api
+    command:
+      - --port
+      - "4300"
+      - --database-uri
+      - mongodb://mongo:27017/spica?replicaSet=rs0
+      - --database-name
+      - spica
+      - --database-pool-size
+      - "200"
+      - --database-replica-set
+      - rs0
+      - --passport-secret
+      - $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
+      - --passport-password
+      - spica
+      - --persistent-path
+      - /data
+      - --public-url
+      - http://localhost:4300/api
+    ports:
+      - "4300:4300"
+    volumes:
+      - spica-data:/data
+    # depends_on:
+    #   - repl-init
+    networks:
+      - spica
+
+
+  # /spica -> spica-web:80, /api -> spica-api:4300
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: spica-gateway
+  #   depends_on:
+  #     - spica-web
+  #     - spica-api
+  #   ports:
+  #     - "8080:80"      
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  #   networks:
+  #     - spica
+
+networks:
+  spica:
+
+volumes:
+  mongo-data:
+  spica-data:
