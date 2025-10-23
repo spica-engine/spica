@@ -209,8 +209,6 @@ const ImageViewer = ({
 
   const loading = Boolean(externalLoading) || isImageLoading;
 
-  const url = new URL(file.url);
-  url.searchParams.set("t", String(Date.now()));
   return (
     <div style={{position: "relative", display: "inline-block"}}>
       {loading && (
@@ -228,7 +226,7 @@ const ImageViewer = ({
         </div>
       )}
       <img
-        src={url.toString()}
+        src={createImageUrl(file.url)}
         alt={file.name}
         style={{...(style || {}), display: loading ? "none" : "block"}}
         className={className}
