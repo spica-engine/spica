@@ -25,6 +25,37 @@ const getParentPath = (fullPath?: string) => {
   return res === "/" ? res : res + "/";
 };
 
+function isLocalServerUrl(urlStr?: string) {
+  if (!urlStr) return false;
+  try {
+    const {hostname} = new URL(urlStr);
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1" ||
+      hostname === "0.0.0.0" ||
+      hostname.endsWith(".local")
+    ) {
+      return true;
+    }
+    // private LAN ranges (treat as local/dev)
+    if (/^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname)) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function formatUrlForGoogleStorage(url: string) {
+  const parsed = new URL(url);
+  const match = parsed.pathname.match(/\/b\/([^/]+)\/o\/([^/]+)/);
+  if (!match) return null;
+  const [, projectName, objectId] = match;
+  return `${parsed.protocol}//${parsed.host}/${projectName}/${objectId}`;
+}
+
 interface FilePreviewProps {
   handleClosePreview: () => void;
   previewFile?: DirectoryItem;
@@ -43,7 +74,6 @@ export const FilePreview = memo(
     const timestamp = parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000;
     const url = new URL(previewFile?.url ?? window.location.origin);
     url.searchParams.set("timestamp", String(timestamp));
-    url.searchParams.set("t", String(Date.now()));
     const urlWithTimestamp = url.toString();
     const fileView = useFileView({
       file: {...previewFile, url: urlWithTimestamp} as TypeFile
@@ -61,8 +91,28 @@ export const FilePreview = memo(
 
     const handleCopy = () => {
       if (!previewFile) return;
+
+      const serverUrl = import.meta.env.VITE_BASE_URL as string;
+      const isLocal = isLocalServerUrl(serverUrl);
       const origin = window.location.origin;
-      navigator.clipboard.writeText(origin + "/storage-view/" + previewFile._id);
+
+      if (isLocal) {
+        navigator.clipboard.writeText(`${origin}/storage-view/${previewFile._id}`);
+        return;
+      }
+
+      const url = new URL(previewFile.url);
+
+      if (url.hostname === "storage.googleapis.com") {
+        const formattedUrl = formatUrlForGoogleStorage(previewFile.url);
+
+        if (formattedUrl) {
+          navigator.clipboard.writeText(formattedUrl);
+          return;
+        }
+      }
+
+      navigator.clipboard.writeText(`${origin}/storage-view/${previewFile._id}`);
     };
 
     const handleReplace = async (e: React.ChangeEvent<HTMLInputElement>) => {
