@@ -26,6 +26,7 @@ type TypeUseFileView = {
   file?: TypeFile;
   styles?: TypeStyle;
   classNames?: TypeClassName;
+  isLoading?: boolean;
 };
 
 interface WordDocProps {
@@ -179,26 +180,52 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
     />
   );
 };
+const ImageViewer = ({
+  file,
+  style,
+  className,
+  loading: externalLoading
+}: {
+  file: TypeFile;
+  style?: CSSProperties;
+  className?: string;
+  loading?: boolean;
+}) => {
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
-const ImageViewer = memo(({file, style, className}: {file: TypeFile; style?: CSSProperties; className?: string}) => {
-  const [isLoading, setIsLoading] = useState(true);
+  if (!file.content.type.startsWith("image/")) return null;
+
+  const loading = Boolean(externalLoading) || isImageLoading;
 
   return (
     <div style={{position: "relative", display: "inline-block"}}>
-      {isLoading && <Spinner />}
+      {loading && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none"
+          }}
+        >
+          <Spinner />
+        </div>
+      )}
       <img
         src={file.url}
         alt={file.name}
-        style={{...(style || {}), display: isLoading ? "none" : "block"}}
+        style={{...(style || {}), display: loading ? "none" : "block"}}
         className={className}
-        onLoad={() => setIsLoading(false)}
-        onError={() => setIsLoading(false)}
+        onLoad={() => setIsImageLoading(false)}
+        onError={() => setIsImageLoading(false)}
       />
     </div>
   );
-});
+};
 
-const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
+const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => {
   if (!file) {
     return null;
   }
@@ -206,9 +233,7 @@ const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
   const contentTypeMapping = [
     {
       regex: /^image\//,
-      viewer: (file: TypeFile) => {
-        return <ImageViewer key={file.url} file={file}/>;
-      }
+      viewer: (file: TypeFile) => <ImageViewer key={file.url} file={file} loading={isLoading} />
     },
     {
       regex: /^video\//,
