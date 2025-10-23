@@ -151,15 +151,10 @@ export const FilePreview = ({
           return;
         }
 
-        //const baseUrl = updatedFile.url || previewFile.url;
-        //const url = new URL(baseUrl);
-        //url.searchParams.set("updated", String(Date.now()));
-
         const directoryItem = {
           ...updatedFile,
           label: rawFile.name,
           fullPath: fileName,
-          url: url.toString(),
         } as DirectoryItem;
         console.log("File replaced successfully:", directoryItem, "updatedFile:", updatedFile);
         onFileReplaced?.(directoryItem);
