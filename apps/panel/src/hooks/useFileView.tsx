@@ -180,6 +180,13 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
     />
   );
 };
+
+const createImageUrl = (fileUrl: string) => {
+  const url = new URL(fileUrl);
+  url.searchParams.set("t", String(Date.now()));
+  return url.toString();
+};
+
 const ImageViewer = ({
   file,
   style,
@@ -197,6 +204,8 @@ const ImageViewer = ({
 
   const loading = Boolean(externalLoading) || isImageLoading;
 
+  const url = new URL(file.url);
+  url.searchParams.set("t", String(Date.now()));
   return (
     <div style={{position: "relative", display: "inline-block"}}>
       {loading && (
@@ -214,7 +223,7 @@ const ImageViewer = ({
         </div>
       )}
       <img
-        src={file.url}
+        src={url.toString()}
         alt={file.name}
         style={{...(style || {}), display: loading ? "none" : "block"}}
         className={className}
@@ -266,14 +275,18 @@ const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => 
     },
     {
       regex: /^application\/pdf/,
-      viewer: (file: TypeFile) => (
-        <embed
-          type={file.content.type}
-          src={file.url}
-          style={styles?.pdf}
-          className={classNames?.pdf}
-        />
-      )
+      viewer: (file: TypeFile) => {
+        const url = new URL(file.url);
+        url.search = "";
+        return (
+          <embed
+            type={file.content.type}
+            src={url.toString()}
+            style={styles?.pdf}
+            className={classNames?.pdf}
+          />
+        );
+      }
     },
     {
       regex: /^application\/zip/,
