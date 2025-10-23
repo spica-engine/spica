@@ -12,7 +12,7 @@ function build(compilation: Compilation) {
     moduleResolution: "node",
     module: "ES2022",
     target: "ES2022",
-    typeRoots: [path.join(outDirAbsolutePath, "node_modules", "@types")],
+    typeRoots: [path.join(compilation.cwd, "node_modules", "@types")],
     sourceMap: true,
     alwaysStrict: true,
     preserveSymlinks: true,
