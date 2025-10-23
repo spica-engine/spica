@@ -43,12 +43,33 @@ export const getDependencySynchronizer = (
     change: DocChange<DocumentManagerResource<FunctionWithContent>>
   ) => {
     const parsed = JSON.parse(change.resource.content.content);
-    const dependencies = parsed.dependencies || {};
+    const functionName = change.resource.content.name;
+    const language = change.resource.content.language;
+
+    let buildScript: string;
+    switch (language) {
+      case "javascript":
+        buildScript = `mkdir -p .build/${functionName} && cp index.mjs .build/${functionName}/index.mjs`;
+        break;
+      case "typescript":
+        buildScript = `mkdir -p .build/${functionName} && tsc --module ES2022 --target ES2022 --outDir .build/${functionName} && mv .build/${functionName}/index.js .build/${functionName}/index.mjs`;
+        break;
+      default:
+        break;
+    }
+
+    const packageJson = {
+      ...parsed,
+      scripts: {
+        ...parsed.scripts,
+        build: buildScript
+      }
+    };
 
     return {
       _id: change.resource._id || change.resource.content._id?.toString(),
       slug: change.resource.slug || change.resource.content.name,
-      content: JSON.stringify({dependencies})
+      content: JSON.stringify(packageJson)
     };
   };
 
