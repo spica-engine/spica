@@ -1,6 +1,6 @@
-import {Icon, type TypeFile} from "oziko-ui-kit";
+import {Icon, type TypeFile, Text, Spinner} from "oziko-ui-kit";
 import type {CSSProperties} from "react";
-import {useEffect, useRef} from "react";
+import {useEffect, useRef, useState} from "react";
 import {renderAsync} from "docx-preview";
 import React, {useMemo} from "react";
 
@@ -149,6 +149,69 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
   );
 };
 
+interface SafeVideoPlayerProps {
+  url: string;
+  mimeType?: string;
+  style?: CSSProperties;
+  className?: string;
+}
+
+interface SafeVideoPlayerProps {
+  url: string;
+  style?: React.CSSProperties;
+  className?: string;
+}
+
+export function SafeVideoPlayer({url, style, className}: SafeVideoPlayerProps) {
+  const [canPlay, setCanPlay] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!url) {
+      setCanPlay(null);
+      return;
+    }
+
+    let video: HTMLVideoElement | null = document.createElement("video");
+    video.src = url;
+
+    const handleCanPlay = () => setCanPlay(true);
+    const handleError = () => setCanPlay(false);
+
+    video.addEventListener("canplay", handleCanPlay);
+    video.addEventListener("error", handleError);
+
+    video.load();
+
+    return () => {
+      video?.removeEventListener("canplay", handleCanPlay);
+      video?.removeEventListener("error", handleError);
+      video = null;
+    };
+  }, [url]);
+
+  if (canPlay === null) {
+    return <Spinner />;
+  }
+
+  if (!canPlay) {
+    return (
+      <div style={{...(style || {}), maxWidth: "100%"}} className={className}>
+        <Text size="large" variant="primary">⚠️ Your browser cannot play this video format.</Text>
+        <a href={url} download className="underline">
+          Download video instead
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <video controls style={{maxWidth: "100%", ...(style || {})}} className={className}>
+      <source src={url} />
+      Your browser does not support the video tag.
+    </video>
+  );
+}
+
 const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
   if (!file) {
     return null;
@@ -164,17 +227,17 @@ const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
     {
       regex: /^video\//,
       viewer: (file: TypeFile) => (
-        <video controls style={{maxWidth: "100%", ...(styles?.video || {})}} className={classNames?.video}>
-          <source src={file.url} type={file.content.type} />
-          Your browser does not support the video tag.
-        </video>
+        <SafeVideoPlayer url={file.url} className={classNames?.video} style={styles?.video} />
       )
     },
     {
       regex: /^(text\/plain|text\/javascript|application\/json)$/,
       viewer: (file: TypeFile) => (
-        <TextViewer fileUrl={file.url} height={styles?.text?.height || 400} 
-          style={styles?.text} className={classNames?.text}
+        <TextViewer
+          fileUrl={file.url}
+          height={styles?.text?.height || 400}
+          style={styles?.text}
+          className={classNames?.text}
         />
       )
     },
