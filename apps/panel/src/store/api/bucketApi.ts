@@ -133,7 +133,7 @@ export const bucketApi = baseApi.injectEndpoints({
       filter?: Record<string, any>;
     } | void>({
       query: (params) => ({
-        url: 'api/bucket',
+        url: '/bucket',
         params: params || {},
       }),
       providesTags: ['Bucket'],
@@ -163,7 +163,7 @@ export const bucketApi = baseApi.injectEndpoints({
         });
         
         return {
-          url: `api/bucket/${bucketId}/data`,
+          url: `/bucket/${bucketId}/data`,
           params: Object.fromEntries(queryParams),
         };
       },
@@ -205,7 +205,7 @@ export const bucketApi = baseApi.injectEndpoints({
         };
 
         return {
-          url: 'api/bucket',
+          url: '/bucket',
           method: 'POST',
           body: bucketData,
         };
@@ -230,7 +230,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket
     updateBucket: builder.mutation<BucketType, { id: string; body: UpdateBucketRequest }>({
       query: ({ id, body }) => ({
-        url: `api/bucket/${id}`,
+        url: `/bucket/${id}`,
         method: 'PUT',
         body,
       }),
@@ -261,7 +261,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Delete bucket
     deleteBucket: builder.mutation<{ message: string }, string>({
       query: (id) => ({
-        url: `api/bucket/${id}`,
+        url: `/bucket/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, id) => [
@@ -288,7 +288,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Change bucket category
     changeBucketCategory: builder.mutation<BucketType, { bucketId: string; category: string }>({
       query: ({ bucketId, category }) => ({
-        url: `api/bucket/${bucketId}`,
+        url: `/bucket/${bucketId}`,
         method: 'PATCH',
         body: { category },
       }),
@@ -318,7 +318,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket order
     updateBucketOrder: builder.mutation<BucketType, { bucketId: string; order: number }>({
       query: ({ bucketId, order }) => ({
-        url: `api/bucket/${bucketId}`,
+        url: `/bucket/${bucketId}`,
         method: 'PATCH',
         body: { order },
       }),
@@ -348,7 +348,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Create bucket field (update bucket properties)
     createBucketField: builder.mutation<BucketType, BucketType>({
       query: (modifiedBucket) => ({
-        url: `api/bucket/${modifiedBucket._id}`,
+        url: `/bucket/${modifiedBucket._id}`,
         method: 'PUT',
         body: modifiedBucket,
       }),
@@ -382,7 +382,7 @@ export const bucketApi = baseApi.injectEndpoints({
       newRules: { write: string; read: string } 
     }>({
       query: ({ bucket, newRules }) => ({
-        url: `api/bucket/${bucket._id}`,
+        url: `/bucket/${bucket._id}`,
         method: 'PUT',
         body: { ...bucket, acl: newRules },
       }),
@@ -412,7 +412,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Delete bucket history
     deleteBucketHistory: builder.mutation<{ message: string }, BucketType>({
       query: (bucket) => ({
-        url: `api/bucket/${bucket._id}/history`,
+        url: `/bucket/${bucket._id}/history`,
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, bucket) => [
@@ -425,7 +425,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket history setting
     updateBucketHistory: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `api/bucket/${bucket._id}`,
+        url: `/bucket/${bucket._id}`,
         method: 'PUT',
         body: {
           ...bucket,
@@ -458,7 +458,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket readonly setting
     updateBucketReadonly: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `api/bucket/${bucket._id}`,
+        url: `/bucket/${bucket._id}`,
         method: 'PUT',
         body: {
           ...bucket,
@@ -497,7 +497,7 @@ export const bucketApi = baseApi.injectEndpoints({
         delete (body as any).index;
         
         return {
-          url: `api/bucket/${bucket._id}`,
+          url: `/bucket/${bucket._id}`,
           method: 'PUT',
           body,
         };
@@ -528,7 +528,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket limitation
     updateBucketLimitation: builder.mutation<BucketType, { bucketId: string; body: BucketType }>({
       query: ({ bucketId, body }) => ({
-        url: `api/bucket/${bucketId}`,
+        url: `/bucket/${bucketId}`,
         method: 'PUT',
         body,
       }),
@@ -541,7 +541,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket limitation fields
     updateBucketLimitationFields: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `api/bucket/${bucket._id}`,
+        url: `/bucket/${bucket._id}`,
         method: 'PUT',
         body: bucket,
       }),
