@@ -58,7 +58,7 @@ export function StorageItemColumns({
   const maxDepth = useMemo(() => {
     return Math.max(...visibleDirectories.map(dir => dir.currentDepth || 0), 0);
   }, [visibleDirectories]);
-  console.log("maxDepth", maxDepth, "visibleDirectories", visibleDirectories);
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className={styles.container}>
