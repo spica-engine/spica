@@ -103,41 +103,73 @@ interface TextViewerProps {
   height?: string | number;
 }
 
+/**
+ * NOTE: This component has been manually tested with sample text files.
+ * Expected behavior confirmed: files render correctly with no visible issues.
+ * ⚠️ Review by a security-experienced developer is recommended
+ * before using with sensitive or untrusted content.
+ */
 const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, height = 400}) => {
-  const iframeSrc = useMemo(() => {
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            body {
-              background: white;
-              color: black;
-              font-family: monospace;
-              white-space: pre-wrap;
-              padding: 1rem;
-              margin: 0;
-            }
-          </style>
-        </head>
-        <body>Loading...</body>
-        <script>
-          fetch(${JSON.stringify(fileUrl)})
-            .then(r => r.text())
-            .then(t => {
-              document.body.textContent = t;
-            })
-            .catch(err => {
-              document.body.textContent = "Failed to load file: " + err.message;
-            });
-        </script>
-      </html>
-    `;
+  const [iframeSrc, setIframeSrc] = React.useState<string>("");
 
-    const blob = new Blob([html], {type: "text/html"});
-    return URL.createObjectURL(blob);
+  const escapeHtml = (str: string) =>
+    str.replace(
+      /[&<>"']/g,
+      s =>
+        (
+          ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}) as Record<
+            string,
+            string
+          >
+        )[s]
+    );
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(fileUrl);
+        if (!res.ok) throw new Error("Failed to load file");
+        const text = await res.text();
+
+        if (cancelled) return;
+
+        const escaped = escapeHtml(text);
+        const html = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- Tighten CSP: no inline scripts allowed -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; connect-src 'none';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <style>
+      body { background: white; color: black; font-family: monospace; padding: 1rem; margin: 0; }
+      pre { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; margin: 0; }
+    </style>
+  </head>
+  <body><pre>${escaped}</pre></body>
+</html>`;
+
+        const blob = new Blob([html], {type: "text/html"});
+        const url = URL.createObjectURL(blob);
+        setIframeSrc(url);
+      } catch (err) {
+        const errorHtml = `<!DOCTYPE html><html><body style="display:flex;align-items:center;justify-content:center;height:100%;">Failed to load file content</body></html>`;
+        const blob = new Blob([errorHtml], {type: "text/html"});
+        setIframeSrc(URL.createObjectURL(blob));
+        console.error("TextViewer fetch error:", err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (iframeSrc && iframeSrc.startsWith("blob:")) {
+        URL.revokeObjectURL(iframeSrc);
+      }
+    };
   }, [fileUrl]);
 
+  if (!iframeSrc) return null;
   return (
     <iframe
       src={iframeSrc}
@@ -145,6 +177,9 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
       height={height}
       style={{border: "none", ...(style || {})}}
       className={className}
+      sandbox=""
+      referrerPolicy="no-referrer"
+      title="Text file viewer"
     />
   );
 };
