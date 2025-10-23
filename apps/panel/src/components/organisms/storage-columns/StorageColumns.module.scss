@@ -86,6 +86,32 @@
   background-color: var(--color-transparent);
 }
 
+.notAllowedDrop {
+  * {
+    cursor: not-allowed !important;
+    pointer-events: none;
+  }
+  cursor: not-allowed !important;
+  background-color: var(--color-error-light) !important;
+  opacity: 0.6;
+  position: relative;
+  
+  &::after {
+    content: '🚫';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  
+  &:hover {
+    background-color: var(--color-error) !important;
+  }
+}
+
 .droppableColumnActive {
   background-color: var(--color-menu-contrast);
 }

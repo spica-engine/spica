@@ -1,7 +1,7 @@
 import {useDrop} from "react-dnd";
 import {ItemTypes, getCanDropChecks, type DragItem} from "./StorageColumnHooks";
 import type {DirectoryItem, TypeDirectories, TypeDirectoryDepth} from "./StorageColumns";
-import {memo, useMemo, useRef, type DragEventHandler} from "react";
+import {memo, useEffect, useMemo, useRef, type DragEventHandler} from "react";
 import {FlexElement, type TypeAlignment, type TypeFile, Text} from "oziko-ui-kit";
 import {useUploadFilesMutation} from "../../../store/api/storageApi";
 import styles from "./StorageColumns.module.scss";
@@ -21,7 +21,7 @@ interface DroppableColumnProps {
 }
 
 function DroppableColumn({folderPath, items, children, onDrop, className}: DroppableColumnProps) {
-  const [{isOver, canDrop}, drop] = useDrop<DragItem, boolean, {isOver: boolean; canDrop: boolean}>(
+  const [{isOver, canDrop}, drop] = useDrop<DragItem, DirectoryItem, {isOver: boolean; canDrop: boolean}>(
     {
       accept: ItemTypes.STORAGE_ITEM,
       drop: dragItem => {
@@ -71,19 +71,20 @@ function DroppableColumn({folderPath, items, children, onDrop, className}: Dropp
       },
       collect: monitor => ({
         isOver: monitor.isOver(),
-        canDrop: monitor.canDrop()
+        canDrop: monitor.canDrop(),
       })
     }
   );
 
-  const active = isOver && canDrop;
+  const active = isOver && canDrop === true;
+  const notAllowedDrop = isOver && !(canDrop);
   const ref = useRef(null);
   drop(ref);
 
   return (
     <div
       ref={ref}
-      className={`${active ? styles.droppableColumnActive : ""} ${styles.droppableColumn} ${className || ""}`}
+      className={`${active ? styles.droppableColumnActive : ""} ${notAllowedDrop ? styles.notAllowedDrop : ""} ${styles.droppableColumn} ${className || ""}`}
     >
       {children}
     </div>
