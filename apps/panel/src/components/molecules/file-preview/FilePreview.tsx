@@ -114,29 +114,60 @@ export const FilePreview = memo(
 
       navigator.clipboard.writeText(`${origin}/storage-view/${previewFile._id}`);
     };
-
-    const handleReplace = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleReplace = (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (!files || files.length === 0 || !previewFile?._id) return;
-      try {
-        const rawFile = files[0];
-        const parentPath = getParentPath(previewFile.fullPath);
-        const fileName = `${parentPath === ROOT_PATH ? "" : parentPath}${rawFile.name}`;
-        const encodedFileName = encodeURIComponent(fileName);
-        const fileToUpload = new File([rawFile], encodedFileName, {type: rawFile.type});
 
-        const updatedFile = await updateStorageItem({
-          id: previewFile._id,
-          file: fileToUpload
-        }).unwrap();
+      const rawFile = files[0];
+      const parentPath = getParentPath(previewFile.fullPath);
+      const fileName = `${parentPath === ROOT_PATH ? "" : parentPath}${rawFile.name}`;
+      const encodedFileName = encodeURIComponent(fileName);
+      const fileToUpload = new File([rawFile], encodedFileName, {type: rawFile.type});
 
-        const directoryItem = {...updatedFile, label: rawFile.name, fullPath: fileName};
-        if (updatedFile) onFileReplaced?.(directoryItem as DirectoryItem);
+      // Store original file for rollback
+      const originalFile = previewFile;
 
-        e.target.value = "";
-      } catch (error) {
-        console.error("File replacement failed:", error);
-      }
+      // Create proper optimistic update that matches DirectoryItem structure
+      const optimisticUpdate = {
+        ...previewFile, // Keep all original fields
+        name: fileName, // Update name (this is the storage name, not label)
+        label: rawFile.name, // Update display label
+        content: {
+          type: rawFile.type,
+          size: rawFile.size
+        }
+        // Keep fullPath, _id, url, isActive from original
+      };
+
+      // Apply optimistic update
+      onFileReplaced?.(optimisticUpdate);
+
+      updateStorageItem({id: previewFile._id, file: fileToUpload})
+        .unwrap()
+        .then(updatedFile => {
+          if (!updatedFile) {
+            // Rollback on empty response
+            onFileReplaced?.(originalFile);
+            return;
+          }
+
+          // Convert API response to DirectoryItem
+          const directoryItem = {
+            ...updatedFile,
+            label: updatedFile.name.split("/").filter(Boolean).pop() || updatedFile.name,
+            fullPath: updatedFile.name,
+            isActive: previewFile.isActive
+          } as DirectoryItem;
+          
+          onFileReplaced?.(directoryItem);
+        })
+        .catch(error => {
+          console.error("File replacement failed:", error);
+          // Rollback to original file on error
+          onFileReplaced?.(originalFile);
+        });
+
+      e.target.value = ""; // reset input
     };
 
     const handleDeleteConfirm = async () => {
