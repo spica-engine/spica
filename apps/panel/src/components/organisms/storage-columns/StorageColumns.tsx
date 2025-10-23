@@ -1,6 +1,6 @@
 import {FlexElement, Spinner, type TypeFile} from "oziko-ui-kit";
 import styles from "./StorageColumns.module.scss";
-import {useMemo} from "react";
+import {useMemo, useRef, useEffect, useState} from "react";
 import {ROOT_PATH} from "../../../pages/storage/StorageHooks";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
@@ -53,15 +53,36 @@ export function StorageItemColumns({
   isDraggingDisabled = false
 }: StorageItemColumnsProps) {
   const {handleDrop} = useDragAndDrop(directory, setDirectory);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const visibleDirectories = useMemo(() => getVisibleDirectories(directory), [directory]);
   const maxDepth = useMemo(() => {
     return Math.max(...visibleDirectories.map(dir => dir.currentDepth || 0), 0);
   }, [visibleDirectories]);
-  console.log("maxDepth", maxDepth, "visibleDirectories", visibleDirectories);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const checkScrollable = () => {
+      if (container.scrollWidth > container.clientWidth) {
+        container.scrollTo({left: container.scrollWidth, behavior: "smooth"});
+      }
+    };
+
+    checkScrollable();
+
+    const resizeObserver = new ResizeObserver(checkScrollable);
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [visibleDirectories]);
+
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className={styles.container}>
+      <div ref={containerRef} className={styles.container}>
         <FlexElement className={styles.columns} gap={0}>
           {visibleDirectories.map(dir =>
             dir.items ? (
