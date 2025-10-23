@@ -11,30 +11,23 @@ interface DeleteFileButtonProps {
 }
 
 export const DeleteFileButton = memo(({fileId, onFileDeleted, onClose}: DeleteFileButtonProps) => {
-  const [deleteStorageItem] = useDeleteStorageItemMutation();
+  const [deleteStorageItem, {isLoading, error}] = useDeleteStorageItemMutation();
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDeleteConfirm = async () => {
     try {
-      setDeleteLoading(true);
-      setDeleteError(null);
       await deleteStorageItem(fileId).unwrap();
       onFileDeleted(fileId);
       setShowDeleteConfirmation(false);
       onClose();
     } catch (error) {
       console.error("File deletion failed:", error);
-      setDeleteError(error instanceof Error ? error.message : "Failed to delete file");
     } finally {
-      setDeleteLoading(false);
     }
   };
 
   const handleDeleteCancel = () => {
     setShowDeleteConfirmation(false);
-    setDeleteError(null);
   };
 
   return (
@@ -77,8 +70,8 @@ export const DeleteFileButton = memo(({fileId, onFileDeleted, onClose}: DeleteFi
           showInput={true}
           onConfirm={handleDeleteConfirm}
           onCancel={handleDeleteCancel}
-          loading={deleteLoading}
-          error={deleteError}
+          loading={isLoading}
+          error={error ? String(error) : undefined}
         />
       )}
     </>
