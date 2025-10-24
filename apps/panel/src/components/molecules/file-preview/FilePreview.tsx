@@ -1,20 +1,11 @@
-import {useRef} from "react";
-import {FluidContainer, FlexElement, Icon, Text, Button, type TypeFile} from "oziko-ui-kit";
+import {FluidContainer, FlexElement, type TypeFile} from "oziko-ui-kit";
 import styles from "./FilePreview.module.scss";
 import {useUpdateStorageItemMutation} from "../../../store/api";
 import {type DirectoryItem} from "../../../types/storage";
 import useFileView from "../../../hooks/useFileView";
-import {DeleteFileButton} from "./DeleteFileButton";
-
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 B";
-
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  const value = bytes / Math.pow(1024, i);
-
-  return `${parseFloat(value.toFixed(2))} ${units[i]}`;
-}
+import {FileMetadata} from "./file-metadata/FileMetadata";
+import {FileActions} from "./file-actions/FileActions";
+import {FileViewerFrame} from "./file-viewer-frame/FileViewerFrame";
 
 const ROOT_PATH = "/";
 const getParentPath = (fullPath?: string) => {
@@ -56,31 +47,28 @@ function formatUrlForGoogleStorage(url: string) {
   return `${parsed.protocol}//${parsed.host}/${projectName}/${objectId}`;
 }
 
-const handleCopy = (previewFile?: TypeFile) => {
-  if (!previewFile) return;
+function getCopyUrl(file?: TypeFile): string {
+  if (!file) return "";
 
   const serverUrl = import.meta.env.VITE_BASE_URL as string;
   const isLocal = isLocalServerUrl(serverUrl);
   const origin = window.location.origin;
 
   if (isLocal) {
-    navigator.clipboard.writeText(`${origin}/storage-view/${previewFile._id}`);
-    return;
+    return `${origin}/storage-view/${file._id}`;
   }
 
-  const url = new URL(previewFile.url);
+  const url = new URL(file.url);
 
   if (url.hostname === "storage.googleapis.com") {
-    const formattedUrl = formatUrlForGoogleStorage(previewFile.url);
-
+    const formattedUrl = formatUrlForGoogleStorage(file.url);
     if (formattedUrl) {
-      navigator.clipboard.writeText(formattedUrl);
-      return;
+      return formattedUrl;
     }
   }
 
-  navigator.clipboard.writeText(`${origin}/storage-view/${previewFile._id}`);
-};
+  return `${origin}/storage-view/${file._id}`;
+}
 
 interface FilePreviewProps {
   handleClosePreview: () => void;
@@ -105,7 +93,6 @@ export const FilePreview = ({
     file: {...previewFile, url: urlWithTimestamp} as TypeFile,
     isLoading
   });
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const createdAt = new Date(timestamp).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -116,11 +103,16 @@ export const FilePreview = ({
     hour12: true
   });
 
-  const handleReplace = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0 || !previewFile?._id) return;
+  const handleCopy = () => {
+    const copyUrl = getCopyUrl(previewFile);
+    if (copyUrl) {
+      navigator.clipboard.writeText(copyUrl);
+    }
+  };
 
-    const rawFile = files[0];
+  const handleReplace = (rawFile: File) => {
+    if (!previewFile?._id) return;
+
     const parentPath = getParentPath(previewFile.fullPath);
     const fileName = `${parentPath === ROOT_PATH ? "" : parentPath}${rawFile.name}`;
     const encodedFileName = encodeURIComponent(fileName);
@@ -157,8 +149,6 @@ export const FilePreview = ({
         console.error("File replacement failed:", error);
         onFileReplaced?.(previewFile);
       });
-
-    e.target.value = "";
   };
 
   return (
@@ -169,78 +159,28 @@ export const FilePreview = ({
         direction="vertical"
         dimensionY="fill"
         root={{
-          children: (
-            <FlexElement gap={10} direction="vertical">
-              <FluidContainer
-                dimensionX="fill"
-                alignment="rightCenter"
-                suffix={{
-                  children: (
-                    <Button
-                      className={styles.closePreviewButton}
-                      variant="icon"
-                      onClick={handleClosePreview}
-                    >
-                      <Icon name="close" />
-                    </Button>
-                  )
-                }}
-              />
-              <FlexElement className={styles.fileView}>{fileView}</FlexElement>
-            </FlexElement>
-          ),
+          children: <FileViewerFrame onClose={handleClosePreview}>{fileView}</FileViewerFrame>,
           className: styles.fileViewContainer
         }}
         suffix={{
           className: styles.metadata,
           children: (
             <FlexElement direction="vertical" className={styles.metadataContent}>
-              <FlexElement direction="vertical" gap={10}>
-                <Text className={styles.metadataName}>{previewFile?.label}</Text>
-                <Text>
-                  {previewFile?.content?.type} - {formatFileSize(previewFile?.content?.size || 0)}
-                </Text>
-                <Text>{createdAt}</Text>
-              </FlexElement>
-              <FlexElement gap={10}>
-                <Button
-                  className={styles.metadataButton}
-                  variant="text"
-                  onClick={() => handleCopy(previewFile)}
-                >
-                  <Icon name="fileMultiple" size={14} />
-                  Copy
-                </Button>
-                {isImage && (
-                  <Button className={styles.metadataButton} variant="text">
-                    <Icon name="pencil" size={14} />
-                    Edit
-                  </Button>
-                )}
-                <Button
-                  className={styles.metadataButton}
-                  variant="text"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading}
-                >
-                  <Icon name="swapHorizontal" size={14} />
-                  Replace
-                </Button>
-                <input
-                  id="replace-file-input"
-                  type="file"
-                  style={{display: "none"}}
-                  onChange={handleReplace}
-                  ref={fileInputRef}
-                />
-                {previewFile?._id && onFileDeleted && (
-                  <DeleteFileButton
-                    fileId={previewFile._id}
-                    onFileDeleted={onFileDeleted}
-                    onClose={handleClosePreview}
-                  />
-                )}
-              </FlexElement>
+              <FileMetadata
+                name={previewFile?.label}
+                type={previewFile?.content?.type}
+                size={previewFile?.content?.size}
+                createdAt={createdAt}
+              />
+              <FileActions
+                onCopy={handleCopy}
+                onReplace={handleReplace}
+                onDelete={onFileDeleted}
+                fileId={previewFile?._id}
+                isImage={isImage}
+                isLoading={isLoading}
+                onClose={handleClosePreview}
+              />
             </FlexElement>
           )
         }}

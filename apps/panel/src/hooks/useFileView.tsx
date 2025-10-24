@@ -208,6 +208,7 @@ const ImageViewer = ({
   if (!file.content.type.startsWith("image/")) return null;
 
   const loading = Boolean(externalLoading) || isImageLoading;
+  const imageUrl = createImageUrl(file.url);
 
   return (
     <div style={{position: "relative", display: "inline-block"}}>
@@ -226,7 +227,8 @@ const ImageViewer = ({
         </div>
       )}
       <img
-        src={createImageUrl(file.url)}
+        key={imageUrl}
+        src={imageUrl}
         alt={file.name}
         style={{...(style || {}), display: loading ? "none" : "block"}}
         className={className}
@@ -245,7 +247,7 @@ const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => 
   const contentTypeMapping = [
     {
       regex: /^image\//,
-      viewer: (file: TypeFile) => <ImageViewer key={file.url} file={file} loading={isLoading} />
+      viewer: (file: TypeFile, loading: boolean) => <ImageViewer key={file.url} file={file} loading={loading} />
     },
     {
       regex: /^video\//,
@@ -300,7 +302,7 @@ const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => 
   const match = contentTypeMapping.find(({regex}) => regex.test(file.content.type));
 
   if (match) {
-    return match.viewer(file);
+    return match.viewer(file, isLoading || false);
   }
 
   return <Icon name="fileDocument" size={72} />;

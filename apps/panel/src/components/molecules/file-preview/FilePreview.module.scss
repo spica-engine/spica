@@ -19,23 +19,12 @@
   }
 }
 
-.closePreviewButton {
-  padding: 0 !important;
-}
-
-
 .fileViewContainer {
   width: 600px !important;
   > * {
     width: 100% !important;
   }
 }
-
-.fileView {
-  width: 100% !important;
-  height: 400px !important;
-}
-
 
 .metadata {
   height: 100% !important;
@@ -47,20 +36,3 @@
   }
 }
 
-.metadataName {
-  font-weight: 700;
-}
-
-.metadataButton {
-  height: 32px !important;
-  font-size: var(--font-size-md);
-  align-items: center !important;
-  display: flex;
-  color: var(--color-font-primary) !important;
-}
-
-.metadataClearButton {
-  min-width: 74px !important;
-  width: 74px !important;
-  color: var(--color-font-secondary) !important;
-}

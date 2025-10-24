@@ -1,7 +1,7 @@
 import {memo, useState} from "react";
 import {Button, Icon} from "oziko-ui-kit";
-import {useDeleteStorageItemMutation} from "../../../store/api";
-import Confirmation from "../confirmation/Confirmation";
+import {useDeleteStorageItemMutation} from "../../../../store/api";
+import Confirmation from "../../confirmation/Confirmation";
 import styles from "./FilePreview.module.scss";
 
 interface DeleteFileButtonProps {
@@ -33,7 +33,7 @@ export const DeleteFileButton = memo(({fileId, onFileDeleted, onClose}: DeleteFi
   return (
     <>
       <Button
-        className={`${styles.metadataButton} ${styles.metadataClearButton}`}
+        className={`${styles.actionButton} ${styles.clearButton}`}
         color="danger"
         onClick={() => setShowDeleteConfirmation(true)}
       >
@@ -46,9 +46,7 @@ export const DeleteFileButton = memo(({fileId, onFileDeleted, onClose}: DeleteFi
           inputPlaceholder="Type Here"
           description={
             <>
-              <span className={styles.confirmText}>
-                This action will permanently delete the file.
-              </span>
+              <span>This action will permanently delete the file.</span>
               <span>
                 Please type <strong>agree</strong> to confirm deletion.
               </span>
