@@ -1,5 +1,5 @@
 import {FlexElement, Text} from "oziko-ui-kit";
-import styles from "./FilePreview.module.scss";
+import styles from "./FileMetada.module.scss";
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";

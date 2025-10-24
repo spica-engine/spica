@@ -1,7 +1,7 @@
 import {useRef} from "react";
 import {FlexElement, Button, Icon} from "oziko-ui-kit";
 import {DeleteFileButton} from "./DeleteFileButton";
-import styles from "./FilePreview.module.scss";
+import styles from "./FileActions.module.scss";
 
 interface FileActionsProps {
   onCopy: () => void;

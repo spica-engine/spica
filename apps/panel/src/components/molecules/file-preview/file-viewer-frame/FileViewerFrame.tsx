@@ -1,5 +1,5 @@
 import {FlexElement, Button, Icon} from "oziko-ui-kit";
-import styles from "./FilePreview.module.scss";
+import styles from "./FileViewer.module.scss";
 
 interface FileViewerFrameProps {
   children: React.ReactNode;
@@ -9,7 +9,7 @@ interface FileViewerFrameProps {
 export const FileViewerFrame = ({children, onClose}: FileViewerFrameProps) => {
   return (
     <FlexElement gap={10} direction="vertical">
-      <FlexElement gap={10} alignment="rightCenter">
+      <FlexElement gap={10} dimensionX="fill" alignment="rightCenter">
         <Button className={styles.closePreviewButton} variant="icon" onClick={onClose}>
           <Icon name="close" />
         </Button>

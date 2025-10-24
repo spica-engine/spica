@@ -2,7 +2,7 @@ import {memo, useState} from "react";
 import {Button, Icon} from "oziko-ui-kit";
 import {useDeleteStorageItemMutation} from "../../../../store/api";
 import Confirmation from "../../confirmation/Confirmation";
-import styles from "./FilePreview.module.scss";
+import styles from "./FileActions.module.scss";
 
 interface DeleteFileButtonProps {
   fileId: string;
