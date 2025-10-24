@@ -96,17 +96,6 @@
   opacity: 0.6;
   position: relative;
   
-  &::after {
-    content: '🚫';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 48px;
-    pointer-events: none;
-    z-index: 1000;
-  }
-  
   &:hover {
     background-color: var(--color-error) !important;
   }
