@@ -135,6 +135,10 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
     initialOffset: monitor.getInitialSourceClientOffset()
   }));
 
+  const {itemType} = useDragLayer(monitor => ({
+    itemType: monitor.getItemType()
+  }));
+
   const hoverIndex = useMemo(
     () =>
       itemRefs.findIndex(ref => {
@@ -157,7 +161,7 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
     [initialOffset?.x, currentOffset?.y]
   );
 
-  if (!isDragging) return null;
+  if (!isDragging || itemType !== "NAVIGATOR_ITEM") return null;
 
   return (
     <div className={styles.dragLayer}>
