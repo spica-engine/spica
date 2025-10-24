@@ -1,0 +1,26 @@
+.outlinedInput {
+  outline: var(--border-default);
+}
+
+.objectProperty {
+  gap: var(--gap-md) !important;
+}
+
+.relationInput > div:nth-child(2) * {
+  text-transform: none;
+}
+
+.objectInput {
+  border: none;
+  >div {
+    border: var(--border-default);
+    border-radius: var(--border-radius-md);
+  }
+  >div:first-child {
+    border: none !important;
+  }
+}
+
+.arrayInput {
+  border: none !important;
+}

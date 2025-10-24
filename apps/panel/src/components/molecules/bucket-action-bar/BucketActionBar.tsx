@@ -7,6 +7,7 @@ import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
 import Confirmation from "../confirmation/Confirmation";
 import type {BucketDataType, BucketType, Property} from "src/services/bucketService";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
+import BucketEntryDrawer from "../../organisms/BucketEntryDrawer/BucketEntryDrawer";
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 
 type BucketActionBarProps = {
@@ -112,7 +113,6 @@ const BucketActionBar = ({
   const [deleteEntryError, setDeleteEntryError] = useState<string | null>(null);
 
   useEffect(() => setSearchValue(""), [bucket?._id]);
-  const isReadOnlyChecked = useMemo(() => bucket?.readOnly, [bucket]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -207,6 +207,7 @@ const BucketActionBar = ({
         loading={searchLoading}
       />
       <FlexElement className={styles.actionBar}>
+        <BucketEntryDrawer bucket={bucket} />
         {selectedEntries.size > 0 && (
           <Button
             onClick={handleOpenEntryDeletionForm}
@@ -215,12 +216,6 @@ const BucketActionBar = ({
           >
             <Icon name="delete" />
             Delete
-          </Button>
-        )}
-        {!isReadOnlyChecked && (
-          <Button onClick={() => {}}>
-            <Icon name="plus" />
-            New Entry
           </Button>
         )}
         <Button
