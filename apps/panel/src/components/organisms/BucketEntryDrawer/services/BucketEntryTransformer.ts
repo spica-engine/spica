@@ -97,7 +97,7 @@ export class BucketEntryTransformer {
     }
 
     if (type === "relation") {
-      return Array.isArray(value) ? value.map(v => v.value) : value?.value;
+      return Array.isArray(value) ? value.map(v => v?.value ?? v) : value?.value;
     }
 
     if (type === "object") {

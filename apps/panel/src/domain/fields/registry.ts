@@ -988,7 +988,13 @@ const JSON_DEFINITION: FieldDefinition = {
     type: FieldKind.Json
   }),
   getDefaultValue: property => property.default,
-  getDisplayValue: value => JSON.parse(value),
+  getDisplayValue: value => {
+    try {
+      return JSON.parse(value);
+    } catch (e) {
+      return null;
+    }
+  },
   getSaveReadyValue: value => JSON.stringify(value),
   validateCreationForm: form => runYupValidation(JSON_FIELD_CREATION_FORM_SCHEMA, form),
   validateValue: (value, properties, required) =>

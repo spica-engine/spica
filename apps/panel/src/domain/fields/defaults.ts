@@ -1,4 +1,3 @@
-import { FIELD_REGISTRY } from "./registry";
 import type {FieldCreationForm, FieldKind} from "./types";
 
 export function freezeFormDefaults(seed: FieldCreationForm): FieldCreationForm {

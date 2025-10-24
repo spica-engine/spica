@@ -402,9 +402,7 @@ export const BucketProvider = ({children}: {children: ReactNode}) => {
 
   const createBucketEntry = useCallback(
     async (bucketId: string, data: Record<string, any>) => {
-      try {
-        // const result = await apiCreateBucketEntry(bucketId, data);
-        // if (!result) return;
+      try {     
         refreshBucketData();
         return {};
       } catch (error) {

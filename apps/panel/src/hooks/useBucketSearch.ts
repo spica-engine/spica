@@ -34,7 +34,7 @@ export function useBucketSearch(
     async (search: string) => {
       const trimmed = search.trim();
       const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
-      setSearchQuery(query ? {bucketId: bucketId!, ...query} : undefined);
+      setSearchQuery(query && bucketId ? {bucketId, ...query} : undefined);
     },
     [bucketId, searchableColumns]
   );
