@@ -46,15 +46,25 @@ export const getDependencySynchronizer = (
     const functionName = change.resource.content.name;
     const language = change.resource.content.language;
     const dependencies = parsed.dependencies || {};
+    const devDependencies = parsed.devDependencies || {};
+
+    // Add TypeScript compiler as devDependency for TypeScript functions for build to work.
+    if (language == "typescript" && !devDependencies.typescript) {
+      devDependencies.typescript = "^5.0.0";
+    }
+
     let buildScript: string;
     switch (language) {
       case "javascript":
-        buildScript = `mkdir -p ../.build/${functionName} && ln -sf node_modules ../.build/${functionName}/node_modules && cp index.mjs ../.build/${functionName}/index.mjs`;
+        buildScript = `mkdir -p ../.build/${functionName} && ln -sf ./node_modules ../.build/${functionName}/node_modules && cp index.mjs ../.build/${functionName}/index.mjs`;
         break;
       case "typescript":
-        buildScript = `mkdir -p ../.build/${functionName} && ln -sf node_modules ../.build/${functionName}/node_modules && tsc && mv ../.build/${functionName}/index.js ../.build/${functionName}/index.mjs`;
+        buildScript = `mkdir -p ../.build/${functionName} && ln -sf ./node_modules ../.build/${functionName}/node_modules && tsc && mv ../.build/${functionName}/index.js ../.build/${functionName}/index.mjs`;
         break;
       default:
+        console.warn(
+          `Unknown language "${language}" for function "${functionName}". Skipping build script generation.`
+        );
         buildScript = "";
         break;
     }
@@ -62,6 +72,7 @@ export const getDependencySynchronizer = (
     const packageJson = {
       ...parsed,
       dependencies,
+      devDependencies,
       scripts: {
         ...parsed.scripts,
         build: buildScript
