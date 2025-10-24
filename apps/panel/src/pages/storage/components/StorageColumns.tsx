@@ -1,12 +1,12 @@
 import {FlexElement, Spinner, type TypeFile} from "oziko-ui-kit";
 import styles from "./StorageColumns.module.scss";
 import {useMemo, useRef, useEffect} from "react";
-import {ROOT_PATH} from "../StorageHooks";
+import {ROOT_PATH} from "../constants";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {StorageItemColumn} from "./StorageColumn";
 import type {DirectoryItem, TypeDirectories, TypeDirectoryDepth} from "../../../types/storage";
-import {useDragAndDrop} from "./hooks/useDragAndDrop";
+import {useDragAndDrop} from "../hooks/useDragAndDrop";
 import {DroppableColumn} from "./DroppableColumn";
 import {StorageItem} from "./StorageItem";
 
@@ -14,8 +14,8 @@ interface StorageItemColumnsProps {
   handleFolderClick: (
     folderName: string,
     fullPath: string,
+    directoryDepth: TypeDirectoryDepth,
     wasActive: boolean,
-    directoryDepth: TypeDirectoryDepth
   ) => void;
   setPreviewFile: (file: DirectoryItem | undefined) => void;
   directory: TypeDirectories;

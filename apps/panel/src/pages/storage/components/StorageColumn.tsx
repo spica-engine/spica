@@ -5,7 +5,7 @@ import styles from "./StorageColumns.module.scss";
 import {
   type DirectoryItem,
   type TypeDirectoryDepth,
-  type TypeDirectories,
+  type TypeDirectories
 } from "../../../types/storage";
 
 interface StorageItemColumnProps {
@@ -13,8 +13,8 @@ interface StorageItemColumnProps {
   handleFolderClick: (
     folderName: string,
     fullPath: string,
-    isActive: boolean,
     depth: TypeDirectoryDepth,
+    isActive: boolean,
   ) => void;
   setPreviewFile: (file?: DirectoryItem) => void;
   depth: TypeDirectoryDepth;
@@ -100,7 +100,7 @@ export const StorageItemColumn = memo(
                 key={item._id}
                 item={item}
                 onFolderClick={folderName =>
-                  handleFolderClick(folderName, fullPath, isActive, depth)
+                  handleFolderClick(folderName, fullPath, depth, isActive)
                 }
                 onFileClick={setPreviewFile}
                 isActive={isActive}

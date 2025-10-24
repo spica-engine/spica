@@ -1,12 +1,25 @@
 import type {DirectoryItem, TypeDirectories} from "src/types/storage";
 
+export function findMaxDepthDirectory<T extends {currentDepth?: number}>(arr: T[]): T | undefined {
+  return arr.reduce<T | undefined>((max, obj) => {
+    if (obj.currentDepth === undefined) return max;
+    if (!max || max.currentDepth === undefined || obj.currentDepth > max.currentDepth) return obj;
+    return max;
+  }, undefined);
+}
+
 export function normalizePathWithTrailingSlash(path: string): string {
   return path.endsWith("/") ? path : path + "/";
 }
 
-export function getParentPath(fullPath: string): string {
-  return fullPath.substring(0, fullPath.lastIndexOf("/") + 1);
-}
+export const getParentPath = (fullPath?: string) => {
+  const res =
+    fullPath?.replace(/\/[^/]+\/?$/, "") === fullPath
+      ? "/"
+      : fullPath?.replace(/\/[^/]+\/?$/, "") || "/";
+  return res === "/" ? res : res + "/";
+};
+
 
 function isDifferentLocation(oldParent: string, newParent: string): boolean {
   return oldParent !== newParent;

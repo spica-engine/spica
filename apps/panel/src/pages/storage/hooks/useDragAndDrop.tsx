@@ -2,7 +2,7 @@ import type { TypeDirectories, DirectoryItem } from "src/types/storage";
 import {
   useUpdateStorageNameMutation,
   useLazyGetStorageItemsQuery
-} from "../../../../store/api/storageApi";
+} from "../../../store/api/storageApi";
 import { getParentPath, normalizePathWithTrailingSlash, updateDirectoryLists, updateStorageNames, validateDrop } from "../utils";
 
 export function useDragAndDrop(

@@ -1,7 +1,7 @@
 import {memo} from "react";
 import {FlexElement, Icon, Text} from "oziko-ui-kit";
-import styles from "./StorageColumns.module.scss";
 import {type DirectoryItem} from "../../../types/storage";
+import styles from "./StorageItem.module.scss";
 import { DraggableStorageItem } from "./DroppableItem";
 
 interface StorageItemProps {
