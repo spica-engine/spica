@@ -1,0 +1,66 @@
+
+.filePreviewContent {
+  width: 100% !important;
+  height: 100% !important;
+  justify-content: space-between;
+
+  img,
+  embed {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.closePreviewButton {
+  padding: 0 !important;
+}
+
+
+.fileViewContainer {
+  width: 600px !important;
+  > * {
+    width: 100% !important;
+  }
+}
+
+.fileView {
+  width: 100% !important;
+  height: 400px !important;
+}
+
+
+.metadata {
+  height: 100% !important;
+  padding-top: var(--padding-xl);
+  font-size: var(--font-size-md);
+  .metadataContent {
+    height: 100% !important;
+    justify-content: space-between !important;
+  }
+}
+
+.metadataName {
+  font-weight: 700;
+}
+
+.metadataButton {
+  height: 32px !important;
+  font-size: var(--font-size-md);
+  align-items: center !important;
+  display: flex;
+  color: var(--color-font-primary) !important;
+}
+
+.metadataClearButton {
+  min-width: 74px !important;
+  width: 74px !important;
+  color: var(--color-font-secondary) !important;
+}
