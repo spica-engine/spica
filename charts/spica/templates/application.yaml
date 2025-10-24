@@ -96,7 +96,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
-                  key: passportSecret
+                  key: secret
             - name: BUCKET_DATA_HASH_SECRET
               valueFrom:
                 secretKeyRef:
