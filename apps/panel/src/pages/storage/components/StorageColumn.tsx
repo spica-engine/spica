@@ -6,7 +6,7 @@ import {
   type DirectoryItem,
   type TypeDirectoryDepth,
   type TypeDirectories,
-} from "src/types/storage";
+} from "../../../types/storage";
 
 interface StorageItemColumnProps {
   items: DirectoryItem[];
