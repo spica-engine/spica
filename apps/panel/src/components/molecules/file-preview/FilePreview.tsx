@@ -1,7 +1,7 @@
 import {memo} from "react";
 import {FluidContainer, FlexElement, Icon, Text, Button, type TypeFile} from "oziko-ui-kit";
 import styles from "./FilePreview.module.scss";
-import {type DirectoryItem} from "../../organisms/storage-columns/StorageColumns";
+import {type DirectoryItem} from "../../../types/storage";
 import useFileView from "../../../hooks/useFileView";
 
 function formatFileSize(bytes: number): string {
@@ -27,9 +27,7 @@ export const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewP
   url.searchParams.set("t", String(Date.now()));
   const urlWithTimestamp = url.toString();
   const file: TypeFile | undefined = {...previewFile, url: urlWithTimestamp} as TypeFile;
-  const fileView = useFileView({
-    file
-  });
+  const fileView = useFileView({file});
   const createdAt = new Date(timestamp).toLocaleString("en-US", {
     month: "short",
     day: "numeric",

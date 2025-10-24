@@ -1,22 +1,16 @@
 import {FluidContainer} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
-import {
-  StorageItemColumns,
-  type DirectoryItem,
-  type TypeDirectoryDepth
-} from "../../components/organisms/storage-columns/StorageColumns";
+import {StorageItemColumns} from "./components/storage-columns/StorageColumns";
 import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
-import StorageActionBar from "../../components/molecules/storage-action-bar/StorageActionBar";
-import {
-  useDirectoryNavigation,
-  useFilePreview,
-  useFileOperations,
-  useStorageDataSync
-} from "./StorageHooks";
+import StorageActionBar from "./components/storage-action-bar/StorageActionBar";
+import {useDirectoryNavigation} from "./hooks/useDirectoryNavigation";
+import {useFileOperations} from "./hooks/useFileOperations";
+import {useFilePreview} from "./hooks/useFilePreview";
+import {useStorageDataSync} from "./hooks/useStorageDataSync";
+import type {DirectoryItem, TypeDirectoryDepth} from "src/types/storage";
 
 export default function StoragePage() {
   const {directory, setDirectory, handleFolderClick: onFolderClick} = useDirectoryNavigation();
-
   const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
   useStorageDataSync(directory, setDirectory);
   const {onUploadComplete} = useFileOperations(directory, setDirectory, setPreviewFile);
@@ -25,8 +19,9 @@ export default function StoragePage() {
     folderName: string,
     fullPath: string,
     directoryDepth: TypeDirectoryDepth,
-    wasActive: boolean
+    wasActive: boolean,
   ) => {
+    console.log('handleFolderClick called with:', { folderName, fullPath, directoryDepth, wasActive });
     handleClosePreview();
     onFolderClick(folderName, fullPath, directoryDepth, wasActive, false);
   };
