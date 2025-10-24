@@ -84,7 +84,6 @@ function useStorageService() {
     [updateStorageName]
   );
 
-
   const convertStorageToTypeFile = (storage: Storage): TypeFile => ({
     _id: storage._id || "",
     name: storage.name,
@@ -97,7 +96,7 @@ function useStorageService() {
     url: storage.url || ""
   });
 
-  const buildDirectoryFilter = useCallback((directory: string[]) => {
+  const buildDirectoryFilter = useCallback((directory: string[] = ["/"]) => {
     const currentDirectory = directory.length === 1 ? "/" : directory.slice(1).join("");
 
     if (currentDirectory === "/") {
@@ -120,7 +119,6 @@ function useStorageService() {
     }
   }, []);
 
-
   return {
     uploadFiles: uploadFilesWithProgress,
     updateOne,
@@ -131,9 +129,8 @@ function useStorageService() {
 
     uploadLoading: uploadResult.isLoading,
     uploadProgress,
-    
-    uploadError: uploadResult.error,
 
+    uploadError: uploadResult.error
   };
 }
 

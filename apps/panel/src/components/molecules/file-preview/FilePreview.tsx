@@ -1,8 +1,8 @@
-import {memo, useRef, useState} from "react";
+import {useRef} from "react";
 import {FluidContainer, FlexElement, Icon, Text, Button, type TypeFile} from "oziko-ui-kit";
 import styles from "./FilePreview.module.scss";
-import {type DirectoryItem} from "../../organisms/storage-columns/StorageColumns";
 import {useUpdateStorageItemMutation} from "../../../store/api";
+import {type DirectoryItem} from "../../../types/storage";
 import useFileView from "../../../hooks/useFileView";
 import {DeleteFileButton} from "./DeleteFileButton";
 
