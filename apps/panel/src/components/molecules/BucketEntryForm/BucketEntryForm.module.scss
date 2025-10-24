@@ -1,0 +1,16 @@
+.formContent {
+  width: 100% !important;
+  padding-bottom: var(--padding-xl);
+}
+
+.inputFieldContainer {
+  width: 100%;
+  min-width: 100%;
+  > div {
+    border: none;
+  }
+  *:not(input):not(textarea) {
+    text-transform: capitalize;
+  }
+}
+

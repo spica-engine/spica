@@ -1,17 +1,18 @@
 @import "../../../styles/mixins";
 
+
 .drawerContent {
   border-top-left-radius: var(--border-radius-xl);
   border-bottom-left-radius: var(--border-radius-xl);
-}
-
-.drawerContentScrollableContent {
+  height: 100%;
+  overflow-y: auto;
   @include hideScrollbar;
 }
 
 .formContainer {
-  display: block !important;
-  max-height: 500px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   width: 100% !important;
   padding: var(--padding-xl);
 }
@@ -32,17 +33,3 @@
   }
 }
 
-.footer {
-  width: 100% !important;
-  justify-content: flex-end !important;
-
-  .errorText {
-    font-size: var(--font-size-xs) !important;
-    color: var(--color-danger);
-    width: 100%;
-  }
-
-  .saveButton {
-    height: 38px;
-  }
-}

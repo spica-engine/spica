@@ -7,7 +7,7 @@ import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
 import Confirmation from "../confirmation/Confirmation";
 import type {BucketDataType, BucketType, Property} from "src/services/bucketService";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
-import NewBucketEntryDrawer from "../new-bucket-entry-drawer/NewBucketEntryDrawer";
+import BucketEntryDrawer from "../../organisms/BucketEntryDrawer/BucketEntryDrawer";
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 
 type BucketActionBarProps = {
@@ -207,7 +207,7 @@ const BucketActionBar = ({
         loading={searchLoading}
       />
       <FlexElement className={styles.actionBar}>
-        <NewBucketEntryDrawer bucket={bucket} />
+        <BucketEntryDrawer bucket={bucket} />
         {selectedEntries.size > 0 && (
           <Button
             onClick={handleOpenEntryDeletionForm}
@@ -218,12 +218,6 @@ const BucketActionBar = ({
             Delete
           </Button>
         )}
-        {/* {!bucket?.readonly && (
-          <Button onClick={() => {}}>
-            <Icon name="plus" />
-            New Entry
-          </Button>
-        )} */}
         <Button
           className={styles.refreshButton}
           variant="text"

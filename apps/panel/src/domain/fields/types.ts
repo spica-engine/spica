@@ -101,12 +101,12 @@ export type ObjectInputRelationHandlers = {
 };
 
 export interface FieldDefinition {
-  kind: FieldKind; // name of the field kind
-  display: FieldDisplayMeta; // UI metadata
-  creationFormDefaultValues: FieldCreationForm; // seed values for creation form
-  getDefaultValue: (property: Property) => any; // default value for data creation using this field, if any
-  validateCreationForm: (form: FieldCreationForm) => TypeInputRepresenterError | null; // validate the creation form state for this field type
-  validateValue: (value: any, properties: Property, required?: boolean) => FormError; // validate a raw value for this field (e.g. before saving data)
+  kind: FieldKind;  
+  display: FieldDisplayMeta; 
+  creationFormDefaultValues: FieldCreationForm; 
+  getDefaultValue: (property: Property) => any; 
+  validateCreationForm: (form: FieldCreationForm) => TypeInputRepresenterError | null; 
+  validateValue: (value: any, properties: Property, required?: boolean) => FormError; 
   buildCreationFormProperties: (isInnerField?: boolean) => {
     fieldValues: TypeProperties;
     configurationValues: TypeProperties;
@@ -116,16 +116,17 @@ export interface FieldDefinition {
   buildValueProperty: (
     property: Property,
     relationProps?: RelationInputRelationHandlers | ObjectInputRelationHandlers
-  ) => TypeProperty; // build TypeProperty-compatible value schema for this field  requiresInnerFields?: (form: FieldCreationForm) => boolean; // whether this field kind structurally requires at least one inner field
-  requiresInnerFields?: (form: FieldCreationForm) => boolean; // whether this field kind structurally requires at least one inner field
-  applyPresetLogic?: (form: FieldCreationForm, oldValues: FieldCreationForm) => FieldCreationForm; // apply preset logic to the form state, (only for string and array's with string items)
+  ) => TypeProperty; 
+  requiresInnerFields?: (form: FieldCreationForm) => boolean; 
+  applyPresetLogic?: (form: FieldCreationForm, oldValues: FieldCreationForm) => FieldCreationForm; 
   applySelectionTypeLogic?: (
     form: FieldCreationForm,
     properties: TypeProperties
-  ) => {updatedForm: FieldCreationForm; updatedFieldProperties: TypeProperties}; // apply selection type logic to the form state (only for multiselect)
-  // Optional formatting function for displaying values in lists, etc.
+  ) => {updatedForm: FieldCreationForm; updatedFieldProperties: TypeProperties}; 
   getDisplayValue: (value: any, properties?: Property) => any;
-  getSaveReadyValue: (value: any, properties?: Property) => any; // transform the value into a save-ready format, if needed (e.g. for uploading to server)  // Optional builder that converts a FieldFormState to API Property definition (progressive migration from createFieldProperty.ts)
+  getSaveReadyValue: (value: any, properties?: Property) => any; 
   buildCreationFormApiProperty: (form: FieldFormState) => Property;
   capabilities?: FieldCapabilities;
 }
+
+export type FieldRegistry = Partial<Record<FieldKind, FieldDefinition>>;
