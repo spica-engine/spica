@@ -1,6 +1,6 @@
 import {FlexElement, Spinner, type TypeFile} from "oziko-ui-kit";
 import styles from "./StorageColumns.module.scss";
-import {useMemo, useRef, useEffect, useState} from "react";
+import {useMemo, useRef, useEffect} from "react";
 import {ROOT_PATH} from "../../../pages/storage/StorageHooks";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
