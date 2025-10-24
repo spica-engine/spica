@@ -12,15 +12,15 @@ function build(compilation: Compilation) {
     moduleResolution: "node",
     module: "ES2022",
     target: "ES2022",
-    typeRoots: [path.join(compilation.cwd, "node_modules", "@types")],
+    typeRoots: ["./node_modules/@types"],
     sourceMap: true,
     alwaysStrict: true,
     preserveSymlinks: true,
     incremental: true,
-    tsBuildInfoFile: path.join(outDirAbsolutePath, ".tsbuildinfo"),
-    baseUrl: compilation.cwd,
-    rootDir: compilation.cwd,
-    outDir: outDirAbsolutePath,
+    tsBuildInfoFile: path.join(compilation.outDir, ".tsbuildinfo"),
+    baseUrl: ".",
+    rootDir: ".",
+    outDir: compilation.outDir,
     declaration: true
   };
 
@@ -41,15 +41,15 @@ function build(compilation: Compilation) {
     moduleResolution: ts.ModuleResolutionKind.Node10,
     module: ts.ModuleKind.ES2022,
     target: ts.ScriptTarget.ES2022,
-    typeRoots: tsconfigOptions.typeRoots,
+    typeRoots: ["./node_modules/@types"],
     sourceMap: tsconfigOptions.sourceMap,
     alwaysStrict: tsconfigOptions.alwaysStrict,
     preserveSymlinks: tsconfigOptions.preserveSymlinks,
     incremental: tsconfigOptions.incremental,
-    tsBuildInfoFile: tsconfigOptions.tsBuildInfoFile,
-    baseUrl: tsconfigOptions.baseUrl,
-    rootDir: tsconfigOptions.rootDir,
-    outDir: tsconfigOptions.outDir,
+    tsBuildInfoFile: path.join(compilation.outDir, ".tsbuildinfo"),
+    baseUrl: ".",
+    rootDir: ".",
+    outDir: outDirAbsolutePath,
     declaration: tsconfigOptions.declaration
   };
 
