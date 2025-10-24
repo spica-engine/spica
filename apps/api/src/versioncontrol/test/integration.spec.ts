@@ -407,8 +407,10 @@ describe("Versioning", () => {
               private: true,
               license: "UNLICENSED",
               keywords: ["spica", "function", "node.js"],
+              dependencies: {},
+              devDependencies: {},
               scripts: {
-                build: `mkdir -p .build/${fn.name} && cp index.mjs .build/${fn.name}/index.mjs`
+                build: `mkdir -p ../.build/${fn.name} && ln -sf ./node_modules ../.build/${fn.name}/node_modules && cp index.mjs ../.build/${fn.name}/index.mjs`
               }
             },
             schema: expectedSchema
@@ -446,8 +448,10 @@ describe("Versioning", () => {
               private: true,
               license: "UNLICENSED",
               keywords: ["spica", "function", "node.js"],
+              dependencies: {},
+              devDependencies: {},
               scripts: {
-                build: `mkdir -p .build/${fn.name} && cp index.mjs .build/${fn.name}/index.mjs`
+                build: `mkdir -p ../.build/${fn.name} && ln -sf ./node_modules ../.build/${fn.name}/node_modules && cp index.mjs ../.build/${fn.name}/index.mjs`
               }
             },
             schema: {...expectedSchema, triggers: {onCall}}
@@ -480,8 +484,10 @@ describe("Versioning", () => {
               private: true,
               license: "UNLICENSED",
               keywords: ["spica", "function", "node.js"],
+              dependencies: {},
+              devDependencies: {},
               scripts: {
-                build: `mkdir -p .build/${fn.name} && cp index.mjs .build/${fn.name}/index.mjs`
+                build: `mkdir -p ../.build/${fn.name} && ln -sf ./node_modules ../.build/${fn.name}/node_modules && cp index.mjs ../.build/${fn.name}/index.mjs`
               }
             },
             schema: {...expectedSchema, triggers: {onCall}}
