@@ -23,7 +23,7 @@ export function useStorageDataSync(
         i.fullPath === dirToChange.fullPath ? {...i, items: convertedData} : i
       );
     }
-    console.log("Syncing storage data, new directories:", newDirectories);
+
     setDirectory(newDirectories);
   }, [storageData]);
 }
