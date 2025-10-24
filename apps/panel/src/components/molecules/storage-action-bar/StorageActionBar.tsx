@@ -3,7 +3,7 @@ import SearchBar from "../../atoms/search-bar/SearchBar";
 import styles from "./StorageActionBar.module.scss";
 import CreateFile from "../create-file-modal/CreateFile";
 import CreateFolder from "../create-folder-modal/CreateFolderModal";
-import type {TypeDirectories} from "src/components/organisms/storage-columns/StorageColumns";
+import type {TypeDirectories} from "src/pages/storage/components/StorageColumns";
 import {findMaxDepthDirectory, ROOT_PATH} from "../../../pages/storage/StorageHooks";
 
 interface StorageActionBarProps {

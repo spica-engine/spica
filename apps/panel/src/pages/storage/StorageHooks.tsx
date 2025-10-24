@@ -5,7 +5,7 @@ import type {
   TypeDirectories,
   DirectoryItem,
   TypeDirectoryDepth
-} from "../../components/organisms/storage-columns/StorageColumns";
+} from "./components/StorageColumns";
 import {useGetStorageItemsQuery} from "../../store/api";
 
 export const ROOT_PATH = "/";

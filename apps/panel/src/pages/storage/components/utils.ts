@@ -1,35 +1,12 @@
-import {
-  useUpdateStorageNameMutation,
-  useLazyGetStorageItemsQuery
-} from "../../../store/api/storageApi";
-import type {DirectoryItem, TypeDirectories} from "./StorageColumns";
+import type {DirectoryItem, TypeDirectories} from "src/types/storage";
 
-export const ItemTypes = {
-  STORAGE_ITEM: "storage_item"
-} as const;
-
-export interface DragItem {
-  id: string;
-  name: string;
-  fullPath: string;
-  isDirectory: boolean;
-  parentPath: string;
-}
-
-function normalizePathWithTrailingSlash(path: string): string {
+export function normalizePathWithTrailingSlash(path: string): string {
   return path.endsWith("/") ? path : path + "/";
 }
 
-function getParentPath(fullPath: string): string {
+export function getParentPath(fullPath: string): string {
   return fullPath.substring(0, fullPath.lastIndexOf("/") + 1);
 }
-
-type CanDropCheck = (
-  oldParent: string,
-  newParent: string,
-  item: DirectoryItem,
-  items: DirectoryItem[]
-) => boolean;
 
 function isDifferentLocation(oldParent: string, newParent: string): boolean {
   return oldParent !== newParent;
@@ -61,7 +38,14 @@ function isNotMovingFolderIntoChild(
   return !normalizedChild.startsWith(normalizedParent);
 }
 
-export function getCanDropChecks(): CanDropCheck[] {
+type CanDropCheck = (
+  oldParent: string,
+  newParent: string,
+  item: DirectoryItem,
+  items: DirectoryItem[]
+) => boolean;
+
+function getCanDropChecks(): CanDropCheck[] {
   return [
     (oldParent, newParent) => isDifferentLocation(oldParent, newParent),
     (oldParent, newParent, item, items) => hasUniqueNameInTarget(oldParent, newParent, item, items),
@@ -69,7 +53,7 @@ export function getCanDropChecks(): CanDropCheck[] {
   ];
 }
 
-function validateDrop(
+export function validateDrop(
   draggedItem: DirectoryItem,
   oldParent: string,
   newParent: string,
@@ -79,7 +63,10 @@ function validateDrop(
   return checks.every(check => check(oldParent, newParent, draggedItem, allItems));
 }
 
-function removeItemFromDirectory(dir: TypeDirectories[0], itemId: string): TypeDirectories[0] {
+export function removeItemFromDirectory(
+  dir: TypeDirectories[0],
+  itemId: string
+): TypeDirectories[0] {
   if (!dir.items) return dir;
 
   const hasItem = dir.items.some(i => i._id === itemId);
@@ -94,7 +81,7 @@ function removeItemFromDirectory(dir: TypeDirectories[0], itemId: string): TypeD
   return dir;
 }
 
-function addItemToDirectory(
+export function addItemToDirectory(
   dir: TypeDirectories[0],
   toPath: string,
   item: DirectoryItem
@@ -130,7 +117,11 @@ interface DirectoryUpdateParams {
   toPath: string;
 }
 
-function updateDirectoryLists({directory, item, toPath}: DirectoryUpdateParams): TypeDirectories {
+export function updateDirectoryLists({
+  directory,
+  item,
+  toPath
+}: DirectoryUpdateParams): TypeDirectories {
   return directory.map(dir => {
     let updatedDir = removeItemFromDirectory(dir, item._id!);
     updatedDir = addItemToDirectory(updatedDir, toPath, item);
@@ -169,11 +160,12 @@ async function updateDirectoryStorage({
 }: StorageUpdateParams): Promise<void> {
   if (!item.fullPath) return;
   const normalizedPath = oldFullName.startsWith("/") ? oldFullName.slice(1) : oldFullName;
-  const subResources = await getStorageItems({
-    filter: {
-      name: {$regex: `^${normalizedPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`}
-    }
-  }) || [];
+  const subResources =
+    (await getStorageItems({
+      filter: {
+        name: {$regex: `^${normalizedPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`}
+      }
+    })) || [];
 
   const updates = subResources.map((storage: any) => {
     const updatedName = storage.name.replace(normalizedPath, newFullName);
@@ -199,7 +191,7 @@ async function updateFileStorage({
   });
 }
 
-async function updateStorageNames(
+export async function updateStorageNames(
   item: DirectoryItem,
   oldFullName: string,
   newFullName: string,
@@ -223,71 +215,4 @@ async function updateStorageNames(
       updateStorageName
     });
   }
-}
-
-export function useDragAndDrop(
-  directory: TypeDirectories,
-  setDirectory: (dirs: TypeDirectories) => void
-) {
-  const [updateStorageName] = useUpdateStorageNameMutation();
-  const [getStorageItems] = useLazyGetStorageItemsQuery();
-
-  const handleDrop = async (
-    draggedItem: DirectoryItem,
-    targetFolderPath: string,
-    sourceItems: DirectoryItem[],
-    targetItems: DirectoryItem[]
-  ): Promise<boolean> => {
-    const oldParent = getParentPath(draggedItem.fullPath);
-    const newParent = normalizePathWithTrailingSlash(targetFolderPath);
-
-    const allItems = [...sourceItems, ...targetItems];
-    const canDrop = validateDrop(draggedItem, oldParent, newParent, allItems);
-
-    if (!canDrop) {
-      console.warn("Cannot drop item here");
-      return false;
-    }
-
-    const oldFullName = draggedItem.fullPath || "";
-    const itemName = draggedItem.label;
-
-    const isRootTarget = newParent === "/";
-    const newFullName = isRootTarget ? itemName : newParent + itemName;
-
-    try {
-      const updatedDirectories = updateDirectoryLists({
-        directory,
-        item: draggedItem,
-        toPath: newParent
-      });
-      setDirectory(updatedDirectories);
-
-      await updateStorageNames(
-        draggedItem,
-        oldFullName,
-        newFullName as string,
-        params => updateStorageName(params).unwrap(),
-        async params => {
-          const {data} = await getStorageItems(params);
-          return data;
-        }
-      );
-
-      return true;
-    } catch (error) {
-      console.error("Failed to move item:", error);
-
-      const revertedDirectories = updateDirectoryLists({
-        directory,
-        item: draggedItem,
-        toPath: oldParent
-      });
-      setDirectory(revertedDirectories);
-
-      return false;
-    }
-  };
-
-  return {handleDrop};
 }
