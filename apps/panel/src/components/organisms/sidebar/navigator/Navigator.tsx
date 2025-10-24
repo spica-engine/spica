@@ -1,11 +1,4 @@
-import {
-  FluidContainer,
-  Icon,
-  Text,
-  type IconName,
-  helperUtils,
-  Accordion,
-} from "oziko-ui-kit";
+import {FluidContainer, Icon, Text, type IconName, helperUtils, Accordion} from "oziko-ui-kit";
 import styles from "./Navigator.module.scss";
 import {Button} from "oziko-ui-kit";
 import NavigatorItem from "../../../molecules/navigator-item/NavigatorItem";
@@ -73,7 +66,8 @@ const useNavigatorItemSelection = (itemId: string) => {
 const useNavigatorItemClick = (item: any, isCurrentlySelected: boolean) => {
   const navigate = useNavigate();
   return useCallback(() => {
-    if (!isCurrentlySelected) {
+    if (item.section === "storage") navigate("/storage");
+    else if (!isCurrentlySelected) {
       navigate(`/${item?.section}/${item?._id}`);
     }
   }, [navigate, item?.section, item?._id, isCurrentlySelected]);
@@ -234,6 +228,7 @@ const DraggableItem = ({
       onClick={handleClick}
       className={`${styles.navigatorItem} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} ${isCurrentlySelected ? styles.selected : ""}`}
       bucket={item as BucketType}
+      icon={item.icon as IconName}
     />
   );
 };
@@ -292,7 +287,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
   const {grouped, ungrouped} = groupObjectsByCategory({
     items: items?.items ?? []
   });
-  
+
   const accordionItems = grouped?.map(item => ({
     title: helperUtils.capitalize(item?.[0]?.category ?? ""),
     content: (

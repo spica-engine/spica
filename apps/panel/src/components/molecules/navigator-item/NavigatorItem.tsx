@@ -13,6 +13,7 @@ type SuffixIcon = {
 
 type TypeNavigatorItem = {
   label: string;
+  icon?: IconName;
   prefixIcon?: IconName;
   suffixIcons?: SuffixIcon[];
   bucket: BucketType;
@@ -20,6 +21,7 @@ type TypeNavigatorItem = {
 
 const NavigatorItem: FC<TypeNavigatorItem> = ({
   label,
+  icon,
   prefixIcon,
   bucket,
   suffixIcons = [],
@@ -33,7 +35,7 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({
       dimensionY={36}
       mode="fill"
       prefix={{
-        children: <Icon name={"help"} size={"md"} />
+        children: <Icon name={icon ?? "help"} size={"md"} />
       }}
       root={{
         children: (
