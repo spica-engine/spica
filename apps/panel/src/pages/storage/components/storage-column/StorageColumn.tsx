@@ -1,12 +1,12 @@
 import React, {memo, type DragEventHandler} from "react";
 import {FlexElement, type TypeAlignment, type TypeFile, Text} from "oziko-ui-kit";
-import {useUploadFilesMutation} from "../../../store/api/storageApi";
-import styles from "./StorageColumns.module.scss";
+import {useUploadFilesMutation} from "../../../../store/api/storageApi";
+import styles from "./StorageColumn.module.scss";
 import {
   type DirectoryItem,
   type TypeDirectoryDepth,
   type TypeDirectories
-} from "../../../types/storage";
+} from "../../../../types/storage";
 
 interface StorageItemColumnProps {
   items: DirectoryItem[];

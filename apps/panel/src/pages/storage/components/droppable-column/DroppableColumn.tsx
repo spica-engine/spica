@@ -1,8 +1,8 @@
 import {useRef} from "react";
 import {useDrop} from "react-dnd";
-import {type DirectoryItem, type DragItem, ItemTypes} from "../../../types/storage";
-import {validateDrop} from "../utils";
-import styles from "./StorageColumns.module.scss";
+import {type DirectoryItem, type DragItem, ItemTypes} from "../../../../types/storage";
+import {validateDrop} from "../../utils";
+import styles from "./DroppableColumn.module.scss";
 
 interface DroppableColumnProps {
   folderPath: string;

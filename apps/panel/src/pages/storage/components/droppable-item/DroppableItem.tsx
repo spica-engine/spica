@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useDrag } from "react-dnd";
-import { ItemTypes, type DirectoryItem, type DragItem } from "../../../types/storage";
-import styles from "./StorageColumns.module.scss";
+import { ItemTypes, type DirectoryItem, type DragItem } from "../../../../types/storage";
+import styles from "./DroppableItem.module.scss";
 
 interface DraggableStorageItemProps {
   item: DirectoryItem;

@@ -1,7 +1,7 @@
 import {memo} from "react";
 import {FluidContainer, FlexElement, Icon, Text, Button, type TypeFile} from "oziko-ui-kit";
 import styles from "./FilePreview.module.scss";
-import {type DirectoryItem} from "../../../pages/storage/components/StorageColumns";
+import {type DirectoryItem} from "../../../pages/storage/components/storage-columns/StorageColumns";
 import useFileView from "../../../hooks/useFileView";
 
 function formatFileSize(bytes: number): string {

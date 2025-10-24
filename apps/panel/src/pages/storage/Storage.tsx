@@ -1,6 +1,6 @@
 import {FluidContainer} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
-import {StorageItemColumns} from "./components/StorageColumns";
+import {StorageItemColumns} from "./components/storage-columns/StorageColumns";
 import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
 import StorageActionBar from "./components/storage-action-bar/StorageActionBar";
 import {useDirectoryNavigation} from "./hooks/useDirectoryNavigation";
