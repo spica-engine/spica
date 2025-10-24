@@ -7,7 +7,7 @@ import {useDirectoryNavigation} from "./hooks/useDirectoryNavigation";
 import {useFileOperations} from "./hooks/useFileOperations";
 import {useFilePreview} from "./hooks/useFilePreview";
 import {useStorageDataSync} from "./hooks/useStorageDataSync";
-import type {TypeDirectoryDepth} from "src/types/storage";
+import type {DirectoryItem, TypeDirectoryDepth} from "src/types/storage";
 
 export default function StoragePage() {
   const {directory, setDirectory, handleFolderClick: onFolderClick} = useDirectoryNavigation();
@@ -25,6 +25,23 @@ export default function StoragePage() {
     onFolderClick(folderName, fullPath, directoryDepth, wasActive, false);
   };
 
+    const handleCloseFolder = (depthToClose: TypeDirectoryDepth) => {
+    const folder = directory.find(dir => dir.currentDepth === depthToClose) as DirectoryItem;
+    if (!folder) return;
+    onFolderClick(folder.name, folder.fullPath, depthToClose, true, false);
+  };
+
+  const handleFileClick = (file?: DirectoryItem) => {
+    if (!file) {
+      setPreviewFile(undefined);
+      return;
+    }
+
+    handleCloseFolder(file.currentDepth as TypeDirectoryDepth);
+    setPreviewFile(undefined);
+    setPreviewFile(file);
+  };
+
   return (
     <div className={styles.container}>
       <StorageActionBar />
@@ -36,7 +53,7 @@ export default function StoragePage() {
           children: (
             <StorageItemColumns
               handleFolderClick={handleFolderClick}
-              setPreviewFile={setPreviewFile}
+              setPreviewFile={handleFileClick}
               directory={directory}
               setDirectory={setDirectory}
               previewFile={previewFile}
