@@ -61,9 +61,8 @@ export function useDirectoryNavigation() {
     }
     const ancestorPaths = new Set<string>();
     let currentPath = fullPath;
-    console.log("Building ancestor paths for:", fullPath);
+
     while (currentPath !== ROOT_PATH) {
-      console.log("Adding ancestor path:", currentPath);
       ancestorPaths.add(currentPath);
       currentPath = getParentPath(currentPath);
     }
