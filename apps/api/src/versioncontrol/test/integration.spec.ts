@@ -399,7 +399,20 @@ describe("Versioning", () => {
           _id: fn.name,
           contents: {
             index: "",
-            package: {dependencies: {}},
+            package: {
+              name: fn.name,
+              version: "0.0.1",
+              description: "No description.",
+              main: `.build/${fn.name}/index.mjs`,
+              private: true,
+              license: "UNLICENSED",
+              keywords: ["spica", "function", "node.js"],
+              dependencies: {},
+              devDependencies: {},
+              scripts: {
+                build: `mkdir -p ../.build/${fn.name} && ln -sf ./node_modules ../.build/${fn.name}/node_modules && cp index.mjs ../.build/${fn.name}/index.mjs`
+              }
+            },
             schema: expectedSchema
           }
         });
@@ -427,7 +440,20 @@ describe("Versioning", () => {
           _id: fn.name,
           contents: {
             index: "",
-            package: {dependencies: {}},
+            package: {
+              name: fn.name,
+              version: "0.0.1",
+              description: "No description.",
+              main: `.build/${fn.name}/index.mjs`,
+              private: true,
+              license: "UNLICENSED",
+              keywords: ["spica", "function", "node.js"],
+              dependencies: {},
+              devDependencies: {},
+              scripts: {
+                build: `mkdir -p ../.build/${fn.name} && ln -sf ./node_modules ../.build/${fn.name}/node_modules && cp index.mjs ../.build/${fn.name}/index.mjs`
+              }
+            },
             schema: {...expectedSchema, triggers: {onCall}}
           }
         });
@@ -450,7 +476,20 @@ describe("Versioning", () => {
           _id: fn.name,
           contents: {
             index: "console.log(123)",
-            package: {dependencies: {}},
+            package: {
+              name: fn.name,
+              version: "0.0.1",
+              description: "No description.",
+              main: `.build/${fn.name}/index.mjs`,
+              private: true,
+              license: "UNLICENSED",
+              keywords: ["spica", "function", "node.js"],
+              dependencies: {},
+              devDependencies: {},
+              scripts: {
+                build: `mkdir -p ../.build/${fn.name} && ln -sf ./node_modules ../.build/${fn.name}/node_modules && cp index.mjs ../.build/${fn.name}/index.mjs`
+              }
+            },
             schema: {...expectedSchema, triggers: {onCall}}
           }
         });

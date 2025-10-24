@@ -43,12 +43,46 @@ export const getDependencySynchronizer = (
     change: DocChange<DocumentManagerResource<FunctionWithContent>>
   ) => {
     const parsed = JSON.parse(change.resource.content.content);
+    const functionName = change.resource.content.name;
+    const language = change.resource.content.language;
     const dependencies = parsed.dependencies || {};
+    const devDependencies = parsed.devDependencies || {};
+
+    // Add TypeScript compiler as devDependency for TypeScript functions for build to work.
+    if (language == "typescript" && !devDependencies.typescript) {
+      devDependencies.typescript = "^5.0.0";
+    }
+
+    let buildScript: string;
+    switch (language) {
+      case "javascript":
+        buildScript = `mkdir -p ../.build/${functionName} && ln -sf ./node_modules ../.build/${functionName}/node_modules && cp index.mjs ../.build/${functionName}/index.mjs`;
+        break;
+      case "typescript":
+        buildScript = `mkdir -p ../.build/${functionName} && ln -sf ./node_modules ../.build/${functionName}/node_modules && tsc && mv ../.build/${functionName}/index.js ../.build/${functionName}/index.mjs`;
+        break;
+      default:
+        console.warn(
+          `Unknown language "${language}" for function "${functionName}". Skipping build script generation.`
+        );
+        buildScript = "";
+        break;
+    }
+
+    const packageJson = {
+      ...parsed,
+      dependencies,
+      devDependencies,
+      scripts: {
+        ...parsed.scripts,
+        build: buildScript
+      }
+    };
 
     return {
       _id: change.resource._id || change.resource.content._id?.toString(),
       slug: change.resource.slug || change.resource.content.name,
-      content: JSON.stringify({dependencies})
+      content: JSON.stringify(packageJson)
     };
   };
 
