@@ -8,7 +8,6 @@ import {
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import styles from "./BucketEntryDrawer.module.scss";
 import type {BucketType} from "src/services/bucketService";
-import useLocalStorage from "../../../hooks/useLocalStorage";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import {FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketEntryService, type IBucketApiClient} from "./services";
@@ -30,7 +29,6 @@ const BucketEntryDrawer = ({
   onEntryCreated,
   triggerButton
 }: BucketEntryDrawerProps) => {
-  const [authToken] = useLocalStorage("token", "");
   const [createBucketEntry, {isLoading: isCreating, error: createError}] = useCreateBucketEntryMutation();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -51,7 +49,7 @@ const BucketEntryDrawer = ({
     [injectedService, apiClient]
   );
 
-  const formattedProperties = useValueProperties(bucket, authToken);
+  const formattedProperties = useValueProperties(bucket);
 
   const [formState, formActions] = useBucketEntryForm({
     properties: formattedProperties,
@@ -83,7 +81,7 @@ const BucketEntryDrawer = ({
       formActions.reset();
       submitActions.clearError();
     }
-  }, [isOpen, formActions, submitActions]);
+  }, [isOpen]);
 
   const normalizedValue =
     Object.keys(formState.value).length === 0 && formState.value.constructor === Object

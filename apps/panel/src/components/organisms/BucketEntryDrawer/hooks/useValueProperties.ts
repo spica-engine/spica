@@ -41,9 +41,9 @@ function collectBucketIds(
   return collected;
 }
 
-export const useValueProperties = (bucket: BucketType, authToken: string) => {
+export const useValueProperties = (bucket: BucketType) => {
   const {relationStates, getOptionsMap, loadMoreOptionsMap, searchOptionsMap, ensureHandlers} =
-    useRelationInputHandlers(authToken);
+    useRelationInputHandlers();
 
   const bucketIds = useMemo(
     () => collectBucketIds(bucket.properties || {}, null),

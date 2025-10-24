@@ -33,22 +33,35 @@ export const useBucketEntryForm = ({
   );
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isValidating, setIsValidating] = useState(false);
+  const isInitialMount = useRef(true);
+  const previousPropertiesRef = useRef(properties);
 
   const errorRefs = useRef<Map<string, HTMLElement>>(new Map());
 
-  // Reset form when properties change
   useEffect(() => {
-    setValue(service.generateInitialValues(properties));
-    setErrors({});
-  }, [properties, service]);
 
-  // Validate on value change (debounced validation)
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      previousPropertiesRef.current = properties;
+      return;
+    }
+
+    const prevKeys = Object.keys(previousPropertiesRef.current || {}).sort().join(',');
+    const currentKeys = Object.keys(properties || {}).sort().join(',');
+    
+    if (prevKeys !== currentKeys) {
+      setValue(service.generateInitialValues(properties));
+      setErrors({});
+      previousPropertiesRef.current = properties;
+    }
+  }, [properties]);
+
   useEffect(() => {
     if (!errors || Object.keys(errors).length === 0) return;
 
     const validationResult = service.validate(value, properties, requiredFields);
     setErrors(validationResult.errors);
-  }, [value, properties, requiredFields, service]);
+  }, [value]);
 
   const validate = useCallback((): boolean => {
     setIsValidating(true);
@@ -56,12 +69,12 @@ export const useBucketEntryForm = ({
     setErrors(validationResult.errors);
     setIsValidating(false);
     return validationResult.isValid;
-  }, [value, properties, requiredFields, service]);
+  }, [value]);
 
   const reset = useCallback(() => {
     setValue(service.generateInitialValues(properties));
     setErrors({});
-  }, [properties, service]);
+  }, []);
 
   const scrollToFirstError = useCallback(() => {
     const firstErrorId = service.findFirstErrorId(errors, properties);
@@ -70,7 +83,7 @@ export const useBucketEntryForm = ({
       const errorElement = errorRefs.current.get(firstErrorId) || document.getElementById(firstErrorId);
       errorElement?.scrollIntoView({behavior: "smooth", block: "center"});
     }
-  }, [errors, properties, service]);
+  }, [errors]);
 
   const registerErrorRef = useCallback((id: string, element: HTMLElement | null) => {
     if (element) {

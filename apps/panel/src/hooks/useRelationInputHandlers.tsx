@@ -1,4 +1,9 @@
 import {useState, useRef, useEffect, useCallback} from "react";
+import {
+  useLazyGetBucketQuery,
+  useLazyGetBucketDataQuery,
+  useLazyGetBucketEntryQuery
+} from "../store/api/bucketApi";
 
 type Option = {label: string; value: string};
 
@@ -37,51 +42,37 @@ export type TypeInitialValues =
   | FormattedInitialValue
   | Array<FormattedInitialValue>;
 
-const buildOptionsUrl = (bucketId: string, skip = 0, searchValue?: string, primaryKey?: string) => {
-  const baseUrl = import.meta.env.VITE_BASE_URL;
-  const params = new URLSearchParams({
-    paginate: "true",
-    relation: "true",
-    limit: "25",
-    sort: JSON.stringify({_id: -1}),
-    skip: String(skip)
-  });
+const buildQueryParams = (skip = 0, searchValue?: string, primaryKey?: string) => {
+  const params: {
+    paginate: boolean;
+    relation: boolean;
+    limit: number;
+    sort: Record<string, number>;
+    skip: number;
+    filter?: Record<string, any>;
+  } = {
+    paginate: true,
+    relation: true,
+    limit: 25,
+    sort: {_id: -1},
+    skip
+  };
 
   if (searchValue) {
     const searchField = primaryKey || "_id";
-    const filter = {
+    params.filter = {
       $or: [
         {
           [searchField]: {$regex: searchValue, $options: "i"}
         }
       ]
     };
-    params.append("filter", JSON.stringify(filter));
   }
 
-  return `${baseUrl}/api/bucket/${bucketId}/data?${params.toString()}`;
+  return params;
 };
 
-const getRowValue = async (rowId: string, bucketId: string, authToken: string) => {
-  try {
-    const response = await fetch(
-      `${import.meta.env.VITE_BASE_URL}/api/bucket/${bucketId}/data/${rowId}`,
-      {
-        headers: {authorization: `IDENTITY ${authToken}`}
-      }
-    );
-    if (!response.ok) {
-      throw new Error(`Error fetching row: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Failed to fetch row data:", error);
-    return null;
-  }
-};
-
-export const useRelationInputHandlers = (authToken: string): RelationInputHandlers => {
+export const useRelationInputHandlers = (): RelationInputHandlers => {
   const [relationStates, setRelationStates] = useState<Record<string, RelationState>>({});
   const relationStatesRef = useRef(relationStates);
 
@@ -93,18 +84,18 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
   const loadMoreOptionsMap = useRef<TypeGetMoreOptionsMap>({});
   const searchOptionsMap = useRef<TypeSearchOptionsMap>({});
 
+  const [getBucket] = useLazyGetBucketQuery();
+  const [getBucketData] = useLazyGetBucketDataQuery();
+  const [getBucketEntry] = useLazyGetBucketEntryQuery();
+
   const getPrimaryKey = useCallback(
     async (bucketId: string, key: string) => {
       if (relationStatesRef.current[key]?.primaryKey)
         return relationStatesRef.current[key].primaryKey;
       if (!bucketId) return;
       try {
-        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/api/bucket/${bucketId}`, {
-          headers: {authorization: `IDENTITY ${authToken}`}
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        const bucketPrimaryKey = data?.primary;
+        const result = await getBucket(bucketId).unwrap();
+        const bucketPrimaryKey = result?.primary;
         if (!bucketPrimaryKey) return;
         relationStatesRef.current[key] = {
           ...relationStatesRef.current[key],
@@ -116,10 +107,11 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
         }));
         return bucketPrimaryKey;
       } catch (e) {
-        throw e;
+        console.error("Failed to get primary key:", e);
+        return undefined;
       }
     },
-    [authToken, relationStatesRef]
+    [getBucket, relationStatesRef]
   );
 
   const populateGetOptions = useCallback(
@@ -131,11 +123,8 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
         const bucketPrimaryKey = await getPrimaryKey(bucketId, key);
         if (!bucketPrimaryKey) return [];
         try {
-          const res = await fetch(buildOptionsUrl(bucketId, 0, undefined, bucketPrimaryKey), {
-            headers: {authorization: `IDENTITY ${authToken}`}
-          });
-          if (!res.ok) return [];
-          const data = await res.json();
+          const params = buildQueryParams(0, undefined, bucketPrimaryKey);
+          const data = await getBucketData({bucketId, ...params}).unwrap();
           setRelationStates(prev => ({
             ...prev,
             [key]: {
@@ -147,17 +136,18 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
             }
           }));
           return (
-            data?.data?.map((i: {_id: string; [key: string]: any}) => ({
+            data?.data?.map((i: any) => ({
               label: i[bucketPrimaryKey],
               value: i._id
             })) || []
           );
         } catch (e) {
-          throw e;
+          console.error("Failed to get options:", e);
+          return [];
         }
       };
     },
-    [authToken]
+    [getBucketData, getPrimaryKey]
   );
 
   const populateLoadMoreOptions = useCallback(
@@ -171,29 +161,24 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
         if (!bucketPrimaryKey) return [];
 
         try {
-          const res = await fetch(
-            buildOptionsUrl(bucketId, currentSkip, lastSearch, bucketPrimaryKey),
-            {
-              headers: {authorization: `IDENTITY ${authToken}`}
-            }
-          );
-          if (!res.ok) return [];
-          const data = await res.json();
+          const params = buildQueryParams(currentSkip, lastSearch, bucketPrimaryKey);
+          const data = await getBucketData({bucketId, ...params}).unwrap();
 
           setRelationStates(prev => ({...prev, [key]: {...prev[key], skip: currentSkip + 25}}));
 
           return (
-            data?.data?.map((i: {[k: string]: any; _id: string}) => ({
+            data?.data?.map((i: any) => ({
               label: i[bucketPrimaryKey] ?? i.title,
               value: i._id
             })) || []
           );
         } catch (e) {
-          throw e;
+          console.error("Failed to load more options:", e);
+          return [];
         }
       };
     },
-    [authToken]
+    [getBucketData, getPrimaryKey]
   );
 
   const populateSearchOptions = useCallback(
@@ -206,27 +191,25 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
         if (!bucketPrimaryKey) return [];
         setRelationStates(prev => ({...prev, [key]: {...prev[key], lastSearch: search}}));
         try {
-          const res = await fetch(buildOptionsUrl(bucketId, 0, search, bucketPrimaryKey), {
-            headers: {authorization: `IDENTITY ${authToken}`}
-          });
-          if (!res.ok) return [];
-          const data = await res.json();
+          const params = buildQueryParams(0, search, bucketPrimaryKey);
+          const data = await getBucketData({bucketId, ...params}).unwrap();
           setRelationStates(prev => ({
             ...prev,
             [key]: {...prev[key], skip: 25, total: data?.meta?.total || 0}
           }));
           return (
-            data?.data?.map((i: {[k: string]: any; _id: string}) => ({
+            data?.data?.map((i: any) => ({
               label: i[bucketPrimaryKey] ?? i.title,
               value: i._id
             })) || []
           );
         } catch (e) {
-          throw e;
+          console.error("Failed to search options:", e);
+          return [];
         }
       };
     },
-    [authToken]
+    [getBucketData, getPrimaryKey]
   );
 
   const populateHandlers = useCallback(
@@ -261,33 +244,41 @@ export const useRelationInputHandlers = (authToken: string): RelationInputHandle
         return initialValue;
       }
 
-      let formattedValue;
+      let formattedValue: {label: string; value: string} | Array<{label: string; value: string}> | undefined = undefined;
       const primaryKey = relationStatesRef.current[key]?.primaryKey;
       if (Array.isArray(initialValue)) {
         const formattedValues: Array<{label: string; value: string}> = [];
         for (const val of initialValue) {
-          const row = await getRowValue(val as string, bucketId, authToken);
-          const formatted = {
-            value: (row as {_id: string})?._id,
-            label: primaryKey ? (row as {[key: string]: string})?.[primaryKey] : ""
-          };
-          formattedValues.push(formatted);
+          try {
+            const row = await getBucketEntry({bucketId, entryId: val as string}).unwrap();
+            const formatted = {
+              value: (row as any)?._id || "",
+              label: primaryKey ? (row as any)?.[primaryKey] || "" : ""
+            };
+            formattedValues.push(formatted);
+          } catch (error) {
+            console.error("Failed to fetch row data:", error);
+          }
         }
         formattedValue = formattedValues;
       } else {
-        const row = await getRowValue(initialValue as string, bucketId, authToken);
-        const formatted = {
-          value: (row as {_id: string})?._id,
-          label: primaryKey ? (row as {[key: string]: string})?.[primaryKey] : ""
-        };
-        formattedValue = formatted;
+        try {
+          const row = await getBucketEntry({bucketId, entryId: initialValue as string}).unwrap();
+          formattedValue = {
+            value: (row as any)?._id || "",
+            label: primaryKey ? (row as any)?.[primaryKey] || "" : ""
+          };
+        } catch (error) {
+          console.error("Failed to fetch row data:", error);
+          formattedValue = undefined;
+        }
       }
       setRelationStates(prev => ({
         ...prev,
         [key]: {...prev[key], initialFormattedValues: formattedValue, stateInitialized: true}
       }));
     },
-    [relationStatesRef, setRelationStates]
+    [getBucketEntry, relationStatesRef, setRelationStates]
   );
   const ensureHandlers = useCallback(
     (bucketId: string, key: string, relationValue?: TypeInitialValues) => {

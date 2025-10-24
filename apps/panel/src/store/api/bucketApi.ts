@@ -139,7 +139,15 @@ export const bucketApi = baseApi.injectEndpoints({
       providesTags: ['Bucket'],
     }),
 
-    // Get bucket data
+    getBucket: builder.query<BucketType, string>({
+      query: (bucketId) => ({
+        url: `/bucket/${bucketId}`,
+      }),
+      providesTags: (result, error, bucketId) => [
+        { type: 'Bucket', id: bucketId },
+      ],
+    }),
+
     getBucketData: builder.query<BucketDataType, {
       bucketId: string;
       paginate?: boolean;
@@ -150,7 +158,6 @@ export const bucketApi = baseApi.injectEndpoints({
       filter?: Record<string, any>;
     }>({
       query: ({ bucketId, ...params }) => {
-        // Convert params to query string (excluding undefined values)
         const queryParams = new URLSearchParams();
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined) {
@@ -173,7 +180,15 @@ export const bucketApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Create bucket
+    getBucketEntry: builder.query<any, { bucketId: string; entryId: string }>({
+      query: ({ bucketId, entryId }) => ({
+        url: `/bucket/${bucketId}/data/${entryId}`,
+      }),
+      providesTags: (result, error, { bucketId, entryId }) => [
+        { type: 'BucketData', id: bucketId },
+      ],
+    }),
+
     createBucket: builder.mutation<BucketType, CreateBucketRequest>({
       query: (body) => {
         const bucketData = {
@@ -626,7 +641,12 @@ export const bucketApi = baseApi.injectEndpoints({
 
 export const {
   useGetBucketsQuery,
+  useGetBucketQuery,
   useGetBucketDataQuery,
+  useGetBucketEntryQuery,
+  useLazyGetBucketQuery,
+  useLazyGetBucketDataQuery,
+  useLazyGetBucketEntryQuery,
   useCreateBucketMutation,
   useUpdateBucketMutation,
   useDeleteBucketMutation,
