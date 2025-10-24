@@ -21,7 +21,6 @@ export default function StoragePage() {
     directoryDepth: TypeDirectoryDepth,
     wasActive: boolean,
   ) => {
-    console.log('handleFolderClick called with:', { folderName, fullPath, directoryDepth, wasActive });
     handleClosePreview();
     onFolderClick(folderName, fullPath, directoryDepth, wasActive, false);
   };
