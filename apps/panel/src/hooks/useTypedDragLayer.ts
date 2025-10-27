@@ -24,7 +24,6 @@ export function useTypedDragLayer<T extends string, R = any>(
       differenceFromInitialOffset: monitor.getDifferenceFromInitialOffset(),
     };
 
-    // If the caller provided a selector, merge/replace
     return selector ? { ...baseData, ...selector(monitor) } : (baseData as unknown as R);
   });
 }
