@@ -6,8 +6,7 @@ import useFileView from "../../../hooks/useFileView";
 import {FileMetadata} from "./file-metadata/FileMetadata";
 import {FileActions} from "./file-actions/FileActions";
 import {FileViewerFrame} from "./file-viewer-frame/FileViewerFrame";
-import {useEffect, useLayoutEffect, useMemo, useState} from "react";
-import {set} from "lodash";
+import {useLayoutEffect, useMemo, useState} from "react";
 
 interface FilePreviewProps {
   handleClosePreview: () => void;

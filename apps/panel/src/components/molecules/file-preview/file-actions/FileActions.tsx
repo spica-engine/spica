@@ -80,7 +80,7 @@ export const FileActions = ({
   onClose,
   updateStorageItem
 }: FileActionsProps) => {
-  const isImage = useMemo(() => file?.content?.type.startsWith("image/"), [file]);
+  const isImage = file?.content?.type.startsWith("image/");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleCopy = useCallback((file: TypeFile) => {
@@ -144,7 +144,7 @@ export const FileActions = ({
         <Icon name="fileMultiple" size={14} />
         Copy
       </Button>
-      {isImage && onEdit && (
+      {isImage && (
         <Button className={styles.actionButton} variant="text" onClick={onEdit}>
           <Icon name="pencil" size={14} />
           Edit
