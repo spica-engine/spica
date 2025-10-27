@@ -59,9 +59,6 @@ export const getTsconfigSynchronizer = (
         }
       },
       {
-        // These methods are intentionally no-ops because tsconfig files are read-only.
-        // Modifications (insert, update, delete) are ignored.
-        // reducing CPU usage by avoiding unnecessary file system monitoring and conversion.
         watcher: {
           filesToWatch: [],
           eventsToWatch: []
