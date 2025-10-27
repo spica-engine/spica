@@ -46,6 +46,8 @@ spec:
         app.kubernetes.io/version: {{ .Chart.AppVersion }}
         app.kubernetes.io/part-of: {{ .Chart.Name }}
         app.kubernetes.io/managed-by: helm
+      annotations:
+        checksum/application-secrets: {{ include (print $.Template.BasePath "/applicationsecrets.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ .Values.application.serviceAccountName }}
       containers:
@@ -83,7 +85,6 @@ spec:
             --database-uri, {{ template "database.connection-uri" . }},
             --database-replica-set,  {{ .Values.database.replicaSetName }},
             --database-name,  {{ .Values.database.name }},
-            --passport-secret, {{ required "A valid .Values.application.secret is required!" .Values.application.secret }},
             --passport-password,  {{ .Values.application.defaultPassword }},
             --public-url, {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}},
             --persistent-path, /data,
@@ -93,6 +94,16 @@ spec:
             - name: {{ .Release.Name }}-data
               mountPath: /data
           env:
+            - name: PASSPORT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: secret
+            - name: BUCKET_DATA_HASH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: bucketDataHashSecret
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:

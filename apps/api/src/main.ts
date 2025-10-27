@@ -495,6 +495,16 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 
       args["database-uri"] = uri.toString();
     }
+
+    const passportSecret = process.env.PASSPORT_SECRET;
+    if (passportSecret) {
+      args["passport-secret"] = passportSecret;
+    }
+
+    const bucketDataHashSecret = process.env.BUCKET_DATA_HASH_SECRET;
+    if (bucketDataHashSecret) {
+      args["bucket-data-hash-secret"] = bucketDataHashSecret;
+    }
   })
   .check(args => {
     if (!args["passport-identity-token-expiration-seconds-limit"]) {
