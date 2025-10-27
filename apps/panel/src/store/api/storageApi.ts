@@ -150,6 +150,7 @@ export const storageApi = baseApi.injectEndpoints({
 
 export const {
   useGetStorageItemsQuery,
+  useLazyGetStorageItemsQuery,
   useGetStorageItemQuery,
   useUploadFilesMutation,
   useUpdateStorageItemMutation,

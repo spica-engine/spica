@@ -1,0 +1,25 @@
+
+.droppableColumnActive {
+  background-color: var(--color-menu-contrast) !important;
+}
+
+.notAllowedDrop {
+  * {
+    cursor: not-allowed !important;
+    pointer-events: none;
+  }
+  cursor: not-allowed !important;
+  background-color: var(--color-error-light) !important;
+  opacity: 0.6;
+  position: relative;
+  
+  &:hover {
+    background-color: var(--color-error) !important;
+  }
+}
+
+.droppableColumn {
+  min-height: 100px;
+  transition: background-color var(--transition-duration) ease;
+  background-color: var(--color-transparent);
+}

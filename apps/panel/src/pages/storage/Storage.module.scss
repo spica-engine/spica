@@ -2,7 +2,7 @@
 
 .container {
   height: 93% !important;
-  padding: 10px;
+  padding: var(--padding-md);
   font-family: var(--font-family-base);
 }
 
@@ -11,20 +11,23 @@
   width: 100% !important;
   height: 100% !important;
   border-radius: var(--border-radius-md);
-  overflow-y: auto;
-  @include mixins.hideScrollbar;
+  overflow: hidden !important;
 }
 
 .storageItemColumns {
   display: flex;
   height: 100% !important;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: auto;
+  border-right: var(--border-default);
 }
-
 
 .preview {
   width: 100% !important;
   height: 100% !important;
   padding: var(--padding-xl);
+  flex: 1;
 }
 
 
