@@ -6,7 +6,8 @@ import useFileView from "../../../hooks/useFileView";
 import {FileMetadata} from "./file-metadata/FileMetadata";
 import {FileActions} from "./file-actions/FileActions";
 import {FileViewerFrame} from "./file-viewer-frame/FileViewerFrame";
-import {useMemo} from "react";
+import {useEffect, useLayoutEffect, useMemo, useState} from "react";
+import {set} from "lodash";
 
 interface FilePreviewProps {
   handleClosePreview: () => void;
@@ -22,21 +23,38 @@ export const FilePreview = ({
   onFileDeleted
 }: FilePreviewProps) => {
   const [updateStorageItem, {isLoading}] = useUpdateStorageItemMutation();
+  const [fileUrl, setFileUrl] = useState<string | null>(previewFile?.url || null);
+
   const timestamp = useMemo(
     () => parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000,
-    [previewFile]
+    [previewFile?._id]
   );
-  const url = useMemo(() => {
-    const url = new URL(previewFile?.url ?? window.location.origin);
+
+  useLayoutEffect(() => {
+    const url = new URL(previewFile?.url!);
     url.searchParams.set("timestamp", String(timestamp));
     const urlWithTimestamp = url?.toString();
-    return urlWithTimestamp;
-  }, [previewFile]);
+    console.log("FilePreview setting fileUrl:", urlWithTimestamp);
+    setFileUrl(urlWithTimestamp);
+  }, [previewFile?.url, previewFile?._id, previewFile?.content.type]);
 
   const fileView = useFileView({
-    file: {...previewFile, url} as TypeFile,
+    file: {...previewFile, url: fileUrl || previewFile?.url} as TypeFile,
     isLoading
   });
+
+  const memoizedFileView = useMemo(
+    () => fileView,
+    [previewFile?._id, previewFile?.url, previewFile?.content.type, isLoading]
+  );
+
+  const handleReplaceFile = (updatedFile: DirectoryItem) => {
+    if (!onFileReplaced) return;
+    onFileReplaced(updatedFile);
+    const newUrl = new URL(updatedFile.url);
+    newUrl.searchParams.set("t", String(Date.now()));
+    setFileUrl(newUrl.toString());
+  };
 
   return (
     <>
@@ -46,7 +64,9 @@ export const FilePreview = ({
         direction="vertical"
         dimensionY="fill"
         root={{
-          children: <FileViewerFrame onClose={handleClosePreview}>{fileView}</FileViewerFrame>,
+          children: (
+            <FileViewerFrame onClose={handleClosePreview}>{memoizedFileView}</FileViewerFrame>
+          ),
           className: styles.fileViewContainer
         }}
         suffix={{
@@ -56,7 +76,7 @@ export const FilePreview = ({
               <FileMetadata file={previewFile!} timestamp={timestamp} />
               <FileActions
                 file={previewFile!}
-                onFileReplaced={onFileReplaced}
+                onFileReplaced={handleReplaceFile}
                 updateStorageItem={updateStorageItem}
                 onDelete={onFileDeleted}
                 isLoading={isLoading}

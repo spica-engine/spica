@@ -128,18 +128,23 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
 
   React.useEffect(() => {
     let cancelled = false;
-    (async () => {
+    const loadTextContent = async () => {
       try {
-        const res = await fetch(fileUrl);
+        const res = await fetch(fileUrl, {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache"
+          }
+        });
+
         if (!res.ok) throw new Error("Failed to load file");
         const text = await res.text();
-
         if (cancelled) return;
 
         const escaped = escapeHtml(text);
         const html = `<!DOCTYPE html>
-<html>
-  <head>
+  <html>
+    <head>
     <meta charset="UTF-8">
     <!-- Tighten CSP: no inline scripts allowed -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; connect-src 'none';">
@@ -148,9 +153,9 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
       body { background: white; color: black; font-family: monospace; padding: 1rem; margin: 0; }
       pre { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; margin: 0; }
     </style>
-  </head>
-  <body><pre>${escaped}</pre></body>
-</html>`;
+    </head>
+    <body><pre>${escaped}</pre></body>
+  </html>`;
 
         const blob = new Blob([html], {type: "text/html"});
         const url = URL.createObjectURL(blob);
@@ -161,7 +166,9 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
         setIframeSrc(URL.createObjectURL(blob));
         console.error("TextViewer fetch error:", err);
       }
-    })();
+    };
+
+    loadTextContent();
 
     return () => {
       cancelled = true;
@@ -186,12 +193,6 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
   );
 };
 
-const createImageUrl = (fileUrl: string) => {
-  const url = new URL(fileUrl);
-  url.searchParams.set("t", String(Date.now()));
-  return url.toString();
-};
-
 const ImageViewer = ({
   file,
   style,
@@ -208,7 +209,6 @@ const ImageViewer = ({
   if (!file.content.type.startsWith("image/")) return null;
 
   const loading = Boolean(externalLoading) || isImageLoading;
-  const imageUrl = createImageUrl(file.url);
 
   return (
     <div style={{position: "relative", display: "inline-block"}}>
@@ -227,8 +227,8 @@ const ImageViewer = ({
         </div>
       )}
       <img
-        key={imageUrl}
-        src={imageUrl}
+        key={file.url}
+        src={file.url}
         alt={file.name}
         style={{...(style || {}), display: loading ? "none" : "block"}}
         className={className}
@@ -247,7 +247,9 @@ const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => 
   const contentTypeMapping = [
     {
       regex: /^image\//,
-      viewer: (file: TypeFile, loading: boolean) => <ImageViewer key={file.url} file={file} loading={loading} />
+      viewer: (file: TypeFile, loading: boolean) => (
+        <ImageViewer key={file.url} file={file} loading={loading} />
+      )
     },
     {
       regex: /^video\//,
