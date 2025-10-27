@@ -48,18 +48,19 @@ export const getDependencySynchronizer = (
     const dependencies = parsed.dependencies || {};
     const devDependencies = parsed.devDependencies || {};
 
-    // Add TypeScript compiler as devDependency for TypeScript functions for build to work.
     if (language == "typescript" && !devDependencies.typescript) {
       devDependencies.typescript = "^5.0.0";
     }
+    const buildMjsDir = `../.build/${functionName}/index.mjs`;
+    const buildJsDir = `../.build/${functionName}/index.js`;
 
-    let buildScript: string;
+    let buildScript = `mkdir -p ../.build/${functionName} && ln -sf ./node_modules ../.build/${functionName}/node_modules`;
     switch (language) {
       case "javascript":
-        buildScript = `mkdir -p ../.build/${functionName} && ln -sf ./node_modules ../.build/${functionName}/node_modules && cp index.mjs ../.build/${functionName}/index.mjs`;
+        buildScript = `&& cp index.mjs ${buildMjsDir}`;
         break;
       case "typescript":
-        buildScript = `mkdir -p ../.build/${functionName} && ln -sf ./node_modules ../.build/${functionName}/node_modules && tsc && mv ../.build/${functionName}/index.js ../.build/${functionName}/index.mjs`;
+        buildScript = `&& tsc && mv ${buildJsDir} ${buildMjsDir}`;
         break;
       default:
         console.warn(
