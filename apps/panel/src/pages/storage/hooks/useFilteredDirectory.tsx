@@ -14,7 +14,6 @@ export function useFilteredDirectory(directory: TypeDirectories, isFilteringOrSe
 
     const seen = new Set();
     const filteredItems = allItems.filter(item => {
-      if (item.content.type === "inode/directory") return false;
       if (seen.has(item._id)) return false;
       seen.add(item._id);
       return true;

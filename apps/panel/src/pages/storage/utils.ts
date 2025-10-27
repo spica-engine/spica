@@ -233,32 +233,42 @@ export async function updateStorageNames(
 }
 
 
-export function buildApiFilter(filterValue: TypeFilterValue): object {
-  if (!filterValue) return {};
+export function buildApiFilter(filterValue: TypeFilterValue, negativeFilterValue: TypeFilterValue): object {
+  if (!filterValue && !negativeFilterValue) return {};
 
   const filter: {
-    "content.type"?: {$in: string[]};
-    "content.size"?: {$gte?: number; $lte?: number};
-    created_at?: {$gte?: string; $lte?: string};
+    "content.type"?: {$in?: string[]; $nin?: string[]};
+    "content.size"?: {$gte?: number; $lte?: number; $not?: {$gte?: number; $lte?: number}};
+    created_at?: {$gte?: string; $lte?: string; $not?: {$gte?: string; $lte?: string}};
     name?: {$regex: string; $options: string};
   } = {};
 
-  if (filterValue.type?.length) {
+  const getByteSize = (value: number, unit: TypeFileSizeUnit) => {
+    const multipliers: Record<TypeFileSizeUnit, number> = {
+      kb: 1024,
+      mb: 1024 ** 2,
+      gb: 1024 ** 3,
+      tb: 1024 ** 4
+    };
+    return value * multipliers[unit];
+  };
+
+  // Positive type filter
+  if (filterValue?.type?.length) {
     filter["content.type"] = {$in: filterValue.type};
   }
 
-  if (filterValue.fileSize) {
-    const sizeFilter: {$gte?: number; $lte?: number} = {};
-
-    const getByteSize = (value: number, unit: TypeFileSizeUnit) => {
-      const multipliers: Record<TypeFileSizeUnit, number> = {
-        kb: 1024,
-        mb: 1024 ** 2,
-        gb: 1024 ** 3,
-        tb: 1024 ** 4
-      };
-      return value * multipliers[unit];
+  // Negative type filter
+  if (negativeFilterValue?.type?.length) {
+    filter["content.type"] = {
+      ...filter["content.type"],
+      $nin: negativeFilterValue.type
     };
+  }
+
+  // Positive file size filter
+  if (filterValue?.fileSize) {
+    const sizeFilter: {$gte?: number; $lte?: number} = {};
 
     if (filterValue.fileSize.min?.value) {
       sizeFilter.$gte = getByteSize(
@@ -279,7 +289,34 @@ export function buildApiFilter(filterValue: TypeFilterValue): object {
     }
   }
 
-  if (filterValue.quickdate || filterValue.dateRange?.from || filterValue.dateRange?.to) {
+  // Negative file size filter
+  if (negativeFilterValue?.fileSize) {
+    const negativeSizeFilter: {$gte?: number; $lte?: number} = {};
+
+    if (negativeFilterValue.fileSize.min?.value) {
+      negativeSizeFilter.$gte = getByteSize(
+        negativeFilterValue.fileSize.min.value,
+        negativeFilterValue.fileSize.min.unit as TypeFileSizeUnit
+      );
+    }
+
+    if (negativeFilterValue.fileSize.max?.value) {
+      negativeSizeFilter.$lte = getByteSize(
+        negativeFilterValue.fileSize.max.value,
+        negativeFilterValue.fileSize.max.unit as TypeFileSizeUnit
+      );
+    }
+
+    if (Object.keys(negativeSizeFilter).length) {
+      filter["content.size"] = {
+        ...filter["content.size"],
+        $not: negativeSizeFilter
+      };
+    }
+  }
+
+  // Positive date filter
+  if (filterValue?.quickdate || filterValue?.dateRange?.from || filterValue?.dateRange?.to) {
     const dateFilter: {$gte?: string; $lte?: string} = {};
 
     if (filterValue.quickdate) {
@@ -313,6 +350,47 @@ export function buildApiFilter(filterValue: TypeFilterValue): object {
 
     if (Object.keys(dateFilter).length) {
       filter["created_at"] = dateFilter;
+    }
+  }
+
+  // Negative date filter
+  if (negativeFilterValue?.quickdate || negativeFilterValue?.dateRange?.from || negativeFilterValue?.dateRange?.to) {
+    const negativeDateFilter: {$gte?: string; $lte?: string} = {};
+
+    if (negativeFilterValue.quickdate) {
+      const quickdateValue = negativeFilterValue.quickdate as string;
+      const range = convertQuickDateToRange(quickdateValue);
+      const quickdateFilter = range
+        ? {
+            $gte: range.from?.toISOString(),
+            $lte: range.to?.toISOString()
+          }
+        : null;
+      if (quickdateFilter) {
+        Object.assign(negativeDateFilter, quickdateFilter);
+      }
+    } else {
+      if (negativeFilterValue.dateRange?.from) {
+        const fromDate =
+          typeof negativeFilterValue.dateRange.from === "string"
+            ? new Date(negativeFilterValue.dateRange.from)
+            : negativeFilterValue.dateRange.from;
+        negativeDateFilter.$gte = fromDate.toISOString();
+      }
+      if (negativeFilterValue.dateRange?.to) {
+        const toDate =
+          typeof negativeFilterValue.dateRange.to === "string"
+            ? new Date(negativeFilterValue.dateRange.to)
+            : negativeFilterValue.dateRange.to;
+        negativeDateFilter.$lte = toDate.toISOString();
+      }
+    }
+
+    if (Object.keys(negativeDateFilter).length) {
+      filter["created_at"] = {
+        ...filter["created_at"],
+        $not: negativeDateFilter
+      };
     }
   }
 
