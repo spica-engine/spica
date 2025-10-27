@@ -11,6 +11,20 @@
     text-transform: uppercase;
   }
 
+  .fileSizeInputsContainer {
+    padding: var(--padding-md) 0 !important;
+    .select {
+      > div:first-child {
+        width: min-content;
+      }
+      padding-right: var(--padding-md);
+    }
+  }
+
+  .fileSizeInput {
+    text-align: center;
+  }
+
   .content {
     padding: var(--padding-sm) var(--padding-md);
     border: var(--border-default);
@@ -18,11 +32,8 @@
 
     .left {
       border-right: var(--border-default);
+      height: var(--chip-height);
     }
-  }
-
-  .dateRangeInputContainer {
-    width: 142px !important;
   }
 
   .content {
