@@ -242,7 +242,14 @@ const ImageViewer = ({
   const loading = Boolean(externalLoading) || isImageLoading;
 
   return (
-    <div style={{position: "relative", display: "inline-block"}}>
+    <div
+      style={{
+        position: "relative",
+        display: "inline-block",
+        width: "inherit",
+        height: "inherit"
+      }}
+    >
       {loading && (
         <div
           style={{
