@@ -1,5 +1,5 @@
 import React, {memo, type DragEventHandler} from "react";
-import {FlexElement, type TypeAlignment, type TypeFile, Text} from "oziko-ui-kit";
+import {FlexElement, type TypeAlignment, type TypeFile, Text, CircularProgress} from "oziko-ui-kit";
 import {useUploadFilesMutation} from "../../../../store/api/storageApi";
 import styles from "./StorageColumn.module.scss";
 import {
@@ -45,6 +45,8 @@ export const StorageItemColumn = memo(
     StorageItem
   }: StorageItemColumnProps) => {
     const [uploadFiles] = useUploadFilesMutation();
+    const [progress, setProgress] = React.useState(0);
+    const [isUploading, setIsUploading] = React.useState(false);
 
     const handleDragOver: DragEventHandler<HTMLDivElement> = e => {
       if (isDraggingDisabled) return;
@@ -57,6 +59,7 @@ export const StorageItemColumn = memo(
       const files = e.dataTransfer.files;
 
       if (files && files.length > 0) {
+        setIsUploading(true);
         try {
           const filesWithPrefix = Array.from(files).map(file => {
             const fileName = prefix + file.name;
@@ -67,13 +70,16 @@ export const StorageItemColumn = memo(
           const dataTransfer = new DataTransfer();
           filesWithPrefix.forEach(file => dataTransfer.items.add(file));
 
-          const response = await uploadFiles({files: dataTransfer.files});
+          const response = await uploadFiles({files: dataTransfer.files, onProgress: setProgress});
           const uploadedFile = response?.data?.[0] as DirectoryItem | undefined;
           if (uploadedFile) {
             onUploadComplete?.({...uploadedFile, prefix});
           }
         } catch (error) {
           console.error("File upload failed:", error);
+        } finally {
+          setIsUploading(false);
+          setProgress(0);
         }
       }
     };
@@ -87,6 +93,17 @@ export const StorageItemColumn = memo(
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
+        {isUploading && (
+          <div className={styles.uploadOverlay}>
+            <CircularProgress
+              strokeWidth={3}
+              size="xxs"
+              percent={progress}
+              status={progress === 100 ? "success" : "normal"}
+              label={progress === 100 ? undefined : null}
+            />
+          </div>
+        )}
         {items.length ? (
           items.map(item => {
             const isFolder = item?.content?.type === "inode/directory";

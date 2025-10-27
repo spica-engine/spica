@@ -1,14 +1,30 @@
-import React, {useRef, type FC, type ReactNode} from "react";
+import React, {use, useRef, type FC, type ReactNode} from "react";
 import {useUploadFilesMutation} from "../../../store/api/storageApi";
 
 type CreateFileProps = {
   prefix?: string;
-  children: (props: {onOpen: (e: React.MouseEvent) => void}) => ReactNode;
+  children: (props: {
+    onOpen: (e: React.MouseEvent) => void;
+    loading: boolean;
+    progress: number;
+  }) => ReactNode;
 };
 
 const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
-  const [uploadFiles, {isLoading}] = useUploadFilesMutation();
+  const [uploadFiles, {isLoading: isUploading}] = useUploadFilesMutation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [progress, setProgress] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+
+  React.useEffect(() => {
+    if (isUploading) {
+      setIsLoading(true);
+    } else {
+      setIsLoading(false);
+      setProgress(0);
+    }
+  }, [isUploading]);
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -28,7 +44,7 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
         const dataTransfer = new DataTransfer();
         filesWithPrefix.forEach(file => dataTransfer.items.add(file));
 
-        await uploadFiles({files: dataTransfer.files});
+        await uploadFiles({files: dataTransfer.files, onProgress: setProgress});
       } catch (error) {
         console.error("File upload failed:", error);
       }
@@ -42,7 +58,9 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
   return (
     <>
       {children({
-        onOpen: handleOpen
+        onOpen: handleOpen,
+        loading: isLoading,
+        progress
       })}
       <input
         ref={fileInputRef}

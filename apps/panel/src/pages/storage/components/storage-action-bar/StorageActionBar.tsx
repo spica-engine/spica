@@ -1,4 +1,4 @@
-import {FlexElement, FluidContainer, Icon, Button, Popover} from "oziko-ui-kit";
+import {FlexElement, FluidContainer, Icon, Button, CircularProgress} from "oziko-ui-kit";
 import SearchBar from "../../../../components/atoms/search-bar/SearchBar";
 import styles from "./StorageActionBar.module.scss";
 import CreateFile from "../../../../components/molecules/create-file-modal/CreateFile";
@@ -41,10 +41,30 @@ export default function StorageActionBar({directory}: StorageActionBarProps) {
               Refresh
             </Button>
             <CreateFile prefix={prefix}>
-              {({onOpen}) => (
-                <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
-                  <Icon name="plus" />
-                  Upload Files
+              {({onOpen, loading, progress}) => (
+                <Button
+                  className={`${styles.actionBarButton} ${styles.uploadFileButton}`}
+                  variant="filled"
+                  onClick={onOpen}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <CircularProgress
+                        strokeWidth={3}
+                        size="xxs"
+                        percent={progress}
+                        status={progress === 100 ? "success" : "normal"}
+                        label={progress === 100 ? undefined : null}
+                      />
+                      Loading..
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="plus" />
+                      Upload Files
+                    </>
+                  )}
                 </Button>
               )}
             </CreateFile>

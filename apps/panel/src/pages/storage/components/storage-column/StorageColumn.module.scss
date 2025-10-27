@@ -4,7 +4,21 @@
   height: 100% !important;
   width: 100% !important;
   overflow-y: scroll;
+  position: relative;
   @include mixins.hideScrollbar;
+}
+
+.uploadOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
 .noItemsText {
