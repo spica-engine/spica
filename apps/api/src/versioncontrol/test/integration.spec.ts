@@ -24,7 +24,7 @@ import * as fnCRUD from "@spica-server/function/src/crud";
 import {v4 as uuidv4} from "uuid";
 import {PolicyModule, PolicyService} from "@spica-server/passport/policy";
 
-const sleep = (value = 1000) => new Promise(r => setTimeout(r, value));
+const sleep = (value = 2000) => new Promise(r => setTimeout(r, value));
 
 describe("Versioning", () => {
   let module: TestingModule;
@@ -482,7 +482,7 @@ describe("Versioning", () => {
 
         let index = "console.log('hi')";
         await rep.write("function", fn.name, "index", index, "ts");
-        await sleep(5000);
+        await sleep();
 
         let packages: any = {
           dependencies: {}
