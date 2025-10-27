@@ -43,7 +43,10 @@ const types = [
   {value: "application/vnd.ms-excel", label: "XLS"},
   {value: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", label: "XLSX"},
   {value: "application/vnd.ms-powerpoint", label: "PPT"},
-  {value: "application/vnd.openxmlformats-officedocument.presentationml.presentation", label: "PPTX"},
+  {
+    value: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    label: "PPTX"
+  },
   {value: "text/plain", label: "TXT"},
   {value: "text/csv", label: "CSV"},
   {value: "text/html", label: "HTML"},
@@ -107,14 +110,14 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
   return (
     <form onSubmit={formik.handleSubmit}>
       <FlexElement
-        dimensionX={515}
-        dimensionY={350}
+        dimensionX={500}
         gap={10}
         className={styles.container}
         direction="vertical"
       >
         <FluidContainer
           dimensionX="fill"
+          className={styles.typeContainer}
           prefix={{
             children: <Text>Type</Text>,
             dimensionX: "fill",
@@ -138,6 +141,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
         />
         <FluidContainer
           dimensionX="fill"
+          className={styles.fileSizeContainer}
           prefix={{
             children: <Text>File Size</Text>,
             dimensionX: "fill",
@@ -162,6 +166,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
                     placeholder=""
                     value={formik.values.fileSize.min.unit}
                     className={styles.select}
+                    popupClassName={styles.selectPopup}
                   />
                 </FlexElement>
                 <FlexElement>
@@ -208,28 +213,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
 
         <FluidContainer
           dimensionX="fill"
-          prefix={{
-            children: <Text>From</Text>,
-            dimensionX: "fill",
-            alignment: "leftCenter"
-          }}
-          suffix={{
-            children: (
-              <FlexElement className={styles.content} dimensionY={31.5} dimensionX={200}>
-                <DatePicker
-                  onChange={date => formik.setFieldValue("dateRange.from", date)}
-                  value={formik.values.dateRange.from || null}
-                  placeholder="Date"
-                  suffixIcon={<Icon name="chevronDown" />}
-                  format="YYYY-MM-DD HH:mm:ss"
-                  showTime={true}
-                />
-              </FlexElement>
-            )
-          }}
-        />
-        <FluidContainer
-          dimensionX="fill"
+          className={styles.dateRangeContainer}
           prefix={{
             children: <Text>To</Text>,
             dimensionX: "fill",
@@ -237,7 +221,11 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
           }}
           suffix={{
             children: (
-              <FlexElement className={styles.content} dimensionY={31.5} dimensionX={200}>
+              <FlexElement
+                className={`${styles.content} ${styles.dateRangeInputContainer}`}
+                dimensionY={31.5}
+                dimensionX={200}
+              >
                 <DatePicker
                   onChange={date => formik.setFieldValue("dateRange.to", date)}
                   value={formik.values.dateRange.to}
@@ -250,6 +238,34 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
             )
           }}
         />
+        <FluidContainer
+          dimensionX="fill"
+          className={styles.dateRangeContainer}
+          prefix={{
+            children: <Text>From</Text>,
+            dimensionX: "fill",
+            alignment: "leftCenter"
+          }}
+          suffix={{
+            children: (
+              <FlexElement
+                className={`${styles.content} ${styles.dateRangeInputContainer}`}
+                dimensionY={31.5}
+                dimensionX={200}
+              >
+                <DatePicker
+                  onChange={date => formik.setFieldValue("dateRange.from", date)}
+                  value={formik.values.dateRange.from || null}
+                  placeholder="Date"
+                  suffixIcon={<Icon name="chevronDown" />}
+                  format="YYYY-MM-DD HH:mm:ss"
+                  showTime={true}
+                />
+              </FlexElement>
+            )
+          }}
+        />
+
         <FlexElement dimensionX="fill" alignment="rightCenter">
           <Button variant="text" onClick={handleCancel} className={styles.button}>
             <Icon name="close" size="sm" />

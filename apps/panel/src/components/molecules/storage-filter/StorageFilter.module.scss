@@ -3,10 +3,12 @@
   padding: var(--padding-md);
   box-shadow: var(--box-shadow);
   border-radius: var(--border-radius-md);
+  --chip-height: 25px;
 
   .select {
     background: none;
     padding: 0;
+    text-transform: uppercase;
   }
 
   .content {
@@ -19,10 +21,25 @@
     }
   }
 
+  .dateRangeInputContainer {
+    width: 142px !important;
+  }
+
+  .content {
+    height: var(--chip-height) !important;
+  }
+
+  .dateRangeContainer {
+    height: var(--chip-height) !important;
+  }
+
   .chip {
     font-size: var(--font-size-sm);
     border-radius: var(--border-radius-md);
     padding: var(--padding-sm) var(--padding-md) !important;
+    width: 116px !important;
+    height: var(--chip-height) !important;
+    white-space: nowrap;
     cursor: pointer;
     justify-content: space-between !important;
     &.active {
@@ -30,7 +47,11 @@
     }
   }
 
-  .button{
+  .button {
     font-size: var(--font-size-md);
   }
+}
+
+.selectPopup {
+  text-transform: uppercase;
 }

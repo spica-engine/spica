@@ -113,6 +113,7 @@ export default function StorageActionBar({
             <Popover
               open={isFilterOpen}
               onClose={handleOnFilterClose}
+              contentProps={{className: styles.popoverContent}}
               content={
                 <StorageFilter
                   currentFilter={currentFilter}
