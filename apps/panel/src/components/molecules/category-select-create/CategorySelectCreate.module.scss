@@ -1,4 +1,10 @@
 .modal {
+  * {
+    font-family: var(--font-family-base) !important;
+    line-height: unset !important;
+  }
+  font-family: var(--font-family-base) !important;
+  line-height: unset !important;
   padding: 0;
   min-height: 0 !important;
   width: 600px !important;
@@ -6,10 +12,6 @@
   font-size: var(--font-size-md);
   gap: 0 !important;
 
-  * {
-    font-family: var(--font-family-base) !important;
-    line-height: unset !important;
-  }
 }
 
 .modalBody {
