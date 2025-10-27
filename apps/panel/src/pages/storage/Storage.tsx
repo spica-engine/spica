@@ -1,7 +1,6 @@
 import {FluidContainer} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import {StorageItemColumns} from "./components/storage-columns/StorageColumns";
-import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
 import StorageActionBar from "./components/storage-action-bar/StorageActionBar";
 import {useDirectoryNavigation} from "./hooks/useDirectoryNavigation";
 import {useFileOperations} from "./hooks/useFileOperations";
@@ -44,14 +43,6 @@ export default function StoragePage() {
             />
           )
         }}
-        suffix={
-          previewFile && {
-            className: styles.preview,
-            children: (
-              <FilePreview handleClosePreview={handleClosePreview} previewFile={previewFile} />
-            )
-          }
-        }
       />
     </div>
   );
