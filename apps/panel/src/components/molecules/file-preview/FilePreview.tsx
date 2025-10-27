@@ -31,22 +31,32 @@ export const FilePreview = ({
   );
 
   useLayoutEffect(() => {
-    const url = new URL(previewFile?.url!);
-    url.searchParams.set("timestamp", String(timestamp));
-    const urlWithTimestamp = url?.toString();
-    console.log("FilePreview setting fileUrl:", urlWithTimestamp);
-    setFileUrl(urlWithTimestamp);
-  }, [previewFile?.url, previewFile?._id, previewFile?.content.type]);
+    if (!previewFile?.url) {
+      setFileUrl(null);
+      return;
+    }
+    try {
+      const url = new URL(previewFile.url);
+      url.searchParams.set("timestamp", String(timestamp));
+      url.searchParams.set("t", String(Date.now()));
+      setFileUrl(url.toString());
+    } catch (error) {
+      console.error("Error creating URL:", error);
+      setFileUrl(null);
+    }
+  }, [previewFile?.url, previewFile?._id, previewFile?.content.type, timestamp]);
+
+  const file = useMemo(
+    () => ({...previewFile, url: fileUrl || previewFile?.url}),
+    [previewFile?._id, previewFile?.url, fileUrl]
+  ) as DirectoryItem;
 
   const fileView = useFileView({
-    file: {...previewFile, url: fileUrl || previewFile?.url} as TypeFile,
+    file: file,
     isLoading
   });
 
-  const memoizedFileView = useMemo(
-    () => fileView,
-    [previewFile?._id, previewFile?.url, previewFile?.content.type, isLoading]
-  );
+  const memoizedFileView = useMemo(() => fileView, [fileView]);
 
   const handleReplaceFile = (updatedFile: DirectoryItem) => {
     if (!onFileReplaced) return;
@@ -73,9 +83,9 @@ export const FilePreview = ({
           className: styles.metadata,
           children: (
             <FlexElement direction="vertical" className={styles.metadataContent}>
-              <FileMetadata file={previewFile!} timestamp={timestamp} />
+              <FileMetadata file={file!} timestamp={timestamp} />
               <FileActions
-                file={previewFile!}
+                file={file!}
                 onFileReplaced={handleReplaceFile}
                 updateStorageItem={updateStorageItem}
                 onDelete={onFileDeleted}
