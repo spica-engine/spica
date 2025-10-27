@@ -73,7 +73,7 @@ export const FilePreview = memo(({handleClosePreview, previewFile}: FilePreviewP
           children: (
             <FlexElement direction="vertical" className={styles.metadataContent}>
               <FlexElement direction="vertical" gap={10}>
-                <Text className={styles.metadataName}>{previewFile?.name}</Text>
+                <Text className={styles.metadataName}>{previewFile?.label}</Text>
                 <Text>
                   {previewFile?.content?.type} - {formatFileSize(previewFile?.content?.size || 0)}
                 </Text>
