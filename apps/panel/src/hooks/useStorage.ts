@@ -84,7 +84,7 @@ function useStorageService() {
     [updateStorageName]
   );
 
-  const buildDirectoryFilter = useCallback((directory: string[]) => {
+  const buildDirectoryFilter = useCallback((directory: string[] = ["/"]) => {
     const currentDirectory = directory.length === 1 ? "/" : directory.slice(1).join("");
 
     if (currentDirectory === "/") {

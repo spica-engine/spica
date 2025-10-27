@@ -11,7 +11,7 @@ type CreateFolderProps = {
     onOpen: (e: React.MouseEvent) => void;
     onClose: () => void;
   }) => ReactNode;
-  currentItemNames?: string[];
+  forbiddenNames?: string[];
 };
 
 const FOLDER_NAME_PATTERN = /^[^\/\ \.]+/;
@@ -20,7 +20,7 @@ const CreateFolder: FC<CreateFolderProps> = ({
   initialValue = "",
   prefix = "",
   children,
-  currentItemNames
+  forbiddenNames
 }) => {
   const [createFolder] = useUploadFilesMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,7 +52,7 @@ const CreateFolder: FC<CreateFolderProps> = ({
       const folderName =
         prefix + (rawFolderName.endsWith("/") ? rawFolderName : rawFolderName + "/");
 
-      if (currentItemNames?.some(name => name === folderName)) {
+      if (forbiddenNames?.some(name => name === folderName)) {
         setError("A file or folder with this name already exists.");
         return;
       }

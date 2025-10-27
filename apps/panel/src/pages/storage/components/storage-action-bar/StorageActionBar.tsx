@@ -1,10 +1,11 @@
 import {FlexElement, FluidContainer, Icon, Button, Popover} from "oziko-ui-kit";
-import SearchBar from "../../atoms/search-bar/SearchBar";
+import SearchBar from "../../../../components/atoms/search-bar/SearchBar";
 import styles from "./StorageActionBar.module.scss";
-import CreateFile from "../create-file-modal/CreateFile";
-import CreateFolder from "../create-folder-modal/CreateFolderModal";
-import type {TypeDirectories} from "src/components/organisms/storage-columns/StorageColumns";
-import {findMaxDepthDirectory, ROOT_PATH} from "../../../pages/storage/StorageHooks";
+import CreateFile from "../../../../components/molecules/create-file-modal/CreateFile";
+import CreateFolder from "../../../../components/molecules/create-folder-modal/CreateFolderModal";
+import type {TypeDirectories} from "src/types/storage";
+import {findMaxDepthDirectory} from "../../utils";
+import {ROOT_PATH} from "../../constants";
 
 interface StorageActionBarProps {
   directory: TypeDirectories;
@@ -47,7 +48,7 @@ export default function StorageActionBar({directory}: StorageActionBarProps) {
                 </Button>
               )}
             </CreateFile>
-            <CreateFolder prefix={prefix} currentItemNames={currentItemNames}>
+            <CreateFolder prefix={prefix} forbiddenNames={currentItemNames}>
               {({onOpen}) => (
                 <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
                   <Icon name="plus" />

@@ -1,0 +1,11 @@
+
+
+.draggableStorageItem {
+  transition: opacity var(--transition-duration) ease, cursor var(--transition-duration) ease;
+  opacity: 1;
+  cursor: move;
+}
+
+.draggingStorageItem {
+  opacity: 0.5;
+}

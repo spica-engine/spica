@@ -13,11 +13,12 @@ import React, {
   type Ref
 } from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import {DndProvider, useDrag, useDragLayer, useDrop} from "react-dnd";
-import {getEmptyImage, HTML5Backend} from "react-dnd-html5-backend";
+import {useDrag, useDrop} from "react-dnd";
+import {getEmptyImage} from "react-dnd-html5-backend";
 import type {ReorderableItemGroup, TypeNavigatorItems} from "../SideBar";
 import type {BucketType} from "src/store/api/bucketApi";
 import AddBucketPopup from "../../../../components/molecules/add-bucket-popup/AddBucketPopup";
+import {DnDItemTypes, useTypedDragLayer} from "../../../../hooks/useTypedDragLayer";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
@@ -122,12 +123,14 @@ const NavigatorHeader = ({header}: TypeNavigatorHeaderProps) => {
 };
 
 const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
-  const {item, isDragging, currentOffset, initialOffset} = useDragLayer(monitor => ({
-    item: monitor.getItem(),
-    isDragging: monitor.isDragging(),
-    currentOffset: monitor.getSourceClientOffset(),
-    initialOffset: monitor.getInitialSourceClientOffset()
-  }));
+  const {item, currentOffset, initialOffset} = useTypedDragLayer(
+    DnDItemTypes.NAVIGATOR_ITEM,
+    monitor => ({
+      item: monitor.getItem(),
+      currentOffset: monitor.getSourceClientOffset(),
+      initialOffset: monitor.getInitialSourceClientOffset()
+    })
+  );
 
   const hoverIndex = useMemo(
     () =>
@@ -140,7 +143,7 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
   );
 
   useEffect(() => {
-    if (hoverIndex !== -1 && item.index !== hoverIndex) {
+    if (hoverIndex !== -1 && item?.index !== hoverIndex) {
       moveItem(item.index, hoverIndex);
       item.index = hoverIndex;
     }
@@ -150,8 +153,6 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
     () => `translate(${(initialOffset?.x ?? 0) - 153}px, ${currentOffset?.y}px)`,
     [initialOffset?.x, currentOffset?.y]
   );
-
-  if (!isDragging) return null;
 
   return (
     <div className={styles.dragLayer}>
@@ -182,14 +183,14 @@ const DraggableItem = ({
   const handleClick = useNavigatorItemClick(item, isCurrentlySelected);
 
   const [{handlerId}, drop] = useDrop({
-    accept: "NAVIGATOR_ITEM",
+    accept: DnDItemTypes.NAVIGATOR_ITEM,
     collect: monitor => ({
       handlerId: monitor.getHandlerId()
     })
   });
 
   const [, drag, preview] = useDrag({
-    type: "NAVIGATOR_ITEM",
+    type: DnDItemTypes.NAVIGATOR_ITEM,
     item: () => item,
     end: draggedItem => {
       setJustDropped(true);
@@ -197,7 +198,7 @@ const DraggableItem = ({
     }
   });
 
-  const {dragLayerItem, isDragging} = useDragLayer(monitor => ({
+  const {dragLayerItem, isDragging} = useTypedDragLayer(DnDItemTypes.NAVIGATOR_ITEM, monitor => ({
     dragLayerItem: monitor.getItem(),
     isDragging: monitor.isDragging()
   }));
@@ -247,7 +248,7 @@ const ReorderableList = ({items, onOrderChange, completeOrderChange}: TypeReorde
   }, []);
 
   return (
-    <DndProvider backend={HTML5Backend}>
+    <>
       <CustomDragLayer itemRefs={itemRefs.current} moveItem={onOrderChange} />
       {items.map((item, index) => (
         <DraggableItem
@@ -259,7 +260,7 @@ const ReorderableList = ({items, onOrderChange, completeOrderChange}: TypeReorde
           setJustDropped={setJustDropped}
         />
       ))}
-    </DndProvider>
+    </>
   );
 };
 
