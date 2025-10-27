@@ -7,9 +7,11 @@ import {parentPort} from "worker_threads";
 function build(compilation: Compilation) {
   const entryPoint = path.join(compilation.cwd, compilation.entrypoints.build);
   const outDirAbsolutePath = path.join(compilation.cwd, compilation.outDir);
+  const outDirRelative = compilation.outDir;
+  const currentDirectory = compilation.cwd;
 
-  const tsconfigOptions = {
-    moduleResolution: "node",
+  const compilerOptionsJson = {
+    moduleResolution: "Node10",
     module: "ES2022",
     target: "ES2022",
     typeRoots: ["./node_modules/@types"],
@@ -17,49 +19,44 @@ function build(compilation: Compilation) {
     alwaysStrict: true,
     preserveSymlinks: true,
     incremental: true,
-    tsBuildInfoFile: path.join(compilation.outDir, ".tsbuildinfo"),
+    declaration: true,
+    tsBuildInfoFile: path.join(outDirRelative, ".tsbuildinfo"),
     baseUrl: ".",
     rootDir: ".",
-    outDir: compilation.outDir,
-    declaration: true
+    outDir: outDirRelative
   };
 
-  const tsconfigPath = path.join(compilation.cwd, "tsconfig.json");
+  const resolvedJson = {
+    ...compilerOptionsJson,
+    typeRoots: compilerOptionsJson.typeRoots.map(p => path.resolve(currentDirectory, p)),
+    tsBuildInfoFile: path.resolve(currentDirectory, compilerOptionsJson.tsBuildInfoFile),
+    baseUrl: path.resolve(currentDirectory, compilerOptionsJson.baseUrl),
+    rootDir: path.resolve(currentDirectory, compilerOptionsJson.rootDir),
+    outDir: path.resolve(currentDirectory, compilerOptionsJson.outDir)
+  };
+
+  const {options: compilerOptions} = ts.convertCompilerOptionsFromJson(
+    resolvedJson,
+    currentDirectory
+  );
+
+  const tsconfigPath = path.join(currentDirectory, "tsconfig.json");
+
   fs.writeFileSync(
     tsconfigPath,
     JSON.stringify(
       {
-        compilerOptions: tsconfigOptions,
+        compilerOptions: compilerOptionsJson,
         include: [compilation.entrypoints.build]
       },
       null,
       2
     )
   );
-
-  const compilerOptions: ts.CompilerOptions = {
-    moduleResolution: ts.ModuleResolutionKind.Node10,
-    module: ts.ModuleKind.ES2022,
-    target: ts.ScriptTarget.ES2022,
-    typeRoots: [path.join(compilation.cwd, "node_modules/@types")],
-    sourceMap: tsconfigOptions.sourceMap,
-    alwaysStrict: tsconfigOptions.alwaysStrict,
-    preserveSymlinks: tsconfigOptions.preserveSymlinks,
-    incremental: tsconfigOptions.incremental,
-    tsBuildInfoFile: path.join(compilation.outDir, ".tsbuildinfo"),
-    baseUrl: compilation.cwd,
-    rootDir: compilation.cwd,
-    outDir: outDirAbsolutePath,
-    declaration: tsconfigOptions.declaration
-  };
-
   const program = ts.createProgram([entryPoint], compilerOptions);
-
   const diagnostics = Array.from(ts.getPreEmitDiagnostics(program));
-
   program.emit();
-
-  postCompilation(compilation.cwd, outDirAbsolutePath, diagnostics);
+  postCompilation(currentDirectory, outDirAbsolutePath, diagnostics);
 }
 
 function renameJsToMjs(outDir: string) {

@@ -2,15 +2,12 @@ import {
   ChangeTypes,
   DocChange,
   DocumentManagerResource,
-  RepChange,
-  RepresentativeManagerResource,
   ResourceType,
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
 import {FunctionWithContent} from "@spica-server/interface/function";
 import {Observable} from "rxjs";
-import {ObjectId} from "bson";
 
 export const getTsconfigSynchronizer = (
   engine: FunctionEngine
@@ -46,7 +43,7 @@ export const getTsconfigSynchronizer = (
     return {
       _id: change.resource._id || change.resource.content._id?.toString(),
       slug: change.resource.slug || change.resource.content.name,
-      content: JSON.stringify(parsed)
+      content: JSON.stringify(parsed, null, 2)
     };
   };
 
