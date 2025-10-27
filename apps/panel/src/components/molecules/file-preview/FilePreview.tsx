@@ -51,12 +51,7 @@ export const FilePreview = ({
     [previewFile?._id, previewFile?.url, fileUrl]
   ) as DirectoryItem;
 
-  const fileView = useFileView({
-    file: file,
-    isLoading
-  });
-
-  const memoizedFileView = useMemo(() => fileView, [fileView]);
+  const fileView = useFileView({file, isLoading});
 
   const handleReplaceFile = (updatedFile: DirectoryItem) => {
     if (!onFileReplaced) return;
@@ -74,9 +69,7 @@ export const FilePreview = ({
         direction="vertical"
         dimensionY="fill"
         root={{
-          children: (
-            <FileViewerFrame onClose={handleClosePreview}>{memoizedFileView}</FileViewerFrame>
-          ),
+          children: <FileViewerFrame onClose={handleClosePreview}>{fileView}</FileViewerFrame>,
           className: styles.fileViewContainer
         }}
         suffix={{

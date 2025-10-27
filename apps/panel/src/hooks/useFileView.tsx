@@ -103,6 +103,7 @@ interface TextViewerProps {
   style?: CSSProperties;
   className?: string;
   height?: string | number;
+  loading?: boolean;
 }
 
 /**
@@ -111,8 +112,15 @@ interface TextViewerProps {
  * ⚠️ Review by a security-experienced developer is recommended
  * before using with sensitive or untrusted content.
  */
-const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, height = 400}) => {
+const TextViewer: React.FC<TextViewerProps> = ({
+  fileUrl,
+  style,
+  className,
+  height = 400,
+  loading: externalLoading
+}) => {
   const [iframeSrc, setIframeSrc] = React.useState<string>("");
+  const [isTextLoading, setIsTextLoading] = React.useState(true);
 
   const escapeHtml = (str: string) =>
     str.replace(
@@ -128,6 +136,8 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
 
   React.useEffect(() => {
     let cancelled = false;
+    setIsTextLoading(true);
+
     const loadTextContent = async () => {
       try {
         const res = await fetch(fileUrl, {
@@ -160,10 +170,12 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
         const blob = new Blob([html], {type: "text/html"});
         const url = URL.createObjectURL(blob);
         setIframeSrc(url);
+        setIsTextLoading(false);
       } catch (err) {
         const errorHtml = `<!DOCTYPE html><html><body style="display:flex;align-items:center;justify-content:center;height:100%;">Failed to load file content</body></html>`;
         const blob = new Blob([errorHtml], {type: "text/html"});
         setIframeSrc(URL.createObjectURL(blob));
+        setIsTextLoading(false);
         console.error("TextViewer fetch error:", err);
       }
     };
@@ -178,18 +190,37 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
     };
   }, [fileUrl]);
 
-  if (!iframeSrc) return null;
+  const loading = Boolean(externalLoading) || isTextLoading;
+
+  if (!iframeSrc && !loading) return null;
+
   return (
-    <iframe
-      src={iframeSrc}
-      width="100%"
-      height={height}
-      style={{border: "none", ...(style || {})}}
-      className={className}
-      sandbox=""
-      referrerPolicy="no-referrer"
-      title="Text file viewer"
-    />
+    <div style={{position: "relative", display: "inline-block", width: "100%"}}>
+      {loading && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none"
+          }}
+        >
+          <Spinner />
+        </div>
+      )}
+      <iframe
+        src={iframeSrc}
+        width="100%"
+        height={height}
+        style={{border: "none", ...(style || {}), display: loading ? "none" : "block"}}
+        className={className}
+        sandbox=""
+        referrerPolicy="no-referrer"
+        title="Text file viewer"
+      />
+    </div>
   );
 };
 
@@ -262,12 +293,13 @@ const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => 
     },
     {
       regex: /^(text\/plain|text\/javascript|application\/json)$/,
-      viewer: (file: TypeFile) => (
+      viewer: (file: TypeFile, loading: boolean) => (
         <TextViewer
           fileUrl={file.url}
           height={styles?.text?.height || 400}
           style={styles?.text}
           className={classNames?.text}
+          loading={loading}
         />
       )
     },
