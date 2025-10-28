@@ -38,7 +38,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
       await fs.promises.writeFile(fullPath, content);
 
       if (accessMode == "readonly") {
-        fs.chmodSync(fullPath, 0o444);
+        fs.chmodSync(fullPath, 0o644);
       }
     };
 
