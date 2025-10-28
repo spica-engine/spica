@@ -43,8 +43,13 @@ const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => 
   const contentTypeMapping = [
     {
       regex: /^image\//,
-      viewer: (file: TypeFile, loading: boolean) => (
-        <AuthorizedImage token={token || undefined} key={file.url} file={file} loading={loading} />
+      viewer: (file: TypeFile, isLoading: boolean) => (
+        <AuthorizedImage
+          token={token || undefined}
+          key={file.url}
+          file={file}
+          isLoading={isLoading}
+        />
       )
     },
     {
@@ -61,13 +66,13 @@ const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => 
     },
     {
       regex: /^(text\/plain|text\/javascript|application\/json)$/,
-      viewer: (file: TypeFile, loading: boolean) => (
+      viewer: (file: TypeFile, isLoading: boolean) => (
         <AuthorizedText
           fileUrl={file.url}
           token={token || ""}
           style={styles?.text}
           className={classNames?.text}
-          loading={loading}
+          isLoading={isLoading}
         />
       )
     },

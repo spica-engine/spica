@@ -4,7 +4,7 @@ import styles from "./AuthorizedImage.module.scss";
 
 type AuthorizedImageProps = {
   file: TypeFile;
-  loading?: boolean;
+  isLoading?: boolean;
   token?: string;
   containerProps?: React.HTMLAttributes<HTMLDivElement>;
   fallback?: React.ReactNode;
@@ -13,7 +13,7 @@ type AuthorizedImageProps = {
 
 export const AuthorizedImage = ({
   file,
-  loading: externalLoading,
+  isLoading: externalLoading,
   token,
   containerProps,
   fallback,

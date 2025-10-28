@@ -6,7 +6,7 @@ const DEFAULT_HEIGHT = 400;
 
 type AuthorizedTextProps = {
   fileUrl: string;
-  loading?: boolean;
+  isLoading?: boolean;
   iframeProps?: React.IframeHTMLAttributes<HTMLIFrameElement>;
   token?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
@@ -19,7 +19,7 @@ type AuthorizedTextProps = {
  */
 export const AuthorizedText: React.FC<AuthorizedTextProps> = ({
   fileUrl,
-  loading: externalLoading,
+  isLoading: externalLoading,
   iframeProps,
   token,
   ...props
