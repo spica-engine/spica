@@ -1,8 +1,8 @@
-import {Icon, type TypeFile, Text, Spinner} from "oziko-ui-kit";
+import {Icon, Spinner, type TypeFile} from "oziko-ui-kit";
 import type {CSSProperties} from "react";
 import {useEffect, useRef, useState} from "react";
 import {renderAsync} from "docx-preview";
-import React, {useMemo} from "react";
+import React from "react";
 
 type TypeStyle = {
   image?: CSSProperties;
@@ -26,6 +26,7 @@ type TypeUseFileView = {
   file?: TypeFile;
   styles?: TypeStyle;
   classNames?: TypeClassName;
+  isLoading?: boolean;
 };
 
 interface WordDocProps {
@@ -60,6 +61,7 @@ const WordDocViewer = ({url, className}: WordDocProps) => {
 
         const uint8Array = new Uint8Array(arrayBuffer);
         const signature = uint8Array.slice(0, 4);
+
         const isValidZip =
           signature[0] === 0x50 &&
           signature[1] === 0x4b &&
@@ -101,6 +103,7 @@ interface TextViewerProps {
   style?: CSSProperties;
   className?: string;
   height?: string | number;
+  loading?: boolean;
 }
 
 /**
@@ -109,8 +112,15 @@ interface TextViewerProps {
  * ⚠️ Review by a security-experienced developer is recommended
  * before using with sensitive or untrusted content.
  */
-const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, height = 400}) => {
+const TextViewer: React.FC<TextViewerProps> = ({
+  fileUrl,
+  style,
+  className,
+  height = 400,
+  loading: externalLoading
+}) => {
   const [iframeSrc, setIframeSrc] = React.useState<string>("");
+  const [isTextLoading, setIsTextLoading] = React.useState(true);
 
   const escapeHtml = (str: string) =>
     str.replace(
@@ -126,18 +136,25 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
 
   React.useEffect(() => {
     let cancelled = false;
-    (async () => {
+    setIsTextLoading(true);
+
+    const loadTextContent = async () => {
       try {
-        const res = await fetch(fileUrl);
+        const res = await fetch(fileUrl, {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache"
+          }
+        });
+
         if (!res.ok) throw new Error("Failed to load file");
         const text = await res.text();
-
         if (cancelled) return;
 
         const escaped = escapeHtml(text);
         const html = `<!DOCTYPE html>
-<html>
-  <head>
+  <html>
+    <head>
     <meta charset="UTF-8">
     <!-- Tighten CSP: no inline scripts allowed -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; connect-src 'none';">
@@ -146,20 +163,24 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
       body { background: white; color: black; font-family: monospace; padding: 1rem; margin: 0; }
       pre { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; margin: 0; }
     </style>
-  </head>
-  <body><pre>${escaped}</pre></body>
-</html>`;
+    </head>
+    <body><pre>${escaped}</pre></body>
+  </html>`;
 
         const blob = new Blob([html], {type: "text/html"});
         const url = URL.createObjectURL(blob);
         setIframeSrc(url);
+        setIsTextLoading(false);
       } catch (err) {
         const errorHtml = `<!DOCTYPE html><html><body style="display:flex;align-items:center;justify-content:center;height:100%;">Failed to load file content</body></html>`;
         const blob = new Blob([errorHtml], {type: "text/html"});
         setIframeSrc(URL.createObjectURL(blob));
+        setIsTextLoading(false);
         console.error("TextViewer fetch error:", err);
       }
-    })();
+    };
+
+    loadTextContent();
 
     return () => {
       cancelled = true;
@@ -169,85 +190,94 @@ const TextViewer: React.FC<TextViewerProps> = ({fileUrl, style, className, heigh
     };
   }, [fileUrl]);
 
-  if (!iframeSrc) return null;
+  const loading = Boolean(externalLoading) || isTextLoading;
+
+  if (!iframeSrc && !loading) return null;
+
   return (
-    <iframe
-      src={iframeSrc}
-      width="100%"
-      height={height}
-      style={{border: "none", ...(style || {})}}
-      className={className}
-      sandbox=""
-      referrerPolicy="no-referrer"
-      title="Text file viewer"
-    />
+    <div style={{position: "relative", display: "inline-block", width: "100%"}}>
+      {loading && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none"
+          }}
+        >
+          <Spinner />
+        </div>
+      )}
+      <iframe
+        src={iframeSrc}
+        width="100%"
+        height={height}
+        style={{border: "none", ...(style || {}), display: loading ? "none" : "block"}}
+        className={className}
+        sandbox=""
+        referrerPolicy="no-referrer"
+        title="Text file viewer"
+      />
+    </div>
   );
 };
 
-interface SafeVideoPlayerProps {
-  url: string;
-  mimeType?: string;
+const ImageViewer = ({
+  file,
+  style,
+  className,
+  loading: externalLoading
+}: {
+  file: TypeFile;
   style?: CSSProperties;
   className?: string;
-}
+  loading?: boolean;
+}) => {
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
-interface SafeVideoPlayerProps {
-  url: string;
-  style?: React.CSSProperties;
-  className?: string;
-}
+  if (!file.content.type.startsWith("image/")) return null;
 
-export function SafeVideoPlayer({url, style, className}: SafeVideoPlayerProps) {
-  const [canPlay, setCanPlay] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (!url) {
-      setCanPlay(null);
-      return;
-    }
-
-    let video: HTMLVideoElement | null = document.createElement("video");
-    video.src = url;
-
-    const handleCanPlay = () => setCanPlay(true);
-    const handleError = () => setCanPlay(false);
-
-    video.addEventListener("canplay", handleCanPlay);
-    video.addEventListener("error", handleError);
-
-    video.load();
-
-    return () => {
-      video?.removeEventListener("canplay", handleCanPlay);
-      video?.removeEventListener("error", handleError);
-      video = null;
-    };
-  }, [url]);
-
-  if (canPlay === null) {
-    return <Spinner />;
-  }
-
-  if (!canPlay) {
-    return (
-      <div style={{...(style || {}), maxWidth: "100%"}} className={className}>
-        <Text size="large" variant="primary">⚠️ Your browser cannot play this video format.</Text>
-        <a href={url} download className="underline">
-          Download video instead
-        </a>
-      </div>
-    );
-  }
+  const loading = Boolean(externalLoading) || isImageLoading;
 
   return (
-    <video controls style={{maxWidth: "100%", ...(style || {})}} className={className}>
-      <source src={url} />
-      Your browser does not support the video tag.
-    </video>
+    <div
+      style={{
+        position: "relative",
+        display: "inline-block",
+        width: "inherit",
+        height: "inherit"
+      }}
+    >
+      {loading && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none"
+          }}
+        >
+          <Spinner />
+        </div>
+      )}
+      <img
+        key={file.url}
+        src={file.url}
+        alt={file.name}
+        style={{...(style || {}), display: loading ? "none" : "block"}}
+        className={className}
+        onLoad={() => setIsImageLoading(false)}
+        onError={() => setIsImageLoading(false)}
+      />
+    </div>
   );
-}
+};
 
-const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
+const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => {
   if (!file) {
     return null;
   }
@@ -255,24 +285,28 @@ const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
   const contentTypeMapping = [
     {
       regex: /^image\//,
-      viewer: (file: TypeFile) => (
-        <img src={file.url} alt={file.name} style={styles?.image} className={classNames?.image} />
+      viewer: (file: TypeFile, loading: boolean) => (
+        <ImageViewer key={file.url} file={file} loading={loading} />
       )
     },
     {
       regex: /^video\//,
       viewer: (file: TypeFile) => (
-        <SafeVideoPlayer url={file.url} className={classNames?.video} style={styles?.video} />
+        <video controls style={styles?.video} className={classNames?.video}>
+          <source src={file.url} type={file.content.type} />
+          Your browser does not support the video tag.
+        </video>
       )
     },
     {
       regex: /^(text\/plain|text\/javascript|application\/json)$/,
-      viewer: (file: TypeFile) => (
+      viewer: (file: TypeFile, loading: boolean) => (
         <TextViewer
           fileUrl={file.url}
           height={styles?.text?.height || 400}
           style={styles?.text}
           className={classNames?.text}
+          loading={loading}
         />
       )
     },
@@ -287,14 +321,18 @@ const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
     },
     {
       regex: /^application\/pdf/,
-      viewer: (file: TypeFile) => (
-        <embed
-          type={file.content.type}
-          src={file.url}
-          style={styles?.pdf}
-          className={classNames?.pdf}
-        />
-      )
+      viewer: (file: TypeFile) => {
+        const url = new URL(file.url);
+        url.search = "";
+        return (
+          <embed
+            type={file.content.type}
+            src={url.toString()}
+            style={styles?.pdf}
+            className={classNames?.pdf}
+          />
+        );
+      }
     },
     {
       regex: /^application\/zip/,
@@ -305,7 +343,7 @@ const useFileView = ({file, styles, classNames}: TypeUseFileView) => {
   const match = contentTypeMapping.find(({regex}) => regex.test(file.content.type));
 
   if (match) {
-    return match.viewer(file);
+    return match.viewer(file, isLoading || false);
   }
 
   return <Icon name="fileDocument" size={72} />;
