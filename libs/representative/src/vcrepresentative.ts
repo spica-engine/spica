@@ -19,14 +19,30 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return path.join(this.cwd, module);
   }
 
-  write(module: string, id: string, fileName: string, content: string, extension: string) {
+  write(
+    module: string,
+    id: string,
+    fileName: string,
+    content: string,
+    extension: string,
+    accessMode: "readwrite" | "readonly" = "readwrite"
+  ) {
     const resourcesDirectory = path.join(this.cwd, module, id);
     if (!fs.existsSync(resourcesDirectory)) {
       fs.mkdirSync(resourcesDirectory, {recursive: true});
     }
 
     const fullPath = path.join(resourcesDirectory, `${fileName}.${extension}`);
-    return fs.promises.writeFile(fullPath, content);
+
+    const writeFile = async () => {
+      await fs.promises.writeFile(fullPath, content);
+
+      if (accessMode == "readonly") {
+        fs.chmodSync(fullPath, 0o644);
+      }
+    };
+
+    return writeFile();
   }
 
   createModuleDirectory(path: string) {
@@ -60,6 +76,12 @@ export class VCRepresentativeManager implements IRepresentativeManager {
   }
 
   watch(module: string, files: string[], events: string[] = ["add", "change", "unlink"]) {
+    if (files.length == 0) {
+      console.warn(`VCRepresentativeManager.watch: No watch files specified for ${module}.`);
+      return new Observable<RepChange<RepresentativeManagerResource>>(observer => {
+        return () => observer.complete();
+      });
+    }
     const moduleDir = this.getModuleDir(module);
 
     this.createModuleDirectory(moduleDir);

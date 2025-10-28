@@ -1,149 +1,73 @@
 import {Compilation} from "@spica-server/interface/function/compiler";
 import fs from "fs";
-import os from "os";
 import path from "path";
 import ts from "typescript";
 import {parentPort} from "worker_threads";
 
-const ROOT_TSCONFIG_PATH = path.join(os.tmpdir(), "_tsconfig.json");
+function build(compilation: Compilation) {
+  const entryPoint = path.join(compilation.cwd, compilation.entrypoints.build);
+  const outDirAbsolutePath = path.join(compilation.cwd, compilation.outDir);
+  const outDirRelative = compilation.outDir;
+  const currentDirectory = compilation.cwd;
 
-let diagnosticMap = new WeakMap<ts.EmitAndSemanticDiagnosticsBuilderProgram, ts.Diagnostic[]>();
-let builder: ts.SolutionBuilder<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
-let host: ts.SolutionBuilderHost<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
-const astCache = new Map<string, ts.SourceFile>();
-const watchers = new Map<string, fs.FSWatcher>();
-
-function initializeRootTsConfig() {
-  updateRootTsConfig({
-    compilerOptions: {
-      skipDefaultLibCheck: true,
-      noEmit: true
-    },
-    files: [],
-    references: []
-  });
-}
-
-function updateRootTsConfig(config: object) {
-  fs.writeFileSync(ROOT_TSCONFIG_PATH, JSON.stringify(config));
-}
-
-function readRootTsConfig(): object {
-  return JSON.parse(fs.readFileSync(ROOT_TSCONFIG_PATH).toString());
-}
-
-function createEmitAndSemanticDiagnosticsBuilderProgram(
-  rootNames: readonly string[] | undefined,
-  options: ts.CompilerOptions | undefined,
-  compilerHost?: ts.CompilerHost,
-  oldProgram?: ts.EmitAndSemanticDiagnosticsBuilderProgram,
-  configFileParsingDiagnostics?: readonly ts.Diagnostic[],
-  projectReferences?: readonly ts.ProjectReference[]
-) {
-  const originalGetSourceFile = compilerHost.getSourceFile;
-
-  compilerHost.getSourceFile = (
-    fileName: string,
-    languageVersion: ts.ScriptTarget,
-    onError?: (message: string) => void,
-    shouldCreateNewSourceFile?: boolean
-  ) => {
-    const sourceFile = astCache.has(fileName)
-      ? astCache.get(fileName)
-      : originalGetSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
-
-    if (!astCache.has(fileName)) {
-      astCache.set(fileName, sourceFile);
-    }
-
-    if (!watchers.has(fileName) && fileName.indexOf(compilerHost.getDefaultLibLocation()) == -1) {
-      const watcher = fs.watch(fileName, {persistent: false});
-      watcher.on("change", eventType => {
-        if (eventType == "change") {
-          astCache.delete(fileName);
-        }
-      });
-      watchers.set(fileName, watcher);
-    }
-    return sourceFile;
+  const compilerOptionsJson = {
+    moduleResolution: "Node10",
+    module: "ES2022",
+    target: "ES2022",
+    typeRoots: ["./node_modules/@types"],
+    sourceMap: true,
+    alwaysStrict: true,
+    preserveSymlinks: true,
+    incremental: true,
+    declaration: true,
+    tsBuildInfoFile: path.join(outDirRelative, ".tsbuildinfo"),
+    baseUrl: ".",
+    rootDir: ".",
+    outDir: outDirRelative
   };
 
-  const program = ts.createEmitAndSemanticDiagnosticsBuilderProgram(
-    rootNames,
-    options,
-    compilerHost,
-    oldProgram,
-    configFileParsingDiagnostics,
-    projectReferences
+  const resolvedJson = {
+    ...compilerOptionsJson,
+    typeRoots: compilerOptionsJson.typeRoots.map(p => path.resolve(currentDirectory, p)),
+    tsBuildInfoFile: path.resolve(currentDirectory, compilerOptionsJson.tsBuildInfoFile),
+    baseUrl: path.resolve(currentDirectory, compilerOptionsJson.baseUrl),
+    rootDir: path.resolve(currentDirectory, compilerOptionsJson.rootDir),
+    outDir: path.resolve(currentDirectory, compilerOptionsJson.outDir)
+  };
+
+  const {options: compilerOptions} = ts.convertCompilerOptionsFromJson(
+    resolvedJson,
+    currentDirectory
   );
 
-  diagnosticMap.set(program, []);
+  const tsconfigPath = path.join(currentDirectory, "tsconfig.json");
 
-  host.reportDiagnostic = diagnostic => {
-    diagnosticMap.get(program).push(diagnostic);
-  };
-
-  return program;
-}
-
-function build(compilation: Compilation) {
-  const referencedProject = `${compilation.cwd.replace(/\//g, "_")}_tsconfig.json`;
-
-  astCache.delete(path.join(compilation.cwd, compilation.entrypoints.build));
-
-  const rootTsConfig: any = readRootTsConfig();
-
-  const refPath = `./${referencedProject}`;
-
-  if (rootTsConfig.references.findIndex(ref => ref.path == refPath) == -1) {
-    const outDirAbsolutePath = path.join(compilation.cwd, compilation.outDir);
-    const options = {
-      moduleResolution: "node",
-      module: "ES2022",
-      target: "ES2022",
-      typeRoots: [path.join(compilation.cwd, "node_modules", "@types")],
-      sourceMap: true,
-      alwaysStrict: true,
-      preserveSymlinks: true,
-      tsBuildInfoFile: path.join(outDirAbsolutePath, ".tsbuildinfo"),
-      baseUrl: compilation.cwd,
-      rootDir: compilation.cwd,
-      outDir: outDirAbsolutePath,
-      declaration: true
-    };
-
-    const excludePattern = path.resolve(outDirAbsolutePath);
-
-    fs.writeFileSync(
-      path.join(os.tmpdir(), referencedProject),
-      JSON.stringify({
-        compilerOptions: options,
-        files: [path.join(compilation.cwd, compilation.entrypoints.build)],
-        exclude: [excludePattern]
-      })
-    );
-
-    rootTsConfig.references.push({path: refPath});
-    updateRootTsConfig(rootTsConfig);
-  }
-
-  builder = ts.createSolutionBuilder(host, [ROOT_TSCONFIG_PATH], {});
-
-  builder.build();
+  fs.writeFileSync(
+    tsconfigPath,
+    JSON.stringify(
+      {
+        compilerOptions: compilerOptionsJson,
+        include: [compilation.entrypoints.build]
+      },
+      null,
+      2
+    )
+  );
+  const program = ts.createProgram([entryPoint], compilerOptions);
+  const diagnostics = Array.from(ts.getPreEmitDiagnostics(program));
+  program.emit();
+  postCompilation(currentDirectory, outDirAbsolutePath, diagnostics);
 }
 
 function renameJsToMjs(outDir: string) {
   const jsFile = path.join(outDir, "index.js");
   const mjsFile = path.join(outDir, "index.mjs");
-
   if (fs.existsSync(jsFile)) {
     fs.renameSync(jsFile, mjsFile);
   }
 }
-
 function postCompilation(baseUrl: string, outDir: string, diagnostics: ts.Diagnostic[]) {
   renameJsToMjs(outDir);
-
   parentPort.postMessage({
     baseUrl: baseUrl,
     diagnostics: diagnostics
@@ -170,7 +94,6 @@ function postCompilation(baseUrl: string, outDir: string, diagnostics: ts.Diagno
       })
   });
 }
-
 function handleMessage(message: any) {
   if (message == "quit") {
     cleanUp();
@@ -182,30 +105,9 @@ function handleMessage(message: any) {
 
 function cleanUp() {
   parentPort.off("message", handleMessage);
-  builder = undefined;
 }
 
 function main() {
-  host = ts.createSolutionBuilderHost(
-    {
-      ...ts.sys,
-      clearScreen: () => {},
-      write: () => {}
-    },
-    createEmitAndSemanticDiagnosticsBuilderProgram
-  );
-
-  host.reportSolutionBuilderStatus = () => {};
-
-  host.afterProgramEmitAndDiagnostics = program => {
-    const options = program.getCompilerOptions();
-    postCompilation(options.baseUrl, options.outDir, diagnosticMap.get(program));
-    diagnosticMap.delete(program);
-    host.reportDiagnostic = () => {};
-  };
-
-  initializeRootTsConfig();
-
   parentPort.on("message", handleMessage);
 }
 
