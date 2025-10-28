@@ -159,13 +159,7 @@ export const FileActions = ({
         <Icon name="swapHorizontal" size={14} />
         Replace
       </Button>
-      <input
-        id="replace-file-input"
-        type="file"
-        style={{display: "none"}}
-        onChange={handleReplace}
-        ref={fileInputRef}
-      />
+      <input type="file" style={{display: "none"}} onChange={handleReplace} ref={fileInputRef} />
       <DeleteFileButton fileId={file._id} onFileDeleted={onDelete} onClose={onClose} />
     </FlexElement>
   );
