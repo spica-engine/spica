@@ -4,11 +4,10 @@ import styles from "./WordDocViewer.module.scss";
 
 type WordDocViewerProps = {
   url: string;
-  className?: string;
   token?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export const WordDocViewer = ({url, className, token, ...props}: WordDocViewerProps) => {
+export const WordDocViewer = ({url, token, ...props}: WordDocViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let isCancelled = false;
@@ -66,5 +65,5 @@ export const WordDocViewer = ({url, className, token, ...props}: WordDocViewerPr
     };
   }, [url]);
 
-  return <div ref={containerRef} {...props} className={`${styles.viewer} ${className || ""}`} />;
+  return <div ref={containerRef} {...props} className={`${styles.viewer} ${props.className || ""}`} />;
 };
