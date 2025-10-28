@@ -12,7 +12,7 @@ export const WordDocViewer = ({url, className, token, ...props}: WordDocProps) =
   useEffect(() => {
     let isCancelled = false;
 
-    (async () => {
+    const fetchDocx = async () => {
       try {
         const response = await fetch(url, {
           method: "GET",
@@ -56,7 +56,9 @@ export const WordDocViewer = ({url, className, token, ...props}: WordDocProps) =
           containerRef.current.innerHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Failed to load document: ${error instanceof Error ? error.message : "Unknown error"}</div>`;
         }
       }
-    })();
+    };
+
+    fetchDocx();
 
     return () => {
       isCancelled = true;
