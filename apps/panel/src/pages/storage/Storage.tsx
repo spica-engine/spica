@@ -1,31 +1,35 @@
-import {FluidContainer, type TypeFile} from "oziko-ui-kit";
+import {FluidContainer} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import {StorageItemColumns} from "./components/storage-columns/StorageColumns";
-import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
 import StorageActionBar from "./components/storage-action-bar/StorageActionBar";
 import {useDirectoryNavigation} from "./hooks/useDirectoryNavigation";
 import {useFileOperations} from "./hooks/useFileOperations";
 import {useFilePreview} from "./hooks/useFilePreview";
 import {useStorageDataSync} from "./hooks/useStorageDataSync";
 import type {DirectoryItem, TypeDirectoryDepth} from "src/types/storage";
+import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
 
 export default function StoragePage() {
   const {directory, setDirectory, handleFolderClick: onFolderClick} = useDirectoryNavigation();
   const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
   useStorageDataSync(directory, setDirectory);
-  const {onUploadComplete, onFileReplaced, onFileDeleted} = useFileOperations(directory, setDirectory, setPreviewFile);
+  const {onUploadComplete, onFileReplaced, onFileDeleted} = useFileOperations(
+    directory,
+    setDirectory,
+    setPreviewFile
+  );
 
   const handleFolderClick = (
     folderName: string,
     fullPath: string,
     directoryDepth: TypeDirectoryDepth,
-    wasActive: boolean,
+    wasActive: boolean
   ) => {
     handleClosePreview();
     onFolderClick(folderName, fullPath, directoryDepth, wasActive, false);
   };
 
-    const handleCloseFolder = (depthToClose: TypeDirectoryDepth) => {
+  const handleCloseFolder = (depthToClose: TypeDirectoryDepth) => {
     const folder = directory.find(dir => dir.currentDepth === depthToClose) as DirectoryItem;
     if (!folder) return;
     onFolderClick(folder.name, folder.fullPath, depthToClose, true, false);
@@ -66,10 +70,11 @@ export default function StoragePage() {
             className: styles.preview,
             children: (
               <FilePreview
+                key={previewFile?._id}
                 handleClosePreview={handleClosePreview}
                 previewFile={previewFile}
-                onFileReplaced={onFileReplaced}
                 onFileDeleted={onFileDeleted}
+                onFileReplaced={onFileReplaced}
               />
             )
           }

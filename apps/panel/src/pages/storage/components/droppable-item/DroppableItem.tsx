@@ -1,7 +1,8 @@
-import { useRef } from "react";
-import { useDrag } from "react-dnd";
-import { ItemTypes, type DirectoryItem, type DragItem } from "../../../../types/storage";
+import {useRef} from "react";
+import {useDrag} from "react-dnd";
+import {type DirectoryItem, type DragItem} from "../../../../types/storage";
 import styles from "./DroppableItem.module.scss";
+import {DnDItemTypes} from "../../../../hooks/useTypedDragLayer";
 
 interface DraggableStorageItemProps {
   item: DirectoryItem;
@@ -21,7 +22,7 @@ export function DraggableStorageItem({item, children}: DraggableStorageItemProps
   const parentPath = calculatedParentPath === "" ? "/" : calculatedParentPath;
 
   const [{isDragging}, drag] = useDrag<DragItem, unknown, {isDragging: boolean}>({
-    type: ItemTypes.STORAGE_ITEM,
+    type: DnDItemTypes.STORAGE_ITEM,
     item: {
       id: item._id || "",
       name: item.label as string,

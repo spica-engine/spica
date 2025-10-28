@@ -1,9 +1,5 @@
 import type { TypeFile } from "oziko-ui-kit";
 
-export const ItemTypes = {
-  STORAGE_ITEM: "storage_item"
-} as const;
-
 export interface DragItem {
   id: string;
   name: string;
@@ -13,7 +9,8 @@ export interface DragItem {
 }
 
 export type TypeDirectoryDepth = number;
-export type DirectoryItem = TypeFile & {fullPath: string; label?: string; isActive?: boolean, currentDepth?: TypeDirectoryDepth};
+
+export type DirectoryItem = TypeFile & {fullPath: string; label?: string; isActive?: boolean, currentDepth?: TypeDirectoryDepth; items?: DirectoryItem[];};
 export type TypeDirectory = {
   items?: DirectoryItem[];
   label: string;

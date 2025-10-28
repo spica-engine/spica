@@ -1,8 +1,9 @@
 import {useRef} from "react";
 import {useDrop} from "react-dnd";
-import {type DirectoryItem, type DragItem, ItemTypes} from "../../../../types/storage";
+import {type DirectoryItem, type DragItem} from "../../../../types/storage";
 import {validateDrop} from "../../utils";
 import styles from "./DroppableColumn.module.scss";
+import { DnDItemTypes } from "../../../../hooks/useTypedDragLayer";
 
 interface DroppableColumnProps {
   folderPath: string;
@@ -23,7 +24,7 @@ export function DroppableColumn({folderPath, items, children, onDrop, className}
     DirectoryItem,
     {isOver: boolean; canDrop: boolean}
   >({
-    accept: ItemTypes.STORAGE_ITEM,
+    accept: DnDItemTypes.STORAGE_ITEM,
     drop: dragItem => {
       const draggedItem: DirectoryItem = {
         _id: dragItem.id,
@@ -45,7 +46,7 @@ export function DroppableColumn({folderPath, items, children, onDrop, className}
         return itemParent === dragItem.parentPath;
       });
 
-      void onDrop(draggedItem, targetPath, sourceItems, items).catch(err => {
+      onDrop(draggedItem, targetPath, sourceItems, items).catch(err => {
         console.error("onDrop failed", err);
       });
 
