@@ -1,5 +1,6 @@
 import {renderAsync} from "docx-preview";
 import {useRef, useEffect} from "react";
+import styles from "./WordDocViewer.module.scss";
 
 type WordDocViewerProps = {
   url: string;
@@ -65,17 +66,5 @@ export const WordDocViewer = ({url, className, token, ...props}: WordDocViewerPr
     };
   }, [url]);
 
-  return (
-    <div
-      ref={containerRef}
-      className={className}
-      {...props}
-      style={{
-        ...(props.style || {}),
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center"
-      }}
-    />
-  );
+  return <div ref={containerRef} {...props} className={`${styles.viewer} ${className || ""}`} />;
 };
