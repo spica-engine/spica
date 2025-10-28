@@ -1,13 +1,13 @@
 import {FluidContainer} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import {StorageItemColumns} from "./components/storage-columns/StorageColumns";
-import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
 import StorageActionBar from "./components/storage-action-bar/StorageActionBar";
 import {useDirectoryNavigation} from "./hooks/useDirectoryNavigation";
 import {useFileOperations} from "./hooks/useFileOperations";
 import {useFilePreview} from "./hooks/useFilePreview";
 import {useStorageDataSync} from "./hooks/useStorageDataSync";
 import type {DirectoryItem, TypeDirectoryDepth} from "src/types/storage";
+import { FilePreview } from "src/components/molecules/file-preview/FilePreview";
 
 export default function StoragePage() {
   const {directory, setDirectory, handleFolderClick: onFolderClick} = useDirectoryNavigation();

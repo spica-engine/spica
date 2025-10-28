@@ -1,9 +1,5 @@
 import type { TypeFile } from "oziko-ui-kit";
 
-export const ItemTypes = {
-  STORAGE_ITEM: "storage_item"
-} as const;
-
 export interface DragItem {
   id: string;
   name: string;

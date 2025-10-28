@@ -1,23 +1,31 @@
-import { useMemo } from "react";
-import { useGetStorageItemsQuery } from "../../../store/api";
-import type { TypeDirectories } from "src/types/storage";
-import useStorage from "../../../hooks/useStorage";
-import { findMaxDepthDirectory } from "../utils";
+import {useMemo} from "react";
+import {useBrowseStorageQuery} from "../../../store/api/storageApi";
+import type {TypeDirectories} from "../../../types/storage";
+import {findMaxDepthDirectory} from "../utils";
+import {ROOT_PATH} from "../constants";
 
 export function useStorageData(directory: TypeDirectories) {
-  const {buildDirectoryFilter} = useStorage();
+  const dirToFetch = findMaxDepthDirectory(directory) ?? directory[0];
 
-  const filterArray = [
-    "/",
-    ...(findMaxDepthDirectory(directory)
-      ?.fullPath.split("/")
-      .filter(Boolean)
-      .map(i => `${i}/`) || [])
-  ];
+  const path = useMemo(() => {
+    if (!dirToFetch) return "";
+    if (dirToFetch.fullPath === ROOT_PATH) return "";
 
-  const directoryFilter = useMemo(() => buildDirectoryFilter(filterArray), [filterArray]);
+    return dirToFetch.fullPath.split("/").filter(Boolean).join("/");
+  }, [dirToFetch?.fullPath]);
 
-  const {data: storageData} = useGetStorageItemsQuery({filter: directoryFilter});
+  const {
+    data: storageData,
+    isLoading,
+    error
+  } = useBrowseStorageQuery({
+    path,
+    sort: {name: 1}
+  });
 
-  return {storageData};
+  return {
+    storageData,
+    isLoading,
+    error
+  };
 }
