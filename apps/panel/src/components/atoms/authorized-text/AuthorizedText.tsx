@@ -1,7 +1,5 @@
 import {Spinner} from "oziko-ui-kit";
 import React from "react";
-import {useSelector} from "react-redux";
-import {selectToken} from "src/store";
 import styles from "./AuthorizedText.module.scss";
 
 const DEFAULT_HEIGHT = 400;
