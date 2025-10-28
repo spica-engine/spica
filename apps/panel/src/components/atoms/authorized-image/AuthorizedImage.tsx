@@ -7,17 +7,21 @@ type AuthorizedImageProps = {
   loading?: boolean;
   token?: string;
   containerProps?: React.HTMLAttributes<HTMLDivElement>;
+  fallback?: React.ReactNode;
 } & React.ImgHTMLAttributes<HTMLImageElement>;
+
 
 export const AuthorizedImage = ({
   file,
   loading: externalLoading,
   token,
   containerProps,
+  fallback,
   ...props
 }: AuthorizedImageProps) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let objectUrl: string | null = null;
@@ -25,6 +29,7 @@ export const AuthorizedImage = ({
     const fetchImage = async () => {
       try {
         setIsImageLoading(true);
+        setError(null);
 
         const response = await fetch(file.url, {
           headers: token
@@ -42,7 +47,7 @@ export const AuthorizedImage = ({
         objectUrl = URL.createObjectURL(blob);
         setBlobUrl(objectUrl);
       } catch (error) {
-        console.error("Error fetching image:", error);
+        setError("Unable to load image.");
         setIsImageLoading(false);
       }
     };
@@ -51,7 +56,6 @@ export const AuthorizedImage = ({
       fetchImage();
     }
 
-    // Cleanup function to revoke the blob URL
     return () => {
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl);
@@ -70,14 +74,21 @@ export const AuthorizedImage = ({
           <Spinner />
         </div>
       )}
-      s
-      {blobUrl && (
+      {error && (
+        <div className={styles.error}>
+          {fallback || <span>Unable to load image.</span>}
+        </div>
+      )}
+      {blobUrl && !error && (
         <img
           key={file.url}
           src={blobUrl}
           alt={file.name}
           onLoad={() => setIsImageLoading(false)}
-          onError={() => setIsImageLoading(false)}
+          onError={() => {
+            setIsImageLoading(false);
+            setError("Unable to load image.");
+          }}
           className={props.className}
           {...props}
           style={{...(props.style || {}), display: loading ? "none" : "block"}}
