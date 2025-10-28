@@ -6,8 +6,8 @@ import styles from "./FileActions.module.scss";
 
 interface DeleteFileButtonProps {
   fileId: string;
-  onFileDeleted: (fileId: string) => void;
-  onClose: () => void;
+  onFileDeleted?: (fileId: string) => void;
+  onClose?: () => void;
 }
 
 export const DeleteFileButton = memo(({fileId, onFileDeleted, onClose}: DeleteFileButtonProps) => {
@@ -17,9 +17,9 @@ export const DeleteFileButton = memo(({fileId, onFileDeleted, onClose}: DeleteFi
   const handleDeleteConfirm = async () => {
     try {
       await deleteStorageItem(fileId).unwrap();
-      onFileDeleted(fileId);
+      onFileDeleted?.(fileId);
       setShowDeleteConfirmation(false);
-      onClose();
+      onClose?.();
     } catch (error) {
       console.error("File deletion failed:", error);
     } finally {

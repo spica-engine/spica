@@ -166,9 +166,7 @@ export const FileActions = ({
         onChange={handleReplace}
         ref={fileInputRef}
       />
-      {file._id && onDelete && onClose && (
-        <DeleteFileButton fileId={file._id} onFileDeleted={onDelete} onClose={onClose} />
-      )}
+      <DeleteFileButton fileId={file._id} onFileDeleted={onDelete} onClose={onClose} />
     </FlexElement>
   );
 };

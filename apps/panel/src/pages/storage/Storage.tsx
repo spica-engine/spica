@@ -13,7 +13,7 @@ export default function StoragePage() {
   const {directory, setDirectory, handleFolderClick: onFolderClick} = useDirectoryNavigation();
   const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
   useStorageDataSync(directory, setDirectory);
-  const {onUploadComplete} = useFileOperations(directory, setDirectory, setPreviewFile);
+  const {onUploadComplete, onFileReplaced, onFileDeleted} = useFileOperations(directory, setDirectory, setPreviewFile);
 
   const handleFolderClick = (
     folderName: string,
@@ -69,6 +69,8 @@ export default function StoragePage() {
                 key={previewFile?._id}
                 handleClosePreview={handleClosePreview}
                 previewFile={previewFile}
+                onFileDeleted={onFileDeleted}
+                onFileReplaced={onFileReplaced}
               />
             )
           }

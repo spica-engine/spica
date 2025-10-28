@@ -3,6 +3,8 @@ import type {CSSProperties} from "react";
 import {useEffect, useRef, useState} from "react";
 import {renderAsync} from "docx-preview";
 import React from "react";
+import { useSelector } from "react-redux";
+import { selectToken } from "../store";
 
 type TypeStyle = {
   image?: CSSProperties;
@@ -121,6 +123,7 @@ const TextViewer: React.FC<TextViewerProps> = ({
 }) => {
   const [iframeSrc, setIframeSrc] = React.useState<string>("");
   const [isTextLoading, setIsTextLoading] = React.useState(true);
+  const token = useSelector(selectToken);
 
   const escapeHtml = (str: string) =>
     str.replace(
@@ -142,9 +145,7 @@ const TextViewer: React.FC<TextViewerProps> = ({
       try {
         const res = await fetch(fileUrl, {
           cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache"
-          }
+          headers: token ? {Authorization: `IDENTITY ${token}`} : {}
         });
 
         if (!res.ok) throw new Error("Failed to load file");
@@ -188,7 +189,7 @@ const TextViewer: React.FC<TextViewerProps> = ({
         URL.revokeObjectURL(iframeSrc);
       }
     };
-  }, [fileUrl]);
+  }, [fileUrl, token]);
 
   const loading = Boolean(externalLoading) || isTextLoading;
 
