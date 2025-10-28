@@ -1,13 +1,13 @@
 import {renderAsync} from "docx-preview";
 import {useRef, useEffect} from "react";
 
-type WordDocProps = {
+type WordDocViewerProps = {
   url: string;
   className?: string;
   token?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export const WordDocViewer = ({url, className, token, ...props}: WordDocProps) => {
+export const WordDocViewer = ({url, className, token, ...props}: WordDocViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let isCancelled = false;
