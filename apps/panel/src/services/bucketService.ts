@@ -18,7 +18,7 @@ export type BucketType = {
   [key: string]: any;
 };
 
-type Properties = {[key: string]: Property};
+export type Properties = {[key: string]: Property};
 
 export type Property =
   | BasicProperty
@@ -162,6 +162,12 @@ export const useBucketService = () => {
     endpoint: "",
     method: "put"
   });
+
+  const {request: createBucketEntry, error: apiCreateBucketEntryError} = useApi({
+    endpoint: "",
+    method: "post"
+  });
+  
 
   const apiGetBucketData = useCallback(
     (bucketId: string, queryString?: string) => {
@@ -327,6 +333,16 @@ export const useBucketService = () => {
     [bucketLimitationRequest]
   );
 
+  const apiCreateBucketEntry = useCallback(
+    async (bucketId: string, data: Record<string, any>) => {
+      return await createBucketEntry({
+        endpoint: `/api/bucket/${bucketId}/data`,
+        body: data
+      });
+    },
+    [createBucketEntry]
+  );
+  
   const apiDeleteBucketField = useCallback(
     (modifiedBucket: BucketType) => {
       return deleteFieldRequest({
@@ -352,6 +368,7 @@ export const useBucketService = () => {
     apiUpdatebucketLimitiationFields,
     apiCreateBucket,
     apiCreateBucketField,
+    apiCreateBucketEntry,
     apiDeleteBucketField,
     apiDeleteBucketEntry,
     apiBuckets,
@@ -364,5 +381,6 @@ export const useBucketService = () => {
     apiUpdateBucketLimitationFieldsLoading,
     apiUpdateBucketLimitationFieldsError,
     apiCreateBucketFieldError,
+    apiCreateBucketEntryError
   };
 };
