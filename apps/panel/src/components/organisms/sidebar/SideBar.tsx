@@ -1,9 +1,10 @@
 import React, {type FC, type ReactNode, useState} from "react";
 import styles from "./SideBar.module.scss";
 import {Icon, type IconName} from "oziko-ui-kit";
-import Navigator, {type TypeNavigatorHeader} from "./navigator/Navigator";
+import Navigator from "./navigator/Navigator";
 import Logo from "../../atoms/logo/Logo";
 import type {BucketType} from "src/store/api/bucketApi";
+import type { TypeNavigatorHeader } from "./navigator/components/navigator-header/NavigatorHeader";
 
 export type TypeMenuItems = {
   name?: string;
