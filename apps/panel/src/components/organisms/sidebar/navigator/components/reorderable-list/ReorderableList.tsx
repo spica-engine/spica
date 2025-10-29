@@ -1,15 +1,22 @@
-import { useState, useRef, useCallback, useEffect, useImperativeHandle, useMemo, type Ref } from "react";
-import { useDrag, useDragLayer, useDrop, DndProvider } from "react-dnd";
-import { getEmptyImage, HTML5Backend } from "react-dnd-html5-backend";
-import { useNavigatorItemClick } from "../../hooks/useNavigatorItemClick";
-import { useNavigatorItemSelection } from "../../hooks/useNavigatorItemSelection";
-import type {ReorderableItemGroup, TypeNavigatorItems} from "../../../SideBar";
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  type Ref
+} from "react";
+import {useDrag, useDragLayer, useDrop, DndProvider} from "react-dnd";
+import {getEmptyImage, HTML5Backend} from "react-dnd-html5-backend";
+import {useNavigatorItemClick} from "../../hooks/useNavigatorItemClick";
+import {useNavigatorItemSelection} from "../../hooks/useNavigatorItemSelection";
+import type {NavigatorItemGroup, TypeNavigatorItems} from "../../../SideBar";
 import NavigatorItem from "../../../../../molecules/navigator-item/NavigatorItem";
 import styles from "./ReorderableList.module.scss";
-import type {BucketType} from "src/store/api/bucketApi";
 
 type TypeDraggableItemProps = {
-  item: (TypeNavigatorItems & {index: number}) | (BucketType & {index: number});
+  item: TypeNavigatorItems & {index: number};
   completeMoving: (identifier: string, order: number) => void;
   ref: Ref<HTMLDivElement>;
   justDropped: boolean;
@@ -21,7 +28,7 @@ type TypeCustomDragLayerProps = {
   moveItem: (itemIndex: number, hoverIndex: number) => void;
 };
 
-type TypeReorderableListProps = ReorderableItemGroup;
+type TypeReorderableListProps = NavigatorItemGroup;
 
 const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
   const {item, isDragging, currentOffset, initialOffset} = useDragLayer(monitor => ({
@@ -61,8 +68,8 @@ const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
         <NavigatorItem
           label={item?.title ?? ""}
           suffixIcons={[{name: "dragHorizontalVariant"}]}
-          className={styles.navigatorItem}
-          bucket={item}
+          suffixElements={item.suffixElements}
+          className={`${styles.navigatorItem} ${item.className ?? ""}`}
         />
       </div>
     </div>
@@ -128,13 +135,17 @@ const DraggableItem = ({
       style={{opacity}}
       suffixIcons={[{name: "dragHorizontalVariant", ref: buttonRef}]}
       onClick={handleClick}
-      className={`${styles.navigatorItem} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} ${isCurrentlySelected ? styles.selected : ""}`}
-      bucket={item as BucketType}
+      className={`${styles.navigatorItem} ${isDragging ? styles.globalDragActive : ""} ${justDropped ? styles.justDropped : ""} ${isCurrentlySelected ? styles.selected : ""} ${item.className ?? ""}`}
+      suffixElements={item.suffixElements}
     />
   );
 };
 
-export const ReorderableList = ({items, onOrderChange, completeOrderChange}: TypeReorderableListProps) => {
+export const ReorderableList = ({
+  items,
+  onOrderChange,
+  completeOrderChange
+}: TypeReorderableListProps) => {
   const [justDropped, setJustDropped] = useState(false);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const setItemRef = useCallback((el: HTMLDivElement | null, index: number) => {

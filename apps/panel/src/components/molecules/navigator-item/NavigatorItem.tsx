@@ -1,7 +1,5 @@
-import React, {type FC, memo, useState} from "react";
+import React, {type FC, memo} from "react";
 import styles from "./NavigatorItem.module.scss";
-import BucketNavigatorPopup from "../bucket-navigator-popup/BucketNavigatorPopup";
-import type {BucketType} from "src/store/api/bucketApi";
 import {Text, Icon, FluidContainer, type TypeFluidContainer, type IconName} from "oziko-ui-kit";
 import Button from "../../atoms/button/Button";
 
@@ -15,17 +13,16 @@ type TypeNavigatorItem = {
   label: string;
   prefixIcon?: IconName;
   suffixIcons?: SuffixIcon[];
-  bucket: BucketType;
+  suffixElements?: Array<React.ElementType>;
 } & TypeFluidContainer;
 
 const NavigatorItem: FC<TypeNavigatorItem> = ({
   label,
   prefixIcon,
-  bucket,
   suffixIcons = [],
+  suffixElements = [],
   ...props
 }) => {
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   return (
     <FluidContainer
@@ -45,7 +42,7 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({
       suffix={{
         children: (
           <>
-            {suffixIcons.length > 0 && (
+            {
               <>
                 {suffixIcons.map(({name, onClick, ref}, index) => (
                   <Button
@@ -58,19 +55,16 @@ const NavigatorItem: FC<TypeNavigatorItem> = ({
                     <Icon name={name} size="sm" />
                   </Button>
                 ))}
-                <BucketNavigatorPopup
-                  isOpen={isPopupOpen}
-                  setIsOpen={setIsPopupOpen}
-                  bucket={bucket}
-                  className={styles.suffixButton}
-                />
+                {suffixElements.map((Element, index) => (
+                  <Element key={index} className={`${styles.suffixElement}`} />
+                ))}
               </>
-            )}
+            }
           </>
         )
       }}
       {...props}
-      className={`${styles.navigatorItem} ${props.className} ${isPopupOpen && styles.popupOpen}`}
+      className={`${styles.navigatorItem} ${props.className}`}
     />
   );
 };

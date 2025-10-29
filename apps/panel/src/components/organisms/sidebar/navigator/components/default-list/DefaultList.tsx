@@ -1,7 +1,6 @@
 import type { TypeNavigatorItems } from "../../../SideBar";
 import { useNavigatorItemClick } from "../../hooks/useNavigatorItemClick";
 import { useNavigatorItemSelection } from "../../hooks/useNavigatorItemSelection";
-import type {BucketType} from "src/store/api/bucketApi";
 import styles from "./DefaultList.module.scss";
 import NavigatorItem from "../../../../../molecules/navigator-item/NavigatorItem";
 
@@ -17,8 +16,8 @@ export const DefaultList = ({items}: {items: TypeNavigatorItems[]}) => {
             key={item._id}
             label={item?.title ?? ""}
             onClick={handleClick}
-            className={`${styles.navigatorItem} ${isCurrentlySelected ? styles.selected : ""}`}
-            bucket={item as unknown as BucketType}
+            className={`${styles.navigatorItem} ${isCurrentlySelected ? styles.selected : ""} ${item.className ?? ""}`}
+            suffixElements={item.suffixElements}
           />
         );
       })}

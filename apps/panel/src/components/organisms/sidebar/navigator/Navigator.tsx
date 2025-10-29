@@ -2,16 +2,19 @@ import {Icon, Text, type IconName, helperUtils, Accordion} from "oziko-ui-kit";
 import styles from "./Navigator.module.scss";
 import {Button} from "oziko-ui-kit";
 import {memo} from "react";
-import type {ReorderableItemGroup, TypeNavigatorItems} from "../SideBar";
+import type {NavigatorItemGroup, TypeNavigatorItems} from "../SideBar";
 import AddBucketPopup from "../../../../components/molecules/add-bucket-popup/AddBucketPopup";
-import { NavigatorHeader, type TypeNavigatorHeader } from "./components/navigator-header/NavigatorHeader";
-import { ReorderableList } from "./components/reorderable-list/ReorderableList";
-import { DefaultList } from "./components/default-list/DefaultList";
-import { AccordionNavigatorItem } from "./components/accordion-navigator-item/AccordionNavigatorItem";
+import {
+  NavigatorHeader,
+  type TypeNavigatorHeader
+} from "./components/navigator-header/NavigatorHeader";
+import {ReorderableList} from "./components/reorderable-list/ReorderableList";
+import {DefaultList} from "./components/default-list/DefaultList";
+import {AccordionNavigatorItem} from "./components/accordion-navigator-item/AccordionNavigatorItem";
 
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
-  items?: ReorderableItemGroup;
+  items?: NavigatorItemGroup;
   button?: {
     title: string;
     icon: IconName;
@@ -59,9 +62,11 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
         <Icon name="dragHorizontalVariant" />
         <Icon name="dotsVertical" />
       </>
-    )
+    ),
+    className: item?.[0]?.className
   }));
 
+  
   return (
     <div className={styles.navigation}>
       <NavigatorHeader header={header} />
@@ -71,7 +76,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
             key={index}
             items={[item]}
             headerClassName={styles.accordionHeader}
-            className={`${styles.accordion} accordion`}
+            className={`${styles.accordion} accordion ${item.className ?? ""}`}
             openClassName={styles.accordionOpen}
             gap={0}
           />

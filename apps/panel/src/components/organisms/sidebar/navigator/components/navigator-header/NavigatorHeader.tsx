@@ -1,10 +1,10 @@
 import {Text, FluidContainer, Button, Icon, type IconName} from "oziko-ui-kit";
 import styles from "./NavigatorHeader.module.scss";
-import type {ReorderableItemGroup} from "../../../SideBar";
+import type {NavigatorItemGroup} from "../../../SideBar";
 
 export type TypeNavigatorHeader = {
   name?: string;
-  items?: ReorderableItemGroup;
+  items?: NavigatorItemGroup;
   buttons?: {
     icon: IconName;
     onClick: () => void;
@@ -13,7 +13,7 @@ export type TypeNavigatorHeader = {
 
 type TypeNavigatorHeaderProps = {
   header?: TypeNavigatorHeader;
-  items?: ReorderableItemGroup;
+  items?: NavigatorItemGroup;
   button?: {
     title: string;
     icon: IconName;

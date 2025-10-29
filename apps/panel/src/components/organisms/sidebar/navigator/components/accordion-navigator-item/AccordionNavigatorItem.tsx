@@ -21,8 +21,8 @@ export const AccordionNavigatorItem = ({item, index}: AccordionNavigatorItemProp
         prefix={{children: <Icon name={"help"} />}}
         suffixIcons={[{name: "dragHorizontalVariant"}]}
         onClick={handleClick}
-        bucket={item}
         className={`${styles.navigatorItem} ${isCurrentlySelected ? styles.selected : ""}`}
+        suffixElements={item.suffixElements}
       />
     </div>
   );

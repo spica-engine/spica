@@ -3,7 +3,6 @@ import styles from "./SideBar.module.scss";
 import {Icon, type IconName} from "oziko-ui-kit";
 import Navigator from "./navigator/Navigator";
 import Logo from "../../atoms/logo/Logo";
-import type {BucketType} from "src/store/api/bucketApi";
 import type { TypeNavigatorHeader } from "./navigator/components/navigator-header/NavigatorHeader";
 
 export type TypeMenuItems = {
@@ -20,10 +19,12 @@ export type TypeNavigatorItems = {
   title?: string;
   icon?: IconName;
   category?: string;
+  suffixElements?: React.ElementType[];
+  className?: string;
 };
 
-export type ReorderableItemGroup = {
-  items: TypeNavigatorItems[] | BucketType[];
+export type NavigatorItemGroup = {
+  items: TypeNavigatorItems[]
   onOrderChange: (from: number, to: number) => void;
   completeOrderChange: (identifier: string, newOrder: number) => void;
 };
@@ -31,7 +32,7 @@ export type ReorderableItemGroup = {
 type TypeSideBar = {
   menuItems?: TypeMenuItems[];
   navigatorItems?: {
-    [key: string]: ReorderableItemGroup;
+    [key: string]: NavigatorItemGroup;
   };
   logo?: string;
   footer?: ReactNode;
