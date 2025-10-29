@@ -1,11 +1,10 @@
-import {FluidContainer, Select} from "oziko-ui-kit";
+import {FluidContainer} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import StorageActionBar from "./components/storage-action-bar/StorageActionBar";
 import {useDirectoryNavigation} from "./hooks/useDirectoryNavigation";
 import {useFileOperations} from "./hooks/useFileOperations";
 import {useFilePreview} from "./hooks/useFilePreview";
 import {useStorageDataSync} from "./hooks/useStorageDataSync";
-import {useFilteredDirectory} from "./hooks/useFilteredDirectory";
 import {useSearchAndFilter} from "./hooks/useSearchAndFilter";
 import {StorageItemColumns} from "./components/storage-columns/StorageColumns";
 import type {TypeDirectories, TypeDirectoryDepth} from "src/types/storage";
@@ -22,7 +21,6 @@ export default function StoragePage() {
   } = useSearchAndFilter();
 
   const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
-  const {displayedDirectory} = useFilteredDirectory(directory, isFilteringOrSearching);
   const {isLoading} = useStorageDataSync(
     apiFilter,
     directory,
@@ -65,11 +63,11 @@ export default function StoragePage() {
             <StorageItemColumns
               handleFolderClick={handleFolderClick}
               setPreviewFile={setPreviewFile}
-              directory={displayedDirectory}
+              directory={directory}
               setDirectory={setDirectory}
               previewFile={previewFile}
               onUploadComplete={onUploadComplete}
-              isDraggingDisabled={!!isFilteringOrSearching}
+              isFilteringOrSearching={isFilteringOrSearching}
               isLoading={isLoading}
             />
           )

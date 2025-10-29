@@ -20,7 +20,7 @@ interface StorageItemColumnsProps {
   setDirectory: (dirs: TypeDirectories) => void;
   previewFile?: DirectoryItem;
   onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
-  isDraggingDisabled?: boolean;
+  isFilteringOrSearching?: boolean;
   isLoading: boolean;
 }
 
@@ -31,7 +31,7 @@ export function StorageItemColumns({
   setDirectory,
   previewFile,
   onUploadComplete,
-  isDraggingDisabled = false,
+  isFilteringOrSearching = false,
   isLoading
 }: StorageItemColumnsProps) {
   const {handleDrop} = useDragAndDrop(directory, setDirectory);
@@ -72,7 +72,7 @@ export function StorageItemColumns({
   return (
     <div ref={containerRef} className={styles.container}>
       <FlexElement className={styles.columns} gap={0}>
-        {isLoading ? (
+        {isLoading && isFilteringOrSearching ? (
           <div className={styles.columnLoaderContainer}>
             <Spinner />
           </div>
@@ -95,11 +95,11 @@ export function StorageItemColumns({
                 folderPath={folderPath}
                 items={orderedItems || []}
                 onDrop={handleDrop}
+                key={dir.fullPath}
                 className={`${styles.storageItemColumnContainer} ${maxDepth === dir.currentDepth ? styles.lastColumn : ""}`}
               >
                 <StorageItemColumn
                   items={orderedItems || []}
-                  key={dir.fullPath}
                   handleFolderClick={handleFolderClick}
                   setPreviewFile={setPreviewFile}
                   depth={dir.currentDepth!}
@@ -107,7 +107,7 @@ export function StorageItemColumns({
                   previewFileId={previewFile?._id}
                   prefix={folderPath}
                   onUploadComplete={onUploadComplete}
-                  isDraggingDisabled={isDraggingDisabled}
+                  isDraggingDisabled={isFilteringOrSearching}
                   StorageItem={StorageItem}
                 />
               </DroppableColumn>

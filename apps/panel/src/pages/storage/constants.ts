@@ -1,4 +1,4 @@
-import type { TypeDirectories } from "src/components/organisms/storage-columns/StorageColumns";
+import type { TypeDirectories } from "../../types/storage";
 
 export const ROOT_PATH = "/";
 

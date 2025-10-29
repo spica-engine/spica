@@ -2,7 +2,10 @@ import {useEffect, useMemo, useState} from "react";
 import type {TypeDirectories} from "src/types/storage";
 import useStorage from "../../../hooks/useStorage";
 import {findMaxDepthDirectory} from "../utils";
-import {useBrowseStorageQuery, useLazyGetStorageItemsQuery} from "../../../store/api/storageApi";
+import {
+  useLazyBrowseStorageQuery,
+  useLazyGetStorageItemsQuery
+} from "../../../store/api/storageApi";
 import {ROOT_PATH} from "../constants";
 
 export function useStorageData(
@@ -14,7 +17,10 @@ export function useStorageData(
   const [filteredData, setFilteredData] = useState<Storage[]>([]);
   const {buildDirectoryFilter} = useStorage();
   const dirToFetch = findMaxDepthDirectory(directory) ?? directory[0];
-  const [fetchFilteredData, {isLoading: isFilteredDataLoading, isFetching: isFilteredDataFetching}] = useLazyGetStorageItemsQuery();
+  const [
+    fetchFilteredData,
+    {isLoading: isFilteredDataLoading, isFetching: isFilteredDataFetching}
+  ] = useLazyGetStorageItemsQuery();
 
   const path = useMemo(() => {
     if (!dirToFetch) return "";
@@ -22,7 +28,15 @@ export function useStorageData(
     return dirToFetch.fullPath.split("/").filter(Boolean).join("/");
   }, [dirToFetch?.fullPath]);
 
-  const {data: unfilteredData, isLoading: isUnfilteredDataLoading, isFetching: isUnfilteredDataFetching, error} = useBrowseStorageQuery({path});
+  const [
+    fetchUnfilteredData,
+    {
+      data: unfilteredData,
+      isLoading: isUnfilteredDataLoading,
+      isFetching: isUnfilteredDataFetching,
+      error
+    }
+  ] = useLazyBrowseStorageQuery();
 
   const filterArray = useMemo(
     () => [
@@ -74,6 +88,11 @@ export function useStorageData(
   }, [directoryFilter, apiFilter, searchFilter]);
 
   useEffect(() => {
+    if (isFilteringOrSearching) return;
+    fetchUnfilteredData({path});
+  }, [directoryFilter, fetchUnfilteredData, isFilteringOrSearching, path]);
+
+  useEffect(() => {
     if (!isFilteringOrSearching) return;
     const fetchData = async () => {
       const {data} = await fetchFilteredData({filter});
@@ -84,7 +103,11 @@ export function useStorageData(
 
   return {
     storageData: isFilteringOrSearching ? filteredData : unfilteredData,
-    isLoading: isFilteredDataLoading || isUnfilteredDataLoading || isFilteredDataFetching || isUnfilteredDataFetching,
+    isLoading:
+      isFilteredDataLoading ||
+      isUnfilteredDataLoading ||
+      isFilteredDataFetching ||
+      isUnfilteredDataFetching,
     error
   };
 }

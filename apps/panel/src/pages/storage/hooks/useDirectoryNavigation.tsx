@@ -1,7 +1,9 @@
-import { useState } from "react";
-import type { TypeDirectories, TypeDirectoryDepth } from "src/types/storage";
-import { getParentPath } from "../utils";
-import { ROOT_PATH } from "../constants";
+import {useState} from "react";
+import type {TypeDirectories, TypeDirectoryDepth} from "src/types/storage";
+import {getParentPath} from "../utils";
+import {ROOT_PATH} from "../constants";
+
+export const SEARCH_RESULTS_PATH = "search-results";
 
 const INITIAL_DIRECTORIES: TypeDirectories = [
   {
