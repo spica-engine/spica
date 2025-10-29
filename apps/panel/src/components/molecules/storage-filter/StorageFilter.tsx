@@ -57,7 +57,7 @@ const types = [
   {value: "application/x-tar", label: "TAR"},
   {value: "application/gzip", label: "GZ"},
   {value: "application/octet-stream", label: "Binary/Other"}
-];
+].sort((a, b) => a.label.localeCompare(b.label));
 
 const units = ["kb", "mb", "gb", "tb"];
 
@@ -125,7 +125,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
                 options={types}
                 value={formik.values.type}
                 onChange={v => formik.setFieldValue("type", v)}
-                dimensionX={168}
+                dimensionX={184}
                 alignment="rightCenter"
                 placeholder=""
                 multiple
@@ -148,7 +148,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
                 className={`${styles.content} ${styles.fileSizeInputsContainer}`}
                 gap={0}
               >
-                <FlexElement className={styles.left} dimensionX={84} gap={0}>
+                <FlexElement className={styles.left} dimensionX={92} gap={0}>
                   <Input
                     value={formik.values.fileSize.min.value || undefined}
                     placeholder="-"
@@ -169,7 +169,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
                     popupClassName={styles.selectPopup}
                   />
                 </FlexElement>
-                <FlexElement dimensionX={82} gap={0}>
+                <FlexElement dimensionX={90} gap={0}>
                   <Input
                     value={formik.values.fileSize.max.value || undefined}
                     placeholder="-"
@@ -221,7 +221,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
           dimensionX="fill"
           className={styles.dateRangeContainer}
           prefix={{
-            children: <Text>To</Text>,
+            children: <Text>From</Text>,
             dimensionX: "fill",
             alignment: "leftCenter"
           }}
@@ -229,8 +229,8 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
             children: (
               <FlexElement className={styles.content} dimensionY={31.5} dimensionX={185}>
                 <DatePicker
-                  onChange={date => formik.setFieldValue("dateRange.to", date)}
-                  value={formik.values.dateRange.to}
+                  onChange={date => formik.setFieldValue("dateRange.from", date)}
+                  value={formik.values.dateRange.from || null}
                   placeholder="Date"
                   suffixIcon={<Icon name="chevronDown" />}
                   format="YYYY-MM-DD HH:mm:ss"
@@ -244,7 +244,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
           dimensionX="fill"
           className={styles.dateRangeContainer}
           prefix={{
-            children: <Text>From</Text>,
+            children: <Text>To</Text>,
             dimensionX: "fill",
             alignment: "leftCenter"
           }}
@@ -252,8 +252,8 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
             children: (
               <FlexElement className={styles.content} dimensionY={31.5} dimensionX={185}>
                 <DatePicker
-                  onChange={date => formik.setFieldValue("dateRange.from", date)}
-                  value={formik.values.dateRange.from || null}
+                  onChange={date => formik.setFieldValue("dateRange.to", date)}
+                  value={formik.values.dateRange.to}
                   placeholder="Date"
                   suffixIcon={<Icon name="chevronDown" />}
                   format="YYYY-MM-DD HH:mm:ss"

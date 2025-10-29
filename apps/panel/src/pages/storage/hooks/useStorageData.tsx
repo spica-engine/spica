@@ -1,8 +1,9 @@
-import {useMemo} from "react";
-import {useGetStorageItemsQuery} from "../../../store/api";
+import {useEffect, useMemo, useState} from "react";
 import type {TypeDirectories} from "src/types/storage";
 import useStorage from "../../../hooks/useStorage";
 import {findMaxDepthDirectory} from "../utils";
+import {useBrowseStorageQuery, useLazyGetStorageItemsQuery} from "../../../store/api/storageApi";
+import {ROOT_PATH} from "../constants";
 
 export function useStorageData(
   directory: TypeDirectories,
@@ -10,15 +11,29 @@ export function useStorageData(
   searchQuery: string = "",
   isFilteringOrSearching: boolean = false
 ) {
+  const [filteredData, setFilteredData] = useState<Storage[]>([]);
   const {buildDirectoryFilter} = useStorage();
+  const dirToFetch = findMaxDepthDirectory(directory) ?? directory[0];
+  const [fetchFilteredData, {isLoading: isFilteredDataLoading, isFetching: isFilteredDataFetching}] = useLazyGetStorageItemsQuery();
 
-  const filterArray = [
-    "/",
-    ...(findMaxDepthDirectory(directory)
-      ?.fullPath.split("/")
-      .filter(Boolean)
-      .map(i => `${i}/`) || [])
-  ];
+  const path = useMemo(() => {
+    if (!dirToFetch) return "";
+    if (dirToFetch.fullPath === ROOT_PATH) return "";
+    return dirToFetch.fullPath.split("/").filter(Boolean).join("/");
+  }, [dirToFetch?.fullPath]);
+
+  const {data: unfilteredData, isLoading: isUnfilteredDataLoading, isFetching: isUnfilteredDataFetching, error} = useBrowseStorageQuery({path});
+
+  const filterArray = useMemo(
+    () => [
+      "/",
+      ...(findMaxDepthDirectory(directory)
+        ?.fullPath.split("/")
+        .filter(Boolean)
+        .map(i => `${i}/`) || [])
+    ],
+    [directory]
+  );
 
   const directoryFilter = useMemo(() => {
     if (isFilteringOrSearching) return {};
@@ -36,7 +51,7 @@ export function useStorageData(
     };
   }, [searchQuery]);
 
-  const combinedFilter = useMemo(() => {
+  const filter = useMemo(() => {
     const filters: object[] = [];
 
     if (Object.keys(directoryFilter).length > 0) {
@@ -58,11 +73,18 @@ export function useStorageData(
     return {$and: filters};
   }, [directoryFilter, apiFilter, searchFilter]);
 
-  const {
-    data: storageData,
-    isFetching,
-    isLoading
-  } = useGetStorageItemsQuery({filter: combinedFilter});
+  useEffect(() => {
+    if (!isFilteringOrSearching) return;
+    const fetchData = async () => {
+      const {data} = await fetchFilteredData({filter});
+      setFilteredData(data as unknown as Storage[]);
+    };
+    fetchData();
+  }, [isFilteringOrSearching, apiFilter, searchQuery]);
 
-  return {storageData, isLoading: isFetching || isLoading};
+  return {
+    storageData: isFilteringOrSearching ? filteredData : unfilteredData,
+    isLoading: isFilteredDataLoading || isUnfilteredDataLoading || isFilteredDataFetching || isUnfilteredDataFetching,
+    error
+  };
 }

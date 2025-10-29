@@ -1,8 +1,7 @@
-import {Icon, InputWithIcon, type TypeInput} from "oziko-ui-kit";
+import {Icon, InputWithIcon, Spinner, type TypeInput} from "oziko-ui-kit";
 import React from "react";
 import styles from "./SearchBar.module.scss";
 import {memo} from "react";
-import Loader from "../loader/Loader";
 
 type SearchBarProps = {
   inputProps?: TypeInput;
@@ -16,7 +15,11 @@ const SearchBar = ({inputProps, loading}: SearchBarProps) => {
         gap={10}
         dimensionX={400}
         prefix={{
-          children: <Icon name="magnify" className={styles.icon} />
+          children: loading ? (
+            <Spinner size="small" className={styles.icon} />
+          ) : (
+            <Icon name="magnify" className={styles.icon} />
+          )
         }}
         inputProps={{
           placeholder: "Search",
@@ -24,7 +27,6 @@ const SearchBar = ({inputProps, loading}: SearchBarProps) => {
         }}
         className={styles.input}
       />
-      {loading && <Loader />}
     </div>
   );
 };

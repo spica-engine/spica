@@ -46,7 +46,7 @@ export function DroppableColumn({folderPath, items, children, onDrop, className}
         return itemParent === dragItem.parentPath;
       });
 
-      void onDrop(draggedItem, targetPath, sourceItems, items).catch(err => {
+      onDrop(draggedItem, targetPath, sourceItems, items).catch(err => {
         console.error("onDrop failed", err);
       });
 

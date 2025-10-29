@@ -1,10 +1,9 @@
-import type {TypeFile} from "oziko-ui-kit";
 import {useEffect} from "react";
 import {useStorageData} from "./useStorageData";
 import type {TypeDirectories} from "src/types/storage";
 import {findMaxDepthDirectory} from "../utils";
 import {useStorageConverter} from "./useStorageConverter";
-import { INITIAL_DIRECTORIES } from "../constants";
+import type { Storage } from '../../../store/api/storageApi';
 
 export function useStorageDataSync(
   apiFilter: object = {},
@@ -22,13 +21,11 @@ export function useStorageDataSync(
   const {convertData} = useStorageConverter(directory);
 
   useEffect(() => {
-    const data = storageData?.data ?? (storageData as unknown as TypeFile[]);
-    const convertedData = convertData(data as TypeFile[]);
+    if (!storageData) return;
+
+    const convertedData = convertData(storageData as unknown as Storage[]);
     if (!convertedData) return;
-    if (convertedData.length === 0 && isFilteringOrSearching) {
-      setDirectory(INITIAL_DIRECTORIES);
-      return;
-    }
+
     let newDirectories = [...directory];
     const dirToChange = findMaxDepthDirectory(newDirectories) ?? newDirectories[0];
     if (dirToChange) {

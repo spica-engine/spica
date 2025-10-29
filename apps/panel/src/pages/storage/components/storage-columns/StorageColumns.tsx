@@ -21,6 +21,7 @@ interface StorageItemColumnsProps {
   previewFile?: DirectoryItem;
   onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
   isDraggingDisabled?: boolean;
+  isLoading: boolean;
 }
 
 export function StorageItemColumns({
@@ -30,7 +31,8 @@ export function StorageItemColumns({
   setDirectory,
   previewFile,
   onUploadComplete,
-  isDraggingDisabled = false
+  isDraggingDisabled = false,
+  isLoading
 }: StorageItemColumnsProps) {
   const {handleDrop} = useDragAndDrop(directory, setDirectory);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -70,46 +72,52 @@ export function StorageItemColumns({
   return (
     <div ref={containerRef} className={styles.container}>
       <FlexElement className={styles.columns} gap={0}>
-        {visibleDirectories.map(dir => {
-          const orderedItems = [...(dir.items || [])].sort((a, b) => {
-            const aIsDir = a.content?.type === "inode/directory";
-            const bIsDir = b.content?.type === "inode/directory";
-            if (aIsDir !== bIsDir) return aIsDir ? -1 : 1;
-            return a.name.localeCompare(b.name);
-          });
+        {isLoading ? (
+          <div className={styles.columnLoaderContainer}>
+            <Spinner />
+          </div>
+        ) : (
+          visibleDirectories.map(dir => {
+            const orderedItems = [...(dir.items || [])].sort((a, b) => {
+              const aIsDir = a.content?.type === "inode/directory";
+              const bIsDir = b.content?.type === "inode/directory";
+              if (aIsDir !== bIsDir) return aIsDir ? -1 : 1;
+              return a.name.localeCompare(b.name);
+            });
 
-          const folderPath =
-            dir.fullPath === ROOT_PATH
-              ? ""
-              : dir.fullPath.split("/").filter(Boolean).join("/") + "/";
+            const folderPath =
+              dir.fullPath === ROOT_PATH
+                ? ""
+                : dir.fullPath.split("/").filter(Boolean).join("/") + "/";
 
-          return dir.items ? (
-            <DroppableColumn
-              folderPath={folderPath}
-              items={orderedItems || []}
-              onDrop={handleDrop}
-              className={`${styles.storageItemColumnContainer} ${maxDepth === dir.currentDepth ? styles.lastColumn : ""}`}
-            >
-              <StorageItemColumn
+            return dir.items ? (
+              <DroppableColumn
+                folderPath={folderPath}
                 items={orderedItems || []}
-                key={dir.fullPath}
-                handleFolderClick={handleFolderClick}
-                setPreviewFile={setPreviewFile}
-                depth={dir.currentDepth!}
-                directory={directory}
-                previewFileId={previewFile?._id}
-                prefix={folderPath}
-                onUploadComplete={onUploadComplete}
-                isDraggingDisabled={isDraggingDisabled}
-                StorageItem={StorageItem}
-              />
-            </DroppableColumn>
-          ) : (
-            <div className={styles.columnLoaderContainer} key={dir.fullPath}>
-              <Spinner />
-            </div>
-          );
-        })}
+                onDrop={handleDrop}
+                className={`${styles.storageItemColumnContainer} ${maxDepth === dir.currentDepth ? styles.lastColumn : ""}`}
+              >
+                <StorageItemColumn
+                  items={orderedItems || []}
+                  key={dir.fullPath}
+                  handleFolderClick={handleFolderClick}
+                  setPreviewFile={setPreviewFile}
+                  depth={dir.currentDepth!}
+                  directory={directory}
+                  previewFileId={previewFile?._id}
+                  prefix={folderPath}
+                  onUploadComplete={onUploadComplete}
+                  isDraggingDisabled={isDraggingDisabled}
+                  StorageItem={StorageItem}
+                />
+              </DroppableColumn>
+            ) : (
+              <div className={styles.columnLoaderContainer} key={dir.fullPath}>
+                <Spinner />
+              </div>
+            );
+          })
+        )}
       </FlexElement>
     </div>
   );

@@ -1,7 +1,6 @@
 import {FluidContainer, Select} from "oziko-ui-kit";
 import styles from "./Storage.module.scss";
 import StorageActionBar from "./components/storage-action-bar/StorageActionBar";
-import {FilePreview} from "../../components/molecules/file-preview/FilePreview";
 import {useDirectoryNavigation} from "./hooks/useDirectoryNavigation";
 import {useFileOperations} from "./hooks/useFileOperations";
 import {useFilePreview} from "./hooks/useFilePreview";
@@ -32,7 +31,7 @@ export default function StoragePage() {
     isFilteringOrSearching
   );
 
-  const {onUploadComplete, onFileReplaced, onFileDeleted} = useFileOperations(
+  const {onUploadComplete} = useFileOperations(
     directory,
     setDirectory,
     setPreviewFile
@@ -71,22 +70,10 @@ export default function StoragePage() {
               previewFile={previewFile}
               onUploadComplete={onUploadComplete}
               isDraggingDisabled={!!isFilteringOrSearching}
+              isLoading={isLoading}
             />
           )
         }}
-        suffix={
-          previewFile && {
-            className: styles.preview,
-            children: (
-              <FilePreview
-                handleClosePreview={handleClosePreview}
-                previewFile={previewFile}
-                onFileReplaced={onFileReplaced}
-                onFileDeleted={onFileDeleted}
-              />
-            )
-          }
-        }
       />
     </div>
   );

@@ -23,6 +23,15 @@
 
   .fileSizeInput {
     text-align: center;
+    padding-left: var(--padding-sm)
+  }
+
+  .fileSizeInput::placeholder {
+    transition: color var(--transition-duration) ease;
+  }
+
+  .fileSizeInput:focus::placeholder {
+    color: transparent;
   }
 
   .content {
