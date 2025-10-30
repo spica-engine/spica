@@ -3,7 +3,7 @@ import BucketNavigatorPopup, {
   type TypeBucketNavigatorPopup
 } from "../../components/molecules/bucket-navigator-popup/BucketNavigatorPopup";
 
-type BucketNavigatorPopupWrapperProps = Omit<TypeBucketNavigatorPopup, "isOpen" | "setIsOpen">;
+export type BucketNavigatorPopupWrapperProps = Omit<TypeBucketNavigatorPopup, "isOpen" | "setIsOpen">;
 
 export const BucketNavigatorPopupWrapper = (props: BucketNavigatorPopupWrapperProps) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);

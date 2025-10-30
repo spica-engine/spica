@@ -1,9 +1,7 @@
 import React, {useEffect, useMemo, useState, useRef} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
-import SideBar, {
-  type NavigatorItemGroup,
-  type TypeNavigatorItems
-} from "../components/organisms/sidebar/SideBar";
+import SideBar from "../components/organisms/sidebar/SideBar";
+import type {NavigatorItemGroup, TypeNavigatorItem} from "../types/sidebar";
 import {getMenuItems, navigatorItems} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
@@ -13,7 +11,10 @@ import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
 import {useGetBucketsQuery, useUpdateBucketOrderMutation} from "../store/api/bucketApi";
 import {useRequestTracker} from "../hooks/useRequestTracker";
-import {BucketNavigatorPopupWrapper} from "./components/BucketNavigatorPopupWrapper";
+import {
+  BucketNavigatorPopupWrapper,
+  type BucketNavigatorPopupWrapperProps
+} from "./components/BucketNavigatorPopupWrapper";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -65,8 +66,12 @@ const Layout = () => {
       items: (localBuckets?.map(i => ({
         ...i,
         section: "bucket",
-        suffixElements: [(props) => <BucketNavigatorPopupWrapper bucket={i} {...props} />]
-      })) ?? []) as TypeNavigatorItems[],
+        suffixElements: [
+          (props: BucketNavigatorPopupWrapperProps) => (
+            <BucketNavigatorPopupWrapper {...props} bucket={i} />
+          )
+        ]
+      })) ?? []) as TypeNavigatorItem[],
       onOrderChange: updateBucketOrderLocally,
       completeOrderChange: updateBucketOrderOnServer
     }
