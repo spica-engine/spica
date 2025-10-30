@@ -45,7 +45,7 @@ export const StorageItemColumn = memo(
     isDraggingDisabled,
     StorageItem
   }: StorageItemColumnProps) => {
-    const [uploadFiles, {isLoading, error}] = useUploadFilesMutation();
+    const [uploadFiles, {isLoading, error, isSuccess}] = useUploadFilesMutation();
     const [progress, setProgress] = React.useState(0);
 
     const handleDragOver: DragEventHandler<HTMLDivElement> = e => {
@@ -91,7 +91,7 @@ export const StorageItemColumn = memo(
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        <UploadOverlay loading={isLoading} progress={progress} error={error} />
+        <UploadOverlay loading={isLoading} progress={progress} error={error} isSuccess={isSuccess} />
         {items.length ? (
           items.map(item => {
             const isFolder = item?.content?.type === "inode/directory";

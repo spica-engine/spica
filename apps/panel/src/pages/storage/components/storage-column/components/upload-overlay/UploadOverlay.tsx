@@ -1,21 +1,23 @@
-import { CircularProgress } from "oziko-ui-kit";
+import {CircularProgress} from "oziko-ui-kit";
 import {useState, useEffect} from "react";
 import styles from "./UploadOverlay.module.scss";
 
 export const UploadOverlay = ({
   loading,
   progress,
-  error: externalError
+  error: externalError,
+  isSuccess
 }: {
   loading: boolean;
   progress: number;
   error: unknown;
+  isSuccess: boolean;
 }) => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
 
   useEffect(() => {
-    if (progress === 100 && !externalError && !showSuccess) {
+    if (isSuccess || (progress === 100 && !externalError && !showSuccess)) {
       setShowSuccess(true);
       const timer = setTimeout(() => setShowSuccess(false), 2000);
       return () => clearTimeout(timer);
