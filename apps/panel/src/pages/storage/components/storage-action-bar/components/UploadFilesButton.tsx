@@ -1,5 +1,5 @@
-import { CircularProgress, Icon, Button } from "oziko-ui-kit";
-import { useState, useEffect, type MouseEvent } from "react";
+import {CircularProgress, Icon, Button} from "oziko-ui-kit";
+import {useState, useEffect, type MouseEvent} from "react";
 
 type UploadFilesButtonProps = {
   onOpen: (e: MouseEvent) => void;
@@ -22,13 +22,15 @@ export function UploadFilesButton({
   useEffect(() => {
     if (progress === 100 && loading && !externalError) {
       setShowSuccess(true);
+      const timer = setTimeout(() => setShowSuccess(false), 2000);
+      return () => clearTimeout(timer);
     }
 
     if (loading && progress < 100) {
       setShowSuccess(false);
     }
 
-    if (!loading) {
+    if (!loading && showSuccess) {
       setTimeout(() => {
         setShowSuccess(false);
       }, 2000);
