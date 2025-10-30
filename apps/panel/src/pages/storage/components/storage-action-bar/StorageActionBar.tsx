@@ -1,7 +1,7 @@
 import {FlexElement, FluidContainer, Icon, Button, CircularProgress} from "oziko-ui-kit";
 import SearchBar from "../../../../components/atoms/search-bar/SearchBar";
 import styles from "./StorageActionBar.module.scss";
-import CreateFile from "src/components/molecules/create-file-modal/CreateFile";
+import CreateFile from "../../../../components/molecules/create-file-modal/CreateFile";
 import type {TypeDirectories} from "../../../../types/storage";
 import {findMaxDepthDirectory} from "../../utils";
 import {ROOT_PATH} from "../../constants";
