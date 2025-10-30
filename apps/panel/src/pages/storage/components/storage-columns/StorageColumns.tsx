@@ -86,13 +86,13 @@ export function StorageItemColumns({
           return dir.items ? (
             <DroppableColumn
               folderPath={folderPath}
+              key={dir.fullPath}
               items={orderedItems || []}
               onDrop={handleDrop}
               className={`${styles.storageItemColumnContainer} ${maxDepth === dir.currentDepth ? styles.lastColumn : ""}`}
             >
               <StorageItemColumn
                 items={orderedItems || []}
-                key={dir.fullPath}
                 handleFolderClick={handleFolderClick}
                 setPreviewFile={setPreviewFile}
                 depth={dir.currentDepth!}

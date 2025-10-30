@@ -19,13 +19,14 @@ export function useStorageDataSync(
     if (!convertedData) return;
     
     let newDirectories = [...directory];
+    console.log("Converted data for sync", newDirectories);
     const dirToChange = findMaxDepthDirectory(newDirectories) ?? newDirectories[0];
     if (dirToChange) {
       newDirectories = newDirectories.map(i =>
         i.fullPath === dirToChange.fullPath ? {...i, items: convertedData} : i
       );
     }
-
+    console.log("Updating storage data sync", newDirectories);
     setDirectory(newDirectories);
   }, [storageData]);
 }
