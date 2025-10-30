@@ -67,7 +67,7 @@ export function UploadFilesButton({
           label={undefined}
         />
       ),
-      text: "Upload Failed"
+      text: "Failed!"
     },
     success: {
       icon: (
