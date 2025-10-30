@@ -66,6 +66,7 @@ const Layout = () => {
       items: (localBuckets?.map(i => ({
         ...i,
         section: "bucket",
+        link: `/bucket/${i._id}`,
         suffixElements: [
           (props: BucketNavigatorPopupWrapperProps) => (
             <BucketNavigatorPopupWrapper {...props} bucket={i} />

@@ -16,7 +16,7 @@ export type TypeNavigatorItem = {
   category?: string;
   suffixElements?: React.ElementType[];
   className?: string;
-  link?: string;
+  link: string;
 };
 
 export type NavigatorItemGroup = {

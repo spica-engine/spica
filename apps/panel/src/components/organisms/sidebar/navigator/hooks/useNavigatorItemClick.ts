@@ -6,7 +6,7 @@ export const useNavigatorItemClick = (item: TypeNavigatorItem, isCurrentlySelect
   const navigate = useNavigate();
   return useCallback(() => {
     if (!isCurrentlySelected) {
-      navigate(item.link ?? `/${item?.section}/${item?._id}`);
+      navigate(item.link);
     }
-  }, [navigate, item?.section, item?._id, isCurrentlySelected]);
+  }, [navigate, item.link, isCurrentlySelected]);
 };

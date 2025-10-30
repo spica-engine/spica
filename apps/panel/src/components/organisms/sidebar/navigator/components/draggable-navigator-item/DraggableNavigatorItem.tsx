@@ -31,7 +31,6 @@ export const DraggableItem = ({
   const innerRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-  // Use custom hooks to eliminate code duplication
   const isCurrentlySelected = useNavigatorItemSelection(item);
   const handleClick = useNavigatorItemClick(item, isCurrentlySelected);
 

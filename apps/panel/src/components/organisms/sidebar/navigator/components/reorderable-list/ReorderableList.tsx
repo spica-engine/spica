@@ -1,4 +1,4 @@
-import {useState, useRef, useCallback, useEffect, useMemo, type Ref} from "react";
+import {useState, useRef, useCallback, useEffect} from "react";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import type {NavigatorItemGroup} from "../../../../../../types/sidebar";
