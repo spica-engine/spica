@@ -87,7 +87,7 @@ export type BucketDataQueryWithIdType = BucketDataQueryType & {bucketId: string}
  */
 export const useBucketService = () => {
   const {request: fetchBuckets, data: apiBuckets} = useApi<BucketType[]>({
-    endpoint: "/bucket",
+    endpoint: "/api/bucket",
     method: "get"
   });
 
@@ -103,7 +103,7 @@ export const useBucketService = () => {
 
   const {request: bucketOrderRequest} = useApi({endpoint: "", method: "patch"});
 
-  const {request: patchRequest} = useApi({endpoint: "/bucket", method: "patch"});
+  const {request: patchRequest} = useApi({endpoint: "/api/bucket", method: "patch"});
 
   const {request: deleteRequest} = useApi({
     endpoint: "",
@@ -143,7 +143,7 @@ export const useBucketService = () => {
   });
 
   const {request: postRequest} = useApi<BucketType>({
-    endpoint: "/bucket",
+    endpoint: "/api/bucket",
     method: "post"
   });
 
@@ -172,7 +172,7 @@ export const useBucketService = () => {
   const apiGetBucketData = useCallback(
     (bucketId: string, queryString?: string) => {
       return fetchBucketData({
-        endpoint: `/bucket/${bucketId}/data?${queryString}`
+        endpoint: `/api/bucket/${bucketId}/data?${queryString}`
       });
     },
     [fetchBucketData]
@@ -180,14 +180,14 @@ export const useBucketService = () => {
 
   const apiChangeBucketCategory = useCallback(
     (bucketId: string, category: string) => {
-      return patchRequest({body: {category}, endpoint: `/bucket/${bucketId}`});
+      return patchRequest({body: {category}, endpoint: `/api/bucket/${bucketId}`});
     },
     [patchRequest]
   );
 
   const apiChangeBucketOrder = useCallback(
     (bucketId: string, order: number) => {
-      return bucketOrderRequest({endpoint: `/bucket/${bucketId}`, body: {order}});
+      return bucketOrderRequest({endpoint: `/api/bucket/${bucketId}`, body: {order}});
     },
     [bucketOrderRequest]
   );
@@ -198,7 +198,7 @@ export const useBucketService = () => {
         const body = {...bucket, title: newTitle};
         delete (body as unknown as {section: any}).section;
         delete (body as unknown as {index: any}).index;
-        return await putRequest({body, endpoint: `/bucket/${bucket._id}`});
+        return await putRequest({body, endpoint: `/api/bucket/${bucket._id}`});
       } catch (err) {
         console.error(err);
       }
@@ -209,7 +209,7 @@ export const useBucketService = () => {
   const apiDeleteBucket = useCallback(
     (bucketId: string) => {
       return deleteRequest({
-        endpoint: `/bucket/${bucketId}`
+        endpoint: `/api/bucket/${bucketId}`
       });
     },
     [deleteRequest]
@@ -218,7 +218,7 @@ export const useBucketService = () => {
   const apiUpdateBucketHistory = useCallback(
     async (bucket: BucketType) => {
       return await putRequest({
-        endpoint: `/bucket/${bucket._id}`,
+        endpoint: `/api/bucket/${bucket._id}`,
         body: {
           ...bucket,
           history: !bucket.history
@@ -231,7 +231,7 @@ export const useBucketService = () => {
   const apiDeleteBucketHistory = useCallback(
     async (bucket: BucketType) => {
       return await deleteHistoty({
-        endpoint: `/bucket/${bucket._id}/history`
+        endpoint: `/api/bucket/${bucket._id}/history`
       });
     },
     [deleteHistoty]
@@ -241,7 +241,7 @@ export const useBucketService = () => {
     async (modifiedBucket: BucketType) => {
       return createBucketField({
         body: modifiedBucket,
-        endpoint: `/bucket/${modifiedBucket._id}`
+        endpoint: `/api/bucket/${modifiedBucket._id}`
       });
     },
     [createBucketField]
@@ -250,7 +250,7 @@ export const useBucketService = () => {
   const apiUpdateBucketReadonly = useCallback(
     async (bucket: BucketType) => {
       return await putRequest({
-        endpoint: `/bucket/${bucket._id}`,
+        endpoint: `/api/bucket/${bucket._id}`,
         body: {
           ...bucket,
           readOnly: !bucket.readOnly
@@ -263,7 +263,7 @@ export const useBucketService = () => {
   const apiUpdateBucketRule = useCallback(
     async (bucket: BucketType, newRules: {write: string; read: string}) => {
       return await updateBucketRule({
-        endpoint: `/bucket/${bucket._id}`,
+        endpoint: `/api/bucket/${bucket._id}`,
         body: {...bucket, acl: newRules}
       });
     },
@@ -307,7 +307,7 @@ export const useBucketService = () => {
   const apiDeleteBucketEntry = useCallback(
     (entryId: string, bucketId: string) => {
       return deleteBucketEntry({
-        endpoint: `/bucket/${bucketId}/data/${entryId}`,
+        endpoint: `/api/bucket/${bucketId}/data/${entryId}`,
       });
     },
     [deleteBucketEntry]
@@ -316,7 +316,7 @@ export const useBucketService = () => {
   const apiUpdatebucketLimitiation = useCallback(
     async (bucketId: string, body: BucketType) => {
       return await bucketLimitationRequest({
-        endpoint: `/bucket/${bucketId}`,
+        endpoint: `/api/bucket/${bucketId}`,
         body
       });
     },
@@ -326,7 +326,7 @@ export const useBucketService = () => {
   const apiUpdatebucketLimitiationFields = useCallback(
     (bucket: BucketType) => {
       return bucketLimitationRequest({
-        endpoint: `/bucket/${bucket._id}`,
+        endpoint: `/api/bucket/${bucket._id}`,
         body: bucket
       });
     },
@@ -346,7 +346,7 @@ export const useBucketService = () => {
   const apiDeleteBucketField = useCallback(
     (modifiedBucket: BucketType) => {
       return deleteFieldRequest({
-        endpoint: `/bucket/${modifiedBucket._id}`,
+        endpoint: `/api/bucket/${modifiedBucket._id}`,
         body: modifiedBucket
       });
     },
