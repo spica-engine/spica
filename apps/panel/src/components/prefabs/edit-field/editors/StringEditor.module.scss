@@ -1,0 +1,21 @@
+.stringEditor {
+  .divider {
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 24px 0 16px 0;
+  }
+
+  .configSection {
+    .sectionTitle {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+      color: #333;
+    }
+
+    .defaultValue {
+      margin-top: 16px;
+    }
+  }
+}
+

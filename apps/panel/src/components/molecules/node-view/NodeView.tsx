@@ -5,6 +5,9 @@ import {useNavigate} from "react-router-dom";
 import DeleteBucket from "../../prefabs/delete-bucket/DeleteBucket";
 import type {BucketType} from "../../../store/api/bucketApi";
 import EditBucket from "../../prefabs/edit-bucket/EditBucket";
+import DeleteField from "../../prefabs/delete-field/DeleteField";
+import {EditField} from "../../prefabs/edit-field";
+import type {FieldConfig} from "../../prefabs/edit-field";
 
 export interface Field {
   id: string;
@@ -29,6 +32,7 @@ interface NodeViewProps {
   onMouseDown: (nodeId: string, e: React.MouseEvent) => void;
   onClick?: (nodeId: string, e: React.MouseEvent) => void;
   onAddField: (nodeId: string) => void;
+  onEditField: (nodeId: string, field: FieldConfig) => void;
   onRemoveField: (nodeId: string, fieldId: string) => void;
   dragging: boolean;
   isFocused?: boolean;
@@ -42,6 +46,7 @@ const NodeView: React.FC<NodeViewProps> = ({
   onMouseDown,
   onClick,
   onAddField,
+  onEditField,
   onRemoveField,
   dragging,
   isFocused = true,
@@ -99,43 +104,6 @@ const NodeView: React.FC<NodeViewProps> = ({
     [node.id, onRemoveField]
   );
 
-  const getFieldIcon = useCallback((type: string, isRelation?: boolean) => {
-    if (isRelation) return "🔗";
-
-    switch (type) {
-      case "unique":
-        return "🔑";
-      case "string":
-        return "📝";
-      case "textarea":
-        return "📝";
-      case "number":
-        return "🔢";
-      case "boolean":
-        return "☑️";
-      case "object":
-        return "📦";
-      case "array":
-        return "📋";
-      case "multiselect":
-        return "📋";
-      case "relation":
-        return "🔗";
-      case "date":
-        return "📅";
-      case "color":
-        return "🎨";
-      case "storage":
-        return "💾";
-      case "location":
-        return "📍";
-      case "richtext":
-        return "📄";
-      default:
-        return "•";
-    }
-  }, []);
-
   const getFieldTypeDisplay = useCallback((field: Field) => {
     if (field.isUnique) return "unique";
     if (field.isRelation) return "relation";
@@ -152,6 +120,22 @@ const NodeView: React.FC<NodeViewProps> = ({
     const parts = path.split(".");
     return parts[parts.length - 1];
   }, []);
+
+  const mapFieldToConfig = useCallback((field: Field): FieldConfig => {
+    return {
+      ...field,
+      _id: field.id,
+      name: field.name,
+      type: field.type
+    };
+  }, []);
+
+  const handleFieldSave = useCallback(
+    (fieldConfig: FieldConfig) => {
+      onEditField(node.id, fieldConfig);
+    },
+    [node.id, onEditField]
+  );
 
   return (
     <div
@@ -206,18 +190,28 @@ const NodeView: React.FC<NodeViewProps> = ({
             data-node-id={node.id}
             style={{paddingLeft: `${getFieldIndent(field.path)}px`}}
           >
-            <span className={styles.fieldIcon}>{getFieldIcon(field.type, field.isRelation)}</span>
-            <span className={styles.fieldName}>{getFieldDisplayName(field)}</span>
-            <span className={styles.fieldType}>{getFieldTypeDisplay(field)}</span>
-            <div className={styles.fieldControls}>
-              <button className={styles.controlBtn}>✏️</button>
-              <button
-                className={`${styles.controlBtn} ${styles.delete}`}
-                onClick={e => handleRemoveField(field.id, e)}
-              >
-                🗑️
-              </button>
+            <div className={styles.fieldLeft}>
+              <span className={styles.fieldName}>{getFieldDisplayName(field)}</span>
+              <span className={styles.fieldType}>{getFieldTypeDisplay(field)}</span>
             </div>
+
+          {field.name !== "_id" && <div className={styles.fieldControls}>
+              <EditField field={mapFieldToConfig(field)} onSave={handleFieldSave}>
+                {({onOpen}) => (
+                  <Button variant="icon" className={styles.editButton} onClick={onOpen}>
+                    <Icon name="pencil" />
+                  </Button>
+                )}
+              </EditField>
+
+           {bucket.primary !== field.name && <DeleteField field={field} bucket={bucket}>
+              {({onOpen}) => (
+                <Button variant="icon" className={styles.deleteButton} onClick={onOpen}>
+                <Icon name="delete" />
+              </Button>
+              )}
+            </DeleteField>}
+            </div>}
           </div>
         ))}
 

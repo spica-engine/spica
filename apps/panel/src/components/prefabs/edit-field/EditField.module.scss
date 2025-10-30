@@ -1,0 +1,43 @@
+.editFieldModal {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  max-height: 80vh;
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+
+    .typeIndicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e0e0e0;
+
+      span {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+      }
+    }
+
+    .editorContainer {
+      max-width: 600px;
+    }
+  }
+
+  .footer {
+    border-top: 1px solid #e0e0e0;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+
+.typeSelectorPortal {
+  z-index: 1000;
+}

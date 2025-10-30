@@ -635,6 +635,56 @@ export const bucketApi = baseApi.injectEndpoints({
         'BucketData',
       ],
     }),
+
+    // Delete bucket field
+    deleteBucketField: builder.mutation<BucketType, { bucketId: string; fieldKey: string; bucket: BucketType }>({
+      query: ({ bucketId, fieldKey, bucket }) => {
+        const { [fieldKey]: removed, ...updatedProperties } = bucket.properties;
+        const updatedRequired = bucket.required?.filter(r => r !== fieldKey) ?? [];
+        const updatedPrimary = bucket.primary === fieldKey ? 'title' : bucket.primary;
+
+        const updatedBucket = {
+          ...bucket,
+          properties: updatedProperties,
+          required: updatedRequired,
+          primary: updatedPrimary,
+        };
+
+        return {
+          url: `/bucket/${bucketId}`,
+          method: 'PUT',
+          body: updatedBucket,
+        };
+      },
+      invalidatesTags: (result, error, { bucketId }) => [
+        { type: 'Bucket', id: bucketId },
+        { type: 'BucketData', id: bucketId },
+        'Bucket',
+      ],
+      // Optimistic update
+      onQueryStarted: async ({ bucketId, fieldKey, bucket }, { dispatch, queryFulfilled }) => {
+        const { [fieldKey]: removed, ...updatedProperties } = bucket.properties;
+        const updatedRequired = bucket.required?.filter(r => r !== fieldKey) ?? [];
+        const updatedPrimary = bucket.primary === fieldKey ? 'title' : bucket.primary;
+
+        const patchResult = dispatch(
+          bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
+            const foundBucket = draft.find((b) => b._id === bucketId);
+            if (foundBucket) {
+              foundBucket.properties = updatedProperties;
+              foundBucket.required = updatedRequired;
+              foundBucket.primary = updatedPrimary;
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+    }),
   }),
   overrideExisting: false,
 });
@@ -663,6 +713,7 @@ export const {
   useCreateBucketEntryMutation,
   useUpdateBucketEntryMutation,
   useDeleteBucketEntryMutation,
+  useDeleteBucketFieldMutation,
 } = bucketApi;
 
 export const bucketApiReducerPath = bucketApi.reducerPath;
