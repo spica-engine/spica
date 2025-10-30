@@ -18,9 +18,9 @@ import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import uniqid from "uniqid";
 import {createApikeyActivity} from "./activity.resource";
 import {ApiKeyService} from "./apikey.service";
+import {generateUniqueApiKey} from "./utility";
 import {ApiKey} from "@spica-server/interface/passport/apikey";
 
 @Controller("passport/apikey")
@@ -81,8 +81,10 @@ export class ApiKeyController {
   @UseInterceptors(activity(createApikeyActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:create"))
-  insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
-    apiKey.key = apiKey.key || uniqid();
+  async insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
+    if (!apiKey.key) {
+      apiKey.key = generateUniqueApiKey();
+    }
     apiKey.policies = [];
     return this.apiKeyService.insertOne(apiKey);
   }
