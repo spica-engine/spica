@@ -57,9 +57,12 @@ export function useStorageData(
   const searchFilter = useMemo(() => {
     if (!searchQuery) return {};
 
+    const safeQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = `^(?:[^/]*${safeQuery}[^/]*|.*\\/[^/]*${safeQuery}[^/]*)$`;
+
     return {
       name: {
-        $regex: searchQuery,
+        $regex: pattern,
         $options: "i"
       }
     };

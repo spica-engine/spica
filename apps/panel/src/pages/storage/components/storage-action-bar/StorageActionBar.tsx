@@ -108,6 +108,7 @@ export default function StorageActionBar({
                 value: searchValue,
                 onChange: handleSearchChange
               }}
+              onClear={() => setSearchValue("")}
               loading={isLoading}
             />
             <Popover
