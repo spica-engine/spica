@@ -20,8 +20,8 @@ import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {createApikeyActivity} from "./activity.resource";
 import {ApiKeyService} from "./apikey.service";
-import {generateUniqueApiKey} from "./utility";
 import {ApiKey} from "@spica-server/interface/passport/apikey";
+import {nanoid} from "nanoid";
 
 @Controller("passport/apikey")
 export class ApiKeyController {
@@ -83,7 +83,7 @@ export class ApiKeyController {
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:create"))
   async insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
     if (!apiKey.key) {
-      apiKey.key = generateUniqueApiKey();
+      apiKey.key = nanoid(32);
     }
     apiKey.policies = [];
     return this.apiKeyService.insertOne(apiKey);
