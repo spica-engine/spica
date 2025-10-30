@@ -15,7 +15,7 @@ export const UploadOverlay = ({
   const [showError, setShowError] = useState(false);
 
   useEffect(() => {
-    if (progress === 100 && loading && !externalError) {
+    if (progress === 100 && !externalError && !showSuccess) {
       setShowSuccess(true);
       const timer = setTimeout(() => setShowSuccess(false), 2000);
       return () => clearTimeout(timer);
