@@ -42,7 +42,7 @@ async function connect(): Promise<_mongodb.MongoClient> {
   return connection;
 }
 
-const wrappedCollections = new WeakMap<_mongodb.Db, Set<string>>();
+const wrappedCollectionsMap = new WeakMap<_mongodb.Db, Map<string, _mongodb.Collection<any>>>();
 
 export async function database(): Promise<_mongodb.Db> {
   checkEnvironment();
@@ -62,19 +62,21 @@ export async function database(): Promise<_mongodb.Db> {
 
   const originalCollection = db.collection.bind(db);
 
-  if (!wrappedCollections.has(db)) {
-    wrappedCollections.set(db, new Set());
+  if (!wrappedCollectionsMap.has(db)) {
+    wrappedCollectionsMap.set(db, new Map());
   }
-  const wrapped = wrappedCollections.get(db);
+  const collectionCache = wrappedCollectionsMap.get(db);
 
   db.collection = (...args) => {
     const collectionName = args[0];
-    const coll: _mongodb.Collection<any> = originalCollection(...args);
 
-    if (!wrapped.has(collectionName)) {
-      collectionMethods(coll);
-      wrapped.add(collectionName);
+    if (collectionCache.has(collectionName)) {
+      return collectionCache.get(collectionName);
     }
+
+    const coll: _mongodb.Collection<any> = originalCollection(...args);
+    collectionMethods(coll);
+    collectionCache.set(collectionName, coll);
 
     return coll;
   };
