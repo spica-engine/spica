@@ -7,6 +7,7 @@ import {
   type TypeDirectoryDepth,
   type TypeDirectories
 } from "../../../../types/storage";
+import {UploadOverlay} from "./components/upload-overlay/UploadOverlay";
 
 interface StorageItemColumnProps {
   items: DirectoryItem[];
@@ -14,7 +15,7 @@ interface StorageItemColumnProps {
     folderName: string,
     fullPath: string,
     depth: TypeDirectoryDepth,
-    isActive: boolean,
+    isActive: boolean
   ) => void;
   setPreviewFile: (file?: DirectoryItem) => void;
   depth: TypeDirectoryDepth;
@@ -44,9 +45,8 @@ export const StorageItemColumn = memo(
     isDraggingDisabled,
     StorageItem
   }: StorageItemColumnProps) => {
-    const [uploadFiles] = useUploadFilesMutation();
+    const [uploadFiles, {isLoading, error}] = useUploadFilesMutation();
     const [progress, setProgress] = React.useState(0);
-    const [isUploading, setIsUploading] = React.useState(false);
 
     const handleDragOver: DragEventHandler<HTMLDivElement> = e => {
       if (isDraggingDisabled) return;
@@ -59,7 +59,6 @@ export const StorageItemColumn = memo(
       const files = e.dataTransfer.files;
 
       if (files && files.length > 0) {
-        setIsUploading(true);
         try {
           const filesWithPrefix = Array.from(files).map(file => {
             const fileName = prefix + file.name;
@@ -78,7 +77,6 @@ export const StorageItemColumn = memo(
         } catch (error) {
           console.error("File upload failed:", error);
         } finally {
-          setIsUploading(false);
           setProgress(0);
         }
       }
@@ -93,17 +91,7 @@ export const StorageItemColumn = memo(
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        {isUploading && (
-          <div className={styles.uploadOverlay}>
-            <CircularProgress
-              strokeWidth={3}
-              size="xxs"
-              percent={progress}
-              status={progress === 100 ? "success" : "normal"}
-              label={progress === 100 ? undefined : null}
-            />
-          </div>
-        )}
+        <UploadOverlay loading={isLoading} progress={progress} error={error} />
         {items.length ? (
           items.map(item => {
             const isFolder = item?.content?.type === "inode/directory";
