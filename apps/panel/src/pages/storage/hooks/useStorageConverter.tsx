@@ -19,9 +19,6 @@ export function useStorageConverter(directory: TypeDirectories) {
         const isDirectory = typeFile.content?.type === "inode/directory";
         const nameParts = typeFile.name.split("/").filter(Boolean);
         const resolvedName = nameParts[nameParts.length - 1] + (isDirectory ? "/" : "");
-        const originalUrl = new URL(typeFile.url);
-        const origin = `${originalUrl.protocol}//${originalUrl.host}`;
-        const viewUrl = new URL(`${origin}/storage/${typeFile._id}/view`);
 
         return {
           ...typeFile,
@@ -30,7 +27,6 @@ export function useStorageConverter(directory: TypeDirectories) {
           fullPath: storage.name,
           currentDepth: depth ?? directory.filter(dir => dir.currentDepth).length,
           isActive: false,
-          url: viewUrl.toString(),
         } as DirectoryItem;
       });
     },
