@@ -68,6 +68,10 @@ describe("Storage Service", () => {
           expect(val.name).toBe("name" + (result.data.length - 1 - index));
           expect(val.content["data"]).toBe(undefined);
           expect(val.content.type).toBe((result.data.length - 1 - index).toString());
+          expect(val.created_at).toBeInstanceOf(Date);
+          expect(val.updated_at).toBeInstanceOf(Date);
+          expect(val.created_at).toEqual(result.data[index].created_at);
+          expect(val.updated_at).toEqual(result.data[index].updated_at);
         });
         return result;
       })
@@ -166,18 +170,25 @@ describe("Storage Service", () => {
     };
     await expect(storageService.update(storageObjectId, updatedData)).resolves.not.toThrow();
 
+    const insertedObject = await storageService.get(storageObjectId);
+    const createdAt = insertedObject.created_at;
+    const updatedAt = insertedObject.updated_at;
+
     return await expect(
       storageService.get(storageObjectId).then(result => {
         expect(result).toEqual({
           _id: storageObjectId,
           name: "new name",
           url: "new_url",
+          created_at: createdAt,
+          updated_at: updatedAt,
           content: {
             data: Buffer.from("cba"),
             type: "newtype",
             size: 10
           }
         });
+        expect(result.updated_at.getTime()).toBeGreaterThan(createdAt.getTime());
         return result;
       })
     ).resolves.not.toThrow();
