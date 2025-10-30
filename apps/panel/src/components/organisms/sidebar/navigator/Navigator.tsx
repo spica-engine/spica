@@ -13,6 +13,28 @@ import {ReorderableList} from "./components/reorderable-list/ReorderableList";
 import {DefaultNavigatorItem} from "./components/default-navigator-item/DefaultNavigatorItem";
 import {AccordionNavigatorItem} from "./components/accordion-navigator-item/AccordionNavigatorItem";
 
+const groupObjectsByCategory = (items: TypeNavigatorItem[]) => {
+  const groupedMap = new Map<string, TypeNavigatorItem[]>();
+  const ungrouped: TypeNavigatorItem[] = [];
+  items.forEach(obj => {
+    if (obj.category) {
+      if (!groupedMap.has(obj.category)) {
+        groupedMap.set(obj.category, []);
+      }
+      groupedMap.get(obj.category)!.push(obj);
+    } else {
+      ungrouped.push(obj);
+    }
+  });
+
+  const grouped = Array.from(groupedMap.values());
+
+  return {
+    grouped,
+    ungrouped
+  };
+};
+
 type TypeNavigatorProps = {
   header?: TypeNavigatorHeader;
   items?: NavigatorItemGroup;
@@ -24,34 +46,8 @@ type TypeNavigatorProps = {
   addNewButtonText?: string;
 };
 
-const groupObjectsByCategory = (object: {items: TypeNavigatorItem[]}) => {
-  const groupedMap = new Map<string, TypeNavigatorItem[]>();
-  const ungrouped: TypeNavigatorItem[] = [];
-  object.items.forEach(obj => {
-    if (obj.category) {
-      if (!groupedMap.has(obj.category)) {
-        groupedMap.set(obj.category, []);
-      }
-      groupedMap.get(obj.category)!.push(obj);
-    } else {
-      ungrouped.push(obj);
-    }
-  });
-
-  return {
-    grouped: Array.from(groupedMap.values()),
-    ungrouped
-  };
-};
-
 const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps) => {
-  const {grouped, ungrouped} = useMemo(
-    () =>
-      groupObjectsByCategory({
-        items: items?.items ?? []
-      }),
-    [items]
-  );
+  const {grouped, ungrouped} = useMemo(() => groupObjectsByCategory(items?.items ?? []), [items]);
 
   const accordionItems = useMemo(
     () =>
