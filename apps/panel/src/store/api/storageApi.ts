@@ -73,7 +73,7 @@ export const storageApi = baseApi.injectEndpoints({
     uploadFiles: builder.mutation<Storage[], UploadFilesRequest>({
       query: ({ files, prefix }) => {
         const formData = new FormData();
-        Array.from(files).forEach((file) => formData.append('file', file));
+        Array.from(files).forEach((file) => formData.append('files', file));
         if (prefix) formData.append('prefix', prefix);
 
         return {
@@ -82,7 +82,10 @@ export const storageApi = baseApi.injectEndpoints({
           body: formData,
         };
       },
-      invalidatesTags: [{ type: 'Storage' as const, id: 'LIST' }],
+      invalidatesTags: [
+        { type: 'Storage' as const, id: 'LIST' },
+        { type: 'Storage' as const, id: 'BROWSE' }
+      ],
     }),
 
     updateStorageItem: builder.mutation<Storage, UpdateStorageItemRequest>({
@@ -145,15 +148,42 @@ export const storageApi = baseApi.injectEndpoints({
         { type: 'Storage' as const, id: `${id}-sub` },
       ],
     }),
+
+    browseStorage: builder.query<StorageListResponse, StorageOptions & { path?: string }>({
+      query: (options: StorageOptions & { path?: string } = {}) => {
+        const params = new URLSearchParams();
+        const { path, limit, skip, sort, filter, paginate } = options;
+
+        if (path) params.append('path', path);
+        if (limit != null) params.append('limit', String(limit));
+        if (skip != null) params.append('skip', String(skip));
+        if (sort) params.append('sort', JSON.stringify(sort));
+        if (filter) params.append('filter', JSON.stringify(filter));
+        params.append('paginate', JSON.stringify(paginate ?? false));
+
+        const qs = params.toString();
+        return qs ? `/storage/browse?${qs}` : `/storage/browse`;
+      },
+      providesTags: (result) =>
+        result && result.data
+          ? [
+              ...result.data.map(({ _id }) => ({ type: 'Storage' as const, id: _id })),
+              { type: 'Storage' as const, id: 'BROWSE' },
+            ]
+          : [{ type: 'Storage' as const, id: 'BROWSE' }],
+    })
   }),
 });
 
 export const {
   useGetStorageItemsQuery,
+  useLazyGetStorageItemsQuery,
   useGetStorageItemQuery,
   useUploadFilesMutation,
   useUpdateStorageItemMutation,
   useDeleteStorageItemMutation,
   useUpdateStorageNameMutation,
   useGetSubResourcesQuery,
+  useBrowseStorageQuery,
+  useLazyBrowseStorageQuery,
 } = storageApi;
