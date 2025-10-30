@@ -14,8 +14,8 @@ export function useFileOperations(
     const newDirectories = directory
       .map(dir => {
         const {prefix, ...fileWithoutPrefix} = file;
-        const convertedFile = convertData([fileWithoutPrefix])?.[0];
         if (dir.fullPath === prefix || (!prefix && dir.fullPath === ROOT_PATH)) {
+          const convertedFile = convertData([fileWithoutPrefix], dir.currentDepth)?.[0];
           return {
             ...dir,
             items: dir.items ? [...dir.items, convertedFile] : [convertedFile]

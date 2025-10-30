@@ -19,6 +19,7 @@ export function useStorageDataSync(
     if (!convertedData) return;
     
     let newDirectories = [...directory];
+
     const dirToChange = findMaxDepthDirectory(newDirectories) ?? newDirectories[0];
     if (dirToChange) {
       newDirectories = newDirectories.map(i =>

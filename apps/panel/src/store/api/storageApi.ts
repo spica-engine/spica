@@ -185,4 +185,5 @@ export const {
   useUpdateStorageNameMutation,
   useGetSubResourcesQuery,
   useBrowseStorageQuery,
+  useLazyBrowseStorageQuery,
 } = storageApi;

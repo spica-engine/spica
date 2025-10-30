@@ -1,11 +1,20 @@
-import {useMemo} from "react";
-import {useBrowseStorageQuery} from "../../../store/api/storageApi";
+import {useEffect, useMemo} from "react";
+import {useLazyBrowseStorageQuery} from "../../../store/api/storageApi";
 import type {TypeDirectories} from "../../../types/storage";
 import {findMaxDepthDirectory} from "../utils";
 import {ROOT_PATH} from "../constants";
 
 export function useStorageData(directory: TypeDirectories) {
   const dirToFetch = findMaxDepthDirectory(directory) ?? directory[0];
+  const [
+    fetchUnfilteredData,
+    {
+      data: unfilteredData,
+      isLoading: isUnfilteredDataLoading,
+      isFetching: isUnfilteredDataFetching,
+      error
+    }
+  ] = useLazyBrowseStorageQuery();
 
   const path = useMemo(() => {
     if (!dirToFetch) return "";
@@ -14,18 +23,13 @@ export function useStorageData(directory: TypeDirectories) {
     return dirToFetch.fullPath.split("/").filter(Boolean).join("/");
   }, [dirToFetch?.fullPath]);
 
-  const {
-    data: storageData,
-    isLoading,
-    error
-  } = useBrowseStorageQuery({
-    path,
-    sort: {name: 1}
-  });
+  useEffect(() => {
+    fetchUnfilteredData({path});
+  }, [fetchUnfilteredData, path]);
 
   return {
-    storageData,
-    isLoading,
+    storageData: unfilteredData,
+    isLoading: isUnfilteredDataLoading || isUnfilteredDataFetching,
     error
   };
 }
