@@ -12,19 +12,15 @@ type CreateFileProps = {
 };
 
 const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
-  const [uploadFiles, {isLoading: isUploading, error}] = useUploadFilesMutation();
+  const [uploadFiles, {isLoading, error}] = useUploadFilesMutation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = React.useState(0);
-  const [isLoading, setIsLoading] = React.useState(false);
 
   React.useEffect(() => {
-    if (isUploading) {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
+    if (!isLoading) {
       setProgress(0);
     }
-  }, [isUploading]);
+  }, [isLoading]);
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
