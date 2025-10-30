@@ -42,6 +42,8 @@ async function connect(): Promise<_mongodb.MongoClient> {
   return connection;
 }
 
+const wrappedCollections = new WeakMap<_mongodb.Db, Set<string>>();
+
 export async function database(): Promise<_mongodb.Db> {
   checkEnvironment();
 
@@ -58,94 +60,107 @@ export async function database(): Promise<_mongodb.Db> {
 
   const db = connection.db(process.env.__INTERNAL__SPICA__MONGODBNAME__);
 
-  const collection = db.collection;
+  const originalCollection = db.collection.bind(db);
+
+  if (!wrappedCollections.has(db)) {
+    wrappedCollections.set(db, new Set());
+  }
+  const wrapped = wrappedCollections.get(db);
 
   db.collection = (...args) => {
-    const coll: _mongodb.Collection<any> = collection.call(db, ...args);
+    const collectionName = args[0];
+    const coll: _mongodb.Collection<any> = originalCollection(...args);
 
-    const watch = coll.watch;
-    coll.watch = (...args) => {
-      process.emitWarning(
-        "DeprecationWarning: It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing."
-      );
-      return watch.bind(coll)(...args);
-    };
-    const findById = coll.findOne;
-    coll["findById"] = (id, ...args) => {
-      const objectId = new ObjectId(id);
-      return findById.bind(coll)({_id: objectId}, ...args);
-    };
-
-    const findOne = coll.findOne;
-    coll.findOne = (filter?, ...args) => {
-      validateDocs(filter);
-      return findOne.bind(coll)(filter, ...args);
-    };
-    const find = coll.find;
-    coll.find = (filter?, ...args) => {
-      validateDocs(filter);
-      return find.bind(coll)(filter, ...args);
-    };
-    const findOneAndUpdate = coll.findOneAndUpdate;
-    coll.findOneAndUpdate = (filter, update, ...args) => {
-      validateDocs(filter);
-      validateDocs(update);
-      return findOneAndUpdate.bind(coll)(filter, update, ...args);
-    };
-
-    const findOneAndReplace = coll.findOneAndReplace;
-    coll.findOneAndReplace = (filter, update, ...args) => {
-      validateDocs(filter);
-      validateDocs(update);
-      return findOneAndReplace.bind(coll)(filter, update, ...args);
-    };
-
-    const findOneAndDelete = coll.findOneAndDelete;
-    coll.findOneAndDelete = (filter, ...args) => {
-      validateDocs(filter);
-      return findOneAndDelete.bind(coll)(filter, ...args);
-    };
-
-    const insertOne = coll.insertOne;
-    coll.insertOne = (doc, ...args) => {
-      validateDocs(doc);
-      return insertOne.bind(coll)(doc, ...args);
-    };
-    const insertMany = coll.insertMany;
-    coll.insertMany = (docs, ...args) => {
-      validateDocs(docs);
-      return insertMany.bind(coll)(docs, ...args);
-    };
-    const updateOne = coll.updateOne;
-    coll.updateOne = (filter, update, ...args) => {
-      validateDocs(filter);
-      validateDocs(update);
-      return updateOne.bind(coll)(filter, update, ...args);
-    };
-
-    const updateMany = coll.updateMany;
-    coll.updateMany = (filter, update, ...args) => {
-      validateDocs(filter);
-      validateDocs(update);
-      return updateMany.bind(coll)(filter, update, ...args);
-    };
-
-    const deleteOne = coll.deleteOne;
-    coll.deleteOne = (filter, ...args) => {
-      validateDocs(filter);
-      return deleteOne.bind(coll)(filter, ...args);
-    };
-
-    const deleteMany = coll.deleteMany;
-    coll.deleteMany = (filter, ...args) => {
-      validateDocs(filter);
-      return deleteMany.bind(coll)(filter, ...args);
-    };
+    if (!wrapped.has(collectionName)) {
+      collectionMethods(coll);
+      wrapped.add(collectionName);
+    }
 
     return coll;
   };
 
   return db;
+}
+
+function collectionMethods(coll: _mongodb.Collection<any>): void {
+  const watch = coll.watch;
+  coll.watch = (...args) => {
+    process.emitWarning(
+      "DeprecationWarning: It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing."
+    );
+    return watch.bind(coll)(...args);
+  };
+  const findById = coll.findOne;
+  coll["findById"] = (id, ...args) => {
+    const objectId = new ObjectId(id);
+    return findById.bind(coll)({_id: objectId}, ...args);
+  };
+
+  const findOne = coll.findOne;
+  coll.findOne = (filter?, ...args) => {
+    validateDocs(filter);
+    return findOne.bind(coll)(filter, ...args);
+  };
+  const find = coll.find;
+  coll.find = (filter?, ...args) => {
+    validateDocs(filter);
+    return find.bind(coll)(filter, ...args);
+  };
+  const findOneAndUpdate = coll.findOneAndUpdate;
+  coll.findOneAndUpdate = (filter, update, ...args) => {
+    validateDocs(filter);
+    validateDocs(update);
+    return findOneAndUpdate.bind(coll)(filter, update, ...args);
+  };
+
+  const findOneAndReplace = coll.findOneAndReplace;
+  coll.findOneAndReplace = (filter, update, ...args) => {
+    validateDocs(filter);
+    validateDocs(update);
+    return findOneAndReplace.bind(coll)(filter, update, ...args);
+  };
+
+  const findOneAndDelete = coll.findOneAndDelete;
+  coll.findOneAndDelete = (filter, ...args) => {
+    validateDocs(filter);
+    return findOneAndDelete.bind(coll)(filter, ...args);
+  };
+
+  const insertOne = coll.insertOne;
+  coll.insertOne = (doc, ...args) => {
+    validateDocs(doc);
+    return insertOne.bind(coll)(doc, ...args);
+  };
+  const insertMany = coll.insertMany;
+  coll.insertMany = (docs, ...args) => {
+    validateDocs(docs);
+    return insertMany.bind(coll)(docs, ...args);
+  };
+  const updateOne = coll.updateOne;
+  coll.updateOne = (filter, update, ...args) => {
+    validateDocs(filter);
+    validateDocs(update);
+    return updateOne.bind(coll)(filter, update, ...args);
+  };
+
+  const updateMany = coll.updateMany;
+  coll.updateMany = (filter, update, ...args) => {
+    validateDocs(filter);
+    validateDocs(update);
+    return updateMany.bind(coll)(filter, update, ...args);
+  };
+
+  const deleteOne = coll.deleteOne;
+  coll.deleteOne = (filter, ...args) => {
+    validateDocs(filter);
+    return deleteOne.bind(coll)(filter, ...args);
+  };
+
+  const deleteMany = coll.deleteMany;
+  coll.deleteMany = (filter, ...args) => {
+    validateDocs(filter);
+    return deleteMany.bind(coll)(filter, ...args);
+  };
 }
 
 function validateDocs(doc: object | object[]) {
