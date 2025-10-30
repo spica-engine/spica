@@ -57,7 +57,7 @@ export const storageApi = baseApi.injectEndpoints({
         params.append("paginate", JSON.stringify(paginate ?? false));
 
         const qs = params.toString();
-        return qs ? `/api/storage?${qs}` : `/api/storage`;
+        return qs ? `/storage?${qs}` : `/storage`;
       },
       providesTags: result =>
         result && result.data
@@ -166,7 +166,7 @@ export const storageApi = baseApi.injectEndpoints({
         if (filter) params.append("filter", JSON.stringify(filter));
         params.append("paginate", JSON.stringify(paginate ?? false));
 
-        return `/api/storage/${id}/sub-resources?${params.toString()}`;
+        return `/storage/${id}/sub-resources?${params.toString()}`;
       },
       providesTags: (result, error, {id}) => [{type: "Storage" as const, id: `${id}-sub`}]
     })

@@ -75,7 +75,9 @@ export function StorageItemColumns({
             const aIsDir = a.content?.type === "inode/directory";
             const bIsDir = b.content?.type === "inode/directory";
             if (aIsDir !== bIsDir) return aIsDir ? -1 : 1;
-            return a.name.localeCompare(b.name);
+            const firstName = a.label || a.name;
+            const secondName = b.label || b.name;
+            return firstName.localeCompare(secondName);
           });
 
           const folderPath =
@@ -86,13 +88,13 @@ export function StorageItemColumns({
           return dir.items ? (
             <DroppableColumn
               folderPath={folderPath}
+              key={dir.fullPath}
               items={orderedItems || []}
               onDrop={handleDrop}
               className={`${styles.storageItemColumnContainer} ${maxDepth === dir.currentDepth ? styles.lastColumn : ""}`}
             >
               <StorageItemColumn
                 items={orderedItems || []}
-                key={dir.fullPath}
                 handleFolderClick={handleFolderClick}
                 setPreviewFile={setPreviewFile}
                 depth={dir.currentDepth!}

@@ -1,7 +1,7 @@
-import type { TypeFile } from "oziko-ui-kit";
-import type { TypeDirectories, DirectoryItem } from "src/types/storage";
-import { ROOT_PATH } from "../constants";
-import { useStorageConverter } from "./useStorageConverter";
+import type {TypeFile} from "oziko-ui-kit";
+import type {TypeDirectories, DirectoryItem} from "src/types/storage";
+import {ROOT_PATH} from "../constants";
+import {useStorageConverter} from "./useStorageConverter";
 
 export function useFileOperations(
   directory: TypeDirectories,
@@ -11,17 +11,19 @@ export function useFileOperations(
   const {convertData} = useStorageConverter(directory);
 
   const onUploadComplete = (file: TypeFile & {prefix?: string}) => {
-    const newDirectories = directory.map(dir => {
-      const {prefix, ...fileWithoutPrefix} = file;
-      const convertedFile = convertData([fileWithoutPrefix])[0];
-      if (dir.fullPath === prefix || (!prefix && dir.fullPath === ROOT_PATH)) {
-        return {
-          ...dir,
-          items: dir.items ? [...dir.items, convertedFile] : [convertedFile]
-        };
-      }
-      return dir;
-    });
+    const newDirectories = directory
+      .map(dir => {
+        const {prefix, ...fileWithoutPrefix} = file;
+        if (dir.fullPath === prefix || (!prefix && dir.fullPath === ROOT_PATH)) {
+          const convertedFile = convertData([fileWithoutPrefix], dir.currentDepth)?.[0];
+          return {
+            ...dir,
+            items: dir.items ? [...dir.items, convertedFile] : [convertedFile]
+          };
+        }
+        return dir;
+      })
+      .filter(Boolean) as TypeDirectories;
     setDirectory(newDirectories);
   };
 

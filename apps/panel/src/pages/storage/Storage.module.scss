@@ -34,13 +34,14 @@
 
 .storageItemColumn {
   height: 100% !important;
-  width: 100% !important;
+   width: 100% !important;
   overflow-y: scroll;
   @include mixins.hideScrollbar;
 }
 
 .storageItem {
   cursor: pointer;
+  max-width: 100%;
   width: 100% !important;
   height: 28px !important;
   padding: var(--padding-sm) var(--padding-xl);
@@ -64,7 +65,10 @@
 }
 
 .fileViewContainer {
-  width: 100% !important;
+  width: 600px !important;
+  > * {
+    width: 100% !important;
+  }
 }
 
 .fileView {
@@ -128,7 +132,7 @@
 
 .actionBar {
   justify-content: space-between !important;
-  padding: var(--padding-lg) 0 !important;
+  padding: 0 0 var(--padding-lg) !important;
   width: 100% !important;
 }
 
@@ -145,6 +149,24 @@
 
 .hidden {
   display: none !important;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.doc {
+  display: block !important;
+  overflow-y: auto;
+  > div > section {
+    width: 100% !important;
+    overflow-x: auto;
+  }
+  width: 100%;
+  height: 100%;
+  overflow: auto;
 }
 
 .columnLoaderContainer {
