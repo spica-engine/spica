@@ -1,4 +1,4 @@
-import React, {use, useRef, type FC, type ReactNode} from "react";
+import React, {useRef, type FC, type ReactNode} from "react";
 import {useUploadFilesMutation} from "../../../store/api/storageApi";
 
 type CreateFileProps = {
@@ -7,15 +7,15 @@ type CreateFileProps = {
     onOpen: (e: React.MouseEvent) => void;
     loading: boolean;
     progress: number;
+    error?: unknown;
   }) => ReactNode;
 };
 
 const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
-  const [uploadFiles, {isLoading: isUploading}] = useUploadFilesMutation();
+  const [uploadFiles, {isLoading: isUploading, error}] = useUploadFilesMutation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
-
 
   React.useEffect(() => {
     if (isUploading) {
@@ -60,7 +60,8 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
       {children({
         onOpen: handleOpen,
         loading: isLoading,
-        progress
+        progress,
+        error
       })}
       <input
         ref={fileInputRef}
