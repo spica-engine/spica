@@ -1,6 +1,4 @@
-import {baseApi} from "./baseApi";
-import axios from "axios";
-import type {FetchBaseQueryError} from "@reduxjs/toolkit/query";
+import { baseApi } from './baseApi';
 
 export interface Storage {
   _id?: string;
@@ -30,7 +28,6 @@ export interface StorageOptions {
 export interface UploadFilesRequest {
   files: FileList;
   prefix?: string;
-  onProgress?: (progress: number) => void;
 }
 
 export interface UpdateStorageItemRequest {
@@ -44,133 +41,138 @@ export interface UpdateStorageNameRequest {
 }
 
 export const storageApi = baseApi.injectEndpoints({
-  endpoints: builder => ({
+  endpoints: (builder) => ({
     getStorageItems: builder.query<StorageListResponse, StorageOptions | void>({
       query: (options: StorageOptions = {}) => {
         const params = new URLSearchParams();
-        const {limit, skip, sort, filter, paginate} = options;
+        const { limit, skip, sort, filter, paginate } = options;
 
-        if (limit != null) params.append("limit", String(limit));
-        if (skip != null) params.append("skip", String(skip));
-        if (sort) params.append("sort", JSON.stringify(sort));
-        if (filter) params.append("filter", JSON.stringify(filter));
-        params.append("paginate", JSON.stringify(paginate ?? false));
+        if (limit != null) params.append('limit', String(limit));
+        if (skip != null) params.append('skip', String(skip));
+        if (sort) params.append('sort', JSON.stringify(sort));
+        if (filter) params.append('filter', JSON.stringify(filter));
+        params.append('paginate', JSON.stringify(paginate ?? false));
 
         const qs = params.toString();
         return qs ? `/storage?${qs}` : `/storage`;
       },
-      providesTags: result =>
+      providesTags: (result) =>
         result && result.data
           ? [
-              ...result.data.map(({_id}) => ({type: "Storage" as const, id: _id})),
-              {type: "Storage" as const, id: "LIST"}
+              ...result.data.map(({ _id }) => ({ type: 'Storage' as const, id: _id })),
+              { type: 'Storage' as const, id: 'LIST' },
             ]
-          : [{type: "Storage" as const, id: "LIST"}]
+          : [{ type: 'Storage' as const, id: 'LIST' }],
     }),
 
     getStorageItem: builder.query<Storage, string>({
-      query: id => `/api/storage/${id}`,
-      providesTags: (result, error, id) => [{type: "Storage" as const, id}]
+      query: (id) => `/storage/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Storage' as const, id }],
     }),
 
     uploadFiles: builder.mutation<Storage[], UploadFilesRequest>({
-      queryFn: async ({files, prefix, onProgress}, api) => {
-        try {
-          const state = api.getState() as any;
-          const token = state.auth?.token;
+      query: ({ files, prefix }) => {
+        const formData = new FormData();
+        Array.from(files).forEach((file) => formData.append('files', file));
+        if (prefix) formData.append('prefix', prefix);
 
-          const formData = new FormData();
-          Array.from(files).forEach(file => formData.append("files", file));
-          if (prefix) formData.append("prefix", prefix);
-
-          const headers: any = {};
-          if (token) {
-            headers.Authorization = `IDENTITY ${token}`;
-          }
-
-          const result = await axios({
-            url: `${import.meta.env.VITE_BASE_URL}/api/storage`,
-            method: "POST",
-            data: formData,
-            headers,
-            onUploadProgress: onProgress
-              ? (progressEvent: any) => {
-                  const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                  onProgress(progress);
-                }
-              : undefined
-          });
-
-          return {data: result.data as Storage[]};
-        } catch (axiosError: any) {
-          const err = axiosError;
-          return {
-            error: {
-              status: err.response?.status,
-              data: err.response?.data || err.message
-            } as FetchBaseQueryError
-          };
-        }
+        return {
+          url: '/storage',
+          method: 'POST',
+          body: formData,
+        };
       },
-      invalidatesTags: [{type: "Storage" as const, id: "LIST"}]
+      invalidatesTags: [
+        { type: 'Storage' as const, id: 'LIST' },
+        { type: 'Storage' as const, id: 'BROWSE' }
+      ],
     }),
 
     updateStorageItem: builder.mutation<Storage, UpdateStorageItemRequest>({
-      query: ({id, file}) => {
+      query: ({ id, file }) => {
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append('file', file);
 
         return {
-          url: `/api/storage/${id}`,
-          method: "PUT",
-          body: formData
+          url: `/storage/${id}`,
+          method: 'PUT',
+          body: formData,
         };
       },
-      invalidatesTags: (result, error, {id}) => [
-        {type: "Storage" as const, id},
-        {type: "Storage" as const, id: "LIST"}
-      ]
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Storage' as const, id },
+        { type: 'Storage' as const, id: 'LIST' },
+      ],
     }),
 
     deleteStorageItem: builder.mutation<void, string>({
-      query: id => ({
-        url: `/api/storage/${id}`,
-        method: "DELETE"
+      query: (id) => ({
+        url: `/storage/${id}`,
+        method: 'DELETE',
       }),
       invalidatesTags: (result, error, id) => [
-        {type: "Storage" as const, id},
-        {type: "Storage" as const, id: "LIST"}
-      ]
+        { type: 'Storage' as const, id },
+        { type: 'Storage' as const, id: 'LIST' },
+      ],
     }),
 
     updateStorageName: builder.mutation<Storage, UpdateStorageNameRequest>({
-      query: ({id, name}) => ({
-        url: `/api/storage/${id}`,
-        method: "PATCH",
-        body: {name}
+      query: ({ id, name }) => ({
+        url: `/storage/${id}`,
+        method: 'PATCH',
+        body: { name },
       }),
-      invalidatesTags: (result, error, {id}) => [
-        {type: "Storage" as const, id},
-        {type: "Storage" as const, id: "LIST"}
-      ]
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Storage' as const, id },
+        { type: 'Storage' as const, id: 'LIST' },
+      ],
     }),
 
-    getSubResources: builder.query<StorageListResponse, {id: string; options?: StorageOptions}>({
-      query: ({id, options = {}}) => {
+    getSubResources: builder.query<
+      StorageListResponse,
+      { id: string; options?: StorageOptions }
+    >({
+      query: ({ id, options = {} }) => {
         const params = new URLSearchParams();
-        const {limit, skip, sort, filter, paginate} = options;
+        const { limit, skip, sort, filter, paginate } = options;
 
-        if (limit != null) params.append("limit", String(limit));
-        if (skip != null) params.append("skip", String(skip));
-        if (sort) params.append("sort", JSON.stringify(sort));
-        if (filter) params.append("filter", JSON.stringify(filter));
-        params.append("paginate", JSON.stringify(paginate ?? false));
+        if (limit != null) params.append('limit', String(limit));
+        if (skip != null) params.append('skip', String(skip));
+        if (sort) params.append('sort', JSON.stringify(sort));
+        if (filter) params.append('filter', JSON.stringify(filter));
+        params.append('paginate', JSON.stringify(paginate ?? false));
 
         return `/storage/${id}/sub-resources?${params.toString()}`;
       },
-      providesTags: (result, error, {id}) => [{type: "Storage" as const, id: `${id}-sub`}]
+      providesTags: (result, error, { id }) => [
+        { type: 'Storage' as const, id: `${id}-sub` },
+      ],
+    }),
+
+    browseStorage: builder.query<StorageListResponse, StorageOptions & { path?: string }>({
+      query: (options: StorageOptions & { path?: string } = {}) => {
+        const params = new URLSearchParams();
+        const { path, limit, skip, sort, filter, paginate } = options;
+
+        if (path) params.append('path', path);
+        if (limit != null) params.append('limit', String(limit));
+        if (skip != null) params.append('skip', String(skip));
+        if (sort) params.append('sort', JSON.stringify(sort));
+        if (filter) params.append('filter', JSON.stringify(filter));
+        params.append('paginate', JSON.stringify(paginate ?? false));
+
+        const qs = params.toString();
+        return qs ? `/storage/browse?${qs}` : `/storage/browse`;
+      },
+      providesTags: (result) =>
+        result && result.data
+          ? [
+              ...result.data.map(({ _id }) => ({ type: 'Storage' as const, id: _id })),
+              { type: 'Storage' as const, id: 'BROWSE' },
+            ]
+          : [{ type: 'Storage' as const, id: 'BROWSE' }],
     })
-  })
+  }),
 });
 
 export const {
@@ -181,5 +183,7 @@ export const {
   useUpdateStorageItemMutation,
   useDeleteStorageItemMutation,
   useUpdateStorageNameMutation,
-  useGetSubResourcesQuery
+  useGetSubResourcesQuery,
+  useBrowseStorageQuery,
+  useLazyBrowseStorageQuery,
 } = storageApi;
