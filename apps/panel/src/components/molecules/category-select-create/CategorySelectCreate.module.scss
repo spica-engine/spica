@@ -1,9 +1,10 @@
-* {
+.modal {
+  * {
+    font-family: var(--font-family-base) !important;
+    line-height: unset !important;
+  }
   font-family: var(--font-family-base) !important;
   line-height: unset !important;
-}
-
-.modal {
   padding: 0;
   min-height: 0 !important;
   width: 600px !important;
@@ -64,7 +65,6 @@
 .option:hover {
   background-color: var(--color-soft);
 }
-
 
 .addButton {
   width: min-content;

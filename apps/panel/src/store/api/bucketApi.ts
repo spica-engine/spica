@@ -139,7 +139,15 @@ export const bucketApi = baseApi.injectEndpoints({
       providesTags: ['Bucket'],
     }),
 
-    // Get bucket data
+    getBucket: builder.query<BucketType, string>({
+      query: (bucketId) => ({
+        url: `/bucket/${bucketId}`,
+      }),
+      providesTags: (result, error, bucketId) => [
+        { type: 'Bucket', id: bucketId },
+      ],
+    }),
+
     getBucketData: builder.query<BucketDataType, {
       bucketId: string;
       paginate?: boolean;
@@ -150,7 +158,6 @@ export const bucketApi = baseApi.injectEndpoints({
       filter?: Record<string, any>;
     }>({
       query: ({ bucketId, ...params }) => {
-        // Convert params to query string (excluding undefined values)
         const queryParams = new URLSearchParams();
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined) {
@@ -173,7 +180,15 @@ export const bucketApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Create bucket
+    getBucketEntry: builder.query<any, { bucketId: string; entryId: string }>({
+      query: ({ bucketId, entryId }) => ({
+        url: `/bucket/${bucketId}/data/${entryId}`,
+      }),
+      providesTags: (result, error, { bucketId, entryId }) => [
+        { type: 'BucketData', id: bucketId },
+      ],
+    }),
+
     createBucket: builder.mutation<BucketType, CreateBucketRequest>({
       query: (body) => {
         const bucketData = {
@@ -550,13 +565,88 @@ export const bucketApi = baseApi.injectEndpoints({
         'Bucket',
       ],
     }),
+
+    // Create bucket entry
+    createBucketEntry: builder.mutation<any, { bucketId: string; data: Record<string, any> }>({
+      query: ({ bucketId, data }) => ({
+        url: `/bucket/${bucketId}/data`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { bucketId }) => [
+        { type: 'BucketData', id: bucketId },
+        'BucketData',
+      ],
+      // Optimistic update
+      onQueryStarted: async ({ bucketId, data }, { dispatch, queryFulfilled }) => {
+        try {
+          const { data: newEntry } = await queryFulfilled;
+          // Update the bucket data cache
+          dispatch(
+            bucketApi.util.updateQueryData('getBucketData', { bucketId } as any, (draft) => {
+              draft.data.push(newEntry);
+              draft.meta.total += 1;
+            })
+          );
+        } catch {
+          // If the mutation fails, the cache will be invalidated automatically
+        }
+      },
+    }),
+
+    // Update bucket entry
+    updateBucketEntry: builder.mutation<any, { bucketId: string; entryId: string; data: Record<string, any> }>({
+      query: ({ bucketId, entryId, data }) => ({
+        url: `/bucket/${bucketId}/data/${entryId}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { bucketId, entryId }) => [
+        { type: 'BucketData', id: bucketId },
+        'BucketData',
+      ],
+      // Optimistic update
+      onQueryStarted: async ({ bucketId, entryId, data }, { dispatch, queryFulfilled }) => {
+        const patchResult = dispatch(
+          bucketApi.util.updateQueryData('getBucketData', { bucketId } as any, (draft) => {
+            const entryIndex = draft.data.findIndex((entry) => entry._id === entryId);
+            if (entryIndex !== -1) {
+              draft.data[entryIndex] = { ...draft.data[entryIndex], ...data };
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+    }),
+
+    // Delete bucket entry
+    deleteBucketEntry: builder.mutation<{ message: string }, { entryId: string; bucketId: string }>({
+      query: ({ entryId, bucketId }) => ({
+        url: `/bucket/${bucketId}/data/${entryId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { bucketId }) => [
+        { type: 'BucketData', id: bucketId },
+        'BucketData',
+      ],
+    }),
   }),
   overrideExisting: false,
 });
 
 export const {
   useGetBucketsQuery,
+  useGetBucketQuery,
   useGetBucketDataQuery,
+  useGetBucketEntryQuery,
+  useLazyGetBucketQuery,
+  useLazyGetBucketDataQuery,
+  useLazyGetBucketEntryQuery,
   useCreateBucketMutation,
   useUpdateBucketMutation,
   useDeleteBucketMutation,
@@ -570,6 +660,9 @@ export const {
   useRenameBucketMutation,
   useUpdateBucketLimitationMutation,
   useUpdateBucketLimitationFieldsMutation,
+  useCreateBucketEntryMutation,
+  useUpdateBucketEntryMutation,
+  useDeleteBucketEntryMutation,
 } = bucketApi;
 
 export const bucketApiReducerPath = bucketApi.reducerPath;

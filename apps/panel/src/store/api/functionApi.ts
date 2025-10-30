@@ -86,20 +86,20 @@ export const functionApi = baseApi.injectEndpoints({
       filter?: Record<string, any>;
     } | void>({
       query: (params) => ({
-        url: 'function',
+        url: '/function',
         params: params || {},
       }),
       providesTags: ['Function'],
     }),
 
     getFunction: builder.query<SpicaFunction, string>({
-      query: (id) => `function/${id}`,
+      query: (id) => `/function/${id}`,
       providesTags: (result, error, id) => [{ type: 'Function', id }],
     }),
 
     createFunction: builder.mutation<SpicaFunction, CreateFunctionRequest>({
       query: (body) => ({
-        url: 'function',
+        url: '/function',
         method: 'POST',
         body,
       }),
@@ -108,7 +108,7 @@ export const functionApi = baseApi.injectEndpoints({
 
     updateFunction: builder.mutation<SpicaFunction, { id: string; body: UpdateFunctionRequest }>({
       query: ({ id, body }) => ({
-        url: `function/${id}`,
+        url: `/function/${id}`,
         method: 'PUT',
         body,
       }),
@@ -117,7 +117,7 @@ export const functionApi = baseApi.injectEndpoints({
 
     deleteFunction: builder.mutation<{ message: string }, string>({
       query: (id) => ({
-        url: `function/${id}`,
+        url: `/function/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, id) => [{ type: 'Function', id }, 'Function'],
@@ -125,7 +125,7 @@ export const functionApi = baseApi.injectEndpoints({
 
     executeFunction: builder.mutation<any, { id: string; body?: ExecuteFunctionRequest }>({
       query: ({ id, body = {} }) => ({
-        url: `function/${id}/run`,
+        url: `/function/${id}/run`,
         method: 'POST',
         body,
       }),
@@ -138,20 +138,20 @@ export const functionApi = baseApi.injectEndpoints({
       sort?: Record<string, 1 | -1>;
     }>({
       query: ({ functionId, ...params }) => ({
-        url: `function/${functionId}/logs`,
+        url: `/function/${functionId}/logs`,
         params,
       }),
       providesTags: (result, error, { functionId }) => [{ type: 'Function', id: functionId }],
     }),
 
     getFunctionDependencies: builder.query<Record<string, string>, string>({
-      query: (id) => `function/${id}/dependencies`,
+      query: (id) => `/function/${id}/dependencies`,
       providesTags: (result, error, id) => [{ type: 'Function', id }],
     }),
 
     installFunctionDependencies: builder.mutation<{ message: string }, { id: string; dependencies: Record<string, string> }>({
       query: ({ id, dependencies }) => ({
-        url: `function/${id}/dependencies`,
+        url: `/function/${id}/dependencies`,
         method: 'POST',
         body: { dependencies },
       }),
@@ -159,13 +159,13 @@ export const functionApi = baseApi.injectEndpoints({
     }),
 
     getFunctionTriggers: builder.query<FunctionTrigger[], string>({
-      query: (id) => `function/${id}/triggers`,
+      query: (id) => `/function/${id}/triggers`,
       providesTags: (result, error, id) => [{ type: 'Function', id }],
     }),
 
     updateFunctionTriggers: builder.mutation<SpicaFunction, { id: string; triggers: FunctionTrigger[] }>({
       query: ({ id, triggers }) => ({
-        url: `function/${id}/triggers`,
+        url: `/function/${id}/triggers`,
         method: 'PUT',
         body: { triggers },
       }),
@@ -173,13 +173,13 @@ export const functionApi = baseApi.injectEndpoints({
     }),
 
     getFunctionEnv: builder.query<Record<string, string>, string>({
-      query: (id) => `function/${id}/env`,
+      query: (id) => `/function/${id}/env`,
       providesTags: (result, error, id) => [{ type: 'Function', id }],
     }),
 
     updateFunctionEnv: builder.mutation<SpicaFunction, { id: string; env: Record<string, string> }>({
       query: ({ id, env }) => ({
-        url: `function/${id}/env`,
+        url: `/function/${id}/env`,
         method: 'PUT',
         body: { env },
       }),

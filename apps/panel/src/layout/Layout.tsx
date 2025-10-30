@@ -139,7 +139,7 @@ const Layout = () => {
       </div>
       <div className={styles.main}>
         <div className={styles.toolbar}>
-          <Toolbar bucketId={undefined} token={token} name={name} onDrawerOpen={openDrawer} />
+          <Toolbar token={token} name={name} onDrawerOpen={openDrawer} />
         </div>
         <div className={styles.content}>
           <Outlet />
