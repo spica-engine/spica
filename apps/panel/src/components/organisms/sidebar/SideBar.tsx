@@ -3,31 +3,7 @@ import styles from "./SideBar.module.scss";
 import {Icon, type IconName} from "oziko-ui-kit";
 import Navigator from "./navigator/Navigator";
 import Logo from "../../atoms/logo/Logo";
-import type { TypeNavigatorHeader } from "./navigator/components/navigator-header/NavigatorHeader";
-
-export type TypeMenuItems = {
-  name?: string;
-  icon?: IconName;
-  header?: TypeNavigatorHeader;
-  id: string;
-  addNewButtonText?: string;
-};
-
-export type TypeNavigatorItems = {
-  _id: string;
-  section: string; //!Todo can be improvable like statically defined values etc.
-  title?: string;
-  icon?: IconName;
-  category?: string;
-  suffixElements?: React.ElementType[];
-  className?: string;
-};
-
-export type NavigatorItemGroup = {
-  items: TypeNavigatorItems[]
-  onOrderChange: (from: number, to: number) => void;
-  completeOrderChange: (identifier: string, newOrder: number) => void;
-};
+import type {TypeMenuItems, NavigatorItemGroup, TypeNavigatorHeader} from "../../../types/sidebar";
 
 type TypeSideBar = {
   menuItems?: TypeMenuItems[];

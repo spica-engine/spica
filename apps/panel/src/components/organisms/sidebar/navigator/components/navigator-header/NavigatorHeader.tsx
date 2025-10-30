@@ -1,15 +1,6 @@
 import {Text, FluidContainer, Button, Icon, type IconName} from "oziko-ui-kit";
 import styles from "./NavigatorHeader.module.scss";
-import type {NavigatorItemGroup} from "../../../SideBar";
-
-export type TypeNavigatorHeader = {
-  name?: string;
-  items?: NavigatorItemGroup;
-  buttons?: {
-    icon: IconName;
-    onClick: () => void;
-  }[];
-};
+import type {NavigatorItemGroup, TypeNavigatorHeader} from "../../../../../../types/sidebar";
 
 type TypeNavigatorHeaderProps = {
   header?: TypeNavigatorHeader;

@@ -1,15 +1,16 @@
 import {Icon, Text, type IconName, helperUtils, Accordion} from "oziko-ui-kit";
 import styles from "./Navigator.module.scss";
 import {Button} from "oziko-ui-kit";
-import {memo} from "react";
-import type {NavigatorItemGroup, TypeNavigatorItems} from "../SideBar";
+import {memo, useMemo} from "react";
+import type {
+  NavigatorItemGroup,
+  TypeNavigatorItem,
+  TypeNavigatorHeader
+} from "../../../../types/sidebar";
 import AddBucketPopup from "../../../../components/molecules/add-bucket-popup/AddBucketPopup";
-import {
-  NavigatorHeader,
-  type TypeNavigatorHeader
-} from "./components/navigator-header/NavigatorHeader";
+import {NavigatorHeader} from "./components/navigator-header/NavigatorHeader";
 import {ReorderableList} from "./components/reorderable-list/ReorderableList";
-import {DefaultList} from "./components/default-list/DefaultList";
+import {DefaultNavigatorItem} from "./components/default-navigator-item/DefaultNavigatorItem";
 import {AccordionNavigatorItem} from "./components/accordion-navigator-item/AccordionNavigatorItem";
 
 type TypeNavigatorProps = {
@@ -23,76 +24,89 @@ type TypeNavigatorProps = {
   addNewButtonText?: string;
 };
 
-const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps) => {
-  const groupObjectsByCategory = (object: {items: any[]}) => {
-    const groupedMap = new Map<string, TypeNavigatorItems[]>();
-    const ungrouped: TypeNavigatorItems[] = [];
-    object.items.forEach(obj => {
-      if (obj.category) {
-        if (!groupedMap.has(obj.category)) {
-          groupedMap.set(obj.category, []);
-        }
-        groupedMap.get(obj.category)!.push(obj);
-      } else {
-        ungrouped.push(obj);
+const groupObjectsByCategory = (object: {items: TypeNavigatorItem[]}) => {
+  const groupedMap = new Map<string, TypeNavigatorItem[]>();
+  const ungrouped: TypeNavigatorItem[] = [];
+  object.items.forEach(obj => {
+    if (obj.category) {
+      if (!groupedMap.has(obj.category)) {
+        groupedMap.set(obj.category, []);
       }
-    });
-
-    return {
-      grouped: Array.from(groupedMap.values()),
-      ungrouped
-    };
-  };
-
-  const {grouped, ungrouped} = groupObjectsByCategory({
-    items: items?.items ?? []
+      groupedMap.get(obj.category)!.push(obj);
+    } else {
+      ungrouped.push(obj);
+    }
   });
 
-  const accordionItems = grouped?.map(item => ({
-    title: helperUtils.capitalize(item?.[0]?.category ?? ""),
-    content: (
-      <>
-        {item.map((item: any, index: number) => (
-          <AccordionNavigatorItem key={item._id} item={item} index={index} />
-        ))}
-      </>
-    ),
-    icon: (
-      <>
-        <Icon name="dragHorizontalVariant" />
-        <Icon name="dotsVertical" />
-      </>
-    ),
-    className: item?.[0]?.className
-  }));
+  return {
+    grouped: Array.from(groupedMap.values()),
+    ungrouped
+  };
+};
 
-  
+const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps) => {
+  const {grouped, ungrouped} = useMemo(
+    () =>
+      groupObjectsByCategory({
+        items: items?.items ?? []
+      }),
+    [items]
+  );
+
+  const accordionItems = useMemo(
+    () =>
+      grouped.map((item, index) => {
+        const title = helperUtils.capitalize(item?.[0]?.category ?? "");
+        const content = (
+          <>
+            {item.map((item: TypeNavigatorItem, index: number) => (
+              <AccordionNavigatorItem key={item._id} item={item} index={index} />
+            ))}
+          </>
+        );
+
+        const icon = (
+          <>
+            <Icon name="dragHorizontalVariant" />
+            <Icon name="dotsVertical" />
+          </>
+        );
+        const items = [{title, content, icon}];
+
+        return (
+          <Accordion
+            key={index}
+            items={items}
+            headerClassName={styles.accordionHeader}
+            className={`${styles.accordion} accordion`}
+            openClassName={styles.accordionOpen}
+            gap={0}
+          />
+        );
+      }),
+    [grouped, items]
+  );
+
+  const ungroupedItems = useMemo(() => {
+    if (!Array.isArray(ungrouped) || !items) return null;
+    if (items.onOrderChange) {
+      return (
+        <ReorderableList
+          onOrderChange={items.onOrderChange}
+          completeOrderChange={items.completeOrderChange}
+          items={ungrouped as TypeNavigatorItem[]}
+        />
+      );
+    }
+    return ungrouped.map(item => <DefaultNavigatorItem key={item._id} item={item} />);
+  }, [ungrouped]);
+
   return (
     <div className={styles.navigation}>
       <NavigatorHeader header={header} />
       <div className={styles.items}>
-        {accordionItems.map((item, index) => (
-          <Accordion
-            key={index}
-            items={[item]}
-            headerClassName={styles.accordionHeader}
-            className={`${styles.accordion} accordion ${item.className ?? ""}`}
-            openClassName={styles.accordionOpen}
-            gap={0}
-          />
-        ))}
-
-        {Array.isArray(ungrouped) &&
-          items &&
-          (items.onOrderChange ? (
-            <ReorderableList
-              onOrderChange={items.onOrderChange}
-              completeOrderChange={items.completeOrderChange}
-              items={ungrouped as TypeNavigatorItems[]}
-            />
-          ) : (
-            <DefaultList items={ungrouped as TypeNavigatorItems[]} />
-          ))}
+        {accordionItems}
+        {ungroupedItems}
         {addNewButtonText && <AddBucketPopup text={addNewButtonText} />}
       </div>
       {button && (

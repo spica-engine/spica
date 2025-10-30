@@ -9,28 +9,27 @@ type SuffixIcon = {
   ref?: React.Ref<HTMLButtonElement>;
 };
 
-type TypeNavigatorItem = {
+type NavigatorItemProps = {
   label: string;
   prefixIcon?: IconName;
   suffixIcons?: SuffixIcon[];
   suffixElements?: Array<React.ElementType>;
 } & TypeFluidContainer;
 
-const NavigatorItem: FC<TypeNavigatorItem> = ({
+const NavigatorItem: FC<NavigatorItemProps> = ({
   label,
   prefixIcon,
   suffixIcons = [],
   suffixElements = [],
   ...props
 }) => {
-
   return (
     <FluidContainer
       dimensionX={"fill"}
       dimensionY={36}
       mode="fill"
       prefix={{
-        children: <Icon name={"help"} size={"md"} />
+        children: <Icon name={prefixIcon as IconName} size={"md"} />
       }}
       root={{
         children: (
