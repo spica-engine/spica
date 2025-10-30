@@ -92,16 +92,16 @@ export class StorageController {
    * @param id Identifier of the object
    * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
    */
-  @Get(":id/view")
+  @Get("*/view")
   @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
   async view(
     @Res() res,
-    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
+    @Param("0") idOrName: string,
     @Headers("if-none-match") ifNoneMatch?: string
   ) {
     let object;
-    if (idOrName instanceof ObjectId) {
-      object = await this.storage.get(idOrName);
+    if (ObjectId.isValid(idOrName)) {
+      object = await this.storage.get(new ObjectId(idOrName));
     } else {
       object = await this.storage.getByName(idOrName);
     }
@@ -122,12 +122,12 @@ export class StorageController {
    * Returns metadata of the object size, content-type and url.
    * @param id Identifier of the object
    */
-  @Get(":id")
+  @Get("*")
   @UseGuards(AuthGuard(), ActionGuard("storage:show"))
-  async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
+  async findOne(@Param("0") idOrName: string) {
     let object;
-    if (idOrName instanceof ObjectId) {
-      object = await this.storage.get(idOrName);
+    if (ObjectId.isValid(idOrName)) {
+      object = await this.storage.get(new ObjectId(idOrName));
     } else {
       object = await this.storage.getByName(idOrName);
     }
