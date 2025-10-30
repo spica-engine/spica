@@ -158,6 +158,7 @@ describe("Storage Service", () => {
   it("should update storage object", async () => {
     await expect(storageService.insert([storageObject])).resolves.not.toThrow();
 
+    await new Promise(resolve => setTimeout(resolve, 50)); // ensure updated_at is later than created_at
     const updatedData = {
       _id: storageObjectId,
       name: "new name",

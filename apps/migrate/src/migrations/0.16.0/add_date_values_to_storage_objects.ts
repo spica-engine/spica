@@ -3,11 +3,7 @@ import {Context} from "../../migrate";
 export default async function (ctx: Context) {
   const storageCollection = ctx.database.collection("storage");
 
-  const objectsWithoutTimestamps = await storageCollection
-    .find({
-      $and: [{created_at: {$exists: false}}, {updated_at: {$exists: false}}]
-    })
-    .toArray();
+  const objectsWithoutTimestamps = await storageCollection.find({}).toArray();
 
   if (!objectsWithoutTimestamps.length) return;
 
