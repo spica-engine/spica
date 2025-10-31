@@ -12,7 +12,8 @@
     },
     "name": {
       "type": "string",
-      "description": "Name of the function"
+      "description": "Name of the function",
+      "pattern": "^(?!\\.)(?!.*\\0)[^/\\\\:\\*\\?\"<>|]+$"
     },
     "description": {
       "type": "string",

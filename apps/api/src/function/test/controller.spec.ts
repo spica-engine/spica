@@ -215,7 +215,7 @@ describe("Function Controller", () => {
     });
   });
 
-  describe("name uniqueness", () => {
+  describe("name operations", () => {
     it("should not allow duplicate function names", async () => {
       //Wait a bit for before test for mongodb to create name indexes to resolve async process issues
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -229,6 +229,23 @@ describe("Function Controller", () => {
       expect(response.body.message).toEqual(
         "Value of the property .name should unique across all documents."
       );
+    });
+
+    it("should not allow special characters in function name", async () => {
+      const fn = await request.post("/function", fnSchema).then(r => r.body);
+
+      const response = await request
+        .post("/function", {
+          ...fnSchema,
+          name: "/function_with_invalid_name"
+        })
+        .catch(e => e);
+
+      expect(response.body).toEqual({
+        message: '.name must match pattern "^(?!\\.)(?!.*\\0)[^/\\\\:\\*\\?"<>|]+$"',
+        error: "validation failed",
+        statusCode: 400
+      });
     });
   });
 });
