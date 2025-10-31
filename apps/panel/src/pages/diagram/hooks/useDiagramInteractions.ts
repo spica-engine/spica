@@ -16,9 +16,20 @@ export const useDiagramInteractions = (
   const [isInitialized, setIsInitialized] = useState(false);
   const ZOOM_INCREMENT = 0.02;
 
-  // Enhanced zoom functionality with wheel and keyboard controls
+  const isPopoverOpen = () => {
+    const portals = document.querySelectorAll('[class*="Portal-module_container"]');
+    return Array.from(portals).some(portal => {
+      const style = window.getComputedStyle(portal as HTMLElement);
+      return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+    });
+  };
+
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
+      if (isPopoverOpen()) {
+        return;
+      }
+
       if (e.ctrlKey) {
         e.preventDefault();
         setZoom(prev => {
@@ -30,6 +41,11 @@ export const useDiagramInteractions = (
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
+
+      if (isPopoverOpen()) {
+        return;
+      }
+
       if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
         e.preventDefault();
         setZoom(prev => Math.min(prev + 0.1, 5));
@@ -125,6 +141,10 @@ export const useDiagramInteractions = (
   };
 
   const handlePanStart = (e: React.MouseEvent) => {
+    if (isPopoverOpen()) {
+      return;
+    }
+
     const target = e.target as HTMLElement;
     const isNodeElement = target.closest('[class*="node"]') || target.closest('[data-node-id]');
     const isZoomControlElement = target.closest('[class*="controls"]') || target.closest('[class*="controlBtn"]');
@@ -153,7 +173,10 @@ export const useDiagramInteractions = (
   };
 
   const handleMouseDown = (nodeId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+    if (isPopoverOpen()) {
+      return;
+    }
+
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
 
@@ -173,6 +196,10 @@ export const useDiagramInteractions = (
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (isPopoverOpen()) {
+      return;
+    }
+
     if (dragging) {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;

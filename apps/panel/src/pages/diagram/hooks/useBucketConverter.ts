@@ -64,6 +64,14 @@ export const useBucketConverter = (buckets: BucketType[] | null) => {
         });
       }
 
+      if (property.type === "array" && property.items && typeof property.items === "object" && "properties" in property.items) {
+        Object.entries((property.items as any).properties || {}).forEach(([nestedKey, nestedProperty]) => {
+          const nestedPath = `${path}.${nestedKey}`;
+          const nestedFields = convertPropertyToField(nestedKey, nestedProperty as Property, nestedPath);
+          fields.push(...nestedFields);
+        });
+      }
+
       return fields;
     };
   }, []);

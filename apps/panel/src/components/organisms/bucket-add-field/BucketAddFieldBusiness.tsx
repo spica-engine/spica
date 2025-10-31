@@ -2,10 +2,7 @@ import {type FC, useMemo, useState, useCallback, useEffect, memo, useRef} from "
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import {useGetBucketsQuery, useCreateBucketFieldMutation} from "../../../store/api/bucketApi";
 import BucketAddFieldView from "./BucketAddFieldView";
-import {
-  useBucketFieldPopups,
-  type BucketFieldPopup
-} from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
+import type {PopupType} from "../../molecules/bucket-field-popup/BucketFieldConfigurationPopup";
 import {
   FieldKind,
   type FieldDefinition,
@@ -33,6 +30,9 @@ export type BucketAddFieldBusinessProps = {
   className?: string;
   popupId?: string;
   forbiddenFieldNames?: string[];
+  fieldType?: FieldKind;
+  popupType?: PopupType;
+  initialValues?: FieldFormState;
 };
 
 export type FormErrors = {
@@ -49,17 +49,17 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   onSaveAndClose,
   className,
   popupId,
-  forbiddenFieldNames
+  forbiddenFieldNames,
+  fieldType,
+  popupType = "add-field",
+  initialValues
 }) => {
-  const {bucketFieldPopups} = useBucketFieldPopups();
   const {data: buckets = []} = useGetBucketsQuery();
   const [, { error: createBucketFieldError }] = useCreateBucketFieldMutation({
     fixedCacheKey: 'shared-create-bucket-field'
   });
 
-  const currentPopup = bucketFieldPopups.find(p => p.id === popupId) as BucketFieldPopup;
-  const {fieldKind: fieldType, popupType, initialValues} = currentPopup;
-  const fieldDefinition = FIELD_REGISTRY[fieldType as FieldKind] as FieldDefinition;
+  const fieldDefinition = fieldType ? FIELD_REGISTRY[fieldType as FieldKind] as FieldDefinition : null;
   const isInnerField = popupType !== "add-field";
 
   const {
@@ -69,7 +69,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     presetValues: presetProperties,
     multipleSelectionTab: multipleSelectionTabProperties
   } = useMemo(
-    () => fieldDefinition.buildCreationFormProperties(isInnerField, buckets),
+    () => fieldDefinition?.buildCreationFormProperties(isInnerField, buckets) || {fieldValues: {}, configurationValues: {}, defaultValue: undefined, presetValues: undefined, multipleSelectionTab: undefined},
     [fieldDefinition, isInnerField, buckets]
   );
 
@@ -99,7 +99,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
 
   const oldValues = useRef(formValues);
   useEffect(() => {
-    if (!fieldType || !isInitialized) return;
+    if (!fieldType || !isInitialized || !fieldDefinition) return;
     const newFormValues = fieldDefinition.applyPresetLogic?.(formValues, oldValues.current);
     setFormValues(newFormValues ?? formValues);
     oldValues.current = newFormValues ?? formValues;
@@ -113,7 +113,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   ]);
 
   useEffect(() => {
-    if (fieldType !== "multiselect" || !isInitialized) return;
+    if (fieldType !== "multiselect" || !isInitialized || !fieldDefinition) return;
     const {updatedForm, updatedFieldProperties} =
       fieldDefinition.applySelectionTypeLogic?.(formValues, mainFormProperties) ?? {};
     setFormValues(updatedForm ?? formValues);
@@ -122,7 +122,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
 
   const validateForm = useCallback(async () => {
     // No need to manually clear API error since RTK Query handles it
-    if (!fieldType) return false;
+    if (!fieldType || !fieldDefinition) return false;
 
     const errors = fieldDefinition.validateCreationForm({...formValues, type: fieldType});
 
@@ -141,7 +141,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
 
     setFormErrors({});
     return true;
-  }, [formValues, fieldType, popupType]);
+  }, [formValues, fieldType, popupType, fieldDefinition]);
 
   const oldType = useRef(fieldType);
   useEffect(() => {
@@ -169,7 +169,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
   }, []);
 
   const handleSaveInnerField = useCallback((values: InnerFieldFormState) => {
-    setFormValues(prev => updateInnerField(prev, values));
+    setFormValues(prev => {
+      const updated = updateInnerField(prev, values);
+      return updated;
+    });
   }, []);
 
   const handleDeleteInnerField = useCallback((field: FieldFormState) => {
@@ -184,6 +187,10 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     setFormValues(prev => {
       return {...prev, [formValuesAttribute]: values};
     });
+
+  if (!fieldType || !fieldDefinition) {
+    return null;
+  }
 
   return (
     <BucketAddFieldView
@@ -204,6 +211,7 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
       handleDeleteInnerField={handleDeleteInnerField}
       popupId={popupId}
       type={fieldType as FieldKind}
+      popupType={popupType}
     />
   );
 };
