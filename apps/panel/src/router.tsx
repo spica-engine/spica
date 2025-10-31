@@ -8,6 +8,8 @@ import Bucket from "./pages/bucket/Bucket";
 import Identity from "./pages/identity/Identity";
 import Diagram from "./pages/diagram/Diagram";
 import ProtectedRoute from "./components/guards/ProtectedRoute";
+import Storage from "./pages/storage/Storage";
+import StorageItem from "./pages/storage-view/StorageView";
 
 const router = createBrowserRouter([
   {
@@ -44,8 +46,16 @@ const router = createBrowserRouter([
       {
         path: "diagram",
         element: <Diagram />
+      },
+      {
+        path: "storage",
+        element: <Storage />
       }
     ]
+  },
+  {
+    path: "storage-view/:storageId",
+    element: <StorageItem />
   }
 ]);
 
