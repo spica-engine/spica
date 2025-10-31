@@ -10,7 +10,8 @@ import {EventEmitter} from "events";
 import {PartialObserver} from "rxjs";
 
 export const replicationServiceOptions: ReplicationServiceOptions = {
-  expireAfterSeconds: 60
+  expireAfterSeconds: 60,
+  jobExpireAfterSeconds: 60
 };
 
 export const cmdMessengerOptions: CommandMessengerOptions = {
