@@ -17,7 +17,8 @@
     "react-infinite-scroll-component": "^6.1.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.11.2",
-    "yup": "^1.7.0"
+    "yup": "^1.7.0",
+    "docx-preview": "^0.3.7"
   },
   "devDependencies": {
     "@nx/react": "^20.4.4",
