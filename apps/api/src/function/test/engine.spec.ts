@@ -7,6 +7,10 @@ import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {TargetChange, ChangeKind} from "@spica-server/interface/function";
+import fs from "fs";
+import path from "path";
+import {rimraf} from "rimraf";
+
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
@@ -16,7 +20,7 @@ describe("Engine", () => {
 
   let scheduler: Scheduler;
   let database: DatabaseService;
-  let fs: FunctionService;
+  let fservice: FunctionService;
   let evs: EnvVarService;
 
   let module: TestingModule;
@@ -56,9 +60,9 @@ describe("Engine", () => {
     database = module.get(DatabaseService);
 
     evs = new EnvVarService(database);
-    fs = new FunctionService(database, evs, {} as any);
+    fservice = new FunctionService(database, evs, {} as any);
     engine = new FunctionEngine(
-      fs,
+      fservice,
       database,
       scheduler,
       undefined,
@@ -202,7 +206,7 @@ describe("Engine", () => {
   });
 
   it("should unregister triggers on module destroy", async () => {
-    await fs.insertOne({
+    await fservice.insertOne({
       _id: new ObjectId(hexString),
       env_vars: [],
       language: "js",
@@ -241,7 +245,7 @@ describe("Engine", () => {
   it("should reload function environments when environment variable changed", async () => {
     const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);
-    await fs.insertOne({
+    await fservice.insertOne({
       _id: fnId,
       env_vars: [env._id],
       language: "js",
@@ -279,7 +283,7 @@ describe("Engine", () => {
   it("should reload function environments and clear relation when environment variable removed", async () => {
     const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
     const fnId = new ObjectId(hexString);
-    await fs.insertOne({
+    await fservice.insertOne({
       _id: fnId,
       env_vars: [env._id],
       language: "js",
@@ -312,7 +316,7 @@ describe("Engine", () => {
     expect(subscribeSpy).toHaveBeenCalledTimes(1);
     expect(subscribeSpy).toHaveBeenCalledWith(change);
 
-    const fn = await fs.findOne({_id: fnId});
+    const fn = await fservice.findOne({_id: fnId});
     expect(fn.env_vars).toEqual([]);
   });
 
@@ -343,6 +347,59 @@ describe("Engine", () => {
       const schemaPromise = await engine.getSchema("database");
 
       expect(schemaPromise).toEqual(expectedSchema);
+    });
+  });
+
+  describe("Function Migration", () => {
+    const fn = {
+      _id: new ObjectId(hexString),
+      name: "my_function",
+      triggers: {},
+      timeout: 60,
+      language: "javascript",
+      env_vars: []
+    };
+
+    it("should skip migration if new structure already exists", async () => {
+      const newFunctionRoot = path.join(engine["options"].root, fn.name);
+      await fs.promises.mkdir(newFunctionRoot, {recursive: true});
+
+      await engine["migrateOldFunction"](fn);
+
+      const exists = await engine["folderExists"](newFunctionRoot);
+      expect(exists).toBe(true);
+
+      await rimraf(engine["options"].root);
+    });
+
+    it("should migrate old function structure to new structure", async () => {
+      const oldFunctionRoot = path.join(engine["options"].root, fn._id.toString());
+      const newFunctionRoot = path.join(engine["options"].root, fn.name);
+
+      await fs.promises.mkdir(path.join(oldFunctionRoot, "node_modules"), {recursive: true});
+      await fs.promises.writeFile(path.join(oldFunctionRoot, "index.js"), "console.log('hello');");
+      await fs.promises.writeFile(path.join(oldFunctionRoot, "node_modules", "package.json"), "{}");
+
+      const oldBuildDir = path.join(oldFunctionRoot, ".build");
+      await fs.promises.mkdir(oldBuildDir, {recursive: true});
+      await fs.promises.writeFile(path.join(oldBuildDir, "index.mjs"), "console.log('old build');");
+
+      await engine["migrateOldFunction"](fn);
+
+      expect(await engine["folderExists"](newFunctionRoot)).toBe(true);
+
+      const indexJsPath = path.join(newFunctionRoot, "index.js");
+      const nodeModulesPath = path.join(newFunctionRoot, "node_modules");
+
+      expect(await engine["folderExists"](indexJsPath)).toBe(true);
+      expect(await engine["folderExists"](nodeModulesPath)).toBe(true);
+
+      const newBuildDir = path.join(newFunctionRoot, ".build");
+      expect(await engine["folderExists"](newBuildDir)).toBe(false);
+
+      expect(await engine["folderExists"](oldFunctionRoot)).toBe(false);
+
+      await rimraf(engine["options"].root);
     });
   });
 });

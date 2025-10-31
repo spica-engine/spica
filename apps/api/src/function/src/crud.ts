@@ -107,12 +107,17 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
 export async function replace(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   const _id = new ObjectId(fn._id);
 
+  const preFn = await fs.findOne({_id});
+  if (preFn) {
+    await engine.migrateOldFunction({...preFn, _id});
+  }
+
   // not sure that is necessary
   delete fn._id;
   delete fn.language;
 
-  const preFn = await fs.findOneAndUpdate({_id}, {$set: fn});
-  if (!preFn) {
+  const updatedFn = await fs.findOneAndUpdate({_id}, {$set: fn});
+  if (!updatedFn) {
     throw new NotFoundException(`Couldn't find the function with id ${_id}`);
   }
 
@@ -181,6 +186,8 @@ export namespace index {
     if (!fn) {
       throw new NotFoundException("Cannot find function.");
     }
+
+    await engine.migrateOldFunction({...fn, _id: id});
 
     await engine.update(fn, index);
 

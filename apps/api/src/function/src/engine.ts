@@ -181,6 +181,58 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return Promise.all([rimraf(functionRoot), rimraf(buildDir)]);
   }
 
+  async migrateOldFunction(fn: Function): Promise<void> {
+    const functionRoot = this.getFunctionRoot(fn);
+
+    if (await this.folderExists(functionRoot)) {
+      return;
+    }
+
+    const oldFunctionRoot = path.join(this.options.root, fn._id.toString());
+
+    if (await this.folderExists(oldFunctionRoot)) {
+      await fs.promises.mkdir(functionRoot, {recursive: true});
+      await this.copyDirectoryExcluding(oldFunctionRoot, functionRoot, this.options.outDir);
+      await rimraf(oldFunctionRoot);
+    }
+  }
+
+  private async copyDirectory(src: string, dest: string): Promise<void> {
+    await fs.promises.cp(src, dest, {recursive: true});
+  }
+
+  private async copyDirectoryExcluding(
+    src: string,
+    dest: string,
+    excludeDir: string
+  ): Promise<void> {
+    const entries = await fs.promises.readdir(src, {withFileTypes: true});
+
+    for (const entry of entries) {
+      if (entry.name == excludeDir) {
+        continue;
+      }
+
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+
+      if (entry.isDirectory()) {
+        await this.copyDirectory(srcPath, destPath);
+      } else {
+        await fs.promises.copyFile(srcPath, destPath);
+      }
+    }
+  }
+
+  private async folderExists(folderPath: string): Promise<boolean> {
+    try {
+      await fs.promises.access(folderPath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   compile(fn: Function) {
     const language = this.getFunctionLanguage(fn);
     const outDirRelative = path.join("..", this.options.outDir, fn.name);
