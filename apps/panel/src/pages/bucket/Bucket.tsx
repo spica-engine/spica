@@ -1,207 +1,49 @@
 import styles from "./Bucket.module.scss";
-import {useGetBucketsQuery, useGetBucketDataQuery} from "../../store/api/bucketApi";
+import {useGetBucketsQuery, useDeleteBucketEntryMutation} from "../../store/api/bucketApi";
 import {useParams} from "react-router-dom";
-import BucketTable, {type ColumnType} from "../../components/organisms/bucket-table/BucketTable";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import BucketTable from "../../components/organisms/bucket-table/BucketTable";
+import {useCallback, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketDataQueryWithIdType, BucketType} from "src/services/bucketService";
-import useLocalStorage from "../../hooks/useLocalStorage";
+import type {BucketType} from "src/services/bucketService";
 import Loader from "../../components/atoms/loader/Loader";
 import {EntrySelectionProvider} from "../../contexts/EntrySelectionContext";
-
-const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
-  ({
-    paginate: true,
-    relation: true,
-    limit: 25,
-    filter: {
-      $or: searchableColumns.map(col => ({
-        [col]: {$regex: escapeForRegex(searchText), $options: "i"}
-      }))
-    }
-  }) as const;
-
-function smoothScrollToTop(el: HTMLElement): Promise<void> {
-  return new Promise(resolve => {
-    if (!el) {
-      resolve();
-      return;
-    }
-
-    if (el.scrollTop === 0) {
-      resolve();
-      return;
-    }
-
-    const onScroll = () => {
-      if (el.scrollTop === 0) {
-        el.removeEventListener("scroll", onScroll);
-        resolve();
-      }
-    };
-
-    el.addEventListener("scroll", onScroll);
-
-    el.scrollTo({top: 0, behavior: "smooth"});
-  });
-}
+import {useBucketColumns} from "../../hooks/useBucketColumns";
+import {useBucketSearch} from "../../hooks/useBucketSearch";
+import {useBucketData} from "../../hooks/useBucketData";
 
 export default function Bucket() {
-  const [searchQuery, setSearchQuery] = useState<BucketDataQueryWithIdType | undefined>();
   const {bucketId} = useParams<{bucketId: string}>();
-
-  const sortMetaKey = `${bucketId}-sort-meta`;
-  const [sortMeta] = useLocalStorage<{field: string; direction: "asc" | "desc"} | null>(
-    sortMetaKey,
-    null
-  );
-
-  useEffect(() => {
-    setSearchQuery(undefined);
-  }, [bucketId]);
-
   const {data: buckets = []} = useGetBucketsQuery();
-  const {
-    data: bucketDataResponse,
-    isLoading: bucketDataLoading,
-    refetch: refreshBucketData
-  } = useGetBucketDataQuery(
-    searchQuery || {
-      bucketId: bucketId!,
-      paginate: true,
-      relation: true,
-      limit: 25,
-      sort: {_id: -1}
-    },
-    {
-      skip: !bucketId,
-      refetchOnMountOrArgChange: 10,
-      refetchOnFocus: true
-    }
-  );
-
-  const bucketData = bucketDataResponse
-    ? {
-        ...bucketDataResponse,
-        bucketId: bucketId!
-      }
-    : null;
+  const [deleteBucketEntryMutation] = useDeleteBucketEntryMutation();
 
   const bucket = useMemo(
     () => buckets?.find((i: BucketType) => i._id === bucketId),
     [buckets, bucketId]
   );
 
-  const [refreshLoading, setRefreshLoading] = useState(false);
-  const tableRef = useRef<HTMLElement | null>(null);
+  const {formattedColumns, filteredColumns, visibleColumns, searchableColumns, toggleColumn} =
+    useBucketColumns(bucket, bucketId!);
 
-  const [fieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, []);
+  const {searchQuery, handleSearch} = useBucketSearch(bucketId!, searchableColumns);
 
-  const formattedColumns: ColumnType[] = useMemo(() => {
-    const columns = Object.values(bucket?.properties ?? {});
-
-    const orderedColumns = fieldsOrder.length
-      ? (fieldsOrder
-          .map(orderKey => columns.find(c => c.title === orderKey))
-          .filter(Boolean) as ColumnType[] as typeof columns)
-      : columns;
-
-    return [
-      {
-        header: "_id",
-        key: "_id",
-        showDropdownIcon: true,
-        sticky: true,
-        width: "230px",
-        resizable: false,
-        fixed: true,
-        selectable: false
-      },
-      ...orderedColumns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
-    ] as ColumnType[];
-  }, [bucket, fieldsOrder]);
-
-  const searchableColumns = formattedColumns
-    .filter(({type}) => ["string", "textarea", "richtext"].includes(type as string))
-    .map(({key}) => key);
-
-  const defaultVisibleColumns = useMemo(
-    () => Object.fromEntries(formattedColumns.map(col => [col.key, true])),
-    [formattedColumns]
-  );
-
-  const visibleColumnsStorageKey = `${bucketId}-visible-columns`;
-  const [visibleColumns, setVisibleColumns] = useLocalStorage<{[key: string]: boolean}>(
-    visibleColumnsStorageKey,
-    defaultVisibleColumns
-  );
-
-  const filteredColumns = useMemo(
-    () => formattedColumns.filter(column => visibleColumns?.[column.key]),
-    [formattedColumns, visibleColumns]
-  );
+  const {bucketData, bucketDataLoading, refreshLoading, tableRef, handleRefresh, loadMoreBucketData} =
+    useBucketData(bucketId!, searchQuery);
 
   const isTableLoading = useMemo(() => !(formattedColumns.length > 1), [formattedColumns]);
 
-  useEffect(() => {
-    if (!bucketId || !formattedColumns.length) return;
-
-    const currentVisibleKeys = Object.keys(
-      (visibleColumns as unknown as {[key: string]: boolean}) || {}
-    );
-    const defaultKeys = Object.keys(defaultVisibleColumns);
-    const newColumns = defaultKeys.filter(key => !currentVisibleKeys.includes(key));
-
-    if (newColumns.length > 0) {
-      setVisibleColumns({
-        ...visibleColumns,
-        ...Object.fromEntries(newColumns.map(key => [key, true]))
-      });
-    }
-  }, [bucketId, defaultVisibleColumns, formattedColumns]);
-
-  const handleSearch = useCallback(
-    async (search: string) => {
-      const trimmed = search.trim();
-      const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
-      setSearchQuery(query ? {bucketId: bucketId!, ...query} : undefined);
+  const deleteBucketEntry = useCallback(
+    async (entryId: string, bucketId: string): Promise<string | null> => {
+      try {
+        await deleteBucketEntryMutation({entryId, bucketId}).unwrap();
+        return entryId;
+      } catch (error) {
+        console.error("Failed to delete bucket entry:", error);
+        return null;
+      }
     },
-    [bucketId, searchableColumns]
+    [deleteBucketEntryMutation]
   );
 
-  const loadMoreBucketData = useCallback(async () => {
-    console.log("Load more data - implement pagination logic here");
-  }, []);
-
-  const handleRefresh = useCallback(async () => {
-    if (tableRef.current) await smoothScrollToTop(tableRef.current);
-    setRefreshLoading(true);
-    const result = await refreshBucketData();
-    setRefreshLoading(false);
-    return result;
-  }, [bucketId, refreshBucketData]);
-
-  const toggleColumn = (key?: string) => {
-    if (key) {
-      setVisibleColumns({
-        ...visibleColumns,
-        [key]: !visibleColumns[key]
-      });
-      return;
-    }
-
-    const hasHiddenColumns = Object.values(visibleColumns).some(isVisible => !isVisible);
-
-    if (hasHiddenColumns) {
-      setVisibleColumns(defaultVisibleColumns);
-    } else {
-      // Hide all columns except _id
-      setVisibleColumns(
-        Object.fromEntries(formattedColumns.map(col => [col.key, col.key === "_id"]))
-      );
-    }
-  };
   if (formattedColumns.length <= 1 || !bucket) {
     return <Loader />;
   }
@@ -212,6 +54,8 @@ export default function Bucket() {
         <BucketActionBar
           onSearch={handleSearch}
           bucket={bucket as BucketType}
+          bucketData={bucketData?.data ?? []}
+          deleteBucketEntry={deleteBucketEntry}
           onRefresh={handleRefresh}
           columns={formattedColumns}
           visibleColumns={visibleColumns}

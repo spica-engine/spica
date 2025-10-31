@@ -1,47 +1,52 @@
 import React, {useEffect, useMemo, useState, useRef} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
-import SideBar, {type ReorderableItemGroup} from "../components/organisms/sidebar/SideBar";
-import {getMenuItems, navigatorItems} from "../pages/home/mock";
+import SideBar from "../components/organisms/sidebar/SideBar";
+import type {NavigatorItemGroup, TypeNavigatorItem} from "../types/sidebar";
+import {getMenuItems, navigatorItems} from "../pages/home/sidebarItems";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
 import Toolbar from "../components/atoms/toolbar/Toolbar";
 import useLocalStorage from "../hooks/useLocalStorage";
 import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
-import { useGetBucketsQuery, useUpdateBucketOrderMutation } from "../store/api/bucketApi";
+import {useGetBucketsQuery, useUpdateBucketOrderMutation} from "../store/api/bucketApi";
 import {useRequestTracker} from "../hooks/useRequestTracker";
+import {
+  BucketNavigatorPopupWrapper,
+  type BucketNavigatorPopupWrapperProps
+} from "./components/BucketNavigatorPopupWrapper";
 
 const Layout = () => {
   const navigate = useNavigate();
   const [token] = useLocalStorage<string>("token", "");
-  
+
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  
-  const { data: buckets = [], refetch: getBuckets } = useGetBucketsQuery();
-  
+
+  const {data: buckets = [], refetch: getBuckets} = useGetBucketsQuery();
+
   const [updateBucketOrder] = useUpdateBucketOrderMutation();
-  
+
   const memoizedBuckets = useMemo(() => buckets, [JSON.stringify(buckets.map(b => b._id))]);
-  
+
   const [localBuckets, setLocalBuckets] = useState(memoizedBuckets);
-  
+
   useEffect(() => {
     setLocalBuckets(memoizedBuckets);
   }, [memoizedBuckets]);
-  
+
   const updateBucketOrderLocally = (from: number, to: number) => {
     const updated = [...localBuckets];
     const [moved] = updated.splice(from, 1);
     updated.splice(to, 0, moved);
     setLocalBuckets(updated);
   };
-  
+
   const updateBucketOrderOnServer = async (bucketId: string, order: number) => {
     try {
-      await updateBucketOrder({ bucketId, order });
+      await updateBucketOrder({bucketId, order});
     } catch (error) {
-      console.error('Failed to update bucket order:', error);
+      console.error("Failed to update bucket order:", error);
       setLocalBuckets(memoizedBuckets);
     }
   };
@@ -49,7 +54,7 @@ const Layout = () => {
   const menuItems = getMenuItems(navigate);
 
   const mergedNavigatorItems: {
-    [key: string]: ReorderableItemGroup;
+    [key: string]: NavigatorItemGroup;
   } = {
     ...Object.fromEntries(
       Object.entries(navigatorItems).map(([key, value]) => [
@@ -58,7 +63,16 @@ const Layout = () => {
       ])
     ),
     bucket: {
-      items: localBuckets?.map(i => ({...i, section: "bucket"})) ?? [],
+      items: (localBuckets?.map(i => ({
+        ...i,
+        section: "bucket",
+        link: `/bucket/${i._id}`,
+        suffixElements: [
+          (props: BucketNavigatorPopupWrapperProps) => (
+            <BucketNavigatorPopupWrapper {...props} bucket={i} />
+          )
+        ]
+      })) ?? []) as TypeNavigatorItem[],
       onOrderChange: updateBucketOrderLocally,
       completeOrderChange: updateBucketOrderOnServer
     }
@@ -131,7 +145,7 @@ const Layout = () => {
       </div>
       <div className={styles.main}>
         <div className={styles.toolbar}>
-          <Toolbar bucketId={undefined} token={token} name={name} onDrawerOpen={openDrawer} />
+          <Toolbar token={token} name={name} onDrawerOpen={openDrawer} />
         </div>
         <div className={styles.content}>
           <Outlet />

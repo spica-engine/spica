@@ -133,13 +133,21 @@ export const bucketApi = baseApi.injectEndpoints({
       filter?: Record<string, any>;
     } | void>({
       query: (params) => ({
-        url: 'api/bucket',
+        url: '/bucket',
         params: params || {},
       }),
       providesTags: ['Bucket'],
     }),
 
-    // Get bucket data
+    getBucket: builder.query<BucketType, string>({
+      query: (bucketId) => ({
+        url: `/bucket/${bucketId}`,
+      }),
+      providesTags: (result, error, bucketId) => [
+        { type: 'Bucket', id: bucketId },
+      ],
+    }),
+
     getBucketData: builder.query<BucketDataType, {
       bucketId: string;
       paginate?: boolean;
@@ -150,7 +158,6 @@ export const bucketApi = baseApi.injectEndpoints({
       filter?: Record<string, any>;
     }>({
       query: ({ bucketId, ...params }) => {
-        // Convert params to query string (excluding undefined values)
         const queryParams = new URLSearchParams();
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined) {
@@ -163,7 +170,7 @@ export const bucketApi = baseApi.injectEndpoints({
         });
         
         return {
-          url: `api/bucket/${bucketId}/data`,
+          url: `/bucket/${bucketId}/data`,
           params: Object.fromEntries(queryParams),
         };
       },
@@ -173,7 +180,15 @@ export const bucketApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Create bucket
+    getBucketEntry: builder.query<any, { bucketId: string; entryId: string }>({
+      query: ({ bucketId, entryId }) => ({
+        url: `/bucket/${bucketId}/data/${entryId}`,
+      }),
+      providesTags: (result, error, { bucketId, entryId }) => [
+        { type: 'BucketData', id: bucketId },
+      ],
+    }),
+
     createBucket: builder.mutation<BucketType, CreateBucketRequest>({
       query: (body) => {
         const bucketData = {
@@ -205,7 +220,7 @@ export const bucketApi = baseApi.injectEndpoints({
         };
 
         return {
-          url: 'api/bucket',
+          url: '/bucket',
           method: 'POST',
           body: bucketData,
         };
@@ -230,7 +245,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket
     updateBucket: builder.mutation<BucketType, { id: string; body: UpdateBucketRequest }>({
       query: ({ id, body }) => ({
-        url: `api/bucket/${id}`,
+        url: `/bucket/${id}`,
         method: 'PUT',
         body,
       }),
@@ -261,7 +276,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Delete bucket
     deleteBucket: builder.mutation<{ message: string }, string>({
       query: (id) => ({
-        url: `api/bucket/${id}`,
+        url: `/bucket/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, id) => [
@@ -288,7 +303,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Change bucket category
     changeBucketCategory: builder.mutation<BucketType, { bucketId: string; category: string }>({
       query: ({ bucketId, category }) => ({
-        url: `api/bucket/${bucketId}`,
+        url: `/bucket/${bucketId}`,
         method: 'PATCH',
         body: { category },
       }),
@@ -318,7 +333,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket order
     updateBucketOrder: builder.mutation<BucketType, { bucketId: string; order: number }>({
       query: ({ bucketId, order }) => ({
-        url: `api/bucket/${bucketId}`,
+        url: `/bucket/${bucketId}`,
         method: 'PATCH',
         body: { order },
       }),
@@ -348,7 +363,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Create bucket field (update bucket properties)
     createBucketField: builder.mutation<BucketType, BucketType>({
       query: (modifiedBucket) => ({
-        url: `api/bucket/${modifiedBucket._id}`,
+        url: `/bucket/${modifiedBucket._id}`,
         method: 'PUT',
         body: modifiedBucket,
       }),
@@ -382,7 +397,7 @@ export const bucketApi = baseApi.injectEndpoints({
       newRules: { write: string; read: string } 
     }>({
       query: ({ bucket, newRules }) => ({
-        url: `api/bucket/${bucket._id}`,
+        url: `/bucket/${bucket._id}`,
         method: 'PUT',
         body: { ...bucket, acl: newRules },
       }),
@@ -412,7 +427,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Delete bucket history
     deleteBucketHistory: builder.mutation<{ message: string }, BucketType>({
       query: (bucket) => ({
-        url: `api/bucket/${bucket._id}/history`,
+        url: `/bucket/${bucket._id}/history`,
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, bucket) => [
@@ -425,7 +440,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket history setting
     updateBucketHistory: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `api/bucket/${bucket._id}`,
+        url: `/bucket/${bucket._id}`,
         method: 'PUT',
         body: {
           ...bucket,
@@ -458,7 +473,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket readonly setting
     updateBucketReadonly: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `api/bucket/${bucket._id}`,
+        url: `/bucket/${bucket._id}`,
         method: 'PUT',
         body: {
           ...bucket,
@@ -497,7 +512,7 @@ export const bucketApi = baseApi.injectEndpoints({
         delete (body as any).index;
         
         return {
-          url: `api/bucket/${bucket._id}`,
+          url: `/bucket/${bucket._id}`,
           method: 'PUT',
           body,
         };
@@ -528,7 +543,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket limitation
     updateBucketLimitation: builder.mutation<BucketType, { bucketId: string; body: BucketType }>({
       query: ({ bucketId, body }) => ({
-        url: `api/bucket/${bucketId}`,
+        url: `/bucket/${bucketId}`,
         method: 'PUT',
         body,
       }),
@@ -541,7 +556,7 @@ export const bucketApi = baseApi.injectEndpoints({
     // Update bucket limitation fields
     updateBucketLimitationFields: builder.mutation<BucketType, BucketType>({
       query: (bucket) => ({
-        url: `api/bucket/${bucket._id}`,
+        url: `/bucket/${bucket._id}`,
         method: 'PUT',
         body: bucket,
       }),
@@ -550,13 +565,88 @@ export const bucketApi = baseApi.injectEndpoints({
         'Bucket',
       ],
     }),
+
+    // Create bucket entry
+    createBucketEntry: builder.mutation<any, { bucketId: string; data: Record<string, any> }>({
+      query: ({ bucketId, data }) => ({
+        url: `/bucket/${bucketId}/data`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { bucketId }) => [
+        { type: 'BucketData', id: bucketId },
+        'BucketData',
+      ],
+      // Optimistic update
+      onQueryStarted: async ({ bucketId, data }, { dispatch, queryFulfilled }) => {
+        try {
+          const { data: newEntry } = await queryFulfilled;
+          // Update the bucket data cache
+          dispatch(
+            bucketApi.util.updateQueryData('getBucketData', { bucketId } as any, (draft) => {
+              draft.data.push(newEntry);
+              draft.meta.total += 1;
+            })
+          );
+        } catch {
+          // If the mutation fails, the cache will be invalidated automatically
+        }
+      },
+    }),
+
+    // Update bucket entry
+    updateBucketEntry: builder.mutation<any, { bucketId: string; entryId: string; data: Record<string, any> }>({
+      query: ({ bucketId, entryId, data }) => ({
+        url: `/bucket/${bucketId}/data/${entryId}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { bucketId, entryId }) => [
+        { type: 'BucketData', id: bucketId },
+        'BucketData',
+      ],
+      // Optimistic update
+      onQueryStarted: async ({ bucketId, entryId, data }, { dispatch, queryFulfilled }) => {
+        const patchResult = dispatch(
+          bucketApi.util.updateQueryData('getBucketData', { bucketId } as any, (draft) => {
+            const entryIndex = draft.data.findIndex((entry) => entry._id === entryId);
+            if (entryIndex !== -1) {
+              draft.data[entryIndex] = { ...draft.data[entryIndex], ...data };
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+    }),
+
+    // Delete bucket entry
+    deleteBucketEntry: builder.mutation<{ message: string }, { entryId: string; bucketId: string }>({
+      query: ({ entryId, bucketId }) => ({
+        url: `/bucket/${bucketId}/data/${entryId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { bucketId }) => [
+        { type: 'BucketData', id: bucketId },
+        'BucketData',
+      ],
+    }),
   }),
   overrideExisting: false,
 });
 
 export const {
   useGetBucketsQuery,
+  useGetBucketQuery,
   useGetBucketDataQuery,
+  useGetBucketEntryQuery,
+  useLazyGetBucketQuery,
+  useLazyGetBucketDataQuery,
+  useLazyGetBucketEntryQuery,
   useCreateBucketMutation,
   useUpdateBucketMutation,
   useDeleteBucketMutation,
@@ -570,6 +660,9 @@ export const {
   useRenameBucketMutation,
   useUpdateBucketLimitationMutation,
   useUpdateBucketLimitationFieldsMutation,
+  useCreateBucketEntryMutation,
+  useUpdateBucketEntryMutation,
+  useDeleteBucketEntryMutation,
 } = bucketApi;
 
 export const bucketApiReducerPath = bucketApi.reducerPath;

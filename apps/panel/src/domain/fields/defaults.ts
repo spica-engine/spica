@@ -1,4 +1,4 @@
-import type {FieldCreationForm} from "./types";
+import type {FieldCreationForm, FieldKind} from "./types";
 
 export function freezeFormDefaults(seed: FieldCreationForm): FieldCreationForm {
   Object.freeze(seed.fieldValues);
@@ -23,3 +23,5 @@ export const BASE_FORM_DEFAULTS = {
   },
   presetValues: BASE_PRESET_DEFAULTS
 };
+
+export const DEFAULT_COORDINATES = {lat: 36.8969, lng: 30.7133}; // Default to Antalya, Turkiye

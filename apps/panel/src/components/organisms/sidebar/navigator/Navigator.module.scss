@@ -17,73 +17,20 @@
     scrollbar-width: thin;
   }
 
-  .items > div:hover:not(.accordion), .items > .accordion .accordionItemContainer:hover {
+  .items > div:hover:not(.accordion) {
     background-color: var(--color-hover);
-  }
-
-  .header {
-    padding: 0 !important;
-    span {
-      display: flex;
-      align-items: center;
-      padding-left: var(--padding-md);
-    }
-    .title {
-      font-weight: 600;
-      font-size: var(--font-size-lg);
-      height: 50px;
-      line-height: 0;
-    }
-    .icon {
-      height: unset !important;
-      width: min-content !important;
-      min-width: min-content !important;
-      padding: 0 var(--padding-md) 0 0 !important;
-    }
   }
 
   .noLineHeight {
     line-height: 0 !important;
   }
-
-  .navigatorItem {
-    svg,
-    button {
-      width: var(--icon-size-md);
-      height: var(--icon-size-md);
-    }
-  }
-}
-
-.dragLayer {
-  position: fixed;
-  pointer-events: none;
-  z-index: 100;
-  left: 0;
-  top: 0;
-  width: max-content;
-  height: 100%;
-  .navigatorItem {
-    background: var(--color-default);
-    width: 200px !important;
-    box-shadow: var(--box-shadow);
-  }
-}
-.globalDragActive,
-.justDropped {
-  button {
-    opacity: 0 !important;
-  }
-  background-color: var(--color-default) !important;
-}
-
-.accordionItemContainer {
-  padding: 0 var(--padding-md);
 }
 
 .accordionHeader {
   height: 32px !important;
-  svg { display: none;}
+  svg {
+    display: none;
+  }
   &:hover svg {
     display: block;
   }
@@ -95,4 +42,8 @@
 
 .accordion > div:has(.accordionOpen) > div:nth-child(2) {
   padding: var(--padding-md) 0 !important;
+}
+
+.selected {
+  background-color: var(--color-hover);
 }
