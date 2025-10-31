@@ -356,7 +356,7 @@ describe("Engine", () => {
       name: "my_function",
       triggers: {},
       timeout: 60,
-      language: "javascript",
+      language: "js",
       env_vars: []
     };
 
