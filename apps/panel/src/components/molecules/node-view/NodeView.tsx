@@ -12,7 +12,6 @@ import EditBucket from "../../prefabs/edit-bucket/EditBucket";
 import DeleteField from "../../prefabs/delete-field/DeleteField";
 import BucketFieldPopup from "../bucket-field-popup/BucketFieldPopup";
 import BucketFieldConfigurationPopup from "../bucket-field-popup/BucketFieldConfigurationPopup";
-import {Popover} from "oziko-ui-kit";
 import type {FieldFormState, FieldKind} from "../../../domain/fields/types";
 import {FIELD_REGISTRY, isFieldKind} from "../../../domain/fields/registry";
 
@@ -41,6 +40,7 @@ interface EditFieldButtonProps {
 }
 
 
+// Utility functions for property navigation
 const navigateToNextProperty = (current: Property, part: string): Property | null => {
   if (current.type === "object" && current.properties) {
     return current.properties[part];
@@ -53,6 +53,50 @@ const navigateToNextProperty = (current: Property, part: string): Property | nul
   return null;
 };
 
+const getPropertiesContainer = (parent: Property): Record<string, Property> | null => {
+  if (parent.type === "object" && parent.properties) {
+    return parent.properties;
+  }
+  
+  if (parent.type === "array" && parent.items?.properties) {
+    return (parent.items as Property).properties;
+  }
+  
+  return null;
+};
+
+const getPropertyByPath = (bucket: BucketType, path: string): Property | null => {
+  const parts = path.split(".");
+  let currentProperty: any = bucket.properties;
+
+  for (let i = 0; i < parts.length; i++) {
+    if (!currentProperty) return null;
+    
+    currentProperty = i === 0 
+      ? currentProperty[parts[i]]
+      : navigateToNextProperty(currentProperty, parts[i]);
+  }
+
+  return currentProperty as Property || null;
+};
+
+const getPropertyRequiredContainer = (parent: Property): Property => {
+  return parent.type === "object" ? parent : (parent.items as Property);
+};
+
+const getLastPathPart = (path: string): string => {
+  const parts = path.split(".");
+  return parts[parts.length - 1];
+};
+
+const setPropertiesContainer = (parent: Property, updatedProperties: Record<string, Property>): void => {
+  if (parent.type === "object") {
+    parent.properties = updatedProperties;
+  } else if (parent.type === "array" && parent.items) {
+    (parent.items as Property).properties = updatedProperties;
+  }
+};
+
 const EditFieldButton: React.FC<EditFieldButtonProps> = memo(({
   field,
   bucket,
@@ -61,23 +105,8 @@ const EditFieldButton: React.FC<EditFieldButtonProps> = memo(({
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const getPropertyByPath = (path: string): Property | null => {
-    const parts = path.split(".");
-    let currentProperty: any = bucket.properties;
-
-    for (let i = 0; i < parts.length; i++) {
-      if (!currentProperty) return null;
-      
-      currentProperty = i === 0 
-        ? currentProperty[parts[i]]
-        : navigateToNextProperty(currentProperty, parts[i]);
-    }
-
-    return currentProperty as Property || null;
-  };
-
   const fieldPath = field.path || field.name;
-  const property = getPropertyByPath(fieldPath);
+  const property = getPropertyByPath(bucket, fieldPath);
   
   if (!property) return null;
 
@@ -85,18 +114,6 @@ const EditFieldButton: React.FC<EditFieldButtonProps> = memo(({
   if (!initialValues) return null;
 
   const fieldType = property.type as FieldKind;
-  
-  const getPropertiesFromParent = (parent: Property): Record<string, Property> | null => {
-    if (parent.type === "object" && parent.properties) {
-      return parent.properties;
-    }
-    
-    if (parent.type === "array" && parent.items?.properties) {
-      return (parent.items as Property).properties;
-    }
-    
-    return null;
-  };
 
   const getSiblingFieldNames = (): string[] => {
     const parts = fieldPath.split(".");
@@ -106,11 +123,11 @@ const EditFieldButton: React.FC<EditFieldButtonProps> = memo(({
     }
 
     const parentPath = parts.slice(0, -1).join(".");
-    const parentProperty = getPropertyByPath(parentPath);
+    const parentProperty = getPropertyByPath(bucket, parentPath);
     
     if (!parentProperty) return [];
     
-    const properties = getPropertiesFromParent(parentProperty);
+    const properties = getPropertiesContainer(parentProperty);
     return properties ? Object.keys(properties).filter(k => k !== field.name) : [];
   };
 
@@ -244,8 +261,7 @@ const NodeView: React.FC<NodeViewProps> = ({
 
   const getFieldDisplayName = useCallback((field: Field) => {
     const path = field.path || field.name;
-    const parts = path.split(".");
-    return parts[parts.length - 1];
+    return getLastPathPart(path);
   }, []);
 
   const getFieldArrows = useCallback((path?: string) => {
@@ -327,14 +343,9 @@ const NodeView: React.FC<NodeViewProps> = ({
     };
   }, []);
 
-  const buildMultiselectTab = useCallback((property: Property) => {
-    return {
-      multipleSelectionType: property.enum ? "enum" : "bucketId",
-    };
-  }, []);
-
   const addMultiselectFields = useCallback((fieldFormState: FieldFormState, property: Property) => {
-    fieldFormState.multipleSelectionTab = buildMultiselectTab(property);
+    const multipleSelectionType = property.enum ? "enum" : "bucketId";
+    fieldFormState.multipleSelectionTab = { multipleSelectionType };
     
     if (property.enum) {
       fieldFormState.fieldValues.enum = property.enum;
@@ -343,7 +354,7 @@ const NodeView: React.FC<NodeViewProps> = ({
     if (property.bucketId) {
       fieldFormState.fieldValues.bucketId = property.bucketId;
     }
-  }, [buildMultiselectTab]);
+  }, []);
 
   const convertPropertiesToInnerFields = useCallback((properties: Record<string, any>) => {
     return Object.entries(properties)
@@ -355,16 +366,9 @@ const NodeView: React.FC<NodeViewProps> = ({
   }, []);
 
   const addInnerFields = useCallback((fieldFormState: FieldFormState, property: Property) => {
-    if (property.type === "object" && property.properties) {
-      fieldFormState.innerFields = convertPropertiesToInnerFields(property.properties);
-      return;
-    }
-
-    if (property.type === "array" && property.items) {
-      const itemsProperty = property.items as Property;
-      if (itemsProperty.properties) {
-        fieldFormState.innerFields = convertPropertiesToInnerFields(itemsProperty.properties);
-      }
+    const propertiesContainer = getPropertiesContainer(property);
+    if (propertiesContainer) {
+      fieldFormState.innerFields = convertPropertiesToInnerFields(propertiesContainer);
     }
   }, [convertPropertiesToInnerFields]);
 
@@ -481,12 +485,9 @@ const NodeView: React.FC<NodeViewProps> = ({
     newTitle: string,
     requiredField: boolean
   ) => {
-    if (!container.required) {
-      container.required = [];
-    }
-    
+    const currentRequired = container.required || [];
     const updated = updateRequiredArray(
-      container.required,
+      currentRequired,
       oldFieldName,
       newTitle,
       requiredField
@@ -508,19 +509,9 @@ const NodeView: React.FC<NodeViewProps> = ({
     requiredField: boolean
   ) => {
     const parentProperty = navigateToParentProperty(properties, pathParts);
-
-    const isObject = parentProperty.type === "object" && parentProperty.properties;
-    const isArray = parentProperty.type === "array" && parentProperty.items?.properties;
+    const propertiesContainer = getPropertiesContainer(parentProperty);
     
-    if (isObject || isArray) {
-      const propertiesContainer = isObject 
-        ? parentProperty.properties! 
-        : (parentProperty.items as Property).properties!;
-      
-      const requiredContainer = isObject 
-        ? parentProperty 
-        : parentProperty.items as Property;
-      
+    if (propertiesContainer) {
       const updatedProperties = updatePropertyPreservingOrder(
         propertiesContainer,
         oldFieldName,
@@ -528,77 +519,82 @@ const NodeView: React.FC<NodeViewProps> = ({
         fieldProperty
       );
       
-      if (isObject) {
-        parentProperty.properties = updatedProperties;
-      } else {
-        (parentProperty.items as Property).properties = updatedProperties;
-      }
+      setPropertiesContainer(parentProperty, updatedProperties);
       
+      const requiredContainer = getPropertyRequiredContainer(parentProperty);
       updateNestedPropertyRequired(requiredContainer, oldFieldName, newTitle, requiredField);
     }
 
     return { ...bucket, properties };
   }, [bucket, navigateToParentProperty, updatePropertyPreservingOrder, updateNestedPropertyRequired]);
 
-  const handleEditFieldSave = useCallback(
-    async (fieldPath: string, values: FieldFormState, kind: FieldKind): Promise<BucketType> => {
-      if (!bucket) {
-        throw new Error("No bucket available");
-      }
+  const extractFieldData = useCallback((values: FieldFormState, kind: FieldKind) => {
+    const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
+    const {requiredField, primaryField} = values.configurationValues;
+    const {title} = values.fieldValues;
+    return {fieldProperty: fieldProperty as Property, requiredField, primaryField, title};
+  }, []);
 
-      const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
-      const {requiredField, primaryField} = values.configurationValues;
-      const {title} = values.fieldValues;
-      const pathParts = fieldPath.split(".");
-      const oldFieldName = pathParts[pathParts.length - 1];
+  const validateBucketExists = useCallback(() => {
+    if (!bucket) {
+      throw new Error("No bucket available");
+    }
+  }, [bucket]);
 
-      const modifiedBucket = pathParts.length === 1
-        ? updateTopLevelField(oldFieldName, title, fieldProperty as Property, requiredField, primaryField)
-        : updateNestedField(
-            JSON.parse(JSON.stringify(bucket.properties)),
-            pathParts,
-            oldFieldName,
-            title,
-            fieldProperty as Property,
-            requiredField
-          );
-
+  const saveBucketField = useCallback(
+    async (modifiedBucket: BucketType, errorMessage: string): Promise<BucketType> => {
       const result = await createBucketField(modifiedBucket);
       if (!result.data) {
-        throw new Error("Failed to update bucket field");
+        throw new Error(errorMessage);
       }
       return result.data;
     },
-    [bucket, createBucketField, updateTopLevelField, updateNestedField]
+    [createBucketField]
+  );
+
+  const handleEditFieldSave = useCallback(
+    async (fieldPath: string, values: FieldFormState, kind: FieldKind): Promise<BucketType> => {
+      validateBucketExists();
+
+      const {fieldProperty, requiredField, primaryField, title} = extractFieldData(values, kind);
+      const pathParts = fieldPath.split(".");
+      const oldFieldName = getLastPathPart(fieldPath);
+
+      const modifiedBucket = pathParts.length === 1
+        ? updateTopLevelField(oldFieldName, title, fieldProperty, requiredField, primaryField)
+        : updateNestedField(
+            JSON.parse(JSON.stringify(bucket!.properties)),
+            pathParts,
+            oldFieldName,
+            title,
+            fieldProperty,
+            requiredField
+          );
+
+      return saveBucketField(modifiedBucket, "Failed to update bucket field");
+    },
+    [bucket, extractFieldData, validateBucketExists, saveBucketField, updateTopLevelField, updateNestedField]
   );
 
   const handleSaveAndClose = useCallback(
     async (values: FieldFormState, kind: FieldKind): Promise<BucketType> => {
-      if (!bucket) {
-        throw new Error("No bucket available");
-      }
+      validateBucketExists();
 
-      const fieldProperty = FIELD_REGISTRY[kind]?.buildCreationFormApiProperty(values);
-      const {requiredField, primaryField} = values.configurationValues;
-      const {title} = values.fieldValues;
+      const {fieldProperty, requiredField, primaryField, title} = extractFieldData(values, kind);
 
       const modifiedBucket = {
-        ...bucket,
+        ...bucket!,
         properties: {
-          ...bucket.properties,
-          [title]: fieldProperty as Property
+          ...bucket!.properties,
+          [title]: fieldProperty
         },
-          required: requiredField ? [...(bucket.required || []), title] : bucket.required,
-        primary: primaryField ? title : bucket.primary
+        required: requiredField ? [...(bucket!.required || []), title] : bucket!.required,
+        primary: primaryField ? title : bucket!.primary
       };
 
-      const result = await createBucketField(modifiedBucket);
-      if (!result.data) {
-        throw new Error("Failed to create bucket field");
-      }
-      return result.data;
+      return saveBucketField(modifiedBucket, "Failed to create bucket field");
     },
-    [bucket, createBucketField]
+    [bucket, extractFieldData, validateBucketExists, saveBucketField]
   );
 
   const forbiddenFieldNames = useMemo(() => {
