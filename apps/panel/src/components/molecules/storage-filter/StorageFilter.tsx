@@ -211,7 +211,13 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}
                 className={`${styles.chip} ${active && styles.active}`}
                 variant="outlined"
                 suffixIcon={active ? "check" : undefined}
-                onClick={() => formik.setFieldValue("quickdate", el.value)}
+                onClick={() => {
+                  if (formik.values.quickdate === el.value) {
+                    formik.setFieldValue("quickdate", null);
+                    return;
+                  }
+                  formik.setFieldValue("quickdate", el.value);
+                }}
               />
             );
           })}
