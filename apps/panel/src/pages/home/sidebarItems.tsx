@@ -31,7 +31,8 @@ export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[]
     icon: "storage",
     header: {
       name: "Storage"
-    }
+    },
+    onClick: () => navigate?.("/storage")
   },
   {
     id: "identity",
