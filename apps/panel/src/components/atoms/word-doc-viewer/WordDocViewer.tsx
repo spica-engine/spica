@@ -1,14 +1,16 @@
 import {renderAsync} from "docx-preview";
-import {useRef, useEffect} from "react";
+import {useRef, useEffect, useState} from "react";
 import styles from "./WordDocViewer.module.scss";
 
 type WordDocViewerProps = {
   url: string;
-  token?: string;
+  token?: string | null;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export const WordDocViewer = ({url, token, ...props}: WordDocViewerProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [isError, setIsError] = useState(false);
+
+  const viewerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let isCancelled = false;
 
@@ -46,15 +48,16 @@ export const WordDocViewer = ({url, token, ...props}: WordDocViewerProps) => {
           throw new Error("Invalid .docx file format (not a valid ZIP archive)");
         }
 
-        if (!isCancelled && containerRef.current) {
-          containerRef.current.innerHTML = "";
-          await renderAsync(arrayBuffer, containerRef.current);
+        if (!isCancelled && viewerRef.current) {
+          viewerRef.current.innerHTML = "";
+          await renderAsync(arrayBuffer, viewerRef.current);
         }
       } catch (error) {
         console.error("Failed to render docx:", error);
-        if (!isCancelled && containerRef.current) {
-          containerRef.current.innerHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Failed to load document: ${error instanceof Error ? error.message : "Unknown error"}</div>`;
+        if (!isCancelled && viewerRef.current) {
+          viewerRef.current.innerHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Failed to load document: ${error instanceof Error ? error.message : "Unknown error"}</div>`;
         }
+        setIsError(true);
       }
     };
 
@@ -65,5 +68,9 @@ export const WordDocViewer = ({url, token, ...props}: WordDocViewerProps) => {
     };
   }, [url]);
 
-  return <div ref={containerRef} {...props} className={`${styles.viewer} ${props.className || ""}`} />;
+  return (
+    <div {...props} className={`${styles.viewerContainer} ${props.className || ""} ${isError ? styles.error : "" }`}>
+      <div ref={viewerRef} className={styles.viewer} />
+    </div>
+  );
 };
