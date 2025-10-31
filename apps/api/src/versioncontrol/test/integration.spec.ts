@@ -24,7 +24,7 @@ import * as fnCRUD from "@spica-server/function/src/crud";
 import {v4 as uuidv4} from "uuid";
 import {PolicyModule, PolicyService} from "@spica-server/passport/policy";
 
-const sleep = (value = 5000) => new Promise(r => setTimeout(r, value));
+const sleep = (value = 3000) => new Promise(r => setTimeout(r, value));
 
 describe("Versioning", () => {
   let module: TestingModule;
