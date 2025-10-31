@@ -202,7 +202,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     return this._coll.findOneAndUpdate(
       {_id},
-      {$set: {name}},
+      {$set: {name, updated_at: new Date()}},
       {returnDocument: ReturnDocument.AFTER}
     );
   }
@@ -230,6 +230,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     delete object.content.data;
     delete object._id;
+    object.updated_at = new Date();
 
     return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
       return {...object, _id: _id};
@@ -238,8 +239,11 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   async insert(objects: StorageObject<fs.ReadStream | Buffer>[]): Promise<StorageObjectMeta[]> {
     const datas: (Buffer | fs.ReadStream)[] = objects.map(o => o.content.data);
+    const now = new Date();
     const schemas: StorageObjectMeta[] = objects.map(object => {
       delete object.content.data;
+      object.created_at = now;
+      object.updated_at = now;
       return object;
     });
 

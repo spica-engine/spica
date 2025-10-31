@@ -68,6 +68,10 @@ describe("Storage Service", () => {
           expect(val.name).toBe("name" + (result.data.length - 1 - index));
           expect(val.content["data"]).toBe(undefined);
           expect(val.content.type).toBe((result.data.length - 1 - index).toString());
+          expect(val.created_at).toBeInstanceOf(Date);
+          expect(val.updated_at).toBeInstanceOf(Date);
+          expect(val.created_at).toEqual(result.data[index].created_at);
+          expect(val.updated_at).toEqual(result.data[index].updated_at);
         });
         return result;
       })
@@ -154,6 +158,7 @@ describe("Storage Service", () => {
   it("should update storage object", async () => {
     await expect(storageService.insert([storageObject])).resolves.not.toThrow();
 
+    await new Promise(resolve => setTimeout(resolve, 50)); // ensure updated_at is later than created_at
     const updatedData = {
       _id: storageObjectId,
       name: "new name",
@@ -166,18 +171,25 @@ describe("Storage Service", () => {
     };
     await expect(storageService.update(storageObjectId, updatedData)).resolves.not.toThrow();
 
+    const insertedObject = await storageService.get(storageObjectId);
+    const createdAt = insertedObject.created_at;
+    const updatedAt = insertedObject.updated_at;
+
     return await expect(
       storageService.get(storageObjectId).then(result => {
         expect(result).toEqual({
           _id: storageObjectId,
           name: "new name",
           url: "new_url",
+          created_at: createdAt,
+          updated_at: updatedAt,
           content: {
             data: Buffer.from("cba"),
             type: "newtype",
             size: 10
           }
         });
+        expect(result.updated_at.getTime()).toBeGreaterThan(createdAt.getTime());
         return result;
       })
     ).resolves.not.toThrow();
@@ -219,6 +231,57 @@ describe("Storage Service", () => {
         {}
       );
       expect(res.map(r => r.content.type)).toEqual(["type1"]);
+    });
+
+    it("should filter by created_at", async () => {
+      const allObjects = await storageService.getAll(resourceFilter, undefined, false, 0, 0, {});
+      const targetDate = allObjects[0].created_at;
+
+      const resGte = await storageService.getAll(
+        resourceFilter,
+        {created_at: {$gte: targetDate}},
+        false,
+        0,
+        0,
+        {}
+      );
+      expect(resGte.length).toBeGreaterThan(0);
+      expect(resGte.some(r => r.name == "object1")).toBe(true);
+
+      const resLt = await storageService.getAll(
+        resourceFilter,
+        {created_at: {$lt: targetDate}},
+        false,
+        0,
+        0,
+        {}
+      );
+      expect(resLt).toEqual([]);
+    });
+
+    it("should filter by updated_at", async () => {
+      const allObjects = await storageService.getAll(resourceFilter, undefined, false, 0, 0, {});
+      const targetDate = allObjects[0].updated_at;
+
+      const res1 = await storageService.getAll(
+        resourceFilter,
+        {updated_at: {$gte: targetDate}},
+        false,
+        0,
+        0,
+        {}
+      );
+      expect(res1.some(r => r.name == "object1")).toBe(true);
+
+      const res2 = await storageService.getAll(
+        resourceFilter,
+        {updated_at: {$lt: targetDate}},
+        false,
+        0,
+        0,
+        {}
+      );
+      expect(res2).toEqual([]);
     });
   });
 
@@ -313,6 +376,93 @@ describe("Storage Service", () => {
     });
   });
 
+  describe("sorts with timestamp delays", () => {
+    beforeEach(async () => {
+      await storageService.insert([
+        {
+          name: "name2",
+          content: {
+            data: Buffer.from(""),
+            type: ""
+          }
+        }
+      ]);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      await storageService.insert([
+        {
+          name: "name1",
+          content: {
+            data: Buffer.from(""),
+            type: ""
+          }
+        }
+      ]);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      await storageService.insert([
+        {
+          name: "name0",
+          content: {
+            data: Buffer.from(""),
+            type: ""
+          }
+        }
+      ]);
+    });
+
+    it("should sort storage objects descend by created_at", async () => {
+      return await expect(
+        storageService
+          .getAll(resourceFilter, undefined, true, 3, 0, {created_at: -1})
+          .then(result => {
+            expect(result.data[0].name).toBe("name0");
+            expect(result.data[1].name).toBe("name1");
+            expect(result.data[2].name).toBe("name2");
+            return result;
+          })
+      ).resolves.not.toThrow();
+    });
+
+    it("should sort storage objects ascend by created_at", async () => {
+      return await expect(
+        storageService
+          .getAll(resourceFilter, undefined, true, 3, 0, {created_at: 1})
+          .then(result => {
+            expect(result.data[0].name).toBe("name2");
+            expect(result.data[1].name).toBe("name1");
+            expect(result.data[2].name).toBe("name0");
+            return result;
+          })
+      ).resolves.not.toThrow();
+    });
+
+    it("should sort storage objects descend by updated_at", async () => {
+      return await expect(
+        storageService
+          .getAll(resourceFilter, undefined, true, 3, 0, {updated_at: -1})
+          .then(result => {
+            expect(result.data[0].name).toBe("name0");
+            expect(result.data[1].name).toBe("name1");
+            expect(result.data[2].name).toBe("name2");
+            return result;
+          })
+      ).resolves.not.toThrow();
+    });
+
+    it("should sort storage objects ascend by updated_at", async () => {
+      return await expect(
+        storageService
+          .getAll(resourceFilter, undefined, true, 3, 0, {updated_at: 1})
+          .then(result => {
+            expect(result.data[0].name).toBe("name2");
+            expect(result.data[1].name).toBe("name1");
+            expect(result.data[2].name).toBe("name0");
+            return result;
+          })
+      ).resolves.not.toThrow();
+    });
+  });
   describe("storage size limit", () => {
     const MB = Math.pow(10, 6); // 1mb = 10^6 byte
     let storageObjects = [];
