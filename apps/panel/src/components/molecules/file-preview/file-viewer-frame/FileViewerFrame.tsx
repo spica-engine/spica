@@ -8,7 +8,7 @@ interface FileViewerFrameProps {
 
 export const FileViewerFrame = ({children, onClose}: FileViewerFrameProps) => {
   return (
-    <FlexElement gap={10} direction="vertical" className={styles.viewerFrame}>
+    <FlexElement gap={10} direction="vertical">
       <FlexElement gap={10} dimensionX="fill" alignment="rightCenter">
         <Button className={styles.closePreviewButton} variant="icon" onClick={onClose}>
           <Icon name="close" />
