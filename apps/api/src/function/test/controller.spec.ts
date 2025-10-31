@@ -242,7 +242,7 @@ describe("Function Controller", () => {
         .catch(e => e);
 
       expect(response.body).toEqual({
-        message: '.name must match pattern "^(?!\\.)(?!.*\\0)[^/\\\\:\\*\\?"<>|]+$"',
+        message: '.name must match pattern "^\\w+$"',
         error: "validation failed",
         statusCode: 400
       });
