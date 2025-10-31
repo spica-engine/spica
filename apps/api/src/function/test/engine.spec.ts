@@ -391,7 +391,8 @@ describe("Engine", () => {
       const indexJsPath = path.join(newFunctionRoot, "index.js");
       const nodeModulesPath = path.join(newFunctionRoot, "node_modules");
 
-      expect(await engine["folderExists"](indexJsPath)).toBe(true);
+      const indexJsStat = await fs.promises.stat(indexJsPath);
+      expect(indexJsStat.isFile()).toBe(true);
       expect(await engine["folderExists"](nodeModulesPath)).toBe(true);
 
       const newBuildDir = path.join(newFunctionRoot, ".build");

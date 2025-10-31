@@ -197,10 +197,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async copyDirectory(src: string, dest: string): Promise<void> {
-    await fs.promises.cp(src, dest, {recursive: true});
-  }
-
   private async copyDirectoryExcluding(
     src: string,
     dest: string,
@@ -217,7 +213,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       const destPath = path.join(dest, entry.name);
 
       if (entry.isDirectory()) {
-        await this.copyDirectory(srcPath, destPath);
+        await fs.promises.cp(srcPath, destPath, {recursive: true});
       } else {
         await fs.promises.copyFile(srcPath, destPath);
       }
