@@ -79,7 +79,7 @@ const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => 
     {
       regex:
         /^(application\/msword|application\/vnd.openxmlformats-officedocument.wordprocessingml.document)$/,
-      viewer: (file: TypeFile) => <WordDocViewer url={file.url} className={classNames?.doc} style={styles?.doc} />
+      viewer: (file: TypeFile) => <WordDocViewer url={file.url} className={classNames?.doc} style={styles?.doc} token={token} />
     },
     {
       regex: /^(application\/vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|text\/csv)$/,
