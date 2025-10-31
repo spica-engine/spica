@@ -3,10 +3,35 @@
   padding: var(--padding-md);
   box-shadow: var(--box-shadow);
   border-radius: var(--border-radius-md);
+  --chip-height: 25px;
 
   .select {
     background: none;
     padding: 0;
+    text-transform: uppercase;
+  }
+
+  .fileSizeInputsContainer {
+    padding: var(--padding-md) 0 !important;
+    .select {
+      > div:first-child {
+        width: min-content;
+      }
+      padding-right: var(--padding-md);
+    }
+  }
+
+  .fileSizeInput {
+    text-align: center;
+    padding-left: var(--padding-sm)
+  }
+
+  .fileSizeInput::placeholder {
+    transition: color var(--transition-duration) ease;
+  }
+
+  .fileSizeInput:focus::placeholder {
+    color: transparent;
   }
 
   .content {
@@ -16,13 +41,25 @@
 
     .left {
       border-right: var(--border-default);
+      height: var(--chip-height);
     }
+  }
+
+  .content {
+    height: var(--chip-height) !important;
+  }
+
+  .dateRangeContainer {
+    height: var(--chip-height) !important;
   }
 
   .chip {
     font-size: var(--font-size-sm);
     border-radius: var(--border-radius-md);
     padding: var(--padding-sm) var(--padding-md) !important;
+    width: 116px !important;
+    height: var(--chip-height) !important;
+    white-space: nowrap;
     cursor: pointer;
     justify-content: space-between !important;
     &.active {
@@ -30,7 +67,11 @@
     }
   }
 
-  .button{
+  .button {
     font-size: var(--font-size-md);
   }
+}
+
+.selectPopup {
+  text-transform: uppercase;
 }

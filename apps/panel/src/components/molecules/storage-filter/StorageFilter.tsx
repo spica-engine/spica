@@ -17,17 +17,51 @@ import {useFormik} from "formik";
 type TypeStorageFilter = {
   onApply?: (filter: TypeFilterValue) => void;
   onCancel?: () => void;
+  currentFilter?: TypeFilterValue;
 };
 
 const types = [
-  {value: "jpg", label: "JPG"},
-  {value: "png", label: "PNG"},
-  {value: "mp4", label: "MP4"}
-];
+  {value: "image/jpeg", label: "JPEG/JPG"},
+  {value: "image/png", label: "PNG"},
+  {value: "image/gif", label: "GIF"},
+  {value: "image/svg+xml", label: "SVG"},
+  {value: "image/bmp", label: "BMP"},
+  {value: "image/webp", label: "WEBP"},
+  {value: "image/tiff", label: "TIFF"},
+  {value: "image/heic", label: "HEIC"},
+  {value: "video/mp4", label: "MP4"},
+  {value: "video/quicktime", label: "MOV"},
+  {value: "video/x-msvideo", label: "AVI"},
+  {value: "video/x-matroska", label: "MKV"},
+  {value: "video/webm", label: "WEBM"},
+  {value: "audio/mpeg", label: "MP3"},
+  {value: "audio/wav", label: "WAV"},
+  {value: "audio/flac", label: "FLAC"},
+  {value: "application/pdf", label: "PDF"},
+  {value: "application/msword", label: "DOC"},
+  {value: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", label: "DOCX"},
+  {value: "application/vnd.ms-excel", label: "XLS"},
+  {value: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", label: "XLSX"},
+  {value: "application/vnd.ms-powerpoint", label: "PPT"},
+  {
+    value: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    label: "PPTX"
+  },
+  {value: "text/plain", label: "TXT"},
+  {value: "text/csv", label: "CSV"},
+  {value: "text/html", label: "HTML"},
+  {value: "text/javascript", label: "JavaScript"},
+  {value: "application/zip", label: "ZIP"},
+  {value: "application/x-rar-compressed", label: "RAR"},
+  {value: "application/x-7z-compressed", label: "7Z"},
+  {value: "application/x-tar", label: "TAR"},
+  {value: "application/gzip", label: "GZ"},
+  {value: "application/octet-stream", label: "Binary/Other"}
+].sort((a, b) => a.label.localeCompare(b.label));
 
 const units = ["kb", "mb", "gb", "tb"];
 
-const createdAtArr = [
+export const createdAtArr = [
   {value: "last_1_hour", label: "Last 1 Hour"},
   {value: "last_6_hour", label: "Last 6 Hour"},
   {value: "last_12_hour", label: "Last 12 Hour"},
@@ -42,22 +76,22 @@ const createdAtArr = [
   {value: "last_week", label: "Last Week"}
 ];
 
-const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
+const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, currentFilter}) => {
   const formik = useFormik({
     initialValues: {
-      type: ["jpg", "png", "mp4"],
-      fileSize: {
+      type: currentFilter?.type || ["image/jpeg", "image/png", "video/mp4"],
+      fileSize: currentFilter?.fileSize || {
         min: {
-          value: 1,
+          value: null,
           unit: "mb"
         },
         max: {
-          value: 10,
+          value: null,
           unit: "gb"
         }
       },
-      quickdate: null,
-      dateRange: {
+      quickdate: currentFilter?.quickdate || null,
+      dateRange: currentFilter?.dateRange || {
         from: null,
         to: null
       }
@@ -75,15 +109,10 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <FlexElement
-        dimensionX={515}
-        dimensionY={350}
-        gap={10}
-        className={styles.container}
-        direction="vertical"
-      >
+      <FlexElement dimensionX={500} gap={10} className={styles.container} direction="vertical">
         <FluidContainer
           dimensionX="fill"
+          className={styles.typeContainer}
           prefix={{
             children: <Text>Type</Text>,
             dimensionX: "fill",
@@ -96,7 +125,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
                 options={types}
                 value={formik.values.type}
                 onChange={v => formik.setFieldValue("type", v)}
-                dimensionX={200}
+                dimensionX={184}
                 alignment="rightCenter"
                 placeholder=""
                 multiple
@@ -107,6 +136,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
         />
         <FluidContainer
           dimensionX="fill"
+          className={styles.fileSizeContainer}
           prefix={{
             children: <Text>File Size</Text>,
             dimensionX: "fill",
@@ -114,41 +144,53 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
           }}
           suffix={{
             children: (
-              <FlexElement className={styles.content}>
-                <FlexElement className={styles.left}>
+              <FlexElement
+                className={`${styles.content} ${styles.fileSizeInputsContainer}`}
+                gap={0}
+              >
+                <FlexElement className={styles.left} dimensionX={92} gap={0}>
                   <Input
-                    value={formik.values.fileSize.min.value}
+                    value={formik.values.fileSize.min.value || undefined}
+                    placeholder="-"
                     type="number"
-                    dimensionX={45}
+                    dimensionX={26}
+                    className={styles.fileSizeInput}
                     onChange={e => formik.setFieldValue("fileSize.min.value", e.target.value)}
                   />
                   <Select
                     dimensionY="hug"
+                    dimensionX={58}
                     options={units}
-                    dimensionX={60}
                     onChange={v => formik.setFieldValue("fileSize.min.unit", v)}
                     alignment="rightCenter"
                     placeholder=""
                     value={formik.values.fileSize.min.unit}
                     className={styles.select}
+                    popupClassName={styles.selectPopup}
                   />
                 </FlexElement>
-                <FlexElement>
+                <FlexElement dimensionX={90} gap={0}>
                   <Input
-                    value={formik.values.fileSize.max.value}
+                    value={formik.values.fileSize.max.value || undefined}
+                    placeholder="-"
                     type="number"
-                    dimensionX={45}
+                    dimensionX={26}
+                    className={styles.fileSizeInput}
                     onChange={e => formik.setFieldValue("fileSize.max.value", e.target.value)}
                   />
                   <Select
                     dimensionY="hug"
                     options={units}
-                    dimensionX={60}
+                    dimensionX={56}
+                    root={{
+                      className: styles.selectOptionLabel
+                    }}
                     onChange={v => formik.setFieldValue("fileSize.max.unit", v)}
                     alignment="rightCenter"
                     placeholder=""
                     value={formik.values.fileSize.max.unit}
                     className={styles.select}
+                    popupClassName={styles.selectPopup}
                   />
                 </FlexElement>
               </FlexElement>
@@ -177,6 +219,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
 
         <FluidContainer
           dimensionX="fill"
+          className={styles.dateRangeContainer}
           prefix={{
             children: <Text>From</Text>,
             dimensionX: "fill",
@@ -184,7 +227,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
           }}
           suffix={{
             children: (
-              <FlexElement className={styles.content} dimensionY={31.5} dimensionX={200}>
+              <FlexElement className={styles.content} dimensionY={31.5} dimensionX={185}>
                 <DatePicker
                   onChange={date => formik.setFieldValue("dateRange.from", date)}
                   value={formik.values.dateRange.from || null}
@@ -199,6 +242,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
         />
         <FluidContainer
           dimensionX="fill"
+          className={styles.dateRangeContainer}
           prefix={{
             children: <Text>To</Text>,
             dimensionX: "fill",
@@ -206,7 +250,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
           }}
           suffix={{
             children: (
-              <FlexElement className={styles.content} dimensionY={31.5} dimensionX={200}>
+              <FlexElement className={styles.content} dimensionY={31.5} dimensionX={185}>
                 <DatePicker
                   onChange={date => formik.setFieldValue("dateRange.to", date)}
                   value={formik.values.dateRange.to}
@@ -219,13 +263,14 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
             )
           }}
         />
+
         <FlexElement dimensionX="fill" alignment="rightCenter">
           <Button variant="text" onClick={handleCancel} className={styles.button}>
-            <Icon name="close" size="sm"/>
+            <Icon name="close" size="sm" />
             Cancel
           </Button>
           <Button type="submit">
-            <Icon name="filter" size="sm" className={styles.button}/> Apply
+            <Icon name="filter" size="sm" className={styles.button} /> Apply
           </Button>
         </FlexElement>
       </FlexElement>
