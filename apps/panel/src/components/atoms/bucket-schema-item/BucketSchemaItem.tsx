@@ -60,7 +60,9 @@ const BucketSchemaItem: FC<TypeBucketSchemaItem> = ({
     }
   };
   const renderPrefixIcon = () => {
-    if (!itemDepth) return null;
+    if (itemDepth === undefined || itemDepth === null || itemDepth === 0) {
+      return null;
+    }
 
     if (itemDepth === 1) {
       return <Icon name="chevronRight" />;
@@ -75,7 +77,11 @@ const BucketSchemaItem: FC<TypeBucketSchemaItem> = ({
       );
     }
 
-    return <Text style={{marginLeft: "2px", fontWeight: 600, letterSpacing: "1px"}}>...</Text>;
+    // if (itemDepth >= 3) {
+    //   return <Text className={styles.depthEllipsis}>...</Text>;
+    // }
+
+    return null;
   };
 
   return (

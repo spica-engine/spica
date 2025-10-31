@@ -40,6 +40,19 @@ interface EditFieldButtonProps {
   convertPropertyToFieldFormState: (fieldName: string, property: Property) => FieldFormState | null;
 }
 
+
+const navigateToNextProperty = (current: Property, part: string): Property | null => {
+  if (current.type === "object" && current.properties) {
+    return current.properties[part];
+  }
+  
+  if (current.type === "array" && current.items?.properties) {
+    return current.items.properties[part];
+  }
+  
+  return null;
+};
+
 const EditFieldButton: React.FC<EditFieldButtonProps> = memo(({
   field,
   bucket,
@@ -47,18 +60,6 @@ const EditFieldButton: React.FC<EditFieldButtonProps> = memo(({
   convertPropertyToFieldFormState
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-
-  const navigateToNextProperty = (current: any, part: string): any => {
-    if (current.type === "object" && current.properties) {
-      return current.properties[part];
-    }
-    
-    if (current.type === "array" && current.items?.properties) {
-      return current.items.properties[part];
-    }
-    
-    return null;
-  };
 
   const getPropertyByPath = (path: string): Property | null => {
     const parts = path.split(".");
@@ -85,13 +86,13 @@ const EditFieldButton: React.FC<EditFieldButtonProps> = memo(({
 
   const fieldType = property.type as FieldKind;
   
-  const getPropertiesFromParent = (parent: Property): Record<string, any> | null => {
+  const getPropertiesFromParent = (parent: Property): Record<string, Property> | null => {
     if (parent.type === "object" && parent.properties) {
       return parent.properties;
     }
     
     if (parent.type === "array" && parent.items?.properties) {
-      return (parent.items as any).properties;
+      return (parent.items as Property).properties;
     }
     
     return null;
@@ -261,22 +262,10 @@ const NodeView: React.FC<NodeViewProps> = ({
       ),
     };
     
-    return arrowMap[level] ?? <span className={styles.deepNestingIndicator}>...</span>;
+    return arrowMap[level];
   }, [getFieldNestingLevel]);
 
   const [createBucketField] = useCreateBucketFieldMutation();
-
-  const navigateToNextProperty = useCallback((current: any, part: string): any => {
-    if (current.type === "object" && current.properties) {
-      return current.properties[part];
-    }
-    
-    if (current.type === "array" && current.items?.properties) {
-      return current.items.properties[part];
-    }
-    
-    return null;
-  }, []);
 
   const updatePropertyPreservingOrder = useCallback((
     properties: Record<string, any>,
@@ -311,7 +300,7 @@ const NodeView: React.FC<NodeViewProps> = ({
       multiselect: {
         multipleSelectionType: property.enum ? "enum" : "bucketId",
       },
-      array: property.items ? { arrayType: (property.items as any).type } : {},
+      array: property.items ? { arrayType: (property.items as Property).type } : {},
       number: {
         minimum: property.minimum,
         maximum: property.maximum,
@@ -362,7 +351,7 @@ const NodeView: React.FC<NodeViewProps> = ({
         const innerFormState = convertPropertyToFieldFormState(key, prop as Property);
         return innerFormState ? { ...innerFormState, id: key } : null;
       })
-      .filter(Boolean) as any[];
+      .filter(Boolean) as (FieldFormState & { id: string })[];
   }, []);
 
   const addInnerFields = useCallback((fieldFormState: FieldFormState, property: Property) => {
@@ -472,19 +461,19 @@ const NodeView: React.FC<NodeViewProps> = ({
   }, [bucket, updatePropertyPreservingOrder, updateRequiredArray]);
 
   const navigateToParentProperty = useCallback((
-    properties: any,
+    properties: Record<string, Property>,
     pathParts: string[]
-  ): any => {
-    let currentProperty: any = properties;
+  ): Property => {
+    let currentProperty: Record<string, Property> | Property = properties;
     
     for (let i = 0; i < pathParts.length - 1; i++) {
       currentProperty = i === 0 
-        ? currentProperty[pathParts[i]]
-        : navigateToNextProperty(currentProperty, pathParts[i]);
+        ? (currentProperty as Record<string, Property>)[pathParts[i]]
+        : navigateToNextProperty(currentProperty as Property, pathParts[i])!;
     }
     
-    return currentProperty;
-  }, [navigateToNextProperty]);
+    return currentProperty as Property;
+  }, []);
 
   const updateNestedPropertyRequired = useCallback((
     container: any,
@@ -511,7 +500,7 @@ const NodeView: React.FC<NodeViewProps> = ({
   }, [updateRequiredArray]);
 
   const updateNestedField = useCallback((
-    properties: any,
+    properties: Record<string, Property>,
     pathParts: string[],
     oldFieldName: string,
     newTitle: string,
@@ -520,22 +509,32 @@ const NodeView: React.FC<NodeViewProps> = ({
   ) => {
     const parentProperty = navigateToParentProperty(properties, pathParts);
 
-    if (parentProperty.type === "object" && parentProperty.properties) {
-      parentProperty.properties = updatePropertyPreservingOrder(
-        parentProperty.properties,
+    const isObject = parentProperty.type === "object" && parentProperty.properties;
+    const isArray = parentProperty.type === "array" && parentProperty.items?.properties;
+    
+    if (isObject || isArray) {
+      const propertiesContainer = isObject 
+        ? parentProperty.properties! 
+        : (parentProperty.items as Property).properties!;
+      
+      const requiredContainer = isObject 
+        ? parentProperty 
+        : parentProperty.items as Property;
+      
+      const updatedProperties = updatePropertyPreservingOrder(
+        propertiesContainer,
         oldFieldName,
         newTitle,
         fieldProperty
       );
-      updateNestedPropertyRequired(parentProperty, oldFieldName, newTitle, requiredField);
-    } else if (parentProperty.type === "array" && parentProperty.items?.properties) {
-      parentProperty.items.properties = updatePropertyPreservingOrder(
-        parentProperty.items.properties,
-        oldFieldName,
-        newTitle,
-        fieldProperty
-      );
-      updateNestedPropertyRequired(parentProperty.items, oldFieldName, newTitle, requiredField);
+      
+      if (isObject) {
+        parentProperty.properties = updatedProperties;
+      } else {
+        (parentProperty.items as Property).properties = updatedProperties;
+      }
+      
+      updateNestedPropertyRequired(requiredContainer, oldFieldName, newTitle, requiredField);
     }
 
     return { ...bucket, properties };

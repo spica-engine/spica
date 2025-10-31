@@ -55,9 +55,6 @@ const BucketFieldConfigurationPopup = ({
       contentProps={{
         className: styles.bucketAddField,
         ref: bucketAddFieldRef,
-        style: {
-          transform: 'translate(200px, 0px)'
-        },
         onClick: (e: React.MouseEvent) => {
           e.stopPropagation();
         }
