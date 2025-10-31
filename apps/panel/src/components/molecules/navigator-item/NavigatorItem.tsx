@@ -34,6 +34,7 @@ const NavigatorItem: FC<NavigatorItemProps> = ({
         children: <Icon name={prefixIcon as IconName} size={"md"} />
       }}
       root={{
+        className: styles.labelContainer,
         children: (
           <Text dimensionX={"fill"} size="medium" className={styles.label}>
             {label}

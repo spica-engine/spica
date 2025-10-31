@@ -4,7 +4,8 @@
   padding: var(--padding-md) !important;
   color: var(--color-font-primary);
   font-weight: 400;
-  .suffixButton, .suffixElement {
+  .suffixButton,
+  .suffixElement {
     border: 0;
     padding: 0;
     width: var(--icon-size-sm);
@@ -16,18 +17,23 @@
 
   &:hover {
     cursor: pointer;
-    .suffixButton, .suffixElement {
+    .suffixButton,
+    .suffixElement {
       opacity: 1;
     }
   }
 
-  .label {
-    display: -webkit-box;
-    -webkit-line-clamp: 2; /* limit to 2 lines */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    max-width: 120px;
-    text-overflow: ellipsis;
+  .labelContainer {
+    justify-content: flex-start !important;
+
+    .label {
+      display: -webkit-box;
+      -webkit-line-clamp: 2; /* limit to 2 lines */
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      max-width: 120px;
+      text-overflow: ellipsis;
+    }
   }
 }
 
