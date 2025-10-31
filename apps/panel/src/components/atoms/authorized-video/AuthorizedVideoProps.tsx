@@ -10,6 +10,8 @@ type AuthorizedVideoProps = {
   containerProps?: React.HTMLAttributes<HTMLDivElement>;
 } & React.VideoHTMLAttributes<HTMLVideoElement>;
 
+const WAIT_FOR_VIDEO_AVAILABILITY_MS = 1000;
+
 export function AuthorizedVideo({
   type,
   url,
@@ -25,10 +27,10 @@ export function AuthorizedVideo({
   useEffect(() => {
     let objectUrl: string | null = null;
 
-    const loadVideo = async () => {
+    const fetchVideoWithDelay = async () => {
+      setIsVideoLoading(true);
+      setError(null);
       try {
-        setIsVideoLoading(true);
-        setError(null);
         const response = await fetch(url, {
           headers: {Authorization: `IDENTITY ${token}`}
         });
@@ -38,14 +40,20 @@ export function AuthorizedVideo({
         setVideoUrl(objectUrl);
       } catch (error) {
         setError("Unable to load video.");
+      } finally {
         setIsVideoLoading(false);
       }
     };
 
     if (token) {
-      loadVideo();
+      const waitTimer = setTimeout(fetchVideoWithDelay, WAIT_FOR_VIDEO_AVAILABILITY_MS);
+      return () => {
+        clearTimeout(waitTimer);
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+        }
+      };
     }
-
     return () => {
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl);
