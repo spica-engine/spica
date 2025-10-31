@@ -232,7 +232,7 @@ describe("Function Controller", () => {
     });
 
     it("should not allow special characters in function name", async () => {
-      const fn = await request.post("/function", fnSchema).then(r => r.body);
+      await request.post("/function", fnSchema).then(r => r.body);
 
       const response = await request
         .post("/function", {
