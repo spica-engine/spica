@@ -1,14 +1,23 @@
-import { Spinner } from "oziko-ui-kit";
-import {useEffect, useState, type CSSProperties} from "react";
+import {Spinner} from "oziko-ui-kit";
+import {useEffect, useState} from "react";
+import styles from "./AuthorizedVideo.module.scss";
 
 type AuthorizedVideoProps = {
   type?: string;
   url: string;
   token: string;
   fallback?: React.ReactNode;
+  containerProps?: React.HTMLAttributes<HTMLDivElement>;
 } & React.VideoHTMLAttributes<HTMLVideoElement>;
 
-export function AuthorizedVideo({type, url, token, fallback, ...props}: AuthorizedVideoProps) {
+export function AuthorizedVideo({
+  type,
+  url,
+  token,
+  fallback,
+  containerProps,
+  ...props
+}: AuthorizedVideoProps) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +30,7 @@ export function AuthorizedVideo({type, url, token, fallback, ...props}: Authoriz
         setIsVideoLoading(true);
         setError(null);
         const response = await fetch(url, {
-          headers: {Authorization: `Bearer ${token}`}
+          headers: {Authorization: `IDENTITY ${token}`}
         });
         if (!response.ok) throw new Error("Failed to fetch video");
         const blob = await response.blob();
@@ -45,29 +54,32 @@ export function AuthorizedVideo({type, url, token, fallback, ...props}: Authoriz
   }, [url, token]);
   const loading = (isVideoLoading || !videoUrl) && !error;
 
-  const handleError = () => {
+  const handleError = (event: React.SyntheticEvent<HTMLVideoElement>) => {
     setIsVideoLoading(false);
     setError("Unable to load video.");
-  }
+    props.onError?.(event);
+  };
+
+  const handleOnLoadedData = (event: React.SyntheticEvent<HTMLVideoElement>) => {
+    setIsVideoLoading(false);
+    props.onLoadedData?.(event);
+  };
 
   return (
-    <div style={props.style}>
+    <div {...(containerProps || {})} className={`${props.className} ${styles.container}`}>
       {loading && (
         <div>
           <Spinner />
         </div>
       )}
-      {error && (
-        <div>
-          {fallback || <span>Unable to load video.</span>}
-        </div>
-      )}
+      {error && <div>{fallback || <span>Unable to load video.</span>}</div>}
       {videoUrl && !error && (
         <video
           controls
           {...props}
+          className={`${styles.video} ${props.className}`}
           style={{...(props.style || {}), display: loading ? "none" : "block"}}
-          onLoadedData={() => setIsVideoLoading(false)}
+          onLoadedData={handleOnLoadedData}
           onError={handleError}
         >
           <source src={videoUrl} type={type} />
