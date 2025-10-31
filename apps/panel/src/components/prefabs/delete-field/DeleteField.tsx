@@ -14,6 +14,7 @@ type DeleteFieldProps = {
 }
 
 const DeleteField: FC<DeleteFieldProps> = ({ field, bucket, children }) => {
+
     const [deleteBucketField] = useDeleteBucketFieldMutation();
     const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
@@ -27,9 +28,17 @@ const DeleteField: FC<DeleteFieldProps> = ({ field, bucket, children }) => {
     };
 
     const confirmDelete = async () => {
-        await deleteBucketField({ bucketId: bucket._id, fieldKey: field.key, bucket });
+        const fieldKey = field.path || field.name;
+        await deleteBucketField({ bucketId: bucket._id, fieldKey, bucket });
         setIsConfirmationOpen(false);
     };
+
+    const getFieldDisplayName = () => {
+      const path = field.path || field.name;
+      const parts = path.split(".");
+      return parts[parts.length - 1];
+    };
+
   return (
    <>
      {children({
@@ -43,8 +52,11 @@ const DeleteField: FC<DeleteFieldProps> = ({ field, bucket, children }) => {
           description={
             <>
               <span>
+                Are you sure you want to delete the field <strong>"{getFieldDisplayName()}"</strong>?
+              </span>
+              <span>
                 This action will remove the field from bucket entries. Please confirm this action to
-                continue
+                continue.
               </span>
               <span>
                 Please type <strong>agree</strong> to confirm deletion.
@@ -68,8 +80,6 @@ const DeleteField: FC<DeleteFieldProps> = ({ field, bucket, children }) => {
           confirmCondition={val => val === "agree"}
           onConfirm={confirmDelete}
           onCancel={handleCancelConfirmation}
-        //   error={fieldDeletionError}
-        //   loading={isFieldDeletionLoading}
         />
       )}
    </>

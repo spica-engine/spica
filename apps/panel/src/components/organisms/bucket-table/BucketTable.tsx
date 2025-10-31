@@ -11,14 +11,12 @@ import {
   type BucketType
 } from "../../../store/api/bucketApi";
 import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
-import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
-import type {Property} from "src/services/bucketService";
+import type {Property} from "../../../services/bucketService";
 import Confirmation from "../../../components/molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
-import StringField from "../../../bucket/BucketField";
 
 function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
   const index = arr.indexOf(target);
@@ -329,20 +327,21 @@ const NewFieldHeader = memo(({bucketId}: {bucketId: string}) => {
   }, [bucket]);
 
   return (
-    <BucketFieldPopupsProvider>
-      <BucketFieldPopup
-        onSaveAndClose={handleSaveAndClose}
-        forbiddenFieldNames={forbiddenFieldNames}
-      >
+    <BucketFieldPopup
+      onSaveAndClose={handleSaveAndClose}
+      forbiddenFieldNames={forbiddenFieldNames}
+    >
+      {({onOpen}) => (
         <Button
           variant="icon"
-          className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
+          className={styles.newFieldColumnButton}
+          onClick={onOpen}
         >
           <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
           <span>New&nbsp;Field</span>
         </Button>
-      </BucketFieldPopup>
-    </BucketFieldPopupsProvider>
+      )}
+    </BucketFieldPopup>
   );
 });
 

@@ -1,6 +1,5 @@
 import { useRef, useEffect } from "react";
 import type { Node } from "./useBucketConverter";
-import type { FieldConfig } from "../../../components/prefabs/edit-field";
 
 export const useNodeManagement = (
   nodes: Node[],
@@ -64,34 +63,9 @@ export const useNodeManagement = (
     );
   };
 
-  const editField = (nodeId: string, fieldConfig: FieldConfig) => {
-    setNodes(prev =>
-      prev.map(node => {
-        if (node.id === nodeId) {
-          return {
-            ...node,
-            fields: node.fields.map(field =>
-              field.id === fieldConfig._id
-                ? {
-                    ...field,
-                    ...fieldConfig,
-                    id: field.id,
-                    name: fieldConfig.name,
-                    type: fieldConfig.type
-                  }
-                : field
-            )
-          };
-        }
-        return node;
-      })
-    );
-  };
-
   return {
     fieldRefsMap,
     addField,
-    editField,
     removeField
   };
 };

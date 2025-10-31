@@ -161,7 +161,6 @@ export default function Diagram() {
                 onMouseDown={interactions.handleMouseDown}
                 onClick={focusMode.handleNodeClick}
                 onAddField={nodeManagement.addField}
-                onEditField={nodeManagement.editField}
                 onRemoveField={nodeManagement.removeField}
                 dragging={interactions.dragging === node.id}
                 isFocused={focusMode.isNodeFocused(node.id)}

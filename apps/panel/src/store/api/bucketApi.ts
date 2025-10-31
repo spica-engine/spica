@@ -650,6 +650,7 @@ export const bucketApi = baseApi.injectEndpoints({
           primary: updatedPrimary,
         };
 
+
         return {
           url: `/bucket/${bucketId}`,
           method: 'PUT',

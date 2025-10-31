@@ -31,3 +31,12 @@
   pointer-events: none !important;
 }
 
+.newFieldButtonContainer{
+ > div {
+  width: 100% !important;
+ }
+  .addNewFieldButtonChildren{
+    width: 100% !important;
+  }
+}
+

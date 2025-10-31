@@ -732,10 +732,11 @@ const ARRAY_DEFINITION: FieldDefinition = {
     }
 
     if (fv.arrayType === "object" && Array.isArray(form.innerFields)) {
-      item.properties = form.innerFields.reduce<Record<string, Property>>((acc, inner) => {
+        item.properties = form.innerFields.reduce<Record<string, Property>>((acc, inner) => {
         const innerDef = FIELD_REGISTRY[inner.type as FieldKind];
         if (innerDef?.buildCreationFormApiProperty) {
-          acc[inner.fieldValues.title] = innerDef.buildCreationFormApiProperty(inner);
+          const builtProperty = innerDef.buildCreationFormApiProperty(inner);   
+          acc[inner.fieldValues.title] = builtProperty;
         } else {
           throw new Error(`Cannot build property for field type ${inner?.type}`);
         }
@@ -893,12 +894,13 @@ const OBJECT_DEFINITION: FieldDefinition = {
     return result;
   },
   buildCreationFormApiProperty: form => {
-    const base = buildBaseProperty(form);
+    const base = buildBaseProperty(form); 
     const properties = Array.isArray(form.innerFields)
       ? form.innerFields.reduce<Record<string, Property>>((acc, inner) => {
           const innerDef = FIELD_REGISTRY[inner.type as FieldKind];
           if (innerDef?.buildCreationFormApiProperty) {
-            acc[inner.fieldValues.title] = innerDef.buildCreationFormApiProperty(inner);
+            const builtProperty = innerDef.buildCreationFormApiProperty(inner); 
+            acc[inner.fieldValues.title] = builtProperty;
           } else {
             throw new Error(`Cannot build property for field type ${inner?.type}`);
           }
