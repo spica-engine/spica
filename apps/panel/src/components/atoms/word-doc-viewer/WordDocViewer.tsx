@@ -1,5 +1,5 @@
 import {renderAsync} from "docx-preview";
-import {useRef, useEffect} from "react";
+import {useRef, useEffect, useState} from "react";
 import styles from "./WordDocViewer.module.scss";
 
 type WordDocViewerProps = {
@@ -8,6 +8,8 @@ type WordDocViewerProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export const WordDocViewer = ({url, token, ...props}: WordDocViewerProps) => {
+  const [isError, setIsError] = useState(false);
+
   const viewerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let isCancelled = false;
@@ -55,6 +57,7 @@ export const WordDocViewer = ({url, token, ...props}: WordDocViewerProps) => {
         if (!isCancelled && viewerRef.current) {
           viewerRef.current.innerHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">Failed to load document: ${error instanceof Error ? error.message : "Unknown error"}</div>`;
         }
+        setIsError(true);
       }
     };
 
@@ -66,8 +69,8 @@ export const WordDocViewer = ({url, token, ...props}: WordDocViewerProps) => {
   }, [url]);
 
   return (
-    <div className={styles.viewerContainer}>
-      <div ref={viewerRef} {...props} className={`${styles.viewer} ${props.className || ""}`} />
+    <div {...props} className={`${styles.viewerContainer} ${props.className || ""} ${isError ? styles.error : "" }`}>
+      <div ref={viewerRef} className={styles.viewer} />
     </div>
   );
 };
