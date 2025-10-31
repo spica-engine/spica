@@ -58,6 +58,7 @@ export type CommandMessageFilter = Filter<CommandMessage>;
 
 export interface ReplicationServiceOptions {
   expireAfterSeconds: number;
+  jobExpireAfterSeconds?: number;
 }
 
 export interface MemoryOptions {
