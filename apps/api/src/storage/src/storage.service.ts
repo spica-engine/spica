@@ -230,7 +230,6 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     delete object.content.data;
     delete object._id;
-    object.created_at = existing.created_at;
     object.updated_at = new Date();
 
     return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
