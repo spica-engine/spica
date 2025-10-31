@@ -50,7 +50,7 @@ export const FilePreview = ({
     [previewFile?._id, previewFile?.url, fileUrl]
   ) as DirectoryItem;
 
-  const fileView = useFileView({file, isLoading});
+  const fileView = useFileView({file, isLoading, classNames: {doc: styles.wordDocViewer}});
 
   const handleReplaceFile = (updatedFile: DirectoryItem) => {
     if (!onFileReplaced) return;
