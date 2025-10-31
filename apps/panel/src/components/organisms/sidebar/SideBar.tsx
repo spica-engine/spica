@@ -1,36 +1,14 @@
 import React, {type FC, type ReactNode, useState} from "react";
 import styles from "./SideBar.module.scss";
 import {Icon, type IconName} from "oziko-ui-kit";
-import Navigator, {type TypeNavigatorHeader} from "./navigator/Navigator";
+import Navigator from "./navigator/Navigator";
 import Logo from "../../atoms/logo/Logo";
-import type {BucketType} from "src/store/api/bucketApi";
-
-export type TypeMenuItems = {
-  name?: string;
-  icon?: IconName;
-  header?: TypeNavigatorHeader;
-  id: string;
-  addNewButtonText?: string;
-};
-
-export type TypeNavigatorItems = {
-  _id: string;
-  section: string; //!Todo can be improvable like statically defined values etc.
-  title?: string;
-  icon?: IconName;
-  category?: string;
-};
-
-export type ReorderableItemGroup = {
-  items: TypeNavigatorItems[] | BucketType[];
-  onOrderChange: (from: number, to: number) => void;
-  completeOrderChange: (identifier: string, newOrder: number) => void;
-};
+import type {TypeMenuItems, NavigatorItemGroup, TypeNavigatorHeader} from "../../../types/sidebar";
 
 type TypeSideBar = {
   menuItems?: TypeMenuItems[];
   navigatorItems?: {
-    [key: string]: ReorderableItemGroup;
+    [key: string]: NavigatorItemGroup;
   };
   logo?: string;
   footer?: ReactNode;
