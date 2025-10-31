@@ -232,6 +232,57 @@ describe("Storage Service", () => {
       );
       expect(res.map(r => r.content.type)).toEqual(["type1"]);
     });
+
+    it("should filter by created_at", async () => {
+      const allObjects = await storageService.getAll(resourceFilter, undefined, false, 0, 0, {});
+      const targetDate = allObjects[0].created_at;
+
+      const resGte = await storageService.getAll(
+        resourceFilter,
+        {created_at: {$gte: targetDate}},
+        false,
+        0,
+        0,
+        {}
+      );
+      expect(resGte.length).toBeGreaterThan(0);
+      expect(resGte.some(r => r.name == "object1")).toBe(true);
+
+      const resLt = await storageService.getAll(
+        resourceFilter,
+        {created_at: {$lt: targetDate}},
+        false,
+        0,
+        0,
+        {}
+      );
+      expect(resLt).toEqual([]);
+    });
+
+    it("should filter by updated_at", async () => {
+      const allObjects = await storageService.getAll(resourceFilter, undefined, false, 0, 0, {});
+      const targetDate = allObjects[0].updated_at;
+
+      const res1 = await storageService.getAll(
+        resourceFilter,
+        {updated_at: {$gte: targetDate}},
+        false,
+        0,
+        0,
+        {}
+      );
+      expect(res1.some(r => r.name == "object1")).toBe(true);
+
+      const res2 = await storageService.getAll(
+        resourceFilter,
+        {updated_at: {$lt: targetDate}},
+        false,
+        0,
+        0,
+        {}
+      );
+      expect(res2).toEqual([]);
+    });
   });
 
   it("should filter, limit skip and sort and not paginate ", async () => {
@@ -325,6 +376,93 @@ describe("Storage Service", () => {
     });
   });
 
+  describe("sorts with timestamp delays", () => {
+    beforeEach(async () => {
+      await storageService.insert([
+        {
+          name: "name2",
+          content: {
+            data: Buffer.from(""),
+            type: ""
+          }
+        }
+      ]);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      await storageService.insert([
+        {
+          name: "name1",
+          content: {
+            data: Buffer.from(""),
+            type: ""
+          }
+        }
+      ]);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      await storageService.insert([
+        {
+          name: "name0",
+          content: {
+            data: Buffer.from(""),
+            type: ""
+          }
+        }
+      ]);
+    });
+
+    it("should sort storage objects descend by created_at", async () => {
+      return await expect(
+        storageService
+          .getAll(resourceFilter, undefined, true, 3, 0, {created_at: -1})
+          .then(result => {
+            expect(result.data[0].name).toBe("name0");
+            expect(result.data[1].name).toBe("name1");
+            expect(result.data[2].name).toBe("name2");
+            return result;
+          })
+      ).resolves.not.toThrow();
+    });
+
+    it("should sort storage objects ascend by created_at", async () => {
+      return await expect(
+        storageService
+          .getAll(resourceFilter, undefined, true, 3, 0, {created_at: 1})
+          .then(result => {
+            expect(result.data[0].name).toBe("name2");
+            expect(result.data[1].name).toBe("name1");
+            expect(result.data[2].name).toBe("name0");
+            return result;
+          })
+      ).resolves.not.toThrow();
+    });
+
+    it("should sort storage objects descend by updated_at", async () => {
+      return await expect(
+        storageService
+          .getAll(resourceFilter, undefined, true, 3, 0, {updated_at: -1})
+          .then(result => {
+            expect(result.data[0].name).toBe("name0");
+            expect(result.data[1].name).toBe("name1");
+            expect(result.data[2].name).toBe("name2");
+            return result;
+          })
+      ).resolves.not.toThrow();
+    });
+
+    it("should sort storage objects ascend by updated_at", async () => {
+      return await expect(
+        storageService
+          .getAll(resourceFilter, undefined, true, 3, 0, {updated_at: 1})
+          .then(result => {
+            expect(result.data[0].name).toBe("name2");
+            expect(result.data[1].name).toBe("name1");
+            expect(result.data[2].name).toBe("name0");
+            return result;
+          })
+      ).resolves.not.toThrow();
+    });
+  });
   describe("storage size limit", () => {
     const MB = Math.pow(10, 6); // 1mb = 10^6 byte
     let storageObjects = [];
