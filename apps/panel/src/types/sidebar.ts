@@ -6,6 +6,7 @@ export type TypeMenuItems = {
   header?: TypeNavigatorHeader;
   id: string;
   addNewButtonText?: string;
+  onClick?: () => void;
 };
 
 export type TypeNavigatorItem = {

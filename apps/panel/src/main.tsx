@@ -9,6 +9,8 @@ import {StorageProvider} from "./contexts/StorageContext";
 import {Provider} from "react-redux";
 import {store} from "./store";
 import {BucketProvider} from "./contexts/BucketContext";
+import {DndProvider} from "react-dnd";
+
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 root.render(

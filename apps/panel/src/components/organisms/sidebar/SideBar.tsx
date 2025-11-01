@@ -31,6 +31,8 @@ const SideBar: FC<TypeSideBar> = ({
   const handleClick = (index: number) => {
     setActiveMenu(index);
     setShowNavigator(true);
+    const onClickAction = menuItems?.[index]?.onClick;
+    onClickAction?.();
   };
   const toggleNavigator = () => {
     setShowNavigator(prev => {

@@ -31,7 +31,8 @@ export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[]
     icon: "storage",
     header: {
       name: "Storage"
-    }
+    },
+    onClick: () => navigate?.("/storage")
   },
   {
     id: "identity",
@@ -71,11 +72,10 @@ export const menuItems: TypeMenuItems[] = getMenuItems();
 
 export const navigatorItems: {[key: string]: TypeNavigatorItem[]} = {
   dashboard: [
-    {_id: "1", title: "Overview", icon: "dashboard", section: "dashboard"},
-    {_id: "2", title: "Analytics", icon: "dashboard", section: "dashboard"}
+    {_id: "1", title: "Overview", icon: "dashboard", section: "dashboard", link: "/dashboard/overview"},
+    {_id: "2", title: "Analytics", icon: "dashboard", section: "dashboard", link: "/dashboard/analytics"}
   ],
-  bucket: [
-    {_id: "3", title: "Profile", icon: "bucket", section: "bucket"},
-    {_id: "4", title: "Security", icon: "lock", section: "bucket"}
-  ]
+  storage: [
+    { _id: "5", title: "/", icon: "folder", section: "storage", link: "/storage" },
+  ],
 };
