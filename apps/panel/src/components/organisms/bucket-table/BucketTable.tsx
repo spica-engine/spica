@@ -7,17 +7,16 @@ import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopu
 import {
   useGetBucketsQuery,
   useCreateBucketFieldMutation,
+  useDeleteBucketFieldMutation,
   type BucketType
 } from "../../../store/api/bucketApi";
 import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
-import {BucketFieldPopupsProvider} from "../../molecules/bucket-field-popup/BucketFieldPopupsContext";
 import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
-import type {Property} from "src/services/bucketService";
+import type {Property} from "../../../services/bucketService";
 import Confirmation from "../../../components/molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
-import {useBucket} from "../../../contexts/BucketContext";
 
 function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
   const index = arr.indexOf(target);
@@ -328,20 +327,21 @@ const NewFieldHeader = memo(({bucketId}: {bucketId: string}) => {
   }, [bucket]);
 
   return (
-    <BucketFieldPopupsProvider>
-      <BucketFieldPopup
-        onSaveAndClose={handleSaveAndClose}
-        forbiddenFieldNames={forbiddenFieldNames}
-      >
+    <BucketFieldPopup
+      onSaveAndClose={handleSaveAndClose}
+      forbiddenFieldNames={forbiddenFieldNames}
+    >
+      {({onOpen}) => (
         <Button
           variant="icon"
-          className={`${styles.columnHeaderText} ${styles.newFieldColumnButton}`}
+          className={styles.newFieldColumnButton}
+          onClick={onOpen}
         >
           <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
           <span>New&nbsp;Field</span>
         </Button>
-      </BucketFieldPopup>
-    </BucketFieldPopupsProvider>
+      )}
+    </BucketFieldPopup>
   );
 });
 
@@ -442,9 +442,6 @@ function getFormattedColumns(
         ...col,
         header: (
           <ColumnHeader
-            title={col.header}
-            icon={col.type && COLUMN_ICONS[col.type]}
-            showDropdownIcon={col.showDropdownIcon}
             title={header}
             icon={icon}
             showDropdownIcon={showDropdownIcon}
@@ -514,7 +511,26 @@ const BucketTable = ({
   tableRef,
   primaryKey
 }: BucketTableProps) => {
-  const {handleDeleteField} = useBucket();
+  const { data: buckets } = useGetBucketsQuery();
+  const [deleteBucketField] = useDeleteBucketFieldMutation();
+
+  const handleDeleteField = useCallback(
+    async (fieldKey: string) => {
+      const bucket = buckets?.find(b => b._id === bucketId);
+      if (!bucket) {
+        console.error("Bucket not found");
+        return "Bucket not found";
+      }
+
+      try {
+        await deleteBucketField({ bucketId, fieldKey, bucket }).unwrap();
+      } catch (error) {
+        console.error("Error deleting bucket field:", error);
+        return "Error deleting field";
+      }
+    },
+    [bucketId, buckets, deleteBucketField]
+  );
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, [
     ...columns.slice(1).map(i => i.key)
@@ -595,10 +611,11 @@ const BucketTable = ({
     [data, columnMap, columnMap.length]
   );
 
+
   return loading ? (
     <Loader />
   ) : (
-    <Table
+     <Table
       style={{maxHeight}}
       className={styles.table}
       columns={formattedColumns}
@@ -607,6 +624,7 @@ const BucketTable = ({
       totalDataLength={totalDataLength}
       tableRef={tableRef}
     />
+   
   );
 };
 

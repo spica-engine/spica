@@ -60,20 +60,28 @@ const BucketSchemaItem: FC<TypeBucketSchemaItem> = ({
     }
   };
   const renderPrefixIcon = () => {
-    if (!itemDepth) return null;
+    if (itemDepth === undefined || itemDepth === null || itemDepth === 0) {
+      return null;
+    }
 
-    const showEllipsis = itemDepth > 2;
+    if (itemDepth === 1) {
+      return <Icon name="chevronRight" />;
+    }
 
-    return (
-      <>
-        {showEllipsis && <Text style={{marginLeft: "2px"}}>...</Text>}
-        {Array(showEllipsis ? 1 : itemDepth)
-          .fill("")
-          .map((_, index) => (
-            <Icon key={`chevron-${index}`} name="chevronRight" />
-          ))}
-      </>
-    );
+    if (itemDepth === 2) {
+      return (
+        <>
+          <Icon name="chevronRight" />
+          <Icon name="chevronRight" />
+        </>
+      );
+    }
+
+    // if (itemDepth >= 3) {
+    //   return <Text className={styles.depthEllipsis}>...</Text>;
+    // }
+
+    return null;
   };
 
   return (

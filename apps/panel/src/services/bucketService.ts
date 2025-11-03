@@ -158,11 +158,6 @@ export const useBucketService = () => {
     deduplicateRequests: false
   });
 
-  const {request: deleteFieldRequest} = useApi({
-    endpoint: "",
-    method: "put"
-  });
-
   const {request: createBucketEntry, error: apiCreateBucketEntryError} = useApi({
     endpoint: "",
     method: "post"
@@ -342,16 +337,6 @@ export const useBucketService = () => {
     },
     [createBucketEntry]
   );
-  
-  const apiDeleteBucketField = useCallback(
-    (modifiedBucket: BucketType) => {
-      return deleteFieldRequest({
-        endpoint: `/api/bucket/${modifiedBucket._id}`,
-        body: modifiedBucket
-      });
-    },
-    [deleteFieldRequest]
-  );
 
   return {
     apiGetBucketData,
@@ -369,7 +354,6 @@ export const useBucketService = () => {
     apiCreateBucket,
     apiCreateBucketField,
     apiCreateBucketEntry,
-    apiDeleteBucketField,
     apiDeleteBucketEntry,
     apiBuckets,
     apiBucketData,

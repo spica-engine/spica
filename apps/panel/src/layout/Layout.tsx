@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useState, useRef} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
-import SideBar, {type ReorderableItemGroup} from "../components/organisms/sidebar/SideBar";
+import SideBar from "../components/organisms/sidebar/SideBar";
+import type {NavigatorItemGroup, TypeNavigatorItem} from "../types/sidebar";
 import {getMenuItems, navigatorItems} from "../pages/home/mock";
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
@@ -10,6 +11,10 @@ import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
 import {useGetBucketsQuery, useUpdateBucketOrderMutation} from "../store/api/bucketApi";
 import {useRequestTracker} from "../hooks/useRequestTracker";
+import {
+  BucketNavigatorPopupWrapper,
+  type BucketNavigatorPopupWrapperProps
+} from "./components/BucketNavigatorPopupWrapper";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -49,7 +54,7 @@ const Layout = () => {
   const menuItems = getMenuItems(navigate);
 
   const mergedNavigatorItems: {
-    [key: string]: ReorderableItemGroup;
+    [key: string]: NavigatorItemGroup;
   } = {
     ...Object.fromEntries(
       Object.entries(navigatorItems).map(([key, value]) => [
@@ -58,7 +63,16 @@ const Layout = () => {
       ])
     ),
     bucket: {
-      items: buckets?.map(i => ({...i, section: "bucket"})) ?? [],
+      items: (localBuckets?.map(i => ({
+        ...i,
+        section: "bucket",
+        link: `/bucket/${i._id}`,
+        suffixElements: [
+          (props: BucketNavigatorPopupWrapperProps) => (
+            <BucketNavigatorPopupWrapper {...props} bucket={i} />
+          )
+        ]
+      })) ?? []) as TypeNavigatorItem[],
       onOrderChange: updateBucketOrderLocally,
       completeOrderChange: updateBucketOrderOnServer
     }
