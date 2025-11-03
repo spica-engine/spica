@@ -1,0 +1,25 @@
+.typeGrid{
+    padding: var(--padding-md) 0 !important;
+}
+// .popoverContent{
+//     padding: 0 !important;
+// }
+
+.types {
+    background-color: var(--color-menu-background);
+    padding: var(--padding-md) 0;
+    border-radius: var(--border-radius-lg);
+    gap: 0 !important;
+    .item {
+      color: var(--color-font-primary);
+      padding: 0 var(--padding-sm-plus);
+      cursor: pointer;
+      height: 26.5px !important;
+    }
+    .item:hover {
+      background-color: var(--color-hover);
+    }
+  }
+
+
+
