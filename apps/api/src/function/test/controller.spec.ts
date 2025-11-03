@@ -158,13 +158,13 @@ describe("Function Controller", () => {
     it("should replace a function via PUT and ignore language field", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
 
-      const updated = {...inserted, name: "replaced-name", language: "typescript"};
+      const updated = {...inserted, name: "replacedName", language: "typescript"};
       const putRes = await request.put(`/function/${inserted._id}`, updated);
 
       expect(putRes.statusCode).toEqual(200);
 
       const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
-      expect(found.name).toEqual("replaced-name");
+      expect(found.name).toEqual("replacedName");
 
       expect(found.language).toEqual(inserted.language);
 
