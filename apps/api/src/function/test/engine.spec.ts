@@ -207,7 +207,7 @@ describe("Engine", () => {
       env_vars: [],
       language: "js",
       timeout: 10,
-      name: "myFn",
+      name: "my_fn",
       triggers: {test_handler: {active: true, options: {}, type: "http"}}
     });
 
@@ -217,7 +217,7 @@ describe("Engine", () => {
         target: {
           id: hexString,
           handler: "test_handler",
-          name: "myFn",
+          name: "my_fn",
           context: {
             env: {},
             timeout: 10
@@ -246,7 +246,7 @@ describe("Engine", () => {
       env_vars: [env._id],
       language: "js",
       timeout: 10,
-      name: "myFn",
+      name: "my_fn",
       triggers: {test_handler: {active: true, options: {}, type: "http"}}
     });
 
@@ -257,7 +257,7 @@ describe("Engine", () => {
       target: {
         id: hexString,
         handler: "test_handler",
-        name: "myFn",
+        name: "my_fn",
         context: {
           env: {IGNORE_ME: "YES"},
           timeout: 10
@@ -284,7 +284,7 @@ describe("Engine", () => {
       env_vars: [env._id],
       language: "js",
       timeout: 10,
-      name: "myFn",
+      name: "my_fn",
       triggers: {test_handler: {active: true, options: {}, type: "http"}}
     });
 
@@ -297,7 +297,7 @@ describe("Engine", () => {
       target: {
         id: hexString,
         handler: "test_handler",
-        name: "myFn",
+        name: "my_fn",
         context: {
           env: {},
           timeout: 10
