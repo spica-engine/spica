@@ -27,7 +27,7 @@ describe("Change", () => {
   beforeEach(() => {
     fn = {
       _id: "fn_id",
-      name: "myFn",
+      name: "my_fn",
       env_vars: envVars,
       language: "javascript",
       timeout: 50,
@@ -64,7 +64,7 @@ describe("Change", () => {
         target: {
           id: "fn_id",
           handler: "default",
-          name: "myFn",
+          name: "my_fn",
           context: {
             env: {
               IGNORE_ERRORS: "true",
@@ -83,7 +83,7 @@ describe("Change", () => {
         target: {
           id: "fn_id",
           handler: "another",
-          name: "myFn",
+          name: "my_fn",
           context: {
             env: {
               IGNORE_ERRORS: "true",

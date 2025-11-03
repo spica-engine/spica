@@ -158,13 +158,13 @@ describe("Function Controller", () => {
     it("should replace a function via PUT and ignore language field", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
 
-      const updated = {...inserted, name: "replacedName", language: "typescript"};
+      const updated = {...inserted, name: "replaced-name", language: "typescript"};
       const putRes = await request.put(`/function/${inserted._id}`, updated);
 
       expect(putRes.statusCode).toEqual(200);
 
       const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
-      expect(found.name).toEqual("replacedName");
+      expect(found.name).toEqual("replaced-name");
 
       expect(found.language).toEqual(inserted.language);
 
@@ -230,6 +230,27 @@ describe("Function Controller", () => {
         "Value of the property .name should unique across all documents."
       );
     });
+    it("should allow function names with underscores", async () => {
+      const fn = await request
+        .post("/function", {
+          ...fnSchema,
+          name: "function_with_underscores"
+        })
+        .then(r => r.body);
+
+      expect(fn.name).toEqual("function_with_underscores");
+    });
+
+    it("should allow function names with hyphens", async () => {
+      const fn = await request
+        .post("/function", {
+          ...fnSchema,
+          name: "function-with-hyphens"
+        })
+        .then(r => r.body);
+
+      expect(fn.name).toEqual("function-with-hyphens");
+    });
 
     it("should not allow special characters in function name", async () => {
       await request.post("/function", fnSchema).then(r => r.body);
@@ -237,12 +258,12 @@ describe("Function Controller", () => {
       const response = await request
         .post("/function", {
           ...fnSchema,
-          name: "/function_with_invalid_name"
+          name: "user function"
         })
         .catch(e => e);
 
       expect(response.body).toEqual({
-        message: '.name must match pattern "^\\w+$"',
+        message: '.name must match pattern "^[\\w-]+$"',
         error: "validation failed",
         statusCode: 400
       });
