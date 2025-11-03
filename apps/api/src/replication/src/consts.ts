@@ -6,8 +6,7 @@ import {
 } from "@spica-server/interface/replication";
 
 export const replicationServiceOptions: ReplicationServiceOptions = {
-  expireAfterSeconds: 60 * 60,
-  jobExpireAfterSeconds: 5 * 60
+  expireAfterSeconds: 5 * 60
 };
 
 export const commandMemoryOptions: MemoryOptions = {

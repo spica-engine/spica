@@ -12,6 +12,6 @@ export class JobService extends BaseCollection<JobMeta>("jobs") {
     db: DatabaseService,
     @Inject(REPLICATION_SERVICE_OPTIONS) options: ReplicationServiceOptions
   ) {
-    super(db, {afterInit: () => this.upsertTTLIndex(options.jobExpireAfterSeconds)});
+    super(db, {afterInit: () => this.upsertTTLIndex(options.expireAfterSeconds)});
   }
 }
