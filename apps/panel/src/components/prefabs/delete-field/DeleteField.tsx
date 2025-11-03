@@ -1,11 +1,11 @@
 import { Icon } from 'oziko-ui-kit';
 import React, { useState, type ReactNode, type FC } from 'react'
 import Confirmation from '../../molecules/confirmation/Confirmation';
-import { useDeleteBucketFieldMutation, type BucketType } from '../../../store/api/bucketApi';
+import { useDeleteBucketFieldMutation } from '../../../store/api/bucketApi';
 
-type DeleteFieldProps = {
+interface DeleteFieldProps {
     field: any; // TODO: add type
-    bucket: BucketType;
+    bucket: {_id: string; title: string};
     children: (props: { 
         isOpen: boolean;
         onOpen: (e: React.MouseEvent) => void;
@@ -14,7 +14,6 @@ type DeleteFieldProps = {
 }
 
 const DeleteField: FC<DeleteFieldProps> = ({ field, bucket, children }) => {
-
     const [deleteBucketField] = useDeleteBucketFieldMutation();
     const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
@@ -28,13 +27,13 @@ const DeleteField: FC<DeleteFieldProps> = ({ field, bucket, children }) => {
     };
 
     const confirmDelete = async () => {
-        const fieldKey = field.path || field.name;
-        await deleteBucketField({ bucketId: bucket._id, fieldKey, bucket });
+        const fieldKey = field.path || field.title;
+        await deleteBucketField({ bucketId: bucket._id, fieldKey });
         setIsConfirmationOpen(false);
     };
 
     const getFieldDisplayName = () => {
-      const path = field.path || field.name;
+      const path = field.path || field.title;
       const parts = path.split(".");
       return parts[parts.length - 1];
     };

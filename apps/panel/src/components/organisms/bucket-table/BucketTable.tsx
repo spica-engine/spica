@@ -5,9 +5,9 @@ import {memo, useCallback, useMemo, useState, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import {
-  useGetBucketsQuery,
   useCreateBucketFieldMutation,
   useDeleteBucketFieldMutation,
+  useGetBucketsQuery,
   type BucketType
 } from "../../../store/api/bucketApi";
 import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
@@ -511,25 +511,18 @@ const BucketTable = ({
   tableRef,
   primaryKey
 }: BucketTableProps) => {
-  const { data: buckets } = useGetBucketsQuery();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
 
   const handleDeleteField = useCallback(
     async (fieldKey: string) => {
-      const bucket = buckets?.find(b => b._id === bucketId);
-      if (!bucket) {
-        console.error("Bucket not found");
-        return "Bucket not found";
-      }
-
       try {
-        await deleteBucketField({ bucketId, fieldKey, bucket }).unwrap();
+        await deleteBucketField({ bucketId, fieldKey }).unwrap();
       } catch (error) {
         console.error("Error deleting bucket field:", error);
         return "Error deleting field";
       }
     },
-    [bucketId, buckets, deleteBucketField]
+    [bucketId, deleteBucketField]
   );
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, [

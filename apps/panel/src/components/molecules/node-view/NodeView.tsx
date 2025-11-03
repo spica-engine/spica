@@ -686,6 +686,10 @@ const NodeView: React.FC<NodeViewProps> = ({
         ))}
 
       </div>
+       {/* TODO: Use new implementation for adding new field after fixing the issues on new implementation
+         Currently adding new field should use old implementation because there is issues on popover orders and ui
+         also there is some issues on field creation, and its usage on edit field
+       */}
       <BucketFieldPopup
             onSaveAndClose={handleSaveAndClose}
             forbiddenFieldNames={forbiddenFieldNames}
