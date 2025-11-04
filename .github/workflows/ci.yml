@@ -15,11 +15,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install Helm
-        uses: azure/setup-helm@v4
         with:
-          version: "latest"
+          fetch-depth: 1
+      - name: Install Helm
+        uses: azure/setup-helm@v4.2.0
 
       - name: Lint Helm Charts
         run: |
