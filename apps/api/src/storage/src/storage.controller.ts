@@ -85,62 +85,6 @@ export class StorageController {
     return this.storage.browse(resourceFilter, path, filter, limit, skip, sort);
   }
 
-  /**
-   * Returns content of the object along with http caching headers.
-   * When `if-none-match` header is present and matches the objects checksum, it will end the response with status code 304
-   * for futher information check: https://en.wikipedia.org/wiki/HTTP_ETag
-   * @param id Identifier of the object
-   * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
-   */
-  @Get(":id/view")
-  @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
-  async view(
-    @Res() res,
-    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
-    @Headers("if-none-match") ifNoneMatch?: string
-  ) {
-    let object;
-    if (idOrName instanceof ObjectId) {
-      object = await this.storage.get(idOrName);
-    } else {
-      object = await this.storage.getByName(idOrName);
-    }
-    if (!object) {
-      throw new NotFoundException("Could not find the object.");
-    }
-    const eTag = etag(object.content.data);
-    if (eTag === ifNoneMatch) {
-      return res.status(HttpStatus.NOT_MODIFIED).end();
-    }
-    res.header("Content-type", object.content.type);
-    res.header("ETag", eTag);
-    res.header("Cache-control", "public, max-age=3600, must-revalidate");
-    res.end(object.content.data);
-  }
-
-  /**
-   * Returns metadata of the object size, content-type and url.
-   * @param id Identifier of the object
-   */
-  @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("storage:show"))
-  async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
-    let object;
-    if (idOrName instanceof ObjectId) {
-      object = await this.storage.get(idOrName);
-    } else {
-      object = await this.storage.getByName(idOrName);
-    }
-    if (!object) {
-      throw new NotFoundException("Could not find the object.");
-    }
-
-    object.url = await this.storage.getUrl(object.name);
-
-    delete object.content.data;
-    return object;
-  }
-
   @UseInterceptors(activity(createStorageActivity))
   @Patch(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update", "storage/:id"))
@@ -266,5 +210,61 @@ export class StorageController {
   @UseGuards(AuthGuard(), ActionGuard("storage:create"))
   async handleUpload(@Req() req, @Res() res) {
     await this.storage.handleResumableUpload(req, res);
+  }
+
+  /**
+   * Returns content of the object along with http caching headers.
+   * When `if-none-match` header is present and matches the objects checksum, it will end the response with status code 304
+   * for futher information check: https://en.wikipedia.org/wiki/HTTP_ETag
+   * @param id Identifier of the object
+   * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
+   */
+  @Get(":id(*)/view")
+  @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
+  async view(
+    @Res() res,
+    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
+    @Headers("if-none-match") ifNoneMatch?: string
+  ) {
+    let object;
+    if (idOrName instanceof ObjectId) {
+      object = await this.storage.get(idOrName);
+    } else {
+      object = await this.storage.getByName(idOrName);
+    }
+    if (!object) {
+      throw new NotFoundException("Could not find the object.");
+    }
+    const eTag = etag(object.content.data);
+    if (eTag === ifNoneMatch) {
+      return res.status(HttpStatus.NOT_MODIFIED).end();
+    }
+    res.header("Content-type", object.content.type);
+    res.header("ETag", eTag);
+    res.header("Cache-control", "public, max-age=3600, must-revalidate");
+    res.end(object.content.data);
+  }
+
+  /**
+   * Returns metadata of the object size, content-type and url.
+   * @param id Identifier of the object
+   */
+  @Get(":id(*)")
+  @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
+  async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
+    let object;
+    if (idOrName instanceof ObjectId) {
+      object = await this.storage.get(idOrName);
+    } else {
+      object = await this.storage.getByName(idOrName);
+    }
+    if (!object) {
+      throw new NotFoundException("Could not find the object.");
+    }
+
+    object.url = await this.storage.getUrl(object.name);
+
+    delete object.content.data;
+    return object;
   }
 }
