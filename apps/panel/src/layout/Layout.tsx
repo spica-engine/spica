@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useState, useRef} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
 import SideBar from "../components/organisms/sidebar/SideBar";
 import type {NavigatorItemGroup, TypeNavigatorItem} from "../types/sidebar";
-import {getMenuItems, navigatorItems} from "../pages/home/mock";
+
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
 import Toolbar from "../components/atoms/toolbar/Toolbar";
@@ -15,6 +15,7 @@ import {
   BucketNavigatorPopupWrapper,
   type BucketNavigatorPopupWrapperProps
 } from "./components/BucketNavigatorPopupWrapper";
+import { getMenuItems, navigatorItems } from "../pages/home/sidebarItems";
 
 const Layout = () => {
   const navigate = useNavigate();

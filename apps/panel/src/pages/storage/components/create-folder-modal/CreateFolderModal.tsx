@@ -1,17 +1,18 @@
 import React, {useState, type FC, type ReactNode} from "react";
 import {Button, FluidContainer, Icon, Text, FlexElement, Modal, StringInput} from "oziko-ui-kit";
 import styles from "./CreateFolderModal.module.scss";
-import {useUploadFilesMutation} from "../../../store/api/storageApi";
+import {useUploadFilesMutation} from "../../../../store/api/storageApi";
 
 type CreateFolderProps = {
   initialValue?: string;
   prefix?: string;
-  children: (props: {
-    isOpen: boolean;
-    onOpen: (e: React.MouseEvent) => void;
-    onClose: () => void;
-  }) => ReactNode;
+  buttonClassName?: string;
   forbiddenNames?: string[];
+};
+
+type FolderNameValidationResult = {
+  isValid: boolean;
+  error: string | null;
 };
 
 const FOLDER_NAME_PATTERN = /^[^\/\ \.]+/;
@@ -19,7 +20,7 @@ const FOLDER_NAME_PATTERN = /^[^\/\ \.]+/;
 const CreateFolder: FC<CreateFolderProps> = ({
   initialValue = "",
   prefix = "",
-  children,
+  buttonClassName,
   forbiddenNames
 }) => {
   const [createFolder] = useUploadFilesMutation();
@@ -28,23 +29,32 @@ const CreateFolder: FC<CreateFolderProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
+  function validateFolderNameStructure(value: string): FolderNameValidationResult {
+    if (!value.trim()) return {isValid: false, error: "This field cannot be left empty."};
+    if (value.length > 100)
+      return {isValid: false, error: "This field cannot exceed 100 characters"};
+    if (!FOLDER_NAME_PATTERN.test(value.trim()))
+      return {
+        isValid: false,
+        error: "Folder name cannot start with a dot, space, or contain forward slashes."
+      };
+    return {isValid: true, error: null};
+  }
+
+  function isFolderNameForbidden(folderName: string): {forbidden: boolean; folderName: string | null; error: string | null} {
+    const fullFolderName = prefix + (folderName.endsWith("/") ? folderName : folderName + "/");
+    return forbiddenNames?.some(name => name === fullFolderName)
+      ? {forbidden: true, folderName: fullFolderName, error: "A file or folder with this name already exists."}
+      : {forbidden: false, folderName: null, error: null};
+  }
+
   const handleSave = async () => {
     try {
       setLoading(true);
-      setError("");
 
-      if (!value?.trim()) {
-        setError("This field cannot be left empty.");
-        return;
-      }
-
-      if (value.length > 100) {
-        setError("This field cannot exceed 100 characters");
-        return;
-      }
-
-      if (!FOLDER_NAME_PATTERN.test(value.trim())) {
-        setError("Folder name cannot start with a dot, space, or contain forward slashes.");
+      const validation = validateFolderNameStructure(value);
+      if (!validation.isValid) {
+        setError(validation.error ?? "");
         return;
       }
 
@@ -57,7 +67,7 @@ const CreateFolder: FC<CreateFolderProps> = ({
         return;
       }
 
-      const encodedFolderName = encodeURIComponent(folderName);
+      const encodedFolderName = encodeURIComponent(folderName ?? "");
       const emptyFolder = new File([], encodedFolderName);
       await createFolder({files: [emptyFolder] as unknown as FileList});
       setIsModalOpen(false);
@@ -89,11 +99,10 @@ const CreateFolder: FC<CreateFolderProps> = ({
 
   return (
     <>
-      {children({
-        isOpen: isModalOpen,
-        onOpen: handleOpen,
-        onClose: handleClose
-      })}
+      <Button className={buttonClassName} variant="filled" onClick={handleOpen}>
+        <Icon name="plus" />
+        Create New Folder
+      </Button>
       {isModalOpen && (
         <Modal showCloseButton={false} onClose={handleClose} className={styles.modal} isOpen>
           <FluidContainer

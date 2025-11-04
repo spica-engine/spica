@@ -12,8 +12,8 @@ import {useNavigatorItemSelection} from "../../hooks/useNavigatorItemSelection";
 import NavigatorItem from "../../../../../molecules/navigator-item/NavigatorItem";
 import styles from "./DraggableNavigatorItem.module.scss";
 import type {TypeNavigatorItem} from "../../../../../../types/sidebar";
-import { useTypedDragLayer } from "src/hooks/useTypedDragLayer";
-import { DnDItemTypes } from "src/hooks/useTypedDragLayer";
+
+import { useTypedDragLayer, DnDItemTypes } from "../../../../../../hooks/useTypedDragLayer";
 
 type TypeDraggableItemProps = {
   item: TypeNavigatorItem & {index: number};

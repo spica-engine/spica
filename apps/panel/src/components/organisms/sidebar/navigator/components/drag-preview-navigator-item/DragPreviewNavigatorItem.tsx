@@ -2,7 +2,7 @@ import { NavigatorItem } from "oziko-ui-kit";
 import { useMemo, useEffect } from "react";
 import { useDragLayer } from "react-dnd";
 import styles from "./DragPreviewNavigatorItem.module.scss";
-import { DnDItemTypes, useTypedDragLayer } from "src/hooks/useTypedDragLayer";
+import { DnDItemTypes, useTypedDragLayer } from "../../../../../../hooks/useTypedDragLayer";
 
 type TypeCustomDragLayerProps = {
   itemRefs: (HTMLDivElement | null)[];
@@ -41,7 +41,7 @@ export const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) 
     [initialOffset?.x, currentOffset?.y]
   );
 
-  if (!item.isDragging) return null;
+  if (!item?.isDragging) return null;
 
   return (
     <div className={styles.dragLayer}>

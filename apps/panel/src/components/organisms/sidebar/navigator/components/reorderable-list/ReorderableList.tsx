@@ -1,6 +1,4 @@
 import {useState, useRef, useCallback, useEffect} from "react";
-import {DndProvider} from "react-dnd";
-import {HTML5Backend} from "react-dnd-html5-backend";
 import type {NavigatorItemGroup} from "../../../../../../types/sidebar";
 import {DraggableItem} from "../draggable-navigator-item/DraggableNavigatorItem";
 import {CustomDragLayer} from "../drag-preview-navigator-item/DragPreviewNavigatorItem";
@@ -25,7 +23,7 @@ export const ReorderableList = ({
   }, []);
 
   return (
-    <DndProvider backend={HTML5Backend}>
+    <>
       <CustomDragLayer itemRefs={itemRefs.current} moveItem={onOrderChange} />
       {items.map((item, index) => (
         <DraggableItem
@@ -37,6 +35,6 @@ export const ReorderableList = ({
           setJustDropped={setJustDropped}
         />
       ))}
-    </DndProvider>
+    </>
   );
 };

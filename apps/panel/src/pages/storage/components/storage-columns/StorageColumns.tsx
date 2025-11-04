@@ -7,33 +7,32 @@ import type {DirectoryItem, TypeDirectories, TypeDirectoryDepth} from "../../../
 import {useDragAndDrop} from "../../hooks/useDragAndDrop";
 import {DroppableColumn} from "../droppable-column/DroppableColumn";
 import {StorageItem} from "../storage-item/StorageItem";
+import { useDirectoryNavigation } from "../../hooks/useDirectoryNavigation";
+import { useFilePreview } from "../../hooks/useFilePreview";
+import { useStorageDataSync } from "../../hooks/useStorageDataSync";
+import { useFileOperations } from "../../hooks/useFileOperations";
 
-interface StorageItemColumnsProps {
-  handleFolderClick: (
+
+export function StorageItemColumns({
+
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const {directory, setDirectory, handleFolderClick: onFolderClick} = useDirectoryNavigation();
+  const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
+  useStorageDataSync(directory, setDirectory);
+  const {onUploadComplete} = useFileOperations(directory, setDirectory, setPreviewFile);
+  const {handleDrop} = useDragAndDrop(directory, setDirectory);
+
+  const handleFolderClick = (
     folderName: string,
     fullPath: string,
     directoryDepth: TypeDirectoryDepth,
-    wasActive: boolean
-  ) => void;
-  setPreviewFile: (file: DirectoryItem | undefined) => void;
-  directory: TypeDirectories;
-  setDirectory: (dirs: TypeDirectories) => void;
-  previewFile?: DirectoryItem;
-  onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
-  isDraggingDisabled?: boolean;
-}
-
-export function StorageItemColumns({
-  handleFolderClick,
-  setPreviewFile,
-  directory,
-  setDirectory,
-  previewFile,
-  onUploadComplete,
-  isDraggingDisabled = false
-}: StorageItemColumnsProps) {
-  const {handleDrop} = useDragAndDrop(directory, setDirectory);
-  const containerRef = useRef<HTMLDivElement>(null);
+    wasActive: boolean,
+  ) => {
+    handleClosePreview();
+    onFolderClick(folderName, fullPath, directoryDepth, wasActive, false);
+  };
 
   const visibleDirectories = useMemo(
     () =>
@@ -102,7 +101,7 @@ export function StorageItemColumns({
                 previewFileId={previewFile?._id}
                 prefix={folderPath}
                 onUploadComplete={onUploadComplete}
-                isDraggingDisabled={isDraggingDisabled}
+                isDraggingDisabled={false}
                 StorageItem={StorageItem}
               />
             </DroppableColumn>

@@ -1,12 +1,13 @@
-import React, {useRef, type FC, type ReactNode} from "react";
-import {useUploadFilesMutation} from "../../../store/api/storageApi";
+import React, {useRef, type FC} from "react";
+import {useUploadFilesMutation} from "../../../../store/api/storageApi";
+import {Icon, Button, Input} from "oziko-ui-kit";
 
 type CreateFileProps = {
   prefix?: string;
-  children: (props: {onOpen: (e: React.MouseEvent) => void}) => ReactNode;
+  className?: string;
 };
 
-const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
+const CreateFile: FC<CreateFileProps> = ({prefix = "", className}) => {
   const [uploadFiles, {isLoading}] = useUploadFilesMutation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,9 +42,10 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", children}) => {
 
   return (
     <>
-      {children({
-        onOpen: handleOpen
-      })}
+      <Button variant="filled" onClick={handleOpen} className={className}>
+        <Icon name="plus" />
+        Upload Files
+      </Button>
       <input
         ref={fileInputRef}
         type="file"

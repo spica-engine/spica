@@ -1,17 +1,18 @@
 import {FlexElement, FluidContainer, Icon, Button, Popover} from "oziko-ui-kit";
 import SearchBar from "../../../../components/atoms/search-bar/SearchBar";
 import styles from "./StorageActionBar.module.scss";
-import CreateFile from "../../../../components/molecules/create-file-modal/CreateFile";
-import CreateFolder from "../../../../components/molecules/create-folder-modal/CreateFolderModal";
+
+import CreateFolder from "../create-folder-modal/CreateFolderModal";
 import type {TypeDirectories} from "src/types/storage";
 import {findMaxDepthDirectory} from "../../utils";
 import {ROOT_PATH} from "../../constants";
+import CreateFile from "../create-file-modal/CreateFile";
+import { useDirectoryNavigation } from "../../hooks/useDirectoryNavigation";
 
-interface StorageActionBarProps {
-  directory: TypeDirectories;
-}
 
-export default function StorageActionBar({directory}: StorageActionBarProps) {
+export default function StorageActionBar() {
+  const {directory} = useDirectoryNavigation();
+  
   const visibleDirectories = directory.filter(dir => dir.currentDepth);
   const currentItemNames = visibleDirectories
     .map(dir => dir.items?.map(item => item.name).filter(Boolean) || [])
@@ -40,22 +41,8 @@ export default function StorageActionBar({directory}: StorageActionBarProps) {
               <Icon name="refresh" />
               Refresh
             </Button>
-            <CreateFile prefix={prefix}>
-              {({onOpen}) => (
-                <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
-                  <Icon name="plus" />
-                  Upload Files
-                </Button>
-              )}
-            </CreateFile>
-            <CreateFolder prefix={prefix} forbiddenNames={currentItemNames}>
-              {({onOpen}) => (
-                <Button className={styles.actionBarButton} variant="filled" onClick={onOpen}>
-                  <Icon name="plus" />
-                  Create New Folder
-                </Button>
-              )}
-            </CreateFolder>
+            <CreateFile prefix={prefix} className={styles.actionBarButton}/>
+            <CreateFolder prefix={prefix} forbiddenNames={currentItemNames} buttonClassName={styles.actionBarButton}/>
           </FlexElement>
         )
       }}
