@@ -7,22 +7,25 @@ import type {DirectoryItem, TypeDirectories, TypeDirectoryDepth} from "../../../
 import {useDragAndDrop} from "../../hooks/useDragAndDrop";
 import {DroppableColumn} from "../droppable-column/DroppableColumn";
 import {StorageItem} from "../storage-item/StorageItem";
-import { useDirectoryNavigation } from "../../hooks/useDirectoryNavigation";
 import { useFilePreview } from "../../hooks/useFilePreview";
 import { useStorageDataSync } from "../../hooks/useStorageDataSync";
 import { useFileOperations } from "../../hooks/useFileOperations";
+import { useAppSelector, useAppDispatch } from "../../../../store/hook";
+import { selectDirectory, setDirectory, handleFolderClick as handleFolderClickAction } from "../../../../store";
 
-
-export function StorageItemColumns({
-
-}) {
+export function StorageItemColumns() {
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const {directory, setDirectory, handleFolderClick: onFolderClick} = useDirectoryNavigation();
+  const dispatch = useAppDispatch();
+  const directory = useAppSelector(selectDirectory);
   const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
-  useStorageDataSync(directory, setDirectory);
-  const {onUploadComplete} = useFileOperations(directory, setDirectory, setPreviewFile);
-  const {handleDrop} = useDragAndDrop(directory, setDirectory);
+  
+  const handleSetDirectory = (dirs: TypeDirectories) => {
+    dispatch(setDirectory(dirs));
+  };
+  
+  useStorageDataSync(directory, handleSetDirectory);
+  const {onUploadComplete} = useFileOperations(directory, handleSetDirectory, setPreviewFile);
+  const {handleDrop} = useDragAndDrop(directory, handleSetDirectory);
 
   const handleFolderClick = (
     folderName: string,
@@ -31,7 +34,13 @@ export function StorageItemColumns({
     wasActive: boolean,
   ) => {
     handleClosePreview();
-    onFolderClick(folderName, fullPath, directoryDepth, wasActive, false);
+    dispatch(handleFolderClickAction({
+      folderName,
+      fullPath,
+      directoryDepth,
+      wasActive,
+      isFilteringOrSearching: false
+    }));
   };
 
   const visibleDirectories = useMemo(

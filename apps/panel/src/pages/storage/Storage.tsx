@@ -4,7 +4,6 @@ import {StorageItemColumns} from "./components/storage-columns/StorageColumns";
 import StorageActionBar from "./components/storage-action-bar/StorageActionBar";
 
 export default function StoragePage() {
-
   return (
     <div className={styles.container}>
       <StorageActionBar />

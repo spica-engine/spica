@@ -16,6 +16,7 @@ const INITIAL_DIRECTORIES: TypeDirectories = [
 
 export function useDirectoryNavigation() {
   const [directory, setDirectory] = useState<TypeDirectories>(INITIAL_DIRECTORIES);
+  const [currentDirectory, setCurrentDirectory] = useState<string>(ROOT_PATH);
 
   const handleFolderClick = (
     folderName: string,
@@ -42,6 +43,12 @@ export function useDirectoryNavigation() {
         };
       });
       setDirectory(newDirectories);
+      
+      const visibleDirs = newDirectories
+        .filter(dir => dir.currentDepth)
+        .sort((a, b) => (a.currentDepth || 0) - (b.currentDepth || 0));
+      const lastVisible = visibleDirs[visibleDirs.length - 1];
+      setCurrentDirectory(lastVisible?.fullPath || ROOT_PATH);
       return;
     }
 
@@ -94,11 +101,16 @@ export function useDirectoryNavigation() {
       newDirectories.push(theDirectory);
     }
     setDirectory(newDirectories);
+    
+    // Update currentDirectory to the clicked folder
+    setCurrentDirectory(fullPath);
   };
 
   return {
     directory,
     setDirectory,
+    currentDirectory,
+    setCurrentDirectory,
     handleFolderClick
   };
 }

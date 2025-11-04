@@ -3,6 +3,7 @@ import {Button, FluidContainer, Icon, Text, FlexElement, Modal, StringInput} fro
 import styles from "./CreateFolderModal.module.scss";
 import {useUploadFilesMutation} from "../../../../store/api/storageApi";
 
+
 type CreateFolderProps = {
   initialValue?: string;
   prefix?: string;
@@ -41,12 +42,6 @@ const CreateFolder: FC<CreateFolderProps> = ({
     return {isValid: true, error: null};
   }
 
-  function isFolderNameForbidden(folderName: string): {forbidden: boolean; folderName: string | null; error: string | null} {
-    const fullFolderName = prefix + (folderName.endsWith("/") ? folderName : folderName + "/");
-    return forbiddenNames?.some(name => name === fullFolderName)
-      ? {forbidden: true, folderName: fullFolderName, error: "A file or folder with this name already exists."}
-      : {forbidden: false, folderName: null, error: null};
-  }
 
   const handleSave = async () => {
     try {
@@ -61,6 +56,7 @@ const CreateFolder: FC<CreateFolderProps> = ({
       const rawFolderName = value.trim();
       const folderName =
         prefix + (rawFolderName.endsWith("/") ? rawFolderName : rawFolderName + "/");
+
 
       if (forbiddenNames?.some(name => name === folderName)) {
         setError("A file or folder with this name already exists.");

@@ -3,26 +3,27 @@ import SearchBar from "../../../../components/atoms/search-bar/SearchBar";
 import styles from "./StorageActionBar.module.scss";
 
 import CreateFolder from "../create-folder-modal/CreateFolderModal";
-import type {TypeDirectories} from "src/types/storage";
-import {findMaxDepthDirectory} from "../../utils";
 import {ROOT_PATH} from "../../constants";
 import CreateFile from "../create-file-modal/CreateFile";
-import { useDirectoryNavigation } from "../../hooks/useDirectoryNavigation";
-
+import { useAppSelector } from "../../../../store/hook";
+import { selectDirectory, selectCurrentDirectory } from "../../../../store";
 
 export default function StorageActionBar() {
-  const {directory} = useDirectoryNavigation();
+  const directory = useAppSelector(selectDirectory);
+  const currentDirectory = useAppSelector(selectCurrentDirectory);
   
-  const visibleDirectories = directory.filter(dir => dir.currentDepth);
+  const visibleDirectories = directory
+    .filter(dir => dir.currentDepth)
+    .sort((a, b) => (a.currentDepth || 0) - (b.currentDepth || 0));
+  
   const currentItemNames = visibleDirectories
     .map(dir => dir.items?.map(item => item.name).filter(Boolean) || [])
     .flat();
 
-  const deepestPath = findMaxDepthDirectory(directory)?.fullPath;
   const prefix =
-    !deepestPath || deepestPath === ROOT_PATH
+    !currentDirectory || currentDirectory === ROOT_PATH
       ? ""
-      : deepestPath.split("/").filter(Boolean).join("/") + "/";
+      : currentDirectory.split("/").filter(Boolean).join("/") + "/";
 
   return (
     <FluidContainer
