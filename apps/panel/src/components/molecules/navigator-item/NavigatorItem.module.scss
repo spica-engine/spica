@@ -4,7 +4,7 @@
   padding: var(--padding-md) !important;
   color: var(--color-font-primary);
   font-weight: 400;
-  .suffixButton {
+  .suffixButton, .suffixElement {
     border: 0;
     padding: 0;
     width: var(--icon-size-sm);
@@ -16,7 +16,7 @@
 
   &:hover {
     cursor: pointer;
-    .suffixButton {
+    .suffixButton, .suffixElement {
       opacity: 1;
     }
   }

@@ -1,0 +1,18 @@
+.accordionItemContainer {
+  padding: 0 var(--padding-md);
+  &:hover {
+    background-color: var(--color-hover);
+  }
+}
+
+.navigatorItem {
+  svg,
+  button {
+    width: var(--icon-size-md);
+    height: var(--icon-size-md);
+  }
+}
+
+.selected {
+  background-color: var(--color-hover);
+}

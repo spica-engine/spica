@@ -8,7 +8,6 @@ import {useGetStorageItemsQuery, type Storage, type StorageOptions} from "../../
 import { convertQuickDateToRange, convertToBytes } from "../../../utils/storage";
 import useStorage from "../../../hooks/useStorage";
 
-
 type TypeStorageFileSelect = {
   className?: string;
   isOpen?: boolean;
@@ -61,6 +60,7 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
   const containerRef = useRef<HTMLDivElement>(null);
 
   const ITEMS_PER_PAGE = 20;
+
 
   const buildSearchFilter = useCallback(() => {
     return searchTerm

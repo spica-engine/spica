@@ -24,10 +24,20 @@
   overflow-x: hidden;
   display: block !important;
   width: 400px !important;
+  transform: translate(200px, 0px);
 }
 
 .hidden {
   opacity: 0 !important;
   pointer-events: none !important;
+}
+
+.newFieldButtonContainer{
+ > div {
+  width: 100% !important;
+ }
+  .addNewFieldButtonChildren{
+    width: 100% !important;
+  }
 }
 

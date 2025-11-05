@@ -11,6 +11,7 @@ export interface DragItem {
 
 export type TypeDirectoryDepth = number;
 export type DirectoryItem = TypeFile & {fullPath: string; label?: string; isActive?: boolean, currentDepth?: TypeDirectoryDepth; items?: DirectoryItem[];};
+
 export type TypeDirectory = {
   items?: DirectoryItem[];
   label: string;

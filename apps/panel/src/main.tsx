@@ -20,6 +20,7 @@ root.render(
       <DndProvider backend={HTML5Backend}>
         <DrawerProvider>
           <AuthProvider>
+            {/* TODO: Remove Bucket and Storage provider after all actions are migrated to RTK Query */}
             <BucketProvider>
               <StorageProvider>
                 <AppRouter />

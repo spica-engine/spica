@@ -7,33 +7,41 @@ import type {DirectoryItem, TypeDirectories, TypeDirectoryDepth} from "../../../
 import {useDragAndDrop} from "../../hooks/useDragAndDrop";
 import {DroppableColumn} from "../droppable-column/DroppableColumn";
 import {StorageItem} from "../storage-item/StorageItem";
+import { useFilePreview } from "../../hooks/useFilePreview";
+import { useStorageDataSync } from "../../hooks/useStorageDataSync";
+import { useFileOperations } from "../../hooks/useFileOperations";
+import { useAppSelector, useAppDispatch } from "../../../../store/hook";
+import { selectDirectory, setDirectory, handleFolderClick as handleFolderClickAction } from "../../../../store";
 
-interface StorageItemColumnsProps {
-  handleFolderClick: (
+export function StorageItemColumns() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dispatch = useAppDispatch();
+  const directory = useAppSelector(selectDirectory);
+  const {previewFile, setPreviewFile, handleClosePreview} = useFilePreview();
+  
+  const handleSetDirectory = (dirs: TypeDirectories) => {
+    dispatch(setDirectory(dirs));
+  };
+  
+  useStorageDataSync(directory, handleSetDirectory);
+  const {onUploadComplete} = useFileOperations(directory, handleSetDirectory, setPreviewFile);
+  const {handleDrop} = useDragAndDrop(directory, handleSetDirectory);
+
+  const handleFolderClick = (
     folderName: string,
     fullPath: string,
     directoryDepth: TypeDirectoryDepth,
-    wasActive: boolean
-  ) => void;
-  setPreviewFile: (file: DirectoryItem | undefined) => void;
-  directory: TypeDirectories;
-  setDirectory: (dirs: TypeDirectories) => void;
-  previewFile?: DirectoryItem;
-  onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
-  isDraggingDisabled?: boolean;
-}
-
-export function StorageItemColumns({
-  handleFolderClick,
-  setPreviewFile,
-  directory,
-  setDirectory,
-  previewFile,
-  onUploadComplete,
-  isDraggingDisabled = false
-}: StorageItemColumnsProps) {
-  const {handleDrop} = useDragAndDrop(directory, setDirectory);
-  const containerRef = useRef<HTMLDivElement>(null);
+    wasActive: boolean,
+  ) => {
+    handleClosePreview();
+    dispatch(handleFolderClickAction({
+      folderName,
+      fullPath,
+      directoryDepth,
+      wasActive,
+      isFilteringOrSearching: false
+    }));
+  };
 
   const visibleDirectories = useMemo(
     () =>
@@ -102,7 +110,7 @@ export function StorageItemColumns({
                 previewFileId={previewFile?._id}
                 prefix={folderPath}
                 onUploadComplete={onUploadComplete}
-                isDraggingDisabled={isDraggingDisabled}
+                isDraggingDisabled={false}
                 StorageItem={StorageItem}
               />
             </DroppableColumn>
