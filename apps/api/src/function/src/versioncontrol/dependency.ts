@@ -8,7 +8,7 @@ import {
   VCSynchronizerArgs
 } from "@spica-server/interface/versioncontrol";
 import {FunctionEngine} from "../engine";
-import {FunctionWithContent} from "@spica-server/interface/function";
+import {FunctionContentChange, FunctionWithContent} from "@spica-server/interface/function";
 import {Observable} from "rxjs";
 import * as CRUD from "../crud";
 import {ObjectId} from "bson";
@@ -22,10 +22,10 @@ export const getDependencySynchronizer = (
   const docWatcher = () =>
     new Observable<DocChange<DocumentManagerResource<FunctionWithContent>>>(observer => {
       engine.watch("dependency").subscribe({
-        next: (change: FunctionWithContent) => {
+        next: ({fn: change, changeType}: FunctionContentChange) => {
           const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
             resourceType: ResourceType.DOCUMENT,
-            changeType: ChangeTypes.INSERT,
+            changeType: changeType == "add" ? ChangeTypes.INSERT : ChangeTypes.UPDATE,
             resource: {
               _id: change._id.toString(),
               slug: change.name,

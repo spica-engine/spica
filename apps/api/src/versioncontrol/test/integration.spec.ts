@@ -33,6 +33,47 @@ import {getDocWatcher} from "../src/synchronizer/doc.synchronizer";
 const sleep = (value = 3000) => new Promise(r => setTimeout(r, value));
 
 describe("Versioning", () => {
+  const performAndWaitUntilReflected = (subjects: Subject<any>[], action: Promise<any>) => {
+    return firstValueFrom(zip(...subjects.map(subject => firstValueFrom(subject)), action));
+  };
+
+  const initializeRepWatcher = (
+    rep: VCRepresentativeManager,
+    moduleName: string,
+    slug: string,
+    fileSubjectMap: {
+      [fileName: string]: {
+        insert: Subject<any>;
+        update: Subject<any>;
+        delete: Subject<any>;
+      };
+    }
+  ) => {
+    const getRepWatcher = (moduleName, fileName) => rep.watch(moduleName, [fileName]);
+    const getChangeHandler =
+      (subjects: {insert: Subject<any>; update: Subject<any>; delete: Subject<any>}) => change => {
+        if (change.resource.slug !== slug) return;
+
+        switch (change.changeType) {
+          case ChangeTypes.INSERT:
+            subjects.insert.next(change);
+            break;
+          case ChangeTypes.UPDATE:
+            subjects.update.next(change);
+            break;
+          case ChangeTypes.DELETE:
+            subjects.delete.next(change);
+            break;
+        }
+      };
+
+    const subs: Subscription[] = [];
+    Object.entries(fileSubjectMap).forEach(([fileName, subjects]) => {
+      subs.push(getRepWatcher(moduleName, fileName).subscribe(getChangeHandler(subjects)));
+    });
+    return subs;
+  };
+
   async function readResource(
     rep: VCRepresentativeManager,
     module: string,
@@ -120,9 +161,28 @@ describe("Versioning", () => {
         });
 
         describe("Document to representative", () => {
+          let subs: Subscription[];
+          let onSchemaInserted = new Subject<any>();
+          let onSchemaUpdated = new Subject<any>();
+          let onSchemaDeleted = new Subject<any>();
+
           beforeEach(async () => {
-            await prefService.insertOne(preference);
-            await sleep();
+            subs = initializeRepWatcher(rep, "preference", "identity", {
+              "schema.yaml": {
+                insert: onSchemaInserted,
+                update: onSchemaUpdated,
+                delete: onSchemaDeleted
+              }
+            });
+
+            await performAndWaitUntilReflected(
+              [onSchemaInserted],
+              prefService.insertOne(preference)
+            );
+          });
+
+          afterEach(() => {
+            subs.forEach(s => s.unsubscribe());
           });
 
           it("should do the initial sync", async () => {
@@ -135,11 +195,12 @@ describe("Versioning", () => {
           });
 
           it("should update if schema has changes", async () => {
-            await prefService.updateOne(
-              {scope: "passport"},
-              {$set: {"identity.attributes.properties.name.type": "number"}}
-            );
-            await sleep();
+            const updatePreference = () =>
+              prefService.updateOne(
+                {scope: "passport"},
+                {$set: {"identity.attributes.properties.name.type": "number"}}
+              );
+            await performAndWaitUntilReflected([onSchemaUpdated], updatePreference());
 
             const file = await readResource(rep, "preference", "identity");
             const parsedFile = {
@@ -278,12 +339,13 @@ describe("Versioning", () => {
     describe("bucket", () => {
       let bucket;
       let id: ObjectId;
+      const bucketTitle = "bucket1";
 
       beforeEach(async () => {
         id = new ObjectId();
         bucket = {
           _id: id,
-          title: "bucket1",
+          title: bucketTitle,
           properties: {
             title: {
               type: "string",
@@ -296,10 +358,28 @@ describe("Versioning", () => {
       });
 
       describe("Synchronization from database to files", () => {
-        it("should make first synchronization", async () => {
-          await bs.insertOne(bucket);
-          await sleep();
+        let subs: Subscription[];
+        let onSchemaInserted = new Subject<any>();
+        let onSchemaUpdated = new Subject<any>();
+        let onSchemaDeleted = new Subject<any>();
 
+        beforeEach(async () => {
+          subs = initializeRepWatcher(rep, "bucket", bucketTitle, {
+            "schema.yaml": {
+              insert: onSchemaInserted,
+              update: onSchemaUpdated,
+              delete: onSchemaDeleted
+            }
+          });
+
+          await performAndWaitUntilReflected([onSchemaInserted], bs.insertOne(bucket));
+        });
+
+        afterEach(() => {
+          subs.forEach(s => s.unsubscribe());
+        });
+
+        it("should make first synchronization", async () => {
           const file = await readResource(rep, "bucket", bucket.title);
           const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
@@ -310,11 +390,9 @@ describe("Versioning", () => {
         });
 
         it("should update if schema has changes", async () => {
-          await bs.insertOne(bucket);
-          await sleep();
-
-          await bs.updateOne({_id: id}, {$set: {"properties.title.type": "number"}});
-          await sleep();
+          const updateBucket = () =>
+            bs.updateOne({_id: id}, {$set: {"properties.title.type": "number"}});
+          await performAndWaitUntilReflected([onSchemaUpdated], updateBucket());
 
           const file = await readResource(rep, "bucket", bucket.title);
           const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
@@ -331,11 +409,8 @@ describe("Versioning", () => {
         });
 
         it("should delete if schema has been deleted", async () => {
-          await bs.insertOne(bucket);
-          await sleep();
-
-          await bs.deleteOne({_id: id});
-          await sleep();
+          const deleteBucket = () => bs.deleteOne({_id: id});
+          await performAndWaitUntilReflected([onSchemaDeleted], deleteBucket());
 
           const file = await readResource(rep, "bucket", bucket.title);
           expect(file).toEqual({});
@@ -400,39 +475,24 @@ describe("Versioning", () => {
 
         const fnName = "fn1";
 
-        const performAndWaitUntilReflected = (subjects: Subject<any>[], action: Promise<any>) => {
-          return firstValueFrom(zip(...subjects.map(subject => firstValueFrom(subject)), action));
-        };
-
         beforeEach(() => {
-          const getWatcher = file => rep.watch("function", [file]);
-          const getChangeHandler = subjects => change => {
-            if (change.resource.slug !== fnName) return;
-
-            switch (change.changeType) {
-              case ChangeTypes.INSERT:
-                subjects[0].next(change);
-                break;
-              case ChangeTypes.UPDATE:
-                subjects[1].next(change);
-                break;
-              case ChangeTypes.DELETE:
-                subjects[2].next(change);
-                break;
+          subs = initializeRepWatcher(rep, "function", fnName, {
+            "schema.yaml": {
+              insert: onSchemaInserted,
+              update: onSchemaUpdated,
+              delete: onSchemaDeleted
+            },
+            "index.js": {
+              insert: onIndexInserted,
+              update: onIndexUpdated,
+              delete: onIndexDeleted
+            },
+            "package.json": {
+              insert: onPackageInserted,
+              update: onPackageUpdated,
+              delete: onPackageDeleted
             }
-          };
-
-          subs = [
-            getWatcher("schema.yaml").subscribe(
-              getChangeHandler([onSchemaInserted, onSchemaUpdated, onSchemaDeleted])
-            ),
-            getWatcher("index.js").subscribe(
-              getChangeHandler([onIndexInserted, onIndexUpdated, onIndexDeleted])
-            ),
-            getWatcher("package.json").subscribe(
-              getChangeHandler([onPackageInserted, onPackageUpdated, onPackageDeleted])
-            )
-          ];
+          });
         });
 
         afterEach(() => {
@@ -561,43 +621,25 @@ describe("Versioning", () => {
 
         const fnId = new ObjectId().toHexString();
 
-        const performAndWaitUntilReflected = (subjects: Subject<any>[], action: Promise<any>) => {
-          return firstValueFrom(zip(...subjects.map(subject => firstValueFrom(subject)), action));
-        };
-
         beforeEach(() => {
           const schemaWatcher = getDocWatcher({
             collectionService: fnservice,
             skipInitialEmit: true
           });
-          const indexWatcher = engine.watch("index").pipe(
-            tap(r => console.log("index change detected", r)),
-            map(change => {
-              return {
-                resourceType: ResourceType.DOCUMENT,
-                changeType: ChangeTypes.INSERT,
-                resource: {
-                  _id: change._id.toString(),
-                  slug: change.name,
-                  content: {...change, content: change.content}
-                }
-              };
-            })
-          );
-          const packageWatcher = engine.watch("dependency").pipe(
-            tap(r => console.log("package change detected", r)),
-            map(change => {
-              return {
-                resourceType: ResourceType.DOCUMENT,
-                changeType: ChangeTypes.INSERT,
-                resource: {
-                  _id: change._id.toString(),
-                  slug: change.name,
-                  content: {...change, content: change.content}
-                }
-              };
-            })
-          );
+          // TODO: reduce copy-pasted code
+          const convertEngineChange = ({fn: change, changeType}) => {
+            return {
+              resourceType: ResourceType.DOCUMENT,
+              changeType: changeType == "add" ? ChangeTypes.INSERT : ChangeTypes.UPDATE,
+              resource: {
+                _id: change._id.toString(),
+                slug: change.name,
+                content: {...change, content: change.content}
+              }
+            };
+          };
+          const indexWatcher = engine.watch("index").pipe(map(convertEngineChange));
+          const packageWatcher = engine.watch("dependency").pipe(map(convertEngineChange));
 
           const getChangeHandler = subjects => change => {
             if (change.resource._id !== fnId) return;
@@ -669,7 +711,7 @@ describe("Versioning", () => {
           packages = await engine.getPackages(fn);
           expect(packages).toEqual([]);
 
-          await performAndWaitUntilReflected([onIndexInserted], insertIndex());
+          await performAndWaitUntilReflected([onIndexUpdated], insertIndex());
           index = await engine.read(fn);
           expect(index).toEqual("console.log('hi')");
 
@@ -696,7 +738,7 @@ describe("Versioning", () => {
           // INDEX UPDATES
           index = "console.log('hi2')";
           const updateIndex = () => rep.write("function", fn.name, "index", index, "ts");
-          await performAndWaitUntilReflected([onIndexInserted], updateIndex());
+          await performAndWaitUntilReflected([onIndexUpdated], updateIndex());
 
           index = await engine.read(fn);
           expect(index).toEqual("console.log('hi2')");
@@ -721,22 +763,39 @@ describe("Versioning", () => {
     describe("environment variables", () => {
       let envVar;
       let id: ObjectId;
+      const key = "IGNORE_ERRORS";
 
       beforeEach(async () => {
         id = new ObjectId();
         envVar = {
           _id: id,
-          key: "IGNORE_ERRORS",
+          key: key,
           value: "true"
         };
-        await sleep();
       });
 
       describe("Synchronization from database to files", () => {
-        it("should make first synchronization", async () => {
-          await evs.insertOne(envVar);
-          await sleep();
+        let subs: Subscription[];
+        let onSchemaInserted = new Subject<any>();
+        let onSchemaUpdated = new Subject<any>();
+        let onSchemaDeleted = new Subject<any>();
 
+        beforeEach(async () => {
+          subs = initializeRepWatcher(rep, "env-var", key, {
+            "schema.yaml": {
+              insert: onSchemaInserted,
+              update: onSchemaUpdated,
+              delete: onSchemaDeleted
+            }
+          });
+          await performAndWaitUntilReflected([onSchemaInserted], evs.insertOne(envVar));
+        });
+
+        afterEach(() => {
+          subs.forEach(s => s.unsubscribe());
+        });
+
+        it("should make first synchronization", async () => {
           const file = await readResource(rep, "env-var", envVar.key);
           const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
 
@@ -747,11 +806,10 @@ describe("Versioning", () => {
         });
 
         it("should update if schema has changes", async () => {
-          await evs.insertOne(envVar);
-          await sleep();
-
-          await evs.updateOne({_id: id}, {$set: {value: "false"}});
-          await sleep();
+          await performAndWaitUntilReflected(
+            [onSchemaUpdated],
+            evs.updateOne({_id: id}, {$set: {value: "false"}})
+          );
 
           const file = await readResource(rep, "env-var", envVar.key);
           const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
@@ -763,12 +821,7 @@ describe("Versioning", () => {
         });
 
         it("should delete if schema has been deleted", async () => {
-          await evs.insertOne(envVar);
-          await sleep();
-
-          await evs.findOneAndDelete({_id: id});
-          await sleep();
-
+          await performAndWaitUntilReflected([onSchemaDeleted], evs.findOneAndDelete({_id: id}));
           const file = await readResource(rep, "env-var", envVar.key);
           expect(file).toEqual({});
         });
@@ -820,12 +873,13 @@ describe("Versioning", () => {
     describe("policy", () => {
       let policy;
       let id: ObjectId;
+      const policyName = "Test Policy";
 
       beforeEach(async () => {
         id = new ObjectId();
         policy = {
           _id: id,
-          name: "Test Policy",
+          name: policyName,
           description: "Test Policy description",
           statement: [
             {
@@ -835,14 +889,30 @@ describe("Versioning", () => {
             }
           ]
         };
-        await sleep();
       });
 
       describe("Synchronization from database to files", () => {
-        it("should make first synchronization", async () => {
-          await ps.insertOne(policy);
-          await sleep();
+        let subs: Subscription[];
+        let onSchemaInserted = new Subject<any>();
+        let onSchemaUpdated = new Subject<any>();
+        let onSchemaDeleted = new Subject<any>();
 
+        beforeEach(async () => {
+          subs = initializeRepWatcher(rep, "policy", policyName, {
+            "schema.yaml": {
+              insert: onSchemaInserted,
+              update: onSchemaUpdated,
+              delete: onSchemaDeleted
+            }
+          });
+          await performAndWaitUntilReflected([onSchemaInserted], ps.insertOne(policy));
+        });
+
+        afterEach(() => {
+          subs.forEach(s => s.unsubscribe());
+        });
+
+        it("should make first synchronization", async () => {
           const file = await readResource(rep, "policy", policy.name);
 
           const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
@@ -867,11 +937,10 @@ describe("Versioning", () => {
         });
 
         it("should update if schema has changes", async () => {
-          await ps.insertOne(policy);
-          await sleep();
-
-          await ps.updateOne({_id: id as any}, {$set: {value: "false"}});
-          await sleep();
+          await performAndWaitUntilReflected(
+            [onSchemaUpdated],
+            ps.updateOne({_id: id as any}, {$set: {value: "false"}})
+          );
 
           const file = await readResource(rep, "policy", policy.name);
           const parsedFile = {...file, contents: {schema: YAML.parse(file.contents.schema)}};
@@ -897,12 +966,10 @@ describe("Versioning", () => {
         });
 
         it("should delete if schema has been deleted", async () => {
-          await ps.insertOne(policy);
-          await sleep();
-
-          await ps.findOneAndDelete({_id: id as any});
-          await sleep();
-
+          await performAndWaitUntilReflected(
+            [onSchemaDeleted],
+            ps.findOneAndDelete({_id: id as any})
+          );
           const file = await readResource(rep, "policy", policy.name);
           expect(file).toEqual({});
         });

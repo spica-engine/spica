@@ -20,7 +20,8 @@ import {
   SCHEMA,
   SchemaWithName,
   EnvRelation,
-  FunctionWithContent
+  FunctionWithContent,
+  FunctionContentChange
 } from "@spica-server/interface/function";
 
 import {createTargetChanges} from "./change";
@@ -211,7 +212,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
   }
 
-  watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
+  watch(scope: "index" | "dependency"): Observable<FunctionContentChange> {
     let files = [];
 
     switch (scope) {
@@ -225,14 +226,14 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     const moduleDir = this.options.root;
     fs.mkdirSync(moduleDir, {recursive: true});
 
-    return new Observable<FunctionWithContent>(observer => {
+    return new Observable<FunctionContentChange>(observer => {
       const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
         persistent: true,
         depth: 2
       });
 
-      const handleFileEvent = async (path: string) => {
+      const handleFileEvent = async (path: string, eventType: "change" | "add") => {
         const relativePath = path.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
 
@@ -248,11 +249,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
         const content = await fs.promises.readFile(path).then(b => b.toString());
 
-        observer.next({...fn, content});
+        observer.next({fn: {...fn, content}, changeType: eventType});
       };
 
-      watcher.on("change", path => handleFileEvent(path));
-      watcher.on("add", path => handleFileEvent(path));
+      watcher.on("change", path => handleFileEvent(path, "change"));
+      watcher.on("add", path => handleFileEvent(path, "add"));
 
       watcher.on("error", err => observer.error(err));
 
