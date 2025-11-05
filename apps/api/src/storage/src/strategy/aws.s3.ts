@@ -4,7 +4,8 @@ import {
   GetObjectCommand,
   PutObjectCommand,
   DeleteObjectCommand,
-  CopyObjectCommand
+  CopyObjectCommand,
+  ListObjectsV2Command
 } from "@aws-sdk/client-s3";
 import {readFileSync} from "fs";
 import {S3Store} from "@tus/s3-store";
@@ -101,19 +102,33 @@ export class AWSS3 extends BaseStrategy {
     return `https://${this.bucketName}.s3.${region}.amazonaws.com/${id}`;
   }
 
-  async rename(oldKey: string, newKey: string): Promise<void> {
-    await this.s3.send(
-      new CopyObjectCommand({
+  async rename(oldPrefix: string, newPrefix: string): Promise<void> {
+    const listResponse = await this.s3.send(
+      new ListObjectsV2Command({
         Bucket: this.bucketName,
-        CopySource: `${this.bucketName}/${encodeURIComponent(oldKey)}`,
-        Key: newKey
+        Prefix: oldPrefix
       })
     );
-    await this.s3.send(
-      new DeleteObjectCommand({
-        Bucket: this.bucketName,
-        Key: oldKey
-      })
-    );
+
+    const objects = listResponse.Contents ?? [];
+
+    for (const obj of objects) {
+      const oldKey = obj.Key!;
+      const newKey = oldKey.replace(oldPrefix, newPrefix);
+
+      await this.s3.send(
+        new CopyObjectCommand({
+          Bucket: this.bucketName,
+          CopySource: `${this.bucketName}/${encodeURIComponent(oldKey)}`,
+          Key: newKey
+        })
+      );
+      await this.s3.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucketName,
+          Key: oldKey
+        })
+      );
+    }
   }
 }

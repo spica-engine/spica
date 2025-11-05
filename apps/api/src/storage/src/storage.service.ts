@@ -198,13 +198,35 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     if (oldName !== name) {
       await this.service.rename(oldName, name);
-    }
 
-    return this._coll.findOneAndUpdate(
-      {_id},
-      {$set: {name}},
-      {returnDocument: ReturnDocument.AFTER}
-    );
+      const escapedOld = this.startsWithRegex(oldName);
+      await this._coll.updateMany(
+        {
+          $or: [{name: oldName}, {name: {$regex: new RegExp(`^${escapedOld}`)}}]
+        },
+        [
+          {
+            $set: {
+              name: {
+                $cond: [
+                  {$eq: ["$name", oldName]},
+                  name,
+                  {
+                    $replaceOne: {
+                      input: "$name",
+                      find: oldName,
+                      replacement: name
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      );
+    }
+    existing.name = name;
+    return existing;
   }
 
   async update(
@@ -303,5 +325,9 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   async handleResumableUpload(req: any, res: any) {
     await this.service.handleResumableUpload(req, res);
+  }
+
+  private startsWithRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 }
