@@ -82,24 +82,26 @@ export function getDocWatcher<R extends Resource>(
       changeStream.on("error", err => observer.error(err));
       changeStream.on("close", () => observer.complete());
 
-      service._coll
-        .find()
-        .toArray()
-        .then(resources => {
-          resources.forEach(resource => {
-            const docChange: DocChange<DocumentManagerResource<R>> = {
-              resourceType: ResourceType.DOCUMENT,
-              changeType: ChangeTypes.INSERT,
-              resource: {
-                _id: resource._id?.toString(),
-                slug: resource.name || resource.title || resource.key,
-                content: resource as R
-              }
-            };
+      if (!props.skipInitialEmit) {
+        service._coll
+          .find()
+          .toArray()
+          .then(resources => {
+            resources.forEach(resource => {
+              const docChange: DocChange<DocumentManagerResource<R>> = {
+                resourceType: ResourceType.DOCUMENT,
+                changeType: ChangeTypes.INSERT,
+                resource: {
+                  _id: resource._id?.toString(),
+                  slug: resource.name || resource.title || resource.key,
+                  content: resource as R
+                }
+              };
 
-            observer.next(docChange);
+              observer.next(docChange);
+            });
           });
-        });
+      }
 
       return () => changeStream.close();
     });

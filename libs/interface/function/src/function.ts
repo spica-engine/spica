@@ -83,5 +83,9 @@ export interface TargetChange {
 }
 
 export type FunctionWithContent = Function & {content?: string};
+export type FunctionContentChange = {
+  fn: FunctionWithContent;
+  changeType: "change" | "add";
+};
 
 export const SCHEMA = Symbol.for("FUNCTION_ENQUEUER_SCHEMA");
