@@ -13,6 +13,8 @@ import NavigatorItem from "../../../../../molecules/navigator-item/NavigatorItem
 import styles from "./DraggableNavigatorItem.module.scss";
 import type {TypeNavigatorItem} from "../../../../../../types/sidebar";
 
+import { useTypedDragLayer, DnDItemTypes } from "../../../../../../hooks/useTypedDragLayer";
+
 type TypeDraggableItemProps = {
   item: TypeNavigatorItem & {index: number};
   completeMoving: (identifier: string, order: number) => void;
@@ -35,22 +37,25 @@ export const DraggableItem = ({
   const handleClick = useNavigatorItemClick(item, isCurrentlySelected);
 
   const [{handlerId}, drop] = useDrop({
-    accept: "NAVIGATOR_ITEM",
+    accept: DnDItemTypes.NAVIGATOR_ITEM,
     collect: monitor => ({
       handlerId: monitor.getHandlerId()
     })
   });
 
   const [, drag, preview] = useDrag({
-    type: "NAVIGATOR_ITEM",
-    item: () => item,
+    type: DnDItemTypes.NAVIGATOR_ITEM,
+    item: () => item, 
     end: draggedItem => {
       setJustDropped(true);
       completeMoving(draggedItem._id, draggedItem.index);
     }
   });
 
-  const {dragLayerItem, isDragging} = useDragLayer(monitor => ({
+  const {dragLayerItem, isDragging} = useTypedDragLayer(
+    DnDItemTypes.NAVIGATOR_ITEM,
+    monitor => ({
+    
     dragLayerItem: monitor.getItem(),
     isDragging: monitor.isDragging()
   }));

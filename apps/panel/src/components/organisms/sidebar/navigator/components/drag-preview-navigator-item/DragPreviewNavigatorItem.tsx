@@ -2,6 +2,7 @@ import { NavigatorItem } from "oziko-ui-kit";
 import { useMemo, useEffect } from "react";
 import { useDragLayer } from "react-dnd";
 import styles from "./DragPreviewNavigatorItem.module.scss";
+import { DnDItemTypes, useTypedDragLayer } from "../../../../../../hooks/useTypedDragLayer";
 
 type TypeCustomDragLayerProps = {
   itemRefs: (HTMLDivElement | null)[];
@@ -9,12 +10,14 @@ type TypeCustomDragLayerProps = {
 };
 
 export const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) => {
-  const {item, isDragging, currentOffset, initialOffset} = useDragLayer(monitor => ({
-    item: monitor.getItem(),
-    isDragging: monitor.isDragging(),
-    currentOffset: monitor.getSourceClientOffset(),
-    initialOffset: monitor.getInitialSourceClientOffset()
-  }));
+  const {item, currentOffset, initialOffset} = useTypedDragLayer(
+    DnDItemTypes.NAVIGATOR_ITEM,
+    monitor => ({
+      item: monitor.getItem(),
+      currentOffset: monitor.getSourceClientOffset(),
+      initialOffset: monitor.getInitialSourceClientOffset()
+    })
+  );
 
   const hoverIndex = useMemo(
     () =>
@@ -38,7 +41,7 @@ export const CustomDragLayer = ({itemRefs, moveItem}: TypeCustomDragLayerProps) 
     [initialOffset?.x, currentOffset?.y]
   );
 
-  if (!isDragging) return null;
+  if (!item?.isDragging) return null;
 
   return (
     <div className={styles.dragLayer}>
