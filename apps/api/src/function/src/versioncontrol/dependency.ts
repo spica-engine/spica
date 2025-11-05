@@ -29,7 +29,7 @@ export const getDependencySynchronizer = (
             resource: {
               _id: change._id.toString(),
               slug: change.name,
-              content: change
+              content: {...change, content: change.content}
             }
           };
 

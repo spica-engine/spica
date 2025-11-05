@@ -10,7 +10,11 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import os from "os";
 import {VersionControlModule} from "@spica-server/versioncontrol";
-import {ChangeTypes, VC_REPRESENTATIVE_MANAGER} from "@spica-server/interface/versioncontrol";
+import {
+  ChangeTypes,
+  ResourceType,
+  VC_REPRESENTATIVE_MANAGER
+} from "@spica-server/interface/versioncontrol";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
@@ -23,7 +27,8 @@ import fs from "fs";
 import * as fnCRUD from "@spica-server/function/src/crud";
 import {v4 as uuidv4} from "uuid";
 import {PolicyModule, PolicyService} from "@spica-server/passport/policy";
-import {Subject, firstValueFrom, Subscription, zip} from "rxjs";
+import {Subject, firstValueFrom, Subscription, zip, map, tap} from "rxjs";
+import {getDocWatcher} from "../src/synchronizer/doc.synchronizer";
 
 const sleep = (value = 3000) => new Promise(r => setTimeout(r, value));
 
@@ -541,42 +546,130 @@ describe("Versioning", () => {
       });
 
       describe("Synchronization from files to database", () => {
+        let subs: Subscription[];
+        let onSchemaInserted = new Subject<any>();
+        let onSchemaUpdated = new Subject<any>();
+        let onSchemaDeleted = new Subject<any>();
+
+        let onIndexInserted = new Subject<any>();
+        let onIndexUpdated = new Subject<any>();
+        let onIndexDeleted = new Subject<any>();
+
+        let onPackageInserted = new Subject<any>();
+        let onPackageUpdated = new Subject<any>();
+        let onPackageDeleted = new Subject<any>();
+
+        const fnId = new ObjectId().toHexString();
+
+        const performAndWaitUntilReflected = (subjects: Subject<any>[], action: Promise<any>) => {
+          return firstValueFrom(zip(...subjects.map(subject => firstValueFrom(subject)), action));
+        };
+
+        beforeEach(() => {
+          const schemaWatcher = getDocWatcher({
+            collectionService: fnservice,
+            skipInitialEmit: true
+          });
+          const indexWatcher = engine.watch("index").pipe(
+            tap(r => console.log("index change detected", r)),
+            map(change => {
+              return {
+                resourceType: ResourceType.DOCUMENT,
+                changeType: ChangeTypes.INSERT,
+                resource: {
+                  _id: change._id.toString(),
+                  slug: change.name,
+                  content: {...change, content: change.content}
+                }
+              };
+            })
+          );
+          const packageWatcher = engine.watch("dependency").pipe(
+            tap(r => console.log("package change detected", r)),
+            map(change => {
+              return {
+                resourceType: ResourceType.DOCUMENT,
+                changeType: ChangeTypes.INSERT,
+                resource: {
+                  _id: change._id.toString(),
+                  slug: change.name,
+                  content: {...change, content: change.content}
+                }
+              };
+            })
+          );
+
+          const getChangeHandler = subjects => change => {
+            if (change.resource._id !== fnId) return;
+
+            switch (change.changeType) {
+              case ChangeTypes.INSERT:
+                subjects[0].next(change);
+                break;
+              case ChangeTypes.UPDATE:
+                subjects[1].next(change);
+                break;
+              case ChangeTypes.DELETE:
+                subjects[2].next(change);
+                break;
+            }
+          };
+
+          subs = [
+            schemaWatcher().subscribe(
+              getChangeHandler([onSchemaInserted, onSchemaUpdated, onSchemaDeleted])
+            ),
+            indexWatcher.subscribe(
+              getChangeHandler([onIndexInserted, onIndexUpdated, onIndexDeleted])
+            ),
+            packageWatcher.subscribe(
+              getChangeHandler([onPackageInserted, onPackageUpdated, onPackageDeleted])
+            )
+          ];
+        });
+
+        afterEach(() => {
+          subs.forEach(s => s.unsubscribe());
+        });
+
         it("should sync changes", async () => {
           // SCHEMA INSERT
-          const id = new ObjectId().toHexString();
+
           let fn = {
-            _id: id,
+            _id: fnId,
             name: "fn1",
             language: "javascript",
             timeout: 100,
             triggers: {}
           };
           const stringified = YAML.stringify(fn);
-          await rep.write("function", fn.name, "schema", stringified, "yaml");
-          await sleep();
+
+          const insertSchema = () => rep.write("function", fn.name, "schema", stringified, "yaml");
 
           let index = "console.log('hi')";
-          await rep.write("function", fn.name, "index", index, "ts");
-          await sleep();
+          const insertIndex = () => rep.write("function", fn.name, "index", index, "ts");
 
           let packages: any = {
             dependencies: {}
           };
           const stringifiedPackages = YAML.stringify(packages);
-          await rep.write("function", fn.name, "package", stringifiedPackages, "json");
-          await sleep();
+          const insertPackage = () =>
+            rep.write("function", fn.name, "package", stringifiedPackages, "json");
 
+          await performAndWaitUntilReflected([onSchemaInserted], insertSchema());
           let fns = await fnservice.find();
           expect(fns).toEqual([
             {
               ...fn,
-              _id: new ObjectId(id)
+              _id: new ObjectId(fnId)
             }
           ]);
 
+          await performAndWaitUntilReflected([onPackageInserted], insertPackage());
           packages = await engine.getPackages(fn);
           expect(packages).toEqual([]);
 
+          await performAndWaitUntilReflected([onIndexInserted], insertIndex());
           index = await engine.read(fn);
           expect(index).toEqual("console.log('hi')");
 
@@ -587,29 +680,30 @@ describe("Versioning", () => {
             options: {}
           };
           const stringifiedSchema = YAML.stringify({...fn, triggers: {onCall}});
-          await rep.write("function", fn.name, "schema", stringifiedSchema, "yaml");
-          await sleep();
 
+          const updateSchema = () =>
+            rep.write("function", fn.name, "schema", stringifiedSchema, "yaml");
+          await performAndWaitUntilReflected([onSchemaUpdated], updateSchema());
           fns = await fnservice.find();
           expect(fns).toEqual([
             {
               ...fn,
               triggers: {onCall},
-              _id: new ObjectId(id)
+              _id: new ObjectId(fnId)
             }
           ]);
 
           // INDEX UPDATES
           index = "console.log('hi2')";
-          await rep.write("function", fn.name, "index", index, "ts");
-          await sleep();
+          const updateIndex = () => rep.write("function", fn.name, "index", index, "ts");
+          await performAndWaitUntilReflected([onIndexInserted], updateIndex());
 
           index = await engine.read(fn);
           expect(index).toEqual("console.log('hi2')");
 
           // SCHEMA DELETE
-          await rep.rm("function", fn.name);
-          await sleep();
+          const deleteSchema = () => rep.rm("function", fn.name);
+          await performAndWaitUntilReflected([onSchemaDeleted], deleteSchema());
 
           fns = await fnservice.find();
           expect(fns).toEqual([]);

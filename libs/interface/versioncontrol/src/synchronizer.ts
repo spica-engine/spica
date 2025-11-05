@@ -422,10 +422,12 @@ export type VCSynchronizerArgs<R1 extends Resource> = Omit<
       watcher:
         | {
             collectionService: BaseCollection<R1>;
+            skipInitialEmit?: boolean;
             docWatcher?: never;
           }
         | {
             collectionService?: never;
+            skipInitialEmit?: never;
             docWatcher: () => Observable<DocChange<DocumentManagerResource<R1>>>;
           };
       converter: {
