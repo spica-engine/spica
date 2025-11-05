@@ -112,23 +112,24 @@ export class AWSS3 extends BaseStrategy {
 
     const objects = listResponse.Contents ?? [];
 
-    for (const obj of objects) {
-      const oldKey = obj.Key!;
-      const newKey = oldKey.replace(oldPrefix, newPrefix);
-
-      await this.s3.send(
-        new CopyObjectCommand({
-          Bucket: this.bucketName,
-          CopySource: `${this.bucketName}/${encodeURIComponent(oldKey)}`,
-          Key: newKey
-        })
-      );
-      await this.s3.send(
-        new DeleteObjectCommand({
-          Bucket: this.bucketName,
-          Key: oldKey
-        })
-      );
-    }
+    await Promise.all(
+      objects.map(async obj => {
+        const oldKey = obj.Key!;
+        const newKey = oldKey.replace(oldPrefix, newPrefix);
+        await this.s3.send(
+          new CopyObjectCommand({
+            Bucket: this.bucketName,
+            CopySource: `${this.bucketName}/${encodeURIComponent(oldKey)}`,
+            Key: newKey
+          })
+        );
+        await this.s3.send(
+          new DeleteObjectCommand({
+            Bucket: this.bucketName,
+            Key: oldKey
+          })
+        );
+      })
+    );
   }
 }
