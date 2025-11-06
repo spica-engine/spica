@@ -17,6 +17,7 @@ import type {
   DragItem
 } from "../../../../types/storage";
 import styles from "./StorageColumns.module.scss";
+import { DraggableStorageItem } from "../droppable-item/DroppableItem";
 
 interface StorageColumnsProps {
   setPreviewFile: (file?: DirectoryItem) => void;
@@ -29,49 +30,6 @@ interface DraggableStorageItemProps {
   children: React.ReactNode;
 }
 
-const DraggableStorageItem = memo(({item, children}: DraggableStorageItemProps) => {
-  const isDirectory = item.content?.type === "inode/directory";
-  const pathWithoutTrailingSlash = isDirectory ? item.fullPath.slice(0, -1) : item.fullPath;
-  const calculatedParentPath = pathWithoutTrailingSlash.substring(
-    0,
-    pathWithoutTrailingSlash.lastIndexOf("/") + 1
-  );
-  const parentPath = calculatedParentPath === "" ? "/" : calculatedParentPath;
-
-  const [{isDragging}, drag] = useDrag<DragItem, unknown, {isDragging: boolean}>({
-    type: DnDItemTypes.STORAGE_ITEM,
-    item: {
-      id: item._id || "",
-      name: item.label as string,
-      fullPath: item.fullPath,
-      parentPath,
-      type: item.content?.type,
-      size: item.content?.size
-    },
-    collect: monitor => ({
-      isDragging: monitor.isDragging()
-    }),
-    canDrag: () => true
-  });
-
-  const ref = useRef(null);
-  drag(ref);
-
-  return (
-    <div
-      ref={ref}
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-        cursor: "move",
-        transition: "opacity var(--transition-duration) ease, cursor var(--transition-duration) ease"
-      }}
-    >
-      {children}
-    </div>
-  );
-});
-
-DraggableStorageItem.displayName = "DraggableStorageItem";
 
 interface StorageItemProps {
   item: DirectoryItem;
