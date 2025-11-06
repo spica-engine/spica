@@ -502,7 +502,7 @@ describe("Versioning", () => {
         packages = await engine.getPackages(fn);
         expect(packages).toEqual([]);
 
-        index = await engine.readIndex(fn);
+        index = await engine.read(fn, "index");
         expect(index).toEqual("console.log('hi')");
 
         // SCHEMA UPDATE
@@ -529,7 +529,7 @@ describe("Versioning", () => {
         await rep.write("function", fn.name, "index", index, "ts");
         await sleep();
 
-        index = await engine.readIndex(fn);
+        index = await engine.read(fn, "index");
         expect(index).toEqual("console.log('hi2')");
 
         // SCHEMA DELETE
@@ -542,7 +542,7 @@ describe("Versioning", () => {
         packages = await engine.getPackages(fn);
         expect(packages).toEqual([]);
 
-        await engine.readIndex(fn).catch(e => {
+        await engine.read(fn, "index").catch(e => {
           expect(e).toEqual("Not Found");
         });
       });

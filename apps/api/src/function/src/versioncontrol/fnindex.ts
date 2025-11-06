@@ -23,24 +23,26 @@ export const getIndexSynchronizer = (
   const docWatcher = () =>
     new Observable<DocChange<DocumentManagerResource<FunctionWithContent>>>(observer => {
       CRUD.find(fs, engine, {}).then(async functions => {
-        for (const fn of functions) {
-          try {
-            const content = await engine.readIndex(fn);
-            const fnWithContent: FunctionWithContent = {...fn, content};
-            const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
-              resourceType: ResourceType.DOCUMENT,
-              changeType: ChangeTypes.INSERT,
-              resource: {
-                _id: fn._id.toString(),
-                slug: fn.name,
-                content: fnWithContent
-              }
-            };
-            observer.next(docChange);
-          } catch (error) {
-            observer.error(error);
-            return;
-          }
+        try {
+          await Promise.all(
+            functions.map(async fn => {
+              const content = await engine.read(fn, "index");
+              const fnWithContent: FunctionWithContent = {...fn, content};
+              const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
+                resourceType: ResourceType.DOCUMENT,
+                changeType: ChangeTypes.INSERT,
+                resource: {
+                  _id: fn._id.toString(),
+                  slug: fn.name,
+                  content: fnWithContent
+                }
+              };
+              observer.next(docChange);
+            })
+          );
+        } catch (error) {
+          observer.error(error);
+          return;
         }
       });
 

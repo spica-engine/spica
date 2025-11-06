@@ -91,7 +91,7 @@ export function registerAssetHandlers(
     promises.push(manager.write(_module, _id, "package", {dependencies}, "json"));
 
     // index
-    const index = await engine.readIndex(fn);
+    const index = await engine.read(fn, "index");
 
     promises.push(
       manager.write(_module, _id, "index", index, fn.language == "javascript" ? "js" : "ts")
