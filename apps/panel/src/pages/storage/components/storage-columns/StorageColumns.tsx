@@ -1,5 +1,5 @@
 import {useRef, useEffect, useMemo, memo, type DragEventHandler} from "react";
-import {useDrop, useDrag} from "react-dnd";
+import {useDrop} from "react-dnd";
 import {FlexElement, Spinner, Icon, Text} from "oziko-ui-kit";
 import {useAppSelector, useAppDispatch} from "../../../../store/hook";
 import {selectDirectory, setDirectory, handleFolderClick as handleFolderClickAction} from "../../../../store";
@@ -112,7 +112,9 @@ const StorageColumn = memo(({
         });
 
         const dataTransfer = new DataTransfer();
-        filesWithPrefix.forEach(file => dataTransfer.items.add(file));
+        for (const file of filesWithPrefix) {
+          dataTransfer.items.add(file);
+        }
 
         const response = await uploadFiles({files: dataTransfer.files});
         const uploadedFile = response?.data?.[0] as DirectoryItem | undefined;
@@ -360,7 +362,7 @@ export function StorageItemColumns({
                 directory={directory}
                 previewFileId={previewFile?._id}
                 prefix={folderPath}
-                depth={dir.currentDepth!}
+                depth={dir.currentDepth || 0}
                 onFolderClick={handleFolderClick}
                 onFileClick={setPreviewFile}
                 onUploadComplete={onUploadComplete}

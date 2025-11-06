@@ -32,11 +32,15 @@ export function AuthorizedVideo({
         const response = await fetch(url, {
           headers: {Authorization: `IDENTITY ${token}`}
         });
-        if (!response.ok) throw new Error("Failed to fetch video");
+        console.log("response", response);
+        if (!response.ok) {
+          throw new Error("Failed to fetch video");
+        };
         const blob = await response.blob();
         objectUrl = URL.createObjectURL(blob);
         setVideoUrl(objectUrl);
       } catch (error) {
+        console.log("error", error);
         setError("Unable to load video.");
         setIsVideoLoading(false);
       }
@@ -63,6 +67,7 @@ export function AuthorizedVideo({
   const handleOnLoadedData = (event: React.SyntheticEvent<HTMLVideoElement>) => {
     setIsVideoLoading(false);
     props.onLoadedData?.(event);
+    console.log("event", event);
   };
 
   return (
@@ -78,11 +83,15 @@ export function AuthorizedVideo({
           controls
           {...props}
           className={`${styles.video} ${props.className}`}
-          style={{...(props.style || {}), display: loading ? "none" : "block"}}
+          style={{...(props.style), display: loading ? "none" : "block"}}
           onLoadedData={handleOnLoadedData}
           onError={handleError}
         >
-          <source src={videoUrl} type={type} />
+          {type && type !== 'video/quicktime' ? (
+            <source src={videoUrl} type={type} />
+          ) : (
+            <source src={videoUrl} />
+          )}
           Your browser does not support the video tag.
         </video>
       )}
