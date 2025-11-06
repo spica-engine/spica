@@ -32,7 +32,6 @@ export function AuthorizedVideo({
         const response = await fetch(url, {
           headers: {Authorization: `IDENTITY ${token}`}
         });
-        console.log("response", response);
         if (!response.ok) {
           throw new Error("Failed to fetch video");
         };
@@ -40,7 +39,7 @@ export function AuthorizedVideo({
         objectUrl = URL.createObjectURL(blob);
         setVideoUrl(objectUrl);
       } catch (error) {
-        console.log("error", error);
+        console.error("error", error);
         setError("Unable to load video.");
         setIsVideoLoading(false);
       }
@@ -67,10 +66,10 @@ export function AuthorizedVideo({
   const handleOnLoadedData = (event: React.SyntheticEvent<HTMLVideoElement>) => {
     setIsVideoLoading(false);
     props.onLoadedData?.(event);
-    console.log("event", event);
   };
 
-  return (
+  const isQuickTime = type?.includes('quicktime');
+  return (  
     <div {...(containerProps || {})} className={`${props.className} ${styles.container}`}>
       {loading && (
         <div>
@@ -87,7 +86,7 @@ export function AuthorizedVideo({
           onLoadedData={handleOnLoadedData}
           onError={handleError}
         >
-          {type && type !== 'video/quicktime' ? (
+          {type && !isQuickTime ? (
             <source src={videoUrl} type={type} />
           ) : (
             <source src={videoUrl} />
