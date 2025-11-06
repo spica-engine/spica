@@ -1054,13 +1054,11 @@ describe("Storage Acceptance", () => {
       });
 
       const {body: allItems} = await req.get("/storage");
-      const renamedItems = allItems.filter(item =>
-        item.name.startsWith("folder/subfolder_renamed")
-      );
 
-      expect(renamedItems.length).toBe(2);
-      expect(renamedItems.some(item => item.name == "folder/subfolder_renamed/")).toBe(true);
-      expect(renamedItems.some(item => item.name == "folder/subfolder_renamed/document.pdf")).toBe(
+      expect(allItems.length).toBe(6);
+      expect(allItems.some(item => item.name == "folder/")).toBe(true);
+      expect(allItems.some(item => item.name == "folder/subfolder_renamed/")).toBe(true);
+      expect(allItems.some(item => item.name == "folder/subfolder_renamed/document.pdf")).toBe(
         true
       );
     });

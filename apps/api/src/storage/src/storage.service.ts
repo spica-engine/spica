@@ -199,7 +199,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     if (oldName !== name) {
       await this.service.rename(oldName, name);
 
-      const escapedOld = this.startsWithRegex(oldName);
+      const escapedOld = this.escapeRegex(oldName);
       await this._coll.updateMany(
         {
           $or: [{name: oldName}, {name: {$regex: new RegExp(`^${escapedOld}`)}}]
@@ -327,7 +327,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     await this.service.handleResumableUpload(req, res);
   }
 
-  private startsWithRegex(str: string): string {
+  private escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 }
