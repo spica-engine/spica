@@ -7,6 +7,7 @@ import {FileMetadata} from "./file-metadata/FileMetadata";
 import {FileActions} from "./file-actions/FileActions";
 import {FileViewerFrame} from "./file-viewer-frame/FileViewerFrame";
 import {useLayoutEffect, useMemo, useState} from "react";
+import {getTimestampFromObjectId, buildFileUrl} from "./utils";
 
 interface FilePreviewProps {
   handleClosePreview: () => void;
@@ -25,24 +26,13 @@ export const FilePreview = ({
   const [fileUrl, setFileUrl] = useState<string | null>(previewFile?.url || null);
 
   const timestamp = useMemo(
-    () => parseInt(previewFile?._id.substring(0, 8) || "0", 16) * 1000,
+    () => getTimestampFromObjectId(previewFile?._id),
     [previewFile?._id]
   );
 
   useLayoutEffect(() => {
-    if (!previewFile?.url) {
-      setFileUrl(null);
-      return;
-    }
-    try {
-      const url = new URL(previewFile.url);
-      url.searchParams.set("timestamp", String(timestamp));
-      url.searchParams.set("t", String(Date.now()));
-      setFileUrl(url.toString());
-    } catch (error) {
-      console.error("Error creating URL:", error);
-      setFileUrl(null);
-    }
+    const url = buildFileUrl(previewFile?.url, {timestamp});
+    setFileUrl(url);
   }, [previewFile?.url, previewFile?._id, previewFile?.content.type, timestamp]);
 
   const file = useMemo(
@@ -55,9 +45,8 @@ export const FilePreview = ({
   const handleReplaceFile = (updatedFile: DirectoryItem) => {
     if (!onFileReplaced) return;
     onFileReplaced(updatedFile);
-    const newUrl = new URL(updatedFile.url);
-    newUrl.searchParams.set("t", String(Date.now()));
-    setFileUrl(newUrl.toString());
+    const newUrl = buildFileUrl(updatedFile.url, {cacheBust: true});
+    setFileUrl(newUrl);
   };
 
   return (

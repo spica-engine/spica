@@ -15,7 +15,7 @@ import {HTML5Backend} from "react-dnd-html5-backend";
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 root.render(
-  <StrictMode>
+  // <StrictMode>
     <Provider store={store}>
       <DndProvider backend={HTML5Backend}>
         <DrawerProvider>
@@ -30,5 +30,5 @@ root.render(
         </DrawerProvider>
       </DndProvider>
     </Provider>
-  </StrictMode>
+  // </StrictMode>
 );

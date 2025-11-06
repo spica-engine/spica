@@ -1,10 +1,10 @@
 import {Icon, type TypeFile} from "oziko-ui-kit";
 import type {CSSProperties} from "react";
 import {useSelector} from "react-redux";
-import {AuthorizedEmbed} from "../components/atoms/authorized-embed/AuthorizedEmbed";
-import {AuthorizedVideo} from "../components/atoms/authorized-video/AuthorizedVideoProps";
-import {AuthorizedImage} from "../components/atoms/authorized-image/AuthorizedImage";
-import {AuthorizedText} from "../components/atoms/authorized-text/AuthorizedText";
+import {AuthorizedEmbed} from "../components/prefabs/authorized-embed/AuthorizedEmbed";
+import {AuthorizedVideo} from "../components/prefabs/authorized-video/AuthorizedVideoProps";
+import {AuthorizedImage} from "../components/prefabs/authorized-image/AuthorizedImage";
+import {AuthorizedText} from "../components/prefabs/authorized-text/AuthorizedText";
 import {WordDocViewer} from "../components/atoms/word-doc-viewer/WordDocViewer";
 import {selectToken} from "../store";
 
