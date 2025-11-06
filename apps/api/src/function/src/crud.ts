@@ -159,7 +159,7 @@ export namespace index {
     if (!fn) {
       throw new NotFoundException("Can not find function.");
     }
-    const index = await engine.read(fn).catch(e => {
+    const index = await engine.readIndex(fn).catch(e => {
       if (e == "Not Found") {
         throw new NotFoundException("Index does not exist.");
       }

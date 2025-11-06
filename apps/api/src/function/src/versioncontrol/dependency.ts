@@ -12,8 +12,10 @@ import {FunctionWithContent} from "@spica-server/interface/function";
 import {Observable} from "rxjs";
 import * as CRUD from "../crud";
 import {ObjectId} from "bson";
+import {FunctionService} from "@spica-server/function/services";
 
 export const getDependencySynchronizer = (
+  fs: FunctionService,
   engine: FunctionEngine
 ): VCSynchronizerArgs<FunctionWithContent> => {
   const fileName = "package";
@@ -21,6 +23,23 @@ export const getDependencySynchronizer = (
 
   const docWatcher = () =>
     new Observable<DocChange<DocumentManagerResource<FunctionWithContent>>>(observer => {
+      CRUD.find(fs, engine, {}).then(async functions => {
+        for (const fn of functions) {
+          const content = await engine.readIndex(fn, "dependency");
+          const fnWithContent: FunctionWithContent = {...fn, content};
+          const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
+            resourceType: ResourceType.DOCUMENT,
+            changeType: ChangeTypes.INSERT,
+            resource: {
+              _id: fn._id.toString(),
+              slug: fn.name,
+              content: fnWithContent
+            }
+          };
+          observer.next(docChange);
+        }
+      });
+
       engine.watch("dependency").subscribe({
         next: (change: FunctionWithContent) => {
           const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
