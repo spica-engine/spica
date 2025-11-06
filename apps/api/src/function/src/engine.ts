@@ -198,20 +198,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   readIndex(fn: Function, scope: "index" | "dependency" = "index"): Promise<string> {
-    const filePath = this.getFunctionBuildEntrypoint(fn);
-    if (scope == "dependency") {
-      const filePath = path.join(this.getFunctionRoot(fn), "package.json");
+    try {
+      if (scope === "dependency") {
+        const dependencyFilePath = path.join(this.getFunctionRoot(fn), "package.json");
+        return fs.promises.readFile(dependencyFilePath).then(b => b.toString());
+      }
+      const filePath = this.getFunctionBuildEntrypoint(fn);
       return fs.promises.readFile(filePath).then(b => b.toString());
+    } catch (e) {
+      if (e.code == "ENOENT") {
+        return Promise.reject("Not Found");
+      }
+      throw Error(e);
     }
-    return fs.promises
-      .readFile(filePath)
-      .then(b => b.toString())
-      .catch(e => {
-        if (e.code == "ENOENT") {
-          return Promise.reject("Not Found");
-        }
-        throw Error(e);
-      });
   }
 
   watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
