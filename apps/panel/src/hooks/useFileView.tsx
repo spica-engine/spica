@@ -2,7 +2,7 @@ import {Icon, type TypeFile} from "oziko-ui-kit";
 import type {CSSProperties} from "react";
 import {useSelector} from "react-redux";
 import {AuthorizedEmbed} from "../components/prefabs/authorized-embed/AuthorizedEmbed";
-import {AuthorizedVideo} from "../components/prefabs/authorized-video/AuthorizedVideoProps";
+import {AuthorizedVideo} from "../components/prefabs/authorized-video/AuthorizedVideo";
 import {AuthorizedImage} from "../components/prefabs/authorized-image/AuthorizedImage";
 import {AuthorizedText} from "../components/prefabs/authorized-text/AuthorizedText";
 import {WordDocViewer} from "../components/atoms/word-doc-viewer/WordDocViewer";
