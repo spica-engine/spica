@@ -1,4 +1,4 @@
-import {FlexElement, FluidContainer, Icon, Button, Popover} from "oziko-ui-kit";
+import {FlexElement, FluidContainer, Icon, Button} from "oziko-ui-kit";
 import SearchBar from "../../../../components/atoms/search-bar/SearchBar";
 import styles from "./StorageActionBar.module.scss";
 

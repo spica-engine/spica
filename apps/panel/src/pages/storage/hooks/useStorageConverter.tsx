@@ -1,4 +1,4 @@
-import type {DirectoryItem, TypeDirectories, TypeDirectoryDepth} from "../../../types/storage";
+import type {DirectoryItem, TypeDirectories} from "../../../types/storage";
 import type {Storage} from "../../../store/api/storageApi";
 import {findMaxDepthDirectory} from "../utils";
 import useStorageService from "../../../hooks/useStorage";
@@ -8,7 +8,7 @@ export function useStorageConverter(directory: TypeDirectories) {
   const {convertStorageToTypeFile} = useStorageService();
 
   const convertData = useCallback(
-    (data: Storage[], depth?: TypeDirectoryDepth): DirectoryItem[] | undefined => {
+    (data: Storage[], depth?: number): DirectoryItem[] | undefined => {
       if (!data || !Array.isArray(data)) return undefined;
 
       const dirToConvert = findMaxDepthDirectory(directory);
@@ -18,7 +18,7 @@ export function useStorageConverter(directory: TypeDirectories) {
         const typeFile = convertStorageToTypeFile(storage);
         const isDirectory = typeFile.content?.type === "inode/directory";
         const nameParts = typeFile.name.split("/").filter(Boolean);
-        const resolvedName = nameParts[nameParts.length - 1] + (isDirectory ? "/" : "");
+        const resolvedName = nameParts.at(-1) + (isDirectory ? "/" : "");
 
         return {
           ...typeFile,

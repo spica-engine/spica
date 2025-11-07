@@ -61,7 +61,6 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
 
   const ITEMS_PER_PAGE = 20;
 
-
   const buildSearchFilter = useCallback(() => {
     return searchTerm
       ? {

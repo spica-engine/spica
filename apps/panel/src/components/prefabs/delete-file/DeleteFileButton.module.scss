@@ -1,0 +1,14 @@
+
+.actionButton {
+    height: 32px !important;
+    font-size: var(--font-size-md);
+    align-items: center !important;
+    display: flex;
+    color: var(--color-font-primary) !important;
+  }
+  
+  .clearButton {
+    min-width: 74px !important;
+    width: 74px !important;
+    color: var(--color-font-secondary) !important;
+  }

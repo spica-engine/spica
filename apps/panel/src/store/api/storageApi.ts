@@ -1,5 +1,19 @@
 import { baseApi } from './baseApi';
 
+// Storage tag constants
+const STORAGE_TAG = 'Storage' as const;
+
+const STORAGE_TAGS = {
+  LIST: { type: STORAGE_TAG, id: 'LIST' },
+  BROWSE: { type: STORAGE_TAG, id: 'BROWSE' },
+} as const;
+
+const createStorageIdTags = (id: string) => [
+  { type: STORAGE_TAG, id },
+  STORAGE_TAGS.LIST,
+  STORAGE_TAGS.BROWSE,
+];
+
 export interface Storage {
   _id?: string;
   name: string;
@@ -59,15 +73,15 @@ export const storageApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result && result.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: 'Storage' as const, id: _id })),
-              { type: 'Storage' as const, id: 'LIST' },
+              ...result.data.map(({ _id }) => ({ type: STORAGE_TAG, id: _id })),
+              STORAGE_TAGS.LIST,
             ]
-          : [{ type: 'Storage' as const, id: 'LIST' }],
+          : [STORAGE_TAGS.LIST],
     }),
 
     getStorageItem: builder.query<Storage, string>({
       query: (id) => `/storage/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Storage' as const, id }],
+      providesTags: (result, error, id) => [{ type: STORAGE_TAG, id }],
     }),
 
     uploadFiles: builder.mutation<Storage[], UploadFilesRequest>({
@@ -81,10 +95,7 @@ export const storageApi = baseApi.injectEndpoints({
           body: formData,
         };
       },
-      invalidatesTags: [
-        { type: 'Storage' as const, id: 'LIST' },
-        { type: 'Storage' as const, id: 'BROWSE' }
-      ],
+      invalidatesTags: [STORAGE_TAGS.LIST, STORAGE_TAGS.BROWSE],
     }),
 
     updateStorageItem: builder.mutation<Storage, UpdateStorageItemRequest>({
@@ -98,10 +109,7 @@ export const storageApi = baseApi.injectEndpoints({
           body: formData,
         };
       },
-      invalidatesTags: (result, error, { id }) => [
-        { type: 'Storage' as const, id },
-        { type: 'Storage' as const, id: 'LIST' },
-      ],
+      invalidatesTags: (result, error, { id }) => createStorageIdTags(id),
     }),
 
     deleteStorageItem: builder.mutation<void, string>({
@@ -109,10 +117,7 @@ export const storageApi = baseApi.injectEndpoints({
         url: `/storage/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, id) => [
-        { type: 'Storage' as const, id },
-        { type: 'Storage' as const, id: 'LIST' },
-      ],
+      invalidatesTags: (result, error, id) => createStorageIdTags(id),
     }),
 
     updateStorageName: builder.mutation<Storage, UpdateStorageNameRequest>({
@@ -121,10 +126,7 @@ export const storageApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: { name },
       }),
-      invalidatesTags: (result, error, { id }) => [
-        { type: 'Storage' as const, id },
-        { type: 'Storage' as const, id: 'LIST' },
-      ],
+      invalidatesTags: (result, error, { id }) => createStorageIdTags(id),
     }),
 
     getSubResources: builder.query<
@@ -144,7 +146,7 @@ export const storageApi = baseApi.injectEndpoints({
         return `/storage/${id}/sub-resources?${params.toString()}`;
       },
       providesTags: (result, error, { id }) => [
-        { type: 'Storage' as const, id: `${id}-sub` },
+        { type: STORAGE_TAG, id: `${id}-sub` },
       ],
     }),
 
@@ -166,10 +168,10 @@ export const storageApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result && result.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: 'Storage' as const, id: _id })),
-              { type: 'Storage' as const, id: 'BROWSE' },
+              ...result.data.map(({ _id }) => ({ type: STORAGE_TAG, id: _id })),
+              STORAGE_TAGS.BROWSE,
             ]
-          : [{ type: 'Storage' as const, id: 'BROWSE' }],
+          : [STORAGE_TAGS.BROWSE],
     })
   }),
 });

@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../index';
-import type { TypeDirectories, TypeDirectoryDepth } from '../../types/storage';
+import type { TypeDirectories } from '../../types/storage';
 import { getParentPath } from '../../pages/storage/utils';
 import { ROOT_PATH } from '../../pages/storage/constants';
 
@@ -38,7 +38,7 @@ const storageSlice = createSlice({
     handleFolderClick: (state, action: PayloadAction<{
       folderName: string;
       fullPath: string;
-      directoryDepth: TypeDirectoryDepth;
+      directoryDepth: number;
       wasActive: boolean;
       isFilteringOrSearching: boolean;
     }>) => {
@@ -106,7 +106,7 @@ const storageSlice = createSlice({
           return {
             ...dir,
             isActive: true,
-            currentDepth: pathDepth as TypeDirectoryDepth
+            currentDepth: pathDepth
           };
         }
 

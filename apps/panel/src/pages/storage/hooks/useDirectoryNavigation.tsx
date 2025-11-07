@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { TypeDirectories, TypeDirectoryDepth } from "src/types/storage";
+import type { TypeDirectories } from "src/types/storage";
 import { getParentPath } from "../utils";
 import { ROOT_PATH } from "../constants";
 
@@ -21,7 +21,7 @@ export function useDirectoryNavigation() {
   const handleFolderClick = (
     folderName: string,
     fullPath: string,
-    directoryDepth: TypeDirectoryDepth,
+    directoryDepth: number,
     wasActive: boolean,
     isFilteringOrSearching: boolean
   ) => {
@@ -86,7 +86,7 @@ export function useDirectoryNavigation() {
         return {
           ...dir,
           isActive: true,
-          currentDepth: pathDepth as TypeDirectoryDepth
+          currentDepth: pathDepth as number
         };
       }
 
