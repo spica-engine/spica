@@ -162,6 +162,106 @@ describe("Storage Acceptance", () => {
         }
       ]);
     });
+
+    it("should work with _id filter", async () => {
+      const {body} = await req.get("/storage", {
+        filter: JSON.stringify({name: "third.txt"})
+      });
+
+      const response = await req.get("/storage", {
+        filter: JSON.stringify({_id: body[0]._id})
+      });
+
+      expect(ObjectId.isValid(response.body[0]._id)).toEqual(true);
+      expect(body).toEqual([
+        {
+          _id: response.body[0]._id,
+          name: "third.txt",
+          url: `http://insteadof/storage/third.txt/view`,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        }
+      ]);
+    });
+
+    it("should work with date filter", async () => {
+      const newData = {
+        name: "newData.txt",
+        content: {
+          data: new Binary(Buffer.from("newData")),
+          type: "text/plain",
+          size: 7
+        }
+      };
+
+      const postRes = await req.post("/storage", serialize({content: [newData]}), {
+        "Content-Type": "application/bson"
+      });
+
+      const body = postRes.body;
+
+      const ltRes = await req.get("/storage", {
+        filter: JSON.stringify({created_at: {$lt: body[0].created_at}})
+      });
+
+      const gteRes = await req.get("/storage", {
+        filter: JSON.stringify({created_at: {$gte: body[0].created_at}})
+      });
+
+      expect(gteRes.body).toEqual([
+        {
+          _id: gteRes.body[0]._id,
+          name: "newData.txt",
+          url: `http://insteadof/storage/newData.txt/view`,
+          created_at: gteRes.body[0].created_at,
+          updated_at: gteRes.body[0].updated_at,
+          content: {
+            type: `text/plain`,
+            size: 7
+          }
+        }
+      ]);
+
+      expect(ltRes.body).toEqual([
+        {
+          _id: ltRes.body[0]._id,
+          name: "first.txt",
+          url: `http://insteadof/storage/first.txt/view`,
+          created_at: ltRes.body[0].created_at,
+          updated_at: ltRes.body[0].updated_at,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        },
+        {
+          _id: ltRes.body[1]._id,
+          name: "second.txt",
+          url: `http://insteadof/storage/second.txt/view`,
+          created_at: ltRes.body[1].created_at,
+          updated_at: ltRes.body[1].updated_at,
+          content: {
+            type: `text/plain`,
+            size: 6
+          }
+        },
+        {
+          _id: ltRes.body[2]._id,
+          name: "third.txt",
+          url: `http://insteadof/storage/third.txt/view`,
+          created_at: ltRes.body[2].created_at,
+          updated_at: ltRes.body[2].updated_at,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        }
+      ]);
+    });
   });
 
   describe("index", () => {

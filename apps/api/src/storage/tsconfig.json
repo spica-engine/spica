@@ -19,6 +19,9 @@
     },
     {
       "path": "../../../../libs/interface/storage"
+    },
+    {
+      "path": "../../../../libs/filter"
     }
   ]
 }
