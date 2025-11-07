@@ -1,5 +1,6 @@
 @use "../../../../styles/mixins";
 
+/* Container Styles */
 .container {
   height: 100% !important;
   overflow-x: auto;
@@ -13,7 +14,7 @@
   align-items: start !important;
 }
 
-
+/* Column Container Styles */
 .storageItemColumnContainer {
   height: 100% !important;
   border-right: var(--border-default) !important;
@@ -21,6 +22,16 @@
   padding: var(--padding-xl) 0;
   width: 280px !important;
   min-width: 280px !important;
+  overflow-y: auto;
+  min-height: 0;
+  
+  &:last-child {
+    border-right: none;
+  }
+}
+
+.lastColumn {
+  border-right: none !important;
 }
 
 .columnLoaderContainer {
@@ -32,17 +43,49 @@
   align-items: center;
 }
 
-.storageItemColumnContainer {
-  border-right: var(--border-default);
-  overflow-y: auto;
-  min-height: 0;
-  
-  &:last-child {
-    border-right: none;
+/* Column Content Styles */
+.storageItemColumn {
+  height: 100% !important;
+  width: 100% !important;
+  overflow-y: scroll;
+  @include mixins.hideScrollbar;
+}
+
+.noItemsText {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Storage Item Styles */
+.storageItem {
+  cursor: pointer;
+  max-width: 100%;
+  width: 100% !important;
+  height: 28px !important;
+  padding: var(--padding-sm) var(--padding-xl);
+  justify-content: flex-start !important;
+
+  &:hover {
+    background-color: var(--color-hover);
   }
 }
 
-
-.lastColumn {
-  border-right: none !important;
+.activeStorageItem {
+  background-color: var(--color-hover);
 }
+
+.storageItemText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block !important;
+  max-width: 100%;
+}
+
+.storageItemIcon {
+  color: var(--color-font-primary);
+}
+

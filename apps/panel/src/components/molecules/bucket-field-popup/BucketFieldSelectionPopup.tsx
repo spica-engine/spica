@@ -1,20 +1,20 @@
-import {cloneElement, memo, useState, type ReactNode} from "react";
+import {memo, useState, type ReactNode} from "react";
 import {FlexElement, ListItem, Icon, Popover, type IconName} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
-import BucketFieldConfigurationPopup from "./BucketFieldConfigurationPopup";
+import BucketFieldConfigurationPopup, {type PopupType} from "./BucketFieldConfigurationPopup";
 import type {Placement} from "oziko-ui-kit/dist/custom-hooks/useAdaptivePosition";
-import type {PopupType} from "./BucketFieldPopupsContext";
 import {FieldKind} from "../../../domain/fields";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type {BucketType} from "../../../store/api/bucketApi";
 
 type BucketFieldSelectionPopupProps = {
-  children: ReactNode;
+  children: (props: {onOpen: (e: React.MouseEvent) => void} & {className?: string}) => ReactNode;
   onSaveAndClose: (values: FieldFormState, kind: FieldKind) => void | Promise<BucketType>;
   placement?: Placement;
   popupType?: PopupType;
   forbiddenFieldNames?: string[];
+  containerClassName?: string;
 };
 
 const BucketFieldSelectionPopup = ({
@@ -22,7 +22,8 @@ const BucketFieldSelectionPopup = ({
   onSaveAndClose,
   placement,
   popupType = "add-field",
-  forbiddenFieldNames = []
+  forbiddenFieldNames = [],
+  containerClassName
 }: BucketFieldSelectionPopupProps) => {
   const [selectedType, setSelectedType] = useState<FieldKind | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -58,7 +59,13 @@ const BucketFieldSelectionPopup = ({
       open={isOpen}
       onClose={handleClose}
       portalClassName={outerPortalClassName}
-      contentProps={{className: styles.popoverContent}}
+      contentProps={{
+        className: styles.popoverContent,
+        onClick: (e: React.MouseEvent) => {
+          e.stopPropagation();
+        }
+      }}
+      containerProps={{dimensionX: "fill", className: styles.newFieldButtonContainer}}
       content={
         <BucketFieldConfigurationPopup
           isOpen={!!selectedType}
@@ -85,12 +92,11 @@ const BucketFieldSelectionPopup = ({
         </BucketFieldConfigurationPopup>
       }
     >
-      <>
-        {cloneElement(children as React.ReactElement<{onClick?: (e: React.MouseEvent) => void}>, {
-          onClick: handleOpen
-        })}
-      </>
+      <div className={styles.addNewFieldButtonChildren}>
+      {children({onOpen: handleOpen, className: styles.newFieldButtonContainer})}
+      </div>
     </Popover>
+
   );
 };
 

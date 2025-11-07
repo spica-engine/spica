@@ -84,18 +84,6 @@ function useStorageService() {
     [updateStorageName]
   );
 
-  const convertStorageToTypeFile = (storage: Storage): TypeFile => ({
-    _id: storage._id || "",
-    name: storage.name,
-    content: {
-      type: storage.name.endsWith("/")
-        ? "inode/directory"
-        : storage.content?.type || "application/octet-stream",
-      size: storage.content?.size || 0
-    },
-    url: storage.url || ""
-  });
-
   const buildDirectoryFilter = useCallback((directory: string[] = ["/"]) => {
     const currentDirectory = directory.length === 1 ? "/" : directory.slice(1).join("");
 
@@ -118,6 +106,21 @@ function useStorageService() {
       };
     }
   }, []);
+
+  const convertStorageToTypeFile = useCallback(
+    (storage: Storage): TypeFile => ({
+      _id: storage._id || "",
+      name: storage.name,
+      content: {
+        type: storage.name.endsWith("/")
+          ? "inode/directory"
+          : storage.content?.type || "application/octet-stream",
+        size: storage.content?.size || 0
+      },
+      url: storage.url || ""
+    }),
+    []
+  );
 
   return {
     uploadFiles: uploadFilesWithProgress,

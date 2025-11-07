@@ -4,7 +4,6 @@ import {useUploadFilesMutation} from "../../../../store/api/storageApi";
 import styles from "./StorageColumn.module.scss";
 import {
   type DirectoryItem,
-  type TypeDirectoryDepth,
   type TypeDirectories
 } from "../../../../types/storage";
 
@@ -13,11 +12,11 @@ interface StorageItemColumnProps {
   handleFolderClick: (
     folderName: string,
     fullPath: string,
-    depth: TypeDirectoryDepth,
+    depth: number,
     isActive: boolean,
   ) => void;
   setPreviewFile: (file?: DirectoryItem) => void;
-  depth: TypeDirectoryDepth;
+  depth: number;
   directory: TypeDirectories;
   previewFileId?: string;
   prefix: string;

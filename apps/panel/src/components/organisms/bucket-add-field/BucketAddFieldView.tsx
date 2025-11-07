@@ -23,11 +23,7 @@ import {
 } from "react";
 import type {FormErrors} from "./BucketAddFieldBusiness";
 import styles from "./BucketAddField.module.scss";
-import BucketFieldConfigurationPopup from "../../molecules/bucket-field-popup/BucketFieldConfigurationPopup";
-import {
-  useBucketFieldPopups,
-  type PopupType
-} from "../../../components/molecules/bucket-field-popup/BucketFieldPopupsContext";
+import BucketFieldConfigurationPopup, {type PopupType} from "../../molecules/bucket-field-popup/BucketFieldConfigurationPopup";
 import {useInputRepresenter} from "oziko-ui-kit";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {TypeProperties} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
@@ -39,6 +35,7 @@ type InnerFieldProps = {
   onSaveInnerField: (values: InnerFieldFormState) => void;
   onDeleteInnerField: (field: FieldFormState) => void;
   forbiddenFieldNames: string[];
+  popupId?: string;
 };
 
 const iconsMap: Record<Exclude<PopupType, "add-field">, IconName> = {
@@ -47,7 +44,7 @@ const iconsMap: Record<Exclude<PopupType, "add-field">, IconName> = {
 };
 
 const InnerField: FC<InnerFieldProps> = memo(
-  ({field, onSaveInnerField, onDeleteInnerField, forbiddenFieldNames}) => {
+  ({field, onSaveInnerField, onDeleteInnerField, forbiddenFieldNames, popupId}) => {
     const [isEditing, setIsEditing] = useState(false);
 
     const handleToggleEdit = () => setIsEditing(prev => !prev);
@@ -123,6 +120,7 @@ type BucketAddFieldViewProps = {
   handleDeleteInnerField: (values: FieldFormState) => void;
   popupId?: string;
   type: FieldKind;
+  popupType?: PopupType;
 };
 
 const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
@@ -142,11 +140,9 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
   handleSaveInnerField,
   handleDeleteInnerField,
   popupId,
-  type
+  type,
+  popupType = "add-field"
 }) => {
-  const {bucketFieldPopups} = useBucketFieldPopups();
-  const {popupType} = bucketFieldPopups.find(p => p.id === popupId) as {popupType: PopupType};
-
   const iconName = iconsMap[popupType as keyof typeof iconsMap];
   const field = FIELD_REGISTRY[type as keyof typeof FIELD_REGISTRY];
 
@@ -231,6 +227,7 @@ const BucketAddFieldView: FC<BucketAddFieldViewProps> = ({
                   onSaveInnerField={handleSaveInnerField}
                   onDeleteInnerField={handleDeleteInnerField}
                   forbiddenFieldNames={forbiddenFieldNames}
+                  popupId={popupId}
                 />
               ))}
             </div>

@@ -63,6 +63,8 @@ services:
       - --persistent-path
       - /data
       - --public-url
+      - http://localhost:4300/api
+      - --default-storage-public-url
       - http://localhost:4300
     ports:
       - "4300:4300"

@@ -1,4 +1,4 @@
-import type { TypeMenuItems, TypeNavigatorItems } from "../../components/organisms/sidebar/SideBar";
+import type {TypeMenuItems, TypeNavigatorItem} from "../../types/sidebar";
 
 export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[] => [
   {
@@ -7,12 +7,13 @@ export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[]
     icon: "bucket",
     header: {
       name: "Tables",
-      buttons: [{
-        icon: "clockOutline",
-        onClick: () => { }
-      },
-      { icon: "viewList", onClick: () => navigate?.("/diagram") }
-    ]
+      buttons: [
+        {
+          icon: "clockOutline",
+          onClick: () => {}
+        },
+        {icon: "viewList", onClick: () => navigate?.("/diagram")}
+      ]
     },
     addNewButtonText: "New Bucket"
   },
@@ -63,18 +64,18 @@ export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[]
     header: {
       name: "Assetstore"
     }
-  },
+  }
 ];
 
 export const menuItems: TypeMenuItems[] = getMenuItems();
 
-export const navigatorItems: { [key: string]: TypeNavigatorItems[] } = {
+export const navigatorItems: {[key: string]: TypeNavigatorItem[]} = {
   dashboard: [
-    { _id: "1", title: "Overview", icon: "dashboard", section: "dashboard" },
-    { _id: "2", title: "Analytics", icon: "dashboard", section: "dashboard" }
+    {_id: "1", title: "Overview", icon: "dashboard", section: "dashboard"},
+    {_id: "2", title: "Analytics", icon: "dashboard", section: "dashboard"}
   ],
   bucket: [
-    { _id: "3", title: "Profile", icon: "bucket", section: "bucket" },
-    { _id: "4", title: "Security", icon: "lock", section: "bucket" }
+    {_id: "3", title: "Profile", icon: "bucket", section: "bucket"},
+    {_id: "4", title: "Security", icon: "lock", section: "bucket"}
   ]
 };

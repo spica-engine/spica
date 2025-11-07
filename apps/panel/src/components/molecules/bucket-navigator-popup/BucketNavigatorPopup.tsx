@@ -8,7 +8,7 @@ import CategorySelectCreate from "../category-select-create/CategorySelectCreate
 import {useGetBucketsQuery, useChangeBucketCategoryMutation, useRenameBucketMutation} from "../../../store/api/bucketApi";
 import DeleteBucket from "../../prefabs/delete-bucket/DeleteBucket";
 
-type TypeBucketNavigatorPopup = {
+export type TypeBucketNavigatorPopup = {
   className?: string;
   onOpen?: () => void;
   onClose?: () => void;

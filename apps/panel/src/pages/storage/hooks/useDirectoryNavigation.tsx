@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { TypeDirectories, TypeDirectoryDepth } from "src/types/storage";
+import type { TypeDirectories } from "src/types/storage";
 import { getParentPath } from "../utils";
 import { ROOT_PATH } from "../constants";
 
@@ -16,11 +16,12 @@ const INITIAL_DIRECTORIES: TypeDirectories = [
 
 export function useDirectoryNavigation() {
   const [directory, setDirectory] = useState<TypeDirectories>(INITIAL_DIRECTORIES);
+  const [currentDirectory, setCurrentDirectory] = useState<string>(ROOT_PATH);
 
   const handleFolderClick = (
     folderName: string,
     fullPath: string,
-    directoryDepth: TypeDirectoryDepth,
+    directoryDepth: number,
     wasActive: boolean,
     isFilteringOrSearching: boolean
   ) => {
@@ -42,6 +43,12 @@ export function useDirectoryNavigation() {
         };
       });
       setDirectory(newDirectories);
+      
+      const visibleDirs = newDirectories
+        .filter(dir => dir.currentDepth)
+        .sort((a, b) => (a.currentDepth || 0) - (b.currentDepth || 0));
+      const lastVisible = visibleDirs[visibleDirs.length - 1];
+      setCurrentDirectory(lastVisible?.fullPath || ROOT_PATH);
       return;
     }
 
@@ -79,7 +86,7 @@ export function useDirectoryNavigation() {
         return {
           ...dir,
           isActive: true,
-          currentDepth: pathDepth as TypeDirectoryDepth
+          currentDepth: pathDepth as number
         };
       }
 
@@ -94,11 +101,14 @@ export function useDirectoryNavigation() {
       newDirectories.push(theDirectory);
     }
     setDirectory(newDirectories);
+    setCurrentDirectory(fullPath);
   };
 
   return {
     directory,
     setDirectory,
+    currentDirectory,
+    setCurrentDirectory,
     handleFolderClick
   };
 }

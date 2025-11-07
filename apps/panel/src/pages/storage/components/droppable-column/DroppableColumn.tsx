@@ -18,13 +18,7 @@ interface DroppableColumnProps {
   className?: string;
 }
 
-export function DroppableColumn({
-  folderPath,
-  items,
-  children,
-  onDrop,
-  className
-}: DroppableColumnProps) {
+export function DroppableColumn({folderPath, items, children, onDrop, className}: DroppableColumnProps) {
   const [{isOver, canDrop}, drop] = useDrop<
     DragItem,
     DirectoryItem,

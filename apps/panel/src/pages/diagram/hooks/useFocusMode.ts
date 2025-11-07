@@ -5,6 +5,14 @@ export const useFocusMode = (relations: Relation[]) => {
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
   const [focusedRelatedNodes, setFocusedRelatedNodes] = useState<Set<string>>(new Set());
 
+  const isPopoverOpen = () => {
+    const portals = document.querySelectorAll('[class*="Portal-module_container"]');
+    return Array.from(portals).some(portal => {
+      const style = window.getComputedStyle(portal as HTMLElement);
+      return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+    });
+  };
+
   const isNodeFocused = useCallback((nodeId: string) => {
     if (!focusedNodeId) return true;
     return nodeId === focusedNodeId || focusedRelatedNodes.has(nodeId);
@@ -27,6 +35,10 @@ export const useFocusMode = (relations: Relation[]) => {
   }, [focusedNodeId, focusedRelatedNodes, relations]);
 
   const handleNodeClick = useCallback((nodeId: string) => {
+    if (isPopoverOpen()) {
+      return;
+    }
+
     if (focusedNodeId === nodeId) {
       setFocusedNodeId(null);
       setFocusedRelatedNodes(new Set());
@@ -46,6 +58,10 @@ export const useFocusMode = (relations: Relation[]) => {
   }, [focusedNodeId, relations]);
 
   const handleBackgroundClick = useCallback((e: React.MouseEvent, containerRef: React.RefObject<HTMLDivElement | null>) => {
+    if (isPopoverOpen()) {
+      return;
+    }
+
     if (
       focusedNodeId && 
       (e.target === containerRef.current ||

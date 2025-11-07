@@ -8,7 +8,6 @@ import {useGetStorageItemsQuery, type Storage, type StorageOptions} from "../../
 import { convertQuickDateToRange, convertToBytes } from "../../../utils/storage";
 import useStorage from "../../../hooks/useStorage";
 
-
 type TypeStorageFileSelect = {
   className?: string;
   isOpen?: boolean;

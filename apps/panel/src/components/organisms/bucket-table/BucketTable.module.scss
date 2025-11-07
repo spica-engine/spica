@@ -95,20 +95,16 @@
 }
 
 .newFieldColumnButton {
-  padding-left: 0;
-  background-color: var(--color-border);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-weight: 600;
-  line-height: 0 !important;
   span {
     font-weight: 600;
     font-size: var(--font-size-md);
     font-family: var(--font-family-base);
   }
-  button {
-    width: 100%;
-    gap: var(--gap-xl);
-  }
-  max-width: 140px;
 }
 
 .newFieldCell {

@@ -78,10 +78,8 @@
 
 .innerFieldPrefix {
   overflow: visible;
-  width: 100%;
+  width: auto;
   justify-content: flex-start !important;
-  min-width: 25px;
-  max-width: 25px;
   > div {
     justify-content: flex-start !important;
   }

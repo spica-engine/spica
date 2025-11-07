@@ -26,6 +26,7 @@ function isDifferentLocation(oldParent: string, newParent: string): boolean {
 }
 
 function hasUniqueNameInTarget(
+  _oldParent: string,
   newParent: string,
   item: DirectoryItem,
   items: DirectoryItem[]
@@ -38,6 +39,7 @@ function hasUniqueNameInTarget(
 }
 
 function isNotMovingFolderIntoChild(
+  _oldParent: string,
   newParent: string,
   item: DirectoryItem
 ): boolean {
@@ -59,8 +61,8 @@ type CanDropCheck = (
 function getCanDropChecks(): CanDropCheck[] {
   return [
     (oldParent, newParent) => isDifferentLocation(oldParent, newParent),
-    (_oldParent, newParent, item, items) => hasUniqueNameInTarget(newParent, item, items),
-    (_oldParent, newParent, item) => isNotMovingFolderIntoChild(newParent, item)
+    (oldParent, newParent, item, items) => hasUniqueNameInTarget(oldParent, newParent, item, items),
+    (oldParent, newParent, item) => isNotMovingFolderIntoChild(oldParent, newParent, item)
   ];
 }
 

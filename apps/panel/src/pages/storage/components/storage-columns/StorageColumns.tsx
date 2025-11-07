@@ -1,39 +1,62 @@
-import {FlexElement, Spinner, type TypeFile} from "oziko-ui-kit";
-import styles from "./StorageColumns.module.scss";
-import {useMemo, useRef, useEffect} from "react";
-import {ROOT_PATH} from "../../constants";
-import {StorageItemColumn} from "../storage-column/StorageColumn";
-import type {DirectoryItem, TypeDirectories, TypeDirectoryDepth} from "../../../../types/storage";
-import {useDragAndDrop} from "../../hooks/useDragAndDrop";
-import {DroppableColumn} from "../droppable-column/DroppableColumn";
-import {StorageItem} from "../storage-item/StorageItem";
 
-interface StorageItemColumnsProps {
-  handleFolderClick: (
-    folderName: string,
-    fullPath: string,
-    directoryDepth: TypeDirectoryDepth,
-    wasActive: boolean
-  ) => void;
-  setPreviewFile: (file: DirectoryItem | undefined) => void;
-  directory: TypeDirectories;
-  setDirectory: (dirs: TypeDirectories) => void;
-  previewFile?: DirectoryItem;
-  onUploadComplete?: (file: TypeFile & {prefix?: string}) => void;
-  isDraggingDisabled?: boolean;
+import {useRef, useEffect, useMemo} from "react";
+import {FlexElement, Spinner} from "oziko-ui-kit";
+import {useAppSelector, useAppDispatch} from "../../../../store/hook";
+import {selectDirectory, setDirectory, handleFolderClick as handleFolderClickAction} from "../../../../store";
+import {useDragAndDrop} from "../../hooks/useDragAndDrop";
+import {useStorageDataSync} from "../../hooks/useStorageDataSync";
+import {useFileOperations} from "../../hooks/useFileOperations";
+import {ROOT_PATH} from "../../constants";
+import type {
+  DirectoryItem,
+  TypeDirectories,
+} from "../../../../types/storage";
+import styles from "./StorageColumns.module.scss";
+import { DroppableColumn } from "../droppable-column/DroppableColumn";
+import { StorageItem } from "../storage-item/StorageItem";
+import { StorageItemColumn } from "../storage-column/StorageColumn";
+
+interface StorageColumnsProps {
+  readonly setPreviewFile: (file?: DirectoryItem) => void;
+  readonly handleClosePreview: () => void;
+  readonly previewFile?: DirectoryItem;
 }
 
+
 export function StorageItemColumns({
-  handleFolderClick,
   setPreviewFile,
-  directory,
-  setDirectory,
-  previewFile,
-  onUploadComplete,
-  isDraggingDisabled = false
-}: StorageItemColumnsProps) {
-  const {handleDrop} = useDragAndDrop(directory, setDirectory);
+  handleClosePreview,
+  previewFile
+}: StorageColumnsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const dispatch = useAppDispatch();
+  const directory = useAppSelector(selectDirectory);
+
+  const handleSetDirectory = (dirs: TypeDirectories) => {
+    dispatch(setDirectory(dirs));
+  };
+
+  useStorageDataSync(directory, handleSetDirectory);
+  const {onUploadComplete} = useFileOperations(directory, handleSetDirectory, setPreviewFile);
+  const {handleDrop} = useDragAndDrop(directory, handleSetDirectory);
+
+  const handleFolderClick = (
+    folderName: string,
+    fullPath: string,
+    directoryDepth: number,
+    wasActive: boolean
+  ) => {
+    handleClosePreview();
+    dispatch(
+      handleFolderClickAction({
+        folderName,
+        fullPath,
+        directoryDepth,
+        wasActive,
+        isFilteringOrSearching: false
+      })
+    );
+  };
 
   const visibleDirectories = useMemo(
     () =>
@@ -43,9 +66,10 @@ export function StorageItemColumns({
     [directory]
   );
 
-  const maxDepth = useMemo(() => {
-    return Math.max(...visibleDirectories.map(dir => dir.currentDepth || 0), 0);
-  }, [visibleDirectories]);
+  const maxDepth = useMemo(
+    () => Math.max(...visibleDirectories.map(dir => dir.currentDepth || 0), 0),
+    [visibleDirectories]
+  );
 
   useEffect(() => {
     const container = containerRef.current;
@@ -62,9 +86,7 @@ export function StorageItemColumns({
     const resizeObserver = new ResizeObserver(checkScrollable);
     resizeObserver.observe(container);
 
-    return () => {
-      resizeObserver.disconnect();
-    };
+    return () => resizeObserver.disconnect();
   }, [visibleDirectories]);
 
   return (
@@ -85,24 +107,28 @@ export function StorageItemColumns({
               ? ""
               : dir.fullPath.split("/").filter(Boolean).join("/") + "/";
 
+          const columnClassName = `${styles.storageItemColumnContainer} ${
+            maxDepth === dir.currentDepth ? styles.lastColumn : ""
+          }`;
+
           return dir.items ? (
             <DroppableColumn
-              folderPath={folderPath}
               key={dir.fullPath}
-              items={orderedItems || []}
+              folderPath={folderPath}
+              items={orderedItems}
               onDrop={handleDrop}
-              className={`${styles.storageItemColumnContainer} ${maxDepth === dir.currentDepth ? styles.lastColumn : ""}`}
+              className={columnClassName}
             >
               <StorageItemColumn
-                items={orderedItems || []}
+                items={orderedItems}
                 handleFolderClick={handleFolderClick}
                 setPreviewFile={setPreviewFile}
-                depth={dir.currentDepth!}
+                depth={dir.currentDepth || 0}
                 directory={directory}
                 previewFileId={previewFile?._id}
                 prefix={folderPath}
                 onUploadComplete={onUploadComplete}
-                isDraggingDisabled={isDraggingDisabled}
+                isDraggingDisabled={false}
                 StorageItem={StorageItem}
               />
             </DroppableColumn>

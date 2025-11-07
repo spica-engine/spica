@@ -75,7 +75,6 @@ export const storageApi = baseApi.injectEndpoints({
         const formData = new FormData();
         Array.from(files).forEach((file) => formData.append('files', file));
         if (prefix) formData.append('prefix', prefix);
-
         return {
           url: '/storage',
           method: 'POST',
