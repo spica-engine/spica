@@ -9,6 +9,25 @@ on:
     branches: ["master"]
 
 jobs:
+  helm_lint:
+    name: Helm Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install Helm
+        uses: azure/setup-helm@v4.2.0
+
+      - name: Lint Helm Charts
+        run: |
+          cd charts/spica
+          helm lint \
+            --set application.secret=lint-secret \
+            --set application.bucketDataHashSecret=lint-hash-secret \
+            --set application.publicHost=lint.example.com
+
   run_command:
     name: Run Command
     runs-on: ubuntu-latest
