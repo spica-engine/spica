@@ -1,9 +1,11 @@
-import type { TypeFile } from "oziko-ui-kit";
 
 /**
  * @owner Kanan Gasimov
  * email: rio.kenan@gmail.com
  */
+
+import type { TypeFile } from "oziko-ui-kit";
+
 export function isLocalServerUrl(urlStr?: string): boolean {
   if (!urlStr) return false;
 
@@ -53,7 +55,7 @@ function getCopyUrl(file?: TypeFile): string {
 
   const url = new URL(file.url);
 
-  if (url.hostname === "storage.googleapis.com") {
+  if (url.hostname === import.meta.env.VITE_GOOGLE_STORAGE_HOST) {
     const formattedUrl = formatGoogleStorageUrl(file.url);
     if (formattedUrl) {
       return formattedUrl;
@@ -83,7 +85,7 @@ export function generatePublicFileUrl(
     const url = new URL(fileUrl);
 
     // Handle Google Cloud Storage URLs
-    if (url.hostname === "storage.googleapis.com") {
+    if (url.hostname === import.meta.env.VITE_GOOGLE_STORAGE_HOST) {
       const formattedUrl = formatGoogleStorageUrl(fileUrl);
       if (formattedUrl) {
         return formattedUrl;
