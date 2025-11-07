@@ -107,11 +107,9 @@ export function useFileActions(
       const parentPath = getParentPath(originalFile.fullPath);
       const {uploadFile, fullPath} = prepareFileForUpload(newFile, parentPath);
 
-      // Optimistic update - show temporary file immediately
       const temporaryFile = createTemporaryFileItem(originalFile, newFile, fullPath);
       onFileReplaced?.(temporaryFile);
 
-      // Perform the actual upload
       updateStorageItem({id: originalFile._id, file: uploadFile})
         .unwrap()
         .then((updatedFile: any) => {
@@ -130,11 +128,9 @@ export function useFileActions(
         })
         .catch((error: unknown) => {
           console.error("File replacement failed:", error);
-          // Revert to original file on error
           onFileReplaced?.(originalFile);
         });
 
-      // Reset input for same file re-selection
       event.target.value = "";
     },
     [onFileReplaced, updateStorageItem]

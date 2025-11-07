@@ -13,7 +13,6 @@ export function AuthorizedEmbed({
   ...props
 }: AuthorizedEmbedProps) {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
-  console.log("url", url);
   useEffect(() => {
     let urlObject: string;
 

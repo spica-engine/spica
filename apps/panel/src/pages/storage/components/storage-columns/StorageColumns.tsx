@@ -1,5 +1,4 @@
 import {useRef, useEffect, useMemo, memo, type DragEventHandler} from "react";
-import {useDrop} from "react-dnd";
 import {FlexElement, Spinner, Icon, Text} from "oziko-ui-kit";
 import {useAppSelector, useAppDispatch} from "../../../../store/hook";
 import {selectDirectory, setDirectory, handleFolderClick as handleFolderClickAction} from "../../../../store";
@@ -7,17 +6,15 @@ import {useUploadFilesMutation} from "../../../../store/api/storageApi";
 import {useDragAndDrop} from "../../hooks/useDragAndDrop";
 import {useStorageDataSync} from "../../hooks/useStorageDataSync";
 import {useFileOperations} from "../../hooks/useFileOperations";
-import {validateDrop} from "../../utils";
 import {ROOT_PATH} from "../../constants";
-import {DnDItemTypes} from "../../../../hooks/useTypedDragLayer";
 import type {
   DirectoryItem,
   TypeDirectories,
   TypeDirectoryDepth,
-  DragItem
 } from "../../../../types/storage";
 import styles from "./StorageColumns.module.scss";
 import { DraggableStorageItem } from "../droppable-item/DroppableItem";
+import { DroppableColumn } from "../droppable-column/DroppableColumn";
 
 interface StorageColumnsProps {
   setPreviewFile: (file?: DirectoryItem) => void;
@@ -178,88 +175,6 @@ interface DroppableColumnProps {
   className?: string;
 }
 
-const DroppableColumn = memo(({folderPath, items, children, onDrop, className}: DroppableColumnProps) => {
-  const [{isOver, canDrop}, drop] = useDrop<
-    DragItem,
-    DirectoryItem,
-    {isOver: boolean; canDrop: boolean}
-  >({
-    accept: DnDItemTypes.STORAGE_ITEM,
-    drop: dragItem => {
-      const draggedItem: DirectoryItem = {
-        _id: dragItem.id,
-        label: dragItem.name,
-        fullPath: dragItem.fullPath,
-        content: {
-          type: dragItem.type,
-          size: dragItem.size
-        },
-        name: dragItem.name,
-        url: "",
-        isActive: false
-      };
-
-      const targetPath = folderPath.endsWith("/") ? folderPath : folderPath + "/";
-      const sourceItems = items.filter(item => {
-        const itemParent = item.fullPath.substring(0, item.fullPath.lastIndexOf("/") + 1);
-        return itemParent === dragItem.parentPath;
-      });
-
-      onDrop(draggedItem, targetPath, sourceItems, items).catch(err => {
-        console.error("onDrop failed", err);
-      });
-
-      return undefined;
-    },
-    canDrop: dragItem => {
-      const oldParent = dragItem.parentPath;
-      const newParent = folderPath.endsWith("/") ? folderPath : folderPath + "/";
-      const draggedItem: DirectoryItem = {
-        _id: dragItem.id,
-        label: dragItem.name,
-        fullPath: dragItem.fullPath,
-        content: {
-          type: dragItem.type,
-          size: dragItem.size
-        },
-        name: dragItem.name,
-        url: "",
-        isActive: false
-      };
-
-      return validateDrop(draggedItem, oldParent, newParent, items);
-    },
-    collect: monitor => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop()
-    })
-  });
-
-  const active = isOver && canDrop === true;
-  const notAllowedDrop = isOver && !canDrop;
-  const ref = useRef(null);
-  drop(ref);
-
-  const dropStyles: React.CSSProperties = {
-    minHeight: "100px",
-    transition: "background-color var(--transition-duration) ease",
-    backgroundColor: active
-      ? "var(--color-menu-contrast)"
-      : notAllowedDrop
-      ? "var(--color-error-light)"
-      : "var(--color-transparent)",
-    opacity: notAllowedDrop ? 0.6 : 1,
-    cursor: notAllowedDrop ? "not-allowed" : "default"
-  };
-
-  return (
-    <div ref={ref} style={dropStyles} className={className}>
-      {children}
-    </div>
-  );
-});
-
-DroppableColumn.displayName = "DroppableColumn";
 
 export function StorageItemColumns({
   setPreviewFile,
