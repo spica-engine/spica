@@ -4,12 +4,14 @@ export interface DragItem {
   id: string;
   name: string;
   fullPath: string;
-  isDirectory: boolean;
   parentPath: string;
+  type: string;
+  size: number;
 }
 
 export type TypeDirectoryDepth = number;
-export type DirectoryItem = TypeFile & {fullPath: string; label?: string; isActive?: boolean};
+export type DirectoryItem = TypeFile & {fullPath: string; label?: string; isActive?: boolean, currentDepth?: TypeDirectoryDepth; items?: DirectoryItem[];};
+
 export type TypeDirectory = {
   items?: DirectoryItem[];
   label: string;

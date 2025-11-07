@@ -27,8 +27,9 @@ export function DraggableStorageItem({item, children}: DraggableStorageItemProps
       id: item._id || "",
       name: item.label as string,
       fullPath: item.fullPath,
-      isDirectory: item.content?.type === "inode/directory",
-      parentPath
+      parentPath,
+      type: item.content?.type,
+      size: item.content?.size
     },
     collect: monitor => ({
       isDragging: monitor.isDragging()

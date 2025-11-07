@@ -3,7 +3,7 @@ import {useDrop} from "react-dnd";
 import {type DirectoryItem, type DragItem} from "../../../../types/storage";
 import {validateDrop} from "../../utils";
 import styles from "./DroppableColumn.module.scss";
-import { DnDItemTypes } from "../../../../hooks/useTypedDragLayer";
+import {DnDItemTypes} from "../../../../hooks/useTypedDragLayer";
 
 interface DroppableColumnProps {
   folderPath: string;
@@ -31,8 +31,8 @@ export function DroppableColumn({folderPath, items, children, onDrop, className}
         label: dragItem.name,
         fullPath: dragItem.fullPath,
         content: {
-          type: dragItem.isDirectory ? "inode/directory" : "application/octet-stream",
-          size: 0
+          type: dragItem.type,
+          size: dragItem.size
         },
         name: dragItem.name,
         url: "",
@@ -60,8 +60,8 @@ export function DroppableColumn({folderPath, items, children, onDrop, className}
         label: dragItem.name,
         fullPath: dragItem.fullPath,
         content: {
-          type: dragItem.isDirectory ? "inode/directory" : "application/octet-stream",
-          size: 0
+          type: dragItem.type,
+          size: dragItem.size
         },
         name: dragItem.name,
         url: "",

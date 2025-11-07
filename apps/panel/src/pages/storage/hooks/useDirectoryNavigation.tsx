@@ -101,8 +101,6 @@ export function useDirectoryNavigation() {
       newDirectories.push(theDirectory);
     }
     setDirectory(newDirectories);
-    
-    // Update currentDirectory to the clicked folder
     setCurrentDirectory(fullPath);
   };
 
