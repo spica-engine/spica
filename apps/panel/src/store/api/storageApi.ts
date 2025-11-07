@@ -6,6 +6,7 @@
 import { baseApi } from './baseApi';
 import axios, { type AxiosProgressEvent } from 'axios';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import type { RootState } from '../index';
 
 // Storage tag constants
 const STORAGE_TAG = 'Storage' as const;
@@ -95,7 +96,7 @@ export const storageApi = baseApi.injectEndpoints({
     uploadFiles: builder.mutation<Storage[], UploadFilesRequest>({
       queryFn: async ({ files, prefix, onProgress }, api) => {
         try {
-          const state = api.getState() as any;
+          const state = api.getState() as RootState;
           const token = state.auth?.token;
 
           const formData = new FormData();
@@ -104,7 +105,7 @@ export const storageApi = baseApi.injectEndpoints({
           }
           if (prefix) formData.append('prefix', prefix);
 
-          const headers: any = {};
+          const headers: Record<string, string> = {};
           if (token) {
             headers.Authorization = `IDENTITY ${token}`;
           }
