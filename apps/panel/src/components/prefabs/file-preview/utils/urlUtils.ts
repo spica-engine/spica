@@ -1,3 +1,5 @@
+import type { TypeFile } from "oziko-ui-kit";
+
 /**
  * @owner Kanan Gasimov
  * email: rio.kenan@gmail.com
@@ -31,19 +33,34 @@ export function isLocalServerUrl(urlStr?: string): boolean {
 }
 
 export function formatGoogleStorageUrl(url: string): string | null {
-  try {
-    const parsed = new URL(url);
-    const match = parsed.pathname.match(/\/b\/([^/]+)\/o\/(.+)/);
-    
-    if (!match) return null;
-    
-    const [, bucketName, objectPath] = match;
-    const decodedObjectPath = decodeURIComponent(objectPath);
-    
-    return `${parsed.protocol}//${parsed.host}/${bucketName}/${decodedObjectPath}`;
-  } catch {
-    return null;
+  const parsed = new URL(url);
+  const match = parsed.pathname.match(/\/b\/([^/]+)\/o\/([^/]+)/);
+  if (!match) return null;
+  const [, projectName, objectId] = match;
+  return `${parsed.protocol}//${parsed.host}/${projectName}/${objectId}`;
+}
+
+function getCopyUrl(file?: TypeFile): string {
+  if (!file) return "";
+
+  const serverUrl = import.meta.env.VITE_BASE_URL as string;
+  const isLocal = isLocalServerUrl(serverUrl);
+  const origin = window.location.origin;
+
+  if (isLocal) {
+    return `${origin}/storage-view/${file._id}`;
   }
+
+  const url = new URL(file.url);
+
+  if (url.hostname === "storage.googleapis.com") {
+    const formattedUrl = formatGoogleStorageUrl(file.url);
+    if (formattedUrl) {
+      return formattedUrl;
+    }
+  }
+
+  return `${origin}/storage-view/${file._id}`;
 }
 
 interface UrlConfig {

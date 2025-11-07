@@ -101,6 +101,7 @@ export const storageApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: 'Storage' as const, id },
         { type: 'Storage' as const, id: 'LIST' },
+        { type: 'Storage' as const, id: 'BROWSE' },
       ],
     }),
 
@@ -112,6 +113,7 @@ export const storageApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, id) => [
         { type: 'Storage' as const, id },
         { type: 'Storage' as const, id: 'LIST' },
+        { type: 'Storage' as const, id: 'BROWSE' },
       ],
     }),
 
@@ -124,6 +126,7 @@ export const storageApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: 'Storage' as const, id },
         { type: 'Storage' as const, id: 'LIST' },
+        { type: 'Storage' as const, id: 'BROWSE' },
       ],
     }),
 

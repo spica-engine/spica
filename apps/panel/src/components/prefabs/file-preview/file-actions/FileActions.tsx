@@ -1,7 +1,7 @@
 import {useMemo} from "react";
 import {FlexElement, Button, Icon} from "oziko-ui-kit";
 import type {DirectoryItem} from "src/types/storage";
-import {DeleteFileButton} from "./DeleteFileButton";
+import {DeleteFileButton} from "../../delete-file/DeleteFileButton";
 import {useFileActions} from "../hooks/useFileActions";
 import styles from "./FileActions.module.scss";
 

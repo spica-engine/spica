@@ -18,7 +18,7 @@ export function useStorageConverter(directory: TypeDirectories) {
         const typeFile = convertStorageToTypeFile(storage);
         const isDirectory = typeFile.content?.type === "inode/directory";
         const nameParts = typeFile.name.split("/").filter(Boolean);
-        const resolvedName = nameParts[nameParts.length - 1] + (isDirectory ? "/" : "");
+        const resolvedName = nameParts.at(-1) + (isDirectory ? "/" : "");
 
         return {
           ...typeFile,

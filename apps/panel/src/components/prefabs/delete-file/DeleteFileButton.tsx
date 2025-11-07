@@ -1,8 +1,8 @@
 import {memo, useState} from "react";
 import {Button, Icon} from "oziko-ui-kit";
-import {useDeleteStorageItemMutation} from "../../../../store/api";
-import Confirmation from "../../../molecules/confirmation/Confirmation";
-import styles from "./FileActions.module.scss";
+import {useDeleteStorageItemMutation} from "../../../store/api";
+import Confirmation from "../../molecules/confirmation/Confirmation";
+import styles from "./DeleteFileButton.module.scss";
 
 interface DeleteFileButtonProps {
   fileId: string;
@@ -18,11 +18,11 @@ export const DeleteFileButton = memo(({fileId, onFileDeleted, onClose}: DeleteFi
     try {
       await deleteStorageItem(fileId).unwrap();
       onFileDeleted?.(fileId);
-      setShowDeleteConfirmation(false);
       onClose?.();
     } catch (error) {
       console.error("File deletion failed:", error);
     } finally {
+      setShowDeleteConfirmation(false);
     }
   };
 
