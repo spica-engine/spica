@@ -87,6 +87,8 @@ describe("Storage Acceptance", () => {
           _id: body[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/third.txt/view`,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
           content: {
             type: `text/plain`,
             size: 5
@@ -109,6 +111,8 @@ describe("Storage Acceptance", () => {
           _id: body.data[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/third.txt/view`,
+          created_at: body.data[0].created_at,
+          updated_at: body.data[0].updated_at,
           content: {
             type: `text/plain`,
             size: 5
@@ -149,6 +153,8 @@ describe("Storage Acceptance", () => {
           _id: body[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/third.txt/view`,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
           content: {
             type: `text/plain`,
             size: 5
@@ -171,6 +177,8 @@ describe("Storage Acceptance", () => {
           _id: data[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/third.txt/view`,
+          created_at: data[0].created_at,
+          updated_at: data[0].updated_at,
           content: {
             type: `text/plain`,
             size: 5
@@ -192,6 +200,8 @@ describe("Storage Acceptance", () => {
           _id: data[0]._id,
           name: "second.txt",
           url: `http://insteadof/storage/second.txt/view`,
+          created_at: data[0].created_at,
+          updated_at: data[0].updated_at,
           content: {
             type: `text/plain`,
             size: 6
@@ -201,6 +211,8 @@ describe("Storage Acceptance", () => {
           _id: data[1]._id,
           name: "first.txt",
           url: `http://insteadof/storage/first.txt/view`,
+          created_at: data[1].created_at,
+          updated_at: data[1].updated_at,
           content: {
             type: `text/plain`,
             size: 5
@@ -226,6 +238,8 @@ describe("Storage Acceptance", () => {
           _id: data[0]._id,
           name: "second.txt",
           url: `http://insteadof/storage/second.txt/view`,
+          created_at: data[0].created_at,
+          updated_at: data[0].updated_at,
           content: {
             type: `text/plain`,
             size: 6
@@ -233,7 +247,6 @@ describe("Storage Acceptance", () => {
         }
       ]);
     });
-
     describe("sort", () => {
       it("ascend by name", async () => {
         const {
@@ -252,6 +265,8 @@ describe("Storage Acceptance", () => {
             _id: data[0]._id,
             name: "first.txt",
             url: `http://insteadof/storage/first.txt/view`,
+            created_at: data[0].created_at,
+            updated_at: data[0].updated_at,
             content: {
               type: `text/plain`,
               size: 5
@@ -261,6 +276,8 @@ describe("Storage Acceptance", () => {
             _id: data[1]._id,
             name: "second.txt",
             url: `http://insteadof/storage/second.txt/view`,
+            created_at: data[1].created_at,
+            updated_at: data[1].updated_at,
             content: {
               type: `text/plain`,
               size: 6
@@ -270,6 +287,8 @@ describe("Storage Acceptance", () => {
             _id: data[2]._id,
             name: "third.txt",
             url: `http://insteadof/storage/third.txt/view`,
+            created_at: data[2].created_at,
+            updated_at: data[2].updated_at,
             content: {
               type: `text/plain`,
               size: 5
@@ -295,6 +314,8 @@ describe("Storage Acceptance", () => {
             _id: data[0]._id,
             name: "third.txt",
             url: `http://insteadof/storage/third.txt/view`,
+            created_at: data[0].created_at,
+            updated_at: data[0].updated_at,
             content: {
               type: `text/plain`,
               size: 5
@@ -304,6 +325,8 @@ describe("Storage Acceptance", () => {
             _id: data[1]._id,
             name: "second.txt",
             url: `http://insteadof/storage/second.txt/view`,
+            created_at: data[1].created_at,
+            updated_at: data[1].updated_at,
             content: {
               type: `text/plain`,
               size: 6
@@ -313,6 +336,8 @@ describe("Storage Acceptance", () => {
             _id: data[2]._id,
             name: "first.txt",
             url: `http://insteadof/storage/first.txt/view`,
+            created_at: data[2].created_at,
+            updated_at: data[2].updated_at,
             content: {
               type: `text/plain`,
               size: 5
@@ -395,6 +420,8 @@ describe("Storage Acceptance", () => {
       const id = row._id;
       delete row._id;
       delete row.url;
+      delete row.created_at;
+      delete row.updated_at;
 
       await req.put(`/storage/${id}`, serialize(row), {
         "Content-Type": "application/bson"
@@ -458,6 +485,8 @@ describe("Storage Acceptance", () => {
         _id: res.body._id,
         name: "updated_first.txt",
         url: `http://insteadof/storage/updated_first.txt/view`,
+        created_at: res.body.created_at,
+        updated_at: res.body.updated_at,
         content: {
           type: `text/plain`,
           size: 5
@@ -472,6 +501,8 @@ describe("Storage Acceptance", () => {
         _id: res.body._id,
         name: "updated_first.txt",
         url: `http://insteadof/storage/updated_first.txt/view`,
+        created_at: res.body.created_at,
+        updated_at: res.body.updated_at,
         content: {
           type: `text/plain`,
           size: 5
@@ -511,6 +542,8 @@ describe("Storage Acceptance", () => {
           _id: body[0]._id,
           name: "remoteconfig.json",
           url: body[0].url,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
           content: {
             type: "application/json",
             size: 2
@@ -557,6 +590,8 @@ describe("Storage Acceptance", () => {
           _id: body[0]._id,
           name: "remote config.json",
           url: body[0].url,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
           content: {
             size: 2,
             type: "application/json"
@@ -566,6 +601,8 @@ describe("Storage Acceptance", () => {
           _id: body[1]._id,
           name: "remote config backup.json",
           url: body[1].url,
+          created_at: body[1].created_at,
+          updated_at: body[1].updated_at,
           content: {
             size: 2,
             type: "application/json"
@@ -693,6 +730,8 @@ describe("Storage Acceptance", () => {
           _id: body[0]._id,
           name: "remoteconfig.json",
           url: body[0].url,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
           content: {
             type: "application/json",
             size: 2
@@ -715,8 +754,9 @@ describe("Storage Acceptance", () => {
 
       const id = row._id;
       delete row._id;
-
       delete row.url;
+      delete row.created_at;
+      delete row.updated_at;
 
       await req.put(`/storage/${id}`, row);
 
@@ -781,6 +821,8 @@ describe("Storage Acceptance", () => {
           _id: resBody[0]._id,
           name: "data.json",
           url: resBody[0].url,
+          created_at: resBody[0].created_at,
+          updated_at: resBody[0].updated_at,
           content: {
             type: "application/json",
             size: 2
@@ -790,6 +832,8 @@ describe("Storage Acceptance", () => {
           _id: resBody[1]._id,
           name: "test.txt",
           url: resBody[1].url,
+          created_at: resBody[1].created_at,
+          updated_at: resBody[1].updated_at,
           content: {
             type: "text/plain",
             size: 5
