@@ -1,3 +1,4 @@
+
 import {FlexElement, FluidContainer, Icon, Button} from "oziko-ui-kit";
 import SearchBar from "../../../../components/atoms/search-bar/SearchBar";
 import styles from "./StorageActionBar.module.scss";
@@ -17,8 +18,7 @@ export default function StorageActionBar() {
     .sort((a, b) => (a.currentDepth || 0) - (b.currentDepth || 0));
   
   const currentItemNames = visibleDirectories
-    .map(dir => dir.items?.map(item => item.name).filter(Boolean) || [])
-    .flat();
+    .flatMap(dir => dir.items?.map(item => item.name).filter(Boolean) || [])
 
   const prefix =
     !currentDirectory || currentDirectory === ROOT_PATH
