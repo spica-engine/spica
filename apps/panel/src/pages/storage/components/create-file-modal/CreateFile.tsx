@@ -1,15 +1,51 @@
-import React, {useRef, type FC} from "react";
+/**
+ * @owner Kanan Gasimov
+ * email: rio.kenan@gmail.com
+ */
+ 
+import React, {useRef, useState, useEffect, type FC} from "react";
 import {useUploadFilesMutation} from "../../../../store/api/storageApi";
-import {Icon, Button, Input} from "oziko-ui-kit";
+import {Icon, Button, CircularProgress} from "oziko-ui-kit";
+import styles from "./CreateFile.module.scss";
 
 type CreateFileProps = {
   prefix?: string;
   className?: string;
 };
 
+type ButtonState = "idle" | "loading" | "success" | "error";
+
 const CreateFile: FC<CreateFileProps> = ({prefix = "", className}) => {
-  const [uploadFiles, {isLoading}] = useUploadFilesMutation();
+  const [uploadFiles, {isLoading, error, isSuccess}] = useUploadFilesMutation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [progress, setProgress] = useState(0);
+  const [buttonState, setButtonState] = useState<ButtonState>("idle");
+
+  const resetToIdle = () => {
+    const timer = setTimeout(() => {
+      setButtonState("idle");
+      setProgress(0);
+    }, 1000);
+    return () => clearTimeout(timer);
+  };
+
+  useEffect(() => {
+    if (isLoading) {
+      setButtonState("loading");
+    } else if (error) {
+      setButtonState("error");
+      return resetToIdle();
+    } else if (isSuccess) {
+      setButtonState("success");
+      return resetToIdle();
+    }
+  }, [isLoading, error, isSuccess]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setProgress(0);
+    }
+  }, [isLoading]);
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -27,9 +63,11 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", className}) => {
         });
 
         const dataTransfer = new DataTransfer();
-        filesWithPrefix.forEach(file => dataTransfer.items.add(file));
+        for (const file of filesWithPrefix) {
+          dataTransfer.items.add(file);
+        }
 
-        await uploadFiles({files: dataTransfer.files});
+       await uploadFiles({files: dataTransfer.files, onProgress: setProgress});
       } catch (error) {
         console.error("File upload failed:", error);
       }
@@ -40,11 +78,56 @@ const CreateFile: FC<CreateFileProps> = ({prefix = "", className}) => {
     }
   };
 
+  const buttonContent = {
+    error: {
+      icon: (
+        <CircularProgress
+          strokeWidth={3}
+          size="xxs"
+          percent={100}
+          status="danger"
+          label={undefined}
+        />
+      ),
+      text: "Failed!"
+    },
+    success: {
+      icon: (
+        <CircularProgress
+          strokeWidth={3}
+          size="xxs"
+          percent={100}
+          status="success"
+          label={undefined}
+        />
+      ),
+      text: "Success!"
+    },
+    loading: {
+      icon: (
+        <CircularProgress
+          strokeWidth={3}
+          size="xxs"
+          percent={progress}
+          status="normal"
+          label={null}
+        />
+      ),
+      text: "Loading..."
+    },
+    idle: {icon: <Icon name="plus" />, text: "Upload Files"}
+  }[buttonState];
+
   return (
     <>
-      <Button variant="filled" onClick={handleOpen} className={className}>
-        <Icon name="plus" />
-        Upload Files
+      <Button 
+        className={`${styles.uploadButton} ${className}`}
+        variant="filled" 
+        onClick={handleOpen} 
+        disabled={isLoading}
+      >
+        {buttonContent.icon}
+        {buttonContent.text}
       </Button>
       <input
         ref={fileInputRef}

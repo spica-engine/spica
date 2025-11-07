@@ -1,4 +1,12 @@
+/**
+ * @owner Kanan Gasimov
+ * email: rio.kenan@gmail.com
+ */
+
 import { baseApi } from './baseApi';
+import axios, { type AxiosProgressEvent } from 'axios';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import type { RootState } from '../index';
 
 // Storage tag constants
 const STORAGE_TAG = 'Storage' as const;
@@ -42,6 +50,7 @@ export interface StorageOptions {
 export interface UploadFilesRequest {
   files: FileList;
   prefix?: string;
+  onProgress?: (progress: number) => void;
 }
 
 export interface UpdateStorageItemRequest {
@@ -71,7 +80,7 @@ export const storageApi = baseApi.injectEndpoints({
         return qs ? `/storage?${qs}` : `/storage`;
       },
       providesTags: (result) =>
-        result && result.data
+        result?.data
           ? [
               ...result.data.map(({ _id }) => ({ type: STORAGE_TAG, id: _id })),
               STORAGE_TAGS.LIST,
@@ -85,15 +94,50 @@ export const storageApi = baseApi.injectEndpoints({
     }),
 
     uploadFiles: builder.mutation<Storage[], UploadFilesRequest>({
-      query: ({ files, prefix }) => {
-        const formData = new FormData();
-        Array.from(files).forEach((file) => formData.append('files', file));
-        if (prefix) formData.append('prefix', prefix);
-        return {
-          url: '/storage',
-          method: 'POST',
-          body: formData,
-        };
+      queryFn: async ({ files, prefix, onProgress }, api) => {
+        try {
+          const state = api.getState() as RootState;
+          const token = state.auth?.token;
+
+          const formData = new FormData();
+          for (const file of Array.from(files)) {
+            formData.append('files', file);
+          }
+          if (prefix) formData.append('prefix', prefix);
+
+          const headers: Record<string, string> = {};
+          if (token) {
+            headers.Authorization = `IDENTITY ${token}`;
+          }
+
+          const baseUrl = import.meta.env.VITE_BASE_URL || '';
+          const url = baseUrl.endsWith('/') ? `${baseUrl}storage` : `${baseUrl}/storage`;
+
+          const result = await axios({
+            url,
+            method: 'POST',
+            data: formData,
+            headers,
+            onUploadProgress: onProgress
+              ? (progressEvent: AxiosProgressEvent) => {
+                  const progress = Math.round(
+                    (progressEvent.loaded * 100) / (progressEvent.total ?? 1)
+                  );
+                  onProgress(progress);
+                }
+              : undefined,
+          });
+
+          return { data: result.data as Storage[] };
+        } catch (axiosError: any) {
+          const err = axiosError;
+          return {
+            error: {
+              status: err.response?.status,
+              data: err.response?.data || err.message,
+            } as FetchBaseQueryError,
+          };
+        }
       },
       invalidatesTags: [STORAGE_TAGS.LIST, STORAGE_TAGS.BROWSE],
     }),
@@ -166,7 +210,7 @@ export const storageApi = baseApi.injectEndpoints({
         return qs ? `/storage/browse?${qs}` : `/storage/browse`;
       },
       providesTags: (result) =>
-        result && result.data
+        result?.data
           ? [
               ...result.data.map(({ _id }) => ({ type: STORAGE_TAG, id: _id })),
               STORAGE_TAGS.BROWSE,
