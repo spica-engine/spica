@@ -1004,4 +1004,70 @@ describe("Storage Acceptance", () => {
       expect(body).toBe("third");
     });
   });
+
+  describe("objects with slashes in names", () => {
+    beforeEach(async () => {
+      // Add objects with slashes in their names
+      const objects = [
+        {
+          name: "school/holiday.png",
+          content: {
+            data: new Binary(Buffer.from("image data in folder")),
+            type: "image/png"
+          }
+        },
+        {
+          name: "folder/subfolder/document.pdf",
+          content: {
+            data: new Binary(Buffer.from("pdf data in nested folder")),
+            type: "application/pdf"
+          }
+        }
+      ];
+      await req.post("/storage", serialize({content: objects}), {
+        "Content-Type": "application/bson"
+      });
+    });
+
+    it("should return storage object by name with slash", async () => {
+      const {body: response} = await req.get("/storage/school/holiday.png");
+      expect(response.name).toEqual("school/holiday.png");
+      expect(response.content.type).toEqual("image/png");
+      expect(response.content.size).toEqual(21);
+    });
+
+    it("should show the object by name with slash via view endpoint", async () => {
+      const {headers, body} = await req.get("/storage/school/holiday.png/view");
+      expect(headers["content-type"]).toEqual("image/png; charset=utf-8");
+      expect(body).toBe("image data in folder");
+    });
+
+    it("should return storage object by name with nested slashes", async () => {
+      const {body: response} = await req.get("/storage/folder/subfolder/document.pdf");
+      expect(response.name).toEqual("folder/subfolder/document.pdf");
+      expect(response.content.type).toEqual("application/pdf");
+      expect(response.content.size).toEqual(26);
+    });
+
+    it("should show the object by name with nested slashes via view endpoint", async () => {
+      const {headers, body} = await req.get("/storage/folder/subfolder/document.pdf/view");
+      expect(headers["content-type"]).toEqual("application/pdf; charset=utf-8");
+      expect(body).toBe("pdf data in nested folder");
+    });
+
+    it("should send ETag for objects with slashes in names", async () => {
+      const {headers} = await req.get("/storage/school/holiday.png/view");
+      expect(headers["etag"]).toBe(etag("image data in folder"));
+    });
+
+    it("should send 304 if etag matches for objects with slashes", async () => {
+      const {statusCode, statusText} = await req.get(
+        "/storage/school/holiday.png/view",
+        {},
+        {"If-None-Match": etag("image data in folder")}
+      );
+      expect(statusCode).toBe(304);
+      expect(statusText).toBe("Not Modified");
+    });
+  });
 });
