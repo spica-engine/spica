@@ -3,7 +3,7 @@
  * email: rio.kenan@gmail.com
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import {useNavigate} from "react-router-dom";
 import {handleFolderClick} from "../../../store";
 import {useAppDispatch} from "../../../store/hook";
@@ -16,8 +16,11 @@ const StorageNavigation: React.FC<NavigationPrefabProps> = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const handleRootClick = () => {
+  useEffect(() => {
     navigate("/storage");
+  }, []);
+
+  const handleRootClick = () => {
     dispatch(
       handleFolderClick({
         folderName: "",
@@ -34,10 +37,10 @@ const StorageNavigation: React.FC<NavigationPrefabProps> = () => {
       <div className={styles.header}>
         <Text size="large">Storage</Text>
       </div>
-      <div onClick={handleRootClick} className={styles.rootItem}>
+      <button onClick={handleRootClick} className={styles.rootItem} >
         <Icon name="folder" className={styles.rootItemIcon}/>
         <Text size="small">/</Text>
-      </div>
+      </button>
     </div>
   );
 };

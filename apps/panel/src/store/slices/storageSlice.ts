@@ -66,7 +66,7 @@ const storageSlice = createSlice({
         const visibleDirs = newDirectories
           .filter(dir => dir.currentDepth)
           .sort((a, b) => (a.currentDepth || 0) - (b.currentDepth || 0));
-        const lastVisible = visibleDirs[visibleDirs.length - 1];
+        const lastVisible = visibleDirs.at(-1);
         state.currentDirectory = lastVisible?.fullPath || ROOT_PATH;
         return;
       }

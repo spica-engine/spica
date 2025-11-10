@@ -21,14 +21,10 @@
     gap: var(--gap-sm);
     padding: var(--padding-sm) var(--padding-xl);
     color: var(--color-font-primary);
-
+    background-color: var(--color-hover);
     cursor: pointer;
-    &:hover {
-      background-color: var(--color-hover);
-    }
-    &.active {
-      background-color: var(--color-hover);
-    }
+    outline: none;
+    border: none;
 
   }
 
