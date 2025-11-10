@@ -5,9 +5,10 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {bucketSupplier, bucketApplier} from "../src/bucket.synchronizer";
-import {ChangeLog} from "@spica-server/interface/versioncontrol/src/interface";
+import {ChangeLog} from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../../src/crud";
 import YAML from "yaml";
+import {deepCopy} from "@spica-server/core/patch";
 
 describe("Bucket Synchronizer", () => {
   let module: TestingModule;
@@ -31,7 +32,6 @@ describe("Bucket Synchronizer", () => {
   });
 
   afterEach(async () => {
-    jest.restoreAllMocks();
     await module.close();
   });
 
@@ -46,7 +46,8 @@ describe("Bucket Synchronizer", () => {
       expect(supplier).toMatchObject({
         module: "bucket",
         subModule: "schema",
-        fileExtension: "yaml"
+        fileExtension: "yaml",
+        listen: expect.any(Function)
       });
     });
 
@@ -77,7 +78,7 @@ describe("Bucket Synchronizer", () => {
           origin: "local",
           resource_id: mockBucket._id.toString(),
           resource_slug: "Test Bucket",
-          resource_content: expect.stringContaining("title: Test Bucket"),
+          resource_content: YAML.stringify(mockBucket),
           created_at: expect.any(Date)
         });
 
@@ -105,7 +106,7 @@ describe("Bucket Synchronizer", () => {
         }
       };
 
-      const updatedBucket: any = {
+      let updatedBucket: any = {
         _id: bucketId,
         title: "Updated Bucket",
         description: "Updated Description",
@@ -121,6 +122,7 @@ describe("Bucket Synchronizer", () => {
           description: {type: "string", options: {}}
         }
       };
+      const expectedUpdatedBucket = deepCopy(updatedBucket);
 
       const observable = supplier.listen();
 
@@ -133,17 +135,14 @@ describe("Bucket Synchronizer", () => {
             origin: "local",
             resource_id: bucketId.toString(),
             resource_slug: "Updated Bucket",
-            resource_content: expect.stringContaining("title: Updated Bucket"),
+            resource_content: YAML.stringify(expectedUpdatedBucket),
             created_at: expect.any(Date)
           });
-
           done();
         }
       });
 
-      CRUD.insert(bs, initialBucket).then(() => {
-        CRUD.replace(bs, bds, history, updatedBucket);
-      });
+      CRUD.insert(bs, initialBucket).then(() => CRUD.replace(bs, bds, history, updatedBucket));
     });
 
     it("should emit ChangeLog on bucket delete", done => {
@@ -174,7 +173,7 @@ describe("Bucket Synchronizer", () => {
             type: "delete",
             origin: "local",
             resource_id: bucketId.toString(),
-            resource_slug: "",
+            resource_slug: null,
             resource_content: "",
             created_at: expect.any(Date)
           });
@@ -200,13 +199,15 @@ describe("Bucket Synchronizer", () => {
       expect(applier).toMatchObject({
         module: "bucket",
         subModule: "schema",
-        fileExtension: "yaml"
+        fileExtension: "yaml",
+        apply: expect.any(Function)
       });
     });
 
     it("should apply insert change successfully", async () => {
+      const _id = new ObjectId();
       const mockBucket: any = {
-        _id: new ObjectId(),
+        _id,
         title: "New Bucket",
         description: "New Description",
         icon: "new-icon",
@@ -239,12 +240,27 @@ describe("Bucket Synchronizer", () => {
       });
 
       const insertedBucket = await bs.findOne({_id: mockBucket._id});
-      expect(insertedBucket.title).toBe("New Bucket");
+      expect(insertedBucket).toEqual({
+        _id,
+        title: "New Bucket",
+        description: "New Description",
+        icon: "new-icon",
+        primary: "title",
+        readOnly: false,
+        acl: {
+          read: "true==true",
+          write: "true==true"
+        },
+        properties: {
+          title: {type: "string", options: {}}
+        }
+      });
     });
 
     it("should apply update change successfully", async () => {
+      const _id = new ObjectId();
       const existingBucket: any = {
-        _id: new ObjectId(),
+        _id,
         title: "Old Bucket",
         description: "Old Description",
         icon: "old-icon",
@@ -260,7 +276,7 @@ describe("Bucket Synchronizer", () => {
       };
       await CRUD.insert(bs, existingBucket);
       const updatedBucket: any = {
-        _id: existingBucket._id,
+        _id,
         title: "Updated Bucket",
         description: "Updated Description",
         icon: "updated-icon",
@@ -281,7 +297,7 @@ describe("Bucket Synchronizer", () => {
         sub_module: "schema",
         type: "update",
         origin: "remote",
-        resource_id: updatedBucket._id.toString(),
+        resource_id: _id.toString(),
         resource_slug: "Updated Bucket",
         resource_content: YAML.stringify(updatedBucket),
         created_at: new Date()
@@ -293,9 +309,9 @@ describe("Bucket Synchronizer", () => {
         status: "succeeded"
       });
 
-      const bucket = await bs.findOne({_id: existingBucket._id});
+      const bucket = await bs.findOne({_id});
       expect(bucket).toMatchObject({
-        _id: existingBucket._id,
+        _id,
         title: "Updated Bucket",
         description: "Updated Description",
         icon: "updated-icon",
@@ -313,9 +329,9 @@ describe("Bucket Synchronizer", () => {
     });
 
     it("should apply delete change successfully", async () => {
-      const bucketId = new ObjectId();
+      const _id = new ObjectId();
       const mockBucket: any = {
-        _id: bucketId,
+        _id,
         title: "Test Bucket",
         description: "To be deleted",
         icon: "test-icon",
@@ -336,8 +352,8 @@ describe("Bucket Synchronizer", () => {
         sub_module: "schema",
         type: "delete",
         origin: "remote",
-        resource_id: bucketId.toString(),
-        resource_slug: "",
+        resource_id: _id.toString(),
+        resource_slug: null,
         resource_content: "",
         created_at: new Date()
       };
@@ -348,7 +364,7 @@ describe("Bucket Synchronizer", () => {
         status: "succeeded"
       });
 
-      const bucket = await bs.findOne({_id: bucketId});
+      const bucket = await bs.findOne({_id});
       expect(bucket).toBeNull();
     });
 
@@ -356,11 +372,11 @@ describe("Bucket Synchronizer", () => {
       const changeLog: ChangeLog = {
         module: "bucket",
         sub_module: "schema",
-        type: "unknown",
+        type: "upsert",
         origin: "remote",
         resource_id: "123",
-        resource_slug: "",
-        resource_content: "{}",
+        resource_slug: null,
+        resource_content: "",
         created_at: new Date()
       };
 
@@ -368,7 +384,7 @@ describe("Bucket Synchronizer", () => {
 
       expect(result).toMatchObject({
         status: "failed",
-        reason: "Unknown operation type: unknown"
+        reason: "Unknown operation type: upsert"
       });
     });
 

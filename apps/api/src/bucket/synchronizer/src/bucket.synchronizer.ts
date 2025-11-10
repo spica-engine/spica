@@ -9,7 +9,7 @@ import {
   ChangeSupplier,
   ChangeApplier,
   ApplyResult
-} from "@spica-server/interface/versioncontrol/src/interface";
+} from "@spica-server/interface/versioncontrol";
 
 const module = "bucket";
 const subModule = "schema";
@@ -56,7 +56,7 @@ export const bucketSupplier = (bs: BucketService): ChangeSupplier => {
               changeData = {
                 type: "delete",
                 resource_id: change.documentKey._id.toString(),
-                resource_slug: "",
+                resource_slug: null,
                 resource_content: ""
               };
               break;
