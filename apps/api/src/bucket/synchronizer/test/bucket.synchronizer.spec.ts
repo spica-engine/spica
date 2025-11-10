@@ -6,6 +6,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {bucketSupplier, bucketApplier} from "../src/bucket.synchronizer";
 import {ChangeLog} from "@spica-server/interface/versioncontrol/src/interface";
+import * as CRUD from "../../src/crud";
 import YAML from "yaml";
 import {EventEmitter} from "events";
 
@@ -201,14 +202,15 @@ describe("Bucket Synchronizer", () => {
         created_at: new Date()
       };
 
-      const insertOneSpy = jest.spyOn(bs, "insertOne").mockResolvedValue(mockBucket as any);
-
       const result = await applier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: "succeeded"
       });
-      expect(insertOneSpy).toHaveBeenCalled();
+
+      const insertedBucket = await bs.findOne({_id: mockBucket._id});
+      expect(insertedBucket).toBeDefined();
+      expect(insertedBucket.title).toBe("New Bucket");
     });
 
     it("should apply update change successfully", async () => {
@@ -228,11 +230,14 @@ describe("Bucket Synchronizer", () => {
           title: {type: "string", options: {}}
         }
       };
-
+      await CRUD.insert(bs, existingBucket);
       const updatedBucket: any = {
-        ...existingBucket,
+        _id: existingBucket._id,
         title: "Updated Bucket",
         description: "Updated Description",
+        icon: "updated-icon",
+        primary: "title",
+        readOnly: false,
         acl: {
           read: "true==true",
           write: "true==true"
@@ -254,16 +259,16 @@ describe("Bucket Synchronizer", () => {
         created_at: new Date()
       };
 
-      const findOneAndReplaceSpy = jest
-        .spyOn(bs, "findOneAndReplace")
-        .mockResolvedValue(updatedBucket as any);
-
       const result = await applier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: "succeeded"
       });
-      expect(findOneAndReplaceSpy).toHaveBeenCalled();
+
+      const bucket = await bs.findOne({_id: existingBucket._id});
+      expect(bucket).toBeDefined();
+      expect(bucket.title).toBe("Updated Bucket");
+      expect(bucket.description).toBe("Updated Description");
     });
 
     it("should apply delete change successfully", async () => {
@@ -271,8 +276,20 @@ describe("Bucket Synchronizer", () => {
       const bucketId = new ObjectId();
       const mockBucket: any = {
         _id: bucketId,
-        title: "Test"
+        title: "Test Bucket",
+        description: "To be deleted",
+        icon: "test-icon",
+        primary: "title",
+        readOnly: false,
+        acl: {
+          read: "true==true",
+          write: "true==true"
+        },
+        properties: {
+          title: {type: "string", options: {}}
+        }
       };
+      await CRUD.insert(bs, mockBucket);
 
       const changeLog: ChangeLog = {
         module: "bucket",
@@ -285,14 +302,14 @@ describe("Bucket Synchronizer", () => {
         created_at: new Date()
       };
 
-      const dropSpy = jest.spyOn(bs, "drop").mockResolvedValue(mockBucket as any);
-
       const result = await applier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: "succeeded"
       });
-      expect(dropSpy).toHaveBeenCalled();
+
+      const bucket = await bs.findOne({_id: bucketId});
+      expect(bucket).toBeNull();
     });
 
     it("should handle unknown operation type", async () => {

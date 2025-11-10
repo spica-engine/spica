@@ -1,15 +1,5 @@
 {
   "name": "api/bucket/synchronizer",
   "sourceRoot": "apps/api/src/bucket/synchronizer",
-  "projectType": "library",
-  "targets": {
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/apps/api/bucket/synchronizer"],
-      "options": {
-        "jestConfig": "apps/api/src/bucket/synchronizer/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
-  }
+  "projectType": "application"
 }

@@ -116,9 +116,11 @@ export const bucketApplier = (
             return {status: "succeeded"};
 
           default:
+            console.warn("Unknown operation type:", operationType);
             return {status: "failed", reason: `Unknown operation type: ${operationType}`};
         }
       } catch (error) {
+        console.warn("Error applying bucket change:", error);
         return {status: "failed", reason: error.message};
       }
     }
