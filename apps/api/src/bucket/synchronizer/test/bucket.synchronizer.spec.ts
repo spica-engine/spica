@@ -8,7 +8,6 @@ import {bucketSupplier, bucketApplier} from "../src/bucket.synchronizer";
 import {ChangeLog} from "@spica-server/interface/versioncontrol/src/interface";
 import * as CRUD from "../../src/crud";
 import YAML from "yaml";
-import {EventEmitter} from "events";
 
 describe("Bucket Synchronizer", () => {
   let module: TestingModule;
@@ -19,7 +18,7 @@ describe("Bucket Synchronizer", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         SchemaModule.forChild()
       ],
@@ -37,9 +36,13 @@ describe("Bucket Synchronizer", () => {
   });
 
   describe("bucketSupplier", () => {
-    it("should return ChangeSupplier with correct metadata", () => {
-      const supplier = bucketSupplier(bs);
+    let supplier;
 
+    beforeEach(() => {
+      supplier = bucketSupplier(bs);
+    });
+
+    it("should return ChangeSupplier with correct metadata", () => {
       expect(supplier).toMatchObject({
         module: "bucket",
         subModule: "schema",
@@ -48,7 +51,6 @@ describe("Bucket Synchronizer", () => {
     });
 
     it("should emit ChangeLog on bucket insert", done => {
-      const supplier = bucketSupplier(bs);
       const mockBucket: any = {
         _id: new ObjectId(),
         title: "Test Bucket",
@@ -56,13 +58,14 @@ describe("Bucket Synchronizer", () => {
         icon: "test-icon",
         primary: "title",
         readOnly: false,
+        acl: {
+          read: "true==true",
+          write: "true==true"
+        },
         properties: {
           title: {type: "string", options: {}}
         }
       };
-
-      const mockStream = new EventEmitter();
-      jest.spyOn(bs._coll, "watch").mockReturnValue(mockStream as any);
 
       const observable = supplier.listen();
 
@@ -81,16 +84,27 @@ describe("Bucket Synchronizer", () => {
         done();
       });
 
-      mockStream.emit("change", {
-        operationType: "insert",
-        fullDocument: mockBucket,
-        documentKey: {_id: mockBucket._id}
-      });
+      CRUD.insert(bs, mockBucket);
     });
 
     it("should emit ChangeLog on bucket update", done => {
-      const supplier = bucketSupplier(bs);
       const bucketId = new ObjectId();
+      const initialBucket: any = {
+        _id: bucketId,
+        title: "Initial Bucket",
+        description: "Initial Description",
+        icon: "initial-icon",
+        primary: "title",
+        readOnly: false,
+        acl: {
+          read: "true==true",
+          write: "true==true"
+        },
+        properties: {
+          title: {type: "string", options: {}}
+        }
+      };
+
       const updatedBucket: any = {
         _id: bucketId,
         title: "Updated Bucket",
@@ -98,74 +112,91 @@ describe("Bucket Synchronizer", () => {
         icon: "updated-icon",
         primary: "title",
         readOnly: false,
+        acl: {
+          read: "true==true",
+          write: "true==true"
+        },
         properties: {
           title: {type: "string", options: {}},
           description: {type: "string", options: {}}
         }
       };
 
-      const mockStream = new EventEmitter();
-      jest.spyOn(bs._coll, "watch").mockReturnValue(mockStream as any);
-
       const observable = supplier.listen();
 
       observable.subscribe(changeLog => {
-        expect(changeLog).toMatchObject({
-          module: "bucket",
-          sub_module: "schema",
-          type: "update",
-          origin: "local",
-          resource_id: bucketId.toString(),
-          resource_slug: "Updated Bucket",
-          resource_content: expect.stringContaining("title: Updated Bucket"),
-          created_at: expect.any(Date)
-        });
+        if (changeLog.type === "update") {
+          expect(changeLog).toMatchObject({
+            module: "bucket",
+            sub_module: "schema",
+            type: "update",
+            origin: "local",
+            resource_id: bucketId.toString(),
+            resource_slug: "Updated Bucket",
+            resource_content: expect.stringContaining("title: Updated Bucket"),
+            created_at: expect.any(Date)
+          });
 
-        done();
+          done();
+        }
       });
 
-      mockStream.emit("change", {
-        operationType: "update",
-        fullDocument: updatedBucket,
-        documentKey: {_id: bucketId}
+      CRUD.insert(bs, initialBucket).then(() => {
+        CRUD.replace(bs, bds, history, updatedBucket);
       });
     });
 
     it("should emit ChangeLog on bucket delete", done => {
-      const supplier = bucketSupplier(bs);
       const bucketId = new ObjectId();
-
-      const mockStream = new EventEmitter();
-      jest.spyOn(bs._coll, "watch").mockReturnValue(mockStream as any);
+      const bucketToDelete: any = {
+        _id: bucketId,
+        title: "Bucket To Delete",
+        description: "Will be deleted",
+        icon: "delete-icon",
+        primary: "title",
+        readOnly: false,
+        acl: {
+          read: "true==true",
+          write: "true==true"
+        },
+        properties: {
+          title: {type: "string", options: {}}
+        }
+      };
 
       const observable = supplier.listen();
 
       observable.subscribe(changeLog => {
-        expect(changeLog).toMatchObject({
-          module: "bucket",
-          sub_module: "schema",
-          type: "delete",
-          origin: "local",
-          resource_id: bucketId.toString(),
-          resource_slug: "",
-          resource_content: "",
-          created_at: expect.any(Date)
-        });
+        if (changeLog.type === "delete") {
+          expect(changeLog).toMatchObject({
+            module: "bucket",
+            sub_module: "schema",
+            type: "delete",
+            origin: "local",
+            resource_id: bucketId.toString(),
+            resource_slug: "",
+            resource_content: "",
+            created_at: expect.any(Date)
+          });
 
-        done();
+          done();
+        }
       });
 
-      mockStream.emit("change", {
-        operationType: "delete",
-        documentKey: {_id: bucketId}
+      CRUD.insert(bs, bucketToDelete).then(() => {
+        CRUD.remove(bs, bds, history, bucketId.toString());
       });
     });
   });
 
   describe("bucketApplier", () => {
-    it("should return ChangeApplier with correct metadata", () => {
-      const applier = bucketApplier(bs, bds, history);
+    let applier;
 
+    beforeEach(() => {
+      applier = bucketApplier(bs, bds, history);
+    });
+
+    it("should return ChangeApplier with correct metadata", () => {
       expect(applier).toMatchObject({
         module: "bucket",
         subModule: "schema",
@@ -174,7 +205,6 @@ describe("Bucket Synchronizer", () => {
     });
 
     it("should apply insert change successfully", async () => {
-      const applier = bucketApplier(bs, bds, history);
       const mockBucket: any = {
         _id: new ObjectId(),
         title: "New Bucket",
@@ -214,7 +244,6 @@ describe("Bucket Synchronizer", () => {
     });
 
     it("should apply update change successfully", async () => {
-      const applier = bucketApplier(bs, bds, history);
       const existingBucket: any = {
         _id: new ObjectId(),
         title: "Old Bucket",
@@ -266,13 +295,25 @@ describe("Bucket Synchronizer", () => {
       });
 
       const bucket = await bs.findOne({_id: existingBucket._id});
-      expect(bucket).toBeDefined();
-      expect(bucket.title).toBe("Updated Bucket");
-      expect(bucket.description).toBe("Updated Description");
+      expect(bucket).toMatchObject({
+        _id: existingBucket._id,
+        title: "Updated Bucket",
+        description: "Updated Description",
+        icon: "updated-icon",
+        primary: "title",
+        readOnly: false,
+        acl: {
+          read: "true==true",
+          write: "true==true"
+        },
+        properties: {
+          title: {type: "string", options: {}},
+          description: {type: "string", options: {}}
+        }
+      });
     });
 
     it("should apply delete change successfully", async () => {
-      const applier = bucketApplier(bs, bds, history);
       const bucketId = new ObjectId();
       const mockBucket: any = {
         _id: bucketId,
@@ -313,8 +354,6 @@ describe("Bucket Synchronizer", () => {
     });
 
     it("should handle unknown operation type", async () => {
-      const applier = bucketApplier(bs, bds, history);
-
       const changeLog: ChangeLog = {
         module: "bucket",
         sub_module: "schema",
