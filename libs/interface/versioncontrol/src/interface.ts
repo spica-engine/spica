@@ -1,10 +1,21 @@
 import {Observable} from "rxjs";
 
+export enum ChangeType {
+  CREATE,
+  UPDATE,
+  DELETE
+}
+
+export enum ChangeOrigin {
+  DOCUMENT,
+  REPRESENTATIVE
+}
+
 export interface ChangeLog {
   module: string;
   sub_module: string;
-  type: string;
-  origin: string;
+  type: ChangeType;
+  origin: ChangeOrigin;
   resource_id: string;
   resource_slug: string;
   resource_content: string;
@@ -13,7 +24,7 @@ export interface ChangeLog {
 
 export interface ChangeHandler {
   moduleMeta: ChangeModuleMeta;
-  origin: string;
+  origin: ChangeOrigin;
   supplier: ChangeSupplier;
   applier: ChangeApplier;
 }
@@ -38,7 +49,7 @@ export interface ChangeLogProcessor {
 }
 
 export interface ApplyResult {
-  status: "succeeded" | "failed";
+  status: SyncStatuses;
   reason?: string;
 }
 
@@ -57,10 +68,10 @@ export interface Sync {
 }
 
 export enum SyncStatuses {
-  PENDING = "pending",
-  APPROVED = "approved",
-  REJECTED = "rejected",
-  IN_PROGRESS = "in_progress",
-  SUCCEEDED = "succeeded",
-  FAILED = "failed"
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  IN_PROGRESS = "IN_PROGRESS",
+  SUCCEEDED = "SUCCEEDED",
+  FAILED = "FAILED"
 }

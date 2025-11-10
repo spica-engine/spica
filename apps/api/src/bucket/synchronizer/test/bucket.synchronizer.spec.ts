@@ -5,7 +5,12 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {bucketSupplier, bucketApplier} from "../src/bucket.synchronizer";
-import {ChangeLog} from "@spica-server/interface/versioncontrol";
+import {
+  ChangeLog,
+  ChangeOrigin,
+  ChangeType,
+  SyncStatuses
+} from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../../src/crud";
 import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
@@ -74,8 +79,8 @@ describe("Bucket Synchronizer", () => {
         expect(changeLog).toMatchObject({
           module: "bucket",
           sub_module: "schema",
-          type: "insert",
-          origin: "local",
+          type: ChangeType.CREATE,
+          origin: ChangeOrigin.DOCUMENT,
           resource_id: mockBucket._id.toString(),
           resource_slug: "Test Bucket",
           resource_content: YAML.stringify(mockBucket),
@@ -127,12 +132,12 @@ describe("Bucket Synchronizer", () => {
       const observable = supplier.listen();
 
       observable.subscribe(changeLog => {
-        if (changeLog.type === "update") {
+        if (changeLog.type == ChangeType.UPDATE) {
           expect(changeLog).toMatchObject({
             module: "bucket",
             sub_module: "schema",
-            type: "update",
-            origin: "local",
+            type: ChangeType.UPDATE,
+            origin: ChangeOrigin.DOCUMENT,
             resource_id: bucketId.toString(),
             resource_slug: "Updated Bucket",
             resource_content: YAML.stringify(expectedUpdatedBucket),
@@ -166,12 +171,12 @@ describe("Bucket Synchronizer", () => {
       const observable = supplier.listen();
 
       observable.subscribe(changeLog => {
-        if (changeLog.type === "delete") {
+        if (changeLog.type == ChangeType.DELETE) {
           expect(changeLog).toMatchObject({
             module: "bucket",
             sub_module: "schema",
-            type: "delete",
-            origin: "local",
+            type: ChangeType.DELETE,
+            origin: ChangeOrigin.DOCUMENT,
             resource_id: bucketId.toString(),
             resource_slug: null,
             resource_content: "",
@@ -225,8 +230,8 @@ describe("Bucket Synchronizer", () => {
       const changeLog: ChangeLog = {
         module: "bucket",
         sub_module: "schema",
-        type: "insert",
-        origin: "remote",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
         resource_id: mockBucket._id.toString(),
         resource_slug: "New Bucket",
         resource_content: YAML.stringify(mockBucket),
@@ -236,7 +241,7 @@ describe("Bucket Synchronizer", () => {
       const result = await applier.apply(changeLog);
 
       expect(result).toMatchObject({
-        status: "succeeded"
+        status: SyncStatuses.SUCCEEDED
       });
 
       const insertedBucket = await bs.findOne({_id: mockBucket._id});
@@ -295,8 +300,8 @@ describe("Bucket Synchronizer", () => {
       const changeLog: ChangeLog = {
         module: "bucket",
         sub_module: "schema",
-        type: "update",
-        origin: "remote",
+        type: ChangeType.UPDATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
         resource_id: _id.toString(),
         resource_slug: "Updated Bucket",
         resource_content: YAML.stringify(updatedBucket),
@@ -306,7 +311,7 @@ describe("Bucket Synchronizer", () => {
       const result = await applier.apply(changeLog);
 
       expect(result).toMatchObject({
-        status: "succeeded"
+        status: SyncStatuses.SUCCEEDED
       });
 
       const bucket = await bs.findOne({_id});
@@ -350,8 +355,8 @@ describe("Bucket Synchronizer", () => {
       const changeLog: ChangeLog = {
         module: "bucket",
         sub_module: "schema",
-        type: "delete",
-        origin: "remote",
+        type: ChangeType.DELETE,
+        origin: ChangeOrigin.REPRESENTATIVE,
         resource_id: _id.toString(),
         resource_slug: null,
         resource_content: "",
@@ -361,7 +366,7 @@ describe("Bucket Synchronizer", () => {
       const result = await applier.apply(changeLog);
 
       expect(result).toMatchObject({
-        status: "succeeded"
+        status: SyncStatuses.SUCCEEDED
       });
 
       const bucket = await bs.findOne({_id});
@@ -372,8 +377,8 @@ describe("Bucket Synchronizer", () => {
       const changeLog: ChangeLog = {
         module: "bucket",
         sub_module: "schema",
-        type: "upsert",
-        origin: "remote",
+        type: "upsert" as any,
+        origin: ChangeOrigin.REPRESENTATIVE,
         resource_id: "123",
         resource_slug: null,
         resource_content: "",
@@ -383,7 +388,7 @@ describe("Bucket Synchronizer", () => {
       const result = await applier.apply(changeLog);
 
       expect(result).toMatchObject({
-        status: "failed",
+        status: SyncStatuses.FAILED,
         reason: "Unknown operation type: upsert"
       });
     });
@@ -394,8 +399,8 @@ describe("Bucket Synchronizer", () => {
       const changeLog: ChangeLog = {
         module: "bucket",
         sub_module: "schema",
-        type: "insert",
-        origin: "remote",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
         resource_id: "123",
         resource_slug: "Test",
         resource_content: "invalid: yaml: content:",
@@ -405,7 +410,7 @@ describe("Bucket Synchronizer", () => {
       const result = await applier.apply(changeLog);
 
       expect(result).toMatchObject({
-        status: "failed"
+        status: SyncStatuses.FAILED
       });
       expect(result.reason).toBeDefined();
     });

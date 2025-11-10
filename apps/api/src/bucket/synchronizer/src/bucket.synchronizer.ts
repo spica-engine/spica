@@ -8,7 +8,10 @@ import {
   ChangeLog,
   ChangeSupplier,
   ChangeApplier,
-  ApplyResult
+  ApplyResult,
+  ChangeType,
+  ChangeOrigin,
+  SyncStatuses
 } from "@spica-server/interface/versioncontrol";
 
 const module = "bucket";
@@ -35,7 +38,7 @@ export const bucketSupplier = (bs: BucketService): ChangeSupplier => {
           switch (change.operationType) {
             case "insert":
               changeData = {
-                type: "insert",
+                type: ChangeType.CREATE,
                 resource_id: change.fullDocument._id.toString(),
                 resource_slug: change.fullDocument.title,
                 resource_content: YAML.stringify(change.fullDocument)
@@ -45,7 +48,7 @@ export const bucketSupplier = (bs: BucketService): ChangeSupplier => {
             case "replace":
             case "update":
               changeData = {
-                type: "update",
+                type: ChangeType.UPDATE,
                 resource_id: change.documentKey._id.toString(),
                 resource_slug: change.fullDocument.title,
                 resource_content: YAML.stringify(change.fullDocument)
@@ -54,7 +57,7 @@ export const bucketSupplier = (bs: BucketService): ChangeSupplier => {
 
             case "delete":
               changeData = {
-                type: "delete",
+                type: ChangeType.DELETE,
                 resource_id: change.documentKey._id.toString(),
                 resource_slug: null,
                 resource_content: ""
@@ -69,7 +72,7 @@ export const bucketSupplier = (bs: BucketService): ChangeSupplier => {
             const changeLog: ChangeLog = {
               module,
               sub_module: subModule,
-              origin: "local",
+              origin: ChangeOrigin.DOCUMENT,
               created_at: new Date(),
               ...changeData
             };
@@ -106,25 +109,28 @@ export const bucketApplier = (
         const bucket: Bucket = YAML.parse(change.resource_content);
 
         switch (operationType) {
-          case "insert":
+          case ChangeType.CREATE:
             await CRUD.insert(bs, bucket);
-            return {status: "succeeded"};
+            return {status: SyncStatuses.SUCCEEDED};
 
-          case "update":
+          case ChangeType.UPDATE:
             await CRUD.replace(bs, bds, history, bucket);
-            return {status: "succeeded"};
+            return {status: SyncStatuses.SUCCEEDED};
 
-          case "delete":
+          case ChangeType.DELETE:
             await CRUD.remove(bs, bds, history, change.resource_id);
-            return {status: "succeeded"};
+            return {status: SyncStatuses.SUCCEEDED};
 
           default:
             console.warn("Unknown operation type:", operationType);
-            return {status: "failed", reason: `Unknown operation type: ${operationType}`};
+            return {
+              status: SyncStatuses.FAILED,
+              reason: `Unknown operation type: ${operationType}`
+            };
         }
       } catch (error) {
         console.warn("Error applying bucket change:", error);
-        return {status: "failed", reason: error.message};
+        return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }
   };
