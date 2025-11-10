@@ -60,6 +60,9 @@ export const bucketSupplier = (bs: BucketService): ChangeSupplier => {
                 resource_content: ""
               };
               break;
+            default:
+              console.warn("Unknown operation type:", change.operationType);
+              break;
           }
 
           if (changeData) {
