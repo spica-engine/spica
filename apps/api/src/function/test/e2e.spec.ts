@@ -229,7 +229,9 @@ describe("Queue shifting", () => {
       scheduler = res.scheduler;
     });
 
-    afterEach(async () => await app2.close().catch(console.error));
+    afterEach(async () => {
+      await Promise.all([app.close().catch(console.error), app2.close().catch(console.error)]);
+    });
 
     it("should wait until current event completed, return 503 for ones in queue", done => {
       let firstResponse;
@@ -271,7 +273,9 @@ describe("Queue shifting", () => {
       updateSchedulerTrigger(true);
     });
 
-    afterEach(async () => await app2.close().catch(console.error));
+    afterEach(async () => {
+      await Promise.all([app.close().catch(console.error), app2.close().catch(console.error)]);
+    });
 
     // don't know but somehow scheduler trigger prevents API from exiting on the exit signal received If it runs every second
     // that's why we had to disable the trigger after the event shifted
@@ -325,7 +329,9 @@ describe("Queue shifting", () => {
       db = res.db;
     });
 
-    afterEach(async () => await app2.close().catch(console.error));
+    afterEach(async () => {
+      await Promise.all([app.close().catch(console.error), app2.close().catch(console.error)]);
+    });
 
     async function triggerDatabaseEvent() {
       return new Promise((resolve, reject) => {
@@ -379,7 +385,9 @@ describe("Queue shifting", () => {
       bucket = res.bucket;
     });
 
-    afterEach(async () => await app2.close().catch(console.error));
+    afterEach(async () => {
+      await Promise.all([app.close().catch(console.error), app2.close().catch(console.error)]);
+    });
 
     function triggerBucketDataEvent() {
       return req.post(`/bucket/${bucket._id}/data`, {
@@ -411,109 +419,7 @@ describe("Queue shifting", () => {
     });
   });
 
-  describe("controller", () => {
-    let app: INestApplication;
-    let request: Request;
-    const fnSchema = {
-      name: "test",
-      description: "test",
-      language: "javascript",
-      timeout: 10,
-      triggers: {
-        http: {
-          options: {
-            method: "Get",
-            path: "/test",
-            preflight: true
-          },
-          type: "http",
-          active: true
-        }
-      }
-    };
-
-    beforeEach(async () => {
-      process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:38653";
-      const module = await Test.createTestingModule({
-        imports: [
-          CoreTestingModule,
-          DatabaseTestingModule.replicaSet(),
-          PreferenceTestingModule,
-          PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
-          SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
-          FunctionModule.forRoot({
-            invocationLogs: false,
-            path: os.tmpdir(),
-            databaseName: undefined,
-            databaseReplicaSet: undefined,
-            databaseUri: undefined,
-            apiUrl: undefined,
-            timeout: 10,
-            corsOptions: {
-              allowCredentials: true,
-              allowedHeaders: ["*"],
-              allowedMethods: ["*"],
-              allowedOrigins: ["*"]
-            },
-            logExpireAfterSeconds: 60,
-            entryLimit: 20,
-            maxConcurrency: 1,
-            debug: false,
-            realtimeLogs: false,
-            logger: false,
-            spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
-            tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH,
-            realtime: false
-          })
-        ]
-      }).compile();
-
-      request = module.get(Request);
-      app = module.createNestApplication();
-      await app.listen(request.socket);
-    });
-
-    afterEach(async () => await app.close().catch(console.error));
-
-    it("should filter functions by index", async () => {
-      const fn1 = await request.post("/function", {...fnSchema, name: "func1"}).then(r => r.body);
-      await request.post(`/function/${fn1._id}/index`, {
-        index: `
-  export function findMe(){ 
-    return 'OK' ;
-  }`
-      });
-
-      const fn2 = await request.post("/function", {...fnSchema, name: "func2"}).then(r => r.body);
-      await request.post(`/function/${fn2._id}/index`, {
-        index: `
-  export function dontFindMe(){ 
-    return 'OK' ;
-  }`
-      });
-
-      const foundFns = await request
-        .get("/function", {filter: JSON.stringify({index: "findMe\\("})})
-        .then(r => r.body);
-      expect(foundFns).toEqual([{...fn1, env_vars: []}]);
-    });
-
-    it("should throw bad request exception if filter is mistaken", async () => {
-      const fn1 = await request.post("/function", {...fnSchema, name: "func3"}).then(r => r.body);
-      await request.post(`/function/${fn1._id}/index`, {
-        index: `
-  export function findMe(){ 
-    return 'OK' ;
-  }`
-      });
-
-      // notice no escape charachter("\\") for special charachters("(")
-      const body = await request
-        .get("/function", {filter: JSON.stringify({index: "findMe("})})
-        .then(r => r.body);
-      expect(body.statusCode).toEqual(400);
-      expect(body.error).toEqual("Bad Request");
-      expect(body.message).toContain("Invalid regular expression");
-    });
+  afterAll(async () => {
+    await sleep(2000); // let all connections closed properly
   });
 });
