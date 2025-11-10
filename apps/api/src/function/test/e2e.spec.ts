@@ -418,8 +418,4 @@ describe("Queue shifting", () => {
       req.get("/fn-execute/test");
     });
   });
-
-  afterAll(async () => {
-    await sleep(2000); // let all connections closed properly
-  });
 });

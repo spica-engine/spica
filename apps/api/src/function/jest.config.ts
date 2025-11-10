@@ -11,20 +11,8 @@ export default {
   projects: [
     {
       ...commonConfig,
-      modulePathIgnorePatterns: [
-        "<rootDir>/test/e2e.spec.ts",
-        "<rootDir>/test/controller.spec.ts",
-        "<rootDir>/test/engine.spec.ts"
-      ],
-      testMatch: ["<rootDir>/test/**/*.spec.ts"]
-    },
-    {
-      ...commonConfig,
-      testMatch: ["<rootDir>/test/controller.spec.ts"]
-    },
-    {
-      ...commonConfig,
-      testMatch: ["<rootDir>/test/engine.spec.ts"]
+      modulePathIgnorePatterns: ["<rootDir>/test/e2e.spec.ts"],
+      testMatch: ["<rootDir>/test/*.spec.ts"]
     },
     {
       ...commonConfig,
