@@ -239,7 +239,6 @@ describe("Bucket Synchronizer", () => {
       });
 
       const insertedBucket = await bs.findOne({_id: mockBucket._id});
-      expect(insertedBucket).toBeDefined();
       expect(insertedBucket.title).toBe("New Bucket");
     });
 
