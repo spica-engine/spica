@@ -203,8 +203,6 @@ describe("Queue shifting", () => {
           `
     });
 
-    await sleep(5000);
-
     return {
       app,
       app2,
@@ -231,7 +229,7 @@ describe("Queue shifting", () => {
       scheduler = res.scheduler;
     });
 
-    afterEach(async () => await app2.close());
+    afterEach(async () => await app2.close().catch(console.error));
 
     it("should wait until current event completed, return 503 for ones in queue", done => {
       let firstResponse;
@@ -273,7 +271,7 @@ describe("Queue shifting", () => {
       updateSchedulerTrigger(true);
     });
 
-    afterEach(async () => await app2.close());
+    afterEach(async () => await app2.close().catch(console.error));
 
     // don't know but somehow scheduler trigger prevents API from exiting on the exit signal received If it runs every second
     // that's why we had to disable the trigger after the event shifted
@@ -327,7 +325,7 @@ describe("Queue shifting", () => {
       db = res.db;
     });
 
-    afterEach(async () => await app2.close());
+    afterEach(async () => await app2.close().catch(console.error));
 
     async function triggerDatabaseEvent() {
       return new Promise((resolve, reject) => {
@@ -381,7 +379,7 @@ describe("Queue shifting", () => {
       bucket = res.bucket;
     });
 
-    afterEach(async () => await app2.close());
+    afterEach(async () => await app2.close().catch(console.error));
 
     function triggerBucketDataEvent() {
       return req.post(`/bucket/${bucket._id}/data`, {
@@ -475,7 +473,7 @@ describe("Queue shifting", () => {
       await app.listen(request.socket);
     });
 
-    afterEach(async () => await app.close());
+    afterEach(async () => await app.close().catch(console.error));
 
     it("should filter functions by index", async () => {
       const fn1 = await request.post("/function", {...fnSchema, name: "func1"}).then(r => r.body);
