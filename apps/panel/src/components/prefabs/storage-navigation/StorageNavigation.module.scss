@@ -1,0 +1,31 @@
+.container{
+    width: var(--navigator-width);
+    background: var(--color-menu-background);
+    border-radius: var(--border-radius-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+
+  .header{
+    padding: 0 var(--padding-md);
+    font-weight: 600;
+    font-size: var(--font-size-lg);
+    height: 50px;
+    display: flex;
+    align-items: center;
+  }
+
+  .rootItem{
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    padding: var(--padding-sm) var(--padding-xl);
+    color: var(--color-font-primary);
+    background-color: var(--color-hover);
+    cursor: pointer;
+    outline: none;
+    border: none;
+
+  }
+
+}

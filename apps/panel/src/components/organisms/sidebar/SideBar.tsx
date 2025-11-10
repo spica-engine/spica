@@ -1,9 +1,9 @@
 import React, {type FC, type ReactNode, useState} from "react";
 import styles from "./SideBar.module.scss";
 import {Icon, type IconName} from "oziko-ui-kit";
-import Navigator from "./navigator/Navigator";
 import Logo from "../../atoms/logo/Logo";
-import type {TypeMenuItems, NavigatorItemGroup, TypeNavigatorHeader} from "../../../types/sidebar";
+import type {TypeMenuItems, NavigatorItemGroup} from "../../../types/sidebar";
+import {getNavigationComponent} from "../../prefabs/navigation-registry";
 
 type TypeSideBar = {
   menuItems?: TypeMenuItems[];
@@ -39,6 +39,17 @@ const SideBar: FC<TypeSideBar> = ({
       return newState;
     });
   };
+
+  const activeMenuItem = menuItems?.[activeMenu];
+  
+  const NavigationComponent = activeMenuItem 
+    ? getNavigationComponent(activeMenuItem.id)
+    : null;
+
+  const activeNavigatorItems = activeMenuItem 
+    ? navigatorItems?.[activeMenuItem.id]
+    : undefined;
+
   return (
     <div className={styles.container}>
       <div className={styles.menuContainer}>
@@ -73,15 +84,12 @@ const SideBar: FC<TypeSideBar> = ({
         {footer || <Icon name="forkRight" size={24} className={styles.versionControl} />}
       </div>
 
-      <div
-        className={`${styles.navigatorContainer} ${showNavigator ? styles.open : styles.closed}`}
-      >
-        <Navigator
-          header={menuItems?.[activeMenu]?.header as TypeNavigatorHeader}
-          items={navigatorItems?.[menuItems![activeMenu]?.id]}
-          addNewButtonText={menuItems?.[activeMenu]?.addNewButtonText}
+      {showNavigator && NavigationComponent && (
+        <NavigationComponent 
+          menuItem={activeMenuItem}
+          navigatorItems={activeNavigatorItems}
         />
-      </div>
+      )}
     </div>
   );
 };
