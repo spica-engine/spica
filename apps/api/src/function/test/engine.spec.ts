@@ -78,10 +78,14 @@ describe("Engine", () => {
   });
 
   afterEach(async () => {
-    subscribeSpy.mockReset();
-    unsubscribeSpy.mockReset();
-    await module.close();
-    return app.close();
+    try {
+      subscribeSpy.mockReset();
+      unsubscribeSpy.mockReset();
+      await module.close();
+      await app.close();
+    } catch (error) {
+      console.error(error);
+    }
   });
 
   it("should subscribe to new trigger if ChangeKind is Added", () => {
