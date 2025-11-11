@@ -1,0 +1,5 @@
+{
+  "name": "api/function/synchronizer/schema",
+  "sourceRoot": "apps/api/src/function/synchronizer/schema",
+  "projectType": "application"
+}

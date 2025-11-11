@@ -5,7 +5,7 @@ import {LogService} from "@spica-server/function/log";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
-import {functionSupplier, functionApplier} from "../src/fnschema.synchronizer";
+import {functionSupplier, functionApplier} from "../src/schema.synchronizer";
 import {
   ChangeLog,
   ChangeOrigin,
