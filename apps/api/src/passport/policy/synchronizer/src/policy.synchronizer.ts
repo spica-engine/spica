@@ -1,6 +1,6 @@
 import {Observable} from "rxjs";
 import {PolicyService} from "../../src/policy.service";
-import {Policy} from "@spica-server/interface/passport/policy";
+import {changeFactory, Policy} from "@spica-server/interface/passport/policy";
 import YAML from "yaml";
 import * as CRUD from "../../src/crud";
 import {
@@ -94,7 +94,11 @@ export function policySupplier(ps: PolicyService): ChangeSupplier {
   };
 }
 
-export function policyApplier(ps: PolicyService): ChangeApplier {
+export function policyApplier(
+  ps: PolicyService,
+  apikeyFinalizer: changeFactory,
+  identityFinalizer: changeFactory
+): ChangeApplier {
   return {
     module,
     subModule,
@@ -102,22 +106,24 @@ export function policyApplier(ps: PolicyService): ChangeApplier {
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
+        const policy: Policy = YAML.parse(change.resource_content);
 
         switch (operationType) {
           case ChangeType.CREATE:
-            const createPolicy: Policy = YAML.parse(change.resource_content);
-            createPolicy._id = new ObjectId(change.resource_id);
-            await CRUD.insert(ps, createPolicy);
+            await CRUD.insert(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.UPDATE:
-            const updatePolicy: Policy = YAML.parse(change.resource_content);
-            updatePolicy._id = new ObjectId(change.resource_id);
-            await CRUD.replace(ps, updatePolicy);
+            await CRUD.replace(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:
-            await CRUD.remove(ps, new ObjectId(change.resource_id));
+            await CRUD.remove(
+              ps,
+              new ObjectId(change.resource_id),
+              apikeyFinalizer,
+              identityFinalizer
+            );
             return {status: SyncStatuses.SUCCEEDED};
 
           default:

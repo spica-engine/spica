@@ -145,7 +145,7 @@ describe("Policy Synchronizer", () => {
       (async () => {
         await ps.insertOne(initialPolicy);
         await ps.replaceOne({_id: policyId}, updatedPolicy);
-      })().catch(err => console.error(err));
+      })().catch(err => done(err));
     });
 
     it("should emit ChangeLog on policy delete", done => {
@@ -188,7 +188,7 @@ describe("Policy Synchronizer", () => {
       (async () => {
         await ps.insertOne(policyToDelete);
         await ps.deleteOne({_id: policyId});
-      })().catch(err => console.error(err));
+      })().catch(err => done(err));
     });
   });
 
@@ -196,7 +196,7 @@ describe("Policy Synchronizer", () => {
     let applier;
 
     beforeEach(() => {
-      applier = policyApplier(ps);
+      applier = policyApplier(ps, undefined, undefined);
     });
 
     it("should return ChangeApplier with correct metadata", () => {
@@ -262,7 +262,7 @@ describe("Policy Synchronizer", () => {
     });
 
     it("should apply update change successfully", async () => {
-      const _id = new ObjectId();
+      const _id = new ObjectId().toString();
       const existingPolicy: any = {
         _id,
         name: "Old Policy",
@@ -408,8 +408,6 @@ describe("Policy Synchronizer", () => {
     });
 
     it("should handle YAML parse errors", async () => {
-      const applier = policyApplier(ps);
-
       const changeLog: ChangeLog = {
         module: "policy",
         sub_module: "schema",
