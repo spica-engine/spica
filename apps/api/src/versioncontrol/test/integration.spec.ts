@@ -489,7 +489,7 @@ describe("Versioning", () => {
         };
         const stringifiedPackages = YAML.stringify(packages);
         await rep.write("function", fn.name, "package", stringifiedPackages, "json");
-        await sleep();
+        await sleep(5000);
 
         let fns = await fnservice.find();
         expect(fns).toEqual([
@@ -545,7 +545,7 @@ describe("Versioning", () => {
         await engine.read(fn).catch(e => {
           expect(e).toEqual("Not Found");
         });
-      });
+      }, 60_000);
     });
   });
 

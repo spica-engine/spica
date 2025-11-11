@@ -1,0 +1,79 @@
+import {
+  ChangeTypes,
+  DocChange,
+  DocumentManagerResource,
+  ResourceType,
+  VCSynchronizerArgs
+} from "@spica-server/interface/versioncontrol";
+import {FunctionEngine} from "../engine";
+import {FunctionWithContent} from "@spica-server/interface/function";
+import {Observable} from "rxjs";
+
+export const getTsconfigSynchronizer = (
+  engine: FunctionEngine
+): VCSynchronizerArgs<FunctionWithContent> => {
+  const fileName = "tsconfig";
+  const extension = "json";
+
+  const docWatcher = () =>
+    new Observable<DocChange<DocumentManagerResource<FunctionWithContent>>>(observer => {
+      engine.watch("tsconfig").subscribe({
+        next: (change: FunctionWithContent) => {
+          const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
+            resourceType: ResourceType.DOCUMENT,
+            changeType: ChangeTypes.INSERT,
+            resource: {
+              _id: change._id.toString(),
+              slug: change.name,
+              content: change
+            }
+          };
+
+          observer.next(docChange);
+        },
+        error: observer.error
+      });
+    });
+
+  const convertToRepResource = (
+    change: DocChange<DocumentManagerResource<FunctionWithContent>>
+  ) => {
+    const parsed = JSON.parse(change.resource.content.content);
+
+    return {
+      _id: change.resource._id || change.resource.content._id?.toString(),
+      slug: change.resource.slug || change.resource.content.name,
+      content: JSON.stringify(parsed, null, 2)
+    };
+  };
+
+  return {
+    syncs: [
+      {
+        watcher: {docWatcher},
+        converter: {convertToRepResource},
+        applier: {
+          fileName,
+          getExtension: () => extension,
+          getAccessMode: () => "readonly"
+        }
+      },
+      {
+        watcher: {
+          filesToWatch: [],
+          eventsToWatch: []
+        },
+        converter: {
+          convertToDocResource: () => undefined
+        },
+        applier: {
+          insert: () => {},
+          update: () => {},
+          delete: () => {}
+        }
+      }
+    ],
+    moduleName: "function",
+    subModuleName: "tsconfig"
+  };
+};
