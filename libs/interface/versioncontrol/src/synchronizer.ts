@@ -436,6 +436,9 @@ export type VCSynchronizerArgs<R1 extends Resource> = Omit<
       applier: {
         fileName: string;
         getExtension: (change: RepChange<RepresentativeManagerResource>) => string;
+        getAccessMode?: (
+          change: RepChange<RepresentativeManagerResource>
+        ) => "readwrite" | "readonly";
       };
     },
     {

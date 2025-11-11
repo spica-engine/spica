@@ -73,8 +73,14 @@ export class GCloud extends BaseStrategy {
   }
 
   async rename(oldName: string, newName: string): Promise<void> {
-    const file = this.bucket.file(oldName);
-    await file.move(newName);
+    const [files] = await this.bucket.getFiles({prefix: oldName});
+
+    await Promise.all(
+      files.map(async file => {
+        const newDir = file.name.replace(oldName, newName);
+        await file.move(newDir);
+      })
+    );
   }
 
   async getAllFilesMetadataPaginated(pageToken?: string): Promise<{

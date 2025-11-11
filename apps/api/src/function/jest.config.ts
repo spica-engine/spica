@@ -12,7 +12,7 @@ export default {
     {
       ...commonConfig,
       modulePathIgnorePatterns: ["<rootDir>/test/e2e.spec.ts"],
-      testMatch: ["<rootDir>/test/**/*.spec.ts"]
+      testMatch: ["<rootDir>/test/*.spec.ts"]
     },
     {
       ...commonConfig,
