@@ -1,0 +1,5 @@
+{
+  "name": "api/env_var/synchronizer",
+  "sourceRoot": "apps/api/src/env_var/synchronizer",
+  "projectType": "application"
+}
