@@ -189,10 +189,11 @@ describe("Function Synchronizer", () => {
         }
       });
 
-      fs.insertOne(initialFunction).then(() => {
+      (async () => {
+        await fs.insertOne(initialFunction);
         const {_id, language, ...updateFields} = updatedFunction;
-        fs.findOneAndUpdate({_id: functionId}, {$set: updateFields});
-      });
+        await fs.findOneAndUpdate({_id: functionId}, {$set: updateFields});
+      })().catch(err => console.error(err));
     });
 
     it("should emit ChangeLog on function delete", done => {
@@ -235,9 +236,10 @@ describe("Function Synchronizer", () => {
         }
       });
 
-      fs.insertOne(functionToDelete).then(() => {
-        fs.findOneAndDelete({_id: functionId});
-      });
+      (async () => {
+        await fs.insertOne(functionToDelete);
+        await fs.findOneAndDelete({_id: functionId});
+      })().catch(err => console.error(err));
     });
   });
 
