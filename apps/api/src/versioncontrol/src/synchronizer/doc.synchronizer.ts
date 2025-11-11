@@ -133,7 +133,8 @@ export function getRepApplier<R extends Resource>(
         resource.slug,
         props.fileName,
         resource.content,
-        props.getExtension(change)
+        props.getExtension(change),
+        props.getAccessMode?.(change)
       );
     };
 

@@ -4,6 +4,7 @@ import {LogService} from "@spica-server/function/log";
 import {getIndexSynchronizer} from "./fnindex";
 import {getSchemaSynchronizer} from "./schema";
 import {getDependencySynchronizer} from "./dependency";
+import {getTsconfigSynchronizer} from "./tsconfig";
 
 export const getSynchronizers = (
   service: FunctionService,
@@ -13,6 +14,7 @@ export const getSynchronizers = (
   const schema = getSchemaSynchronizer(service, engine, logs);
   const index = getIndexSynchronizer(service, engine);
   const dependency = getDependencySynchronizer(engine);
+  const tsconfig = getTsconfigSynchronizer(engine);
 
-  return [schema, index, dependency];
+  return [schema, index, dependency, tsconfig];
 };
