@@ -12,7 +12,7 @@ export const getSynchronizers = (
 ) => {
   const schema = getSchemaSynchronizer(service, engine, logs);
   const index = getIndexSynchronizer(service, engine);
-  const dependency = getDependencySynchronizer(engine);
+  const dependency = getDependencySynchronizer(service, engine);
 
   return [schema, index, dependency];
 };
