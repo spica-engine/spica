@@ -31,7 +31,7 @@ describe("Function Controller", () => {
   };
 
   beforeEach(async () => {
-    process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:38653";
+    process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:38654";
     const module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
@@ -71,7 +71,7 @@ describe("Function Controller", () => {
     await app.listen(request.socket);
   });
 
-  afterEach(async () => await app.close());
+  afterEach(async () => await app.close().catch(console.error));
 
   describe("filtering", () => {
     it("should filter functions by index", async () => {
