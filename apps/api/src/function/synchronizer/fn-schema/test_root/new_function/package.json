@@ -1,0 +1,13 @@
+{
+  "name": "new_function",
+  "description": "New function",
+  "version": "0.0.1",
+  "private": true,
+  "keywords": [
+    "spica",
+    "function",
+    "node.js"
+  ],
+  "license": "UNLICENSED",
+  "main": ".build/new_function/index.mjs"
+}
