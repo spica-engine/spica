@@ -46,7 +46,7 @@ export const supplier = (engine: FunctionEngine, fs: FunctionService): ChangeSup
         const subscription = engine.watch("index").subscribe({
           next: change => {
             let type = ChangeType.UPDATE;
-            if (!change.content) {
+            if (change.content === undefined || change.content === null) {
               type = ChangeType.DELETE;
             }
 

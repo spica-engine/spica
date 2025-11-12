@@ -1,4 +1,4 @@
-import {Test, TestingModule} from "@nestjs/testing";
+import {Test} from "@nestjs/testing";
 import {FunctionService} from "@spica-server/function/services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
