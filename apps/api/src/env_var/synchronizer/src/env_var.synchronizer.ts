@@ -12,7 +12,6 @@ import {
   ChangeOrigin,
   SyncStatuses
 } from "@spica-server/interface/versioncontrol";
-import {ObjectId} from "@spica-server/database";
 
 const module = "env-var";
 const subModule = "schema";
