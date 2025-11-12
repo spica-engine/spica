@@ -101,34 +101,27 @@ export const envVarApplier = (evs: EnvVarService): ChangeApplier => {
     fileExtension,
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
-        const {type, resource_id, resource_content} = change;
-
-        if (type === ChangeType.DELETE) {
-          await CRUD.remove(evs, resource_id);
-          return {status: SyncStatuses.SUCCEEDED};
-        }
-
-        if (!resource_content) {
-          return {
-            status: SyncStatuses.FAILED,
-            reason: `Unknown operation type: ${type}`
-          };
-        }
-
-        const envVar: EnvVar = YAML.parse(resource_content);
-        envVar._id = new ObjectId(resource_id);
-
+        const type = change.type;
+        const envVar: EnvVar = YAML.parse(change.resource_content);
         switch (type) {
           case ChangeType.CREATE:
             await CRUD.insert(evs, envVar);
-            break;
+            return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.UPDATE:
             await CRUD.replace(evs, envVar);
-            break;
-        }
+            return {status: SyncStatuses.SUCCEEDED};
 
-        return {status: SyncStatuses.SUCCEEDED};
+          case ChangeType.DELETE:
+            await CRUD.remove(evs, change.resource_id);
+            return {status: SyncStatuses.SUCCEEDED};
+
+          default:
+            return {
+              status: SyncStatuses.FAILED,
+              reason: `Unknown operation type: ${type}`
+            };
+        }
       } catch (error: any) {
         console.warn("Error applying env_var change:", error);
         return {status: SyncStatuses.FAILED, reason: error.message};
