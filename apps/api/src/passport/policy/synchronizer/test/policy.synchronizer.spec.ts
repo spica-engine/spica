@@ -262,7 +262,7 @@ describe("Policy Synchronizer", () => {
     });
 
     it("should apply update change successfully", async () => {
-      const _id = new ObjectId().toString();
+      const _id = new ObjectId();
       const existingPolicy: any = {
         _id,
         name: "Old Policy",

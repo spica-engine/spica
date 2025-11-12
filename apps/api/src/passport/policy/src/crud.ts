@@ -34,11 +34,11 @@ export async function replace(ps: PolicyService, policy: Policy) {
   }
 
   const _id = new ObjectId(policy._id);
-
-  const res = await ps.replaceOne({_id: policy._id}, policy);
+  delete policy._id;
+  const res = await ps.replaceOne({_id}, policy);
 
   if (!res) {
-    throw new NotFoundException(`Policy with ID ${policy._id} not found`);
+    throw new NotFoundException(`Policy with ID ${_id} not found`);
   }
   return res;
 }
