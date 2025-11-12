@@ -32,16 +32,29 @@ export interface ChangeHandler {
 export interface ChangeModuleMeta {
   module: string;
   subModule: string;
-  fileExtension: string;
 }
 
 export interface ChangeSupplier extends ChangeModuleMeta {
   listen(): Observable<ChangeLog>;
 }
 
+export interface RepresentativeChangeSupplier extends ChangeSupplier {}
+
+export interface DocumentChangeSupplier extends ChangeSupplier {
+  getFileExtension(change: ChangeLog): Promise<string>;
+}
+
 export interface ChangeApplier extends ChangeModuleMeta {
   apply(change: ChangeLog): Promise<ApplyResult>;
 }
+
+export interface DocumentChangeApplier extends ChangeApplier {
+  findIdBySlug(slug: string): Promise<string>;
+  findIdByContent(content: string): Promise<string>;
+  fileExtensions: string[];
+}
+
+export interface RepresentativeChangeApplier extends ChangeApplier {}
 
 export interface ChangeLogProcessor {
   push(changeLog: ChangeLog): Promise<void>;
