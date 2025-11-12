@@ -308,6 +308,8 @@ describe("Function Index Synchronizer", () => {
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
       });
+      const savedIndex = await engine.read(mockFunction, "index");
+      expect(savedIndex).toContain("Created");
     });
 
     it("should apply update change successfully", async () => {
