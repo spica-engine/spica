@@ -8,6 +8,7 @@ import {
   ChangeType,
   SyncStatuses
 } from "@spica-server/interface/versioncontrol";
+import {ObjectId} from "bson";
 
 const module = "function";
 const subModule = "index";
@@ -29,7 +30,8 @@ export const applier = (fs: FunctionService, engine: FunctionEngine): ChangeAppl
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:
-            await CRUD.index.write(fs, engine, change.resource_id, "");
+            const fn = await CRUD.findOne(fs, new ObjectId(change.resource_id), {});
+            await engine.deleteIndex(fn);
             return {
               status: SyncStatuses.SUCCEEDED
             };

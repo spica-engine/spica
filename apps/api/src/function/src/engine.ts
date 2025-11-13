@@ -213,6 +213,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
   }
 
+  deleteIndex(fn: Function): Promise<void> {
+    const filePath = this.getFunctionBuildEntrypoint(fn);
+    return fs.promises.rm(filePath);
+  }
+
   watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
     let files = [];
 

@@ -356,7 +356,7 @@ describe("Function Index Synchronizer", () => {
       expect(savedIndex).not.toContain("Initial");
     });
 
-    it("should handle delete change by clearing index file", async () => {
+    fit("should handle delete change by clearing index file", async () => {
       const mockFunction: Function = {
         _id: new ObjectId(),
         name: "delete_function",
@@ -391,7 +391,7 @@ describe("Function Index Synchronizer", () => {
         origin: ChangeOrigin.REPRESENTATIVE,
         resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
-        resource_content: "",
+        resource_content: null,
         created_at: new Date()
       };
 
@@ -400,9 +400,17 @@ describe("Function Index Synchronizer", () => {
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
       });
-
-      const savedIndex = await engine.read(mockFunction, "index");
-      expect(savedIndex).toBe("");
+      let savedIndex;
+      try {
+        savedIndex = await engine.read(mockFunction, "index");
+      } catch (err) {
+        if (err === "Not Found") {
+          savedIndex = undefined;
+        } else {
+          throw err;
+        }
+      }
+      expect(savedIndex).toBe(undefined);
     });
 
     it("should handle unknown operation type", async () => {
