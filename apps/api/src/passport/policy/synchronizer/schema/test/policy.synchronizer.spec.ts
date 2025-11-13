@@ -64,7 +64,7 @@ describe("Policy Synchronizer", () => {
       };
       await ps.insertOne(mockPolicy);
 
-      const changeLog = await firstValueFrom(policySupplier.listen().pipe(take(1)));
+      const changeLog = await firstValueFrom(policySupplier.listen());
 
       expect(changeLog).toMatchObject({
         module: "policy",
