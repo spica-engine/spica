@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {envVarSupplier, envVarApplier} from "../src/env_var.synchronizer";
+import {supplier, applier} from "../src";
 import {
   ChangeLog,
   ChangeOrigin,
@@ -10,6 +10,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import YAML from "yaml";
 import {EnvVar} from "@spica-server/interface/env_var";
+import {firstValueFrom} from "rxjs";
 
 describe("EnvVar Synchronizer", () => {
   let module: TestingModule;
@@ -29,18 +30,41 @@ describe("EnvVar Synchronizer", () => {
   });
 
   describe("envVarSupplier", () => {
-    let supplier;
+    let envVarSupplier;
 
     beforeEach(() => {
-      supplier = envVarSupplier(evs);
+      envVarSupplier = supplier(evs);
     });
 
-    it("should return ChangeSupplier with correct metadata", () => {
-      expect(supplier).toMatchObject({
+    it("should return Change Supplier with correct metadata", () => {
+      expect(envVarSupplier).toMatchObject({
         module: "env-var",
         subModule: "schema",
         fileExtension: "yaml",
         listen: expect.any(Function)
+      });
+    });
+
+    it("should emit ChangeLog on env_var insert", async () => {
+      const mockEnvVar: EnvVar = {
+        _id: new ObjectId(),
+        key: "TEST_API_KEY",
+        value: "test-secret-value"
+      };
+
+      await evs.insertOne(mockEnvVar);
+
+      const changeLog = await firstValueFrom(envVarSupplier.listen());
+
+      expect(changeLog).toMatchObject({
+        module: "env-var",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.DOCUMENT,
+        resource_id: mockEnvVar._id.toString(),
+        resource_slug: "TEST_API_KEY",
+        resource_content: YAML.stringify(mockEnvVar),
+        created_at: expect.any(Date)
       });
     });
 
@@ -51,7 +75,7 @@ describe("EnvVar Synchronizer", () => {
         value: "test-secret-value"
       };
 
-      const observable = supplier.listen();
+      const observable = envVarSupplier.listen();
 
       observable.subscribe(changeLog => {
         expect(changeLog).toMatchObject({
@@ -85,7 +109,7 @@ describe("EnvVar Synchronizer", () => {
         value: "mongodb://localhost:27017/new"
       };
 
-      const observable = supplier.listen();
+      const observable = envVarSupplier.listen();
 
       observable.subscribe(changeLog => {
         if (changeLog.type === ChangeType.UPDATE) {
@@ -117,7 +141,7 @@ describe("EnvVar Synchronizer", () => {
         value: "will-be-deleted"
       };
 
-      const observable = supplier.listen();
+      const observable = envVarSupplier.listen();
 
       observable.subscribe(changeLog => {
         if (changeLog.type === ChangeType.DELETE) {
@@ -144,14 +168,14 @@ describe("EnvVar Synchronizer", () => {
   });
 
   describe("envVarApplier", () => {
-    let applier;
+    let envVarApplier;
 
     beforeEach(() => {
-      applier = envVarApplier(evs);
+      envVarApplier = applier(evs);
     });
 
-    it("should return ChangeApplier with correct metadata", () => {
-      expect(applier).toMatchObject({
+    it("should return Change Applier with correct metadata", () => {
+      expect(envVarApplier).toMatchObject({
         module: "env-var",
         subModule: "schema",
         fileExtension: "yaml",
@@ -178,7 +202,7 @@ describe("EnvVar Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await envVarApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -219,7 +243,7 @@ describe("EnvVar Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await envVarApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -254,7 +278,7 @@ describe("EnvVar Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await envVarApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -276,7 +300,7 @@ describe("EnvVar Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await envVarApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.FAILED,
@@ -296,7 +320,7 @@ describe("EnvVar Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await envVarApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.FAILED

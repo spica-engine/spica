@@ -1,29 +1,46 @@
 import {Observable} from "rxjs";
-import {EnvVarService} from "../../services";
-import * as CRUD from "../../src/crud";
-import {EnvVar} from "@spica-server/interface/env_var";
+import {EnvVarService} from "../../../services";
 import YAML from "yaml";
 import {
   ChangeLog,
   ChangeSupplier,
-  ChangeApplier,
-  ApplyResult,
   ChangeType,
-  ChangeOrigin,
-  SyncStatuses
+  ChangeOrigin
 } from "@spica-server/interface/versioncontrol";
 
 const module = "env-var";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export const envVarSupplier = (evs: EnvVarService): ChangeSupplier => {
+export const supplier = (evs: EnvVarService): ChangeSupplier => {
   return {
     module,
     subModule,
     fileExtension,
     listen(): Observable<ChangeLog> {
       return new Observable(observer => {
+        evs._coll
+          .find()
+          .toArray()
+          .then(envVars => {
+            envVars.forEach(envVar => {
+              const changeLog: ChangeLog = {
+                module,
+                sub_module: subModule,
+                origin: ChangeOrigin.DOCUMENT,
+                type: ChangeType.CREATE,
+                resource_id: envVar._id.toString(),
+                resource_slug: envVar.key,
+                resource_content: YAML.stringify(envVar),
+                created_at: new Date()
+              };
+              observer.next(changeLog);
+            });
+          })
+          .catch(error => {
+            console.error("Error propagating existing buckets:", error);
+          });
+
         const stream = evs._coll.watch([], {
           fullDocument: "updateLookup"
         });
@@ -89,42 +106,6 @@ export const envVarSupplier = (evs: EnvVarService): ChangeSupplier => {
           }
         };
       });
-    }
-  };
-};
-
-export const envVarApplier = (evs: EnvVarService): ChangeApplier => {
-  return {
-    module,
-    subModule,
-    fileExtension,
-    apply: async (change: ChangeLog): Promise<ApplyResult> => {
-      try {
-        const type = change.type;
-        const envVar: EnvVar = YAML.parse(change.resource_content);
-        switch (type) {
-          case ChangeType.CREATE:
-            await CRUD.insert(evs, envVar);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          case ChangeType.UPDATE:
-            await CRUD.replace(evs, envVar);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          case ChangeType.DELETE:
-            await CRUD.remove(evs, change.resource_id);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          default:
-            return {
-              status: SyncStatuses.FAILED,
-              reason: `Unknown operation type: ${type}`
-            };
-        }
-      } catch (error: any) {
-        console.warn("Error applying env_var change:", error);
-        return {status: SyncStatuses.FAILED, reason: error.message};
-      }
     }
   };
 };
