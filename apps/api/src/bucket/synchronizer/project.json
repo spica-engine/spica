@@ -1,5 +1,0 @@
-{
-  "name": "api/bucket/synchronizer",
-  "sourceRoot": "apps/api/src/bucket/synchronizer",
-  "projectType": "application"
-}

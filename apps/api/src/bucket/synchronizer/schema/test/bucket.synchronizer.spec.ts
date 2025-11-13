@@ -4,16 +4,18 @@ import {HistoryService} from "@spica-server/bucket/history";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
-import {bucketSupplier, bucketApplier} from "../src/bucket.synchronizer";
+import {applier, supplier} from "../index";
 import {
   ChangeLog,
   ChangeOrigin,
   ChangeType,
   SyncStatuses
 } from "@spica-server/interface/versioncontrol";
-import * as CRUD from "../../src/crud";
+import * as CRUD from "../../../src/crud";
 import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
+import {skip, take} from "rxjs/operators";
+import {firstValueFrom} from "rxjs";
 
 describe("Bucket Synchronizer", () => {
   let module: TestingModule;
@@ -41,18 +43,50 @@ describe("Bucket Synchronizer", () => {
   });
 
   describe("bucketSupplier", () => {
-    let supplier;
+    let bucketSupplier;
 
     beforeEach(() => {
-      supplier = bucketSupplier(bs);
+      bucketSupplier = supplier(bs);
     });
 
-    it("should return ChangeSupplier with correct metadata", () => {
-      expect(supplier).toMatchObject({
+    it("should return Change supplier with correct metadata", () => {
+      expect(bucketSupplier).toMatchObject({
         module: "bucket",
         subModule: "schema",
         fileExtension: "yaml",
         listen: expect.any(Function)
+      });
+    });
+
+    it("should emit ChangeLog on initial start", async () => {
+      const mockBucket: any = {
+        _id: new ObjectId(),
+        title: "Test Bucket",
+        description: "Test Description",
+        icon: "test-icon",
+        primary: "title",
+        readOnly: false,
+        acl: {
+          read: "true==true",
+          write: "true==true"
+        },
+        properties: {
+          title: {type: "string", options: {}}
+        }
+      };
+      await CRUD.insert(bs, mockBucket);
+
+      const changeLog = await firstValueFrom(bucketSupplier.listen().pipe(take(1)));
+
+      expect(changeLog).toMatchObject({
+        module: "bucket",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.DOCUMENT,
+        resource_id: mockBucket._id.toString(),
+        resource_slug: "Test Bucket",
+        resource_content: YAML.stringify(mockBucket),
+        created_at: expect.any(Date)
       });
     });
 
@@ -73,7 +107,7 @@ describe("Bucket Synchronizer", () => {
         }
       };
 
-      const observable = supplier.listen();
+      const observable = bucketSupplier.listen();
 
       observable.subscribe(changeLog => {
         expect(changeLog).toMatchObject({
@@ -129,7 +163,7 @@ describe("Bucket Synchronizer", () => {
       };
       const expectedUpdatedBucket = deepCopy(updatedBucket);
 
-      const observable = supplier.listen();
+      const observable = bucketSupplier.listen().pipe(skip(1));
 
       observable.subscribe(changeLog => {
         if (changeLog.type == ChangeType.UPDATE) {
@@ -168,7 +202,7 @@ describe("Bucket Synchronizer", () => {
         }
       };
 
-      const observable = supplier.listen();
+      const observable = bucketSupplier.listen().pipe(skip(1));
 
       observable.subscribe(changeLog => {
         if (changeLog.type == ChangeType.DELETE) {
@@ -194,14 +228,14 @@ describe("Bucket Synchronizer", () => {
   });
 
   describe("bucketApplier", () => {
-    let applier;
+    let bucketApplier;
 
     beforeEach(() => {
-      applier = bucketApplier(bs, bds, history);
+      bucketApplier = applier(bs, bds, history);
     });
 
-    it("should return ChangeApplier with correct metadata", () => {
-      expect(applier).toMatchObject({
+    it("should return Change Applier with correct metadata", () => {
+      expect(bucketApplier).toMatchObject({
         module: "bucket",
         subModule: "schema",
         fileExtension: "yaml",
@@ -238,7 +272,7 @@ describe("Bucket Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await bucketApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -308,7 +342,7 @@ describe("Bucket Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await bucketApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -363,7 +397,7 @@ describe("Bucket Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await bucketApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -385,7 +419,7 @@ describe("Bucket Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await bucketApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.FAILED,
@@ -394,8 +428,6 @@ describe("Bucket Synchronizer", () => {
     });
 
     it("should handle YAML parse errors", async () => {
-      const applier = bucketApplier(bs, bds, history);
-
       const changeLog: ChangeLog = {
         module: "bucket",
         sub_module: "schema",
@@ -407,7 +439,7 @@ describe("Bucket Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await bucketApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.FAILED
