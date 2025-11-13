@@ -1004,6 +1004,64 @@ describe("Storage Acceptance", () => {
       expect(body).toBe("third");
     });
   });
+  describe("rename folder", () => {
+    beforeEach(async () => {
+      await initModule({});
+
+      const folder1 = {
+        name: "folder/",
+        content: {
+          data: new Binary(Buffer.from("")),
+          type: "application/octet-stream",
+          size: 0
+        }
+      };
+      const folder2 = {
+        name: "folder/subfolder/",
+        content: {
+          data: new Binary(Buffer.from("")),
+          type: "application/octet-stream",
+          size: 0
+        }
+      };
+
+      await req.post("/storage", serialize({content: [folder1, folder2]}), {
+        "Content-Type": "application/bson"
+      });
+
+      const object1 = {
+        name: "folder/subfolder/document.pdf",
+        content: {
+          data: new Binary(Buffer.from("pdf data in nested folder")),
+          type: "application/pdf"
+        }
+      };
+
+      await req.post("/storage", serialize({content: [object1]}), {
+        "Content-Type": "application/bson"
+      });
+    });
+
+    it("should rename the folder and its children based on new name", async () => {
+      const {body: folderResponse} = await req.get("/storage", {
+        filter: JSON.stringify({name: "folder/subfolder/"})
+      });
+      const subfolderId = folderResponse[0]._id;
+
+      await req.patch(`/storage/${subfolderId}`, {
+        name: "folder/subfolder_renamed/"
+      });
+
+      const {body: allItems} = await req.get("/storage");
+
+      expect(allItems.length).toBe(6);
+      expect(allItems.some(item => item.name == "folder/")).toBe(true);
+      expect(allItems.some(item => item.name == "folder/subfolder_renamed/")).toBe(true);
+      expect(allItems.some(item => item.name == "folder/subfolder_renamed/document.pdf")).toBe(
+        true
+      );
+    });
+  });
   describe("objects with slashes in names", () => {
     beforeEach(async () => {
       const folder1 = {
