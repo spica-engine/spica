@@ -14,7 +14,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
-import {skip, take, firstValueFrom} from "rxjs";
+import {skip, firstValueFrom} from "rxjs";
 import * as rimraf from "rimraf";
 
 describe("Function Synchronizer", () => {
@@ -114,7 +114,7 @@ describe("Function Synchronizer", () => {
       };
       await fs.insertOne(mockFunction);
 
-      const changeLog = await firstValueFrom(funcSupplier.listen().pipe(take(1)));
+      const changeLog = await firstValueFrom(funcSupplier.listen());
 
       expect(changeLog).toMatchObject({
         module: "function",
