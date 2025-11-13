@@ -5,7 +5,7 @@ import {LogService} from "@spica-server/function/log";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
-import {functionSupplier, functionApplier} from "../src/schema.synchronizer";
+import {applier, supplier} from "../src";
 import {
   ChangeLog,
   ChangeOrigin,
@@ -14,6 +14,8 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
+import {skip, take, firstValueFrom} from "rxjs";
+import * as rimraf from "rimraf";
 
 describe("Function Synchronizer", () => {
   let module: TestingModule;
@@ -71,22 +73,58 @@ describe("Function Synchronizer", () => {
   });
 
   afterEach(async () => {
+    rimraf.sync("test_root");
     await module.close();
   });
 
-  describe("functionSupplier", () => {
-    let supplier;
+  describe("functionfuncSupplier", () => {
+    let funcSupplier;
 
     beforeEach(() => {
-      supplier = functionSupplier(fs);
+      funcSupplier = supplier(fs);
     });
 
-    it("should return ChangeSupplier with correct metadata", () => {
-      expect(supplier).toMatchObject({
+    it("should return Change supplier with correct metadata", () => {
+      expect(funcSupplier).toMatchObject({
         module: "function",
         subModule: "schema",
         fileExtension: "yaml",
         listen: expect.any(Function)
+      });
+    });
+
+    it("should emit ChangeLog on initial start", async () => {
+      const mockFunction: any = {
+        _id: new ObjectId(),
+        name: "test_function",
+        description: "Test function description",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/test"
+            }
+          }
+        },
+        timeout: 60,
+        language: "javascript"
+      };
+      await fs.insertOne(mockFunction);
+
+      const changeLog = await firstValueFrom(funcSupplier.listen().pipe(take(1)));
+
+      expect(changeLog).toMatchObject({
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.DOCUMENT,
+        resource_id: mockFunction._id.toString(),
+        resource_slug: "test_function",
+        resource_content: YAML.stringify(mockFunction),
+        created_at: expect.any(Date)
       });
     });
 
@@ -110,7 +148,7 @@ describe("Function Synchronizer", () => {
         language: "javascript"
       };
 
-      const observable = supplier.listen();
+      const observable = funcSupplier.listen();
 
       observable.subscribe(changeLog => {
         expect(changeLog).toMatchObject({
@@ -171,7 +209,7 @@ describe("Function Synchronizer", () => {
       };
       const expectedUpdatedFunction = deepCopy(updatedFunction);
 
-      const observable = supplier.listen();
+      const observable = funcSupplier.listen().pipe(skip(1));
 
       observable.subscribe(changeLog => {
         if (changeLog.type === ChangeType.UPDATE) {
@@ -193,7 +231,7 @@ describe("Function Synchronizer", () => {
         await fs.insertOne(initialFunction);
         const {_id, language, ...updateFields} = updatedFunction;
         await fs.findOneAndUpdate({_id: functionId}, {$set: updateFields});
-      })().catch(err => console.error(err));
+      })().catch(err => done(err));
     });
 
     it("should emit ChangeLog on function delete", done => {
@@ -217,7 +255,7 @@ describe("Function Synchronizer", () => {
         language: "javascript"
       };
 
-      const observable = supplier.listen();
+      const observable = funcSupplier.listen().pipe(skip(1));
 
       observable.subscribe(changeLog => {
         if (changeLog.type === ChangeType.DELETE) {
@@ -239,19 +277,19 @@ describe("Function Synchronizer", () => {
       (async () => {
         await fs.insertOne(functionToDelete);
         await fs.findOneAndDelete({_id: functionId});
-      })().catch(err => console.error(err));
+      })().catch(err => done(err));
     });
   });
 
   describe("functionApplier", () => {
-    let applier;
+    let funcApplier;
 
     beforeEach(() => {
-      applier = functionApplier(fs, engine, logs);
+      funcApplier = applier(fs, engine, logs);
     });
 
-    it("should return ChangeApplier with correct metadata", () => {
-      expect(applier).toMatchObject({
+    it("should return Change Applier with correct metadata", () => {
+      expect(funcApplier).toMatchObject({
         module: "function",
         subModule: "schema",
         fileExtension: "yaml",
@@ -291,7 +329,7 @@ describe("Function Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await funcApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -379,7 +417,7 @@ describe("Function Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await funcApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -445,7 +483,7 @@ describe("Function Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await funcApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -467,7 +505,7 @@ describe("Function Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await funcApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.FAILED,
@@ -487,7 +525,7 @@ describe("Function Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await funcApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.FAILED

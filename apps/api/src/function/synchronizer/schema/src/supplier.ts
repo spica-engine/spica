@@ -1,31 +1,46 @@
 import {Observable} from "rxjs";
 import {FunctionService} from "@spica-server/function/services";
-import {FunctionEngine} from "@spica-server/function/src/engine";
-import {LogService} from "@spica-server/function/log";
-import * as CRUD from "../../../src/crud";
-import {Function} from "@spica-server/interface/function";
 import YAML from "yaml";
 import {
   ChangeLog,
   ChangeSupplier,
-  ChangeApplier,
-  ApplyResult,
   ChangeType,
-  ChangeOrigin,
-  SyncStatuses
+  ChangeOrigin
 } from "@spica-server/interface/versioncontrol";
 
 const module = "function";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export const functionSupplier = (fs: FunctionService): ChangeSupplier => {
+export const supplier = (fs: FunctionService): ChangeSupplier => {
   return {
     module,
     subModule,
     fileExtension,
     listen(): Observable<ChangeLog> {
       return new Observable(observer => {
+        fs._coll
+          .find()
+          .toArray()
+          .then(functions => {
+            functions.forEach(fn => {
+              const changeLog: ChangeLog = {
+                module,
+                sub_module: subModule,
+                origin: ChangeOrigin.DOCUMENT,
+                type: ChangeType.CREATE,
+                resource_id: fn._id.toString(),
+                resource_slug: fn.name,
+                resource_content: YAML.stringify(fn),
+                created_at: new Date()
+              };
+              observer.next(changeLog);
+            });
+          })
+          .catch(error => {
+            console.error("Error propagating existing functions:", error);
+          });
+
         const stream = fs._coll.watch([], {
           fullDocument: "updateLookup"
         });
@@ -91,48 +106,6 @@ export const functionSupplier = (fs: FunctionService): ChangeSupplier => {
           }
         };
       });
-    }
-  };
-};
-
-export const functionApplier = (
-  fs: FunctionService,
-  engine: FunctionEngine,
-  logs: LogService
-): ChangeApplier => {
-  return {
-    module,
-    subModule,
-    fileExtension,
-    apply: async (change: ChangeLog): Promise<ApplyResult> => {
-      try {
-        const operationType = change.type;
-        const fn: Function = YAML.parse(change.resource_content);
-
-        switch (operationType) {
-          case ChangeType.CREATE:
-            await CRUD.insert(fs, engine, fn);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          case ChangeType.UPDATE:
-            await CRUD.replace(fs, engine, fn);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          case ChangeType.DELETE:
-            await CRUD.remove(fs, engine, logs, change.resource_id);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          default:
-            console.warn("Unknown operation type:", operationType);
-            return {
-              status: SyncStatuses.FAILED,
-              reason: `Unknown operation type: ${operationType}`
-            };
-        }
-      } catch (error) {
-        console.warn("Error applying function change:", error);
-        return {status: SyncStatuses.FAILED, reason: error.message};
-      }
     }
   };
 };
