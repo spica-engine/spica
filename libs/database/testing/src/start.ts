@@ -20,7 +20,7 @@ export async function start(topology: "standalone" | "replset") {
   }
 
   globalThis.__CLEANUPCALLBACKS = globalThis.__CLEANUPCALLBACKS || [];
-  globalThis.__CLEANUPCALLBACKS.push(() => setTimeout(() => mongod.stop(), 1000));
+  globalThis.__CLEANUPCALLBACKS.push(() => setTimeout(() => mongod.stop(), 2000));
 
   uri = mongod.getUri() + "&retryWrites=false";
 

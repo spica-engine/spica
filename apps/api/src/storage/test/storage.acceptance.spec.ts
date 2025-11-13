@@ -1004,6 +1004,7 @@ describe("Storage Acceptance", () => {
       expect(body).toBe("third");
     });
   });
+
   describe("rename folder", () => {
     beforeEach(async () => {
       await initModule({});
@@ -1062,6 +1063,7 @@ describe("Storage Acceptance", () => {
       );
     });
   });
+
   describe("objects with slashes in names", () => {
     beforeEach(async () => {
       const folder1 = {
