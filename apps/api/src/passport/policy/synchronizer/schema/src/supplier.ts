@@ -1,30 +1,45 @@
 import {Observable} from "rxjs";
-import {PolicyService} from "../../src/policy.service";
-import {changeFactory, Policy} from "@spica-server/interface/passport/policy";
+import {PolicyService} from "../../../src/policy.service";
 import YAML from "yaml";
-import * as CRUD from "../../src/crud";
 import {
   ChangeLog,
   ChangeSupplier,
-  ChangeApplier,
-  ApplyResult,
   ChangeType,
-  ChangeOrigin,
-  SyncStatuses
+  ChangeOrigin
 } from "@spica-server/interface/versioncontrol";
-import {ObjectId} from "bson";
 
 const module = "policy";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export function policySupplier(ps: PolicyService): ChangeSupplier {
+export function supplier(ps: PolicyService): ChangeSupplier {
   return {
     module,
     subModule,
     fileExtension,
     listen(): Observable<ChangeLog> {
       return new Observable(observer => {
+        ps._coll
+          .find()
+          .toArray()
+          .then(policies => {
+            policies.forEach(policy => {
+              const changeLog: ChangeLog = {
+                module,
+                sub_module: subModule,
+                origin: ChangeOrigin.DOCUMENT,
+                type: ChangeType.CREATE,
+                resource_id: policy._id.toString(),
+                resource_slug: policy.name,
+                resource_content: YAML.stringify(policy),
+                created_at: new Date()
+              };
+              observer.next(changeLog);
+            });
+          })
+          .catch(error => {
+            console.error("Error propagating existing policies:", error);
+          });
         const stream = ps._coll.watch([], {
           fullDocument: "updateLookup"
         });
@@ -90,53 +105,6 @@ export function policySupplier(ps: PolicyService): ChangeSupplier {
           }
         };
       });
-    }
-  };
-}
-
-export function policyApplier(
-  ps: PolicyService,
-  apikeyFinalizer: changeFactory,
-  identityFinalizer: changeFactory
-): ChangeApplier {
-  return {
-    module,
-    subModule,
-    fileExtension,
-    apply: async (change: ChangeLog): Promise<ApplyResult> => {
-      try {
-        const operationType = change.type;
-        const policy: Policy = YAML.parse(change.resource_content);
-
-        switch (operationType) {
-          case ChangeType.CREATE:
-            await CRUD.insert(ps, policy);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          case ChangeType.UPDATE:
-            await CRUD.replace(ps, policy);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          case ChangeType.DELETE:
-            await CRUD.remove(
-              ps,
-              new ObjectId(change.resource_id),
-              apikeyFinalizer,
-              identityFinalizer
-            );
-            return {status: SyncStatuses.SUCCEEDED};
-
-          default:
-            console.warn("Unknown operation type:", operationType);
-            return {
-              status: SyncStatuses.FAILED,
-              reason: `Unknown operation type: ${operationType}`
-            };
-        }
-      } catch (error) {
-        console.warn("Error applying policy change:", error);
-        return {status: SyncStatuses.FAILED, reason: error.message};
-      }
     }
   };
 }

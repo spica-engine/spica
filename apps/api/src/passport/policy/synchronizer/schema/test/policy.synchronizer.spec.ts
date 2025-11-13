@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {PolicyService} from "../../src/policy.service";
+import {PolicyService} from "../../../src/policy.service";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {policySupplier, policyApplier} from "../src/policy.synchronizer";
+
 import {
   ChangeLog,
   ChangeOrigin,
@@ -10,6 +10,8 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
+import {applier, supplier} from "../src";
+import {firstValueFrom, take} from "rxjs";
 
 describe("Policy Synchronizer", () => {
   let module: TestingModule;
@@ -29,18 +31,50 @@ describe("Policy Synchronizer", () => {
   });
 
   describe("policySupplier", () => {
-    let supplier;
+    let policySupplier;
 
     beforeEach(() => {
-      supplier = policySupplier(ps);
+      policySupplier = supplier(ps);
     });
 
-    it("should return ChangeSupplier with correct metadata", () => {
-      expect(supplier).toMatchObject({
+    it("should return Change Supplier with correct metadata", () => {
+      expect(policySupplier).toMatchObject({
         module: "policy",
         subModule: "schema",
         fileExtension: "yaml",
         listen: expect.any(Function)
+      });
+    });
+
+    it("should emit ChangeLog on initial start", async () => {
+      const mockPolicy: any = {
+        _id: new ObjectId(),
+        name: "Test Policy",
+        description: "Test Description",
+        statement: [
+          {
+            action: "bucket:index",
+            resource: {
+              include: ["*"],
+              exclude: []
+            },
+            module: "bucket"
+          }
+        ]
+      };
+      await ps.insertOne(mockPolicy);
+
+      const changeLog = await firstValueFrom(policySupplier.listen().pipe(take(1)));
+
+      expect(changeLog).toMatchObject({
+        module: "policy",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.DOCUMENT,
+        resource_id: mockPolicy._id.toString(),
+        resource_slug: "Test Policy",
+        resource_content: YAML.stringify(mockPolicy),
+        created_at: expect.any(Date)
       });
     });
 
@@ -61,7 +95,7 @@ describe("Policy Synchronizer", () => {
         ]
       };
 
-      const observable = supplier.listen();
+      const observable = policySupplier.listen();
 
       observable.subscribe(changeLog => {
         expect(changeLog).toMatchObject({
@@ -124,7 +158,7 @@ describe("Policy Synchronizer", () => {
       };
       const expectedUpdatedPolicy = deepCopy(updatedPolicy);
 
-      const observable = supplier.listen();
+      const observable = policySupplier.listen();
 
       observable.subscribe(changeLog => {
         if (changeLog.type == ChangeType.UPDATE) {
@@ -166,7 +200,7 @@ describe("Policy Synchronizer", () => {
         ]
       };
 
-      const observable = supplier.listen();
+      const observable = policySupplier.listen();
 
       observable.subscribe(changeLog => {
         if (changeLog.type == ChangeType.DELETE) {
@@ -192,15 +226,15 @@ describe("Policy Synchronizer", () => {
     });
   });
 
-  describe("policyApplier", () => {
-    let applier;
+  describe("policy Applier", () => {
+    let policyApplier;
 
     beforeEach(() => {
-      applier = policyApplier(ps, undefined, undefined);
+      policyApplier = applier(ps, undefined, undefined);
     });
 
-    it("should return ChangeApplier with correct metadata", () => {
-      expect(applier).toMatchObject({
+    it("should return Change Applier with correct metadata", () => {
+      expect(policyApplier).toMatchObject({
         module: "policy",
         subModule: "schema",
         fileExtension: "yaml",
@@ -237,7 +271,7 @@ describe("Policy Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await policyApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -315,7 +349,7 @@ describe("Policy Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await policyApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -377,7 +411,7 @@ describe("Policy Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await policyApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.SUCCEEDED
@@ -399,7 +433,7 @@ describe("Policy Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await policyApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.FAILED,
@@ -419,7 +453,7 @@ describe("Policy Synchronizer", () => {
         created_at: new Date()
       };
 
-      const result = await applier.apply(changeLog);
+      const result = await policyApplier.apply(changeLog);
 
       expect(result).toMatchObject({
         status: SyncStatuses.FAILED
