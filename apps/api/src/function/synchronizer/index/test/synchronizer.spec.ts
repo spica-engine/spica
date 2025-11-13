@@ -16,6 +16,7 @@ import {
 import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {filter} from "rxjs";
 
 describe("Function Index Synchronizer", () => {
   let functionService: FunctionService;
@@ -115,24 +116,24 @@ describe("Function Index Synchronizer", () => {
       const indexContent = `export default function(req, res) {
         res.send("Existing function");
         }`;
+      const observable = indexSupplier.listen();
+
+      observable.subscribe((changeLog: ChangeLog) => {
+        expect(changeLog).toMatchObject({
+          module: "function",
+          sub_module: "index",
+          type: ChangeType.CREATE,
+          origin: ChangeOrigin.DOCUMENT,
+          resource_id: mockFunction._id.toString(),
+          resource_slug: mockFunction.name,
+          resource_content: indexContent,
+          created_at: expect.any(Date)
+        });
+        done();
+      });
 
       CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         await engine.update(fn, indexContent);
-        const observable = indexSupplier.listen();
-
-        observable.subscribe((changeLog: ChangeLog) => {
-          expect(changeLog).toMatchObject({
-            module: "function",
-            sub_module: "index",
-            type: ChangeType.CREATE,
-            origin: ChangeOrigin.DOCUMENT,
-            resource_id: mockFunction._id.toString(),
-            resource_slug: mockFunction.name,
-            resource_content: indexContent,
-            created_at: expect.any(Date)
-          });
-          done();
-        });
       });
     });
 
@@ -165,29 +166,24 @@ describe("Function Index Synchronizer", () => {
         res.send("Updated");
         }`;
 
-      const observable = indexSupplier.listen();
-      let emitCount = 0;
-
-      observable.subscribe((changeLog: ChangeLog) => {
-        emitCount++;
-
-        if (emitCount === 2) {
-          expect(changeLog).toMatchObject({
-            module: "function",
-            sub_module: "index",
-            type: ChangeType.UPDATE,
-            origin: ChangeOrigin.DOCUMENT,
-            resource_id: mockFunction._id.toString(),
-            resource_slug: mockFunction.name,
-            resource_content: updatedContent,
-            created_at: expect.any(Date)
-          });
-          done();
-        }
-      });
-
       CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         await engine.update(fn, indexContent);
+        const observable = indexSupplier.listen();
+        observable
+          .pipe(filter((changeLog: ChangeLog) => changeLog.type === ChangeType.UPDATE))
+          .subscribe((changeLog: ChangeLog) => {
+            expect(changeLog).toMatchObject({
+              module: "function",
+              sub_module: "index",
+              type: ChangeType.UPDATE,
+              origin: ChangeOrigin.DOCUMENT,
+              resource_id: mockFunction._id.toString(),
+              resource_slug: mockFunction.name,
+              resource_content: updatedContent,
+              created_at: expect.any(Date)
+            });
+            done();
+          });
         setTimeout(async () => {
           await engine.update(fn, updatedContent);
         }, 100);
@@ -219,31 +215,27 @@ describe("Function Index Synchronizer", () => {
         res.send("To be deleted");
         }`;
 
-      const observable = indexSupplier.listen();
-      let emitCount = 0;
-
-      observable.subscribe((changeLog: ChangeLog) => {
-        emitCount++;
-
-        if (emitCount === 2) {
-          expect(changeLog).toMatchObject({
-            module: "function",
-            sub_module: "index",
-            type: ChangeType.DELETE,
-            origin: ChangeOrigin.DOCUMENT,
-            resource_id: mockFunction._id.toString(),
-            resource_slug: mockFunction.name,
-            resource_content: "",
-            created_at: expect.any(Date)
-          });
-          done();
-        }
-      });
-
       CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         await engine.update(fn, indexContent);
+        const observable = indexSupplier.listen();
+
+        observable
+          .pipe(filter((changeLog: ChangeLog) => changeLog.type === ChangeType.DELETE))
+          .subscribe((changeLog: ChangeLog) => {
+            expect(changeLog).toMatchObject({
+              module: "function",
+              sub_module: "index",
+              type: ChangeType.DELETE,
+              origin: ChangeOrigin.DOCUMENT,
+              resource_id: mockFunction._id.toString(),
+              resource_slug: mockFunction.name,
+              resource_content: null,
+              created_at: expect.any(Date)
+            });
+            done();
+          });
         setTimeout(async () => {
-          await engine.update(fn, "");
+          await engine.deleteFunction(fn);
         }, 100);
       });
     });

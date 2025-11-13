@@ -234,7 +234,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         depth: 2
       });
 
-      const handleFileEvent = async (path: string) => {
+      const handleFileEvent = async (path: string, type: "create" | "update" | "delete") => {
         const relativePath = path.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
 
@@ -248,13 +248,20 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         });
         if (!fn) return;
 
-        const content = await fs.promises.readFile(path).then(b => b.toString());
+        let content: string;
+        if (type == "delete") {
+          content = null;
+        } else {
+          const b = await fs.promises.readFile(path);
+          content = b.toString();
+        }
 
-        observer.next({...fn, content});
+        observer.next({...fn, content, type});
       };
 
-      watcher.on("change", path => handleFileEvent(path));
-      watcher.on("add", path => handleFileEvent(path));
+      watcher.on("change", path => handleFileEvent(path, "update"));
+      watcher.on("unlink", path => handleFileEvent(path, "delete"));
+      watcher.on("add", path => handleFileEvent(path, "create"));
 
       watcher.on("error", err => observer.error(err));
 

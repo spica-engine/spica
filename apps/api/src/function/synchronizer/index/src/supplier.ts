@@ -45,9 +45,16 @@ export const supplier = (engine: FunctionEngine, fs: FunctionService): ChangeSup
 
         const subscription = engine.watch("index").subscribe({
           next: change => {
-            let type = ChangeType.UPDATE;
-            if (change.content === undefined || change.content === null) {
-              type = ChangeType.DELETE;
+            const changeMap = {
+              create: ChangeType.CREATE,
+              update: ChangeType.UPDATE,
+              delete: ChangeType.DELETE
+            };
+            const type = changeMap[change.type];
+
+            if (!Object.values(ChangeType).includes(type)) {
+              console.warn("Unknown change type:", change.type);
+              return;
             }
 
             const changeLog: ChangeLog = {
