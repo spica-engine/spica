@@ -17,6 +17,7 @@ import {useFormik} from "formik";
 type TypeStorageFilter = {
   onApply?: (filter: TypeFilterValue) => void;
   onCancel?: () => void;
+  initialValues?: TypeFilterValue;
 };
 
 const types = [
@@ -26,6 +27,25 @@ const types = [
 ];
 
 const units = ["kb", "mb", "gb", "tb"];
+
+export const createStorageFilterDefaultValues = (): TypeFilterValue => ({
+  type: ["jpg", "png", "mp4"],
+  fileSize: {
+    min: {
+      value: 1,
+      unit: "mb"
+    },
+    max: {
+      value: 10,
+      unit: "gb"
+    }
+  },
+  quickdate: null,
+  dateRange: {
+    from: null,
+    to: null
+  }
+});
 
 const createdAtArr = [
   {value: "last_1_hour", label: "Last 1 Hour"},
@@ -42,26 +62,10 @@ const createdAtArr = [
   {value: "last_week", label: "Last Week"}
 ];
 
-const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
+const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, initialValues}) => {
   const formik = useFormik({
-    initialValues: {
-      type: ["jpg", "png", "mp4"],
-      fileSize: {
-        min: {
-          value: 1,
-          unit: "mb"
-        },
-        max: {
-          value: 10,
-          unit: "gb"
-        }
-      },
-      quickdate: null,
-      dateRange: {
-        from: null,
-        to: null
-      }
-    },
+    initialValues: initialValues ?? createStorageFilterDefaultValues(),
+    enableReinitialize: true,
     onSubmit: values => onSubmit(values)
   });
 
@@ -70,6 +74,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
   };
 
   const handleCancel = () => {
+    formik.resetForm();
     onCancel?.();
   };
 
@@ -117,10 +122,15 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
               <FlexElement className={styles.content}>
                 <FlexElement className={styles.left}>
                   <Input
-                    value={formik.values.fileSize.min.value}
+                    value={formik.values.fileSize.min.value ?? ""}
                     type="number"
                     dimensionX={45}
-                    onChange={e => formik.setFieldValue("fileSize.min.value", e.target.value)}
+                    onChange={e =>
+                      formik.setFieldValue(
+                        "fileSize.min.value",
+                        e.target.value === "" ? null : Number(e.target.value)
+                      )
+                    }
                   />
                   <Select
                     dimensionY="hug"
@@ -135,10 +145,15 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel}) => {
                 </FlexElement>
                 <FlexElement>
                   <Input
-                    value={formik.values.fileSize.max.value}
+                    value={formik.values.fileSize.max.value ?? ""}
                     type="number"
                     dimensionX={45}
-                    onChange={e => formik.setFieldValue("fileSize.max.value", e.target.value)}
+                    onChange={e =>
+                      formik.setFieldValue(
+                        "fileSize.max.value",
+                        e.target.value === "" ? null : Number(e.target.value)
+                      )
+                    }
                   />
                   <Select
                     dimensionY="hug"

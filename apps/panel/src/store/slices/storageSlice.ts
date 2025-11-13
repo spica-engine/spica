@@ -7,6 +7,7 @@ import { ROOT_PATH } from '../../pages/storage/constants';
 interface StorageState {
   directory: TypeDirectories;
   currentDirectory: string;
+  searchQuery: string;
 }
 
 const INITIAL_DIRECTORIES: TypeDirectories = [
@@ -23,6 +24,7 @@ const INITIAL_DIRECTORIES: TypeDirectories = [
 const initialState: StorageState = {
   directory: INITIAL_DIRECTORIES,
   currentDirectory: ROOT_PATH,
+  searchQuery: "",
 };
 
 const storageSlice = createSlice({
@@ -34,6 +36,9 @@ const storageSlice = createSlice({
     },
     setCurrentDirectory: (state, action: PayloadAction<string>) => {
       state.currentDirectory = action.payload;
+    },
+    setSearchQuery: (state, action: PayloadAction<string>) => {
+      state.searchQuery = action.payload;
     },
     handleFolderClick: (state, action: PayloadAction<{
       folderName: string;
@@ -128,6 +133,7 @@ const storageSlice = createSlice({
     resetStorage: (state) => {
       state.directory = INITIAL_DIRECTORIES;
       state.currentDirectory = ROOT_PATH;
+      state.searchQuery = "";
     },
   },
 });
@@ -135,6 +141,7 @@ const storageSlice = createSlice({
 export const { 
   setDirectory, 
   setCurrentDirectory, 
+  setSearchQuery,
   handleFolderClick,
   resetStorage 
 } = storageSlice.actions;
@@ -142,6 +149,7 @@ export const {
 // Selectors
 export const selectDirectory = (state: RootState): TypeDirectories => state.storage.directory;
 export const selectCurrentDirectory = (state: RootState): string => state.storage.currentDirectory;
+export const selectSearchQuery = (state: RootState): string => state.storage.searchQuery;
 
 export default storageSlice.reducer;
 

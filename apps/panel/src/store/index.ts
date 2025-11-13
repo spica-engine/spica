@@ -34,8 +34,10 @@ export {
 export {
   setDirectory,
   setCurrentDirectory,
+  setSearchQuery,
   handleFolderClick,
   resetStorage,
   selectDirectory,
   selectCurrentDirectory,
+  selectSearchQuery,
 } from './slices/storageSlice';
