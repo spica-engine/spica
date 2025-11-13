@@ -20,23 +20,21 @@ export const supplier = (engine: FunctionEngine, fs: FunctionService): ChangeSup
     fileExtension,
     listen(): Observable<ChangeLog> {
       return new Observable(observer => {
-        CRUD.find(fs, engine, {}).then(async functions => {
+        CRUD.find(fs, engine, {}).then(functions => {
           try {
-            await Promise.all(
-              functions.map(async fn => {
-                const content = await engine.read(fn, "index");
-                observer.next({
-                  module,
-                  sub_module: subModule,
-                  origin: ChangeOrigin.DOCUMENT,
-                  type: ChangeType.CREATE,
-                  resource_id: fn._id.toString(),
-                  resource_slug: fn.name,
-                  resource_content: content,
-                  created_at: new Date()
-                });
-              })
-            );
+            functions.map(async fn => {
+              const content = await engine.read(fn, "index");
+              observer.next({
+                module,
+                sub_module: subModule,
+                origin: ChangeOrigin.DOCUMENT,
+                type: ChangeType.CREATE,
+                resource_id: fn._id.toString(),
+                resource_slug: fn.name,
+                resource_content: content,
+                created_at: new Date()
+              });
+            });
           } catch (error) {
             observer.error(error);
             return;

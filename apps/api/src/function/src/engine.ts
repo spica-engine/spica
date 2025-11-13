@@ -243,10 +243,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         if (!isCorrectDepth || !isTrackedFile) return;
 
         const dirName = parts[0];
-        const fn = await CRUD.findByName(this.fs, dirName, {
-          resolveEnvRelations: EnvRelation.NotResolved
-        });
-        if (!fn) return;
 
         let content: string;
         if (type == "delete") {
@@ -255,6 +251,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
           const b = await fs.promises.readFile(path);
           content = b.toString();
         }
+
+        const fn = await CRUD.findByName(this.fs, dirName, {
+          resolveEnvRelations: EnvRelation.NotResolved
+        });
+        if (!fn) return;
 
         observer.next({...fn, content, type});
       };
