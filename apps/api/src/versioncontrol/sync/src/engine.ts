@@ -15,6 +15,8 @@ import {SyncProcessor} from "@spica-server/versioncontrol/processors/sync";
 import {PendingSync} from "@spica-server/versioncontrol/processors/sync/src/interface";
 
 export class SyncEngine {
+  private readonly changeHandlers: ChangeHandler[] = [];
+
   constructor(
     private readonly suppliers: DocumentChangeSupplier[],
     private readonly appliers: DocumentChangeApplier[],
@@ -22,36 +24,51 @@ export class SyncEngine {
     private readonly syncProcessor: SyncProcessor,
     private readonly repManager: IIRepresentativeManager
   ) {
-    const changeHandlersForReps = this.buildChangeHandlersForReps();
-    const changeHandlersForDocs = this.buildChangeHandlersForDocs();
+    this.defineChangeHandlers();
 
-    const changeHandlers = [...changeHandlersForReps, ...changeHandlersForDocs];
+    this.registerSyncProcessor();
+    this.registerChangeLogProcessor();
+    this.registerChangeHandlers();
+  }
 
-    this.syncProcessor.watch().subscribe(sync => {
-      const handler = this.findChangeHandlerOfSync(sync, changeHandlers);
+  private registerSyncProcessor() {
+    const syncHandler = async (sync: Sync) => {
+      const handler = this.findChangeHandlerOfSync(sync);
 
       if (!handler) {
         console.error("No handler found for sync", sync);
         return;
       }
 
-      handler.applier.apply(sync.change_log).then(result => {
-        return syncProcessor.update(sync._id, result.status, result.reason);
-      });
-    });
+      const result = await handler.applier.apply(sync.change_log);
+      this.syncProcessor.update(sync._id, result.status, result.reason);
+    };
 
-    this.changeLogProcessor.watch().subscribe(changeLog => {
+    this.syncProcessor.watch(SyncStatuses.APPROVED).subscribe(syncHandler);
+  }
+
+  private registerChangeLogProcessor() {
+    const changeLogHandler = (changeLog: ChangeLog) => {
       const sync: PendingSync = this.generateSyncFromChangeLog(
         changeLog,
         SyncStatuses.PENDING
       ) as PendingSync;
-      syncProcessor.push(sync);
-    });
+      this.syncProcessor.push(sync);
+    };
+    this.changeLogProcessor.watch().subscribe(changeLogHandler);
+  }
 
-    for (const handler of changeHandlers) {
-      handler.supplier.listen().subscribe(changeLog => {
-        changeLogProcessor.push(changeLog);
-      });
+  private defineChangeHandlers() {
+    const repHandlers = this.buildChangeHandlersForReps();
+    const docHandlers = this.buildChangeHandlersForDocs();
+    this.changeHandlers.push(...repHandlers, ...docHandlers);
+  }
+
+  private registerChangeHandlers() {
+    const changeHandler = (changeLog: ChangeLog) => this.changeLogProcessor.push(changeLog);
+
+    for (const handler of this.changeHandlers) {
+      handler.supplier.listen().subscribe(changeHandler);
     }
   }
 
@@ -79,11 +96,8 @@ export class SyncEngine {
     });
   }
 
-  private findChangeHandlerOfSync(
-    sync: Sync,
-    changeHandlers: ChangeHandler[]
-  ): ChangeHandler | undefined {
-    return changeHandlers.find(
+  private findChangeHandlerOfSync(sync: Sync): ChangeHandler | undefined {
+    return this.changeHandlers.find(
       handler =>
         handler.moduleMeta.module === sync.change_log.module &&
         handler.moduleMeta.subModule === sync.change_log.sub_module &&

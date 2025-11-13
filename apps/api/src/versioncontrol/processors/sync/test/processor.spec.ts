@@ -3,6 +3,7 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {ChangeOrigin, ChangeType, Sync, SyncStatuses} from "@spica-server/interface/versioncontrol";
 import {SyncProcessor, SyncProcessorsModule} from "@spica-server/versioncontrol/processors/sync";
 import {ApprovedSync, PendingSync} from "../src/interface";
+import {bufferCount} from "rxjs";
 
 function getMockSync(status: SyncStatuses = SyncStatuses.PENDING): Sync {
   return {
@@ -33,7 +34,7 @@ describe("SyncProcessor", () => {
     processor = module.get(SyncProcessor);
   });
 
-  it("should emit approved syncs when inserted", done => {
+  it("should emit all", done => {
     const pendingSync: PendingSync = getMockSync(SyncStatuses.PENDING) as PendingSync;
 
     const approvedSync: ApprovedSync = {
@@ -42,7 +43,32 @@ describe("SyncProcessor", () => {
       _id: new ObjectId()
     };
 
-    processor.watch().subscribe({
+    processor
+      .watch()
+      .pipe(bufferCount(2))
+      .subscribe({
+        next: received => {
+          expect(received).toEqual([pendingSync, approvedSync]);
+          done();
+        },
+        error: err => {
+          done.fail(err);
+        }
+      });
+
+    processor.push(pendingSync, approvedSync);
+  });
+
+  it("should emit approved syncs", done => {
+    const pendingSync: PendingSync = getMockSync(SyncStatuses.PENDING) as PendingSync;
+
+    const approvedSync: ApprovedSync = {
+      ...pendingSync,
+      status: SyncStatuses.APPROVED,
+      _id: new ObjectId()
+    };
+
+    processor.watch(SyncStatuses.APPROVED).subscribe({
       next: received => {
         expect(received).toEqual(approvedSync);
         done();
@@ -58,7 +84,7 @@ describe("SyncProcessor", () => {
   it("should emit approved syncs when updated", done => {
     const pendingSync: PendingSync = getMockSync(SyncStatuses.PENDING) as PendingSync;
 
-    processor.watch().subscribe({
+    processor.watch(SyncStatuses.APPROVED).subscribe({
       next: received => {
         expect(received).toEqual({
           ...pendingSync,

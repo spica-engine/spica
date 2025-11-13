@@ -20,8 +20,13 @@ export class SyncProcessor implements ISyncProcessor {
     return this.service.findOneAndUpdate({_id}, update, {returnDocument: "after"});
   }
 
-  watch(): Observable<Sync> {
-    const statusFilter = sync => sync.status === SyncStatuses.APPROVED;
+  watch(status?: SyncStatuses): Observable<Sync> {
+    let statusFilter = sync => sync;
+
+    if (status) {
+      statusFilter = sync => sync.status === status;
+    }
+
     return this.service.watch([], {fullDocument: "updateLookup"}).pipe(
       map(change => change["fullDocument"]),
       filter(statusFilter)

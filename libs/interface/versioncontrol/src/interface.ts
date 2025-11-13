@@ -70,7 +70,7 @@ export interface ApplyResult {
 export interface ISyncProcessor {
   push(...sync: Sync[]): Promise<Sync[]>;
   update(_id: ObjectId, status: SyncStatuses, reason?: string): Promise<Sync>;
-  watch(): Observable<Sync>;
+  watch(status: SyncStatuses): Observable<Sync>;
 }
 
 export interface Sync {
