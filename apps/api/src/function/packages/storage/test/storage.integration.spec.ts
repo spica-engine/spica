@@ -11,6 +11,9 @@ import {BatchModule} from "@spica-server/batch";
 const PORT = 3001;
 const PUBLIC_URL = `http://localhost:${PORT}`;
 
+// ISO 8601 date format: e.g 2025-11-13T13:49:27.271Z
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
 describe("Storage", () => {
   let module: TestingModule;
   let app: INestApplication;
@@ -68,7 +71,9 @@ describe("Storage", () => {
         content: {
           size: 5,
           type: "text/plain"
-        }
+        },
+        created_at: expect.stringMatching(ISO_DATE_REGEX),
+        updated_at: expect.stringMatching(ISO_DATE_REGEX)
       }
     ]);
   });
@@ -87,7 +92,9 @@ describe("Storage", () => {
           content: {
             size: 5,
             type: "text/plain"
-          }
+          },
+          created_at: expect.stringMatching(ISO_DATE_REGEX),
+          updated_at: expect.stringMatching(ISO_DATE_REGEX)
         }
       ]
     });
@@ -104,7 +111,9 @@ describe("Storage", () => {
       content: {
         size: 5,
         type: "text/plain"
-      }
+      },
+      created_at: expect.stringMatching(ISO_DATE_REGEX),
+      updated_at: expect.stringMatching(ISO_DATE_REGEX)
     });
   });
 
@@ -118,7 +127,9 @@ describe("Storage", () => {
       content: {
         size: 5,
         type: "text/plain"
-      }
+      },
+      created_at: expect.stringMatching(ISO_DATE_REGEX),
+      updated_at: expect.stringMatching(ISO_DATE_REGEX)
     };
     expect(ObjectId.isValid(insertedObject._id)).toEqual(true);
     expect(insertedObject).toEqual(expectedObj);
@@ -141,7 +152,9 @@ describe("Storage", () => {
         content: {
           size: 5,
           type: "text/plain"
-        }
+        },
+        created_at: expect.stringMatching(ISO_DATE_REGEX),
+        updated_at: expect.stringMatching(ISO_DATE_REGEX)
       },
       {
         _id: insertedObjects[1]._id,
@@ -150,7 +163,9 @@ describe("Storage", () => {
         content: {
           size: 2,
           type: "application/json"
-        }
+        },
+        created_at: expect.stringMatching(ISO_DATE_REGEX),
+        updated_at: expect.stringMatching(ISO_DATE_REGEX)
       }
     ];
     expect(insertedObjects).toEqual(expectedObjects);
@@ -166,20 +181,29 @@ describe("Storage", () => {
 
     const updateResponse = await Storage.update(insertedObj._id, updatedObject);
 
-    const expectedObject = {
+    expect(updateResponse).toEqual({
       _id: insertedObj._id,
       name: "test.txt",
       url: `${PUBLIC_URL}/storage/test.txt/view`,
       content: {
         size: 9,
         type: "text/plain"
-      }
-    };
-
-    expect(updateResponse).toEqual(expectedObject);
+      },
+      updated_at: expect.stringMatching(ISO_DATE_REGEX)
+    });
 
     const existing = await Storage.get(insertedObj._id);
-    expect(existing).toEqual(expectedObject);
+    expect(existing).toEqual({
+      _id: insertedObj._id,
+      name: "test.txt",
+      url: `${PUBLIC_URL}/storage/test.txt/view`,
+      content: {
+        size: 9,
+        type: "text/plain"
+      },
+      created_at: expect.stringMatching(ISO_DATE_REGEX),
+      updated_at: expect.stringMatching(ISO_DATE_REGEX)
+    });
   });
 
   it("should patch", async () => {
@@ -194,7 +218,9 @@ describe("Storage", () => {
       content: {
         size: 5,
         type: "text/plain"
-      }
+      },
+      created_at: expect.stringMatching(ISO_DATE_REGEX),
+      updated_at: expect.stringMatching(ISO_DATE_REGEX)
     };
 
     expect(updateResponse).toEqual(expectedObject);
