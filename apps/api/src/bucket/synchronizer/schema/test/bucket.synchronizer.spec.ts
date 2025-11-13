@@ -14,7 +14,7 @@ import {
 import * as CRUD from "../../../src/crud";
 import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
-import {skip, take} from "rxjs/operators";
+import {skip} from "rxjs/operators";
 import {firstValueFrom} from "rxjs";
 
 describe("Bucket Synchronizer", () => {
@@ -76,7 +76,7 @@ describe("Bucket Synchronizer", () => {
       };
       await CRUD.insert(bs, mockBucket);
 
-      const changeLog = await firstValueFrom(bucketSupplier.listen().pipe(take(1)));
+      const changeLog = await firstValueFrom(bucketSupplier.listen());
 
       expect(changeLog).toMatchObject({
         module: "bucket",
