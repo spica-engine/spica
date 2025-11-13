@@ -1,3 +1,4 @@
+import {ObjectId} from "@spica-server/database";
 import {Observable} from "rxjs";
 
 export enum ChangeType {
@@ -56,8 +57,8 @@ export interface DocumentChangeApplier extends ChangeApplier {
 
 export interface RepresentativeChangeApplier extends ChangeApplier {}
 
-export interface ChangeLogProcessor {
-  push(changeLog: ChangeLog): Promise<void>;
+export interface IChangeLogProcessor {
+  push(...changeLogs: ChangeLog[]): Promise<ChangeLog[]>;
   watch(): Observable<ChangeLog>;
 }
 
@@ -66,13 +67,14 @@ export interface ApplyResult {
   reason?: string;
 }
 
-export interface SyncProcessor {
-  push(sync: Sync): Promise<Sync>;
-  update(sync: Sync, status: SyncStatuses, reason?: string): Promise<Sync>;
+export interface ISyncProcessor {
+  push(...sync: Sync[]): Promise<Sync[]>;
+  update(_id: ObjectId, status: SyncStatuses, reason?: string): Promise<Sync>;
   watch(): Observable<Sync>;
 }
 
 export interface Sync {
+  _id?: ObjectId;
   change_log: ChangeLog;
   status: SyncStatuses;
   reason?: string;
