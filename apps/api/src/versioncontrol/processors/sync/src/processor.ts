@@ -20,7 +20,7 @@ export class SyncProcessor implements ISyncProcessor {
     return this.service.findOneAndUpdate({_id}, update, {returnDocument: "after"});
   }
 
-  watch(status?: SyncStatuses): Observable<Sync> {
+  watch(status: SyncStatuses): Observable<Sync> {
     let statusFilter = sync => sync;
 
     if (status) {
