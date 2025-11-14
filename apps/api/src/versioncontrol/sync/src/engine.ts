@@ -36,7 +36,7 @@ export class SyncEngine {
       const handler = this.findChangeHandlerOfSync(sync);
 
       if (!handler) {
-        console.error("No handler found for sync", sync);
+        this.syncProcessor.update(sync._id, SyncStatuses.FAILED, "No handler found for this sync.");
         return;
       }
 
