@@ -1,8 +1,14 @@
 
-import {useRef, useEffect, useMemo} from "react";
+import {useRef, useEffect, useMemo, useState} from "react";
 import {FlexElement, Spinner} from "oziko-ui-kit";
 import {useAppSelector, useAppDispatch} from "../../../../store/hook";
-import {selectDirectory, setDirectory, handleFolderClick as handleFolderClickAction, selectSearchQuery, setSearchQuery} from "../../../../store";
+import {
+  selectDirectory,
+  setDirectory,
+  handleFolderClick as handleFolderClickAction,
+  selectSearchQuery,
+  selectSearchResults
+} from "../../../../store";
 import {useDragAndDrop} from "../../hooks/useDragAndDrop";
 import {useStorageDataSync} from "../../hooks/useStorageDataSync";
 import {useFileOperations} from "../../hooks/useFileOperations";
@@ -15,6 +21,8 @@ import styles from "./StorageColumns.module.scss";
 import { DroppableColumn } from "../droppable-column/DroppableColumn";
 import { StorageItem } from "../storage-item/StorageItem";
 import { StorageItemColumn } from "../storage-column/StorageColumn";
+
+const MIN_SEARCH_LENGTH = 3;
 
 interface StorageColumnsProps {
   readonly setPreviewFile: (file?: DirectoryItem) => void;
@@ -32,6 +40,10 @@ export function StorageItemColumns({
   const dispatch = useAppDispatch();
   const directory = useAppSelector(selectDirectory);
   const searchQuery = useAppSelector(selectSearchQuery);
+  const searchResults = useAppSelector(selectSearchResults);
+  const [isSearchViewActive, setIsSearchViewActive] = useState(false);
+  const [selectedSearchPath, setSelectedSearchPath] = useState<string | null>(null);
+  const lastActivatedQueryRef = useRef("");
 
   const handleSetDirectory = (dirs: TypeDirectories) => {
     dispatch(setDirectory(dirs));
@@ -66,7 +78,7 @@ export function StorageItemColumns({
     wasActive: boolean
   ) => {
     handleClosePreview();
-    dispatch(setSearchQuery(""));
+    setSelectedSearchPath(fullPath);
     dispatch(
       handleFolderClickAction({
         folderName,
@@ -78,36 +90,58 @@ export function StorageItemColumns({
     );
   };
 
-  const isSearching = searchQuery.trim().length > 0;
+  const isSearching = isSearchViewActive;
 
-  const searchResults = useMemo(() => {
-    if (!isSearching) return [];
+  useEffect(() => {
+    const trimmedQuery = searchQuery.trim();
+    const meetsThreshold = trimmedQuery.length >= MIN_SEARCH_LENGTH;
 
-    const query = searchQuery.trim().toLowerCase();
-    const allItems = directory.flatMap(dir => dir.items ?? []);
+    if (!meetsThreshold) {
+      setIsSearchViewActive(false);
+      lastActivatedQueryRef.current = "";
+      setSelectedSearchPath(null);
+      return;
+    }
 
-    const uniqueItems = new Map<string, DirectoryItem>();
+    if (searchResults.length > 0 && searchQuery !== lastActivatedQueryRef.current) {
+      setIsSearchViewActive(true);
+      lastActivatedQueryRef.current = searchQuery;
+    }
+  }, [searchQuery, searchResults]);
 
-    allItems.forEach(item => {
-      if (!item) return;
+  useEffect(() => {
+    if (!isSearchViewActive) {
+      setSelectedSearchPath(null);
+    }
+  }, [isSearchViewActive]);
 
-      const searchableName = (item.label || item.name || "").toLowerCase();
-      if (!searchableName) return;
+  useEffect(() => {
+    setSelectedSearchPath(null);
+  }, [searchQuery]);
 
-      if (searchableName.includes(query)) {
-        const uniqueKey = item._id || item.fullPath || searchableName;
-        if (!uniqueItems.has(uniqueKey)) {
-          uniqueItems.set(uniqueKey, item);
-        }
-      }
-    });
+  const selectedDirectory = useMemo(
+    () => (selectedSearchPath ? directory.find(dir => dir.fullPath === selectedSearchPath) : undefined),
+    [directory, selectedSearchPath]
+  );
 
-    return Array.from(uniqueItems.values()).sort((a, b) => {
-      const firstName = (a.label || a.name || "").toLowerCase();
-      const secondName = (b.label || b.name || "").toLowerCase();
+  const selectedDirectoryItems = useMemo(() => {
+    if (!selectedDirectory?.items) return undefined;
+    return [...selectedDirectory.items].sort((a, b) => {
+      const aIsDir = a.content?.type === "inode/directory";
+      const bIsDir = b.content?.type === "inode/directory";
+      if (aIsDir !== bIsDir) return aIsDir ? -1 : 1;
+      const firstName = a.label || a.name;
+      const secondName = b.label || b.name;
       return firstName.localeCompare(secondName);
     });
-  }, [directory, searchQuery, isSearching]);
+  }, [selectedDirectory?.items]);
+
+  const selectedFolderPrefix = useMemo(() => {
+    if (!selectedDirectory) return "";
+    return selectedDirectory.fullPath === ROOT_PATH
+      ? ""
+      : selectedDirectory.fullPath.split("/").filter(Boolean).join("/") + "/";
+  }, [selectedDirectory]);
 
   const visibleDirectories = useMemo(
     () =>
@@ -158,6 +192,28 @@ export function StorageItemColumns({
               StorageItem={StorageItem}
             />
           </div>
+          {/* {selectedSearchPath && (
+            <div className={`${styles.storageItemColumnContainer} ${styles.lastColumn}`}>
+              {selectedDirectoryItems ? (
+                <StorageItemColumn
+                  items={selectedDirectoryItems}
+                  handleFolderClick={handleSearchFolderClick}
+                  setPreviewFile={setPreviewFile}
+                  depth={(selectedDirectory?.currentDepth || 0) + 1}
+                  directory={directory}
+                  previewFileId={previewFile?._id}
+                  prefix={selectedFolderPrefix}
+                  onUploadComplete={onUploadComplete}
+                  isDraggingDisabled
+                  StorageItem={StorageItem}
+                />
+              ) : (
+                <div className={styles.columnLoaderContainer}>
+                  <Spinner />
+                </div>
+              )}
+            </div>
+          )} */}
         </FlexElement>
       </div>
     );

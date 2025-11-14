@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../index';
-import type { TypeDirectories } from '../../types/storage';
+import type { TypeDirectories, DirectoryItem } from '../../types/storage';
 import { getParentPath } from '../../pages/storage/utils';
 import { ROOT_PATH } from '../../pages/storage/constants';
 
@@ -8,6 +8,7 @@ interface StorageState {
   directory: TypeDirectories;
   currentDirectory: string;
   searchQuery: string;
+  searchResults: DirectoryItem[];
 }
 
 const INITIAL_DIRECTORIES: TypeDirectories = [
@@ -25,6 +26,7 @@ const initialState: StorageState = {
   directory: INITIAL_DIRECTORIES,
   currentDirectory: ROOT_PATH,
   searchQuery: "",
+  searchResults: [],
 };
 
 const storageSlice = createSlice({
@@ -39,6 +41,9 @@ const storageSlice = createSlice({
     },
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
+    },
+    setSearchResults: (state, action: PayloadAction<DirectoryItem[]>) => {
+      state.searchResults = action.payload;
     },
     handleFolderClick: (state, action: PayloadAction<{
       folderName: string;
@@ -134,6 +139,7 @@ const storageSlice = createSlice({
       state.directory = INITIAL_DIRECTORIES;
       state.currentDirectory = ROOT_PATH;
       state.searchQuery = "";
+      state.searchResults = [];
     },
   },
 });
@@ -142,6 +148,7 @@ export const {
   setDirectory, 
   setCurrentDirectory, 
   setSearchQuery,
+  setSearchResults,
   handleFolderClick,
   resetStorage 
 } = storageSlice.actions;
@@ -150,6 +157,7 @@ export const {
 export const selectDirectory = (state: RootState): TypeDirectories => state.storage.directory;
 export const selectCurrentDirectory = (state: RootState): string => state.storage.currentDirectory;
 export const selectSearchQuery = (state: RootState): string => state.storage.searchQuery;
+export const selectSearchResults = (state: RootState): DirectoryItem[] => state.storage.searchResults;
 
 export default storageSlice.reducer;
 
