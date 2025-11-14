@@ -1,3 +1,4 @@
+import {ObjectId} from "@spica-server/database";
 import {Observable} from "rxjs";
 
 export enum ChangeType {
@@ -32,19 +33,32 @@ export interface ChangeHandler {
 export interface ChangeModuleMeta {
   module: string;
   subModule: string;
-  fileExtension: string;
 }
 
 export interface ChangeSupplier extends ChangeModuleMeta {
   listen(): Observable<ChangeLog>;
 }
 
+export interface RepresentativeChangeSupplier extends ChangeSupplier {}
+
+export interface DocumentChangeSupplier extends ChangeSupplier {
+  getFileExtension(change: ChangeLog): Promise<string>;
+}
+
 export interface ChangeApplier extends ChangeModuleMeta {
   apply(change: ChangeLog): Promise<ApplyResult>;
 }
 
-export interface ChangeLogProcessor {
-  push(changeLog: ChangeLog): Promise<void>;
+export interface DocumentChangeApplier extends ChangeApplier {
+  findIdBySlug(slug: string): Promise<string>;
+  findIdByContent(content: string): Promise<string>;
+  fileExtensions: string[];
+}
+
+export interface RepresentativeChangeApplier extends ChangeApplier {}
+
+export interface IChangeLogProcessor {
+  push(...changeLogs: ChangeLog[]): Promise<ChangeLog[]>;
   watch(): Observable<ChangeLog>;
 }
 
@@ -53,13 +67,14 @@ export interface ApplyResult {
   reason?: string;
 }
 
-export interface SyncProcessor {
-  push(sync: Sync): Promise<Sync>;
-  update(sync: Sync, status: SyncStatuses, reason?: string): Promise<Sync>;
-  watch(): Observable<Sync>;
+export interface ISyncProcessor {
+  push(...sync: Sync[]): Promise<Sync[]>;
+  update(_id: ObjectId, status: SyncStatuses, reason?: string): Promise<Sync>;
+  watch(status: SyncStatuses): Observable<Sync>;
 }
 
 export interface Sync {
+  _id?: ObjectId;
   change_log: ChangeLog;
   status: SyncStatuses;
   reason?: string;

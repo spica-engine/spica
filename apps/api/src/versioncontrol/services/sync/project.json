@@ -1,0 +1,5 @@
+{
+  "name": "api/versioncontrol/services/sync",
+  "sourceRoot": "apps/api/src/versioncontrol/services/sync",
+  "projectType": "application"
+}
