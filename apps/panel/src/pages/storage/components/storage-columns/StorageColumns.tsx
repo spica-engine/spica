@@ -44,7 +44,6 @@ export function StorageItemColumns({
   const searchResults = useAppSelector(selectSearchResults);
   const activeFilterQuery = useAppSelector(selectStorageFilterQuery);
   const [isSearchViewActive, setIsSearchViewActive] = useState(false);
-  const [selectedSearchPath, setSelectedSearchPath] = useState<string | null>(null);
   const lastActivatedQueryRef = useRef("");
 
   const handleSetDirectory = (dirs: TypeDirectories) => {
@@ -73,25 +72,6 @@ export function StorageItemColumns({
     );
   };
 
-  const handleSearchFolderClick = (
-    folderName: string,
-    fullPath: string,
-    directoryDepth: number,
-    wasActive: boolean
-  ) => {
-    handleClosePreview();
-    setSelectedSearchPath(fullPath);
-    dispatch(
-      handleFolderClickAction({
-        folderName,
-        fullPath,
-        directoryDepth,
-        wasActive,
-        isFilteringOrSearching: false
-      })
-    );
-  };
-
   const isSearching = isSearchViewActive;
 
   useEffect(() => {
@@ -101,7 +81,6 @@ export function StorageItemColumns({
     if (!meetsThreshold) {
       setIsSearchViewActive(false);
       lastActivatedQueryRef.current = "";
-      setSelectedSearchPath(null);
       return;
     }
 
@@ -110,40 +89,6 @@ export function StorageItemColumns({
       lastActivatedQueryRef.current = searchQuery;
     }
   }, [searchQuery, searchResults]);
-
-  useEffect(() => {
-    if (!isSearchViewActive) {
-      setSelectedSearchPath(null);
-    }
-  }, [isSearchViewActive]);
-
-  useEffect(() => {
-    setSelectedSearchPath(null);
-  }, [searchQuery]);
-
-  const selectedDirectory = useMemo(
-    () => (selectedSearchPath ? directory.find(dir => dir.fullPath === selectedSearchPath) : undefined),
-    [directory, selectedSearchPath]
-  );
-
-  const selectedDirectoryItems = useMemo(() => {
-    if (!selectedDirectory?.items) return undefined;
-    return [...selectedDirectory.items].sort((a, b) => {
-      const aIsDir = a.content?.type === "inode/directory";
-      const bIsDir = b.content?.type === "inode/directory";
-      if (aIsDir !== bIsDir) return aIsDir ? -1 : 1;
-      const firstName = a.label || a.name;
-      const secondName = b.label || b.name;
-      return firstName.localeCompare(secondName);
-    });
-  }, [selectedDirectory?.items]);
-
-  const selectedFolderPrefix = useMemo(() => {
-    if (!selectedDirectory) return "";
-    return selectedDirectory.fullPath === ROOT_PATH
-      ? ""
-      : selectedDirectory.fullPath.split("/").filter(Boolean).join("/") + "/";
-  }, [selectedDirectory]);
 
   const visibleDirectories = useMemo(
     () =>
@@ -176,51 +121,6 @@ export function StorageItemColumns({
     return () => resizeObserver.disconnect();
   }, [visibleDirectories]);
 
-  if (isSearching) {
-    return (
-      <div ref={containerRef} className={styles.container}>
-        <FlexElement className={styles.columns} gap={0}>
-          <div className={`${styles.storageItemColumnContainer} ${styles.lastColumn}`}>
-            <StorageItemColumn
-              items={searchResults}
-              handleFolderClick={handleSearchFolderClick}
-              setPreviewFile={setPreviewFile}
-              depth={1}
-              directory={directory}
-              previewFileId={previewFile?._id}
-              prefix=""
-              onUploadComplete={onUploadComplete}
-              isDraggingDisabled
-              StorageItem={StorageItem}
-            />
-          </div>
-          {/* {selectedSearchPath && (
-            <div className={`${styles.storageItemColumnContainer} ${styles.lastColumn}`}>
-              {selectedDirectoryItems ? (
-                <StorageItemColumn
-                  items={selectedDirectoryItems}
-                  handleFolderClick={handleSearchFolderClick}
-                  setPreviewFile={setPreviewFile}
-                  depth={(selectedDirectory?.currentDepth || 0) + 1}
-                  directory={directory}
-                  previewFileId={previewFile?._id}
-                  prefix={selectedFolderPrefix}
-                  onUploadComplete={onUploadComplete}
-                  isDraggingDisabled
-                  StorageItem={StorageItem}
-                />
-              ) : (
-                <div className={styles.columnLoaderContainer}>
-                  <Spinner />
-                </div>
-              )}
-            </div>
-          )} */}
-        </FlexElement>
-      </div>
-    );
-  }
-
   return (
     <div ref={containerRef} className={styles.container}>
       <FlexElement className={styles.columns} gap={0}>
@@ -234,14 +134,40 @@ export function StorageItemColumns({
             return firstName.localeCompare(secondName);
           });
 
+          const isSearchColumn = isSearching && (dir.currentDepth || 0) === 1;
+          const itemsToRender = isSearchColumn ? searchResults : orderedItems;
+
           const folderPath =
             dir.fullPath === ROOT_PATH
               ? ""
               : dir.fullPath.split("/").filter(Boolean).join("/") + "/";
 
+          const isLastColumn = isSearchColumn
+            ? visibleDirectories.length === 1
+            : maxDepth === dir.currentDepth;
+
           const columnClassName = `${styles.storageItemColumnContainer} ${
-            maxDepth === dir.currentDepth ? styles.lastColumn : ""
+            isLastColumn ? styles.lastColumn : ""
           }`;
+
+          if (isSearchColumn) {
+            return (
+              <div className={columnClassName} key={`${dir.fullPath}-search`}>
+                <StorageItemColumn
+                  items={itemsToRender}
+                  handleFolderClick={handleFolderClick}
+                  setPreviewFile={setPreviewFile}
+                  depth={dir.currentDepth || 0}
+                  directory={directory}
+                  previewFileId={previewFile?._id}
+                  prefix=""
+                  onUploadComplete={onUploadComplete}
+                  isDraggingDisabled
+                  StorageItem={StorageItem}
+                />
+              </div>
+            );
+          }
 
           return dir.items ? (
             <DroppableColumn
@@ -252,7 +178,7 @@ export function StorageItemColumns({
               className={columnClassName}
             >
               <StorageItemColumn
-                items={orderedItems}
+                items={itemsToRender}
                 handleFolderClick={handleFolderClick}
                 setPreviewFile={setPreviewFile}
                 depth={dir.currentDepth || 0}
