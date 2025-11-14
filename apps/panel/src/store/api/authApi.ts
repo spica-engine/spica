@@ -23,13 +23,13 @@ export interface LoginResponse {
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getStrategies: builder.query<Strategy[], void>({
-      query: () => '/passport/strategies',
+      query: () => 'passport/strategies',
       providesTags: ['Auth'],
     }),
     
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (credentials) => ({
-        url: '/passport/identify',
+        url: 'passport/identify',
         method: 'POST',
         body: credentials,
       }),
@@ -47,7 +47,7 @@ export const authApi = baseApi.injectEndpoints({
     
     logout: builder.mutation<void, void>({
       query: () => ({
-        url: '/passport/logout',
+        url: 'passport/logout',
         method: 'POST',
       }),
       onQueryStarted: async (arg, { dispatch }) => {
@@ -59,7 +59,7 @@ export const authApi = baseApi.injectEndpoints({
   }),
 });
 
-export const {
+export const { 
   useGetStrategiesQuery,
   useLoginMutation,
   useLogoutMutation,

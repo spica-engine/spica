@@ -40,20 +40,20 @@ export const identityApi = baseApi.injectEndpoints({
       filter?: Record<string, any>;
     } | void>({
       query: (params) => ({
-        url: '/passport/identity',
+        url: 'passport/identity',
         params: params || {},
       }),
       providesTags: ['Identity'],
     }),
 
     getIdentity: builder.query<Identity, string>({
-      query: (id) => `/passport/identity/${id}`,
+      query: (id) => `passport/identity/${id}`,
       providesTags: (result, error, id) => [{ type: 'Identity', id }],
     }),
 
     createIdentity: builder.mutation<Identity, CreateIdentityRequest>({
       query: (body) => ({
-        url: '/passport/identity',
+        url: 'passport/identity',
         method: 'POST',
         body,
       }),
@@ -62,7 +62,7 @@ export const identityApi = baseApi.injectEndpoints({
 
     updateIdentity: builder.mutation<Identity, { id: string; body: UpdateIdentityRequest }>({
       query: ({ id, body }) => ({
-        url: `/passport/identity/${id}`,
+        url: `passport/identity/${id}`,
         method: 'PUT',
         body,
       }),
@@ -71,7 +71,7 @@ export const identityApi = baseApi.injectEndpoints({
 
     deleteIdentity: builder.mutation<{ message: string }, string>({
       query: (id) => ({
-        url: `/passport/identity/${id}`,
+        url: `passport/identity/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, id) => [{ type: 'Identity', id }, 'Identity'],
@@ -79,7 +79,7 @@ export const identityApi = baseApi.injectEndpoints({
 
     authenticateIdentity: builder.mutation<{ token: string; identity: Identity }, { identifier: string; password: string }>({
       query: (credentials) => ({
-        url: '/passport/identify',
+        url: 'passport/identify',
         method: 'POST',
         body: credentials,
       }),
@@ -87,18 +87,18 @@ export const identityApi = baseApi.injectEndpoints({
     }),
 
     verifyIdentity: builder.query<Identity, void>({
-      query: () => '/passport/verify',
+      query: () => 'passport/verify',
       providesTags: ['Auth'],
     }),
 
     getIdentityPolicies: builder.query<string[], string>({
-      query: (id) => `/passport/identity/${id}/policies`,
+      query: (id) => `passport/identity/${id}/policies`,
       providesTags: (result, error, id) => [{ type: 'Identity', id }],
     }),
 
     updateIdentityPolicies: builder.mutation<Identity, { id: string; policies: string[] }>({
       query: ({ id, policies }) => ({
-        url: `/passport/identity/${id}/policies`,
+        url: `passport/identity/${id}/policies`,
         method: 'PUT',
         body: { policies },
       }),

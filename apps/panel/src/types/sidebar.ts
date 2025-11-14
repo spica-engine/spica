@@ -22,7 +22,7 @@ export type TypeNavigatorItem = {
 export type NavigatorItemGroup = {
   items: TypeNavigatorItem[];
   onOrderChange: (from: number, to: number) => void;
-  completeOrderChange: (identifier: string, newOrder: number) => void;
+  completeOrderChange: (identifier: string, newOrder: number) => void | Promise<void>;
 };
 
 export type TypeNavigatorHeader = {

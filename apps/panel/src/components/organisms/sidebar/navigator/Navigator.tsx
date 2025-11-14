@@ -103,7 +103,7 @@ const Navigator = ({header, items, button, addNewButtonText}: TypeNavigatorProps
       <div className={styles.items}>
         {accordionItems}
         {ungroupedItems}
-        {addNewButtonText && <AddBucketPopup text={addNewButtonText} />}
+        {addNewButtonText && <AddBucketPopup  />}
       </div>
       {button && (
         <Button color="transparent" variant="text">

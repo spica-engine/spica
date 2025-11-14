@@ -31,6 +31,9 @@
       border-top-left-radius: var(--border-radius-md);
       border-bottom-left-radius: var(--border-radius-md);
       cursor: pointer;
+      outline: none;
+      border: none;
+
     }
 
     .active {

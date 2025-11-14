@@ -1,0 +1,68 @@
+@use "../../../../styles/mixins";
+
+
+.bucketsItemContainer {
+    // padding: 0 var(--padding-sm) 0 var(--padding-md);
+
+    .bucketItem {
+        transition: opacity 0.2s ease-in-out;
+        padding: 0 var(--padding-sm) 0 var(--padding-md);
+      
+        &:hover {
+          background-color: var(--color-hover);
+          cursor: pointer;
+          .actionButtons {
+            opacity: 1;
+          }
+        }
+      
+        .itemButton {
+          padding: 0 !important;
+        }
+      
+        .bucketTitle {
+          overflow-wrap: anywhere;
+        }
+        .actionButtons {
+          opacity: 0;
+          transition: opacity 0.2s ease-in-out;
+        }
+      }
+  }
+
+
+.accordionHeader {
+  height: 32px !important;
+  padding: 0 var(--padding-sm) 0 var(--padding-md);
+  svg {
+    display: none;
+  }
+  &:hover svg {
+    display: block;
+  }
+}
+
+.accordion > div > div:nth-child(2) > div > div > div {
+  padding: var(--padding-xs) !important;
+}
+
+.accordion > div:has(.accordionOpen) > div:nth-child(2) {
+  padding: var(--padding-md) 0 !important;
+}
+
+.selected {
+  background-color: var(--color-hover);
+}
+
+.categoryItem {
+  margin-bottom: var(--padding-xs);
+}
+
+.categoryDragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+
