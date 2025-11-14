@@ -73,31 +73,27 @@ export class SyncController {
       );
     }
 
-    const existingSync = await this.syncService.findOne({_id: id});
-
-    if (!existingSync) {
-      throw new NotFoundException(`Sync record with id ${id} does not exist.`);
-    }
-
-    if (existingSync.status !== SyncStatuses.PENDING) {
-      throw new BadRequestException(
-        `Only syncs with PENDING status can be updated. Current status: ${existingSync.status}`
-      );
-    }
-
     const update: Partial<Sync> = {
       status,
       updated_at: new Date()
     };
 
+    // Atomic update: only update if status is PENDING
     const updatedSync = await this.syncService.findOneAndUpdate(
-      {_id: id},
+      {_id: id, status: SyncStatuses.PENDING},
       {$set: update},
       {returnDocument: "after"}
     );
 
     if (!updatedSync) {
-      throw new NotFoundException(`Failed to update sync record with id ${id}.`);
+      // Check if the record exists, to provide accurate error
+      const existingSync = await this.syncService.findOne({_id: id});
+      if (!existingSync) {
+        throw new NotFoundException(`Sync record with id ${id} does not exist.`);
+      }
+      throw new BadRequestException(
+        `Only syncs with PENDING status can be updated. Current status: ${existingSync.status}`
+      );
     }
 
     return updatedSync;
