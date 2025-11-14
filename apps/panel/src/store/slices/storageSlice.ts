@@ -3,12 +3,14 @@ import type { RootState } from '../index';
 import type { TypeDirectories, DirectoryItem } from '../../types/storage';
 import { getParentPath } from '../../pages/storage/utils';
 import { ROOT_PATH } from '../../pages/storage/constants';
+import type {StorageFilterQuery} from "../../utils/storageFilter";
 
 interface StorageState {
   directory: TypeDirectories;
   currentDirectory: string;
   searchQuery: string;
   searchResults: DirectoryItem[];
+  filterQuery: StorageFilterQuery | null;
 }
 
 const INITIAL_DIRECTORIES: TypeDirectories = [
@@ -27,6 +29,7 @@ const initialState: StorageState = {
   currentDirectory: ROOT_PATH,
   searchQuery: "",
   searchResults: [],
+  filterQuery: null,
 };
 
 const storageSlice = createSlice({
@@ -44,6 +47,9 @@ const storageSlice = createSlice({
     },
     setSearchResults: (state, action: PayloadAction<DirectoryItem[]>) => {
       state.searchResults = action.payload;
+    },
+    setFilterQuery: (state, action: PayloadAction<StorageFilterQuery | null>) => {
+      state.filterQuery = action.payload ?? null;
     },
     handleFolderClick: (state, action: PayloadAction<{
       folderName: string;
@@ -140,6 +146,7 @@ const storageSlice = createSlice({
       state.currentDirectory = ROOT_PATH;
       state.searchQuery = "";
       state.searchResults = [];
+      state.filterQuery = null;
     },
   },
 });
@@ -149,6 +156,7 @@ export const {
   setCurrentDirectory, 
   setSearchQuery,
   setSearchResults,
+  setFilterQuery,
   handleFolderClick,
   resetStorage 
 } = storageSlice.actions;
@@ -158,6 +166,8 @@ export const selectDirectory = (state: RootState): TypeDirectories => state.stor
 export const selectCurrentDirectory = (state: RootState): string => state.storage.currentDirectory;
 export const selectSearchQuery = (state: RootState): string => state.storage.searchQuery;
 export const selectSearchResults = (state: RootState): DirectoryItem[] => state.storage.searchResults;
+export const selectStorageFilterQuery = (state: RootState): StorageFilterQuery | null =>
+  state.storage.filterQuery;
 
 export default storageSlice.reducer;
 

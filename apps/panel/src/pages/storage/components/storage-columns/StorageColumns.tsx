@@ -7,7 +7,8 @@ import {
   setDirectory,
   handleFolderClick as handleFolderClickAction,
   selectSearchQuery,
-  selectSearchResults
+  selectSearchResults,
+  selectStorageFilterQuery
 } from "../../../../store";
 import {useDragAndDrop} from "../../hooks/useDragAndDrop";
 import {useStorageDataSync} from "../../hooks/useStorageDataSync";
@@ -41,6 +42,7 @@ export function StorageItemColumns({
   const directory = useAppSelector(selectDirectory);
   const searchQuery = useAppSelector(selectSearchQuery);
   const searchResults = useAppSelector(selectSearchResults);
+  const activeFilterQuery = useAppSelector(selectStorageFilterQuery);
   const [isSearchViewActive, setIsSearchViewActive] = useState(false);
   const [selectedSearchPath, setSelectedSearchPath] = useState<string | null>(null);
   const lastActivatedQueryRef = useRef("");
@@ -49,7 +51,7 @@ export function StorageItemColumns({
     dispatch(setDirectory(dirs));
   };
 
-  useStorageDataSync(directory, handleSetDirectory);
+  useStorageDataSync(directory, handleSetDirectory, activeFilterQuery);
   const {onUploadComplete} = useFileOperations(directory, handleSetDirectory, setPreviewFile);
   const {handleDrop} = useDragAndDrop(directory, handleSetDirectory);
 

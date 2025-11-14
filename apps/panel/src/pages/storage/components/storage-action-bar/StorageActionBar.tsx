@@ -13,15 +13,20 @@ import {
   selectCurrentDirectory,
   selectSearchQuery,
   setSearchQuery,
-  setSearchResults
+  setSearchResults,
+  setFilterQuery
 } from "../../../../store";
-import StorageFilter, {
-  createStorageFilterDefaultValues
-} from "../../../../components/molecules/storage-filter/StorageFilter";
+import StorageFilter from "../../../../components/molecules/storage-filter/StorageFilter";
 import {useLazyGetStorageItemsQuery} from "../../../../store/api/storageApi";
 import useStorageService from "../../../../hooks/useStorage";
 import type {DirectoryItem} from "../../../../types/storage";
 import type {Storage} from "../../../../store/api/storageApi";
+import {
+  buildStorageFilterQuery,
+  cloneStorageFilterValues,
+  createStorageFilterDefaultValues,
+  isDefaultStorageFilter
+} from "../../../../utils/storageFilter";
 
 const SEARCH_DEBOUNCE_MS = 300;
 const MIN_SEARCH_LENGTH = 3;
@@ -47,58 +52,21 @@ export default function StorageActionBar() {
     [dispatch]
   );
 
-  const cloneFilter = useCallback((filter: TypeFilterValue): TypeFilterValue => ({
-    type: [...filter.type],
-    fileSize: {
-      min: {
-        value: filter.fileSize.min.value,
-        unit: filter.fileSize.min.unit
-      },
-      max: {
-        value: filter.fileSize.max.value,
-        unit: filter.fileSize.max.unit
-      }
-    },
-    quickdate: filter.quickdate,
-    dateRange: {
-      from: filter.dateRange.from,
-      to: filter.dateRange.to
-    }
-  }), []);
+  const hasActiveFilter = useMemo(() => !isDefaultStorageFilter(appliedFilter), [appliedFilter]);
 
-  const hasActiveFilter = useMemo(() => {
-    const defaultFilter = createStorageFilterDefaultValues();
-
-    const sortValues = (values: string[]) => [...values].sort();
-    const currentTypes = sortValues(appliedFilter.type);
-    const defaultTypes = sortValues(defaultFilter.type);
-
-    const isTypeEqual =
-      currentTypes.length === defaultTypes.length &&
-      currentTypes.every((value, index) => value === defaultTypes[index]);
-
-    return !(
-      isTypeEqual &&
-      appliedFilter.fileSize.min.value === defaultFilter.fileSize.min.value &&
-      appliedFilter.fileSize.min.unit === defaultFilter.fileSize.min.unit &&
-      appliedFilter.fileSize.max.value === defaultFilter.fileSize.max.value &&
-      appliedFilter.fileSize.max.unit === defaultFilter.fileSize.max.unit &&
-      appliedFilter.quickdate === defaultFilter.quickdate &&
-      appliedFilter.dateRange.from === defaultFilter.dateRange.from &&
-      appliedFilter.dateRange.to === defaultFilter.dateRange.to
-    );
-  }, [appliedFilter]);
-
-  const filterInitialValues = useMemo(() => cloneFilter(appliedFilter), [appliedFilter, cloneFilter]);
+  const filterInitialValues = useMemo(() => cloneStorageFilterValues(appliedFilter), [appliedFilter]);
 
   const handleToggleFilter = () => {
     setIsFilterOpen(prev => !prev);
   };
 
   const handleApplyFilter = (values: TypeFilterValue) => {
-    setAppliedFilter(cloneFilter(values));
+    const clonedFilter = cloneStorageFilterValues(values);
+    setAppliedFilter(clonedFilter);
     setIsFilterOpen(false);
-    // TODO: integrate with API once available
+
+    const filterQuery = buildStorageFilterQuery(clonedFilter);
+    dispatch(setFilterQuery(filterQuery));
   };
 
   const handleCancelFilter = () => {
@@ -108,7 +76,7 @@ export default function StorageActionBar() {
   const handleClearFilters = () => {
     setAppliedFilter(createStorageFilterDefaultValues());
     setIsFilterOpen(false);
-    // TODO: refresh data with unfiltered version once API is available
+    dispatch(setFilterQuery(null));
   };
 
   const convertSearchResults = useCallback(
