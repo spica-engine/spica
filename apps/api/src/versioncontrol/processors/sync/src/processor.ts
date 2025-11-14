@@ -13,7 +13,7 @@ export class SyncProcessor implements ISyncProcessor {
   }
 
   update(_id: ObjectId, status: SyncStatuses, reason?: string): Promise<Sync> {
-    const update: any = {$set: {status, updated_at: new Date()}};
+    const update: { $set: Partial<Sync> } = { $set: { status, updated_at: new Date() } };
     if (reason) {
       update.$set.reason = reason;
     }
