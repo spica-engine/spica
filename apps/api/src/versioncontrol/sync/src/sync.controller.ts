@@ -61,7 +61,7 @@ export class SyncController {
    */
   @Put(":id")
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update"))
+  @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
   async updateSync(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("status") status: SyncStatuses
@@ -78,7 +78,6 @@ export class SyncController {
       updated_at: new Date()
     };
 
-    // Atomic update: only update if status is PENDING
     const updatedSync = await this.syncService.findOneAndUpdate(
       {_id: id, status: SyncStatuses.PENDING},
       {$set: update},
@@ -86,7 +85,6 @@ export class SyncController {
     );
 
     if (!updatedSync) {
-      // Check if the record exists, to provide accurate error
       const existingSync = await this.syncService.findOne({_id: id});
       if (!existingSync) {
         throw new NotFoundException(`Sync record with id ${id} does not exist.`);
