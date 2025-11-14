@@ -197,9 +197,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.writeFile(filePath, index);
   }
 
-  read(fn: Function): Promise<string> {
-    const filePath = this.getFunctionBuildEntrypoint(fn);
-
+  read(fn: Function, scope: "index" | "dependency"): Promise<string> {
+    let filePath = this.getFunctionBuildEntrypoint(fn);
+    if (scope === "dependency") {
+      filePath = path.join(this.getFunctionRoot(fn), "package.json");
+    }
     return fs.promises
       .readFile(filePath)
       .then(b => b.toString())
@@ -209,6 +211,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         }
         throw Error(e);
       });
+  }
+
+  deleteIndex(fn: Function): Promise<void> {
+    const filePath = this.getFunctionBuildEntrypoint(fn);
+    return fs.promises.rm(filePath);
   }
 
   watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
@@ -232,7 +239,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         depth: 2
       });
 
-      const handleFileEvent = async (path: string) => {
+      const handleFileEvent = async (path: string, type: "create" | "update" | "delete") => {
         const relativePath = path.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
 
@@ -241,18 +248,26 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         if (!isCorrectDepth || !isTrackedFile) return;
 
         const dirName = parts[0];
+
+        let content: string;
+        if (type == "delete") {
+          content = null;
+        } else {
+          const b = await fs.promises.readFile(path);
+          content = b.toString();
+        }
+
         const fn = await CRUD.findByName(this.fs, dirName, {
           resolveEnvRelations: EnvRelation.NotResolved
         });
         if (!fn) return;
 
-        const content = await fs.promises.readFile(path).then(b => b.toString());
-
-        observer.next({...fn, content});
+        observer.next({...fn, content, type});
       };
 
-      watcher.on("change", path => handleFileEvent(path));
-      watcher.on("add", path => handleFileEvent(path));
+      watcher.on("change", path => handleFileEvent(path, "update"));
+      watcher.on("unlink", path => handleFileEvent(path, "delete"));
+      watcher.on("add", path => handleFileEvent(path, "create"));
 
       watcher.on("error", err => observer.error(err));
 
