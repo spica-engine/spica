@@ -3,8 +3,9 @@ import {useLazyBrowseStorageQuery} from "../../../store/api/storageApi";
 import type {TypeDirectories} from "../../../types/storage";
 import {findMaxDepthDirectory} from "../utils";
 import {ROOT_PATH} from "../constants";
+import type {StorageFilterQuery} from "../../../utils/storageFilter";
 
-export function useStorageData(directory: TypeDirectories) {
+export function useStorageData(directory: TypeDirectories, filterQuery: StorageFilterQuery | null) {
   const dirToFetch = findMaxDepthDirectory(directory) ?? directory[0];
   const [
     fetchUnfilteredData,
@@ -24,8 +25,12 @@ export function useStorageData(directory: TypeDirectories) {
   }, [dirToFetch?.fullPath]);
 
   useEffect(() => {
-    fetchUnfilteredData({path});
-  }, [fetchUnfilteredData, path]);
+    const requestOptions: {path: string; filter?: StorageFilterQuery} = {path};
+    if (filterQuery && Object.keys(filterQuery).length > 0) {
+      requestOptions.filter = filterQuery;
+    }
+    fetchUnfilteredData(requestOptions);
+  }, [fetchUnfilteredData, path, filterQuery]);
 
   return {
     storageData: unfilteredData,

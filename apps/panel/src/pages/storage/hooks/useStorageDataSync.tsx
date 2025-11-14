@@ -3,13 +3,15 @@ import {useStorageData} from "./useStorageData";
 import type {TypeDirectories} from "src/types/storage";
 import {findMaxDepthDirectory} from "../utils";
 import {useStorageConverter} from "./useStorageConverter";
-import type { Storage } from '../../../store/api/storageApi';
+import type {Storage} from "../../../store/api/storageApi";
+import type {StorageFilterQuery} from "../../../utils/storageFilter";
 
 export function useStorageDataSync(
   directory: TypeDirectories,
-  setDirectory: (dirs: TypeDirectories) => void
+  setDirectory: (dirs: TypeDirectories) => void,
+  filterQuery: StorageFilterQuery | null
 ) {
-  const {storageData} = useStorageData(directory);
+  const {storageData} = useStorageData(directory, filterQuery);
   const {convertData} = useStorageConverter(directory);
 
   useEffect(() => {
