@@ -22,14 +22,14 @@ export const getDependencySynchronizer = (
   const docWatcher = () =>
     new Observable<DocChange<DocumentManagerResource<FunctionWithContent>>>(observer => {
       engine.watch("dependency").subscribe({
-        next: (change: FunctionWithContent) => {
+        next: ({fn}) => {
           const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
             resourceType: ResourceType.DOCUMENT,
             changeType: ChangeTypes.INSERT,
             resource: {
-              _id: change._id.toString(),
-              slug: change.name,
-              content: change
+              _id: fn._id.toString(),
+              slug: fn.name,
+              content: fn
             }
           };
 

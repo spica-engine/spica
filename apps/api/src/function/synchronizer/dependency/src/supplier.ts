@@ -10,8 +10,8 @@ import {
 import * as CRUD from "../../../src/crud";
 
 const module = "function";
-const subModule = "index";
-const fileExtension = "js";
+const subModule = "package";
+const fileExtension = "json";
 
 export const supplier = (engine: FunctionEngine, fs: FunctionService): ChangeSupplier => {
   return {
@@ -23,7 +23,7 @@ export const supplier = (engine: FunctionEngine, fs: FunctionService): ChangeSup
         CRUD.find(fs, engine, {}).then(functions => {
           try {
             functions.map(async fn => {
-              const content = await engine.read(fn, "index");
+              const content = await engine.read(fn, "dependency");
               observer.next({
                 module,
                 sub_module: subModule,
@@ -41,7 +41,7 @@ export const supplier = (engine: FunctionEngine, fs: FunctionService): ChangeSup
           }
         });
 
-        const subscription = engine.watch("index").subscribe({
+        const subscription = engine.watch("dependency").subscribe({
           next: change => {
             const changeMap = {
               create: ChangeType.CREATE,

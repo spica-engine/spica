@@ -1,0 +1,5 @@
+{
+  "name": "api/function/synchronizer/dependency/test",
+  "sourceRoot": "apps/api/src/function/synchronizer/dependency/test",
+  "projectType": "application"
+}
