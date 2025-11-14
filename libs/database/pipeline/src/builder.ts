@@ -1,5 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {IPipelineBuilder} from "@spica-server/interface/database";
+import {FilterReplaceManager} from "@spica-server/filter";
 
 export class PipelineBuilder implements IPipelineBuilder {
   protected pipeline: object[] = [];
@@ -24,6 +25,12 @@ export class PipelineBuilder implements IPipelineBuilder {
 
   async filterByUserRequest(filter: object) {
     this.isFilterApplied = this.isValidObject(filter);
+
+    if (this.isFilterApplied) {
+      const filterReplacer = new FilterReplaceManager();
+      filter = await filterReplacer.replace(filter);
+    }
+
     this.attachToPipeline(this.isFilterApplied, {$match: filter});
     return Promise.resolve(this);
   }

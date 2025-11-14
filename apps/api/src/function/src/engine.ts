@@ -224,10 +224,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.rm(filePath);
   }
 
-  watch(
-    scope: "index" | "dependency"
-  ): Observable<{fn: FunctionWithContent; type: "create" | "update" | "delete"}> {
-  watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
+  watch(scope: "index" | "dependency" | "tsconfig"): Observable<{fn: FunctionWithContent; type: "create" | "update" | "delete"}> {
     let files = [];
 
     switch (scope) {
@@ -236,6 +233,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         break;
       case "dependency":
         files = ["package.json"];
+        break;
+      case "tsconfig":
+        files = ["tsconfig.json"];
         break;
     }
     const moduleDir = this.options.root;

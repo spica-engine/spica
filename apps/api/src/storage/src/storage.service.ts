@@ -198,13 +198,35 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     if (oldName !== name) {
       await this.service.rename(oldName, name);
-    }
 
-    return this._coll.findOneAndUpdate(
-      {_id},
-      {$set: {name}},
-      {returnDocument: ReturnDocument.AFTER}
-    );
+      const escapedOld = this.escapeRegex(oldName);
+      await this._coll.updateMany(
+        {
+          $or: [{name: oldName}, {name: {$regex: new RegExp(`^${escapedOld}`)}}]
+        },
+        [
+          {
+            $set: {
+              name: {
+                $cond: [
+                  {$eq: ["$name", oldName]},
+                  name,
+                  {
+                    $replaceOne: {
+                      input: "$name",
+                      find: oldName,
+                      replacement: name
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      );
+    }
+    existing.name = name;
+    return existing;
   }
 
   async update(
@@ -230,6 +252,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     delete object.content.data;
     delete object._id;
+    object.updated_at = new Date();
 
     return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
       return {...object, _id: _id};
@@ -238,8 +261,11 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   async insert(objects: StorageObject<fs.ReadStream | Buffer>[]): Promise<StorageObjectMeta[]> {
     const datas: (Buffer | fs.ReadStream)[] = objects.map(o => o.content.data);
+    const now = new Date();
     const schemas: StorageObjectMeta[] = objects.map(object => {
       delete object.content.data;
+      object.created_at = now;
+      object.updated_at = now;
       return object;
     });
 
@@ -303,5 +329,9 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   async handleResumableUpload(req: any, res: any) {
     await this.service.handleResumableUpload(req, res);
+  }
+
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 }

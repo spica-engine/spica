@@ -87,6 +87,8 @@ describe("Storage Acceptance", () => {
           _id: body[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/third.txt/view`,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
           content: {
             type: `text/plain`,
             size: 5
@@ -109,6 +111,8 @@ describe("Storage Acceptance", () => {
           _id: body.data[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/third.txt/view`,
+          created_at: body.data[0].created_at,
+          updated_at: body.data[0].updated_at,
           content: {
             type: `text/plain`,
             size: 5
@@ -149,6 +153,108 @@ describe("Storage Acceptance", () => {
           _id: body[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/third.txt/view`,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        }
+      ]);
+    });
+
+    it("should work with _id filter", async () => {
+      const {body} = await req.get("/storage", {
+        filter: JSON.stringify({name: "third.txt"})
+      });
+
+      const response = await req.get("/storage", {
+        filter: JSON.stringify({_id: body[0]._id})
+      });
+
+      expect(ObjectId.isValid(response.body[0]._id)).toEqual(true);
+      expect(body).toEqual([
+        {
+          _id: response.body[0]._id,
+          name: "third.txt",
+          url: `http://insteadof/storage/third.txt/view`,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        }
+      ]);
+    });
+
+    it("should work with date filter", async () => {
+      const newData = {
+        name: "newData.txt",
+        content: {
+          data: new Binary(Buffer.from("newData")),
+          type: "text/plain",
+          size: 7
+        }
+      };
+
+      const postRes = await req.post("/storage", serialize({content: [newData]}), {
+        "Content-Type": "application/bson"
+      });
+
+      const body = postRes.body;
+
+      const ltRes = await req.get("/storage", {
+        filter: JSON.stringify({created_at: {$lt: body[0].created_at}})
+      });
+
+      const gteRes = await req.get("/storage", {
+        filter: JSON.stringify({created_at: {$gte: body[0].created_at}})
+      });
+
+      expect(gteRes.body).toEqual([
+        {
+          _id: gteRes.body[0]._id,
+          name: "newData.txt",
+          url: `http://insteadof/storage/newData.txt/view`,
+          created_at: gteRes.body[0].created_at,
+          updated_at: gteRes.body[0].updated_at,
+          content: {
+            type: `text/plain`,
+            size: 7
+          }
+        }
+      ]);
+
+      expect(ltRes.body).toEqual([
+        {
+          _id: ltRes.body[0]._id,
+          name: "first.txt",
+          url: `http://insteadof/storage/first.txt/view`,
+          created_at: ltRes.body[0].created_at,
+          updated_at: ltRes.body[0].updated_at,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        },
+        {
+          _id: ltRes.body[1]._id,
+          name: "second.txt",
+          url: `http://insteadof/storage/second.txt/view`,
+          created_at: ltRes.body[1].created_at,
+          updated_at: ltRes.body[1].updated_at,
+          content: {
+            type: `text/plain`,
+            size: 6
+          }
+        },
+        {
+          _id: ltRes.body[2]._id,
+          name: "third.txt",
+          url: `http://insteadof/storage/third.txt/view`,
+          created_at: ltRes.body[2].created_at,
+          updated_at: ltRes.body[2].updated_at,
           content: {
             type: `text/plain`,
             size: 5
@@ -171,6 +277,8 @@ describe("Storage Acceptance", () => {
           _id: data[0]._id,
           name: "third.txt",
           url: `http://insteadof/storage/third.txt/view`,
+          created_at: data[0].created_at,
+          updated_at: data[0].updated_at,
           content: {
             type: `text/plain`,
             size: 5
@@ -192,6 +300,8 @@ describe("Storage Acceptance", () => {
           _id: data[0]._id,
           name: "second.txt",
           url: `http://insteadof/storage/second.txt/view`,
+          created_at: data[0].created_at,
+          updated_at: data[0].updated_at,
           content: {
             type: `text/plain`,
             size: 6
@@ -201,6 +311,8 @@ describe("Storage Acceptance", () => {
           _id: data[1]._id,
           name: "first.txt",
           url: `http://insteadof/storage/first.txt/view`,
+          created_at: data[1].created_at,
+          updated_at: data[1].updated_at,
           content: {
             type: `text/plain`,
             size: 5
@@ -226,6 +338,8 @@ describe("Storage Acceptance", () => {
           _id: data[0]._id,
           name: "second.txt",
           url: `http://insteadof/storage/second.txt/view`,
+          created_at: data[0].created_at,
+          updated_at: data[0].updated_at,
           content: {
             type: `text/plain`,
             size: 6
@@ -233,7 +347,6 @@ describe("Storage Acceptance", () => {
         }
       ]);
     });
-
     describe("sort", () => {
       it("ascend by name", async () => {
         const {
@@ -252,6 +365,8 @@ describe("Storage Acceptance", () => {
             _id: data[0]._id,
             name: "first.txt",
             url: `http://insteadof/storage/first.txt/view`,
+            created_at: data[0].created_at,
+            updated_at: data[0].updated_at,
             content: {
               type: `text/plain`,
               size: 5
@@ -261,6 +376,8 @@ describe("Storage Acceptance", () => {
             _id: data[1]._id,
             name: "second.txt",
             url: `http://insteadof/storage/second.txt/view`,
+            created_at: data[1].created_at,
+            updated_at: data[1].updated_at,
             content: {
               type: `text/plain`,
               size: 6
@@ -270,6 +387,8 @@ describe("Storage Acceptance", () => {
             _id: data[2]._id,
             name: "third.txt",
             url: `http://insteadof/storage/third.txt/view`,
+            created_at: data[2].created_at,
+            updated_at: data[2].updated_at,
             content: {
               type: `text/plain`,
               size: 5
@@ -295,6 +414,8 @@ describe("Storage Acceptance", () => {
             _id: data[0]._id,
             name: "third.txt",
             url: `http://insteadof/storage/third.txt/view`,
+            created_at: data[0].created_at,
+            updated_at: data[0].updated_at,
             content: {
               type: `text/plain`,
               size: 5
@@ -304,6 +425,8 @@ describe("Storage Acceptance", () => {
             _id: data[1]._id,
             name: "second.txt",
             url: `http://insteadof/storage/second.txt/view`,
+            created_at: data[1].created_at,
+            updated_at: data[1].updated_at,
             content: {
               type: `text/plain`,
               size: 6
@@ -313,6 +436,8 @@ describe("Storage Acceptance", () => {
             _id: data[2]._id,
             name: "first.txt",
             url: `http://insteadof/storage/first.txt/view`,
+            created_at: data[2].created_at,
+            updated_at: data[2].updated_at,
             content: {
               type: `text/plain`,
               size: 5
@@ -395,6 +520,8 @@ describe("Storage Acceptance", () => {
       const id = row._id;
       delete row._id;
       delete row.url;
+      delete row.created_at;
+      delete row.updated_at;
 
       await req.put(`/storage/${id}`, serialize(row), {
         "Content-Type": "application/bson"
@@ -458,6 +585,8 @@ describe("Storage Acceptance", () => {
         _id: res.body._id,
         name: "updated_first.txt",
         url: `http://insteadof/storage/updated_first.txt/view`,
+        created_at: res.body.created_at,
+        updated_at: res.body.updated_at,
         content: {
           type: `text/plain`,
           size: 5
@@ -472,6 +601,8 @@ describe("Storage Acceptance", () => {
         _id: res.body._id,
         name: "updated_first.txt",
         url: `http://insteadof/storage/updated_first.txt/view`,
+        created_at: res.body.created_at,
+        updated_at: res.body.updated_at,
         content: {
           type: `text/plain`,
           size: 5
@@ -511,6 +642,8 @@ describe("Storage Acceptance", () => {
           _id: body[0]._id,
           name: "remoteconfig.json",
           url: body[0].url,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
           content: {
             type: "application/json",
             size: 2
@@ -557,6 +690,8 @@ describe("Storage Acceptance", () => {
           _id: body[0]._id,
           name: "remote config.json",
           url: body[0].url,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
           content: {
             size: 2,
             type: "application/json"
@@ -566,6 +701,8 @@ describe("Storage Acceptance", () => {
           _id: body[1]._id,
           name: "remote config backup.json",
           url: body[1].url,
+          created_at: body[1].created_at,
+          updated_at: body[1].updated_at,
           content: {
             size: 2,
             type: "application/json"
@@ -693,6 +830,8 @@ describe("Storage Acceptance", () => {
           _id: body[0]._id,
           name: "remoteconfig.json",
           url: body[0].url,
+          created_at: body[0].created_at,
+          updated_at: body[0].updated_at,
           content: {
             type: "application/json",
             size: 2
@@ -715,8 +854,9 @@ describe("Storage Acceptance", () => {
 
       const id = row._id;
       delete row._id;
-
       delete row.url;
+      delete row.created_at;
+      delete row.updated_at;
 
       await req.put(`/storage/${id}`, row);
 
@@ -781,6 +921,8 @@ describe("Storage Acceptance", () => {
           _id: resBody[0]._id,
           name: "data.json",
           url: resBody[0].url,
+          created_at: resBody[0].created_at,
+          updated_at: resBody[0].updated_at,
           content: {
             type: "application/json",
             size: 2
@@ -790,6 +932,8 @@ describe("Storage Acceptance", () => {
           _id: resBody[1]._id,
           name: "test.txt",
           url: resBody[1].url,
+          created_at: resBody[1].created_at,
+          updated_at: resBody[1].updated_at,
           content: {
             type: "text/plain",
             size: 5
@@ -1002,6 +1146,141 @@ describe("Storage Acceptance", () => {
       expect(headers["content-type"]).toEqual("text/plain; charset=utf-8");
       expect(headers["etag"]).toBe(etag("third"));
       expect(body).toBe("third");
+    });
+  });
+
+  describe("rename folder", () => {
+    beforeEach(async () => {
+      await initModule({});
+
+      const folder1 = {
+        name: "folder/",
+        content: {
+          data: new Binary(Buffer.from("")),
+          type: "application/octet-stream",
+          size: 0
+        }
+      };
+      const folder2 = {
+        name: "folder/subfolder/",
+        content: {
+          data: new Binary(Buffer.from("")),
+          type: "application/octet-stream",
+          size: 0
+        }
+      };
+
+      await req.post("/storage", serialize({content: [folder1, folder2]}), {
+        "Content-Type": "application/bson"
+      });
+
+      const object1 = {
+        name: "folder/subfolder/document.pdf",
+        content: {
+          data: new Binary(Buffer.from("pdf data in nested folder")),
+          type: "application/pdf"
+        }
+      };
+
+      await req.post("/storage", serialize({content: [object1]}), {
+        "Content-Type": "application/bson"
+      });
+    });
+
+    it("should rename the folder and its children based on new name", async () => {
+      const {body: folderResponse} = await req.get("/storage", {
+        filter: JSON.stringify({name: "folder/subfolder/"})
+      });
+      const subfolderId = folderResponse[0]._id;
+
+      await req.patch(`/storage/${subfolderId}`, {
+        name: "folder/subfolder_renamed/"
+      });
+
+      const {body: allItems} = await req.get("/storage");
+
+      expect(allItems.length).toBe(6);
+      expect(allItems.some(item => item.name == "folder/")).toBe(true);
+      expect(allItems.some(item => item.name == "folder/subfolder_renamed/")).toBe(true);
+      expect(allItems.some(item => item.name == "folder/subfolder_renamed/document.pdf")).toBe(
+        true
+      );
+    });
+  });
+
+  describe("objects with slashes in names", () => {
+    beforeEach(async () => {
+      const folder1 = {
+        name: "school/",
+        content: {
+          data: new Binary(Buffer.from("")),
+          type: "application/octet-stream",
+          size: 0
+        }
+      };
+      const folder2 = {
+        name: "folder/",
+        content: {
+          data: new Binary(Buffer.from("")),
+          type: "application/octet-stream",
+          size: 0
+        }
+      };
+      const folder3 = {
+        name: "folder/subfolder/",
+        content: {
+          data: new Binary(Buffer.from("")),
+          type: "application/octet-stream",
+          size: 0
+        }
+      };
+
+      await req.post("/storage", serialize({content: [folder1, folder2, folder3]}), {
+        "Content-Type": "application/bson"
+      });
+
+      const object1 = {
+        name: "school/holiday.png",
+        content: {
+          data: new Binary(Buffer.from("image data in folder")),
+          type: "image/png"
+        }
+      };
+      const object2 = {
+        name: "folder/subfolder/document.pdf",
+        content: {
+          data: new Binary(Buffer.from("pdf data in nested folder")),
+          type: "application/pdf"
+        }
+      };
+
+      await req.post("/storage", serialize({content: [object1, object2]}), {
+        "Content-Type": "application/bson"
+      });
+    });
+
+    it("should return storage object by name with slash", async () => {
+      const {body: response} = await req.get("/storage/school/holiday.png");
+      expect(response.name).toEqual("school/holiday.png");
+      expect(response.content.type).toEqual("image/png");
+    });
+
+    it("should show the object by name with slash via view endpoint", async () => {
+      const {headers, body} = await req.get("/storage/school/holiday.png/view");
+      expect(headers["content-type"]).toContain("image/png");
+      expect(body).toBe("image data in folder");
+    });
+
+    it("should return storage object by name with nested slashes", async () => {
+      const {body: response} = await req.get("/storage/folder/subfolder/document.pdf");
+      expect(response.name).toEqual("folder/subfolder/document.pdf");
+      expect(response.content.type).toEqual("application/pdf");
+    });
+
+    it("should show the object by name with nested slashes via view endpoint", async () => {
+      const {headers, body} = await req.get("/storage/folder/subfolder/document.pdf/view");
+      expect(headers["content-type"]).toContain("application/pdf");
+      expect(body).toBe("pdf data in nested folder");
     });
   });
 });
