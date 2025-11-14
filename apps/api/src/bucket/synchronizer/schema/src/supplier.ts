@@ -1,30 +1,46 @@
 import {Observable} from "rxjs";
-import {BucketDataService, BucketService} from "@spica-server/bucket/services";
-import {HistoryService} from "@spica-server/bucket/history";
-import * as CRUD from "../../src/crud";
-import {Bucket} from "@spica-server/interface/bucket";
+import {BucketService} from "@spica-server/bucket/services";
 import YAML from "yaml";
 import {
   ChangeLog,
   ChangeSupplier,
-  ChangeApplier,
-  ApplyResult,
   ChangeType,
-  ChangeOrigin,
-  SyncStatuses
+  ChangeOrigin
 } from "@spica-server/interface/versioncontrol";
 
 const module = "bucket";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export const bucketSupplier = (bs: BucketService): ChangeSupplier => {
+export const supplier = (bs: BucketService): ChangeSupplier => {
   return {
     module,
     subModule,
     fileExtension,
     listen(): Observable<ChangeLog> {
       return new Observable(observer => {
+        bs._coll
+          .find()
+          .toArray()
+          .then(buckets => {
+            buckets.forEach(bucket => {
+              const changeLog: ChangeLog = {
+                module,
+                sub_module: subModule,
+                origin: ChangeOrigin.DOCUMENT,
+                type: ChangeType.CREATE,
+                resource_id: bucket._id.toString(),
+                resource_slug: bucket.title,
+                resource_content: YAML.stringify(bucket),
+                created_at: new Date()
+              };
+              observer.next(changeLog);
+            });
+          })
+          .catch(error => {
+            console.error("Error propagating existing buckets:", error);
+          });
+
         const stream = bs._coll.watch([], {
           fullDocument: "updateLookup"
         });
@@ -90,48 +106,6 @@ export const bucketSupplier = (bs: BucketService): ChangeSupplier => {
           }
         };
       });
-    }
-  };
-};
-
-export const bucketApplier = (
-  bs: BucketService,
-  bds: BucketDataService,
-  history: HistoryService
-): ChangeApplier => {
-  return {
-    module,
-    subModule,
-    fileExtension,
-    apply: async (change: ChangeLog): Promise<ApplyResult> => {
-      try {
-        const operationType = change.type;
-        const bucket: Bucket = YAML.parse(change.resource_content);
-
-        switch (operationType) {
-          case ChangeType.CREATE:
-            await CRUD.insert(bs, bucket);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          case ChangeType.UPDATE:
-            await CRUD.replace(bs, bds, history, bucket);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          case ChangeType.DELETE:
-            await CRUD.remove(bs, bds, history, change.resource_id);
-            return {status: SyncStatuses.SUCCEEDED};
-
-          default:
-            console.warn("Unknown operation type:", operationType);
-            return {
-              status: SyncStatuses.FAILED,
-              reason: `Unknown operation type: ${operationType}`
-            };
-        }
-      } catch (error) {
-        console.warn("Error applying bucket change:", error);
-        return {status: SyncStatuses.FAILED, reason: error.message};
-      }
     }
   };
 };

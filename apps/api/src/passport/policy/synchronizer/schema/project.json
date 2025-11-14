@@ -1,0 +1,5 @@
+{
+  "name": "api/passport/policy/synchronizer/schema",
+  "sourceRoot": "apps/api/src/passport/policy/synchronizer/schema",
+  "projectType": "application"
+}

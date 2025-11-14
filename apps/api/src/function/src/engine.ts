@@ -227,6 +227,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   watch(
     scope: "index" | "dependency"
   ): Observable<{fn: FunctionWithContent; type: "create" | "update" | "delete"}> {
+  watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
     let files = [];
 
     switch (scope) {
