@@ -60,9 +60,9 @@ export const supplier = (engine: FunctionEngine, fs: FunctionService): ChangeSup
               sub_module: subModule,
               origin: ChangeOrigin.DOCUMENT,
               type,
-              resource_id: change._id.toString(),
-              resource_slug: change.name,
-              resource_content: change.content,
+              resource_id: change.fn._id.toString(),
+              resource_slug: change.fn.name,
+              resource_content: change.fn.content,
               created_at: new Date()
             };
             observer.next(changeLog);

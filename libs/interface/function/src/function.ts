@@ -82,6 +82,6 @@ export interface TargetChange {
   };
 }
 
-export type FunctionWithContent = Function & {content?: string; type?: string};
+export type FunctionWithContent = Function & {content?: string};
 
 export const SCHEMA = Symbol.for("FUNCTION_ENQUEUER_SCHEMA");

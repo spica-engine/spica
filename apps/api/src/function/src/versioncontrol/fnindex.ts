@@ -23,14 +23,14 @@ export const getIndexSynchronizer = (
   const docWatcher = () =>
     new Observable<DocChange<DocumentManagerResource<FunctionWithContent>>>(observer => {
       engine.watch("index").subscribe({
-        next: (change: FunctionWithContent) => {
+        next: ({fn}) => {
           const docChange: DocChange<DocumentManagerResource<FunctionWithContent>> = {
             resourceType: ResourceType.DOCUMENT,
             changeType: ChangeTypes.INSERT,
             resource: {
-              _id: change._id.toString(),
-              slug: change.name,
-              content: {...change, content: change.content}
+              _id: fn._id.toString(),
+              slug: fn.name,
+              content: {...fn, content: fn.content}
             }
           };
 

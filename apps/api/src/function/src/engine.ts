@@ -35,6 +35,7 @@ import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {Package} from "@spica-server/interface/function/pkgmanager";
 import chokidar from "chokidar";
+import {FunctionModule} from "./function.module";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -223,7 +224,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.rm(filePath);
   }
 
-  watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
+  watch(
+    scope: "index" | "dependency"
+  ): Observable<{fn: FunctionWithContent; type: "create" | "update" | "delete"}> {
     let files = [];
 
     switch (scope) {
@@ -237,7 +240,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     const moduleDir = this.options.root;
     fs.mkdirSync(moduleDir, {recursive: true});
 
-    return new Observable<FunctionWithContent>(observer => {
+    return new Observable(observer => {
       const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
         persistent: true,
@@ -254,20 +257,25 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
         const dirName = parts[0];
 
-        let content: string;
+        let contentPromise: Promise<string> | null;
+        let content: string | null;
+        let fn: Function | null;
         if (type == "delete") {
-          content = null;
+          contentPromise = Promise.resolve(null);
         } else {
-          const b = await fs.promises.readFile(path);
-          content = b.toString();
+          contentPromise = fs.promises.readFile(path).then(b => b.toString());
         }
 
-        const fn = await CRUD.findByName(this.fs, dirName, {
-          resolveEnvRelations: EnvRelation.NotResolved
-        });
+        await Promise.all([
+          CRUD.findByName(this.fs, dirName, {
+            resolveEnvRelations: EnvRelation.NotResolved
+          }).then(r => (fn = r)),
+          contentPromise.then(c => (content = c))
+        ]);
+
         if (!fn) return;
 
-        observer.next({...fn, content, type});
+        observer.next({fn: {...fn, content}, type});
       };
 
       watcher.on("change", path => handleFileEvent(path, "update"));
