@@ -40,7 +40,8 @@ export const getSynchronizer = (ps: PolicyService): VCSynchronizerArgs<Policy> =
         applier: {
           insert: (policy: Policy) => CRUD.insert(ps, policy),
           update: (policy: Policy) => CRUD.replace(ps, policy),
-          delete: (policy: Policy) => CRUD.remove(ps, policy._id as unknown as ObjectId)
+          delete: (policy: Policy) =>
+            CRUD.remove(ps, policy._id as unknown as ObjectId, undefined, undefined)
         }
       }
     ],
