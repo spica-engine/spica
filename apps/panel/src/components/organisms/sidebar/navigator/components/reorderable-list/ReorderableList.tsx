@@ -3,7 +3,7 @@ import type {NavigatorItemGroup} from "../../../../../../types/sidebar";
 import {DraggableItem} from "../draggable-navigator-item/DraggableNavigatorItem";
 import {CustomDragLayer} from "../drag-preview-navigator-item/DragPreviewNavigatorItem";
 
-type TypeReorderableListProps = NavigatorItemGroup;
+type TypeReorderableListProps = any;
 
 export const ReorderableList = ({
   items,
@@ -25,7 +25,7 @@ export const ReorderableList = ({
   return (
     <>
       <CustomDragLayer itemRefs={itemRefs.current} moveItem={onOrderChange} />
-      {items.map((item, index) => (
+      {items.map((item: any, index: number) => (
         <DraggableItem
           key={item._id}
           item={{...item, index}}

@@ -1,0 +1,30 @@
+@use "../../../../styles/mixins";
+
+
+.bucketsItemContainer {
+    padding: 0 var(--padding-sm) 0 var(--padding-md);
+
+    .bucketItem {
+        transition: opacity 0.2s ease-in-out;
+      
+        &:hover {
+          .actionButtons {
+            opacity: 1;
+          }
+        }
+      
+        .itemButton {
+          padding: 0 !important;
+        }
+      
+        .bucketTitle {
+          overflow-wrap: anywhere;
+        }
+        .actionButtons {
+          opacity: 0;
+          transition: opacity 0.2s ease-in-out;
+        }
+      }
+  }
+
+

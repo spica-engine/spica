@@ -37,18 +37,35 @@ const Layout = () => {
   }, [memoizedBuckets]);
 
   const updateBucketOrderLocally = (from: number, to: number) => {
-    const updated = [...localBuckets];
-    const [moved] = updated.splice(from, 1);
-    updated.splice(to, 0, moved);
-    setLocalBuckets(updated);
+    setLocalBuckets(prevBuckets => {
+      const clonedBuckets = prevBuckets.map(bucket => ({...bucket}));
+      const [moved] = clonedBuckets.splice(from, 1);
+      if (!moved) {
+        return prevBuckets;
+      }
+      clonedBuckets.splice(to, 0, moved);
+      return clonedBuckets.map((bucket, index) => ({...bucket, order: index}));
+    });
   };
 
-  const updateBucketOrderOnServer = async (bucketId: string, order: number) => {
+  const updateBucketOrderOnServer = async (_bucketId: string, _order: number) => {
+    const snapshot = localBuckets.map(bucket => ({...bucket}));
+    const bucketsWithUpdatedOrder = localBuckets.map((bucket, index) => ({
+      ...bucket,
+      order: index
+    }));
+
+    setLocalBuckets(bucketsWithUpdatedOrder);
+
     try {
-      await updateBucketOrder({bucketId, order});
+      await Promise.all(
+        bucketsWithUpdatedOrder.map(bucket =>
+          updateBucketOrder({bucketId: bucket._id, order: bucket.order ?? 0}).unwrap()
+        )
+      );
     } catch (error) {
       console.error("Failed to update bucket order:", error);
-      setLocalBuckets(memoizedBuckets);
+      setLocalBuckets(snapshot);
     }
   };
 
@@ -109,8 +126,6 @@ const Layout = () => {
   const sideBarElement = (
     <div className={styles.sidebar}>
       <SideBar
-        menuItems={menuItems}
-        navigatorItems={mergedNavigatorItems}
         onNavigatorToggle={setNavigatorOpen}
       />
     </div>
@@ -125,10 +140,7 @@ const Layout = () => {
       size={260}
     >
       <SideBar
-        menuItems={menuItems}
-        navigatorItems={mergedNavigatorItems}
         onNavigatorToggle={setNavigatorOpen}
-        displayToggleIcon={false}
       />
     </Drawer>
   );

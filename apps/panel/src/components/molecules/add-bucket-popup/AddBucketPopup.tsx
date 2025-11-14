@@ -3,7 +3,9 @@ import {Button, Icon, Text} from "oziko-ui-kit";
 import styles from "./AddBucketPopup.module.scss";
 import EditBucket from "../../prefabs/edit-bucket/EditBucket";
 
-const AddBucketPopup = ({text}: {text?: string}) => {
+const AddBucketPopup = () => {
+  // TODO: This component should be refactored or EditBucket should be refactored because adding a new bucket is not 
+  // editing a bucket. It should be a separate component. They may use common ui
   return (
     <EditBucket mode="create" initialValue="New Bucket">
       {({onOpen}) => (
@@ -15,7 +17,7 @@ const AddBucketPopup = ({text}: {text?: string}) => {
         >
           <Icon name="plus" size="xs" />
           <Text className={styles.noLineHeight} size="medium">
-            {text}
+            New Bucket
           </Text>
         </Button>
       )}
