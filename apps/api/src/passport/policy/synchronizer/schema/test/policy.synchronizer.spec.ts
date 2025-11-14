@@ -268,7 +268,8 @@ describe("Policy Synchronizer", () => {
         resource_id: mockPolicy._id.toString(),
         resource_slug: "New Policy",
         resource_content: YAML.stringify(mockPolicy),
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -346,7 +347,8 @@ describe("Policy Synchronizer", () => {
         resource_id: _id.toString(),
         resource_slug: "Updated Policy",
         resource_content: YAML.stringify(updatedPolicy),
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -408,7 +410,8 @@ describe("Policy Synchronizer", () => {
         resource_id: _id.toString(),
         resource_slug: null,
         resource_content: "",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -430,7 +433,8 @@ describe("Policy Synchronizer", () => {
         resource_id: "123",
         resource_slug: null,
         resource_content: "",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -450,7 +454,8 @@ describe("Policy Synchronizer", () => {
         resource_id: "123",
         resource_slug: "Test",
         resource_content: "invalid: yaml: content:",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await policyApplier.apply(changeLog);

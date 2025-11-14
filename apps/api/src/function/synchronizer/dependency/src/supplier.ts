@@ -3,37 +3,43 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionService} from "@spica-server/function/services";
 import {
   ChangeLog,
-  ChangeSupplier,
   ChangeType,
-  ChangeOrigin
+  ChangeOrigin,
+  DocumentChangeSupplier
 } from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../../../src/crud";
+import {Function} from "@spica-server/interface/function";
 
 const module = "function";
 const subModule = "package";
 const fileExtension = "json";
 
-export const supplier = (engine: FunctionEngine, fs: FunctionService): ChangeSupplier => {
+const getChangeLogForDeps = (type: ChangeType, fn: Function, content: string): ChangeLog => {
+  return {
+    module,
+    sub_module: subModule,
+    origin: ChangeOrigin.DOCUMENT,
+    type,
+    resource_id: fn._id.toString(),
+    resource_slug: fn.name,
+    resource_content: content,
+    resource_extension: fileExtension,
+    created_at: new Date()
+  };
+};
+
+export const supplier = (engine: FunctionEngine, fs: FunctionService): DocumentChangeSupplier => {
   return {
     module,
     subModule,
-    fileExtension,
     listen(): Observable<ChangeLog> {
       return new Observable(observer => {
         CRUD.find(fs, engine, {}).then(functions => {
           try {
             functions.map(async fn => {
               const content = await engine.read(fn, "dependency");
-              observer.next({
-                module,
-                sub_module: subModule,
-                origin: ChangeOrigin.DOCUMENT,
-                type: ChangeType.CREATE,
-                resource_id: fn._id.toString(),
-                resource_slug: fn.name,
-                resource_content: content,
-                created_at: new Date()
-              });
+              const changelog = getChangeLogForDeps(ChangeType.CREATE, fn, content);
+              observer.next(changelog);
             });
           } catch (error) {
             observer.error(error);
@@ -55,16 +61,7 @@ export const supplier = (engine: FunctionEngine, fs: FunctionService): ChangeSup
               return;
             }
 
-            const changeLog: ChangeLog = {
-              module,
-              sub_module: subModule,
-              origin: ChangeOrigin.DOCUMENT,
-              type,
-              resource_id: change.fn._id.toString(),
-              resource_slug: change.fn.name,
-              resource_content: change.fn.content,
-              created_at: new Date()
-            };
+            const changeLog = getChangeLogForDeps(type, change.fn, change.fn.content);
             observer.next(changeLog);
           },
           error: error => {

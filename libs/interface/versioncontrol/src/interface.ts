@@ -20,6 +20,7 @@ export interface ChangeLog {
   resource_id: string;
   resource_slug: string;
   resource_content: string;
+  resource_extension: string;
   created_at: Date;
 }
 
@@ -41,17 +42,15 @@ export interface ChangeSupplier extends ChangeModuleMeta {
 
 export interface RepresentativeChangeSupplier extends ChangeSupplier {}
 
-export interface DocumentChangeSupplier extends ChangeSupplier {
-  getFileExtension(change: ChangeLog): Promise<string>;
-}
+export interface DocumentChangeSupplier extends ChangeSupplier {}
 
 export interface ChangeApplier extends ChangeModuleMeta {
   apply(change: ChangeLog): Promise<ApplyResult>;
 }
 
 export interface DocumentChangeApplier extends ChangeApplier {
-  findIdBySlug(slug: string): Promise<string>;
-  findIdByContent(content: string): Promise<string>;
+  findIdBySlug(slug: string): Promise<string | null>;
+  findIdByContent(content: string): Promise<string | null>;
   fileExtensions: string[];
 }
 
@@ -70,7 +69,7 @@ export interface ApplyResult {
 export interface ISyncProcessor {
   push(...sync: Sync[]): Promise<Sync[]>;
   update(_id: ObjectId, status: SyncStatuses, reason?: string): Promise<Sync>;
-  watch(status: SyncStatuses): Observable<Sync>;
+  watch(status?: SyncStatuses): Observable<Sync>;
 }
 
 export interface Sync {

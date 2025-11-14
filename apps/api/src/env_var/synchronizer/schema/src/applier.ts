@@ -4,21 +4,41 @@ import {EnvVar} from "@spica-server/interface/env_var";
 import YAML from "yaml";
 import {
   ChangeLog,
-  ChangeApplier,
   ApplyResult,
   ChangeType,
-  SyncStatuses
+  SyncStatuses,
+  DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 
 const module = "env-var";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export const applier = (evs: EnvVarService): ChangeApplier => {
+export const applier = (evs: EnvVarService): DocumentChangeApplier => {
+  const findEnvVarByKey = async (key: string) => {
+    const envVar = await evs.findOne({key});
+    return envVar?._id?.toString();
+  };
+
   return {
     module,
     subModule,
-    fileExtension,
+    fileExtensions: [fileExtension],
+    findIdBySlug: (slug: string): Promise<string> => {
+      return findEnvVarByKey(slug);
+    },
+    findIdByContent: (content: string): Promise<string> => {
+      let envVar: EnvVar;
+
+      try {
+        envVar = YAML.parse(content);
+      } catch (error) {
+        console.error("YAML parsing error:", error);
+        return Promise.resolve(null);
+      }
+
+      return findEnvVarByKey(envVar.key);
+    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const type = change.type;

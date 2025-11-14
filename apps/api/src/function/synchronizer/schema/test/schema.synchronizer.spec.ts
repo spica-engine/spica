@@ -326,7 +326,8 @@ describe("Function Synchronizer", () => {
         resource_id: mockFunction._id.toString(),
         resource_slug: "new_function",
         resource_content: YAML.stringify(mockFunction),
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -414,7 +415,8 @@ describe("Function Synchronizer", () => {
         resource_id: _id.toString(),
         resource_slug: "updated_function",
         resource_content: YAML.stringify(updatedFunction),
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -480,7 +482,8 @@ describe("Function Synchronizer", () => {
         resource_id: _id.toString(),
         resource_slug: null,
         resource_content: "",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -502,7 +505,8 @@ describe("Function Synchronizer", () => {
         resource_id: "123",
         resource_slug: null,
         resource_content: "",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -522,7 +526,8 @@ describe("Function Synchronizer", () => {
         resource_id: "123",
         resource_slug: "test_function",
         resource_content: "invalid: yaml: content:",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await funcApplier.apply(changeLog);

@@ -156,7 +156,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
-      name: fn.name.replace(" ", "-").toLowerCase(),
+      name: fn.name,
       description: fn.description || "No description.",
       version: "0.0.1",
       private: true,
@@ -224,7 +224,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.rm(filePath);
   }
 
-  watch(scope: "index" | "dependency" | "tsconfig"): Observable<{fn: FunctionWithContent; type: "create" | "update" | "delete"}> {
+  watch(
+    scope: "index" | "dependency" | "tsconfig"
+  ): Observable<{fn: FunctionWithContent; type: "create" | "update" | "delete"}> {
     let files = [];
 
     switch (scope) {

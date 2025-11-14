@@ -11,12 +11,11 @@ export const getApplier = (
   repManager: IIRepresentativeManager,
   supplier: DocumentChangeSupplier
 ): RepresentativeChangeApplier => {
-  const {module, subModule, getFileExtension} = supplier;
+  const {module, subModule} = supplier;
   return {
     module,
     subModule,
     apply: async (change: ChangeLog) => {
-      const fileExtension = await getFileExtension(change);
       let result: ApplyResult = {status: SyncStatuses.SUCCEEDED};
       try {
         await repManager.write(
@@ -24,7 +23,7 @@ export const getApplier = (
           change.resource_slug,
           subModule,
           change.resource_content,
-          fileExtension
+          change.resource_extension
         );
       } catch (error) {
         result = {status: SyncStatuses.FAILED, reason: (error as Error).message};

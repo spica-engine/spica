@@ -4,10 +4,10 @@ import YAML from "yaml";
 import * as CRUD from "../../../src/crud";
 import {
   ChangeLog,
-  ChangeApplier,
   ApplyResult,
   ChangeType,
-  SyncStatuses
+  SyncStatuses,
+  DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {ObjectId} from "bson";
 
@@ -19,11 +19,30 @@ export function applier(
   ps: PolicyService,
   apikeyFinalizer: changeFactory,
   identityFinalizer: changeFactory
-): ChangeApplier {
+): DocumentChangeApplier {
+  const findPolicyByName = async (name: string) => {
+    const policy = await ps.findOne({name});
+    return policy?._id?.toString();
+  };
   return {
     module,
     subModule,
-    fileExtension,
+    fileExtensions: [fileExtension],
+    findIdBySlug: (slug: string): Promise<string> => {
+      return findPolicyByName(slug);
+    },
+    findIdByContent: (content: string): Promise<string> => {
+      let policy: Policy;
+
+      try {
+        policy = YAML.parse(content);
+      } catch (error) {
+        console.error("YAML parsing error:", error);
+        return Promise.resolve(null);
+      }
+
+      return findPolicyByName(policy.name);
+    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;

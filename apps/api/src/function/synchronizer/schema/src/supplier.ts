@@ -3,20 +3,34 @@ import {FunctionService} from "@spica-server/function/services";
 import YAML from "yaml";
 import {
   ChangeLog,
-  ChangeSupplier,
   ChangeType,
-  ChangeOrigin
+  ChangeOrigin,
+  DocumentChangeSupplier
 } from "@spica-server/interface/versioncontrol";
+import {Function} from "@spica-server/interface/function";
 
 const module = "function";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export const supplier = (fs: FunctionService): ChangeSupplier => {
+const getChangeForSchema = (fn: Function, type: ChangeType): ChangeLog => {
+  return {
+    module,
+    sub_module: subModule,
+    origin: ChangeOrigin.DOCUMENT,
+    type,
+    resource_id: fn._id.toString(),
+    resource_slug: fn.name,
+    resource_content: YAML.stringify(fn),
+    resource_extension: fileExtension,
+    created_at: new Date()
+  };
+};
+
+export const supplier = (fs: FunctionService): DocumentChangeSupplier => {
   return {
     module,
     subModule,
-    fileExtension,
     listen(): Observable<ChangeLog> {
       return new Observable(observer => {
         fs._coll
@@ -24,16 +38,7 @@ export const supplier = (fs: FunctionService): ChangeSupplier => {
           .toArray()
           .then(functions => {
             functions.forEach(fn => {
-              const changeLog: ChangeLog = {
-                module,
-                sub_module: subModule,
-                origin: ChangeOrigin.DOCUMENT,
-                type: ChangeType.CREATE,
-                resource_id: fn._id.toString(),
-                resource_slug: fn.name,
-                resource_content: YAML.stringify(fn),
-                created_at: new Date()
-              };
+              const changeLog = getChangeForSchema(fn, ChangeType.CREATE);
               observer.next(changeLog);
             });
           })
@@ -46,52 +51,28 @@ export const supplier = (fs: FunctionService): ChangeSupplier => {
         });
 
         stream.on("change", change => {
-          let changeData: Pick<
-            ChangeLog,
-            "type" | "resource_id" | "resource_slug" | "resource_content"
-          >;
+          let changeType: ChangeType;
 
           switch (change.operationType) {
             case "insert":
-              changeData = {
-                type: ChangeType.CREATE,
-                resource_id: change.fullDocument._id.toString(),
-                resource_slug: change.fullDocument.name,
-                resource_content: YAML.stringify(change.fullDocument)
-              };
+              changeType = ChangeType.CREATE;
               break;
 
             case "replace":
             case "update":
-              changeData = {
-                type: ChangeType.UPDATE,
-                resource_id: change.documentKey._id.toString(),
-                resource_slug: change.fullDocument.name,
-                resource_content: YAML.stringify(change.fullDocument)
-              };
+              changeType = ChangeType.UPDATE;
               break;
 
             case "delete":
-              changeData = {
-                type: ChangeType.DELETE,
-                resource_id: change.documentKey._id.toString(),
-                resource_slug: null,
-                resource_content: ""
-              };
+              changeType = ChangeType.DELETE;
               break;
             default:
               console.warn("Unknown operation type:", change.operationType);
               break;
           }
 
-          if (changeData) {
-            const changeLog: ChangeLog = {
-              module,
-              sub_module: subModule,
-              origin: ChangeOrigin.DOCUMENT,
-              created_at: new Date(),
-              ...changeData
-            };
+          if (changeType) {
+            const changeLog = getChangeForSchema(change["fullDocument"], changeType);
             observer.next(changeLog);
           }
         });

@@ -26,7 +26,8 @@ describe("ChangeLogProcessor", () => {
       type: ChangeType.CREATE,
       resource_content: "",
       resource_id: "id",
-      resource_slug: "slug"
+      resource_slug: "slug",
+      resource_extension: ""
     };
     processor.watch().subscribe({
       next: received => {
@@ -47,7 +48,8 @@ describe("ChangeLogProcessor", () => {
       type: ChangeType.CREATE,
       resource_content: "",
       resource_id: "id",
-      resource_slug: "slug2"
+      resource_slug: "slug2",
+      resource_extension: ""
     };
 
     const deleteChange: ChangeLog = {
@@ -58,7 +60,8 @@ describe("ChangeLogProcessor", () => {
       type: ChangeType.DELETE,
       resource_content: "",
       resource_id: "id",
-      resource_slug: "slug"
+      resource_slug: "slug",
+      resource_extension: ""
     };
 
     const unrelatedChange: ChangeLog = {
@@ -69,7 +72,8 @@ describe("ChangeLogProcessor", () => {
       type: ChangeType.UPDATE,
       resource_content: "",
       resource_id: "id",
-      resource_slug: "slug"
+      resource_slug: "slug",
+      resource_extension: ""
     };
 
     processor

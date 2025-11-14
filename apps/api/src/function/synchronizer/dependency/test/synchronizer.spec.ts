@@ -297,7 +297,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
         resource_content: packageContent,
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "json"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -352,7 +353,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
         resource_content: updatedPackage,
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "json"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -401,7 +403,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
         resource_content: null,
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "json"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -431,7 +434,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_id: "123",
         resource_slug: "test",
         resource_content: "some content",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "json"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -451,7 +455,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_id: new ObjectId().toString(),
         resource_slug: "nonexistent_function",
         resource_content: JSON.stringify({name: "test", version: "1.0.0"}),
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "json"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -471,7 +476,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_id: "invalid-id",
         resource_slug: "test_function",
         resource_content: JSON.stringify({name: "test", version: "1.0.0"}),
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "json"
       };
 
       const result = await dependencyApplier.apply(changeLog);

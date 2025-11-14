@@ -289,7 +289,8 @@ describe("Function Index Synchronizer", () => {
         resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
         resource_content: indexContent,
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "js"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -342,7 +343,8 @@ describe("Function Index Synchronizer", () => {
         resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
         resource_content: updatedIndex,
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "js"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -392,7 +394,8 @@ describe("Function Index Synchronizer", () => {
         resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
         resource_content: null,
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "js"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -422,7 +425,8 @@ describe("Function Index Synchronizer", () => {
         resource_id: "123",
         resource_slug: "test",
         resource_content: "some content",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "js"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -442,7 +446,8 @@ describe("Function Index Synchronizer", () => {
         resource_id: new ObjectId().toString(),
         resource_slug: "nonexistent_function",
         resource_content: "export default function() {}",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "js"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -462,7 +467,8 @@ describe("Function Index Synchronizer", () => {
         resource_id: "invalid-id",
         resource_slug: "test_function",
         resource_content: "export default function() {}",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "js"
       };
 
       const result = await indexApplier.apply(changeLog);

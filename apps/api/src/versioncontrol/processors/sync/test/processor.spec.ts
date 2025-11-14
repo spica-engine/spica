@@ -16,7 +16,8 @@ function getMockSync(status: SyncStatuses = SyncStatuses.PENDING): Sync {
       type: ChangeType.CREATE,
       resource_content: "",
       resource_id: "id",
-      resource_slug: "slug"
+      resource_slug: "slug",
+      resource_extension: ""
     },
     created_at: new Date(),
     status: status,

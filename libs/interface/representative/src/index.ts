@@ -45,6 +45,7 @@ export interface IIRepresentativeManager {
   ): Observable<{
     slug: string;
     content: string;
+    extension: string;
     type: ChangeType;
   }>;
 }

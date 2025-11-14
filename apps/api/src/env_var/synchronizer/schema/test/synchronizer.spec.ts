@@ -199,7 +199,8 @@ describe("EnvVar Synchronizer", () => {
         resource_id: _id.toString(),
         resource_slug: "NEW_API_KEY",
         resource_content: YAML.stringify(mockEnvVar),
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -240,7 +241,8 @@ describe("EnvVar Synchronizer", () => {
         resource_id: _id.toString(),
         resource_slug: "OLD_SECRET",
         resource_content: YAML.stringify(updatedEnvVar),
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -275,7 +277,8 @@ describe("EnvVar Synchronizer", () => {
         resource_id: _id.toString(),
         resource_slug: null,
         resource_content: "",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -297,7 +300,8 @@ describe("EnvVar Synchronizer", () => {
         resource_id: "123",
         resource_slug: null,
         resource_content: "",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -317,7 +321,8 @@ describe("EnvVar Synchronizer", () => {
         resource_id: "123",
         resource_slug: "TEST",
         resource_content: "invalid: yaml: content:",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await envVarApplier.apply(changeLog);

@@ -13,14 +13,14 @@ export class SyncProcessor implements ISyncProcessor {
   }
 
   update(_id: ObjectId, status: SyncStatuses, reason?: string): Promise<Sync> {
-    const update: { $set: Partial<Sync> } = { $set: { status, updated_at: new Date() } };
+    const update: {$set: Partial<Sync>} = {$set: {status, updated_at: new Date()}};
     if (reason) {
       update.$set.reason = reason;
     }
     return this.service.findOneAndUpdate({_id}, update, {returnDocument: "after"});
   }
 
-  watch(status: SyncStatuses): Observable<Sync> {
+  watch(status?: SyncStatuses): Observable<Sync> {
     let statusFilter = sync => sync;
 
     if (status) {

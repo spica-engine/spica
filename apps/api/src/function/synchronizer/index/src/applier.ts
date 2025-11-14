@@ -3,22 +3,33 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import * as CRUD from "../../../src/crud";
 import {
   ChangeLog,
-  ChangeApplier,
   ApplyResult,
   ChangeType,
-  SyncStatuses
+  SyncStatuses,
+  DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {ObjectId} from "bson";
 
 const module = "function";
 const subModule = "index";
-const fileExtension = "js";
+const fileExtensions = ["mjs", "ts"];
 
-export const applier = (fs: FunctionService, engine: FunctionEngine): ChangeApplier => {
+export const applier = (fs: FunctionService, engine: FunctionEngine): DocumentChangeApplier => {
+  const findFnByName = async (name: string) => {
+    const fn = await fs.findOne({name});
+    return fn?._id?.toString();
+  };
   return {
     module,
     subModule,
-    fileExtension,
+    fileExtensions,
+    findIdBySlug: (slug: string): Promise<string> => {
+      return findFnByName(slug);
+    },
+    findIdByContent: (content: string): Promise<string> => {
+      // no way to find fn by index content
+      return null;
+    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;

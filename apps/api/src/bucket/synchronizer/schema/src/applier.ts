@@ -5,10 +5,10 @@ import {Bucket} from "@spica-server/interface/bucket";
 import YAML from "yaml";
 import {
   ChangeLog,
-  ChangeApplier,
   ApplyResult,
   ChangeType,
-  SyncStatuses
+  SyncStatuses,
+  DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 
 const module = "bucket";
@@ -19,11 +19,30 @@ export const applier = (
   bs: BucketService,
   bds: BucketDataService,
   history: HistoryService
-): ChangeApplier => {
+): DocumentChangeApplier => {
+  const findBucketByTitle = async (title: string) => {
+    const bucket = await bs.findOne({title});
+    return bucket?._id?.toString();
+  };
   return {
     module,
     subModule,
-    fileExtension,
+    fileExtensions: [fileExtension],
+    findIdBySlug: (slug: string): Promise<string> => {
+      return findBucketByTitle(slug);
+    },
+    findIdByContent: (content: string): Promise<string> => {
+      let bucket: Bucket;
+
+      try {
+        bucket = YAML.parse(content);
+      } catch (error) {
+        console.error("YAML parsing error:", error);
+        return Promise.resolve(null);
+      }
+
+      return findBucketByTitle(bucket.title);
+    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;

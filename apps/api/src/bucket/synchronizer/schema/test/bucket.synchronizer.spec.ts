@@ -269,7 +269,8 @@ describe("Bucket Synchronizer", () => {
         resource_id: mockBucket._id.toString(),
         resource_slug: "New Bucket",
         resource_content: YAML.stringify(mockBucket),
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -339,7 +340,8 @@ describe("Bucket Synchronizer", () => {
         resource_id: _id.toString(),
         resource_slug: "Updated Bucket",
         resource_content: YAML.stringify(updatedBucket),
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -394,7 +396,8 @@ describe("Bucket Synchronizer", () => {
         resource_id: _id.toString(),
         resource_slug: null,
         resource_content: "",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -416,7 +419,8 @@ describe("Bucket Synchronizer", () => {
         resource_id: "123",
         resource_slug: null,
         resource_content: "",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -436,7 +440,8 @@ describe("Bucket Synchronizer", () => {
         resource_id: "123",
         resource_slug: "Test",
         resource_content: "invalid: yaml: content:",
-        created_at: new Date()
+        created_at: new Date(),
+        resource_extension: "yaml"
       };
 
       const result = await bucketApplier.apply(changeLog);

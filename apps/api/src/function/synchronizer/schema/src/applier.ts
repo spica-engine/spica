@@ -6,10 +6,10 @@ import {Function} from "@spica-server/interface/function";
 import YAML from "yaml";
 import {
   ChangeLog,
-  ChangeApplier,
   ApplyResult,
   ChangeType,
-  SyncStatuses
+  SyncStatuses,
+  DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 
 const module = "function";
@@ -20,11 +20,28 @@ export const applier = (
   fs: FunctionService,
   engine: FunctionEngine,
   logs: LogService
-): ChangeApplier => {
+): DocumentChangeApplier => {
+  const findFnByName = async (name: string) => {
+    const fn = await fs.findOne({name});
+    return fn?._id?.toString();
+  };
   return {
     module,
     subModule,
-    fileExtension,
+    fileExtensions: [fileExtension],
+    findIdBySlug: (slug: string): Promise<string> => {
+      return findFnByName(slug);
+    },
+    findIdByContent: (content: string): Promise<string> => {
+      let fn: Function;
+      try {
+        fn = YAML.parse(content);
+      } catch (error) {
+        console.error("YAML parsing error:", error);
+        return Promise.resolve(null);
+      }
+      return findFnByName(fn.name);
+    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;

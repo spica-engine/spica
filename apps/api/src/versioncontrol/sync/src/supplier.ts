@@ -1,14 +1,10 @@
 import {IIRepresentativeManager} from "@spica-server/interface/representative";
 import {
-  ChangeApplier,
-  ChangeLog,
   ChangeOrigin,
-  ChangeSupplier,
-  ChangeType,
   DocumentChangeApplier,
   RepresentativeChangeSupplier
 } from "@spica-server/interface/versioncontrol";
-import {from, iif, map, mergeMap, Observable, of, switchMap} from "rxjs";
+import {from, map, mergeMap, of} from "rxjs";
 
 export const getSupplier = (
   repManager: IIRepresentativeManager,
@@ -29,7 +25,7 @@ export const getSupplier = (
       return repManager.watch(applier.module, fileNames).pipe(
         mergeMap(attachIdFromSlug),
         mergeMap(attachIdFromContent),
-        map(({_id, slug, content, type}) => {
+        map(({_id, slug, content, type, extension}) => {
           return {
             module,
             sub_module: subModule,
@@ -38,6 +34,7 @@ export const getSupplier = (
             resource_content: content,
             resource_slug: slug,
             resource_id: _id,
+            resource_extension: extension,
             type
           };
         })
