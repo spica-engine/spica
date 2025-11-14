@@ -1,4 +1,6 @@
 import { baseApi } from './baseApi';
+import { prepareBucketWithoutField } from '../../utils/bucket/bucket';
+import type { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query';
 
 // Types (migrated from bucketService.ts)
 export type BucketDataType = {
@@ -637,25 +639,37 @@ export const bucketApi = baseApi.injectEndpoints({
     }),
 
     // Delete bucket field
-    deleteBucketField: builder.mutation<BucketType, { bucketId: string; fieldKey: string; bucket: BucketType }>({
-      query: ({ bucketId, fieldKey, bucket }) => {
-        const { [fieldKey]: removed, ...updatedProperties } = bucket.properties;
-        const updatedRequired = bucket.required?.filter(r => r !== fieldKey) ?? [];
-        const updatedPrimary = bucket.primary === fieldKey ? 'title' : bucket.primary;
+    deleteBucketField: builder.mutation<BucketType, { bucketId: string; fieldKey: string }>({
+      async queryFn({ bucketId, fieldKey},  { dispatch, getState }, _extra, baseQuery){
+        const state = getState() as any;
+        const cachedBucketsQuery = bucketApi.endpoints.getBuckets.select(undefined)(state);
+        let buckets = cachedBucketsQuery?.data as BucketType[] | undefined;
 
-        const updatedBucket = {
-          ...bucket,
-          properties: updatedProperties,
-          required: updatedRequired,
-          primary: updatedPrimary,
-        };
+         if (!buckets) {
+          try {
+            buckets = await dispatch(
+              bucketApi.endpoints.getBuckets.initiate(undefined, { forceRefetch: true })
+            ).unwrap();
+          } catch {
+            return { error: { status: 500, data: 'Buckets could not be loaded' } as FetchBaseQueryError };
+          }
+        }
 
+        const bucket = buckets?.find((b) => b._id === bucketId) as BucketType;
+        if (!bucket) {
+          return { error: { status: 404, data: 'Bucket not found' } as FetchBaseQueryError };
+        }
 
-        return {
+        const updatedBucket = prepareBucketWithoutField(bucket, fieldKey);
+        const res = await baseQuery({
           url: `/bucket/${bucketId}`,
           method: 'PUT',
           body: updatedBucket,
-        };
+        });
+
+        if ('error' in res && res.error) return { error: res.error as FetchBaseQueryError };
+        return { data: res.data as BucketType };
+
       },
       invalidatesTags: (result, error, { bucketId }) => [
         { type: 'Bucket', id: bucketId },
@@ -663,18 +677,26 @@ export const bucketApi = baseApi.injectEndpoints({
         'Bucket',
       ],
       // Optimistic update
-      onQueryStarted: async ({ bucketId, fieldKey, bucket }, { dispatch, queryFulfilled }) => {
-        const { [fieldKey]: removed, ...updatedProperties } = bucket.properties;
-        const updatedRequired = bucket.required?.filter(r => r !== fieldKey) ?? [];
-        const updatedPrimary = bucket.primary === fieldKey ? 'title' : bucket.primary;
+      onQueryStarted: async ({ bucketId, fieldKey }, { dispatch, queryFulfilled, getState }) => {
+        const state = getState() as any;
+        const cachedBucketsQuery = bucketApi.endpoints.getBuckets.select(undefined)(state);
+        const buckets = cachedBucketsQuery?.data as BucketType[] | undefined;
+        const bucket = buckets?.find((b) => b._id === bucketId);
+
+        if (!bucket) {
+          // If bucket is not in cache, skip optimistic update
+          return;
+        }
+
+     const updatedBucket = prepareBucketWithoutField(bucket, fieldKey);
 
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
             const foundBucket = draft.find((b) => b._id === bucketId);
             if (foundBucket) {
-              foundBucket.properties = updatedProperties;
-              foundBucket.required = updatedRequired;
-              foundBucket.primary = updatedPrimary;
+              foundBucket.properties = updatedBucket.properties;
+              foundBucket.required = updatedBucket.required;
+              foundBucket.primary = updatedBucket.primary;
             }
           })
         );

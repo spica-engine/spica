@@ -1,0 +1,21 @@
+.fieldRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--padding-md);
+    gap: var(--gap-md);
+    transition: background-color 0.2s;
+
+    .fieldLeft {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--gap-sm);
+        width: 80%;
+    }
+
+    .fieldControls {
+        display: flex;
+        gap: var(--gap-xs);
+    }
+}

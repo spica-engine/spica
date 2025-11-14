@@ -6,7 +6,10 @@ import styles from "./DeleteBucket.module.scss"
 import { useDeleteBucketMutation } from '../../../store/api/bucketApi';
 
 type DeleteBucketProps = {
-    bucket: BucketType;
+    bucket:{
+        _id: string;
+        title: string;
+    }
     children: (props: { 
         isOpen: boolean;
         onOpen: (e: React.MouseEvent) => void;
