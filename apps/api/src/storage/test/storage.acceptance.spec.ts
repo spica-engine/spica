@@ -1063,4 +1063,80 @@ describe("Storage Acceptance", () => {
       );
     });
   });
+
+  describe("objects with slashes in names", () => {
+    beforeEach(async () => {
+      const folder1 = {
+        name: "school/",
+        content: {
+          data: new Binary(Buffer.from("")),
+          type: "application/octet-stream",
+          size: 0
+        }
+      };
+      const folder2 = {
+        name: "folder/",
+        content: {
+          data: new Binary(Buffer.from("")),
+          type: "application/octet-stream",
+          size: 0
+        }
+      };
+      const folder3 = {
+        name: "folder/subfolder/",
+        content: {
+          data: new Binary(Buffer.from("")),
+          type: "application/octet-stream",
+          size: 0
+        }
+      };
+
+      await req.post("/storage", serialize({content: [folder1, folder2, folder3]}), {
+        "Content-Type": "application/bson"
+      });
+
+      const object1 = {
+        name: "school/holiday.png",
+        content: {
+          data: new Binary(Buffer.from("image data in folder")),
+          type: "image/png"
+        }
+      };
+      const object2 = {
+        name: "folder/subfolder/document.pdf",
+        content: {
+          data: new Binary(Buffer.from("pdf data in nested folder")),
+          type: "application/pdf"
+        }
+      };
+
+      await req.post("/storage", serialize({content: [object1, object2]}), {
+        "Content-Type": "application/bson"
+      });
+    });
+
+    it("should return storage object by name with slash", async () => {
+      const {body: response} = await req.get("/storage/school/holiday.png");
+      expect(response.name).toEqual("school/holiday.png");
+      expect(response.content.type).toEqual("image/png");
+    });
+
+    it("should show the object by name with slash via view endpoint", async () => {
+      const {headers, body} = await req.get("/storage/school/holiday.png/view");
+      expect(headers["content-type"]).toContain("image/png");
+      expect(body).toBe("image data in folder");
+    });
+
+    it("should return storage object by name with nested slashes", async () => {
+      const {body: response} = await req.get("/storage/folder/subfolder/document.pdf");
+      expect(response.name).toEqual("folder/subfolder/document.pdf");
+      expect(response.content.type).toEqual("application/pdf");
+    });
+
+    it("should show the object by name with nested slashes via view endpoint", async () => {
+      const {headers, body} = await req.get("/storage/folder/subfolder/document.pdf/view");
+      expect(headers["content-type"]).toContain("application/pdf");
+      expect(body).toBe("pdf data in nested folder");
+    });
+  });
 });
