@@ -55,6 +55,7 @@ describe("Sync Controller", () => {
             resource_id: "resource1",
             resource_slug: "test-slug-1",
             resource_content: "content1",
+            resource_extension: ".yaml",
             created_at: new Date(now.getTime() - 2000)
           },
           status: SyncStatuses.PENDING,
@@ -70,6 +71,7 @@ describe("Sync Controller", () => {
             resource_id: "resource2",
             resource_slug: "test-slug-2",
             resource_content: "content2",
+            resource_extension: ".yaml",
             created_at: new Date(now.getTime() - 1000)
           },
           status: SyncStatuses.PENDING,
@@ -112,7 +114,7 @@ describe("Sync Controller", () => {
       });
     });
 
-    fit("should apply filter by created_at", async () => {
+    it("should apply filter by created_at", async () => {
       const now = new Date();
       const olderDate = new Date(now.getTime() - 2000);
       const newerDate = new Date(now.getTime() - 1000);
@@ -128,6 +130,7 @@ describe("Sync Controller", () => {
             resource_id: "resource1",
             resource_slug: "slug-1",
             resource_content: "content1",
+            resource_extension: ".yaml",
             created_at: olderDate
           },
           status: SyncStatuses.PENDING,
@@ -143,6 +146,8 @@ describe("Sync Controller", () => {
             resource_id: "resource2",
             resource_slug: "slug-2",
             resource_content: "content2",
+            resource_extension: ".yaml",
+
             created_at: newerDate
           },
           status: SyncStatuses.PENDING,
@@ -152,8 +157,7 @@ describe("Sync Controller", () => {
       ];
 
       await syncService.insertMany(syncRecords as Sync[]);
-      const data = await syncService.find({});
-      console.log("Inserted sync records:", data);
+
       const {statusCode, body} = await req.get("/versioncontrol/sync", {
         filter: JSON.stringify({
           created_at: {
@@ -188,6 +192,8 @@ describe("Sync Controller", () => {
           origin: ChangeOrigin.DOCUMENT,
           resource_id: "resource1",
           resource_slug: "test-slug",
+          resource_extension: ".yaml",
+
           resource_content: "content",
           created_at: new Date(now.getTime() - 2000)
         },
@@ -205,6 +211,8 @@ describe("Sync Controller", () => {
           resource_id: "resource2",
           resource_slug: "test-slug-2",
           resource_content: "content2",
+          resource_extension: ".yaml",
+
           created_at: new Date(now.getTime() - 1000)
         },
         status: SyncStatuses.APPROVED,
@@ -246,6 +254,8 @@ describe("Sync Controller", () => {
             resource_id: "resource1",
             resource_slug: "slug-1",
             resource_content: "content1",
+            resource_extension: ".yaml",
+
             created_at: new Date(now.getTime() - 2000)
           },
           status: SyncStatuses.PENDING,
@@ -261,6 +271,8 @@ describe("Sync Controller", () => {
             resource_id: "resource2",
             resource_slug: "slug-2",
             resource_content: "content2",
+            resource_extension: ".yaml",
+
             created_at: new Date(now.getTime() - 1000)
           },
           status: SyncStatuses.PENDING,
@@ -286,7 +298,8 @@ describe("Sync Controller", () => {
           origin: ChangeOrigin.DOCUMENT,
           resource_id: "resource2",
           resource_slug: "slug-2",
-          resource_content: "content2"
+          resource_content: "content2",
+          resource_extension: ".yaml"
         },
         status: SyncStatuses.PENDING
       });
@@ -304,6 +317,8 @@ describe("Sync Controller", () => {
             resource_id: "resource1",
             resource_slug: "slug-1",
             resource_content: "content1",
+            resource_extension: ".yaml",
+
             created_at: new Date(now.getTime() - 3000)
           },
           status: SyncStatuses.PENDING,
@@ -319,6 +334,8 @@ describe("Sync Controller", () => {
             resource_id: "resource2",
             resource_slug: "slug-2",
             resource_content: "content2",
+            resource_extension: ".yaml",
+
             created_at: new Date(now.getTime() - 2000)
           },
           status: SyncStatuses.APPROVED,
@@ -334,6 +351,8 @@ describe("Sync Controller", () => {
             resource_id: "resource3",
             resource_slug: "slug-3",
             resource_content: "content3",
+            resource_extension: ".yaml",
+
             created_at: new Date(now.getTime() - 1000)
           },
           status: SyncStatuses.PENDING,
@@ -360,7 +379,8 @@ describe("Sync Controller", () => {
           origin: ChangeOrigin.DOCUMENT,
           resource_id: "resource2",
           resource_slug: "slug-2",
-          resource_content: "content2"
+          resource_content: "content2",
+          resource_extension: ".yaml"
         },
         status: SyncStatuses.APPROVED
       });
@@ -378,7 +398,8 @@ describe("Sync Controller", () => {
             resource_id: "resource1",
             resource_slug: "slug-1",
             resource_content: "content1",
-            created_at: new Date(now.getTime() - 2000)
+            created_at: new Date(now.getTime() - 2000),
+            resource_extension: ".yaml"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 2000),
@@ -393,6 +414,8 @@ describe("Sync Controller", () => {
             resource_id: "resource2",
             resource_slug: "slug-2",
             resource_content: "content2",
+            resource_extension: ".yaml",
+
             created_at: new Date(now.getTime() - 1000)
           },
           status: SyncStatuses.PENDING,
@@ -417,7 +440,8 @@ describe("Sync Controller", () => {
           origin: ChangeOrigin.DOCUMENT,
           resource_id: "resource2",
           resource_slug: "slug-2",
-          resource_content: "content2"
+          resource_content: "content2",
+          resource_extension: ".yaml"
         },
         status: SyncStatuses.PENDING
       });
@@ -447,6 +471,8 @@ describe("Sync Controller", () => {
             resource_id: "resource1",
             resource_slug: "slug-1",
             resource_content: "content1",
+            resource_extension: ".yaml",
+
             created_at: new Date(now.getTime() - 2000)
           },
           status: SyncStatuses.PENDING,
@@ -462,6 +488,8 @@ describe("Sync Controller", () => {
             resource_id: "resource2",
             resource_slug: "slug-2",
             resource_content: "content2",
+            resource_extension: ".yaml",
+
             created_at: new Date(now.getTime() - 1000)
           },
           status: SyncStatuses.PENDING,
@@ -487,7 +515,8 @@ describe("Sync Controller", () => {
           origin: ChangeOrigin.DOCUMENT,
           resource_id: "resource1",
           resource_slug: "slug-1",
-          resource_content: "content1"
+          resource_content: "content1",
+          resource_extension: ".yaml"
         },
         status: SyncStatuses.PENDING
       });
@@ -507,6 +536,8 @@ describe("Sync Controller", () => {
           resource_id: "resource1",
           resource_slug: "test-slug",
           resource_content: "content",
+          resource_extension: ".yaml",
+
           created_at: new Date()
         },
         status: SyncStatuses.PENDING,

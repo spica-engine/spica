@@ -42,7 +42,6 @@ export class SyncController {
     @Query("sort", JSONP) sort?: object
   ): Promise<Sync[]> {
     const builder = new PipelineBuilder();
-    console.log("Filter received in getAllSync:", filter);
 
     await builder.filterByUserRequest(filter);
     builder.sort(sort).skip(skip).limit(limit);
