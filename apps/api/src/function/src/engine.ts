@@ -218,6 +218,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.rm(filePath);
   }
 
+  deleteDependency(fn: Function): Promise<void> {
+    const filePath = path.join(this.getFunctionRoot(fn), "package.json");
+    return fs.promises.rm(filePath);
+  }
+
   watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
     let files = [];
 
