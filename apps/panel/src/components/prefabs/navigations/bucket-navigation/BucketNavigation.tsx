@@ -10,53 +10,116 @@ import {
 import styles from "../Navigation.module.scss";
 import bucketNavigationStyles from "./BucketNavigation.module.scss";
 import {Button} from "oziko-ui-kit";
-import {memo, useCallback, useEffect, useMemo, useRef, useState, type FC} from "react";
-import type {
-  NavigatorItemGroup,
-  TypeNavigatorItem,
-  TypeNavigatorHeader
-} from "../../../../types/sidebar";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FC,
+  type ReactNode,
+  type SetStateAction
+} from "react";
 
 import {useNavigate} from "react-router-dom";
 import {useGetBucketsQuery} from "../../../../store/api";
 import {useUpdateBucketOrderMutation, type BucketType} from "../../../../store/api/bucketApi";
-import NavigatorItem from "../../../../components/molecules/navigator-item/NavigatorItem";
-import { useDrag, useDrop } from "react-dnd";
-import type { Identifier, XYCoord } from "dnd-core";
+import {useDrag, useDrop} from "react-dnd";
+import type {Identifier, XYCoord} from "dnd-core";
 import AddBucketPopup from "../../../../components/molecules/add-bucket-popup/AddBucketPopup";
 
 import BucketNavigatorPopup from "../../../molecules/bucket-navigator-popup/BucketNavigatorPopup";
 
 const BUCKET_ITEM_TYPE = "BUCKET_NAVIGATION_ITEM";
+const CATEGORY_ITEM_TYPE = "BUCKET_NAVIGATION_CATEGORY";
+const CATEGORY_ORDER_STORAGE_KEY = "bucketNavigationCategoryOrder";
+const UNGROUPED_CATEGORY_KEY = "__ungrouped__";
 
 type BucketNavigationItemData = {
   _id: string;
   title: string;
   order?: number;
+  category?: string;
   [key: string]: unknown;
 };
 
 type DragItem = {
   id: string;
   index: number;
+  groupKey: string;
   type: typeof BUCKET_ITEM_TYPE;
 };
 
-const groupObjectsByCategory = (items: TypeNavigatorItem[]) => {
-  const groupedMap = new Map<string, TypeNavigatorItem[]>();
-  const ungrouped: TypeNavigatorItem[] = [];
-  items.forEach(obj => {
-    if (obj.category) {
-      if (!groupedMap.has(obj.category)) {
-        groupedMap.set(obj.category, []);
+type CategoryDragItem = {
+  id: string;
+  index: number;
+  type: typeof CATEGORY_ITEM_TYPE;
+};
+
+type BucketWithIndex = {
+  bucket: BucketNavigationItemData;
+  index: number;
+};
+
+type CategoryGroup = {
+  category: string;
+  items: BucketWithIndex[];
+};
+
+const arraysEqual = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((item, index) => item === b[index]);
+
+const safeReadCategoryOrder = (): string[] => {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const storedValue = window.localStorage.getItem(CATEGORY_ORDER_STORAGE_KEY);
+    if (!storedValue) {
+      return [];
+    }
+
+    const parsed = JSON.parse(storedValue);
+    return Array.isArray(parsed) ? parsed.filter(item => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+};
+
+const persistCategoryOrder = (order: string[]) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (!order.length) {
+    window.localStorage.removeItem(CATEGORY_ORDER_STORAGE_KEY);
+    return;
+  }
+
+  window.localStorage.setItem(CATEGORY_ORDER_STORAGE_KEY, JSON.stringify(order));
+};
+
+const groupBucketsByCategory = (items: BucketNavigationItemData[]) => {
+  const groupedMap = new Map<string, BucketWithIndex[]>();
+  const ungrouped: BucketWithIndex[] = [];
+
+  items.forEach((bucket, index) => {
+    if (bucket.category) {
+      if (!groupedMap.has(bucket.category)) {
+        groupedMap.set(bucket.category, []);
       }
-      groupedMap.get(obj.category)!.push(obj);
+      groupedMap.get(bucket.category)!.push({bucket, index});
     } else {
-      ungrouped.push(obj);
+      ungrouped.push({bucket, index});
     }
   });
 
-  const grouped = Array.from(groupedMap.values());
+  const grouped: CategoryGroup[] = Array.from(groupedMap.entries()).map(([category, categoryItems]) => ({
+    category,
+    items: categoryItems
+  }));
 
   return {
     grouped,
@@ -64,32 +127,29 @@ const groupObjectsByCategory = (items: TypeNavigatorItem[]) => {
   };
 };
 
-// type TypeNavigatorProps = {
-//   header?: TypeNavigatorHeader;
-//   items?: NavigatorItemGroup;
-//   button?: {
-//     title: string;
-//     icon: IconName;
-//     onClick: () => void;
-//   };
-// };
 
 type SortableBucketItemProps = {
   bucket: BucketNavigationItemData;
   index: number;
+  groupKey: string;
   moveBucket: (from: number, to: number) => void;
   onNavigate: (id: string) => void;
   onDragStart: (index: number) => void;
   onDrop: (id: string, index: number) => void;
+  isPopupOpen: boolean;
+  onPopupStateChange: (state: SetStateAction<boolean>) => void;
 };
 
 const SortableBucketItem: FC<SortableBucketItemProps> = ({
   bucket,
   index,
+  groupKey,
   moveBucket,
   onNavigate,
   onDragStart,
-  onDrop
+  onDrop,
+  isPopupOpen,
+  onPopupStateChange
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -99,6 +159,10 @@ const SortableBucketItem: FC<SortableBucketItemProps> = ({
       handlerId: monitor.getHandlerId()
     }),
     hover: (item, monitor) => {
+      if (item.groupKey !== groupKey) {
+        return;
+      }
+
       if (!containerRef.current) {
         return;
       }
@@ -137,7 +201,7 @@ const SortableBucketItem: FC<SortableBucketItemProps> = ({
     type: BUCKET_ITEM_TYPE,
     item: () => {
       onDragStart(index);
-      return {id: bucket._id, index, type: BUCKET_ITEM_TYPE};
+      return {id: bucket._id, index, groupKey, type: BUCKET_ITEM_TYPE};
     },
     end: draggedItem => {
       if (!draggedItem) {
@@ -215,14 +279,12 @@ const SortableBucketItem: FC<SortableBucketItemProps> = ({
                   <Icon name="dragHorizontalVariant" size="sm" />
                 </Button>
               </div>
-              <Button
-                variant="icon"
-                color="transparent"
+              <BucketNavigatorPopup
                 className={bucketNavigationStyles.itemButton}
-              >
-                <Icon name="dotsVertical" size="sm" />
-                <BucketNavigatorPopup isOpen={true} setIsOpen={() => {}} bucket={bucket as BucketType} />
-              </Button>
+                isOpen={isPopupOpen}
+                setIsOpen={onPopupStateChange}
+                bucket={bucket as BucketType}
+              />
             </FlexElement>
           ),
           className: bucketNavigationStyles.actionButtons
@@ -232,12 +294,104 @@ const SortableBucketItem: FC<SortableBucketItemProps> = ({
   );
 };
 
+type SortableCategoryItemProps = {
+  categoryKey: string;
+  index: number;
+  moveCategory: (fromIndex: number, toIndex: number) => void;
+  children: (options: {setDragHandleRef: (node: HTMLDivElement | null) => void}) => ReactNode;
+};
+
+const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index, moveCategory, children}) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const [{handlerId}, drop] = useDrop<CategoryDragItem, void, {handlerId: Identifier | null}>({
+    accept: CATEGORY_ITEM_TYPE,
+    collect: monitor => ({
+      handlerId: monitor.getHandlerId()
+    }),
+    hover: (item, monitor) => {
+      if (!containerRef.current) {
+        return;
+      }
+
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      const hoverBoundingRect = containerRef.current.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+
+      const clientOffset = monitor.getClientOffset();
+      if (!clientOffset) {
+        return;
+      }
+
+      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
+
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
+      }
+
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return;
+      }
+
+      moveCategory(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    }
+  });
+
+  const [{isDragging}, drag, dragPreview] = useDrag(() => ({
+    type: CATEGORY_ITEM_TYPE,
+    item: {id: categoryKey, index, type: CATEGORY_ITEM_TYPE},
+    collect: monitor => ({
+      isDragging: monitor.isDragging()
+    })
+  }));
+
+  const setContainerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      containerRef.current = node;
+      if (node) {
+        drop(node);
+        dragPreview(node);
+      }
+    },
+    [drop, dragPreview]
+  );
+
+  const setDragHandleRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (node) {
+        drag(node);
+      }
+    },
+    [drag]
+  );
+
+  return (
+    <div
+      ref={setContainerRef}
+      data-handler-id={handlerId ?? undefined}
+      style={{opacity: isDragging ? 0.4 : 1}}
+      className={bucketNavigationStyles.categoryItem}
+    >
+      {children({setDragHandleRef})}
+    </div>
+  );
+};
+
 const BucketNavigation = () => {
   const navigate = useNavigate();
   const {data: buckets = []} = useGetBucketsQuery();
   const [orderedBuckets, setOrderedBuckets] = useState<BucketNavigationItemData[]>([]);
+  const [openBucketId, setOpenBucketId] = useState<string | null>(null);
   const [updateBucketOrder] = useUpdateBucketOrderMutation();
   const previousBucketsRef = useRef<BucketNavigationItemData[] | null>(null);
+  const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
 
   const sortedBuckets = useMemo(() => {
     if (!Array.isArray(buckets)) {
@@ -259,6 +413,15 @@ const BucketNavigation = () => {
   useEffect(() => {
     setOrderedBuckets(sortedBuckets as BucketNavigationItemData[]);
   }, [sortedBuckets]);
+
+  useEffect(() => {
+    const storedOrder = safeReadCategoryOrder();
+    if (!storedOrder.length) {
+      return;
+    }
+
+    setCategoryOrder(storedOrder);
+  }, []);
 
   const moveBucket = useCallback((fromIndex: number, toIndex: number) => {
     setOrderedBuckets(prevBuckets => {
@@ -338,43 +501,155 @@ const BucketNavigation = () => {
     [orderedBuckets, updateBucketOrder]
   );
 
-  // const {grouped, ungrouped} = useMemo(() => groupObjectsByCategory(items?.items ?? []), [items]);
+  const handleSetBucketPopupOpen = useCallback((bucketId: string, state: SetStateAction<boolean>) => {
+    setOpenBucketId(prevId => {
+      const prevIsOpen = prevId === bucketId;
+      const nextIsOpen = typeof state === "function" ? state(prevIsOpen) : state;
 
-  // const accordionItems = useMemo(
-  //   () =>
-  //     grouped.map((item, index) => {
-  //       const title = helperUtils.capitalize(item?.[0]?.category ?? "");
-  //       const content = (
-  //         <>
-  //           {item.map((item: TypeNavigatorItem, index: number) => (
-  //             <AccordionNavigatorItem key={item._id} item={item} index={index} />
-  //           ))}
-  //         </>
-  //       );
+      if (nextIsOpen) {
+        return bucketId;
+      }
 
-  //       const icon = (
-  //         <>
-  //           <Icon name="dragHorizontalVariant" />
-  //           <Icon name="dotsVertical" />
-  //         </>
-  //       );
-  //       const items = [{title, content, icon}];
+      return prevIsOpen ? null : prevId;
+    });
+  }, []);
 
-  //       return (
-  //         <Accordion
-  //           key={index}
-  //           items={items}
-  //           headerClassName={styles.accordionHeader}
-  //           className={`${styles.accordion} accordion`}
-  //           openClassName={styles.accordionOpen}
-  //           gap={0}
-  //         />
-  //       );
-  //     }),
-  //   [grouped, items]
-  // );
+  const {grouped, ungrouped} = useMemo(() => groupBucketsByCategory(orderedBuckets), [orderedBuckets]);
 
- 
+  useEffect(() => {
+    setCategoryOrder(prevOrder => {
+      const groupedNames = grouped.map(group => group.category);
+      const filteredPrev = prevOrder.filter(name => groupedNames.includes(name));
+      const missing = groupedNames.filter(name => !filteredPrev.includes(name));
+      const nextOrder = [...filteredPrev, ...missing];
+
+      if (arraysEqual(prevOrder, nextOrder)) {
+        return prevOrder;
+      }
+
+      return nextOrder;
+    });
+  }, [grouped]);
+
+  useEffect(() => {
+    persistCategoryOrder(categoryOrder);
+  }, [categoryOrder]);
+
+  const moveCategory = useCallback((fromIndex: number, toIndex: number) => {
+    setCategoryOrder(prevOrder => {
+      if (
+        fromIndex === toIndex ||
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= prevOrder.length ||
+        toIndex > prevOrder.length
+      ) {
+        return prevOrder;
+      }
+
+      const nextOrder = [...prevOrder];
+      const [moved] = nextOrder.splice(fromIndex, 1);
+      if (!moved) {
+        return prevOrder;
+      }
+      nextOrder.splice(toIndex, 0, moved);
+      return nextOrder;
+    });
+  }, []);
+
+  const orderedGrouped = useMemo(() => {
+    if (!grouped.length) {
+      return [];
+    }
+
+    const groupMap = new Map(grouped.map(group => [group.category, group]));
+    const orderedFromStorage = categoryOrder
+      .map(categoryName => groupMap.get(categoryName))
+      .filter((group): group is CategoryGroup => Boolean(group));
+    const remainingGroups = grouped.filter(group => !categoryOrder.includes(group.category));
+
+    return [...orderedFromStorage, ...remainingGroups];
+  }, [categoryOrder, grouped]);
+
+  const renderBucketItem = useCallback(
+    (bucket: BucketNavigationItemData, index: number, groupKey: string) => (
+      <SortableBucketItem
+        key={bucket._id ?? index}
+        bucket={bucket}
+        index={index}
+        groupKey={groupKey}
+        moveBucket={moveBucket}
+        onNavigate={handleNavigateToBucket}
+        onDragStart={handleDragStart}
+        onDrop={handleDropBucket}
+        isPopupOpen={openBucketId === bucket._id}
+        onPopupStateChange={state => handleSetBucketPopupOpen(bucket._id, state)}
+      />
+    ),
+    [
+      handleDragStart,
+      handleDropBucket,
+      handleNavigateToBucket,
+      handleSetBucketPopupOpen,
+      moveBucket,
+      openBucketId
+    ]
+  );
+
+  const groupedAccordionItems = useMemo(
+    () =>
+      orderedGrouped.map((groupItem, groupIndex) => {
+        const categoryName = helperUtils.capitalize(groupItem.category ?? "Uncategorized");
+
+        const items = [
+          {
+            title: categoryName,
+            content: (
+              <>
+                {groupItem.items.map(({bucket, index}) =>
+                  renderBucketItem(bucket, index, bucket.category ?? groupItem.category ?? UNGROUPED_CATEGORY_KEY)
+                )}
+              </>
+            ),
+            icon: null
+          }
+        ];
+
+        return (
+          <SortableCategoryItem
+            key={groupItem.category ?? groupIndex}
+            categoryKey={groupItem.category}
+            index={groupIndex}
+            moveCategory={moveCategory}
+          >
+            {({setDragHandleRef}) => (
+              <Accordion
+                items={[
+                  {
+                    ...items[0],
+                    icon: (
+                      <FlexElement gap={4}>
+                        <div ref={setDragHandleRef} className={bucketNavigationStyles.categoryDragHandle}>
+                          <Icon name="dragHorizontalVariant" />
+                        </div>
+                        <Icon name="dotsVertical" />
+                      </FlexElement>
+                    )
+                  }
+                ]}
+                defaultActiveIndex={-1}
+                headerClassName={bucketNavigationStyles.accordionHeader}
+                className={`${bucketNavigationStyles.accordion}`}
+                openClassName={bucketNavigationStyles.accordionOpen}
+                gap={0}
+              />
+            )}
+          </SortableCategoryItem>
+        );
+      }),
+    [moveCategory, orderedGrouped, renderBucketItem]
+  );
+
 
   const handleViewListClick = () => {
     navigate("/diagram");
@@ -422,17 +697,10 @@ const BucketNavigation = () => {
         }}
       />
       <div className={bucketNavigationStyles.bucketsItemContainer}>
-        {orderedBuckets.map((bucket, index) => (
-          <SortableBucketItem
-            key={bucket._id ?? index}
-            bucket={bucket}
-            index={index}
-            moveBucket={moveBucket}
-            onNavigate={handleNavigateToBucket}
-            onDragStart={handleDragStart}
-            onDrop={handleDropBucket}
-          />
-        ))}
+        {groupedAccordionItems}
+        {ungrouped.map(({bucket, index}) =>
+          renderBucketItem(bucket, index, bucket.category ?? UNGROUPED_CATEGORY_KEY)
+        )}
       </div>
 
       <AddBucketPopup />
