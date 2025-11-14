@@ -40,8 +40,9 @@ export class SyncEngine {
         return;
       }
 
+      await this.syncProcessor.update(sync._id, SyncStatuses.IN_PROGRESS);
       const result = await handler.applier.apply(sync.change_log);
-      this.syncProcessor.update(sync._id, result.status, result.reason);
+      return this.syncProcessor.update(sync._id, result.status, result.reason);
     };
 
     this.syncProcessor.watch(SyncStatuses.APPROVED).subscribe(syncHandler);
