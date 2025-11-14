@@ -27,7 +27,7 @@ export class SyncController {
   constructor(private syncService: SyncService) {}
 
   /**
-   * Returns all synchronization changes with optional filtering, pagination and sorting.
+   * Returns all synchronization changes with optional filtering, limiting, skipping and sorting.
    * @query filter - Optional filter criteria
    * @query limit - Maximum number of results to return
    * @query skip - Number of results to skip
@@ -42,6 +42,7 @@ export class SyncController {
     @Query("sort", JSONP) sort?: object
   ): Promise<Sync[]> {
     const builder = new PipelineBuilder();
+    console.log("Filter received in getAllSync:", filter);
 
     await builder.filterByUserRequest(filter);
     builder.sort(sort).skip(skip).limit(limit);

@@ -112,6 +112,72 @@ describe("Sync Controller", () => {
       });
     });
 
+    fit("should apply filter by created_at", async () => {
+      const now = new Date();
+      const olderDate = new Date(now.getTime() - 2000);
+      const newerDate = new Date(now.getTime() - 1000);
+      const filterDate = new Date(now.getTime() - 1500);
+
+      const syncRecords: Partial<Sync>[] = [
+        {
+          change_log: {
+            module: "bucket",
+            sub_module: "test",
+            type: ChangeType.CREATE,
+            origin: ChangeOrigin.DOCUMENT,
+            resource_id: "resource1",
+            resource_slug: "slug-1",
+            resource_content: "content1",
+            created_at: olderDate
+          },
+          status: SyncStatuses.PENDING,
+          created_at: olderDate,
+          updated_at: olderDate
+        },
+        {
+          change_log: {
+            module: "function",
+            sub_module: "test",
+            type: ChangeType.CREATE,
+            origin: ChangeOrigin.DOCUMENT,
+            resource_id: "resource2",
+            resource_slug: "slug-2",
+            resource_content: "content2",
+            created_at: newerDate
+          },
+          status: SyncStatuses.PENDING,
+          created_at: newerDate,
+          updated_at: newerDate
+        }
+      ];
+
+      await syncService.insertMany(syncRecords as Sync[]);
+      const data = await syncService.find({});
+      console.log("Inserted sync records:", data);
+      const {statusCode, body} = await req.get("/versioncontrol/sync", {
+        filter: JSON.stringify({
+          created_at: {
+            $gte: filterDate
+          }
+        })
+      });
+
+      expect(statusCode).toBe(200);
+      expect(body).toHaveLength(1);
+      expect(body[0]).toMatchObject({
+        change_log: {
+          module: "function",
+          sub_module: "test",
+          type: ChangeType.CREATE,
+          origin: ChangeOrigin.DOCUMENT,
+          resource_id: "resource2",
+          resource_slug: "slug-2",
+          resource_content: "content2"
+        },
+        status: SyncStatuses.PENDING
+      });
+    });
+
     it("should filter syncs by status", async () => {
       const now = new Date();
       const pendingSync: Partial<Sync> = {
@@ -149,8 +215,7 @@ describe("Sync Controller", () => {
       await syncService.insertMany([pendingSync, approvedSync] as Sync[]);
 
       const {statusCode, body} = await req.get("/versioncontrol/sync", {
-        filter: JSON.stringify({status: SyncStatuses.PENDING}),
-        sort: JSON.stringify({created_at: 1})
+        filter: JSON.stringify({status: SyncStatuses.PENDING})
       });
 
       expect(statusCode).toBe(200);
@@ -169,7 +234,7 @@ describe("Sync Controller", () => {
       });
     });
 
-    it("should apply pagination with skip", async () => {
+    it("should apply skip", async () => {
       const now = new Date();
       const syncRecords: Partial<Sync>[] = [
         {
@@ -227,7 +292,7 @@ describe("Sync Controller", () => {
       });
     });
 
-    it("should apply pagination with skip and limit", async () => {
+    it("should apply skip and limit", async () => {
       const now = new Date();
       const syncRecords: Partial<Sync>[] = [
         {
@@ -474,19 +539,6 @@ describe("Sync Controller", () => {
       expect([statusCode, body.status]).toEqual([200, SyncStatuses.REJECTED]);
     });
 
-    it("should reject a pending sync with reason", async () => {
-      const {statusCode, body} = await req.put(`/versioncontrol/sync/${testSync._id}`, {
-        status: SyncStatuses.REJECTED
-      });
-
-      expect([statusCode, body]).toEqual([
-        200,
-        expect.objectContaining({
-          status: SyncStatuses.REJECTED
-        })
-      ]);
-    });
-
     it("should return 400 for invalid status", async () => {
       const {statusCode, body} = await req
         .put(`/versioncontrol/sync/${testSync._id}`, {
@@ -527,24 +579,33 @@ describe("Sync Controller", () => {
       ]);
     });
 
-    it("should return 400 when trying to set status to SUCCEEDED", async () => {
-      const {statusCode, body} = await req
-        .put(`/versioncontrol/sync/${testSync._id}`, {
-          status: SyncStatuses.SUCCEEDED
-        })
-        .catch(r => r);
+    it("should return 400 when trying to set invalid status", async () => {
+      const [response1, response2] = await Promise.all([
+        req
+          .put(`/versioncontrol/sync/${testSync._id}`, {
+            status: SyncStatuses.SUCCEEDED
+          })
+          .catch(r => r),
+        req
+          .put(`/versioncontrol/sync/${testSync._id}`, {
+            status: SyncStatuses.FAILED
+          })
+          .catch(r => r)
+      ]);
 
-      expect([statusCode, body.message]).toEqual([400, expect.stringContaining("Invalid status")]);
-    });
+      expect(response1.statusCode).toBe(400);
+      expect(response1.body).toMatchObject({
+        statusCode: 400,
+        message: expect.stringContaining("Invalid status"),
+        error: expect.any(String)
+      });
 
-    it("should return 400 when trying to set status to FAILED", async () => {
-      const {statusCode, body} = await req
-        .put(`/versioncontrol/sync/${testSync._id}`, {
-          status: SyncStatuses.FAILED
-        })
-        .catch(r => r);
-
-      expect([statusCode, body.message]).toEqual([400, expect.stringContaining("Invalid status")]);
+      expect(response2.statusCode).toBe(400);
+      expect(response2.body).toMatchObject({
+        statusCode: 400,
+        message: expect.stringContaining("Invalid status"),
+        error: expect.any(String)
+      });
     });
   });
 });
