@@ -6,6 +6,19 @@ import {
   ValueConstructor
 } from "@spica-server/interface/filter";
 
+export type FilterReplacer = (filter: object) => Promise<object>;
+
+export class FilterReplaceManager {
+  constructor(private replacers: FilterReplacer[] = [replaceFilterObjectIds, replaceFilterDates]) {}
+
+  public async replace(filter: object) {
+    for (let replacer of this.replacers) {
+      filter = await replacer(filter);
+    }
+    return filter;
+  }
+}
+
 export const DefaultExtractor: Extractor = {
   operators: [],
   factory: (expression: Expression) => {
@@ -60,6 +73,11 @@ export function replaceFilterObjectIds(filter: object) {
   return Promise.resolve(replaceFilter(filter, keyValidators, ObjectIdIfValid));
 }
 
+export function replaceFilterDates(filter: object) {
+  const keyValidators = [key => key == "created_at" || key == "updated_at"];
+  return Promise.resolve(replaceFilter(filter, keyValidators, DateIfValid));
+}
+
 export function replaceFilter(
   filter: object,
   keyValidators: KeyValidator[],
@@ -108,4 +126,10 @@ function constructValue(value: object, ctor: ValueConstructor) {
 
 function ObjectIdIfValid(val): ValueConstructor<ObjectId> {
   return ObjectId.isValid(val) ? new ObjectId(val) : val;
+}
+
+function DateIfValid(val): any {
+  if (val instanceof Date) return val;
+  const date = new Date(val);
+  return !isNaN(date.getTime()) ? date : val;
 }
