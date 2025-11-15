@@ -8,6 +8,7 @@
     {"path": "../../../../libs/representative"},
     {"path": "../../../../libs/core/differ"},
     {"path": "../../../../libs/interface/versioncontrol"},
-    {"path": "./sync"}
+    {"path": "./sync"},
+    {"path": "./sync/engine"}
   ]
 }

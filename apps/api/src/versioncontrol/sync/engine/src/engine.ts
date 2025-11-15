@@ -18,17 +18,46 @@ export class SyncEngine {
   private readonly changeHandlers: ChangeHandler[] = [];
 
   constructor(
-    private readonly suppliers: DocumentChangeSupplier[],
-    private readonly appliers: DocumentChangeApplier[],
     private readonly changeLogProcessor: ChangeLogProcessor,
     private readonly syncProcessor: SyncProcessor,
     private readonly repManager: IIRepresentativeManager
   ) {
-    this.defineChangeHandlers();
-
     this.registerSyncProcessor();
     this.registerChangeLogProcessor();
-    this.registerChangeHandlers();
+  }
+
+  public registerChangeHandler(supplier: DocumentChangeSupplier, applier: DocumentChangeApplier) {
+    const repHandler: ChangeHandler = this.getRepChangeHandler(applier);
+
+    const docHandler: ChangeHandler = this.getDocChangeHandler(supplier);
+
+    this.changeHandlers.push(repHandler, docHandler);
+
+    const onChange = (changeLog: ChangeLog) => {
+      this.changeLogProcessor.push(changeLog);
+    };
+
+    repHandler.supplier.listen().subscribe(onChange);
+
+    docHandler.supplier.listen().subscribe(onChange);
+  }
+
+  private getDocChangeHandler(supplier: DocumentChangeSupplier): ChangeHandler {
+    return {
+      supplier: supplier,
+      applier: getApplier(this.repManager, supplier),
+      moduleMeta: {module: supplier.module, subModule: supplier.subModule},
+      origin: ChangeOrigin.DOCUMENT
+    };
+  }
+
+  private getRepChangeHandler(applier: DocumentChangeApplier): ChangeHandler {
+    return {
+      supplier: getSupplier(this.repManager, applier),
+      applier: applier,
+      moduleMeta: {module: applier.module, subModule: applier.subModule},
+      origin: ChangeOrigin.REPRESENTATIVE
+    };
   }
 
   private registerSyncProcessor() {
@@ -57,44 +86,6 @@ export class SyncEngine {
       this.syncProcessor.push(sync);
     };
     this.changeLogProcessor.watch().subscribe(changeLogHandler);
-  }
-
-  private defineChangeHandlers() {
-    const repHandlers = this.buildChangeHandlersForReps();
-    const docHandlers = this.buildChangeHandlersForDocs();
-    this.changeHandlers.push(...repHandlers, ...docHandlers);
-  }
-
-  private registerChangeHandlers() {
-    const changeHandler = (changeLog: ChangeLog) => this.changeLogProcessor.push(changeLog);
-
-    for (const handler of this.changeHandlers) {
-      handler.supplier.listen().subscribe(changeHandler);
-    }
-  }
-
-  private buildChangeHandlersForReps(): ChangeHandler[] {
-    return this.appliers.map(applier => {
-      const repSupplier = getSupplier(this.repManager, applier);
-      return {
-        supplier: repSupplier,
-        applier: applier,
-        moduleMeta: {module: applier.module, subModule: applier.subModule},
-        origin: ChangeOrigin.REPRESENTATIVE
-      } as ChangeHandler;
-    });
-  }
-
-  private buildChangeHandlersForDocs(): ChangeHandler[] {
-    return this.suppliers.map(supplier => {
-      const repApplier = getApplier(this.repManager, supplier);
-      return {
-        supplier: supplier,
-        applier: repApplier,
-        moduleMeta: {module: supplier.module, subModule: supplier.subModule},
-        origin: ChangeOrigin.DOCUMENT
-      } as ChangeHandler;
-    });
   }
 
   private findChangeHandlerOfSync(sync: Sync): ChangeHandler | undefined {

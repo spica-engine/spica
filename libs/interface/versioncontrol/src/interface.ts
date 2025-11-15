@@ -89,3 +89,12 @@ export enum SyncStatuses {
   SUCCEEDED = "SUCCEEDED",
   FAILED = "FAILED"
 }
+
+export type RegisterVCChangeHandler = (
+  supplier: DocumentChangeSupplier,
+  applier: DocumentChangeApplier
+) => void;
+
+export const REGISTER_VC_CHANGE_HANDLER = Symbol.for("REGISTER_VC_CHANGE_HANDLER");
+
+export const VC_REPRESENTATIVE_MANAGER = Symbol.for("VC_REPRESENTATIVE_MANAGER");
