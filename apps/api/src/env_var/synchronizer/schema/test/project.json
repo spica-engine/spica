@@ -1,0 +1,5 @@
+{
+  "name": "api/env_var/synchronizer/schema/test",
+  "sourceRoot": "apps/api/src/env_var/synchronizer/schema/test",
+  "projectType": "application"
+}

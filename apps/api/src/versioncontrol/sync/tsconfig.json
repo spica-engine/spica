@@ -1,0 +1,24 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../passport/guard"
+    },
+    {
+      "path": "../../../../../libs/core"
+    },
+    {
+      "path": "../processors/sync"
+    },
+    {
+      "path": "../processors/changelog"
+    },
+    {
+      "path": "../../../../../libs/database/pipeline"
+    },
+    {
+      "path": "../../../../../libs/interface/representative"
+    }
+  ]
+}

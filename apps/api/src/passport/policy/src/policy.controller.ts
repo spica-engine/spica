@@ -76,6 +76,6 @@ export class PolicyController {
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.remove(this.policy, id);
+    return CRUD.remove(this.policy, id, this.apikeyFinalizer, this.identityFinalizer);
   }
 }

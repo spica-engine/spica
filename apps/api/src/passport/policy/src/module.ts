@@ -1,14 +1,19 @@
 import {DynamicModule, Global, Inject, Module, Optional} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/interface/passport/guard";
-import {Policy} from "@spica-server/interface/passport/policy";
+import {
+  Policy,
+  APIKEY_POLICY_FINALIZER,
+  IDENTITY_POLICY_FINALIZER,
+  changeFactory
+} from "@spica-server/interface/passport/policy";
 import {PolicyController} from "./policy.controller";
 import {PolicyService} from "./policy.service";
 import PolicySchema from "./schemas/policy.json" with {type: "json"};
-import {getSynchronizer} from "./versioncontrol/synchronizer";
+import {getSupplier, getApplier} from "@spica-server/passport/policy/synchronizer/schema";
 import {
-  REGISTER_VC_SYNCHRONIZER,
-  RegisterVCSynchronizer
+  REGISTER_VC_CHANGE_HANDLER,
+  RegisterVCChangeHandler
 } from "@spica-server/interface/versioncontrol";
 import {PolicyRealtimeModule} from "../realtime";
 @Global()
@@ -49,12 +54,13 @@ export class PolicyModule {
   constructor(
     ps: PolicyService,
     @Optional()
-    @Inject(REGISTER_VC_SYNCHRONIZER)
-    registerVCSynchronizer: RegisterVCSynchronizer<Policy>
+    @Inject(REGISTER_VC_CHANGE_HANDLER)
+    registerVCChangeHandler: RegisterVCChangeHandler,
+    @Optional() @Inject(APIKEY_POLICY_FINALIZER) apikeyFinalizer: changeFactory,
+    @Optional() @Inject(IDENTITY_POLICY_FINALIZER) identityFinalizer: changeFactory
   ) {
-    if (registerVCSynchronizer) {
-      const synchronizer = getSynchronizer(ps);
-      registerVCSynchronizer(synchronizer);
+    if (registerVCChangeHandler) {
+      registerVCChangeHandler(getSupplier(ps), getApplier(ps, apikeyFinalizer, identityFinalizer));
     }
   }
 }

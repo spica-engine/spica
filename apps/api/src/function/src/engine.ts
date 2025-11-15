@@ -35,6 +35,7 @@ import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {Package} from "@spica-server/interface/function/pkgmanager";
 import chokidar from "chokidar";
+import {FunctionModule} from "./function.module";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -155,7 +156,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
-      name: fn.name.replace(" ", "-").toLowerCase(),
+      name: fn.name,
       description: fn.description || "No description.",
       version: "0.0.1",
       private: true,
@@ -197,9 +198,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.writeFile(filePath, index);
   }
 
-  read(fn: Function): Promise<string> {
-    const filePath = this.getFunctionBuildEntrypoint(fn);
-
+  read(fn: Function, scope: "index" | "dependency"): Promise<string> {
+    let filePath = this.getFunctionBuildEntrypoint(fn);
+    if (scope === "dependency") {
+      filePath = path.join(this.getFunctionRoot(fn), "package.json");
+    }
     return fs.promises
       .readFile(filePath)
       .then(b => b.toString())
@@ -211,7 +214,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
   }
 
-  watch(scope: "index" | "dependency" | "tsconfig"): Observable<FunctionWithContent> {
+  deleteIndex(fn: Function): Promise<void> {
+    const filePath = this.getFunctionBuildEntrypoint(fn);
+    return fs.promises.rm(filePath);
+  }
+
+  deleteDependency(fn: Function): Promise<void> {
+    const filePath = path.join(this.getFunctionRoot(fn), "package.json");
+    return fs.promises.rm(filePath);
+  }
+
+  watch(
+    scope: "index" | "dependency" | "tsconfig"
+  ): Observable<{fn: FunctionWithContent; type: "create" | "update" | "delete"}> {
     let files = [];
 
     switch (scope) {
@@ -228,14 +243,14 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     const moduleDir = this.options.root;
     fs.mkdirSync(moduleDir, {recursive: true});
 
-    return new Observable<FunctionWithContent>(observer => {
+    return new Observable(observer => {
       const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
         persistent: true,
         depth: 2
       });
 
-      const handleFileEvent = async (path: string) => {
+      const handleFileEvent = async (path: string, type: "create" | "update" | "delete") => {
         const relativePath = path.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
 
@@ -244,18 +259,31 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         if (!isCorrectDepth || !isTrackedFile) return;
 
         const dirName = parts[0];
-        const fn = await CRUD.findByName(this.fs, dirName, {
-          resolveEnvRelations: EnvRelation.NotResolved
-        });
+
+        let contentPromise: Promise<string> | null;
+        let content: string | null;
+        let fn: Function | null;
+        if (type == "delete") {
+          contentPromise = Promise.resolve(null);
+        } else {
+          contentPromise = fs.promises.readFile(path).then(b => b.toString());
+        }
+
+        await Promise.all([
+          CRUD.findByName(this.fs, dirName, {
+            resolveEnvRelations: EnvRelation.NotResolved
+          }).then(r => (fn = r)),
+          contentPromise.then(c => (content = c))
+        ]);
+
         if (!fn) return;
 
-        const content = await fs.promises.readFile(path).then(b => b.toString());
-
-        observer.next({...fn, content});
+        observer.next({fn: {...fn, content}, type});
       };
 
-      watcher.on("change", path => handleFileEvent(path));
-      watcher.on("add", path => handleFileEvent(path));
+      watcher.on("change", path => handleFileEvent(path, "update"));
+      watcher.on("unlink", path => handleFileEvent(path, "delete"));
+      watcher.on("add", path => handleFileEvent(path, "create"));
 
       watcher.on("error", err => observer.error(err));
 
