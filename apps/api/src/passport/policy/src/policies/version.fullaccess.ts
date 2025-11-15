@@ -6,6 +6,10 @@ export default {
     {
       action: "versioncontrol:update",
       module: "versioncontrol"
+    },
+    {
+      action: "versioncontrol:show",
+      module: "versioncontrol"
     }
   ]
 };
