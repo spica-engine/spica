@@ -31,6 +31,15 @@
     },
     {
       "path": "../../../../libs/database/pipeline"
+    },
+    {
+      "path": "./synchronizer/schema"
+    },
+    {
+      "path": "./synchronizer/index"
+    },
+    {
+      "path": "./synchronizer/dependency"
     }
   ]
 }

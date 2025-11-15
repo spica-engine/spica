@@ -4,7 +4,7 @@ import {HistoryService} from "@spica-server/bucket/history";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
-import {applier, supplier} from "../index";
+import {getApplier, getSupplier} from "../index";
 import {
   ChangeLog,
   ChangeOrigin,
@@ -46,7 +46,7 @@ describe("Bucket Synchronizer", () => {
     let bucketSupplier;
 
     beforeEach(() => {
-      bucketSupplier = supplier(bs);
+      bucketSupplier = getSupplier(bs);
     });
 
     it("should return Change supplier with correct metadata", () => {
@@ -231,7 +231,7 @@ describe("Bucket Synchronizer", () => {
     let bucketApplier;
 
     beforeEach(() => {
-      bucketApplier = applier(bs, bds, history);
+      bucketApplier = getApplier(bs, bds, history);
     });
 
     it("should return Change Applier with correct metadata", () => {

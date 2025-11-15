@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {supplier, applier} from "../src";
+import {getSupplier, getApplier} from "../src";
 import {
   ChangeLog,
   ChangeOrigin,
@@ -33,7 +33,7 @@ describe("EnvVar Synchronizer", () => {
     let envVarSupplier;
 
     beforeEach(() => {
-      envVarSupplier = supplier(evs);
+      envVarSupplier = getSupplier(evs);
     });
 
     it("should return Change Supplier with correct metadata", () => {
@@ -171,7 +171,7 @@ describe("EnvVar Synchronizer", () => {
     let envVarApplier;
 
     beforeEach(() => {
-      envVarApplier = applier(evs);
+      envVarApplier = getApplier(evs);
     });
 
     it("should return Change Applier with correct metadata", () => {

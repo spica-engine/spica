@@ -5,7 +5,7 @@ import {LogService} from "@spica-server/function/log";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
-import {applier, supplier} from "../src";
+import {getApplier, getSupplier} from "../src";
 import {
   ChangeLog,
   ChangeOrigin,
@@ -81,7 +81,7 @@ describe("Function Synchronizer", () => {
     let funcSupplier;
 
     beforeEach(() => {
-      funcSupplier = supplier(fs);
+      funcSupplier = getSupplier(fs);
     });
 
     it("should return Change supplier with correct metadata", () => {
@@ -285,7 +285,7 @@ describe("Function Synchronizer", () => {
     let funcApplier;
 
     beforeEach(() => {
-      funcApplier = applier(fs, engine, logs);
+      funcApplier = getApplier(fs, engine, logs);
     });
 
     it("should return Change Applier with correct metadata", () => {

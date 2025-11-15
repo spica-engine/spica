@@ -4,8 +4,8 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {DatabaseService} from "@spica-server/database";
 import {EnvVarService} from "@spica-server/env_var/services";
-import {supplier} from "../src/supplier";
-import {applier} from "../src/applier";
+import {getSupplier} from "../src/supplier";
+import {getApplier} from "../src/applier";
 import * as CRUD from "../../../src/crud";
 import {
   ChangeLog,
@@ -79,7 +79,7 @@ describe("Function Dependency Synchronizer", () => {
     let dependencySupplier;
 
     beforeEach(() => {
-      dependencySupplier = supplier(engine, functionService);
+      dependencySupplier = getSupplier(engine, functionService);
     });
 
     it("should return ChangeSupplier with correct metadata", () => {
@@ -246,7 +246,7 @@ describe("Function Dependency Synchronizer", () => {
     let dependencyApplier;
 
     beforeEach(() => {
-      dependencyApplier = applier(functionService, engine);
+      dependencyApplier = getApplier(functionService, engine);
     });
 
     it("should return ChangeApplier with correct metadata", () => {

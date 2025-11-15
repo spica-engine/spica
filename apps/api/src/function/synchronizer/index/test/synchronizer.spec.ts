@@ -4,8 +4,8 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {DatabaseService} from "@spica-server/database";
 import {EnvVarService} from "@spica-server/env_var/services";
-import {supplier} from "../src/supplier";
-import {applier} from "../src/applier";
+import {getSupplier} from "../src/supplier";
+import {getApplier} from "../src/applier";
 import * as CRUD from "../../../src/crud";
 import {
   ChangeLog,
@@ -79,7 +79,7 @@ describe("Function Index Synchronizer", () => {
     let indexSupplier;
 
     beforeEach(() => {
-      indexSupplier = supplier(engine, functionService);
+      indexSupplier = getSupplier(engine, functionService);
     });
 
     it("should return ChangeSupplier with correct metadata", () => {
@@ -242,7 +242,7 @@ describe("Function Index Synchronizer", () => {
     let indexApplier;
 
     beforeEach(() => {
-      indexApplier = applier(functionService, engine);
+      indexApplier = getApplier(functionService, engine);
     });
 
     it("should return ChangeApplier with correct metadata", () => {

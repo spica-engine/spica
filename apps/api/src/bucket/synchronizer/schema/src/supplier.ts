@@ -27,7 +27,7 @@ const getChangeLogFromBucket = (bucket: Bucket, type: ChangeType): ChangeLog => 
   };
 };
 
-export const supplier = (bs: BucketService): DocumentChangeSupplier => {
+export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
   return {
     module,
     subModule,

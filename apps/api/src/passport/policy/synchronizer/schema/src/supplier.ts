@@ -3,7 +3,6 @@ import {PolicyService} from "../../../src/policy.service";
 import YAML from "yaml";
 import {
   ChangeLog,
-  ChangeSupplier,
   ChangeType,
   ChangeOrigin,
   DocumentChangeSupplier
@@ -28,7 +27,7 @@ const getChangeForSchema = (policy: Policy, changeType: ChangeType): ChangeLog =
   };
 };
 
-export function supplier(ps: PolicyService): DocumentChangeSupplier {
+export function getSupplier(ps: PolicyService): DocumentChangeSupplier {
   return {
     module,
     subModule,

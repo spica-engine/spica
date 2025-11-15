@@ -15,7 +15,7 @@ const module = "policy";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export function applier(
+export function getApplier(
   ps: PolicyService,
   apikeyFinalizer: changeFactory,
   identityFinalizer: changeFactory
@@ -60,7 +60,7 @@ export function applier(
           case ChangeType.DELETE:
             await CRUD.remove(
               ps,
-              new ObjectId(change.resource_id),
+              ObjectId.createFromHexString(change.resource_id),
               apikeyFinalizer,
               identityFinalizer
             );

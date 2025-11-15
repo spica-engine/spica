@@ -28,7 +28,10 @@ const getChangeLogForDeps = (type: ChangeType, fn: Function, content: string): C
   };
 };
 
-export const supplier = (engine: FunctionEngine, fs: FunctionService): DocumentChangeSupplier => {
+export const getSupplier = (
+  engine: FunctionEngine,
+  fs: FunctionService
+): DocumentChangeSupplier => {
   return {
     module,
     subModule,

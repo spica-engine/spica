@@ -27,7 +27,7 @@ const getChangeForSchema = (fn: Function, type: ChangeType): ChangeLog => {
   };
 };
 
-export const supplier = (fs: FunctionService): DocumentChangeSupplier => {
+export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
   return {
     module,
     subModule,

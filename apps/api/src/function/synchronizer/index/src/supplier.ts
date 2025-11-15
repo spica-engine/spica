@@ -28,7 +28,7 @@ const getChangeLogForIndex = (type: ChangeType, fn: Function, content: string): 
   };
 };
 
-export const supplier = (engine: FunctionEngine, fs: FunctionService): ChangeSupplier => {
+export const getSupplier = (engine: FunctionEngine, fs: FunctionService): ChangeSupplier => {
   return {
     module,
     subModule,

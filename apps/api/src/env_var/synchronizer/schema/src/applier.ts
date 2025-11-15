@@ -14,7 +14,7 @@ const module = "env-var";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export const applier = (evs: EnvVarService): DocumentChangeApplier => {
+export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
   const findEnvVarByKey = async (key: string) => {
     const envVar = await evs.findOne({key});
     return envVar?._id?.toString();

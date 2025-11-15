@@ -15,7 +15,7 @@ const module = "bucket";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export const applier = (
+export const getApplier = (
   bs: BucketService,
   bds: BucketDataService,
   history: HistoryService

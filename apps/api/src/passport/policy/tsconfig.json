@@ -25,6 +25,9 @@
     },
     {
       "path": "./realtime"
+    },
+    {
+      "path": "./synchronizer/schema"
     }
   ]
 }

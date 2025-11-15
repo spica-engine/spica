@@ -27,7 +27,7 @@ const getChangeLogForSchema = (envVar: EnvVar, type: ChangeType): ChangeLog => {
   };
 };
 
-export const supplier = (evs: EnvVarService): DocumentChangeSupplier => {
+export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
   return {
     module,
     subModule,

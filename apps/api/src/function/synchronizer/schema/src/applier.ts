@@ -16,7 +16,7 @@ const module = "function";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export const applier = (
+export const getApplier = (
   fs: FunctionService,
   engine: FunctionEngine,
   logs: LogService

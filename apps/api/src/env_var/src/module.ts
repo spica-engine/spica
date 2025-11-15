@@ -6,12 +6,11 @@ import EnvVarSchema from "./schema.json" with {type: "json"};
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {registerAssetHandlers} from "./asset";
 import {
-  REGISTER_VC_SYNCHRONIZER,
-  RegisterVCSynchronizer
+  REGISTER_VC_CHANGE_HANDLER,
+  RegisterVCChangeHandler
 } from "@spica-server/interface/versioncontrol";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {EnvVar} from "@spica-server/interface/env_var";
-import {getSynchronizer} from "./versioncontrol/synchronizer";
+import {getSupplier, getApplier} from "@spica-server/env_var/synchronizer/schema";
 import {EnvVarRealtimeModule} from "@spica-server/env_var/realtime";
 
 @Module({})
@@ -40,14 +39,13 @@ export class EnvVarModule {
   constructor(
     evs: EnvVarService,
     @Optional()
-    @Inject(REGISTER_VC_SYNCHRONIZER)
-    registerVCSynchronizer: RegisterVCSynchronizer<EnvVar>,
+    @Inject(REGISTER_VC_CHANGE_HANDLER)
+    registerVCChangeHandler: RegisterVCChangeHandler,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
     validator: Validator
   ) {
-    if (registerVCSynchronizer) {
-      const synchronizer = getSynchronizer(evs);
-      registerVCSynchronizer(synchronizer);
+    if (registerVCChangeHandler) {
+      registerVCChangeHandler(getSupplier(evs), getApplier(evs));
     }
     registerAssetHandlers(evs, validator, this.assetRepManager);
   }

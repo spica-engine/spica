@@ -10,7 +10,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
-import {applier, supplier} from "../src";
+import {getApplier, getSupplier} from "../src";
 import {firstValueFrom, take} from "rxjs";
 
 describe("Policy Synchronizer", () => {
@@ -34,7 +34,7 @@ describe("Policy Synchronizer", () => {
     let policySupplier;
 
     beforeEach(() => {
-      policySupplier = supplier(ps);
+      policySupplier = getSupplier(ps);
     });
 
     it("should return Change Supplier with correct metadata", () => {
@@ -230,7 +230,7 @@ describe("Policy Synchronizer", () => {
     let policyApplier;
 
     beforeEach(() => {
-      policyApplier = applier(ps, undefined, undefined);
+      policyApplier = getApplier(ps, undefined, undefined);
     });
 
     it("should return Change Applier with correct metadata", () => {

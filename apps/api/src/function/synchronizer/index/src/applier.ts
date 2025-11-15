@@ -14,7 +14,7 @@ const module = "function";
 const subModule = "index";
 const fileExtensions = ["mjs", "ts"];
 
-export const applier = (fs: FunctionService, engine: FunctionEngine): DocumentChangeApplier => {
+export const getApplier = (fs: FunctionService, engine: FunctionEngine): DocumentChangeApplier => {
   const findFnByName = async (name: string) => {
     const fn = await fs.findOne({name});
     return fn?._id?.toString();
