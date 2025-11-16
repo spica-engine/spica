@@ -1,4 +1,4 @@
-import {IIRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {
   ApplyResult,
   ChangeLog,
@@ -8,7 +8,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 
 export const getApplier = (
-  repManager: IIRepresentativeManager,
+  repManager: IRepresentativeManager,
   supplier: DocumentChangeSupplier
 ): RepresentativeChangeApplier => {
   const {module, subModule} = supplier;

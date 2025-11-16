@@ -1,4 +1,4 @@
-import {IIRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {
   ChangeOrigin,
   DocumentChangeApplier,
@@ -7,7 +7,7 @@ import {
 import {from, map, mergeMap, of} from "rxjs";
 
 export const getSupplier = (
-  repManager: IIRepresentativeManager,
+  repManager: IRepresentativeManager,
   applier: DocumentChangeApplier
 ): RepresentativeChangeSupplier => {
   const {module, subModule, findIdBySlug, findIdByContent, fileExtensions} = applier;

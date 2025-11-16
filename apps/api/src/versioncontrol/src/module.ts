@@ -14,7 +14,7 @@ import {Git} from "./versionmanager";
 import fs from "fs";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {SyncModule} from "@spica-server/versioncontrol/sync";
-import {SyncEngine} from "@spica-server/versioncontrol/sync/engine";
+import {SyncEngine, SyncEngineModule} from "@spica-server/versioncontrol/sync/engine";
 
 @Global()
 @Module({})
@@ -45,7 +45,7 @@ export class VersionControlModule {
     return {
       module: VersionControlModule,
       controllers: [VersionControlController],
-      imports: [SyncModule],
+      imports: [SyncModule, SyncEngineModule],
       providers: [
         {
           provide: VERSIONCONTROL_WORKING_DIRECTORY,

@@ -6,7 +6,16 @@
       "path": "../../../../../../libs/interface/versioncontrol"
     },
     {
+      "path": "../../../../../../libs/interface/representative"
+    },
+    {
       "path": "../../../../../../libs/database"
+    },
+    {
+      "path": "../../processors/changelog"
+    },
+    {
+      "path": "../../processors/sync"
     }
   ]
 }

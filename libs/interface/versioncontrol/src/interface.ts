@@ -81,6 +81,9 @@ export interface Sync {
   updated_at: Date;
 }
 
+export type PendingSync = Sync & {status: SyncStatuses.PENDING};
+export type ApprovedSync = Sync & {status: SyncStatuses.APPROVED};
+
 export enum SyncStatuses {
   PENDING = "PENDING",
   APPROVED = "APPROVED",

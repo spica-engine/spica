@@ -1,9 +1,14 @@
 import {Injectable} from "@nestjs/common";
 import {filter, map, Observable} from "rxjs";
-import {ISyncProcessor, Sync, SyncStatuses} from "@spica-server/interface/versioncontrol";
+import {
+  ApprovedSync,
+  ISyncProcessor,
+  PendingSync,
+  Sync,
+  SyncStatuses
+} from "@spica-server/interface/versioncontrol";
 import {SyncService} from "@spica-server/versioncontrol/services/sync";
 import {ObjectId} from "@spica-server/database";
-import {ApprovedSync, PendingSync} from "./interface";
 
 @Injectable()
 export class SyncProcessor implements ISyncProcessor {

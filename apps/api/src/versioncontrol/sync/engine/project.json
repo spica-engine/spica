@@ -1,5 +1,5 @@
 {
-  "name": "api/versioncontrol/services/changelog",
-  "sourceRoot": "apps/api/src/versioncontrol/services/changelog",
+  "name": "api/versioncontrol/sync/engine",
+  "sourceRoot": "apps/api/src/versioncontrol/sync/engine",
   "projectType": "application"
 }

@@ -4,15 +4,15 @@ import {
   ChangeOrigin,
   DocumentChangeApplier,
   DocumentChangeSupplier,
+  PendingSync,
   Sync,
   SyncStatuses
 } from "@spica-server/interface/versioncontrol";
 import {getSupplier} from "./supplier";
-import {IIRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {getApplier} from "./applier";
 import {ChangeLogProcessor} from "@spica-server/versioncontrol/processors/changelog";
 import {SyncProcessor} from "@spica-server/versioncontrol/processors/sync";
-import {PendingSync} from "@spica-server/versioncontrol/processors/sync/src/interface";
 
 export class SyncEngine {
   private readonly changeHandlers: ChangeHandler[] = [];
@@ -20,7 +20,7 @@ export class SyncEngine {
   constructor(
     private readonly changeLogProcessor: ChangeLogProcessor,
     private readonly syncProcessor: SyncProcessor,
-    private readonly repManager: IIRepresentativeManager
+    private readonly repManager: IRepresentativeManager
   ) {
     this.registerSyncProcessor();
     this.registerChangeLogProcessor();

@@ -1,8 +1,14 @@
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {ChangeOrigin, ChangeType, Sync, SyncStatuses} from "@spica-server/interface/versioncontrol";
+import {
+  ApprovedSync,
+  ChangeOrigin,
+  ChangeType,
+  PendingSync,
+  Sync,
+  SyncStatuses
+} from "@spica-server/interface/versioncontrol";
 import {SyncProcessor, SyncProcessorsModule} from "@spica-server/versioncontrol/processors/sync";
-import {ApprovedSync, PendingSync} from "../src/interface";
 import {bufferCount} from "rxjs";
 
 function getMockSync(status: SyncStatuses = SyncStatuses.PENDING): Sync {
