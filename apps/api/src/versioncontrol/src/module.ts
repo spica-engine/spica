@@ -45,7 +45,7 @@ export class VersionControlModule {
     return {
       module: VersionControlModule,
       controllers: [VersionControlController],
-      imports: [SyncModule, SyncEngineModule],
+      imports: [SyncModule.forRoot({realtime: options.realtime}), SyncEngineModule],
       providers: [
         {
           provide: VERSIONCONTROL_WORKING_DIRECTORY,
