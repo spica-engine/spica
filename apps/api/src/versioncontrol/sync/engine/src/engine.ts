@@ -13,6 +13,7 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {getApplier} from "./applier";
 import {ChangeLogProcessor} from "@spica-server/versioncontrol/processors/changelog";
 import {SyncProcessor} from "@spica-server/versioncontrol/processors/sync";
+import {JobReducer} from "@spica-server/replication";
 
 export class SyncEngine {
   private readonly changeHandlers: ChangeHandler[] = [];
@@ -20,7 +21,8 @@ export class SyncEngine {
   constructor(
     private readonly changeLogProcessor: ChangeLogProcessor,
     private readonly syncProcessor: SyncProcessor,
-    private readonly repManager: IRepresentativeManager
+    private readonly repManager: IRepresentativeManager,
+    private jobReducer?: JobReducer
   ) {
     this.registerSyncProcessor();
     this.registerChangeLogProcessor();
@@ -74,7 +76,23 @@ export class SyncEngine {
       return this.syncProcessor.update(sync._id, result.status, result.reason);
     };
 
-    this.syncProcessor.watch(SyncStatuses.APPROVED).subscribe(syncHandler);
+    this.syncProcessor.watch(SyncStatuses.APPROVED).subscribe(sync => {
+      const meta = {
+        _id: sync._id.toString(),
+        module: sync.change_log.module,
+        subModule: sync.change_log.sub_module,
+        resourceId: sync.change_log.resource_id,
+        createdAt: sync.created_at
+      };
+
+      const job = () => syncHandler(sync);
+
+      if (this.jobReducer) {
+        this.jobReducer.do(meta, job);
+      } else {
+        job();
+      }
+    });
   }
 
   private registerChangeLogProcessor() {
@@ -83,7 +101,22 @@ export class SyncEngine {
         changeLog,
         SyncStatuses.PENDING
       ) as PendingSync;
-      this.syncProcessor.push(sync);
+
+      const meta = {
+        _id: changeLog.resource_id,
+        module: changeLog.module,
+        subModule: changeLog.sub_module,
+        resourceId: changeLog.resource_id,
+        createdAt: changeLog.created_at
+      };
+
+      const job = () => this.syncProcessor.push(sync);
+
+      if (this.jobReducer) {
+        this.jobReducer.do(meta, job);
+      } else {
+        job();
+      }
     };
     this.changeLogProcessor.watch().subscribe(changeLogHandler);
   }
