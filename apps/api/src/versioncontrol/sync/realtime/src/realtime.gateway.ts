@@ -63,11 +63,21 @@ export class SyncRealtimeGateway implements OnGatewayConnection, OnGatewayDiscon
     }
 
     if (req.query.has("limit")) {
-      options.limit = Number(req.query.get("limit"));
+      const limit = Number(req.query.get("limit"));
+      if (isNaN(limit) || limit < 0) {
+        client.send(JSON.stringify({code: 400, message: "Invalid limit parameter"}));
+        return client.close(1003);
+      }
+      options.limit = limit;
     }
 
     if (req.query.has("skip")) {
-      options.skip = Number(req.query.get("skip"));
+      const skip = Number(req.query.get("skip"));
+      if (isNaN(skip) || skip < 0) {
+        client.send(JSON.stringify({code: 400, message: "Invalid skip parameter"}));
+        return client.close(1003);
+      }
+      options.skip = skip;
     }
 
     return options;
