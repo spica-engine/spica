@@ -161,3 +161,25 @@ code {
   width: 100%;
   height: 100%;
 }
+.tui-image-editor-container .tui-image-editor-controls{
+  background-color: var(--color-primary) !important;
+}
+
+.tui-image-editor-container{
+
+
+  .tui-image-editor-disabled {
+    .tui-image-editor-virtual-range-bar{
+      background-color: var(--color-soft) !important;
+    }
+    .tui-image-editor-virtual-range-pointer{
+      background-color: var(--color-primary) !important;
+    }
+  }
+  
+  .tui-image-editor-submenu-style{
+    background-color: var(--color-primary) !important;
+  }
+}
+
+
