@@ -6,7 +6,7 @@ import {SyncRealtimeModule} from "@spica-server/versioncontrol/sync/realtime";
 @Module({})
 export class SyncModule {
   static forRoot(options: {realtime: boolean}): DynamicModule {
-    const imports: any[] = [ServicesModule.forRoot()];
+    const imports: DynamicModule[] = [ServicesModule.forRoot()];
 
     if (options.realtime) {
       imports.push(SyncRealtimeModule.register());

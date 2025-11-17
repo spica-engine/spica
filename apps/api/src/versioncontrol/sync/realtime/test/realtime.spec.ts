@@ -52,11 +52,6 @@ describe("Sync Realtime", () => {
     };
   }
 
-  async function insertSync(doc) {
-    const result = await syncService.insertOne(createMockSync(doc._id, doc.status));
-    return result;
-  }
-
   function connectSocket({query = {}, headers = {}} = {}) {
     return wsc.get(url("/versioncontrol/sync", query), {headers});
   }
@@ -64,7 +59,10 @@ describe("Sync Realtime", () => {
   function waitForOpen(socket: any): Promise<void> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error("WebSocket did not open in time")), 5000);
-      if (socket.connected) return resolve();
+      if (socket.connected) {
+        clearTimeout(timeout);
+        return resolve();
+      }
 
       socket.onopen = () => {
         clearTimeout(timeout);
