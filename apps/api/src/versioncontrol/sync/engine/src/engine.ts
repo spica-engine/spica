@@ -88,7 +88,9 @@ export class SyncEngine {
       const job = () => syncHandler(sync);
 
       if (this.jobReducer) {
-        this.jobReducer.do(meta, job);
+        this.jobReducer.do(meta, job).catch(error => {
+          console.error("SyncEngine Job reducer failed:", error);
+        });
       } else {
         job();
       }
@@ -113,7 +115,9 @@ export class SyncEngine {
       const job = () => this.syncProcessor.push(sync);
 
       if (this.jobReducer) {
-        this.jobReducer.do(meta, job);
+        this.jobReducer.do(meta, job).catch(error => {
+          console.error("SyncEngine Job reducer failed:", error);
+        });
       } else {
         job();
       }
