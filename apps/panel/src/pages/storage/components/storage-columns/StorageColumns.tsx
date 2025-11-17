@@ -23,8 +23,6 @@ import { DroppableColumn } from "../droppable-column/DroppableColumn";
 import { StorageItem } from "../storage-item/StorageItem";
 import { StorageItemColumn } from "../storage-column/StorageColumn";
 
-const MIN_SEARCH_LENGTH = 3;
-
 interface StorageColumnsProps {
   readonly setPreviewFile: (file?: DirectoryItem) => void;
   readonly handleClosePreview: () => void;
@@ -76,9 +74,9 @@ export function StorageItemColumns({
 
   useEffect(() => {
     const trimmedQuery = searchQuery.trim();
-    const meetsThreshold = trimmedQuery.length >= MIN_SEARCH_LENGTH;
+    const hasSearchQuery = trimmedQuery.length > 0;
 
-    if (!meetsThreshold) {
+    if (!hasSearchQuery) {
       setIsSearchViewActive(false);
       lastActivatedQueryRef.current = "";
       return;

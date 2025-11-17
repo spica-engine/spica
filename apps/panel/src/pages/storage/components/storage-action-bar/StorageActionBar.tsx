@@ -28,10 +28,13 @@ import {
   isDefaultStorageFilter
 } from "../../../../utils/storageFilter";
 
-const SEARCH_DEBOUNCE_MS = 300;
-const MIN_SEARCH_LENGTH = 3;
+interface StorageActionBarProps {
+  readonly onResetPreview?: () => void;
+}
 
-export default function StorageActionBar() {
+const SEARCH_DEBOUNCE_MS = 300;
+
+export default function StorageActionBar({onResetPreview}: StorageActionBarProps) {
   const dispatch = useAppDispatch();
   const directory = useAppSelector(selectDirectory);
   const currentDirectory = useAppSelector(selectCurrentDirectory);
@@ -43,13 +46,14 @@ export default function StorageActionBar() {
   const latestSearchRef = useRef("");
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const trimmedSearch = searchQuery.trim();
-  const isSearchEligible = trimmedSearch.length >= MIN_SEARCH_LENGTH;
+  const hasSearchInput = trimmedSearch.length > 0;
 
   const handleSearchChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
     event => {
+      onResetPreview?.();
       dispatch(setSearchQuery(event.target.value));
     },
-    [dispatch]
+    [dispatch, onResetPreview]
   );
 
   const hasActiveFilter = useMemo(() => !isDefaultStorageFilter(appliedFilter), [appliedFilter]);
@@ -61,6 +65,7 @@ export default function StorageActionBar() {
   };
 
   const handleApplyFilter = (values: TypeFilterValue) => {
+    onResetPreview?.();
     const clonedFilter = cloneStorageFilterValues(values);
     setAppliedFilter(clonedFilter);
     setIsFilterOpen(false);
@@ -74,6 +79,7 @@ export default function StorageActionBar() {
   };
 
   const handleClearFilters = () => {
+    onResetPreview?.();
     setAppliedFilter(createStorageFilterDefaultValues());
     setIsFilterOpen(false);
     dispatch(setFilterQuery(null));
@@ -118,7 +124,7 @@ export default function StorageActionBar() {
       clearTimeout(debounceTimeoutRef.current);
     }
 
-    if (!trimmedQuery || trimmedQuery.length < MIN_SEARCH_LENGTH) {
+    if (!trimmedQuery) {
       dispatch(setSearchResults([]));
       return;
     }
@@ -178,7 +184,7 @@ export default function StorageActionBar() {
       prefix={{
         children: <FlexElement>
           <SearchBar
-            loading={isSearchEligible && isSearchFetching}
+            loading={hasSearchInput && isSearchFetching}
             inputProps={{
               value: searchQuery,
               onChange: handleSearchChange
@@ -197,7 +203,7 @@ export default function StorageActionBar() {
                 />
               }
             >
-              <Button variant="text" onClick={handleToggleFilter} color={hasActiveFilter ? "primary" : undefined}>
+              <Button  onClick={handleToggleFilter} color={hasActiveFilter ? "primary" : undefined}>
                 <Icon name="filter" size="sm" />
                 Filter
                 {hasActiveFilter && <Icon name="check" size="sm" />}

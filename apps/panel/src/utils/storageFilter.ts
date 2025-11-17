@@ -2,12 +2,52 @@ import type {TypeFilterValue} from "oziko-ui-kit";
 import {convertQuickDateToRange, convertToBytes} from "./storage";
 
 export const STORAGE_TYPE_OPTIONS = [
-  {value: "jpg", label: "JPG"},
-  {value: "png", label: "PNG"},
-  {value: "mp4", label: "MP4"}
-] as const;
+  {value: "image/jpeg", label: "JPEG/JPG"},
+  {value: "image/png", label: "PNG"},
 
-export const STORAGE_SIZE_UNITS: string[] = ["kb", "mb", "gb", "tb"];
+  {value: "application/x-7z-compressed", label: "7Z"},
+  {value: "video/x-msvideo", label: "AVI"},
+  {value: "image/bmp", label: "BMP"},
+  {value: "application/octet-stream", label: "Binary/Other"},
+  {value: "text/csv", label: "CSV"},
+  {value: "application/msword", label: "DOC"},
+  {
+    value: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    label: "DOCX"
+  },
+  {value: "audio/flac", label: "FLAC"},
+  {value: "image/gif", label: "GIF"},
+  {value: "application/gzip", label: "GZ"},
+  {value: "image/heic", label: "HEIC"},
+  {value: "text/html", label: "HTML"},
+  {value: "text/javascript", label: "JavaScript"},
+  {value: "video/x-matroska", label: "MKV"},
+  {value: "video/quicktime", label: "MOV"},
+  {value: "audio/mpeg", label: "MP3"},
+  {value: "video/mp4", label: "MP4"},
+  {value: "application/pdf", label: "PDF"},
+  {value: "application/vnd.ms-powerpoint", label: "PPT"},
+  {
+    value: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    label: "PPTX"
+  },
+  {value: "application/x-rar-compressed", label: "RAR"},
+  {value: "image/svg+xml", label: "SVG"},
+  {value: "application/x-tar", label: "TAR"},
+  {value: "image/tiff", label: "TIFF"},
+  {value: "text/plain", label: "TXT"},
+  {value: "audio/wav", label: "WAV"},
+  {value: "video/webm", label: "WEBM"},
+  {value: "image/webp", label: "WEBP"},
+  {value: "application/vnd.ms-excel", label: "XLS"},
+  {
+    value: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    label: "XLSX"
+  },
+  {value: "application/zip", label: "ZIP"}
+];
+
+export const STORAGE_SIZE_UNITS: string[] = ["KB", "MB", "GB", "TB"];
 
 export const STORAGE_CREATED_AT_PRESETS = [
   {value: "last_1_hour", label: "Last 1 Hour"},
@@ -27,15 +67,15 @@ export const STORAGE_CREATED_AT_PRESETS = [
 export type StorageFilterQuery = Record<string, unknown>;
 
 const STORAGE_FILTER_TEMPLATE: TypeFilterValue = {
-  type: STORAGE_TYPE_OPTIONS.map(option => option.value),
+  type: STORAGE_TYPE_OPTIONS.slice(0, 2).map(option => option.value),
   fileSize: {
     min: {
       value: 1,
-      unit: "mb"
+      unit: "MB"
     },
     max: {
       value: 10,
-      unit: "gb"
+      unit: "GM"
     }
   },
   quickdate: null,
@@ -123,14 +163,11 @@ export const buildStorageFilterQuery = (filter: TypeFilterValue): StorageFilterQ
   const defaultFilter = STORAGE_FILTER_TEMPLATE;
 
   if (filter.type.length > 0 && !areTypeSelectionsEqual(filter.type, defaultFilter.type)) {
-    const typeRegex = filter.type.map(type => `\\.${type}$`).join("|");
-    if (typeRegex) {
-      filterConditions.push(
-        withFileGuard({
-          name: {$regex: `(${typeRegex})`, $options: "i"}
-        })
-      );
-    }
+    filterConditions.push(
+      withFileGuard({
+        "content.type": {$in: filter.type}
+      })
+    );
   }
 
   const minBytes =

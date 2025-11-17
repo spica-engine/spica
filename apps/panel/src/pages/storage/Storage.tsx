@@ -18,7 +18,7 @@ export default function StoragePage() {
   );
   return (
     <div className={styles.container}>
-      <StorageActionBar />
+      <StorageActionBar onResetPreview={handleClosePreview} />
       <FluidContainer
         gap={0}
         className={styles.storageItemContainer}

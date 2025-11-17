@@ -1,5 +1,5 @@
 import {useEffect, useMemo} from "react";
-import {useLazyBrowseStorageQuery} from "../../../store/api/storageApi";
+import {useLazyBrowseStorageQuery, useLazyGetStorageItemsQuery} from "../../../store/api/storageApi";
 import type {TypeDirectories} from "../../../types/storage";
 import {findMaxDepthDirectory} from "../utils";
 import {ROOT_PATH} from "../constants";
@@ -8,14 +8,23 @@ import type {StorageFilterQuery} from "../../../utils/storageFilter";
 export function useStorageData(directory: TypeDirectories, filterQuery: StorageFilterQuery | null) {
   const dirToFetch = findMaxDepthDirectory(directory) ?? directory[0];
   const [
-    fetchUnfilteredData,
+    fetchBrowseData,
     {
-      data: unfilteredData,
-      isLoading: isUnfilteredDataLoading,
-      isFetching: isUnfilteredDataFetching,
-      error
+      data: browseData,
+      isLoading: isBrowseLoading,
+      isFetching: isBrowseFetching,
+      error: browseError
     }
   ] = useLazyBrowseStorageQuery();
+  const [
+    fetchFilteredData,
+    {
+      data: filteredData,
+      isLoading: isFilteredLoading,
+      isFetching: isFilteredFetching,
+      error: filteredError
+    }
+  ] = useLazyGetStorageItemsQuery();
 
   const path = useMemo(() => {
     if (!dirToFetch) return "";
@@ -24,17 +33,26 @@ export function useStorageData(directory: TypeDirectories, filterQuery: StorageF
     return dirToFetch.fullPath.split("/").filter(Boolean).join("/");
   }, [dirToFetch?.fullPath]);
 
+  const hasFilter = Boolean(filterQuery && Object.keys(filterQuery).length > 0);
+
   useEffect(() => {
-    const requestOptions: {path: string; filter?: StorageFilterQuery} = {path};
-    if (filterQuery && Object.keys(filterQuery).length > 0) {
-      requestOptions.filter = filterQuery;
+    if (hasFilter && filterQuery) {
+      fetchFilteredData({filter: filterQuery, paginate: false});
+      return;
     }
-    fetchUnfilteredData(requestOptions);
-  }, [fetchUnfilteredData, path, filterQuery]);
+
+    fetchBrowseData({path});
+  }, [fetchBrowseData, fetchFilteredData, hasFilter, path, filterQuery]);
+
+  const storageData = hasFilter ? filteredData : browseData;
+  const isLoading = hasFilter
+    ? isFilteredLoading || isFilteredFetching
+    : isBrowseLoading || isBrowseFetching;
+  const error = hasFilter ? filteredError : browseError;
 
   return {
-    storageData: unfilteredData,
-    isLoading: isUnfilteredDataLoading || isUnfilteredDataFetching,
+    storageData,
+    isLoading,
     error
   };
 }
