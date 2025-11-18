@@ -36,7 +36,15 @@ export class SyncEngine {
     this.changeHandlers.push(repHandler, docHandler);
 
     const onChange = (changeLog: ChangeLog) => {
-      this.changeLogProcessor.push(changeLog);
+      const job = () => this.changeLogProcessor.push(changeLog);
+
+      if (this.jobReducer) {
+        this.jobReducer.do({...changeLog, _id: changeLog.resource_id}, job).catch(error => {
+          console.error("SyncEngine Change Handler Job reducer failed:", error);
+        });
+      } else {
+        job();
+      }
     };
 
     repHandler.supplier.listen().subscribe(onChange);
@@ -77,19 +85,11 @@ export class SyncEngine {
     };
 
     this.syncProcessor.watch(SyncStatuses.APPROVED).subscribe(sync => {
-      const meta = {
-        _id: sync._id.toString(),
-        module: sync.change_log.module,
-        subModule: sync.change_log.sub_module,
-        resourceId: sync.change_log.resource_id,
-        createdAt: sync.created_at
-      };
-
       const job = () => syncHandler(sync);
 
       if (this.jobReducer) {
-        this.jobReducer.do(meta, job).catch(error => {
-          console.error("SyncEngine Job reducer failed:", error);
+        this.jobReducer.do({...sync, _id: sync._id.toString()}, job).catch(error => {
+          console.error("SyncEngine SyncProcessor Job reducer failed:", error);
         });
       } else {
         job();
@@ -104,19 +104,11 @@ export class SyncEngine {
         SyncStatuses.PENDING
       ) as PendingSync;
 
-      const meta = {
-        _id: changeLog.resource_id,
-        module: changeLog.module,
-        subModule: changeLog.sub_module,
-        resourceId: changeLog.resource_id,
-        createdAt: changeLog.created_at
-      };
-
       const job = () => this.syncProcessor.push(sync);
 
       if (this.jobReducer) {
-        this.jobReducer.do(meta, job).catch(error => {
-          console.error("SyncEngine Job reducer failed:", error);
+        this.jobReducer.do({...sync, _id: sync._id.toString()}, job).catch(error => {
+          console.error("SyncEngine ChangeLogProcessor Job reducer failed:", error);
         });
       } else {
         job();
