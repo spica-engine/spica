@@ -72,18 +72,6 @@ export const FileActions = ({
       const encodedFileName = encodeURIComponent(fullPath);
       const uploadFile = new File([editedFile], encodedFileName, {type: editedFile.type});
 
-      const temporaryFile: DirectoryItem = {
-        ...file,
-        name: fullPath,
-        label: editedFile.name,
-        content: {
-          type: editedFile.type,
-          size: editedFile.size
-        }
-      };
-
-      onFileReplaced?.(temporaryFile);
-
       try {
         const updatedFile = await updateStorageItem({id: file._id, file: uploadFile}).unwrap();
 

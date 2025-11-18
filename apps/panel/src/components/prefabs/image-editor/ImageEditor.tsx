@@ -73,8 +73,6 @@ const ImageEditor = ({
     }
 
     let isMounted = true;
-    let editorInstance: EditorInstance | null = null;
-
     const initEditor = async () => {
       if (!containerRef.current) return;
 
@@ -82,7 +80,7 @@ const ImageEditor = ({
 
       if (!isMounted || !containerRef.current) return;
 
-      editorInstance = new TuiImageEditor(containerRef.current, {
+      const instance = new TuiImageEditor(containerRef.current, {
         includeUI: {
           loadImage: {
             path: imageUrl,
@@ -101,12 +99,12 @@ const ImageEditor = ({
         usageStatistics: false
       }) as unknown as EditorInstance;
 
-      editorRef.current = editorInstance;
-      onReady?.(editorInstance);
+      editorRef.current = instance;
+      onReady?.(instance);
 
       if (imageUrl) {
         try {
-          await editorInstance.loadImageFromURL(imageUrl, imageName);
+          await instance.loadImageFromURL(imageUrl, imageName);
         } catch {
           // ignore load errors for now; editor UI is still usable
         }
@@ -117,7 +115,7 @@ const ImageEditor = ({
 
     return () => {
       isMounted = false;
-      editorInstance?.destroy();
+      editorRef.current?.destroy();
       editorRef.current = null;
     };
   }, [
@@ -148,9 +146,9 @@ const ImageEditor = ({
       console.error("Failed to prepare edited image:", error);
     } finally {
       setIsSaving(false);
+      onClose?.();
       editor.destroy();
       editorRef.current = null;
-      onClose?.();
     }
   };
 
