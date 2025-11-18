@@ -22,6 +22,7 @@ export function isAValidStrategy(type: string) {
 }
 
 export const AuthGuard: (
+  forbiddenStrategies?: string[],
   type?: string,
   error_handlers?: {
     bad_request: (message) => Error;
@@ -29,7 +30,7 @@ export const AuthGuard: (
   }
 ) => Type<CanActivate> = memoize(createAuthGuard);
 
-export function createAuthGuard(type?: string): Type<CanActivate> {
+export function createAuthGuard(forbiddenStrategies?: string[], type?: string): Type<CanActivate> {
   class MixinAuthGuard implements CanActivate {
     constructor(@Optional() private readonly options?: AuthModuleOptions) {}
 
@@ -59,6 +60,15 @@ export function createAuthGuard(type?: string): Type<CanActivate> {
 
       request.strategyType = strategyType.toUpperCase();
 
+      if (forbiddenStrategies) {
+        const isForbidden = forbiddenStrategies.some(
+          forbidden => forbidden.toLowerCase() === strategyType.toLowerCase()
+        );
+        if (isForbidden) {
+          throw new UnauthorizedException(`Strategy "${strategyType}" is forbidden`);
+        }
+      }
+
       const user = await passportFn(
         strategyType,
         options,
@@ -84,6 +94,7 @@ export function createAuthGuard(type?: string): Type<CanActivate> {
 
 export class MixinAuthGuard implements CanActivate {
   constructor(
+    private forbiddenStrategies?: string[],
     @Optional() private readonly options?: AuthModuleOptions,
     private type?: string
   ) {}
@@ -112,6 +123,15 @@ export class MixinAuthGuard implements CanActivate {
     }
 
     request.strategyType = strategyType.toUpperCase();
+
+    if (this.forbiddenStrategies) {
+      const isForbidden = this.forbiddenStrategies.some(
+        forbidden => forbidden.toLowerCase() === strategyType.toLowerCase()
+      );
+      if (isForbidden) {
+        throw new UnauthorizedException(`Strategy "${strategyType}" is forbidden`);
+      }
+    }
 
     const user = await passportFn(strategyType, options, (err: Error, user: unknown, info: any) => {
       if (err) {
