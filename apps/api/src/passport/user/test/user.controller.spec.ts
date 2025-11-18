@@ -61,7 +61,7 @@ describe("user Controller", () => {
       await Promise.all([
         // unrelated operation to ensure ns filter working correctly
         db.collection("buckets").insertOne({}),
-        req.post("/passport/user", {identifier: "user1", password: "password1"}),
+        req.post("/passport/user", {username: "user1", password: "password1"}),
         req.get("/passport/user")
       ]);
     });

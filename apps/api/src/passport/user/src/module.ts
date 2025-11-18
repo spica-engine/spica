@@ -21,7 +21,7 @@ import {registerAssetHandlers} from "./asset";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
-import {userRealtimeModule} from "../realtime";
+import {UserRealtimeModule} from "../realtime";
 
 @Global()
 @Module({})
@@ -32,9 +32,9 @@ export class UserModule {
     private prefService: PreferenceService,
     @Optional() @Inject(ASSET_REP_MANAGER) private repManager: IRepresentativeManager
   ) {
-    if (options.defaultUserIdentifier) {
+    if (options.defaultUserUsername) {
       userService.default({
-        identifier: options.defaultUserIdentifier,
+        username: options.defaultUserUsername,
         password: options.defaultUserPassword,
         policies: options.defaultUserPolicies,
         lastPasswords: [],
@@ -113,7 +113,7 @@ export class UserModule {
     };
 
     if (options.userRealtime) {
-      module.imports.push(userRealtimeModule.register());
+      module.imports.push(UserRealtimeModule.register());
     }
 
     return module;

@@ -20,10 +20,10 @@ export class UserStrategy extends PassportStrategy(Strategy, "user") {
   }
 
   async validate(request: any) {
-    const {identifier} = request.header;
+    const {username} = request.header;
     const {iat} = request.payload;
 
-    const user = await this.user.findOne({identifier});
+    const user = await this.user.findOne({username});
     if (!user) return undefined;
 
     const deactivateJwtsBefore = user["deactivateJwtsBefore"];

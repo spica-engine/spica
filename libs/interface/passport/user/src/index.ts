@@ -13,7 +13,7 @@ export interface UserSchema {
 
 export interface User {
   _id?: ObjectId;
-  identifier: string;
+  username: string;
   password: string;
   deactivateJwtsBefore?: number;
   policies: string[];
@@ -27,7 +27,7 @@ export interface User {
 }
 
 export interface LoginCredentials {
-  identifier: string;
+  username: string;
   password: string;
   state?: string;
   expires?: number;
@@ -51,7 +51,7 @@ export interface UserOptions {
   issuer: string;
   audience?: string;
   secretOrKey: string;
-  defaultUserIdentifier?: string;
+  defaultUserUsername?: string;
   defaultUserPassword?: string;
   defaultUserPolicies?: string[];
   entryLimit?: number;

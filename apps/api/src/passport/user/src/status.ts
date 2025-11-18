@@ -6,7 +6,7 @@ export async function registerStatusProvider(service: UserService) {
     return {
       module: "user",
       status: {
-        identities: await service.getStatus()
+        users: await service.getStatus()
       }
     };
   };

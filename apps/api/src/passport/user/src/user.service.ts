@@ -19,7 +19,7 @@ export class UserService extends BaseCollection<User>("user") {
   ) {
     super(database, {
       entryLimit: userOptions.entryLimit,
-      afterInit: () => this._coll.createIndex({identifier: 1}, {unique: true})
+      afterInit: () => this._coll.createIndex({username: 1}, {unique: true})
     });
   }
 
@@ -31,7 +31,7 @@ export class UserService extends BaseCollection<User>("user") {
     const expiresIn = this.getAccessTokenExpiresIn(requestedExpires);
 
     type CustomJwtHeader = JwtSignOptions["header"] & {
-      identifier?: string;
+      username?: string;
       policies?: string[];
     };
 
@@ -39,7 +39,7 @@ export class UserService extends BaseCollection<User>("user") {
       {...user, password: undefined, lastPasswords: undefined},
       {
         header: {
-          identifier: user.identifier,
+          username: user.username,
           policies: user.policies
         } as CustomJwtHeader,
         expiresIn
@@ -62,7 +62,7 @@ export class UserService extends BaseCollection<User>("user") {
 
   async signRefreshToken(user: User) {
     const expiresIn = this.userOptions.refreshTokenExpiresIn;
-    const token = this.jwt.sign({identifier: user.identifier, uuid: uuidv4()}, {expiresIn});
+    const token = this.jwt.sign({username: user.username, uuid: uuidv4()}, {expiresIn});
 
     const tokenSchema = {
       token,
@@ -86,7 +86,7 @@ export class UserService extends BaseCollection<User>("user") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenIdentifiersAreMatched(accessToken: string, refreshToken: string) {
+  private async verifyTokenusernamesAreMatched(accessToken: string, refreshToken: string) {
     const refreshTokenData = await this.refreshTokenService.findOne({token: refreshToken});
     if (!refreshTokenData) {
       return Promise.reject("Refresh token not found");
@@ -95,7 +95,7 @@ export class UserService extends BaseCollection<User>("user") {
     const user = await this.finduserOfToken(accessToken);
 
     if (refreshTokenData.user !== String(user._id)) {
-      return Promise.reject("Refresh and access token identifiers are mismatched");
+      return Promise.reject("Refresh and access token usernames are mismatched");
     }
 
     return Promise.resolve();
@@ -103,12 +103,12 @@ export class UserService extends BaseCollection<User>("user") {
 
   private async finduserOfToken(token: string) {
     const decodedToken = this.decode(token);
-    const identifier = decodedToken ? decodedToken.identifier : undefined;
+    const username = decodedToken ? decodedToken.username : undefined;
 
-    const user = await this.findOne({identifier});
+    const user = await this.findOne({username});
 
     if (!user) {
-      return Promise.reject("Identifier does not exist");
+      return Promise.reject("username does not exist");
     }
     return user;
   }
@@ -116,7 +116,7 @@ export class UserService extends BaseCollection<User>("user") {
   async refreshToken(accessToken: string, refreshToken: string) {
     accessToken = this.extractAccessToken(accessToken);
     await this.verifyTokenCanBeRefreshed(accessToken, refreshToken);
-    await this.verifyTokenIdentifiersAreMatched(accessToken, refreshToken);
+    await this.verifyTokenusernamesAreMatched(accessToken, refreshToken);
     await this.updateRefreshTokenLastUsedAt(refreshToken);
     const user = await this.finduserOfToken(accessToken);
     return this.sign(user);
@@ -146,11 +146,11 @@ export class UserService extends BaseCollection<User>("user") {
     return this.jwt.decode(token) as unknown as T | null;
   }
 
-  async identify(identifier: string, password: string): Promise<User | null> {
+  async login(username: string, password: string): Promise<User | null> {
     if (!password) {
       return null;
     }
-    const user = await this.findOne({identifier});
+    const user = await this.findOne({username});
 
     if (!user) {
       return null;
@@ -182,7 +182,7 @@ export class UserService extends BaseCollection<User>("user") {
     }
 
     await this.findOneAndUpdate(
-      {identifier},
+      {username},
       {$set: {failedAttempts: user.failedAttempts, lastLogin: user.lastLogin}}
     );
 
@@ -195,7 +195,7 @@ export class UserService extends BaseCollection<User>("user") {
   async default(user: User): Promise<void> {
     const hashedPassword = await hash(user.password);
     await this.updateOne(
-      {identifier: user.identifier},
+      {username: user.username},
       {$setOnInsert: {...user, password: hashedPassword}},
       {upsert: true}
     );

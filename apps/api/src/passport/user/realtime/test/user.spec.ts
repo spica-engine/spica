@@ -29,7 +29,7 @@ describe("user Realtime", () => {
   let app: INestApplication;
   let req: Request;
 
-  let identities: User[];
+  let users: User[];
 
   async function insertUser(doc: User) {
     const {body} = await req.post("/passport/user", doc);
@@ -149,9 +149,9 @@ describe("user Realtime", () => {
     const messageSpy = jest.fn();
 
     beforeEach(async () => {
-      identities = [
+      users = [
         await insertUser({
-          identifier: "user 1",
+          username: "user 1",
           password: "123",
           policies: undefined,
           failedAttempts: undefined,
@@ -159,7 +159,7 @@ describe("user Realtime", () => {
           lastPasswords: undefined
         }),
         await insertUser({
-          identifier: "user 2",
+          username: "user 2",
           password: "123",
           policies: undefined,
           failedAttempts: undefined,
@@ -187,13 +187,13 @@ describe("user Realtime", () => {
               delete message.document?.password;
             });
 
-            identities.forEach(user => {
+            users.forEach(user => {
               delete user.password;
             });
 
             expect(messages).toEqual([
-              {kind: ChunkKind.Initial, document: identities[0]},
-              {kind: ChunkKind.Initial, document: identities[1]},
+              {kind: ChunkKind.Initial, document: users[0]},
+              {kind: ChunkKind.Initial, document: users[1]},
               {kind: ChunkKind.EndOfInitial}
             ]);
 
@@ -218,12 +218,12 @@ describe("user Realtime", () => {
               delete message.document?.password;
             });
 
-            identities.forEach(user => {
+            users.forEach(user => {
               delete user.password;
             });
 
             expect(messages).toEqual([
-              {kind: ChunkKind.Initial, document: identities[0]},
+              {kind: ChunkKind.Initial, document: users[0]},
               {kind: ChunkKind.EndOfInitial}
             ]);
 
@@ -248,12 +248,12 @@ describe("user Realtime", () => {
               delete message.document?.password;
             });
 
-            identities.forEach(user => {
+            users.forEach(user => {
               delete user.password;
             });
 
             expect(messages).toEqual([
-              {kind: ChunkKind.Initial, document: identities[1]},
+              {kind: ChunkKind.Initial, document: users[1]},
               {kind: ChunkKind.EndOfInitial}
             ]);
 
@@ -268,7 +268,7 @@ describe("user Realtime", () => {
       it("should do the initial sync with skip and limit", done => {
         Promise.all([
           insertUser({
-            identifier: "user 3",
+            username: "user 3",
             password: "123",
             policies: undefined,
             failedAttempts: undefined,
@@ -276,14 +276,14 @@ describe("user Realtime", () => {
             lastPasswords: undefined
           }),
           insertUser({
-            identifier: "user 4",
+            username: "user 4",
             password: "123",
             policies: undefined,
             failedAttempts: undefined,
             lastLogin: undefined,
             lastPasswords: undefined
           })
-        ]).then(newIdentities => {
+        ]).then(newusers => {
           const ws = wsc.get(url({skip: 1, limit: 2}));
 
           ws.onmessage = async e => {
@@ -296,13 +296,13 @@ describe("user Realtime", () => {
                 delete message.document?.password;
               });
 
-              identities.forEach(user => {
+              users.forEach(user => {
                 delete user.password;
               });
 
               expect(messages).toEqual([
-                {kind: ChunkKind.Initial, document: identities[1]},
-                {kind: ChunkKind.Initial, document: newIdentities[0]},
+                {kind: ChunkKind.Initial, document: users[1]},
+                {kind: ChunkKind.Initial, document: newusers[0]},
                 {kind: ChunkKind.EndOfInitial}
               ]);
 
@@ -328,13 +328,13 @@ describe("user Realtime", () => {
               delete message.document?.password;
             });
 
-            identities.forEach(user => {
+            users.forEach(user => {
               delete user.password;
             });
 
             expect(messages).toEqual([
-              {kind: ChunkKind.Initial, document: identities[1]},
-              {kind: ChunkKind.Initial, document: identities[0]},
+              {kind: ChunkKind.Initial, document: users[1]},
+              {kind: ChunkKind.Initial, document: users[0]},
               {kind: ChunkKind.EndOfInitial}
             ]);
 
@@ -347,7 +347,7 @@ describe("user Realtime", () => {
       });
 
       it("should do the initial sync with filter", done => {
-        const ws = wsc.get(url({filter: {identifier: {$eq: "user 1"}}}));
+        const ws = wsc.get(url({filter: {username: {$eq: "user 1"}}}));
 
         ws.onmessage = async e => {
           messageSpy(JSON.parse(e.data as string));
@@ -359,12 +359,12 @@ describe("user Realtime", () => {
               delete message.document?.password;
             });
 
-            identities.forEach(user => {
+            users.forEach(user => {
               delete user.password;
             });
 
             expect(messages).toEqual([
-              {kind: ChunkKind.Initial, document: identities[0]},
+              {kind: ChunkKind.Initial, document: users[0]},
               {kind: ChunkKind.EndOfInitial}
             ]);
 

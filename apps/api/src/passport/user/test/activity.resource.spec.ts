@@ -7,11 +7,11 @@ describe("Activity Resource", () => {
       _id: "user_id"
     };
 
-    const activities = createUserActivity({action: Action.POST, identifier: "test_user"}, {}, res);
+    const activities = createUserActivity({action: Action.POST, username: "test_user"}, {}, res);
     expect(activities).toEqual([
       {
         action: Action.POST,
-        identifier: "test_user",
+        username: "test_user",
         resource: ["passport", "user", "user_id"]
       }
     ]);
@@ -24,11 +24,11 @@ describe("Activity Resource", () => {
       }
     };
 
-    const activities = createUserActivity({action: Action.PUT, identifier: "test_user"}, req, {});
+    const activities = createUserActivity({action: Action.PUT, username: "test_user"}, req, {});
     expect(activities).toEqual([
       {
         action: Action.PUT,
-        identifier: "test_user",
+        username: "test_user",
         resource: ["passport", "user", "user_id"]
       }
     ]);
@@ -41,15 +41,11 @@ describe("Activity Resource", () => {
       }
     };
 
-    const activities = createUserActivity(
-      {action: Action.DELETE, identifier: "test_user"},
-      req,
-      {}
-    );
+    const activities = createUserActivity({action: Action.DELETE, username: "test_user"}, req, {});
     expect(activities).toEqual([
       {
         action: Action.DELETE,
-        identifier: "test_user",
+        username: "test_user",
         resource: ["passport", "user", "user_id"]
       }
     ]);
@@ -63,15 +59,11 @@ describe("Activity Resource", () => {
       body: ["policy1", "policy2"]
     };
 
-    const activities = createUserActivity(
-      {action: Action.DELETE, identifier: "test_user"},
-      req,
-      {}
-    );
+    const activities = createUserActivity({action: Action.DELETE, username: "test_user"}, req, {});
     expect(activities).toEqual([
       {
         action: Action.DELETE,
-        identifier: "test_user",
+        username: "test_user",
         resource: ["passport", "user", "user_id"]
       }
     ]);

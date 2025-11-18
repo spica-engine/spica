@@ -77,8 +77,8 @@ export class UserController {
       .find({
         authFactor: {$exists: true}
       })
-      .then(identities => {
-        for (const user of identities) {
+      .then(users => {
+        for (const user of users) {
           this.authFactor.register(user._id.toHexString(), user.authFactor);
         }
       });
@@ -366,7 +366,7 @@ export class UserController {
   ) {
     if (user.password) {
       const {password: currentPassword, lastPasswords} = await this.userService.findOne({
-        identifier: user.identifier
+        username: user.username
       });
 
       const isEqual = await compare(user.password, currentPassword);

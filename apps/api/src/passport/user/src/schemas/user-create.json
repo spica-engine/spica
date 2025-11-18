@@ -3,11 +3,11 @@
   "$id": "http://spica.internal/passport/user-create",
   "type": "object",
   "title": "The user schema",
-  "required": ["identifier", "password"],
+  "required": ["username", "password"],
   "properties": {
-    "identifier": {
+    "username": {
       "type": "string",
-      "title": "Identifier of the user",
+      "title": "username of the user",
       "minLength": 3
     },
     "password": {
