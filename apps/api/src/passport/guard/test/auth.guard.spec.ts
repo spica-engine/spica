@@ -39,11 +39,11 @@ describe("AuthGuard", () => {
 
   describe("forbiddenStrategies", () => {
     describe("with USER strategy forbidden", () => {
-      let GuardClass: any;
+      let guardClass: any;
       let restoreMock: () => void;
 
       beforeEach(() => {
-        GuardClass = AuthGuard(["USER"]);
+        guardClass = AuthGuard(["USER"]);
         restoreMock = mockPassportAuthenticate();
       });
 
@@ -52,7 +52,7 @@ describe("AuthGuard", () => {
       });
 
       it("should throw UnauthorizedException when USER strategy is used", async () => {
-        const guard = new GuardClass(mockAuthOptions);
+        const guard = new guardClass(mockAuthOptions);
         const context = createTestContext("USER user_token_123");
 
         await expect(guard.canActivate(context)).rejects.toThrow(
@@ -61,7 +61,7 @@ describe("AuthGuard", () => {
       });
 
       it("should throw UnauthorizedException with case-insensitive match", async () => {
-        const guard = new GuardClass(mockAuthOptions);
+        const guard = new guardClass(mockAuthOptions);
         const context = createTestContext("user user_token_123");
 
         await expect(guard.canActivate(context)).rejects.toThrow(
@@ -70,7 +70,7 @@ describe("AuthGuard", () => {
       });
 
       it("should successfully authenticate when APIKEY strategy is used", async () => {
-        const guard = new GuardClass(mockAuthOptions);
+        const guard = new guardClass(mockAuthOptions);
         const context = createTestContext("APIKEY sk_1234567890");
 
         const result = await guard.canActivate(context);
@@ -78,7 +78,7 @@ describe("AuthGuard", () => {
       });
 
       it("should successfully authenticate when IDENTITY strategy is used", async () => {
-        const guard = new GuardClass(mockAuthOptions);
+        const guard = new guardClass(mockAuthOptions);
         const context = createTestContext("IDENTITY id_1234567890");
 
         const result = await guard.canActivate(context);
@@ -87,11 +87,11 @@ describe("AuthGuard", () => {
     });
 
     describe("with multiple forbidden strategies", () => {
-      let GuardClass: any;
+      let guardClass: any;
       let restoreMock: () => void;
 
       beforeEach(() => {
-        GuardClass = AuthGuard(["USER", "APIKEY"]);
+        guardClass = AuthGuard(["USER", "APIKEY"]);
         restoreMock = mockPassportAuthenticate();
       });
 
@@ -100,7 +100,7 @@ describe("AuthGuard", () => {
       });
 
       it("should throw UnauthorizedException when USER strategy is used", async () => {
-        const guard = new GuardClass(mockAuthOptions);
+        const guard = new guardClass(mockAuthOptions);
         const context = createTestContext("USER user_token_123");
 
         await expect(guard.canActivate(context)).rejects.toThrow(
@@ -109,7 +109,7 @@ describe("AuthGuard", () => {
       });
 
       it("should throw UnauthorizedException when APIKEY strategy is used", async () => {
-        const guard = new GuardClass(mockAuthOptions);
+        const guard = new guardClass(mockAuthOptions);
         const context = createTestContext("APIKEY sk_1234567890");
 
         await expect(guard.canActivate(context)).rejects.toThrow(
@@ -118,7 +118,7 @@ describe("AuthGuard", () => {
       });
 
       it("should successfully authenticate when IDENTITY strategy is used", async () => {
-        const guard = new GuardClass(mockAuthOptions);
+        const guard = new guardClass(mockAuthOptions);
         const context = createTestContext("IDENTITY id_1234567890");
 
         const result = await guard.canActivate(context);
@@ -127,11 +127,11 @@ describe("AuthGuard", () => {
     });
 
     describe("without forbidden strategies", () => {
-      let GuardClass: any;
+      let guardClass: any;
       let restoreMock: () => void;
 
       beforeEach(() => {
-        GuardClass = AuthGuard();
+        guardClass = AuthGuard();
         restoreMock = mockPassportAuthenticate();
       });
 
@@ -140,7 +140,7 @@ describe("AuthGuard", () => {
       });
 
       it("should allow USER strategy when no forbidden strategies are defined", async () => {
-        const guard = new GuardClass(mockAuthOptions);
+        const guard = new guardClass(mockAuthOptions);
         const context = createTestContext("USER user_token_123");
 
         const result = await guard.canActivate(context);
@@ -148,7 +148,7 @@ describe("AuthGuard", () => {
       });
 
       it("should allow APIKEY strategy when no forbidden strategies are defined", async () => {
-        const guard = new GuardClass(mockAuthOptions);
+        const guard = new guardClass(mockAuthOptions);
         const context = createTestContext("APIKEY sk_1234567890");
 
         const result = await guard.canActivate(context);
@@ -156,7 +156,7 @@ describe("AuthGuard", () => {
       });
 
       it("should allow IDENTITY strategy when no forbidden strategies are defined", async () => {
-        const guard = new GuardClass(mockAuthOptions);
+        const guard = new guardClass(mockAuthOptions);
         const context = createTestContext("IDENTITY id_1234567890");
 
         const result = await guard.canActivate(context);

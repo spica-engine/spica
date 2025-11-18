@@ -60,14 +60,7 @@ export function createAuthGuard(forbiddenStrategies?: string[], type?: string): 
 
       request.strategyType = strategyType.toUpperCase();
 
-      if (forbiddenStrategies) {
-        const isForbidden = forbiddenStrategies.some(
-          forbidden => forbidden.toLowerCase() === strategyType.toLowerCase()
-        );
-        if (isForbidden) {
-          throw new UnauthorizedException(`Strategy "${strategyType}" is forbidden`);
-        }
-      }
+      checkForbiddenStrategy(forbiddenStrategies, strategyType);
 
       const user = await passportFn(
         strategyType,
@@ -124,14 +117,7 @@ export class MixinAuthGuard implements CanActivate {
 
     request.strategyType = strategyType.toUpperCase();
 
-    if (this.forbiddenStrategies) {
-      const isForbidden = this.forbiddenStrategies.some(
-        forbidden => forbidden.toLowerCase() === strategyType.toLowerCase()
-      );
-      if (isForbidden) {
-        throw new UnauthorizedException(`Strategy "${strategyType}" is forbidden`);
-      }
-    }
+    checkForbiddenStrategy(this.forbiddenStrategies, strategyType);
 
     const user = await passportFn(strategyType, options, (err: Error, user: unknown, info: any) => {
       if (err) {
@@ -167,4 +153,15 @@ function parseAuthHeader(hdrValue) {
   }
   const matches = hdrValue.match(re);
   return matches && {scheme: matches[1], value: matches[2]};
+}
+
+function checkForbiddenStrategy(forbiddenStrategies: string[], strategyType: string): void {
+  if (forbiddenStrategies && forbiddenStrategies.length > 0) {
+    const isForbidden = forbiddenStrategies.some(
+      forbidden => forbidden.toLowerCase() === strategyType.toLowerCase()
+    );
+    if (isForbidden) {
+      throw new UnauthorizedException(`Strategy "${strategyType}" is forbidden`);
+    }
+  }
 }
