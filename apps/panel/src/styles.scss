@@ -52,9 +52,7 @@
   --color-menu-contrast: #f4f4f4;
   --color-menu-contrast-rgb: 244, 244, 244;
   --color-black: #000000;
-  --color-black-rgb: 0, 0, 0
-
-  --color-default: #ffffff;
+  --color-black-rgb: 0, 0, 0 --color-default: #ffffff;
   --color-default-rgb: 255, 255, 255;
 
   --color-transparent: transparent;
@@ -122,7 +120,7 @@
   --navigator-width: 200px;
   --sidebar-with-navigator-width: 260px;
 
-  --file-card-image-height: 240px
+  --file-card-image-height: 240px;
 }
 
 @font-face {
@@ -161,25 +159,202 @@ code {
   width: 100%;
   height: 100%;
 }
-.tui-image-editor-container .tui-image-editor-controls{
+.tui-image-editor-container .tui-image-editor-controls {
   background-color: var(--color-primary) !important;
 }
 
-.tui-image-editor-container{
+.tui-image-editor-container {
+  box-sizing: border-box !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background-color: transparent !important;
 
-
-  .tui-image-editor-disabled {
-    .tui-image-editor-virtual-range-bar{
-      background-color: var(--color-soft) !important;
-    }
-    .tui-image-editor-virtual-range-pointer{
-      background-color: var(--color-primary) !important;
-    }
+  .tui-image-editor-partition > div{
+    color: var(--color-primary) !important;
+    border-left: 1px solid var(--color-primary) !important;
   }
-  
-  .tui-image-editor-submenu-style{
+
+  .tui-image-editor-range-value{
+    border: 1px solid var(--color-primary) !important;
     background-color: var(--color-primary) !important;
   }
+
+  .tui-image-editor-virtual-range-bar {
+    background-color: var(--color-border) !important;
+  }
+  .tui-image-editor-virtual-range-subbar {
+    background-color: var(--color-primary) !important;
+  }
+  .tui-image-editor-virtual-range-pointer {
+    background-color: var(--color-primary) !important;
+  }
+
+  .tui-image-editor-range-wrap{
+    label{
+      color: #8a8a8a;
+      font-weight: lighter;
+    }
+  }
+
+  .tui-image-editor-submenu {
+    background-color: var(--color-soft) !important;
+    position: relative !important;
+    height: 25% !important;
+    >div{
+      padding: 0 !important;
+
+      >ul{
+        height: 100% !important;
+        display: flex !important;
+
+        justify-content: center !important;
+        align-items: center !important;
+      }
+
+      .tui-image-editor-button{
+        label{
+          color: #8a8a8a;
+          font-weight: lighter;
+        }
+      }
+
+    }
+
+    .tui-image-editor-submenu-style {
+      display: none !important;
+    }
+  .tui-image-editor-button, .tie-crop-button{
+
+    &:hover{
+      label{
+        color: var(--color-primary) !important;
+      }
+      svg{
+          use{
+            fill: var(--color-primary) !important;
+            stroke: var(--color-primary) !important;
+          }
+      }
+    }
+  }
+
+  .active{
+    label{
+      color: var(--color-primary) !important;
+    }
+    svg{
+        use{
+          fill: var(--color-primary) !important;
+        }
+    }
+  }
+  }
+
+  .preset-none{
+    .active{
+      label{
+        color: var(--color-primary) !important;
+      }
+      svg{
+          use{
+            fill: var(--color-primary) !important;
+          }
+      }
+    }
+ 
+  }
+
+  .tie-crop-preset-button .tui-image-editor-button.preset.active svg > use.active{
+    fill: var(--color-primary) !important;
+    stroke: var(--color-primary) !important;
+  }
+
+  .tui-image-editor-checkbox {
+    label > span:before {
+      border: 1px solid var(--color-border) !important;
+    }
+    span {
+      color: var(--color-font-primary) !important;
+    }
+  }
+  .tui-image-editor-checkbox-group {
+    label {
+      color: var(--color-font-primary) !important;
+    }
+  }
+
+  .tui-image-editor-checkbox label > span{
+
+  }
+
+  .tui-image-editor-help-menu {
+    position: relative !important;
+    background-color: transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: unset !important;
+    left: unset !important;
+    top: unset !important;
+    width: unset !important;
+    height: 10% !important;
+    white-space: unset !important;
+  }
+
+  .tui-image-editor-main-container {
+    position: relative !important;
+    width: 100%;
+    top: unset !important;
+    bottom: unset !important;
+    height: 80% !important;
+  }
+
+  .tui-image-editor-wrap {
+    position: relative !important;
+    height: 75% !important;
+    bottom: unset !important;
+    top: unset !important;
+    left: unset !important;
+
+    .tui-image-editor-size-wrap {
+      display: block;
+      width: 100%;
+      height: 100%;
+
+      .tui-image-editor-align-wrap {
+        display: block;
+        height: 100%;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  .tui-image-editor{
+    height: 100% !important;
+    top: unset !important;
+    left: unset !important;
+  }
+
+  .tui-image-editor-main .tui-image-editor-menu-filter {
+
+    flex-direction: column-reverse !important;
+  }
+  .tui-image-editor-controls {
+    position: relative !important;
+    order: 2;
+    height: 10% !important;
+  }
+
+  .tui-image-editor-main {
+    position: relative !important;
+    text-align: center;
+    top: unset !important;
+    bottom: unset !important;
+    right: unset !important;
+    left: unset !important;
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    height: 100% !important;
+  }
 }
-
-

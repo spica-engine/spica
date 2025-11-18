@@ -159,7 +159,7 @@ const ImageEditor = ({
       animation="growFromCenter"
       isOpen={isOpen}
       onClose={onClose}
-      showCloseButton
+      showCloseButton={false}
       className={styles.imageEditorModal}
       gap={0}
     >
