@@ -8,7 +8,7 @@ import {resourceFilterFunction} from "@spica-server/passport/guard";
 @WebSocketGateway({
   path: "/passport/user"
 })
-export class userRealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class UserRealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "user";
 
   constructor(

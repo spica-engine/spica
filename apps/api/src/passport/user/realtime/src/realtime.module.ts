@@ -1,14 +1,14 @@
 import {Module} from "@nestjs/common";
-import {userRealtimeGateway} from "./realtime.gateway";
+import {UserRealtimeGateway} from "./realtime.gateway";
 import {RealtimeDatabaseModule} from "@spica-server/database/realtime";
 
 @Module({})
-export class userRealtimeModule {
+export class UserRealtimeModule {
   static register() {
     return {
-      module: userRealtimeModule,
+      module: UserRealtimeModule,
       imports: [RealtimeDatabaseModule],
-      providers: [userRealtimeGateway]
+      providers: [UserRealtimeGateway]
     };
   }
 }

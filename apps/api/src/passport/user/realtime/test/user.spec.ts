@@ -9,8 +9,8 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {ChunkKind} from "@spica-server/interface/realtime";
-import {userModule} from "@spica-server/passport/user";
-import {user} from "@spica-server/interface/passport/user";
+import {UserModule} from "@spica-server/passport/user";
+import {User} from "@spica-server/interface/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
 
 function url(query?: {[k: string]: string | number | boolean | object}) {
@@ -29,9 +29,9 @@ describe("user Realtime", () => {
   let app: INestApplication;
   let req: Request;
 
-  let identities: user[];
+  let identities: User[];
 
-  async function insertuser(doc: user) {
+  async function insertUser(doc: User) {
     const {body} = await req.post("/passport/user", doc);
     return body;
   }
@@ -46,7 +46,7 @@ describe("user Realtime", () => {
         CoreTestingModule,
         PolicyModule.forRoot({realtime: true}),
         PreferenceTestingModule,
-        userModule.forRoot({
+        UserModule.forRoot({
           expiresIn: 1000,
           issuer: "spica",
           maxExpiresIn: 1000,
@@ -150,7 +150,7 @@ describe("user Realtime", () => {
 
     beforeEach(async () => {
       identities = [
-        await insertuser({
+        await insertUser({
           identifier: "user 1",
           password: "123",
           policies: undefined,
@@ -158,7 +158,7 @@ describe("user Realtime", () => {
           lastLogin: undefined,
           lastPasswords: undefined
         }),
-        await insertuser({
+        await insertUser({
           identifier: "user 2",
           password: "123",
           policies: undefined,
@@ -267,7 +267,7 @@ describe("user Realtime", () => {
 
       it("should do the initial sync with skip and limit", done => {
         Promise.all([
-          insertuser({
+          insertUser({
             identifier: "user 3",
             password: "123",
             policies: undefined,
@@ -275,7 +275,7 @@ describe("user Realtime", () => {
             lastLogin: undefined,
             lastPasswords: undefined
           }),
-          insertuser({
+          insertUser({
             identifier: "user 4",
             password: "123",
             policies: undefined,
