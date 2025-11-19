@@ -252,10 +252,18 @@ describe("Sync Realtime", () => {
 
           const messages = await collectMessages(socket);
 
-          expect(messages).toMatchObject([
-            {kind: ChunkKind.Initial, document: {status: SyncStatuses.PENDING}},
-            {kind: ChunkKind.EndOfInitial}
-          ]);
+          expect(messages.length).toBe(2);
+          expect(messages[0]).toMatchObject({
+            kind: ChunkKind.Initial,
+            document: {
+              _id: syncs[0]._id.toString(),
+              status: SyncStatuses.PENDING,
+              change_log: expect.objectContaining({
+                resource_id: "resource-sync1"
+              })
+            }
+          });
+          expect(messages[1]).toEqual({kind: ChunkKind.EndOfInitial});
         });
 
         it("should perform 'skip' action", async () => {
@@ -264,10 +272,18 @@ describe("Sync Realtime", () => {
 
           const messages = await collectMessages(socket);
 
-          expect(messages).toMatchObject([
-            {kind: ChunkKind.Initial, document: {status: SyncStatuses.PENDING}},
-            {kind: ChunkKind.EndOfInitial}
-          ]);
+          expect(messages.length).toBe(2);
+          expect(messages[0]).toMatchObject({
+            kind: ChunkKind.Initial,
+            document: {
+              _id: syncs[1]._id.toString(),
+              status: SyncStatuses.PENDING,
+              change_log: expect.objectContaining({
+                resource_id: "resource-sync2"
+              })
+            }
+          });
+          expect(messages[1]).toEqual({kind: ChunkKind.EndOfInitial});
         });
 
         it("should perform 'sort' action", async () => {
@@ -276,11 +292,28 @@ describe("Sync Realtime", () => {
 
           const messages = await collectMessages(socket);
 
-          expect(messages).toMatchObject([
-            {kind: ChunkKind.Initial, document: {status: SyncStatuses.PENDING}},
-            {kind: ChunkKind.Initial, document: {status: SyncStatuses.PENDING}},
-            {kind: ChunkKind.EndOfInitial}
-          ]);
+          expect(messages.length).toBe(3);
+          expect(messages[0]).toMatchObject({
+            kind: ChunkKind.Initial,
+            document: {
+              _id: syncs[1]._id.toString(),
+              status: SyncStatuses.PENDING,
+              change_log: expect.objectContaining({
+                resource_id: "resource-sync2"
+              })
+            }
+          });
+          expect(messages[1]).toMatchObject({
+            kind: ChunkKind.Initial,
+            document: {
+              _id: syncs[0]._id.toString(),
+              status: SyncStatuses.PENDING,
+              change_log: expect.objectContaining({
+                resource_id: "resource-sync1"
+              })
+            }
+          });
+          expect(messages[2]).toEqual({kind: ChunkKind.EndOfInitial});
         });
       });
     });
