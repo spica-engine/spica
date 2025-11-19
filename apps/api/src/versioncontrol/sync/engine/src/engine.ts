@@ -13,6 +13,7 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {getApplier} from "./applier";
 import {ChangeLogProcessor} from "@spica-server/versioncontrol/processors/changelog";
 import {SyncProcessor} from "@spica-server/versioncontrol/processors/sync";
+import {JobReducer} from "@spica-server/replication";
 
 export class SyncEngine {
   private readonly changeHandlers: ChangeHandler[] = [];
@@ -20,7 +21,8 @@ export class SyncEngine {
   constructor(
     private readonly changeLogProcessor: ChangeLogProcessor,
     private readonly syncProcessor: SyncProcessor,
-    private readonly repManager: IRepresentativeManager
+    private readonly repManager: IRepresentativeManager,
+    private jobReducer?: JobReducer
   ) {
     this.registerSyncProcessor();
     this.registerChangeLogProcessor();
@@ -34,7 +36,15 @@ export class SyncEngine {
     this.changeHandlers.push(repHandler, docHandler);
 
     const onChange = (changeLog: ChangeLog) => {
-      this.changeLogProcessor.push(changeLog);
+      const job = () => this.changeLogProcessor.push(changeLog);
+
+      if (this.jobReducer) {
+        this.jobReducer.do({...changeLog, _id: changeLog.resource_id}, job).catch(error => {
+          console.error("SyncEngine Change Handler Job reducer failed:", error);
+        });
+      } else {
+        job();
+      }
     };
 
     repHandler.supplier.listen().subscribe(onChange);
@@ -74,7 +84,17 @@ export class SyncEngine {
       return this.syncProcessor.update(sync._id, result.status, result.reason);
     };
 
-    this.syncProcessor.watch(SyncStatuses.APPROVED).subscribe(syncHandler);
+    this.syncProcessor.watch(SyncStatuses.APPROVED).subscribe(sync => {
+      const job = () => syncHandler(sync);
+
+      if (this.jobReducer) {
+        this.jobReducer.do({...sync, _id: sync._id.toString()}, job).catch(error => {
+          console.error("SyncEngine SyncProcessor Job reducer failed:", error);
+        });
+      } else {
+        job();
+      }
+    });
   }
 
   private registerChangeLogProcessor() {
@@ -83,7 +103,16 @@ export class SyncEngine {
         changeLog,
         SyncStatuses.PENDING
       ) as PendingSync;
-      this.syncProcessor.push(sync);
+
+      const job = () => this.syncProcessor.push(sync);
+
+      if (this.jobReducer) {
+        this.jobReducer.do({...sync, _id: sync._id.toString()}, job).catch(error => {
+          console.error("SyncEngine ChangeLogProcessor Job reducer failed:", error);
+        });
+      } else {
+        job();
+      }
     };
     this.changeLogProcessor.watch().subscribe(changeLogHandler);
   }

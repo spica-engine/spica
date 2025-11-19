@@ -16,6 +16,9 @@
     },
     {
       "path": "../../processors/sync"
+    },
+    {
+      "path": "../../../replication"
     }
   ]
 }
