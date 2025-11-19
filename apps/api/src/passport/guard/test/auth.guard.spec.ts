@@ -11,8 +11,7 @@ describe("AuthGuard", () => {
     const request = {
       headers: {
         authorization: authHeader
-      },
-      user: null
+      }
     };
 
     const response = {};
