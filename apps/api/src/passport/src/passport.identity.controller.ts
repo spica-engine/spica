@@ -39,7 +39,7 @@ import {CommandType} from "@spica-server/interface/replication";
  * @name passport
  */
 @Controller("passport")
-export class PassportController {
+export class PassportIdentityController {
   readonly SESSION_TIMEOUT_MS = 60 * 1000;
   assertObservers = new Map<string, Subject<any>>();
 

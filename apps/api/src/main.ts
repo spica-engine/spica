@@ -207,7 +207,8 @@ const args = yargsInstance
         "StorageFullAccess",
         "StrategyFullAccess",
         "VersionControlFullAccess",
-        "WebhookFullAccess"
+        "WebhookFullAccess",
+        "UserFullAccess"
       ]
     },
     "passport-identity-limit": {
@@ -232,6 +233,78 @@ const args = yargsInstance
     "identity-realtime": {
       boolean: true,
       description: "Enable/disable listening identity realtime. Default value is true",
+      default: true
+    },
+    "passport-user-token-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued JWT tokens for users. Unit: second",
+      default: 60 * 60 * 24 * 2
+    },
+    "passport-user-password-history-limit": {
+      number: true,
+      description:
+        "How many of last passwords will be compared with the new password in terms of uniqueness for users",
+      default: 0
+    },
+    "passport-user-failed-login-attempt-limit": {
+      number: true,
+      description: "Maximum failed login attempt before blocking further attempts for users.",
+      default: 0
+    },
+    "passport-user-block-duration-after-failed-login-attempts": {
+      number: true,
+      description: "Duration of blocking login attempts in minutes for users.",
+      default: 0
+    },
+    "passport-user-token-expiration-seconds-limit": {
+      number: true,
+      description: "Maximum lifespan of the requested JWT token can have for users. Unit: second"
+    },
+    "passport-user-refresh-token-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued refresh JWT tokens for users. Unit: second",
+      default: 60 * 60 * 24 * 3
+    },
+    "passport-default-user-username": {
+      string: true,
+      description: "Username of the default user.",
+      default: "spica"
+    },
+    "passport-default-user-password": {
+      string: true,
+      description: "Password of the default user account.",
+      default: "spica"
+    },
+    "passport-default-user-policies": {
+      array: true,
+      description: "Policies to attach to the default user.",
+      default: [
+        "ActivityFullAccess",
+        "ApiKeyFullAccess",
+        "AssetFullAccess",
+        "BucketFullAccess",
+        "DashboardFullAccess",
+        "EnvVarFullAccess",
+        "FunctionFullAccess",
+        "PassportFullAccess",
+        "PolicyFullAccess",
+        "PreferenceFullAccess",
+        "RefreshTokenFullAccess",
+        "StatusFullAccess",
+        "StorageFullAccess",
+        "StrategyFullAccess",
+        "VersionControlFullAccess",
+        "WebhookFullAccess",
+        "UserFullAccess"
+      ]
+    },
+    "passport-user-limit": {
+      number: true,
+      description: "Maximum number of users that can be inserted."
+    },
+    "user-realtime": {
+      boolean: true,
+      description: "Enable/disable listening user realtime. Default value is true",
       default: true
     }
   })
@@ -512,6 +585,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
         args["passport-identity-token-expires-in"];
     }
 
+    if (!args["passport-user-token-expiration-seconds-limit"]) {
+      args["passport-user-token-expiration-seconds-limit"] = args["passport-user-token-expires-in"];
+    }
+
     if (args["bucket-cache"] && args["bucket-cache-ttl"] < 1) {
       throw new TypeError("--bucket-cache-ttl must be a positive number");
     }
@@ -522,6 +599,14 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     ) {
       throw new TypeError(
         `--passport-identity-token-expiration-seconds-limit(${args["passport-identity-token-expiration-seconds-limit"]} seconds) can not be less than --passport-identity-token-expires-in(${args["passport-identity-token-expires-in"]} seconds)`
+      );
+    }
+
+    if (
+      args["passport-user-token-expiration-seconds-limit"] < args["passport-user-token-expires-in"]
+    ) {
+      throw new TypeError(
+        `--passport-user-token-expiration-seconds-limit(${args["passport-user-token-expiration-seconds-limit"]} seconds) can not be less than --passport-user-token-expires-in(${args["passport-user-token-expires-in"]} seconds)`
       );
     }
 
@@ -637,27 +722,47 @@ const modules = [
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
-    secretOrKey: args["passport-secret"],
-    issuer: args["public-url"],
-    expiresIn: args["passport-identity-token-expires-in"],
-    maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
     defaultStrategy: args["passport-default-strategy"],
-    entryLimit: args["passport-identity-limit"],
-    defaultIdentityPolicies: args["passport-default-identity-policies"],
-    defaultIdentityIdentifier: args["passport-default-identity-identifier"],
-    defaultIdentityPassword: args["passport-default-identity-password"],
-    audience: "spica.io",
     samlCertificateTTL: args["passport-saml-certificate-ttl"],
-    blockingOptions: {
-      failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
-      blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
-    },
-    refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
-    passwordHistoryLimit: args["passport-identity-password-history-limit"],
-    refreshTokenRealtime: args["refresh-token-realtime"],
     apikeyRealtime: args["apikey-realtime"],
+    refreshTokenRealtime: args["refresh-token-realtime"],
     policyRealtime: args["policy-realtime"],
-    identityRealtime: args["identity-realtime"]
+    identityOptions: {
+      expiresIn: args["passport-identity-token-expires-in"],
+      maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
+      issuer: args["public-url"],
+      refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
+      secretOrKey: args["passport-secret"],
+      audience: "spica.io",
+      defaultIdentityIdentifier: args["passport-default-identity-identifier"],
+      defaultIdentityPassword: args["passport-default-identity-password"],
+      defaultIdentityPolicies: args["passport-default-identity-policies"],
+      entryLimit: args["passport-identity-limit"],
+      passwordHistoryLimit: args["passport-identity-password-history-limit"],
+      blockingOptions: {
+        failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
+        blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
+      },
+      identityRealtime: args["identity-realtime"]
+    },
+    userOptions: {
+      expiresIn: args["passport-user-token-expires-in"],
+      maxExpiresIn: args["passport-user-token-expiration-seconds-limit"],
+      issuer: args["public-url"],
+      refreshTokenExpiresIn: args["passport-user-refresh-token-expires-in"],
+      secretOrKey: args["passport-secret"],
+      audience: "spica.io",
+      defaultUserUsername: args["passport-default-user-username"],
+      defaultUserPassword: args["passport-default-user-password"],
+      defaultUserPolicies: args["passport-default-user-policies"],
+      entryLimit: args["passport-user-limit"],
+      passwordHistoryLimit: args["passport-user-password-history-limit"],
+      blockingOptions: {
+        failedAttemptLimit: args["passport-user-failed-login-attempt-limit"],
+        blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
+      },
+      userRealtime: args["user-realtime"]
+    }
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],
