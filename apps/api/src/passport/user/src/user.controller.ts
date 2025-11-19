@@ -208,7 +208,7 @@ export class UserController {
     ActionGuard(
       "passport:user:update",
       "passport/user/:id",
-      registerPolicyAttacher("userFullAccess")
+      registerPolicyAttacher("UserFullAccess")
     )
   )
   async deleteFactor(@Param("id", OBJECT_ID) id: ObjectId) {
@@ -216,7 +216,7 @@ export class UserController {
     this.authFactor.unregister(id.toHexString());
 
     if (!res) {
-      throw new NotFoundException(`user with ID ${id} not found`);
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
 
     await this.userService.findOneAndUpdate({_id: id}, {$unset: {authFactor: ""}});
@@ -225,7 +225,7 @@ export class UserController {
   @Get(":id")
   @UseGuards(
     AuthGuard(),
-    ActionGuard("passport:user:show", undefined, registerPolicyAttacher("userReadOnlyAccess"))
+    ActionGuard("passport:user:show", undefined, registerPolicyAttacher("UserReadOnlyAccess"))
   )
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.userService.findOne({_id: id}, {projection: this.hideSecretsExpression()});
@@ -237,7 +237,7 @@ export class UserController {
     ActionGuard(
       "passport:user:update",
       "passport/user/:id",
-      registerPolicyAttacher("userFullAccess")
+      registerPolicyAttacher("UserFullAccess")
     )
   )
   async startFactorVerification(
@@ -269,7 +269,7 @@ export class UserController {
     ActionGuard(
       "passport:user:update",
       "passport/user/:id",
-      registerPolicyAttacher("userFullAccess")
+      registerPolicyAttacher("UserFullAccess")
     )
   )
   async completeFactorVerification(
@@ -335,7 +335,7 @@ export class UserController {
       .then(insertedUser => this.afterUserUpsert(insertedUser))
       .catch(exception => {
         throw new BadRequestException(
-          exception.code === 11000 ? "user already exists." : exception.message
+          exception.code === 11000 ? "User already exists." : exception.message
         );
       });
   }
@@ -357,7 +357,7 @@ export class UserController {
   @Put(":id")
   @UseGuards(
     AuthGuard(),
-    ActionGuard("passport:user:update", undefined, registerPolicyAttacher("userFullAccess"))
+    ActionGuard("passport:user:update", undefined, registerPolicyAttacher("UserFullAccess"))
   )
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
@@ -401,15 +401,15 @@ export class UserController {
 
     return this.userService
       .findOneAndUpdate({_id: id}, {$set: user}, {returnDocument: ReturnDocument.AFTER})
-      .then(updateduser => {
-        if (!updateduser) {
-          throw new NotFoundException(`user with ID ${id} not found`);
+      .then(updatedUser => {
+        if (!updatedUser) {
+          throw new NotFoundException(`User with ID ${id} not found`);
         }
-        return this.afterUserUpsert(updateduser);
+        return this.afterUserUpsert(updatedUser);
       })
       .catch(exception => {
         throw new BadRequestException(
-          exception.code === 11000 ? "user already exists." : exception.message
+          exception.code === 11000 ? "User already exists." : exception.message
         );
       });
   }
@@ -427,7 +427,7 @@ export class UserController {
 
     return this.userService.deleteOne({_id: id}).then(res => {
       if (!res) {
-        throw new NotFoundException(`user with ID ${id} not found`);
+        throw new NotFoundException(`User with ID ${id} not found`);
       }
       if (this.authFactor.hasFactor(id.toHexString())) {
         this.authFactor.unregister(id.toHexString());
@@ -453,7 +453,7 @@ export class UserController {
       }
     );
     if (!res) {
-      throw new NotFoundException(`user with ID ${id} not found`);
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
     return res;
   }
@@ -476,7 +476,7 @@ export class UserController {
       }
     );
     if (!res) {
-      throw new NotFoundException(`user with ID ${id} not found`);
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
     return res;
   }

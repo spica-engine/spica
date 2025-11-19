@@ -47,7 +47,7 @@ export class UserService extends BaseCollection<User>("user") {
     );
 
     return {
-      scheme: "user",
+      scheme: "USER",
       token,
       issuer: "passport/user"
     };
@@ -86,13 +86,13 @@ export class UserService extends BaseCollection<User>("user") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenusernamesAreMatched(accessToken: string, refreshToken: string) {
+  private async verifyTokenUsernamesAreMatched(accessToken: string, refreshToken: string) {
     const refreshTokenData = await this.refreshTokenService.findOne({token: refreshToken});
     if (!refreshTokenData) {
       return Promise.reject("Refresh token not found");
     }
 
-    const user = await this.finduserOfToken(accessToken);
+    const user = await this.findUserOfToken(accessToken);
 
     if (refreshTokenData.user !== String(user._id)) {
       return Promise.reject("Refresh and access token usernames are mismatched");
@@ -101,7 +101,7 @@ export class UserService extends BaseCollection<User>("user") {
     return Promise.resolve();
   }
 
-  private async finduserOfToken(token: string) {
+  private async findUserOfToken(token: string) {
     const decodedToken = this.decode(token);
     const username = decodedToken ? decodedToken.username : undefined;
 
@@ -116,9 +116,9 @@ export class UserService extends BaseCollection<User>("user") {
   async refreshToken(accessToken: string, refreshToken: string) {
     accessToken = this.extractAccessToken(accessToken);
     await this.verifyTokenCanBeRefreshed(accessToken, refreshToken);
-    await this.verifyTokenusernamesAreMatched(accessToken, refreshToken);
+    await this.verifyTokenUsernamesAreMatched(accessToken, refreshToken);
     await this.updateRefreshTokenLastUsedAt(refreshToken);
-    const user = await this.finduserOfToken(accessToken);
+    const user = await this.findUserOfToken(accessToken);
     return this.sign(user);
   }
 

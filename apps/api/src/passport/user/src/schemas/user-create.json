@@ -7,7 +7,7 @@
   "properties": {
     "username": {
       "type": "string",
-      "title": "username of the user",
+      "title": "Username of the user",
       "minLength": 3
     },
     "password": {

@@ -11,7 +11,7 @@ export class UserStrategy extends PassportStrategy(Strategy, "user") {
     @Inject(USER_OPTIONS) options: UserOptions
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme("user"),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme("USER"),
       ...options,
       jsonWebTokenOptions: {
         complete: true
