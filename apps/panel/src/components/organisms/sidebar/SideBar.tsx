@@ -1,4 +1,4 @@
-import React, {type FC, type ReactNode, useState} from "react";
+import React, {type FC, useState} from "react";
 import styles from "./SideBar.module.scss";
 import {Icon, type IconName} from "oziko-ui-kit";
 import Logo from "../../atoms/logo/Logo";

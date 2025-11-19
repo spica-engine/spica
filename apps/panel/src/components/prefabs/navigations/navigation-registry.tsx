@@ -7,8 +7,7 @@
 
 import React from "react";
 import { StorageNavigation } from "./storage-navigation";
-import Navigator from "../../organisms/sidebar/navigator/Navigator";
-import type { TypeMenuItems, NavigatorItemGroup, TypeNavigatorItem } from "../../../types/sidebar";
+import type { TypeMenuItems } from "../../../types/sidebar";
 import { BucketNavigation } from "./bucket-navigation";
 
 export type NavigationPrefabProps = {
@@ -30,11 +29,8 @@ export const navigationRegistry: Record<string, NavigationComponent> = {
 
 export const DefaultNavigation: React.FC<NavigationPrefabProps> = ({ menuItem }) => {
   return (
-    <Navigator
-      header={menuItem?.header}
-      items={[] as unknown as NavigatorItemGroup}
-      addNewButtonText={menuItem?.addNewButtonText}
-    />
+    //TODO: Implement default navigation
+      <div>Default Navigation</div>
   );
 };
 

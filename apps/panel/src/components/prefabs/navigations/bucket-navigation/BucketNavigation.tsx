@@ -1,15 +1,20 @@
+/**
+ * @owner Kanan Gasimov
+ * email: rio.kenan@gmail.com
+ */
+
 import {
   Icon,
   Text,
-  type IconName,
   helperUtils,
   Accordion,
   FlexElement,
-  FluidContainer
+  FluidContainer,
+  Button
 } from "oziko-ui-kit";
 import styles from "../Navigation.module.scss";
 import bucketNavigationStyles from "./BucketNavigation.module.scss";
-import {Button} from "oziko-ui-kit";
+
 import {
   memo,
   useCallback,
@@ -71,12 +76,12 @@ const arraysEqual = (a: string[], b: string[]) =>
   a.length === b.length && a.every((item, index) => item === b[index]);
 
 const safeReadCategoryOrder = (): string[] => {
-  if (typeof window === "undefined") {
+  if (typeof globalThis === "undefined") {
     return [];
   }
 
   try {
-    const storedValue = window.localStorage.getItem(CATEGORY_ORDER_STORAGE_KEY);
+    const storedValue = globalThis?.localStorage?.getItem(CATEGORY_ORDER_STORAGE_KEY);
     if (!storedValue) {
       return [];
     }
@@ -89,23 +94,23 @@ const safeReadCategoryOrder = (): string[] => {
 };
 
 const persistCategoryOrder = (order: string[]) => {
-  if (typeof window === "undefined") {
+  if (typeof globalThis === "undefined") {
     return;
   }
 
   if (!order.length) {
-    window.localStorage.removeItem(CATEGORY_ORDER_STORAGE_KEY);
+    globalThis?.localStorage?.removeItem(CATEGORY_ORDER_STORAGE_KEY);
     return;
   }
 
-  window.localStorage.setItem(CATEGORY_ORDER_STORAGE_KEY, JSON.stringify(order));
+  globalThis?.localStorage?.setItem(CATEGORY_ORDER_STORAGE_KEY, JSON.stringify(order));
 };
 
 const groupBucketsByCategory = (items: BucketNavigationItemData[]) => {
   const groupedMap = new Map<string, BucketWithIndex[]>();
   const ungrouped: BucketWithIndex[] = [];
 
-  items.forEach((bucket, index) => {
+  for (const [index, bucket] of items.entries()) {
     if (bucket.category) {
       if (!groupedMap.has(bucket.category)) {
         groupedMap.set(bucket.category, []);
@@ -114,7 +119,7 @@ const groupBucketsByCategory = (items: BucketNavigationItemData[]) => {
     } else {
       ungrouped.push({bucket, index});
     }
-  });
+  }
 
   const grouped: CategoryGroup[] = Array.from(groupedMap.entries()).map(([category, categoryItems]) => ({
     category,
@@ -563,9 +568,9 @@ const BucketNavigation = () => {
     }
 
     const groupMap = new Map(grouped.map(group => [group.category, group]));
-    const orderedFromStorage = categoryOrder
-      .map(categoryName => groupMap.get(categoryName))
-      .filter((group): group is CategoryGroup => Boolean(group));
+  const orderedFromStorage = categoryOrder
+    .map(categoryName => groupMap.get(categoryName))
+    .filter(Boolean) as CategoryGroup[];
     const remainingGroups = grouped.filter(group => !categoryOrder.includes(group.category));
 
     return [...orderedFromStorage, ...remainingGroups];

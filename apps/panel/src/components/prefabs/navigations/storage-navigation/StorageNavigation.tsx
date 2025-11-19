@@ -7,8 +7,7 @@ import React, {useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 import {handleFolderClick} from "../../../../store";
 import {ROOT_PATH} from "../../../../pages/storage/constants";
-import styles from "./StorageNavigation.module.scss";
-import navigationStyles from "../Navigation.module.scss";
+import styles from "../Navigation.module.scss";
 import {FluidContainer, Icon, Text} from "oziko-ui-kit";
 import type {NavigationPrefabProps} from "../navigation-registry";
 import {useAppDispatch} from "../../../../store/hook";
@@ -38,7 +37,7 @@ const StorageNavigation: React.FC<NavigationPrefabProps> = () => {
       <FluidContainer
         dimensionX={"fill"}
         mode={"fill"}
-        className={navigationStyles.header}
+        className={styles.header}
         root={{
           children: (
             <Text dimensionX={"fill"} size="large">
