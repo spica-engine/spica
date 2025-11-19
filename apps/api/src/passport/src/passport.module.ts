@@ -2,7 +2,6 @@ import {DynamicModule, Global, Module} from "@nestjs/common";
 import {PassportModule as CorePassportModule} from "@nestjs/passport";
 import {ApiKeyModule} from "@spica-server/passport/apikey";
 import {IdentityModule} from "@spica-server/passport/identity";
-import {IdentityOptions} from "@spica-server/interface/passport/identity";
 import {UserModule} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PreferenceService} from "@spica-server/preference/services";
