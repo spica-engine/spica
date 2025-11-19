@@ -19,6 +19,24 @@
     },
     {
       "path": "../../../../../libs/interface/representative"
+    },
+    {
+      "path": "../../passport/guard/services"
+    },
+    {
+      "path": "./realtime"
+    },
+    {
+      "path": "../../../../../libs/database/realtime"
+    },
+    {
+      "path": "../../../../../libs/realtime"
+    },
+    {
+      "path": "../../../../../libs/interface/realtime"
+    },
+    {
+      "path": "../../../../../libs/realtime"
     }
   ]
 }

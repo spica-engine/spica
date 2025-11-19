@@ -22,18 +22,6 @@
     },
     {
       "path": "../../../passport/testing"
-    },
-    {
-      "path": "../../../passport/guard"
-    },
-    {
-      "path": "../../../../../../libs/interface/realtime"
-    },
-    {
-      "path": "../../../../../../libs/interface/versioncontrol"
-    },
-    {
-      "path": "../../services/sync"
     }
   ]
 }
