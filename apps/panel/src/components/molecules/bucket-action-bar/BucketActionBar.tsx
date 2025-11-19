@@ -20,7 +20,10 @@ type BucketActionBarProps = {
   columns: ColumnType[];
   visibleColumns: Record<string, boolean>;
   toggleColumn: (key?: string) => void;
-  deleteBucketEntry: (entryId: string, bucketId: string) => Promise<string | null>;
+  deleteBucketEntries: (
+    entryIds: string[],
+    bucketId: string
+  ) => Promise<{failed: string[]; succeeded: string[]}>;
 };
 
 const SEARCH_DEBOUNCE_TIME = 1000;
@@ -103,7 +106,7 @@ const BucketActionBar = ({
   columns,
   visibleColumns,
   toggleColumn,
-  deleteBucketEntry
+  deleteBucketEntries
 }: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
   const {selectedEntries, deselectEntry} = useEntrySelection(bucket._id);
@@ -156,18 +159,8 @@ const BucketActionBar = ({
     setDeleteLoading(true);
     setDeleteEntryError(null);
     try {
-      const failedEntryIds: string[] = [];
-      const deletedEntryIds: string[] = [];
-      await Promise.all(
-        Array.from(selectedEntries).map(async entryId => {
-          const result = await deleteBucketEntry(entryId, bucket._id);
-          if (!result) {
-            failedEntryIds.push(entryId);
-          } else {
-            deletedEntryIds.push(result);
-          }
-        })
-      );
+      const entryIds = Array.from(selectedEntries);
+      const {failed: failedEntryIds, succeeded: deletedEntryIds} = await deleteBucketEntries(entryIds, bucket._id);
 
       deletedEntryIds.forEach(id => deselectEntry(id));
       await onRefresh();

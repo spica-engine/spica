@@ -1,5 +1,7 @@
 import styles from "./Bucket.module.scss";
-import {useGetBucketsQuery, useDeleteBucketEntryMutation} from "../../store/api/bucketApi";
+import {useGetBucketsQuery} from "../../store/api/bucketApi";
+import {useExecuteBatchMutation} from "../../store/api/batchApi";
+import type {BatchResponse, BatchResponseItem} from "../../store/api/batchApi";
 import {useParams} from "react-router-dom";
 import BucketTable from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo} from "react";
@@ -9,13 +11,14 @@ import Loader from "../../components/atoms/loader/Loader";
 import {useBucketColumns} from "../../hooks/useBucketColumns";
 import {useBucketSearch} from "../../hooks/useBucketSearch";
 import {useBucketData} from "../../hooks/useBucketData";
-import {useAppDispatch} from "../../store/hook";
+import {useAppDispatch, useAppSelector} from "../../store/hook";
 import {resetBucketSelection} from "../../store";
+import {selectParsedToken} from "../../store/slices/authSlice";
 
 export default function Bucket() {
   const {bucketId = ""} = useParams<{bucketId: string}>();
   const {data: buckets = []} = useGetBucketsQuery();
-  const [deleteBucketEntryMutation] = useDeleteBucketEntryMutation();
+  const [executeBatchRequest] = useExecuteBatchMutation();
   const dispatch = useAppDispatch();
 
   const bucket = useMemo(
@@ -38,18 +41,75 @@ export default function Bucket() {
     useBucketData(bucketId, searchQuery);
 
   const isTableLoading = useMemo(() => formattedColumns.length <= 1, [formattedColumns]);
+  const authToken = useAppSelector(selectParsedToken);
 
-  const deleteBucketEntry = useCallback(
-    async (entryId: string, bucketId: string): Promise<string | null> => {
+  const deleteBucketEntries = useCallback(
+    async (entryIds: string[], bucketId: string): Promise<{failed: string[]; succeeded: string[]}> => {
+      if (!entryIds.length) {
+        return {failed: [], succeeded: []};
+      }
+
       try {
-        await deleteBucketEntryMutation({entryId, bucketId}).unwrap();
-        return entryId;
+        const hasToken = typeof authToken === "string" && authToken.trim().length > 0;
+        const authorizationHeader = hasToken ? {Authorization: `IDENTITY ${authToken}`} : undefined;
+
+        const batchResult: BatchResponse = await executeBatchRequest({
+          requests: entryIds.map(entryId => ({
+            id: entryId,
+            method: "DELETE" as const,
+            url: `/bucket/${bucketId}/data/${entryId}`,
+            headers: authorizationHeader
+          }))
+        }).unwrap();
+
+        const responses: BatchResponseItem[] = batchResult.responses ?? [];
+
+        const getResponseStatus = (responseItem: BatchResponseItem): number | undefined => {
+          if (typeof responseItem.error?.status === "number") {
+            return responseItem.error.status;
+          }
+
+          const response = responseItem.response;
+          if (!response) {
+            return undefined;
+          }
+
+          if (typeof response.status === "number") {
+            return response.status;
+          }
+
+          if (typeof response.statusCode === "number") {
+            return response.statusCode;
+          }
+
+          return undefined;
+        };
+
+        const failedIds = responses
+          .filter(responseItem => {
+            if (responseItem.error) {
+              return true;
+            }
+
+            const status = getResponseStatus(responseItem);
+
+            if (typeof status !== "number") {
+              return false;
+            }
+
+            return status < 200 || status >= 300;
+          })
+          .map(responseItem => responseItem.id);
+
+        const succeededIds = entryIds.filter(id => !failedIds.includes(id));
+
+        return {failed: failedIds, succeeded: succeededIds};
       } catch (error) {
-        console.error("Failed to delete bucket entry:", error);
-        return null;
+        console.error("Failed to delete bucket entries:", error);
+        return {failed: entryIds, succeeded: []};
       }
     },
-    [deleteBucketEntryMutation]
+    [executeBatchRequest, authToken]
   );
 
   if (formattedColumns.length <= 1 || !bucket) {
@@ -62,7 +122,7 @@ export default function Bucket() {
         onSearch={handleSearch}
         bucket={bucket as BucketType}
         bucketData={bucketData?.data ?? []}
-        deleteBucketEntry={deleteBucketEntry}
+        deleteBucketEntries={deleteBucketEntries}
         onRefresh={handleRefresh}
         columns={formattedColumns}
         visibleColumns={visibleColumns}
