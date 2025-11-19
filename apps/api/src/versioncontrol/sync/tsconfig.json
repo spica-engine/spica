@@ -1,27 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["src/**/*.ts", "realtime/**/*.ts", "index.ts"],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
       "path": "../../passport/guard"
     },
     {
       "path": "../../../../../libs/core"
-    },
-    {
-      "path": "../../../../../libs/core/testing"
-    },
-    {
-      "path": "../../../../../libs/core/websocket"
-    },
-    {
-      "path": "../../../../../libs/core/schema"
-    },
-    {
-      "path": "../../../../../libs/database/testing"
-    },
-    {
-      "path": "../../passport/testing"
     },
     {
       "path": "../processors/sync"
@@ -34,9 +19,6 @@
     },
     {
       "path": "../../../../../libs/interface/representative"
-    },
-    {
-      "path": "../"
     }
   ]
 }

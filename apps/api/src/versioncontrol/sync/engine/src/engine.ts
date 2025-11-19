@@ -1,4 +1,3 @@
-import {Injectable, Inject} from "@nestjs/common";
 import {
   ChangeHandler,
   ChangeLog,
@@ -7,8 +6,7 @@ import {
   DocumentChangeSupplier,
   PendingSync,
   Sync,
-  SyncStatuses,
-  VC_REPRESENTATIVE_MANAGER
+  SyncStatuses
 } from "@spica-server/interface/versioncontrol";
 import {getSupplier} from "./supplier";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
@@ -16,14 +14,12 @@ import {getApplier} from "./applier";
 import {ChangeLogProcessor} from "@spica-server/versioncontrol/processors/changelog";
 import {SyncProcessor} from "@spica-server/versioncontrol/processors/sync";
 
-@Injectable()
 export class SyncEngine {
   private readonly changeHandlers: ChangeHandler[] = [];
 
   constructor(
     private readonly changeLogProcessor: ChangeLogProcessor,
     private readonly syncProcessor: SyncProcessor,
-    @Inject(VC_REPRESENTATIVE_MANAGER)
     private readonly repManager: IRepresentativeManager
   ) {
     this.registerSyncProcessor();

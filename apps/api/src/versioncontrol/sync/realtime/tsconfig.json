@@ -10,6 +10,18 @@
     },
     {
       "path": "../../../passport/guard/services"
+    },
+    {
+      "path": "../../../../../../libs/core/testing"
+    },
+    {
+      "path": "../../../../../../libs/core/websocket"
+    },
+    {
+      "path": "../../../../../../libs/database/testing"
+    },
+    {
+      "path": "../../../passport/testing"
     }
   ]
 }

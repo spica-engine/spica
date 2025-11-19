@@ -5,13 +5,11 @@ import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {GuardService} from "@spica-server/passport/guard/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {ChangeOrigin, ChangeType, SyncStatuses} from "@spica-server/interface/versioncontrol";
 import {SyncService} from "@spica-server/versioncontrol/services/sync";
-import {VersionControlModule} from "@spica-server/versioncontrol";
+import {ServicesModule as SyncServicesModule} from "@spica-server/versioncontrol/services/sync";
+import {SyncRealtimeModule} from "../src";
 
 function url(path, query) {
   const u = new URL(path, "ws://insteadof");
@@ -95,17 +93,10 @@ describe("Sync Realtime", () => {
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        SchemaModule.forRoot({
-          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
-          defaults: [CREATED_AT, UPDATED_AT]
-        }),
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
-        VersionControlModule.forRoot({
-          persistentPath: "/tmp",
-          isReplicationEnabled: false,
-          realtime: true
-        }),
+        SyncServicesModule.forRoot(),
+        SyncRealtimeModule.register(),
         PassportTestingModule.initialize({overriddenStrategyType: "APIKEY"})
       ]
     }).compile();
