@@ -2,34 +2,42 @@ import styles from "./Bucket.module.scss";
 import {useGetBucketsQuery, useDeleteBucketEntryMutation} from "../../store/api/bucketApi";
 import {useParams} from "react-router-dom";
 import BucketTable from "../../components/organisms/bucket-table/BucketTable";
-import {useCallback, useMemo} from "react";
+import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketType} from "src/services/bucketService";
 import Loader from "../../components/atoms/loader/Loader";
-import {EntrySelectionProvider} from "../../contexts/EntrySelectionContext";
 import {useBucketColumns} from "../../hooks/useBucketColumns";
 import {useBucketSearch} from "../../hooks/useBucketSearch";
 import {useBucketData} from "../../hooks/useBucketData";
+import {useAppDispatch} from "../../store/hook";
+import {resetBucketSelection} from "../../store";
 
 export default function Bucket() {
-  const {bucketId} = useParams<{bucketId: string}>();
+  const {bucketId = ""} = useParams<{bucketId: string}>();
   const {data: buckets = []} = useGetBucketsQuery();
   const [deleteBucketEntryMutation] = useDeleteBucketEntryMutation();
+  const dispatch = useAppDispatch();
 
   const bucket = useMemo(
     () => buckets?.find((i: BucketType) => i._id === bucketId),
     [buckets, bucketId]
   );
 
-  const {formattedColumns, filteredColumns, visibleColumns, searchableColumns, toggleColumn} =
-    useBucketColumns(bucket, bucketId!);
+  useEffect(() => {
+    if (bucketId) {
+      dispatch(resetBucketSelection(bucketId));
+    }
+  }, [bucketId, dispatch]);
 
-  const {searchQuery, handleSearch} = useBucketSearch(bucketId!, searchableColumns);
+  const {formattedColumns, filteredColumns, visibleColumns, searchableColumns, toggleColumn} =
+    useBucketColumns(bucket, bucketId);
+
+  const {searchQuery, handleSearch} = useBucketSearch(bucketId, searchableColumns);
 
   const {bucketData, bucketDataLoading, refreshLoading, tableRef, handleRefresh, loadMoreBucketData} =
-    useBucketData(bucketId!, searchQuery);
+    useBucketData(bucketId, searchQuery);
 
-  const isTableLoading = useMemo(() => !(formattedColumns.length > 1), [formattedColumns]);
+  const isTableLoading = useMemo(() => formattedColumns.length <= 1, [formattedColumns]);
 
   const deleteBucketEntry = useCallback(
     async (entryId: string, bucketId: string): Promise<string | null> => {
@@ -49,32 +57,30 @@ export default function Bucket() {
   }
 
   return (
-    <EntrySelectionProvider currentBucketId={bucket._id}>
-      <div className={styles.container}>
-        <BucketActionBar
-          onSearch={handleSearch}
-          bucket={bucket as BucketType}
-          bucketData={bucketData?.data ?? []}
-          deleteBucketEntry={deleteBucketEntry}
-          onRefresh={handleRefresh}
-          columns={formattedColumns}
-          visibleColumns={visibleColumns}
-          toggleColumn={toggleColumn}
-          searchLoading={bucketDataLoading && !isTableLoading}
-          refreshLoading={refreshLoading}
-        />
-        <BucketTable
-          bucketId={bucket._id}
-          columns={filteredColumns}
-          data={bucketData?.data ?? []}
-          onScrollEnd={loadMoreBucketData}
-          totalDataLength={bucketData?.meta?.total ?? 0}
-          maxHeight="88vh"
-          loading={isTableLoading}
-          tableRef={tableRef}
-          primaryKey={bucket.primary || "_id"}
-        />
-      </div>
-    </EntrySelectionProvider>
+    <div className={styles.container}>
+      <BucketActionBar
+        onSearch={handleSearch}
+        bucket={bucket as BucketType}
+        bucketData={bucketData?.data ?? []}
+        deleteBucketEntry={deleteBucketEntry}
+        onRefresh={handleRefresh}
+        columns={formattedColumns}
+        visibleColumns={visibleColumns}
+        toggleColumn={toggleColumn}
+        searchLoading={bucketDataLoading && !isTableLoading}
+        refreshLoading={refreshLoading}
+      />
+      <BucketTable
+        bucketId={bucket._id}
+        columns={filteredColumns}
+        data={bucketData?.data ?? []}
+        onScrollEnd={loadMoreBucketData}
+        totalDataLength={bucketData?.meta?.total ?? 0}
+        maxHeight="88vh"
+        loading={isTableLoading}
+        tableRef={tableRef}
+        primaryKey={bucket.primary || "_id"}
+      />
+    </div>
   );
 }

@@ -8,7 +8,7 @@ import Confirmation from "../confirmation/Confirmation";
 import type {BucketDataType, BucketType, Property} from "src/services/bucketService";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 import BucketEntryDrawer from "../../organisms/BucketEntryDrawer/BucketEntryDrawer";
-import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
+import {useEntrySelection} from "../../../hooks/useEntrySelection";
 
 type BucketActionBarProps = {
   onRefresh: () => Promise<BucketDataType | void>;
@@ -106,7 +106,7 @@ const BucketActionBar = ({
   deleteBucketEntry
 }: BucketActionBarProps) => {
   const [searchValue, setSearchValue] = useState("");
-  const {selectedEntries, deselectEntry} = useEntrySelection();
+  const {selectedEntries, deselectEntry} = useEntrySelection(bucket._id);
 
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -155,26 +155,35 @@ const BucketActionBar = ({
   const handleEntryDeletion = async () => {
     setDeleteLoading(true);
     setDeleteEntryError(null);
-    const failedEntryIds: string[] = [];
-    await Promise.all(
-      Array.from(selectedEntries).map(async entryId => {
-        const result = await deleteBucketEntry(entryId, bucket._id);
-        if (!result) {
-          failedEntryIds.push(entryId);
-        }
-      })
-    );
+    try {
+      const failedEntryIds: string[] = [];
+      const deletedEntryIds: string[] = [];
+      await Promise.all(
+        Array.from(selectedEntries).map(async entryId => {
+          const result = await deleteBucketEntry(entryId, bucket._id);
+          if (!result) {
+            failedEntryIds.push(entryId);
+          } else {
+            deletedEntryIds.push(result);
+          }
+        })
+      );
 
-    const newBucketData = await onRefresh();
-    if (newBucketData) {
-      const dataIds = new Set(newBucketData?.data.map(d => d._id));
-      const deletedIds = [...selectedEntries].filter(id => !dataIds.has(id));
-      deletedIds.forEach(id => deselectEntry(id));
+      deletedEntryIds.forEach(id => deselectEntry(id));
+      await onRefresh();
+
+      const message = generateErrorMessage(failedEntryIds);
+      if (message) {
+        setDeleteEntryError(message);
+      } else {
+        setIsDeleteConfirmationOpen(false);
+      }
+    } catch (error) {
+      console.error("Failed to delete entries:", error);
+      setDeleteEntryError("An unexpected error occurred while deleting entries. Please try again.");
+    } finally {
+      setDeleteLoading(false);
     }
-    setDeleteLoading(false);
-    const message = generateErrorMessage(failedEntryIds);
-    if (message) setDeleteEntryError(message);
-    else setIsDeleteConfirmationOpen(false);
   };
 
   const handleCloseEntryDeletionForm = () => {
