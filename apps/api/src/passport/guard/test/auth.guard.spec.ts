@@ -42,7 +42,7 @@ describe("AuthGuard", () => {
       let restoreMock: () => void;
 
       beforeEach(() => {
-        guardClass = AuthGuard(["USER"]);
+        guardClass = AuthGuard({forbiddenStrategies: ["USER"]});
         restoreMock = mockPassportAuthenticate();
       });
 
@@ -90,7 +90,7 @@ describe("AuthGuard", () => {
       let restoreMock: () => void;
 
       beforeEach(() => {
-        guardClass = AuthGuard(["USER", "APIKEY"]);
+        guardClass = AuthGuard({forbiddenStrategies: ["USER", "APIKEY"]});
         restoreMock = mockPassportAuthenticate();
       });
 

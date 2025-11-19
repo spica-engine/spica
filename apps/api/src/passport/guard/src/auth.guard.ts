@@ -9,7 +9,6 @@ import {
 } from "@nestjs/common";
 import {AuthModuleOptions, Type} from "@nestjs/passport";
 import {defaultOptions} from "@nestjs/passport/dist/options.js";
-import {memoize} from "@nestjs/passport/dist/utils/memoize.util.js";
 import passport from "passport";
 
 export const StrategyType = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
@@ -21,16 +20,25 @@ export function isAValidStrategy(type: string) {
   return type.toLowerCase() in passport.strategies;
 }
 
-export const AuthGuard: (
-  forbiddenStrategies?: string[],
-  type?: string,
+export const AuthGuard: (options?: {
+  forbiddenStrategies?: string[];
+  type?: string;
   error_handlers?: {
     bad_request: (message) => Error;
     unauthorized: (message) => Error;
-  }
-) => Type<CanActivate> = memoize(createAuthGuard);
+  };
+}) => Type<CanActivate> = createAuthGuard;
 
-export function createAuthGuard(forbiddenStrategies?: string[], type?: string): Type<CanActivate> {
+export function createAuthGuard(options?: {
+  forbiddenStrategies?: string[];
+  type?: string;
+  error_handlers?: {
+    bad_request: (message) => Error;
+    unauthorized: (message) => Error;
+  };
+}): Type<CanActivate> {
+  let forbiddenStrategies = options?.forbiddenStrategies;
+  let type = options?.type;
   class MixinAuthGuard implements CanActivate {
     constructor(@Optional() private readonly options?: AuthModuleOptions) {}
 
@@ -57,10 +65,9 @@ export function createAuthGuard(forbiddenStrategies?: string[], type?: string): 
       } else {
         strategyType = type.toLowerCase();
       }
+      checkForbiddenStrategy(forbiddenStrategies, strategyType);
 
       request.strategyType = strategyType.toUpperCase();
-
-      checkForbiddenStrategy(forbiddenStrategies, strategyType);
 
       const user = await passportFn(
         strategyType,
@@ -114,10 +121,9 @@ export class MixinAuthGuard implements CanActivate {
     } else {
       strategyType = this.type.toLowerCase();
     }
+    checkForbiddenStrategy(this.forbiddenStrategies, strategyType);
 
     request.strategyType = strategyType.toUpperCase();
-
-    checkForbiddenStrategy(this.forbiddenStrategies, strategyType);
 
     const user = await passportFn(strategyType, options, (err: Error, user: unknown, info: any) => {
       if (err) {
