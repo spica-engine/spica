@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/passport/user-create",
+  "type": "object",
+  "title": "The user schema",
+  "required": ["username", "password"],
+  "properties": {
+    "username": {
+      "type": "string",
+      "title": "Username of the user",
+      "minLength": 3
+    },
+    "password": {
+      "type": "string",
+      "title": "Password of the user",
+      "minLength": 3
+    },
+    "deactivateJwtsBefore": {
+      "type": "number",
+      "title": "Unix timestamp (in seconds). All JWTs issued before this timestamp will be considered invalid"
+    },
+    "attributes": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}
