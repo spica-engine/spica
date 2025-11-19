@@ -13,6 +13,7 @@ export enum ChangeOrigin {
 }
 
 export interface ChangeLog {
+  _id?: ObjectId;
   module: string;
   sub_module: string;
   type: ChangeType;

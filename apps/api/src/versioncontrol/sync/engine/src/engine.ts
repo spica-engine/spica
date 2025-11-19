@@ -6,7 +6,8 @@ import {
   DocumentChangeSupplier,
   PendingSync,
   Sync,
-  SyncStatuses
+  SyncStatuses,
+  VC_REPRESENTATIVE_MANAGER
 } from "@spica-server/interface/versioncontrol";
 import {getSupplier} from "./supplier";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
@@ -14,14 +15,20 @@ import {getApplier} from "./applier";
 import {ChangeLogProcessor} from "@spica-server/versioncontrol/processors/changelog";
 import {SyncProcessor} from "@spica-server/versioncontrol/processors/sync";
 import {JobReducer} from "@spica-server/replication";
+import {Inject, Optional} from "@nestjs/common";
 
 export class SyncEngine {
   private readonly changeHandlers: ChangeHandler[] = [];
 
   constructor(
+    @Inject()
     private readonly changeLogProcessor: ChangeLogProcessor,
+    @Inject()
     private readonly syncProcessor: SyncProcessor,
+    @Inject(VC_REPRESENTATIVE_MANAGER)
     private readonly repManager: IRepresentativeManager,
+    @Optional()
+    @Inject()
     private jobReducer?: JobReducer
   ) {
     this.registerSyncProcessor();
@@ -107,7 +114,7 @@ export class SyncEngine {
       const job = () => this.syncProcessor.push(sync);
 
       if (this.jobReducer) {
-        this.jobReducer.do({...sync, _id: sync._id.toString()}, job).catch(error => {
+        this.jobReducer.do({...sync, _id: changeLog._id.toString()}, job).catch(error => {
           console.error("SyncEngine ChangeLogProcessor Job reducer failed:", error);
         });
       } else {
