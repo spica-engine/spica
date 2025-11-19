@@ -10,7 +10,7 @@ import {
   RegisterVCChangeHandler
 } from "@spica-server/interface/versioncontrol";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {getSupplier, getApplier} from "@spica-server/env_var/synchronizer/schema";
+import {getSupplier, getApplier} from "./synchronizer/schema";
 import {EnvVarRealtimeModule} from "@spica-server/env_var/realtime";
 
 @Module({})

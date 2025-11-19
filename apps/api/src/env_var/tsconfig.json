@@ -17,9 +17,6 @@
     {
       "path": "../passport"
     },
-    {"path": "../../../../libs/interface/versioncontrol"},
-    {
-      "path": "./synchronizer/schema"
-    }
+    {"path": "../../../../libs/interface/versioncontrol"}
   ]
 }

@@ -10,7 +10,7 @@ import {
 import {PolicyController} from "./policy.controller";
 import {PolicyService} from "./policy.service";
 import PolicySchema from "./schemas/policy.json" with {type: "json"};
-import {getSupplier, getApplier} from "@spica-server/passport/policy/synchronizer/schema";
+import {getSupplier, getApplier} from "./synchronizer/schema";
 import {
   REGISTER_VC_CHANGE_HANDLER,
   RegisterVCChangeHandler

@@ -35,7 +35,6 @@ import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {Package} from "@spica-server/interface/function/pkgmanager";
 import chokidar from "chokidar";
-import {FunctionModule} from "./function.module";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {

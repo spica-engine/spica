@@ -61,9 +61,6 @@
     },
     {
       "path": "../../../../libs/interface/asset"
-    },
-    {
-      "path": "./synchronizer/schema"
     }
   ]
 }

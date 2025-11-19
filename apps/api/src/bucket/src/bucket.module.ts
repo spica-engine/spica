@@ -28,7 +28,7 @@ import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {BucketOptions} from "@spica-server/interface/bucket";
-import {getSupplier, getApplier} from "@spica-server/bucket/synchronizer/schema";
+import {getSupplier, getApplier} from "./synchronizer/schema";
 
 @Module({})
 export class BucketModule {

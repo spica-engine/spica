@@ -29,15 +29,12 @@ import {
 import {
   getSupplier as getSchemaSupplier,
   getApplier as getSchemaApplier
-} from "@spica-server/function/synchronizer/schema";
-import {
-  getSupplier as getIndexSupplier,
-  getApplier as getIndexApplier
-} from "@spica-server/function/synchronizer/index";
+} from "./synchronizer/schema";
+import {getSupplier as getIndexSupplier, getApplier as getIndexApplier} from "./synchronizer/index";
 import {
   getSupplier as getDependencySupplier,
   getApplier as getDependencyApplier
-} from "@spica-server/function/synchronizer/dependency";
+} from "./synchronizer/dependency";
 import {FunctionRealtimeModule} from "@spica-server/function/realtime";
 
 @Module({})

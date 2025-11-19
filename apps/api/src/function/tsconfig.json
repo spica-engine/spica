@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json", "test/synchronizer/schema.spec.ts"],
   "references": [
     {
       "path": "../versioncontrol"
@@ -33,13 +33,7 @@
       "path": "../../../../libs/database/pipeline"
     },
     {
-      "path": "./synchronizer/schema"
-    },
-    {
-      "path": "./synchronizer/index"
-    },
-    {
-      "path": "./synchronizer/dependency"
+      "path": "../../../../libs/database/testing"
     }
   ]
 }
