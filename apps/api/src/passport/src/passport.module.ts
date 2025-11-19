@@ -29,12 +29,12 @@ import {RefreshTokenModule} from "@spica-server/passport/refresh_token";
 @Global()
 @Module({})
 class PassportCoreModule {
-  static initialize(defaultStrategy?: string): DynamicModule {
+  static initialize(options: PassportOptions): DynamicModule {
     return {
       module: PassportCoreModule,
       imports: [
         CorePassportModule.register({
-          defaultStrategy: defaultStrategy,
+          defaultStrategy: options.defaultStrategy,
           session: false
         })
       ],
@@ -58,7 +58,7 @@ export class PassportModule {
         SchemaModule.forChild({
           schemas: [LoginSchema, StrategySchema]
         }),
-        PassportCoreModule.initialize(options.defaultStrategy),
+        PassportCoreModule.initialize(options),
         IdentityModule.forRoot(options.identityOptions),
         UserModule.forRoot(options.userOptions),
         PolicyModule.forRoot({realtime: options.policyRealtime}),
