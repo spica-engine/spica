@@ -65,41 +65,25 @@ export default function Bucket() {
         const responses: BatchResponseItem[] = batchResult.responses ?? [];
 
         const getResponseStatus = (responseItem: BatchResponseItem): number | undefined => {
-          if (typeof responseItem.error?.status === "number") {
-            return responseItem.error.status;
-          }
+          const candidates = [
+            responseItem.error?.status,
+            responseItem.response?.status,
+            responseItem.response?.statusCode
+          ];
 
-          const response = responseItem.response;
-          if (!response) {
-            return undefined;
-          }
-
-          if (typeof response.status === "number") {
-            return response.status;
-          }
-
-          if (typeof response.statusCode === "number") {
-            return response.statusCode;
-          }
-
-          return undefined;
+          return candidates.find((status): status is number => typeof status === "number");
         };
 
-        const failedIds = responses
-          .filter(responseItem => {
-            if (responseItem.error) {
-              return true;
-            }
+        const isFailedResponse = (responseItem: BatchResponseItem): boolean => {
+          if (responseItem.error) {
+            return true;
+          }
 
-            const status = getResponseStatus(responseItem);
+          const status = getResponseStatus(responseItem);
+          return typeof status === "number" && (status < 200 || status >= 300);
+        };
 
-            if (typeof status !== "number") {
-              return false;
-            }
-
-            return status < 200 || status >= 300;
-          })
-          .map(responseItem => responseItem.id);
+        const failedIds = responses.filter(isFailedResponse).map(responseItem => responseItem.id);
 
         const succeededIds = entryIds.filter(id => !failedIds.includes(id));
 
