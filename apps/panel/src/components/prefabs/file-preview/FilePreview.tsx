@@ -1,4 +1,4 @@
-import {FluidContainer, FlexElement, type TypeFile} from "oziko-ui-kit";
+import {FluidContainer, FlexElement} from "oziko-ui-kit";
 import styles from "./FilePreview.module.scss";
 import {useUpdateStorageItemMutation} from "../../../store/api";
 import {type DirectoryItem} from "../../../types/storage";
@@ -50,7 +50,6 @@ export const FilePreview = ({
   };
 
   return (
-    <>
       <FluidContainer
         className={styles.filePreviewContent}
         gap={10}
@@ -77,6 +76,5 @@ export const FilePreview = ({
           )
         }}
       />
-    </>
   );
 };
