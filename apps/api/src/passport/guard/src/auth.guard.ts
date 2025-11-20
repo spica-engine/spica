@@ -4,12 +4,12 @@ import {
   ExecutionContext,
   createParamDecorator,
   mixin,
-  Optional,
   UnauthorizedException
 } from "@nestjs/common";
-import {AuthModuleOptions, Type} from "@nestjs/passport";
+import {Type} from "@nestjs/passport";
 import {defaultOptions} from "@nestjs/passport/dist/options.js";
 import passport from "passport";
+import {memoize} from "@nestjs/passport/dist/utils/memoize.util.js";
 
 export const StrategyType = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
@@ -20,51 +20,26 @@ export function isAValidStrategy(type: string) {
   return type.toLowerCase() in passport.strategies;
 }
 
-export const AuthGuard: (options?: {
-  forbiddenStrategies?: string[];
-  type?: string;
-  error_handlers?: {
-    bad_request: (message) => Error;
-    unauthorized: (message) => Error;
-  };
-}) => Type<CanActivate> = createAuthGuard;
+export const AuthGuard: (forbiddenStrategies?: string[]) => Type<CanActivate> =
+  memoize(createAuthGuard);
 
-export function createAuthGuard(options?: {
-  forbiddenStrategies?: string[];
-  type?: string;
-  error_handlers?: {
-    bad_request: (message) => Error;
-    unauthorized: (message) => Error;
-  };
-}): Type<CanActivate> {
-  let forbiddenStrategies = options?.forbiddenStrategies;
-  let type = options?.type;
+export function createAuthGuard(forbiddenStrategies?: string[]): Type<CanActivate> {
   class MixinAuthGuard implements CanActivate {
-    constructor(@Optional() private readonly options?: AuthModuleOptions) {}
-
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const request = context.switchToHttp().getRequest(),
         response = context.switchToHttp().getResponse();
-      const options = {...defaultOptions, ...this.options};
-      if (options) {
-        if (Array.isArray(this.options.defaultStrategy)) {
-          throw "Default strategy can not be an array.";
-        } else {
-          type = type || this.options.defaultStrategy || "NO_STRATEGY";
-        }
-      }
+      const options = {...defaultOptions};
 
       const passportFn = createPassportContext(request, response);
 
       const desiredStrategy = parseAuthHeader(request.headers.authorization);
 
-      let strategyType: string;
-
-      if (desiredStrategy) {
-        strategyType = desiredStrategy.scheme.toLocaleLowerCase();
-      } else {
-        strategyType = type.toLowerCase();
+      if (!desiredStrategy) {
+        throw new UnauthorizedException("Authorization header is missing");
       }
+
+      const strategyType = desiredStrategy.scheme.toLowerCase();
+
       checkForbiddenStrategy(forbiddenStrategies, strategyType);
 
       request.strategyType = strategyType.toUpperCase();
@@ -93,34 +68,23 @@ export function createAuthGuard(options?: {
 }
 
 export class MixinAuthGuard implements CanActivate {
-  constructor(
-    private forbiddenStrategies?: string[],
-    @Optional() private readonly options?: AuthModuleOptions,
-    private type?: string
-  ) {}
+  constructor(private forbiddenStrategies?: string[]) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest(),
       response = context.switchToHttp().getResponse();
-    const options = {...defaultOptions, ...this.options};
-    if (options) {
-      if (Array.isArray(this.options.defaultStrategy)) {
-        throw "Default strategy can not be an array.";
-      } else {
-        this.type = this.type || this.options.defaultStrategy || "NO_STRATEGY";
-      }
-    }
+    const options = {...defaultOptions};
 
     const passportFn = createPassportContext(request, response);
 
     const desiredStrategy = parseAuthHeader(request.headers.authorization);
 
-    let strategyType: string;
-    if (desiredStrategy) {
-      strategyType = desiredStrategy.scheme.toLocaleLowerCase();
-    } else {
-      strategyType = this.type.toLowerCase();
+    if (!desiredStrategy) {
+      throw new UnauthorizedException("Authorization header is missing");
     }
+
+    const strategyType = desiredStrategy.scheme.toLowerCase();
+
     checkForbiddenStrategy(this.forbiddenStrategies, strategyType);
 
     request.strategyType = strategyType.toUpperCase();
