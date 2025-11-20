@@ -11,7 +11,7 @@ import {
   type BucketType
 } from "../../../store/api/bucketApi";
 import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
-import {useEntrySelection} from "../../../contexts/EntrySelectionContext";
+import {useEntrySelection} from "../../../hooks/useEntrySelection";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type {Property} from "../../../services/bucketService";
@@ -229,22 +229,33 @@ const ColumnHeader = ({
 
 const SelectColumnHeader = ({
   visibleIds,
-  dataExists
+  dataExists,
+  bucketId
 }: {
   visibleIds: string[];
   dataExists: boolean;
+  bucketId: string;
 }) => {
   return dataExists ? (
     <div className={styles.selectColumnHeader}>
       <span>
-        <SelectionCheckbox rowId="select-all" visibleIds={visibleIds} />
+        <SelectionCheckbox bucketId={bucketId} rowId="select-all" visibleIds={visibleIds} />
       </span>
     </div>
   ) : null;
 };
 
-function SelectionCheckbox({rowId, visibleIds}: {rowId: string; visibleIds?: string[]}) {
-  const {selectEntry, deselectEntry, selectedEntries} = useEntrySelection();
+function SelectionCheckbox({
+  bucketId,
+  rowId,
+  visibleIds
+}: {
+  bucketId: string;
+  rowId: string;
+  visibleIds?: string[];
+}) {
+  const {selectEntry, deselectEntry, selectEntries, deselectEntries, selectedEntries} =
+    useEntrySelection(bucketId);
 
   const isHeader = rowId === "select-all";
   const headerVisibleIds = isHeader ? visibleIds || [] : [];
@@ -263,9 +274,9 @@ function SelectionCheckbox({rowId, visibleIds}: {rowId: string; visibleIds?: str
       // If all are selected, deselect all visible; otherwise select all visible
       const shouldDeselect = checked;
       if (shouldDeselect) {
-        headerVisibleIds.forEach(id => deselectEntry(id));
+        deselectEntries(headerVisibleIds);
       } else {
-        headerVisibleIds.forEach(id => selectEntry(id));
+        selectEntries(headerVisibleIds);
       }
     } else {
       if (!checked) selectEntry(rowId);
@@ -352,7 +363,7 @@ const buildDefaultColumns = (
 ): ColumnType[] => [
   {
     id: "0",
-    header: <SelectColumnHeader visibleIds={visibleIds} dataExists={dataExists} />,
+    header: <SelectColumnHeader visibleIds={visibleIds} dataExists={dataExists} bucketId={bucketId} />,
     key: "select",
     role: "select",
     type: FieldKind.Boolean,
@@ -385,7 +396,8 @@ function renderCell(
   rowId: string,
   type?: FieldKind,
   deletable?: boolean,
-  role?: TypeColumnRole
+  role?: TypeColumnRole,
+  bucketId?: string
 ) {
   function renderDefault() {
     return (
@@ -402,7 +414,7 @@ function renderCell(
   if (type === FieldKind.Boolean) {
     switch (role) {
       case "select":
-        return <SelectionCheckbox rowId={rowId} />;
+        return bucketId ? <SelectionCheckbox bucketId={bucketId} rowId={rowId} /> : null;
       default:
         return <Checkbox className={styles.checkbox} checked={!!cellData} />;
     }
@@ -470,7 +482,7 @@ function buildColumnMeta(columns: ColumnType[]): Record<string, ColumnMeta> {
     ])
   );
 }
-function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
+function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>, bucketId: string) {
   const allKeys = Object.keys(columnMap);
 
   return data.map(row => {
@@ -492,7 +504,7 @@ function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>) {
           key,
           {
             id: `${meta.id}-${fullRow._id}`,
-            value: renderCell(value, fullRow._id, meta.type, meta.deletable, meta.role)
+            value: renderCell(value, fullRow._id, meta.type, meta.deletable, meta.role, bucketId)
           }
         ];
       })
@@ -607,8 +619,8 @@ const BucketTable = ({
   );
   const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
   const formattedData = useMemo(
-    () => formatDataRows(data, columnMap),
-    [data, columnMap, columnMap.length]
+    () => formatDataRows(data, columnMap, bucketId),
+    [data, columnMap, bucketId]
   );
 
 
