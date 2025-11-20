@@ -25,4 +25,13 @@ export class FunctionPipelineBuilder extends PipelineBuilder {
     };
     return this.attachToPipeline(envVars && envVars.length, filter);
   }
+
+  filterByLanguage(language: string) {
+    const filter = {
+      $match: {
+        language: language
+      }
+    };
+    return this.attachToPipeline(language, filter);
+  }
 }

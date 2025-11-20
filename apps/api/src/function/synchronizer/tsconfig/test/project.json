@@ -1,0 +1,5 @@
+{
+  "name": "api/function/synchronizer/tsconfig/test",
+  "sourceRoot": "apps/api/src/function/synchronizer/tsconfig/test",
+  "projectType": "application"
+}

@@ -197,11 +197,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.writeFile(filePath, index);
   }
 
-  read(fn: Function, scope: "index" | "dependency"): Promise<string> {
-    let filePath = this.getFunctionBuildEntrypoint(fn);
-    if (scope === "dependency") {
-      filePath = path.join(this.getFunctionRoot(fn), "package.json");
+  private getFilePath(fn: Function, scope: "index" | "dependency" | "tsconfig"): string {
+    switch (scope) {
+      case "dependency":
+        return path.join(this.getFunctionRoot(fn), "package.json");
+      case "tsconfig":
+        return path.join(this.getFunctionRoot(fn), "tsconfig.json");
+      case "index":
+        return this.getFunctionBuildEntrypoint(fn);
     }
+  }
+
+  read(fn: Function, scope: "index" | "dependency" | "tsconfig"): Promise<string> {
+    const filePath = this.getFilePath(fn, scope);
     return fs.promises
       .readFile(filePath)
       .then(b => b.toString())
