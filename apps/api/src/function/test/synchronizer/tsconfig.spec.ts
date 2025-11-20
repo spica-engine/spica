@@ -4,7 +4,7 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {DatabaseService} from "@spica-server/database";
 import {EnvVarService} from "@spica-server/env_var/services";
-import {getSupplier} from "../../src/synchronizer/tsconfig";
+import {getSupplier, getApplier} from "../../src/synchronizer/tsconfig";
 import * as CRUD from "../../src/crud";
 import {ChangeLog, ChangeOrigin, ChangeType} from "@spica-server/interface/versioncontrol";
 import {Function} from "@spica-server/interface/function";
@@ -237,6 +237,81 @@ describe("Function tsconfig Synchronizer", () => {
             done();
           }
         });
+      });
+    });
+  });
+
+  describe("applier", () => {
+    let tsconfigApplier;
+
+    beforeEach(() => {
+      tsconfigApplier = getApplier(functionService, engine);
+    });
+
+    it("should return DocumentChangeApplier with correct metadata", () => {
+      expect(tsconfigApplier).toMatchObject({
+        module: "function",
+        subModule: "tsconfig",
+        fileExtensions: ["json"],
+        apply: expect.any(Function)
+      });
+    });
+
+    it("should not apply any changes and return FAILED status", async () => {
+      const mockFunction: Function = {
+        _id: new ObjectId(),
+        name: "test_function",
+        description: "Test delete function",
+        language: "typescript",
+        timeout: 60,
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "get",
+              path: "/test",
+              preflight: true
+            }
+          }
+        }
+      };
+      const index = `export function handler(req, res) { res.send("Hello World"); }`;
+      CRUD.insert(functionService, engine, mockFunction).then(async fn => {
+        await CRUD.index.write(functionService, engine, fn._id, index);
+      });
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "tsconfig",
+        origin: ChangeOrigin.DOCUMENT,
+        type: ChangeType.CREATE,
+        resource_id: mockFunction._id.toString(),
+        resource_slug: mockFunction.name,
+        resource_content: JSON.stringify({
+          compilerOptions: {
+            moduleResolution: "Node10",
+            module: "ES2022",
+            target: "ES2022",
+            typeRoots: ["./node_modules/@types"],
+            sourceMap: true,
+            alwaysStrict: true,
+            preserveSymlinks: true,
+            incremental: true,
+            declaration: true,
+            baseUrl: ".",
+            rootDir: "."
+          }
+        }),
+        resource_extension: "json",
+        created_at: new Date()
+      };
+
+      const result = await tsconfigApplier.apply(changeLog);
+      expect(result).toMatchObject({
+        status: "FAILED",
+        reason: `tsconfig is read-only and changes cannot be applied.`
       });
     });
   });
