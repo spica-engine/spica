@@ -45,6 +45,21 @@ export type {
   BucketListResponse,
 } from './bucketApi';
 
+export {
+  batchApi,
+  batchApiReducerPath,
+  batchApiMiddleware,
+  useExecuteBatchMutation,
+} from './batchApi';
+
+export type {
+  BatchRequestMethod,
+  BatchRequestItem,
+  BatchRequestPayload,
+  BatchResponse,
+  BatchResponseItem,
+} from './batchApi';
+
 export { 
   identityApi,
   identityApiReducerPath,
