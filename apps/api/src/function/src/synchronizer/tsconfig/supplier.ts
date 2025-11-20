@@ -42,11 +42,16 @@ export const getSupplier = (
             language: "typescript"
           }
         }).then(functions => {
-          functions.map(async fn => {
-            const content = await engine.read(fn, "tsconfig");
-            const changelog = getChangeLogForTsconfig(ChangeType.CREATE, fn, content);
-            observer.next(changelog);
-          });
+          try {
+            functions.map(async fn => {
+              const content = await engine.read(fn, "tsconfig");
+              const changelog = getChangeLogForTsconfig(ChangeType.CREATE, fn, content);
+              observer.next(changelog);
+            });
+          } catch (error) {
+            observer.error(error);
+            return;
+          }
         });
 
         const subscription = engine.watch("tsconfig").subscribe({
@@ -56,8 +61,12 @@ export const getSupplier = (
               update: ChangeType.UPDATE,
               delete: ChangeType.DELETE
             };
-
             const type = changeMap[change.type];
+
+            if (!Object.values(ChangeType).includes(type)) {
+              console.warn("Unknown change type:", change.type);
+              return;
+            }
 
             const changeLog = getChangeLogForTsconfig(type, change.fn, change.fn.content);
             observer.next(changeLog);
