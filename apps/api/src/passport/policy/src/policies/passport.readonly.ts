@@ -3,6 +3,7 @@ import StrategyReadOnly from "./strategy.readonly";
 import ApiKeyReadOnly from "./apikey.readonly";
 import PolicyReadOnly from "./policy.readonly";
 import RefreshTokenReadonlyAccess from "./refresh.token.readonly";
+import UserReadOnly from "./user.readonly";
 
 export default {
   _id: "PassportReadOnlyAccess",
@@ -13,6 +14,7 @@ export default {
     ...ApiKeyReadOnly.statement,
     ...PolicyReadOnly.statement,
     ...StrategyReadOnly.statement,
-    ...RefreshTokenReadonlyAccess.statement
+    ...RefreshTokenReadonlyAccess.statement,
+    ...UserReadOnly.statement
   ]
 };
