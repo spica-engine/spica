@@ -85,7 +85,8 @@ const STORAGE_FILTER_TEMPLATE: TypeFilterValue = {
   }
 };
 
-const sortTypes = (types: string[]) => [...types].filter(Boolean).sort();
+const sortTypes = (types: string[]) =>
+  [...types].filter(Boolean).sort((first, second) => first.localeCompare(second));
 
 export const cloneStorageFilterValues = (filter: TypeFilterValue): TypeFilterValue => ({
   type: [...filter.type],
