@@ -1,12 +1,16 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../index';
-import type { TypeDirectories } from '../../types/storage';
+import type { TypeDirectories, DirectoryItem } from '../../types/storage';
 import { getParentPath } from '../../pages/storage/utils';
 import { ROOT_PATH } from '../../pages/storage/constants';
+import type {StorageFilterQuery} from "../../utils/storageFilter";
 
 interface StorageState {
   directory: TypeDirectories;
   currentDirectory: string;
+  searchQuery: string;
+  searchResults: DirectoryItem[];
+  filterQuery: StorageFilterQuery | null;
 }
 
 const INITIAL_DIRECTORIES: TypeDirectories = [
@@ -23,6 +27,9 @@ const INITIAL_DIRECTORIES: TypeDirectories = [
 const initialState: StorageState = {
   directory: INITIAL_DIRECTORIES,
   currentDirectory: ROOT_PATH,
+  searchQuery: "",
+  searchResults: [],
+  filterQuery: null,
 };
 
 const storageSlice = createSlice({
@@ -34,6 +41,15 @@ const storageSlice = createSlice({
     },
     setCurrentDirectory: (state, action: PayloadAction<string>) => {
       state.currentDirectory = action.payload;
+    },
+    setSearchQuery: (state, action: PayloadAction<string>) => {
+      state.searchQuery = action.payload;
+    },
+    setSearchResults: (state, action: PayloadAction<DirectoryItem[]>) => {
+      state.searchResults = action.payload;
+    },
+    setFilterQuery: (state, action: PayloadAction<StorageFilterQuery | null>) => {
+      state.filterQuery = action.payload ?? null;
     },
     handleFolderClick: (state, action: PayloadAction<{
       folderName: string;
@@ -128,6 +144,9 @@ const storageSlice = createSlice({
     resetStorage: (state) => {
       state.directory = INITIAL_DIRECTORIES;
       state.currentDirectory = ROOT_PATH;
+      state.searchQuery = "";
+      state.searchResults = [];
+      state.filterQuery = null;
     },
   },
 });
@@ -135,6 +154,9 @@ const storageSlice = createSlice({
 export const { 
   setDirectory, 
   setCurrentDirectory, 
+  setSearchQuery,
+  setSearchResults,
+  setFilterQuery,
   handleFolderClick,
   resetStorage 
 } = storageSlice.actions;
@@ -142,6 +164,10 @@ export const {
 // Selectors
 export const selectDirectory = (state: RootState): TypeDirectories => state.storage.directory;
 export const selectCurrentDirectory = (state: RootState): string => state.storage.currentDirectory;
+export const selectSearchQuery = (state: RootState): string => state.storage.searchQuery;
+export const selectSearchResults = (state: RootState): DirectoryItem[] => state.storage.searchResults;
+export const selectStorageFilterQuery = (state: RootState): StorageFilterQuery | null =>
+  state.storage.filterQuery;
 
 export default storageSlice.reducer;
 

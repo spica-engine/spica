@@ -36,11 +36,18 @@ export {
 export {
   setDirectory,
   setCurrentDirectory,
+  setSearchQuery,
+  setSearchResults,
+  setFilterQuery,
   handleFolderClick,
   resetStorage,
   selectDirectory,
   selectCurrentDirectory,
+  selectSearchQuery,
+  selectSearchResults,
+  selectStorageFilterQuery,
 } from './slices/storageSlice';
+
 
 export {
   selectEntry,

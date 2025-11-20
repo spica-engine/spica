@@ -1,8 +1,15 @@
 
-import {useRef, useEffect, useMemo} from "react";
+import {useRef, useEffect, useMemo, useState} from "react";
 import {FlexElement, Spinner} from "oziko-ui-kit";
 import {useAppSelector, useAppDispatch} from "../../../../store/hook";
-import {selectDirectory, setDirectory, handleFolderClick as handleFolderClickAction} from "../../../../store";
+import {
+  selectDirectory,
+  setDirectory,
+  handleFolderClick as handleFolderClickAction,
+  selectSearchQuery,
+  selectSearchResults,
+  selectStorageFilterQuery
+} from "../../../../store";
 import {useDragAndDrop} from "../../hooks/useDragAndDrop";
 import {useStorageDataSync} from "../../hooks/useStorageDataSync";
 import {useFileOperations} from "../../hooks/useFileOperations";
@@ -31,12 +38,17 @@ export function StorageItemColumns({
   const containerRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
   const directory = useAppSelector(selectDirectory);
+  const searchQuery = useAppSelector(selectSearchQuery);
+  const searchResults = useAppSelector(selectSearchResults);
+  const activeFilterQuery = useAppSelector(selectStorageFilterQuery);
+  const [isSearchViewActive, setIsSearchViewActive] = useState(false);
+  const lastActivatedQueryRef = useRef("");
 
   const handleSetDirectory = (dirs: TypeDirectories) => {
     dispatch(setDirectory(dirs));
   };
 
-  useStorageDataSync(directory, handleSetDirectory);
+  useStorageDataSync(directory, handleSetDirectory, activeFilterQuery);
   const {onUploadComplete} = useFileOperations(directory, handleSetDirectory, setPreviewFile);
   const {handleDrop} = useDragAndDrop(directory, handleSetDirectory);
 
@@ -57,6 +69,24 @@ export function StorageItemColumns({
       })
     );
   };
+
+  const isSearching = isSearchViewActive;
+
+  useEffect(() => {
+    const trimmedQuery = searchQuery.trim();
+    const hasSearchQuery = trimmedQuery.length > 0;
+
+    if (!hasSearchQuery) {
+      setIsSearchViewActive(false);
+      lastActivatedQueryRef.current = "";
+      return;
+    }
+
+    if (searchResults.length > 0 && searchQuery !== lastActivatedQueryRef.current) {
+      setIsSearchViewActive(true);
+      lastActivatedQueryRef.current = searchQuery;
+    }
+  }, [searchQuery, searchResults]);
 
   const visibleDirectories = useMemo(
     () =>
@@ -102,14 +132,40 @@ export function StorageItemColumns({
             return firstName.localeCompare(secondName);
           });
 
+          const isSearchColumn = isSearching && (dir.currentDepth || 0) === 1;
+          const itemsToRender = isSearchColumn ? searchResults : orderedItems;
+
           const folderPath =
             dir.fullPath === ROOT_PATH
               ? ""
               : dir.fullPath.split("/").filter(Boolean).join("/") + "/";
 
+          const isLastColumn = isSearchColumn
+            ? visibleDirectories.length === 1
+            : maxDepth === dir.currentDepth;
+
           const columnClassName = `${styles.storageItemColumnContainer} ${
-            maxDepth === dir.currentDepth ? styles.lastColumn : ""
+            isLastColumn ? styles.lastColumn : ""
           }`;
+
+          if (isSearchColumn) {
+            return (
+              <div className={columnClassName} key={`${dir.fullPath}-search`}>
+                <StorageItemColumn
+                  items={itemsToRender}
+                  handleFolderClick={handleFolderClick}
+                  setPreviewFile={setPreviewFile}
+                  depth={dir.currentDepth || 0}
+                  directory={directory}
+                  previewFileId={previewFile?._id}
+                  prefix=""
+                  onUploadComplete={onUploadComplete}
+                  isDraggingDisabled
+                  StorageItem={StorageItem}
+                />
+              </div>
+            );
+          }
 
           return dir.items ? (
             <DroppableColumn
@@ -120,7 +176,7 @@ export function StorageItemColumns({
               className={columnClassName}
             >
               <StorageItemColumn
-                items={orderedItems}
+                items={itemsToRender}
                 handleFolderClick={handleFolderClick}
                 setPreviewFile={setPreviewFile}
                 depth={dir.currentDepth || 0}
