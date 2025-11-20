@@ -362,10 +362,10 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index
       containerRef.current = node;
       if (node) {
         drop(node);
-        dragPreview(node);
+        dragPreview(node.querySelector(" & > div > div > div"));
       }
     },
-    [drop, dragPreview]
+    [drop, dragPreview, isDragging]
   );
 
   const setDragHandleRef = useCallback(
