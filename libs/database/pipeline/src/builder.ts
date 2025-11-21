@@ -40,7 +40,7 @@ export class PipelineBuilder implements IPipelineBuilder {
     return this;
   }
 
-  private isValidObject(obj) {
+  protected isValidObject(obj) {
     return typeof obj == "object" && !Array.isArray(obj) && !!Object.keys(obj).length;
   }
 

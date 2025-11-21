@@ -3,7 +3,7 @@ import {ObjectId} from "@spica-server/database";
 export interface PreActivity {
   action: Action;
   identifier?: string | ObjectId;
-  username?: string;
+  username?: string | ObjectId;
 }
 
 export interface ModuleActivity extends PreActivity {
