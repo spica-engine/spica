@@ -26,7 +26,15 @@ export interface IGuardService {
     options?: {resourceFilter: boolean};
   }): Promise<boolean>;
 
-  checkAuthorization({request, response}: {request: any; response: any});
+  checkAuthorization({
+    request,
+    response,
+    allowedStrategies
+  }: {
+    request: any;
+    response: any;
+    allowedStrategies?: string[];
+  });
 }
 
 // Since we can not depend on since

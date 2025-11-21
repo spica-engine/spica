@@ -8,22 +8,22 @@ import {PassportTestingModule} from "@spica-server/passport/testing";
 
 @Controller("test")
 export class TestController {
-  @Get("no-forbidden")
+  @Get("allow-all")
   @UseGuards(AuthGuard())
-  noForbidden() {
-    return {message: "no-forbidden"};
+  allowAll() {
+    return {message: "allow-all"};
   }
 
-  @Get("forbidden-user")
-  @UseGuards(AuthGuard(["USER"]))
-  forbiddenUser() {
-    return {message: "forbidden-user"};
+  @Get("allow-identity")
+  @UseGuards(AuthGuard(["IDENTITY"]))
+  allowIdentity() {
+    return {message: "allow-identity"};
   }
 
-  @Get("forbidden-user-apikey")
+  @Get("allow-user-apikey")
   @UseGuards(AuthGuard(["USER", "APIKEY"]))
-  forbiddenUserApikey() {
-    return {message: "forbidden-user-apikey"};
+  allowUserApikey() {
+    return {message: "allow-user-apikey"};
   }
 }
 
@@ -59,7 +59,7 @@ describe("AuthGuard - Controller Tests", () => {
     await app.close();
   });
 
-  describe("No forbidden strategies - all strategies allowed", () => {
+  describe("Allow all strategies - no restrictions", () => {
     let restoreMock: () => void;
 
     beforeEach(() => {
@@ -70,35 +70,27 @@ describe("AuthGuard - Controller Tests", () => {
       restoreMock();
     });
 
-    it("should allow USER strategy", async () => {
-      const response = await req.get("/test/no-forbidden", undefined, {
-        Authorization: "USER user_token_123"
+    it("should allow USER, APIKEY, and IDENTITY strategies", async () => {
+      const results = await Promise.all([
+        req.get("/test/allow-all", undefined, {
+          Authorization: "USER user_token_123"
+        }),
+        req.get("/test/allow-all", undefined, {
+          Authorization: "APIKEY sk_1234567890"
+        }),
+        req.get("/test/allow-all", undefined, {
+          Authorization: "IDENTITY id_1234567890"
+        })
+      ]);
+
+      results.forEach(response => {
+        expect(response.statusCode).toBe(200);
+        expect(response.body.message).toBe("allow-all");
       });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.body.message).toBe("no-forbidden");
-    });
-
-    it("should allow APIKEY strategy", async () => {
-      const response = await req.get("/test/no-forbidden", undefined, {
-        Authorization: "APIKEY sk_1234567890"
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.body.message).toBe("no-forbidden");
-    });
-
-    it("should allow IDENTITY strategy", async () => {
-      const response = await req.get("/test/no-forbidden", undefined, {
-        Authorization: "IDENTITY id_1234567890"
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.body.message).toBe("no-forbidden");
     });
   });
 
-  describe("One forbidden strategy (USER) - USER fails, APIKEY and IDENTITY pass", () => {
+  describe("Allow IDENTITY strategy only - only IDENTITY passes, USER and APIKEY fail", () => {
     let restoreMock: () => void;
 
     beforeEach(() => {
@@ -109,35 +101,33 @@ describe("AuthGuard - Controller Tests", () => {
       restoreMock();
     });
 
-    it("should reject USER strategy with 401", async () => {
-      const response = await req.get("/test/forbidden-user", undefined, {
-        Authorization: "USER user_token_123"
-      });
+    it("should allow IDENTITY and reject USER and APIKEY strategies", async () => {
+      const results = await Promise.all([
+        req.get("/test/allow-identity", undefined, {
+          Authorization: "IDENTITY id_1234567890"
+        }),
+        req.get("/test/allow-identity", undefined, {
+          Authorization: "USER user_token_123"
+        }),
+        req.get("/test/allow-identity", undefined, {
+          Authorization: "APIKEY sk_1234567890"
+        })
+      ]);
 
-      expect(response.statusCode).toBe(401);
-      expect(response.body.message).toContain('Strategy "user" is forbidden');
-    });
+      const [identityResponse, userResponse, apikeyResponse] = results;
 
-    it("should allow APIKEY strategy", async () => {
-      const response = await req.get("/test/forbidden-user", undefined, {
-        Authorization: "APIKEY sk_1234567890"
-      });
+      expect(identityResponse.statusCode).toBe(200);
+      expect(identityResponse.body.message).toBe("allow-identity");
 
-      expect(response.statusCode).toBe(200);
-      expect(response.body.message).toBe("forbidden-user");
-    });
+      expect(userResponse.statusCode).toBe(401);
+      expect(userResponse.body.message).toContain('Strategy "user" is not allowed');
 
-    it("should allow IDENTITY strategy", async () => {
-      const response = await req.get("/test/forbidden-user", undefined, {
-        Authorization: "IDENTITY id_1234567890"
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.body.message).toBe("forbidden-user");
+      expect(apikeyResponse.statusCode).toBe(401);
+      expect(apikeyResponse.body.message).toContain('Strategy "apikey" is not allowed');
     });
   });
 
-  describe("Two forbidden strategies (USER, APIKEY) - both fail, IDENTITY passes", () => {
+  describe("Allow USER and APIKEY strategies - both pass, IDENTITY fails", () => {
     let restoreMock: () => void;
 
     beforeEach(() => {
@@ -148,31 +138,29 @@ describe("AuthGuard - Controller Tests", () => {
       restoreMock();
     });
 
-    it("should reject USER strategy with 401", async () => {
-      const response = await req.get("/test/forbidden-user-apikey", undefined, {
-        Authorization: "USER user_token_123"
-      });
+    it("should allow USER and APIKEY and reject IDENTITY strategy", async () => {
+      const results = await Promise.all([
+        req.get("/test/allow-user-apikey", undefined, {
+          Authorization: "USER user_token_123"
+        }),
+        req.get("/test/allow-user-apikey", undefined, {
+          Authorization: "APIKEY sk_1234567890"
+        }),
+        req.get("/test/allow-user-apikey", undefined, {
+          Authorization: "IDENTITY id_1234567890"
+        })
+      ]);
 
-      expect(response.statusCode).toBe(401);
-      expect(response.body.message).toContain('Strategy "user" is forbidden');
-    });
+      const [userResponse, apikeyResponse, identityResponse] = results;
 
-    it("should reject APIKEY strategy with 401", async () => {
-      const response = await req.get("/test/forbidden-user-apikey", undefined, {
-        Authorization: "APIKEY sk_1234567890"
-      });
+      expect(userResponse.statusCode).toBe(200);
+      expect(userResponse.body.message).toBe("allow-user-apikey");
 
-      expect(response.statusCode).toBe(401);
-      expect(response.body.message).toContain('Strategy "apikey" is forbidden');
-    });
+      expect(apikeyResponse.statusCode).toBe(200);
+      expect(apikeyResponse.body.message).toBe("allow-user-apikey");
 
-    it("should allow IDENTITY strategy", async () => {
-      const response = await req.get("/test/forbidden-user-apikey", undefined, {
-        Authorization: "IDENTITY id_1234567890"
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.body.message).toBe("forbidden-user-apikey");
+      expect(identityResponse.statusCode).toBe(401);
+      expect(identityResponse.body.message).toContain('Strategy "identity" is not allowed');
     });
   });
 });

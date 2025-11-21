@@ -4,9 +4,10 @@ import {
   ExecutionContext,
   createParamDecorator,
   mixin,
-  UnauthorizedException
+  UnauthorizedException,
+  Optional
 } from "@nestjs/common";
-import {Type} from "@nestjs/passport";
+import {AuthModuleOptions, Type} from "@nestjs/passport";
 import {defaultOptions} from "@nestjs/passport/dist/options.js";
 import passport from "passport";
 import {memoize} from "@nestjs/passport/dist/utils/memoize.util.js";
@@ -20,27 +21,38 @@ export function isAValidStrategy(type: string) {
   return type.toLowerCase() in passport.strategies;
 }
 
-export const AuthGuard: (forbiddenStrategies?: string[]) => Type<CanActivate> =
+export const AuthGuard: (allowedStrategies?: string[]) => Type<CanActivate> =
   memoize(createAuthGuard);
 
-export function createAuthGuard(forbiddenStrategies?: string[]): Type<CanActivate> {
+export function createAuthGuard(allowedStrategies?: string[]): Type<CanActivate> {
   class MixinAuthGuard implements CanActivate {
+    constructor(@Optional() private readonly options?: AuthModuleOptions) {}
     async canActivate(context: ExecutionContext): Promise<boolean> {
+      let type: string;
       const request = context.switchToHttp().getRequest(),
         response = context.switchToHttp().getResponse();
-      const options = {...defaultOptions};
+      const options = {...defaultOptions, ...this.options};
+      if (options) {
+        if (Array.isArray(this.options.defaultStrategy)) {
+          throw "Default strategy can not be an array.";
+        } else {
+          type = this.options.defaultStrategy || "NO_STRATEGY";
+        }
+      }
 
       const passportFn = createPassportContext(request, response);
 
       const desiredStrategy = parseAuthHeader(request.headers.authorization);
 
-      if (!desiredStrategy) {
-        throw new UnauthorizedException("Authorization header is missing");
+      let strategyType: string;
+
+      if (desiredStrategy) {
+        strategyType = desiredStrategy.scheme.toLocaleLowerCase();
+      } else {
+        strategyType = type.toLowerCase();
       }
 
-      const strategyType = desiredStrategy.scheme.toLowerCase();
-
-      checkForbiddenStrategy(forbiddenStrategies, strategyType);
+      checkAllowedStrategies(allowedStrategies, strategyType);
 
       request.strategyType = strategyType.toUpperCase();
 
@@ -68,24 +80,38 @@ export function createAuthGuard(forbiddenStrategies?: string[]): Type<CanActivat
 }
 
 export class MixinAuthGuard implements CanActivate {
-  constructor(private forbiddenStrategies?: string[]) {}
+  constructor(
+    @Optional() private readonly options?: AuthModuleOptions,
+    private type?: string,
+    private allowedStrategies?: string[]
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest(),
       response = context.switchToHttp().getResponse();
-    const options = {...defaultOptions};
+
+    const options = {...defaultOptions, ...this.options};
+    if (options) {
+      if (Array.isArray(this.options.defaultStrategy)) {
+        throw "Default strategy can not be an array.";
+      } else {
+        this.type = this.options.defaultStrategy || "NO_STRATEGY";
+      }
+    }
 
     const passportFn = createPassportContext(request, response);
 
     const desiredStrategy = parseAuthHeader(request.headers.authorization);
 
-    if (!desiredStrategy) {
-      throw new UnauthorizedException("Authorization header is missing");
+    let strategyType: string;
+
+    if (desiredStrategy) {
+      strategyType = desiredStrategy.scheme.toLocaleLowerCase();
+    } else {
+      strategyType = this.type.toLowerCase();
     }
 
-    const strategyType = desiredStrategy.scheme.toLowerCase();
-
-    checkForbiddenStrategy(this.forbiddenStrategies, strategyType);
+    checkAllowedStrategies(this.allowedStrategies, strategyType);
 
     request.strategyType = strategyType.toUpperCase();
 
@@ -125,13 +151,14 @@ function parseAuthHeader(hdrValue) {
   return matches && {scheme: matches[1], value: matches[2]};
 }
 
-function checkForbiddenStrategy(forbiddenStrategies: string[], strategyType: string): void {
-  if (forbiddenStrategies && forbiddenStrategies.length > 0) {
-    const isForbidden = forbiddenStrategies.some(
-      forbidden => forbidden.toLowerCase() === strategyType.toLowerCase()
-    );
-    if (isForbidden) {
-      throw new UnauthorizedException(`Strategy "${strategyType}" is forbidden`);
-    }
+function checkAllowedStrategies(allowedStrategies: string[], strategyType: string): void {
+  if (!allowedStrategies || allowedStrategies.length === 0) {
+    return;
+  }
+  const isAllowed = allowedStrategies.some(
+    allowed => allowed.toLowerCase() === strategyType.toLowerCase()
+  );
+  if (!isAllowed) {
+    throw new UnauthorizedException(`Strategy "${strategyType}" is not allowed`);
   }
 }

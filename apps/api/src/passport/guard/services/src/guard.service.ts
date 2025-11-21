@@ -52,8 +52,16 @@ export class GuardService implements IGuardService {
     );
   }
 
-  checkAuthorization({request, response}: {request: any; response: any; type?: string}) {
-    const guard = AuthGuard();
+  checkAuthorization({
+    request,
+    response,
+    allowedStrategies
+  }: {
+    request: any;
+    response: any;
+    allowedStrategies?: string[];
+  }) {
+    const guard = AuthGuard(allowedStrategies);
     return this.wrapResult(
       new guard(this.options).canActivate({
         switchToHttp: () => ({
