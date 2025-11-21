@@ -1,4 +1,4 @@
-import {useState, useCallback} from "react";
+import {useCallback} from "react";
 
 export type InsetValue = {
   top: number;
@@ -65,10 +65,6 @@ const clampAxis = (
 };
 
 export const usePopoverStack = () => {
-
-  const [, setUpdateCounter] = useState(0);
-  const forceUpdate = () => setUpdateCounter(prev => prev + 1);
-
   const clampInsetToViewport = useCallback(
     (inset: InsetValue, popoverWidth: number = 400, popoverHeight: number = 600): InsetValue => {
       const viewportWidth = window.innerWidth;
@@ -128,7 +124,6 @@ export const usePopoverStack = () => {
       const calculatedInset = clampInsetToViewport(initialInset, popoverWidth, popoverHeight);
 
       stackState.stack = [...currentStack, {id: popoverId, inset: calculatedInset}];
-      forceUpdate();
 
       return {popoverId, inset: calculatedInset};
     },
@@ -137,7 +132,6 @@ export const usePopoverStack = () => {
 
   const unregisterPopover = useCallback((popoverId: string) => {
     stackState.stack = stackState.stack.filter(entry => entry.id !== popoverId);
-    forceUpdate();
   }, []);
 
   const getInset = useCallback((popoverId: string): InsetValue | undefined => {

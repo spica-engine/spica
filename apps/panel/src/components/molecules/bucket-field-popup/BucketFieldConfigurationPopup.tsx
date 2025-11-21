@@ -70,7 +70,6 @@ const BucketFieldConfigurationPopup = ({
 
       let baseInset: InsetValue | undefined;
       if (parentInset) {
-        const viewportWidth = window.innerWidth;
         const selectionPopoverWidth = 200;
         const widthDifference = popoverWidth - selectionPopoverWidth;
 
