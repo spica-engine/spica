@@ -15,6 +15,7 @@ import {DATE, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {Filter, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Activity} from "@spica-server/interface/activity";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ActivityPipelineBuilder} from "./activity-pipeline.builder";
 
 @Controller("activity")
 export class ActivityController {
@@ -24,6 +25,7 @@ export class ActivityController {
   @UseGuards(AuthGuard(), ActionGuard("activity:index"))
   find(
     @Query("identifier") identifier,
+    @Query("username") username,
     @Query("action", DEFAULT([]), ARRAY(Number)) action: number[],
     @Query("resource", JSONP) resource: object,
     @Query("begin", DATE) begin: Date,
@@ -31,27 +33,14 @@ export class ActivityController {
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
   ) {
-    const aggregation: object[] = [
-      {
-        $lookup: {
-          from: "identity",
-          localField: "identifier",
-          foreignField: "_id",
-          as: "identifier"
-        }
-      },
-      {$unwind: "$identifier"},
-      {
-        $set: {
-          identifier: "$identifier.identifier"
-        }
-      }
-    ];
-
     let filter: Filter<Activity> = {};
 
     if (identifier) {
       filter.identifier = identifier;
+    }
+
+    if (username) {
+      filter.username = username;
     }
 
     if (!isNaN(begin.getTime()) && !isNaN(end.getTime())) {
@@ -71,21 +60,20 @@ export class ActivityController {
       filter = {...filter, resource};
     }
 
-    if (filter) {
-      aggregation.push({$match: filter});
-    }
-
-    aggregation.push({$sort: {_id: -1}});
+    const builder = new ActivityPipelineBuilder()
+      .attachAuthLookups()
+      .filterActivity(filter)
+      .sort({_id: -1});
 
     if (skip) {
-      aggregation.push({$skip: skip});
+      builder.skip(skip);
     }
 
     if (limit) {
-      aggregation.push({$limit: limit});
+      builder.limit(limit);
     }
 
-    return this.activityService.aggregate(aggregation).toArray();
+    return this.activityService.aggregate(builder.result()).toArray();
   }
 
   @Delete(":id")
