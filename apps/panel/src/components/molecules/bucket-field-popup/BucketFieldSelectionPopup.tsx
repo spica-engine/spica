@@ -1,4 +1,4 @@
-import {memo, useState, useEffect, useCallback, type ReactNode} from "react";
+import {memo, useState, useEffect, useCallback, useRef, type ReactNode} from "react";
 import {FlexElement, ListItem, Icon, Popover} from "oziko-ui-kit";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketFieldConfigurationPopup, {type PopupType} from "./BucketFieldConfigurationPopup";
@@ -6,7 +6,7 @@ import {FieldKind} from "../../../domain/fields";
 import {FIELD_REGISTRY} from "../../../domain/fields/registry";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type {BucketType} from "../../../store/api/bucketApi";
-import {usePopoverStack} from "../../../hooks/usePopoverStack";
+import {usePopoverStack, type InsetValue} from "../../../hooks/usePopoverStack";
 
 type BucketFieldSelectionPopupProps = {
   children: (props: {onOpen: (e: React.MouseEvent) => void} & {className?: string}) => ReactNode;
@@ -28,14 +28,34 @@ const BucketFieldSelectionPopup = ({
   const {registerPopover, unregisterPopover, getInset, formatInset} = usePopoverStack();
   const [popoverId, setPopoverId] = useState<string | null>(null);
   const [insetStyle, setInsetStyle] = useState<React.CSSProperties>({});
+  const [currentInset, setCurrentInset] = useState<InsetValue | null>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const selectionPopoverWidth = 200;
+  const selectionPopoverHeight = 400;
 
   const handleOpen = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
       setIsOpen(true);
-      // Register popover when opening
-      const {popoverId: newPopoverId, inset} = registerPopover();
+        
+      const triggerElement = e.currentTarget as HTMLElement;
+      triggerRef.current = triggerElement;
+      const rect = triggerElement.getBoundingClientRect();
+      
+      const popoverWidth = selectionPopoverWidth;
+      const popoverHeight = selectionPopoverHeight;
+      const gap = 4;
+      
+      const baseInset = {
+        top: rect.bottom + gap,
+        right: window.innerWidth - (rect.left + popoverWidth),
+        bottom: window.innerHeight - (rect.bottom + gap + popoverHeight),
+        left: rect.left
+      };
+      
+      const {popoverId: newPopoverId, inset} = registerPopover(baseInset, popoverWidth, popoverHeight);
       setPopoverId(newPopoverId);
+      setCurrentInset(inset);
       setInsetStyle({
         inset: formatInset(inset),
         position: "fixed" as const
@@ -47,14 +67,12 @@ const BucketFieldSelectionPopup = ({
   const handleClose = useCallback(() => {
     setIsOpen(false);
     setSelectedType(null);
-    // Unregister popover when closing
     if (popoverId) {
       unregisterPopover(popoverId);
       setPopoverId(null);
     }
   }, [popoverId, unregisterPopover]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (popoverId) {
@@ -62,12 +80,12 @@ const BucketFieldSelectionPopup = ({
       }
     };
   }, [popoverId, unregisterPopover]);
-
-  // Update inset style when popover becomes visible in stack
+  
   useEffect(() => {
     if (popoverId && isOpen) {
       const inset = getInset(popoverId);
       if (inset) {
+        setCurrentInset(inset);
         setInsetStyle({
           inset: formatInset(inset),
           position: "fixed" as const
@@ -106,8 +124,7 @@ const BucketFieldSelectionPopup = ({
       }}
       containerProps={{
         dimensionX: "fill",
-        className: styles.newFieldButtonContainer,
-        style: insetStyle
+        className: styles.newFieldButtonContainer
       }}
       content={
         <BucketFieldConfigurationPopup
@@ -117,6 +134,7 @@ const BucketFieldSelectionPopup = ({
           onSaveAndClose={handleSaveAndClose}
           popupType={popupType}
           forbiddenFieldNames={forbiddenFieldNames}
+          parentInset={currentInset}
         >
           <FlexElement dimensionX={200} direction="vertical" className={styles.container}>
             {Object.values(FIELD_REGISTRY).map(field => (

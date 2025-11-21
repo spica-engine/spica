@@ -12,7 +12,7 @@ import {FieldKind} from "../../../domain/fields";
 import styles from "./BucketFieldPopup.module.scss";
 import BucketAddField from "../../organisms/bucket-add-field/BucketAddField";
 import type {FieldFormState} from "../../../domain/fields/types";
-import {usePopoverStack} from "../../../hooks/usePopoverStack";
+import {usePopoverStack, type InsetValue} from "../../../hooks/usePopoverStack";
 
 export type PopupType = "add-field" | "edit-inner-field" | "add-inner-field";
 
@@ -27,6 +27,7 @@ type BucketFieldConfigurationPopupProps = {
   popupType?: PopupType;
   forbiddenFieldNames?: string[];
   popoverClassName?: string;
+  parentInset?: InsetValue | null;
 };
 
 const BucketFieldConfigurationPopup = ({
@@ -39,7 +40,8 @@ const BucketFieldConfigurationPopup = ({
   iconName,
   popupType,
   forbiddenFieldNames,
-  popoverClassName
+  popoverClassName,
+  parentInset
 }: BucketFieldConfigurationPopupProps) => {
   const innerContainerRef = useRef<HTMLDivElement>(null);
   const bucketAddFieldRef = useRef<HTMLDivElement>(null);
@@ -60,24 +62,45 @@ const BucketFieldConfigurationPopup = ({
     [onClose, popoverId, unregisterPopover]
   );
 
-  // Register/unregister popover based on isOpen state
+
   useEffect(() => {
     if (isOpen && !popoverId) {
-      // Register popover when opening
-      const {popoverId: newPopoverId, inset} = registerPopover();
+      const popoverWidth = 400;
+      const popoverHeight = 600;
+
+      let baseInset: InsetValue | undefined;
+      if (parentInset) {
+        const viewportWidth = window.innerWidth;
+        const selectionPopoverWidth = 200;
+        const widthDifference = popoverWidth - selectionPopoverWidth;
+
+        baseInset = {
+          top: parentInset.top,
+          right: Math.max(8, parentInset.right - widthDifference),
+          bottom: parentInset.bottom,
+          left: parentInset.left
+        };
+
+        const minRight = 8;
+        if (baseInset.right < minRight) {
+          const adjustment = minRight - baseInset.right;
+          baseInset.left = Math.max(8, baseInset.left - adjustment);
+          baseInset.right = minRight;
+        }
+      }
+
+      const {popoverId: newPopoverId, inset} = registerPopover(baseInset, popoverWidth, popoverHeight);
       setPopoverId(newPopoverId);
       setInsetStyle({
         inset: formatInset(inset),
         position: "fixed" as const
       });
     } else if (!isOpen && popoverId) {
-      // Unregister popover when closing
       unregisterPopover(popoverId);
       setPopoverId(null);
     }
-  }, [isOpen, popoverId, registerPopover, unregisterPopover, formatInset]);
+  }, [isOpen, popoverId, parentInset, registerPopover, unregisterPopover, formatInset]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (popoverId) {
@@ -86,7 +109,6 @@ const BucketFieldConfigurationPopup = ({
     };
   }, [popoverId, unregisterPopover]);
 
-  // Update inset style when popover becomes visible in stack
   useEffect(() => {
     if (popoverId && isOpen) {
       const inset = getInset(popoverId);
@@ -105,8 +127,7 @@ const BucketFieldConfigurationPopup = ({
       onClose={handleClose}
       containerProps={{
         ref: innerContainerRef,
-        className: popoverClassName || "",
-        style: insetStyle
+        className: popoverClassName || ""
       }}
       contentProps={{
         className: styles.bucketAddField,
