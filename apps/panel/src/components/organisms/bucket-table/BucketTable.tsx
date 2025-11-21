@@ -349,7 +349,7 @@ const NewFieldHeader = memo(({bucketId}: {bucketId: string}) => {
           onClick={onOpen}
         >
           <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
-          <span>New&nbsp;Field</span>
+          <span>New Field</span>
         </Button>
       )}
     </BucketFieldPopup>
