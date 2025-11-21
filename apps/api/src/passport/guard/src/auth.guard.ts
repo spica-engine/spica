@@ -79,58 +79,6 @@ export function createAuthGuard(allowedStrategies?: string[]): Type<CanActivate>
   return mixin(MixinAuthGuard);
 }
 
-export class MixinAuthGuard implements CanActivate {
-  constructor(
-    @Optional() private readonly options?: AuthModuleOptions,
-    private type?: string,
-    private allowedStrategies?: string[]
-  ) {}
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest(),
-      response = context.switchToHttp().getResponse();
-
-    const options = {...defaultOptions, ...this.options};
-    if (options) {
-      if (Array.isArray(this.options.defaultStrategy)) {
-        throw "Default strategy can not be an array.";
-      } else {
-        this.type = this.options.defaultStrategy || "NO_STRATEGY";
-      }
-    }
-
-    const passportFn = createPassportContext(request, response);
-
-    const desiredStrategy = parseAuthHeader(request.headers.authorization);
-
-    let strategyType: string;
-
-    if (desiredStrategy) {
-      strategyType = desiredStrategy.scheme.toLocaleLowerCase();
-    } else {
-      strategyType = this.type.toLowerCase();
-    }
-
-    checkAllowedStrategies(this.allowedStrategies, strategyType);
-
-    request.strategyType = strategyType.toUpperCase();
-
-    const user = await passportFn(strategyType, options, (err: Error, user: unknown, info: any) => {
-      if (err) {
-        throw new BadRequestException(err.message);
-      }
-      if (!user) {
-        throw new UnauthorizedException(info ? info.message : undefined);
-      }
-      return user;
-    });
-
-    request[options.property] = user;
-
-    return true;
-  }
-}
-
 const createPassportContext = (request, response) => (type, options, callback: Function) =>
   new Promise((resolve, reject) =>
     passport.authenticate(type, options, (err, user, info) => {
