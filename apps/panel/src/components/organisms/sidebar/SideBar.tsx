@@ -1,36 +1,26 @@
-import React, {type FC, type ReactNode, useState} from "react";
+import React, {type FC, useState} from "react";
 import styles from "./SideBar.module.scss";
 import {Icon, type IconName} from "oziko-ui-kit";
 import Logo from "../../atoms/logo/Logo";
-import type {TypeMenuItems, NavigatorItemGroup} from "../../../types/sidebar";
-import {getNavigationComponent} from "../../prefabs/navigation-registry";
+import {getNavigationComponent} from "../../../components/prefabs/navigations/navigation-registry";
+import { sideBarItems, type SideBarItem } from "../../../pages/home/sidebarItems";
 
 type TypeSideBar = {
-  menuItems?: TypeMenuItems[];
-  navigatorItems?: {
-    [key: string]: NavigatorItemGroup;
-  };
-  logo?: string;
-  footer?: ReactNode;
   toggleIconName?: IconName;
-  displayToggleIcon?: boolean;
   onNavigatorToggle?: (isOpen: boolean) => void;
 };
 
 const SideBar: FC<TypeSideBar> = ({
-  menuItems,
-  navigatorItems,
-  footer,
   toggleIconName = "chevronLeft",
-  displayToggleIcon = true,
   onNavigatorToggle
 }) => {
-  const [activeMenu, setActiveMenu] = useState<number>(0);
   const [showNavigator, setShowNavigator] = useState(true);
 
+  const [activeSideBarItem, setActiveSideBarItem] = useState<SideBarItem>(sideBarItems[0]);
+
   const handleClick = (index: number) => {
-    setActiveMenu(index);
     setShowNavigator(true);
+    setActiveSideBarItem(sideBarItems[index]);
   };
   const toggleNavigator = () => {
     setShowNavigator(prev => {
@@ -40,15 +30,10 @@ const SideBar: FC<TypeSideBar> = ({
     });
   };
 
-  const activeMenuItem = menuItems?.[activeMenu];
-  
-  const NavigationComponent = activeMenuItem 
-    ? getNavigationComponent(activeMenuItem.id)
+  const NavigationComponent = activeSideBarItem 
+    ? getNavigationComponent(activeSideBarItem.id)
     : null;
 
-  const activeNavigatorItems = activeMenuItem 
-    ? navigatorItems?.[activeMenuItem.id]
-    : undefined;
 
   return (
     <div className={styles.container}>
@@ -58,36 +43,33 @@ const SideBar: FC<TypeSideBar> = ({
         </div>
 
         <div className={styles.menu}>
-          {menuItems?.map((menuItem, index) => {
-            const isActive = menuItems?.[activeMenu].id === menuItem.id;
+          {sideBarItems?.map((item, index) => {
+            const isActive = activeSideBarItem.id === item.id;
             return (
-              <div
-                key={index}
-                className={`${styles.menuItem} ${activeMenu === index ? styles.active : ""}`}
+              <button
+                key={index + item.id}
+                className={`${styles.menuItem} ${isActive ? styles.active : ""}`}
                 onClick={() => handleClick(index)}
               >
                 <Icon
-                  name={menuItem.icon as IconName}
+                  name={item.icon}
                   size={isActive ? "lg" : "md"}
                   className={isActive ? styles.activeMenuIcon : styles.deactiveMenuIcon}
                 />
-              </div>
+              </button>
             );
           })}
-          {displayToggleIcon && (
-            <div className={styles.menuItem} onClick={toggleNavigator}>
+            <button className={styles.menuItem} onClick={toggleNavigator}>
               <Icon name={toggleIconName} />
-            </div>
-          )}
+            </button>
         </div>
 
-        {footer || <Icon name="forkRight" size={24} className={styles.versionControl} />}
+        <Icon name="forkRight" size={24} className={styles.versionControl} />
       </div>
 
       {showNavigator && NavigationComponent && (
         <NavigationComponent 
-          menuItem={activeMenuItem}
-          navigatorItems={activeNavigatorItems}
+          menuItem={activeSideBarItem}
         />
       )}
     </div>

@@ -1,4 +1,47 @@
+import type { IconName } from "oziko-ui-kit";
 import type {TypeMenuItems, TypeNavigatorItem} from "../../types/sidebar";
+
+export type SideBarItem = {
+  id: string;
+  name: string;
+  icon: IconName;
+};
+
+export const sideBarItems: SideBarItem[]=  [
+  {
+    id: "bucket",
+    name: "Bucket",
+    icon: "bucket",
+  },
+  {
+    id: "dashboard",
+    name: "Dashboard",
+    icon: "dashboard",
+  },
+  {
+    id: "storage",
+    name: "Storage",
+    icon: "storage",
+  },
+  {
+    id: "identity",
+    name: "Identity",
+    icon: "identities",
+  },
+  {
+    id: "function",
+    name: "Function",
+    icon: "function",
+  },
+  {
+    id: "webhook",
+    name: "Webhook",
+    icon: "webhook",
+  },
+]
+
+
+
 
 export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[] => [
   {

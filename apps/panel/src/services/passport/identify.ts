@@ -16,17 +16,17 @@ export async function authorization(
   openCallback?: (url: string) => void
 ): Promise<any> {
   if (typeof identityOrStrategy !== "string") {
-    return apiClient.post(`/api/passport/identify`, identityOrStrategy);
+    return apiClient.post(`/passport/identify`, identityOrStrategy);
   }
   //Login with strategy part
   const strategy = identityOrStrategy;
-  const strategyRes = await apiClient.get(`/api/passport/strategy/${strategy}/url`, {
+  const strategyRes = await apiClient.get(`/passport/strategy/${strategy}/url`, {
     params: {identityOrStrategy: strategy}
   });
 
   if (openCallback) openCallback(strategyRes.data.url);
 
-  return apiClient.get("/api/passport/identify", {
+  return apiClient.get("/passport/identify", {
     params: {state: strategyRes.data.state}
   });
 }
