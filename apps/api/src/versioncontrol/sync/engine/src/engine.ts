@@ -60,24 +60,6 @@ export class SyncEngine {
     docHandler.supplier.listen().subscribe(onChange);
   }
 
-  private getDocChangeHandler(supplier: DocumentChangeSupplier): ChangeHandler {
-    return {
-      supplier: supplier,
-      applier: getApplier(this.repManager, supplier),
-      moduleMeta: {module: supplier.module, subModule: supplier.subModule},
-      origin: ChangeOrigin.DOCUMENT
-    };
-  }
-
-  private getRepChangeHandler(applier: DocumentChangeApplier): ChangeHandler {
-    return {
-      supplier: getSupplier(this.repManager, applier),
-      applier: applier,
-      moduleMeta: {module: applier.module, subModule: applier.subModule},
-      origin: ChangeOrigin.REPRESENTATIVE
-    };
-  }
-
   private registerSyncProcessor() {
     const syncHandler = async (sync: Sync) => {
       const handler = this.findChangeHandlerOfSync(sync);
@@ -123,6 +105,24 @@ export class SyncEngine {
       }
     };
     this.changeLogProcessor.watch().subscribe(changeLogHandler);
+  }
+
+  private getDocChangeHandler(supplier: DocumentChangeSupplier): ChangeHandler {
+    return {
+      supplier: supplier,
+      applier: getApplier(this.repManager, supplier),
+      moduleMeta: {module: supplier.module, subModule: supplier.subModule},
+      origin: ChangeOrigin.DOCUMENT
+    };
+  }
+
+  private getRepChangeHandler(applier: DocumentChangeApplier): ChangeHandler {
+    return {
+      supplier: getSupplier(this.repManager, applier),
+      applier: applier,
+      moduleMeta: {module: applier.module, subModule: applier.subModule},
+      origin: ChangeOrigin.REPRESENTATIVE
+    };
   }
 
   private findChangeHandlerOfSync(sync: Sync): ChangeHandler | undefined {

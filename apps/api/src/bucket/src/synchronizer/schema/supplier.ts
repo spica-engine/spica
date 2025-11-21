@@ -68,13 +68,11 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
               break;
             default:
               console.warn("Unknown operation type:", change.operationType);
-              break;
+              return;
           }
 
-          if (changeType) {
-            const changeLog = getChangeLogFromBucket(change["fullDocument"], changeType);
-            observer.next(changeLog);
-          }
+          const changeLog = getChangeLogFromBucket(change["fullDocument"], changeType);
+          observer.next(changeLog);
         });
 
         stream.on("error", error => {
