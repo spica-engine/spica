@@ -8,7 +8,7 @@ export default async function (ctx: Context) {
       const collectionInfo = await ctx.database.listCollections({name: collectionName}).toArray();
 
       if (!collectionInfo.length) {
-        console.log(`[Migration] Collection "${collectionName}" does not exist, skipping...`);
+        ctx.console.log(`[Migration] Collection "${collectionName}" does not exist, skipping...`);
         continue;
       }
 
@@ -16,7 +16,7 @@ export default async function (ctx: Context) {
       const isAlreadyEnabled = currentInfo.options?.changeStreamPreAndPostImages?.enabled === true;
 
       if (isAlreadyEnabled) {
-        console.log(
+        ctx.console.log(
           `[Migration] Collection "${collectionName}" already has changeStreamPreAndPostImages enabled, skipping...`
         );
         continue;
@@ -27,11 +27,11 @@ export default async function (ctx: Context) {
         changeStreamPreAndPostImages: {enabled: true}
       });
 
-      console.log(
+      ctx.console.log(
         `[Migration] Successfully enabled changeStreamPreAndPostImages for collection "${collectionName}"`
       );
     } catch (error) {
-      console.error(
+      ctx.console.error(
         `[Migration] Error enabling changeStreamPreAndPostImages for "${collectionName}":`,
         error.message
       );

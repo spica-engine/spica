@@ -52,7 +52,7 @@ describe("Enable changeStreamPreAndPostImages for collections", () => {
     expect(webhooksInfo[0].options?.changeStreamPreAndPostImages?.enabled).toBe(undefined);
   });
 
-  it("should enable changeStreamPreAndPostImages only existing collections", async () => {
+  it("should enable changeStreamPreAndPostImages only for existing collections", async () => {
     await db.collection("buckets").insertOne({_id: new ObjectId(), name: "test bucket"});
     await db
       .collection("function")
