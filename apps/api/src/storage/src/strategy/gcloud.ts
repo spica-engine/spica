@@ -56,7 +56,7 @@ export class GCloud extends BaseStrategy {
   }
 
   delete(id: string) {
-    return this.bucket.deleteFiles({prefix: id});
+    this.bucket.deleteFiles({prefix: id});
   }
 
   async getMetadata(id: string) {
