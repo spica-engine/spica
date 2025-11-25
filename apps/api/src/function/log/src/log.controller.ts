@@ -19,7 +19,7 @@ export class LogController {
   constructor(private logService: LogService) {}
 
   @Get()
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   logs(
     @Query("limit", NUMBER) limit: number,
     @Query("skip", NUMBER) skip: number,
@@ -89,7 +89,7 @@ export class LogController {
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
   async clearLogs(
     @Param("id") fnId: string,
     @Query("begin", DEFAULT(() => new Date(0)), DATE) begin: Date,

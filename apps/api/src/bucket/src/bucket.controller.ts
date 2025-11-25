@@ -47,7 +47,7 @@ export class BucketController {
    * Returns predefined defaults
    */
   @Get("predefineddefaults")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   getPredefinedDefaults() {
     return this.bs.getPredefinedDefaults();
   }
@@ -56,7 +56,7 @@ export class BucketController {
    * Returns all schemas.
    */
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:index"))
   index(@ResourceFilter() resourceFilter: object) {
     return CRUD.find(this.bs, {resourceFilter, sort: {order: 1}});
   }
@@ -66,7 +66,7 @@ export class BucketController {
    * @param id Identifier of the schema.
    */
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:show"))
   async show(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.findOne(this.bs, id);
   }
@@ -96,7 +96,7 @@ export class BucketController {
    */
   @UseInterceptors(activity(createBucketActivity))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("bucket:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:create"))
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
     return CRUD.insert(this.bs, bucket).catch(error => {
       throw new HttpException(error.message, error.status || 500);
@@ -128,7 +128,7 @@ export class BucketController {
    */
   @UseInterceptors(activity(createBucketActivity), invalidateCache())
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:update"))
   async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
@@ -150,7 +150,7 @@ export class BucketController {
    * ```
    */
   @Patch(":id")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:update"))
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Headers("content-type") contentType: string,
@@ -202,7 +202,7 @@ export class BucketController {
   @UseInterceptors(activity(createBucketActivity), invalidateCache())
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("bucket:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.remove(this.bs, this.bds, this.history, id);
   }

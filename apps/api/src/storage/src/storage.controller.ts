@@ -58,7 +58,7 @@ export class StorageController {
    Ascending `{"content.size": 1}`
    */
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("storage:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:index"))
   async find(
     @ResourceFilter() resourceFilter: object,
     @Query("filter", JSONP) filter?: object,

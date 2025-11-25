@@ -48,7 +48,7 @@ export class ActivityController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("activity:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("activity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param("id", OBJECT_ID) id: ObjectId) {
     const deletedCount = await this.activityService.deleteOne({_id: id});
@@ -58,7 +58,7 @@ export class ActivityController {
   }
 
   @Delete()
-  @UseGuards(AuthGuard(), ActionGuard("activity:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("activity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteMany(@Body() ids: ObjectId[]) {
     const deletedCount = await this.activityService.deleteMany({
