@@ -48,11 +48,10 @@ export function createAuthGuard(allowedStrategies?: string[]): Type<CanActivate>
 
       if (desiredStrategy) {
         strategyType = desiredStrategy.scheme.toLocaleLowerCase();
+        checkAllowedStrategies(allowedStrategies, strategyType);
       } else {
         strategyType = type.toLowerCase();
       }
-
-      checkAllowedStrategies(allowedStrategies, strategyType);
 
       request.strategyType = strategyType.toUpperCase();
 
