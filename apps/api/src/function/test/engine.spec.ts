@@ -320,33 +320,31 @@ describe("Engine", () => {
     expect(fn.env_vars).toEqual([]);
   });
 
-  describe("Database Schema", () => {
-    it("should get initial schema", async () => {
-      await database.createCollection("function");
-      const expectedSchema: any = {
-        $id: "http://spica.internal/function/enqueuer/database",
-        type: "object",
-        required: ["collection", "type"],
-        properties: {
-          collection: {
-            title: "Collection Name",
-            type: "string",
-            viewEnum: ["function"],
-            enum: ["function"],
-            description: "Collection name that the event will be tracked on"
-          },
-          type: {
-            title: "Operation type",
-            description: "Operation type that must be performed in the specified collection",
-            type: "string",
-            enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
-          }
+  it("should get initial schema for database trigger", async () => {
+    await database.createCollection("test");
+    const expectedSchema: any = {
+      $id: "http://spica.internal/function/enqueuer/database",
+      type: "object",
+      required: ["collection", "type"],
+      properties: {
+        collection: {
+          title: "Collection Name",
+          type: "string",
+          viewEnum: expect.arrayContaining(["test"]),
+          enum: expect.arrayContaining(["test"]),
+          description: "Collection name that the event will be tracked on"
         },
-        additionalProperties: false
-      };
-      const schemaPromise = await engine.getSchema("database");
+        type: {
+          title: "Operation type",
+          description: "Operation type that must be performed in the specified collection",
+          type: "string",
+          enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+        }
+      },
+      additionalProperties: false
+    };
+    const schemaPromise = await engine.getSchema("database");
 
-      expect(schemaPromise).toEqual(expectedSchema);
-    });
+    expect(schemaPromise).toEqual(expectedSchema);
   });
 });

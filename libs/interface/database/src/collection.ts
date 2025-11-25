@@ -1,8 +1,8 @@
-import {CollectionOptions, ObjectId} from "mongodb";
+import {CreateCollectionOptions, ObjectId} from "mongodb";
 
 export interface InitializeOptions {
   entryLimit?: number;
-  collectionOptions?: CollectionOptions;
+  collectionOptions?: CreateCollectionOptions;
   afterInit?: (...args: any[]) => any;
 }
 

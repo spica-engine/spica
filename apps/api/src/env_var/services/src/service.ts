@@ -11,7 +11,9 @@ import {Observable} from "rxjs";
 @Injectable()
 export class EnvVarService extends BaseCollection<EnvVar>("env_var") {
   constructor(db: DatabaseService) {
-    super(db);
+    super(db, {
+      collectionOptions: {changeStreamPreAndPostImages: {enabled: true}}
+    });
   }
 
   watch(
