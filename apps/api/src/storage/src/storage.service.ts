@@ -186,17 +186,20 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
 
     const folderName = result.name;
-    const escapedName = this.escapeRegex(folderName);
+    const isFolder = folderName.endsWith("/");
 
-    const subResources = await this._coll
-      .find({
-        name: {$regex: new RegExp(`^${escapedName}`)}
-      })
-      .toArray();
+    if (isFolder) {
+      const escapedName = this.escapeRegex(folderName);
+      const subResources = await this._coll
+        .find({
+          name: {$regex: new RegExp(`^${escapedName}`)}
+        })
+        .toArray();
 
-    if (subResources.length > 0) {
-      const subResourceIds = subResources.map(resource => resource._id);
-      await this._coll.deleteMany({_id: {$in: subResourceIds}});
+      if (subResources.length > 0) {
+        const subResourceIds = subResources.map(resource => resource._id);
+        await this._coll.deleteMany({_id: {$in: subResourceIds}});
+      }
     }
 
     try {
