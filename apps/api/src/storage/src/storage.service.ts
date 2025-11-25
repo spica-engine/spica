@@ -199,7 +199,11 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       await this._coll.deleteMany({_id: {$in: subResourceIds}});
     }
 
-    await this.service.delete(folderName);
+    try {
+      await this.service.delete(folderName);
+    } catch (error) {
+      throw new Error(`Failed to delete storage files: ${error.message}`);
+    }
   }
 
   async updateMeta(_id: ObjectId, name: string) {

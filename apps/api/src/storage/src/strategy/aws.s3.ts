@@ -90,10 +90,13 @@ export class AWSS3 extends BaseStrategy {
 
   async delete(id: string): Promise<void> {
     await this.iterateSubResources(id, async obj => {
+      if (!obj.Key) {
+        return;
+      }
       await this.s3.send(
         new DeleteObjectCommand({
           Bucket: this.bucketName,
-          Key: obj.Key!
+          Key: obj.Key
         })
       );
     });
@@ -106,7 +109,10 @@ export class AWSS3 extends BaseStrategy {
 
   async rename(oldPrefix: string, newPrefix: string): Promise<void> {
     await this.iterateSubResources(oldPrefix, async obj => {
-      const oldKey = obj.Key!;
+      if (!obj.Key) {
+        return;
+      }
+      const oldKey = obj.Key;
       const newKey = oldKey.replace(oldPrefix, newPrefix);
 
       await this.s3.send(
