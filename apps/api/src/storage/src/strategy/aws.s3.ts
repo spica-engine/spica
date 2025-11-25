@@ -89,12 +89,14 @@ export class AWSS3 extends BaseStrategy {
   }
 
   async delete(id: string): Promise<void> {
-    await this.s3.send(
-      new DeleteObjectCommand({
-        Bucket: this.bucketName,
-        Key: id
-      })
-    );
+    await this.iterateSubResources(id, async obj => {
+      await this.s3.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucketName,
+          Key: obj.Key!
+        })
+      );
+    });
   }
 
   async url(id: string): Promise<string> {
@@ -103,39 +105,42 @@ export class AWSS3 extends BaseStrategy {
   }
 
   async rename(oldPrefix: string, newPrefix: string): Promise<void> {
+    await this.iterateSubResources(oldPrefix, async obj => {
+      const oldKey = obj.Key!;
+      const newKey = oldKey.replace(oldPrefix, newPrefix);
+
+      await this.s3.send(
+        new CopyObjectCommand({
+          Bucket: this.bucketName,
+          CopySource: `${this.bucketName}/${encodeURIComponent(oldKey)}`,
+          Key: newKey
+        })
+      );
+
+      await this.s3.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucketName,
+          Key: oldKey
+        })
+      );
+    });
+  }
+
+  private async iterateSubResources(
+    prefix: string,
+    callback: (obj: any) => Promise<void>
+  ): Promise<void> {
     let continuationToken: string | undefined = undefined;
     do {
       const listResponse = await this.s3.send(
         new ListObjectsV2Command({
           Bucket: this.bucketName,
-          Prefix: oldPrefix,
+          Prefix: prefix,
           ContinuationToken: continuationToken
         })
       );
-
       const objects = listResponse.Contents ?? [];
-
-      await Promise.all(
-        objects.map(async obj => {
-          const oldKey = obj.Key!;
-          const newKey = oldKey.replace(oldPrefix, newPrefix);
-
-          await this.s3.send(
-            new CopyObjectCommand({
-              Bucket: this.bucketName,
-              CopySource: `${this.bucketName}/${encodeURIComponent(oldKey)}`,
-              Key: newKey
-            })
-          );
-
-          await this.s3.send(
-            new DeleteObjectCommand({
-              Bucket: this.bucketName,
-              Key: oldKey
-            })
-          );
-        })
-      );
+      await Promise.all(objects.map(obj => callback(obj)));
 
       continuationToken = listResponse.IsTruncated ? listResponse.NextContinuationToken : undefined;
     } while (continuationToken);
