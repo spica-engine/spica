@@ -84,7 +84,7 @@ describe("Auth", () => {
       password: "spica"
     }).then(r => r.data.token);
 
-    Auth.initialize({username: token, publicUrl: PUBLIC_URL});
+    Auth.initialize({userToken: token, publicUrl: PUBLIC_URL});
   });
 
   afterEach(async () => await app.close());

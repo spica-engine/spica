@@ -17,7 +17,7 @@ const userSegment = "passport/user";
  * Initialize the auth module with API key or user credentials.
  * Required for sign-up operations.
  *
- * @param options - Initialization options (ApikeyInitialization or IdentityInitialization)
+ * @param options - Initialization options (ApikeyInitialization or UserInitialization)
  */
 export function initialize(options: ApikeyInitialization | UserInitialization) {
   const {authorization: _authorization, service: _service} = _initialize(options);

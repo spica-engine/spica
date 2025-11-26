@@ -28,7 +28,7 @@ export interface IdentityInitialization extends InitializeOptions {
 }
 
 export interface UserInitialization extends InitializeOptions {
-  username: string;
+  userToken: string;
 }
 
 export interface InitializationResult {

@@ -16,8 +16,8 @@ export function initialize(
     authorization = `APIKEY ${options.apikey}`;
   } else if ("identity" in options) {
     authorization = `IDENTITY ${options.identity}`;
-  } else if ("username" in options) {
-    authorization = `USER ${options.username}`;
+  } else if ("userToken" in options) {
+    authorization = `USER ${options.userToken}`;
   }
 
   checkInitialized(authorization);
