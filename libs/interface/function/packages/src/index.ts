@@ -27,6 +27,10 @@ export interface IdentityInitialization extends InitializeOptions {
   identity: string;
 }
 
+export interface UserInitialization extends InitializeOptions {
+  username: string;
+}
+
 export interface InitializationResult {
   authorization: string;
   publicUrl: string;

@@ -1,20 +1,23 @@
 import {
   ApikeyInitialization,
   IdentityInitialization,
-  InitializationResult
+  InitializationResult,
+  UserInitialization
 } from "@spica-server/interface/function/packages";
 import {Axios} from "./request";
 
 let service: Axios;
 
 export function initialize(
-  options: ApikeyInitialization | IdentityInitialization
+  options: ApikeyInitialization | IdentityInitialization | UserInitialization
 ): InitializationResult {
   let authorization: string;
   if ("apikey" in options) {
     authorization = `APIKEY ${options.apikey}`;
   } else if ("identity" in options) {
     authorization = `IDENTITY ${options.identity}`;
+  } else if ("username" in options) {
+    authorization = `USER ${options.username}`;
   }
 
   checkInitialized(authorization);
