@@ -53,7 +53,6 @@ describe("Bucket Synchronizer", () => {
       expect(bucketSupplier).toMatchObject({
         module: "bucket",
         subModule: "schema",
-        fileExtension: "yaml",
         listen: expect.any(Function)
       });
     });
@@ -212,11 +211,25 @@ describe("Bucket Synchronizer", () => {
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: bucketId.toString(),
-            resource_slug: null,
-            resource_content: "",
+            resource_slug: "Bucket To Delete",
             created_at: expect.any(Date)
           });
-
+          const parsedContent = YAML.parse(changeLog.resource_content);
+          expect(parsedContent).toEqual({
+            _id: bucketId.toString(),
+            title: "Bucket To Delete",
+            description: "Will be deleted",
+            icon: "delete-icon",
+            primary: "title",
+            readOnly: false,
+            acl: {
+              read: "true==true",
+              write: "true==true"
+            },
+            properties: {
+              title: {type: "string", options: {}}
+            }
+          });
           done();
         }
       });
@@ -238,7 +251,6 @@ describe("Bucket Synchronizer", () => {
       expect(bucketApplier).toMatchObject({
         module: "bucket",
         subModule: "schema",
-        fileExtension: "yaml",
         apply: expect.any(Function)
       });
     });

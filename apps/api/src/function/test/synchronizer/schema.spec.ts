@@ -88,7 +88,6 @@ describe("Function Synchronizer", () => {
       expect(funcSupplier).toMatchObject({
         module: "function",
         subModule: "schema",
-        fileExtension: "yaml",
         listen: expect.any(Function)
       });
     });
@@ -265,11 +264,28 @@ describe("Function Synchronizer", () => {
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: functionId.toString(),
-            resource_slug: null,
-            resource_content: "",
+            resource_slug: "function_to_delete",
             created_at: expect.any(Date)
           });
-
+          const parsedContent = YAML.parse(changeLog.resource_content);
+          expect(parsedContent).toMatchObject({
+            _id: functionId.toString(),
+            name: "function_to_delete",
+            description: "Will be deleted",
+            env_vars: [],
+            triggers: {
+              default: {
+                type: "http",
+                active: true,
+                options: {
+                  method: "Get",
+                  path: "/delete"
+                }
+              }
+            },
+            timeout: 60,
+            language: "javascript"
+          });
           done();
         }
       });
@@ -292,7 +308,6 @@ describe("Function Synchronizer", () => {
       expect(funcApplier).toMatchObject({
         module: "function",
         subModule: "schema",
-        fileExtension: "yaml",
         apply: expect.any(Function)
       });
     });

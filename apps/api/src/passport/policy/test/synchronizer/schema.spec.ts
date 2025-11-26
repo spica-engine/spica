@@ -41,7 +41,6 @@ describe("Policy Synchronizer", () => {
       expect(policySupplier).toMatchObject({
         module: "policy",
         subModule: "schema",
-        fileExtension: "yaml",
         listen: expect.any(Function)
       });
     });
@@ -210,11 +209,25 @@ describe("Policy Synchronizer", () => {
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: policyId.toString(),
-            resource_slug: null,
-            resource_content: "",
+            resource_slug: "Policy To Delete",
             created_at: expect.any(Date)
           });
-
+          const parsedContent = YAML.parse(changeLog.resource_content);
+          expect(parsedContent).toMatchObject({
+            _id: policyId.toString(),
+            name: "Policy To Delete",
+            description: "Will be deleted",
+            statement: [
+              {
+                action: "bucket:index",
+                resource: {
+                  include: ["*"],
+                  exclude: []
+                },
+                module: "bucket"
+              }
+            ]
+          });
           done();
         }
       });
@@ -237,7 +250,6 @@ describe("Policy Synchronizer", () => {
       expect(policyApplier).toMatchObject({
         module: "policy",
         subModule: "schema",
-        fileExtension: "yaml",
         apply: expect.any(Function)
       });
     });

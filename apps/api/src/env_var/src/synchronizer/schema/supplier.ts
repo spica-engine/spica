@@ -47,34 +47,36 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
           });
 
         const stream = evs._coll.watch([], {
-          fullDocument: "updateLookup"
+          fullDocument: "updateLookup",
+          fullDocumentBeforeChange: "required"
         });
 
         stream.on("change", change => {
           let changeType: ChangeType;
-
+          let documentData: any;
           switch (change.operationType) {
             case "insert":
               changeType = ChangeType.CREATE;
+              documentData = change["fullDocument"];
               break;
 
             case "replace":
             case "update":
               changeType = ChangeType.UPDATE;
+              documentData = change["fullDocument"];
               break;
 
             case "delete":
               changeType = ChangeType.DELETE;
+              documentData = change["fullDocumentBeforeChange"];
               break;
             default:
               console.warn("Unknown operation type:", change.operationType);
               break;
           }
 
-          if (changeType) {
-            const changeLog = getChangeLogForSchema(change["fullDocument"], changeType);
-            observer.next(changeLog);
-          }
+          const changeLog = getChangeLogForSchema(documentData, changeType);
+          observer.next(changeLog);
         });
 
         stream.on("error", error => {

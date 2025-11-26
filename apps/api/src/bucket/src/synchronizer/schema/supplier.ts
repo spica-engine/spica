@@ -47,31 +47,36 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
           });
 
         const stream = bs._coll.watch([], {
-          fullDocument: "updateLookup"
+          fullDocument: "updateLookup",
+          fullDocumentBeforeChange: "required"
         });
 
         stream.on("change", change => {
           let changeType: ChangeType;
+          let documentData: any;
 
           switch (change.operationType) {
             case "insert":
               changeType = ChangeType.CREATE;
+              documentData = change["fullDocument"];
               break;
 
             case "replace":
             case "update":
               changeType = ChangeType.UPDATE;
+              documentData = change["fullDocument"];
               break;
 
             case "delete":
               changeType = ChangeType.DELETE;
+              documentData = change["fullDocumentBeforeChange"];
               break;
             default:
               console.warn("Unknown operation type:", change.operationType);
               return;
           }
 
-          const changeLog = getChangeLogFromBucket(change["fullDocument"], changeType);
+          const changeLog = getChangeLogFromBucket(documentData, changeType);
           observer.next(changeLog);
         });
 

@@ -40,7 +40,6 @@ describe("EnvVar Synchronizer", () => {
       expect(envVarSupplier).toMatchObject({
         module: "env-var",
         subModule: "schema",
-        fileExtension: "yaml",
         listen: expect.any(Function)
       });
     });
@@ -151,11 +150,15 @@ describe("EnvVar Synchronizer", () => {
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: envVarId.toString(),
-            resource_slug: null,
-            resource_content: "",
+            resource_slug: "TEMP_SECRET",
             created_at: expect.any(Date)
           });
-
+          const parsedContent = YAML.parse(changeLog.resource_content);
+          expect(parsedContent).toMatchObject({
+            _id: envVarId.toString(),
+            key: "TEMP_SECRET",
+            value: "will-be-deleted"
+          });
           done();
         }
       });
@@ -178,7 +181,6 @@ describe("EnvVar Synchronizer", () => {
       expect(envVarApplier).toMatchObject({
         module: "env-var",
         subModule: "schema",
-        fileExtension: "yaml",
         apply: expect.any(Function)
       });
     });
