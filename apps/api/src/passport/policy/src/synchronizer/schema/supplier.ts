@@ -52,7 +52,7 @@ export function getSupplier(ps: PolicyService): DocumentChangeSupplier {
 
         stream.on("change", change => {
           let changeType: ChangeType;
-          let documentData: any;
+          let documentData: Policy | undefined;
           switch (change.operationType) {
             case "insert":
               changeType = ChangeType.CREATE;

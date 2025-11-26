@@ -53,7 +53,7 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
 
         stream.on("change", change => {
           let changeType: ChangeType;
-          let documentData: any;
+          let documentData: EnvVar | undefined;
           switch (change.operationType) {
             case "insert":
               changeType = ChangeType.CREATE;

@@ -53,7 +53,7 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
 
         stream.on("change", change => {
           let changeType: ChangeType;
-          let documentData: any;
+          let documentData: Bucket | undefined;
 
           switch (change.operationType) {
             case "insert":

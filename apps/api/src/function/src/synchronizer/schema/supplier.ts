@@ -53,7 +53,7 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
 
         stream.on("change", change => {
           let changeType: ChangeType;
-          let documentData: any;
+          let documentData: Function | undefined;
           switch (change.operationType) {
             case "insert":
               changeType = ChangeType.CREATE;
