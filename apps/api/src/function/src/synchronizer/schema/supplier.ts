@@ -75,6 +75,11 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
               break;
           }
 
+          if (!Object.values(ChangeType).includes(changeType)) {
+            console.warn("Unknown change type:", changeType);
+            return;
+          }
+
           const changeLog = getChangeForSchema(documentData, changeType);
           observer.next(changeLog);
         });
