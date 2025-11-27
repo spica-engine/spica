@@ -186,27 +186,12 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
 
     const folderName = result.name;
-    const isFolder = folderName.endsWith("/");
 
-    if (isFolder) {
-      const escapedName = this.escapeRegex(folderName);
-      const subResources = await this._coll
-        .find({
-          name: {$regex: new RegExp(`^${escapedName}`)}
-        })
-        .toArray();
+    const escapedName = this.escapeRegex(folderName);
 
-      if (subResources.length > 0) {
-        const subResourceIds = subResources.map(resource => resource._id);
-        await this._coll.deleteMany({_id: {$in: subResourceIds}});
-      }
-    }
-
-    try {
-      await this.service.delete(folderName);
-    } catch (error) {
-      throw new Error(`Failed to delete storage files: ${error.message}`);
-    }
+    await this._coll.deleteMany({
+      name: {$regex: new RegExp(`^${escapedName}`)}
+    });
   }
 
   async updateMeta(_id: ObjectId, name: string) {
