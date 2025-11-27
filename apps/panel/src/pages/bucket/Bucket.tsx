@@ -14,6 +14,7 @@ import {useBucketData} from "../../hooks/useBucketData";
 import {useAppDispatch, useAppSelector} from "../../store/hook";
 import {resetBucketSelection} from "../../store";
 import {selectParsedToken} from "../../store/slices/authSlice";
+import BucketTableNew from "../../components/organisms/bucket/bucket-table-new/BucketTableNew";
 
 export default function Bucket() {
   const {bucketId = ""} = useParams<{bucketId: string}>();
@@ -114,7 +115,8 @@ export default function Bucket() {
         searchLoading={bucketDataLoading && !isTableLoading}
         refreshLoading={refreshLoading}
       />
-      <BucketTable
+      <BucketTableNew />
+      {/* <BucketTable
         bucketId={bucket._id}
         columns={filteredColumns}
         data={bucketData?.data ?? []}
@@ -124,7 +126,7 @@ export default function Bucket() {
         loading={isTableLoading}
         tableRef={tableRef}
         primaryKey={bucket.primary || "_id"}
-      />
+      /> */}
     </div>
   );
 }

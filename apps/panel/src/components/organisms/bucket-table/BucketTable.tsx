@@ -1,5 +1,5 @@
 import {Button, Checkbox, Icon, Popover, type IconName} from "oziko-ui-kit";
-import Table from "../table/Table";
+
 import styles from "./BucketTable.module.scss";
 import {memo, useCallback, useMemo, useState, type RefObject} from "react";
 import Loader from "../../../components/atoms/loader/Loader";
@@ -17,6 +17,7 @@ import type {FieldFormState} from "../../../domain/fields/types";
 import type {Property} from "../../../services/bucketService";
 import Confirmation from "../../../components/molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
+import Table from "../table/Table";
 
 function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
   const index = arr.indexOf(target);
@@ -390,7 +391,7 @@ const buildDefaultColumns = (
 ];
 
 // TODO: Refactor this function to render more appropriate UI elements for each field type.
-// Many field types are currently using the generic `renderDefault()`.
+// Many field types are cuƒrrently using the generic `renderDefault()`.
 function renderCell(
   cellData: any,
   rowId: string,
@@ -453,7 +454,7 @@ function getFormattedColumns(
       return {
         ...col,
         header: (
-          <ColumnHeader
+          <ColumnHeader 
             title={header}
             icon={icon}
             showDropdownIcon={showDropdownIcon}
@@ -641,3 +642,4 @@ const BucketTable = ({
 };
 
 export default memo(BucketTable);
+

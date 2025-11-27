@@ -37,7 +37,12 @@ export function useBucketColumns(
         fixed: true,
         selectable: false
       },
-      ...orderedColumns.map(i => ({...i, header: i.title, key: i.title, showDropdownIcon: true}))
+      ...orderedColumns.map(i => ({
+        ...i,
+        header: i.title,
+        key: i.title,
+        showDropdownIcon: true
+      }))
     ] as ColumnType[];
   }, [bucket, fieldsOrder]);
 
