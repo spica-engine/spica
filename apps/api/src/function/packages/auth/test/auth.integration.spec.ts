@@ -79,12 +79,12 @@ describe("Auth", () => {
     // WAIT UNTIL USER IS INSERTED
     await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
-    const token = await Axios.post(`${PUBLIC_URL}/passport/login`, {
-      username: "spica",
+    const token = await Axios.post(`${PUBLIC_URL}/passport/identify`, {
+      identifier: "spica",
       password: "spica"
     }).then(r => r.data.token);
 
-    Auth.initialize({userToken: token, publicUrl: PUBLIC_URL});
+    Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
   });
 
   afterEach(async () => await app.close());

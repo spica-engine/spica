@@ -3,7 +3,7 @@ import {initialize as _initialize, checkInitialized, Axios} from "@spica-devkit/
 import {
   ApikeyInitialization,
   HttpService,
-  UserInitialization
+  IdentityInitialization
 } from "@spica-server/interface/function/packages";
 import {deepCopyJSON} from "@spica-server/core/copy";
 
@@ -14,12 +14,12 @@ let service: HttpService;
 const userSegment = "passport/user";
 
 /**
- * Initialize the auth module with API key or user credentials.
+ * Initialize the auth module with API key or identity credentials.
  * Required for sign-up operations.
  *
- * @param options - Initialization options (ApikeyInitialization or UserInitialization)
+ * @param options - Initialization options (ApikeyInitialization or IdentityInitialization)
  */
-export function initialize(options: ApikeyInitialization | UserInitialization) {
+export function initialize(options: ApikeyInitialization | IdentityInitialization) {
   const {authorization: _authorization, service: _service} = _initialize(options);
 
   authorization = _authorization;
@@ -70,8 +70,6 @@ export async function signIn(
   tokenLifeSpan?: number,
   headers?: object
 ): Promise<string> {
-  checkInitialized(authorization);
-
   const response = await service.post<TokenScheme>(
     "/passport/login",
     {

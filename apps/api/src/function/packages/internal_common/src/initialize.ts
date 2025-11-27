@@ -16,8 +16,8 @@ export function initialize(
     authorization = `APIKEY ${options.apikey}`;
   } else if ("identity" in options) {
     authorization = `IDENTITY ${options.identity}`;
-  } else if ("userToken" in options) {
-    authorization = `USER ${options.userToken}`;
+  } else if ("user" in options) {
+    authorization = `USER ${options.user}`;
   }
 
   checkInitialized(authorization);
@@ -39,7 +39,7 @@ export function initialize(
 
 export function checkInitialized(authorization: string) {
   if (!authorization) {
-    throw new Error("You should call initialize method with a valid apikey or identity token.");
+    throw new Error("You should call initialize method with a valid credentials");
   }
 }
 
