@@ -23,6 +23,7 @@ export async function find<ER extends EnvRelation = EnvRelation.NotResolved>(
       resources?: object;
       envVars?: ObjectId[];
       index?: string;
+      language?: string;
     };
     resolveEnvRelations?: ER;
   }
@@ -31,6 +32,7 @@ export async function find<ER extends EnvRelation = EnvRelation.NotResolved>(
     .filterResources(options?.filter?.resources)
     .filterByEnvVars(options?.filter?.envVars)
     .resolveEnvRelation(options?.resolveEnvRelations)
+    .filterByLanguage(options?.filter?.language)
     .result();
   let fns = await fs.aggregate<Function<ER>>(pipeline).toArray();
 
@@ -159,7 +161,7 @@ export namespace index {
     if (!fn) {
       throw new NotFoundException("Can not find function.");
     }
-    const index = await engine.read(fn).catch(e => {
+    const index = await engine.read(fn, "index").catch(e => {
       if (e == "Not Found") {
         throw new NotFoundException("Index does not exist.");
       }
