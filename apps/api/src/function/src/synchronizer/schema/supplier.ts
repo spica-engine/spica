@@ -47,34 +47,36 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
           });
 
         const stream = fs._coll.watch([], {
-          fullDocument: "updateLookup"
+          fullDocument: "updateLookup",
+          fullDocumentBeforeChange: "required"
         });
 
         stream.on("change", change => {
           let changeType: ChangeType;
-
+          let documentData: Function | undefined;
           switch (change.operationType) {
             case "insert":
               changeType = ChangeType.CREATE;
+              documentData = change["fullDocument"];
               break;
 
             case "replace":
             case "update":
               changeType = ChangeType.UPDATE;
+              documentData = change["fullDocument"];
               break;
 
             case "delete":
               changeType = ChangeType.DELETE;
+              documentData = change["fullDocumentBeforeChange"];
               break;
             default:
               console.warn("Unknown operation type:", change.operationType);
-              break;
+              return;
           }
 
-          if (changeType) {
-            const changeLog = getChangeForSchema(change["fullDocument"], changeType);
-            observer.next(changeLog);
-          }
+          const changeLog = getChangeForSchema(documentData, changeType);
+          observer.next(changeLog);
         });
 
         stream.on("error", error => {

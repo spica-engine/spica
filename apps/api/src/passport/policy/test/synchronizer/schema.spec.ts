@@ -38,10 +38,9 @@ describe("Policy Synchronizer", () => {
     });
 
     it("should return Change Supplier with correct metadata", () => {
-      expect(policySupplier).toMatchObject({
+      expect(policySupplier).toEqual({
         module: "policy",
         subModule: "schema",
-        fileExtension: "yaml",
         listen: expect.any(Function)
       });
     });
@@ -66,13 +65,14 @@ describe("Policy Synchronizer", () => {
 
       const changeLog = await firstValueFrom(policySupplier.listen());
 
-      expect(changeLog).toMatchObject({
+      expect(changeLog).toEqual({
         module: "policy",
         sub_module: "schema",
         type: ChangeType.CREATE,
         origin: ChangeOrigin.DOCUMENT,
         resource_id: mockPolicy._id.toString(),
         resource_slug: "Test Policy",
+        resource_extension: "yaml",
         resource_content: YAML.stringify(mockPolicy),
         created_at: expect.any(Date)
       });
@@ -98,13 +98,14 @@ describe("Policy Synchronizer", () => {
       const observable = policySupplier.listen();
 
       observable.subscribe(changeLog => {
-        expect(changeLog).toMatchObject({
+        expect(changeLog).toEqual({
           module: "policy",
           sub_module: "schema",
           type: ChangeType.CREATE,
           origin: ChangeOrigin.DOCUMENT,
           resource_id: mockPolicy._id.toString(),
           resource_slug: "Test Policy",
+          resource_extension: "yaml",
           resource_content: YAML.stringify(mockPolicy),
           created_at: expect.any(Date)
         });
@@ -162,12 +163,14 @@ describe("Policy Synchronizer", () => {
 
       observable.subscribe(changeLog => {
         if (changeLog.type == ChangeType.UPDATE) {
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "policy",
             sub_module: "schema",
             type: ChangeType.UPDATE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: policyId.toString(),
+            resource_extension: "yaml",
+
             resource_slug: "Updated Policy",
             resource_content: YAML.stringify(expectedUpdatedPolicy),
             created_at: expect.any(Date)
@@ -204,17 +207,17 @@ describe("Policy Synchronizer", () => {
 
       observable.subscribe(changeLog => {
         if (changeLog.type == ChangeType.DELETE) {
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "policy",
             sub_module: "schema",
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: policyId.toString(),
-            resource_slug: null,
-            resource_content: "",
+            resource_slug: "Policy To Delete",
+            resource_extension: "yaml",
+            resource_content: YAML.stringify(policyToDelete),
             created_at: expect.any(Date)
           });
-
           done();
         }
       });
@@ -234,10 +237,12 @@ describe("Policy Synchronizer", () => {
     });
 
     it("should return Change Applier with correct metadata", () => {
-      expect(policyApplier).toMatchObject({
+      expect(policyApplier).toEqual({
         module: "policy",
         subModule: "schema",
-        fileExtension: "yaml",
+        fileExtensions: ["yaml"],
+        findIdBySlug: expect.any(Function),
+        findIdByContent: expect.any(Function),
         apply: expect.any(Function)
       });
     });
@@ -274,7 +279,7 @@ describe("Policy Synchronizer", () => {
 
       const result = await policyApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
@@ -353,12 +358,12 @@ describe("Policy Synchronizer", () => {
 
       const result = await policyApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
       const policy = await ps.findOne({_id});
-      expect(policy).toMatchObject({
+      expect(policy).toEqual({
         _id,
         name: "Updated Policy",
         description: "Updated Description",
@@ -416,7 +421,7 @@ describe("Policy Synchronizer", () => {
 
       const result = await policyApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
@@ -439,7 +444,7 @@ describe("Policy Synchronizer", () => {
 
       const result = await policyApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.FAILED,
         reason: "Unknown operation type: upsert"
       });

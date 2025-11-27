@@ -50,10 +50,9 @@ describe("Bucket Synchronizer", () => {
     });
 
     it("should return Change supplier with correct metadata", () => {
-      expect(bucketSupplier).toMatchObject({
+      expect(bucketSupplier).toEqual({
         module: "bucket",
         subModule: "schema",
-        fileExtension: "yaml",
         listen: expect.any(Function)
       });
     });
@@ -78,13 +77,14 @@ describe("Bucket Synchronizer", () => {
 
       const changeLog = await firstValueFrom(bucketSupplier.listen());
 
-      expect(changeLog).toMatchObject({
+      expect(changeLog).toEqual({
         module: "bucket",
         sub_module: "schema",
         type: ChangeType.CREATE,
         origin: ChangeOrigin.DOCUMENT,
         resource_id: mockBucket._id.toString(),
         resource_slug: "Test Bucket",
+        resource_extension: "yaml",
         resource_content: YAML.stringify(mockBucket),
         created_at: expect.any(Date)
       });
@@ -110,13 +110,14 @@ describe("Bucket Synchronizer", () => {
       const observable = bucketSupplier.listen();
 
       observable.subscribe(changeLog => {
-        expect(changeLog).toMatchObject({
+        expect(changeLog).toEqual({
           module: "bucket",
           sub_module: "schema",
           type: ChangeType.CREATE,
           origin: ChangeOrigin.DOCUMENT,
           resource_id: mockBucket._id.toString(),
           resource_slug: "Test Bucket",
+          resource_extension: "yaml",
           resource_content: YAML.stringify(mockBucket),
           created_at: expect.any(Date)
         });
@@ -167,13 +168,14 @@ describe("Bucket Synchronizer", () => {
 
       observable.subscribe(changeLog => {
         if (changeLog.type == ChangeType.UPDATE) {
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "bucket",
             sub_module: "schema",
             type: ChangeType.UPDATE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: bucketId.toString(),
             resource_slug: "Updated Bucket",
+            resource_extension: "yaml",
             resource_content: YAML.stringify(expectedUpdatedBucket),
             created_at: expect.any(Date)
           });
@@ -206,17 +208,17 @@ describe("Bucket Synchronizer", () => {
 
       observable.subscribe(changeLog => {
         if (changeLog.type == ChangeType.DELETE) {
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "bucket",
             sub_module: "schema",
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: bucketId.toString(),
-            resource_slug: null,
-            resource_content: "",
+            resource_content: YAML.stringify(bucketToDelete),
+            resource_extension: "yaml",
+            resource_slug: "Bucket To Delete",
             created_at: expect.any(Date)
           });
-
           done();
         }
       });
@@ -235,10 +237,12 @@ describe("Bucket Synchronizer", () => {
     });
 
     it("should return Change Applier with correct metadata", () => {
-      expect(bucketApplier).toMatchObject({
+      expect(bucketApplier).toEqual({
         module: "bucket",
         subModule: "schema",
-        fileExtension: "yaml",
+        fileExtensions: ["yaml"],
+        findIdBySlug: expect.any(Function),
+        findIdByContent: expect.any(Function),
         apply: expect.any(Function)
       });
     });
@@ -275,7 +279,7 @@ describe("Bucket Synchronizer", () => {
 
       const result = await bucketApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
@@ -346,12 +350,12 @@ describe("Bucket Synchronizer", () => {
 
       const result = await bucketApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
       const bucket = await bs.findOne({_id});
-      expect(bucket).toMatchObject({
+      expect(bucket).toEqual({
         _id,
         title: "Updated Bucket",
         description: "Updated Description",
@@ -402,7 +406,7 @@ describe("Bucket Synchronizer", () => {
 
       const result = await bucketApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
@@ -425,7 +429,7 @@ describe("Bucket Synchronizer", () => {
 
       const result = await bucketApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.FAILED,
         reason: "Unknown operation type: upsert"
       });

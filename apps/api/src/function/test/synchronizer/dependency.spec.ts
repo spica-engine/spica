@@ -82,10 +82,9 @@ describe("Function Dependency Synchronizer", () => {
     });
 
     it("should return ChangeSupplier with correct metadata", () => {
-      expect(dependencySupplier).toMatchObject({
+      expect(dependencySupplier).toEqual({
         module: "function",
         subModule: "package",
-        fileExtension: "json",
         listen: expect.any(Function)
       });
     });
@@ -118,24 +117,16 @@ describe("Function Dependency Synchronizer", () => {
         const observable = dependencySupplier.listen();
 
         observable.subscribe((changeLog: ChangeLog) => {
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "function",
             sub_module: "package",
             type: ChangeType.CREATE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
+            resource_extension: "json",
+            resource_content: changeLog.resource_content,
             resource_slug: mockFunction.name,
             created_at: expect.any(Date)
-          });
-          const packageJson = JSON.parse(changeLog.resource_content);
-          expect(packageJson).toMatchObject({
-            name: "existing_function",
-            description: "Existing function",
-            version: "0.0.1",
-            private: true,
-            keywords: ["spica", "function", "node.js"],
-            license: "UNLICENSED",
-            dependencies: {axios: "^1.0.0"}
           });
           done();
         });
@@ -174,19 +165,16 @@ describe("Function Dependency Synchronizer", () => {
             await CRUD.dependencies.update(engine, fnWithUpdatedDeps);
             return;
           }
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "function",
             sub_module: "package",
             type: ChangeType.UPDATE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
+            resource_extension: "json",
+            resource_content: changeLog.resource_content,
             resource_slug: mockFunction.name,
             created_at: expect.any(Date)
-          });
-          const packageJson = JSON.parse(changeLog.resource_content);
-          expect(packageJson).toMatchObject({
-            name: "test_js_function",
-            dependencies: {axios: "^1.0.0", lodash: "^4.17.21"}
           });
           done();
         });
@@ -225,13 +213,14 @@ describe("Function Dependency Synchronizer", () => {
             const deleted = await engine.deleteFunction(fn);
             return;
           }
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "function",
             sub_module: "package",
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
             resource_slug: mockFunction.name,
+            resource_extension: "json",
             resource_content: null,
             created_at: expect.any(Date)
           });
@@ -249,10 +238,12 @@ describe("Function Dependency Synchronizer", () => {
     });
 
     it("should return ChangeApplier with correct metadata", () => {
-      expect(dependencyApplier).toMatchObject({
+      expect(dependencyApplier).toEqual({
         module: "function",
         subModule: "package",
-        fileExtension: "json",
+        fileExtensions: ["json"],
+        findIdBySlug: expect.any(Function),
+        findIdByContent: expect.any(Function),
         apply: expect.any(Function)
       });
     });
@@ -302,7 +293,7 @@ describe("Function Dependency Synchronizer", () => {
 
       const result = await dependencyApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
       const packages = await CRUD.dependencies.findOne(functionService, engine, mockFunction._id);
@@ -358,7 +349,7 @@ describe("Function Dependency Synchronizer", () => {
 
       const result = await dependencyApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
@@ -408,7 +399,7 @@ describe("Function Dependency Synchronizer", () => {
 
       const result = await dependencyApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
       let savedPackage;
@@ -439,7 +430,7 @@ describe("Function Dependency Synchronizer", () => {
 
       const result = await dependencyApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.FAILED,
         reason: "Unknown operation type: upsert"
       });
