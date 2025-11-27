@@ -5,17 +5,26 @@
 
 import {Table, Icon, type IconName, FlexElement} from "oziko-ui-kit";
 import React, {useCallback, useMemo} from "react";
-import {useParams} from "react-router-dom";
 import BucketFieldPopup from "../../../molecules/bucket-field-popup/BucketFieldPopup";
-import {useBucketColumns} from "../../../../hooks/useBucketColumns";
-import {useBucketSearch} from "../../../../hooks/useBucketSearch";
-import {useBucketData} from "../../../../hooks/useBucketData";
-import {useCreateBucketFieldMutation, useGetBucketQuery} from "../../../../store/api/bucketApi";
+import {useCreateBucketFieldMutation, useGetBucketQuery, type BucketType, type Property} from "../../../../store/api/bucketApi";
 import {FieldKind, FIELD_REGISTRY} from "../../../../domain/fields";
 import type {ColumnType} from "../../bucket-table/BucketTable";
 import styles from "./BucketTableNew.module.scss";
 import type {FieldFormState} from "../../../../domain/fields/types";
-import type {BucketType} from "../../../../services/bucketService";
+import {useBucketCellData} from "../../../../hooks/useBucketCellData";
+
+
+interface BucketTableNewProps {
+  bucketId: string;
+  bucket?: BucketType;
+  columns: ColumnType[];
+  data: any[];
+  onScrollEnd: () => void;
+  totalDataLength: number;
+  maxHeight: string | number;
+  loading: boolean;
+  primaryKey: string;
+}
 
 const COLUMN_ICONS: Record<string, IconName> = Object.values(FieldKind).reduce(
   (acc, k) => {
@@ -24,22 +33,9 @@ const COLUMN_ICONS: Record<string, IconName> = Object.values(FieldKind).reduce(
     return acc;
   },
   {} as Record<string, IconName>
-);
+);  
 
-const BucketTableNew = () => {
-  const {bucketId = ""} = useParams<{bucketId: string}>();
-
-  const {data: bucket, isLoading} = useGetBucketQuery(bucketId, {
-    skip: !bucketId
-  });
-
-
-  const {formattedColumns, searchableColumns} = useBucketColumns(bucket, bucketId);
-
-  const {searchQuery} = useBucketSearch(bucketId, searchableColumns);
-
-  const {bucketData} = useBucketData(bucketId, searchQuery);
-  const [createBucketField] = useCreateBucketFieldMutation();
+const BucketTableNew: React.FC<BucketTableNewProps> = ({ bucketId, bucket: bucketProp, columns, data, onScrollEnd, totalDataLength, maxHeight, loading, primaryKey}) => {
 
   // Store cell action handlers (Enter/Escape per cell)
   const cellActionsRef = React.useRef<{
@@ -49,8 +45,22 @@ const BucketTableNew = () => {
     };
   }>({});
 
+  const {data: bucketFromQuery} = useGetBucketQuery(bucketId);
+  const bucket = bucketProp || bucketFromQuery;
+  const [createBucketField] = useCreateBucketFieldMutation();
+
+  // Transform raw data into editable cells
+  const {editableData} = useBucketCellData({
+    bucketId,
+    bucket,
+    rawData: data,
+    cellActionsRef
+  });
+
   const columnsWithHeaders = useMemo(() => {
-    const mappedColumns = formattedColumns.map((column: ColumnType) => {
+    console.log(columns, "columns");
+    
+    const mappedColumns = columns?.map((column: ColumnType) => {
       const icon = column.type ? COLUMN_ICONS[column.type] : undefined;
 
       return {
@@ -74,11 +84,11 @@ const BucketTableNew = () => {
     });
 
     return [...mappedColumns];
-  }, [formattedColumns]);
+  }, [columns, bucketId]);
 
   const forbiddenFieldNames = useMemo(() => {
-    return bucket?.properties ? Object.keys(bucket.properties) : [];
-  }, [bucket]);
+    return columns.map((column: ColumnType) => column.key);
+  }, [columns]);
 
   const handleSaveAndClose = useCallback(
     async (values: FieldFormState, kind: FieldKind): Promise<BucketType> => {
@@ -90,14 +100,16 @@ const BucketTableNew = () => {
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
-
+      // Build the modified bucket with new field
       const modifiedBucket = {
         ...bucket,
         properties: {
           ...bucket.properties,
-          [title]: fieldProperty
+          [title]: fieldProperty as Property
         },
+        // Add to required array if requiredField is true
         required: requiredField ? [...(bucket.required || []), title] : bucket.required,
+        // Set as primary if primaryField is true
         primary: primaryField ? title : bucket.primary
       };
 
@@ -129,7 +141,7 @@ const BucketTableNew = () => {
     }
   }, []);
 
-  if (isLoading || !bucket) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
@@ -137,7 +149,7 @@ const BucketTableNew = () => {
     <FlexElement className={styles.tableContainer} dimensionX={"fill"} dimensionY={"fill"} gap={0}>
       <Table
         columns={columnsWithHeaders}
-        data={bucketData?.data ?? []}
+        data={editableData}
         noResizeableColumns={["_id"]}
         fixedColumns={["_id"]}
         tableClassName={styles.table}

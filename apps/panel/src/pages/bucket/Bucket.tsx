@@ -115,8 +115,18 @@ export default function Bucket() {
         searchLoading={bucketDataLoading && !isTableLoading}
         refreshLoading={refreshLoading}
       />
-      <BucketTableNew />
-      {/* <BucketTable
+      <BucketTableNew 
+        bucketId={bucket._id}
+        columns={filteredColumns}
+        data={bucketData?.data ?? []}
+        onScrollEnd={loadMoreBucketData}
+        totalDataLength={bucketData?.meta?.total ?? 0}
+        maxHeight="88vh"
+        loading={isTableLoading}
+        primaryKey={bucket.primary || "_id"}
+        
+      />
+      <BucketTable
         bucketId={bucket._id}
         columns={filteredColumns}
         data={bucketData?.data ?? []}
@@ -126,7 +136,7 @@ export default function Bucket() {
         loading={isTableLoading}
         tableRef={tableRef}
         primaryKey={bucket.primary || "_id"}
-      /> */}
+      />
     </div>
   );
 }

@@ -604,7 +604,7 @@ export const bucketApi = baseApi.injectEndpoints({
     updateBucketEntry: builder.mutation<any, { bucketId: string; entryId: string; data: Record<string, any> }>({
       query: ({ bucketId, entryId, data }) => ({
         url: `bucket/${bucketId}/data/${entryId}`,
-        method: 'PUT',
+        method: 'PATCH',
         body: data,
       }),
       invalidatesTags: (result, error, { bucketId, entryId }) => [
