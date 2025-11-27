@@ -69,22 +69,7 @@ export class PassportTestingModule {
           provide: NoopStrategy,
           useFactory: () => new NoopStrategy(options || {})
         },
-        {
-          provide: GuardService,
-          useFactory: () => {
-            const guard = new GuardService(undefined, {defaultStrategy: "noop"});
-            const originalCheckAuthorization = guard.checkAuthorization;
-            guard.checkAuthorization = (...args) => {
-              console.log("new guard ", args);
-              args[0].allowedStrategies = args[0].allowedStrategies || [];
-              args[0].allowedStrategies.push("NOOP");
-              console.log("after ", args);
-
-              return originalCheckAuthorization.apply(guard, ...args);
-            };
-            return guard;
-          }
-        }
+        GuardService
       ]
     };
   }
