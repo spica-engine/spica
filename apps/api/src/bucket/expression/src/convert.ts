@@ -347,5 +347,29 @@ function isValueSide(node) {
   return node && node.kind == "literal" && node.type == "string";
 }
 
+const RuleReplacer: Replacer = {
+  condition: node => {
+    return (
+      node &&
+      node.kind === "operator" &&
+      node.type === "==" &&
+      node.left &&
+      node.left.kind === "operator" &&
+      node.left.type === "select" &&
+      node.left.left &&
+      node.left.left.kind === "identifier" &&
+      node.left.left.name === "auth"
+    );
+  },
+  replace: node => {
+    const authProperty = node.left.right.name;
+
+    if (authProperty !== "username") {
+      node.left = {kind: "literal", type: "boolean", value: true};
+      node.right = {kind: "literal", type: "boolean", value: true};
+    }
+  }
+};
+
 // define and add custom replacers here
-const replacers = [ObjectIdReplacer];
+const replacers = [ObjectIdReplacer, RuleReplacer];
