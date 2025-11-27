@@ -71,12 +71,11 @@ export function getSupplier(ps: PolicyService): DocumentChangeSupplier {
               break;
             default:
               console.warn("Unknown operation type:", change.operationType);
-              break;
+              return;
           }
-          if (Object.values(ChangeType).includes(changeType)) {
-            const changeLog = getChangeForSchema(documentData, changeType);
-            observer.next(changeLog);
-          }
+
+          const changeLog = getChangeForSchema(documentData, changeType);
+          observer.next(changeLog);
         });
 
         stream.on("error", error => {

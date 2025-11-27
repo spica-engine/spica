@@ -37,7 +37,7 @@ describe("EnvVar Synchronizer", () => {
     });
 
     it("should return Change Supplier with correct metadata", () => {
-      expect(envVarSupplier).toMatchObject({
+      expect(envVarSupplier).toEqual({
         module: "env-var",
         subModule: "schema",
         listen: expect.any(Function)
@@ -55,13 +55,14 @@ describe("EnvVar Synchronizer", () => {
 
       const changeLog = await firstValueFrom(envVarSupplier.listen());
 
-      expect(changeLog).toMatchObject({
+      expect(changeLog).toEqual({
         module: "env-var",
         sub_module: "schema",
         type: ChangeType.CREATE,
         origin: ChangeOrigin.DOCUMENT,
         resource_id: mockEnvVar._id.toString(),
         resource_slug: "TEST_API_KEY",
+        resource_extension: "yaml",
         resource_content: YAML.stringify(mockEnvVar),
         created_at: expect.any(Date)
       });
@@ -77,13 +78,14 @@ describe("EnvVar Synchronizer", () => {
       const observable = envVarSupplier.listen();
 
       observable.subscribe(changeLog => {
-        expect(changeLog).toMatchObject({
+        expect(changeLog).toEqual({
           module: "env-var",
           sub_module: "schema",
           type: ChangeType.CREATE,
           origin: ChangeOrigin.DOCUMENT,
           resource_id: mockEnvVar._id.toString(),
           resource_slug: "TEST_API_KEY",
+          resource_extension: "yaml",
           resource_content: YAML.stringify(mockEnvVar),
           created_at: expect.any(Date)
         });
@@ -112,13 +114,14 @@ describe("EnvVar Synchronizer", () => {
 
       observable.subscribe(changeLog => {
         if (changeLog.type === ChangeType.UPDATE) {
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "env-var",
             sub_module: "schema",
             type: ChangeType.UPDATE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: envVarId.toString(),
             resource_slug: "DATABASE_URL",
+            resource_extension: "yaml",
             resource_content: YAML.stringify(updatedEnvVar),
             created_at: expect.any(Date)
           });
@@ -144,20 +147,16 @@ describe("EnvVar Synchronizer", () => {
 
       observable.subscribe(changeLog => {
         if (changeLog.type === ChangeType.DELETE) {
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "env-var",
             sub_module: "schema",
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: envVarId.toString(),
+            resource_content: YAML.stringify(envVarToDelete),
+            resource_extension: "yaml",
             resource_slug: "TEMP_SECRET",
             created_at: expect.any(Date)
-          });
-          const parsedContent = YAML.parse(changeLog.resource_content);
-          expect(parsedContent).toMatchObject({
-            _id: envVarId.toString(),
-            key: "TEMP_SECRET",
-            value: "will-be-deleted"
           });
           done();
         }
@@ -178,9 +177,12 @@ describe("EnvVar Synchronizer", () => {
     });
 
     it("should return Change Applier with correct metadata", () => {
-      expect(envVarApplier).toMatchObject({
+      expect(envVarApplier).toEqual({
         module: "env-var",
         subModule: "schema",
+        fileExtensions: ["yaml"],
+        findIdBySlug: expect.any(Function),
+        findIdByContent: expect.any(Function),
         apply: expect.any(Function)
       });
     });
@@ -207,7 +209,7 @@ describe("EnvVar Synchronizer", () => {
 
       const result = await envVarApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
@@ -249,12 +251,12 @@ describe("EnvVar Synchronizer", () => {
 
       const result = await envVarApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
       const envVar = await evs.findOne({_id});
-      expect(envVar).toMatchObject({
+      expect(envVar).toEqual({
         _id,
         key: "OLD_SECRET",
         value: "updated-value"
@@ -285,7 +287,7 @@ describe("EnvVar Synchronizer", () => {
 
       const result = await envVarApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
@@ -308,7 +310,7 @@ describe("EnvVar Synchronizer", () => {
 
       const result = await envVarApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.FAILED,
         reason: "Unknown operation type: upsert"
       });

@@ -91,7 +91,7 @@ describe("Function tsconfig Synchronizer", () => {
     });
 
     it("should return ChangeSupplier with correct metadata", () => {
-      expect(tsconfigSupplier).toMatchObject({
+      expect(tsconfigSupplier).toEqual({
         module: "function",
         subModule: "tsconfig",
         listen: expect.any(Function)
@@ -126,19 +126,16 @@ describe("Function tsconfig Synchronizer", () => {
         const observable = tsconfigSupplier.listen();
 
         observable.subscribe((changeLog: ChangeLog) => {
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "function",
             sub_module: "tsconfig",
             type: ChangeType.CREATE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
             resource_slug: mockFunction.name,
+            resource_content: changeLog.resource_content,
             resource_extension: "json",
             created_at: expect.any(Date)
-          });
-          const tsconfig = JSON.parse(changeLog.resource_content);
-          expect(tsconfig).toMatchObject({
-            compilerOptions: compilerOptionsJson
           });
           done();
         });
@@ -170,19 +167,16 @@ describe("Function tsconfig Synchronizer", () => {
       const observable = tsconfigSupplier.listen();
 
       observable.subscribe(async (changeLog: ChangeLog) => {
-        expect(changeLog).toMatchObject({
+        expect(changeLog).toEqual({
           module: "function",
           sub_module: "tsconfig",
           type: ChangeType.CREATE,
           origin: ChangeOrigin.DOCUMENT,
           resource_id: mockFunction._id.toString(),
           resource_slug: mockFunction.name,
+          resource_content: changeLog.resource_content,
           resource_extension: "json",
           created_at: expect.any(Date)
-        });
-        const tsconfig = JSON.parse(changeLog.resource_content);
-        expect(tsconfig).toMatchObject({
-          compilerOptions: compilerOptionsJson
         });
         done();
       });
@@ -225,12 +219,14 @@ describe("Function tsconfig Synchronizer", () => {
           }
 
           if (changeLog.type === ChangeType.DELETE) {
-            expect(changeLog).toMatchObject({
+            expect(changeLog).toEqual({
               module: "function",
               sub_module: "tsconfig",
               type: ChangeType.DELETE,
               origin: ChangeOrigin.DOCUMENT,
               resource_id: mockFunction._id.toString(),
+              resource_content: null,
+              resource_extension: "json",
               resource_slug: mockFunction.name,
               created_at: expect.any(Date)
             });
@@ -249,10 +245,12 @@ describe("Function tsconfig Synchronizer", () => {
     });
 
     it("should return DocumentChangeApplier with correct metadata", () => {
-      expect(tsconfigApplier).toMatchObject({
+      expect(tsconfigApplier).toEqual({
         module: "function",
         subModule: "tsconfig",
         fileExtensions: ["json"],
+        findIdBySlug: expect.any(Function),
+        findIdByContent: expect.any(Function),
         apply: expect.any(Function)
       });
     });
@@ -309,7 +307,7 @@ describe("Function tsconfig Synchronizer", () => {
       };
 
       const result = await tsconfigApplier.apply(changeLog);
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: "FAILED",
         reason: `tsconfig is read-only and changes cannot be applied.`
       });

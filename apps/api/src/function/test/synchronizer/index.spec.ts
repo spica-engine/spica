@@ -83,10 +83,9 @@ describe("Function Index Synchronizer", () => {
     });
 
     it("should return ChangeSupplier with correct metadata", () => {
-      expect(indexSupplier).toMatchObject({
+      expect(indexSupplier).toEqual({
         module: "function",
         subModule: "index",
-        fileExtension: "js",
         listen: expect.any(Function)
       });
     });
@@ -118,12 +117,13 @@ describe("Function Index Synchronizer", () => {
       const observable = indexSupplier.listen();
 
       observable.subscribe((changeLog: ChangeLog) => {
-        expect(changeLog).toMatchObject({
+        expect(changeLog).toEqual({
           module: "function",
           sub_module: "index",
           type: ChangeType.CREATE,
           origin: ChangeOrigin.DOCUMENT,
           resource_id: mockFunction._id.toString(),
+          resource_extension: changeLog.resource_extension,
           resource_slug: mockFunction.name,
           resource_content: indexContent,
           created_at: expect.any(Date)
@@ -173,13 +173,14 @@ describe("Function Index Synchronizer", () => {
             await engine.update(fn, updatedContent);
             return;
           }
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "function",
             sub_module: "index",
             type: ChangeType.UPDATE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
             resource_slug: mockFunction.name,
+            resource_extension: changeLog.resource_extension,
             resource_content: updatedContent,
             created_at: expect.any(Date)
           });
@@ -222,12 +223,13 @@ describe("Function Index Synchronizer", () => {
             await engine.deleteFunction(fn);
             return;
           }
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "function",
             sub_module: "index",
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
+            resource_extension: changeLog.resource_extension,
             resource_slug: mockFunction.name,
             resource_content: null,
             created_at: expect.any(Date)
@@ -246,10 +248,12 @@ describe("Function Index Synchronizer", () => {
     });
 
     it("should return ChangeApplier with correct metadata", () => {
-      expect(indexApplier).toMatchObject({
+      expect(indexApplier).toEqual({
         module: "function",
         subModule: "index",
-        fileExtension: "js",
+        fileExtensions: ["mjs", "ts"],
+        findIdBySlug: expect.any(Function),
+        findIdByContent: expect.any(Function),
         apply: expect.any(Function)
       });
     });
@@ -295,7 +299,7 @@ describe("Function Index Synchronizer", () => {
 
       const result = await indexApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
       const savedIndex = await engine.read(mockFunction, "index");
@@ -349,7 +353,7 @@ describe("Function Index Synchronizer", () => {
 
       const result = await indexApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
@@ -358,7 +362,7 @@ describe("Function Index Synchronizer", () => {
       expect(savedIndex).not.toContain("Initial");
     });
 
-    fit("should handle delete change by clearing index file", async () => {
+    it("should handle delete change by clearing index file", async () => {
       const mockFunction: Function = {
         _id: new ObjectId(),
         name: "delete_function",
@@ -400,7 +404,7 @@ describe("Function Index Synchronizer", () => {
 
       const result = await indexApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
       let savedIndex;
@@ -431,7 +435,7 @@ describe("Function Index Synchronizer", () => {
 
       const result = await indexApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.FAILED,
         reason: "Unknown operation type: upsert"
       });

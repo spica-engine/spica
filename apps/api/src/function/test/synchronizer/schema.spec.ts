@@ -85,7 +85,7 @@ describe("Function Synchronizer", () => {
     });
 
     it("should return Change supplier with correct metadata", () => {
-      expect(funcSupplier).toMatchObject({
+      expect(funcSupplier).toEqual({
         module: "function",
         subModule: "schema",
         listen: expect.any(Function)
@@ -115,13 +115,14 @@ describe("Function Synchronizer", () => {
 
       const changeLog = await firstValueFrom(funcSupplier.listen());
 
-      expect(changeLog).toMatchObject({
+      expect(changeLog).toEqual({
         module: "function",
         sub_module: "schema",
         type: ChangeType.CREATE,
         origin: ChangeOrigin.DOCUMENT,
         resource_id: mockFunction._id.toString(),
         resource_slug: "test_function",
+        resource_extension: "yaml",
         resource_content: YAML.stringify(mockFunction),
         created_at: expect.any(Date)
       });
@@ -150,13 +151,14 @@ describe("Function Synchronizer", () => {
       const observable = funcSupplier.listen();
 
       observable.subscribe(changeLog => {
-        expect(changeLog).toMatchObject({
+        expect(changeLog).toEqual({
           module: "function",
           sub_module: "schema",
           type: ChangeType.CREATE,
           origin: ChangeOrigin.DOCUMENT,
           resource_id: mockFunction._id.toString(),
           resource_slug: "test_function",
+          resource_extension: "yaml",
           resource_content: YAML.stringify(mockFunction),
           created_at: expect.any(Date)
         });
@@ -212,13 +214,14 @@ describe("Function Synchronizer", () => {
 
       observable.subscribe(changeLog => {
         if (changeLog.type === ChangeType.UPDATE) {
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "function",
             sub_module: "schema",
             type: ChangeType.UPDATE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: functionId.toString(),
             resource_slug: "updated_function",
+            resource_extension: "yaml",
             resource_content: YAML.stringify(expectedUpdatedFunction),
             created_at: expect.any(Date)
           });
@@ -258,33 +261,16 @@ describe("Function Synchronizer", () => {
 
       observable.subscribe(changeLog => {
         if (changeLog.type === ChangeType.DELETE) {
-          expect(changeLog).toMatchObject({
+          expect(changeLog).toEqual({
             module: "function",
             sub_module: "schema",
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: functionId.toString(),
             resource_slug: "function_to_delete",
+            resource_extension: "yaml",
+            resource_content: YAML.stringify(functionToDelete),
             created_at: expect.any(Date)
-          });
-          const parsedContent = YAML.parse(changeLog.resource_content);
-          expect(parsedContent).toMatchObject({
-            _id: functionId.toString(),
-            name: "function_to_delete",
-            description: "Will be deleted",
-            env_vars: [],
-            triggers: {
-              default: {
-                type: "http",
-                active: true,
-                options: {
-                  method: "Get",
-                  path: "/delete"
-                }
-              }
-            },
-            timeout: 60,
-            language: "javascript"
           });
           done();
         }
@@ -305,9 +291,12 @@ describe("Function Synchronizer", () => {
     });
 
     it("should return Change Applier with correct metadata", () => {
-      expect(funcApplier).toMatchObject({
+      expect(funcApplier).toEqual({
         module: "function",
         subModule: "schema",
+        fileExtensions: ["yaml"],
+        findIdBySlug: expect.any(Function),
+        findIdByContent: expect.any(Function),
         apply: expect.any(Function)
       });
     });
@@ -347,12 +336,12 @@ describe("Function Synchronizer", () => {
 
       const result = await funcApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
       const insertedFunction = await fs.findOne({_id: mockFunction._id});
-      expect(insertedFunction).toMatchObject({
+      expect(insertedFunction).toEqual({
         _id,
         name: "new_function",
         description: "New function",
@@ -436,12 +425,12 @@ describe("Function Synchronizer", () => {
 
       const result = await funcApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
       const fn = await fs.findOne({_id});
-      expect(fn).toMatchObject({
+      expect(fn).toEqual({
         name: "updated_function",
         description: "Updated description",
         triggers: {
@@ -503,7 +492,7 @@ describe("Function Synchronizer", () => {
 
       const result = await funcApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.SUCCEEDED
       });
 
@@ -526,7 +515,7 @@ describe("Function Synchronizer", () => {
 
       const result = await funcApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
+      expect(result).toEqual({
         status: SyncStatuses.FAILED,
         reason: "Unknown operation type: upsert"
       });

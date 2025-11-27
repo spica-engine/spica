@@ -72,12 +72,10 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
               break;
             default:
               console.warn("Unknown operation type:", change.operationType);
-              break;
+              return;
           }
-          if (Object.values(ChangeType).includes(changeType)) {
-            const changeLog = getChangeLogForSchema(documentData, changeType);
-            observer.next(changeLog);
-          }
+          const changeLog = getChangeLogForSchema(documentData, changeType);
+          observer.next(changeLog);
         });
 
         stream.on("error", error => {
