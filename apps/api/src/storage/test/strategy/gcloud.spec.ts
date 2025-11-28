@@ -25,7 +25,8 @@ describe("GCloud", () => {
   };
 
   const Bucket = {
-    file: jest.fn((name: string, options?: FileOptions) => File)
+    file: jest.fn((name: string, options?: FileOptions) => File),
+    deleteFiles: jest.fn((options?: object) => Promise.resolve())
   };
 
   beforeEach(() => {
@@ -73,10 +74,8 @@ describe("GCloud", () => {
   it("should delete file", async () => {
     await service.delete("test_file");
 
-    expect(Bucket.file).toHaveBeenCalledTimes(1);
-    expect(Bucket.file).toHaveBeenCalledWith("test_file");
-
-    expect(File.delete).toHaveBeenCalledTimes(1);
+    expect(Bucket.deleteFiles).toHaveBeenCalledTimes(1);
+    expect(Bucket.deleteFiles).toHaveBeenCalledWith({prefix: "test_file"});
   });
 
   it("should get url without generation param", async () => {

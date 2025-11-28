@@ -201,6 +201,91 @@ describe("Storage Service", () => {
     return await expect(storageService.get(storageObjectId)).resolves.toBeNull();
   });
 
+  it("should delete folder with nested sub-resources at multiple levels", async () => {
+    const folderId = new ObjectId();
+    const subFolder1Id = new ObjectId();
+    const subFolder2Id = new ObjectId();
+    const nestedFileId = new ObjectId();
+    const deepNestedFileId = new ObjectId();
+    const rootFileId = new ObjectId();
+
+    const testData = [
+      {
+        _id: folderId,
+        name: "documents/",
+        content: {
+          data: Buffer.from(""),
+          type: "application/octet-stream",
+          size: 0
+        }
+      },
+      {
+        _id: subFolder1Id,
+        name: "documents/work/",
+        content: {
+          data: Buffer.from(""),
+          type: "application/octet-stream",
+          size: 0
+        }
+      },
+      {
+        _id: subFolder2Id,
+        name: "documents/work/projects/",
+        content: {
+          data: Buffer.from(""),
+          type: "application/octet-stream",
+          size: 0
+        }
+      },
+      {
+        _id: nestedFileId,
+        name: "documents/work/report.pdf",
+        content: {
+          data: Buffer.from("report data"),
+          type: "application/pdf",
+          size: 11
+        }
+      },
+      {
+        _id: deepNestedFileId,
+        name: "documents/work/projects/project1.docx",
+        content: {
+          data: Buffer.from("project data"),
+          type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          size: 12
+        }
+      },
+      {
+        _id: rootFileId,
+        name: "readme.txt",
+        content: {
+          data: Buffer.from("readme content"),
+          type: "text/plain",
+          size: 14
+        }
+      }
+    ];
+
+    await expect(storageService.insert(testData)).resolves.not.toThrow();
+
+    let allItems = await storageService.getAll(resourceFilter, undefined, false, 10, 0, {});
+    expect(allItems.length).toBe(6);
+
+    await expect(storageService.delete(folderId)).resolves.not.toThrow();
+
+    await expect(storageService.get(folderId)).resolves.toBeNull();
+    await expect(storageService.get(subFolder1Id)).resolves.toBeNull();
+    await expect(storageService.get(subFolder2Id)).resolves.toBeNull();
+    await expect(storageService.get(nestedFileId)).resolves.toBeNull();
+    await expect(storageService.get(deepNestedFileId)).resolves.toBeNull();
+
+    await expect(storageService.get(rootFileId)).resolves.not.toBeNull();
+
+    const remainingItems = await storageService.getAll(resourceFilter, undefined, false, 10, 0, {});
+    expect(remainingItems.length).toBe(1);
+    expect(remainingItems[0].name).toBe("readme.txt");
+  });
+
   describe("filter", () => {
     beforeEach(async () => {
       const storageObjects = [
