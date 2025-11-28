@@ -6,12 +6,12 @@
     background: transparent;
 }
 
-.dateInput {
+
+
+.dateCellContainer {
     width: 100%;
-    border: 1px solid #4CAF50;
-    border-radius: 4px;
-    padding: 4px 8px;
-    outline: none;
+    display: flex;
+    align-items: center;
 }
 
 .textareaInput {
