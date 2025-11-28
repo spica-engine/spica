@@ -34,24 +34,16 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
 }
 
 /**
- * Verify a token without requiring initialization.
- * Can be called independently as it doesn't need authorization.
+ * Verify an authentication token.
+ * Requires prior initialization call, but does not require authorization.
  *
  * @param token - The authentication token to verify
- * @param baseUrl - Optional base URL of the server
  * @param headers - Optional headers to include in the request
  * @returns Promise resolving to verified token information
  */
-export function verifyToken(token: string, baseUrl?: string, headers: object = {}) {
-  const _baseUrl = baseUrl ? baseUrl : service ? service.baseUrl : undefined;
-
-  if (!_baseUrl) {
-    throw new Error("You should pass the base url of the server or call the initialize method.");
-  }
-
-  const req = new Axios({baseURL: _baseUrl});
-
-  return req.get(`${userSegment}/verify`, {headers: {Authorization: token, ...headers}});
+export function verifyToken(token: string, headers: object = {}) {
+  checkInitialized(authorization, service, {skipAuthCheck: true});
+  return service.get(`${userSegment}/verify`, {headers: {Authorization: token, ...headers}});
 }
 
 /**
@@ -70,6 +62,7 @@ export async function signIn(
   tokenLifeSpan?: number,
   headers?: object
 ): Promise<string> {
+  checkInitialized(authorization, service, {skipAuthCheck: true});
   const response = await service.post<TokenScheme>(
     "/passport/login",
     {
@@ -92,7 +85,7 @@ export async function signIn(
  * @returns Promise resolving to created user information (without password)
  */
 export async function signUp(user: UserCreate, headers?: object): Promise<UserGet> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   user = deepCopyJSON(user);
   const desiredPolicies = user.policies;
@@ -113,7 +106,7 @@ export namespace policy {
     policyIds: string[] = [],
     headers?: object
   ): Promise<string[]> {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     const promises: Promise<UserGet>[] = [];
     const attachedPolicies = new Set<string>();
@@ -137,7 +130,7 @@ export namespace policy {
     policyIds: string[] = [],
     headers?: object
   ): Promise<string[]> {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     const promises: Promise<UserGet>[] = [];
     const detachedPolicies = new Set<string>();

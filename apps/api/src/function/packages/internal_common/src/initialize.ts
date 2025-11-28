@@ -1,5 +1,6 @@
 import {
   ApikeyInitialization,
+  HttpService,
   IdentityInitialization,
   InitializationResult,
   UserInitialization
@@ -20,26 +21,33 @@ export function initialize(
     authorization = `USER ${options.user}`;
   }
 
-  checkInitialized(authorization);
-
   const publicUrl = options.publicUrl || getPublicUrl();
   if (!publicUrl) {
     throw new Error("Public url must be provided.");
   }
 
   if (!service) {
-    service = new Axios({baseURL: publicUrl, headers: {Authorization: authorization}});
-  } else {
-    service.setBaseUrl(publicUrl);
+    service = new Axios({});
+  }
+  service.setBaseUrl(publicUrl);
+  if (authorization) {
     service.setAuthorization(authorization);
   }
 
   return {authorization, publicUrl, service};
 }
 
-export function checkInitialized(authorization: string) {
-  if (!authorization) {
-    throw new Error("You should call initialize method with a valid credentials");
+export function checkInitialized(
+  authorization: string,
+  service: HttpService,
+  options: {skipAuthCheck: boolean} = {skipAuthCheck: false}
+) {
+  if (!authorization && !options.skipAuthCheck) {
+    throw new Error("You should call initialize method with a valid credentials.");
+  }
+
+  if (!service) {
+    throw new Error("You should call initialize method with a valid publicUrl.");
   }
 }
 
