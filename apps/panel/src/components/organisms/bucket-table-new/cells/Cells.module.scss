@@ -1,0 +1,11 @@
+.inputCell{
+    width: 100%;
+    border:none;
+    outline: none;
+    background: transparent;
+}
+.valueCell{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

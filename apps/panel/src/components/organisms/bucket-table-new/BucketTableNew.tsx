@@ -1,20 +1,194 @@
-import React, { useCallback, useMemo } from "react";
-import {FlexElement, Icon, Table, type TableColumn } from "oziko-ui-kit";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {FlexElement, Icon, Table, type TableColumn, Button, Popover, type IconName } from "oziko-ui-kit";
 import type { BucketSchema, BucketDataRow, BucketProperty } from "./types";
 import { EditableCell } from "./EditableCell";
 import styles from "./BucketTableNew.module.scss";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type {BucketType} from "../../../store/api/bucketApi";
 import { FieldKind } from "../../../domain/fields/types";
-import { useCreateBucketFieldMutation } from "../../../store/api/bucketApi";
+import { useCreateBucketFieldMutation, useDeleteBucketFieldMutation } from "../../../store/api/bucketApi";
 import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
 import { FIELD_REGISTRY } from "../../../domain/fields/registry";
-import type { Property } from "../../../services/bucketService";
+import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
+import Confirmation from "../../molecules/confirmation/Confirmation";
+import useLocalStorage from "../../../hooks/useLocalStorage";
 interface BucketTableNewProps {
   bucket: BucketSchema;
   data: BucketDataRow[];
   onDataChange?: (rowId: string, propertyKey: string, newValue: any) => void;
 }
+
+/**
+ * Helper function to move an element in an array
+ */
+function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
+  const index = arr.indexOf(target);
+  if (index === -1) return arr;
+
+  if (direction === "left" && index > 0) {
+    const newArr = [...arr];
+    [newArr[index - 1], newArr[index]] = [newArr[index], newArr[index - 1]];
+    return newArr;
+  }
+
+  if (direction === "right" && index < arr.length - 1) {
+    const newArr = [...arr];
+    [newArr[index], newArr[index + 1]] = [newArr[index + 1], newArr[index]];
+    return newArr;
+  }
+
+  return arr;
+}
+
+/**
+ * ColumnHeader - Renders a column header with dropdown menu for actions
+ */
+interface ColumnHeaderProps {
+  title?: string;
+  icon?: IconName;
+  showDropdownIcon?: boolean;
+  fieldKey?: string;
+  onEdit?: () => void;
+  onMoveRight?: (fieldKey: string) => void;
+  onMoveLeft?: (fieldKey: string) => void;
+  onSortAsc?: (fieldKey: string) => void;
+  onSortDesc?: (fieldKey: string) => void;
+  onDelete?: () => Promise<void | string>;
+}
+
+const ColumnHeader = ({
+  title,
+  icon,
+  showDropdownIcon,
+  fieldKey,
+  onEdit,
+  onMoveRight,
+  onMoveLeft,
+  onSortAsc,
+  onSortDesc,
+  onDelete
+}: ColumnHeaderProps) => {
+  const [fieldDeletionError, setFieldDeletionError] = useState<string | undefined>(undefined);
+  const [isFieldDeletionLoading, setIsFieldDeletionLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setFieldDeletionError(undefined);
+  };
+  const handleOpen = () => setIsOpen(true);
+
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const openConfirmation = useCallback(() => setIsConfirmationOpen(true), []);
+  const closeConfirmation = useCallback(() => {
+    setIsConfirmationOpen(false);
+    setFieldDeletionError(undefined);
+    handleClose();
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    setFieldDeletionError(undefined);
+    setIsFieldDeletionLoading(true);
+    onDelete?.().then(result => {
+      setIsFieldDeletionLoading(false);
+      if (typeof result === "string") {
+        setFieldDeletionError(result);
+        return;
+      }
+      closeConfirmation();
+    });
+  }, [onDelete]);
+
+  const handleMoveRight = useCallback(() => {
+    if (fieldKey) onMoveRight?.(fieldKey);
+    handleClose();
+  }, [onMoveRight, fieldKey]);
+
+  const handleMoveLeft = useCallback(() => {
+    if (fieldKey) onMoveLeft?.(fieldKey);
+    handleClose();
+  }, [onMoveLeft, fieldKey]);
+
+  const handleSortAsc = useCallback(() => {
+    if (fieldKey) onSortAsc?.(fieldKey);
+    handleClose();
+  }, [onSortAsc, fieldKey]);
+
+  const handleSortDesc = useCallback(() => {
+    if (fieldKey) onSortDesc?.(fieldKey);
+    handleClose();
+  }, [onSortDesc, fieldKey]);
+
+  return (
+    <>
+      <div className={styles.columnHeaderWrapper}>
+        <div className={styles.columnHeaderText}>
+          {icon && <Icon name={icon} size={16} className={styles.headerIcon} />}
+          <span>{title || "\u00A0"}</span>
+        </div>
+        {showDropdownIcon && (
+          <Popover
+            open={isOpen}
+            onClose={handleClose}
+            content={
+              <ColumnActionsMenu
+                onEdit={onEdit}
+                onMoveRight={onMoveRight ? handleMoveRight : undefined}
+                onMoveLeft={onMoveLeft ? handleMoveLeft : undefined}
+                onSortAsc={handleSortAsc}
+                onSortDesc={handleSortDesc}
+                onDelete={onDelete ? openConfirmation : undefined}
+              />
+            }
+            contentProps={{
+              className: styles.popover
+            }}
+            placement="bottom"
+          >
+            <Button variant="icon" onClick={handleOpen}>
+              <Icon name="chevronDown" size={16} />
+            </Button>
+          </Popover>
+        )}
+      </div>
+      {isConfirmationOpen && (
+        <Confirmation
+          title="DELETE FIELD"
+          description={
+            <>
+              <span>
+                This action will remove the field from bucket entries. Please confirm this action to
+                continue
+              </span>
+              <span>
+                Please type <strong>agree</strong> to confirm deletion.
+              </span>
+            </>
+          }
+          inputPlaceholder="Type Here"
+          confirmLabel={
+            <>
+              <Icon name="delete" />
+              Delete
+            </>
+          }
+          cancelLabel={
+            <>
+              <Icon name="close" />
+              Cancel
+            </>
+          }
+          showInput
+          confirmCondition={val => val === "agree"}
+          onConfirm={confirmDelete}
+          onCancel={closeConfirmation}
+          error={fieldDeletionError}
+          loading={isFieldDeletionLoading}
+        />
+      )}
+    </>
+  );
+};
 
 /**
  * BucketTableNew - Main table component for displaying and editing bucket data
@@ -32,6 +206,22 @@ const BucketTableNew: React.FC<BucketTableNewProps> = ({
 }) => {
   // All hooks must be called before any conditional returns
   const [createBucketField] = useCreateBucketFieldMutation();
+  const [deleteBucketField] = useDeleteBucketFieldMutation();
+
+  // Local storage for column order and sorting
+  const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
+    `${bucket?._id}-fields-order`,
+    bucket?.properties ? Object.keys(bucket.properties) : []
+  );
+  const tableKey = useMemo(
+    () => `${bucket?._id ?? "bucket"}-${fieldsOrder.join(",")}`,
+    [bucket?._id, fieldsOrder]
+  );
+
+  const [sortMeta, setSortMeta] = useLocalStorage<{
+    field: string;
+    direction: "asc" | "desc";
+  } | null>(`${bucket?._id}-sort-meta`, null);
 
   const forbiddenFieldNames = useMemo(() => {
     return bucket?.properties ? Object.keys(bucket.properties) : [];
@@ -55,7 +245,7 @@ const BucketTableNew: React.FC<BucketTableNewProps> = ({
         ...bucketType,
         properties: {
           ...bucket.properties,
-          [title]: fieldProperty as Property
+          [title]: fieldProperty
         },
         // Add to required array if requiredField is true
         required: requiredField ? [...(bucketType.required || []), title] : bucketType.required,
@@ -68,6 +258,7 @@ const BucketTableNew: React.FC<BucketTableNewProps> = ({
         throw new Error("Failed to create bucket field");
       }
       
+      // fieldsOrder will be automatically updated by the useEffect when bucket.properties changes
       return result.data;
     },
     [bucket, createBucketField]
@@ -76,21 +267,6 @@ const BucketTableNew: React.FC<BucketTableNewProps> = ({
   /**
    * Get appropriate column width based on property type
    */
-  const getColumnWidth = useCallback((type: string): string => {
-    const widthMap: Record<string, string> = {
-      string: "200px",
-      textarea: "300px",
-      number: "150px",
-      date: "180px",
-      relation: "200px",
-      boolean: "100px",
-      array: "250px",
-      object: "250px",
-    };
-
-    return widthMap[type] || "200px";
-  }, []);
-
   /**
    * Get icon for a property type from the field registry
    */
@@ -122,7 +298,104 @@ const BucketTableNew: React.FC<BucketTableNewProps> = ({
   }, [onDataChange]);
 
   /**
-   * Generate table columns from bucket properties
+   * Handle field deletion
+   */
+  const handleDeleteField = useCallback(
+    async (fieldKey: string) => {
+      if (!bucket) {
+        console.error("Bucket not found");
+        return "Bucket not found";
+      }
+
+      try {
+        await deleteBucketField({ 
+          bucketId: bucket._id, 
+          fieldKey, 
+          bucket: bucket as unknown as BucketType 
+        }).unwrap();
+      } catch (error) {
+        console.error("Error deleting bucket field:", error);
+        return "Error deleting field";
+      }
+    },
+    [bucket, deleteBucketField]
+  );
+
+  /**
+   * Move column to the left
+   */
+  const onMoveLeft = useCallback(
+    (fieldTitle: string) => {
+      const oldIndex = fieldsOrder.indexOf(fieldTitle);
+      const newOrder = moveElement(fieldsOrder, "left", fieldsOrder[oldIndex]);
+      setFieldsOrder(newOrder);
+    },
+    [fieldsOrder, setFieldsOrder]
+  );
+
+  /**
+   * Move column to the right
+   */
+  const onMoveRight = useCallback(
+    (fieldTitle: string) => {
+      const oldIndex = fieldsOrder.indexOf(fieldTitle);
+      const newOrder = moveElement(fieldsOrder, "right", fieldsOrder[oldIndex]);
+      setFieldsOrder(newOrder);
+    },
+    [fieldsOrder, setFieldsOrder]
+  );
+
+  /**
+   * Sort column in ascending order
+   */
+  const onSortAsc = useCallback(
+    (fieldTitle: string) => {
+      setSortMeta({field: fieldTitle, direction: "asc"});
+    },
+    [setSortMeta]
+  );
+
+  /**
+   * Sort column in descending order
+   */
+  const onSortDesc = useCallback(
+    (fieldTitle: string) => {
+      setSortMeta({field: fieldTitle, direction: "desc"});
+    },
+    [setSortMeta]
+  );
+
+  /**
+   * Sync fieldsOrder with bucket properties when properties change
+   */
+  useEffect(() => {
+    if (!bucket?.properties) return;
+    
+    const propertyKeys = Object.keys(bucket.properties);
+    
+    // Initialize fieldsOrder if it's empty
+    if (fieldsOrder.length === 0) {
+      setFieldsOrder(propertyKeys);
+      return;
+    }
+    
+    // Check if there are new keys (fields added)
+    const newKeys = propertyKeys.filter(key => !fieldsOrder.includes(key));
+    
+    // Check if there are removed keys (fields deleted)
+    const removedKeys = fieldsOrder.filter(key => !propertyKeys.includes(key));
+    
+    // Only update if there are actual changes
+    if (newKeys.length > 0 || removedKeys.length > 0) {
+      // Keep existing order intact, just remove deleted keys and append new keys at the end
+      const validKeys = fieldsOrder.filter(key => propertyKeys.includes(key));
+      setFieldsOrder([...validKeys, ...newKeys]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bucket?.properties, bucket?._id]);
+
+  /**
+   * Generate table columns from bucket properties with ordering and actions
    */
   const columns = useMemo((): TableColumn<BucketDataRow>[] => {
     if (!bucket?.properties) return [];
@@ -143,20 +416,39 @@ const BucketTableNew: React.FC<BucketTableNewProps> = ({
       }
     ];
 
-    const propertyEntries = Object.entries(bucket.properties);
+    // Get property entries and order them based on fieldsOrder
+    const propertyKeys = Object.keys(bucket.properties);
+    
+    // Create ordered property entries
+    const orderedKeys = fieldsOrder.filter(key => propertyKeys.includes(key));
+    const newKeys = propertyKeys.filter(key => !fieldsOrder.includes(key));
+    const finalOrderedKeys = [...orderedKeys, ...newKeys];
 
-    const propertyColumns = propertyEntries.map(([key, property]: [string, BucketProperty]) => {
+    const propertyColumns = finalOrderedKeys.map((key, index) => {
+      const property: BucketProperty = bucket.properties[key];
       const icon = getPropertyIcon(property.type);
+      const isPrimaryField = bucket.primary === key;
       
+      // Determine if move operations are allowed
+      const moveRightAllowed = index < finalOrderedKeys.length - 1;
+      const moveLeftAllowed = index > 0;
+
       return {
         key,
         header: (
-          <FlexElement gap={8} alignment="leftCenter">
-            {icon && <Icon name={icon} size={16} />}
-            <span>{property.title || key}</span>
-          </FlexElement>
+          <ColumnHeader
+            title={property.title || key}
+            icon={icon}
+            showDropdownIcon={true}
+            fieldKey={key}
+            onMoveRight={moveRightAllowed ? onMoveRight : undefined}
+            onMoveLeft={moveLeftAllowed ? onMoveLeft : undefined}
+            onSortAsc={onSortAsc}
+            onSortDesc={onSortDesc}
+            onDelete={isPrimaryField ? undefined : () => handleDeleteField(key)}
+          />
         ),
-        width: getColumnWidth(property.type),
+        width: "200px",
         renderCell: (params: { row: BucketDataRow; isFocused: boolean }) => {
           const value = params.row[key];
           
@@ -177,7 +469,51 @@ const BucketTableNew: React.FC<BucketTableNewProps> = ({
 
     // Combine system columns with property columns
     return [...systemColumns, ...propertyColumns];
-  }, [bucket, handleValueChange, getColumnWidth]);
+  }, [
+    bucket, 
+    fieldsOrder, 
+    setFieldsOrder, 
+    handleValueChange, 
+    getPropertyIcon,
+    onMoveLeft,
+    onMoveRight,
+    onSortAsc,
+    onSortDesc,
+    handleDeleteField
+  ]);
+
+  /**
+   * Apply sorting to data if sortMeta is set
+   */
+  const sortedData = useMemo(() => {
+    const currentData = data ?? [];
+    if (!sortMeta || currentData.length === 0) return currentData;
+
+    return [...currentData].sort((a, b) => {
+      const aValue = a[sortMeta.field];
+      const bValue = b[sortMeta.field];
+
+      // Handle null/undefined values
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
+
+      // Compare values
+      let comparison = 0;
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        comparison = aValue.localeCompare(bValue);
+      } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+        comparison = aValue - bValue;
+      } else if (aValue instanceof Date && bValue instanceof Date) {
+        comparison = aValue.getTime() - bValue.getTime();
+      } else {
+        // For other types, convert to string and compare
+        comparison = String(aValue).localeCompare(String(bValue));
+      }
+
+      return sortMeta.direction === 'asc' ? comparison : -comparison;
+    });
+  }, [data, sortMeta]);
 
   if (!bucket?.properties) {
     return (
@@ -187,28 +523,24 @@ const BucketTableNew: React.FC<BucketTableNewProps> = ({
     );
   }
 
-  if (!data || data.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <p>No data available</p>
-      </div>
-    );
-  }
 
   return (
-    <div className={styles.tableContainer}>
-      <Table
-        key={`${bucket._id}-${Object.keys(bucket.properties || {}).length}`}
-        columns={columns}
-        data={data}
-        saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
-        fixedColumns={['_id']}
-        noResizeableColumns={['_id']}
-        tableClassName={styles.table}
-        headerClassName={styles.header}
-        columnClassName={styles.column}
-        cellClassName={styles.cell}
-      />
+<>
+<div className={styles.tableContainer}>
+      <div className={styles.tableWrapper}>
+        <Table
+          key={tableKey}
+          columns={columns}
+          data={sortedData}
+          saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
+          fixedColumns={['_id']}
+          noResizeableColumns={['_id']}
+          tableClassName={styles.table}
+          headerClassName={styles.header}
+          columnClassName={styles.column}
+          cellClassName={styles.cell}
+        />
+      </div>
       <FlexElement
         className={styles.newFieldContainer}
         direction="vertical"
@@ -229,6 +561,10 @@ const BucketTableNew: React.FC<BucketTableNewProps> = ({
       </FlexElement>
 
     </div>
+     {!sortedData.length && <div className={styles.noDataText}>
+      <p>No data available</p>
+    </div>}
+</>
   );
 };
 

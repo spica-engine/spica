@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { CellRendererProps, CellKeyboardHandler } from "../types";
 import { BaseCellRenderer } from "./BaseCellRenderer";
+import styles from "./Cells.module.scss";
 
 export const StringCell: React.FC<CellRendererProps> = ({
   value,
@@ -10,14 +11,16 @@ export const StringCell: React.FC<CellRendererProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || "");
+  const [pendingValue, setPendingValue] = useState<{ value: string; baseValue: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const normalizedValue = value ?? "";
 
   // Sync editValue with value prop when not editing
   useEffect(() => {
     if (!isEditing) {
-      setEditValue(value || "");
+      setEditValue(normalizedValue);
     }
-  }, [value, isEditing]);
+  }, [normalizedValue, isEditing]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -35,9 +38,18 @@ export const StringCell: React.FC<CellRendererProps> = ({
     }
   }, [isFocused]);
 
+  useEffect(() => {
+    if (!pendingValue) return;
+
+    if (normalizedValue !== pendingValue.baseValue) {
+      setPendingValue(null);
+    }
+  }, [normalizedValue, pendingValue]);
+
   const handleSave = () => {
     if (editValue !== value) {
       onChange(editValue);
+      setPendingValue({ value: editValue, baseValue: normalizedValue });
     }
     setIsEditing(false);
   };
@@ -46,6 +58,7 @@ export const StringCell: React.FC<CellRendererProps> = ({
     setEditValue(value || "");
     setIsEditing(false);
     onRequestBlur();
+    setPendingValue(null);
   };
 
   const handleBlur = () => {
@@ -75,13 +88,7 @@ export const StringCell: React.FC<CellRendererProps> = ({
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleInputKeyDown}
-          style={{
-            width: "100%",
-            border: "1px solid #4CAF50",
-            borderRadius: "4px",
-            padding: "4px 8px",
-            outline: "none",
-          }}
+          className={styles.inputCell}
         />
       </BaseCellRenderer>
     );
@@ -89,8 +96,8 @@ export const StringCell: React.FC<CellRendererProps> = ({
 
   return (
     <BaseCellRenderer isFocused={isFocused}>
-      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        {value || ""}
+      <span className={styles.valueCell}>
+        {pendingValue?.value ?? normalizedValue}
       </span>
     </BaseCellRenderer>
   );

@@ -1,3 +1,4 @@
+import { FlexElement } from "oziko-ui-kit";
 import React from "react";
 
 /**
@@ -21,8 +22,9 @@ export const BaseCellRenderer: React.FC<{
   };
 
   return (
-    <button
-      type="button"
+    <FlexElement
+      dimensionX={"fill"}
+      alignment={"leftTop"}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       style={{
@@ -38,7 +40,7 @@ export const BaseCellRenderer: React.FC<{
       }}
     >
       {children}
-    </button>
+    </FlexElement>
   );
 };
 

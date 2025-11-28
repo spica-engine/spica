@@ -1,7 +1,7 @@
 import styles from "./Bucket.module.scss";
 import {useGetBucketsQuery} from "../../store/api/bucketApi";
-import {useExecuteBatchMutation} from "../../store/api/batchApi";
-import type {BatchResponse, BatchResponseItem} from "../../store/api/batchApi";
+import {useExecuteBatchMutation, type BatchResponse, type BatchResponseItem} from "../../store/api/batchApi";
+import {useUpdateBucketEntryMutation} from "../../store/api/bucketApi";
 import {useParams} from "react-router-dom";
 import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
@@ -14,11 +14,13 @@ import {useAppDispatch, useAppSelector} from "../../store/hook";
 import {resetBucketSelection} from "../../store";
 import {selectParsedToken} from "../../store/slices/authSlice";
 import BucketTableNew from "../../components/organisms/bucket-table-new/BucketTableNew";
+import BucketTable from "../../components/organisms/bucket-table/BucketTable";
 
 export default function Bucket() {
   const {bucketId = ""} = useParams<{bucketId: string}>();
   const {data: buckets = []} = useGetBucketsQuery();
   const [executeBatchRequest] = useExecuteBatchMutation();
+  const [updateBucketEntry] = useUpdateBucketEntryMutation();
   const dispatch = useAppDispatch();
 
   const bucket = useMemo(
@@ -42,23 +44,15 @@ export default function Bucket() {
 
   const isTableLoading = useMemo(() => formattedColumns.length <= 1, [formattedColumns]);
   const authToken = useAppSelector(selectParsedToken);
-
   const handleDataChange = useCallback(
     async (rowId: string, propertyKey: string, newValue: any) => {
       try {
-        const hasToken = typeof authToken === "string" && authToken.trim().length > 0;
-        const authorizationHeader = hasToken ? {Authorization: `IDENTITY ${authToken}`} : undefined;
-
-        await executeBatchRequest({
-          requests: [{
-            id: rowId,
-            method: "PATCH" as const,
-            url: `/bucket/${bucketId}/data/${rowId}`,
-            headers: authorizationHeader,
-            body: {
-              [propertyKey]: newValue
-            }
-          }]
+        await updateBucketEntry({
+          bucketId,
+          entryId: rowId,
+          data: {
+            [propertyKey]: newValue
+          }
         }).unwrap();
 
         console.log("Data saved successfully:", { rowId, propertyKey, newValue });
@@ -69,7 +63,7 @@ export default function Bucket() {
         console.error("Failed to save data:", error);
       }
     },
-    [bucketId, executeBatchRequest, authToken, handleRefresh]
+    [bucketId, handleRefresh, updateBucketEntry]
   );
 
   const deleteBucketEntries = useCallback(
