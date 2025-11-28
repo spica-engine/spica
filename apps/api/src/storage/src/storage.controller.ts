@@ -58,7 +58,7 @@ export class StorageController {
    Ascending `{"content.size": 1}`
    */
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("storage:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:index"))
   async find(
     @ResourceFilter() resourceFilter: object,
     @Query("filter", JSONP) filter?: object,
@@ -70,7 +70,7 @@ export class StorageController {
     return this.storage.getAll(resourceFilter, filter, paginate, limit, skip, sort);
   }
   @Get("browse")
-  @UseGuards(AuthGuard(), SimpleActionGuard("storage:browse", "storage"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), SimpleActionGuard("storage:browse", "storage"))
   async browse(
     @ResourceFilter({
       pure: true
@@ -87,7 +87,7 @@ export class StorageController {
 
   @UseInterceptors(activity(createStorageActivity))
   @Patch(":id")
-  @UseGuards(AuthGuard(), ActionGuard("storage:update", "storage/:id"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update", "storage/:id"))
   async patch(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(
@@ -128,7 +128,7 @@ export class StorageController {
     activity(createStorageActivity)
   )
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("storage:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update"))
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/storage/body/single"))
@@ -168,7 +168,7 @@ export class StorageController {
     activity(createStorageActivity)
   )
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:create"))
   async insertMany(@Body(Schema.validate("http://spica.internal/storage/body")) body: MixedBody) {
     const converter = getPostBodyConverter(body);
     const objects = converter.convert(body);
@@ -189,7 +189,7 @@ export class StorageController {
   @UseInterceptors(activity(createStorageActivity))
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.storage.delete(id);
   }
@@ -198,7 +198,7 @@ export class StorageController {
    * Creates and returns new upload resource
    */
   @Post("resumable")
-  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:create"))
   async getUploadUrl(@Req() req, @Res() res) {
     await this.storage.handleResumableUpload(req, res);
   }
@@ -207,7 +207,7 @@ export class StorageController {
    * Accepts all resumable uploads
    */
   @All("resumable/:id")
-  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:create"))
   async handleUpload(@Req() req, @Res() res) {
     await this.storage.handleResumableUpload(req, res);
   }
@@ -220,7 +220,7 @@ export class StorageController {
    * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
    */
   @Get(":id(*)/view")
-  @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
   async view(
     @Res() res,
     @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
@@ -250,7 +250,7 @@ export class StorageController {
    * @param id Identifier of the object
    */
   @Get(":id(*)")
-  @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
   async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
     let object;
     if (idOrName instanceof ObjectId) {

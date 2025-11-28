@@ -22,7 +22,7 @@ export class HistoryController {
   ) {}
 
   @Get(":documentId")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   getHistories(
     @Param("bucketId", OBJECT_ID) bucket_id: ObjectId,
     @Param("documentId", OBJECT_ID) document_id: ObjectId
@@ -31,7 +31,7 @@ export class HistoryController {
   }
 
   @Get(":documentId/:historyId")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   async revertTo(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
@@ -49,7 +49,7 @@ export class HistoryController {
   }
 
   @Delete()
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   @HttpCode(HttpStatus.NO_CONTENT)
   async clearHistories(@Param("bucketId", OBJECT_ID) bucketId: ObjectId) {
     const res = await this.historyService.deleteMany({bucket_id: bucketId});

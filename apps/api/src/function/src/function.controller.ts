@@ -63,7 +63,7 @@ export class FunctionController {
    * @param id Identifier of the function
    */
   @Get("information")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   async information() {
     const enqueuers = [];
 
@@ -87,7 +87,7 @@ export class FunctionController {
    * @param id Identifier of the function
    */
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("function:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:index"))
   index(
     @ResourceFilter() resourceFilter,
     @Query("filter", DEFAULT({}), JSONP) filter: {index?: string}
@@ -108,7 +108,7 @@ export class FunctionController {
    * @param id Identifier of the function
    */
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("function:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.findOne(this.fs, id, {
       resolveEnvRelations: EnvRelation.Resolved
@@ -123,7 +123,7 @@ export class FunctionController {
    */
   @UseInterceptors(activity(createFunctionActivity))
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("function:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.remove(this.fs, this.engine, this.log, id);
@@ -136,7 +136,7 @@ export class FunctionController {
    */
   @UseInterceptors(activity(createFunctionActivity))
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("function:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update"))
   async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate(generate)) fn: Function
@@ -159,7 +159,7 @@ export class FunctionController {
    */
   @UseInterceptors()
   @Patch(":id")
-  @UseGuards(AuthGuard(), ActionGuard("function:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update"))
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Headers("content-type") contentType: string,
@@ -200,7 +200,7 @@ export class FunctionController {
    */
   @UseInterceptors(activity(createFunctionActivity))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
     return CRUD.insert(this.fs, this.engine, fn).catch(error => {
       throw new HttpException(error.message, error.status || 500);
@@ -215,7 +215,7 @@ export class FunctionController {
   @UseInterceptors(activity(createFunctionIndexActivity))
   @Post(":id/index")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
   async updateIndex(@Param("id", OBJECT_ID) id: ObjectId, @Body("index") index: string) {
     return CRUD.index
       .write(this.fs, this.engine, id, index)
@@ -227,7 +227,7 @@ export class FunctionController {
    * @param id Identifier of the function
    */
   @Get(":id/index")
-  @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:show", "function/:id"))
   async showIndex(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.index.find(this.fs, this.engine, id).catch(error => {
       throw new HttpException(error.message, error.status || 500);
@@ -239,7 +239,7 @@ export class FunctionController {
    * @param id Identifier of the function
    */
   @Get(":id/dependencies")
-  @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:show", "function/:id"))
   async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.dependencies.findOne(this.fs, this.engine, id).catch(error => {
       throw new HttpException(error.message, error.status || 500);
@@ -253,7 +253,7 @@ export class FunctionController {
    */
   @UseInterceptors(activity(createFunctionDependencyActivity))
   @Post(":id/dependencies")
-  @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
   @Header("X-Content-Type-Options", "nosniff")
   async addDependency(
     @Param("id", OBJECT_ID) id: ObjectId,
@@ -273,7 +273,7 @@ export class FunctionController {
    */
   @UseInterceptors(activity(createFunctionDependencyActivity))
   @Delete(":id/dependencies/:name(*)")
-  @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Param("name") name: string) {
     const fn = await this.fs.findOne({_id: id});
@@ -290,7 +290,7 @@ export class FunctionController {
    */
   @UseInterceptors(activity(createFunctionEnvVarActivity))
   @Put(":id/env-var/:envVarId")
-  @UseGuards(AuthGuard(), ActionGuard("function:env-var:inject"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:env-var:inject"))
   async injectEnvironmentVariable(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Param("envVarId", OBJECT_ID) envVarId: ObjectId
@@ -305,7 +305,7 @@ export class FunctionController {
    */
   @UseInterceptors(activity(createFunctionEnvVarActivity))
   @Delete(":id/env-var/:envVarId")
-  @UseGuards(AuthGuard(), ActionGuard("function:env-var:eject"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:env-var:eject"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async ejectEnvironmentVariable(
     @Param("id", OBJECT_ID) id: ObjectId,
