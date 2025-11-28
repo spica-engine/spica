@@ -1,228 +1,132 @@
-.table {
-  font-family: var(--font-family-base);
-  border-radius: var(--border-radius-md);
-  color: var(--color-font-primary);
-  font-size: var(--font-size-md);
-  font-weight: 400;
-  border-bottom: none;
-  white-space: nowrap;
-  max-width: 100%;
-  width: 100%;
-  border-spacing: 0;
+.tableContainer{
+    display: flex !important;
+    border:1px solid var(--color-border) !important;
+    width: 100% !important;
+    border-radius: var(--border-radius-md) !important;
+    overflow: hidden !important;
+
+    .tableWrapper{
+        width: 90% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--gap-sm) !important;
+    }
+
+    .table{
+        border:none !important;
+        overflow: scroll !important;
+        width: 100% !important;
+        background-color: var(--color-soft-light) !important;
+        font-size: var(--font-size-md) !important;
+        color: var(--color-font-primary) !important;
+    }
+    
+    .noDataPlaceholder{
+        margin-top: var(--gap-sm) !important;
+        padding: var(--padding-md) !important;
+        border: 1px dashed var(--color-input-placeholder) !important;
+        border-radius: var(--border-radius-sm) !important;
+        background-color: var(--color-soft-light) !important;
+        color: var(--color-font-secondary) !important;
+        font-size: var(--font-size-md) !important;
+        text-align: center !important;
+    }
+
+    .column{
+        border-color: var(--color-input-placeholder) !important;
+
+        .cell{
+            height: 36px !important;
+            background-color: var(--color-soft-light) !important;
+            border-color: var(--color-zebra);
+            font-size: var(--font-size-md) !important;
+        } 
+
+        .cell:nth-child(odd){
+            background-color: var(--color-zebra) !important;
+        }
+    }
+    
+    .column:first-child{
+        border-top-left-radius: var(--border-radius-md) !important;
+        border-bottom-left-radius: var(--border-radius-md) !important;
+    }
+    
+    
+    .header{
+        background-color: var(--color-border) !important;
+        color: var(--color-font-primary) !important;
+        display: flex !important;
+        gap: var(--gap-md) !important;
+        width: 100% !important;
+        justify-content: start !important;
+        height: 36px !important;
+        font-size: var(--font-size-md) !important;
+    
+    }
+
+
+
+    .newFieldContainer{
+        width: 10% !important;
+        border-left: 1px solid var(--color-input-placeholder) !important;
+        background-color: var(--color-border) !important;
+
+    }
+
+    .newFieldHeader{
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: var(--padding-md) !important;
+        color: var(--color-primary) !important;
+        font-weight: 600 !important;
+        font-size: var(--font-size-md) !important;
+        cursor: pointer !important;
+
+    }
 }
 
-.table td:not([class*="focusedCell"]),
-.table th {
-  border-bottom: none !important;
-  border-right: var(--border-default);
-  border-color: var(--color-input-placeholder);
+.readonlyCell {
+    padding: 8px 12px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    color: var(--color-font-primary) !important;
+    font-size: var(--font-size-md) !important;
 }
 
-.table > tbody > tr:nth-child(even) {
-  background-color: var(--color-zebra);
-}
-.table > tbody > tr:nth-child(odd) {
-  background-color: var(--color-soft-light);
+.columnHeaderWrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 8px !important;
 }
 
 .columnHeaderText {
-  display: flex;
-  justify-content: normal !important;
-  align-items: center;
-  gap: var(--gap-md) !important;
-  > span {
-    text-overflow: ellipsis;
-    overflow: hidden;
-    min-width: 50px;
-    width: min-content;
-  }
-  width: 80%;
-}
-
-.selectColumnHeader {
-  justify-content: center !important;
-  padding: 0 !important;
-  width: 60px !important;
-  label {
-    background-color: var(--color-border);
-    border-color: var(--color-font-primary) !important;
-  }
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
 }
 
 .headerIcon {
-  color: var(--color-icon);
+    flex-shrink: 0 !important;
 }
 
-.newFieldHeaderIcon {
-  color: var(--color-font-primary);
+.popover {
+    z-index: 1000 !important;
 }
 
-.newFieldHeader {
-  border-top-right-radius: var(--border-radius-md);
-  right: 0;
-  border-left: var(--border-default);
-  > div {
-    justify-content: center !important;
-  }
-}
-
-.multipleSelectionCell {
-  display: flex;
-  gap: var(--gap-md);
-
-  .grayBox {
-    width: 22px;
-    height: 22px;
-    border-radius: var(--border-radius-md);
-    background-color: var(--color-border);
-    font-family: var(--font-family-base);
-    font-size: var(--font-size-md);
-    line-height: 0 !important;
-  }
-}
-
-.columnHeader {
-  justify-content: space-between !important;
-  background-color: var(--color-border);
-}
-
-.columnHeader:nth-last-child(2) {
-  border-right: none !important;
-}
-
-.columnHeader:first-child {
-  border-right: none;
-}
-
-.newFieldColumnButton {
-  width: 100%;
+.noDataText {
+  text-align: center;
+  font-size: var(--font-size-lg);
+  color: var(--color-font-tertiary);
+  height: 200px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: 600;
-  span {
-    font-weight: 600;
-    font-size: var(--font-size-md);
-    font-family: var(--font-family-base);
-  }
-}
-
-.newFieldCell {
-  background-color: var(--color-border) !important;
-  right: 0;
-  border-left: var(--border-default);
-}
-
-.checkbox:not(.selectColumnHeader .checkbox) {
-  border-color: var(--color-border) !important;
-}
-
-.checkbox {
-  label {
-    width: 20px !important;
-    height: 20px !important;
-    border-radius: var(--border-radius-md) !important;
-    cursor: pointer !important;
-    position: relative !important;
-  }
-
-  div:nth-child(2) {
-    display: none;
-  }
-
-  height: min-content !important;
-  margin-top: -2px;
-}
-
-.selectColumn {
-  min-width: 60px !important;
-  flex: none !important;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-right: 0 !important;
-  * {
-    padding-right: 0 !important;
-  }
-  > div > div {
-    height: min-content !important;
-  }
-}
-
-.selectCell {
-  border-bottom: var(--border-default) !important;
-  padding: var(--padding-md) !important;
-  border-right: none !important;
-}
-
-.locationCell {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.locationImage {
-  width: 20px;
-  height: 20px;
-  border-radius: var(--border-radius-md);
-}
-
-.fileCell {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-sm);
-  overflow: hidden;
-  span {
-    width: 90%;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
-}
-
-.newFieldColumn {
-  flex: 1;
-  position: relative;
-  max-width: 140px;
-  overflow-y: auto;
-
-  &:not(:last-child) {
-    border-right: none;
-  }
-}
-
-.grayText {
-  color: var(--color-input-placeholder);
-}
-
-.defaultCell {
-  overflow: hidden;
-  display: flex;
-  justify-content: space-between;
-  height: 100%;
-  align-items: center;
-}
-
-.defaultCellData {
-  width: 100%;
-  height: 100%;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  align-items: center;
-  align-content: center;
-}
-
-.cell:nth-last-child(2) {
-  border-right: none !important;
-}
-
-.popover{
-  padding: 0 !important;
-}
-
-.confirmationDescription {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-md);
 }
