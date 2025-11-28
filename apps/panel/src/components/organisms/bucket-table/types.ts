@@ -1,4 +1,4 @@
-import { TableCellKeyDownParams } from "components/atoms/table/Table";
+
 
 export type BucketPropertyType = 
   | "string" 

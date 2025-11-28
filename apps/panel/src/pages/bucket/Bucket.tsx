@@ -13,8 +13,8 @@ import {useBucketData} from "../../hooks/useBucketData";
 import {useAppDispatch, useAppSelector} from "../../store/hook";
 import {resetBucketSelection} from "../../store";
 import {selectParsedToken} from "../../store/slices/authSlice";
-import BucketTableNew from "../../components/organisms/bucket-table-new/BucketTableNew";
-import BucketTable from "../../components/organisms/bucket-table/BucketTable";
+import BucketTableNew from "../../components/organisms/bucket-table/BucketTable";
+
 
 export default function Bucket() {
   const {bucketId = ""} = useParams<{bucketId: string}>();

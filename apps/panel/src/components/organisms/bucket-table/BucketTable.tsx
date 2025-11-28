@@ -1,23 +1,23 @@
-import {Button, Checkbox, Icon, Popover, type IconName} from "oziko-ui-kit";
-
-import styles from "./BucketTable.module.scss";
-import {memo, useCallback, useMemo, useState, type RefObject} from "react";
-import Loader from "../../../components/atoms/loader/Loader";
-import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
-import {
-  useGetBucketsQuery,
-  useCreateBucketFieldMutation,
-  useDeleteBucketFieldMutation,
-  type BucketType
-} from "../../../store/api/bucketApi";
-import {FieldKind, FIELD_REGISTRY} from "../../../domain/fields";
-import {useEntrySelection} from "../../../hooks/useEntrySelection";
-import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {FlexElement, Icon, Table, type TableColumn, Button, Popover, type IconName } from "oziko-ui-kit";
+import type { BucketSchema, BucketDataRow, BucketProperty } from "./types";
+import { EditableCell } from "./EditableCell";
+import styles from "./BucketTableNew.module.scss";
 import type {FieldFormState} from "../../../domain/fields/types";
-import type {Property} from "../../../services/bucketService";
-import Confirmation from "../../../components/molecules/confirmation/Confirmation";
+import type {BucketType} from "../../../store/api/bucketApi";
+import { FieldKind } from "../../../domain/fields/types";
+import { useCreateBucketFieldMutation, useDeleteBucketFieldMutation } from "../../../store/api/bucketApi";
+import BucketFieldPopup from "../../molecules/bucket-field-popup/BucketFieldPopup";
+import { FIELD_REGISTRY } from "../../../domain/fields/registry";
+import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
+import Confirmation from "../../molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
-import Table from "../table/Table";
+interface BucketTableNewProps {
+  bucket: BucketSchema;
+  data: BucketDataRow[];
+  onDataChange?: (rowId: string, propertyKey: string, newValue: any) => void;
+}
+
 
 function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
   const index = arr.indexOf(target);
@@ -38,72 +38,24 @@ function moveElement<T>(arr: T[], direction: "left" | "right", target: T): T[] {
   return arr;
 }
 
-type TypeColumnRole = "select" | "data" | "new-field";
-
-export type ColumnType = {
-  id: string;
-  header: any;
-  key: string;
-  role?: TypeColumnRole;
-  type?: FieldKind;
-  width?: string;
-  deletable?: boolean;
-  headerClassName?: string;
-  cellClassName?: string;
-  showDropdownIcon?: boolean;
-  resizable?: boolean;
-  fixed?: boolean;
-  selectable?: boolean;
-  leftOffset?: number;
-  fixedWidth?: boolean;
-};
-
-type BucketTableProps = {
-  data: Record<string, any>[];
-  columns: ColumnType[];
-  onScrollEnd?: () => void;
-  totalDataLength: number;
-  maxHeight?: string | number;
-  bucketId: string;
-  loading: boolean;
-  tableRef?: RefObject<HTMLElement | null>;
-  primaryKey: string;
-  onMoveLeft?: () => void;
-  onMoveRight?: () => void;
-};
-
-type ColumnHeaderProps = {
+interface ColumnHeaderProps {
   title?: string;
   icon?: IconName;
   showDropdownIcon?: boolean;
+  fieldKey?: string;
   onEdit?: () => void;
-  onMoveRight?: (fieldTitle: string) => void;
-  onMoveLeft?: (fieldTitle: string) => void;
-  onSortAsc?: (fieldTitle: string) => void;
-  onSortDesc?: (fieldTitle: string) => void;
+  onMoveRight?: (fieldKey: string) => void;
+  onMoveLeft?: (fieldKey: string) => void;
+  onSortAsc?: (fieldKey: string) => void;
+  onSortDesc?: (fieldKey: string) => void;
   onDelete?: () => Promise<void | string>;
-};
-
-type ColumnMeta = {
-  type?: FieldKind;
-  deletable?: boolean;
-  id: string;
-  role?: TypeColumnRole;
-};
-
-const COLUMN_ICONS: Record<string, IconName> = Object.values(FieldKind).reduce(
-  (acc, k) => {
-    const def = FIELD_REGISTRY[k as FieldKind];
-    if (def) acc[k] = def.display.icon as IconName;
-    return acc;
-  },
-  {} as Record<string, IconName>
-);
+}
 
 const ColumnHeader = ({
   title,
   icon,
   showDropdownIcon,
+  fieldKey,
   onEdit,
   onMoveRight,
   onMoveLeft,
@@ -143,52 +95,57 @@ const ColumnHeader = ({
   }, [onDelete]);
 
   const handleMoveRight = useCallback(() => {
-    onMoveRight?.(title!);
+    if (fieldKey) onMoveRight?.(fieldKey);
     handleClose();
-  }, [onMoveRight]);
+  }, [onMoveRight, fieldKey]);
+
   const handleMoveLeft = useCallback(() => {
-    onMoveLeft?.(title!);
+    if (fieldKey) onMoveLeft?.(fieldKey);
     handleClose();
-  }, [onMoveLeft]);
+  }, [onMoveLeft, fieldKey]);
+
   const handleSortAsc = useCallback(() => {
-    onSortAsc?.(title!);
+    if (fieldKey) onSortAsc?.(fieldKey);
     handleClose();
-  }, [onSortAsc]);
+  }, [onSortAsc, fieldKey]);
+
   const handleSortDesc = useCallback(() => {
-    onSortDesc?.(title!);
+    if (fieldKey) onSortDesc?.(fieldKey);
     handleClose();
-  }, [onSortDesc]);
+  }, [onSortDesc, fieldKey]);
 
   return (
     <>
-      <div className={styles.columnHeaderText}>
-        {icon && <Icon name={icon} size="sm" className={styles.headerIcon} />}
-        <span>{title || "\u00A0"}</span>
+      <div className={styles.columnHeaderWrapper}>
+        <div className={styles.columnHeaderText}>
+          {icon && <Icon name={icon} size={16} className={styles.headerIcon} />}
+          <span>{title || "\u00A0"}</span>
+        </div>
+        {showDropdownIcon && (
+          <Popover
+            open={isOpen}
+            onClose={handleClose}
+            content={
+              <ColumnActionsMenu
+                onEdit={onEdit}
+                onMoveRight={onMoveRight ? handleMoveRight : undefined}
+                onMoveLeft={onMoveLeft ? handleMoveLeft : undefined}
+                onSortAsc={handleSortAsc}
+                onSortDesc={handleSortDesc}
+                onDelete={onDelete ? openConfirmation : undefined}
+              />
+            }
+            contentProps={{
+              className: styles.popover
+            }}
+            placement="bottom"
+          >
+            <Button variant="icon" onClick={handleOpen}>
+              <Icon name="chevronDown" size={16} />
+            </Button>
+          </Popover>
+        )}
       </div>
-      {showDropdownIcon && (
-        <Popover
-          open={isOpen}
-          onClose={handleClose}
-          content={
-            <ColumnActionsMenu
-              onEdit={onEdit}
-              onMoveRight={onMoveRight ? handleMoveRight : undefined}
-              onMoveLeft={onMoveLeft ? handleMoveLeft : undefined}
-              onSortAsc={handleSortAsc}
-              onSortDesc={handleSortDesc}
-              onDelete={onDelete ? openConfirmation : undefined}
-            />
-          }
-          contentProps={{
-            className: styles.popover
-          }}
-          placement="bottom"
-        >
-          <Button variant="icon" onClick={handleOpen}>
-            <Icon name="chevronDown" size="lg" />
-          </Button>
-        </Popover>
-      )}
       {isConfirmationOpen && (
         <Confirmation
           title="DELETE FIELD"
@@ -228,78 +185,33 @@ const ColumnHeader = ({
   );
 };
 
-const SelectColumnHeader = ({
-  visibleIds,
-  dataExists,
-  bucketId
-}: {
-  visibleIds: string[];
-  dataExists: boolean;
-  bucketId: string;
+
+const BucketTable: React.FC<BucketTableNewProps> = ({ 
+  bucket, 
+  data,
+  onDataChange 
 }) => {
-  return dataExists ? (
-    <div className={styles.selectColumnHeader}>
-      <span>
-        <SelectionCheckbox bucketId={bucketId} rowId="select-all" visibleIds={visibleIds} />
-      </span>
-    </div>
-  ) : null;
-};
 
-function SelectionCheckbox({
-  bucketId,
-  rowId,
-  visibleIds
-}: {
-  bucketId: string;
-  rowId: string;
-  visibleIds?: string[];
-}) {
-  const {selectEntry, deselectEntry, selectEntries, deselectEntries, selectedEntries} =
-    useEntrySelection(bucketId);
-
-  const isHeader = rowId === "select-all";
-  const headerVisibleIds = isHeader ? visibleIds || [] : [];
-  const selectedCount = isHeader
-    ? headerVisibleIds.filter(id => selectedEntries.has(id)).length
-    : undefined;
-  const total = isHeader ? headerVisibleIds.length : undefined;
-
-  const checked = isHeader ? total! > 0 && selectedCount === total : selectedEntries.has(rowId);
-  const indeterminate = isHeader
-    ? !!total && !!selectedCount && selectedCount! > 0 && selectedCount! < total!
-    : false;
-
-  const handleChange = () => {
-    if (isHeader) {
-      // If all are selected, deselect all visible; otherwise select all visible
-      const shouldDeselect = checked;
-      if (shouldDeselect) {
-        deselectEntries(headerVisibleIds);
-      } else {
-        selectEntries(headerVisibleIds);
-      }
-    } else {
-      if (!checked) selectEntry(rowId);
-      else deselectEntry(rowId);
-    }
-  };
-
-  return (
-    <Checkbox
-      className={styles.checkbox}
-      checked={!!checked}
-      indeterminate={!!indeterminate}
-      onChange={handleChange}
-    />
-  );
-}
-
-const NewFieldHeader = memo(({bucketId}: {bucketId: string}) => {
-  const {data: buckets = []} = useGetBucketsQuery();
   const [createBucketField] = useCreateBucketFieldMutation();
+  const [deleteBucketField] = useDeleteBucketFieldMutation();
 
-  const bucket = useMemo(() => buckets.find(i => i._id === bucketId), [buckets, bucketId]);
+  const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
+    `${bucket?._id}-fields-order`,
+    bucket?.properties ? Object.keys(bucket.properties) : []
+  );
+  const tableKey = useMemo(
+    () => `${bucket?._id ?? "bucket"}-${fieldsOrder.join(",")}`,
+    [bucket?._id, fieldsOrder]
+  );
+
+  const [sortMeta, setSortMeta] = useLocalStorage<{
+    field: string;
+    direction: "asc" | "desc";
+  } | null>(`${bucket?._id}-sort-meta`, null);
+
+  const forbiddenFieldNames = useMemo(() => {
+    return bucket?.properties ? Object.keys(bucket.properties) : [];
+  }, [bucket]);
 
   const handleSaveAndClose = useCallback(
     async (values: FieldFormState, kind: FieldKind): Promise<BucketType> => {
@@ -311,16 +223,15 @@ const NewFieldHeader = memo(({bucketId}: {bucketId: string}) => {
       const {requiredField, primaryField} = values.configurationValues;
       const {title} = values.fieldValues;
 
-      // Build the modified bucket with new field
-      const modifiedBucket = {
-        ...bucket,
+      const bucketType = bucket as unknown as BucketType;
+
+      const modifiedBucket: BucketType = {
+        ...bucketType,
         properties: {
           ...bucket.properties,
-          [title]: fieldProperty as Property
+          [title]: fieldProperty
         },
-        // Add to required array if requiredField is true
-        required: requiredField ? [...(bucket.required || []), title] : bucket.required,
-        // Set as primary if primaryField is true
+        required: requiredField ? [...(bucketType.required || []), title] : bucketType.required,
         primary: primaryField ? title : bucket.primary
       };
 
@@ -328,245 +239,64 @@ const NewFieldHeader = memo(({bucketId}: {bucketId: string}) => {
       if (!result.data) {
         throw new Error("Failed to create bucket field");
       }
+      
       return result.data;
     },
     [bucket, createBucketField]
   );
 
-  const forbiddenFieldNames = useMemo(() => {
-    if (!bucket) return [];
-    return Object.keys(bucket.properties || {});
-  }, [bucket]);
-
-  return (
-    <BucketFieldPopup
-      onSaveAndClose={handleSaveAndClose}
-      forbiddenFieldNames={forbiddenFieldNames}
-    >
-      {({onOpen}) => (
-        <Button
-          variant="icon"
-          className={styles.newFieldColumnButton}
-          onClick={onOpen}
-        >
-          <Icon name={"plus"} size="sm" className={styles.newFieldHeaderIcon} />
-          <span>New Field</span>
-        </Button>
-      )}
-    </BucketFieldPopup>
-  );
-});
-
-const buildDefaultColumns = (
-  visibleIds: string[],
-  dataExists: boolean,
-  bucketId: string
-): ColumnType[] => [
-  {
-    id: "0",
-    header: <SelectColumnHeader visibleIds={visibleIds} dataExists={dataExists} bucketId={bucketId} />,
-    key: "select",
-    role: "select",
-    type: FieldKind.Boolean,
-    width: "41px",
-    fixedWidth: true,
-    headerClassName: styles.columnHeader,
-    cellClassName: `${styles.selectCell} ${styles.cell}`,
-    resizable: false,
-    fixed: true,
-    selectable: false
-  },
-  {
-    id: "1",
-    header: <NewFieldHeader bucketId={bucketId} />,
-    key: "new field",
-    role: "new-field",
-    width: "125px",
-    headerClassName: `${styles.columnHeader} ${styles.newFieldHeader}`,
-    cellClassName: `${styles.newFieldCell} ${styles.cell}`,
-    resizable: false,
-    fixed: true,
-    selectable: false
-  }
-];
-
-// TODO: Refactor this function to render more appropriate UI elements for each field type.
-// Many field types are cuƒrrently using the generic `renderDefault()`.
-function renderCell(
-  cellData: any,
-  rowId: string,
-  type?: FieldKind,
-  deletable?: boolean,
-  role?: TypeColumnRole,
-  bucketId?: string
-) {
-  function renderDefault() {
-    return (
-      <div className={styles.defaultCell}>
-        <div className={styles.defaultCellData}>{cellData}</div>
-        {deletable && cellData && (
-          <Button variant="icon">
-            <Icon name="close" size="sm" />
-          </Button>
-        )}
-      </div>
-    );
-  }
-  if (type === FieldKind.Boolean) {
-    switch (role) {
-      case "select":
-        return bucketId ? <SelectionCheckbox bucketId={bucketId} rowId={rowId} /> : null;
-      default:
-        return <Checkbox className={styles.checkbox} checked={!!cellData} />;
-    }
-  }
-  if (type) {
-    const formatted = FIELD_REGISTRY[type]?.getSaveReadyValue?.(cellData);
-    if (typeof formatted === "string" || typeof formatted === "number") return formatted as any;
-    if (typeof formatted === "object") return JSON.stringify(formatted)
-  }
-  return renderDefault();
-}
-
-function getFormattedColumns(
-  columns: ColumnType[],
-  bucketId: string,
-  handleDeleteField: (fieldKey: string) => Promise<void | string>,
-  primaryKey: string,
-  visibleIds: string[],
-  dataExists: boolean,
-  onMoveLeft?: (fieldTitle: string) => void,
-  onMoveRight?: (fieldTitle: string) => void,
-  onSortAsc?: (fieldTitle: string) => void,
-  onSortDesc?: (fieldTitle: string) => void
-): ColumnType[] {
-  const defaultColumns = buildDefaultColumns(visibleIds, dataExists, bucketId);
-  return [
-    defaultColumns[0],
-    ...columns.map((col, index) => {
-      const handleDelete = () => handleDeleteField(col.key);
-      const isIdField = index === 0; // in one of the pr's, the id and select fields are specified with their role attributes
-      const isPrimaryField = col.key === primaryKey;
-      const {header, type, showDropdownIcon} = col;
-      const moveRightAllowed = index !== columns.length - 1 && index !== 0;
-      const moveLeftAllowed = index > 1;
-      const icon = COLUMN_ICONS[type as string];
-      return {
-        ...col,
-        header: (
-          <ColumnHeader 
-            title={header}
-            icon={icon}
-            showDropdownIcon={showDropdownIcon}
-            onMoveRight={moveRightAllowed ? onMoveRight : undefined}
-            onMoveLeft={moveLeftAllowed ? onMoveLeft : undefined}
-            onSortAsc={onSortAsc}
-            onSortDesc={onSortDesc}
-            onEdit={isIdField ? undefined : () => {}}
-            onDelete={isIdField || isPrimaryField ? undefined : handleDelete}
-          />
-        ),
-        headerClassName: `${col.headerClassName || ""} ${styles.columnHeader}`,
-        id: `${col.key}-${index}-s${bucketId}`,
-        cellClassName: styles.cell
-      };
-    }),
-    defaultColumns[1]
-  ];
-}
-
-function buildColumnMeta(columns: ColumnType[]): Record<string, ColumnMeta> {
-  return Object.fromEntries(
-    columns.map(col => [
-      col.key,
-      {type: col.type, deletable: col.deletable, id: col.id, role: col.role}
-    ])
-  );
-}
-function formatDataRows(data: any[], columnMap: Record<string, ColumnMeta>, bucketId: string) {
-  const allKeys = Object.keys(columnMap);
-
-  return data.map(row => {
-    const fullRow: Record<string, any> = {
-      select: "",
-      "new field": ""
+  const getPropertyIcon = useCallback((type: string) => {
+    const typeToKindMap: Record<string, FieldKind> = {
+      string: FieldKind.String,
+      textarea: FieldKind.Textarea,
+      number: FieldKind.Number,
+      date: FieldKind.Date,
+      relation: FieldKind.Relation,
+      boolean: FieldKind.Boolean,
+      array: FieldKind.Array,
+      object: FieldKind.Object,
+      location: FieldKind.Location,
+      richtext: FieldKind.Richtext,
+      color: FieldKind.Color,
     };
 
-    allKeys.forEach(key => {
-      if (!(key in fullRow)) {
-        fullRow[key] = row[key];
-      }
-    });
+    const kind = typeToKindMap[type];
+    return kind ? FIELD_REGISTRY[kind]?.display?.icon : undefined;
+  }, []);
 
-    return Object.fromEntries(
-      Object.entries(fullRow).map(([key, value]) => {
-        const meta = columnMap[key] || {};
-        return [
-          key,
-          {
-            id: `${meta.id}-${fullRow._id}`,
-            value: renderCell(value, fullRow._id, meta.type, meta.deletable, meta.role, bucketId)
-          }
-        ];
-      })
-    );
-  });
-}
-
-const BucketTable = ({
-  data,
-  columns,
-  onScrollEnd,
-  totalDataLength,
-  maxHeight,
-  loading,
-  bucketId,
-  tableRef,
-  primaryKey
-}: BucketTableProps) => {
-  const { data: buckets } = useGetBucketsQuery();
-  const [deleteBucketField] = useDeleteBucketFieldMutation();
+  const handleValueChange = useCallback((propertyKey: string, rowId: string, newValue: any) => {
+    onDataChange?.(rowId, propertyKey, newValue);
+  }, [onDataChange]);
 
   const handleDeleteField = useCallback(
     async (fieldKey: string) => {
-      const bucket = buckets?.find(b => b._id === bucketId);
       if (!bucket) {
         console.error("Bucket not found");
         return "Bucket not found";
       }
 
       try {
-        await deleteBucketField({ bucketId, fieldKey, bucket }).unwrap();
+        await deleteBucketField({ 
+          bucketId: bucket._id, 
+          fieldKey, 
+          bucket: bucket as unknown as BucketType 
+        }).unwrap();
       } catch (error) {
         console.error("Error deleting bucket field:", error);
         return "Error deleting field";
       }
     },
-    [bucketId, buckets, deleteBucketField]
+    [bucket, deleteBucketField]
   );
 
-  const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(`${bucketId}-fields-order`, [
-    ...columns.slice(1).map(i => i.key)
-  ]);
-
-  const [sortMeta, setSortMeta] = useLocalStorage<{
-    field: string;
-    direction: "asc" | "desc";
-  } | null>(`${bucketId}-sort-meta`, null);
   const onMoveLeft = useCallback(
     (fieldTitle: string) => {
       const oldIndex = fieldsOrder.indexOf(fieldTitle);
       const newOrder = moveElement(fieldsOrder, "left", fieldsOrder[oldIndex]);
       setFieldsOrder(newOrder);
     },
-    [columns, bucketId]
+    [fieldsOrder, setFieldsOrder]
   );
-
-  const visibleIds = useMemo(
-    () => (data?.map?.(r => r._id).filter(Boolean) as string[]) || [],
-    [data]
-  );
-  const dataExists = data.length > 0;
 
   const onMoveRight = useCallback(
     (fieldTitle: string) => {
@@ -574,72 +304,204 @@ const BucketTable = ({
       const newOrder = moveElement(fieldsOrder, "right", fieldsOrder[oldIndex]);
       setFieldsOrder(newOrder);
     },
-    [columns, bucketId]
+    [fieldsOrder, setFieldsOrder]
   );
 
   const onSortAsc = useCallback(
     (fieldTitle: string) => {
       setSortMeta({field: fieldTitle, direction: "asc"});
     },
-    [bucketId]
+    [setSortMeta]
   );
 
   const onSortDesc = useCallback(
     (fieldTitle: string) => {
       setSortMeta({field: fieldTitle, direction: "desc"});
     },
-    [bucketId]
+    [setSortMeta]
   );
 
-  const formattedColumns = useMemo(
-    () =>
-      getFormattedColumns(
-        columns,
-        bucketId,
-        handleDeleteField,
-        primaryKey,
-        visibleIds,
-        dataExists,
-        onMoveLeft,
-        onMoveRight,
-        onSortAsc,
-        onSortDesc
-      ),
-    [
-      columns,
-      bucketId,
-      handleDeleteField,
-      primaryKey,
-      visibleIds,
-      dataExists,
-      onMoveLeft,
-      onMoveRight,
-      onSortAsc,
-      onSortDesc
-    ]
-  );
-  const columnMap = useMemo(() => buildColumnMeta(formattedColumns), [formattedColumns]);
-  const formattedData = useMemo(
-    () => formatDataRows(data, columnMap, bucketId),
-    [data, columnMap, bucketId]
-  );
+  useEffect(() => {
+    if (!bucket?.properties) return;
+    
+    const propertyKeys = Object.keys(bucket.properties);
+    
+    if (fieldsOrder.length === 0) {
+      setFieldsOrder(propertyKeys);
+      return;
+    }
+    
+    const newKeys = propertyKeys.filter(key => !fieldsOrder.includes(key));
+    
+    const removedKeys = fieldsOrder.filter(key => !propertyKeys.includes(key));
+    
+    if (newKeys.length > 0 || removedKeys.length > 0) {
+      const validKeys = fieldsOrder.filter(key => propertyKeys.includes(key));
+      setFieldsOrder([...validKeys, ...newKeys]);
+    }
+
+  }, [bucket?.properties, bucket?._id]);
+
+  const columns = useMemo((): TableColumn<BucketDataRow>[] => {
+    if (!bucket?.properties) return [];
+
+    const systemColumns: TableColumn<BucketDataRow>[] = [
+      {
+        key: '_id',
+        header: '_id',
+        width: '200px',
+        renderCell: (params: { row: BucketDataRow; isFocused: boolean }) => {
+          return (
+            <div className={styles.readonlyCell}>
+              {params.row._id}
+            </div>
+          );
+        },
+      }
+    ];
 
 
-  return loading ? (
-    <Loader />
-  ) : (
-     <Table
-      style={{maxHeight}}
-      className={styles.table}
-      columns={formattedColumns}
-      data={formattedData}
-      onScrollEnd={onScrollEnd}
-      totalDataLength={totalDataLength}
-      tableRef={tableRef}
-    />
-   
+    const propertyKeys = Object.keys(bucket.properties);
+
+    // Create ordered property entries
+    const orderedKeys = fieldsOrder.filter(key => propertyKeys.includes(key));
+    const newKeys = propertyKeys.filter(key => !fieldsOrder.includes(key));
+    const finalOrderedKeys = [...orderedKeys, ...newKeys];
+
+    const propertyColumns = finalOrderedKeys.map((key, index) => {
+      const property: BucketProperty = bucket.properties[key];
+      const icon = getPropertyIcon(property.type);
+      const isPrimaryField = bucket.primary === key;
+      
+      const moveRightAllowed = index < finalOrderedKeys.length - 1;
+      const moveLeftAllowed = index > 0;
+
+      return {
+        key,
+        header: (
+          <ColumnHeader
+            title={property.title || key}
+            icon={icon}
+            showDropdownIcon={true}
+            fieldKey={key}
+            onMoveRight={moveRightAllowed ? onMoveRight : undefined}
+            onMoveLeft={moveLeftAllowed ? onMoveLeft : undefined}
+            onSortAsc={onSortAsc}
+            onSortDesc={onSortDesc}
+            onDelete={isPrimaryField ? undefined : () => handleDeleteField(key)}
+          />
+        ),
+        width: "200px",
+        renderCell: (params: { row: BucketDataRow; isFocused: boolean }) => {
+          const value = params.row[key];
+          
+          return (
+            <EditableCell
+              value={value}
+              propertyKey={key}
+              property={property}
+              rowId={params.row._id}
+              isFocused={params.isFocused}
+              onValueChange={handleValueChange}
+              onRequestBlur={() => {}}
+            />
+          );
+        },
+      };
+    });
+
+    return [...systemColumns, ...propertyColumns];
+  }, [
+    bucket, 
+    fieldsOrder, 
+    setFieldsOrder, 
+    handleValueChange, 
+    getPropertyIcon,
+    onMoveLeft,
+    onMoveRight,
+    onSortAsc,
+    onSortDesc,
+    handleDeleteField
+  ]);
+
+  const sortedData = useMemo(() => {
+    const currentData = data ?? [];
+    if (!sortMeta || currentData.length === 0) return currentData;
+
+    return [...currentData].sort((a, b) => {
+      const aValue = a[sortMeta.field];
+      const bValue = b[sortMeta.field];
+
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
+
+      let comparison = 0;
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        comparison = aValue.localeCompare(bValue);
+      } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+        comparison = aValue - bValue;
+      } else if (aValue instanceof Date && bValue instanceof Date) {
+        comparison = aValue.getTime() - bValue.getTime();
+      } else {
+        comparison = String(aValue).localeCompare(String(bValue));
+      }
+
+      return sortMeta.direction === 'asc' ? comparison : -comparison;
+    });
+  }, [data, sortMeta]);
+
+  if (!bucket?.properties) {
+    return (
+      <div className={styles.emptyState}>
+        <p>No bucket schema available</p>
+      </div>
+    );
+  }
+
+
+  return (
+<>
+<div className={styles.tableContainer}>
+      <div className={styles.tableWrapper}>
+        <Table
+          key={tableKey}
+          columns={columns}
+          data={sortedData}
+          saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
+          fixedColumns={['_id']}
+          noResizeableColumns={['_id']}
+          tableClassName={styles.table}
+          headerClassName={styles.header}
+          columnClassName={styles.column}
+          cellClassName={styles.cell}
+        />
+      </div>
+      <FlexElement
+        className={styles.newFieldContainer}
+        direction="vertical"
+        dimensionY="fill"
+        alignment="leftTop"
+      >
+        <BucketFieldPopup
+          onSaveAndClose={handleSaveAndClose}
+          forbiddenFieldNames={forbiddenFieldNames}
+        >
+          {({onOpen}) => (
+            <FlexElement className={styles.newFieldHeader} dimensionY={36} onClick={onOpen}>
+              <Icon name="plus" size={16} />
+              <span>New Field</span>
+            </FlexElement>
+          )}
+        </BucketFieldPopup>
+      </FlexElement>
+
+    </div>
+     {!sortedData.length && <div className={styles.noDataText}>
+      <p>No data available</p>
+    </div>}
+</>
   );
 };
 
-export default memo(BucketTable);
-
+export default BucketTable;

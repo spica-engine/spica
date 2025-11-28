@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { CellRendererProps, CellKeyboardHandler } from "../types";
 import { BaseCellRenderer } from "./BaseCellRenderer";
+import styles from "./Cells.module.scss";
 
 export const DateCell: React.FC<CellRendererProps> = ({
   value,
@@ -16,7 +17,6 @@ export const DateCell: React.FC<CellRendererProps> = ({
   });
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sync editValue with value prop when not editing
   useEffect(() => {
     if (!isEditing) {
       if (!value) {
@@ -89,13 +89,7 @@ export const DateCell: React.FC<CellRendererProps> = ({
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleInputKeyDown}
-          style={{
-            width: "100%",
-            border: "1px solid #4CAF50",
-            borderRadius: "4px",
-            padding: "4px 8px",
-            outline: "none",
-          }}
+          className={styles.dateInput}
         />
       </BaseCellRenderer>
     );

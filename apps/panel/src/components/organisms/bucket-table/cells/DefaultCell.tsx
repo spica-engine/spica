@@ -1,6 +1,7 @@
 import React from "react";
 import type { CellRendererProps, CellKeyboardHandler } from "../types";
 import { BaseCellRenderer } from "./BaseCellRenderer";
+import styles from "./Cells.module.scss";
 
 /**
  * Default fallback cell for unsupported types
@@ -19,16 +20,8 @@ export const DefaultCell: React.FC<CellRendererProps> = ({
 
   return (
     <BaseCellRenderer isFocused={isFocused}>
-      <span
-        style={{
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          color: "#666",
-          fontStyle: "italic",
-        }}
-      >
-        {displayValue()} <span style={{ fontSize: "11px" }}>({property.type})</span>
+      <span className={styles.defaultValueCell}>
+        {displayValue()} <span className={styles.defaultTypeLabel}>({property.type})</span>
       </span>
     </BaseCellRenderer>
   );

@@ -12,15 +12,6 @@ interface EditableCellProps {
   onRequestBlur: () => void;
 }
 
-/**
- * EditableCell - Wrapper that manages keyboard events and delegates rendering to cell type components
- * 
- * This component acts as a coordinator between the table and individual cell components.
- * It handles:
- * - Keyboard event delegation to appropriate cell handlers
- * - Focus state management
- * - Value change propagation
- */
 export const EditableCell: React.FC<EditableCellProps> = ({
   value,
   propertyKey,
@@ -46,10 +37,8 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     onRequestBlur();
   }, [onRequestBlur]);
 
-  // Check if the cell is readonly
   const isReadonly = property.options?.readonly === true;
 
-  // Handle keyboard events when cell is focused
   useEffect(() => {
     if (!isFocused || isReadonly) {
       setIsEditMode(false);
@@ -57,7 +46,6 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Create keyboard context for the handler
       const context: CellKeyboardContext = {
         value,
         onChange: handleValueChange,
@@ -67,16 +55,13 @@ export const EditableCell: React.FC<EditableCellProps> = ({
         onRequestBlur: handleRequestBlur,
       };
 
-      // Let the cell-specific handler decide what to do
       const handled = keyboardHandler.handleKeyDown(event, context);
 
-      // If the handler indicates it can handle typing, enter edit mode
       if (handled) {
         setIsEditMode(true);
       }
     };
 
-    // Only attach keyboard listener if focused
     globalThis.addEventListener("keydown", handleKeyDown);
 
     return () => {

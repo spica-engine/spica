@@ -1,10 +1,7 @@
 import { FlexElement } from "oziko-ui-kit";
 import React from "react";
+import styles from "./Cells.module.scss";
 
-/**
- * Base wrapper for all cell renderers
- * Provides common functionality and structure
- */
 export const BaseCellRenderer: React.FC<{
   children: React.ReactNode;
   isFocused: boolean;
@@ -27,17 +24,7 @@ export const BaseCellRenderer: React.FC<{
       alignment={"leftTop"}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        alignItems: "center",
-        padding: "8px",
-        cursor: "pointer",
-        border: "none",
-        background: "transparent",
-        textAlign: "left"
-      }}
+      className={styles.baseCellRenderer}
     >
       {children}
     </FlexElement>
