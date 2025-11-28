@@ -4,12 +4,8 @@ import {
   StringCellKeyboardHandler,
   NumberCell,
   NumberCellKeyboardHandler,
-  TextareaCell,
-  TextareaCellKeyboardHandler,
   DateCell,
   DateCellKeyboardHandler,
-  BooleanCell,
-  BooleanCellKeyboardHandler,
   DefaultCell,
   DefaultCellKeyboardHandler,
 } from "./cells";
@@ -37,12 +33,6 @@ class CellRegistry {
       defaultValue: "",
     });
 
-    this.register("textarea", {
-      component: TextareaCell,
-      keyboardHandler: TextareaCellKeyboardHandler,
-      defaultValue: "",
-    });
-
     this.register("number", {
       component: NumberCell,
       keyboardHandler: NumberCellKeyboardHandler,
@@ -53,12 +43,6 @@ class CellRegistry {
       component: DateCell,
       keyboardHandler: DateCellKeyboardHandler,
       defaultValue: null,
-    });
-
-    this.register("boolean", {
-      component: BooleanCell,
-      keyboardHandler: BooleanCellKeyboardHandler,
-      defaultValue: false,
     });
 
     this.register("array", {

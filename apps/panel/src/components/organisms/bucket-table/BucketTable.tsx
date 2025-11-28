@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {FlexElement, Icon, Table, type TableColumn, Button, Popover, type IconName } from "oziko-ui-kit";
 import type { BucketSchema, BucketDataRow, BucketProperty } from "./types";
 import { EditableCell } from "./EditableCell";
-import styles from "./BucketTableNew.module.scss";
+import styles from "./BucketTable.module.scss";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type {BucketType} from "../../../store/api/bucketApi";
 import { FieldKind } from "../../../domain/fields/types";

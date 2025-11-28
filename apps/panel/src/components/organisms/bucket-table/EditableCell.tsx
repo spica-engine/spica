@@ -39,6 +39,12 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 
   const isReadonly = property.options?.readonly === true;
 
+  const handleClick = useCallback(() => {
+    if (!isReadonly && isFocused) {
+      setIsEditMode(true);
+    }
+  }, [isFocused, isReadonly]);
+
   useEffect(() => {
     if (!isFocused || isReadonly) {
       setIsEditMode(false);
@@ -70,7 +76,11 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   }, [isFocused, isReadonly, value, property, propertyKey, rowId, keyboardHandler, handleValueChange, handleRequestBlur]);
 
   return (
-    <div ref={cellRef} style={{ width: "100%", height: "100%" }}>
+    <div 
+      ref={cellRef} 
+      style={{ width: "100%", height: "100%", cursor: isReadonly ? "default" : "pointer" }}
+      onClick={handleClick}
+    >
       <CellComponent
         value={value}
         onChange={handleValueChange}
