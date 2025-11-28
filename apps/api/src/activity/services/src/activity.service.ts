@@ -19,6 +19,10 @@ export class ActivityService extends BaseCollection<Activity>("activity") {
         activity.identifier = new ObjectId(activity.identifier);
       }
 
+      if (ObjectId.isValid(activity.username)) {
+        activity.username = new ObjectId(activity.username);
+      }
+
       activity.created_at = new Date();
 
       return activity;

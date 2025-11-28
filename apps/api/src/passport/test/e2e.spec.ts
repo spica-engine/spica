@@ -218,27 +218,41 @@ describe("E2E Tests", () => {
       SchemaModule.forRoot(),
       DatabaseTestingModule.standalone(),
       PassportModule.forRoot({
-        expiresIn: EXPIRES_IN,
-        issuer: "spica",
-        maxExpiresIn: EXPIRES_IN,
         publicUrl: publicUrl,
         samlCertificateTTL: EXPIRES_IN,
-        secretOrKey: "spica",
         defaultStrategy: "IDENTITY",
-        defaultIdentityIdentifier: "spica",
-        defaultIdentityPassword: "spica",
-        audience: "spica",
-        defaultIdentityPolicies: ["PassportFullAccess"],
-        blockingOptions: {
-          failedAttemptLimit: 3,
-          blockDurationMinutes: 10
-        },
-        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
-        passwordHistoryLimit: 2,
         apikeyRealtime: false,
-        identityRealtime: false,
+        policyRealtime: false,
         refreshTokenRealtime: false,
-        policyRealtime: false
+        userOptions: {
+          expiresIn: EXPIRES_IN,
+          maxExpiresIn: EXPIRES_IN,
+          issuer: "spica",
+          secretOrKey: "spica",
+          blockingOptions: {
+            failedAttemptLimit: 3,
+            blockDurationMinutes: 10
+          },
+          passwordHistoryLimit: 2,
+          userRealtime: false
+        },
+        identityOptions: {
+          expiresIn: EXPIRES_IN,
+          issuer: "spica",
+          maxExpiresIn: EXPIRES_IN,
+          secretOrKey: "spica",
+          defaultIdentityIdentifier: "spica",
+          defaultIdentityPassword: "spica",
+          audience: "spica",
+          defaultIdentityPolicies: ["PassportFullAccess"],
+          blockingOptions: {
+            failedAttemptLimit: 3,
+            blockDurationMinutes: 10
+          },
+          refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+          passwordHistoryLimit: 2,
+          identityRealtime: false
+        }
       }),
       PreferenceTestingModule,
       CoreTestingModule

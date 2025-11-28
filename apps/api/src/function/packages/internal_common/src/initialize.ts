@@ -1,23 +1,25 @@
 import {
   ApikeyInitialization,
+  HttpService,
   IdentityInitialization,
-  InitializationResult
+  InitializationResult,
+  UserInitialization
 } from "@spica-server/interface/function/packages";
 import {Axios} from "./request";
 
 let service: Axios;
 
 export function initialize(
-  options: ApikeyInitialization | IdentityInitialization
+  options: ApikeyInitialization | IdentityInitialization | UserInitialization
 ): InitializationResult {
   let authorization: string;
   if ("apikey" in options) {
     authorization = `APIKEY ${options.apikey}`;
   } else if ("identity" in options) {
     authorization = `IDENTITY ${options.identity}`;
+  } else if ("user" in options) {
+    authorization = `USER ${options.user}`;
   }
-
-  checkInitialized(authorization);
 
   const publicUrl = options.publicUrl || getPublicUrl();
   if (!publicUrl) {
@@ -25,18 +27,27 @@ export function initialize(
   }
 
   if (!service) {
-    service = new Axios({baseURL: publicUrl, headers: {Authorization: authorization}});
-  } else {
-    service.setBaseUrl(publicUrl);
+    service = new Axios({});
+  }
+  service.setBaseUrl(publicUrl);
+  if (authorization) {
     service.setAuthorization(authorization);
   }
 
   return {authorization, publicUrl, service};
 }
 
-export function checkInitialized(authorization: string) {
-  if (!authorization) {
-    throw new Error("You should call initialize method with a valid apikey or identity token.");
+export function checkInitialized(
+  authorization: string,
+  service: HttpService,
+  options: {skipAuthCheck: boolean} = {skipAuthCheck: false}
+) {
+  if (!authorization && !options.skipAuthCheck) {
+    throw new Error("You should call initialize method with a valid credentials.");
+  }
+
+  if (!service) {
+    throw new Error("You should call initialize method with a valid publicUrl.");
   }
 }
 

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/passport/authfactor",
+  "type": "object",
+  "title": "Authentication Factor Schema",
+  "required": ["type", "config"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title of the factor"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description of the factor"
+    },
+    "type": {
+      "type": "string",
+      "title": "Type of the factor"
+    },
+    "config": {
+      "type": "object",
+      "title": "Configuration values of the factor"
+    }
+  },
+  "additionalProperties": false
+}

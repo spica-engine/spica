@@ -7,6 +7,9 @@
     },
     {
       "path": "./identity"
+    },
+    {
+      "path": "./user"
     }
   ]
 }
