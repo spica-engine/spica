@@ -46,9 +46,12 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     onRequestBlur();
   }, [onRequestBlur]);
 
+  // Check if the cell is readonly
+  const isReadonly = property.options?.readonly === true;
+
   // Handle keyboard events when cell is focused
   useEffect(() => {
-    if (!isFocused) {
+    if (!isFocused || isReadonly) {
       setIsEditMode(false);
       return;
     }
@@ -79,7 +82,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     return () => {
       globalThis.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isFocused, value, property, propertyKey, rowId, keyboardHandler, handleValueChange, handleRequestBlur]);
+  }, [isFocused, isReadonly, value, property, propertyKey, rowId, keyboardHandler, handleValueChange, handleRequestBlur]);
 
   return (
     <div ref={cellRef} style={{ width: "100%", height: "100%" }}>

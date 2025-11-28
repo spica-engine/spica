@@ -374,24 +374,33 @@ export const bucketApi = baseApi.injectEndpoints({
         body: modifiedBucket,
       }),
       invalidatesTags: (result, error, bucket) => [
-        { type: 'Bucket', id: bucket._id },
         { type: 'BucketData', id: bucket._id },
-        'Bucket',
       ],
-      // Optimistic update
+      // Optimistic update for immediate UI response
       onQueryStarted: async (modifiedBucket, { dispatch, queryFulfilled }) => {
+        // Optimistically update the cache
         const patchResult = dispatch(
           bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
             const bucketIndex = draft.findIndex((b) => b._id === modifiedBucket._id);
             if (bucketIndex !== -1) {
-              draft[bucketIndex] = modifiedBucket;
+              draft[bucketIndex] = { ...draft[bucketIndex], ...modifiedBucket };
             }
           })
         );
 
         try {
-          await queryFulfilled;
+          const { data: updatedBucket } = await queryFulfilled;
+          // Replace optimistic update with server response
+          dispatch(
+            bucketApi.util.updateQueryData('getBuckets', undefined, (draft) => {
+              const bucketIndex = draft.findIndex((b) => b._id === updatedBucket._id);
+              if (bucketIndex !== -1) {
+                draft[bucketIndex] = updatedBucket;
+              }
+            })
+          );
         } catch {
+          // Undo optimistic update on error
           patchResult.undo();
         }
       },
