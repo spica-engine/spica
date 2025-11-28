@@ -90,11 +90,18 @@ describe("Auth", () => {
   afterEach(async () => await app.close());
 
   describe("login", () => {
+    beforeEach(async () => {
+      await Auth.signUp({
+        username: "user1",
+        password: "pass1",
+        policies: ["PassportFullAccess"]
+      });
+    });
     it("should sign in", async () => {
-      const token = await Auth.signIn("spica", "spica");
+      const token = await Auth.signIn("user1", "pass1");
       const {username, iat, exp, iss} = jwtDecode<any>(token);
 
-      expect([username, iss]).toEqual(["spica", "spica"]);
+      expect([username, iss]).toEqual(["user1", "spica"]);
 
       const tokenLifeSpan = exp - iat;
       expect(tokenLifeSpan).toEqual(EXPIRES_IN);
@@ -102,7 +109,7 @@ describe("Auth", () => {
 
     it("should sign in with desired token lifespan", async () => {
       const oneDay = 60 * 60 * 24;
-      const token = await Auth.signIn("spica", "spica", oneDay);
+      const token = await Auth.signIn("user1", "pass1", oneDay);
 
       const {iat, exp} = jwtDecode<any>(token);
 
@@ -111,7 +118,7 @@ describe("Auth", () => {
     });
 
     it("should verify token with success", async () => {
-      const token = await Auth.signIn("spica", "spica");
+      const token = await Auth.signIn("user1", "pass1");
 
       const decodedToken = jwtDecode<any>(token);
 
