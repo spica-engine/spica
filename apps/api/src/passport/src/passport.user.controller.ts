@@ -299,7 +299,7 @@ export class PassportUserController {
     return res.status(200).json(this.userToken.get(id));
   }
 
-  @Post("session/refresh")
+  @Post("user/session/refresh")
   async refreshToken(
     @Headers("authorization") accessToken: string,
     @Req() req: any,
@@ -320,12 +320,12 @@ export class PassportUserController {
     res.status(200).json(tokenSchema);
   }
 
-  @Get("strategies")
+  @Get("user/strategies")
   async strategies() {
     return this.strategyService.aggregate([{$project: {options: 0}}]).toArray();
   }
 
-  @Get("strategy/:id/url")
+  @Get("user/strategy/:id/url")
   async getUrl(@Param("id", OBJECT_ID) id: ObjectId) {
     const strategy = await this.strategyService.findOne({_id: id});
 
@@ -346,13 +346,13 @@ export class PassportUserController {
     return login;
   }
 
-  @Get("strategy/:name/metadata")
+  @Get("user/strategy/:name/metadata")
   @Header("Content-type", "application/xml")
   metadata(@Param("name") name: string) {
     return this.strategyTypes.find("saml").createMetadata(name);
   }
 
-  @All("strategy/:id/complete")
+  @All("user/strategy/:id/complete")
   @UseInterceptors(UrlEncodedBodyParser())
   @HttpCode(HttpStatus.NO_CONTENT)
   async complete(
