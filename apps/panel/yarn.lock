@@ -11000,10 +11000,10 @@ own-keys@^1.0.1:
     object-keys "^1.1.1"
     safe-push-apply "^1.0.0"
 
-oziko-ui-kit@^0.0.95:
-  version "0.0.95"
-  resolved "https://registry.yarnpkg.com/oziko-ui-kit/-/oziko-ui-kit-0.0.95.tgz#9df627a6f38abae685d0ec6e6908c62ed0005888"
-  integrity sha512-6JRBg0XHIWdAt2wEcgeB+B8omBTTnpNC1hk00yCmjcg6mHsBSxreciLUrHT1FT+8RtjlGe8WORpbrlXfH8H2Uw==
+oziko-ui-kit@^0.0.97:
+  version "0.0.97"
+  resolved "https://registry.yarnpkg.com/oziko-ui-kit/-/oziko-ui-kit-0.0.97.tgz#107356aacd5bcefb3927c71b7f5848b64035f12e"
+  integrity sha512-o1xT05cpUouFFqYt8Qnfhl9VGKYVXLuaQ4YwBNv3VFxHiYuCReJ9F+5AWRAYiOdvJuVemViziw7uTJFXFYbCww==
   dependencies:
     "@emotion/react" "^11.14.0"
     "@emotion/styled" "^11.14.0"

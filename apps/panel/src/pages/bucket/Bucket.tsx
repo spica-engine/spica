@@ -3,7 +3,6 @@ import {useGetBucketsQuery} from "../../store/api/bucketApi";
 import {useExecuteBatchMutation} from "../../store/api/batchApi";
 import type {BatchResponse, BatchResponseItem} from "../../store/api/batchApi";
 import {useParams} from "react-router-dom";
-import BucketTable from "../../components/organisms/bucket-table/BucketTable";
 import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketType} from "src/services/bucketService";
@@ -14,7 +13,7 @@ import {useBucketData} from "../../hooks/useBucketData";
 import {useAppDispatch, useAppSelector} from "../../store/hook";
 import {resetBucketSelection} from "../../store";
 import {selectParsedToken} from "../../store/slices/authSlice";
-import BucketTableNew from "../../components/organisms/bucket/bucket-table-new/BucketTableNew";
+import BucketTableNew from "../../components/organisms/bucket-table-new/BucketTableNew";
 
 export default function Bucket() {
   const {bucketId = ""} = useParams<{bucketId: string}>();
@@ -38,11 +37,40 @@ export default function Bucket() {
 
   const {searchQuery, handleSearch} = useBucketSearch(bucketId, searchableColumns);
 
-  const {bucketData, bucketDataLoading, refreshLoading, tableRef, handleRefresh, loadMoreBucketData} =
+  const {bucketData, bucketDataLoading, refreshLoading, handleRefresh, loadMoreBucketData} =
     useBucketData(bucketId, searchQuery);
 
   const isTableLoading = useMemo(() => formattedColumns.length <= 1, [formattedColumns]);
   const authToken = useAppSelector(selectParsedToken);
+
+  const handleDataChange = useCallback(
+    async (rowId: string, propertyKey: string, newValue: any) => {
+      try {
+        const hasToken = typeof authToken === "string" && authToken.trim().length > 0;
+        const authorizationHeader = hasToken ? {Authorization: `IDENTITY ${authToken}`} : undefined;
+
+        await executeBatchRequest({
+          requests: [{
+            id: rowId,
+            method: "PATCH" as const,
+            url: `/bucket/${bucketId}/data/${rowId}`,
+            headers: authorizationHeader,
+            body: {
+              [propertyKey]: newValue
+            }
+          }]
+        }).unwrap();
+
+        console.log("Data saved successfully:", { rowId, propertyKey, newValue });
+        
+        // Optionally refresh data
+        handleRefresh();
+      } catch (error) {
+        console.error("Failed to save data:", error);
+      }
+    },
+    [bucketId, executeBatchRequest, authToken, handleRefresh]
+  );
 
   const deleteBucketEntries = useCallback(
     async (entryIds: string[], bucketId: string): Promise<{failed: string[]; succeeded: string[]}> => {
@@ -115,27 +143,10 @@ export default function Bucket() {
         searchLoading={bucketDataLoading && !isTableLoading}
         refreshLoading={refreshLoading}
       />
-      <BucketTableNew 
-        bucketId={bucket._id}
-        columns={filteredColumns}
+      <BucketTableNew
+        bucket={bucket as any}
         data={bucketData?.data ?? []}
-        onScrollEnd={loadMoreBucketData}
-        totalDataLength={bucketData?.meta?.total ?? 0}
-        maxHeight="88vh"
-        loading={isTableLoading}
-        primaryKey={bucket.primary || "_id"}
-        
-      />
-      <BucketTable
-        bucketId={bucket._id}
-        columns={filteredColumns}
-        data={bucketData?.data ?? []}
-        onScrollEnd={loadMoreBucketData}
-        totalDataLength={bucketData?.meta?.total ?? 0}
-        maxHeight="88vh"
-        loading={isTableLoading}
-        tableRef={tableRef}
-        primaryKey={bucket.primary || "_id"}
+        onDataChange={handleDataChange}
       />
     </div>
   );
