@@ -1,4 +1,4 @@
-import {Mode, Replacer} from "@spica-server/interface/bucket/expression";
+import {Mode} from "@spica-server/interface/bucket/expression";
 import * as func from "./func";
 
 function visitArgFns(fns: any[], ctx) {
@@ -21,7 +21,6 @@ function visit(node, mode: Mode) {
     const fns = visitArgs(node, mode);
     return ctx => visitArgFns(fns, ctx);
   }
-
   switch (node.kind) {
     case "operator":
       return visitOperator(node, mode);
