@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { cellRegistry } from "./cellRegistry";
 import type { BucketProperty, CellKeyboardContext } from "./types";
+import styles from "./EditableCell.module.scss";
 
 interface EditableCellProps {
   value: any;
@@ -78,7 +79,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   return (
     <div 
       ref={cellRef} 
-      style={{ width: "100%", height: "100%", cursor: isReadonly ? "default" : "pointer" }}
+      className={`${styles.cellWrapper} ${isReadonly ? styles.readonly : ""}`}
       onClick={handleClick}
     >
       <CellComponent
