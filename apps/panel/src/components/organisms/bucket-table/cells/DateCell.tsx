@@ -11,6 +11,11 @@ export const DateCell: React.FC<CellRendererProps> = ({
   onRequestBlur,
 }) => {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [localValue, setLocalValue] = useState<string | null>(value);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
 
   useEffect(() => {
     if (isFocused) {
@@ -21,13 +26,9 @@ export const DateCell: React.FC<CellRendererProps> = ({
   }, [isFocused]);
 
   const handleDateChange = (newValue: string | string[] | null) => {
-    if (newValue && typeof newValue === "string") {
-      onChange(new Date(newValue).toISOString());
-    } else {
-      onChange(null);
-    }
-    setPickerOpen(false);
-    onRequestBlur();
+    const dateValue = newValue && typeof newValue === "string" ? new Date(newValue).toISOString() : null;
+    setLocalValue(dateValue);
+    onChange(dateValue);
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -41,12 +42,15 @@ export const DateCell: React.FC<CellRendererProps> = ({
   return (
     <BaseCellRenderer isFocused={isFocused}>
       <DatePicker
-        value={value || null}
+        value={localValue || null}
         onChange={handleDateChange}
         open={pickerOpen}
+        format="YYYY-MM-DD HH:mm:ss"
         onOpenChange={handleOpenChange}
-        placeholder={value || "Invalid Date"}
+        placeholder="Invalid Date"
         className={styles.dateInput}
+        showTime
+
       />
     </BaseCellRenderer>
   );
