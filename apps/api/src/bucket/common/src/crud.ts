@@ -59,6 +59,7 @@ export async function findDocuments<T>(
 
   let rulePropertyMap;
   let ruleRelationMap: RelationMap[];
+  let filtersAppliedPipeline;
 
   let basePipeline = await pipelineBuilder
     .findOneIfRequested(params.documentId)
@@ -68,24 +69,27 @@ export async function findDocuments<T>(
     params.req.res.header("Content-language", locale.best || locale.fallback);
   });
 
-  const rulesAppliedPipeline = await basePipeline
-    .rules(params.req.user, (propertyMap, relationMap) => {
-      rulePropertyMap = propertyMap;
-      ruleRelationMap = relationMap;
-    })
-    .catch(error => {
-      throw new ACLSyntaxException(error.message);
-    });
+  if (params.req.strategyType == "USER") {
+    const rulesAppliedPipeline = await basePipeline
+      .rules(params.req.user, (propertyMap, relationMap) => {
+        rulePropertyMap = propertyMap;
+        ruleRelationMap = relationMap;
+      })
+      .catch(error => {
+        throw new ACLSyntaxException(error.message);
+      });
 
-  const ruleResetStage = resetNonOverlappingPathsInRelationMap({
-    left: [],
-    right: rulePropertyMap,
-    map: ruleRelationMap
-  });
-  // Reset those relations which have been requested by acl rules.
-  const filtersAppliedPipeline = await rulesAppliedPipeline
-    .attachToPipeline(!!ruleResetStage, ruleResetStage)
-    .filterByUserRequest(params.filter);
+    const ruleResetStage = resetNonOverlappingPathsInRelationMap({
+      left: [],
+      right: rulePropertyMap,
+      map: ruleRelationMap
+    });
+    filtersAppliedPipeline = await rulesAppliedPipeline
+      .attachToPipeline(!!ruleResetStage, ruleResetStage)
+      .filterByUserRequest(params.filter);
+  } else {
+    filtersAppliedPipeline = await basePipeline.filterByUserRequest(params.filter);
+  }
 
   const seekingPipeline = seekingPipelineBuilder
     .sort(params.sort)
@@ -101,9 +105,10 @@ export async function findDocuments<T>(
     }
   );
 
-  const aclProjection = buildAclProjection(schema.properties, params.req.user);
-  seekingPipelineBuilder.attachToPipeline(true, {$project: aclProjection});
-
+  if (isUserRequest(params.req)) {
+    const aclProjection = buildAclProjection(schema.properties, params.req.user);
+    seekingPipelineBuilder.attachToPipeline(true, {$project: aclProjection});
+  }
   // for graphql responses
   seekingPipeline.setVisibilityOfFields(getVisibilityOfFields(params.projectMap));
 
@@ -134,7 +139,6 @@ export async function findDocuments<T>(
       throw new DatabaseException(error.message);
     });
 }
-
 function buildAclProjection(properties: Record<string, {acl?: string}>, user: any) {
   const result: Record<string, object | number> = {};
 
@@ -174,17 +178,18 @@ export async function insertDocument(
 ) {
   const collection = factories.collection(schema);
 
-  await executeWriteRule(
-    schema,
-    factories.schema,
-    document,
-    // unlike others, we have to run this pipeline against buckets in case the target
-    // collection is empty.
-    collection.collection("buckets"),
-    params.req.user,
-    factories.authResolver
-  );
-
+  if (isUserRequest(params.req)) {
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      // unlike others, we have to run this pipeline against buckets in case the target
+      // collection is empty.
+      collection.collection("buckets"),
+      params.req.user,
+      factories.authResolver
+    );
+  }
   if (
     schema.documentSettings &&
     schema.documentSettings.limitExceedBehaviour == LimitExceedBehaviours.REMOVE
@@ -219,14 +224,16 @@ export async function replaceDocument(
 ) {
   const collection = factories.collection(schema);
 
-  await executeWriteRule(
-    schema,
-    factories.schema,
-    document,
-    collection,
-    params.req.user,
-    factories.authResolver
-  );
+  if (isUserRequest(params.req)) {
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      collection,
+      params.req.user,
+      factories.authResolver
+    );
+  }
 
   const documentId = document._id;
   delete document._id;
@@ -255,15 +262,16 @@ export async function patchDocument(
   } = {returnDocument: ReturnDocument.BEFORE}
 ) {
   const collection = factories.collection(schema);
-
-  await executeWriteRule(
-    schema,
-    factories.schema,
-    document,
-    collection,
-    params.req.user,
-    factories.authResolver
-  );
+  if (isUserRequest(params.req)) {
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      collection,
+      params.req.user,
+      factories.authResolver
+    );
+  }
 
   delete patch._id;
 
@@ -296,14 +304,16 @@ export async function deleteDocument(
     return;
   }
 
-  await executeWriteRule(
-    schema,
-    factories.schema,
-    document,
-    collection,
-    params.req.user,
-    factories.authResolver
-  );
+  if (isUserRequest(params.req)) {
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      collection,
+      params.req.user,
+      factories.authResolver
+    );
+  }
 
   const deletedCount = await collection.deleteOne({_id: document._id});
 
@@ -404,4 +414,8 @@ export function authIdToString(req: any) {
     req.user._id = req.user._id.toString();
   }
   return req;
+}
+
+function isUserRequest(req) {
+  return req.strategyType === "USER";
 }
