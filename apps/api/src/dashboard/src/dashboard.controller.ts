@@ -24,19 +24,19 @@ export class DashboardController {
   constructor(private dashboardService: DashboardService) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("dashboard:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:index"))
   findAll(@ResourceFilter() resourceFilter: object) {
     return this.dashboardService.aggregate([resourceFilter]).toArray();
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("dashboard:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:show"))
   findById(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.dashboardService.findOne({_id: id});
   }
 
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("dashboard:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:create"))
   insert(@Body(Schema.validate("http://spica.internal/dashboard")) dashboard: Dashboard) {
     return this.dashboardService.insertOne(dashboard).catch(e => {
       throw new BadRequestException(e.message);
@@ -44,7 +44,7 @@ export class DashboardController {
   }
 
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("dashboard:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:update"))
   async update(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/dashboard"))
@@ -60,7 +60,7 @@ export class DashboardController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("dashboard:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param("id", OBJECT_ID) id: ObjectId) {
     const deletedCount = await this.dashboardService.deleteOne({_id: id});
