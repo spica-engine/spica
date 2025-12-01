@@ -215,7 +215,7 @@ describe("Function Controller", () => {
     });
   });
 
-  describe("name uniqueness", () => {
+  describe("name operations", () => {
     it("should not allow duplicate function names", async () => {
       //Wait a bit for before test for mongodb to create name indexes to resolve async process issues
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -229,6 +229,42 @@ describe("Function Controller", () => {
       expect(response.body.message).toEqual(
         "Value of the property .name should unique across all documents."
       );
+    });
+    it("should allow function names with underscores", async () => {
+      const fn = await request
+        .post("/function", {
+          ...fnSchema,
+          name: "function_with_underscores"
+        })
+        .then(r => r.body);
+
+      expect(fn.name).toEqual("function_with_underscores");
+    });
+
+    it("should allow function names with hyphens", async () => {
+      const fn = await request
+        .post("/function", {
+          ...fnSchema,
+          name: "function-with-hyphens"
+        })
+        .then(r => r.body);
+
+      expect(fn.name).toEqual("function-with-hyphens");
+    });
+
+    it("should not allow special characters in function name", async () => {
+      const response = await request
+        .post("/function", {
+          ...fnSchema,
+          name: "user function"
+        })
+        .catch(e => e);
+
+      expect(response.body).toEqual({
+        message: '.name must match pattern "^[\\w-]+$"',
+        error: "validation failed",
+        statusCode: 400
+      });
     });
   });
 });
