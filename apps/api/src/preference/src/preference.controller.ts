@@ -34,14 +34,14 @@ export class PreferenceController {
   ) {}
 
   @Get(":scope")
-  @UseGuards(AuthGuard(), ActionGuard("preference:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("preference:show"))
   find(@Param("scope") scope: string) {
     return this.preference.get(scope);
   }
 
   @UseInterceptors(activity(createPreferenceActivity))
   @Put(":scope")
-  @UseGuards(AuthGuard(), ActionGuard("preference:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("preference:update"))
   async replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {
     if (scope == "bucket" && this.bucketFactory) {
       const previousPrefs = await this.preference.get("bucket");

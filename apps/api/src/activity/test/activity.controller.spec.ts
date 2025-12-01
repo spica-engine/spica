@@ -12,6 +12,7 @@ describe("Activity Acceptance", () => {
   let app: INestApplication;
   let service: ActivityService;
   let created_at: Date;
+  let databaseService: DatabaseService;
 
   let user1Id;
   let user2Id;
@@ -36,9 +37,9 @@ describe("Activity Acceptance", () => {
     await app.listen(request.socket);
 
     service = app.get(ActivityService);
+    databaseService = module.get(DatabaseService);
 
-    await module
-      .get(DatabaseService)
+    await databaseService
       .collection("identity")
       .insertMany([{identifier: "user1"}, {identifier: "user2"}])
       .then(res => {
@@ -244,6 +245,41 @@ describe("Activity Acceptance", () => {
         identifier: "user1",
         resource: ["test_module", "test_id1"],
         created_at: activities[1].created_at
+      }
+    ]);
+  });
+
+  it("should filter activities by username", async () => {
+    let testUser1Id;
+    await databaseService
+      .collection("user")
+      .insertOne({username: "testuser1"})
+      .then(res => {
+        testUser1Id = res.insertedId;
+      });
+
+    await service.insert([
+      {
+        action: Action.POST,
+        username: testUser1Id.toString(),
+        resource: ["test_module", "test_id_username"]
+      }
+    ]);
+
+    const {body: activities} = await request.get("/activity", {username: "testuser1"});
+
+    activities.forEach(activity => {
+      expect(ObjectId.isValid(activity._id)).toBe(true);
+      expect(typeof new Date(activity.created_at).getTime()).toBe("number");
+    });
+
+    expect(activities).toEqual([
+      {
+        _id: activities[0]._id,
+        action: Action.POST,
+        username: "testuser1",
+        resource: ["test_module", "test_id_username"],
+        created_at: activities[0].created_at
       }
     ]);
   });

@@ -41,25 +41,25 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
 }
 
 export function get(id: string, headers?: object): Promise<Bucket> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.get<Bucket>(`bucket/${id}`, {headers});
 }
 
 export function getAll(headers?: object): Promise<Bucket[]> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.get<Bucket[]>("bucket", {headers});
 }
 
 export function insert(bucket: Bucket, headers?: object): Promise<Bucket> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.post<Bucket>("bucket", bucket, {headers});
 }
 
 export function insertMany(buckets: Bucket[], headers?: object) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   const batchReqs = Batch.prepareInsertRequest<Bucket>(
     buckets,
@@ -74,19 +74,19 @@ export function insertMany(buckets: Bucket[], headers?: object) {
 }
 
 export function update(id: string, bucket: Bucket, headers?: object): Promise<Bucket> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.put<Bucket>(`bucket/${id}`, bucket, {headers});
 }
 
 export function remove(id: string, headers?: object): Promise<any> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.delete(`bucket/${id}`, {headers});
 }
 
 export function removeMany(ids: string[], headers?: object) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   const batchReqs = Batch.prepareRemoveRequest(ids, "bucket", service.getAuthorization(), headers);
 
@@ -104,7 +104,7 @@ export namespace data {
       queryParams?: {[key: string]: any};
     } = {}
   ): Promise<T> {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     return service.get<T>(`bucket/${bucketId}/data/${documentId}`, {
       params: options.queryParams,
@@ -133,7 +133,7 @@ export namespace data {
       queryParams?: {[key: string]: any; paginate?: boolean};
     } = {}
   ): Promise<T[] | IndexResult<T>> {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     return service.get<IndexResult<T> | T[]>(`bucket/${bucketId}/data`, {
       params: options.queryParams,
@@ -146,13 +146,13 @@ export namespace data {
     document: Omit<T, "_id">,
     headers?: object
   ): Promise<T> {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     return service.post<T>(`bucket/${bucketId}/data`, document, {headers});
   }
 
   export function insertMany<T>(bucketId: string, documents: T[], headers?: object) {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     const batchReqs = Batch.prepareInsertRequest<T>(
       documents,
@@ -172,7 +172,7 @@ export namespace data {
     document: T,
     headers?: object
   ): Promise<T> {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     return service.put<T>(`bucket/${bucketId}/data/${documentId}`, document, {headers});
   }
@@ -183,19 +183,19 @@ export namespace data {
     document: Partial<BucketDocument>,
     headers?: object
   ): Promise<any> {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     return service.patch(`bucket/${bucketId}/data/${documentId}`, document, {headers});
   }
 
   export function remove(bucketId: string, documentId: string, headers?: object): Promise<any> {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     return service.delete(`bucket/${bucketId}/data/${documentId}`, {headers});
   }
 
   export function removeMany(bucketId: string, documentIds: string[], headers?: object) {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     const batchReqs = Batch.prepareRemoveRequest(
       documentIds,
@@ -220,7 +220,7 @@ export namespace data {
       messageCallback?: (res: {status: number; message: string}) => any,
       queryParams: object = {}
     ): RealtimeConnectionOne<T> {
-      checkInitialized(authorization);
+      checkInitialized(authorization, service);
 
       const relation = queryParams["relation"];
 
@@ -248,7 +248,7 @@ export namespace data {
       queryParams: object = {},
       messageCallback?: (res: {status: number; message: string}) => any
     ): RealtimeConnection<T[]> {
-      checkInitialized(authorization);
+      checkInitialized(authorization, service);
 
       const sort = queryParams["sort"];
       const relation = queryParams["relation"];

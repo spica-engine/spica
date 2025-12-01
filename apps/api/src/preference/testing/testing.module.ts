@@ -7,7 +7,7 @@ class PartialPreferenceService {
   private defaults = new Map<string, any>();
 
   constructor() {
-    this.defaults.set("passport", {identity: {attributes: {}}});
+    this.defaults.set("passport", {identity: {attributes: {}}, user: {attributes: {}}});
   }
 
   default = jest.fn<typeof PreferenceService.prototype.default>((preference: any) => {

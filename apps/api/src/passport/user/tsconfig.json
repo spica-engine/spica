@@ -1,0 +1,36 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../asset"
+    },
+    {
+      "path": "../../preference/services"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "../refresh_token/services"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
+      "path": "../../bucket/common"
+    },
+    {
+      "path": "../../status"
+    },
+    {
+      "path": "../../../../../libs/interface/passport/user"
+    },
+    {
+      "path": "./realtime"
+    }
+  ]
+}

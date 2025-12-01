@@ -28,7 +28,7 @@ export class ApiKeyController {
   constructor(private apiKeyService: ApiKeyService) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:index"))
   find(
     @ResourceFilter() resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit?: number,
@@ -68,7 +68,7 @@ export class ApiKeyController {
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.apiKeyService.findOne({_id: id}).then(r => {
       if (!r) {
@@ -80,7 +80,7 @@ export class ApiKeyController {
 
   @UseInterceptors(activity(createApikeyActivity))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:create"))
   async insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
     if (!apiKey.key) {
       apiKey.key = nanoid(32);
@@ -91,7 +91,7 @@ export class ApiKeyController {
 
   @UseInterceptors(activity(createApikeyActivity))
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:update"))
   replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey
@@ -108,7 +108,7 @@ export class ApiKeyController {
 
   @UseInterceptors(activity(createApikeyActivity))
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.apiKeyService.deleteOne({_id: id}).then(r => {
@@ -125,7 +125,7 @@ export class ApiKeyController {
    */
   @UseInterceptors(activity(createApikeyActivity))
   @Put(":id/policy/:policyId")
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:add"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:policy:add"))
   async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.apiKeyService
       .findOneAndUpdate(
@@ -154,7 +154,7 @@ export class ApiKeyController {
    */
   @UseInterceptors(activity(createApikeyActivity))
   @Delete(":id/policy/:policyId")
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:remove"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:apikey:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.apiKeyService
