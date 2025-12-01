@@ -209,6 +209,15 @@ describe("Storage Service", () => {
     const deepNestedFileId = new ObjectId();
     const rootFileId = new ObjectId();
 
+    const remainingData = {
+      _id: rootFileId,
+      name: "readme.txt",
+      content: {
+        data: Buffer.from("readme content"),
+        type: "text/plain",
+        size: 14
+      }
+    };
     const testData = [
       {
         _id: folderId,
@@ -255,15 +264,7 @@ describe("Storage Service", () => {
           size: 12
         }
       },
-      {
-        _id: rootFileId,
-        name: "readme.txt",
-        content: {
-          data: Buffer.from("readme content"),
-          type: "text/plain",
-          size: 14
-        }
-      }
+      remainingData
     ];
 
     await expect(storageService.insert(testData)).resolves.not.toThrow();
@@ -273,17 +274,25 @@ describe("Storage Service", () => {
 
     await expect(storageService.delete(folderId)).resolves.not.toThrow();
 
-    await expect(storageService.get(folderId)).resolves.toBeNull();
-    await expect(storageService.get(subFolder1Id)).resolves.toBeNull();
-    await expect(storageService.get(subFolder2Id)).resolves.toBeNull();
-    await expect(storageService.get(nestedFileId)).resolves.toBeNull();
-    await expect(storageService.get(deepNestedFileId)).resolves.toBeNull();
-
-    await expect(storageService.get(rootFileId)).resolves.not.toBeNull();
+    const expectedRemainingData = {
+      ...remainingData,
+      content: {...remainingData.content, data: Buffer.from("readme content")}
+    };
+    await expect(
+      Promise.all([
+        storageService.get(folderId),
+        storageService.get(subFolder1Id),
+        storageService.get(subFolder2Id),
+        storageService.get(nestedFileId),
+        storageService.get(deepNestedFileId),
+        // should be unaffected
+        storageService.get(rootFileId)
+      ])
+    ).resolves.toEqual([null, null, null, null, null, expectedRemainingData]);
 
     const remainingItems = await storageService.getAll(resourceFilter, undefined, false, 10, 0, {});
     expect(remainingItems.length).toBe(1);
-    expect(remainingItems[0].name).toBe("readme.txt");
+    expect(remainingItems[0].name).toEqual("readme.txt");
   });
 
   describe("filter", () => {
