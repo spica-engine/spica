@@ -105,13 +105,10 @@ export async function findDocuments<T>(
     }
   );
 
-  const aclProjection = buildAclProjection(
-    schema.properties,
-    params.req.user,
-    params.req.strategyType
-  );
-  seekingPipelineBuilder.attachToPipeline(true, {$project: aclProjection});
-
+  if (isUserRequest(params.req)) {
+    const aclProjection = buildAclProjection(schema.properties, params.req.user);
+    seekingPipelineBuilder.attachToPipeline(true, {$project: aclProjection});
+  }
   // for graphql responses
   seekingPipeline.setVisibilityOfFields(getVisibilityOfFields(params.projectMap));
 
@@ -142,17 +139,13 @@ export async function findDocuments<T>(
       throw new DatabaseException(error.message);
     });
 }
-function buildAclProjection(
-  properties: Record<string, {acl?: string}>,
-  user: any,
-  strategyType: string = "USER"
-) {
+function buildAclProjection(properties: Record<string, {acl?: string}>, user: any) {
   const result: Record<string, object | number> = {};
 
   for (const key in properties) {
     const acl = properties[key].acl;
 
-    if (acl && strategyType === "USER") {
+    if (acl) {
       const condition = expression.aggregate(acl, {auth: user}, "project");
 
       result[key] = {
@@ -185,7 +178,7 @@ export async function insertDocument(
 ) {
   const collection = factories.collection(schema);
 
-  if (params.req.strategyType === "USER") {
+  if (isUserRequest(params.req)) {
     await executeWriteRule(
       schema,
       factories.schema,
@@ -231,7 +224,7 @@ export async function replaceDocument(
 ) {
   const collection = factories.collection(schema);
 
-  if (params.req.strategyType === "USER") {
+  if (isUserRequest(params.req)) {
     await executeWriteRule(
       schema,
       factories.schema,
@@ -269,7 +262,7 @@ export async function patchDocument(
   } = {returnDocument: ReturnDocument.BEFORE}
 ) {
   const collection = factories.collection(schema);
-  if (params.req.strategyType === "USER") {
+  if (isUserRequest(params.req)) {
     await executeWriteRule(
       schema,
       factories.schema,
@@ -311,7 +304,7 @@ export async function deleteDocument(
     return;
   }
 
-  if (params.req.strategyType === "USER") {
+  if (isUserRequest(params.req)) {
     await executeWriteRule(
       schema,
       factories.schema,
@@ -421,4 +414,8 @@ export function authIdToString(req: any) {
     req.user._id = req.user._id.toString();
   }
   return req;
+}
+
+function isUserRequest(req) {
+  return req.strategyType === "USER";
 }
