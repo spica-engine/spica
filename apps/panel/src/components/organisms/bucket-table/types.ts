@@ -8,6 +8,7 @@ export type BucketPropertyType =
   | "relation"
   | "boolean"
   | "array"
+  | "multiselect"
   | "object";
 
 export interface BucketProperty {

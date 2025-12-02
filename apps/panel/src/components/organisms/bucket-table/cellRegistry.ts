@@ -8,6 +8,8 @@ import {
   DateCellKeyboardHandler,
   DefaultCell,
   DefaultCellKeyboardHandler,
+  MultipleSelectionCell,
+  MultipleSelectionCellKeyboardHandler,
 } from "./cells";
 
 
@@ -43,6 +45,12 @@ class CellRegistry {
       component: DateCell,
       keyboardHandler: DateCellKeyboardHandler,
       defaultValue: null,
+    });
+
+    this.register("multiselect", {
+      component: MultipleSelectionCell,
+      keyboardHandler: MultipleSelectionCellKeyboardHandler,
+      defaultValue: [],
     });
 
     this.register("array", {

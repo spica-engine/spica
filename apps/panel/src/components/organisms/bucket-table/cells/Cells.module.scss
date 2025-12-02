@@ -57,7 +57,7 @@
     height: 100%;
     display: flex;
     align-items: center;
-    padding: 8px;
+
     cursor: pointer;
     border: none;
     background: transparent;
@@ -135,4 +135,41 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     cursor: pointer;
+}
+
+// Multiple selection cell
+.multiSelectCell {
+    width: 100%;
+    overflow: hidden;
+}
+
+.multiSelectCellWrapper {
+    width: 100%;
+    
+    .multiSelectInput{
+        background-color: transparent !important;
+    }
+}
+
+.multiSelectTrigger {
+    width: 100%;
+    cursor: pointer;
+}
+
+.multiSelectDisplay {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}
+
+.emptyValue {
+    color: #999;
+    font-style: italic;
+}
+
+.multiSelectPopover {
+    min-width: 250px;
+    max-width: 400px;
+    padding: 8px;
 }
