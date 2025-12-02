@@ -25,7 +25,7 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     },
     findIdByContent: (content: string): Promise<string> => {
       // no way to find fn by tsconfig content
-      return null;
+      return Promise.resolve(null);
     },
 
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
