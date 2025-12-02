@@ -20,7 +20,7 @@ export const MultipleSelectionCell: React.FC<CellRendererProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLDivElement>(null);
   
-  const options = (property as any).items?.enum || property.enum || [];
+  const options = property.items?.enum || property.enum || [];
 
   useEffect(() => {
     const normalizedValue = Array.isArray(value) ? value : [];
@@ -37,12 +37,13 @@ export const MultipleSelectionCell: React.FC<CellRendererProps> = ({
           input.click();
         }
       }, 0);
-    } else {
-      if (isOpen && JSON.stringify(editValue) !== JSON.stringify(originalValue)) {
-        onChange(editValue);
-      }
-      setIsOpen(false);
+      return;
     }
+    
+    if (isOpen && JSON.stringify(editValue) !== JSON.stringify(originalValue)) {
+      onChange(editValue);
+    }
+    setIsOpen(false);
   }, [isFocused]);
 
   const handleCancel = () => {
@@ -60,13 +61,12 @@ export const MultipleSelectionCell: React.FC<CellRendererProps> = ({
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       if (e.key === "Escape") {
-        e.preventDefault();
-        e.stopPropagation();
         handleCancel();
       } else if (e.key === "Enter") {
-        e.preventDefault();
-        e.stopPropagation();
         if (JSON.stringify(editValue) !== JSON.stringify(originalValue)) {
           onChange(editValue);
         }
