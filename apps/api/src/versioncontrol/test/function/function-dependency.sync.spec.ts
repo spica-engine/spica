@@ -238,12 +238,11 @@ describe("SyncEngine Integration - Function Dependency", () => {
     repManager.write("function", name, fileName, packageContent, fileExtension);
   });
 
-  fit("should sync dependency changes from representative to documents after approval", done => {
+  it("should sync dependency changes from representative to documents after approval", done => {
     const _id = new ObjectId();
     const name = "TestFuncDepRepApproved";
     const fileName = "package";
     const fileExtension = "json";
-
     const packageContent = JSON.stringify(
       {
         name,
@@ -261,15 +260,31 @@ describe("SyncEngine Integration - Function Dependency", () => {
       2
     );
 
-    createTestFunction(_id, name).then(() => {
+    createTestFunction(_id, name).then(async () => {
       const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
         syncSub.unsubscribe();
-
         await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
       });
       const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
         succeededSub.unsubscribe();
-        console.log("sync: ", sync);
+        expect(sync).toEqual({
+          _id: sync._id,
+          status: SyncStatuses.SUCCEEDED,
+          created_at: sync.created_at,
+          updated_at: sync.updated_at,
+          change_log: {
+            _id: sync.change_log._id,
+            module: "function",
+            sub_module: "package",
+            origin: ChangeOrigin.REPRESENTATIVE,
+            type: ChangeType.CREATE,
+            resource_id: _id.toString(),
+            resource_slug: name,
+            resource_content: packageContent,
+            resource_extension: fileExtension,
+            created_at: sync.change_log.created_at
+          }
+        });
         done();
       });
       repManager.write("function", name, fileName, packageContent, fileExtension);

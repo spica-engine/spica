@@ -106,6 +106,32 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
   return fn;
 }
 
+export async function insertSchema(fs: FunctionService, engine: FunctionEngine, fn: Function) {
+  if (fn._id) {
+    fn._id = new ObjectId(fn._id);
+  }
+
+  let insertedFn;
+  try {
+    const r = await fs.insertOne(fn);
+    insertedFn = await findOne(fs, r._id, {resolveEnvRelations: EnvRelation.Resolved});
+  } catch (error: any) {
+    if (error && error.code === 11000) {
+      throw new BadRequestException(
+        `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
+      );
+    }
+
+    throw new InternalServerErrorException(error?.message || error);
+  }
+
+  const changes = createTargetChanges(insertedFn, ChangeKind.Added);
+  engine.categorizeChanges(changes);
+
+  await engine.createFunctionSchema(fn);
+  return fn;
+}
+
 export async function replace(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   const _id = new ObjectId(fn._id);
 
@@ -235,6 +261,29 @@ export namespace index {
 
       rl.on("close", () => resolve(isFound));
     });
+  }
+}
+
+export namespace packageJson {
+  export async function create(
+    fs: FunctionService,
+    engine: FunctionEngine,
+    id: ObjectId,
+    packageJson: any
+  ) {
+    const fn = await fs.findOne({_id: id});
+    if (!fn) {
+      throw new NotFoundException("Could not find the function.");
+    }
+    await engine.createFunctionDependency(fn, packageJson);
+  }
+
+  export async function remove(fs: FunctionService, engine: FunctionEngine, id: ObjectId) {
+    const fn = await fs.findOne({_id: id});
+    if (!fn) {
+      throw new NotFoundException("Could not find the function.");
+    }
+    await engine.deleteDependency(fn);
   }
 }
 

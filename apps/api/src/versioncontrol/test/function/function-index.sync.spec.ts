@@ -195,25 +195,27 @@ describe("SyncEngine Integration - Function Index", () => {
     const fileExtension = "mjs";
     const indexContent = `export function handler(req, res) { res.send("Hello from Rep"); }`;
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      expect(sync.status).toBe(SyncStatuses.PENDING);
-      expect(sync.change_log).toEqual({
-        _id: sync.change_log._id,
-        module: "function",
-        sub_module: "index",
-        origin: ChangeOrigin.REPRESENTATIVE,
-        type: ChangeType.CREATE,
-        resource_id: _id.toString(),
-        resource_slug: name,
-        resource_content: indexContent,
-        resource_extension: "mjs",
-        created_at: sync.change_log.created_at
+    createTestFunction(_id, name).then(async () => {
+      const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
+        expect(sync.status).toBe(SyncStatuses.PENDING);
+        expect(sync.change_log).toEqual({
+          _id: sync.change_log._id,
+          module: "function",
+          sub_module: "index",
+          origin: ChangeOrigin.REPRESENTATIVE,
+          type: ChangeType.CREATE,
+          resource_id: _id.toString(),
+          resource_slug: name,
+          resource_content: indexContent,
+          resource_extension: "mjs",
+          created_at: sync.change_log.created_at
+        });
+        syncSub.unsubscribe();
+        done();
       });
-      syncSub.unsubscribe();
-      done();
-    });
 
-    repManager.write("function", name, fileName, indexContent, fileExtension);
+      repManager.write("function", name, fileName, indexContent, fileExtension);
+    });
   });
 
   it("should sync index changes from representative to documents after approval", done => {
@@ -228,16 +230,18 @@ describe("SyncEngine Integration - Function Index", () => {
       await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
     });
 
-    const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async () => {
-      succeededSub.unsubscribe();
+    createTestFunction(_id, name).then(() => {
+      const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async () => {
+        succeededSub.unsubscribe();
 
-      const fn = await functionService.findOne({_id});
-      const indexPath = join(functionRoot, fn.name, "index.mjs");
-      const writtenContent = await fs.promises.readFile(indexPath, "utf-8");
-      expect(writtenContent).toContain("Hello from Rep Approved");
-      done();
+        const result = await CRUD.index.find(functionService, functionEngine, _id);
+        expect(result.index).toEqual(
+          `export function handler(req, res) { res.send("Hello from Rep Approved"); }`
+        );
+        done();
+      });
+
+      repManager.write("function", name, fileName, indexContent, fileExtension);
     });
-
-    repManager.write("function", name, fileName, indexContent, fileExtension);
   });
 });

@@ -265,7 +265,7 @@ describe("SyncEngine Integration - Function Tsconfig", () => {
     repManager.write("function", name, fileName, tsconfigContent, fileExtension);
   });
 
-  fit("should fail to apply tsconfig changes from representative (read-only)", done => {
+  it("should fail to apply tsconfig changes from representative (read-only)", done => {
     const _id = new ObjectId();
     const name = "TestFuncTsconfigReadOnly";
     const fileName = "tsconfig";
