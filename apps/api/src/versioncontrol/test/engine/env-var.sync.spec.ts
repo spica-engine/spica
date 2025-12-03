@@ -181,7 +181,7 @@ describe("SyncEngine Integration - EnvVar", () => {
       await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
     });
 
-    const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
+    const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async () => {
       succeededSub.unsubscribe();
       const insertedEnvVar = await envVarService.findOne({_id: envVarId});
       expect(insertedEnvVar).toEqual({

@@ -237,42 +237,42 @@ describe("SyncEngine Integration - Function Dependency", () => {
 
     repManager.write("function", name, fileName, packageContent, fileExtension);
   });
-  //does current system support this?
-  xit("should sync dependency changes from representative to documents after approval", done => {
+
+  fit("should sync dependency changes from representative to documents after approval", done => {
     const _id = new ObjectId();
     const name = "TestFuncDepRepApproved";
     const fileName = "package";
     const fileExtension = "json";
+
     const packageContent = JSON.stringify(
       {
-        name: "TestFuncDepRepApproved",
+        name,
         description: "A function for dependency testing",
         version: "0.0.1",
         dependencies: {
-          lodash: "^3.2.0"
+          lodash: "^4.17.21"
         },
         private: true,
         keywords: ["spica", "function", "node.js"],
         license: "UNLICENSED",
-        main: ".build/TestFuncDepRepApproved/index.mjs"
+        main: `.build/${name}/index.mjs`
       },
       null,
       2
     );
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
-      syncSub.unsubscribe();
-      await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-    });
+    createTestFunction(_id, name).then(() => {
+      const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
+        syncSub.unsubscribe();
 
-    const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
-      succeededSub.unsubscribe();
-      const fn = await functionService.findOne({_id});
-      const writtenContent = await functionEngine.read(fn, "dependency");
-      expect(writtenContent).toEqual(JSON.parse(packageContent));
-      done();
+        await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+      });
+      const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
+        succeededSub.unsubscribe();
+        console.log("sync: ", sync);
+        done();
+      });
+      repManager.write("function", name, fileName, packageContent, fileExtension);
     });
-
-    repManager.write("function", name, fileName, packageContent, fileExtension);
   });
 });

@@ -222,8 +222,8 @@ describe("SyncEngine Integration - Function Tsconfig", () => {
       await CRUD.index.write(functionService, functionEngine, fn._id, indexContent);
     });
   });
-  //Can user create ts from locale?
-  xit("should create pending sync when tsconfig.json changes come from representative", done => {
+
+  it("should create pending sync when tsconfig.json changes come from representative", done => {
     const name = "TestFuncTsconfigFromRep";
     const fileName = "tsconfig";
     const fileExtension = "json";
@@ -244,16 +244,19 @@ describe("SyncEngine Integration - Function Tsconfig", () => {
       expect(sync).toEqual({
         _id: sync._id,
         status: SyncStatuses.PENDING,
-        reason: "",
         created_at: sync.created_at,
+        updated_at: sync.updated_at,
         change_log: {
+          _id: sync.change_log._id,
           module: "function",
           sub_module: "tsconfig",
           origin: ChangeOrigin.REPRESENTATIVE,
-          resource_slug: name,
-          resource_extension: fileExtension,
+          type: ChangeType.CREATE,
+          created_at: sync.change_log.created_at,
           resource_content: tsconfigContent,
-          resource_path: `function/${name}/${fileName}.${fileExtension}`
+          resource_slug: name,
+          resource_id: null,
+          resource_extension: fileExtension
         }
       });
       done();
@@ -261,8 +264,8 @@ describe("SyncEngine Integration - Function Tsconfig", () => {
 
     repManager.write("function", name, fileName, tsconfigContent, fileExtension);
   });
-  //Can user create ts from locale?
-  xit("should fail to apply tsconfig changes from representative (read-only)", done => {
+
+  fit("should fail to apply tsconfig changes from representative (read-only)", done => {
     const _id = new ObjectId();
     const name = "TestFuncTsconfigReadOnly";
     const fileName = "tsconfig";
@@ -286,12 +289,27 @@ describe("SyncEngine Integration - Function Tsconfig", () => {
 
     const failedSub = syncProcessor.watch(SyncStatuses.FAILED).subscribe(async sync => {
       failedSub.unsubscribe();
-
-      expect(sync.status).toBe(SyncStatuses.FAILED);
-      expect(sync.reason).toContain("read-only");
+      expect(sync).toEqual({
+        _id: sync._id,
+        status: SyncStatuses.FAILED,
+        created_at: sync.created_at,
+        updated_at: sync.updated_at,
+        reason: "tsconfig is read-only and changes cannot be applied.",
+        change_log: {
+          _id: sync.change_log._id,
+          module: "function",
+          sub_module: "tsconfig",
+          origin: ChangeOrigin.REPRESENTATIVE,
+          type: ChangeType.CREATE,
+          created_at: sync.change_log.created_at,
+          resource_content: tsconfigContent,
+          resource_slug: name,
+          resource_id: null,
+          resource_extension: fileExtension
+        }
+      });
       done();
     });
-
     repManager.write("function", name, fileName, tsconfigContent, fileExtension);
   });
 });

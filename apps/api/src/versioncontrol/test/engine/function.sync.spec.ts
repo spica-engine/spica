@@ -295,7 +295,7 @@ describe("SyncEngine Integration - Function", () => {
       await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
     });
 
-    const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
+    const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async () => {
       succeededSub.unsubscribe();
       const insertedFunction = await functionService.findOne({_id: functionId});
       expect(insertedFunction).toEqual({

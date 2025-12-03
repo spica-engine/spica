@@ -228,7 +228,7 @@ describe("SyncEngine Integration - Function Index", () => {
       await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
     });
 
-    const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
+    const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async () => {
       succeededSub.unsubscribe();
 
       const fn = await functionService.findOne({_id});
