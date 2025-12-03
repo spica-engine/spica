@@ -106,7 +106,7 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
   return fn;
 }
 
-export async function insertSchema(fs: FunctionService, engine: FunctionEngine, fn: Function) {
+export async function insertSchemaOnly(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   if (fn._id) {
     fn._id = new ObjectId(fn._id);
   }

@@ -72,26 +72,6 @@ describe("SyncEngine Integration - Bucket", () => {
   });
 
   it("should push sync to processor, but don't process until not approved", done => {
-    const subs = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      expect(new Date(sync.created_at)).toBeInstanceOf(Date);
-      expect(sync.created_at).toEqual(sync.updated_at);
-      expect(sync.status).toBe(SyncStatuses.PENDING);
-      expect(sync.change_log).toEqual({
-        _id: sync.change_log._id,
-        module: "bucket",
-        sub_module: "schema",
-        origin: ChangeOrigin.DOCUMENT,
-        type: ChangeType.CREATE,
-        resource_id: _id.toHexString(),
-        resource_slug: "Test Bucket",
-        resource_content: YAML.stringify(bucket),
-        resource_extension: "yaml",
-        created_at: sync.change_log.created_at
-      });
-      subs.unsubscribe();
-      done();
-    });
-
     const _id = new ObjectId();
     const title = "Test Bucket";
 
@@ -113,6 +93,27 @@ describe("SyncEngine Integration - Bucket", () => {
         }
       }
     };
+
+    const subs = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
+      expect(new Date(sync.created_at)).toBeInstanceOf(Date);
+      expect(sync.created_at).toEqual(sync.updated_at);
+      expect(sync.status).toBe(SyncStatuses.PENDING);
+      expect(sync.change_log).toEqual({
+        _id: sync.change_log._id,
+        module: "bucket",
+        sub_module: "schema",
+        origin: ChangeOrigin.DOCUMENT,
+        type: ChangeType.CREATE,
+        resource_id: _id.toHexString(),
+        resource_slug: "Test Bucket",
+        resource_content: YAML.stringify(bucket),
+        resource_extension: "yaml",
+        created_at: sync.change_log.created_at
+      });
+      subs.unsubscribe();
+      done();
+    });
+
     bs.insertOne(bucket);
   });
 
