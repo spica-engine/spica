@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {FlexElement, Icon, Table, type TableColumn, Button, Popover, type IconName } from "oziko-ui-kit";
 import type { BucketSchema, BucketDataRow, BucketProperty } from "./types";
 import { EditableCell } from "./EditableCell";
@@ -194,14 +194,16 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [tableFocusReset, setTableFocusReset] = useState(0);
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
     `${bucket?._id}-fields-order`,
     bucket?.properties ? Object.keys(bucket.properties) : []
   );
   const tableKey = useMemo(
-    () => `${bucket?._id ?? "bucket"}-${fieldsOrder.join(",")}`,
-    [bucket?._id, fieldsOrder]
+    () => `${bucket?._id ?? "bucket"}-${fieldsOrder.join(",")}-${tableFocusReset}`,
+    [bucket?._id, fieldsOrder, tableFocusReset]
   );
 
   const [sortMeta, setSortMeta] = useLocalStorage<{
@@ -342,6 +344,194 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 
   }, [bucket?.properties, bucket?._id]);
 
+
+  const hasPopoverRole = useCallback((element: Element): boolean => {
+    const role = element.getAttribute('role');
+    if (!role) return false;
+    
+    const popoverRoles = ['dialog', 'menu', 'listbox', 'tooltip', 'combobox', 'grid', 'tree'];
+    return popoverRoles.includes(role);
+  }, []);
+
+  const hasPortalClassName = useCallback((element: Element): boolean => {
+    const className = element.className;
+    let classNameStr = '';
+    
+    if (typeof className === 'string') {
+      classNameStr = className;
+    } else if (className && typeof className === 'object') {
+      // Handle SVGAnimatedString or similar objects
+      const classNameObj = className as { baseVal?: string };
+      classNameStr = (typeof classNameObj.baseVal === 'string')
+        ? classNameObj.baseVal
+        : String(className);
+    }
+    
+    if (!classNameStr) return false;
+    
+    const portalClassNames = [
+      'rc-portal', 'rc-tooltip', 'rc-dropdown', 
+      'popover', 'Popover', 'portal', 'Portal'
+    ];
+    
+    return portalClassNames.some(name => classNameStr.includes(name));
+  }, []);
+
+  const hasPopoverAriaAttributes = useCallback((element: Element): boolean => {
+    if (element.getAttribute('aria-expanded') === 'true') return true;
+    if (element.getAttribute('aria-haspopup') === 'true') return true;
+    
+    if (element instanceof HTMLElement) {
+      return 'popover' in element.dataset || 'portal' in element.dataset;
+    }
+    
+    return false;
+  }, []);
+
+  const hasFixedPositioning = useCallback((element: Element): boolean => {
+    const style = globalThis.getComputedStyle(element);
+    if (style.position !== 'fixed') return false;
+    
+    const zIndex = style.zIndex;
+    return zIndex !== 'auto' && Number.parseInt(zIndex, 10) > 1000;
+  }, []);
+
+  const isInsidePopover = useCallback((element: Node | null): boolean => {
+    if (!element) return false;
+    
+    let current: Node | null = element;
+    
+    while (current && current !== document.body) {
+      if (!(current instanceof Element)) {
+        current = current.parentNode;
+        continue;
+      }
+      
+      if (
+        hasPopoverRole(current) ||
+        hasPortalClassName(current) ||
+        hasPopoverAriaAttributes(current) ||
+        hasFixedPositioning(current)
+      ) {
+        return true;
+      }
+      
+      current = current.parentNode;
+    }
+    
+    return false;
+  }, [hasPopoverRole, hasPortalClassName, hasPopoverAriaAttributes, hasFixedPositioning]);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // Don't blur if clicking inside a popover/dialog
+      if (isInsidePopover(target)) {
+        return;
+      }
+      
+      if (tableContainerRef.current && !tableContainerRef.current.contains(target)) {
+        // Click is outside the table and not inside a popover, reset table focus state by changing key
+        setTableFocusReset(prev => prev + 1);
+      }
+    };
+
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setTableFocusReset(prev => prev + 1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscKey);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isInsidePopover]);
+
+
+  const renderIdCell = useCallback((params: { row: BucketDataRow; isFocused: boolean }) => {
+    return (
+      <div className={styles.readonlyCell}>
+        {params.row._id}
+      </div>
+    );
+  }, []);
+
+  const handleRequestBlur = useCallback(() => {
+    setTableFocusReset(prev => prev + 1);
+  }, []);
+
+  const createDeleteHandler = useCallback((fieldKey: string, isPrimaryField: boolean) => {
+    if (isPrimaryField) return undefined;
+    return () => handleDeleteField(fieldKey);
+  }, [handleDeleteField]);
+
+  const createPropertyRenderCell = useCallback((
+    key: string,
+    property: BucketProperty
+  ) => {
+    return (params: { row: BucketDataRow; isFocused: boolean }) => {
+      const value = params.row[key];
+      
+      return (
+        <EditableCell
+          value={value}
+          propertyKey={key}
+          property={property}
+          rowId={params.row._id}
+          isFocused={params.isFocused}
+          onValueChange={handleValueChange}
+          onRequestBlur={handleRequestBlur}
+        />
+      );
+    };
+  }, [handleValueChange, handleRequestBlur]);
+
+  const createPropertyColumn = useCallback((
+    key: string,
+    property: BucketProperty,
+    index: number,
+    totalKeys: number
+  ): TableColumn<BucketDataRow> => {
+    const icon = getPropertyIcon(property.type);
+    const isPrimaryField = bucket.primary === key;
+    const moveRightAllowed = index < totalKeys - 1;
+    const moveLeftAllowed = index > 0;
+
+    return {
+      key,
+      header: (
+        <ColumnHeader
+          title={property.title || key}
+          icon={icon}
+          showDropdownIcon={true}
+          fieldKey={key}
+          onMoveRight={moveRightAllowed ? onMoveRight : undefined}
+          onMoveLeft={moveLeftAllowed ? onMoveLeft : undefined}
+          onSortAsc={onSortAsc}
+          onSortDesc={onSortDesc}
+          onDelete={createDeleteHandler(key, isPrimaryField)}
+        />
+      ),
+      width: "200px",
+      renderCell: createPropertyRenderCell(key, property),
+    };
+  }, [
+    bucket.primary,
+    getPropertyIcon,
+    onMoveRight,
+    onMoveLeft,
+    onSortAsc,
+    onSortDesc,
+    createDeleteHandler,
+    createPropertyRenderCell
+  ]);
+
   const columns = useMemo((): TableColumn<BucketDataRow>[] => {
     if (!bucket?.properties) return [];
 
@@ -350,79 +540,50 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
         key: '_id',
         header: '_id',
         width: '200px',
-        renderCell: (params: { row: BucketDataRow; isFocused: boolean }) => {
-          return (
-            <div className={styles.readonlyCell}>
-              {params.row._id}
-            </div>
-          );
-        },
+        renderCell: renderIdCell,
       }
     ];
 
-
     const propertyKeys = Object.keys(bucket.properties);
 
-    // Create ordered property entries
+
     const orderedKeys = fieldsOrder.filter(key => propertyKeys.includes(key));
     const newKeys = propertyKeys.filter(key => !fieldsOrder.includes(key));
     const finalOrderedKeys = [...orderedKeys, ...newKeys];
 
     const propertyColumns = finalOrderedKeys.map((key, index) => {
       const property: BucketProperty = bucket.properties[key];
-      const icon = getPropertyIcon(property.type);
-      const isPrimaryField = bucket.primary === key;
-      
-      const moveRightAllowed = index < finalOrderedKeys.length - 1;
-      const moveLeftAllowed = index > 0;
-
-      return {
-        key,
-        header: (
-          <ColumnHeader
-            title={property.title || key}
-            icon={icon}
-            showDropdownIcon={true}
-            fieldKey={key}
-            onMoveRight={moveRightAllowed ? onMoveRight : undefined}
-            onMoveLeft={moveLeftAllowed ? onMoveLeft : undefined}
-            onSortAsc={onSortAsc}
-            onSortDesc={onSortDesc}
-            onDelete={isPrimaryField ? undefined : () => handleDeleteField(key)}
-          />
-        ),
-        width: "200px",
-        renderCell: (params: { row: BucketDataRow; isFocused: boolean }) => {
-          const value = params.row[key];
-          
-          return (
-            <EditableCell
-              value={value}
-              propertyKey={key}
-              property={property}
-              rowId={params.row._id}
-              isFocused={params.isFocused}
-              onValueChange={handleValueChange}
-              onRequestBlur={() => {}}
-            />
-          );
-        },
-      };
+      return createPropertyColumn(key, property, index, finalOrderedKeys.length);
     });
 
     return [...systemColumns, ...propertyColumns];
   }, [
-    bucket, 
-    fieldsOrder, 
-    setFieldsOrder, 
-    handleValueChange, 
-    getPropertyIcon,
-    onMoveLeft,
-    onMoveRight,
-    onSortAsc,
-    onSortDesc,
-    handleDeleteField
+    bucket?.properties,
+    fieldsOrder,
+    renderIdCell,
+    createPropertyColumn
   ]);
+
+
+  const compareValues = useCallback((aValue: any, bValue: any): number => {
+    if (aValue == null && bValue == null) return 0;
+    if (aValue == null) return 1;
+    if (bValue == null) return -1;
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return aValue.localeCompare(bValue);
+    }
+    
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return aValue - bValue;
+    }
+    
+    if (aValue instanceof Date && bValue instanceof Date) {
+      return aValue.getTime() - bValue.getTime();
+    }
+    
+    return String(aValue).localeCompare(String(bValue));
+  }, []);
 
   const sortedData = useMemo(() => {
     const currentData = data ?? [];
@@ -431,25 +592,10 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     return [...currentData].sort((a, b) => {
       const aValue = a[sortMeta.field];
       const bValue = b[sortMeta.field];
-
-      if (aValue == null && bValue == null) return 0;
-      if (aValue == null) return 1;
-      if (bValue == null) return -1;
-
-      let comparison = 0;
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        comparison = aValue.localeCompare(bValue);
-      } else if (typeof aValue === 'number' && typeof bValue === 'number') {
-        comparison = aValue - bValue;
-      } else if (aValue instanceof Date && bValue instanceof Date) {
-        comparison = aValue.getTime() - bValue.getTime();
-      } else {
-        comparison = String(aValue).localeCompare(String(bValue));
-      }
-
+      const comparison = compareValues(aValue, bValue);
       return sortMeta.direction === 'asc' ? comparison : -comparison;
     });
-  }, [data, sortMeta]);
+  }, [data, sortMeta, compareValues]);
 
   if (!bucket?.properties) {
     return (
@@ -462,7 +608,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 
   return (
 <>
-<div className={styles.tableContainer}>
+<div ref={tableContainerRef} className={styles.tableContainer}>
       <div className={styles.tableWrapper}>
         <Table
           key={tableKey}
