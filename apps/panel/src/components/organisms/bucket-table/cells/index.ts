@@ -4,4 +4,5 @@ export { NumberCell, NumberCellKeyboardHandler } from "./NumberCell";
 export { DateCell, DateCellKeyboardHandler } from "./DateCell";
 export { DefaultCell, DefaultCellKeyboardHandler } from "./DefaultCell";
 export { MultipleSelectionCell, MultipleSelectionCellKeyboardHandler } from "./MultipleSelectionCell";
+export { StorageCell, StorageCellKeyboardHandler } from "./StorageCell";
 
