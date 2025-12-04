@@ -58,7 +58,7 @@ describe("SyncEngine Integration - Function Dependency", () => {
       timeout: 60,
       language: "javascript"
     };
-    await CRUD.insert(functionService, functionEngine, testFunction);
+    await CRUD.insertSchemaOnly(functionService, functionEngine, testFunction);
     return testFunction;
   };
 
@@ -160,10 +160,13 @@ describe("SyncEngine Integration - Function Dependency", () => {
         });
         done();
       });
+
+      // CRUD.packageJson.create(functionService,)
     });
   });
 
   it("should sync dependency from document to representatives", done => {
+    // as same as above
     const _id = new ObjectId();
     const name = "TestFuncDepDocToRep";
 
@@ -267,6 +270,7 @@ describe("SyncEngine Integration - Function Dependency", () => {
       });
       const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
         succeededSub.unsubscribe();
+        // fnengine.dependencies.find...
         expect(sync).toEqual({
           _id: sync._id,
           status: SyncStatuses.SUCCEEDED,
