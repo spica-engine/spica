@@ -49,7 +49,7 @@ export const getApplier = (
 
         switch (operationType) {
           case ChangeType.CREATE:
-            await CRUD.insertSchemaOnly(fs, engine, fn);
+            await CRUD.insertSchema(fs, engine, fn);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.UPDATE:

@@ -175,7 +175,9 @@ describe("SyncEngine Integration - Function Index", () => {
         .watch("function", ["index.js"], ["add", "change"])
         .subscribe(fileEvent => {
           repSub.unsubscribe();
-          expect(fileEvent.content).toContain("Hello from Doc");
+          expect(fileEvent.content).toEqual(
+            `export function handler(req, res) { res.send("Hello from Doc"); }`
+          );
           done();
         });
 

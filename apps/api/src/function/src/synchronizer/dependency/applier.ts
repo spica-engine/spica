@@ -41,16 +41,23 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
       try {
         const operationType = change.type;
         const fn = await CRUD.findOne(fs, new ObjectId(change.resource_id), {});
+        const packageJson = JSON.parse(change.resource_content);
 
         switch (operationType) {
           case ChangeType.CREATE:
+            await CRUD.dependencies.create(fs, engine, fn._id, packageJson);
+            return {status: SyncStatuses.SUCCEEDED};
+
           case ChangeType.UPDATE:
-            const packageJson = JSON.parse(change.resource_content);
-            await CRUD.packageJson.create(fs, engine, fn._id, packageJson);
+            const fnWithDeps = {
+              ...fn,
+              dependencies: packageJson.dependencies || {}
+            };
+            await CRUD.dependencies.update(engine, fnWithDeps);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:
-            await CRUD.packageJson.remove(fs, engine, fn._id);
+            await CRUD.dependencies.remove(fs, engine, fn._id);
             return {status: SyncStatuses.SUCCEEDED};
 
           default:

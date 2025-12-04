@@ -58,7 +58,7 @@ describe("SyncEngine Integration - Function Dependency", () => {
       timeout: 60,
       language: "javascript"
     };
-    await CRUD.insertSchemaOnly(functionService, functionEngine, testFunction);
+    await CRUD.insertSchema(functionService, functionEngine, testFunction);
     return testFunction;
   };
 
@@ -139,11 +139,19 @@ describe("SyncEngine Integration - Function Dependency", () => {
     const _id = new ObjectId();
     const name = "TestFuncDep";
 
+    const packageJsonContent = {
+      name: name,
+      description: "A function for dependency testing",
+      version: "0.0.1",
+      private: true,
+      keywords: ["spica", "function", "node.js"],
+      license: "UNLICENSED",
+      main: `.build/${name}/index.mjs`
+    };
+
     createTestFunction(_id, name).then(async fn => {
       const subs = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
         subs.unsubscribe();
-
-        const packageJsonContent = await functionEngine.read(fn, "dependency");
         expect(new Date(sync.created_at)).toBeInstanceOf(Date);
         expect(sync.status).toBe(SyncStatuses.PENDING);
         expect(sync.change_log).toEqual({
@@ -154,36 +162,34 @@ describe("SyncEngine Integration - Function Dependency", () => {
           type: ChangeType.CREATE,
           resource_id: _id.toString(),
           resource_slug: name,
-          resource_content: packageJsonContent,
+          resource_content: JSON.stringify(packageJsonContent, null, 2),
           resource_extension: "json",
           created_at: sync.change_log.created_at
         });
         done();
       });
-
-      // CRUD.packageJson.create(functionService,)
+      CRUD.dependencies.create(functionService, functionEngine, fn._id, packageJsonContent);
     });
   });
 
   it("should sync dependency from document to representatives", done => {
-    // as same as above
     const _id = new ObjectId();
     const name = "TestFuncDepDocToRep";
-
+    const packageJsonContent = {
+      name: name,
+      description: "A function for dependency testing",
+      version: "0.0.1",
+      private: true,
+      keywords: ["spica", "function", "node.js"],
+      license: "UNLICENSED",
+      main: `.build/${name}/index.mjs`
+    };
     createTestFunction(_id, name).then(async fn => {
       const repSub = repManager
         .watch("function", ["package.json"], ["add", "change"])
         .subscribe(fileEvent => {
           repSub.unsubscribe();
-          expect(JSON.parse(fileEvent.content)).toEqual({
-            name: "TestFuncDepDocToRep",
-            description: "A function for dependency testing",
-            version: "0.0.1",
-            private: true,
-            keywords: ["spica", "function", "node.js"],
-            license: "UNLICENSED",
-            main: ".build/TestFuncDepDocToRep/index.mjs"
-          });
+          expect(JSON.parse(fileEvent.content)).toEqual(packageJsonContent);
           done();
         });
 
@@ -191,6 +197,7 @@ describe("SyncEngine Integration - Function Dependency", () => {
         syncSub.unsubscribe();
         syncProcessor.update(sync._id, SyncStatuses.APPROVED);
       });
+      CRUD.dependencies.create(functionService, functionEngine, fn._id, packageJsonContent);
     });
   });
 
@@ -270,25 +277,8 @@ describe("SyncEngine Integration - Function Dependency", () => {
       });
       const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
         succeededSub.unsubscribe();
-        // fnengine.dependencies.find...
-        expect(sync).toEqual({
-          _id: sync._id,
-          status: SyncStatuses.SUCCEEDED,
-          created_at: sync.created_at,
-          updated_at: sync.updated_at,
-          change_log: {
-            _id: sync.change_log._id,
-            module: "function",
-            sub_module: "package",
-            origin: ChangeOrigin.REPRESENTATIVE,
-            type: ChangeType.CREATE,
-            resource_id: _id.toString(),
-            resource_slug: name,
-            resource_content: packageContent,
-            resource_extension: fileExtension,
-            created_at: sync.change_log.created_at
-          }
-        });
+        const deps = await CRUD.dependencies.findOne(functionService, functionEngine, _id);
+        expect(deps).toEqual([{name: "lodash", version: "^4.17.21", types: {}}]);
         done();
       });
       repManager.write("function", name, fileName, packageContent, fileExtension);
