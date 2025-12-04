@@ -58,7 +58,7 @@
     font-size: 11px;
 }
 
-// Base cell renderer
+
 .baseCellRenderer {
     width: 100%;
     height: 100%;
@@ -71,12 +71,35 @@
     text-align: left;
 }
 
-// Boolean cell
 .booleanCheckbox {
-    cursor: pointer;
-    width: 18px;
-    height: 18px;
+   width: unset !important;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   position: relative;
+
+   .booleanInput{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    z-index: 1;
+
+   }
+
+   .active{
+    opacity: 1;
+   }
+
+   .disabled{
+    opacity: 0;
+   }
+
 }
+
+
 
 // Relation cell
 .relationLink {
