@@ -31,7 +31,19 @@ describe("ChangeLogProcessor", () => {
     };
     processor.watch().subscribe({
       next: received => {
-        expect(received).toEqual(change);
+        expect(received).toEqual({
+          _id: received._id,
+          created_at: change.created_at,
+          module: change.module,
+          sub_module: change.sub_module,
+          origin: change.origin,
+          type: change.type,
+          resource_content: change.resource_content,
+          resource_id: change.resource_id,
+          resource_slug: change.resource_slug,
+          resource_extension: change.resource_extension,
+          synced_before: 1
+        });
         done();
       },
       error: err => done.fail(err)
@@ -82,13 +94,35 @@ describe("ChangeLogProcessor", () => {
       .subscribe({
         next: received => {
           expect(received.length).toBe(2);
-          expect(received).toContainEqual({
-            ...insertChange,
-            // notice the type change here
-            type: ChangeType.UPDATE
+          // First change: insertChange becomes UPDATE after aggregation with deleteChange
+          expect(received[0]).toEqual({
+            _id: received[0]._id,
+            created_at: insertChange.created_at,
+            module: insertChange.module,
+            sub_module: insertChange.sub_module,
+            origin: insertChange.origin,
+            resource_content: insertChange.resource_content,
+            resource_id: insertChange.resource_id,
+            resource_slug: insertChange.resource_slug,
+            resource_extension: insertChange.resource_extension,
+            type: ChangeType.UPDATE,
+            synced_before: 1
           });
-          // unrelated change should be untouched
-          expect(received).toContainEqual(unrelatedChange);
+
+          // Second change: unrelatedChange stays as is
+          expect(received[1]).toEqual({
+            _id: received[1]._id,
+            created_at: unrelatedChange.created_at,
+            module: unrelatedChange.module,
+            sub_module: unrelatedChange.sub_module,
+            origin: unrelatedChange.origin,
+            resource_content: unrelatedChange.resource_content,
+            resource_id: unrelatedChange.resource_id,
+            resource_slug: unrelatedChange.resource_slug,
+            resource_extension: unrelatedChange.resource_extension,
+            type: unrelatedChange.type,
+            synced_before: 1
+          });
           done();
         },
         error: err => done.fail(err)
@@ -96,5 +130,51 @@ describe("ChangeLogProcessor", () => {
     processor.push(insertChange);
     processor.push(deleteChange);
     processor.push(unrelatedChange);
+  });
+
+  it("should handle infinite sync", async () => {
+    const change: ChangeLog = {
+      created_at: new Date(),
+      module: "test",
+      sub_module: "subTest",
+      origin: ChangeOrigin.DOCUMENT,
+      type: ChangeType.CREATE,
+      resource_content: "",
+      resource_id: "123",
+      resource_slug: "slug",
+      resource_extension: ""
+    };
+
+    const sameChange: ChangeLog = {
+      created_at: new Date(),
+      module: "test",
+      sub_module: "subTest",
+      origin: ChangeOrigin.REPRESENTATIVE,
+      type: ChangeType.CREATE,
+      resource_content: "",
+      resource_id: "123",
+      resource_slug: "slug",
+      resource_extension: ""
+    };
+
+    processor.watch().subscribe({
+      next: received => {
+        expect(received).toEqual({
+          _id: received._id,
+          created_at: change.created_at,
+          module: change.module,
+          sub_module: change.sub_module,
+          origin: ChangeOrigin.DOCUMENT,
+          type: ChangeType.CREATE,
+          resource_content: change.resource_content,
+          resource_id: change.resource_id,
+          resource_slug: change.resource_slug,
+          resource_extension: change.resource_extension,
+          synced_before: 1
+        });
+      }
+    });
+    await processor.push(change);
+    await processor.push(sameChange);
   });
 });

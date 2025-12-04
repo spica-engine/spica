@@ -59,13 +59,13 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
         changeLog.origin === ChangeOrigin.DOCUMENT
           ? ChangeOrigin.REPRESENTATIVE
           : ChangeOrigin.DOCUMENT,
-      synced_before: {$ne: true}
+      synced_before: {$lt: 2}
     };
 
     const update = {
       $setOnInsert: changeLog,
-      $set: {
-        synced_before: true
+      $inc: {
+        synced_before: 1
       }
     };
 
@@ -79,7 +79,6 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
 
     // If document existed, we can detect it
     if (!result) {
-      console.warn("Infinite change log detected:", result);
       return;
     }
 
