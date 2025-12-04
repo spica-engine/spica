@@ -9,7 +9,8 @@ export type BucketPropertyType =
   | "boolean"
   | "array"
   | "multiselect"
-  | "object";
+  | "object"
+  | "color";
 
 export interface BucketProperty {
   type: BucketPropertyType;
