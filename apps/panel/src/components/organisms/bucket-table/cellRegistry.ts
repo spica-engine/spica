@@ -10,6 +10,8 @@ import {
   DefaultCellKeyboardHandler,
   MultipleSelectionCell,
   MultipleSelectionCellKeyboardHandler,
+  StorageCell,
+  StorageCellKeyboardHandler,
 } from "./cells";
 
 
@@ -63,6 +65,12 @@ class CellRegistry {
       component: DefaultCell,
       keyboardHandler: DefaultCellKeyboardHandler,
       defaultValue: {},
+    });
+
+    this.register("storage", {
+      component: StorageCell,
+      keyboardHandler: StorageCellKeyboardHandler,
+      defaultValue: null,
     });
   }
 
