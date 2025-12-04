@@ -93,6 +93,8 @@ describe("ChangeLogProcessor", () => {
         },
         error: err => done.fail(err)
       });
-    processor.push(insertChange, deleteChange, unrelatedChange);
+    processor.push(insertChange);
+    processor.push(deleteChange);
+    processor.push(unrelatedChange);
   });
 });

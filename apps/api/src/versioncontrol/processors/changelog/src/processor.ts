@@ -8,6 +8,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {ChangeLogAggregator} from "./interface";
 import {ChangeLogService} from "@spica-server/versioncontrol/services/changelog";
+import {ReturnDocument} from "mongodb";
 
 @Injectable()
 export class ChangeLogProcessor implements IChangeLogProcessor {
@@ -48,8 +49,41 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
 
   constructor(private readonly service: ChangeLogService) {}
 
-  push(...changeLogs: ChangeLog[]) {
-    return this.service.insertMany(changeLogs).then(() => changeLogs);
+  async push(changeLog: ChangeLog) {
+    const filter = {
+      type: changeLog.type,
+      module: changeLog.module,
+      sub_module: changeLog.sub_module,
+      resource_id: changeLog.resource_id,
+      origin:
+        changeLog.origin === ChangeOrigin.DOCUMENT
+          ? ChangeOrigin.REPRESENTATIVE
+          : ChangeOrigin.DOCUMENT,
+      synced_before: {$ne: true}
+    };
+
+    const update = {
+      $setOnInsert: changeLog,
+      $set: {
+        synced_before: true
+      }
+    };
+
+    const options = {
+      sort: {_id: -1 as const},
+      upsert: true,
+      returnDocument: ReturnDocument.AFTER
+    };
+
+    const result = await this.service.findOneAndUpdate(filter, update, options);
+
+    // If document existed, we can detect it
+    if (!result) {
+      console.warn("Infinite change log detected:", result);
+      return;
+    }
+
+    return changeLog;
   }
 
   watch(): Observable<ChangeLog> {
