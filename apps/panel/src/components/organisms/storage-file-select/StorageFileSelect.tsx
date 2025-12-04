@@ -12,6 +12,7 @@ type TypeStorageFileSelect = {
   className?: string;
   isOpen?: boolean;
   onClose?: () => void;
+  onFileSelect?: (file: Storage) => void;
 };
 
 enum SORTS {
@@ -21,7 +22,7 @@ enum SORTS {
   DATE_ASC = "date_asc"
 }
 
-const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose}) => {
+const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, onFileSelect}) => {
   const [directory, setDirectory] = useState(["/"]);
   const [fileLength, setFileLength] = useState(0);
   const [folderLength, setFolderLength] = useState(0);
@@ -257,7 +258,15 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose})
         return [...prevDirectory, folderPath];
       });
     } else {
-      console.log("Selected file:", file);
+      // Convert TypeFile back to Storage format for the callback
+      const storageFile: Storage = {
+        _id: file._id,
+        name: file.name,
+        url: file.url,
+        content: file.content
+      };
+      onFileSelect?.(storageFile);
+      handleClose();
     }
   };
 
