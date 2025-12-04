@@ -42,13 +42,17 @@ export const StorageCell: React.FC<CellRendererProps> = ({
     setIsModalOpen(true);
   }, []);
 
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    onRequestBlur();
+  }, [onRequestBlur]);
+
   const handleFileSelect = useCallback(
     (file: Storage) => {
       onChange(file._id || null);
-      setIsModalOpen(false);
-      onRequestBlur();
+      handleCloseModal();
     },
-    [onChange, onRequestBlur]
+    [onChange, handleCloseModal]
   );
 
   const handleUpload = useCallback(
@@ -72,11 +76,6 @@ export const StorageCell: React.FC<CellRendererProps> = ({
     onChange(null);
     onRequestBlur();
   }, [onChange, onRequestBlur]);
-
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false);
-    onRequestBlur();
-  }, [onRequestBlur]);
 
   return (
     <>
