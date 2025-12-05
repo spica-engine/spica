@@ -6,6 +6,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {getApplier, getSupplier} from "../../src/synchronizer/schema/index";
 import {
+  ChangeInitiator,
   ChangeLog,
   ChangeOrigin,
   ChangeType,
@@ -86,7 +87,8 @@ describe("Bucket Synchronizer", () => {
         resource_slug: "Test Bucket",
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockBucket),
-        created_at: expect.any(Date)
+        created_at: expect.any(Date),
+        initiator: ChangeInitiator.INTERNAL
       });
     });
 
@@ -119,7 +121,8 @@ describe("Bucket Synchronizer", () => {
           resource_slug: "Test Bucket",
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockBucket),
-          created_at: expect.any(Date)
+          created_at: expect.any(Date),
+          initiator: ChangeInitiator.EXTERNAL
         });
 
         done();
@@ -177,7 +180,8 @@ describe("Bucket Synchronizer", () => {
             resource_slug: "Updated Bucket",
             resource_extension: "yaml",
             resource_content: YAML.stringify(expectedUpdatedBucket),
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         }
@@ -217,7 +221,8 @@ describe("Bucket Synchronizer", () => {
             resource_content: YAML.stringify(bucketToDelete),
             resource_extension: "yaml",
             resource_slug: "Bucket To Delete",
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         }
@@ -274,7 +279,8 @@ describe("Bucket Synchronizer", () => {
         resource_slug: "New Bucket",
         resource_content: YAML.stringify(mockBucket),
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -345,7 +351,8 @@ describe("Bucket Synchronizer", () => {
         resource_slug: "Updated Bucket",
         resource_content: YAML.stringify(updatedBucket),
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -401,7 +408,8 @@ describe("Bucket Synchronizer", () => {
         resource_slug: null,
         resource_content: "",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -424,7 +432,8 @@ describe("Bucket Synchronizer", () => {
         resource_slug: null,
         resource_content: "",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -445,7 +454,8 @@ describe("Bucket Synchronizer", () => {
         resource_slug: "Test",
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await bucketApplier.apply(changeLog);

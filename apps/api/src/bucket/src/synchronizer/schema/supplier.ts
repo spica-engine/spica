@@ -5,7 +5,8 @@ import {
   ChangeLog,
   ChangeType,
   ChangeOrigin,
-  DocumentChangeSupplier
+  DocumentChangeSupplier,
+  ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {Bucket} from "@spica-server/interface/bucket";
 
@@ -13,7 +14,11 @@ const module = "bucket";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-const getChangeLogFromBucket = (bucket: Bucket, type: ChangeType): ChangeLog => {
+const getChangeLogFromBucket = (
+  bucket: Bucket,
+  type: ChangeType,
+  initiator: ChangeInitiator
+): ChangeLog => {
   return {
     module,
     sub_module: subModule,
@@ -23,7 +28,8 @@ const getChangeLogFromBucket = (bucket: Bucket, type: ChangeType): ChangeLog => 
     resource_slug: bucket.title,
     resource_content: YAML.stringify(bucket),
     resource_extension: fileExtension,
-    created_at: new Date()
+    created_at: new Date(),
+    initiator
   };
 };
 
@@ -38,7 +44,11 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
           .toArray()
           .then(buckets => {
             buckets.forEach(bucket => {
-              const changeLog = getChangeLogFromBucket(bucket, ChangeType.CREATE);
+              const changeLog = getChangeLogFromBucket(
+                bucket,
+                ChangeType.CREATE,
+                ChangeInitiator.INTERNAL
+              );
               observer.next(changeLog);
             });
           })
@@ -76,7 +86,11 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
               return;
           }
 
-          const changeLog = getChangeLogFromBucket(documentData, changeType);
+          const changeLog = getChangeLogFromBucket(
+            documentData,
+            changeType,
+            ChangeInitiator.EXTERNAL
+          );
           observer.next(changeLog);
         });
 

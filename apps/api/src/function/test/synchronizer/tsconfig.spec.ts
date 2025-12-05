@@ -6,7 +6,12 @@ import {DatabaseService} from "@spica-server/database";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {getSupplier, getApplier} from "../../src/synchronizer/tsconfig";
 import * as CRUD from "../../src/crud";
-import {ChangeLog, ChangeOrigin, ChangeType} from "@spica-server/interface/versioncontrol";
+import {
+  ChangeInitiator,
+  ChangeLog,
+  ChangeOrigin,
+  ChangeType
+} from "@spica-server/interface/versioncontrol";
 import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
@@ -135,7 +140,8 @@ describe("Function tsconfig Synchronizer", () => {
             resource_slug: mockFunction.name,
             resource_content: changeLog.resource_content,
             resource_extension: "json",
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.INTERNAL
           });
           done();
         });
@@ -176,7 +182,8 @@ describe("Function tsconfig Synchronizer", () => {
           resource_slug: mockFunction.name,
           resource_content: changeLog.resource_content,
           resource_extension: "json",
-          created_at: expect.any(Date)
+          created_at: expect.any(Date),
+          initiator: ChangeInitiator.EXTERNAL
         });
         done();
       });
@@ -228,7 +235,8 @@ describe("Function tsconfig Synchronizer", () => {
               resource_content: null,
               resource_extension: "json",
               resource_slug: mockFunction.name,
-              created_at: expect.any(Date)
+              created_at: expect.any(Date),
+              initiator: ChangeInitiator.EXTERNAL
             });
             done();
           }
@@ -303,7 +311,8 @@ describe("Function tsconfig Synchronizer", () => {
           }
         }),
         resource_extension: "json",
-        created_at: new Date()
+        created_at: new Date(),
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await tsconfigApplier.apply(changeLog);

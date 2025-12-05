@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import {NUMBER, JSONP} from "@spica-server/core";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {SyncPipelineBuilder} from "./pipeline.builder";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {SyncService} from "@spica-server/versioncontrol/services/sync";
 import {Sync, SyncStatuses} from "@spica-server/interface/versioncontrol";
@@ -32,6 +32,7 @@ export class SyncController {
    * @query limit - Maximum number of results to return
    * @query skip - Number of results to skip
    * @query sort - Sort order (e.g., {created_at: -1})
+   * @query initiator - Filter by resource origin: "external" (default), "internal", or "all" to show all resources
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("versioncontrol:show", "versioncontrol"))
@@ -41,7 +42,7 @@ export class SyncController {
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
   ): Promise<Sync[]> {
-    const builder = new PipelineBuilder();
+    const builder = new SyncPipelineBuilder();
 
     await builder.filterByUserRequest(filter);
     builder.sort(sort).skip(skip).limit(limit);

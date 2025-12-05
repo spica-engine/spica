@@ -3,6 +3,7 @@ import {EnvVarService} from "@spica-server/env_var/services";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {getSupplier, getApplier} from "../../src/synchronizer/schema";
 import {
+  ChangeInitiator,
   ChangeLog,
   ChangeOrigin,
   ChangeType,
@@ -44,7 +45,7 @@ describe("EnvVar Synchronizer", () => {
       });
     });
 
-    it("should emit ChangeLog on env_var insert", async () => {
+    it("should emit ChangeLog on env_var first sync", async () => {
       const mockEnvVar: EnvVar = {
         _id: new ObjectId(),
         key: "TEST_API_KEY",
@@ -64,7 +65,8 @@ describe("EnvVar Synchronizer", () => {
         resource_slug: "TEST_API_KEY",
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockEnvVar),
-        created_at: expect.any(Date)
+        created_at: expect.any(Date),
+        initiator: ChangeInitiator.INTERNAL
       });
     });
 
@@ -87,7 +89,8 @@ describe("EnvVar Synchronizer", () => {
           resource_slug: "TEST_API_KEY",
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockEnvVar),
-          created_at: expect.any(Date)
+          created_at: expect.any(Date),
+          initiator: ChangeInitiator.EXTERNAL
         });
 
         done();
@@ -123,7 +126,8 @@ describe("EnvVar Synchronizer", () => {
             resource_slug: "DATABASE_URL",
             resource_extension: "yaml",
             resource_content: YAML.stringify(updatedEnvVar),
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         }
@@ -156,7 +160,8 @@ describe("EnvVar Synchronizer", () => {
             resource_content: YAML.stringify(envVarToDelete),
             resource_extension: "yaml",
             resource_slug: "TEMP_SECRET",
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         }
@@ -204,7 +209,8 @@ describe("EnvVar Synchronizer", () => {
         resource_slug: "NEW_API_KEY",
         resource_content: YAML.stringify(mockEnvVar),
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -246,7 +252,8 @@ describe("EnvVar Synchronizer", () => {
         resource_slug: "OLD_SECRET",
         resource_content: YAML.stringify(updatedEnvVar),
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -282,7 +289,8 @@ describe("EnvVar Synchronizer", () => {
         resource_slug: null,
         resource_content: "",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -305,7 +313,8 @@ describe("EnvVar Synchronizer", () => {
         resource_slug: null,
         resource_content: "",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -326,7 +335,8 @@ describe("EnvVar Synchronizer", () => {
         resource_slug: "TEST",
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await envVarApplier.apply(changeLog);

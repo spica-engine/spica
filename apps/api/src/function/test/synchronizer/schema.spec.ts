@@ -7,6 +7,7 @@ import {EnvVarService} from "@spica-server/env_var/services";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {getApplier, getSupplier} from "../../src/synchronizer/schema";
 import {
+  ChangeInitiator,
   ChangeLog,
   ChangeOrigin,
   ChangeType,
@@ -124,7 +125,8 @@ describe("Function Synchronizer", () => {
         resource_slug: "test_function",
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockFunction),
-        created_at: expect.any(Date)
+        created_at: expect.any(Date),
+        initiator: ChangeInitiator.INTERNAL
       });
     });
 
@@ -160,7 +162,8 @@ describe("Function Synchronizer", () => {
           resource_slug: "test_function",
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockFunction),
-          created_at: expect.any(Date)
+          created_at: expect.any(Date),
+          initiator: ChangeInitiator.EXTERNAL
         });
 
         done();
@@ -223,7 +226,8 @@ describe("Function Synchronizer", () => {
             resource_slug: "updated_function",
             resource_extension: "yaml",
             resource_content: YAML.stringify(expectedUpdatedFunction),
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         }
@@ -270,7 +274,8 @@ describe("Function Synchronizer", () => {
             resource_slug: "function_to_delete",
             resource_extension: "yaml",
             resource_content: YAML.stringify(functionToDelete),
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         }
@@ -331,7 +336,8 @@ describe("Function Synchronizer", () => {
         resource_slug: "new_function",
         resource_content: YAML.stringify(mockFunction),
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -420,7 +426,8 @@ describe("Function Synchronizer", () => {
         resource_slug: "updated_function",
         resource_content: YAML.stringify(updatedFunction),
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -431,6 +438,7 @@ describe("Function Synchronizer", () => {
 
       const fn = await fs.findOne({_id});
       expect(fn).toEqual({
+        _id,
         name: "updated_function",
         description: "Updated description",
         triggers: {
@@ -451,7 +459,9 @@ describe("Function Synchronizer", () => {
             }
           }
         },
-        timeout: 120
+        timeout: 120,
+        language: "javascript",
+        env_vars: []
       });
     });
 
@@ -487,7 +497,8 @@ describe("Function Synchronizer", () => {
         resource_slug: null,
         resource_content: "",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -510,7 +521,8 @@ describe("Function Synchronizer", () => {
         resource_slug: null,
         resource_content: "",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -531,7 +543,8 @@ describe("Function Synchronizer", () => {
         resource_slug: "test_function",
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await funcApplier.apply(changeLog);

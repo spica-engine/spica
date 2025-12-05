@@ -1,6 +1,11 @@
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {ChangeLog, ChangeOrigin, ChangeType} from "@spica-server/interface/versioncontrol";
+import {
+  ChangeInitiator,
+  ChangeLog,
+  ChangeOrigin,
+  ChangeType
+} from "@spica-server/interface/versioncontrol";
 import {
   ChangeLogProcessor,
   ChangeLogProcessorsModule
@@ -27,7 +32,8 @@ describe("ChangeLogProcessor", () => {
       resource_content: "",
       resource_id: "id",
       resource_slug: "slug",
-      resource_extension: ""
+      resource_extension: "",
+      initiator: ChangeInitiator.EXTERNAL
     };
     processor.watch().subscribe({
       next: received => {
@@ -49,7 +55,8 @@ describe("ChangeLogProcessor", () => {
       resource_content: "",
       resource_id: "id",
       resource_slug: "slug2",
-      resource_extension: ""
+      resource_extension: "",
+      initiator: ChangeInitiator.EXTERNAL
     };
 
     const deleteChange: ChangeLog = {
@@ -61,7 +68,8 @@ describe("ChangeLogProcessor", () => {
       resource_content: "",
       resource_id: "id",
       resource_slug: "slug",
-      resource_extension: ""
+      resource_extension: "",
+      initiator: ChangeInitiator.EXTERNAL
     };
 
     const unrelatedChange: ChangeLog = {
@@ -73,7 +81,8 @@ describe("ChangeLogProcessor", () => {
       resource_content: "",
       resource_id: "id",
       resource_slug: "slug",
-      resource_extension: ""
+      resource_extension: "",
+      initiator: ChangeInitiator.EXTERNAL
     };
 
     processor

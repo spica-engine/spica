@@ -2,6 +2,7 @@ import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {
   ApprovedSync,
+  ChangeInitiator,
   ChangeOrigin,
   ChangeType,
   PendingSync,
@@ -23,7 +24,8 @@ function getMockSync(status: SyncStatuses = SyncStatuses.PENDING): Sync {
       resource_content: "",
       resource_id: "id",
       resource_slug: "slug",
-      resource_extension: ""
+      resource_extension: "",
+      initiator: ChangeInitiator.EXTERNAL
     },
     created_at: new Date(),
     status: status,

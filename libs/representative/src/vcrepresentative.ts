@@ -11,7 +11,20 @@ import {ChangeType} from "@spica-server/interface/versioncontrol";
 
 @Injectable()
 export class VCRepresentativeManager implements IRepresentativeManager {
-  constructor(protected cwd: string) {}
+  constructor(protected cwd: string) {
+    try {
+      const entries = fs.readdirSync(this.cwd);
+      for (const entry of entries) {
+        if (entry.startsWith(".")) continue;
+        fs.rmSync(path.join(this.cwd, entry), {
+          recursive: true,
+          force: true
+        });
+      }
+    } catch (error) {
+      console.error("Error emptying representative directory:", error);
+    }
+  }
 
   getModuleDir(module: string) {
     return path.join(this.cwd, module);

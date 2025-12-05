@@ -7,6 +7,7 @@ import {EnvVarService} from "@spica-server/env_var/services";
 import {getSupplier, getApplier} from "../../src/synchronizer/dependency";
 import * as CRUD from "../../src/crud";
 import {
+  ChangeInitiator,
   ChangeLog,
   ChangeOrigin,
   ChangeType,
@@ -126,7 +127,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_extension: "json",
             resource_content: changeLog.resource_content,
             resource_slug: mockFunction.name,
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.INTERNAL
           });
           done();
         });
@@ -174,7 +176,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_extension: "json",
             resource_content: changeLog.resource_content,
             resource_slug: mockFunction.name,
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         });
@@ -222,7 +225,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_slug: mockFunction.name,
             resource_extension: "json",
             resource_content: null,
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         });
@@ -288,7 +292,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_slug: mockFunction.name,
         resource_content: packageContent,
         created_at: new Date(),
-        resource_extension: "json"
+        resource_extension: "json",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -344,7 +349,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_slug: mockFunction.name,
         resource_content: updatedPackage,
         created_at: new Date(),
-        resource_extension: "json"
+        resource_extension: "json",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -394,7 +400,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_slug: mockFunction.name,
         resource_content: null,
         created_at: new Date(),
-        resource_extension: "json"
+        resource_extension: "json",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -425,7 +432,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_slug: "test",
         resource_content: "some content",
         created_at: new Date(),
-        resource_extension: "json"
+        resource_extension: "json",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -446,7 +454,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_slug: "nonexistent_function",
         resource_content: JSON.stringify({name: "test", version: "1.0.0"}),
         created_at: new Date(),
-        resource_extension: "json"
+        resource_extension: "json",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -467,7 +476,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_slug: "test_function",
         resource_content: JSON.stringify({name: "test", version: "1.0.0"}),
         created_at: new Date(),
-        resource_extension: "json"
+        resource_extension: "json",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await dependencyApplier.apply(changeLog);

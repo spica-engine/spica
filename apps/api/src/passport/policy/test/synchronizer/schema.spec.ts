@@ -3,6 +3,7 @@ import {PolicyService} from "@spica-server/passport/policy";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 
 import {
+  ChangeInitiator,
   ChangeLog,
   ChangeOrigin,
   ChangeType,
@@ -74,7 +75,8 @@ describe("Policy Synchronizer", () => {
         resource_slug: "Test Policy",
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockPolicy),
-        created_at: expect.any(Date)
+        created_at: expect.any(Date),
+        initiator: ChangeInitiator.INTERNAL
       });
     });
 
@@ -107,7 +109,8 @@ describe("Policy Synchronizer", () => {
           resource_slug: "Test Policy",
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockPolicy),
-          created_at: expect.any(Date)
+          created_at: expect.any(Date),
+          initiator: ChangeInitiator.EXTERNAL
         });
 
         done();
@@ -170,10 +173,10 @@ describe("Policy Synchronizer", () => {
             origin: ChangeOrigin.DOCUMENT,
             resource_id: policyId.toString(),
             resource_extension: "yaml",
-
             resource_slug: "Updated Policy",
             resource_content: YAML.stringify(expectedUpdatedPolicy),
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         }
@@ -216,7 +219,8 @@ describe("Policy Synchronizer", () => {
             resource_slug: "Policy To Delete",
             resource_extension: "yaml",
             resource_content: YAML.stringify(policyToDelete),
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         }
@@ -274,7 +278,8 @@ describe("Policy Synchronizer", () => {
         resource_slug: "New Policy",
         resource_content: YAML.stringify(mockPolicy),
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -353,7 +358,8 @@ describe("Policy Synchronizer", () => {
         resource_slug: "Updated Policy",
         resource_content: YAML.stringify(updatedPolicy),
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -416,7 +422,8 @@ describe("Policy Synchronizer", () => {
         resource_slug: null,
         resource_content: "",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -439,7 +446,8 @@ describe("Policy Synchronizer", () => {
         resource_slug: null,
         resource_content: "",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -460,7 +468,8 @@ describe("Policy Synchronizer", () => {
         resource_slug: "Test",
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
-        resource_extension: "yaml"
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await policyApplier.apply(changeLog);

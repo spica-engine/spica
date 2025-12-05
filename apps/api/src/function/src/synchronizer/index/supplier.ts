@@ -5,7 +5,8 @@ import {
   ChangeLog,
   ChangeSupplier,
   ChangeType,
-  ChangeOrigin
+  ChangeOrigin,
+  ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../../../src/crud";
 import {Function} from "@spica-server/interface/function";
@@ -14,7 +15,12 @@ const module = "function";
 const subModule = "index";
 const fileExtension = "js";
 
-const getChangeLogForIndex = (type: ChangeType, fn: Function, content: string): ChangeLog => {
+const getChangeLogForIndex = (
+  type: ChangeType,
+  fn: Function,
+  content: string,
+  initiator: ChangeInitiator
+): ChangeLog => {
   return {
     module,
     sub_module: subModule,
@@ -24,7 +30,8 @@ const getChangeLogForIndex = (type: ChangeType, fn: Function, content: string): 
     resource_slug: fn.name,
     resource_content: content,
     resource_extension: fileExtension,
-    created_at: new Date()
+    created_at: new Date(),
+    initiator
   };
 };
 
@@ -38,7 +45,12 @@ export const getSupplier = (engine: FunctionEngine, fs: FunctionService): Change
           try {
             functions.map(async fn => {
               const content = await engine.read(fn, "index");
-              const changelog = getChangeLogForIndex(ChangeType.CREATE, fn, content);
+              const changelog = getChangeLogForIndex(
+                ChangeType.CREATE,
+                fn,
+                content,
+                ChangeInitiator.INTERNAL
+              );
               observer.next(changelog);
             });
           } catch (error) {
@@ -61,7 +73,12 @@ export const getSupplier = (engine: FunctionEngine, fs: FunctionService): Change
               return;
             }
 
-            const changeLog = getChangeLogForIndex(type, change.fn, change.fn.content);
+            const changeLog = getChangeLogForIndex(
+              type,
+              change.fn,
+              change.fn.content,
+              ChangeInitiator.EXTERNAL
+            );
             observer.next(changeLog);
           },
           error: error => {
