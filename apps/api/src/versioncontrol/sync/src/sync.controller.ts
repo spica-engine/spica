@@ -40,15 +40,11 @@ export class SyncController {
     @Query("filter", JSONP) filter?: object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
-    @Query("sort", JSONP) sort?: object,
-    @Query("initiator") initiator?: "external" | "internal" | "all"
+    @Query("sort", JSONP) sort?: object
   ): Promise<Sync[]> {
-    if (initiator !== undefined && !["external", "internal", "all"].includes(initiator)) {
-      throw new BadRequestException('initiator must be "external", "internal", or "all"');
-    }
     const builder = new SyncPipelineBuilder();
 
-    await builder.filterByUserRequest(filter, initiator);
+    await builder.filterByUserRequest(filter);
     builder.sort(sort).skip(skip).limit(limit);
 
     const pipeline = builder.result();

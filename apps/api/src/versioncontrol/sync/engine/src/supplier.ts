@@ -1,5 +1,6 @@
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {
+  ChangeInitiator,
   ChangeOrigin,
   DocumentChangeApplier,
   RepresentativeChangeSupplier
@@ -35,7 +36,8 @@ export const getSupplier = (
             resource_slug: slug,
             resource_id: _id,
             resource_extension: extension,
-            type
+            type,
+            initiator: ChangeInitiator.EXTERNAL
           };
         })
       );

@@ -13,8 +13,8 @@ export enum ChangeOrigin {
 }
 
 export enum ChangeInitiator {
-  INTERNAL,
-  EXTERNAL
+  INTERNAL = -1,
+  EXTERNAL = 1
 }
 
 export interface ChangeLog {

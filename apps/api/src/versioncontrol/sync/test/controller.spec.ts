@@ -541,7 +541,7 @@ describe("Sync Controller", () => {
       });
     });
 
-    it("should filter by initiator (external, internal, all)", async () => {
+    it("should filter by change log initiator", async () => {
       const now = new Date();
       const externalSync: Partial<Sync> = {
         change_log: {
@@ -561,6 +561,7 @@ describe("Sync Controller", () => {
         updated_at: new Date(now.getTime() - 2000)
       };
 
+      const internalSyncCreatedAt = new Date(now.getTime() - 1000);
       const internalSync: Partial<Sync> = {
         change_log: {
           module: "function",
@@ -572,11 +573,11 @@ describe("Sync Controller", () => {
           resource_content: "internal-content",
           resource_extension: ".yaml",
           initiator: ChangeInitiator.INTERNAL,
-          created_at: new Date(now.getTime() - 1000)
+          created_at: internalSyncCreatedAt
         },
         status: SyncStatuses.PENDING,
-        created_at: new Date(now.getTime() - 1000),
-        updated_at: new Date(now.getTime() - 1000)
+        created_at: internalSyncCreatedAt,
+        updated_at: internalSyncCreatedAt
       };
 
       await syncService.insertMany([externalSync, internalSync] as Sync[]);
@@ -606,7 +607,9 @@ describe("Sync Controller", () => {
 
       const {statusCode: internalStatus, body: internalBody} = await req.get(
         "/versioncontrol/sync",
-        {initiator: "internal"}
+        {
+          filter: JSON.stringify({"change_log.initiator": ChangeInitiator.INTERNAL})
+        }
       );
 
       expect(internalStatus).toBe(200);
@@ -631,7 +634,12 @@ describe("Sync Controller", () => {
       });
 
       const {statusCode: allStatus, body: allBody} = await req.get("/versioncontrol/sync", {
-        initiator: "all"
+        filter: JSON.stringify({
+          "change_log.initiator": {$in: [ChangeInitiator.EXTERNAL, ChangeInitiator.INTERNAL]}
+        }),
+        sort: JSON.stringify({
+          created_at: 1
+        })
       });
 
       expect(allStatus).toBe(200);
