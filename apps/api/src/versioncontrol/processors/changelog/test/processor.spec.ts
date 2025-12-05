@@ -17,6 +17,10 @@ describe("ChangeLogProcessor", () => {
     processor = module.get(ChangeLogProcessor);
   });
 
+  afterEach(async () => {
+    await processor["service"]._coll.drop();
+  });
+
   it("should watch changes", done => {
     const change: ChangeLog = {
       created_at: new Date(),
@@ -41,8 +45,7 @@ describe("ChangeLogProcessor", () => {
           resource_content: change.resource_content,
           resource_id: change.resource_id,
           resource_slug: change.resource_slug,
-          resource_extension: change.resource_extension,
-          synced_before: 1
+          resource_extension: change.resource_extension
         });
         done();
       },
@@ -105,8 +108,7 @@ describe("ChangeLogProcessor", () => {
             resource_id: insertChange.resource_id,
             resource_slug: insertChange.resource_slug,
             resource_extension: insertChange.resource_extension,
-            type: ChangeType.UPDATE,
-            synced_before: 1
+            type: ChangeType.UPDATE
           });
 
           // Second change: unrelatedChange stays as is
@@ -120,8 +122,7 @@ describe("ChangeLogProcessor", () => {
             resource_id: unrelatedChange.resource_id,
             resource_slug: unrelatedChange.resource_slug,
             resource_extension: unrelatedChange.resource_extension,
-            type: unrelatedChange.type,
-            synced_before: 1
+            type: unrelatedChange.type
           });
           done();
         },
@@ -157,24 +158,23 @@ describe("ChangeLogProcessor", () => {
       resource_extension: ""
     };
 
-    processor.watch().subscribe({
-      next: received => {
-        expect(received).toEqual({
-          _id: received._id,
-          created_at: change.created_at,
-          module: change.module,
-          sub_module: change.sub_module,
-          origin: ChangeOrigin.DOCUMENT,
-          type: ChangeType.CREATE,
-          resource_content: change.resource_content,
-          resource_id: change.resource_id,
-          resource_slug: change.resource_slug,
-          resource_extension: change.resource_extension,
-          synced_before: 1
-        });
-      }
-    });
     await processor.push(change);
     await processor.push(sameChange);
+
+    const changes = await processor["service"]._coll.find().toArray();
+    expect(changes.length).toBe(1);
+    expect(changes[0]).toEqual({
+      _id: changes[0]._id,
+      created_at: change.created_at,
+      module: change.module,
+      sub_module: change.sub_module,
+      origin: ChangeOrigin.DOCUMENT,
+      type: ChangeType.CREATE,
+      resource_content: change.resource_content,
+      resource_id: change.resource_id,
+      resource_slug: change.resource_slug,
+      resource_extension: change.resource_extension,
+      cycle_count: 1
+    });
   });
 });

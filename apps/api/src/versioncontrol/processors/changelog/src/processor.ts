@@ -59,13 +59,13 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
         changeLog.origin === ChangeOrigin.DOCUMENT
           ? ChangeOrigin.REPRESENTATIVE
           : ChangeOrigin.DOCUMENT,
-      synced_before: {$lt: 2}
+      cycle_count: {$lt: 1}
     };
 
     const update = {
       $setOnInsert: changeLog,
       $inc: {
-        synced_before: 1
+        cycle_count: 0.5
       }
     };
 
@@ -90,7 +90,11 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
       .watch([{$match: {operationType: "insert"}}], {fullDocument: "updateLookup"})
       .pipe(
         // fix here
-        map(change => change["fullDocument"] as ChangeLog),
+        map(change => {
+          const doc = change["fullDocument"] as any;
+          delete doc.cycle_count;
+          return doc as ChangeLog;
+        }),
         // might be reduced
         // test whether it works for replicas
         bufferTime(2000),
