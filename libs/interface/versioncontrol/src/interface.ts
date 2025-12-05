@@ -64,7 +64,7 @@ export interface DocumentChangeApplier extends ChangeApplier {
 export interface RepresentativeChangeApplier extends ChangeApplier {}
 
 export interface IChangeLogProcessor {
-  push(...changeLogs: ChangeLog[]): Promise<ChangeLog[]>;
+  push(changeLog: ChangeLog): Promise<ChangeLog | undefined>;
   watch(): Observable<ChangeLog>;
 }
 
