@@ -41,15 +41,19 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   const isReadonly = property.options?.readonly === true;
 
   const handleClick = useCallback(() => {
-    if (!isReadonly && isFocused) {
+    if (!isReadonly) {
       setIsEditMode(true);
     }
-  }, [isFocused, isReadonly]);
+  }, [isReadonly]);
 
   useEffect(() => {
     if (!isFocused || isReadonly) {
       setIsEditMode(false);
       return;
+    }
+
+    if (cellConfig.autoEnterEditMode) {
+      setIsEditMode(true);
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -74,7 +78,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     return () => {
       globalThis.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isFocused, isReadonly, value, property, propertyKey, rowId, keyboardHandler, handleValueChange, handleRequestBlur]);
+  }, [isFocused, isReadonly, value, property, propertyKey, rowId, keyboardHandler, handleValueChange, handleRequestBlur, cellConfig]);
 
   return (
     <div 
