@@ -175,6 +175,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  createSchema(fn: Function) {
+    const functionRoot = this.getFunctionRoot(fn);
+    return fs.promises.mkdir(functionRoot, {recursive: true});
+  }
+
+  createDependency(fn: Function, packageJson) {
+    const functionRoot = this.getFunctionRoot(fn);
+    return fs.promises.writeFile(
+      path.join(functionRoot, "package.json"),
+      JSON.stringify(packageJson, null, 2)
+    );
+  }
+
   deleteFunction(fn: Function) {
     const functionRoot = this.getFunctionRoot(fn);
     const buildDir = path.join(this.options.root, this.options.outDir, fn.name);

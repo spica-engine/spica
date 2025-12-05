@@ -40,25 +40,25 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
+        const fn = await CRUD.findOne(fs, new ObjectId(change.resource_id), {});
+        const packageJson = JSON.parse(change.resource_content);
 
         switch (operationType) {
           case ChangeType.CREATE:
+            await CRUD.dependencies.create(fs, engine, fn._id, packageJson);
+            return {status: SyncStatuses.SUCCEEDED};
+
           case ChangeType.UPDATE:
-            const func = await CRUD.findOne(fs, new ObjectId(change.resource_id), {});
-            const packageJson = JSON.parse(change.resource_content);
             const fnWithDeps = {
-              ...func,
+              ...fn,
               dependencies: packageJson.dependencies || {}
             };
             await CRUD.dependencies.update(engine, fnWithDeps);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:
-            const fn = await CRUD.findOne(fs, new ObjectId(change.resource_id), {});
-            await engine.deleteDependency(fn);
-            return {
-              status: SyncStatuses.SUCCEEDED
-            };
+            await CRUD.dependencies.remove(fs, engine, fn._id);
+            return {status: SyncStatuses.SUCCEEDED};
 
           default:
             console.warn("Unknown operation type:", operationType);
