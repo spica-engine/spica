@@ -14,6 +14,8 @@ import {
   StorageCellKeyboardHandler,
   TextareaCell,
   TextareaCellKeyboardHandler,
+  BooleanCell,
+  BooleanCellKeyboardHandler
 } from "./cells";
 
 
@@ -55,6 +57,12 @@ class CellRegistry {
       component: MultipleSelectionCell,
       keyboardHandler: MultipleSelectionCellKeyboardHandler,
       defaultValue: [],
+    });
+    this.register("boolean", {
+      component: BooleanCell,
+      keyboardHandler: BooleanCellKeyboardHandler,
+      defaultValue: null,
+      autoEnterEditMode: true,
     });
 
     this.register("array", {
