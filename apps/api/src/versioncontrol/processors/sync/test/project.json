@@ -1,0 +1,5 @@
+{
+  "name": "api/versioncontrol/processors/sync/test",
+  "sourceRoot": "api/versioncontrol/processors/sync/test",
+  "projectType": "application"
+}
