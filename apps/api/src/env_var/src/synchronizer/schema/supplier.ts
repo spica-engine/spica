@@ -5,7 +5,8 @@ import {
   ChangeLog,
   ChangeType,
   ChangeOrigin,
-  DocumentChangeSupplier
+  DocumentChangeSupplier,
+  ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {EnvVar} from "@spica-server/interface/env_var";
 
@@ -13,7 +14,11 @@ const module = "env-var";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-const getChangeLogForSchema = (envVar: EnvVar, type: ChangeType): ChangeLog => {
+const getChangeLogForSchema = (
+  envVar: EnvVar,
+  type: ChangeType,
+  initiator: ChangeInitiator
+): ChangeLog => {
   return {
     module,
     sub_module: subModule,
@@ -23,7 +28,8 @@ const getChangeLogForSchema = (envVar: EnvVar, type: ChangeType): ChangeLog => {
     resource_slug: envVar.key,
     resource_content: YAML.stringify(envVar),
     resource_extension: fileExtension,
-    created_at: new Date()
+    created_at: new Date(),
+    initiator
   };
 };
 
@@ -38,7 +44,11 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
           .toArray()
           .then(envVars => {
             envVars.forEach(envVar => {
-              const changeLog = getChangeLogForSchema(envVar, ChangeType.CREATE);
+              const changeLog = getChangeLogForSchema(
+                envVar,
+                ChangeType.CREATE,
+                ChangeInitiator.INTERNAL
+              );
               observer.next(changeLog);
             });
           })
@@ -74,7 +84,11 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
               console.warn("Unknown operation type:", change.operationType);
               return;
           }
-          const changeLog = getChangeLogForSchema(documentData, changeType);
+          const changeLog = getChangeLogForSchema(
+            documentData,
+            changeType,
+            ChangeInitiator.EXTERNAL
+          );
           observer.next(changeLog);
         });
 

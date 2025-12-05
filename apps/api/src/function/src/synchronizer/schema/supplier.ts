@@ -5,7 +5,8 @@ import {
   ChangeLog,
   ChangeType,
   ChangeOrigin,
-  DocumentChangeSupplier
+  DocumentChangeSupplier,
+  ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {Function} from "@spica-server/interface/function";
 
@@ -13,7 +14,11 @@ const module = "function";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-const getChangeForSchema = (fn: Function, type: ChangeType): ChangeLog => {
+const getChangeForSchema = (
+  fn: Function,
+  type: ChangeType,
+  initiator: ChangeInitiator
+): ChangeLog => {
   return {
     module,
     sub_module: subModule,
@@ -23,7 +28,8 @@ const getChangeForSchema = (fn: Function, type: ChangeType): ChangeLog => {
     resource_slug: fn.name,
     resource_content: YAML.stringify(fn),
     resource_extension: fileExtension,
-    created_at: new Date()
+    created_at: new Date(),
+    initiator
   };
 };
 
@@ -38,7 +44,7 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
           .toArray()
           .then(functions => {
             functions.forEach(fn => {
-              const changeLog = getChangeForSchema(fn, ChangeType.CREATE);
+              const changeLog = getChangeForSchema(fn, ChangeType.CREATE, ChangeInitiator.INTERNAL);
               observer.next(changeLog);
             });
           })
@@ -75,7 +81,7 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
               return;
           }
 
-          const changeLog = getChangeForSchema(documentData, changeType);
+          const changeLog = getChangeForSchema(documentData, changeType, ChangeInitiator.EXTERNAL);
           observer.next(changeLog);
         });
 

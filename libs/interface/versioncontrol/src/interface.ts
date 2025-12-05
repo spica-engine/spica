@@ -12,6 +12,11 @@ export enum ChangeOrigin {
   REPRESENTATIVE
 }
 
+export enum ChangeInitiator {
+  INTERNAL,
+  EXTERNAL
+}
+
 export interface ChangeLog {
   _id?: ObjectId;
   module: string;
@@ -23,6 +28,7 @@ export interface ChangeLog {
   resource_content: string;
   resource_extension: string;
   created_at: Date;
+  initiator: ChangeInitiator;
 }
 
 export interface ChangeHandler {

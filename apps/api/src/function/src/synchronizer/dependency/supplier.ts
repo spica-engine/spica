@@ -5,7 +5,8 @@ import {
   ChangeLog,
   ChangeType,
   ChangeOrigin,
-  DocumentChangeSupplier
+  DocumentChangeSupplier,
+  ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../../../src/crud";
 import {Function} from "@spica-server/interface/function";
@@ -14,7 +15,12 @@ const module = "function";
 const subModule = "package";
 const fileExtension = "json";
 
-const getChangeLogForDeps = (type: ChangeType, fn: Function, content: string): ChangeLog => {
+const getChangeLogForDeps = (
+  type: ChangeType,
+  fn: Function,
+  content: string,
+  initiator: ChangeInitiator
+): ChangeLog => {
   return {
     module,
     sub_module: subModule,
@@ -24,7 +30,8 @@ const getChangeLogForDeps = (type: ChangeType, fn: Function, content: string): C
     resource_slug: fn.name,
     resource_content: content,
     resource_extension: fileExtension,
-    created_at: new Date()
+    created_at: new Date(),
+    initiator
   };
 };
 
@@ -41,7 +48,12 @@ export const getSupplier = (
           try {
             functions.map(async fn => {
               const content = await engine.read(fn, "dependency");
-              const changelog = getChangeLogForDeps(ChangeType.CREATE, fn, content);
+              const changelog = getChangeLogForDeps(
+                ChangeType.CREATE,
+                fn,
+                content,
+                ChangeInitiator.INTERNAL
+              );
               observer.next(changelog);
             });
           } catch (error) {
@@ -64,7 +76,12 @@ export const getSupplier = (
               return;
             }
 
-            const changeLog = getChangeLogForDeps(type, change.fn, change.fn.content);
+            const changeLog = getChangeLogForDeps(
+              type,
+              change.fn,
+              change.fn.content,
+              ChangeInitiator.EXTERNAL
+            );
             observer.next(changeLog);
           },
           error: error => {

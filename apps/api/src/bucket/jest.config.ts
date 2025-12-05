@@ -11,8 +11,8 @@ export default {
   projects: [
     {
       ...commonConfig,
-      modulePathIgnorePatterns: ["<rootDir>/test/e2e.spec.ts"],
-      testMatch: ["<rootDir>/test/*.spec.ts"]
+      modulePathIgnorePatterns: ["<rootDir>/test/bucket-data/profile.spec.ts"],
+      testMatch: ["<rootDir>/test/**/*.spec.ts"]
     },
     {
       ...commonConfig,

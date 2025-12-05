@@ -5,7 +5,8 @@ import {
   ChangeLog,
   ChangeType,
   ChangeOrigin,
-  DocumentChangeSupplier
+  DocumentChangeSupplier,
+  ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {Policy} from "@spica-server/interface/passport/policy";
 
@@ -13,7 +14,11 @@ const module = "policy";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-const getChangeForSchema = (policy: Policy, changeType: ChangeType): ChangeLog => {
+const getChangeForSchema = (
+  policy: Policy,
+  changeType: ChangeType,
+  initiator: ChangeInitiator
+): ChangeLog => {
   return {
     module,
     sub_module: subModule,
@@ -23,7 +28,8 @@ const getChangeForSchema = (policy: Policy, changeType: ChangeType): ChangeLog =
     resource_slug: policy.name,
     resource_content: YAML.stringify(policy),
     resource_extension: fileExtension,
-    created_at: new Date()
+    created_at: new Date(),
+    initiator
   };
 };
 
@@ -38,7 +44,11 @@ export function getSupplier(ps: PolicyService): DocumentChangeSupplier {
           .toArray()
           .then(policies => {
             policies.forEach(policy => {
-              const changeLog = getChangeForSchema(policy, ChangeType.CREATE);
+              const changeLog = getChangeForSchema(
+                policy,
+                ChangeType.CREATE,
+                ChangeInitiator.INTERNAL
+              );
               observer.next(changeLog);
             });
           })
@@ -74,7 +84,7 @@ export function getSupplier(ps: PolicyService): DocumentChangeSupplier {
               return;
           }
 
-          const changeLog = getChangeForSchema(documentData, changeType);
+          const changeLog = getChangeForSchema(documentData, changeType, ChangeInitiator.EXTERNAL);
           observer.next(changeLog);
         });
 

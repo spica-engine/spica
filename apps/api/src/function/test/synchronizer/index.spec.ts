@@ -8,6 +8,7 @@ import * as CRUD from "../../src/crud";
 import {getSupplier, getApplier} from "../../src/synchronizer/index";
 
 import {
+  ChangeInitiator,
   ChangeLog,
   ChangeOrigin,
   ChangeType,
@@ -114,25 +115,25 @@ describe("Function Index Synchronizer", () => {
       const indexContent = `export default function(req, res) {
         res.send("Existing function");
         }`;
-      const observable = indexSupplier.listen();
-
-      observable.subscribe((changeLog: ChangeLog) => {
-        expect(changeLog).toEqual({
-          module: "function",
-          sub_module: "index",
-          type: ChangeType.CREATE,
-          origin: ChangeOrigin.DOCUMENT,
-          resource_id: mockFunction._id.toString(),
-          resource_extension: changeLog.resource_extension,
-          resource_slug: mockFunction.name,
-          resource_content: indexContent,
-          created_at: expect.any(Date)
-        });
-        done();
-      });
 
       CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         await engine.update(fn, indexContent);
+        const observable = indexSupplier.listen();
+        observable.subscribe((changeLog: ChangeLog) => {
+          expect(changeLog).toEqual({
+            module: "function",
+            sub_module: "index",
+            type: ChangeType.CREATE,
+            origin: ChangeOrigin.DOCUMENT,
+            resource_id: mockFunction._id.toString(),
+            resource_extension: changeLog.resource_extension,
+            resource_slug: mockFunction.name,
+            resource_content: indexContent,
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.INTERNAL
+          });
+          done();
+        });
       });
     });
 
@@ -182,7 +183,8 @@ describe("Function Index Synchronizer", () => {
             resource_slug: mockFunction.name,
             resource_extension: changeLog.resource_extension,
             resource_content: updatedContent,
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         });
@@ -232,7 +234,8 @@ describe("Function Index Synchronizer", () => {
             resource_extension: changeLog.resource_extension,
             resource_slug: mockFunction.name,
             resource_content: null,
-            created_at: expect.any(Date)
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
           });
           done();
         });
@@ -294,7 +297,8 @@ describe("Function Index Synchronizer", () => {
         resource_slug: mockFunction.name,
         resource_content: indexContent,
         created_at: new Date(),
-        resource_extension: "js"
+        resource_extension: "js",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -348,7 +352,8 @@ describe("Function Index Synchronizer", () => {
         resource_slug: mockFunction.name,
         resource_content: updatedIndex,
         created_at: new Date(),
-        resource_extension: "js"
+        resource_extension: "js",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -399,7 +404,8 @@ describe("Function Index Synchronizer", () => {
         resource_slug: mockFunction.name,
         resource_content: null,
         created_at: new Date(),
-        resource_extension: "js"
+        resource_extension: "js",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -430,7 +436,8 @@ describe("Function Index Synchronizer", () => {
         resource_slug: "test",
         resource_content: "some content",
         created_at: new Date(),
-        resource_extension: "js"
+        resource_extension: "js",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -451,7 +458,8 @@ describe("Function Index Synchronizer", () => {
         resource_slug: "nonexistent_function",
         resource_content: "export default function() {}",
         created_at: new Date(),
-        resource_extension: "js"
+        resource_extension: "js",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -472,7 +480,8 @@ describe("Function Index Synchronizer", () => {
         resource_slug: "test_function",
         resource_content: "export default function() {}",
         created_at: new Date(),
-        resource_extension: "js"
+        resource_extension: "js",
+        initiator: ChangeInitiator.EXTERNAL
       };
 
       const result = await indexApplier.apply(changeLog);
