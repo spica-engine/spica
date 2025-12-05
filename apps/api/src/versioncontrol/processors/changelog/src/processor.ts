@@ -8,7 +8,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {ChangeLogAggregator} from "./interface";
 import {ChangeLogService} from "@spica-server/versioncontrol/services/changelog";
-import {ReturnDocument} from "mongodb";
+import {ReturnDocument} from "@spica-server/database";
 
 @Injectable()
 export class ChangeLogProcessor implements IChangeLogProcessor {
@@ -75,14 +75,19 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
       returnDocument: ReturnDocument.AFTER
     };
 
-    const result = await this.service.findOneAndUpdate(filter, update, options);
+    let result: any;
 
-    // If document existed, we can detect it
-    if (!result) {
+    try {
+      result = await this.service.findOneAndUpdate(filter, update, options);
+    } catch (error) {
+      console.error("Error pushing change log:", error);
+    }
+
+    if (result.cycle_count >= 1) {
       return;
     }
 
-    return changeLog;
+    return result;
   }
 
   watch(): Observable<ChangeLog> {
