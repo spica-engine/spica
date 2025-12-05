@@ -22,8 +22,7 @@ jobs:
 
       - name: Lint Helm Charts
         run: |
-          cd charts/spica
-          helm lint \
+          helm lint charts/spica \
             --set application.secret=lint-secret \
             --set application.bucketDataHashSecret=lint-hash-secret \
             --set application.publicHost=lint.example.com

@@ -185,7 +185,13 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       throw new NotFoundException(`Storage object could not be found`);
     }
 
-    await this.service.delete(result.name);
+    const folderName = result.name;
+
+    const escapedName = this.escapeRegex(folderName);
+
+    await this._coll.deleteMany({
+      name: {$regex: new RegExp(`^${escapedName}`)}
+    });
   }
 
   async updateMeta(_id: ObjectId, name: string) {
