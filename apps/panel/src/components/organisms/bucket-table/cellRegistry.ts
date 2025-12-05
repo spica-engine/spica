@@ -12,6 +12,8 @@ import {
   MultipleSelectionCellKeyboardHandler,
   StorageCell,
   StorageCellKeyboardHandler,
+  TextareaCell,
+  TextareaCellKeyboardHandler,
 } from "./cells";
 
 
@@ -71,6 +73,12 @@ class CellRegistry {
       component: StorageCell,
       keyboardHandler: StorageCellKeyboardHandler,
       defaultValue: null,
+    });
+
+    this.register("textarea", {
+      component: TextareaCell,
+      keyboardHandler: TextareaCellKeyboardHandler,
+      defaultValue: "",
     });
   }
 
