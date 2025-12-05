@@ -134,7 +134,7 @@ describe("ChangeLogProcessor", () => {
   });
 
   it("should handle infinite sync", async () => {
-    const change: ChangeLog = {
+    const first: ChangeLog = {
       created_at: new Date(),
       module: "test",
       sub_module: "subTest",
@@ -146,7 +146,7 @@ describe("ChangeLogProcessor", () => {
       resource_extension: ""
     };
 
-    const sameChange: ChangeLog = {
+    const second: ChangeLog = {
       created_at: new Date(),
       module: "test",
       sub_module: "subTest",
@@ -158,23 +158,50 @@ describe("ChangeLogProcessor", () => {
       resource_extension: ""
     };
 
-    await processor.push(change);
-    await processor.push(sameChange);
+    const third: ChangeLog = {
+      created_at: new Date(),
+      module: "test",
+      sub_module: "subTest",
+      origin: ChangeOrigin.REPRESENTATIVE,
+      type: ChangeType.CREATE,
+      resource_content: "different content",
+      resource_id: "123",
+      resource_slug: "slug",
+      resource_extension: ""
+    };
+
+    await processor.push(first);
+    await processor.push(second);
+    await processor.push(third);
 
     const changes = await processor["service"]._coll.find().toArray();
-    expect(changes.length).toBe(1);
+    expect(changes.length).toBe(2);
     expect(changes[0]).toEqual({
       _id: changes[0]._id,
-      created_at: change.created_at,
-      module: change.module,
-      sub_module: change.sub_module,
+      created_at: first.created_at,
+      module: first.module,
+      sub_module: first.sub_module,
       origin: ChangeOrigin.DOCUMENT,
       type: ChangeType.CREATE,
-      resource_content: change.resource_content,
-      resource_id: change.resource_id,
-      resource_slug: change.resource_slug,
-      resource_extension: change.resource_extension,
+      resource_content: first.resource_content,
+      resource_id: first.resource_id,
+      resource_slug: first.resource_slug,
+      resource_extension: first.resource_extension,
       cycle_count: 1
+    });
+
+    expect(changes[1]).toEqual({
+      _id: changes[1]._id,
+      created_at: third.created_at,
+      module: third.module,
+      sub_module: third.sub_module,
+      origin: ChangeOrigin.REPRESENTATIVE,
+      type: ChangeType.CREATE,
+      resource_content: third.resource_content,
+      resource_id: third.resource_id,
+      resource_slug: third.resource_slug,
+      resource_extension: third.resource_extension,
+      cycle_count: 0.5
     });
   });
 });

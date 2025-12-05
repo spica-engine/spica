@@ -94,14 +94,11 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
     return this.service
       .watch([{$match: {operationType: "insert"}}], {fullDocument: "updateLookup"})
       .pipe(
-        // fix here
         map(change => {
           const doc = change["fullDocument"] as any;
           delete doc.cycle_count;
           return doc as ChangeLog;
         }),
-        // might be reduced
-        // test whether it works for replicas
         bufferTime(2000),
         filter(logs => logs.length > 0),
         map(logs => this.aggregators.reduce((acc, aggregator) => aggregator(acc), logs)),
