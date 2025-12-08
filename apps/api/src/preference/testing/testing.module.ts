@@ -17,7 +17,7 @@ class PartialPreferenceService {
     return Promise.resolve(this.defaults.get(scope));
   });
   update = jest.fn();
-  watch = jest.fn(
+  watchPreference = jest.fn(
     (
       scope: string,
       {propagateOnStart}: {propagateOnStart: boolean} = {propagateOnStart: false}
