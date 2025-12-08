@@ -91,25 +91,33 @@ describe("Identity Controller", () => {
     });
 
     it("should skip bucket1 profile entries", async () => {
-      const {body: allProfileEntries} = await req.get("/passport/identity/profile");
-      const res = await req.get("/passport/identity/profile", {skip: 1});
-      expect(res.statusCode).toEqual(200);
-      expect(res.body.length).toEqual(allProfileEntries.length - 1);
+      const [{body: allProfileEntries}, skippedRes] = await Promise.all([
+        req.get("/passport/identity/profile"),
+        req.get("/passport/identity/profile", {skip: 1})
+      ]);
+      expect(skippedRes.statusCode).toEqual(200);
+      expect(skippedRes.body.length).toEqual(allProfileEntries.length - 1);
 
       allProfileEntries.shift();
-      expect(res.body).toEqual(allProfileEntries);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(skippedRes.body).toEqual(allProfileEntries);
+      expect(skippedRes.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(
+        true
+      );
     });
 
     it("should sort bucket1 profile entries", async () => {
-      const {body: allProfileEntries} = await req.get("/passport/identity/profile");
-      const res = await req.get("/passport/identity/profile", {sort: JSON.stringify({ts: -1})});
-      expect(res.statusCode).toEqual(200);
-      expect(res.body).not.toEqual(allProfileEntries);
+      const [{body: allProfileEntries}, sortedRes] = await Promise.all([
+        req.get("/passport/identity/profile"),
+        req.get("/passport/identity/profile", {sort: JSON.stringify({ts: -1})})
+      ]);
+      expect(sortedRes.statusCode).toEqual(200);
+      expect(sortedRes.body).not.toEqual(allProfileEntries);
 
       allProfileEntries.reverse();
-      expect(res.body).toEqual(allProfileEntries);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(sortedRes.body).toEqual(allProfileEntries);
+      expect(sortedRes.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(
+        true
+      );
     });
 
     // to prevent accessing other collections profile entries
