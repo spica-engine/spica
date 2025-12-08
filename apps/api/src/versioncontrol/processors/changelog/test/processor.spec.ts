@@ -51,7 +51,8 @@ describe("ChangeLogProcessor", () => {
           resource_content: change.resource_content,
           resource_id: change.resource_id,
           resource_slug: change.resource_slug,
-          resource_extension: change.resource_extension
+          resource_extension: change.resource_extension,
+          initiator: change.initiator
         });
         done();
       },
@@ -82,7 +83,7 @@ describe("ChangeLogProcessor", () => {
       type: ChangeType.DELETE,
       resource_content: "",
       resource_id: "id",
-      resource_slug: "slug",
+      resource_slug: "slug2",
       resource_extension: "",
       initiator: ChangeInitiator.EXTERNAL
     };
@@ -117,7 +118,8 @@ describe("ChangeLogProcessor", () => {
             resource_id: insertChange.resource_id,
             resource_slug: insertChange.resource_slug,
             resource_extension: insertChange.resource_extension,
-            type: ChangeType.UPDATE
+            type: ChangeType.UPDATE,
+            initiator: insertChange.initiator
           });
 
           // Second change: unrelatedChange stays as is
@@ -131,7 +133,8 @@ describe("ChangeLogProcessor", () => {
             resource_id: unrelatedChange.resource_id,
             resource_slug: unrelatedChange.resource_slug,
             resource_extension: unrelatedChange.resource_extension,
-            type: unrelatedChange.type
+            type: unrelatedChange.type,
+            initiator: unrelatedChange.initiator
           });
           done();
         },
@@ -152,7 +155,8 @@ describe("ChangeLogProcessor", () => {
       resource_content: "",
       resource_id: "123",
       resource_slug: "slug",
-      resource_extension: ""
+      resource_extension: "",
+      initiator: ChangeInitiator.EXTERNAL
     };
 
     const second: ChangeLog = {
@@ -164,7 +168,8 @@ describe("ChangeLogProcessor", () => {
       resource_content: "",
       resource_id: "123",
       resource_slug: "slug",
-      resource_extension: ""
+      resource_extension: "",
+      initiator: ChangeInitiator.EXTERNAL
     };
 
     const third: ChangeLog = {
@@ -176,7 +181,8 @@ describe("ChangeLogProcessor", () => {
       resource_content: "different content",
       resource_id: "123",
       resource_slug: "slug",
-      resource_extension: ""
+      resource_extension: "",
+      initiator: ChangeInitiator.EXTERNAL
     };
 
     await processor.push(first);
@@ -196,6 +202,7 @@ describe("ChangeLogProcessor", () => {
       resource_id: first.resource_id,
       resource_slug: first.resource_slug,
       resource_extension: first.resource_extension,
+      initiator: ChangeInitiator.EXTERNAL,
       cycle_count: 1
     });
 
@@ -210,6 +217,7 @@ describe("ChangeLogProcessor", () => {
       resource_id: third.resource_id,
       resource_slug: third.resource_slug,
       resource_extension: third.resource_extension,
+      initiator: ChangeInitiator.EXTERNAL,
       cycle_count: 0.5
     });
   });
