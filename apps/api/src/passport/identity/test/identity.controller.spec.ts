@@ -105,7 +105,7 @@ describe("Identity Controller", () => {
       );
     });
 
-    it("should sort bucket1 profile entries", async () => {
+    it("should sort identity profile entries", async () => {
       const [{body: allProfileEntries}, sortedRes] = await Promise.all([
         req.get("/passport/identity/profile"),
         req.get("/passport/identity/profile", {sort: JSON.stringify({ts: -1})})
