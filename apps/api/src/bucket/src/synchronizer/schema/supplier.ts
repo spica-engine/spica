@@ -56,52 +56,51 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
             console.error("Error propagating existing buckets:", error);
           });
 
-        const stream = bs._coll.watch([], {
-          fullDocument: "updateLookup",
-          fullDocumentBeforeChange: "required"
-        });
+        const subs = bs
+          .watch([], {
+            fullDocument: "updateLookup",
+            fullDocumentBeforeChange: "required"
+          })
+          .subscribe({
+            next: change => {
+              let changeType: ChangeType;
+              let documentData: Bucket | undefined;
 
-        stream.on("change", change => {
-          let changeType: ChangeType;
-          let documentData: Bucket | undefined;
+              switch (change.operationType) {
+                case "insert":
+                  changeType = ChangeType.CREATE;
+                  documentData = change["fullDocument"];
+                  break;
 
-          switch (change.operationType) {
-            case "insert":
-              changeType = ChangeType.CREATE;
-              documentData = change["fullDocument"];
-              break;
+                case "replace":
+                case "update":
+                  changeType = ChangeType.UPDATE;
+                  documentData = change["fullDocument"];
+                  break;
 
-            case "replace":
-            case "update":
-              changeType = ChangeType.UPDATE;
-              documentData = change["fullDocument"];
-              break;
+                case "delete":
+                  changeType = ChangeType.DELETE;
+                  documentData = change["fullDocumentBeforeChange"];
+                  break;
+                default:
+                  console.warn("Unknown operation type:", change.operationType);
+                  return;
+              }
 
-            case "delete":
-              changeType = ChangeType.DELETE;
-              documentData = change["fullDocumentBeforeChange"];
-              break;
-            default:
-              console.warn("Unknown operation type:", change.operationType);
-              return;
-          }
-
-          const changeLog = getChangeLogFromBucket(
-            documentData,
-            changeType,
-            ChangeInitiator.EXTERNAL
-          );
-          observer.next(changeLog);
-        });
-
-        stream.on("error", error => {
-          observer.error(error);
-        });
+              const changeLog = getChangeLogFromBucket(
+                documentData,
+                changeType,
+                ChangeInitiator.EXTERNAL
+              );
+              observer.next(changeLog);
+            },
+            error: err => {
+              observer.error(err);
+            }
+          });
 
         return () => {
-          if (!stream.closed) {
-            stream.close();
-          }
+          subs.unsubscribe();
         };
       });
     }
