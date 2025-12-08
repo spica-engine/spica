@@ -6,7 +6,12 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {GuardService} from "@spica-server/passport/guard/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {ChunkKind} from "@spica-server/interface/realtime";
-import {ChangeOrigin, ChangeType, SyncStatuses} from "@spica-server/interface/versioncontrol";
+import {
+  ChangeInitiator,
+  ChangeOrigin,
+  ChangeType,
+  SyncStatuses
+} from "@spica-server/interface/versioncontrol";
 import {SyncService} from "@spica-server/versioncontrol/services/sync";
 import {ServicesModule as SyncServicesModule} from "@spica-server/versioncontrol/services/sync";
 import {SyncRealtimeModule} from "../src";
@@ -42,7 +47,8 @@ describe("Sync Realtime", () => {
         resource_content: "{}",
         resource_id: `resource-${idSuffix}`,
         resource_slug: `slug-${idSuffix}`,
-        resource_extension: "json"
+        resource_extension: "json",
+        initiator: ChangeInitiator.EXTERNAL
       },
       created_at: new Date(),
       status: status,
