@@ -13,21 +13,4 @@ export class SyncService extends BaseCollection<Sync>("sync") {
   constructor(db: DatabaseService) {
     super(db, {afterInit: () => this.upsertTTLIndex(30 * 24 * 60 * 60)});
   }
-
-  watch(
-    pipeline?: object[],
-    options?: ChangeStreamOptions
-  ): Observable<ChangeStreamDocument<Sync>> {
-    return new Observable(observer => {
-      const stream = this._coll.watch(pipeline, options);
-      stream.on("change", change => observer.next(change));
-      stream.on("error", observer.error);
-
-      return () => {
-        if (!stream.closed) {
-          stream.close();
-        }
-      };
-    });
-  }
 }

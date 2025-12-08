@@ -6,7 +6,7 @@ export class SchemaResolver {
     validator: Validator,
     private pref: PreferenceService
   ) {
-    pref.watch("passport").subscribe(() => {
+    pref.watchPreference("passport").subscribe(() => {
       validator.removeSchema("http://spica.internal/passport/update-identity-with-attributes");
       validator.removeSchema("http://spica.internal/passport/create-identity-with-attributes");
       validator.removeSchema("http://spica.internal/passport/identity-attributes");

@@ -9,7 +9,7 @@ export class AssetService extends BaseCollection<Asset>("asset") {
     super(db);
   }
 
-  watch() {
+  watchAsset() {
     return new Observable<Asset[]>(observer => {
       const emitAssets = () => this.find().then(assets => observer.next(assets));
 

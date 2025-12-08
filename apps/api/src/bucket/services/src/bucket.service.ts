@@ -136,7 +136,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   }
 
   watchPreferences(propagateOnStart: boolean): Observable<BucketPreferences> {
-    return this.pref.watch("bucket", {propagateOnStart});
+    return this.pref.watchPreference("bucket", {propagateOnStart});
   }
 
   getPredefinedDefaults(): Default[] {

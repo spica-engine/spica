@@ -253,7 +253,7 @@ describe("SyncEngine Integration - Bucket", () => {
       await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
     });
 
-    bs.watch(bucketId.toString(), false).subscribe(updatedBucket => {
+    bs.watchBucket(bucketId.toString(), false).subscribe(updatedBucket => {
       expect(updatedBucket).toEqual({
         _id: bucketId,
         title: bucketTitle,
