@@ -56,50 +56,47 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
             console.error("Error propagating existing buckets:", error);
           });
 
-        const stream = evs._coll.watch([], {
-          fullDocument: "updateLookup",
-          fullDocumentBeforeChange: "required"
-        });
+        const subs = evs
+          .watch([], {
+            fullDocument: "updateLookup",
+            fullDocumentBeforeChange: "required"
+          })
+          .subscribe({
+            next: change => {
+              let changeType: ChangeType;
+              let documentData: EnvVar | undefined;
+              switch (change.operationType) {
+                case "insert":
+                  changeType = ChangeType.CREATE;
+                  documentData = change["fullDocument"];
+                  break;
 
-        stream.on("change", change => {
-          let changeType: ChangeType;
-          let documentData: EnvVar | undefined;
-          switch (change.operationType) {
-            case "insert":
-              changeType = ChangeType.CREATE;
-              documentData = change["fullDocument"];
-              break;
+                case "replace":
+                case "update":
+                  changeType = ChangeType.UPDATE;
+                  documentData = change["fullDocument"];
+                  break;
 
-            case "replace":
-            case "update":
-              changeType = ChangeType.UPDATE;
-              documentData = change["fullDocument"];
-              break;
-
-            case "delete":
-              changeType = ChangeType.DELETE;
-              documentData = change["fullDocumentBeforeChange"];
-              break;
-            default:
-              console.warn("Unknown operation type:", change.operationType);
-              return;
-          }
-          const changeLog = getChangeLogForSchema(
-            documentData,
-            changeType,
-            ChangeInitiator.EXTERNAL
-          );
-          observer.next(changeLog);
-        });
-
-        stream.on("error", error => {
-          observer.error(error);
-        });
+                case "delete":
+                  changeType = ChangeType.DELETE;
+                  documentData = change["fullDocumentBeforeChange"];
+                  break;
+                default:
+                  console.warn("Unknown operation type:", change.operationType);
+                  return;
+              }
+              const changeLog = getChangeLogForSchema(
+                documentData,
+                changeType,
+                ChangeInitiator.EXTERNAL
+              );
+              observer.next(changeLog);
+            },
+            error: err => observer.error(err)
+          });
 
         return () => {
-          if (!stream.closed) {
-            stream.close();
-          }
+          subs.unsubscribe();
         };
       });
     }
