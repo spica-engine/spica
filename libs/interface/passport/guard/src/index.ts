@@ -1,5 +1,10 @@
 import {ExecutionContext} from "@nestjs/common";
 
+export enum ReqAuthStrategy {
+  APIKEY,
+  IDENTITY,
+  USER
+}
 export interface Statement {
   action: string;
   resource: {

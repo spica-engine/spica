@@ -69,7 +69,7 @@ export async function findDocuments<T>(
     params.req.res.header("Content-language", locale.best || locale.fallback);
   });
 
-  if (params.req.strategyType == "USER") {
+  if (params.applyAcl) {
     const rulesAppliedPipeline = await basePipeline
       .rules(params.req.user, (propertyMap, relationMap) => {
         rulePropertyMap = propertyMap;
@@ -105,7 +105,7 @@ export async function findDocuments<T>(
     }
   );
 
-  if (isUserRequest(params.req)) {
+  if (params.applyAcl) {
     const aclProjection = buildAclProjection(schema.properties, params.req.user);
     seekingPipelineBuilder.attachToPipeline(true, {$project: aclProjection});
   }
@@ -168,6 +168,7 @@ export async function insertDocument(
   document: BucketDocument,
   params: {
     req: any;
+    applyAcl?: boolean;
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
@@ -178,7 +179,7 @@ export async function insertDocument(
 ) {
   const collection = factories.collection(schema);
 
-  if (isUserRequest(params.req)) {
+  if (params.applyAcl) {
     await executeWriteRule(
       schema,
       factories.schema,
@@ -212,6 +213,7 @@ export async function replaceDocument(
   document: BucketDocument,
   params: {
     req: any;
+    applyAcl?: boolean;
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
@@ -224,7 +226,7 @@ export async function replaceDocument(
 ) {
   const collection = factories.collection(schema);
 
-  if (isUserRequest(params.req)) {
+  if (params.applyAcl) {
     await executeWriteRule(
       schema,
       factories.schema,
@@ -251,6 +253,7 @@ export async function patchDocument(
   patch: any,
   params: {
     req: any;
+    applyAcl?: boolean;
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
@@ -262,7 +265,7 @@ export async function patchDocument(
   } = {returnDocument: ReturnDocument.BEFORE}
 ) {
   const collection = factories.collection(schema);
-  if (isUserRequest(params.req)) {
+  if (params.applyAcl) {
     await executeWriteRule(
       schema,
       factories.schema,
@@ -289,6 +292,7 @@ export async function deleteDocument(
   documentId: string | ObjectId,
   params: {
     req: any;
+    applyAcl?: boolean;
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<BucketDocument>;
@@ -304,7 +308,7 @@ export async function deleteDocument(
     return;
   }
 
-  if (isUserRequest(params.req)) {
+  if (params.applyAcl) {
     await executeWriteRule(
       schema,
       factories.schema,
@@ -414,8 +418,4 @@ export function authIdToString(req: any) {
     req.user._id = req.user._id.toString();
   }
   return req;
-}
-
-function isUserRequest(req) {
-  return req.strategyType === "USER";
 }

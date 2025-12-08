@@ -1,5 +1,6 @@
 import {ExecutionContext, UnauthorizedException, UseGuards} from "@nestjs/common";
-import {AuthGuard} from "@spica-server/passport/guard";
+import {AuthGuard, StrategyType} from "@spica-server/passport/guard";
+import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 import passport from "passport";
 import {Controller, Get, INestApplication, Post} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
@@ -24,6 +25,17 @@ export class TestController {
   @UseGuards(AuthGuard(["USER", "APIKEY"]))
   allowUserApikey() {
     return {message: "allow-user-apikey"};
+  }
+
+  @Get("strategy-type-with-guard")
+  @UseGuards(AuthGuard())
+  strategyTypeWithGuard(@StrategyType() type: ReqAuthStrategy) {
+    return {strategyType: type};
+  }
+
+  @Get("strategy-type-no-guard")
+  strategyTypeNoGuard(@StrategyType() type: ReqAuthStrategy) {
+    return {strategyType: type};
   }
 }
 
@@ -161,6 +173,106 @@ describe("AuthGuard - Controller Tests", () => {
 
       expect(identityResponse.statusCode).toBe(401);
       expect(identityResponse.body.message).toContain('Strategy "identity" is not allowed');
+    });
+  });
+
+  describe("StrategyType decorator - with AuthGuard", () => {
+    let restoreMock: () => void;
+
+    beforeEach(() => {
+      restoreMock = mockPassportAuthenticate();
+    });
+
+    afterEach(() => {
+      restoreMock();
+    });
+
+    it("should return USER enum value when Authorization header has USER strategy", async () => {
+      const response = await req.get("/test/strategy-type-with-guard", undefined, {
+        Authorization: "USER user_token_123"
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.strategyType).toBe(ReqAuthStrategy.USER);
+    });
+
+    it("should return APIKEY enum value when Authorization header has APIKEY strategy", async () => {
+      const response = await req.get("/test/strategy-type-with-guard", undefined, {
+        Authorization: "APIKEY sk_1234567890"
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.strategyType).toBe(ReqAuthStrategy.APIKEY);
+    });
+
+    it("should return IDENTITY enum value when Authorization header has IDENTITY strategy", async () => {
+      const response = await req.get("/test/strategy-type-with-guard", undefined, {
+        Authorization: "IDENTITY id_1234567890"
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.strategyType).toBe(ReqAuthStrategy.IDENTITY);
+    });
+
+    it("should return undefined when Authorization header has invalid strategy", async () => {
+      const response = await req.get("/test/strategy-type-with-guard", undefined, {
+        Authorization: "INVALID invalid_token"
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.strategyType).toBe(undefined);
+    });
+
+    it("should return undefined when no Authorization header is provided", async () => {
+      const response = await req.get("/test/strategy-type-with-guard", undefined, {});
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.strategyType).toBe(undefined);
+    });
+  });
+
+  describe("StrategyType decorator - without AuthGuard", () => {
+    it("should return USER enum value when Authorization header has USER strategy", async () => {
+      const response = await req.get("/test/strategy-type-no-guard", undefined, {
+        Authorization: "USER user_token_123"
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.strategyType).toBe(ReqAuthStrategy.USER);
+    });
+
+    it("should return APIKEY enum value when Authorization header has APIKEY strategy", async () => {
+      const response = await req.get("/test/strategy-type-no-guard", undefined, {
+        Authorization: "APIKEY sk_1234567890"
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.strategyType).toBe(ReqAuthStrategy.APIKEY);
+    });
+
+    it("should return IDENTITY enum value when Authorization header has IDENTITY strategy", async () => {
+      const response = await req.get("/test/strategy-type-no-guard", undefined, {
+        Authorization: "IDENTITY id_1234567890"
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.strategyType).toBe(ReqAuthStrategy.IDENTITY);
+    });
+
+    it("should return undefined when Authorization header has invalid strategy", async () => {
+      const response = await req.get("/test/strategy-type-no-guard", undefined, {
+        Authorization: "INVALID invalid_token"
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.strategyType).toBe(undefined);
+    });
+
+    it("should return undefined when no Authorization header is provided", async () => {
+      const response = await req.get("/test/strategy-type-no-guard", undefined, {});
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.strategyType).toBe(undefined);
     });
   });
 });
