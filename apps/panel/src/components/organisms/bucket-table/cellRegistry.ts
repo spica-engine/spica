@@ -15,7 +15,9 @@ import {
   TextareaCell,
   TextareaCellKeyboardHandler,
   BooleanCell,
-  BooleanCellKeyboardHandler
+  BooleanCellKeyboardHandler,
+  ArrayCell,
+  ArrayCellKeyboardHandler
 } from "./cells";
 
 
@@ -87,6 +89,12 @@ class CellRegistry {
       component: TextareaCell,
       keyboardHandler: TextareaCellKeyboardHandler,
       defaultValue: "",
+    });
+    
+    this.register("array", {
+      component: ArrayCell,
+      keyboardHandler: ArrayCellKeyboardHandler,
+      defaultValue: [],
     });
   }
 
