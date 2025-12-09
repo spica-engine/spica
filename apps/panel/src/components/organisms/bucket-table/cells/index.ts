@@ -7,4 +7,5 @@ export { MultipleSelectionCell, MultipleSelectionCellKeyboardHandler } from "./M
 export { StorageCell, StorageCellKeyboardHandler } from "./StorageCell";
 export { TextareaCell, TextareaCellKeyboardHandler } from "./TextareaCell";
 export {BooleanCell, BooleanCellKeyboardHandler} from "./BooleanCell"
+export {LocationCell, LocationCellKeyboardHandler} from "./LocationCell"
 
