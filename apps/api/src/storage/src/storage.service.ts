@@ -393,14 +393,10 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
           options: {resourceFilter: false}
         });
       } catch (error) {
-        unauthorizedIds.push(id.toString());
+        throw new ForbiddenException(
+          `You do not have sufficient permissions to delete the storage object:${id.toString()}`
+        );
       }
-    }
-
-    if (unauthorizedIds.length > 0) {
-      throw new ForbiddenException(
-        `You do not have sufficient permissions to delete the following storage objects: ${unauthorizedIds.join(", ")}`
-      );
     }
   }
 }
