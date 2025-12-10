@@ -34,12 +34,13 @@ import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {GuardService} from "@spica-server/passport/guard/services";
-import {resourceFilterFunction} from "@spica-server/passport/guard";
+import {resourceFilterFunction, extractStrategyType} from "@spica-server/passport/guard";
 import {Action} from "@spica-server/interface/activity";
 import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {MessageKind} from "@spica-server/interface/bucket/realtime";
 import {BucketDocument} from "@spica-server/interface/bucket";
 import {getConnectionHandlers} from "@spica-server/realtime";
+import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 @WebSocketGateway({
   path: "/bucket/:id/data"
 })
@@ -138,7 +139,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       insertedDoc = await insertDocument(
         schema,
         document,
-        {req: client.upgradeReq},
+        {
+          req: client.upgradeReq,
+          applyAcl: this.shouldApplyAcl(client.upgradeReq)
+        },
         {
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver(),
@@ -207,7 +211,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       previousDocument = await replaceDocument(
         schema,
         {...document, _id: documentId},
-        {req: client.upgradeReq},
+        {
+          req: client.upgradeReq,
+          applyAcl: this.shouldApplyAcl(client.upgradeReq)
+        },
         {
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver(),
@@ -307,7 +314,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         schema,
         {...patchedDocument, _id: documentId},
         document,
-        {req: client.upgradeReq},
+        {
+          req: client.upgradeReq,
+          applyAcl: this.shouldApplyAcl(client.upgradeReq)
+        },
         {
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver(),
@@ -381,7 +391,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       deletedDocument = await deleteDocument(
         schema,
         document._id,
-        {req: client.upgradeReq},
+        {
+          req: client.upgradeReq,
+          applyAcl: this.shouldApplyAcl(client.upgradeReq)
+        },
         {
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver(),
@@ -578,6 +591,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   send(client, kind: ChunkKind, status: number, message: string) {
     client.send(JSON.stringify({kind, status, message}));
+  }
+
+  private shouldApplyAcl(req: any): boolean {
+    const strategyType = extractStrategyType(req);
+    return strategyType === ReqAuthStrategy.USER;
   }
 }
 

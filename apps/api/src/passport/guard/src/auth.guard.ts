@@ -11,10 +11,24 @@ import {AuthModuleOptions, Type} from "@nestjs/passport";
 import {defaultOptions} from "@nestjs/passport/dist/options.js";
 import passport from "passport";
 import {memoize} from "@nestjs/passport/dist/utils/memoize.util.js";
+import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
+
+export function extractStrategyType(request: any): ReqAuthStrategy | undefined {
+  const auth = request.headers?.["authorization"];
+  if (!auth) {
+    return undefined;
+  }
+  const [strategyType] = auth.split(" ");
+  if (!strategyType) {
+    return undefined;
+  }
+  const upper = strategyType.toUpperCase();
+  return ReqAuthStrategy[upper];
+}
 
 export const StrategyType = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
-  return request.strategyType;
+  return extractStrategyType(request);
 });
 
 export function isAValidStrategy(type: string) {
