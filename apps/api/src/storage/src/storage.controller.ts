@@ -205,9 +205,8 @@ export class StorageController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard())
   async deleteMany(@Body() body: {ids: string[]}, @Req() req) {
+    await this.storage.validateDeletePermissions(body.ids, req);
     const ids = body.ids.map(id => new ObjectId(id));
-
-    await this.storage.validateDeletePermissions(ids, req);
 
     await this.storage.deleteManyByIds(ids);
   }

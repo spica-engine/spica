@@ -188,6 +188,8 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       throw new NotFoundException(`Storage object could not be found`);
     }
 
+    await this.service.delete(result.name);
+
     const folderName = result.name;
 
     const escapedName = this.escapeRegex(folderName);
@@ -204,8 +206,6 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     const deletePromises = objects.map(object => this.service.delete(object.name));
     await Promise.all(deletePromises);
-
-    await this._coll.deleteMany({_id: {$in: ids}});
 
     const folderDeletionPromises = objects.map(async object => {
       const escapedName = this.escapeRegex(object.name);
@@ -364,39 +364,24 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  async validateDeletePermissions(ids: ObjectId[], req: any): Promise<void> {
-    const existingObjects = await this._coll.find({_id: {$in: ids}}).toArray();
-    const existingIds = new Set(existingObjects.map(obj => obj._id.toString()));
-
-    const missingIds = ids.filter(id => !existingIds.has(id.toString()));
-    if (missingIds.length > 0) {
-      throw new NotFoundException(
-        `Storage objects not found: ${missingIds.map(id => id.toString()).join(", ")}`
-      );
-    }
-
-    const unauthorizedIds: string[] = [];
-
+  async validateDeletePermissions(ids: string[], req: any): Promise<void> {
+    let promises = [];
     for (const id of ids) {
-      const mockRequest = {
+      const preparedRequest = {
         ...req,
         route: {path: "/storage/:id"},
-        params: {id: id.toString()},
+        params: {id},
         user: req.user
       };
 
-      try {
-        await this.guardService.checkAction({
-          request: mockRequest,
-          response: {},
-          actions: ["storage:delete"],
-          options: {resourceFilter: false}
-        });
-      } catch (error) {
-        throw new ForbiddenException(
-          `You do not have sufficient permissions to delete the storage object:${id.toString()}`
-        );
-      }
+      const promise = this.guardService.checkAction({
+        request: preparedRequest,
+        response: {},
+        actions: ["storage:delete"],
+        options: {resourceFilter: false}
+      });
+      promises.push(promise);
     }
+    await Promise.all(promises);
   }
 }
