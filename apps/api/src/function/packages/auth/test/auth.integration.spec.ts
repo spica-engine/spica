@@ -18,6 +18,12 @@ const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
 const PORT = 3000;
 const PUBLIC_URL = `http://localhost:${PORT}`;
 
+async function importFreshAuthModule() {
+  jest.resetModules();
+
+  const auth = await import("@spica-devkit/auth");
+  return auth;
+}
 describe("Auth", () => {
   let module: TestingModule;
   let app: INestApplication;
@@ -287,27 +293,33 @@ describe("Auth", () => {
     });
 
     it("should work when initialize is called with identity", async () => {
-      Auth.initialize({apikey: apikey, publicUrl: PUBLIC_URL});
+      jest.resetModules();
+      const auth = await import("@spica-devkit/auth");
+
+      auth.initialize({publicUrl: PUBLIC_URL});
 
       const decodedToken = jwtDecode<any>(token);
-      const result = await Auth.verifyToken(token);
+      const result = await auth.verifyToken(token);
 
       expect(result).toEqual(decodedToken);
     });
 
     it("should verify provided token, not use identity from initialization", async () => {
-      Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+      jest.resetModules();
+      const auth = await import("@spica-devkit/auth");
 
-      await Auth.signUp({
+      auth.initialize({publicUrl: PUBLIC_URL});
+
+      await auth.signUp({
         username: "test_user",
         password: "test_pass",
         policies: ["PassportFullAccess"]
       });
 
-      const userToken = await Auth.signIn("test_user", "test_pass");
+      const userToken = await auth.signIn("test_user", "test_pass");
       const userDecodedToken = jwtDecode<any>(userToken);
 
-      const result = await Auth.verifyToken(userToken);
+      const result = await auth.verifyToken(userToken);
 
       expect(result).toEqual(userDecodedToken);
       expect((result as any).username).toEqual("test_user");
@@ -316,8 +328,11 @@ describe("Auth", () => {
 
   describe("verifyToken token scenarios", () => {
     beforeEach(async () => {
-      Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
-      await Auth.signUp({
+      jest.resetModules();
+
+      const auth = await import("@spica-devkit/auth");
+      auth.initialize({publicUrl: PUBLIC_URL});
+      await auth.signUp({
         username: "user1",
         password: "pass1",
         policies: ["PassportFullAccess"]
@@ -356,11 +371,9 @@ describe("Auth", () => {
     it("should throw error when signIn is called without initialize", async () => {
       jest.resetModules();
 
-      const auth = await import("@spica-devkit/auth");
-
       let error: any;
       try {
-        await auth.signIn("user1", "pass1");
+        await Auth.signIn("user1", "pass1");
       } catch (e) {
         error = e;
       }

@@ -3,6 +3,7 @@ import {
   HttpService,
   IdentityInitialization,
   InitializationResult,
+  PublicInitialization,
   UserInitialization
 } from "@spica-server/interface/function/packages";
 import {Axios} from "./request";
@@ -10,7 +11,7 @@ import {Axios} from "./request";
 let service: Axios;
 
 export function initialize(
-  options: ApikeyInitialization | IdentityInitialization | UserInitialization
+  options: ApikeyInitialization | IdentityInitialization | UserInitialization | PublicInitialization
 ): InitializationResult {
   let authorization: string;
   if ("apikey" in options) {
