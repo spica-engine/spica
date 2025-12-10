@@ -1,0 +1,86 @@
+/**
+ * @owner Kanan Gasimov
+ * email: rio.kenan@gmail.com
+ */
+
+import React, { useEffect, useState } from 'react'
+import type { CellRendererProps, CellKeyboardHandler } from "../types";
+import { BaseCellRenderer } from "./BaseCellRenderer";
+import styles from "./Cells.module.scss";
+import { ObjectMinimizedInput } from "oziko-ui-kit";
+import type { TypeProperties } from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
+
+export const ObjectCell: React.FC<CellRendererProps> = ({
+  value,
+  onChange,
+  property,
+  isFocused,
+  onRequestBlur,
+}) => {
+  const [localValue, setLocalValue] = useState<any>(value ?? {});
+
+  // Sync localValue with value prop when not focused
+  useEffect(() => {
+    if (!isFocused) {
+      setLocalValue(value ?? {});
+    }
+  }, [value, isFocused]);
+
+  const handleChange = (newValue: any) => {
+    setLocalValue(newValue);
+  };
+
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        onChange(localValue);
+        onRequestBlur();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        setLocalValue(value ?? {});
+        onRequestBlur();
+      }
+    };
+
+    globalThis.addEventListener("keydown", handleKeyDown);
+    return () => {
+      globalThis.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isFocused, localValue, value, onChange, onRequestBlur]);
+
+  const properties: TypeProperties = React.useMemo(() => {
+    if (!property?.properties) {
+      return {};
+    }
+
+    return property.properties as unknown as TypeProperties;
+  }, [property?.properties]);
+
+  return (
+    <BaseCellRenderer isFocused={isFocused}>
+      <ObjectMinimizedInput
+        value={localValue}
+        properties={properties}
+        onChange={handleChange}
+        dimensionX="fill"
+        dimensionY={30}
+        className={styles.objectCell}
+      />
+    </BaseCellRenderer>
+  );
+};
+
+export const ObjectCellKeyboardHandler: CellKeyboardHandler = {
+  handleKeyDown: (event, _context) => {
+    if (event.key === "Enter" || event.key === " ") {
+      return true;
+    }
+    return false;
+  },
+};
+
