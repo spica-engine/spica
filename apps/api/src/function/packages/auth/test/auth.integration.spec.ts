@@ -5,7 +5,6 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {CoreTestingModule} from "@spica-server/core/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {PassportModule} from "@spica-server/passport";
-import * as Auth from "@spica-devkit/auth";
 import Axios from "axios";
 import {jwtDecode} from "jwt-decode";
 import {BatchModule} from "@spica-server/batch";
@@ -21,10 +20,11 @@ const PUBLIC_URL = `http://localhost:${PORT}`;
 async function importFreshAuthModule() {
   jest.resetModules();
 
-  const auth = await import("@spica-devkit/auth");
+  const now = new Date().getTime();
+  const auth = await import(`@spica-devkit/auth?now=${now}"`);
   return auth;
 }
-describe("Auth", () => {
+describe("auth", () => {
   let module: TestingModule;
   let app: INestApplication;
   let token: string;
@@ -87,7 +87,7 @@ describe("Auth", () => {
     app = module.createNestApplication();
     await app.listen(PORT);
 
-    await new Promise((resolve, _) => setTimeout(resolve, 1000));
+    await new Promise((resolve, _) => setTimeout(resolve, 3000));
 
     token = await Axios.post(`${PUBLIC_URL}/passport/identify`, {
       identifier: "spica",
@@ -101,7 +101,7 @@ describe("Auth", () => {
         description: "Test API Key"
       },
       {
-        headers: {Authorization: `IDENTITY ${token}`}
+        headers: {authorization: `IDENTITY ${token}`}
       }
     ).then(r => r.data._id);
 
@@ -109,7 +109,7 @@ describe("Auth", () => {
       `${PUBLIC_URL}/passport/apikey/${apiKeyId}/policy/PassportFullAccess`,
       undefined,
       {
-        headers: {Authorization: `IDENTITY ${token}`}
+        headers: {authorization: `IDENTITY ${token}`}
       }
     ).then(r => r.data.key);
   });
@@ -118,17 +118,25 @@ describe("Auth", () => {
     await app.close();
   });
 
-  describe("login", () => {
+  describe("sign in", () => {
+    let auth;
+
     beforeEach(async () => {
-      Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
-      await Auth.signUp({
+      auth = await importFreshAuthModule();
+      auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+      await auth.signUp({
         username: "user1",
         password: "pass1",
         policies: ["PassportFullAccess"]
       });
     });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
     it("should sign in", async () => {
-      const token = await Auth.signIn("user1", "pass1");
+      const token = await auth.signIn("user1", "pass1");
       const {username, iat, exp, iss} = jwtDecode<any>(token);
 
       expect([username, iss]).toEqual(["user1", "spica"]);
@@ -139,7 +147,7 @@ describe("Auth", () => {
 
     it("should sign in with desired token lifespan", async () => {
       const oneDay = 60 * 60 * 24;
-      const token = await Auth.signIn("user1", "pass1", oneDay);
+      const token = await auth.signIn("user1", "pass1", oneDay);
 
       const {iat, exp} = jwtDecode<any>(token);
 
@@ -148,16 +156,16 @@ describe("Auth", () => {
     });
 
     it("should verify token with success", async () => {
-      const token = await Auth.signIn("user1", "pass1");
+      const token = await auth.signIn("user1", "pass1");
 
       const decodedToken = jwtDecode<any>(token);
 
-      const result = await Auth.verifyToken(token);
+      const result = await auth.verifyToken(token);
       expect(result).toEqual(decodedToken);
     });
 
     it("should verify token with failure", async () => {
-      const result = await Auth.verifyToken("some_invalid_token").catch(e => e);
+      const result = await auth.verifyToken("some_invalid_token").catch(e => e);
       expect(result).toEqual({
         statusCode: 400,
         message: "jwt malformed",
@@ -166,12 +174,20 @@ describe("Auth", () => {
     });
   });
 
-  describe("user", () => {
-    beforeEach(() => {
-      Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+  describe("sign up", () => {
+    let auth;
+
+    beforeEach(async () => {
+      auth = await importFreshAuthModule();
+      auth.initialize({identity: token, publicUrl: PUBLIC_URL});
     });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
     it("should sign up", async () => {
-      const user = await Auth.signUp({
+      const user = await auth.signUp({
         username: "user1",
         password: "pass1",
         policies: ["PassportFullAccess"]
@@ -184,7 +200,7 @@ describe("Auth", () => {
         policies: ["PassportFullAccess"]
       });
 
-      const token = await Auth.signIn("user1", "pass1");
+      const token = await auth.signIn("user1", "pass1");
       const {username, policies} = jwtDecode<any>(token);
 
       expect(username).toEqual("user1");
@@ -192,7 +208,7 @@ describe("Auth", () => {
     });
 
     it("should sign up with multiple policies", async () => {
-      const user = await Auth.signUp({
+      const user = await auth.signUp({
         username: "user2",
         password: "pass2",
         policies: ["PassportFullAccess", "BucketFullAccess"]
@@ -207,7 +223,7 @@ describe("Auth", () => {
     });
 
     it("should sign up with headers", async () => {
-      const user = await Auth.signUp(
+      const user = await auth.signUp(
         {
           username: "user3",
           password: "pass3",
@@ -222,35 +238,35 @@ describe("Auth", () => {
 
     describe("policies", () => {
       it("should attach policy", async () => {
-        const user = await Auth.signUp({
+        const user = await auth.signUp({
           username: "user4",
           password: "pass4",
           policies: []
         });
 
-        const res = await Auth.policy.attach(user._id, ["FunctionFullAccess"]);
+        const res = await auth.policy.attach(user._id, ["FunctionFullAccess"]);
         expect(res).toEqual(["FunctionFullAccess"]);
       });
 
       it("should detach policy", async () => {
-        const user = await Auth.signUp({
+        const user = await auth.signUp({
           username: "user5",
           password: "pass5",
           policies: ["FunctionFullAccess"]
         });
 
-        const res = await Auth.policy.detach(user._id, ["FunctionFullAccess"]);
+        const res = await auth.policy.detach(user._id, ["FunctionFullAccess"]);
         expect(res).toEqual(["FunctionFullAccess"]);
       });
 
       it("should attach multiple policies", async () => {
-        const user = await Auth.signUp({
+        const user = await auth.signUp({
           username: "user6",
           password: "pass6",
           policies: []
         });
 
-        const res = await Auth.policy.attach(user._id, ["FunctionFullAccess", "BucketFullAccess"]);
+        const res = await auth.policy.attach(user._id, ["FunctionFullAccess", "BucketFullAccess"]);
 
         expect(res.sort((a, b) => a.localeCompare(b))).toEqual([
           "BucketFullAccess",
@@ -259,13 +275,13 @@ describe("Auth", () => {
       });
 
       it("should detach multiple policies", async () => {
-        const user = await Auth.signUp({
+        const user = await auth.signUp({
           username: "user7",
           password: "pass7",
           policies: ["FunctionFullAccess", "BucketFullAccess"]
         });
 
-        const res = await Auth.policy.detach(user._id, ["FunctionFullAccess", "BucketFullAccess"]);
+        const res = await auth.policy.detach(user._id, ["FunctionFullAccess", "BucketFullAccess"]);
 
         expect(res.sort((a, b) => a.localeCompare(b))).toEqual([
           "BucketFullAccess",
@@ -276,11 +292,17 @@ describe("Auth", () => {
   });
 
   describe("verifyToken initialization", () => {
-    it("should throw error when verifyToken is called without initialize", async () => {
+    let auth;
+
+    beforeEach(async () => {
+      auth = await importFreshAuthModule();
+    });
+
+    afterEach(() => {
       jest.resetModules();
+    });
 
-      const auth = await import("@spica-devkit/auth");
-
+    it("should throw error when verifyToken is called without initialize", async () => {
       let error: any;
       try {
         await auth.verifyToken("any_token");
@@ -293,9 +315,6 @@ describe("Auth", () => {
     });
 
     it("should work when initialize is called with identity", async () => {
-      jest.resetModules();
-      const auth = await import("@spica-devkit/auth");
-
       auth.initialize({publicUrl: PUBLIC_URL});
 
       const decodedToken = jwtDecode<any>(token);
@@ -305,9 +324,6 @@ describe("Auth", () => {
     });
 
     it("should verify provided token, not use identity from initialization", async () => {
-      jest.resetModules();
-      const auth = await import("@spica-devkit/auth");
-
       auth.initialize({publicUrl: PUBLIC_URL});
 
       await auth.signUp({
@@ -327,40 +343,48 @@ describe("Auth", () => {
   });
 
   describe("verifyToken token scenarios", () => {
-    beforeEach(async () => {
-      jest.resetModules();
+    let auth;
 
-      const auth = await import("@spica-devkit/auth");
-      auth.initialize({publicUrl: PUBLIC_URL});
-      await auth.signUp({
+    beforeEach(async () => {
+      const auth2 = await importFreshAuthModule();
+      auth2.initialize({identity: token, publicUrl: PUBLIC_URL});
+      await auth2.signUp({
         username: "user1",
         password: "pass1",
         policies: ["PassportFullAccess"]
       });
+
+      auth = await importFreshAuthModule();
+      auth.initialize({publicUrl: PUBLIC_URL});
     });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
     it("should throw error when verifyToken is called with a malformed token", async () => {
-      const error: any = await Auth.verifyToken("this_is_not_a_valid_token").catch(e => e);
+      const error: any = await auth.verifyToken("this_is_not_a_valid_token").catch(e => e);
 
       expect(error).toBeDefined();
       expect(error.message).toContain("jwt malformed");
     });
 
     it("should throw error when verifyToken is called with an expired token", async () => {
-      const shortLivedToken = await Auth.signIn("user1", "pass1", 1);
+      const shortLivedToken = await auth.signIn("user1", "pass1", 1);
 
       await new Promise((resolve, _) => setTimeout(resolve, 2000));
 
-      const error: any = await Auth.verifyToken(shortLivedToken).catch(e => e);
+      const error: any = await auth.verifyToken(shortLivedToken).catch(e => e);
 
       expect(error).toBeDefined();
       expect(error.message).toContain("jwt expired");
     });
 
     it("should work when verifyToken is called with a valid token", async () => {
-      const validToken = await Auth.signIn("user1", "pass1");
+      const validToken = await auth.signIn("user1", "pass1");
       const decodedToken = jwtDecode<any>(validToken);
 
-      const result = await Auth.verifyToken(validToken);
+      const result = await auth.verifyToken(validToken);
 
       expect(result).toEqual(decodedToken);
       expect((result as any).username).toEqual("user1");
@@ -368,12 +392,20 @@ describe("Auth", () => {
   });
 
   describe("signIn initialization", () => {
-    it("should throw error when signIn is called without initialize", async () => {
-      jest.resetModules();
+    let auth;
 
+    beforeEach(async () => {
+      auth = await importFreshAuthModule();
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
+    it("should throw error when signIn is called without initialize", async () => {
       let error: any;
       try {
-        await Auth.signIn("user1", "pass1");
+        await auth.signIn("user1", "pass1");
       } catch (e) {
         error = e;
       }
@@ -383,30 +415,30 @@ describe("Auth", () => {
     });
 
     it("should work when initialize is called with apikey", async () => {
-      Auth.initialize({apikey: apikey, publicUrl: PUBLIC_URL});
+      auth.initialize({apikey: apikey, publicUrl: PUBLIC_URL});
 
-      await Auth.signUp({
+      await auth.signUp({
         username: "signin_user1",
         password: "signin_pass1",
         policies: ["PassportFullAccess"]
       });
 
-      const signInToken = await Auth.signIn("signin_user1", "signin_pass1");
+      const signInToken = await auth.signIn("signin_user1", "signin_pass1");
       const decodedToken = jwtDecode<any>(signInToken);
 
       expect(decodedToken.username).toEqual("signin_user1");
     });
 
     it("should work when initialize is called with identity", async () => {
-      Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+      auth.initialize({identity: token, publicUrl: PUBLIC_URL});
 
-      await Auth.signUp({
+      await auth.signUp({
         username: "signin_user2",
         password: "signin_pass2",
         policies: ["PassportFullAccess"]
       });
 
-      const signInToken = await Auth.signIn("signin_user2", "signin_pass2");
+      const signInToken = await auth.signIn("signin_user2", "signin_pass2");
       const decodedToken = jwtDecode<any>(signInToken);
 
       expect(decodedToken.username).toEqual("signin_user2");
