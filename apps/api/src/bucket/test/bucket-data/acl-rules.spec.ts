@@ -18,7 +18,7 @@ describe("ACL Rules with Different Authentication Strategies", () => {
   let identityToken: string;
   let apiKey: string;
   let userToken: string;
-  let wrongUserToken: string;
+  let aclRejectedUserToken: string;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -102,66 +102,69 @@ describe("ACL Rules with Different Authentication Strategies", () => {
     });
     identityToken = identityLoginResponse.body.token;
 
-    const apiKeyResponse = await req.post(
-      "/passport/apikey",
-      {
-        name: "test-apikey",
-        description: "Test API Key"
-      },
-      {Authorization: `IDENTITY ${identityToken}`}
-    );
+    const [apiKeyResponse, userResponse, aclRejectedUserResponse] = await Promise.all([
+      req.post(
+        "/passport/apikey",
+        {
+          name: "test-apikey",
+          description: "Test API Key"
+        },
+        {Authorization: `IDENTITY ${identityToken}`}
+      ),
+      req.post(
+        "/passport/user",
+        {
+          username: "oziko",
+          password: "password123"
+        },
+        {Authorization: `IDENTITY ${identityToken}`}
+      ),
+      req.post(
+        "/passport/user",
+        {
+          username: "aclRejectedUser",
+          password: "password123"
+        },
+        {Authorization: `IDENTITY ${identityToken}`}
+      )
+    ]);
+
     const apiKeyId = apiKeyResponse.body._id;
     apiKey = apiKeyResponse.body.key;
+    const userId = userResponse.body._id;
+    const aclRejectedUserId = aclRejectedUserResponse.body._id;
 
-    await req.put(`/passport/apikey/${apiKeyId}/policy/BucketFullAccess`, undefined, {
-      Authorization: `IDENTITY ${identityToken}`
-    });
+    await Promise.all([
+      req.put(`/passport/apikey/${apiKeyId}/policy/BucketFullAccess`, undefined, {
+        Authorization: `IDENTITY ${identityToken}`
+      }),
+      req.put(`/passport/user/${userId}/policy/BucketFullAccess`, undefined, {
+        Authorization: `IDENTITY ${identityToken}`
+      }),
+      req.put(`/passport/user/${aclRejectedUserId}/policy/BucketFullAccess`, undefined, {
+        Authorization: `IDENTITY ${identityToken}`
+      })
+    ]);
 
-    const userResponse = await req.post(
-      "/passport/user",
-      {
+    const [userLoginResponse, aclRejectedUserLoginResponse] = await Promise.all([
+      req.post("/passport/login", {
         username: "oziko",
         password: "password123"
-      },
-      {Authorization: `IDENTITY ${identityToken}`}
-    );
-    const userId = userResponse.body._id;
-
-    await req.put(`/passport/user/${userId}/policy/BucketFullAccess`, undefined, {
-      Authorization: `IDENTITY ${identityToken}`
-    });
-
-    const userLoginResponse = await req.post("/passport/login", {
-      username: "oziko",
-      password: "password123"
-    });
-    userToken = userLoginResponse.body.token;
-
-    const wrongUserResponse = await req.post(
-      "/passport/user",
-      {
-        username: "wronguser",
+      }),
+      req.post("/passport/login", {
+        username: "aclRejectedUser",
         password: "password123"
-      },
-      {Authorization: `IDENTITY ${identityToken}`}
-    );
-    const wrongUserId = wrongUserResponse.body._id;
+      })
+    ]);
 
-    await req.put(`/passport/user/${wrongUserId}/policy/BucketFullAccess`, undefined, {
-      Authorization: `IDENTITY ${identityToken}`
-    });
-
-    const wrongUserLoginResponse = await req.post("/passport/login", {
-      username: "wronguser",
-      password: "password123"
-    });
-    wrongUserToken = wrongUserLoginResponse.body.token;
+    userToken = userLoginResponse.body.token;
+    aclRejectedUserToken = aclRejectedUserLoginResponse.body.token;
   });
 
   afterEach(() => app.close());
 
   describe("Write ACL Rules", () => {
-    describe("when ACL write rule is 'auth.username == \"oziko\"'", () => {
+    describe("when ACL write rule is 'auth.username == document.owner'", () => {
       let bucketId: string;
 
       beforeEach(async () => {
@@ -171,7 +174,7 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           icon: "view_stream",
           primary: "title",
           acl: {
-            write: 'auth.username=="oziko"',
+            write: "auth.username == document.owner",
             read: "true==true"
           },
           properties: {
@@ -182,6 +185,10 @@ describe("ACL Rules with Different Authentication Strategies", () => {
             description: {
               type: "string",
               title: "Description"
+            },
+            owner: {
+              type: "string",
+              title: "Owner"
             }
           }
         };
@@ -197,7 +204,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data`,
           {
             title: "Test Document",
-            description: "Created by oziko"
+            description: "Created by oziko",
+            owner: "oziko"
           },
           {Authorization: `USER ${userToken}`}
         );
@@ -205,16 +213,18 @@ describe("ACL Rules with Different Authentication Strategies", () => {
         expect(response.statusCode).toBe(201);
         expect(response.body.title).toBe("Test Document");
         expect(response.body.description).toBe("Created by oziko");
+        expect(response.body.owner).toBe("oziko");
       });
 
-      it("should reject insert with incorrect USER token", async () => {
+      it("should reject insert for aclRejectedUser", async () => {
         const response = await req.post(
           `/bucket/${bucketId}/data`,
           {
             title: "Test Document",
-            description: "Created by wrong user"
+            description: "Created by ACL rejected user",
+            owner: "oziko"
           },
-          {Authorization: `USER ${wrongUserToken}`}
+          {Authorization: `USER ${aclRejectedUserToken}`}
         );
 
         expect(response.statusCode).toBe(401);
@@ -226,7 +236,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data`,
           {
             title: "Test Document",
-            description: "Created by identity"
+            description: "Created by identity",
+            owner: "someuser"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -241,7 +252,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data`,
           {
             title: "Test Document",
-            description: "Created by apikey"
+            description: "Created by apikey",
+            owner: "someuser"
           },
           {Authorization: `APIKEY ${apiKey}`}
         );
@@ -256,7 +268,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data`,
           {
             title: "Original",
-            description: "Original description"
+            description: "Original description",
+            owner: "oziko"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -266,7 +279,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data/${documentId}`,
           {
             title: "Updated",
-            description: "Updated by oziko"
+            description: "Updated by oziko",
+            owner: "oziko"
           },
           {Authorization: `USER ${userToken}`}
         );
@@ -275,12 +289,13 @@ describe("ACL Rules with Different Authentication Strategies", () => {
         expect(updateResponse.body.title).toBe("Updated");
       });
 
-      it("should reject update with incorrect USER token", async () => {
+      it("should reject update for aclRejectedUser", async () => {
         const createResponse = await req.post(
           `/bucket/${bucketId}/data`,
           {
             title: "Original",
-            description: "Original description"
+            description: "Original description",
+            owner: "oziko"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -290,9 +305,10 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data/${documentId}`,
           {
             title: "Updated",
-            description: "Updated by wrong user"
+            description: "Updated by ACL rejected user",
+            owner: "oziko"
           },
-          {Authorization: `USER ${wrongUserToken}`}
+          {Authorization: `USER ${aclRejectedUserToken}`}
         );
 
         expect(updateResponse.statusCode).toBe(401);
@@ -304,7 +320,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data`,
           {
             title: "Original",
-            description: "Original description"
+            description: "Original description",
+            owner: "someuser"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -314,7 +331,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data/${documentId}`,
           {
             title: "Updated by Identity",
-            description: "Updated description"
+            description: "Updated description",
+            owner: "someuser"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -328,7 +346,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data`,
           {
             title: "Original",
-            description: "Original description"
+            description: "Original description",
+            owner: "someuser"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -338,7 +357,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data/${documentId}`,
           {
             title: "Updated by APIKEY",
-            description: "Updated description"
+            description: "Updated description",
+            owner: "someuser"
           },
           {Authorization: `APIKEY ${apiKey}`}
         );
@@ -352,7 +372,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data`,
           {
             title: "To be deleted",
-            description: "Will be deleted"
+            description: "Will be deleted",
+            owner: "oziko"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -367,12 +388,13 @@ describe("ACL Rules with Different Authentication Strategies", () => {
         expect(deleteResponse.statusCode).toBe(204);
       });
 
-      it("should reject delete with incorrect USER token", async () => {
+      it("should reject delete for aclRejectedUser", async () => {
         const createResponse = await req.post(
           `/bucket/${bucketId}/data`,
           {
             title: "To be deleted",
-            description: "Will not be deleted"
+            description: "Will not be deleted",
+            owner: "oziko"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -381,7 +403,7 @@ describe("ACL Rules with Different Authentication Strategies", () => {
         const deleteResponse = await req.delete(
           `/bucket/${bucketId}/data/${documentId}`,
           undefined,
-          {Authorization: `USER ${wrongUserToken}`}
+          {Authorization: `USER ${aclRejectedUserToken}`}
         );
 
         expect(deleteResponse.statusCode).toBe(401);
@@ -393,7 +415,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data`,
           {
             title: "To be deleted",
-            description: "Will be deleted by identity"
+            description: "Will be deleted by identity",
+            owner: "someuser"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -413,7 +436,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data`,
           {
             title: "To be deleted",
-            description: "Will be deleted by apikey"
+            description: "Will be deleted by apikey",
+            owner: "someuser"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -431,7 +455,7 @@ describe("ACL Rules with Different Authentication Strategies", () => {
   });
 
   describe("Read ACL Rules", () => {
-    describe("when ACL read rule is 'auth.username == \"oziko\"'", () => {
+    describe("when ACL read rule is 'auth.username == document.owner'", () => {
       let bucketId: string;
       let documentId: string;
 
@@ -443,7 +467,7 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           primary: "title",
           acl: {
             write: "true == true",
-            read: 'auth.username == "oziko"'
+            read: "auth.username == document.owner"
           },
           properties: {
             title: {
@@ -453,6 +477,10 @@ describe("ACL Rules with Different Authentication Strategies", () => {
             description: {
               type: "string",
               title: "Description"
+            },
+            owner: {
+              type: "string",
+              title: "Owner"
             }
           }
         };
@@ -466,7 +494,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
           `/bucket/${bucketId}/data`,
           {
             title: "Test Document",
-            description: "Test description"
+            description: "Test description",
+            owner: "oziko"
           },
           {Authorization: `IDENTITY ${identityToken}`}
         );
@@ -486,11 +515,11 @@ describe("ACL Rules with Different Authentication Strategies", () => {
         expect(response.body[0].title).toBe("Test Document");
       });
 
-      it("should reject read with incorrect USER token", async () => {
+      it("should reject read for aclRejectedUser", async () => {
         const response = await req.get(
           `/bucket/${bucketId}/data`,
           {},
-          {Authorization: `USER ${wrongUserToken}`}
+          {Authorization: `USER ${aclRejectedUserToken}`}
         );
         expect(response.body).toEqual([]);
       });
@@ -533,11 +562,11 @@ describe("ACL Rules with Different Authentication Strategies", () => {
         expect(response.body.title).toBe("Test Document");
       });
 
-      it("should reject read single document with incorrect USER token", async () => {
+      it("should reject read single document for aclRejectedUser", async () => {
         const response = await req.get(
           `/bucket/${bucketId}/data/${documentId}`,
           {},
-          {Authorization: `USER ${wrongUserToken}`}
+          {Authorization: `USER ${aclRejectedUserToken}`}
         );
         expect(response.body).toBe(undefined);
       });
