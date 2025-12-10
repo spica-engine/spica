@@ -9,6 +9,7 @@ import * as Auth from "@spica-devkit/auth";
 import Axios from "axios";
 import {jwtDecode} from "jwt-decode";
 import {BatchModule} from "@spica-server/batch";
+import {OBJECT_ID} from "@spica-server/core/schema/formats";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
@@ -20,11 +21,15 @@ const PUBLIC_URL = `http://localhost:${PORT}`;
 describe("Auth", () => {
   let module: TestingModule;
   let app: INestApplication;
-
+  let token: string;
+  let apiKeyId: string;
+  let apikey: string;
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        SchemaModule.forRoot(),
+        SchemaModule.forRoot({
+          formats: [OBJECT_ID]
+        }),
         DatabaseTestingModule.replicaSet(),
         PassportModule.forRoot({
           publicUrl: PUBLIC_URL,
@@ -76,21 +81,40 @@ describe("Auth", () => {
     app = module.createNestApplication();
     await app.listen(PORT);
 
-    // WAIT UNTIL USER IS INSERTED
-    await new Promise((resolve, _) => setTimeout(resolve, 3000));
+    await new Promise((resolve, _) => setTimeout(resolve, 1000));
 
-    const token = await Axios.post(`${PUBLIC_URL}/passport/identify`, {
+    token = await Axios.post(`${PUBLIC_URL}/passport/identify`, {
       identifier: "spica",
       password: "spica"
     }).then(r => r.data.token);
 
-    Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+    apiKeyId = await Axios.post(
+      `${PUBLIC_URL}/passport/apikey`,
+      {
+        name: "test-apikey",
+        description: "Test API Key"
+      },
+      {
+        headers: {Authorization: `IDENTITY ${token}`}
+      }
+    ).then(r => r.data._id);
+
+    apikey = await Axios.put(
+      `${PUBLIC_URL}/passport/apikey/${apiKeyId}/policy/PassportFullAccess`,
+      undefined,
+      {
+        headers: {Authorization: `IDENTITY ${token}`}
+      }
+    ).then(r => r.data.key);
   });
 
-  afterEach(async () => await app.close());
+  afterEach(async () => {
+    await app.close();
+  });
 
   describe("login", () => {
     beforeEach(async () => {
+      Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
       await Auth.signUp({
         username: "user1",
         password: "pass1",
@@ -137,6 +161,9 @@ describe("Auth", () => {
   });
 
   describe("user", () => {
+    beforeEach(() => {
+      Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+    });
     it("should sign up", async () => {
       const user = await Auth.signUp({
         username: "user1",
@@ -239,6 +266,138 @@ describe("Auth", () => {
           "FunctionFullAccess"
         ]);
       });
+    });
+  });
+
+  describe("verifyToken initialization", () => {
+    it("should throw error when verifyToken is called without initialize", async () => {
+      jest.resetModules();
+
+      const auth = await import("@spica-devkit/auth");
+
+      let error: any;
+      try {
+        await auth.verifyToken("any_token");
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).toBeDefined();
+      expect(error.message).toContain("You should call initialize method with a valid publicUrl.");
+    });
+
+    it("should work when initialize is called with identity", async () => {
+      Auth.initialize({apikey: apikey, publicUrl: PUBLIC_URL});
+
+      const decodedToken = jwtDecode<any>(token);
+      const result = await Auth.verifyToken(token);
+
+      expect(result).toEqual(decodedToken);
+    });
+
+    it("should verify provided token, not use identity from initialization", async () => {
+      Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      await Auth.signUp({
+        username: "test_user",
+        password: "test_pass",
+        policies: ["PassportFullAccess"]
+      });
+
+      const userToken = await Auth.signIn("test_user", "test_pass");
+      const userDecodedToken = jwtDecode<any>(userToken);
+
+      const result = await Auth.verifyToken(userToken);
+
+      expect(result).toEqual(userDecodedToken);
+      expect((result as any).username).toEqual("test_user");
+    });
+  });
+
+  describe("verifyToken token scenarios", () => {
+    beforeEach(async () => {
+      Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+      await Auth.signUp({
+        username: "user1",
+        password: "pass1",
+        policies: ["PassportFullAccess"]
+      });
+    });
+    it("should throw error when verifyToken is called with a malformed token", async () => {
+      const error: any = await Auth.verifyToken("this_is_not_a_valid_token").catch(e => e);
+
+      expect(error).toBeDefined();
+      expect(error.message).toContain("jwt malformed");
+    });
+
+    it("should throw error when verifyToken is called with an expired token", async () => {
+      const shortLivedToken = await Auth.signIn("user1", "pass1", 1);
+
+      await new Promise((resolve, _) => setTimeout(resolve, 2000));
+
+      const error: any = await Auth.verifyToken(shortLivedToken).catch(e => e);
+
+      expect(error).toBeDefined();
+      expect(error.message).toContain("jwt expired");
+    });
+
+    it("should work when verifyToken is called with a valid token", async () => {
+      const validToken = await Auth.signIn("user1", "pass1");
+      const decodedToken = jwtDecode<any>(validToken);
+
+      const result = await Auth.verifyToken(validToken);
+
+      expect(result).toEqual(decodedToken);
+      expect((result as any).username).toEqual("user1");
+    });
+  });
+
+  describe("signIn initialization", () => {
+    it("should throw error when signIn is called without initialize", async () => {
+      jest.resetModules();
+
+      const auth = await import("@spica-devkit/auth");
+
+      let error: any;
+      try {
+        await auth.signIn("user1", "pass1");
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).toBeDefined();
+      expect(error.message).toContain("You should call initialize method with a valid publicUrl.");
+    });
+
+    it("should work when initialize is called with apikey", async () => {
+      Auth.initialize({apikey: apikey, publicUrl: PUBLIC_URL});
+
+      await Auth.signUp({
+        username: "signin_user1",
+        password: "signin_pass1",
+        policies: ["PassportFullAccess"]
+      });
+
+      const signInToken = await Auth.signIn("signin_user1", "signin_pass1");
+      const decodedToken = jwtDecode<any>(signInToken);
+
+      expect(decodedToken.username).toEqual("signin_user1");
+    });
+
+    it("should work when initialize is called with identity", async () => {
+      Auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      await Auth.signUp({
+        username: "signin_user2",
+        password: "signin_pass2",
+        policies: ["PassportFullAccess"]
+      });
+
+      const signInToken = await Auth.signIn("signin_user2", "signin_pass2");
+      const decodedToken = jwtDecode<any>(signInToken);
+
+      expect(decodedToken.username).toEqual("signin_user2");
+      expect(decodedToken.iss).toEqual("spica");
     });
   });
 });
