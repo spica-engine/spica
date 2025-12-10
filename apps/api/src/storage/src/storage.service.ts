@@ -19,12 +19,15 @@ import {
 import {Strategy} from "./strategy/strategy";
 
 import fs from "fs";
+import {GuardService} from "@spica-server/passport/guard/services";
+import {ForbiddenException} from "@nestjs/common";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
   constructor(
     database: DatabaseService,
     private service: Strategy,
+    private guardService: GuardService,
     @Inject(STORAGE_OPTIONS) private storageOptions: StorageOptions
   ) {
     super(database, {
@@ -193,6 +196,26 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       name: {$regex: new RegExp(`^${escapedName}`)}
     });
   }
+  async deleteManyByIds(ids: ObjectId[]): Promise<void> {
+    const objects = await this._coll.find({_id: {$in: ids}}).toArray();
+    if (objects.length === 0) {
+      return;
+    }
+
+    const deletePromises = objects.map(object => this.service.delete(object.name));
+    await Promise.all(deletePromises);
+
+    await this._coll.deleteMany({_id: {$in: ids}});
+
+    const folderDeletionPromises = objects.map(async object => {
+      const escapedName = this.escapeRegex(object.name);
+      await this._coll.deleteMany({
+        name: {$regex: new RegExp(`^${escapedName}`)}
+      });
+    });
+
+    await Promise.all(folderDeletionPromises);
+  }
 
   async updateMeta(_id: ObjectId, name: string) {
     const existing = await this._coll.findOne({_id});
@@ -339,5 +362,45 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   private escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  async validateDeletePermissions(ids: ObjectId[], req: any): Promise<void> {
+    const existingObjects = await this._coll.find({_id: {$in: ids}}).toArray();
+    const existingIds = new Set(existingObjects.map(obj => obj._id.toString()));
+
+    const missingIds = ids.filter(id => !existingIds.has(id.toString()));
+    if (missingIds.length > 0) {
+      throw new NotFoundException(
+        `Storage objects not found: ${missingIds.map(id => id.toString()).join(", ")}`
+      );
+    }
+
+    const unauthorizedIds: string[] = [];
+
+    for (const id of ids) {
+      const mockRequest = {
+        ...req,
+        route: {path: "/storage/:id"},
+        params: {id: id.toString()},
+        user: req.user
+      };
+
+      try {
+        await this.guardService.checkAction({
+          request: mockRequest,
+          response: {},
+          actions: ["storage:delete"],
+          options: {resourceFilter: false}
+        });
+      } catch (error) {
+        unauthorizedIds.push(id.toString());
+      }
+    }
+
+    if (unauthorizedIds.length > 0) {
+      throw new ForbiddenException(
+        `You do not have sufficient permissions to delete the following storage objects: ${unauthorizedIds.join(", ")}`
+      );
+    }
   }
 }

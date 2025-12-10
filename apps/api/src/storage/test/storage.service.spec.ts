@@ -4,6 +4,7 @@ import {StorageService} from "@spica-server/storage";
 import {Default} from "@spica-server/storage/src/strategy/default";
 import {Strategy} from "@spica-server/storage/src/strategy/strategy";
 import {StorageObject, STORAGE_OPTIONS} from "@spica-server/interface/storage";
+import {GuardService} from "@spica-server/passport/guard/services";
 
 describe("Storage Service", () => {
   let module: TestingModule;
@@ -37,6 +38,12 @@ describe("Storage Service", () => {
         {
           provide: STORAGE_OPTIONS,
           useValue: {totalSizeLimit: 10}
+        },
+        {
+          provide: GuardService,
+          useValue: {
+            checkAction: jest.fn().mockResolvedValue(true)
+          }
         }
       ]
     }).compile();
@@ -199,6 +206,65 @@ describe("Storage Service", () => {
     await expect(storageService.insert([storageObject])).resolves.not.toThrow();
     await expect(storageService.delete(storageObjectId)).resolves.not.toThrow();
     return await expect(storageService.get(storageObjectId)).resolves.toBeNull();
+  });
+
+  it("should delete multiple storage objects", async () => {
+    const object1Id = new ObjectId();
+    const object2Id = new ObjectId();
+    const object3Id = new ObjectId();
+    const object4Id = new ObjectId();
+
+    const testObjects = [
+      {
+        _id: object1Id,
+        name: "file1.txt",
+        content: {
+          data: Buffer.from("content1"),
+          type: "text/plain",
+          size: 8
+        }
+      },
+      {
+        _id: object2Id,
+        name: "file2.txt",
+        content: {
+          data: Buffer.from("content2"),
+          type: "text/plain",
+          size: 8
+        }
+      },
+      {
+        _id: object3Id,
+        name: "file3.txt",
+        content: {
+          data: Buffer.from("content3"),
+          type: "text/plain",
+          size: 8
+        }
+      },
+      {
+        _id: object4Id,
+        name: "file4.txt",
+        content: {
+          data: Buffer.from("content4"),
+          type: "text/plain",
+          size: 8
+        }
+      }
+    ];
+
+    await expect(storageService.insert(testObjects)).resolves.not.toThrow();
+
+    const idsToDelete = [object1Id, object2Id, object3Id];
+    await expect(storageService.deleteManyByIds(idsToDelete)).resolves.not.toThrow();
+
+    await expect(storageService.get(object1Id)).resolves.toBeNull();
+    await expect(storageService.get(object2Id)).resolves.toBeNull();
+    await expect(storageService.get(object3Id)).resolves.toBeNull();
+
+    const remainingObject = await storageService.get(object4Id);
+    expect(remainingObject).not.toBeNull();
+    expect(remainingObject.name).toBe("file4.txt");
   });
 
   it("should delete folder with nested sub-resources at multiple levels", async () => {
@@ -573,6 +639,12 @@ describe("Storage Service", () => {
           {
             provide: STORAGE_OPTIONS,
             useValue: {}
+          },
+          {
+            provide: GuardService,
+            useValue: {
+              checkAction: jest.fn().mockResolvedValue(true)
+            }
           }
         ]
       }).compile();

@@ -195,6 +195,24 @@ export class StorageController {
   }
 
   /**
+   * Removes multiple storage objects in a single operation.
+   * Validates user has delete permissions for ALL objects before deleting any.
+   * If user lacks permission for even one object, the entire operation is cancelled.
+   * @body {ids: string[]} - Array of object IDs to delete
+   */
+  @UseInterceptors(activity(createStorageActivity))
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard())
+  async deleteMany(@Body() body: {ids: string[]}, @Req() req) {
+    const ids = body.ids.map(id => new ObjectId(id));
+
+    await this.storage.validateDeletePermissions(ids, req);
+
+    await this.storage.deleteManyByIds(ids);
+  }
+
+  /**
    * Creates and returns new upload resource
    */
   @Post("resumable")
