@@ -20,7 +20,6 @@ import {Strategy} from "./strategy/strategy";
 
 import fs from "fs";
 import {GuardService} from "@spica-server/passport/guard/services";
-import {ForbiddenException} from "@nestjs/common";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
