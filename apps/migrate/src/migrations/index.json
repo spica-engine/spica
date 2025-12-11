@@ -12,6 +12,7 @@
     "0.16.0/replace_env_vars.js",
     "0.16.0/update_old_index_usage_to_new.js",
     "0.16.0/ensure_unique_function_name.js",
-    "0.16.0/add_date_values_to_storage_objects.js"
+    "0.16.0/add_date_values_to_storage_objects.js",
+    "0.16.0/enable_changeStreamPreAndPostImages.js"
   ]
 }

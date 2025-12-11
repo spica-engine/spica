@@ -12,7 +12,8 @@
     },
     "name": {
       "type": "string",
-      "description": "Name of the function"
+      "description": "Name of the function",
+      "pattern": "^[\\w-]+$"
     },
     "description": {
       "type": "string",
