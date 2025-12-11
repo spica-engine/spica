@@ -3,7 +3,9 @@ import {initialize as _initialize, checkInitialized, Axios} from "@spica-devkit/
 import {
   ApikeyInitialization,
   HttpService,
-  IdentityInitialization
+  IdentityInitialization,
+  PublicInitialization,
+  UserInitialization
 } from "@spica-server/interface/function/packages";
 import {deepCopyJSON} from "@spica-server/core/copy";
 
@@ -19,7 +21,9 @@ const userSegment = "passport/user";
  *
  * @param options - Initialization options (ApikeyInitialization or IdentityInitialization)
  */
-export function initialize(options: ApikeyInitialization | IdentityInitialization) {
+export function initialize(
+  options: ApikeyInitialization | IdentityInitialization | UserInitialization | PublicInitialization
+) {
   const {authorization: _authorization, service: _service} = _initialize(options);
 
   authorization = _authorization;
