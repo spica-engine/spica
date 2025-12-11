@@ -19,14 +19,12 @@ import {
 import {Strategy} from "./strategy/strategy";
 
 import fs from "fs";
-import {GuardService} from "@spica-server/passport/guard/services";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
   constructor(
     database: DatabaseService,
     private service: Strategy,
-    private guardService: GuardService,
     @Inject(STORAGE_OPTIONS) private storageOptions: StorageOptions
   ) {
     super(database, {
@@ -361,26 +359,5 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   private escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
-  async validateDeletePermissions(ids: string[], req: any): Promise<void> {
-    let promises = [];
-    for (const id of ids) {
-      const preparedRequest = {
-        ...req,
-        route: {path: "/storage/:id"},
-        params: {id},
-        user: req.user
-      };
-
-      const promise = this.guardService.checkAction({
-        request: preparedRequest,
-        response: {},
-        actions: ["storage:delete"],
-        options: {resourceFilter: false}
-      });
-      promises.push(promise);
-    }
-    await Promise.all(promises);
   }
 }

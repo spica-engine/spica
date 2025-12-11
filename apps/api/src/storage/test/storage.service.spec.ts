@@ -4,7 +4,6 @@ import {StorageService} from "@spica-server/storage";
 import {Default} from "@spica-server/storage/src/strategy/default";
 import {Strategy} from "@spica-server/storage/src/strategy/strategy";
 import {StorageObject, STORAGE_OPTIONS} from "@spica-server/interface/storage";
-import {GuardService} from "@spica-server/passport/guard/services";
 
 describe("Storage Service", () => {
   let module: TestingModule;
@@ -38,12 +37,6 @@ describe("Storage Service", () => {
         {
           provide: STORAGE_OPTIONS,
           useValue: {totalSizeLimit: 10}
-        },
-        {
-          provide: GuardService,
-          useValue: {
-            checkAction: jest.fn().mockResolvedValue(true)
-          }
         }
       ]
     }).compile();
@@ -639,12 +632,6 @@ describe("Storage Service", () => {
           {
             provide: STORAGE_OPTIONS,
             useValue: {}
-          },
-          {
-            provide: GuardService,
-            useValue: {
-              checkAction: jest.fn().mockResolvedValue(true)
-            }
           }
         ]
       }).compile();
