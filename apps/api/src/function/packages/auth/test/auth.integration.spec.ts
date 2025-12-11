@@ -324,15 +324,16 @@ describe("auth", () => {
     });
 
     it("should verify provided token, not use identity from initialization", async () => {
-      auth.initialize({publicUrl: PUBLIC_URL});
-
-      await auth.signUp({
+      const auth2 = await importFreshAuthModule();
+      auth2.initialize({identity: token, publicUrl: PUBLIC_URL});
+      await auth2.signUp({
         username: "test_user",
         password: "test_pass",
         policies: ["PassportFullAccess"]
       });
+      const userToken = await auth2.signIn("test_user", "test_pass");
 
-      const userToken = await auth.signIn("test_user", "test_pass");
+      auth.initialize({publicUrl: PUBLIC_URL});
       const userDecodedToken = jwtDecode<any>(userToken);
 
       const result = await auth.verifyToken(userToken);
@@ -344,15 +345,19 @@ describe("auth", () => {
 
   describe("verifyToken token scenarios", () => {
     let auth;
+    let user1Token: string;
+    let expiredToken: string;
 
     beforeEach(async () => {
-      const auth2 = await importFreshAuthModule();
-      auth2.initialize({identity: token, publicUrl: PUBLIC_URL});
-      await auth2.signUp({
+      const authSetup = await importFreshAuthModule();
+      authSetup.initialize({identity: token, publicUrl: PUBLIC_URL});
+      await authSetup.signUp({
         username: "user1",
         password: "pass1",
         policies: ["PassportFullAccess"]
       });
+      user1Token = await authSetup.signIn("user1", "pass1");
+      expiredToken = await authSetup.signIn("user1", "pass1", 1);
 
       auth = await importFreshAuthModule();
       auth.initialize({publicUrl: PUBLIC_URL});
@@ -370,21 +375,19 @@ describe("auth", () => {
     });
 
     it("should throw error when verifyToken is called with an expired token", async () => {
-      const shortLivedToken = await auth.signIn("user1", "pass1", 1);
-
+      //Wait 2 seconds to ensure the token is expired
       await new Promise((resolve, _) => setTimeout(resolve, 2000));
 
-      const error: any = await auth.verifyToken(shortLivedToken).catch(e => e);
+      const error: any = await auth.verifyToken(expiredToken).catch(e => e);
 
       expect(error).toBeDefined();
       expect(error.message).toContain("jwt expired");
     });
 
     it("should work when verifyToken is called with a valid token", async () => {
-      const validToken = await auth.signIn("user1", "pass1");
-      const decodedToken = jwtDecode<any>(validToken);
+      const decodedToken = jwtDecode<any>(user1Token);
 
-      const result = await auth.verifyToken(validToken);
+      const result = await auth.verifyToken(user1Token);
 
       expect(result).toEqual(decodedToken);
       expect((result as any).username).toEqual("user1");
