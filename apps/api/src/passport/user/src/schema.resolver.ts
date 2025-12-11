@@ -36,7 +36,7 @@ export class SchemaResolver {
         // if there is any required property in it otherwise there
         // should not be an attributes property at all.
         const required = [];
-        if (preference.user.attributes.required && preference.user.attributes.required.length) {
+        if (preference?.user?.attributes?.required && preference.user.attributes.required.length) {
           required.push("attributes");
         }
 
@@ -47,7 +47,7 @@ export class SchemaResolver {
           properties: {
             attributes: {
               type: "object",
-              ...preference.user.attributes
+              ...(preference?.user?.attributes || {})
             }
           }
         };

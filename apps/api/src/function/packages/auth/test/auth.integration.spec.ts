@@ -14,7 +14,7 @@ const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
 const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
 
-const PORT = 3000;
+const PORT = 3003;
 const PUBLIC_URL = `http://localhost:${PORT}`;
 
 async function importFreshAuthModule() {
