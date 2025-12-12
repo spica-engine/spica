@@ -18,6 +18,8 @@ import {
   TextareaCellKeyboardHandler,
   BooleanCell,
   BooleanCellKeyboardHandler,
+  LocationCell,
+  LocationCellKeyboardHandler,
   JsonCell,
   JsonCellKeyboardHandler,
 } from "./cells";
@@ -97,6 +99,12 @@ class CellRegistry {
       component: TextareaCell,
       keyboardHandler: TextareaCellKeyboardHandler,
       defaultValue: "",
+    });
+    
+    this.register("location", {
+      component: LocationCell,
+      keyboardHandler: LocationCellKeyboardHandler,
+      defaultValue: null,
     });
     this.register("json", {
       component: JsonCell,

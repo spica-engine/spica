@@ -105,9 +105,7 @@ export const StringCell: React.FC<CellRendererProps> = ({
 
 export const StringCellKeyboardHandler: CellKeyboardHandler = {
   handleKeyDown: (event, context) => {
-    // Any alphanumeric key should trigger edit mode
-    // This is handled by the StringCell component internally
-    // We just need to signal that this cell can handle typing
+
     const isTypingKey = 
       event.key.length === 1 || 
       event.key === "Backspace" || 
