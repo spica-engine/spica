@@ -55,3 +55,10 @@ afterAll(async () => {
     await Promise.all(globalThis.__CLEANUPCALLBACKS.map(callback => callback()));
   }
 });
+
+process.on("uncaughtException", err => {
+  if (err?.codeName === "InterruptedAtShutdown") {
+    return; // ignore during tests
+  }
+  throw err;
+});
