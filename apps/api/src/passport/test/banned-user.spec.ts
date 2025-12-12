@@ -170,18 +170,10 @@ describe("User Ban Logic", () => {
       const bannedUntil = new Date(now);
       bannedUntil.setHours(bannedUntil.getHours() + 1);
 
-      const getUserRes = await req.get(
-        `/passport/user/${testUserId}`,
-        {},
-        {
-          Authorization: `IDENTITY ${identityToken}`
-        }
-      );
-
       await req.put(
         `/passport/user/${testUserId}`,
         {
-          username: getUserRes.body.username,
+          username: "testuser",
           bannedUntil: bannedUntil
         },
         {Authorization: `IDENTITY ${identityToken}`}
