@@ -834,6 +834,12 @@ describe("Storage Acceptance", () => {
       expect(deletedStorageObjectResponse.statusText).toBe("Not Found");
     });
 
+    it("should not delete storage object if data not exists", async () => {
+      const response = await req.delete(`/storage/random-name-or-id`);
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toBe("Storage object could not be found");
+    });
+
     it("should delete multiple storage objects successfully", async () => {
       const {
         body: {data: objects}
