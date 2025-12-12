@@ -10,6 +10,8 @@ import {
   DefaultCellKeyboardHandler,
   MultipleSelectionCell,
   MultipleSelectionCellKeyboardHandler,
+  ColorCell,
+  ColorCellKeyboardHandler,
   StorageCell,
   StorageCellKeyboardHandler,
   TextareaCell,
@@ -75,6 +77,12 @@ class CellRegistry {
       component: DefaultCell,
       keyboardHandler: DefaultCellKeyboardHandler,
       defaultValue: {},
+    });
+
+    this.register("color", {
+      component: ColorCell,
+      keyboardHandler: ColorCellKeyboardHandler,
+      defaultValue: "#000000",
     });
 
     this.register("storage", {
