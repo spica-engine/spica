@@ -16,6 +16,15 @@ describe("User Ban Logic", () => {
   let userToken: string;
   const EXPIRES_IN = 60_000;
 
+  const setupFakeTimers = () => {
+    jest.useFakeTimers({
+      doNotFake: ["nextTick"]
+    });
+    const now = new Date();
+    jest.setSystemTime(now);
+    return now;
+  };
+
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -89,8 +98,9 @@ describe("User Ban Logic", () => {
       password: "spica"
     });
     identityToken = identityLoginRes.body.token;
-    testUserId = await req
-      .get(
+
+    const [userListRes, userLoginRes] = await Promise.all([
+      req.get(
         `/passport/user`,
         {
           username: "testuser"
@@ -98,13 +108,14 @@ describe("User Ban Logic", () => {
         {
           Authorization: `IDENTITY ${identityToken}`
         }
-      )
-      .then(res => res.body[0]._id);
+      ),
+      req.post("/passport/login", {
+        username: "testuser",
+        password: "password123"
+      })
+    ]);
 
-    const userLoginRes = await req.post("/passport/login", {
-      username: "testuser",
-      password: "password123"
-    });
+    testUserId = userListRes.body[0]._id;
     userToken = userLoginRes.body.token;
   });
 
@@ -122,22 +133,16 @@ describe("User Ban Logic", () => {
     });
 
     it("should reject login when user is banned and show banned message", async () => {
-      // Ban the user for 1 hour
-      const bannedUntil = new Date();
-      bannedUntil.setHours(bannedUntil.getHours() + 1);
+      const now = setupFakeTimers();
 
-      const getUserRes = await req.get(
-        `/passport/user/${testUserId}`,
-        {},
-        {
-          Authorization: `IDENTITY ${identityToken}`
-        }
-      );
+      // Ban the user for 1 hour
+      const bannedUntil = new Date(now);
+      bannedUntil.setHours(bannedUntil.getHours() + 1);
 
       await req.put(
         `/passport/user/${testUserId}`,
         {
-          username: getUserRes.body.username,
+          username: "testuser",
           bannedUntil: bannedUntil
         },
         {Authorization: `IDENTITY ${identityToken}`}
@@ -153,15 +158,13 @@ describe("User Ban Logic", () => {
       );
 
       expect(loginRes.statusCode).toEqual(401);
-      expect(loginRes.body.message).toContain("User is banned.");
+      expect(loginRes.body.message).toContain("User is banned. Try again after 1 hours.");
+
+      jest.useRealTimers();
     });
 
     it("should allow login after ban expires using fake timers", async () => {
-      jest.useFakeTimers({
-        doNotFake: ["nextTick", "setImmediate", "clearImmediate", "setInterval", "clearInterval"]
-      });
-      const now = new Date();
-      jest.setSystemTime(now);
+      const now = setupFakeTimers();
 
       // Ban the user for 1 hour
       const bannedUntil = new Date(now);
@@ -190,10 +193,10 @@ describe("User Ban Logic", () => {
       });
 
       expect(loginRes.statusCode).toEqual(401);
-      expect(loginRes.body.message).toContain("User is banned.");
+      expect(loginRes.body.message).toContain("User is banned. Try again after 1 hours.");
 
-      // Advance time by 2 hours
-      jest.advanceTimersByTime(2 * 60 * 60 * 1000);
+      // Advance time by 1 hour 1 second
+      jest.advanceTimersByTime(1 * 60 * 60 * 1000 + 1000);
 
       loginRes = await req.post("/passport/login", {
         username: "testuser",
