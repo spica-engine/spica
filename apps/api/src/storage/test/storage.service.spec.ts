@@ -195,9 +195,15 @@ describe("Storage Service", () => {
     ).resolves.not.toThrow();
   });
 
-  it("should delete single storage object", async () => {
+  it("should delete single storage object by id", async () => {
     await expect(storageService.insert([storageObject])).resolves.not.toThrow();
     await expect(storageService.delete(storageObjectId)).resolves.not.toThrow();
+    return await expect(storageService.get(storageObjectId)).resolves.toBeNull();
+  });
+
+  it("should delete single storage object by name", async () => {
+    await expect(storageService.insert([storageObject])).resolves.not.toThrow();
+    await expect(storageService.delete("name")).resolves.not.toThrow();
     return await expect(storageService.get(storageObjectId)).resolves.toBeNull();
   });
 

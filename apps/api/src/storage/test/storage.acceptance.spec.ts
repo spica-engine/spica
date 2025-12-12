@@ -792,7 +792,7 @@ describe("Storage Acceptance", () => {
   });
 
   describe("delete", () => {
-    it("should delete storage object", async () => {
+    it("should delete storage object by id", async () => {
       const {
         body: {
           data: [row]
@@ -809,6 +809,27 @@ describe("Storage Acceptance", () => {
       expect(storageObjects.data.length).toEqual(2);
 
       const deletedStorageObjectResponse = await req.get(`/storage/${row._id}`);
+      expect(deletedStorageObjectResponse.statusCode).toBe(404);
+      expect(deletedStorageObjectResponse.statusText).toBe("Not Found");
+    });
+
+    it("should delete storage object by name", async () => {
+      const {
+        body: {
+          data: [row]
+        }
+      } = await req.get("/storage", {paginate: true});
+
+      const response = await req.delete(`/storage/${row.name}`);
+      expect(response.statusCode).toBe(204);
+      expect(response.statusText).toBe("No Content");
+      expect(response.body).toBe(undefined);
+
+      const {body: storageObjects} = await req.get("/storage", {paginate: true});
+      expect(storageObjects.meta.total).toBe(2);
+      expect(storageObjects.data.length).toEqual(2);
+
+      const deletedStorageObjectResponse = await req.get(`/storage/${row.name}`);
       expect(deletedStorageObjectResponse.statusCode).toBe(404);
       expect(deletedStorageObjectResponse.statusText).toBe("Not Found");
     });
