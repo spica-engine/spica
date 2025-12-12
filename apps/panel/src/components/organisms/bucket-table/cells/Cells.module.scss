@@ -68,6 +68,10 @@
     font-style: italic;
 }
 
+.locationInput {
+    background: transparent !important;
+}
+
 .defaultTypeLabel {
     font-size: 11px;
 }
@@ -87,6 +91,7 @@
 
 .booleanCheckbox {
    width: unset !important;
+
    display: flex;
    align-items: center;
    justify-content: center;
@@ -110,7 +115,6 @@
    .disabled{
     opacity: 0;
    }
-
 }
 
 
@@ -222,4 +226,20 @@
     padding: 0 !important;
     background: transparent !important;
 
+}
+
+.monacoEditorWrapper {
+    width: 100%;
+    height: 100%;
+    border: var(--border-default);
+    border-radius: var(--border-radius-sm);
+    
+    .monaco-editor {
+        border-radius: var(--border-radius-sm);
+    }
+}
+.colorCellContainer {
+    width: 100%;
+    display: flex;
+    align-items: center;
 }
