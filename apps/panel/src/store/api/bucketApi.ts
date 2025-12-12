@@ -134,7 +134,7 @@ export const bucketApi = baseApi.injectEndpoints({
     } | void>({
       query: (params) => ({
         url: 'bucket',
-        params: params || {},
+        params: params ?? {},
       }),
       providesTags: ['Bucket'],
     }),
