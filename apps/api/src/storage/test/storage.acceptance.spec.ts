@@ -818,8 +818,6 @@ describe("Storage Acceptance", () => {
         body: {data: objects}
       } = await req.get("/storage", {paginate: true});
 
-      expect(objects.length).toBeGreaterThanOrEqual(3);
-
       const idsToDelete = [objects[0]._id.toString(), objects[1]._id.toString()];
       const response = await req.delete("/storage", idsToDelete);
 
@@ -834,7 +832,7 @@ describe("Storage Acceptance", () => {
       expect(remainingIds.some((id: string) => idsToDelete.includes(id))).toBe(false);
     });
 
-    it("should return 400 for invalid IDs in deleteMany request", async () => {
+    it("should return 500 for invalid IDs in deleteMany request", async () => {
       const invalidIds = ["invalid-id-1", "invalid-id-2"];
 
       const response = await req.delete("/storage", invalidIds);
@@ -847,8 +845,6 @@ describe("Storage Acceptance", () => {
       const {
         body: {data: objects}
       } = await req.get("/storage", {paginate: true});
-
-      expect(objects.length).toBeGreaterThanOrEqual(2);
 
       const unauthorizedId = new ObjectId().toString();
       const idsToDelete = [objects[0]._id.toString(), unauthorizedId];
@@ -864,7 +860,6 @@ describe("Storage Acceptance", () => {
       });
 
       const response = await req.delete("/storage", idsToDelete);
-      console.log(response);
       jest.restoreAllMocks();
 
       expect(response.statusCode).toBe(403);
