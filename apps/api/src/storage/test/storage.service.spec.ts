@@ -246,6 +246,7 @@ describe("Storage Service", () => {
       }
     ];
 
+    await storageService.insert(testObjects);
     const idsToDelete = [object1Id, object2Id, object3Id];
     await expect(storageService.deleteManyByIds(idsToDelete)).resolves.not.toThrow();
 
