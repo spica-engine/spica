@@ -24,6 +24,7 @@ export interface User {
   lastPasswords: string[];
   lastLogin: Date;
   failedAttempts: Date[];
+  banned_until?: Date;
 }
 
 export interface LoginCredentials {

@@ -159,6 +159,7 @@ export class UserService extends BaseCollection<User>("user") {
     user.failedAttempts = user.failedAttempts || [];
 
     this.checkUserIsBlocked(user);
+    this.checkUserBan(user);
 
     const matched = await compare(password, user.password);
 
@@ -236,6 +237,15 @@ export class UserService extends BaseCollection<User>("user") {
         `Too many failed login attempts. Try again after ${this.formatRemainingDuration(
           remainingBlockedSeconds
         )}.`
+      );
+    }
+  }
+
+  checkUserBan(user: User) {
+    if (user.banned_until && new Date() < user.banned_until) {
+      const remainingSeconds = (user.banned_until.getTime() - new Date().getTime()) / 1000;
+      throw new UnauthorizedException(
+        `User is banned. Try again after ${this.formatRemainingDuration(remainingSeconds)}.`
       );
     }
   }

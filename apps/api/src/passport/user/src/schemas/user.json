@@ -25,6 +25,11 @@
     },
     "authFactor": {
       "$ref": "http://spica.internal/passport/authfactor"
+    },
+    "banned_until": {
+      "type": "string",
+      "format": "date-time",
+      "title": "User ban expiration date. User cannot log in until this date passes"
     }
   },
   "additionalProperties": false
