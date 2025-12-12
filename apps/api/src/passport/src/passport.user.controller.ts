@@ -112,37 +112,6 @@ export class PassportUserController {
     return user;
   }
 
-  checkUserBan(user: User) {
-    if (user.banned_until && new Date() < user.banned_until) {
-      const remainingSeconds = (user.banned_until.getTime() - new Date().getTime()) / 1000;
-      throw new UnauthorizedException(
-        `User is banned. Try again after ${this.formatRemainingDuration(remainingSeconds)}.`
-      );
-    }
-  }
-
-  formatRemainingDuration(remainingSeconds: number) {
-    let result = [];
-
-    const hours = Math.floor(remainingSeconds / (60 * 60));
-    if (hours) {
-      result.push(`${hours} hours`);
-      remainingSeconds = remainingSeconds - hours * (60 * 60);
-    }
-
-    const minutes = Math.floor(remainingSeconds / 60);
-    if (minutes) {
-      result.push(`${minutes} minutes`);
-      remainingSeconds = remainingSeconds - minutes * 60;
-    }
-
-    if (remainingSeconds) {
-      result.push(`${Math.floor(remainingSeconds)} seconds`);
-    }
-
-    return result.join(" ");
-  }
-
   async startLoginWithState(state: string, expires: number) {
     let user: User;
 
@@ -195,8 +164,6 @@ export class PassportUserController {
         lastLogin: undefined
       });
     }
-
-    this.checkUserBan(user);
 
     this.completeLoginWithState(state, user, expires);
   }
@@ -258,8 +225,6 @@ export class PassportUserController {
     if (!user) {
       return;
     }
-
-    this.checkUserBan(user);
 
     const loginResult = await this.signUser(user, expires).catch(catchError);
     if (!loginResult) {

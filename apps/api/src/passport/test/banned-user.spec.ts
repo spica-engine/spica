@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
@@ -7,7 +7,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID, DATE_TIME} from "@spica-server/core/schema/formats";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
-describe("User Ban Logic (banned_until)", () => {
+describe("User Ban Logic", () => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
@@ -138,7 +138,7 @@ describe("User Ban Logic (banned_until)", () => {
         `/passport/user/${testUserId}`,
         {
           username: getUserRes.body.username,
-          banned_until: bannedUntil
+          bannedUntil: bannedUntil
         },
         {Authorization: `IDENTITY ${identityToken}`}
       );
@@ -179,7 +179,7 @@ describe("User Ban Logic (banned_until)", () => {
         `/passport/user/${testUserId}`,
         {
           username: getUserRes.body.username,
-          banned_until: bannedUntil
+          bannedUntil: bannedUntil
         },
         {Authorization: `IDENTITY ${identityToken}`}
       );
