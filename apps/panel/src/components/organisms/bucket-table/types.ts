@@ -76,5 +76,6 @@ export interface CellTypeConfig {
   component: React.ComponentType<CellRendererProps>;
   keyboardHandler: CellKeyboardHandler;
   defaultValue?: any;
+  autoEnterEditMode?: boolean;
 }
 

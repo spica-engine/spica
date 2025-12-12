@@ -14,6 +14,10 @@ import {
   ColorCellKeyboardHandler,
   StorageCell,
   StorageCellKeyboardHandler,
+  TextareaCell,
+  TextareaCellKeyboardHandler,
+  BooleanCell,
+  BooleanCellKeyboardHandler
 } from "./cells";
 
 
@@ -56,6 +60,12 @@ class CellRegistry {
       keyboardHandler: MultipleSelectionCellKeyboardHandler,
       defaultValue: [],
     });
+    this.register("boolean", {
+      component: BooleanCell,
+      keyboardHandler: BooleanCellKeyboardHandler,
+      defaultValue: null,
+      autoEnterEditMode: true,
+    });
 
     this.register("array", {
       component: DefaultCell,
@@ -79,6 +89,12 @@ class CellRegistry {
       component: StorageCell,
       keyboardHandler: StorageCellKeyboardHandler,
       defaultValue: null,
+    });
+
+    this.register("textarea", {
+      component: TextareaCell,
+      keyboardHandler: TextareaCellKeyboardHandler,
+      defaultValue: "",
     });
   }
 

@@ -6,7 +6,8 @@ export const BaseCellRenderer: React.FC<{
   children: React.ReactNode;
   isFocused: boolean;
   onClick?: () => void;
-}> = ({ children, isFocused, onClick }) => {
+  className?: string;
+}> = ({ children, isFocused, onClick, className }) => {
   const handleClick = () => {
     onClick?.();
   };
@@ -24,7 +25,7 @@ export const BaseCellRenderer: React.FC<{
       alignment={"leftTop"}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      className={styles.baseCellRenderer}
+      className={`${styles.baseCellRenderer} ${className}`}
     >
       {children}
     </FlexElement>
