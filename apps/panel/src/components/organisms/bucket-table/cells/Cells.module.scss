@@ -222,6 +222,17 @@
     padding: 8px;
 }
 
+
+.monacoEditorWrapper {
+    width: 100%;
+    height: 100%;
+    border: var(--border-default);
+    border-radius: var(--border-radius-sm);
+    
+    .monaco-editor {
+        border-radius: var(--border-radius-sm);
+    }
+}
 .colorCellContainer {
     width: 100%;
     display: flex;

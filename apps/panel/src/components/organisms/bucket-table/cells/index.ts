@@ -8,4 +8,4 @@ export { ColorCell, ColorCellKeyboardHandler } from "./ColorCell";
 export { StorageCell, StorageCellKeyboardHandler } from "./StorageCell";
 export { TextareaCell, TextareaCellKeyboardHandler } from "./TextareaCell";
 export {BooleanCell, BooleanCellKeyboardHandler} from "./BooleanCell"
-
+export { JsonCell, JsonCellKeyboardHandler } from "./JsonCell";
