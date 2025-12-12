@@ -22,6 +22,9 @@
     },
     {
       "path": "../../../../libs/filter"
+    },
+    {
+      "path": "../passport/guard/services"
     }
   ]
 }
