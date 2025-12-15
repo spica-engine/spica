@@ -85,8 +85,19 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return authHeader.split(" ")[1];
   }
 
+  private async verifyAccessToken(accessToken: string) {
+    try {
+      await this.verify(accessToken);
+    } catch (error) {
+      // Allow expired JWTs to be refreshed, but reject other errors (malformed, invalid signature, etc.)
+      if (error.message !== "jwt expired") {
+        throw error;
+      }
+    }
+  }
+
   private async verifyTokenCanBeRefreshed(accessToken: string, refreshToken: string) {
-    await this.verify(accessToken);
+    await this.verifyAccessToken(accessToken);
     await this.verify(refreshToken);
   }
 

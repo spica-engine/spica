@@ -81,8 +81,19 @@ export class UserService extends BaseCollection<User>("user") {
     return authHeader.split(" ")[1];
   }
 
+  private async verifyAccessTokenForRefresh(accessToken: string) {
+    try {
+      await this.verify(accessToken);
+    } catch (error) {
+      // Allow expired JWTs to be refreshed, but reject other errors (malformed, invalid signature, etc.)
+      if (error.message !== "jwt expired") {
+        throw error;
+      }
+    }
+  }
+
   private async verifyTokenCanBeRefreshed(accessToken: string, refreshToken: string) {
-    await this.verify(accessToken);
+    await this.verifyAccessTokenForRefresh(accessToken);
     await this.verify(refreshToken);
   }
 
