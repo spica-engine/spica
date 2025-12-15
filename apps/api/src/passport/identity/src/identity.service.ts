@@ -96,7 +96,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       return Promise.reject("Refresh token not found");
     }
 
-    if (!refreshTokenData.active) {
+    if (refreshTokenData.disabled) {
       return Promise.reject("Refresh token is disabled");
     }
 

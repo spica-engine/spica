@@ -239,9 +239,9 @@ describe("ApiKey", () => {
   });
 
   describe("update", () => {
-    it("should deactivate token", async () => {
+    it("should disable token", async () => {
       const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
-        active: false
+        disabled: true
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toEqual({
@@ -251,13 +251,13 @@ describe("ApiKey", () => {
         created_at: "2000-01-01T00:00:00.000Z",
         expired_at: "2000-01-02T00:00:00.000Z",
         last_used_at: "2000-01-01T00:00:00.000Z",
-        active: false
+        disabled: true
       });
     });
 
-    it("should activate token", async () => {
+    it("should enable token", async () => {
       const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
-        active: true
+        disabled: false
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toEqual({
@@ -267,13 +267,13 @@ describe("ApiKey", () => {
         created_at: "2000-01-01T00:00:00.000Z",
         expired_at: "2000-01-02T00:00:00.000Z",
         last_used_at: "2000-01-01T00:00:00.000Z",
-        active: true
+        disabled: false
       });
     });
 
     it("should throw not found exception if token does not exist", async () => {
       const res = await req.put("/passport/refresh-token/000000000000000000000000", {
-        active: false
+        disabled: false
       });
       expect(res.statusCode).toEqual(404);
       expect(res.body).toEqual({
@@ -282,11 +282,11 @@ describe("ApiKey", () => {
       });
     });
 
-    it("should ignore updates for fields other than active", async () => {
+    it("should ignore updates for fields other than disabled", async () => {
       const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
         user: "random_user",
         created_at: "2004-10-08T21:00:00.000Z",
-        active: false
+        disabled: true
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toEqual({
@@ -296,23 +296,23 @@ describe("ApiKey", () => {
         created_at: "2000-01-01T00:00:00.000Z",
         expired_at: "2000-01-02T00:00:00.000Z",
         last_used_at: "2000-01-01T00:00:00.000Z",
-        active: false
+        disabled: true
       });
     });
 
-    it("should throw error if active is not boolean", async () => {
+    it("should throw error if disabled is not boolean", async () => {
       const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
-        active: "true"
+        disabled: "true"
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toEqual({
         statusCode: 400,
         error: "Bad Request",
-        message: "Only active field can be updated and it must be a boolean"
+        message: "Only disabled field can be updated and it must be a boolean"
       });
     });
 
-    it("should throw error if some fields are trying to be updated rather then active", async () => {
+    it("should throw error if some fields are trying to be updated rather then disabled", async () => {
       const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
         user: "user_someone"
       });
@@ -320,7 +320,7 @@ describe("ApiKey", () => {
       expect(res.body).toEqual({
         statusCode: 400,
         error: "Bad Request",
-        message: "Only active field can be updated and it must be a boolean"
+        message: "Only disabled field can be updated and it must be a boolean"
       });
     });
   });

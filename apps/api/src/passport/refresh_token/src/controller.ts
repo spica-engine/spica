@@ -76,15 +76,15 @@ export class RefreshTokenController {
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:refresh-token:update"))
   async update(@Param("id", OBJECT_ID) id: ObjectId, @Body() body: Partial<RefreshToken>) {
-    const {active} = body;
+    const disabled = body?.disabled;
 
-    if (typeof active !== "boolean") {
-      throw new BadRequestException("Only active field can be updated and it must be a boolean");
+    if (typeof disabled !== "boolean") {
+      throw new BadRequestException("Only disabled field can be updated and it must be a boolean");
     }
 
     const updatedToken = await this.service.findOneAndUpdate(
       {_id: id},
-      {$set: {active}},
+      {$set: {disabled}},
       {returnDocument: "after"}
     );
 
