@@ -501,6 +501,19 @@ describe("E2E Tests", () => {
     });
 
     it("should reject refresh with malformed refresh token", async () => {
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: "refreshToken=malformed_token"
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toContain("jwt malformed");
+    });
+
     it("should not refresh jwt if refresh token is disabled", async () => {
       const parsedCookie = parseCookie(cookies[0]);
 
@@ -527,13 +540,11 @@ describe("E2E Tests", () => {
         {},
         {
           Authorization: `IDENTITY ${token}`,
-          Cookie: "refreshToken=malformed_token"
           Cookie: cookies
         }
       );
 
       expect(statusCode).toEqual(400);
-      expect(body.message).toContain("jwt malformed");
       expect(body.message).toEqual("Refresh token is disabled");
     });
   });
