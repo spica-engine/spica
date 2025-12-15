@@ -22,6 +22,7 @@ import {
   LocationCellKeyboardHandler,
   JsonCell,
   JsonCellKeyboardHandler,
+  RichTextCell,
 } from "./cells";
 
 
@@ -110,6 +111,11 @@ class CellRegistry {
       component: JsonCell,
       keyboardHandler: JsonCellKeyboardHandler,
       defaultValue: {},
+    });
+    this.register("richtext", {
+      component: RichTextCell,
+      keyboardHandler: DefaultCellKeyboardHandler,
+      defaultValue: "",
     });
   }
 
