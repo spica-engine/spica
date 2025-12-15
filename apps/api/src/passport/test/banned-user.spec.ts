@@ -99,24 +99,16 @@ describe("User Ban Logic", () => {
     });
     identityToken = identityLoginRes.body.token;
 
-    const [userListRes, userLoginRes] = await Promise.all([
-      req.get(
-        `/passport/user`,
-        {
-          username: "testuser"
-        },
-        {
-          Authorization: `IDENTITY ${identityToken}`
-        }
-      ),
-      req.post("/passport/login", {
-        username: "testuser",
-        password: "password123"
-      })
-    ]);
-
+    const userListRes = await req.get(
+      `/passport/user`,
+      {
+        username: "testuser"
+      },
+      {
+        Authorization: `IDENTITY ${identityToken}`
+      }
+    );
     testUserId = userListRes.body[0]._id;
-    userToken = userLoginRes.body.token;
   });
 
   afterEach(() => app.close());
@@ -148,14 +140,10 @@ describe("User Ban Logic", () => {
         {Authorization: `IDENTITY ${identityToken}`}
       );
 
-      const loginRes = await req.post(
-        "/passport/login",
-        {
-          username: "testuser",
-          password: "password123"
-        },
-        {Authorization: `USER ${userToken}`}
-      );
+      const loginRes = await req.post("/passport/login", {
+        username: "testuser",
+        password: "password123"
+      });
 
       expect(loginRes.statusCode).toEqual(401);
       expect(loginRes.body.message).toContain("User is banned. Try again after 1 hours.");
