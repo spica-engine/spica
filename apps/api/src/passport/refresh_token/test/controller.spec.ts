@@ -256,10 +256,6 @@ describe("ApiKey", () => {
     });
 
     it("should enable token", async () => {
-      await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
-        disabled: true
-      });
-
       const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
         disabled: false
       });
