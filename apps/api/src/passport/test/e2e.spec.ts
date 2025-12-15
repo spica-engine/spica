@@ -461,6 +461,40 @@ describe("E2E Tests", () => {
       } = await getIdentities();
       expect(identity._id).toEqual(refreshToken.identity);
     });
+
+    it("should not refresh jwt if refresh token is disabled", async () => {
+      const parsedCookie = parseCookie(cookies[0]);
+
+      let {
+        body: [refreshToken]
+      } = await req.get(
+        "passport/refresh-token",
+        {filter: JSON.stringify({token: parsedCookie.value})},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+
+      await req.put(
+        `/passport/refresh-token/${refreshToken._id}`,
+        {disabled: true},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toEqual("Refresh token is disabled");
+    });
   });
 
   describe("SSO", () => {
