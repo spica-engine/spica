@@ -9,7 +9,8 @@ import {
   Put,
   Query,
   UseGuards,
-  Body
+  Body,
+  BadRequestException
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
@@ -74,10 +75,16 @@ export class RefreshTokenController {
 
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:refresh-token:update"))
-  async update(@Param("id", OBJECT_ID) id: ObjectId, @Body() updates: Partial<RefreshToken>) {
+  async update(@Param("id", OBJECT_ID) id: ObjectId, @Body() body: Partial<RefreshToken>) {
+    const {active} = body;
+
+    if (typeof active !== "boolean") {
+      throw new BadRequestException("Only active field can be updated and it must be a boolean");
+    }
+
     const updatedToken = await this.service.findOneAndUpdate(
       {_id: id},
-      {$set: updates},
+      {$set: {active}},
       {returnDocument: "after"}
     );
 

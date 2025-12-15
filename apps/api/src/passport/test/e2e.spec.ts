@@ -477,7 +477,7 @@ describe("E2E Tests", () => {
 
       await req.put(
         `/passport/refresh-token/${refreshToken._id}`,
-        {disabled: true},
+        {active: false},
         {
           Authorization: `IDENTITY ${token}`
         }

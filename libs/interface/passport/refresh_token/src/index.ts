@@ -8,7 +8,7 @@ export interface RefreshToken {
   created_at: Date;
   expired_at: Date;
   last_used_at: Date;
-  disabled?: boolean;
+  active?: boolean;
 }
 
 export interface PaginationResponse<T> {
