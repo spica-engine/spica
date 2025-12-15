@@ -21,6 +21,11 @@
     },
     "attributes": {
       "type": "object"
+    },
+    "bannedUntil": {
+      "type": "string",
+      "format": "date-time",
+      "title": "User ban expiration date. User cannot log in until this date passes"
     }
   },
   "additionalProperties": false
