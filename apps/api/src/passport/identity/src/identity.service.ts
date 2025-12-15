@@ -101,10 +101,14 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenIdentifiersAreMatched(accessToken: string, refreshToken: string) {
+  private async verifyTokenCanBeUsed(accessToken: string, refreshToken: string) {
     const refreshTokenData = await this.refreshTokenService.findOne({token: refreshToken});
     if (!refreshTokenData) {
       return Promise.reject("Refresh token not found");
+    }
+
+    if (refreshTokenData.disabled) {
+      return Promise.reject("Refresh token is disabled");
     }
 
     const identity = await this.findIdentityOfToken(accessToken);
@@ -131,7 +135,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   async refreshToken(accessToken: string, refreshToken: string) {
     accessToken = this.extractAccessToken(accessToken);
     await this.verifyTokenCanBeRefreshed(accessToken, refreshToken);
-    await this.verifyTokenIdentifiersAreMatched(accessToken, refreshToken);
+    await this.verifyTokenCanBeUsed(accessToken, refreshToken);
     await this.updateRefreshTokenLastUsedAt(refreshToken);
     const identity = await this.findIdentityOfToken(accessToken);
     return this.sign(identity);

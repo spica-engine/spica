@@ -97,10 +97,14 @@ export class UserService extends BaseCollection<User>("user") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenUsernamesAreMatched(accessToken: string, refreshToken: string) {
+  private async verifyTokenCanBeUsed(accessToken: string, refreshToken: string) {
     const refreshTokenData = await this.refreshTokenService.findOne({token: refreshToken});
     if (!refreshTokenData) {
       return Promise.reject("Refresh token not found");
+    }
+
+    if (refreshTokenData.disabled) {
+      return Promise.reject("Refresh token is disabled");
     }
 
     const user = await this.findUserOfToken(accessToken);
@@ -127,7 +131,7 @@ export class UserService extends BaseCollection<User>("user") {
   async refreshToken(accessToken: string, refreshToken: string) {
     accessToken = this.extractAccessToken(accessToken);
     await this.verifyTokenCanBeRefreshed(accessToken, refreshToken);
-    await this.verifyTokenUsernamesAreMatched(accessToken, refreshToken);
+    await this.verifyTokenCanBeUsed(accessToken, refreshToken);
     await this.updateRefreshTokenLastUsedAt(refreshToken);
     const user = await this.findUserOfToken(accessToken);
     return this.sign(user);
