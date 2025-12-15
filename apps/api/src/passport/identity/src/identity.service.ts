@@ -96,6 +96,10 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       return Promise.reject("Refresh token not found");
     }
 
+    if (refreshTokenData.disabled) {
+      return Promise.reject("Refresh token is disabled");
+    }
+
     const identity = await this.findIdentityOfToken(accessToken);
 
     if (refreshTokenData.identity !== String(identity._id)) {

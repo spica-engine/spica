@@ -20,6 +20,11 @@ export default {
       action: "passport:refresh-token:show",
       resource: {include: ["*"], exclude: []},
       module: "passport:refresh-token"
+    },
+    {
+      action: "passport:refresh-token:update",
+      resource: {include: ["*"], exclude: []},
+      module: "passport:refresh-token"
     }
   ]
 };

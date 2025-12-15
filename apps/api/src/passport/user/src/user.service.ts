@@ -92,6 +92,10 @@ export class UserService extends BaseCollection<User>("user") {
       return Promise.reject("Refresh token not found");
     }
 
+    if (refreshTokenData.disabled) {
+      return Promise.reject("Refresh token is disabled");
+    }
+
     const user = await this.findUserOfToken(accessToken);
 
     if (refreshTokenData.user !== String(user._id)) {

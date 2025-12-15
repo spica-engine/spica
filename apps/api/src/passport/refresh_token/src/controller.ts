@@ -6,8 +6,10 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  Put,
   Query,
-  UseGuards
+  UseGuards,
+  Body
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
@@ -68,6 +70,22 @@ export class RefreshTokenController {
       }
       return r;
     });
+  }
+
+  @Put(":id")
+  @UseGuards(AuthGuard(), ActionGuard("passport:refresh-token:update"))
+  async update(@Param("id", OBJECT_ID) id: ObjectId, @Body() updates: Partial<RefreshToken>) {
+    const updatedToken = await this.service.findOneAndUpdate(
+      {_id: id},
+      {$set: updates},
+      {returnDocument: "after"}
+    );
+
+    if (!updatedToken) {
+      throw new NotFoundException();
+    }
+
+    return updatedToken;
   }
 
   @Delete(":id")
