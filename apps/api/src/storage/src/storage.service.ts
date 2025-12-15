@@ -178,8 +178,9 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     return objectWithData;
   }
 
-  async delete(id: ObjectId): Promise<void> {
-    const result = await this._coll.findOneAndDelete({_id: id});
+  async delete(idOrName: ObjectId | string): Promise<void> {
+    const query = idOrName instanceof ObjectId ? {_id: idOrName} : {name: idOrName};
+    const result = await this._coll.findOneAndDelete(query);
 
     if (!result) {
       throw new NotFoundException(`Storage object could not be found`);

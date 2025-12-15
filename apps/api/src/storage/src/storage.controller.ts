@@ -188,14 +188,17 @@ export class StorageController {
 
   /**
    * Removes the object from the storage along with its metadata
-   * @param id Identifier of the object
+   * Can delete by object ID or by object name
+   * @param idOrName Identifier (ObjectId) or name of the object to delete
    */
   @UseInterceptors(activity(createStorageActivity))
-  @Delete(":id")
+  @Delete(":idOrName")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.storage.delete(id);
+  async deleteOne(
+    @Param("idOrName", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string
+  ) {
+    return this.storage.delete(idOrName);
   }
 
   /**
