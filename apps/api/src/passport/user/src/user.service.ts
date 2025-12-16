@@ -86,7 +86,7 @@ export class UserService extends BaseCollection<User>("user") {
       await this.verify(accessToken);
     } catch (error) {
       // Allow expired JWTs to be refreshed, but reject other errors (malformed, invalid signature, etc.)
-      if (error.message !== "jwt expired") {
+      if (error.name !== "TokenExpiredError") {
         throw error;
       }
     }
