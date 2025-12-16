@@ -84,13 +84,15 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   private extractAccessToken(authHeader: string) {
     return authHeader.split(" ")[1];
   }
+  private isAllowedRefreshError(error: any): boolean {
+    return error?.name === "TokenExpiredError";
+  }
 
   private async verifyAccessTokenForRefresh(accessToken: string) {
     try {
       await this.verify(accessToken);
     } catch (error) {
-      // Allow expired JWTs to be refreshed, but reject other errors (malformed, invalid signature, etc.)
-      if (error.name !== "TokenExpiredError") {
+      if (!this.isAllowedRefreshError(error)) {
         throw error;
       }
     }
