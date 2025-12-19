@@ -80,9 +80,22 @@ export class UserService extends BaseCollection<User>("user") {
   private extractAccessToken(authHeader: string) {
     return authHeader.split(" ")[1];
   }
+  private isAllowedRefreshError(error: any): boolean {
+    return error?.name === "TokenExpiredError";
+  }
+
+  private async verifyAccessTokenForRefresh(accessToken: string) {
+    try {
+      await this.verify(accessToken);
+    } catch (error) {
+      if (!this.isAllowedRefreshError(error)) {
+        throw error;
+      }
+    }
+  }
 
   private async verifyTokenCanBeRefreshed(accessToken: string, refreshToken: string) {
-    await this.verify(accessToken);
+    await this.verifyAccessTokenForRefresh(accessToken);
     await this.verify(refreshToken);
   }
 

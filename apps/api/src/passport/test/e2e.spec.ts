@@ -388,7 +388,7 @@ describe("E2E Tests", () => {
 
     it("should refresh expired jwts", async () => {
       const tokenExpirationDate = new Date(Date.now() + EXPIRES_IN * 1000 + 100);
-      jest.useFakeTimers();
+      jest.useFakeTimers({doNotFake: ["nextTick"]});
       jest.setSystemTime(tokenExpirationDate);
 
       // ensure token is expired
@@ -402,9 +402,6 @@ describe("E2E Tests", () => {
       expect(response.statusCode).toEqual(400);
       expect(response.body.message).toEqual("jwt expired");
 
-      jest.useRealTimers();
-
-      // refresh token
       const {body} = await req.post(
         "passport/identity/session/refresh",
         {},
@@ -415,6 +412,8 @@ describe("E2E Tests", () => {
       );
 
       const newToken = body.token;
+
+      jest.useRealTimers();
 
       // new token should be valid
       response = await req.get(
@@ -460,6 +459,59 @@ describe("E2E Tests", () => {
         body: [identity]
       } = await getIdentities();
       expect(identity._id).toEqual(refreshToken.identity);
+    });
+
+    it("should not refresh with expired refresh token", async () => {
+      const now = new Date();
+      jest.useFakeTimers({doNotFake: ["nextTick"]});
+      jest.setSystemTime(now);
+
+      const refreshTokenExpirationDate = new Date(
+        Date.now() + REFRESH_TOKEN_EXPIRES_IN * 1000 + 100
+      );
+      jest.setSystemTime(refreshTokenExpirationDate);
+
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toContain("jwt expired");
+
+      jest.useRealTimers();
+    });
+
+    it("should reject refresh with malformed access token", async () => {
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY malformed_token`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toContain("jwt malformed");
+    });
+
+    it("should reject refresh with malformed refresh token", async () => {
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: "refreshToken=malformed_token"
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toContain("jwt malformed");
     });
 
     it("should not refresh jwt if refresh token is disabled", async () => {
