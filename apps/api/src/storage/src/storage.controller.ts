@@ -333,20 +333,35 @@ export class StorageController {
   }
 
   private async resolveIdsFromElements(elements: (ObjectId | string)[]): Promise<ObjectId[]> {
-    return Promise.all(
-      elements.map(async element => {
-        if (element instanceof ObjectId) {
-          return element;
-        }
+    const names: string[] = [];
+    for (const element of elements) {
+      if (!(element instanceof ObjectId)) {
+        names.push(element as string);
+      }
+    }
 
-        const object = await this.storage.findOne({name: element});
+    if (names.length === 0) {
+      return elements as ObjectId[];
+    }
 
-        if (!object) {
-          throw new NotFoundException(`Storage object "${element}" could not be found`);
-        }
+    const objects = await this.storage.find({name: {$in: names}});
+    const nameToIdMap = new Map<string, ObjectId>();
 
-        return object._id as ObjectId;
-      })
-    );
+    for (const object of objects) {
+      if (object && object.name && object._id) {
+        nameToIdMap.set(object.name, object._id as ObjectId);
+      }
+    }
+
+    return elements.map(element => {
+      if (element instanceof ObjectId) {
+        return element;
+      }
+      const id = nameToIdMap.get(element as string);
+      if (!id) {
+        throw new NotFoundException(`Storage object "${element}" could not be found`);
+      }
+      return id;
+    });
   }
 }

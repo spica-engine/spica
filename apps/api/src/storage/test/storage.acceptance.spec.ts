@@ -959,12 +959,12 @@ describe("Storage Acceptance", () => {
         body: {data: objects}
       } = await req.get("/storage", {paginate: true});
 
-      const unauthorizedName = "unauthorized-file.txt";
+      const unauthorizedName = objects[1].name;
       const namesToDelete = [objects[0].name, unauthorizedName];
 
       const originalCheckAction = guardService.checkAction;
       jest.spyOn(guardService, "checkAction").mockImplementation((args: any) => {
-        if (args.request?.params?.id === unauthorizedName) {
+        if (args.request?.params?.id === objects[1]._id.toString()) {
           throw new ForbiddenException(
             `You don't have permission to delete storage object: ${unauthorizedName}`
           );
@@ -975,7 +975,11 @@ describe("Storage Acceptance", () => {
       const response = await req.delete("/storage", namesToDelete);
       jest.restoreAllMocks();
 
-      expect(response.statusCode).toBe(404);
+      expect(response.statusCode).toBe(403);
+      expect(response.statusText).toBe("Forbidden");
+      expect(response.body.message).toContain(
+        `You don't have permission to delete storage object: ${unauthorizedName}`
+      );
 
       const {body: afterObjects} = await req.get("/storage", {paginate: true});
       expect(afterObjects.meta.total).toBe(objects.length);
