@@ -21,7 +21,7 @@ import {
   Req
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
+import {BOOLEAN, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {
@@ -42,13 +42,17 @@ import {
 } from "./body";
 import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface/storage";
 import {StorageService} from "./storage.service";
+import {GuardService} from "@spica-server/passport/guard/services";
 
 /**
  * @name storage
  */
 @Controller("storage")
 export class StorageController {
-  constructor(private storage: StorageService) {}
+  constructor(
+    private storage: StorageService,
+    private guardService: GuardService
+  ) {}
 
   /**
    * @param limit The maximum amount documents that can be present in the response.
@@ -184,14 +188,38 @@ export class StorageController {
 
   /**
    * Removes the object from the storage along with its metadata
-   * @param id Identifier of the object
+   * Can delete by object ID or by object name
+   * @param idOrName Identifier (ObjectId) or name of the object to delete
    */
   @UseInterceptors(activity(createStorageActivity))
-  @Delete(":id")
+  @Delete(":idOrName")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:delete"))
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.storage.delete(id);
+  async deleteOne(
+    @Param("idOrName", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string
+  ) {
+    return this.storage.delete(idOrName);
+  }
+
+  /**
+   * Removes multiple storage objects in a single operation.
+   * Validates user has delete permissions for ALL objects before deleting any.
+   * If user lacks permission for even one object, the entire operation is cancelled.
+   * @body Array of object IDs to delete
+   */
+  @UseInterceptors(JsonBodyParser(), activity(createStorageActivity))
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  async deleteMany(
+    @Body(DEFAULT([]), ARRAY(value => new ObjectId(value))) ids: ObjectId[],
+    @Req() req
+  ) {
+    await this.validateDeletePermissions(
+      ids.map(id => id.toString()),
+      req
+    );
+    await this.storage.deleteManyByIds(ids);
   }
 
   /**
@@ -266,5 +294,26 @@ export class StorageController {
 
     delete object.content.data;
     return object;
+  }
+
+  private async validateDeletePermissions(ids: string[], req: any): Promise<void> {
+    let promises = [];
+    for (const id of ids) {
+      const preparedRequest = {
+        ...req,
+        route: {path: "/storage/:id"},
+        params: {id},
+        user: req.user
+      };
+
+      const promise = this.guardService.checkAction({
+        request: preparedRequest,
+        response: {},
+        actions: ["storage:delete"],
+        options: {resourceFilter: false}
+      });
+      promises.push(promise);
+    }
+    await Promise.all(promises);
   }
 }
