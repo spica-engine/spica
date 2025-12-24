@@ -258,8 +258,8 @@ describe("Storage", () => {
         {
           request: "storage/123",
           response: {
-            error: undefined,
-            message: "Invalid id."
+            error: "Not Found",
+            message: "Storage object could not be found"
           }
         }
       ]
