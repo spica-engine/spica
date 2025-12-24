@@ -2,6 +2,7 @@ import {MongoClient, MongoClientOptions} from "mongodb";
 import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server";
 
 let uri;
+let activeChangeStreams: Set<any> = new Set();
 
 const MONGODB_BINARY_VERSION = "7.0.14";
 
@@ -20,15 +21,26 @@ export async function start(topology: "standalone" | "replset") {
   }
 
   globalThis.__CLEANUPCALLBACKS = globalThis.__CLEANUPCALLBACKS || [];
-  globalThis.__CLEANUPCALLBACKS.push(() => setTimeout(() => mongod.stop(), 2000));
+  globalThis.__CLEANUPCALLBACKS.push(async () => {
+    // Close all active change streams before stopping MongoDB
+    await closeAllChangeStreams();
+    await mongod.stop();
+  });
 
   uri = mongod.getUri() + "&retryWrites=false";
 
-  return MongoClient.connect(uri, clientOptions);
+  const client = await MongoClient.connect(uri, clientOptions);
+
+  // Track change streams to close them properly on cleanup
+  trackChangeStreams(client);
+
+  return client;
 }
 
 export async function connect(connectionUri: string) {
-  return MongoClient.connect(connectionUri);
+  const client = await MongoClient.connect(connectionUri);
+  trackChangeStreams(client);
+  return client;
 }
 
 export function getConnectionUri() {
@@ -37,6 +49,57 @@ export function getConnectionUri() {
 
 export function getDatabaseName() {
   return "test";
+}
+
+export function registerChangeStream(stream: any) {
+  activeChangeStreams.add(stream);
+
+  // Suppress shutdown-related errors to prevent test flakiness
+  stream.on("error", (err: any) => {
+    if (
+      err.codeName === "InterruptedAtShutdown" ||
+      err.message?.includes("ChangeStream is closed") ||
+      err.message?.includes("Client must be connected")
+    ) {
+      // Ignore these errors during cleanup
+      return;
+    }
+    console.error("ChangeStream error:", err);
+  });
+
+  // Auto-remove from tracking when stream closes
+  const cleanup = () => activeChangeStreams.delete(stream);
+  stream.on("close", cleanup);
+  stream.on("end", cleanup);
+}
+
+export async function closeAllChangeStreams() {
+  const streams = Array.from(activeChangeStreams);
+  activeChangeStreams.clear();
+
+  await Promise.all(
+    streams.map(async stream => {
+      try {
+        if (!stream.closed) {
+          await stream.close();
+        }
+      } catch (err) {
+        // Ignore errors during cleanup
+      }
+    })
+  );
+}
+
+function trackChangeStreams(client: MongoClient) {
+  // Override client.watch if it exists
+  const originalClientWatch = client.watch;
+  if (originalClientWatch) {
+    client.watch = function (this: any, ...args: any[]) {
+      const stream = originalClientWatch.apply(this, args);
+      registerChangeStream(stream);
+      return stream;
+    };
+  }
 }
 
 function getReplicaClientOptions(): MongoClientOptions {

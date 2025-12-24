@@ -1,5 +1,6 @@
 import {Db, MongoClient} from "@spica-server/database";
 import {ChangeStream} from "mongodb";
+import {registerChangeStream} from "./start";
 
 const originalCollection = Db.prototype.collection;
 
@@ -9,6 +10,10 @@ Db.prototype.collection = function (name: string) {
   coll.watch = function () {
     _prepare();
     const stream = originalWatch.bind(this)(...arguments);
+
+    // Register the stream for cleanup tracking
+    registerChangeStream(stream);
+
     stream.on("ready", () => {
       if (_resolve) {
         _resolve([name, ...arguments]);
@@ -25,6 +30,10 @@ const originalWatch = MongoClient.prototype.watch;
 MongoClient.prototype.watch = function () {
   _prepare();
   const stream = originalWatch.bind(this)(...arguments);
+
+  // Register the stream for cleanup tracking
+  registerChangeStream(stream);
+
   stream.on("ready", () => {
     if (_resolve) {
       _resolve(arguments);
@@ -47,12 +56,20 @@ function _poll(stream: ChangeStream) {
       setImmediate(_resolveChange, e);
     }
   });
+
   const i = setInterval(() => {
-    if (stream["cursor"]) {
+    // Check if stream is closed before emitting ready
+    if (stream["cursor"] && !stream.closed) {
       clearInterval(i);
       stream.emit("ready" as any);
+    } else if (stream.closed) {
+      clearInterval(i);
     }
   }, 1);
+
+  // Clean up interval if stream closes
+  stream.on("close", () => clearInterval(i));
+  stream.on("error", () => clearInterval(i));
 }
 
 function _prepare() {
