@@ -140,7 +140,7 @@ const ColumnHeader = ({
             }}
             placement="bottom"
           >
-            <Button variant="icon" onClick={handleOpen}>
+            <Button variant="icon" onClick={handleOpen} className={styles.dropdownIcon}>
               <Icon name="chevronDown" size={16} />
             </Button>
           </Popover>
@@ -195,15 +195,11 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [tableFocusReset, setTableFocusReset] = useState(0);
+  const [focusResetVersion, setFocusResetVersion] = useState(0);
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
     `${bucket?._id}-fields-order`,
     bucket?.properties ? Object.keys(bucket.properties) : []
-  );
-  const tableKey = useMemo(
-    () => `${bucket?._id ?? "bucket"}-${fieldsOrder.join(",")}-${tableFocusReset}`,
-    [bucket?._id, fieldsOrder, tableFocusReset]
   );
 
   const [sortMeta, setSortMeta] = useLocalStorage<{
@@ -433,14 +429,14 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       }
       
       if (tableContainerRef.current && !tableContainerRef.current.contains(target)) {
-        // Click is outside the table and not inside a popover, reset table focus state by changing key
-        setTableFocusReset(prev => prev + 1);
+        // Click is outside the table, increment focus reset version
+        setFocusResetVersion(prev => prev + 1);
       }
     };
 
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setTableFocusReset(prev => prev + 1);
+        setFocusResetVersion(prev => prev + 1);
       }
     };
 
@@ -463,7 +459,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   }, []);
 
   const handleRequestBlur = useCallback(() => {
-    setTableFocusReset(prev => prev + 1);
+    setFocusResetVersion(prev => prev + 1);
   }, []);
 
   const createDeleteHandler = useCallback((fieldKey: string, isPrimaryField: boolean) => {
@@ -487,10 +483,11 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           isFocused={params.isFocused}
           onValueChange={handleValueChange} 
           onRequestBlur={handleRequestBlur}
+          focusResetVersion={focusResetVersion}
         />
       );
     };
-  }, [handleValueChange, handleRequestBlur]);
+  }, [handleValueChange, handleRequestBlur, focusResetVersion]);
 
   const createPropertyColumn = useCallback((
     key: string,
@@ -518,7 +515,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           onDelete={createDeleteHandler(key, isPrimaryField)}
         />
       ),
-      width: "200px",
+      width: "150px",
+      minWidth: "150px",
       renderCell: createPropertyRenderCell(key, property),
     };
   }, [
@@ -539,7 +537,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       {
         key: '_id',
         header: '_id',
-        width: '200px',
+        width: '250px',
+        minWidth: '250px',
         renderCell: renderIdCell,
       }
     ];
@@ -611,7 +610,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 <div ref={tableContainerRef} className={styles.tableContainer}>
       <div className={styles.tableWrapper}>
         <Table
-          key={tableKey}
           columns={columns}
           data={sortedData}
           saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}

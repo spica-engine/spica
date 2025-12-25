@@ -22,6 +22,7 @@ import {
   LocationCellKeyboardHandler,
   JsonCell,
   JsonCellKeyboardHandler,
+  RelationCell,
 } from "./cells";
 
 
@@ -110,6 +111,12 @@ class CellRegistry {
       component: JsonCell,
       keyboardHandler: JsonCellKeyboardHandler,
       defaultValue: {},
+    });
+
+    this.register("relation", {
+      component: RelationCell,
+      keyboardHandler: DefaultCellKeyboardHandler,
+      defaultValue: null,
     });
   }
 

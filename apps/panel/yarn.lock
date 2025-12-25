@@ -11000,10 +11000,10 @@ own-keys@^1.0.1:
     object-keys "^1.1.1"
     safe-push-apply "^1.0.0"
 
-oziko-ui-kit@^0.0.109:
-  version "0.0.109"
-  resolved "https://registry.yarnpkg.com/oziko-ui-kit/-/oziko-ui-kit-0.0.109.tgz#763b2bb4b3079b8940f57fd0e914b69de939d00c"
-  integrity sha512-Q7+Oz4mNLZG4jUpN4NZsknwTzcRzlKVyEbouwzRnyYqndoGjsRlIdOEKftzOShKQXIrQHYnS4yGMZnmJJfM9Hg==
+oziko-ui-kit@^0.0.114:
+  version "0.0.114"
+  resolved "https://registry.yarnpkg.com/oziko-ui-kit/-/oziko-ui-kit-0.0.114.tgz#3678db3862d42b37cb8f943c5d5d3e567b6dba61"
+  integrity sha512-aeC9Q9J6KDxx3DTpqKvJtR+Kts2Zj/u4HJOvWzpt0UUy1CNfn3DiqHdD9U9r92xABZAju6D2RoxP4ot3vC8wtA==
   dependencies:
     "@emotion/react" "^11.14.0"
     "@emotion/styled" "^11.14.0"
@@ -12507,6 +12507,13 @@ react-infinite-scroll-component@^6.1.0:
   version "6.1.0"
   resolved "https://registry.npmjs.org/react-infinite-scroll-component/-/react-infinite-scroll-component-6.1.0.tgz"
   integrity sha512-SQu5nCqy8DxQWpnUVLx7V7b7LcA37aM7tvoWjTLZp1dk6EJibM5/4EJKzOnl07/BsM1Y40sKLuqjCwwH/xV0TQ==
+  dependencies:
+    throttle-debounce "^2.1.0"
+
+react-infinite-scroll-component@^6.1.1:
+  version "6.1.1"
+  resolved "https://registry.yarnpkg.com/react-infinite-scroll-component/-/react-infinite-scroll-component-6.1.1.tgz#081d0e13ef1d6b77079f344b4bf5f1d5e6d5e759"
+  integrity sha512-R8YoOyiNDynSWmfVme5LHslsKrP+/xcRUWR2ies8UgUab9dtyw5ECnMCVPPmnmjjF4MWQmfVdRwRWcWaDgeyMA==
   dependencies:
     throttle-debounce "^2.1.0"
 
