@@ -1,0 +1,119 @@
+/**
+ * @owner Kanan Gasimov
+ * email: rio.kenan@gmail.com
+ */
+
+import type { FilterCondition } from './inputHandlers/types';
+import { extractRelationId, isRelationSelected } from '../relation-picker/types';
+
+const operatorMap: Record<string, string> = {
+  'Equal': '$eq',
+  'Not Equal': '$ne',
+  'Greater Than': '$gt',
+  'Greater Than or Equal': '$gte',
+  'Less Than': '$lt',
+  'Less Than or Equal': '$lte',
+  'Contains': '$regex',
+  'Not Contains': '$not',
+  'In': '$in',
+  'Not In': '$nin',
+};
+
+function extractQueryValue(value: any, isRelationField: boolean): any {
+  if (isRelationField) {
+    return extractRelationId(value);
+  }
+  return value;
+}
+
+function isRelationFieldValue(value: any): boolean {
+  return isRelationSelected(value);
+}
+
+function buildConditionObject(condition: FilterCondition): Record<string, any> | null {
+  const mongoOperator = operatorMap[condition.operator] || '$eq';
+  const isRelation = isRelationFieldValue(condition.value);
+  const fieldPath = isRelation ? `${condition.field}._id` : condition.field;
+  const queryValue = extractQueryValue(condition.value, isRelation);
+  
+  if (isRelation && !queryValue) {
+    return null;
+  }
+  
+  return {
+    [fieldPath]: {
+      [mongoOperator]: queryValue
+    }
+  };
+}
+
+function buildConditionObjects(validConditions: FilterCondition[]): Record<string, any>[] {
+  return validConditions
+    .map(buildConditionObject)
+    .filter((obj): obj is Record<string, any> => obj !== null);
+}
+
+function buildUniformOperatorFilter(conditionObjects: Record<string, any>[], operator: '$and' | '$or'): Record<string, any> {
+  return { [operator]: conditionObjects };
+}
+
+function buildMixedOperatorFilter(
+  validConditions: FilterCondition[],
+  conditionObjects: Record<string, any>[]
+): Record<string, any> | null {
+  const andConditions: Record<string, any>[] = [conditionObjects[0]];
+  const orConditions: Record<string, any>[] = [];
+  
+  validConditions.slice(1).forEach((condition, index) => {
+    const conditionObj = conditionObjects[index + 1];
+    if (condition.logicalOperator === 'or') {
+      orConditions.push(conditionObj);
+    } else {
+      andConditions.push(conditionObj);
+    }
+  });
+  
+  const filterParts: Record<string, any>[] = [];
+  if (andConditions.length > 0) {
+    filterParts.push(andConditions.length === 1 ? andConditions[0] : { $and: andConditions });
+  }
+  if (orConditions.length > 0) {
+    filterParts.push(orConditions.length === 1 ? orConditions[0] : { $or: orConditions });
+  }
+  
+  return filterParts.length > 1 ? { $and: filterParts } : (filterParts[0] || null);
+}
+
+export function convertConditionsToFilter(conditions: FilterCondition[]): Record<string, any> | null {
+  if (!conditions || conditions.length === 0) {
+    return null;
+  }
+
+  const validConditions = conditions.filter(
+    condition => condition.field && condition.value !== undefined && condition.value !== null && condition.value !== ''
+  );
+
+  if (validConditions.length === 0) {
+    return null;
+  }
+
+  const conditionObjects = buildConditionObjects(validConditions);
+
+  if (validConditions.length === 1) {
+    return buildUniformOperatorFilter(conditionObjects, '$and');
+  }
+
+  const operators = validConditions.slice(1).map(c => c.logicalOperator || 'and');
+  const allAnd = operators.every(op => op === 'and');
+  const allOr = operators.every(op => op === 'or');
+  
+  if (allAnd) {
+    return buildUniformOperatorFilter(conditionObjects, '$and');
+  }
+  
+  if (allOr) {
+    return buildUniformOperatorFilter(conditionObjects, '$or');
+  }
+  
+  return buildMixedOperatorFilter(validConditions, conditionObjects);
+}

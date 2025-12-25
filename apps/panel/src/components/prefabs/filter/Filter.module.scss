@@ -1,0 +1,87 @@
+.container {
+  color: var(--color-font-primary);
+  font-size: var(--font-size-md);
+
+  .conditionsContainer{
+    max-height: 200px;
+    overflow-y: scroll;
+  }
+
+  .options {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border: var(--border-default);
+    border-radius: 4px;
+    overflow: hidden;
+    height: 100%;
+
+    .select {
+      background: transparent;
+      padding: 0 var(--padding-md) !important;
+      color: var(--color-font-primary) !important;
+    }
+
+    .condition {
+      padding: 0 var(--padding-md);
+    }
+
+    .filterInput {
+      padding: 0 var(--padding-md) !important;
+      min-width: 150px !important;
+      max-width: 250px !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      button{
+        padding: 0 !important;
+      }
+    }
+
+    .deleteIcon {
+      color: var(--color-font-primary);
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      border-right: var(--border-default);
+      height: 100%;
+
+      &:first-child {
+        border-top-left-radius: var(--border-radius-sm);
+        border-bottom-left-radius: var(--border-radius-sm);
+      }
+
+      &:last-child {
+        border-right: none;
+        border-top-right-radius: var(--border-radius-sm);
+        border-bottom-right-radius: var(--border-radius-sm);
+      }
+    }
+  }
+
+  .addConditionButton {
+    background: var(--color-layout-background) !important;
+    height: 25px !important;
+    padding: 0 var(--padding-md) !important;
+  }
+
+  .logicalOperator {
+    background: transparent;
+    padding: 0 var(--padding-md) !important;
+    color: var(--color-font-primary) !important;
+    border: var(--border-default);
+    border-radius: 4px;
+    height: 25px;
+
+  }
+}
+
+.stringInput, .relationInput {
+   padding: 0 !important;
+}
+
