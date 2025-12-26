@@ -10,6 +10,8 @@ import {
   DefaultCellKeyboardHandler,
   MultipleSelectionCell,
   MultipleSelectionCellKeyboardHandler,
+  ColorCell,
+  ColorCellKeyboardHandler,
   StorageCell,
   StorageCellKeyboardHandler,
   TextareaCell,
@@ -17,7 +19,11 @@ import {
   BooleanCell,
   BooleanCellKeyboardHandler, 
   ObjectCell,
-  ObjectCellKeyboardHandler
+  ObjectCellKeyboardHandler,
+  LocationCell,
+  LocationCellKeyboardHandler,
+  JsonCell,
+  JsonCellKeyboardHandler,
 } from "./cells";
 
 
@@ -79,6 +85,12 @@ class CellRegistry {
       defaultValue: {},
     });
 
+    this.register("color", {
+      component: ColorCell,
+      keyboardHandler: ColorCellKeyboardHandler,
+      defaultValue: "#000000",
+    });
+
     this.register("storage", {
       component: StorageCell,
       keyboardHandler: StorageCellKeyboardHandler,
@@ -93,6 +105,16 @@ class CellRegistry {
     this.register("object", {
       component: ObjectCell,
       keyboardHandler: ObjectCellKeyboardHandler,
+      defaultValue: {},
+    });
+    this.register("location", {
+      component: LocationCell,
+      keyboardHandler: LocationCellKeyboardHandler,
+      defaultValue: null,
+    });
+    this.register("json", {
+      component: JsonCell,
+      keyboardHandler: JsonCellKeyboardHandler,
       defaultValue: {},
     });
   }

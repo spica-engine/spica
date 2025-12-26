@@ -376,13 +376,13 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       const value = params.row[key];
       
       return (
-        <EditableCell 
-          value={value}
+        <EditableCell
+          value={structuredClone(value)}
           propertyKey={key}
           property={property}
           rowId={params.row._id}
           isFocused={params.isFocused}
-          onValueChange={handleValueChange}
+          onValueChange={handleValueChange} 
           onRequestBlur={handleRequestBlur}
         />
       );
