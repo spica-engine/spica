@@ -44,6 +44,7 @@ export default function Bucket() {
 
   const isTableLoading = useMemo(() => formattedColumns.length <= 1, [formattedColumns]);
   const authToken = useAppSelector(selectParsedToken);
+  
   const handleDataChange = useCallback(
     async (rowId: string, propertyKey: string, newValue: any) => {
       try {
@@ -54,8 +55,6 @@ export default function Bucket() {
             [propertyKey]: newValue
           }
         }).unwrap();
-
-        console.log("Data saved successfully:", { rowId, propertyKey, newValue });
         
         // Optionally refresh data
         handleRefresh();
@@ -63,7 +62,7 @@ export default function Bucket() {
         console.error("Failed to save data:", error);
       }
     },
-    [bucketId, handleRefresh, updateBucketEntry]
+    [bucketId]
   );
 
   const deleteBucketEntries = useCallback(
