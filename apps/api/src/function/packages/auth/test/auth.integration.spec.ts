@@ -126,8 +126,7 @@ describe("auth", () => {
       auth.initialize({identity: token, publicUrl: PUBLIC_URL});
       await auth.signUp({
         username: "user1",
-        password: "pass1",
-        policies: ["PassportFullAccess"]
+        password: "pass1"
       });
     });
 
@@ -189,45 +188,27 @@ describe("auth", () => {
     it("should sign up", async () => {
       const user = await auth.signUp({
         username: "user1",
-        password: "pass1",
-        policies: ["PassportFullAccess"]
+        password: "pass1"
       });
 
       expect(ObjectId.isValid(user._id)).toEqual(true);
       expect(user).toEqual({
         _id: user._id,
         username: "user1",
-        policies: ["PassportFullAccess"]
+        policies: []
       });
 
       const token = await auth.signIn("user1", "pass1");
-      const {username, policies} = jwtDecode<any>(token);
+      const {username} = jwtDecode<any>(token);
 
       expect(username).toEqual("user1");
-      expect(policies).toEqual(["PassportFullAccess"]);
-    });
-
-    it("should sign up with multiple policies", async () => {
-      const user = await auth.signUp({
-        username: "user2",
-        password: "pass2",
-        policies: ["PassportFullAccess", "BucketFullAccess"]
-      });
-
-      expect(ObjectId.isValid(user._id)).toEqual(true);
-      expect(user.username).toEqual("user2");
-      expect(user.policies.sort((a, b) => a.localeCompare(b))).toEqual([
-        "BucketFullAccess",
-        "PassportFullAccess"
-      ]);
     });
 
     it("should sign up with headers", async () => {
       const user = await auth.signUp(
         {
           username: "user3",
-          password: "pass3",
-          policies: []
+          password: "pass3"
         },
         {Accept: "application/json"}
       );
@@ -235,59 +216,69 @@ describe("auth", () => {
       expect(ObjectId.isValid(user._id)).toEqual(true);
       expect(user.username).toEqual("user3");
     });
+  });
 
-    describe("policies", () => {
-      it("should attach policy", async () => {
-        const user = await auth.signUp({
-          username: "user4",
-          password: "pass4",
-          policies: []
-        });
+  describe("crud operations", () => {
+    let auth;
+    let userId: string;
 
-        const res = await auth.policy.attach(user._id, ["FunctionFullAccess"]);
-        expect(res).toEqual(["FunctionFullAccess"]);
+    beforeEach(async () => {
+      auth = await importFreshAuthModule();
+      auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+      const user = await auth.signUp({
+        username: "updateuser",
+        password: "oldpass"
+      });
+      userId = user._id;
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
+    it("should update password", async () => {
+      await auth.update(userId, {
+        password: "newpass"
       });
 
-      it("should detach policy", async () => {
-        const user = await auth.signUp({
-          username: "user5",
-          password: "pass5",
-          policies: ["FunctionFullAccess"]
-        });
+      const newToken = await auth.signIn("updateuser", "newpass");
+      const {username} = jwtDecode<any>(newToken);
 
-        const res = await auth.policy.detach(user._id, ["FunctionFullAccess"]);
-        expect(res).toEqual(["FunctionFullAccess"]);
-      });
+      expect(username).toEqual("updateuser");
+    });
 
-      it("should attach multiple policies", async () => {
-        const user = await auth.signUp({
-          username: "user6",
-          password: "pass6",
-          policies: []
-        });
+    it("should reject attempts to update other fields", async () => {
+      const error: any = await Axios.put(
+        `${PUBLIC_URL}/passport/user/${userId}`,
+        {
+          username: "hacker",
+          password: "newpass"
+        },
+        {
+          headers: {authorization: `IDENTITY ${token}`},
+          validateStatus: () => true
+        }
+      );
+      expect(error.status).toBe(400);
+      expect(error.data.message).toContain("must NOT have additional properties");
+    });
 
-        const res = await auth.policy.attach(user._id, ["FunctionFullAccess", "BucketFullAccess"]);
+    it("should get user by id", async () => {
+      const user = await auth.get(userId);
 
-        expect(res.sort((a, b) => a.localeCompare(b))).toEqual([
-          "BucketFullAccess",
-          "FunctionFullAccess"
-        ]);
-      });
+      expect(user._id).toEqual(userId);
+      expect(user.username).toEqual("updateuser");
+    });
 
-      it("should detach multiple policies", async () => {
-        const user = await auth.signUp({
-          username: "user7",
-          password: "pass7",
-          policies: ["FunctionFullAccess", "BucketFullAccess"]
-        });
+    it("should remove user", async () => {
+      const userBefore = await auth.get(userId);
+      expect(userBefore).toBeDefined();
+      expect(userBefore.username).toEqual("updateuser");
 
-        const res = await auth.policy.detach(user._id, ["FunctionFullAccess", "BucketFullAccess"]);
+      await auth.remove(userId);
 
-        expect(res.sort((a, b) => a.localeCompare(b))).toEqual([
-          "BucketFullAccess",
-          "FunctionFullAccess"
-        ]);
-      });
+      const userAfter = await auth.get(userId);
+      expect(userAfter).toBe("");
     });
   });
 
@@ -328,8 +319,7 @@ describe("auth", () => {
       auth2.initialize({identity: token, publicUrl: PUBLIC_URL});
       await auth2.signUp({
         username: "test_user",
-        password: "test_pass",
-        policies: ["PassportFullAccess"]
+        password: "test_pass"
       });
       const userToken = await auth2.signIn("test_user", "test_pass");
 
@@ -353,8 +343,7 @@ describe("auth", () => {
       authSetup.initialize({identity: token, publicUrl: PUBLIC_URL});
       await authSetup.signUp({
         username: "user1",
-        password: "pass1",
-        policies: ["PassportFullAccess"]
+        password: "pass1"
       });
       user1Token = await authSetup.signIn("user1", "pass1");
       expiredToken = await authSetup.signIn("user1", "pass1", 1);
@@ -422,8 +411,7 @@ describe("auth", () => {
 
       await auth.signUp({
         username: "signin_user1",
-        password: "signin_pass1",
-        policies: ["PassportFullAccess"]
+        password: "signin_pass1"
       });
 
       const signInToken = await auth.signIn("signin_user1", "signin_pass1");
@@ -437,8 +425,7 @@ describe("auth", () => {
 
       await auth.signUp({
         username: "signin_user2",
-        password: "signin_pass2",
-        policies: ["PassportFullAccess"]
+        password: "signin_pass2"
       });
 
       const signInToken = await auth.signIn("signin_user2", "signin_pass2");

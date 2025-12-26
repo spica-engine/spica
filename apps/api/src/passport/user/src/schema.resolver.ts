@@ -22,6 +22,18 @@ export class SchemaResolver {
           {$ref: "http://spica.internal/passport/user-attributes"}
         ]
       };
+    } else if (uri == "http://spica.internal/passport/update-user-password") {
+      return {
+        $id: "http://spica.internal/passport/update-user-password",
+        type: "object",
+        required: ["password"],
+        properties: {
+          password: {
+            type: "string"
+          }
+        },
+        additionalProperties: false
+      };
     } else if (uri == "http://spica.internal/passport/update-user-with-attributes") {
       return {
         $id: "http://spica.internal/passport/update-user-with-attributes",

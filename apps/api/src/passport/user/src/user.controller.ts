@@ -65,8 +65,6 @@ export class UserController {
   constructor(
     private userService: UserService,
     @Inject(USER_OPTIONS) private options: UserOptions,
-    @Inject(POLICY_PROVIDER)
-    private userPolicyResolver: (req: any) => Promise<[{statement: []}]>,
     private authFactor: AuthFactor,
     @Optional() private commander: ClassCommander
   ) {
@@ -95,21 +93,6 @@ export class UserController {
     });
   }
 
-  @Get("statements")
-  @UseGuards(AuthGuard())
-  async statements(@Req() req) {
-    req.user.policies = req.user.policies || [];
-
-    const userPolicies = await this.userPolicyResolver(req);
-
-    return userPolicies
-      .filter(i => i)
-      .map(ip => ip.statement)
-      .reduce((acc, curr) => {
-        return acc.concat(curr);
-      }, []);
-  }
-
   private hideSecretsExpression(): {[key: string]: 0} {
     const expression: any = {password: 0, lastPasswords: 0};
 
@@ -122,7 +105,10 @@ export class UserController {
   }
 
   @Get("profile")
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:profile", "passport/user"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("passport:user:profile", "passport/user")
+  )
   async findProfileEntries(
     @Query("filter", JSONP) filter?: object,
     @Query("limit", NUMBER) limit?: number,
@@ -147,7 +133,7 @@ export class UserController {
   }
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:index"))
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
@@ -188,11 +174,6 @@ export class UserController {
     }
 
     return this.userService.aggregate<User[]>([...pipeline, ...seekingPipeline]).toArray();
-  }
-  @Get("predefs")
-  @UseGuards(AuthGuard())
-  getPredefinedDefaults() {
-    return this.userService.getPredefinedDefaults();
   }
 
   @Get("factors")
@@ -321,7 +302,7 @@ export class UserController {
 
   @UseInterceptors(activity(createUserActivity))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:create"))
   async insertOne(
     @Body(Schema.validate("http://spica.internal/passport/create-user-with-attributes"))
     user: User
@@ -361,13 +342,11 @@ export class UserController {
   )
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/update-user-with-attributes"))
+    @Body(Schema.validate("http://spica.internal/passport/update-user-password"))
     user: Partial<User>
   ) {
     if (user.password) {
-      const {password: currentPassword, lastPasswords} = await this.userService.findOne({
-        username: user.username
-      });
+      const {password: currentPassword, lastPasswords} = await this.userService.findOne({_id: id});
 
       const isEqual = await compare(user.password, currentPassword);
       if (!isEqual) {
@@ -416,7 +395,7 @@ export class UserController {
 
   @UseInterceptors(activity(createUserActivity))
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     // prevent to delete the last user
@@ -437,7 +416,7 @@ export class UserController {
 
   @UseInterceptors(activity(createUserActivity))
   @Put(":id/policy/:policyId")
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:policy:add"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     const res = await this.userService.findOneAndUpdate(
@@ -460,7 +439,7 @@ export class UserController {
 
   @UseInterceptors(activity(createUserActivity))
   @Delete(":id/policy/:policyId")
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:policy:remove"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     const res = await this.userService.findOneAndUpdate(
