@@ -70,6 +70,12 @@ export const ObjectCell: React.FC<CellRendererProps> = ({
         dimensionX="fill"
         dimensionY={30}
         className={styles.objectCell}
+        popoverProps={{
+          open: isFocused,
+          onClose: () => {
+            onRequestBlur();
+          }
+        }}
       />
     </BaseCellRenderer>
   );
