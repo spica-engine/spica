@@ -83,10 +83,7 @@ export const ObjectCell: React.FC<CellRendererProps> = ({
 
 export const ObjectCellKeyboardHandler: CellKeyboardHandler = {
   handleKeyDown: (event, _context) => {
-    if (event.key === "Enter" || event.key === " ") {
-      return true;
-    }
-    return false;
+    return event.key === "Enter" || event.key === " ";
   },
 };
 
