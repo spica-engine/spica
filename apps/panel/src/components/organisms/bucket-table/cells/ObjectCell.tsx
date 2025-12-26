@@ -3,7 +3,7 @@
  * email: rio.kenan@gmail.com
  */
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import type { CellRendererProps, CellKeyboardHandler } from "../types";
 import { BaseCellRenderer } from "./BaseCellRenderer";
 import styles from "./Cells.module.scss";
@@ -19,7 +19,25 @@ export const ObjectCell: React.FC<CellRendererProps> = ({
 }) => {
   const [localValue, setLocalValue] = useState<any>(value ?? {});
 
-  // Sync localValue with value prop when not focused
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      const actions: Partial<Record<KeyboardEvent["key"], () => void>> = {
+        Enter: () => onChange(localValue),
+        Escape: () => setLocalValue(value ?? {}),
+      };
+  
+      const action = actions[e.key];
+      if (!action) return;
+  
+      e.preventDefault();
+      e.stopPropagation();
+  
+      action();
+      onRequestBlur();
+    },
+    [localValue, value, onChange, onRequestBlur]
+  );
+
   useEffect(() => {
     if (!isFocused) {
       setLocalValue(value ?? {});
@@ -32,26 +50,13 @@ export const ObjectCell: React.FC<CellRendererProps> = ({
 
   useEffect(() => {
     if (!isFocused) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        e.stopPropagation();
-        onChange(localValue);
-        onRequestBlur();
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        e.stopPropagation();
-        setLocalValue(value ?? {});
-        onRequestBlur();
-      }
-    };
-
+  
     globalThis.addEventListener("keydown", handleKeyDown);
+  
     return () => {
       globalThis.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isFocused, localValue, value, onChange, onRequestBlur]);
+  }, [isFocused, handleKeyDown]);
 
   const properties: TypeProperties = React.useMemo(() => {
     if (!property?.properties) {
