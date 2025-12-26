@@ -18,23 +18,19 @@ const FilterValueInput: React.FC<FilterValueInputProps> = ({
     onValueChange(condition.id, value);
   };
 
-  if (!property || !condition.field) {
+  const InputHandler = filterInputHandlerRegistry.get(condition.valueType);
+
+  if (!InputHandler || !property) {
+    let displayValue = '';
+    if (typeof condition.value === 'string') {
+      displayValue = condition.value;
+    } else if (typeof condition.value === 'number') {
+      displayValue = String(condition.value);
+    }
+    
     return (
       <Input
-        value={condition.value || ""}
-        onChange={(e) => handleChange(e.target.value)}
-        placeholder="Enter a value"
-        dimensionY="fill"
-      />
-    );
-  }
-
-  const InputHandler = filterInputHandlerRegistry.get(property.type);
-
-  if (!InputHandler) {
-    return (
-      <Input
-        value={condition.value || ""}
+        value={displayValue}
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Enter value"
         dimensionY="fill"

@@ -85,25 +85,22 @@ function buildMixedOperatorFilter(
 }
 
 export function convertConditionsToFilter(conditions: FilterCondition[]): Record<string, any> | null {
+
   if (!conditions || conditions.length === 0) {
     return null;
   }
 
-  const validConditions = conditions.filter(
-    condition => condition.field && condition.value !== undefined && condition.value !== null && condition.value !== ''
-  );
+  const conditionObjects = buildConditionObjects(conditions);
 
-  if (validConditions.length === 0) {
+  if (conditionObjects.length === 0) {
     return null;
   }
 
-  const conditionObjects = buildConditionObjects(validConditions);
-
-  if (validConditions.length === 1) {
+  if (conditions.length === 1) {
     return buildUniformOperatorFilter(conditionObjects, '$and');
   }
 
-  const operators = validConditions.slice(1).map(c => c.logicalOperator || 'and');
+  const operators = conditions.slice(1).map(c => c.logicalOperator || 'and');
   const allAnd = operators.every(op => op === 'and');
   const allOr = operators.every(op => op === 'or');
   
@@ -115,5 +112,5 @@ export function convertConditionsToFilter(conditions: FilterCondition[]): Record
     return buildUniformOperatorFilter(conditionObjects, '$or');
   }
   
-  return buildMixedOperatorFilter(validConditions, conditionObjects);
+  return buildMixedOperatorFilter(conditions, conditionObjects);
 }

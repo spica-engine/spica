@@ -10,4 +10,5 @@ import NumberInputHandler from './NumberInputHandler';
 filterInputHandlerRegistry.register('string', StringInputHandler);
 filterInputHandlerRegistry.register('number', NumberInputHandler);
 
+
 filterInputHandlerRegistry.registerDefault(StringInputHandler);

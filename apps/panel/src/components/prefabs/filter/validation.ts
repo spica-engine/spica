@@ -4,46 +4,48 @@
  */
 
 import type { FilterCondition } from './inputHandlers/types';
-import type { Property } from '../../../store/api/bucketApi';
+import type { ConditionValueType } from './conditionValueType';
 
-function isValidString(value: any): boolean {
+
+function isValidString(value: unknown): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function isValidNumber(value: any): boolean {
-  return value !== null && value !== undefined && value !== "";
+
+function isValidNumber(value: unknown): boolean {
+  return typeof value === "number" && !Number.isNaN(value);
 }
 
-function isValidBoolean(value: any): boolean {
+function isValidBoolean(value: unknown): boolean {
   return typeof value === "boolean";
 }
 
-function isValidDate(value: any): boolean {
+function isValidDate(value: unknown): boolean {
   if (value instanceof Date) {
-    return true;
+    return !Number.isNaN(value.getTime());
   }
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function isValidArray(value: any): boolean {
+function isValidArray(value: unknown): boolean {
   return Array.isArray(value) && value.length > 0;
 }
 
-function isValidObject(value: any): boolean {
+function isValidObject(value: unknown): boolean {
   if (value == null) {
     return false;
   }
   if (typeof value === "object" && !Array.isArray(value)) {
     return Object.keys(value).length > 0;
   }
-  return true;
+  return false;
 }
 
 function hasValidIdProperty(obj: any, idKey: string): boolean {
   return typeof obj[idKey] === "string" && obj[idKey].trim().length > 0;
 }
 
-function isValidRelation(value: any): boolean {
+function isValidRelation(value: unknown): boolean {
   if (typeof value === "string") {
     return value.trim().length > 0;
   }
@@ -52,80 +54,59 @@ function isValidRelation(value: any): boolean {
     return false;
   }
   
-  if (value.kind === "id" && hasValidIdProperty(value, "id")) {
+  const obj = value as any;
+  
+  if (obj.kind === "id" && hasValidIdProperty(obj, "id")) {
     return true;
   }
   
-  if (hasValidIdProperty(value, "_id")) {
+  if (hasValidIdProperty(obj, "_id")) {
     return true;
   }
   
-  return hasValidIdProperty(value, "id");
+  return hasValidIdProperty(obj, "id");
 }
 
-function isValidGeneric(value: any): boolean {
+function isValidGeneric(value: unknown): boolean {
   return value != null && value !== "";
 }
 
-function validateByType(value: any, propertyType: string): boolean {
-  switch (propertyType) {
-    case "string":
-    case "textarea":
-    case "richtext":
-      return isValidString(value);
-    case "number":
-      return isValidNumber(value);
-    case "boolean":
-      return isValidBoolean(value);
-    case "date":
-      return isValidDate(value);
-    case "array":
-      return isValidArray(value);
-    case "object":
-    case "json":
-      return isValidObject(value);
-    case "relation":
-      return isValidRelation(value);
-    case "location":
-    case "color":
-    default:
-      return isValidGeneric(value);
-  }
-}
+const validatorsByValueType: Record<ConditionValueType, (value: unknown) => boolean> = {
+  string: isValidString,
+  number: isValidNumber,
+  boolean: isValidBoolean,
+  date: isValidDate,
+  array: isValidArray,
+  object: isValidObject,
+  relation: isValidRelation,
+  generic: isValidGeneric,
+  unknown: isValidGeneric,
+};
 
-export function isConditionComplete(
-  condition: FilterCondition,
-  property?: Property
-): boolean {
+export function isConditionComplete(condition: FilterCondition): boolean {
   if (!condition.field || condition.field.trim().length === 0) {
     return false;
   }
 
-  const value = condition.value;
-
-  if (!property) {
-    return isValidGeneric(value);
+  const validator = validatorsByValueType[condition.valueType];
+  if (!validator) {
+    return isValidGeneric(condition.value);
   }
 
-  return validateByType(value, property.type);
+  return validator(condition.value);
 }
 
 export function getCompleteConditions(
-  conditions: FilterCondition[],
-  bucketProperties: Record<string, Property>
+  conditions: FilterCondition[]
 ): FilterCondition[] {
-  return conditions.filter(condition => {
-    const property = condition.field ? bucketProperties[condition.field] : undefined;
-    return isConditionComplete(condition, property);
-  });
+  return conditions.filter(isConditionComplete);
 }
 
 
 export function canAddCondition(
-  conditions: FilterCondition[],
-  bucketProperties: Record<string, Property>
+  conditions: FilterCondition[]
 ): boolean {
-  const completeCount = getCompleteConditions(conditions, bucketProperties).length;
+  const completeCount = getCompleteConditions(conditions).length;
   return completeCount === conditions.length;
 }
 

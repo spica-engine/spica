@@ -11,6 +11,7 @@ import FilterValueInput from './FilterValueInput';
 import { convertConditionsToFilter } from './filterUtils';
 import type { FilterCondition } from './inputHandlers/types';
 import { getCompleteConditions, canAddCondition } from './validation';
+import { mapPropertyTypeToValueType, getEmptyValueForType } from './conditionValueType';
 
 export type { FilterCondition } from './inputHandlers/types';
 
@@ -30,7 +31,8 @@ const createEmptyCondition = (): FilterCondition => ({
   id: crypto.randomUUID(),
   field: "",
   operator: "Equal",
-  value: undefined,
+  value: "",
+  valueType: "unknown",
   logicalOperator: "and"
 });
 
@@ -48,13 +50,13 @@ const Filter: React.FC<FilterProps> = ({ bucketProperties, onChange, resetKey, c
   }, [resetKey]);
 
   const completeConditions = useMemo(
-    () => getCompleteConditions(conditions, bucketProperties),
-    [conditions, bucketProperties]
+    () => getCompleteConditions(conditions),
+    [conditions]
   );
 
   const canAdd = useMemo(
-    () => canAddCondition(conditions, bucketProperties),
-    [conditions, bucketProperties]
+    () => canAddCondition(conditions),
+    [conditions]
   );
 
   useEffect(() => {
@@ -80,12 +82,23 @@ const Filter: React.FC<FilterProps> = ({ bucketProperties, onChange, resetKey, c
   }, [bucketProperties]);
 
   const handleFieldChange = useCallback((conditionId: string, fieldKey: string) => {
-    setConditions(prev => prev.map(condition => 
-      condition.id === conditionId 
-        ? { ...condition, field: fieldKey, value: undefined }
-        : condition
-    ));
-  }, []);
+    setConditions(prev => prev.map(condition => {
+      if (condition.id !== conditionId) {
+        return condition;
+      }
+      
+      const property = bucketProperties[fieldKey];
+      const valueType = mapPropertyTypeToValueType(property);
+      const value = getEmptyValueForType(valueType);
+      
+      return {
+        ...condition,
+        field: fieldKey,
+        valueType,
+        value
+      };
+    }));
+  }, [bucketProperties]);
 
   const handleValueChange = useCallback((conditionId: string, value: any) => {
     setConditions(prev => prev.map(condition => 
@@ -119,7 +132,8 @@ const Filter: React.FC<FilterProps> = ({ bucketProperties, onChange, resetKey, c
       id: crypto.randomUUID(),
       field: "",
       operator: "Equal",
-      value: undefined,
+      value: "",
+      valueType: "unknown",
       logicalOperator: "and"
     };
     setConditions(prev => [...prev, newCondition]);
