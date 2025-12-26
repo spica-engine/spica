@@ -458,6 +458,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     );
   }, []);
 
+  // Cells can request blur, but Table component manages its own focus state
+  // This is a no-op since we no longer force re-mounts
   const handleRequestBlur = useCallback(() => {
     setFocusResetVersion(prev => prev + 1);
   }, []);
@@ -471,6 +473,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     key: string,
     property: BucketProperty
   ) => {
+
     return (params: { row: BucketDataRow; isFocused: boolean }) => {
       const value = params.row[key];
       

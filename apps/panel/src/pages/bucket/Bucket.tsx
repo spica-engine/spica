@@ -88,8 +88,6 @@ export default function Bucket() {
             [propertyKey]: newValue
           }
         }).unwrap();
-
-        console.log("Data saved successfully:", { rowId, propertyKey, newValue });
         
         // Optionally refresh data
         handleRefresh();
@@ -97,7 +95,7 @@ export default function Bucket() {
         console.error("Failed to save data:", error);
       }
     },
-    [bucketId, handleRefresh, updateBucketEntry]
+    [bucketId]
   );
 
   const deleteBucketEntries = useCallback(
