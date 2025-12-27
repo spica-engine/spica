@@ -21,7 +21,6 @@ export const RelationCell: React.FC<CellRendererProps> = ({
 }) => {     
   const bucketLookup = useBucketLookup();
   const relatedBucketId = property.bucketId;
-  console.log("value in relation cell", value);
 
   const normalizedValue: RelationSelected | null = useMemo(() => {
     if (!value || !relatedBucketId) return null;

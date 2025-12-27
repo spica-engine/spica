@@ -21,7 +21,6 @@ const RelationInputHandler: React.FC<FilterInputHandlerProps> = ({
   const bucketId = relationProperty.bucketId;
   const bucketLookup = useBucketLookup();
 
-  console.log('value in input handler', value);
 
   const handleChange = useCallback((selectedValue: RelationSelected | null) => {
     onChange(selectedValue);
