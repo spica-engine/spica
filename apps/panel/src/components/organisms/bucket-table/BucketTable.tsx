@@ -356,7 +356,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     if (typeof className === 'string') {
       classNameStr = className;
     } else if (className && typeof className === 'object') {
-      // Handle SVGAnimatedString or similar objects
       const classNameObj = className as { baseVal?: string };
       classNameStr = (typeof classNameObj.baseVal === 'string')
         ? classNameObj.baseVal
@@ -423,13 +422,11 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       
-      // Don't blur if clicking inside a popover/dialog
       if (isInsidePopover(target)) {
         return;
       }
       
       if (tableContainerRef.current && !tableContainerRef.current.contains(target)) {
-        // Click is outside the table, increment focus reset version
         setFocusResetVersion(prev => prev + 1);
       }
     };
@@ -458,8 +455,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     );
   }, []);
 
-  // Cells can request blur, but Table component manages its own focus state
-  // This is a no-op since we no longer force re-mounts
   const handleRequestBlur = useCallback(() => {
     setFocusResetVersion(prev => prev + 1);
   }, []);

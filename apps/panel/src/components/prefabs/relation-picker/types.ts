@@ -3,19 +3,12 @@
  * email: rio.kenan@gmail.com
  */
 
-/**
- * Normalized value type for relation selections.
- * Used across RelationMinimized, RelationCell, and filter handlers.
- */
 export type RelationSelected = {
   kind: "id";
   id: string;
   label?: string;
 };
 
-/**
- * Type guard to check if a value is a RelationSelected object
- */
 export function isRelationSelected(value: any): value is RelationSelected {
   return (
     typeof value === "object" &&
@@ -25,9 +18,6 @@ export function isRelationSelected(value: any): value is RelationSelected {
   );
 }
 
-/**
- * Extracts the ID from various relation value formats
- */
 export function extractRelationId(value: any): string | null {
   if (!value) return null;
   if (typeof value === "string") return value;
