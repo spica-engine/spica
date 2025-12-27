@@ -195,7 +195,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [focusResetVersion, setFocusResetVersion] = useState(0);
+  const [blurTrigger, setBlurTrigger] = useState(0);
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
     `${bucket?._id}-fields-order`,
@@ -427,13 +427,13 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       }
       
       if (tableContainerRef.current && !tableContainerRef.current.contains(target)) {
-        setFocusResetVersion(prev => prev + 1);
+        setBlurTrigger(prev => prev + 1);
       }
     };
 
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setFocusResetVersion(prev => prev + 1);
+        setBlurTrigger(prev => prev + 1);
       }
     };
 
@@ -456,7 +456,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   }, []);
 
   const handleRequestBlur = useCallback(() => {
-    setFocusResetVersion(prev => prev + 1);
+    setBlurTrigger(prev => prev + 1);
   }, []);
 
   const createDeleteHandler = useCallback((fieldKey: string, isPrimaryField: boolean) => {
@@ -481,11 +481,11 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           isFocused={params.isFocused}
           onValueChange={handleValueChange} 
           onRequestBlur={handleRequestBlur}
-          focusResetVersion={focusResetVersion}
+          blurTrigger={blurTrigger}
         />
       );
     };
-  }, [handleValueChange, handleRequestBlur, focusResetVersion]);
+  }, [handleValueChange, handleRequestBlur, blurTrigger]);
 
   const createPropertyColumn = useCallback((
     key: string,

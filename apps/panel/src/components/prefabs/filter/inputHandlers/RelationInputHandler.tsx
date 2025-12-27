@@ -10,6 +10,7 @@ import RelationMinimized from '../../relation-picker/RelationMinimized';
 import type { RelationSelected } from '../../relation-picker/types';
 import { extractRelationId } from '../../relation-picker/types';
 import { useBucketLookup } from '../../../../contexts/BucketLookupContext';
+import { Text } from 'oziko-ui-kit';
 
 const RelationInputHandler: React.FC<FilterInputHandlerProps> = ({
   condition,
@@ -31,7 +32,7 @@ const RelationInputHandler: React.FC<FilterInputHandlerProps> = ({
   }, [bucketLookup, bucketId]);
 
   if (!bucketId) {
-    return <div style={{ padding: '8px', color: '#999' }}>No bucket ID configured</div>;
+    return <Text size="medium">No bucket ID configured</Text>;
   }
 
   const relatedBucketTitle = bucketLookup.getTitleById(bucketId) ?? 'Unknown bucket';
@@ -52,7 +53,6 @@ const RelationInputHandler: React.FC<FilterInputHandlerProps> = ({
     return null;
   })();
 
-  console.log("normalizedValue", normalizedValue);
 
   return (
     <RelationMinimized

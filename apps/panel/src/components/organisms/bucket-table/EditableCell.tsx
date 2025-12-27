@@ -11,7 +11,7 @@ interface EditableCellProps {
   isFocused: boolean;
   onValueChange: (propertyKey: string, rowId: string, newValue: any) => void;
   onRequestBlur: () => void;
-  focusResetVersion: number;
+  blurTrigger: number;
 }
 
 export const EditableCell: React.FC<EditableCellProps> = ({
@@ -22,7 +22,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   isFocused,
   onValueChange,
   onRequestBlur,
-  focusResetVersion,
+  blurTrigger,
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const cellRef = useRef<HTMLDivElement>(null);
@@ -86,7 +86,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     if (isEditMode) {
       setIsEditMode(false);
     }
-  }, [focusResetVersion]);
+  }, [blurTrigger]);
 
   return (
     <div 
