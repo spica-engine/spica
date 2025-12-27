@@ -10,5 +10,6 @@ export { TextareaCell, TextareaCellKeyboardHandler } from "./TextareaCell";
 export {BooleanCell, BooleanCellKeyboardHandler} from "./BooleanCell"
 export {ObjectCell, ObjectCellKeyboardHandler} from "./ObjectCell"
 export {LocationCell, LocationCellKeyboardHandler} from "./LocationCell"
-
+export { RelationCell } from "./RelationCell";
 export { JsonCell, JsonCellKeyboardHandler } from "./JsonCell";
+

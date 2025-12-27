@@ -140,7 +140,7 @@ const ColumnHeader = ({
             }}
             placement="bottom"
           >
-            <Button variant="icon" onClick={handleOpen}>
+            <Button variant="icon" onClick={handleOpen} className={styles.dropdownIcon}>
               <Icon name="chevronDown" size={16} />
             </Button>
           </Popover>
@@ -195,14 +195,11 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [blurTrigger, setBlurTrigger] = useState(0);
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
     `${bucket?._id}-fields-order`,
     bucket?.properties ? Object.keys(bucket.properties) : []
-  );
-  const tableKey = useMemo(
-    () => `${bucket?._id ?? "bucket"}-${fieldsOrder.join(",")}`,
-    [bucket?._id, fieldsOrder]
   );
 
   const [sortMeta, setSortMeta] = useLocalStorage<{
@@ -344,8 +341,110 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   }, [bucket?.properties, bucket?._id]);
 
 
-  // Note: Table component manages its own focus state internally
-  // No need to force re-mounts - the Table will handle blur on click outside and Escape
+  const hasPopoverRole = useCallback((element: Element): boolean => {
+    const role = element.getAttribute('role');
+    if (!role) return false;
+    
+    const popoverRoles = ['dialog', 'menu', 'listbox', 'tooltip', 'combobox', 'grid', 'tree'];
+    return popoverRoles.includes(role);
+  }, []);
+
+  const hasPortalClassName = useCallback((element: Element): boolean => {
+    const className = element.className;
+    let classNameStr = '';
+    
+    if (typeof className === 'string') {
+      classNameStr = className;
+    } else if (className && typeof className === 'object') {
+      const classNameObj = className as { baseVal?: string };
+      classNameStr = (typeof classNameObj.baseVal === 'string')
+        ? classNameObj.baseVal
+        : String(className);
+    }
+    
+    if (!classNameStr) return false;
+    
+    const portalClassNames = [
+      'rc-portal', 'rc-tooltip', 'rc-dropdown', 
+      'popover', 'Popover', 'portal', 'Portal'
+    ];
+    
+    return portalClassNames.some(name => classNameStr.includes(name));
+  }, []);
+
+  const hasPopoverAriaAttributes = useCallback((element: Element): boolean => {
+    if (element.getAttribute('aria-expanded') === 'true') return true;
+    if (element.getAttribute('aria-haspopup') === 'true') return true;
+    
+    if (element instanceof HTMLElement) {
+      return 'popover' in element.dataset || 'portal' in element.dataset;
+    }
+    
+    return false;
+  }, []);
+
+  const hasFixedPositioning = useCallback((element: Element): boolean => {
+    const style = globalThis.getComputedStyle(element);
+    if (style.position !== 'fixed') return false;
+    
+    const zIndex = style.zIndex;
+    return zIndex !== 'auto' && Number.parseInt(zIndex, 10) > 1000;
+  }, []);
+
+  const isInsidePopover = useCallback((element: Node | null): boolean => {
+    if (!element) return false;
+    
+    let current: Node | null = element;
+    
+    while (current && current !== document.body) {
+      if (!(current instanceof Element)) {
+        current = current.parentNode;
+        continue;
+      }
+      
+      if (
+        hasPopoverRole(current) ||
+        hasPortalClassName(current) ||
+        hasPopoverAriaAttributes(current) ||
+        hasFixedPositioning(current)
+      ) {
+        return true;
+      }
+      
+      current = current.parentNode;
+    }
+    
+    return false;
+  }, [hasPopoverRole, hasPortalClassName, hasPopoverAriaAttributes, hasFixedPositioning]);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      if (isInsidePopover(target)) {
+        return;
+      }
+      
+      if (tableContainerRef.current && !tableContainerRef.current.contains(target)) {
+        setBlurTrigger(prev => prev + 1);
+      }
+    };
+
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setBlurTrigger(prev => prev + 1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscKey);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isInsidePopover]);
 
 
   const renderIdCell = useCallback((params: { row: BucketDataRow; isFocused: boolean }) => {
@@ -356,10 +455,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     );
   }, []);
 
-  // Cells can request blur, but Table component manages its own focus state
-  // This is a no-op since we no longer force re-mounts
   const handleRequestBlur = useCallback(() => {
-    // Table component handles focus state internally, no action needed
+    setBlurTrigger(prev => prev + 1);
   }, []);
 
   const createDeleteHandler = useCallback((fieldKey: string, isPrimaryField: boolean) => {
@@ -384,10 +481,11 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           isFocused={params.isFocused}
           onValueChange={handleValueChange} 
           onRequestBlur={handleRequestBlur}
+          blurTrigger={blurTrigger}
         />
       );
     };
-  }, [handleValueChange, handleRequestBlur]);
+  }, [handleValueChange, handleRequestBlur, blurTrigger]);
 
   const createPropertyColumn = useCallback((
     key: string,
@@ -415,7 +513,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           onDelete={createDeleteHandler(key, isPrimaryField)}
         />
       ),
-      width: "200px",
+      width: "150px",
+      minWidth: "150px",
       renderCell: createPropertyRenderCell(key, property),
     };
   }, [
@@ -436,7 +535,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       {
         key: '_id',
         header: '_id',
-        width: '200px',
+        width: '250px',
+        minWidth: '250px',
         renderCell: renderIdCell,
       }
     ];
@@ -508,7 +608,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 <div ref={tableContainerRef} className={styles.tableContainer}>
       <div className={styles.tableWrapper}>
         <Table
-          key={tableKey}
           columns={columns}
           data={sortedData}
           saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}

@@ -7,14 +7,16 @@ import Quicklinks from "../../components/molecules/quicklinks/Quicklinks";
 import WelcomeText from "../../components/atoms/welcome-text/WelcomeText";
 
 const Home = () => {
+
   return (
     <div className={styles.container}>
       <FlexElement dimensionX="fill" direction="vertical" gap={10} className={styles.content}>
-        <WelcomeText />
-        <FlexElement dimensionX="fill">
-          <Quicklinks />
-          <VideoDisplay />
-        </FlexElement>
+          <WelcomeText />
+          <FlexElement dimensionX="fill">
+            <Quicklinks />
+            <VideoDisplay />
+          </FlexElement>
+
       </FlexElement>
     </div>
   );
