@@ -195,15 +195,14 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [tableFocusReset, setTableFocusReset] = useState(0);
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
     `${bucket?._id}-fields-order`,
     bucket?.properties ? Object.keys(bucket.properties) : []
   );
   const tableKey = useMemo(
-    () => `${bucket?._id ?? "bucket"}-${fieldsOrder.join(",")}-${tableFocusReset}`,
-    [bucket?._id, fieldsOrder, tableFocusReset]
+    () => `${bucket?._id ?? "bucket"}-${fieldsOrder.join(",")}`,
+    [bucket?._id, fieldsOrder]
   );
 
   const [sortMeta, setSortMeta] = useLocalStorage<{
@@ -345,113 +344,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   }, [bucket?.properties, bucket?._id]);
 
 
-  const hasPopoverRole = useCallback((element: Element): boolean => {
-    const role = element.getAttribute('role');
-    if (!role) return false;
-    
-    const popoverRoles = ['dialog', 'menu', 'listbox', 'tooltip', 'combobox', 'grid', 'tree'];
-    return popoverRoles.includes(role);
-  }, []);
-
-  const hasPortalClassName = useCallback((element: Element): boolean => {
-    const className = element.className;
-    let classNameStr = '';
-    
-    if (typeof className === 'string') {
-      classNameStr = className;
-    } else if (className && typeof className === 'object') {
-      // Handle SVGAnimatedString or similar objects
-      const classNameObj = className as { baseVal?: string };
-      classNameStr = (typeof classNameObj.baseVal === 'string')
-        ? classNameObj.baseVal
-        : String(className);
-    }
-    
-    if (!classNameStr) return false;
-    
-    const portalClassNames = [
-      'rc-portal', 'rc-tooltip', 'rc-dropdown', 
-      'popover', 'Popover', 'portal', 'Portal'
-    ];
-    
-    return portalClassNames.some(name => classNameStr.includes(name));
-  }, []);
-
-  const hasPopoverAriaAttributes = useCallback((element: Element): boolean => {
-    if (element.getAttribute('aria-expanded') === 'true') return true;
-    if (element.getAttribute('aria-haspopup') === 'true') return true;
-    
-    if (element instanceof HTMLElement) {
-      return 'popover' in element.dataset || 'portal' in element.dataset;
-    }
-    
-    return false;
-  }, []);
-
-  const hasFixedPositioning = useCallback((element: Element): boolean => {
-    const style = globalThis.getComputedStyle(element);
-    if (style.position !== 'fixed') return false;
-    
-    const zIndex = style.zIndex;
-    return zIndex !== 'auto' && Number.parseInt(zIndex, 10) > 1000;
-  }, []);
-
-  const isInsidePopover = useCallback((element: Node | null): boolean => {
-    if (!element) return false;
-    
-    let current: Node | null = element;
-    
-    while (current && current !== document.body) {
-      if (!(current instanceof Element)) {
-        current = current.parentNode;
-        continue;
-      }
-      
-      if (
-        hasPopoverRole(current) ||
-        hasPortalClassName(current) ||
-        hasPopoverAriaAttributes(current) ||
-        hasFixedPositioning(current)
-      ) {
-        return true;
-      }
-      
-      current = current.parentNode;
-    }
-    
-    return false;
-  }, [hasPopoverRole, hasPortalClassName, hasPopoverAriaAttributes, hasFixedPositioning]);
-
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      
-      // Don't blur if clicking inside a popover/dialog
-      if (isInsidePopover(target)) {
-        return;
-      }
-      
-      if (tableContainerRef.current && !tableContainerRef.current.contains(target)) {
-        // Click is outside the table and not inside a popover, reset table focus state by changing key
-        setTableFocusReset(prev => prev + 1);
-      }
-    };
-
-    const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setTableFocusReset(prev => prev + 1);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscKey);
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscKey);
-    };
-  }, [isInsidePopover]);
+  // Note: Table component manages its own focus state internally
+  // No need to force re-mounts - the Table will handle blur on click outside and Escape
 
 
   const renderIdCell = useCallback((params: { row: BucketDataRow; isFocused: boolean }) => {
@@ -462,8 +356,10 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     );
   }, []);
 
+  // Cells can request blur, but Table component manages its own focus state
+  // This is a no-op since we no longer force re-mounts
   const handleRequestBlur = useCallback(() => {
-    setTableFocusReset(prev => prev + 1);
+    // Table component handles focus state internally, no action needed
   }, []);
 
   const createDeleteHandler = useCallback((fieldKey: string, isPrimaryField: boolean) => {
@@ -475,17 +371,18 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     key: string,
     property: BucketProperty
   ) => {
+
     return (params: { row: BucketDataRow; isFocused: boolean }) => {
       const value = params.row[key];
       
       return (
         <EditableCell
-          value={value}
+          value={structuredClone(value)}
           propertyKey={key}
           property={property}
           rowId={params.row._id}
           isFocused={params.isFocused}
-          onValueChange={handleValueChange}
+          onValueChange={handleValueChange} 
           onRequestBlur={handleRequestBlur}
         />
       );
