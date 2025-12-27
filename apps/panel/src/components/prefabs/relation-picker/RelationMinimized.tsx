@@ -37,7 +37,6 @@ const RelationMinimized: React.FC<RelationMinimizedProps> = ({
 }) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
-  // Close popover when resetKey changes
   useEffect(() => {
     setIsPopoverOpen(false);
   }, [resetKey]);
@@ -53,7 +52,6 @@ const RelationMinimized: React.FC<RelationMinimizedProps> = ({
 
   const handleSelect = useCallback(
     (selection: any) => {
-      // Handle both old format (string id) and new format ({ id, label })
       let normalizedValue: RelationSelected;
       
       if (typeof selection === "string") {
@@ -68,7 +66,7 @@ const RelationMinimized: React.FC<RelationMinimizedProps> = ({
           label: selection.label,
         };
       } else {
-        return; // Invalid selection
+        return;
       }
       
       onChange(normalizedValue);
@@ -85,16 +83,13 @@ const RelationMinimized: React.FC<RelationMinimizedProps> = ({
     [onChange]
   );
 
-  // Determine display label
   const displayLabel = (() => {
     if (renderLabel) {
       return renderLabel(value ?? null);
     }
 
-    // Extract ID first to check if we have a real value
     const id = extractRelationId(value);
     
-    // RULE 1: Empty relation (no ID extracted)
     if (!id || id.trim() === "") {
       const label = emptyLabel || placeholder;
       return <Text size="medium" className={styles.placeholder}>{label}</Text>;
@@ -112,7 +107,6 @@ const RelationMinimized: React.FC<RelationMinimizedProps> = ({
     return <Text size="medium">{displayText}</Text>;
   })();
 
-  // Extract current value ID for RelationPicker
   const currentValueId = extractRelationId(value);
 
   return (

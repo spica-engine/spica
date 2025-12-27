@@ -37,7 +37,6 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
   const {data: bucket} = useGetBucketQuery(bucketId);
   const bucketLookup = useBucketLookup();
   
-  // Use RTK Query's cached query for initial/filtered data
   const { data: initialData, isLoading: isInitialLoading, isFetching } = useGetBucketDataQuery({
     bucketId,
     paginate: true,
@@ -50,38 +49,31 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
 
   const [getBucketData] = useLazyGetBucketDataQuery();
 
-  // Combine initial data with additional pages
   const items = useMemo(() => {
     const initial = initialData?.data || [];
     return [...initial, ...additionalPages];
   }, [initialData, additionalPages]);
 
-  // Track the size of the last fetched page to determine if there's more data
   const [lastPageSize, setLastPageSize] = useState<number>(LIMIT);
 
   const hasMore = useMemo(() => {
     if (!initialData) return false;
     
-    // If the last page returned fewer items than LIMIT, there's no more data
     if (lastPageSize < LIMIT) return false;
     
-    // If we have a total count from the API, use it
     if (initialData.meta?.total !== undefined) {
       return items.length < initialData.meta.total;
     }
     
-    // Otherwise, assume there's more if the last page was full
     return lastPageSize === LIMIT;
   }, [initialData, items.length, lastPageSize, LIMIT]);
 
-  // Reset additional pages when filter or bucketId changes
   useEffect(() => {
     setAdditionalPages([]);
     setCurrentPage(0);
-    setLastPageSize(LIMIT); // Reset to assume full page initially
+    setLastPageSize(LIMIT);
   }, [appliedFilter, bucketId, LIMIT]);
 
-  // Update lastPageSize when initial data loads
   useEffect(() => {
     if (initialData?.data) {
       setLastPageSize(initialData.data.length);
@@ -108,10 +100,8 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
       if (result?.data) {
         const fetchedCount = result.data.length;
         
-        // Update last page size to determine if there's more data
         setLastPageSize(fetchedCount);
         
-        // Only add data if we got results
         if (fetchedCount > 0) {
           setAdditionalPages(prev => [...prev, ...result.data]);
           setCurrentPage(nextPage);
@@ -176,10 +166,8 @@ const RelationPicker: React.FC<RelationPickerProps> = ({
                 const primaryFieldValue = extractPrimaryFieldValue(item, properties);
                 
                 const handleItemSelect = () => {
-                  // Cache the label for future use
-                  bucketLookup.setRelationLabel(bucketId, item._id, primaryFieldValue);
+                      bucketLookup.setRelationLabel(bucketId, item._id, primaryFieldValue);
                   
-                  // Pass normalized selection with id and label
                   onSelect?.({
                     id: item._id,
                     label: primaryFieldValue
