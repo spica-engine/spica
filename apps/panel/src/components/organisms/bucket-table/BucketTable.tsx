@@ -16,6 +16,7 @@ interface BucketTableNewProps {
   bucket: BucketSchema;
   data: BucketDataRow[];
   onDataChange?: (rowId: string, propertyKey: string, newValue: any) => void;
+  loading?: boolean;
 }
 
 
@@ -189,7 +190,8 @@ const ColumnHeader = ({
 const BucketTable: React.FC<BucketTableNewProps> = ({ 
   bucket, 
   data,
-  onDataChange 
+  onDataChange,
+  loading = false
 }) => {
 
   const [createBucketField] = useCreateBucketFieldMutation();
@@ -617,6 +619,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           headerClassName={styles.header}
           columnClassName={styles.column}
           cellClassName={styles.cell}
+          loading={loading}
+          skeletonRowCount={10}
         />
       </div>
       <FlexElement

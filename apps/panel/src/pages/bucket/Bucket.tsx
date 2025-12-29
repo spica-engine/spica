@@ -174,6 +174,7 @@ export default function Bucket() {
           bucket={bucket as any}
           data={bucketData?.data ?? []}
           onDataChange={handleDataChange}
+          loading={bucketDataLoading}
         />
       </div>
     </BucketLookupContext.Provider>

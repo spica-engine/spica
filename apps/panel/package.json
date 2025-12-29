@@ -10,7 +10,7 @@
     "formik": "^2.4.6",
     "jwt-decode": "^4.0.0",
     "monaco-editor": "^0.52.2",
-    "oziko-ui-kit": "^0.0.119",
+    "oziko-ui-kit": "^0.0.120",
     "react": "^19.0.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
