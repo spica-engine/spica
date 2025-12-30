@@ -11,6 +11,7 @@ export type FilterInputHandlerProps = {
   property: Property;
   value: any;
   onChange: (value: any) => void;
+  onOperatorChange?: (operator: string) => void;
 };
 
 export type FilterInputHandler = React.ComponentType<FilterInputHandlerProps>;
