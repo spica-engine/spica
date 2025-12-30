@@ -7,6 +7,7 @@ import StorageFileCardSkeleton from "./storage-file-card-skeleton/StorageFileCar
 import {useGetStorageItemsQuery, type Storage, type StorageOptions} from "../../../store/api/storageApi";
 import { convertQuickDateToRange, convertToBytes } from "../../../utils/storage";
 import useStorage from "../../../hooks/useStorage";
+import AuthorizedStorageFileCard from "../../molecules/authoized-storage-file-card/AuthorizedStorageFileCard";
 
 type TypeStorageFileSelect = {
   className?: string;
@@ -393,13 +394,11 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, 
       />
       <Modal.Body className={styles.content} ref={containerRef}>
         {data.map(el => (
-          <StorageFileCard
-            onClick={() => handleClickFile(el)}
-            dimensionX="fill"
-            dimensionY="fill"
-            key={el._id}
+           <AuthorizedStorageFileCard
             file={el}
+            onClick={() => handleClickFile(el)}
             className={styles.file}
+            key={el._id}
           />
         ))}
         {(isLoadingMore || (isFetching && data.length === 0)) && (

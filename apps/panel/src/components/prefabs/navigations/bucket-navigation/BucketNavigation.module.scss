@@ -3,6 +3,16 @@
 
 .bucketsItemContainer {
     // padding: 0 var(--padding-sm) 0 var(--padding-md);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    
+    &::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
 
     .bucketItem {
         transition: opacity 0.2s ease-in-out;
