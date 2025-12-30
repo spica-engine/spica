@@ -1,4 +1,4 @@
-import {UserCreate, UserGet, TokenScheme} from "./interface";
+import {UserCreate, UserGet, TokenScheme, UserUpdate} from "./interface";
 import {initialize as _initialize, checkInitialized, Axios} from "@spica-devkit/internal_common";
 import {
   ApikeyInitialization,
@@ -92,64 +92,45 @@ export async function signUp(user: UserCreate, headers?: object): Promise<UserGe
   checkInitialized(authorization, service);
 
   user = deepCopyJSON(user);
-  const desiredPolicies = user.policies;
-  delete user.policies;
 
   const createdUser = await service.post<UserGet>(`${userSegment}`, user, {headers});
 
-  return policy.attach(createdUser._id, desiredPolicies).then(policies => {
-    createdUser.policies = policies;
-    return createdUser;
-  });
+  return createdUser;
 }
 
-// policy attach detach
-export namespace policy {
-  export function attach(
-    userId: string,
-    policyIds: string[] = [],
-    headers?: object
-  ): Promise<string[]> {
-    checkInitialized(authorization, service);
+/**
+ * Get user by ID.
+ * @param id - User ID to retrieve
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to user information (without password)
+ */
+export function get(id: string, headers?: object): Promise<UserGet> {
+  checkInitialized(authorization, service);
 
-    const promises: Promise<UserGet>[] = [];
-    const attachedPolicies = new Set<string>();
+  return service.get<UserGet>(`${userSegment}/${id}`, {headers});
+}
 
-    for (const policyId of policyIds) {
-      const promise = service
-        .put<any>(`${userSegment}/${userId}/policy/${policyId}`, {}, {headers})
-        .then(() => attachedPolicies.add(policyId))
-        .catch(e => {
-          console.error(`Failed to attach policy with id ${policyId}: `, e);
-          return e;
-        });
-      promises.push(promise);
-    }
+/**
+ * Update user password.
+ * Note: This function only allows password updates. Users can only update their own password.
+ *
+ * @param id - User ID to update
+ * @param user - Update data containing only the new password
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to updated user information (without password)
+ */
+export async function updatePassword(
+  id: string,
+  user: UserUpdate,
+  headers?: object
+): Promise<UserGet> {
+  checkInitialized(authorization, service);
 
-    return Promise.all(promises).then(() => Array.from(attachedPolicies));
-  }
+  user = deepCopyJSON(user);
 
-  export function detach(
-    userId: string,
-    policyIds: string[] = [],
-    headers?: object
-  ): Promise<string[]> {
-    checkInitialized(authorization, service);
+  const updatedUser = await service.put<UserGet>(`${userSegment}/${id}`, user, {
+    headers
+  });
 
-    const promises: Promise<UserGet>[] = [];
-    const detachedPolicies = new Set<string>();
-
-    for (const policyId of policyIds) {
-      const promise = service
-        .delete(`${userSegment}/${userId}/policy/${policyId}`, {headers})
-        .then(() => detachedPolicies.add(policyId))
-        .catch(e => {
-          console.error(`Failed to detach policy with id ${policyId}: `, e);
-          return e;
-        });
-      promises.push(promise);
-    }
-
-    return Promise.all(promises).then(() => Array.from(detachedPolicies));
-  }
+  return updatedUser;
 }

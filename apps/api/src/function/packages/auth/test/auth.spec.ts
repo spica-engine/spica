@@ -38,8 +38,7 @@ describe("@spica-devkit/auth", () => {
   describe("Auth", () => {
     const user: Auth.UserCreate = {
       username: "test",
-      password: "test",
-      policies: []
+      password: "test"
     };
 
     it("should sign up user", () => {
@@ -55,7 +54,7 @@ describe("@spica-devkit/auth", () => {
         {headers: undefined}
       );
 
-      expect(user).toEqual({username: "test", password: "test", policies: []});
+      expect(user).toEqual({username: "test", password: "test"});
     });
 
     it("should sign up user with headers", () => {
@@ -71,76 +70,7 @@ describe("@spica-devkit/auth", () => {
         {headers: {Accept: "application/json"}}
       );
 
-      expect(user).toEqual({username: "test", password: "test", policies: []});
-    });
-
-    it("should sign up user with policies", async () => {
-      const userWithPolicy = {...user, policies: ["policy_id"]};
-
-      await Auth.signUp(userWithPolicy);
-
-      expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith(
-        "passport/user",
-        {
-          username: "test",
-          password: "test"
-        },
-        {headers: undefined}
-      );
-
-      expect(putSpy).toHaveBeenCalledTimes(1);
-      expect(putSpy).toHaveBeenCalledWith(
-        "passport/user/user_id/policy/policy_id",
-        {},
-        {headers: undefined}
-      );
-
-      expect(user).toEqual({username: "test", password: "test", policies: []});
-    });
-
-    it("should attach policy", () => {
-      Auth.policy.attach("user_id", ["policy_id"]);
-
-      expect(putSpy).toHaveBeenCalledTimes(1);
-      expect(putSpy).toHaveBeenCalledWith(
-        "passport/user/user_id/policy/policy_id",
-        {},
-        {
-          headers: undefined
-        }
-      );
-    });
-
-    it("should attach policy with headers", () => {
-      Auth.policy.attach("user_id", ["policy_id"], {Accept: "application/json"});
-
-      expect(putSpy).toHaveBeenCalledTimes(1);
-      expect(putSpy).toHaveBeenCalledWith(
-        "passport/user/user_id/policy/policy_id",
-        {},
-        {
-          headers: {Accept: "application/json"}
-        }
-      );
-    });
-
-    it("should detach policy", () => {
-      Auth.policy.detach("user_id", ["policy_id"]);
-
-      expect(deleteSpy).toHaveBeenCalledTimes(1);
-      expect(deleteSpy).toHaveBeenCalledWith("passport/user/user_id/policy/policy_id", {
-        headers: undefined
-      });
-    });
-
-    it("should detach policy with headers", () => {
-      Auth.policy.detach("user_id", ["policy_id"], {Accept: "application/json"});
-
-      expect(deleteSpy).toHaveBeenCalledTimes(1);
-      expect(deleteSpy).toHaveBeenCalledWith("passport/user/user_id/policy/policy_id", {
-        headers: {Accept: "application/json"}
-      });
+      expect(user).toEqual({username: "test", password: "test"});
     });
   });
 });

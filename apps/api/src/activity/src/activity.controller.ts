@@ -22,7 +22,7 @@ export class ActivityController {
   constructor(private activityService: ActivityService) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("activity:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("activity:index"))
   async find(
     @Query("identifier") identifier: string,
     @Query("username") username: string,
