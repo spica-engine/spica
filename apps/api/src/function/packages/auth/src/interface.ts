@@ -8,7 +8,7 @@ interface User {
   failedAttempts?: Date[];
 }
 
-export type UserCreate = Omit<User, "_id" | "lastLogin" | "failedAttempts">;
+export type UserCreate = Omit<User, "_id" | "lastLogin" | "failedAttempts" | "policies">;
 export type UserGet = Omit<User, "password">;
 export type UserUpdate = Pick<User, "password">;
 

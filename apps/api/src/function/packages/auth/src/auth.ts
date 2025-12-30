@@ -92,7 +92,6 @@ export async function signUp(user: UserCreate, headers?: object): Promise<UserGe
   checkInitialized(authorization, service);
 
   user = deepCopyJSON(user);
-  delete user.policies;
 
   const createdUser = await service.post<UserGet>(`${userSegment}`, user, {headers});
 
@@ -106,7 +105,7 @@ export async function signUp(user: UserCreate, headers?: object): Promise<UserGe
  * @returns Promise resolving to user information (without password)
  */
 export function get(id: string, headers?: object): Promise<UserGet> {
-  checkInitialized(authorization, service, {skipAuthCheck: true});
+  checkInitialized(authorization, service);
 
   return service.get<UserGet>(`${userSegment}/${id}`, {headers});
 }
@@ -120,8 +119,12 @@ export function get(id: string, headers?: object): Promise<UserGet> {
  * @param headers - Optional headers to include in the request
  * @returns Promise resolving to updated user information (without password)
  */
-export async function update(id: string, user: UserUpdate, headers?: object): Promise<UserGet> {
-  checkInitialized(authorization, service, {skipAuthCheck: true});
+export async function updatePassword(
+  id: string,
+  user: UserUpdate,
+  headers?: object
+): Promise<UserGet> {
+  checkInitialized(authorization, service);
 
   user = deepCopyJSON(user);
 
@@ -130,18 +133,4 @@ export async function update(id: string, user: UserUpdate, headers?: object): Pr
   });
 
   return updatedUser;
-}
-
-/**
- * Remove a user by ID.
- * Requires prior initialization call with API key.
- *
- * @param id - User ID to remove
- * @param headers - Optional headers to include in the request
- * @returns Promise resolving when user is removed
- */
-export function remove(id: string, headers?: object): Promise<any> {
-  checkInitialized(authorization, service);
-
-  return service.delete(`${userSegment}/${id}`, {headers});
 }

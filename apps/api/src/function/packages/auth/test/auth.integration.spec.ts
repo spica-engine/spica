@@ -236,7 +236,7 @@ describe("auth", () => {
     });
 
     it("should update password", async () => {
-      await auth.update(userId, {
+      await auth.updatePassword(userId, {
         password: "newpass"
       });
 
@@ -268,17 +268,6 @@ describe("auth", () => {
 
       expect(user._id).toEqual(userId);
       expect(user.username).toEqual("updateuser");
-    });
-
-    it("should remove user", async () => {
-      const userBefore = await auth.get(userId);
-      expect(userBefore).toBeDefined();
-      expect(userBefore.username).toEqual("updateuser");
-
-      await auth.remove(userId);
-
-      const userAfter = await auth.get(userId);
-      expect(userAfter).toBe("");
     });
 
     it("should reject attempts to update another user's password", async () => {

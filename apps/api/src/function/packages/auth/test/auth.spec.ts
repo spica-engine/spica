@@ -38,8 +38,7 @@ describe("@spica-devkit/auth", () => {
   describe("Auth", () => {
     const user: Auth.UserCreate = {
       username: "test",
-      password: "test",
-      policies: []
+      password: "test"
     };
 
     it("should sign up user", () => {
@@ -55,7 +54,7 @@ describe("@spica-devkit/auth", () => {
         {headers: undefined}
       );
 
-      expect(user).toEqual({username: "test", password: "test", policies: []});
+      expect(user).toEqual({username: "test", password: "test"});
     });
 
     it("should sign up user with headers", () => {
@@ -71,7 +70,7 @@ describe("@spica-devkit/auth", () => {
         {headers: {Accept: "application/json"}}
       );
 
-      expect(user).toEqual({username: "test", password: "test", policies: []});
+      expect(user).toEqual({username: "test", password: "test"});
     });
   });
 });
