@@ -1,12 +1,13 @@
 import {type FC, memo, useEffect, useState, useCallback, useRef} from "react";
 import styles from "./StorageFileSelect.module.scss";
-import {Modal, StorageFileCard, type TypeFile, type TypeFilterValue} from "oziko-ui-kit";
+import {Modal, type TypeFile, type TypeFilterValue} from "oziko-ui-kit";
 import {type TypeSortProp} from "./sort-popover-content/SortPopoverContent";
 import StorageModalHeading from "./storage-modal-heading/StorageModalHeading";
 import StorageFileCardSkeleton from "./storage-file-card-skeleton/StorageFileCardSkeleton";
 import {useGetStorageItemsQuery, type Storage, type StorageOptions} from "../../../store/api/storageApi";
 import { convertQuickDateToRange, convertToBytes } from "../../../utils/storage";
 import useStorage from "../../../hooks/useStorage";
+import AuthorizedStorageFileCard from "../../molecules/authoized-storage-file-card/AuthorizedStorageFileCard";
 
 type TypeStorageFileSelect = {
   className?: string;
@@ -393,13 +394,11 @@ const StorageFileSelect: FC<TypeStorageFileSelect> = ({isOpen = false, onClose, 
       />
       <Modal.Body className={styles.content} ref={containerRef}>
         {data.map(el => (
-          <StorageFileCard
-            onClick={() => handleClickFile(el)}
-            dimensionX="fill"
-            dimensionY="fill"
-            key={el._id}
+           <AuthorizedStorageFileCard
             file={el}
+            onClick={() => handleClickFile(el)}
             className={styles.file}
+            key={el._id}
           />
         ))}
         {(isLoadingMore || (isFetching && data.length === 0)) && (

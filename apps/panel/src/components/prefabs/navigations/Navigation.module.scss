@@ -14,9 +14,6 @@
     display: flex;
     align-items: center;
 
-    .button{
-        padding: 0 !important;
-      }
   }
 
   .rootItem{
@@ -33,3 +30,7 @@
   }
 
 }
+  .button{
+        padding: 0 !important;
+        min-width:  unset !important;
+      }
