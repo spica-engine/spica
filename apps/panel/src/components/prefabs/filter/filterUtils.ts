@@ -32,54 +32,40 @@ function isPlainObject(value: any): value is Record<string, any> {
  * Expand object equality filters into dot-notation field comparisons
  * Example: { "obj1": { "$eq": { "key1": "val1", "key2": 123 } } }
  * becomes: { "$and": [ { "obj1.key1": { "$eq": "val1" } }, { "obj1.key2": { "$eq": 123 } } ] }
- * 
- * Note: Values come pre-typed from ObjectMinimizedInput (NumberInput returns numbers, BooleanInput returns booleans, etc.)
  */
 
+type MongoFilter = Record<string, any>;
+
 function expandObjectEqualityFilter(
-  fieldPath: string, 
-  operator: string, 
-  value: any
-): Record<string, any> | null {
-  if (operator !== '$eq' || !isPlainObject(value)) {
-    return {
-      [fieldPath]: {
-        [operator]: value
-      }
-    };
-  }
-
-  const entries = Object.entries(value);
-  
-  if (entries.length === 0) {
-    return {
-      [fieldPath]: {
-        [operator]: value
-      }
-    };
-  }
-
-  if (entries.length === 1) {
-    const [key, val] = entries[0];
-    return {
-      [`${fieldPath}.${key}`]: {
-        [operator]: val
-      }
-    };
-  }
-
-  const expandedConditions = entries.map(([key, val]) => {
-    return {
-      [`${fieldPath}.${key}`]: {
-        [operator]: val
-      }
-    };
+  fieldPath: string,
+  operator: string,
+  value: unknown
+): MongoFilter {
+  const leaf = (path: string, v: unknown): MongoFilter => ({
+    [path]: { [operator]: v }
   });
 
-  return {
-    $and: expandedConditions
-  };
+
+  if (operator !== "$eq" || !isPlainObject(value)) {
+    return leaf(fieldPath, value);
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>);
+  if (entries.length === 0) {
+
+    return leaf(fieldPath, value);
+  }
+
+
+  const expanded = entries.map(([key, v]) => leaf(`${fieldPath}.${key}`, v));
+
+
+  if (expanded.length === 1) return expanded[0];
+
+
+  return { $and: expanded };
 }
+
 
 function extractQueryValue(value: any, isRelationField: boolean): any {
   if (isRelationField) {
