@@ -117,6 +117,9 @@ const StorageModalHeading: FC<TypeStorageModalHeading> = ({
                 } 
                 placement="bottomEnd" 
                 trigger="click"
+                contentProps={{
+                  className: styles.filterPopoverContent
+                }}
               >
                 <Button variant="text" color={hasActiveFilter ? "primary" : undefined}>
                   <Icon name="filter" size="sm"/>
