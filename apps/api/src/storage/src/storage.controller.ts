@@ -348,9 +348,7 @@ export class StorageController {
     const nameToIdMap = new Map<string, ObjectId>();
 
     for (const object of objects) {
-      if (object && object.name && object._id) {
-        nameToIdMap.set(object.name, object._id as ObjectId);
-      }
+      nameToIdMap.set(object.name, object._id as ObjectId);
     }
 
     return elements.map(element => {
