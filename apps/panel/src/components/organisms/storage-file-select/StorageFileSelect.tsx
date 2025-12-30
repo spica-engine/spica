@@ -1,6 +1,6 @@
 import {type FC, memo, useEffect, useState, useCallback, useRef} from "react";
 import styles from "./StorageFileSelect.module.scss";
-import {Modal, StorageFileCard, type TypeFile, type TypeFilterValue} from "oziko-ui-kit";
+import {Modal, type TypeFile, type TypeFilterValue} from "oziko-ui-kit";
 import {type TypeSortProp} from "./sort-popover-content/SortPopoverContent";
 import StorageModalHeading from "./storage-modal-heading/StorageModalHeading";
 import StorageFileCardSkeleton from "./storage-file-card-skeleton/StorageFileCardSkeleton";

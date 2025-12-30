@@ -1,3 +1,9 @@
+/**
+ * @owner Kanan Gasimov
+ * email: rio.kenan@gmail.com
+ */
+ 
+
 import type { FC } from "react";
 import useFileView from "../../../hooks/useFileView";
 import type { TypeFile } from "oziko-ui-kit";
