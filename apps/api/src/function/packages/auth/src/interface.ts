@@ -3,6 +3,7 @@ interface User {
   username: string;
   password: string;
   policies: string[];
+  attributes?: object;
   lastLogin?: Date;
   failedAttempts?: Date[];
 }

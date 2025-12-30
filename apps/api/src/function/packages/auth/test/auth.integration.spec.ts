@@ -221,7 +221,6 @@ describe("auth", () => {
   describe("crud operations", () => {
     let auth;
     let userId: string;
-
     beforeEach(async () => {
       auth = await importFreshAuthModule();
       auth.initialize({identity: token, publicUrl: PUBLIC_URL});
@@ -248,19 +247,20 @@ describe("auth", () => {
     });
 
     it("should reject attempts to update other fields", async () => {
+      const userToken = await auth.signIn("updateuser", "oldpass");
+
       const error: any = await Axios.put(
         `${PUBLIC_URL}/passport/user/${userId}`,
         {
-          username: "hacker",
-          password: "newpass"
+          username: "updatedUsername"
         },
         {
-          headers: {authorization: `IDENTITY ${token}`},
+          headers: {authorization: `USER ${userToken}`},
           validateStatus: () => true
         }
       );
       expect(error.status).toBe(400);
-      expect(error.data.message).toContain("must NOT have additional properties");
+      expect(error.data.message).toContain("must have required property 'password'");
     });
 
     it("should get user by id", async () => {
@@ -279,6 +279,32 @@ describe("auth", () => {
 
       const userAfter = await auth.get(userId);
       expect(userAfter).toBe("");
+    });
+
+    it("should reject attempts to update another user's password", async () => {
+      await auth.signUp({
+        username: "attacker",
+        password: "attackerpass"
+      });
+
+      const attackerToken = await auth.signIn("attacker", "attackerpass");
+
+      const error: any = await Axios.put(
+        `${PUBLIC_URL}/passport/user/${userId}`,
+        {
+          password: "changed"
+        },
+        {
+          headers: {authorization: `USER ${attackerToken}`},
+          validateStatus: () => true
+        }
+      );
+      expect(error.status).toBe(403);
+      expect(error.data.message).toContain("You do not have sufficient permissions");
+
+      const originalToken = await auth.signIn("updateuser", "oldpass");
+      const {username} = jwtDecode<any>(originalToken);
+      expect(username).toEqual("updateuser");
     });
   });
 
