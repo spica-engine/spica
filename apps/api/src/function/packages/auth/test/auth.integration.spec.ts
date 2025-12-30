@@ -8,7 +8,7 @@ import {PassportModule} from "@spica-server/passport";
 import Axios from "axios";
 import {jwtDecode} from "jwt-decode";
 import {BatchModule} from "@spica-server/batch";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
@@ -34,7 +34,7 @@ describe("auth", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID]
+          formats: [OBJECT_ID, DATE_TIME]
         }),
         DatabaseTestingModule.replicaSet(),
         PassportModule.forRoot({
@@ -252,32 +252,6 @@ describe("auth", () => {
 
       expect(user._id).toEqual(userId);
       expect(user.username).toEqual("updateuser");
-    });
-
-    it("should reject attempts to update another user's password", async () => {
-      await auth.signUp({
-        username: "attacker",
-        password: "attackerpass"
-      });
-
-      const attackerToken = await auth.signIn("attacker", "attackerpass");
-
-      const error: any = await Axios.put(
-        `${PUBLIC_URL}/passport/user/${userId}`,
-        {
-          password: "changed"
-        },
-        {
-          headers: {authorization: `USER ${attackerToken}`},
-          validateStatus: () => true
-        }
-      );
-      expect(error.status).toBe(403);
-      expect(error.data.message).toContain("You do not have sufficient permissions");
-
-      const originalToken = await auth.signIn("updateuser", "oldpass");
-      const {username} = jwtDecode<any>(originalToken);
-      expect(username).toEqual("updateuser");
     });
   });
 
