@@ -17,7 +17,9 @@ import {
   TextareaCell,
   TextareaCellKeyboardHandler,
   BooleanCell,
-  BooleanCellKeyboardHandler, 
+  BooleanCellKeyboardHandler,
+  ArrayCell,
+  ArrayCellKeyboardHandler,
   ObjectCell,
   ObjectCellKeyboardHandler,
   LocationCell,
@@ -102,6 +104,12 @@ class CellRegistry {
       component: TextareaCell,
       keyboardHandler: TextareaCellKeyboardHandler,
       defaultValue: "",
+    });
+    
+    this.register("array", {
+      component: ArrayCell,
+      keyboardHandler: ArrayCellKeyboardHandler,
+      defaultValue: [],
     });
     this.register("object", {
       component: ObjectCell,
