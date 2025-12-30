@@ -154,44 +154,26 @@ function buildMixedOperatorFilter(
   return filterParts.length > 1 ? { $and: filterParts } : (filterParts[0] || null);
 }
 
-/**
- * Convert filter conditions into MongoDB-compatible filter object
- * 
- * Transforms object equality filters into dot-notation to avoid MongoDB's fragile subdocument matching.
- * Values are already properly typed by the UI input components (NumberInput, BooleanInput, etc.).
- * 
- * @param conditions - Array of filter conditions from the UI
- * @returns MongoDB filter object or null
- */
 export function convertConditionsToFilter(
   conditions: FilterCondition[]
 ): Record<string, any> | null {
-
-  if (!conditions || conditions.length === 0) {
-    return null;
-  }
+  if (!conditions?.length) return null;
 
   const conditionObjects = buildConditionObjects(conditions);
-
-  if (conditionObjects.length === 0) {
-    return null;
-  }
+  if (!conditionObjects.length) return null;
 
   if (conditions.length === 1) {
-    return buildUniformOperatorFilter(conditionObjects, '$and');
+    return buildUniformOperatorFilter(conditionObjects, "$and");
   }
 
-  const operators = conditions.slice(1).map(c => c.logicalOperator || 'and');
-  const allAnd = operators.every(op => op === 'and');
-  const allOr = operators.every(op => op === 'or');
-  
-  if (allAnd) {
-    return buildUniformOperatorFilter(conditionObjects, '$and');
-  }
-  
-  if (allOr) {
-    return buildUniformOperatorFilter(conditionObjects, '$or');
-  }
-  
+  const ops = conditions
+    .slice(1)
+    .map(c => (c.logicalOperator ?? "and").toLowerCase());
+
+  const isAll = (v: string) => ops.every(op => op === v);
+
+  if (isAll("and")) return buildUniformOperatorFilter(conditionObjects, "$and");
+  if (isAll("or")) return buildUniformOperatorFilter(conditionObjects, "$or");
+
   return buildMixedOperatorFilter(conditions, conditionObjects);
 }
