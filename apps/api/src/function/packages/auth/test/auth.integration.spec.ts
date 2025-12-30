@@ -237,6 +237,7 @@ describe("auth", () => {
 
     it("should update password", async () => {
       await auth.updatePassword(userId, {
+        username: "updateuser",
         password: "newpass"
       });
 
@@ -244,23 +245,6 @@ describe("auth", () => {
       const {username} = jwtDecode<any>(newToken);
 
       expect(username).toEqual("updateuser");
-    });
-
-    it("should reject attempts to update other fields", async () => {
-      const userToken = await auth.signIn("updateuser", "oldpass");
-
-      const error: any = await Axios.put(
-        `${PUBLIC_URL}/passport/user/${userId}`,
-        {
-          username: "updatedUsername"
-        },
-        {
-          headers: {authorization: `USER ${userToken}`},
-          validateStatus: () => true
-        }
-      );
-      expect(error.status).toBe(400);
-      expect(error.data.message).toContain("must have required property 'password'");
     });
 
     it("should get user by id", async () => {
