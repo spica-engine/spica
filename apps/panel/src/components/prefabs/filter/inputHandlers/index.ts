@@ -6,9 +6,11 @@
 import { filterInputHandlerRegistry } from './FilterInputHandlerRegistry';
 import StringInputHandler from './StringInputHandler';
 import NumberInputHandler from './NumberInputHandler';
+import RelationInputHandler from './RelationInputHandler';  
 
 filterInputHandlerRegistry.register('string', StringInputHandler);
 filterInputHandlerRegistry.register('number', NumberInputHandler);
+filterInputHandlerRegistry.register('relation', RelationInputHandler);
 
 
 filterInputHandlerRegistry.registerDefault(StringInputHandler);

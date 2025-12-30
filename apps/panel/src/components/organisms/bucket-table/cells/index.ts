@@ -11,4 +11,5 @@ export {BooleanCell, BooleanCellKeyboardHandler} from "./BooleanCell";
 export {ArrayCell, ArrayCellKeyboardHandler} from "./ArrayCell";
 export {ObjectCell, ObjectCellKeyboardHandler} from "./ObjectCell"
 export {LocationCell, LocationCellKeyboardHandler} from "./LocationCell"
+export { RelationCell } from "./RelationCell";
 export { JsonCell, JsonCellKeyboardHandler } from "./JsonCell";

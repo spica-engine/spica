@@ -53,15 +53,17 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, initialValues}
       >
         <FluidContainer
           dimensionX="fill"
+          dimensionY={25}
           prefix={{
             children: <Text>Type</Text>,
             dimensionX: "fill",
+            dimensionY: "fill",
             alignment: "leftCenter"
           }}
           suffix={{
             children: (
               <Select
-                dimensionY="hug"
+                dimensionY="fill"
                 options={STORAGE_TYPE_OPTIONS}
                 value={formik.values.type}
                 onChange={v => formik.setFieldValue("type", v)}
@@ -71,7 +73,9 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, initialValues}
                 multiple
                 className={`${styles.select} ${styles.content}`}
               />
-            )
+            ),
+            dimensionY: "fill"
+
           }}
         />
         <FluidContainer
@@ -81,14 +85,16 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, initialValues}
             dimensionX: "fill",
             alignment: "leftCenter"
           }}
+          dimensionY={25}
           suffix={{
             children: (
-              <FlexElement className={styles.content}>
+              <FlexElement className={styles.content} dimensionY="fill" gap={10}>
                 <FlexElement className={styles.left}>
                   <Input
                     value={formik.values.fileSize.min.value ?? ""}
                     type="number"
                     dimensionX={45}
+                    placeholder="–"
                     onChange={e =>
                       formik.setFieldValue(
                         "fileSize.min.value",
@@ -97,7 +103,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, initialValues}
                     }
                   />
                   <Select
-                    dimensionY="hug"
+                    dimensionY="fill"
                     options={STORAGE_SIZE_UNITS}
                     dimensionX={60}
                     onChange={v => formik.setFieldValue("fileSize.min.unit", v)}
@@ -105,13 +111,20 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, initialValues}
                     placeholder=""
                     value={formik.values.fileSize.min.unit}
                     className={styles.select}
+                    
+
                   />
                 </FlexElement>
-                <FlexElement>
+
+                 <div  className={styles.separator}>
+                 </div>
+
+                <FlexElement dimensionY="fill">
                   <Input
                     value={formik.values.fileSize.max.value ?? ""}
                     type="number"
                     dimensionX={45}
+                    placeholder="–"
                     onChange={e =>
                       formik.setFieldValue(
                         "fileSize.max.value",
@@ -120,7 +133,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, initialValues}
                     }
                   />
                   <Select
-                    dimensionY="hug"
+                    dimensionY="fill"
                     options={STORAGE_SIZE_UNITS}
                     dimensionX={60}
                     onChange={v => formik.setFieldValue("fileSize.max.unit", v)}
@@ -131,7 +144,8 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, initialValues}
                   />
                 </FlexElement>
               </FlexElement>
-            )
+            ),
+            dimensionY:"fill"
           }}
         />
         <Text dimensionX="fill">Created At</Text>
@@ -143,6 +157,7 @@ const StorageFilter: FC<TypeStorageFilter> = ({onApply, onCancel, initialValues}
               <Chip
                 gap={5}
                 dimensionX={120}
+                dimensionY={25}
                 key={el.value}
                 label={el.label}
                 className={`${styles.chip} ${active && styles.active}`}

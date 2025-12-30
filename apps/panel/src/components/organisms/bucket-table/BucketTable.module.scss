@@ -19,6 +19,13 @@
         background-color: var(--color-soft-light) !important;
         font-size: var(--font-size-md) !important;
         color: var(--color-font-primary) !important;
+        
+        &::-webkit-scrollbar {
+            display: none !important;
+        }
+        
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
     }
     
     .noDataPlaceholder{
@@ -65,7 +72,9 @@
         font-size: var(--font-size-md) !important;
     
     }
-
+    .dropdownIcon{
+        padding: 0 !important;
+    }
 
 
     .newFieldContainer{

@@ -1,7 +1,6 @@
 import styles from "./Bucket.module.scss";
-import {useGetBucketsQuery} from "../../store/api/bucketApi";
 import {useExecuteBatchMutation, type BatchResponse, type BatchResponseItem} from "../../store/api/batchApi";
-import {useUpdateBucketEntryMutation} from "../../store/api/bucketApi";
+import {useUpdateBucketEntryMutation, useGetBucketsQuery} from "../../store/api/bucketApi";
 import {useParams} from "react-router-dom";
 import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
@@ -14,6 +13,7 @@ import {useAppDispatch, useAppSelector} from "../../store/hook";
 import {resetBucketSelection} from "../../store";
 import {selectParsedToken} from "../../store/slices/authSlice";
 import BucketTableNew from "../../components/organisms/bucket-table/BucketTable";
+import {BucketLookupContext, type BucketLookup} from "../../contexts/BucketLookupContext";
 
 
 export default function Bucket() {
@@ -34,16 +34,49 @@ export default function Bucket() {
     }
   }, [bucketId, dispatch]);
 
-  const {formattedColumns, filteredColumns, visibleColumns, searchableColumns, toggleColumn} =
+  const {formattedColumns, visibleColumns, searchableColumns, toggleColumn} =
     useBucketColumns(bucket, bucketId);
 
   const {searchQuery, handleSearch} = useBucketSearch(bucketId, searchableColumns);
 
-  const {bucketData, bucketDataLoading, refreshLoading, handleRefresh, loadMoreBucketData} =
+  const {bucketData, bucketDataLoading, refreshLoading, handleRefresh} =
     useBucketData(bucketId, searchQuery);
 
   const isTableLoading = useMemo(() => formattedColumns.length <= 1, [formattedColumns]);
   const authToken = useAppSelector(selectParsedToken);
+  
+  // Create bucket lookup service for dependency injection
+  const bucketLookup: BucketLookup = useMemo(() => {
+    const idToTitleMap = new Map<string, string>();
+    const idToPropertiesMap = new Map<string, Record<string, any>>();
+    const relationLabelCache = new Map<string, string>(); // Key: "bucketId:documentId"
+    
+    for (const bucket of buckets) {
+      if (bucket._id && bucket.title) {
+        idToTitleMap.set(bucket._id, bucket.title);
+      }
+      if (bucket._id && bucket.properties) {
+        idToPropertiesMap.set(bucket._id, bucket.properties);
+      }
+    }
+    
+    return {
+      getTitleById(id: string): string | undefined {
+        return idToTitleMap.get(id);
+      },
+      getRelationLabel(bucketId: string, documentId: string): string | null {
+        const key = `${bucketId}:${documentId}`;
+        return relationLabelCache.get(key) ?? null;
+      },
+      setRelationLabel(bucketId: string, documentId: string, label: string): void {
+        const key = `${bucketId}:${documentId}`;
+        relationLabelCache.set(key, label);
+      },
+      getBucketProperties(bucketId: string): Record<string, any> | undefined {
+        return idToPropertiesMap.get(bucketId);
+      }
+    };
+  }, [buckets]);
   
   const handleDataChange = useCallback(
     async (rowId: string, propertyKey: string, newValue: any) => {
@@ -123,24 +156,27 @@ export default function Bucket() {
   }
 
   return (
-    <div className={styles.container}>
-      <BucketActionBar
-        onSearch={handleSearch}
-        bucket={bucket as BucketType}
-        bucketData={bucketData?.data ?? []}
-        deleteBucketEntries={deleteBucketEntries}
-        onRefresh={handleRefresh}
-        columns={formattedColumns}
-        visibleColumns={visibleColumns}
-        toggleColumn={toggleColumn}
-        searchLoading={bucketDataLoading && !isTableLoading}
-        refreshLoading={refreshLoading}
-      />
-      <BucketTableNew
-        bucket={bucket as any}
-        data={bucketData?.data ?? []}
-        onDataChange={handleDataChange}
-      />
-    </div>
+    <BucketLookupContext.Provider value={bucketLookup}>
+      <div className={styles.container}>
+        <BucketActionBar
+          onSearch={handleSearch}
+          bucket={bucket as BucketType}
+          bucketData={bucketData?.data ?? []}
+          deleteBucketEntries={deleteBucketEntries}
+          onRefresh={handleRefresh}
+          columns={formattedColumns}
+          visibleColumns={visibleColumns}
+          toggleColumn={toggleColumn}
+          searchLoading={bucketDataLoading && !isTableLoading}
+          refreshLoading={refreshLoading}
+        />
+        <BucketTableNew
+          bucket={bucket as any}
+          data={bucketData?.data ?? []}
+          onDataChange={handleDataChange}
+          loading={bucketDataLoading}
+        />
+      </div>
+    </BucketLookupContext.Provider>
   );
 }

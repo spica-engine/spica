@@ -11,6 +11,7 @@ interface EditableCellProps {
   isFocused: boolean;
   onValueChange: (propertyKey: string, rowId: string, newValue: any) => void;
   onRequestBlur: () => void;
+  blurTrigger: number;
 }
 
 export const EditableCell: React.FC<EditableCellProps> = ({
@@ -21,6 +22,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   isFocused,
   onValueChange,
   onRequestBlur,
+  blurTrigger,
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const cellRef = useRef<HTMLDivElement>(null);
@@ -79,6 +81,12 @@ export const EditableCell: React.FC<EditableCellProps> = ({
       globalThis.removeEventListener("keydown", handleKeyDown);
     };
   }, [isFocused, isReadonly, value, property, propertyKey, rowId, keyboardHandler, handleValueChange, handleRequestBlur, cellConfig]);
+
+  useEffect(() => {
+    if (isEditMode) {
+      setIsEditMode(false);
+    }
+  }, [blurTrigger]);
 
   return (
     <div 
