@@ -75,6 +75,41 @@ type CategoryGroup = {
 const arraysEqual = (a: string[], b: string[]) =>
   a.length === b.length && a.every((item, index) => item === b[index]);
 
+const shouldPreventHover = (
+  containerRef: React.RefObject<HTMLElement | null>,
+  dragIndex: number,
+  hoverIndex: number,
+  monitor: {getClientOffset: () => XYCoord | null}
+): boolean => {
+  if (dragIndex === hoverIndex) {
+    return true;
+  }
+
+  if (!containerRef.current) {
+    return true;
+  }
+
+  const hoverBoundingRect = containerRef.current.getBoundingClientRect();
+  const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+
+  const clientOffset = monitor.getClientOffset();
+  if (!clientOffset) {
+    return true;
+  }
+
+  const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+  if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+    return true;
+  }
+
+  if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+    return true;
+  }
+
+  return false;
+};
+
 const safeReadCategoryOrder = (): string[] => {
   if (typeof globalThis === "undefined") {
     return [];
@@ -168,32 +203,10 @@ const SortableBucketItem: FC<SortableBucketItemProps> = ({
         return;
       }
 
-      if (!containerRef.current) {
-        return;
-      }
-
       const dragIndex = item.index;
       const hoverIndex = index;
 
-      if (dragIndex === hoverIndex) {
-        return;
-      }
-
-      const hoverBoundingRect = containerRef.current.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-      const clientOffset = monitor.getClientOffset();
-      if (!clientOffset) {
-        return;
-      }
-
-      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
-      }
-
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+      if (shouldPreventHover(containerRef, dragIndex, hoverIndex, monitor)) {
         return;
       }
 
@@ -315,32 +328,10 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index
       handlerId: monitor.getHandlerId()
     }),
     hover: (item, monitor) => {
-      if (!containerRef.current) {
-        return;
-      }
-
       const dragIndex = item.index;
       const hoverIndex = index;
 
-      if (dragIndex === hoverIndex) {
-        return;
-      }
-
-      const hoverBoundingRect = containerRef.current.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-      const clientOffset = monitor.getClientOffset();
-      if (!clientOffset) {
-        return;
-      }
-
-      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
-      }
-
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+      if (shouldPreventHover(containerRef, dragIndex, hoverIndex, monitor)) {
         return;
       }
 
