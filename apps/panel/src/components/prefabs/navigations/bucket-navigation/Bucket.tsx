@@ -13,7 +13,7 @@ import {
   Button
 } from "oziko-ui-kit";
 import styles from "../Navigation.module.scss";
-import bucketNavigationStyles from "./BucketNavigation.module.scss";
+import bucketNavigationStyles from "./Bucket.module.scss";
 
 import {
   memo,
@@ -32,7 +32,7 @@ import {useGetBucketsQuery} from "../../../../store/api";
 import {useUpdateBucketOrderMutation, type BucketType} from "../../../../store/api/bucketApi";
 import {useDrag, useDrop} from "react-dnd";
 import type {Identifier, XYCoord} from "dnd-core";
-import AddBucketPopup from "../../../../components/molecules/add-bucket-popup/AddBucketPopup";
+import AddBucketPopup from "../../../molecules/add-bucket-popup/AddBucketPopup";
 
 import BucketNavigatorPopup from "../../../molecules/bucket-navigator-popup/BucketNavigatorPopup";
 
@@ -389,7 +389,7 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index
   );
 };
 
-const BucketNavigation = () => {
+const Bucket = () => {
   const navigate = useNavigate();
   const {data: buckets = []} = useGetBucketsQuery();
   const [orderedBuckets, setOrderedBuckets] = useState<BucketNavigationItemData[]>([]);
@@ -713,4 +713,4 @@ const BucketNavigation = () => {
   );
 };
 
-export default memo(BucketNavigation);
+export default memo(Bucket);
