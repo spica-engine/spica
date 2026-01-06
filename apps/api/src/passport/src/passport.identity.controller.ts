@@ -320,7 +320,9 @@ export class PassportIdentityController {
 
   @Get("identity/strategies")
   async strategies() {
-    return this.strategyService.aggregate([{$project: {options: 0}}]).toArray();
+    return this.strategyService
+      .aggregate([{$match: {type: "saml"}}, {$project: {options: 0}}])
+      .toArray();
   }
 
   @Get("identity/strategy/:id/url")
@@ -329,6 +331,10 @@ export class PassportIdentityController {
 
     if (!strategy) {
       throw new BadRequestException("Strategy does not exist.");
+    }
+
+    if (strategy.type !== "saml") {
+      throw new BadRequestException("Strategy type is not supported for identities.");
     }
 
     const service = this.strategyTypes.find(strategy.type, strategy.options.idp);
@@ -371,6 +377,10 @@ export class PassportIdentityController {
 
     if (!strategy) {
       throw new BadRequestException("Strategy does not exist.");
+    }
+
+    if (strategy.type !== "saml") {
+      throw new BadRequestException("Strategy type is not supported for identities.");
     }
 
     const service = this.strategyTypes.find(strategy.type, strategy.options.idp);
