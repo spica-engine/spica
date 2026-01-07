@@ -69,7 +69,7 @@
       "cache": true
     },
     "test-image": {
-      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/migrate/Dockerfile",
+      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/migrate/Dockerfile --debug",
       "cache": true
     },
     "build-image": {
