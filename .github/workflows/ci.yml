@@ -41,7 +41,7 @@ jobs:
           # - command: build-image:mongoreplicationcontroller
           # - command: test:cli
           # - command: test:devkit:*
-          - command: test-image:migrate --build-arg MONGODB_URL=mongodb://172.17.0.1:27017/?replicaSet=testset&directConnection=true&retryWrites=false
+          - command: test-image:migrate --build-arg MONGODB_URL=mongodb://mongo:27017/?replicaSet=testset&directConnection=true&retryWrites=false
             mongodb: true
           # - command: test-image:api --build-arg PROJECTS=api/activity/**
           #   mongodb: true
@@ -73,9 +73,9 @@ jobs:
           #   mongodb: true
           # - command: test-image:api --build-arg PROJECTS=api/function
           #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/mailer/** --build-arg MAILER_URL=smtp://172.17.0.1:1025,api://172.17.0.1:8025
-          #   mailer: true
-          #   mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/mailer/** --build-arg MAILER_URL=smtp://172.17.0.1:1025,api://172.17.0.1:8025
+            mailer: true
+            mongodb: true
           # - command: test-image:api --build-arg PROJECTS=api/function/enqueuer --build-arg RABBITMQ_URL=amqp://172.17.0.1:5672
           #   rabbitmq: true
           #   mongodb: true
@@ -208,7 +208,6 @@ jobs:
           echo "Debug: Command ${{ matrix.command }} will be executed?: $RESULT"
           echo "Remained space on disk"
           df -h
-          du -h --max-depth=1 / | sort -hr | head -n 20
           echo "Remained space on docker"
           docker system df
           if [[ "$RESULT" == true ]]; then
