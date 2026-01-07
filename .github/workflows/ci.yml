@@ -206,6 +206,11 @@ jobs:
           echo "Debug: AFFECTED_TESTS: $AFFECTED_TESTS"
           RESULT=$(./scripts/find_ci_command.sh "${{ matrix.command }}" "$AFFECTED_BUILDS" "$AFFECTED_TESTS")
           echo "Debug: Command ${{ matrix.command }} will be executed?: $RESULT"
+          echo "Remained space on disk"
+          df -h
+          du -h --max-depth=1 / | sort -hr | head -n 20
+          echo "Remained space on docker"
+          docker system df
           if [[ "$RESULT" == true ]]; then
             yarn run ${{ matrix.command }}
           else
