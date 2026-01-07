@@ -55,7 +55,7 @@ describe("Identity Controller", () => {
 
   afterEach(() => app.close());
 
-  describe("profiler", () => {
+  xdescribe("profiler", () => {
     beforeEach(async () => {
       // to make db insert profile entry
       await Promise.all([

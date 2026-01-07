@@ -22,7 +22,7 @@ describe("Preference Integration", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME]
         }),
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize(),
         PreferenceModule.forRoot(),
         CoreTestingModule,
