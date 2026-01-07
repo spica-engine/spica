@@ -705,7 +705,6 @@ describe("E2E Tests", () => {
             ip: {login_url: "/idp/login", logout_url: "/idp/logout", certificate: CERTIFICATE}
           }
         };
-        await req.post("/passport/strategy", samlStrategy, {Authorization: `IDENTITY ${token}`});
 
         const saml = await req.post("/passport/strategy", samlStrategy, {
           Authorization: `IDENTITY ${token}`
@@ -832,10 +831,7 @@ describe("E2E Tests", () => {
               })
               .then(({body: code}) => {
                 // send code to the strategy complete endpoint
-                const {url: completeUrl, params: completeParams} = parseUrl(
-                  strategyParams.redirect_uri,
-                  publicUrl
-                );
+                const {params: completeParams} = parseUrl(strategyParams.redirect_uri, publicUrl);
                 const completeEndpoint = `/passport/user/strategy/${strategies[0]._id}/complete`;
                 req
                   .get(completeEndpoint, {
@@ -858,7 +854,7 @@ describe("E2E Tests", () => {
           `/passport/identity/strategy/${strategies[0]._id}/url`
         );
         expect(statusCode).toEqual(400);
-        expect(body.message).toContain("Strategy type is not supported for identities.");
+        expect(body.message).toBe("Strategy type is not supported for identities.");
       });
     });
   });
