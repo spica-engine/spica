@@ -1,4 +1,4 @@
-import {INestApplication, NestApplicationOptions} from "@nestjs/common";
+import {INestApplication, NestApplicationOptions, ForbiddenException} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
@@ -7,10 +7,12 @@ import {getMultipartFormDataMeta, StorageModule} from "@spica-server/storage";
 import {Binary, serialize} from "bson";
 import etag from "etag";
 import {StorageObject} from "@spica-server/interface/storage";
+import {GuardService} from "@spica-server/passport/guard/services";
 
 describe("Storage Acceptance", () => {
   let app: INestApplication;
   let req: Request;
+  let guardService: GuardService;
 
   async function addTextObjects() {
     const first = {
@@ -61,6 +63,7 @@ describe("Storage Acceptance", () => {
     }).compile();
     app = module.createNestApplication(options);
     req = module.get(Request);
+    guardService = module.get(GuardService);
     await app.listen(req.socket);
 
     // wait for indexes
@@ -789,7 +792,7 @@ describe("Storage Acceptance", () => {
   });
 
   describe("delete", () => {
-    it("should delete storage object", async () => {
+    it("should delete storage object by id", async () => {
       const {
         body: {
           data: [row]
@@ -808,6 +811,178 @@ describe("Storage Acceptance", () => {
       const deletedStorageObjectResponse = await req.get(`/storage/${row._id}`);
       expect(deletedStorageObjectResponse.statusCode).toBe(404);
       expect(deletedStorageObjectResponse.statusText).toBe("Not Found");
+    });
+
+    it("should delete storage object by name", async () => {
+      const {
+        body: {
+          data: [row]
+        }
+      } = await req.get("/storage", {paginate: true});
+
+      const response = await req.delete(`/storage/${row.name}`);
+      expect(response.statusCode).toBe(204);
+      expect(response.statusText).toBe("No Content");
+      expect(response.body).toBe(undefined);
+
+      const {body: storageObjects} = await req.get("/storage", {paginate: true});
+      expect(storageObjects.meta.total).toBe(2);
+      expect(storageObjects.data.length).toEqual(2);
+
+      const deletedStorageObjectResponse = await req.get(`/storage/${row.name}`);
+      expect(deletedStorageObjectResponse.statusCode).toBe(404);
+      expect(deletedStorageObjectResponse.statusText).toBe("Not Found");
+    });
+
+    it("should not delete storage object if data not exists", async () => {
+      const response = await req.delete(`/storage/random-name-or-id`);
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toBe("Storage object could not be found");
+    });
+
+    it("should delete multiple storage objects successfully", async () => {
+      const {
+        body: {data: objects}
+      } = await req.get("/storage", {paginate: true});
+
+      const idsToDelete = [objects[0]._id.toString(), objects[1]._id.toString()];
+      const response = await req.delete("/storage", idsToDelete);
+
+      expect(response.statusCode).toBe(204);
+      expect(response.statusText).toBe("No Content");
+      expect(response.body).toBe(undefined);
+
+      const {body: storageObjects} = await req.get("/storage", {paginate: true});
+      expect(storageObjects.meta.total).toBe(objects.length - 2);
+
+      const remainingIds = storageObjects.data.map((obj: any) => obj._id.toString());
+      expect(remainingIds.some((id: string) => idsToDelete.includes(id))).toBe(false);
+    });
+
+    it("should delete multiple storage objects by name", async () => {
+      const {
+        body: {data: objects}
+      } = await req.get("/storage", {paginate: true});
+
+      const namesToDelete = [objects[0].name, objects[1].name];
+      const response = await req.delete("/storage", namesToDelete);
+
+      expect(response.statusCode).toBe(204);
+      expect(response.statusText).toBe("No Content");
+      expect(response.body).toBe(undefined);
+
+      const {body: storageObjects} = await req.get("/storage", {paginate: true});
+      expect(storageObjects.meta.total).toBe(objects.length - 2);
+
+      const remainingNames = storageObjects.data.map((obj: any) => obj.name);
+      expect(remainingNames.some((name: string) => namesToDelete.includes(name))).toBe(false);
+    });
+
+    it("should delete multiple storage objects with mixed IDs and names", async () => {
+      const {
+        body: {data: objects}
+      } = await req.get("/storage", {paginate: true});
+
+      const mixedIdentifiers = [objects[0]._id.toString(), objects[1].name];
+      const response = await req.delete("/storage", mixedIdentifiers);
+
+      expect(response.statusCode).toBe(204);
+      expect(response.statusText).toBe("No Content");
+      expect(response.body).toBe(undefined);
+
+      const {body: storageObjects} = await req.get("/storage", {paginate: true});
+      expect(storageObjects.meta.total).toBe(objects.length - 2);
+
+      const remainingData = storageObjects.data.map((obj: any) => ({
+        id: obj._id.toString(),
+        name: obj.name
+      }));
+      expect(remainingData.some((item: any) => item.id === objects[0]._id.toString())).toBe(false);
+      expect(remainingData.some((item: any) => item.name === objects[1].name)).toBe(false);
+    });
+
+    it("should return 404 when deleting by non-existent ID", async () => {
+      const invalidIds = ["invalid-id-1", "first.txt"];
+
+      const response = await req.delete("/storage", invalidIds);
+
+      expect(response.statusCode).toBe(404);
+      expect(response.statusText).toBe("Not Found");
+      expect(response.body.message).toContain('Storage object "invalid-id-1" could not be found');
+    });
+
+    it("should return 404 when deleting by non-existent name", async () => {
+      const nonExistentNames = ["non-existent-file-1.txt", "first.txt"];
+
+      const response = await req.delete("/storage", nonExistentNames);
+
+      expect(response.statusCode).toBe(404);
+      expect(response.statusText).toBe("Not Found");
+      expect(response.body.message).toContain(
+        'Storage object "non-existent-file-1.txt" could not be found'
+      );
+    });
+
+    it("should fail when user lacks permission to delete one of the objects", async () => {
+      const {
+        body: {data: objects}
+      } = await req.get("/storage", {paginate: true});
+
+      const unauthorizedId = new ObjectId().toString();
+      const idsToDelete = [objects[0]._id.toString(), unauthorizedId];
+
+      const originalCheckAction = guardService.checkAction;
+      jest.spyOn(guardService, "checkAction").mockImplementation((args: any) => {
+        if (args.request?.params?.id === unauthorizedId) {
+          throw new ForbiddenException(
+            `You don't have permission to delete storage object: ${unauthorizedId}`
+          );
+        }
+        return originalCheckAction.call(guardService, args);
+      });
+
+      const response = await req.delete("/storage", idsToDelete);
+      jest.restoreAllMocks();
+
+      expect(response.statusCode).toBe(403);
+      expect(response.statusText).toBe("Forbidden");
+      expect(response.body.message).toContain(
+        `You don't have permission to delete storage object: ${unauthorizedId}`
+      );
+
+      const {body: afterObjects} = await req.get("/storage", {paginate: true});
+      expect(afterObjects.meta.total).toBe(objects.length);
+    });
+
+    it("should fail when user lacks permission to delete by name", async () => {
+      const {
+        body: {data: objects}
+      } = await req.get("/storage", {paginate: true});
+
+      const unauthorizedName = objects[1].name;
+      const namesToDelete = [objects[0].name, unauthorizedName];
+
+      const originalCheckAction = guardService.checkAction;
+      jest.spyOn(guardService, "checkAction").mockImplementation((args: any) => {
+        if (args.request?.params?.id === objects[1]._id.toString()) {
+          throw new ForbiddenException(
+            `You don't have permission to delete storage object: ${unauthorizedName}`
+          );
+        }
+        return originalCheckAction.call(guardService, args);
+      });
+
+      const response = await req.delete("/storage", namesToDelete);
+      jest.restoreAllMocks();
+
+      expect(response.statusCode).toBe(403);
+      expect(response.statusText).toBe("Forbidden");
+      expect(response.body.message).toContain(
+        `You don't have permission to delete storage object: ${unauthorizedName}`
+      );
+
+      const {body: afterObjects} = await req.get("/storage", {paginate: true});
+      expect(afterObjects.meta.total).toBe(objects.length);
     });
   });
 

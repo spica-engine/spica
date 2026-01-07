@@ -21,7 +21,7 @@ import {
   Req
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
+import {BOOLEAN, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {
@@ -42,13 +42,17 @@ import {
 } from "./body";
 import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface/storage";
 import {StorageService} from "./storage.service";
+import {GuardService} from "@spica-server/passport/guard/services";
 
 /**
  * @name storage
  */
 @Controller("storage")
 export class StorageController {
-  constructor(private storage: StorageService) {}
+  constructor(
+    private storage: StorageService,
+    private guardService: GuardService
+  ) {}
 
   /**
    * @param limit The maximum amount documents that can be present in the response.
@@ -184,14 +188,53 @@ export class StorageController {
 
   /**
    * Removes the object from the storage along with its metadata
-   * @param id Identifier of the object
+   * Can delete by object ID or by object name
+   * @param idOrName Identifier (ObjectId) or name of the object to delete
    */
   @UseInterceptors(activity(createStorageActivity))
-  @Delete(":id")
+  @Delete(":idOrName")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.storage.delete(id);
+  async deleteOne(
+    @Param("idOrName", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string
+  ) {
+    return this.storage.delete(idOrName);
+  }
+
+  /**
+   * Removes multiple storage objects in a single operation.
+   * Accepts both ObjectIds and object names as elements.
+   * Validates user has delete permissions for ALL objects before deleting any.
+   * If user lacks permission for even one object, the entire operation is cancelled.
+   * @body Array of object IDs (ObjectId) or names (strings) to delete
+   * @example
+   * // Delete by IDs
+   * ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+   * // Delete by names
+   * ["file1.txt", "file2.pdf"]
+   * // Mixed
+   * ["507f1f77bcf86cd799439011", "file2.pdf"]
+   */
+  @UseInterceptors(JsonBodyParser(), activity(createStorageActivity))
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard())
+  async deleteMany(
+    @Body(
+      DEFAULT([]),
+      ARRAY((value: string) => OR(v => ObjectId.isValid(v), OBJECT_ID).transform(value, undefined))
+    )
+    elements: (ObjectId | string)[],
+    @Req() req
+  ) {
+    const resolvedIds = await this.resolveIdsFromElements(elements);
+
+    await this.validateDeletePermissions(
+      resolvedIds.map(id => id.toString()),
+      req
+    );
+
+    await this.storage.deleteManyByIds(resolvedIds);
   }
 
   /**
@@ -266,5 +309,57 @@ export class StorageController {
 
     delete object.content.data;
     return object;
+  }
+
+  private async validateDeletePermissions(ids: string[], req: any): Promise<void> {
+    let promises = [];
+    for (const id of ids) {
+      const preparedRequest = {
+        ...req,
+        route: {path: "/storage/:id"},
+        params: {id},
+        user: req.user
+      };
+
+      const promise = this.guardService.checkAction({
+        request: preparedRequest,
+        response: {},
+        actions: ["storage:delete"],
+        options: {resourceFilter: false}
+      });
+      promises.push(promise);
+    }
+    await Promise.all(promises);
+  }
+
+  private async resolveIdsFromElements(elements: (ObjectId | string)[]): Promise<ObjectId[]> {
+    const names: string[] = [];
+    for (const element of elements) {
+      if (!(element instanceof ObjectId)) {
+        names.push(element as string);
+      }
+    }
+
+    if (names.length === 0) {
+      return elements as ObjectId[];
+    }
+
+    const objects = await this.storage.find({name: {$in: names}});
+    const nameToIdMap = new Map<string, ObjectId>();
+
+    for (const object of objects) {
+      nameToIdMap.set(object.name, object._id as ObjectId);
+    }
+
+    return elements.map(element => {
+      if (element instanceof ObjectId) {
+        return element;
+      }
+      const id = nameToIdMap.get(element as string);
+      if (!id) {
+        throw new NotFoundException(`Storage object "${element}" could not be found`);
+      }
+      return id;
+    });
   }
 }
