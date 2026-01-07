@@ -2,6 +2,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {SyncEngine} from "../../sync/engine/src/engine";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {
+  ChangeInitiator,
   ChangeOrigin,
   ChangeType,
   SyncStatuses,
@@ -99,7 +100,8 @@ describe("SyncEngine Integration - Policy", () => {
         resource_slug: name,
         resource_content: YAML.stringify(testPolicy),
         resource_extension: "yaml",
-        created_at: sync.change_log.created_at
+        created_at: sync.change_log.created_at,
+        initiator: ChangeInitiator.EXTERNAL
       });
       subs.unsubscribe();
       done();
@@ -184,7 +186,8 @@ describe("SyncEngine Integration - Policy", () => {
         resource_slug: policyName,
         resource_content: policyYaml,
         resource_extension: fileExtension,
-        created_at: sync.change_log.created_at
+        created_at: sync.change_log.created_at,
+        initiator: ChangeInitiator.EXTERNAL
       });
       expect(sync.status).toBe(SyncStatuses.PENDING);
       syncSub.unsubscribe();

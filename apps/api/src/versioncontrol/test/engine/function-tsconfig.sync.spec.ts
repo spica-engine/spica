@@ -2,6 +2,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {SyncEngine} from "../../sync/engine/src/engine";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {
+  ChangeInitiator,
   ChangeOrigin,
   ChangeType,
   SyncStatuses,
@@ -172,7 +173,8 @@ describe("SyncEngine Integration - Function Tsconfig", () => {
         resource_slug: name,
         resource_content: JSON.stringify(expectedTsconfig, null, 2),
         resource_extension: "json",
-        created_at: sync.change_log.created_at
+        created_at: sync.change_log.created_at,
+        initiator: ChangeInitiator.EXTERNAL
       });
       done();
     });
@@ -256,7 +258,8 @@ describe("SyncEngine Integration - Function Tsconfig", () => {
           resource_content: tsconfigContent,
           resource_slug: name,
           resource_id: null,
-          resource_extension: fileExtension
+          resource_extension: fileExtension,
+          initiator: ChangeInitiator.EXTERNAL
         }
       });
       done();
@@ -305,7 +308,8 @@ describe("SyncEngine Integration - Function Tsconfig", () => {
           resource_content: tsconfigContent,
           resource_slug: name,
           resource_id: null,
-          resource_extension: fileExtension
+          resource_extension: fileExtension,
+          initiator: ChangeInitiator.EXTERNAL
         }
       });
       done();

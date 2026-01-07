@@ -2,6 +2,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {SyncEngine} from "../../sync/engine/src/engine";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {
+  ChangeInitiator,
   ChangeOrigin,
   ChangeType,
   SyncStatuses,
@@ -156,7 +157,8 @@ describe("SyncEngine Integration - Function Index", () => {
           resource_slug: name,
           resource_content: indexContent,
           resource_extension: "js",
-          created_at: sync.change_log.created_at
+          created_at: sync.change_log.created_at,
+          initiator: ChangeInitiator.EXTERNAL
         });
         done();
       });
@@ -210,7 +212,8 @@ describe("SyncEngine Integration - Function Index", () => {
           resource_slug: name,
           resource_content: indexContent,
           resource_extension: "mjs",
-          created_at: sync.change_log.created_at
+          created_at: sync.change_log.created_at,
+          initiator: ChangeInitiator.EXTERNAL
         });
         syncSub.unsubscribe();
         done();
