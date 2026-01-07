@@ -209,8 +209,7 @@ jobs:
           if [[ "$RESULT" == true ]]; then
             # Add MONGODB_URL build arg if mongodb flag is set
             if [[ "${{ matrix.mongodb || false }}" == "true" ]]; then
-              MONGODB_ARG="--build-arg MONGODB_URL=mongodb://172.17.0.1:27017/?replicaSet=testset&directConnection=true&retryWrites=false"
-              yarn run ${{ matrix.command }} $MONGODB_ARG
+              yarn run ${{ matrix.command }} --build-arg MONGODB_URL="mongodb://172.17.0.1:27017/?replicaSet=testset&directConnection=true&retryWrites=false"
             else
               yarn run ${{ matrix.command }}
             fi
