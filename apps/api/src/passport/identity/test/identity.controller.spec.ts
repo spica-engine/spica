@@ -25,7 +25,7 @@ describe("Identity Controller", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID]
         }),
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         PassportTestingModule.initialize(),
         PreferenceTestingModule,
         CoreTestingModule,

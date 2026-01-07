@@ -25,6 +25,8 @@ COPY jest.flaky.setup.js jest.preset.js jest.setup.js ./
 COPY libs/database ./libs/database
 COPY libs/interface/database ./libs/interface/database
 COPY *.env ./
+ARG MONGODB_URL=""
+ENV MONGODB_URL=$MONGODB_URL
 RUN yarn run test:migrate
 
 # copy deps and build

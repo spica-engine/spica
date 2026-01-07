@@ -21,7 +21,7 @@ describe("Webhook Controller", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         CoreTestingModule,
         PassportTestingModule.initialize(),
         SchemaModule.forChild()

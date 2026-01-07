@@ -24,7 +24,7 @@ describe("Storage", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot(),
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         PassportTestingModule.initialize({overriddenStrategyType: "identity"}),
         StorageModule.forRoot({
           objectSizeLimit: 10,
@@ -258,8 +258,8 @@ describe("Storage", () => {
         {
           request: "storage/123",
           response: {
-            error: undefined,
-            message: "Invalid id."
+            error: "Not Found",
+            message: "Storage object could not be found"
           }
         }
       ]

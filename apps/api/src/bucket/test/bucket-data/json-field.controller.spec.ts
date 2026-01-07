@@ -23,7 +23,7 @@ describe("BucketDataController json field", () => {
         }),
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         PreferenceTestingModule,
         BucketModule.forRoot({
           hooks: false,

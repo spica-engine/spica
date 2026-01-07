@@ -12,7 +12,7 @@ describe("Commander", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet()],
+      imports: [DatabaseTestingModule.standalone()],
       providers: [
         {provide: REPLICATION_SERVICE_OPTIONS, useValue: replicationServiceOptions},
         JobService,
