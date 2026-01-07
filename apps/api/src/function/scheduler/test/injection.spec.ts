@@ -36,7 +36,7 @@ describe("Scheduler Injection", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         SchedulerModule.forRoot({
           invocationLogs: false,
           databaseName: undefined,

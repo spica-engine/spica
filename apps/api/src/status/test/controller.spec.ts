@@ -32,7 +32,7 @@ describe("Status", () => {
       module = await Test.createTestingModule({
         imports: [
           SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME]}),
-          DatabaseTestingModule.replicaSet(),
+          DatabaseTestingModule.standalone(),
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),

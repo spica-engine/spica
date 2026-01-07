@@ -33,7 +33,7 @@ describe("Hash Field", () => {
         }),
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         PreferenceTestingModule,
         BucketModule.forRoot({
           hooks: false,

@@ -24,7 +24,7 @@ describe("Storage", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot(),
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         PassportTestingModule.initialize({overriddenStrategyType: "identity"}),
         StorageModule.forRoot({
           objectSizeLimit: 10,
