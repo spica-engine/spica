@@ -1,5 +1,5 @@
-import { Test } from "@nestjs/testing";
-import { FunctionModule } from "@spica-server/function";
+import {Test} from "@nestjs/testing";
+import {FunctionModule} from "@spica-server/function";
 import os from "os";
 import {
   DatabaseService,
@@ -7,16 +7,16 @@ import {
   getConnectionUri,
   stream
 } from "@spica-server/database/testing";
-import { INestApplication } from "@nestjs/common";
-import { CoreTestingModule, Request } from "@spica-server/core/testing";
-import { SchemaModule } from "@spica-server/core/schema";
-import { OBJECTID_STRING, OBJECT_ID } from "@spica-server/core/schema/formats";
-import { PassportTestingModule } from "@spica-server/passport/testing";
-import { PreferenceTestingModule } from "@spica-server/preference/testing";
-import { Scheduler } from "@spica-server/function/scheduler";
-import { event } from "@spica-server/function/queue/proto";
-import { JobReducer, ReplicationModule } from "@spica-server/replication";
-import { BucketModule } from "@spica-server/bucket";
+import {INestApplication} from "@nestjs/common";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {SchemaModule} from "@spica-server/core/schema";
+import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {Scheduler} from "@spica-server/function/scheduler";
+import {event} from "@spica-server/function/queue/proto";
+import {JobReducer, ReplicationModule} from "@spica-server/replication";
+import {BucketModule} from "@spica-server/bucket";
 
 function sleep(ms: number) {
   return new Promise((resolve, _) => setTimeout(resolve, ms));
@@ -55,8 +55,8 @@ describe("Queue shifting", () => {
           ? DatabaseTestingModule.connect(connectionUri, dbName)
           : DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
-        PassportTestingModule.initialize({ overriddenStrategyType: "JWT" }),
-        SchemaModule.forRoot({ formats: [OBJECT_ID, OBJECTID_STRING] }),
+        PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
+        SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
         FunctionModule.forRoot({
           invocationLogs: false,
           path: os.tmpdir(),
@@ -95,7 +95,7 @@ describe("Queue shifting", () => {
   async function startApp(grpcaddresses: string[]) {
     const module = await getModuleBuilder().compile();
     const db = module.get(DatabaseService);
-    await db.collection("my_coll").insertOne({ test: "123" });
+    await db.collection("my_coll").insertOne({test: "123"});
 
     const connectionUri = getConnectionUri();
     const module2 = await getModuleBuilder(connectionUri, db.databaseName).compile();
@@ -337,7 +337,7 @@ describe("Queue shifting", () => {
       return new Promise((resolve, reject) => {
         stream.change.next();
         stream.change.wait().then(() => resolve(""));
-        db.collection("my_coll").insertOne({ test: "asdqwe" });
+        db.collection("my_coll").insertOne({test: "asdqwe"});
       });
     }
 

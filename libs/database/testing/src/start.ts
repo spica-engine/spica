@@ -1,8 +1,7 @@
-import { MongoClient, MongoClientOptions } from "mongodb";
-import { MongoMemoryReplSet, MongoMemoryServer } from "mongodb-memory-server";
-import { randomBytes } from "crypto";
-import { GenericContainer } from "testcontainers";
-
+import {MongoClient, MongoClientOptions} from "mongodb";
+import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server";
+import {randomBytes} from "crypto";
+import {GenericContainer} from "testcontainers";
 
 let uri;
 let databaseName;
@@ -39,7 +38,7 @@ export async function start(topology: "standalone" | "replset") {
     await tempClient.db("admin").command({
       replSetInitiate: {
         _id: "testset",
-        members: [{ _id: 0, host: `localhost:27017` }]
+        members: [{_id: 0, host: `localhost:27017`}]
       }
     });
 
@@ -86,7 +85,7 @@ function getReplicaClientOptions(): MongoClientOptions {
 
 function getServerOptions() {
   return {
-    binary: { version: MONGODB_BINARY_VERSION }
+    binary: {version: MONGODB_BINARY_VERSION}
   };
 }
 
@@ -97,7 +96,7 @@ function getStandaloneServerOptions(): any {
 function getReplicaServerOptions(): any {
   return {
     ...getServerOptions(),
-    replSet: { count: 1, storageEngine: "wiredTiger" }
+    replSet: {count: 1, storageEngine: "wiredTiger"}
   };
 }
 
