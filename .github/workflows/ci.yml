@@ -3,7 +3,7 @@ name: Spica Continuous Integration
 env:
   origin_branch: master
   VERSION: ${{ github.sha }}
-  MONGODB_URL: "mongodb://mongo:27017?replicaSet=testset\&directConnection=true\&retryWrites=false"
+  MONGODB_URL: "'mongodb://mongo:27017?replicaSet=testset\&directConnection=true\&retryWrites=false\&connectTimeoutMS=5000\&serverSelectionTimeoutMS=5000\&socketTimeoutMS=5000'"
 
 
 on:
