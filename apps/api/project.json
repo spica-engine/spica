@@ -43,7 +43,7 @@
       }
     },
     "test-image": {
-      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/api/Dockerfile",
+      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/api/Dockerfile --debug",
       "cache": true
     },
     "build-image": {
