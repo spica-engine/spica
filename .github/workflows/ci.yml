@@ -3,6 +3,8 @@ name: Spica Continuous Integration
 env:
   origin_branch: master
   VERSION: ${{ github.sha }}
+  MONGODB_URL: mongodb://mongo:27017/?replicaSet=testset&directConnection=true&retryWrites=false
+
 
 on:
   pull_request:
@@ -43,7 +45,7 @@ jobs:
           # - command: test:devkit:*
           # - command: test-image:migrate --build-arg MONGODB_URL=mongodb://mongo:27017/?replicaSet=testset&directConnection=true&retryWrites=false
           #   mongodb: true
-          - command: test-image:api --build-arg PROJECTS=api/activity/** --build-arg MONGODB_URL="mongodb://mongo:27017/?replicaSet=testset&directConnection=true&retryWrites=false"
+          - command: test-image:api --build-arg PROJECTS=api/activity/** --build-arg MONGODB_URL=$MONGODB_URL
             mongodb: true
           # - command: test-image:api --build-arg PROJECTS=api/asset/**
           #   mongodb: true
