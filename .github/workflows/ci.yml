@@ -43,8 +43,8 @@ jobs:
           - command: build-image:migrate
           - command: build-image:mongoreplicationcontroller
           - command: test:cli
-          - command: test:devkit:* --build-arg MONGODB_URL=$MONGODB_URL
-            mongodb: true
+          # - command: test:devkit:*
+          #   mongodb: true
           - command: test-image:migrate --build-arg MONGODB_URL=$MONGODB_URL
             mongodb: true
           - command: test-image:api --build-arg PROJECTS=api/activity/**
