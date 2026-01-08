@@ -45,7 +45,7 @@
       "cache": false
     },
     "test": {
-      "cache": true,
+      "cache": false,
       "configurations": {
         "ci-cd": {
           "forceExit": true,
