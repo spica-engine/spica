@@ -4,6 +4,8 @@ env:
   origin_branch: master
   VERSION: ${{ github.sha }}
   MONGODB_URL: "mongodb://172.17.0.1:27017"
+  MAILER_URL: "smtp://172.17.0.1:1025,api://172.17.0.1:8025"
+  RABBITMQ_URL: "amqp://172.17.0.1:5672"
 
 
 on:
@@ -11,23 +13,23 @@ on:
     branches: ["master"]
 
 jobs:
-  # helm_lint:
-  #   name: Helm Lint
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 1
-  #     - name: Install Helm
-  #       uses: azure/setup-helm@v4.2.0
+  helm_lint:
+    name: Helm Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install Helm
+        uses: azure/setup-helm@v4.2.0
 
-  #     - name: Lint Helm Charts
-  #       run: |
-  #         helm lint charts/spica \
-  #           --set application.secret=lint-secret \
-  #           --set application.bucketDataHashSecret=lint-hash-secret \
-  #           --set application.publicHost=lint.example.com
+      - name: Lint Helm Charts
+        run: |
+          helm lint charts/spica \
+            --set application.secret=lint-secret \
+            --set application.bucketDataHashSecret=lint-hash-secret \
+            --set application.publicHost=lint.example.com
 
   run_command:
     name: Run Command
@@ -35,76 +37,76 @@ jobs:
     strategy:
       matrix:
         include:
-          # - command: format:check
-          # - command: build:cli
-          # - command: build:devkit:*
-          # - command: build-image:api
-          # - command: build-image:migrate
-          # - command: build-image:mongoreplicationcontroller
-          # - command: test:cli
-          # - command: test:devkit:*
-          # - command: test-image:migrate --build-arg MONGODB_URL=mongodb://mongo:27017/?replicaSet=testset&directConnection=true&retryWrites=false
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/activity/** --build-arg MONGODB_URL=$MONGODB_URL
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/asset/**
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/bucket
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/bucket/cache
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/bucket/common
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/bucket/expression
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/bucket/graphql
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/bucket/history
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/bucket/hooks
-          #   mongodb: true
+          - command: format:check
+          - command: build:cli
+          - command: build:devkit:*
+          - command: build-image:api
+          - command: build-image:migrate
+          - command: build-image:mongoreplicationcontroller
+          - command: test:cli
+          - command: test:devkit:*
+          - command: test-image:migrate --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/activity/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/asset/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/bucket --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/bucket/cache --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/bucket/common --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/bucket/expression --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/bucket/graphql --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/bucket/history --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/bucket/hooks --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
           - command: test-image:api --build-arg PROJECTS=api/bucket/realtime --build-arg MONGODB_URL=$MONGODB_URL
             mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/bucket/schemas-realtime
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/bucket/services
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/dashboard/**
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/env_var/**
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/function
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/mailer/** --build-arg MAILER_URL=smtp://172.17.0.1:1025,api://172.17.0.1:8025
-          #   mailer: true
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/function/enqueuer --build-arg RABBITMQ_URL=amqp://172.17.0.1:5672
-          #   rabbitmq: true
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE='api/function/packages/**,api/function,api/function/enqueuer'
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/passport/** --build-arg EXCLUDE='api/passport/apikey/**,api/passport/identity/**'
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/passport/apikey/**
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/passport/identity/**
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/preference/**
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/replication/**
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/status/**
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/storage/**
-          #   mongodb: true
-          # - command: test-image:api --build-arg PROJECTS=api/versioncontrol/**
-          #   mongodb: true
-          # - command: test-image:core --build-arg PROJECTS=core/**
-          #   mongodb: true
-          # - command: test-image:database --build-arg PROJECTS=database/**
-          #   mongodb: true
-          # - command: test-image:filter --build-arg PROJECTS=filter/**
-          #   mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/bucket/schemas-realtime --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/bucket/services --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/dashboard/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/env_var/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/function --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/mailer/** --build-arg MAILER_URL=$MAILER_URL --build-arg MONGODB_URL=$MONGODB_URL
+            mailer: true
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/function/enqueuer --build-arg RABBITMQ_URL=$RABBITMQ_URL --build-arg MONGODB_URL=$MONGODB_URL
+            rabbitmq: true
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE='api/function/packages/**,api/function,api/function/enqueuer' --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/passport/** --build-arg EXCLUDE='api/passport/apikey/**,api/passport/identity/**' --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/passport/apikey/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/passport/identity/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/preference/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/replication/**  --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/status/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/storage/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:api --build-arg PROJECTS=api/versioncontrol/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:core --build-arg PROJECTS=core/**  --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:database --build-arg PROJECTS=database/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
+          - command: test-image:filter --build-arg PROJECTS=filter/** --build-arg MONGODB_URL=$MONGODB_URL
+            mongodb: true
 
     steps:
       - name: Free up some space on disk
@@ -208,10 +210,6 @@ jobs:
           echo "Debug: AFFECTED_TESTS: $AFFECTED_TESTS"
           RESULT=$(./scripts/find_ci_command.sh "${{ matrix.command }}" "$AFFECTED_BUILDS" "$AFFECTED_TESTS")
           echo "Debug: Command ${{ matrix.command }} will be executed?: $RESULT"
-          echo "Remained space on disk"
-          df -h
-          echo "Remained space on docker"
-          docker system df
           if [[ "$RESULT" == true ]]; then
             yarn run ${{ matrix.command }}
           else
