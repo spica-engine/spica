@@ -25,6 +25,11 @@ export interface User {
   lastLogin: Date;
   failedAttempts: Date[];
   bannedUntil?: Date;
+  email?: {
+    value: string;
+    created_at: Date;
+    verified: boolean;
+  };
 }
 
 export interface LoginCredentials {
@@ -65,5 +70,15 @@ export interface UserOptions {
   userRealtime: boolean;
 }
 
+export interface UserVerification {
+  userId: ObjectId;
+  destination: string;
+  expiredAt: Date;
+  attempts: number;
+  code: string;
+  channel: string;
+  purpose: "verify";
+  active: boolean;
+}
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");

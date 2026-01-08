@@ -41,6 +41,7 @@ import {registerPolicyAttacher} from "./utility";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {VerificationService} from "./verification.service";
 
 @Controller("passport/user")
 export class UserController {
@@ -64,6 +65,7 @@ export class UserController {
 
   constructor(
     private userService: UserService,
+    private verificationService: VerificationService,
     @Inject(USER_OPTIONS) private options: UserOptions,
     private authFactor: AuthFactor,
     @Optional() private commander: ClassCommander
@@ -458,5 +460,25 @@ export class UserController {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
     return res;
+  }
+
+  @Post(":id/start-provider-verification")
+  @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
+  startAuthProviderVerification(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body("value") value: string,
+    @Body("provider") provider: string
+  ) {
+    return this.verificationService.startAuthProviderVerification(id, value, provider);
+  }
+
+  @Post(":id/verify-provider")
+  @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
+  async verifyProvider(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body("code") code: string,
+    @Body("provider") provider: string
+  ) {
+    return this.verificationService.verifyAuthProvider(id, code, provider);
   }
 }

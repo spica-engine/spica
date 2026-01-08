@@ -22,6 +22,7 @@ import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 import {UserRealtimeModule} from "../realtime";
+import {VerificationService} from "./verification.service";
 
 @Global()
 @Module({})
@@ -108,7 +109,8 @@ export class UserModule {
           provide: AUTH_RESOLVER,
           useFactory: (i, p) => new AuthResolver(i, p),
           inject: [UserService, PreferenceService]
-        }
+        },
+        VerificationService
       ]
     };
 
