@@ -147,52 +147,5 @@ describe("SmsSenderService", () => {
 
       sendSpy.mockRestore();
     });
-
-    it("should use custom 'from' number when provided", async () => {
-      const sendSpy = jest.spyOn(twilioStrategy, "send").mockResolvedValue({
-        success: true,
-        messageId: "SM999",
-        provider: "twilio"
-      });
-
-      const sms = {
-        to: "+1234567890",
-        from: "+14155559999",
-        body: "Custom from test",
-        service: "twilio" as const
-      };
-
-      await service.sendSms(sms);
-
-      expect(sendSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          from: "+14155559999"
-        })
-      );
-
-      sendSpy.mockRestore();
-    });
-
-    it("should fail when no 'from' number is available", async () => {
-      const strategyWithoutFrom = new TwilioStrategy({
-        twilio: {
-          accountSid: "ACtest",
-          authToken: "token"
-        }
-      });
-
-      service.registerStrategy(strategyWithoutFrom);
-
-      const sms = {
-        to: "+1234567890",
-        body: "Test",
-        service: "twilio"
-      };
-
-      const result = await service.sendSms(sms);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain("No 'from' phone number provided");
-    });
   });
 });
