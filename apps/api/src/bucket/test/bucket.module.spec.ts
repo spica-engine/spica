@@ -12,7 +12,7 @@ describe("Bucket Module", () => {
     const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         BucketModule.forRoot({
           hooks: true,
@@ -32,7 +32,7 @@ describe("Bucket Module", () => {
     const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         BucketModule.forRoot({
           hooks: false,
@@ -57,7 +57,7 @@ describe("Bucket Module", () => {
     const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         BucketModule.forRoot({
           hooks: false,
@@ -77,7 +77,7 @@ describe("Bucket Module", () => {
     const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         BucketModule.forRoot({
           hooks: false,
@@ -102,7 +102,7 @@ describe("Bucket Module", () => {
     const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         BucketModule.forRoot({
           hooks: false,
@@ -122,7 +122,7 @@ describe("Bucket Module", () => {
     const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         BucketModule.forRoot({
           hooks: false,
