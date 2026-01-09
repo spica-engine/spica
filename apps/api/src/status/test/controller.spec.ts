@@ -32,7 +32,7 @@ describe("Status", () => {
       module = await Test.createTestingModule({
         imports: [
           SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME]}),
-          DatabaseTestingModule.standalone(),
+          DatabaseTestingModule.replicaSet(),
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
@@ -125,7 +125,7 @@ describe("Status", () => {
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [
-          DatabaseTestingModule.standalone(),
+          DatabaseTestingModule.replicaSet(),
           PolicyModule.forRoot({realtime: false}),
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
@@ -310,7 +310,7 @@ describe("Status", () => {
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [
-          DatabaseTestingModule.standalone(),
+          DatabaseTestingModule.replicaSet(),
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),

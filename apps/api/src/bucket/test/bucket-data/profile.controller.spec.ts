@@ -60,7 +60,7 @@ describe("BucketDataController profiler", () => {
         }),
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         BucketModule.forRoot({
           hooks: false,
