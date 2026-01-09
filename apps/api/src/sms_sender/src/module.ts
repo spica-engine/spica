@@ -2,6 +2,7 @@ import {DynamicModule, Global, Module} from "@nestjs/common";
 import {SMS_SENDER_OPTIONS, SmsSenderOptions} from "@spica-server/interface/sms_sender";
 import {SmsSenderService} from "./service";
 import {TwilioStrategy} from "./strategy";
+import {DatabaseService} from "@spica-server/database";
 
 @Global()
 @Module({})
@@ -15,15 +16,15 @@ export class SmsSenderModule {
           provide: SMS_SENDER_OPTIONS,
           useValue: options
         },
-        SmsSenderService,
         TwilioStrategy,
         {
-          provide: "SMS_STRATEGIES",
-          useFactory: (service: SmsSenderService, twilio: TwilioStrategy) => {
-            service.registerStrategy(twilio);
+          provide: SmsSenderService,
+          useFactory: (database: DatabaseService, twilioStrategy: TwilioStrategy) => {
+            const service = new SmsSenderService(database);
+            service.registerStrategy(twilioStrategy);
             return service;
           },
-          inject: [SmsSenderService, TwilioStrategy]
+          inject: [DatabaseService, TwilioStrategy]
         }
       ],
       exports: [SmsSenderService]

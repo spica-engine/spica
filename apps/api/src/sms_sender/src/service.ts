@@ -30,20 +30,30 @@ export class SmsSenderService extends BaseCollection<SmsSender>("sms_sender") {
       );
     }
 
-    const result = await strategy.send(sms);
+    try {
+      const result = await strategy.send(sms);
 
-    await this.insertOne({
-      to: sms.to,
-      from: sms.from,
-      body: sms.body,
-      service: sms.service,
-      messageId: result.messageId,
-      status: result.success ? "sent" : "failed",
-      error: result.error,
-      sentAt: new Date()
-    });
+      await this.insertOne({
+        to: sms.to,
+        from: sms.from,
+        body: sms.body,
+        service: sms.service,
+        messageId: result.messageId,
+        status: result.success ? "sent" : "failed",
+        error: result.error,
+        sentAt: new Date()
+      });
 
-    return result;
+      return result;
+    } catch (error) {
+      console.error("Error sending SMS:", error);
+
+      return {
+        success: false,
+        error: "Failed to send SMS",
+        provider: strategy.providerName
+      };
+    }
   }
 
   getStrategy(serviceName: string): SmsStrategy | undefined {

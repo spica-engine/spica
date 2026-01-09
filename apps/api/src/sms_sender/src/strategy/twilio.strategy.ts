@@ -25,19 +25,20 @@ export class TwilioStrategy extends SmsStrategy {
   }
 
   validateConfig(): boolean {
-    return !!(this.config.accountSid && this.config.authToken);
+    return !!(this.config.accountSid && this.config.authToken && this.config.fromNumber);
   }
 
   async send(sms: SmsSender): Promise<SmsSendResult> {
-    const fromNumber = sms.from || this.config.fromNumber;
-    if (!fromNumber) {
+    if (!this.validateConfig()) {
       return {
         success: false,
         error:
-          "No 'from' phone number provided. Either set TWILIO_FROM_NUMBER or pass 'from' in the request.",
+          "Twilio configuration is missing. Please configure accountSid, authToken, and fromNumber.",
         provider: "twilio"
       };
     }
+
+    const fromNumber = sms.from || this.config.fromNumber;
 
     try {
       const message = await this.client.messages.create({
@@ -54,7 +55,7 @@ export class TwilioStrategy extends SmsStrategy {
     } catch (error) {
       return {
         success: false,
-        error: error.message || "Failed to send SMS via Twilio",
+        error: "Failed to send SMS via Twilio",
         provider: "twilio"
       };
     }
@@ -64,10 +65,5 @@ export class TwilioStrategy extends SmsStrategy {
     if (this.validateConfig()) {
       this.client = twilio(this.config.accountSid, this.config.authToken);
     }
-  }
-
-  setConfig(config: TwilioConfig): void {
-    this.config = config;
-    this.initializeClient();
   }
 }

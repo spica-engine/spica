@@ -415,25 +415,22 @@ const args = yargsInstance
       default: 1000 * 60 * 60 * 24 * 2 // 2 days
     }
   })
-  /* Mailer Options */
+  /* Sms Sender Options */
   .options({
     "twilio-sms-service-account-sid": {
       string: true,
-      description: "Twilio SMS service Account SID.",
-      default: ""
+      description: "Twilio SMS service Account SID."
     },
     "twilio-sms-service-auth-token": {
       string: true,
-      description: "Twilio SMS service Auth Token.",
-      default: ""
+      description: "Twilio SMS service Auth Token."
     },
     "twilio-sms-service-from-number": {
       string: true,
-      description: "Twilio SMS service From Number.",
-      default: ""
+      description: "Twilio SMS service From Number."
     }
   })
-  /* Sms Sender Options */
+  /* Mailer Options */
   .options({
     "mailer-host": {
       string: true,
@@ -597,6 +594,21 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     const bucketDataHashSecret = process.env.BUCKET_DATA_HASH_SECRET;
     if (bucketDataHashSecret) {
       args["bucket-data-hash-secret"] = bucketDataHashSecret;
+    }
+
+    const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
+    if (twilioAccountSid) {
+      args["twilio-sms-service-account-sid"] = twilioAccountSid;
+    }
+
+    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+    if (twilioAuthToken) {
+      args["twilio-sms-service-auth-token"] = twilioAuthToken;
+    }
+
+    const twilioFromNumber = process.env.TWILIO_FROM_NUMBER;
+    if (twilioFromNumber) {
+      args["twilio-sms-service-from-number"] = twilioFromNumber;
     }
   })
   .check(args => {

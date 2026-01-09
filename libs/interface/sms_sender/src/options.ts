@@ -1,7 +1,7 @@
 export interface TwilioConfig {
   accountSid: string;
   authToken: string;
-  fromNumber?: string;
+  fromNumber: string;
 }
 
 export interface SmsSenderOptions {
