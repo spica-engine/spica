@@ -1,0 +1,5 @@
+{
+  "name": "interface/sms_sender",
+  "sourceRoot": "libs/interface/sms_sender/src",
+  "projectType": "library"
+}

@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../../../../libs/interface/sms_sender"
+    },
+    {
+      "path": "../../../../libs/database"
+    },
+    {
+      "path": "../passport/guard"
+    }
+  ]
+}

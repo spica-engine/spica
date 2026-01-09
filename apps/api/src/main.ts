@@ -25,6 +25,8 @@ import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
 import {EnvVarModule} from "@spica-server/env_var";
 import {MailerModule} from "@spica-server/mailer";
+import {SmsSenderModule} from "@spica-server/sms_sender";
+
 import fs from "fs";
 import https from "https";
 import path from "path";
@@ -415,6 +417,24 @@ const args = yargsInstance
   })
   /* Mailer Options */
   .options({
+    "twilio-sms-service-account-sid": {
+      string: true,
+      description: "Twilio SMS service Account SID.",
+      default: ""
+    },
+    "twilio-sms-service-auth-token": {
+      string: true,
+      description: "Twilio SMS service Auth Token.",
+      default: ""
+    },
+    "twilio-sms-service-from-number": {
+      string: true,
+      description: "Twilio SMS service From Number.",
+      default: ""
+    }
+  })
+  /* Sms Sender Options */
+  .options({
     "mailer-host": {
       string: true,
       description: "SMTP server host (e.g. smtp.example.com)"
@@ -687,6 +707,13 @@ const modules = [
     },
     defaults: {
       from: args["mailer-from"]
+    }
+  }),
+  SmsSenderModule.forRoot({
+    twilio: {
+      accountSid: args["twilio-sms-service-account-sid"],
+      authToken: args["twilio-sms-service-auth-token"],
+      fromNumber: args["twilio-sms-service-from-number"]
     }
   }),
   SchemaModule.forRoot({
