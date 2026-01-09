@@ -33,7 +33,7 @@ const AccessManagement = () => {
       title: "Policies",
       icon: "layers",
       onClick: () => {
-        navigate("/passport/policy");
+        navigate("passport/policy");
       }
     },
     {
@@ -83,6 +83,7 @@ const AccessManagement = () => {
             mode="fill"
             alignment="leftCenter"
             className={styles.defaultNavigationItem}
+            onClick={item.onClick}
 
             prefix={{
                 children: typeof item.icon === "string" ? <Icon name={item.icon} /> : item.icon
