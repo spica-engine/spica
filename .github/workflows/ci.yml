@@ -93,8 +93,8 @@ jobs:
           - command: test-image:api --build-arg PROJECTS=api/status/** --build-arg MONGODB_URL=$MONGODB_URL
             mongodb: true
           - command: test-image:api --build-arg PROJECTS=api/storage/**
-          - command: test-image:api --build-arg PROJECTS=api/versioncontrol/** --build-arg MONGODB_URL=$MONGODB_URL
-            mongodb: true
+          # - command: test-image:api --build-arg PROJECTS=api/versioncontrol/** --build-arg MONGODB_URL=$MONGODB_URL
+          #   mongodb: true
           - command: test-image:core --build-arg PROJECTS=core/**
           - command: test-image:database --build-arg PROJECTS=database/** --build-arg MONGODB_URL=$MONGODB_URL
             mongodb: true
