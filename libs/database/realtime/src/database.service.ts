@@ -66,6 +66,7 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
     await Promise.all(
       Array.from(this.emitters).map(([_, emitter]) => {
         const stream = this.changeStreams.get(emitter.value.collectionName);
+        this.changeStreams.delete(emitter.value.collectionName);
         return this.closeStreamSafely(stream);
       })
     );
