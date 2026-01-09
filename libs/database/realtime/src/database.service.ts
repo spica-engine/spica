@@ -65,7 +65,8 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
   async onModuleDestroy() {
     await Promise.all(
       Array.from(this.emitters).map(([_, emitter]) => {
-        return this.changeStreams.get(emitter.value.collectionName).close().catch(console.error);
+        const stream = this.changeStreams.get(emitter.value.collectionName);
+        return this.closeStreamSafely(stream);
       })
     );
     this.emitters.clear();
@@ -89,7 +90,7 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
 
       if (!streamListenersRemain) {
         const changeStream = this.changeStreams.get(collName);
-        changeStream.close().catch(console.error);
+        this.closeStreamSafely(changeStream);
         this.changeStreams.delete(collName);
       }
     }
@@ -104,5 +105,15 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
     options: FindOptions<T> = {}
   ): Observable<StreamChunk<T>> {
     return this.getEmitter(name, options).getObservable();
+  }
+
+  private closeStreamSafely(stream: ChangeStream) {
+    if (!stream.closed) {
+      return stream.close();
+    } else {
+      console.warn(
+        `Change stream for collection ${stream.namespace.collection} is already closed.`
+      );
+    }
   }
 }
