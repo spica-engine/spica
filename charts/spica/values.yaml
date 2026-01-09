@@ -29,6 +29,7 @@ application:
   replicas: 1
   secret:
   bucketDataHashSecret:
+  userHashSecret:
   defaultPassword: spica
   webBaseUrl: /spica/
   apiBaseUrl: /api/

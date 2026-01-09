@@ -1,22 +1,25 @@
-import {Injectable, NotFoundException} from "@nestjs/common";
+import {Injectable, NotFoundException, Inject} from "@nestjs/common";
 import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
-import {UserVerification} from "@spica-server/interface/passport/user";
+import {UserVerification, UserOptions, USER_OPTIONS} from "@spica-server/interface/passport/user";
 import {hash} from "@spica-server/core/schema";
 import {MailerService} from "@spica-server/mailer";
 import {UserService} from "./user.service";
+import {randomInt} from "crypto";
+
 @Injectable()
 export class VerificationService extends BaseCollection<UserVerification>("verification") {
   constructor(
     db: DatabaseService,
     private mailerService: MailerService,
-    private userService: UserService
+    private userService: UserService,
+    @Inject(USER_OPTIONS) private userOptions: UserOptions
   ) {
     super(db);
   }
 
   async startAuthProviderVerification(id: ObjectId, value: string, provider: string) {
     const code = this.random6Digit();
-    const hashedCode = hash(code, "verifyHashSecret"); //Todo! change secret
+    const hashedCode = hash(code, this.getHashSecret());
     try {
       const result = await this.mailerService.sendMail({
         to: value,
@@ -71,7 +74,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
       throw new NotFoundException("No verification found");
     }
 
-    const isCodeValid = hash(code, "verifyHashSecret") === verification.code; //Todo! change secret
+    const isCodeValid = hash(code, this.getHashSecret()) === verification.code;
 
     if (!isCodeValid) {
       throw new Error("Invalid verification code");
@@ -96,9 +99,14 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     };
   }
 
-  private random6Digit() {
-    return Math.floor(Math.random() * 1_000_000)
-      .toString()
-      .padStart(6, "0");
+  private random6Digit(): string {
+    return randomInt(0, 1_000_000).toString().padStart(6, "0");
+  }
+
+  private getHashSecret(): string {
+    if (!this.userOptions.hashSecret) {
+      throw new Error("User hash secret is not configured. Please set USER_HASH_SECRET");
+    }
+    return this.userOptions.hashSecret;
   }
 }
