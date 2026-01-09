@@ -65,7 +65,7 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
   async onModuleDestroy() {
     await Promise.all(
       Array.from(this.emitters).map(([_, emitter]) => {
-        return this.changeStreams.get(emitter.value.collectionName).close();
+        return this.changeStreams.get(emitter.value.collectionName).close().catch(console.error);
       })
     );
     this.emitters.clear();
@@ -89,7 +89,7 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
 
       if (!streamListenersRemain) {
         const changeStream = this.changeStreams.get(collName);
-        changeStream.close();
+        changeStream.close().catch(console.error);
         this.changeStreams.delete(collName);
       }
     }
