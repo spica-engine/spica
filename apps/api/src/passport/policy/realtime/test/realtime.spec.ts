@@ -1,16 +1,16 @@
-import {ForbiddenException, INestApplication, UnauthorizedException} from "@nestjs/common";
-import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
-import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {GuardService} from "@spica-server/passport/guard/services";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {ChunkKind} from "@spica-server/interface/realtime";
-import {PolicyModule} from "../../src";
+import { ForbiddenException, INestApplication, UnauthorizedException } from "@nestjs/common";
+import { Test } from "@nestjs/testing";
+import { CoreTestingModule, Request, Websocket } from "@spica-server/core/testing";
+import { WsAdapter } from "@spica-server/core/websocket";
+import { DatabaseTestingModule, ObjectId } from "@spica-server/database/testing";
+import { GuardService } from "@spica-server/passport/guard/services";
+import { PassportTestingModule } from "@spica-server/passport/testing";
+import { PreferenceTestingModule } from "@spica-server/preference/testing";
+import { SchemaModule } from "@spica-server/core/schema";
+import { OBJECTID_STRING, DATE_TIME, OBJECT_ID } from "@spica-server/core/schema/formats";
+import { CREATED_AT, UPDATED_AT } from "@spica-server/core/schema/defaults";
+import { ChunkKind } from "@spica-server/interface/realtime";
+import { PolicyModule } from "../../src";
 
 function url(path, query) {
   const u = new URL(path, "ws://insteadof");
@@ -31,11 +31,11 @@ describe("Realtime", () => {
   let policies = [];
 
   async function insertPolicy(doc) {
-    const {body} = await req.post("/passport/policy", doc);
+    const { body } = await req.post("/passport/policy", doc);
     return body;
   }
-  function connectSocket({query = {}, headers = {}} = {}) {
-    return wsc.get(url("/passport/policy", query), {headers});
+  function connectSocket({ query = {}, headers = {} } = {}) {
+    return wsc.get(url("/passport/policy", query), { headers });
   }
 
   function waitForOpen(socket: any): Promise<void> {
@@ -56,8 +56,8 @@ describe("Realtime", () => {
     const messages: any[] = [];
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        socket.onclose = () => resolve(messages);
         socket.close();
-        resolve(messages);
       }, 500);
 
       socket.onmessage = e => {
@@ -81,8 +81,8 @@ describe("Realtime", () => {
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
         PreferenceTestingModule,
-        PolicyModule.forRoot({realtime: true}),
-        PassportTestingModule.initialize({overriddenStrategyType: "APIKEY"})
+        PolicyModule.forRoot({ realtime: true }),
+        PassportTestingModule.initialize({ overriddenStrategyType: "APIKEY" })
       ]
     }).compile();
 
@@ -105,15 +105,15 @@ describe("Realtime", () => {
       authGuardCheck = jest.spyOn(guardService, "checkAuthorization");
       actionGuardCheck = jest
         .spyOn(guardService, "checkAction")
-        .mockImplementation(({request}: {request: any}) => {
-          request.resourceFilter = {include: [], exclude: []};
+        .mockImplementation(({ request }: { request: any }) => {
+          request.resourceFilter = { include: [], exclude: [] };
           return Promise.resolve(true);
         });
     });
 
     it("should authorize and do the initial sync", done => {
       const ws = wsc.get("/passport/policy", {
-        headers: {Authorization: "APIKEY test"}
+        headers: { Authorization: "APIKEY test" }
       });
 
       ws.onmessage = e => {
@@ -130,7 +130,7 @@ describe("Realtime", () => {
       });
 
       const ws = wsc.get("/passport/policy", {
-        headers: {Authorization: "APIKEY test"}
+        headers: { Authorization: "APIKEY test" }
       });
 
       ws.onclose = () => done();
@@ -145,7 +145,7 @@ describe("Realtime", () => {
       });
 
       const ws = wsc.get("/passport/policy", {
-        headers: {Authorization: "APIKEY test"}
+        headers: { Authorization: "APIKEY test" }
       });
 
       ws.onclose = () => done();
@@ -168,8 +168,8 @@ describe("Realtime", () => {
             name: "Activity Full Access",
             description: "Full access to activity service.",
             statement: [
-              {action: "activity:index", module: "activity"},
-              {action: "activity:delete", module: "activity"}
+              { action: "activity:index", module: "activity" },
+              { action: "activity:delete", module: "activity" }
             ]
           }),
           await insertPolicy({
@@ -197,7 +197,7 @@ describe("Realtime", () => {
       });
 
       describe("initial sync", () => {
-        const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
+        const lastMessage = JSON.stringify({ kind: ChunkKind.EndOfInitial });
 
         it("should do the initial sync", done => {
           const ws = wsc.get("/passport/policy");
@@ -207,9 +207,9 @@ describe("Realtime", () => {
 
             if (e.data === lastMessage) {
               expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
-                {kind: ChunkKind.Initial, document: policies[0]},
-                {kind: ChunkKind.Initial, document: policies[1]},
-                {kind: ChunkKind.EndOfInitial}
+                { kind: ChunkKind.Initial, document: policies[0] },
+                { kind: ChunkKind.Initial, document: policies[1] },
+                { kind: ChunkKind.EndOfInitial }
               ]);
 
               await ws.close();
@@ -222,7 +222,7 @@ describe("Realtime", () => {
       });
 
       describe("listening changes", () => {
-        const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
+        const lastMessage = JSON.stringify({ kind: ChunkKind.EndOfInitial });
 
         it("should listen changes", done => {
           const ws = wsc.get("/passport/policy");
@@ -255,10 +255,10 @@ describe("Realtime", () => {
               const msg = JSON.parse(e.data);
               if (msg.kind === ChunkKind.Insert) {
                 expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
-                  {kind: ChunkKind.Initial, document: policies[0]},
-                  {kind: ChunkKind.Initial, document: policies[1]},
-                  {kind: ChunkKind.EndOfInitial},
-                  {kind: ChunkKind.Insert, document: msg.document}
+                  { kind: ChunkKind.Initial, document: policies[0] },
+                  { kind: ChunkKind.Initial, document: policies[1] },
+                  { kind: ChunkKind.EndOfInitial },
+                  { kind: ChunkKind.Insert, document: msg.document }
                 ]);
                 await ws.close();
                 done();
@@ -282,8 +282,8 @@ describe("Realtime", () => {
           name: "Activity Full Access",
           description: "Full access to activity service.",
           statement: [
-            {action: "activity:index", module: "activity"},
-            {action: "activity:delete", module: "activity"}
+            { action: "activity:index", module: "activity" },
+            { action: "activity:delete", module: "activity" }
           ]
         };
         const p2 = {
@@ -291,9 +291,9 @@ describe("Realtime", () => {
           name: "ApiKey Read Only Access",
           description: "Read only access to passport apikey service.",
           statement: [
-            {action: "passport:apikey:index", module: "passport:apikey"},
-            {action: "passport:apikey:show", module: "passport:apikey"},
-            {action: "passport:apikey:stream", module: "passport:apikey"}
+            { action: "passport:apikey:index", module: "passport:apikey" },
+            { action: "passport:apikey:show", module: "passport:apikey" },
+            { action: "passport:apikey:stream", module: "passport:apikey" }
           ]
         };
         const p3 = {
@@ -301,8 +301,8 @@ describe("Realtime", () => {
           name: "Environment Variables Read Only Access",
           description: "Read only access to function environment variables service.",
           statement: [
-            {action: "env-var:index", module: "env-var"},
-            {action: "env-var:show", module: "env-var"}
+            { action: "env-var:index", module: "env-var" },
+            { action: "env-var:show", module: "env-var" }
           ]
         };
 
@@ -310,15 +310,15 @@ describe("Realtime", () => {
         await insertPolicy(p2);
         await insertPolicy(p3);
 
-        const socket = connectSocket({query: {limit: "2"}});
+        const socket = connectSocket({ query: { limit: "2" } });
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
 
         expect(messages).toMatchObject([
-          {kind: ChunkKind.Initial, document: p1},
-          {kind: ChunkKind.Initial, document: p2},
-          {kind: ChunkKind.EndOfInitial}
+          { kind: ChunkKind.Initial, document: p1 },
+          { kind: ChunkKind.Initial, document: p2 },
+          { kind: ChunkKind.EndOfInitial }
         ]);
       });
 
@@ -328,8 +328,8 @@ describe("Realtime", () => {
           name: "Activity Full Access",
           description: "Full access to activity service.",
           statement: [
-            {action: "activity:index", module: "activity"},
-            {action: "activity:delete", module: "activity"}
+            { action: "activity:index", module: "activity" },
+            { action: "activity:delete", module: "activity" }
           ]
         };
         const p2 = {
@@ -337,9 +337,9 @@ describe("Realtime", () => {
           name: "ApiKey Read Only Access",
           description: "Read only access to passport apikey service.",
           statement: [
-            {action: "passport:apikey:index", module: "passport:apikey"},
-            {action: "passport:apikey:show", module: "passport:apikey"},
-            {action: "passport:apikey:stream", module: "passport:apikey"}
+            { action: "passport:apikey:index", module: "passport:apikey" },
+            { action: "passport:apikey:show", module: "passport:apikey" },
+            { action: "passport:apikey:stream", module: "passport:apikey" }
           ]
         };
         const p3 = {
@@ -347,8 +347,8 @@ describe("Realtime", () => {
           name: "Environment Variables Read Only Access",
           description: "Read only access to function environment variables service.",
           statement: [
-            {action: "env-var:index", module: "env-var"},
-            {action: "env-var:show", module: "env-var"}
+            { action: "env-var:index", module: "env-var" },
+            { action: "env-var:show", module: "env-var" }
           ]
         };
 
@@ -356,15 +356,15 @@ describe("Realtime", () => {
         await insertPolicy(p2);
         await insertPolicy(p3);
 
-        const socket = connectSocket({query: {skip: "1", sort: JSON.stringify({name: 1})}});
+        const socket = connectSocket({ query: { skip: "1", sort: JSON.stringify({ name: 1 }) } });
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
 
         expect(messages).toMatchObject([
-          {kind: ChunkKind.Initial, document: p2},
-          {kind: ChunkKind.Initial, document: p3},
-          {kind: ChunkKind.EndOfInitial}
+          { kind: ChunkKind.Initial, document: p2 },
+          { kind: ChunkKind.Initial, document: p3 },
+          { kind: ChunkKind.EndOfInitial }
         ]);
       });
 
@@ -374,8 +374,8 @@ describe("Realtime", () => {
           name: "b-Policy",
           description: "Full access to activity service.",
           statement: [
-            {action: "activity:index", module: "activity"},
-            {action: "activity:delete", module: "activity"}
+            { action: "activity:index", module: "activity" },
+            { action: "activity:delete", module: "activity" }
           ]
         };
         const p2 = {
@@ -383,9 +383,9 @@ describe("Realtime", () => {
           name: "c-Policy",
           description: "Read only access to passport apikey service.",
           statement: [
-            {action: "passport:apikey:index", module: "passport:apikey"},
-            {action: "passport:apikey:show", module: "passport:apikey"},
-            {action: "passport:apikey:stream", module: "passport:apikey"}
+            { action: "passport:apikey:index", module: "passport:apikey" },
+            { action: "passport:apikey:show", module: "passport:apikey" },
+            { action: "passport:apikey:stream", module: "passport:apikey" }
           ]
         };
         const p3 = {
@@ -393,8 +393,8 @@ describe("Realtime", () => {
           name: "a-Policy",
           description: "Read only access to function environment variables service.",
           statement: [
-            {action: "env-var:index", module: "env-var"},
-            {action: "env-var:show", module: "env-var"}
+            { action: "env-var:index", module: "env-var" },
+            { action: "env-var:show", module: "env-var" }
           ]
         };
 
@@ -402,16 +402,16 @@ describe("Realtime", () => {
         await insertPolicy(p2);
         await insertPolicy(p3);
 
-        const socket = connectSocket({query: {sort: JSON.stringify({name: 1})}});
+        const socket = connectSocket({ query: { sort: JSON.stringify({ name: 1 }) } });
         await waitForOpen(socket);
 
         const messages = await collectMessages(socket);
 
         expect(messages).toMatchObject([
-          {kind: ChunkKind.Initial, document: p3},
-          {kind: ChunkKind.Initial, document: p1},
-          {kind: ChunkKind.Initial, document: p2},
-          {kind: ChunkKind.EndOfInitial}
+          { kind: ChunkKind.Initial, document: p3 },
+          { kind: ChunkKind.Initial, document: p1 },
+          { kind: ChunkKind.Initial, document: p2 },
+          { kind: ChunkKind.EndOfInitial }
         ]);
       });
     });
