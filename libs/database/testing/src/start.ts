@@ -84,7 +84,7 @@ function getReplicaClientOptions(): MongoClientOptions {
     retryWrites: false,
     connectTimeoutMS: 10000,
     serverSelectionTimeoutMS: 10000,
-    socketTimeoutMS: 0
+    socketTimeoutMS: 30000
   };
 }
 
