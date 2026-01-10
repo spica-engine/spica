@@ -109,12 +109,13 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
   }
 
   private closeStreamSafely(stream: ChangeStream) {
-    if (!stream.closed) {
-      return stream.close();
-    } else {
-      console.warn(
-        `Change stream for collection ${stream.namespace.collection} is already closed.`
-      );
-    }
+    // do nothing
+    // if (!stream.closed) {
+    //   return stream.close();
+    // } else {
+    //   console.warn(
+    //     `Change stream for collection ${stream.namespace.collection} is already closed.`
+    //   );
+    // }
   }
 }
