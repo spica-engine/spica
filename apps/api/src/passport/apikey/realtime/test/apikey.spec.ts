@@ -67,9 +67,9 @@ describe("Realtime", () => {
     initialApikey = putRes.body;
   });
 
-  afterEach(async () => {
-    await app.close();
-  });
+  // afterEach(async () => {
+  //   await app.close();
+  // });
 
   describe("authorization", () => {
     let authGuardCheck: jest.SpyInstance<
