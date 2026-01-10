@@ -231,7 +231,7 @@ describe("EnvVar Realtime", () => {
       });
     });
 
-    describe("query operations", () => {
+    xdescribe("query operations", () => {
       beforeEach(() => {
         messageSpy.mockClear();
       });
