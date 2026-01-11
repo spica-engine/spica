@@ -60,6 +60,14 @@ describe("Realtime", () => {
     req = module.get(Request);
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
+
+    // wait for a while
+    await new Promise<void>(resolve => {
+      setTimeout(() => {
+        resolve();
+      }, 2000);
+    });
+
     await app.listen(wsc.socket);
 
     const postRes = await req.post("/passport/apikey", {name: "test", active: true, key: "test"});
@@ -107,11 +115,11 @@ describe("Realtime", () => {
       });
     });
 
-    it("should authorize and do the initial sync", (done) => {
+    it("should authorize and do the initial sync", done => {
       const messageSpy = jest.fn();
       const timeout = setTimeout(() => {
         ws.close().catch(() => {});
-        done(new Error('Test timeout: WebSocket connection did not receive expected messages'));
+        done(new Error("Test timeout: WebSocket connection did not receive expected messages"));
       }, 5000);
 
       const ws = wsc.get("/passport/apikey", {
@@ -130,19 +138,21 @@ describe("Realtime", () => {
             {kind: ChunkKind.EndOfInitial}
           ]);
           clearTimeout(timeout);
-          ws.close().then(() => done()).catch(done);
+          ws.close()
+            .then(() => done())
+            .catch(done);
         }
       };
       ws.connect;
     });
 
-    it("should show error messages", (done) => {
+    it("should show error messages", done => {
       authGuardCheck.mockImplementation(() => {
         throw new UnauthorizedException();
       });
       const timeout = setTimeout(() => {
         ws.close().catch(() => {});
-        done(new Error('Test timeout: WebSocket did not close'));
+        done(new Error("Test timeout: WebSocket did not close"));
       }, 5000);
 
       const ws = wsc.get("/passport/apikey", {
@@ -159,13 +169,13 @@ describe("Realtime", () => {
       };
     });
 
-    it("should the action error message", (done) => {
+    it("should the action error message", done => {
       actionGuardCheck.mockImplementation(() => {
         throw new ForbiddenException("You do not have sufficient permissions to do this action.");
       });
       const timeout = setTimeout(() => {
         ws.close().catch(() => {});
-        done(new Error('Test timeout: WebSocket did not close'));
+        done(new Error("Test timeout: WebSocket did not close"));
       }, 5000);
 
       const ws = wsc.get("/passport/apikey", {
@@ -210,10 +220,10 @@ describe("Realtime", () => {
     describe("initial sync", () => {
       const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
 
-      it("should do the initial sync", (done) => {
+      it("should do the initial sync", done => {
         const timeout = setTimeout(() => {
           ws.close().catch(() => {});
-          done(new Error('Test timeout: Initial sync did not complete'));
+          done(new Error("Test timeout: Initial sync did not complete"));
         }, 5000);
 
         const ws = wsc.get("/passport/apikey");
@@ -238,10 +248,10 @@ describe("Realtime", () => {
         ws.connect;
       });
 
-      it("should do the initial sync with limit", (done) => {
+      it("should do the initial sync with limit", done => {
         const timeout = setTimeout(() => {
           ws.close().catch(() => {});
-          done(new Error('Test timeout: Initial sync with limit did not complete'));
+          done(new Error("Test timeout: Initial sync with limit did not complete"));
         }, 5000);
 
         const ws = wsc.get(url({limit: 2}));
@@ -265,10 +275,10 @@ describe("Realtime", () => {
         ws.connect;
       });
 
-      it("should do the initial sync with skip", (done) => {
+      it("should do the initial sync with skip", done => {
         const timeout = setTimeout(() => {
           ws.close().catch(() => {});
-          done(new Error('Test timeout: Initial sync with skip did not complete'));
+          done(new Error("Test timeout: Initial sync with skip did not complete"));
         }, 5000);
 
         const ws = wsc.get(url({skip: 2}));
@@ -291,7 +301,7 @@ describe("Realtime", () => {
         ws.connect;
       });
 
-      it("should do the initial sync with skip and limit", (done) => {
+      it("should do the initial sync with skip and limit", done => {
         Promise.all([
           insertApikey({
             name: "apikey 3",
@@ -305,38 +315,40 @@ describe("Realtime", () => {
             policies: undefined,
             active: true
           })
-        ]).then(newApikey => {
-          const timeout = setTimeout(() => {
-            ws.close().catch(() => {});
-            done(new Error('Test timeout: Initial sync with skip and limit did not complete'));
-          }, 5000);
+        ])
+          .then(newApikey => {
+            const timeout = setTimeout(() => {
+              ws.close().catch(() => {});
+              done(new Error("Test timeout: Initial sync with skip and limit did not complete"));
+            }, 5000);
 
-          const ws = wsc.get(url({skip: 2, limit: 2}));
+            const ws = wsc.get(url({skip: 2, limit: 2}));
 
-          ws.onmessage = async e => {
-            messageSpy(JSON.parse(e.data as string));
+            ws.onmessage = async e => {
+              messageSpy(JSON.parse(e.data as string));
 
-            if (e.data == lastMessage) {
-              expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
-                {kind: ChunkKind.Initial, document: apikeys[1]},
-                {kind: ChunkKind.Initial, document: newApikey[0]},
-                {kind: ChunkKind.EndOfInitial}
-              ]);
+              if (e.data == lastMessage) {
+                expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
+                  {kind: ChunkKind.Initial, document: apikeys[1]},
+                  {kind: ChunkKind.Initial, document: newApikey[0]},
+                  {kind: ChunkKind.EndOfInitial}
+                ]);
 
-              clearTimeout(timeout);
-              await ws.close();
-              done();
-            }
-          };
+                clearTimeout(timeout);
+                await ws.close();
+                done();
+              }
+            };
 
-          ws.connect;
-        }).catch(done);
+            ws.connect;
+          })
+          .catch(done);
       });
 
-      it("should do the initial sync with sort", (done) => {
+      it("should do the initial sync with sort", done => {
         const timeout = setTimeout(() => {
           ws.close().catch(() => {});
-          done(new Error('Test timeout: Initial sync with sort did not complete'));
+          done(new Error("Test timeout: Initial sync with sort did not complete"));
         }, 5000);
 
         const ws = wsc.get(url({sort: {_id: -1}}));
