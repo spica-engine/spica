@@ -45,7 +45,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
         if (error?.code === 11000 && attempt < MAX_RETRIES) {
           continue;
         }
-        console.error(`Error inserting status (attempt ${attempt}):`, error);
+        console.error(`Error inserting status`, error);
         return;
       }
     }
