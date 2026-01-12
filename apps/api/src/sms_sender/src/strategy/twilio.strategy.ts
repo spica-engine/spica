@@ -1,27 +1,24 @@
-import {Inject, Injectable} from "@nestjs/common";
 import {
   SmsSender,
   SmsStrategy,
   SmsSendResult,
-  TwilioConfig,
-  SMS_SENDER_OPTIONS,
-  SmsSenderOptions
+  TwilioConfig
 } from "@spica-server/interface/sms_sender";
+import {BadRequestException, InternalServerErrorException} from "@nestjs/common";
 import twilio from "twilio";
 
-@Injectable()
 export class TwilioStrategy extends SmsStrategy {
   private config: TwilioConfig;
   private client: twilio.Twilio;
 
-  constructor(@Inject(SMS_SENDER_OPTIONS) options: SmsSenderOptions) {
+  constructor(accountSid: string, authToken: string, fromNumber: string) {
     super();
-    this.config = options.twilio;
+    this.config = {
+      accountSid,
+      authToken,
+      fromNumber
+    };
     this.initializeClient();
-  }
-
-  get providerName(): string {
-    return "twilio";
   }
 
   validateConfig(): boolean {
@@ -30,12 +27,9 @@ export class TwilioStrategy extends SmsStrategy {
 
   async send(sms: SmsSender): Promise<SmsSendResult> {
     if (!this.validateConfig()) {
-      return {
-        success: false,
-        error:
-          "Twilio configuration is missing. Please configure accountSid, authToken, and fromNumber.",
-        provider: "twilio"
-      };
+      throw new InternalServerErrorException(
+        "Twilio configuration is missing. Please configure accountSid, authToken, and fromNumber."
+      );
     }
 
     const fromNumber = sms.from || this.config.fromNumber;
@@ -49,15 +43,11 @@ export class TwilioStrategy extends SmsStrategy {
 
       return {
         success: true,
-        messageId: message.sid,
-        provider: "twilio"
+        messageId: message.sid
       };
     } catch (error) {
-      return {
-        success: false,
-        error: "Failed to send SMS via Twilio",
-        provider: "twilio"
-      };
+      console.error("Error sending SMS via Twilio:", error);
+      throw new BadRequestException(`Failed to send SMS via Twilio`);
     }
   }
 

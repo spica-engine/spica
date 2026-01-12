@@ -1,151 +1,62 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {SmsSenderService} from "../src/service";
-import {TwilioStrategy} from "../src/strategy";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {SMS_SENDER_OPTIONS} from "@spica-server/interface/sms_sender";
+import {SmsService} from "../src/service";
+import {SmsStrategy, SmsSender} from "@spica-server/interface/sms_sender";
+import {TwilioStrategy} from "../src/strategy/twilio.strategy";
 
-describe("SmsSenderService", () => {
-  let service: SmsSenderService;
+describe("SmsService", () => {
+  let service: SmsService;
   let twilioStrategy: TwilioStrategy;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.standalone()],
       providers: [
-        SmsSenderService,
         {
-          provide: SMS_SENDER_OPTIONS,
+          provide: SmsStrategy,
           useValue: {
-            twilio: {
-              accountSid: "ACtest123",
-              authToken: "test_token",
-              fromNumber: "+14155551234"
-            }
+            validateConfig: jest.fn().mockReturnValue(true),
+            send: jest.fn(),
+            providerName: "twilio"
           }
         },
-        TwilioStrategy
+        SmsService
       ]
     }).compile();
 
-    service = module.get<SmsSenderService>(SmsSenderService);
-    twilioStrategy = module.get<TwilioStrategy>(TwilioStrategy);
-
-    service.registerStrategy(twilioStrategy);
-  });
-
-  afterEach(async () => {
-    await service._coll.deleteMany({});
-  });
-
-  describe("Strategy Registration", () => {
-    it("should register Twilio strategy on initialization", () => {
-      const strategy = service.getStrategy("twilio");
-      expect(strategy).toBeDefined();
-      expect(strategy).toBeInstanceOf(TwilioStrategy);
-    });
-
-    it("should return list of supported services", () => {
-      const services = service.getSupportedServices();
-      expect(services).toContain("twilio");
-    });
-
-    it("should check if service is supported", () => {
-      expect(service.isServiceSupported("twilio")).toBe(true);
-      expect(service.isServiceSupported("nexmo")).toBe(false);
-    });
-  });
-
-  describe("Twilio Strategy Configuration", () => {
-    it("should validate configuration correctly", () => {
-      expect(twilioStrategy.validateConfig()).toBe(true);
-      expect(twilioStrategy.providerName).toBe("twilio");
-    });
+    service = module.get(SmsService);
+    twilioStrategy = module.get(SmsStrategy);
   });
 
   describe("SMS Sending", () => {
-    it("should throw error for unsupported service", async () => {
-      const sms = {
-        to: "+1234567890",
-        body: "Test message",
-        service: "unsupported"
-      };
-
-      await expect(service.sendSms(sms)).rejects.toThrow(
-        'SMS service "unsupported" is not supported'
-      );
-    });
-
-    it("should successfully send SMS and save record", async () => {
-      const sendSpy = jest.spyOn(twilioStrategy, "send").mockResolvedValue({
+    it("should successfully send SMS", async () => {
+      (twilioStrategy.send as jest.Mock).mockResolvedValue({
         success: true,
-        messageId: "SM123456789",
-        provider: "twilio"
+        messageId: "SM123456789"
       });
 
-      const sms = {
+      const sms: SmsSender = {
         to: "+1234567890",
-        body: "Test message",
-        service: "twilio"
+        body: "Test message"
       };
 
       const result = await service.sendSms(sms);
 
-      expect(result).toEqual({
-        success: true,
-        messageId: "SM123456789",
-        provider: "twilio"
-      });
-
-      expect(sendSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          to: "+1234567890",
-          body: "Test message",
-          service: "twilio"
-        })
-      );
-
-      const records = await service.find({to: "+1234567890"});
-      expect(records).toHaveLength(1);
-      expect(records[0]).toMatchObject({
-        to: "+1234567890",
-        body: "Test message",
-        service: "twilio",
-        messageId: "SM123456789",
-        status: "sent"
-      });
-
-      sendSpy.mockRestore();
+      expect(result.success).toBe(true);
+      expect(result.messageId).toBe("SM123456789");
+      expect(twilioStrategy.send).toHaveBeenCalledWith(sms);
     });
 
-    it("should handle SMS sending failure and save error", async () => {
-      const sendSpy = jest.spyOn(twilioStrategy, "send").mockResolvedValue({
-        success: false,
-        error: "Invalid phone number",
-        provider: "twilio"
-      });
+    it("should handle SMS sending failure", async () => {
+      (twilioStrategy.send as jest.Mock).mockRejectedValue(new Error("Some error"));
 
-      const sms = {
+      const sms: SmsSender = {
         to: "+1234567890",
-        body: "Test message",
-        service: "twilio" as const
+        body: "Test message"
       };
 
       const result = await service.sendSms(sms);
 
-      expect(result).toEqual({
-        success: false,
-        error: "Invalid phone number",
-        provider: "twilio"
-      });
-
-      const records = await service.find({to: "+1234567890"});
-      expect(records).toHaveLength(1);
-      expect(records[0]).toMatchObject({
-        status: "failed",
-        error: "Invalid phone number"
-      });
-
-      sendSpy.mockRestore();
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Failed to send SMS");
     });
   });
 });

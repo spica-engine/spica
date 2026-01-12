@@ -1,13 +1,12 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
-import {SMS_SENDER_OPTIONS, SmsSenderOptions} from "@spica-server/interface/sms_sender";
-import {SmsSenderService} from "./service";
+import {SmsOptions, SMS_SENDER_OPTIONS, SmsStrategy} from "@spica-server/interface/sms_sender";
+import {SmsService} from "./service";
 import {TwilioStrategy} from "./strategy";
-import {DatabaseService} from "@spica-server/database";
 
 @Global()
 @Module({})
 export class SmsSenderModule {
-  static forRoot(options: SmsSenderOptions): DynamicModule {
+  static forRoot(options: SmsOptions): DynamicModule {
     return {
       module: SmsSenderModule,
       controllers: [],
@@ -16,18 +15,25 @@ export class SmsSenderModule {
           provide: SMS_SENDER_OPTIONS,
           useValue: options
         },
-        TwilioStrategy,
         {
-          provide: SmsSenderService,
-          useFactory: (database: DatabaseService, twilioStrategy: TwilioStrategy) => {
-            const service = new SmsSenderService(database);
-            service.registerStrategy(twilioStrategy);
-            return service;
+          provide: SmsStrategy,
+          useFactory: (options: SmsOptions) => {
+            switch (options.strategy) {
+              case "twilio":
+                return new TwilioStrategy(
+                  options.twilio.accountSid,
+                  options.twilio.authToken,
+                  options.twilio.fromNumber
+                );
+              default:
+                throw new Error(`Unknown SMS strategy: ${options.strategy}`);
+            }
           },
-          inject: [DatabaseService, TwilioStrategy]
-        }
+          inject: [SMS_SENDER_OPTIONS]
+        },
+        SmsService
       ],
-      exports: [SmsSenderService]
+      exports: [SmsService]
     };
   }
 }

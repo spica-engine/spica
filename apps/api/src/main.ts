@@ -417,6 +417,12 @@ const args = yargsInstance
   })
   /* Sms Sender Options */
   .options({
+    "sms-sender-strategy": {
+      string: true,
+      description: "SMS service provider strategy. Default is twilio.",
+      default: "twilio",
+      choices: ["twilio"]
+    },
     "twilio-sms-service-account-sid": {
       string: true,
       description: "Twilio SMS service Account SID."
@@ -722,6 +728,7 @@ const modules = [
     }
   }),
   SmsSenderModule.forRoot({
+    strategy: args["sms-sender-strategy"] as "twilio",
     twilio: {
       accountSid: args["twilio-sms-service-account-sid"],
       authToken: args["twilio-sms-service-auth-token"],
