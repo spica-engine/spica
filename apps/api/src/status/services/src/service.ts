@@ -1,4 +1,4 @@
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService, InsertOneResult} from "@spica-server/database";
 import {Inject, Injectable} from "@nestjs/common";
 import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "@spica-server/interface/status";
 import {ObjectId} from "@spica-server/database";
@@ -7,12 +7,35 @@ import {ObjectId} from "@spica-server/database";
 export class StatusService extends BaseCollection<ApiStatus>("status") {
   moduleOptions: StatusOptions;
   constructor(db: DatabaseService, @Inject(STATUS_OPTIONS) _moduleOptions: StatusOptions) {
-    super(db, {afterInit: () => this.upsertTTLIndex(_moduleOptions.expireAfterSeconds)});
+    super(db, {afterInit: () => this.createIndexes(_moduleOptions)});
     this.moduleOptions = _moduleOptions;
+  }
+
+  private async createIndexes(options: StatusOptions) {
+    await this.upsertTTLIndex(options.expireAfterSeconds);
+    this.createIndex({timestamp: 1});
   }
 
   private byteToMb(bytes: number) {
     return parseFloat((bytes * Math.pow(10, -6)).toFixed(2));
+  }
+
+  async insertOne(status: Omit<ApiStatus, "timestamp" | "count">): Promise<any> {
+    const currentMinuteTimestamp = this.getCurrentMinuteTimestamp();
+    return this._coll.updateOne(
+      {timestamp: currentMinuteTimestamp},
+      {
+        $inc: {
+          count: 1,
+          "request.size": status.request.size,
+          "response.size": status.response.size
+        },
+        $setOnInsert: {
+          timestamp: currentMinuteTimestamp
+        }
+      },
+      {upsert: true}
+    );
   }
 
   async _getStatus(begin: Date, end: Date) {
@@ -20,7 +43,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
       {
         $group: {
           _id: null,
-          request: {$sum: 1},
+          request: {$sum: "$count"},
           uploaded: {$sum: "$request.size"},
           downloaded: {$sum: "$response.size"}
         }
@@ -30,9 +53,9 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
     if (this.isValidDate(begin) && this.isValidDate(end)) {
       pipeline.unshift({
         $match: {
-          _id: {
-            $gte: ObjectId.createFromTime(begin.getTime() / 1000),
-            $lt: ObjectId.createFromTime(end.getTime() / 1000)
+          timestamp: {
+            $gte: begin,
+            $lt: end
           }
         }
       });
@@ -62,5 +85,9 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
 
   private isValidDate(date) {
     return date instanceof Date && !isNaN(date.getTime());
+  }
+
+  private getCurrentMinuteTimestamp() {
+    return new Date(Math.floor(Date.now() / 60000) * 60000);
   }
 }

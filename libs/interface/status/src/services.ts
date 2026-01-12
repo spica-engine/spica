@@ -7,6 +7,8 @@ export interface StatusOptions {
 export type AttachStatusTracker = (req: Request, res: Response) => void;
 
 export interface ApiStatus {
+  timestamp: Date;
+  count: number;
   request: {
     size: number;
   };
