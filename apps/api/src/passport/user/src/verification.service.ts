@@ -18,6 +18,20 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   async startAuthProviderVerification(id: ObjectId, value: string, provider: string) {
+    // Check for existing active verification
+    const existingVerification = await this.findOne({
+      userId: id,
+      channel: provider,
+      purpose: "verify",
+      active: true,
+      expiredAt: {$gt: new Date()}
+    });
+
+    if (existingVerification) {
+      // Deactivate the existing verification to prevent confusion
+      await this.updateOne({_id: existingVerification._id}, {$set: {active: false}});
+    }
+
     const code = this.random6Digit();
     const hashedCode = hash(code, this.getHashSecret());
     try {

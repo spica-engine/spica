@@ -135,6 +135,86 @@ describe("Provider Verification", () => {
 
       expect(verification).toBeNull();
     });
+
+    it("should deactivate existing active verification before creating new one", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
+      const provider = "email";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: []
+      });
+
+      // Create first verification
+      await verificationService.startAuthProviderVerification(userId, email, provider);
+
+      const firstVerification = await db
+        .collection("verification")
+        .findOne({userId, channel: provider, active: true});
+
+      expect(firstVerification).toBeDefined();
+      expect(firstVerification.active).toBe(true);
+
+      // Create second verification
+      await verificationService.startAuthProviderVerification(userId, email, provider);
+
+      // First verification should now be inactive
+      const deactivatedVerification = await db
+        .collection("verification")
+        .findOne({_id: firstVerification._id});
+      expect(deactivatedVerification.active).toBe(false);
+
+      // Second verification should be active
+      const activeVerifications = await db
+        .collection("verification")
+        .find({userId, channel: provider, active: true})
+        .toArray();
+
+      expect(activeVerifications).toHaveLength(1);
+      expect(activeVerifications[0]._id).not.toEqual(firstVerification._id);
+    });
+
+    it("should allow new verification if previous one expired", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
+      const provider = "email";
+
+      // Insert expired verification
+      await db.collection("verification").insertOne({
+        userId,
+        destination: email,
+        expiredAt: new Date(Date.now() - 10 * 60 * 1000),
+        attempts: 0,
+        code: hash("123456", "test-hash-secret"),
+        channel: provider,
+        purpose: "verify",
+        active: true
+      });
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: []
+      });
+
+      // Should succeed and create new verification without deactivating expired one
+      await verificationService.startAuthProviderVerification(userId, email, provider);
+
+      const verifications = await db
+        .collection("verification")
+        .find({userId, channel: provider})
+        .toArray();
+
+      expect(verifications).toHaveLength(2);
+
+      const activeVerifications = verifications.filter(v => v.active);
+      expect(activeVerifications).toHaveLength(2); // Both active since expired one wasn't deactivated
+
+      const nonExpiredActiveVerifications = verifications.filter(
+        v => v.active && v.expiredAt > new Date()
+      );
+      expect(nonExpiredActiveVerifications).toHaveLength(1);
+    });
   });
 
   describe("verify provider", () => {
