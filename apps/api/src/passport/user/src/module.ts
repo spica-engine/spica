@@ -15,6 +15,8 @@ import {registerStatusProvider} from "./status";
 import userSchema from "./schemas/user.json" with {type: "json"};
 import userCreateSchema from "./schemas/user-create.json" with {type: "json"};
 import AuthFactorSchema from "./schemas/authfactor.json" with {type: "json"};
+import startProviderVerificationSchema from "./schemas/start-provider-verification.json" with {type: "json"};
+import verifyProviderSchema from "./schemas/verify-provider.json" with {type: "json"};
 import {AuthResolver} from "./relation";
 import {AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {registerAssetHandlers} from "./asset";
@@ -68,7 +70,7 @@ export class UserModule {
           }
         }),
         SchemaModule.forChild({
-          schemas: [userSchema, userCreateSchema, AuthFactorSchema],
+          schemas: [userSchema, userCreateSchema, AuthFactorSchema, startProviderVerificationSchema, verifyProviderSchema],
           customFields: [
             "options",
             // relation

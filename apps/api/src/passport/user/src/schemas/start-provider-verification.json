@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/passport/start-provider-verification",
+  "type": "object",
+  "title": "Start Provider Verification Schema",
+  "required": ["value", "provider"],
+  "properties": {
+    "value": {
+      "type": "string",
+      "title": "Email address or phone number to verify",
+      "minLength": 1,
+      "format": "email"
+    },
+    "provider": {
+      "type": "string",
+      "title": "Authentication provider identifier",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/passport/verify-provider",
+  "type": "object",
+  "title": "Verify Provider Schema",
+  "required": ["code", "provider"],
+  "properties": {
+    "code": {
+      "type": "string",
+      "title": "Verification code",
+      "minLength": 6,
+      "maxLength": 6,
+      "pattern": "^[0-9]{6}$"
+    },
+    "provider": {
+      "type": "string",
+      "title": "Authentication provider identifier",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    }
+  },
+  "additionalProperties": false
+}

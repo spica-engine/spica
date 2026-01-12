@@ -466,19 +466,19 @@ export class UserController {
   @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
   startAuthProviderVerification(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body("value") value: string,
-    @Body("provider") provider: string
+    @Body(Schema.validate("http://spica.internal/passport/start-provider-verification"))
+    body: {value: string; provider: string}
   ) {
-    return this.verificationService.startAuthProviderVerification(id, value, provider);
+    return this.verificationService.startAuthProviderVerification(id, body.value, body.provider);
   }
 
   @Post(":id/verify-provider")
   @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
   async verifyProvider(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body("code") code: string,
-    @Body("provider") provider: string
+    @Body(Schema.validate("http://spica.internal/passport/verify-provider"))
+    body: {code: string; provider: string}
   ) {
-    return this.verificationService.verifyAuthProvider(id, code, provider);
+    return this.verificationService.verifyAuthProvider(id, body.code, body.provider);
   }
 }
