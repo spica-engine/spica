@@ -466,8 +466,26 @@ export class UserController {
   @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
   startAuthProviderVerification(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body("value") value: string,
-    @Body("provider") provider: string
+    @Body(
+      Schema.validate({
+        type: "object",
+        required: ["value", "provider"],
+        properties: {
+          value: {
+            type: "string",
+            format: "email",
+            minLength: 1
+          },
+          provider: {
+            type: "string",
+            enum: ["email"],
+            minLength: 1
+          }
+        },
+        additionalProperties: false
+      })
+    )
+    {value, provider}: {value: string; provider: string}
   ) {
     return this.verificationService.startAuthProviderVerification(id, value, provider);
   }
@@ -476,8 +494,27 @@ export class UserController {
   @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
   async verifyProvider(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body("code") code: string,
-    @Body("provider") provider: string
+    @Body(
+      Schema.validate({
+        type: "object",
+        required: ["code", "provider"],
+        properties: {
+          code: {
+            type: "string",
+            pattern: "^[0-9]{6}$",
+            minLength: 6,
+            maxLength: 6
+          },
+          provider: {
+            type: "string",
+            enum: ["email"],
+            minLength: 1
+          }
+        },
+        additionalProperties: false
+      })
+    )
+    {code, provider}: {code: string; provider: string}
   ) {
     return this.verificationService.verifyAuthProvider(id, code, provider);
   }
