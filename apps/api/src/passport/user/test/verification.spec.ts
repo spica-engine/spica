@@ -198,6 +198,7 @@ describe("Provider Verification", () => {
       });
 
       // Should succeed and create new verification without deactivating expired one
+      // The expired verification won't be found by the query since it filters for expiredAt > now
       await verificationService.startAuthProviderVerification(userId, email, provider);
 
       const verifications = await db
@@ -207,9 +208,11 @@ describe("Provider Verification", () => {
 
       expect(verifications).toHaveLength(2);
 
+      // Both have active=true, but only the new one is functionally active (not expired)
       const activeVerifications = verifications.filter(v => v.active);
-      expect(activeVerifications).toHaveLength(2); // Both active since expired one wasn't deactivated
+      expect(activeVerifications).toHaveLength(2);
 
+      // Only one is both active and not expired - the new one
       const nonExpiredActiveVerifications = verifications.filter(
         v => v.active && v.expiredAt > new Date()
       );
