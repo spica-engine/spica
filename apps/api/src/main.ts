@@ -429,8 +429,8 @@ const args = yargsInstance
     },
     "mailer-secure": {
       boolean: true,
-      description: "Use secure connection (TLS/SSL)",
-      default: false
+      description: "Use secure connection (TLS/SSL) for email transmission. Recommended for production.",
+      default: true
     },
     "mailer-user": {
       string: true,
@@ -658,6 +658,17 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       if (path.isAbsolute(args["default-storage-path"])) {
         throw new TypeError("--default-storage-path must be relative.");
       }
+    }
+
+    // Security warning for mailer configuration
+    if (args["mailer-host"] && !args["mailer-secure"]) {
+      console.warn(
+        "\x1b[33m%s\x1b[0m",
+        "WARNING: Mailer is configured without TLS/SSL (--mailer-secure=false). " +
+          "This is not recommended for production environments as verification codes and emails " +
+          "will be transmitted without encryption, making them vulnerable to interception. " +
+          "Please set --mailer-secure=true for production deployments."
+      );
     }
 
     return true;
