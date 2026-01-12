@@ -14,7 +14,9 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     private userService: UserService,
     @Inject(USER_OPTIONS) private userOptions: UserOptions
   ) {
-    super(db);
+    super(db, {
+      afterInit: () => this._coll.createIndex({expiredAt: 1}, {expireAfterSeconds: 0})
+    });
   }
 
   async startAuthProviderVerification(id: ObjectId, value: string, provider: string) {
