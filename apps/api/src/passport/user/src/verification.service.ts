@@ -6,6 +6,8 @@ import {MailerService} from "@spica-server/mailer";
 import {UserService} from "./user.service";
 import {randomInt} from "crypto";
 
+const DEFAULT_VERIFICATION_CODE_EXPIRES_IN_SECONDS = 300;
+
 @Injectable()
 export class VerificationService extends BaseCollection<UserVerification>("verification") {
   constructor(
@@ -34,7 +36,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
         throw new Error("Mail was not accepted by SMTP");
       }
 
-      const expiresInMs = (this.userOptions.verificationCodeExpiresIn || 300) * 1000;
+      const expiresInMs = (this.userOptions.verificationCodeExpiresIn || DEFAULT_VERIFICATION_CODE_EXPIRES_IN_SECONDS) * 1000;
       
       await this.insertOne({
         userId: id,
