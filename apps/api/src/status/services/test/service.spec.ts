@@ -22,8 +22,6 @@ describe("StatusService", () => {
     service = module.get(StatusService);
     db = module.get(DatabaseService);
     statusCollection = db.collection("status");
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
   });
 
   afterEach(async () => {

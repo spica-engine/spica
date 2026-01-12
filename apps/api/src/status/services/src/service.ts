@@ -1,4 +1,4 @@
-import {BaseCollection, DatabaseService, InsertOneResult} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Inject, Injectable} from "@nestjs/common";
 import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "@spica-server/interface/status";
 import {ObjectId} from "@spica-server/database";
@@ -13,7 +13,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
 
   private async createIndexes(options: StatusOptions) {
     await this.upsertTTLIndex(options.expireAfterSeconds);
-    this.createIndex({timestamp: 1});
+    await this.createIndex({timestamp: 1}, {unique: true});
   }
 
   private byteToMb(bytes: number) {
@@ -22,20 +22,33 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
 
   async insertOne(status: Omit<ApiStatus, "timestamp" | "count">): Promise<any> {
     const currentMinuteTimestamp = this.getCurrentMinuteTimestamp();
-    return this._coll.updateOne(
-      {timestamp: currentMinuteTimestamp},
-      {
-        $inc: {
-          count: 1,
-          "request.size": status.request.size,
-          "response.size": status.response.size
-        },
-        $setOnInsert: {
-          timestamp: currentMinuteTimestamp
+    const MAX_RETRIES = 3;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        return this._coll.updateOne(
+          {timestamp: currentMinuteTimestamp},
+          {
+            $inc: {
+              count: 1,
+              "request.size": status.request.size,
+              "response.size": status.response.size
+            },
+            $setOnInsert: {
+              timestamp: currentMinuteTimestamp
+            }
+          },
+          {upsert: true}
+        );
+      } catch (error: any) {
+        // Try again ONLY for duplicate key errors
+        if (error?.code === 11000 && attempt < MAX_RETRIES) {
+          continue;
         }
-      },
-      {upsert: true}
-    );
+        console.error(`Error inserting status (attempt ${attempt}):`, error);
+        return;
+      }
+    }
   }
 
   async _getStatus(begin: Date, end: Date) {
