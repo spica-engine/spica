@@ -310,6 +310,11 @@ const args = yargsInstance
     "user-hash-secret": {
       string: true,
       description: "Hash secret used for user-related operations."
+    },
+    "user-verification-code-expires-in": {
+      number: true,
+      description: "Verification code expiration time in seconds. Default is 300 (5 minutes).",
+      default: 300
     }
   })
   .demandOption("passport-secret")
@@ -586,6 +591,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     if (userHashSecret) {
       args["user-hash-secret"] = userHashSecret;
     }
+    const userVerificationCodeExpiresIn = process.env.USER_VERIFICATION_CODE_EXPIRES_IN;
+    if (userVerificationCodeExpiresIn) {
+      args["user-verification-code-expires-in"] = parseInt(userVerificationCodeExpiresIn, 10);
+    }
   })
   .check(args => {
     if (!args["passport-identity-token-expiration-seconds-limit"]) {
@@ -770,7 +779,8 @@ const modules = [
         blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
       },
       userRealtime: args["user-realtime"],
-      hashSecret: args["user-hash-secret"]
+      hashSecret: args["user-hash-secret"],
+      verificationCodeExpiresIn: args["user-verification-code-expires-in"]
     }
   }),
   FunctionModule.forRoot({

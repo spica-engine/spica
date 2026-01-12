@@ -34,10 +34,12 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
         throw new Error("Mail was not accepted by SMTP");
       }
 
+      const expiresInMs = (this.userOptions.verificationCodeExpiresIn || 300) * 1000;
+      
       await this.insertOne({
         userId: id,
         destination: value,
-        expiredAt: new Date(Date.now() + 5 * 60 * 1000),
+        expiredAt: new Date(Date.now() + expiresInMs),
         attempts: 0,
         code: hashedCode,
         channel: provider,

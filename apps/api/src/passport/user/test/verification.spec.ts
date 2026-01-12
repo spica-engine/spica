@@ -53,7 +53,8 @@ describe("Provider Verification", () => {
             failedAttemptLimit: 0
           },
           userRealtime: false,
-          hashSecret: "test-hash-secret"
+          hashSecret: "test-hash-secret",
+          verificationCodeExpiresIn: 300
         })
       ]
     })
