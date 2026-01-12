@@ -216,7 +216,7 @@ describe("Provider Verification", () => {
         destination: email,
         expiredAt: expiredDate,
         attempts: 0,
-        code: hash(randomCode, "verifyHashSecret"),
+        code: hash(randomCode, "test-hash-secret"),
         channel: provider,
         purpose: "verify",
         active: true
@@ -224,7 +224,7 @@ describe("Provider Verification", () => {
 
       await expect(
         verificationService.verifyAuthProvider(userId, randomCode, provider)
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow("Verification code has expired");
 
       const user = await userService.findOne({_id: userId});
       expect(user.email).toBeUndefined();
@@ -236,7 +236,7 @@ describe("Provider Verification", () => {
         destination: email,
         expiredAt: new Date(Date.now() + 5 * 60 * 1000),
         attempts: 5,
-        code: hash(randomCode, "verifyHashSecret"),
+        code: hash(randomCode, "test-hash-secret"),
         channel: provider,
         purpose: "verify",
         active: true
@@ -244,7 +244,7 @@ describe("Provider Verification", () => {
 
       await expect(
         verificationService.verifyAuthProvider(userId, randomCode, provider)
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow("Too many verification attempts");
 
       const user = await userService.findOne({_id: userId});
       expect(user.email).toBeUndefined();
@@ -261,7 +261,7 @@ describe("Provider Verification", () => {
 
       await expect(
         verificationService.verifyAuthProvider(wrongUserId, code, provider)
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow("No active verification found");
 
       const verification = await db.collection("verification").findOne({userId, channel: provider});
       expect(verification).toMatchObject({
@@ -281,7 +281,7 @@ describe("Provider Verification", () => {
 
       await expect(
         verificationService.verifyAuthProvider(userId, code, wrongProvider)
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow("No active verification found");
 
       const verification = await db.collection("verification").findOne({userId, channel: provider});
       expect(verification).toMatchObject({

@@ -56,23 +56,39 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   async verifyAuthProvider(id: ObjectId, code: string, provider: string) {
-    const verification = await this.findOneAndUpdate(
-      {
-        userId: id,
-        channel: provider,
-        purpose: "verify",
-        active: true,
-        attempts: {$lt: 5},
-        expiredAt: {$gt: new Date()}
-      },
-      {
-        $inc: {attempts: 1}
-      }
-    );
+    // First, check if a verification exists for this user/provider
+    const verification = await this.findOne({
+      userId: id,
+      channel: provider,
+      purpose: "verify",
+      active: true
+    });
 
     if (!verification) {
-      throw new NotFoundException("No verification found");
+      throw new NotFoundException(
+        "No active verification found for this user and provider. Please request a new verification code."
+      );
     }
+
+    // Check if verification has expired
+    if (verification.expiredAt <= new Date()) {
+      throw new NotFoundException(
+        "Verification code has expired. Please request a new verification code."
+      );
+    }
+
+    // Check if attempt limit has been reached
+    if (verification.attempts >= 5) {
+      throw new NotFoundException(
+        "Too many verification attempts. Please request a new verification code."
+      );
+    }
+
+    // Increment attempts
+    await this.updateOne(
+      {_id: verification._id},
+      {$inc: {attempts: 1}}
+    );
 
     const isCodeValid = hash(code, this.getHashSecret()) === verification.code;
 
