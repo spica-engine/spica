@@ -593,7 +593,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     }
     const userVerificationCodeExpiresIn = process.env.USER_VERIFICATION_CODE_EXPIRES_IN;
     if (userVerificationCodeExpiresIn) {
-      args["user-verification-code-expires-in"] = parseInt(userVerificationCodeExpiresIn, 10);
+      const parsed = parseInt(userVerificationCodeExpiresIn, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        args["user-verification-code-expires-in"] = parsed;
+      }
     }
   })
   .check(args => {

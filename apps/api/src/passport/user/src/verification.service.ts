@@ -37,7 +37,6 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
       }
 
       const expiresInMs = (this.userOptions.verificationCodeExpiresIn || DEFAULT_VERIFICATION_CODE_EXPIRES_IN_SECONDS) * 1000;
-      
       await this.insertOne({
         userId: id,
         destination: value,
