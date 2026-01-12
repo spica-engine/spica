@@ -54,3 +54,4 @@ yarn-error.log
 .angular/
 
 .env
+package-lock.json

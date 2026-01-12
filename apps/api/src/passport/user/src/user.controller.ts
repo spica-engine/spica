@@ -42,6 +42,7 @@ import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {VerificationService} from "./verification.service";
+import {RateLimitGuard} from "./rate-limit.guard";
 
 @Controller("passport/user")
 export class UserController {
@@ -463,7 +464,14 @@ export class UserController {
   }
 
   @Post(":id/start-provider-verification")
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
+  @UseGuards(
+    AuthGuard(),
+    ActionGuard("passport:user:update", "passport/user/:id"),
+    RateLimitGuard({
+      limit: 3,
+      ttl: 300 // 5 minutes
+    })
+  )
   startAuthProviderVerification(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("value") value: string,
@@ -473,7 +481,14 @@ export class UserController {
   }
 
   @Post(":id/verify-provider")
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
+  @UseGuards(
+    AuthGuard(),
+    ActionGuard("passport:user:update", "passport/user/:id"),
+    RateLimitGuard({
+      limit: 5,
+      ttl: 300 // 5 minutes
+    })
+  )
   async verifyProvider(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("code") code: string,

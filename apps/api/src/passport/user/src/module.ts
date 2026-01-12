@@ -1,4 +1,5 @@
 import {Module, Global, DynamicModule, Inject, Optional} from "@nestjs/common";
+import {CacheModule} from "@nestjs/cache-manager";
 import {SchemaResolver, provideSchemaResolver} from "./schema.resolver";
 import {Validator, SchemaModule} from "@spica-server/core/schema";
 import {PreferenceService} from "@spica-server/preference/services";
@@ -23,6 +24,7 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 import {UserRealtimeModule} from "../realtime";
 import {VerificationService} from "./verification.service";
+import {RateLimitGuard} from "./rate-limit.guard";
 
 @Global()
 @Module({})
@@ -60,6 +62,10 @@ export class UserModule {
       ],
       imports: [
         RefreshTokenServicesModule,
+        CacheModule.register({
+          ttl: 300000, // 5 minutes in milliseconds
+          max: 100 // maximum number of items in cache
+        }),
         JwtModule.register({
           secret: options.secretOrKey,
           signOptions: {
