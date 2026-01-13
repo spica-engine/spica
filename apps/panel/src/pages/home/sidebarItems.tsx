@@ -18,14 +18,15 @@ export const sideBarItems: SideBarItem[]=  [
     name: "Dashboard",
     icon: "dashboard",
   },
+ 
   {
     id: "storage",
     name: "Storage",
     icon: "storage",
   },
   {
-    id: "identity",
-    name: "Identity",
+    id: "accessManagement",
+    name: "Access Management",
     icon: "identities",
   },
   {
