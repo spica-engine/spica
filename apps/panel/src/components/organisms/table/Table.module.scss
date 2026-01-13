@@ -1,93 +1,49 @@
-.container {
-  overflow: auto;
-  max-height: 86vh;
-  width: 100%;
-  border-left: var(--border-default);
-  border-radius: var(--border-radius-md);
-}
-
-.table {
-  border-radius: var(--border-radius-md);
-  border: var(--border-default);
-  border-left: none;
-  table-layout: fixed;
-}
-
-.table > thead > tr > th {
-  padding: 0;
-  font-weight: 400;
-  text-align: start;
-}
-
-.table thead {
-  position: sticky;
-  top: 0;
-  z-index: 4;
-}
-
-.fixedCell {
-  position: sticky !important;
-  left: 0;
-  z-index: 3 !important;
-  background-color: inherit;
-  overflow: auto;
-}
-
-.header {
-  position: sticky;
-  top: 0;
-  overflow-x: visible;
-  overflow-y: visible;
-}
-
-.headerContent {
-  display: flex;
-  align-items: center;
-  padding-left: var(--padding-md);
-  padding-right: var(--padding-xl);
-  height: 36px !important;
-  width: inherit !important;
-  min-width: inherit !important;
-  max-width: inherit !important;
-  justify-content: space-between !important;
-}
-
-.cell {
-  padding: 0 var(--padding-md);
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--color-border);
+.table{
+  border:none !important;
+  overflow: scroll !important;
+  width: 100% !important;
+  background-color: var(--color-soft-light) !important;
+  font-size: var(--font-size-md) !important;
+  color: var(--color-font-primary) !important;
+  border-top-left-radius: var(--border-radius-md) !important;
+  border-top-right-radius: var(--border-radius-md) !important;
+  &::-webkit-scrollbar {
+      display: none !important;
   }
-  white-space: nowrap;
+  
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+
+.header{
+  background-color: var(--color-border) !important;
+  color: var(--color-font-primary) !important;
+  display: flex !important;
+  gap: var(--gap-md) !important;
+  width: 100% !important;
+  justify-content: start !important;
   height: 36px !important;
-  padding-right: calc(var(--padding-xl) + var(--padding-md)) !important;
-  overflow: hidden;
+  font-size: var(--font-size-md) !important;
 }
 
-.resizer {
-  position: absolute;
-  right: 0;
-  top: 0;
-  height: 100%;
-  width: 6px;
-  cursor: col-resize;
-  user-select: none;
-  touch-action: none;
-}
+.column{
+  border-color: var(--color-input-placeholder) !important;
 
-.focusedCell {
-  border: 1px solid var(--color-primary) !important;
-}
+  .cell{
 
-.infiniteScroll {
-  overflow: unset !important;
-}
+      height: 36px !important;
+      background-color: var(--color-soft-light) !important;
+      border-color: var(--color-zebra);
+      font-size: var(--font-size-md) !important;
+  } 
 
-.noDataText {
-  text-align: center;
-  font-size: var(--font-size-lg);
-  color: var(--color-font-tertiary);
-  height: 200px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  .cell:nth-child(odd){
+      background-color: var(--color-zebra) !important;
+      
+  }
+
+  &:last-child{
+    flex: unset !important;
+  }
 }
