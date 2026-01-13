@@ -10,6 +10,7 @@ import Diagram from "./pages/diagram/Diagram";
 import ProtectedRoute from "./components/guards/ProtectedRoute";
 import Storage from "./pages/storage/Storage";
 import StorageItem from "./pages/storage-view/StorageView";
+import Policy from "./pages/policy/Policy";
 
 const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
       {
         path: "passport/identity",
         element: <Identity />
+      },
+      {
+        path: "passport/policy",
+        element: <Policy />
       },
       {
         path: "diagram",
