@@ -9,4 +9,4 @@ export interface SmsOptions {
   twilio: TwilioConfig;
 }
 
-export const SMS_SENDER_OPTIONS = Symbol("SMS_SENDER_OPTIONS");
+export const SMS_OPTIONS = Symbol("SMS_OPTIONS");

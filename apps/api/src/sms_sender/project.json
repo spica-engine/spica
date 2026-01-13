@@ -1,5 +1,0 @@
-{
-  "name": "api/sms_sender",
-  "sourceRoot": "apps/api/src/sms_sender",
-  "projectType": "application"
-}

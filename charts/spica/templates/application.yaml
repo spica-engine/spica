@@ -114,6 +114,21 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-database-spica-credentials
                   key: spicaPassword
+            - name: TWILIO_ACCOUNT_SID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: twilioAccountSid
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: twilioAuthToken
+            - name: TWILIO_FROM_NUMBER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: twilioFromNumber
       {{- if .Values.application.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.application.nodeSelector | indent 8 }}

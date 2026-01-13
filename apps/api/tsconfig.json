@@ -54,7 +54,7 @@
       "path": "../../libs/core/websocket"
     },
     {
-      "path": "./src/sms_sender"
+      "path": "./src/sms"
     }
   ]
 }

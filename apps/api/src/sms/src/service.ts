@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {SmsSender, SmsStrategy, SmsSendResult} from "@spica-server/interface/sms_sender";
+import {SmsSender, SmsStrategy, SmsSendResult} from "@spica-server/interface/sms";
 
 @Injectable()
 export class SmsService {

@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
-import {SmsOptions, SMS_SENDER_OPTIONS, SmsStrategy} from "@spica-server/interface/sms_sender";
+import {SmsOptions, SMS_OPTIONS, SmsStrategy} from "@spica-server/interface/sms";
 import {SmsService} from "./service";
 import {TwilioStrategy} from "./strategy";
 
@@ -12,7 +12,7 @@ export class SmsSenderModule {
       controllers: [],
       providers: [
         {
-          provide: SMS_SENDER_OPTIONS,
+          provide: SMS_OPTIONS,
           useValue: options
         },
         {
@@ -29,7 +29,7 @@ export class SmsSenderModule {
                 throw new Error(`Unknown SMS strategy: ${options.strategy}`);
             }
           },
-          inject: [SMS_SENDER_OPTIONS]
+          inject: [SMS_OPTIONS]
         },
         SmsService
       ],
