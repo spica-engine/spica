@@ -48,27 +48,27 @@ describe("StatusService", () => {
       const docs = await statusCollection.find({}).toArray();
 
       expect(docs.length).toBe(1);
-      expect(docs[0].timestamp).toBeInstanceOf(Date);
 
       expect(docs[0]).toEqual({
         _id: docs[0]._id,
-        timestamp: docs[0].timestamp,
         count: 3,
-        request: {size: 3700},
-        response: {size: 6700}
+        request: {size: 3700}, // 1000 + 1500 + 1200
+        response: {size: 6700} // 2000 + 2500 + 2200
       });
     });
 
     it("should create separate documents for requests in different minutes", async () => {
-      const minute1 = service["getCurrentMinuteTimestamp"]();
+      const minute1ObjectId = service.getCurrentMinuteObjectId();
 
       await service.insertOne({
         request: {size: 1000},
         response: {size: 2000}
       });
 
-      const minute2 = new Date(minute1.getTime() + 60000);
-      jest.spyOn(service as any, "getCurrentMinuteTimestamp").mockReturnValue(minute2);
+      const nextMinuteDate = new Date(Date.now() + 60000);
+      const minute2ObjectId = service.objectIdFromDate(nextMinuteDate);
+
+      jest.spyOn(service, "getCurrentMinuteObjectId").mockReturnValue(minute2ObjectId);
 
       await service.insertOne({
         request: {size: 1500},
@@ -80,26 +80,22 @@ describe("StatusService", () => {
         response: {size: 2200}
       });
 
-      const docs = await statusCollection.find({}).sort({timestamp: 1}).toArray();
+      const docs = await statusCollection.find({}).sort({_id: 1}).toArray();
 
       expect(docs.length).toBe(2);
 
-      expect(docs[0].timestamp).toBeInstanceOf(Date);
       expect(docs[0]).toEqual({
-        _id: docs[0]._id,
-        timestamp: docs[0].timestamp,
+        _id: minute1ObjectId,
         count: 1,
         request: {size: 1000},
         response: {size: 2000}
       });
 
-      expect(docs[1].timestamp).toBeInstanceOf(Date);
       expect(docs[1]).toEqual({
-        _id: docs[1]._id,
-        timestamp: docs[1].timestamp,
+        _id: minute2ObjectId,
         count: 2,
-        request: {size: 2700},
-        response: {size: 4700}
+        request: {size: 2700}, // 1500 + 1200
+        response: {size: 4700} // 2500 + 2200
       });
     });
   });

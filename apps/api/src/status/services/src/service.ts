@@ -13,21 +13,20 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
 
   private async createIndexes(options: StatusOptions) {
     await this.upsertTTLIndex(options.expireAfterSeconds);
-    await this.createIndex({timestamp: 1}, {unique: true});
   }
 
   private byteToMb(bytes: number) {
     return parseFloat((bytes * Math.pow(10, -6)).toFixed(2));
   }
 
-  async insertOne(status: Omit<ApiStatus, "timestamp" | "count">): Promise<any> {
-    const currentMinuteTimestamp = this.getCurrentMinuteTimestamp();
+  async insertOne(status: Omit<ApiStatus, "_id" | "count">): Promise<any> {
+    const currentMinuteObjectId = this.getCurrentMinuteObjectId();
     const MAX_RETRIES = 3;
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         return this._coll.updateOne(
-          {timestamp: currentMinuteTimestamp},
+          {_id: currentMinuteObjectId},
           {
             $inc: {
               count: 1,
@@ -35,7 +34,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
               "response.size": status.response.size
             },
             $setOnInsert: {
-              timestamp: currentMinuteTimestamp
+              _id: currentMinuteObjectId
             }
           },
           {upsert: true}
@@ -64,11 +63,13 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
     ];
 
     if (this.isValidDate(begin) && this.isValidDate(end)) {
+      const beginObjectId = this.objectIdFromDate(begin);
+      const endObjectId = this.objectIdFromDate(end);
       pipeline.unshift({
         $match: {
-          timestamp: {
-            $gte: begin,
-            $lt: end
+          _id: {
+            $gte: beginObjectId,
+            $lt: endObjectId
           }
         }
       });
@@ -100,7 +101,18 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
     return date instanceof Date && !isNaN(date.getTime());
   }
 
-  private getCurrentMinuteTimestamp() {
-    return new Date(Math.floor(Date.now() / 60000) * 60000);
+  getCurrentMinuteObjectId(): ObjectId {
+    const seconds = Math.floor(Date.now() / 1000);
+    const minuteSeconds = Math.floor(seconds / 60) * 60;
+
+    const hexTimestamp = minuteSeconds.toString(16).padStart(8, "0");
+
+    return new ObjectId(hexTimestamp + "0000000000000000");
+  }
+
+  objectIdFromDate(date: Date): ObjectId {
+    const seconds = Math.floor(date.getTime() / 1000);
+    const hex = seconds.toString(16).padStart(8, "0");
+    return new ObjectId(hex + "0000000000000000");
   }
 }
