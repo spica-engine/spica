@@ -2,6 +2,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {SmsService} from "../src/service";
 import {SmsStrategy, SmsSender} from "@spica-server/interface/sms";
 import {TwilioStrategy} from "../src/strategy/twilio.strategy";
+import {InternalServerErrorException} from "@nestjs/common";
 
 describe("SmsService", () => {
   let service: SmsService;
@@ -45,18 +46,16 @@ describe("SmsService", () => {
       expect(twilioStrategy.send).toHaveBeenCalledWith(sms);
     });
 
-    it("should handle SMS sending failure", async () => {
-      (twilioStrategy.send as jest.Mock).mockRejectedValue(new Error("Some error"));
+    it("should throw error when config is invalid", async () => {
+      (twilioStrategy.validateConfig as jest.Mock).mockReturnValue(false);
 
       const sms: SmsSender = {
         to: "+1234567890",
         body: "Test message"
       };
 
-      const result = await service.sendSms(sms);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Failed to send SMS");
+      await expect(service.sendSms(sms)).rejects.toThrow(InternalServerErrorException);
+      await expect(service.sendSms(sms)).rejects.toThrow("SMS service is not properly configured");
     });
   });
 });

@@ -1,5 +1,5 @@
 import {SmsSender, SmsStrategy, SmsSendResult, TwilioConfig} from "@spica-server/interface/sms";
-import {BadRequestException, InternalServerErrorException} from "@nestjs/common";
+import {InternalServerErrorException} from "@nestjs/common";
 import twilio from "twilio";
 
 export class TwilioStrategy extends SmsStrategy {
@@ -21,12 +21,6 @@ export class TwilioStrategy extends SmsStrategy {
   }
 
   async send(sms: SmsSender): Promise<SmsSendResult> {
-    if (!this.validateConfig()) {
-      throw new InternalServerErrorException(
-        "Twilio configuration is missing. Please configure accountSid, authToken, and fromNumber."
-      );
-    }
-
     const fromNumber = sms.from || this.config.fromNumber;
 
     try {
@@ -42,7 +36,7 @@ export class TwilioStrategy extends SmsStrategy {
       };
     } catch (error) {
       console.error("Error sending SMS via Twilio:", error);
-      throw new BadRequestException(`Failed to send SMS via Twilio`);
+      throw new InternalServerErrorException("Failed to send SMS via Twilio:");
     }
   }
 

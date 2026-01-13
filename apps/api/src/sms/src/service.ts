@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, InternalServerErrorException} from "@nestjs/common";
 import {SmsSender, SmsStrategy, SmsSendResult} from "@spica-server/interface/sms";
 
 @Injectable()
@@ -7,19 +7,10 @@ export class SmsService {
 
   async sendSms(sms: SmsSender): Promise<SmsSendResult> {
     if (!this.strategy.validateConfig()) {
-      throw new Error(`SMS service is not properly configured. Please check the configuration.`);
+      throw new InternalServerErrorException(
+        "SMS service is not properly configured. Please check your Twilio credentials."
+      );
     }
-
-    try {
-      const result = await this.strategy.send(sms);
-      return result;
-    } catch (error) {
-      console.error("Error sending SMS:", error);
-
-      return {
-        success: false,
-        error: "Failed to send SMS"
-      };
-    }
+    return await this.strategy.send(sms);
   }
 }
