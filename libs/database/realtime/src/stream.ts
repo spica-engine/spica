@@ -333,7 +333,7 @@ export class Emitter<T extends {_id: ObjectId}> {
 
     // Limit to fetch only one document at a time
     pipeline.push({
-      $limit: 1
+      $limit: this.options.limit - this.ids.size
     });
 
     this.aggregationQueue = this.aggregationQueue
