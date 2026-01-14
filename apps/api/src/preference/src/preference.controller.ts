@@ -15,8 +15,7 @@ import {PreferenceService} from "@spica-server/preference/services";
 import {
   Preference,
   BUCKET_LANGUAGE_FINALIZER,
-  changeFactory,
-  IDENTITY_SETTINGS_FINALIZER
+  changeFactory
 } from "@spica-server/interface/preference";
 import {createPreferenceActivity} from "./activity.resource";
 import {ReturnDocument} from "@spica-server/database";
@@ -28,8 +27,6 @@ export class PreferenceController {
     @Optional()
     @Inject(BUCKET_LANGUAGE_FINALIZER)
     private bucketFactory: changeFactory,
-    @Optional()
-    @Inject(IDENTITY_SETTINGS_FINALIZER)
     private identityFactory: changeFactory
   ) {}
 

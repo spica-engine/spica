@@ -9,18 +9,25 @@ export default async function (ctx: Context) {
     return;
   }
 
-  const attributeKeys = new Set<string>();
-  identities.forEach(identity => {
-    if (identity.attributes && typeof identity.attributes === "object") {
-      Object.keys(identity.attributes).forEach(key => attributeKeys.add(key));
-    }
-  });
+  const preferenceCollection = ctx.database.collection("preferences");
+  const passportPreference = await preferenceCollection.findOne(
+    {scope: "passport"},
+    {session: ctx.session}
+  );
 
-  if (attributeKeys.size === 0) {
-    return;
+  const attributeSchema = passportPreference?.identity?.schema?.attributes || {};
+
+  // Find a unique bucket title
+  const bucketsCollection = ctx.database.collection("buckets");
+  let bucketTitle = "Attributes";
+  let counter = 1;
+
+  while (await bucketsCollection.findOne({title: bucketTitle}, {session: ctx.session})) {
+    bucketTitle = `Attributes_${counter}`;
+    counter++;
   }
 
-  const properties = {
+  const properties: any = {
     auth_name: {
       type: "string",
       title: "Auth Name",
@@ -28,19 +35,12 @@ export default async function (ctx: Context) {
     }
   };
 
-  // Add all attribute keys as properties
-  attributeKeys.forEach(key => {
-    properties[key] = {
-      type: "string",
-      title: key.charAt(0).toUpperCase() + key.slice(1),
-      description: `Migrated from identity.attributes.${key}`
-    };
-  });
+  Object.assign(properties, attributeSchema);
 
   const bucketId = new ObjectId();
   const bucketSchema = {
     _id: bucketId,
-    title: "Attributes",
+    title: bucketTitle,
     description: "Migrated identity attributes",
     icon: "view_stream",
     primary: "auth_name",

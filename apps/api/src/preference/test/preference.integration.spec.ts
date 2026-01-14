@@ -93,20 +93,4 @@ describe("Preference Integration", () => {
       }
     });
   });
-
-  it("should update identities when identity settings updated", async () => {
-    // This test is no longer relevant as identity attributes have been removed
-    const identity = {
-      identifier: "test_user",
-      password: "test_password"
-    };
-    const identityId = await req.post("/passport/identity", identity).then(r => r.body._id);
-
-    const {body} = await req.get(`/passport/identity/${identityId}`);
-    expect(body).toEqual({
-      _id: identityId,
-      identifier: "test_user",
-      policies: []
-    });
-  });
 });

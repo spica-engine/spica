@@ -1,7 +1,6 @@
 import {Module, Global, DynamicModule, Inject, Optional} from "@nestjs/common";
 import {Validator, SchemaModule} from "@spica-server/core/schema";
 import {PreferenceService} from "@spica-server/preference/services";
-import {IDENTITY_SETTINGS_FINALIZER} from "@spica-server/interface/preference";
 import {JwtModule} from "@nestjs/jwt";
 import {
   IdentityOptions,
@@ -53,13 +52,7 @@ export class IdentityModule {
     const module: DynamicModule = {
       module: IdentityModule,
       controllers: [IdentityController],
-      exports: [
-        IdentityService,
-        IdentityStrategy,
-        IDENTITY_SETTINGS_FINALIZER,
-        IDENTITY_POLICY_FINALIZER,
-        AUTH_RESOLVER
-      ],
+      exports: [IdentityService, IdentityStrategy, IDENTITY_POLICY_FINALIZER, AUTH_RESOLVER],
       imports: [
         RefreshTokenServicesModule,
         JwtModule.register({
@@ -99,8 +92,8 @@ export class IdentityModule {
         },
         {
           provide: AUTH_RESOLVER,
-          useFactory: (i, p) => new AuthResolver(i, p),
-          inject: [IdentityService, PreferenceService]
+          useFactory: (identityService: IdentityService) => new AuthResolver(identityService),
+          inject: [IdentityService]
         }
       ]
     };

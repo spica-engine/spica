@@ -24,6 +24,36 @@ describe("Migrate identity attributes to bucket", () => {
     args = ["--database-uri", await getConnectionUri(), "--database-name", getDatabaseName()];
     db = connection.db(args[3]);
 
+    await db.collection("preferences").insertOne({
+      scope: "passport",
+      identity: {
+        schema: {
+          attributes: {
+            email: {
+              type: "string",
+              title: "Email",
+              description: "User email address"
+            },
+            role: {
+              type: "string",
+              title: "Role",
+              description: "User role"
+            },
+            phone: {
+              type: "string",
+              title: "Phone",
+              description: "User phone number"
+            },
+            department: {
+              type: "string",
+              title: "Department",
+              description: "User department"
+            }
+          }
+        }
+      }
+    });
+
     await db.collection("identity").insertMany([
       {
         identifier: "user1",
@@ -78,14 +108,33 @@ describe("Migrate identity attributes to bucket", () => {
       title: "Auth Name",
       description: "Identity identifier reference"
     });
-    expect(bucket.properties.email).toBeDefined();
-    expect(bucket.properties.role).toBeDefined();
-    expect(bucket.properties.phone).toBeDefined();
-    expect(bucket.properties.department).toBeDefined();
+    expect(bucket.properties.email).toEqual({
+      type: "string",
+      title: "Email",
+      description: "User email address"
+    });
+    expect(bucket.properties.role).toEqual({
+      type: "string",
+      title: "Role",
+      description: "User role"
+    });
+    expect(bucket.properties.phone).toEqual({
+      type: "string",
+      title: "Phone",
+      description: "User phone number"
+    });
+    expect(bucket.properties.department).toEqual({
+      type: "string",
+      title: "Department",
+      description: "User department"
+    });
 
     const bucketData = await db.collection(`bucket_${bucket._id}`).find({}).toArray();
 
     expect(bucketData.length).toBe(3);
+
+    const user3Data = bucketData.find(d => d.auth_name === "user3");
+    expect(user3Data).toBeUndefined();
 
     const user1Data = bucketData.find(d => d.auth_name === "user1");
     expect(user1Data).toEqual({

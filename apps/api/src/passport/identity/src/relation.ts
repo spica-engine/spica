@@ -1,5 +1,4 @@
 import {Injectable} from "@nestjs/common";
-import {PreferenceService} from "@spica-server/preference/services";
 import {IdentityService} from "./identity.service";
 import {Identity} from "@spica-server/interface/passport/identity";
 import {IAuthResolver} from "@spica-server/interface/bucket/common";
@@ -8,10 +7,7 @@ import {IAuthResolver} from "@spica-server/interface/bucket/common";
 export class AuthResolver implements IAuthResolver {
   properties = {};
 
-  constructor(
-    private identityService: IdentityService,
-    private prefService: PreferenceService
-  ) {}
+  constructor(private identityService: IdentityService) {}
 
   getProperties(): object {
     return this.properties;
