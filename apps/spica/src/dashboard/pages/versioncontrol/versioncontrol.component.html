@@ -1,35 +1,27 @@
 <mat-toolbar>
   <h4 class="mat-h4">
-    <span>
-      Version Control
-    </span>
+    <span> Version Control </span>
   </h4>
 </mat-toolbar>
 <mat-accordion>
   <mat-expansion-panel>
     <mat-expansion-panel-header>
-      <mat-panel-title>
-        Guides
-      </mat-panel-title>
+      <mat-panel-title> Guides </mat-panel-title>
     </mat-expansion-panel-header>
     <mat-divider></mat-divider>
     <div class="expansion-content">
       <div class="starter">
-        <h3>
-          First commit
-        </h3>
+        <h3>First commit</h3>
         <pre>
 git add .
 git commit -m "first commit"
 git branch -M main
-git remote add origin https://<span class="editable" contenteditable>USERNAME</span>:<span class="editable" contenteditable>ACCESSTOKEN_OR_PASSWORD</span>@<span class="editable" contenteditable>REPO_ADDRESS</span>
+git remote add origin https://<span class="editable" contenteditable>USERNAME</span>:<span class="editable" contenteditable>ACCESSTOKEN_OR_PASSWORD</span>&#64;<span class="editable" contenteditable>REPO_ADDRESS</span>
 git push -u origin main</pre>
         <mat-divider></mat-divider>
-        <h3>
-          Clone repository
-        </h3>
+        <h3>Clone repository</h3>
         <pre>
-git remote add origin https://<span class="editable" contenteditable>USERNAME</span>:<span class="editable" contenteditable>ACCESSTOKEN_OR_PASSWORD</span>@<span class="editable" contenteditable>REPO_ADDRESS</span>
+git remote add origin https://<span class="editable" contenteditable>USERNAME</span>:<span class="editable" contenteditable>ACCESSTOKEN_OR_PASSWORD</span>&#64;<span class="editable" contenteditable>REPO_ADDRESS</span>
 git fetch --all
 <span class="comment"># perform it for each branch that will be switched to</span>
 <span class="comment"># local changes will be overwritten from now</span>
@@ -40,9 +32,7 @@ git clean -d -f
 </pre>
       </div>
       <div class="advanced">
-        <h3>
-          Adding specific files
-        </h3>
+        <h3>Adding specific files</h3>
         <pre>
 <span class="comment">1. Module scoped</span>      
 git add <span class="editable" contenteditable>MODULE_NAME</span>/*
@@ -79,9 +69,7 @@ git add <span class="editable" contenteditable>MODULE_NAME</span>/<span class="e
 <mat-card appearance="outlined">
   <mat-card-content>
     <div class="cli">
-      <mat-label>
-        Command Line
-      </mat-label>
+      <mat-label> Command Line </mat-label>
       <mat-form-field class="command-field">
         <pre>$ git <input [disabled]="isPending" matInput [(ngModel)]="command" (ngModelChange)="onCommandChange($event)" (keyup.enter)="command && !isPending && execute()" />
           <button mat-icon-button (click)="execute()" [disabled]="!command || isPending">

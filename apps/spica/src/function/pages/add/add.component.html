@@ -201,9 +201,7 @@
                     [matClipboard]="urlSpan.textContent"
                     [matTooltip]="clipboard.toolTip"
                   >
-                    <ng-container *ngIf="clipboard.icon == 'check'">
-                      Copied!
-                    </ng-container>
+                    <ng-container *ngIf="clipboard.icon == 'check'"> Copied! </ng-container>
                     <ng-container *ngIf="clipboard.icon != 'check'">
                       {{ apiUrl + "/fn-execute" + trigger.options.path }}
                     </ng-container>
@@ -239,7 +237,7 @@
             >
               <div>
                 <span class="name">{{ dependency.name }}</span>
-                <span class="seperator">@</span>
+                <span class="seperator">&#64;</span>
                 <span class="version">{{ dependency.version }}</span>
               </div>
               <div>
