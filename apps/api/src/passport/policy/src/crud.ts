@@ -1,6 +1,6 @@
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {PolicyService} from "./policy.service";
-import {Policy} from "@spica-server/interface/passport/policy";
+import {changeFactory, Policy} from "@spica-server/interface/passport/policy";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {createDuplicatedActionsErrorMessage, getDuplicatedActionMaps} from "./utility";
 
@@ -19,7 +19,9 @@ export async function insert(ps: PolicyService, body: Policy) {
     const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
     throw new BadRequestException(message);
   }
-
+  if (body._id) {
+    body._id = new ObjectId(body._id);
+  }
   return ps.insertOne(body);
 }
 
@@ -30,21 +32,29 @@ export async function replace(ps: PolicyService, policy: Policy) {
     const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
     throw new BadRequestException(message);
   }
-  const res = await ps.replaceOne({_id: policy._id}, policy);
+
+  const _id = new ObjectId(policy._id);
+  delete policy._id;
+  const res = await ps.replaceOne({_id}, policy);
 
   if (!res) {
-    throw new NotFoundException(`Policy with ID ${policy._id} not found`);
+    throw new NotFoundException(`Policy with ID ${_id} not found`);
   }
   return res;
 }
 
-export async function remove(ps: PolicyService, id: ObjectId) {
-  if (this.apikeyFinalizer) {
-    await this.apikeyFinalizer(id.toHexString());
+export async function remove(
+  ps: PolicyService,
+  id: ObjectId,
+  apikeyFinalizer: changeFactory,
+  identityFinalizer: changeFactory
+) {
+  if (apikeyFinalizer) {
+    await apikeyFinalizer(id.toHexString());
   }
 
-  if (this.identityFinalizer) {
-    await this.identityFinalizer(id.toHexString());
+  if (identityFinalizer) {
+    await identityFinalizer(id.toHexString());
   }
 
   const res = await ps.deleteOne({_id: id as any});

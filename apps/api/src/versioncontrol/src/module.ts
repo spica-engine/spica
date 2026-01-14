@@ -2,17 +2,19 @@ import {Global, Module} from "@nestjs/common";
 import {VersionControlController} from "./controller";
 import {VersionManager} from "./interface";
 import {
-  REGISTER_VC_SYNCHRONIZER,
   VersionControlOptions,
   VERSIONCONTROL_WORKING_DIRECTORY,
   VC_REPRESENTATIVE_MANAGER,
-  VCSynchronizerArgs
+  REGISTER_VC_CHANGE_HANDLER,
+  DocumentChangeSupplier,
+  DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
 import fs from "fs";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {VCSynchronizer} from "./synchronizer/vcsynchronizer";
+import {SyncModule} from "@spica-server/versioncontrol/sync";
+import {SyncEngine, SyncEngineModule} from "@spica-server/versioncontrol/sync/engine";
 
 @Global()
 @Module({})
@@ -23,29 +25,18 @@ export class VersionControlModule {
       useFactory: (cwd, jr) => new Git(cwd, jr),
       inject: [VERSIONCONTROL_WORKING_DIRECTORY]
     };
+
     if (options.isReplicationEnabled) {
       versionManagerProvider.inject.push(JobReducer as any);
-    }
-
-    const vcsynchronizerProvider = {
-      provide: REGISTER_VC_SYNCHRONIZER,
-      useFactory:
-        (
-          vcRepresentativeManager: VCRepresentativeManager,
-          jobReducer?: JobReducer,
-          commander?: ClassCommander
-        ) =>
-        <R1>(args: VCSynchronizerArgs<R1>) =>
-          new VCSynchronizer(args, vcRepresentativeManager, jobReducer, commander).start(),
-      inject: [VC_REPRESENTATIVE_MANAGER]
-    };
-    if (options.isReplicationEnabled) {
-      vcsynchronizerProvider.inject.push(JobReducer as any, ClassCommander as any);
     }
 
     return {
       module: VersionControlModule,
       controllers: [VersionControlController],
+      imports: [
+        SyncModule.forRoot({realtime: options.realtime}),
+        SyncEngineModule.forRoot({isReplicationEnabled: options.isReplicationEnabled})
+      ],
       providers: [
         {
           provide: VERSIONCONTROL_WORKING_DIRECTORY,
@@ -63,9 +54,17 @@ export class VersionControlModule {
           useFactory: dir => new VCRepresentativeManager(dir),
           inject: [VERSIONCONTROL_WORKING_DIRECTORY]
         },
-        vcsynchronizerProvider
+        {
+          provide: REGISTER_VC_CHANGE_HANDLER,
+          useFactory: (engine: SyncEngine) => {
+            return (supplier: DocumentChangeSupplier, applier: DocumentChangeApplier) => {
+              engine.registerChangeHandler(supplier, applier);
+            };
+          },
+          inject: [SyncEngine]
+        }
       ],
-      exports: [REGISTER_VC_SYNCHRONIZER, VC_REPRESENTATIVE_MANAGER]
+      exports: [REGISTER_VC_CHANGE_HANDLER, VC_REPRESENTATIVE_MANAGER]
     };
   }
 }

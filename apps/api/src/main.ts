@@ -483,6 +483,11 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     description: "Enable/disable realtime updates for environment variables.",
     default: true
   })
+  .option("versioncontrol-sync-realtime", {
+    boolean: true,
+    description: "Enable/disable listening to version control sync realtime. Default value is true",
+    default: true
+  })
   .middleware(args => {
     const username = process.env.MONGODB_USERNAME;
     const password = process.env.MONGODB_PASSWORD;
@@ -700,7 +705,8 @@ if (args["version-control"]) {
   modules.push(
     VersionControlModule.forRoot({
       persistentPath: args["persistent-path"],
-      isReplicationEnabled: args["replication"]
+      isReplicationEnabled: args["replication"],
+      realtime: args["versioncontrol-sync-realtime"]
     })
   );
 }

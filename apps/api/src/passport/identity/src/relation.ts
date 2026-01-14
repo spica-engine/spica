@@ -12,7 +12,7 @@ export class AuthResolver implements IAuthResolver {
     private identityService: IdentityService,
     private prefService: PreferenceService
   ) {
-    this.prefService.watch("passport", {propagateOnStart: true}).subscribe(schema => {
+    this.prefService.watchPreference("passport", {propagateOnStart: true}).subscribe(schema => {
       if (!schema || !schema.identity || !schema.identity.attributes) {
         this.properties = {};
       }
