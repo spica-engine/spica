@@ -6,5 +6,5 @@ export default {
   testEnvironment: "node",
   coverageDirectory: path.join(workspaceRoot, "coverage/apps/api/passport/apikey/realtime"),
   testMatch: ["<rootDir>/test/**/*.spec.ts"],
-  setupFilesAfterEnv: ["<rootDir>/jest.flaky.setup.js"]
+  setupFilesAfterEnv: [path.join(workspaceRoot, "jest.flaky.setup.js")]
 };
