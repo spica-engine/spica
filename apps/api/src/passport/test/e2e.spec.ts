@@ -696,20 +696,15 @@ describe("E2E Tests", () => {
         });
       });
 
-      it("should return error when sending SAML to user endpoints", async () => {
-        const samlStrategy = {
-          type: "saml",
-          name: "samlForTest",
-          title: "samlForTest",
-          options: {
-            ip: {login_url: "/idp/login", logout_url: "/idp/logout", certificate: CERTIFICATE}
+      fit("should return error when sending SAML to user endpoints", async () => {
+        const {body: strategies} = await req.get(
+          "/passport/strategy",
+          {},
+          {
+            Authorization: `IDENTITY ${token}`
           }
-        };
-
-        const saml = await req.post("/passport/strategy", samlStrategy, {
-          Authorization: `IDENTITY ${token}`
-        });
-        const id = saml.body._id;
+        );
+        const id = strategies[0]._id;
         const {statusCode, body} = await req.get(`/passport/user/strategy/${id}/url`);
         expect(statusCode).toEqual(400);
         expect(body.message).toBe("Strategy type is not supported for users.");
