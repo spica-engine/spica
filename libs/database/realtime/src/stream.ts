@@ -13,6 +13,7 @@ export class Emitter<T extends {_id: ObjectId}> {
   private sortSubscription: Subscription;
 
   private ids = new Set<string>();
+  private aggregationQueue: Promise<any> = Promise.resolve();
 
   private observable: Observable<StreamChunk<T>>;
   private observer: Subscriber<StreamChunk<T>>;
@@ -160,16 +161,19 @@ export class Emitter<T extends {_id: ObjectId}> {
         });
       }
 
-      this.collection
-        .aggregate(pipeline)
-        .toArray()
-        .then((documents: T[]) => {
-          for (const document of documents) {
-            // we can not use this.next since it's designed for notifying all listeners
-            subscriber.next({kind: ChunkKind.Initial, document: document});
-            this.ids.add(document._id.toString());
-          }
-        })
+      this.aggregationQueue = this.aggregationQueue
+        .then(() =>
+          this.collection
+            .aggregate(pipeline)
+            .toArray()
+            .then((documents: T[]) => {
+              for (const document of documents) {
+                // we can not use this.next since it's designed for notifying all listeners
+                subscriber.next({kind: ChunkKind.Initial, document: document});
+                this.ids.add(document._id.toString());
+              }
+            })
+        )
         .catch(e => subscriber.error(e))
         .finally(() => {
           // we can not use this.next since it's designed for notifying all listeners
@@ -294,19 +298,55 @@ export class Emitter<T extends {_id: ObjectId}> {
       }
     });
 
-    return this.collection
-      .aggregate(pipeline)
-      .toArray()
-      .then(r => r.map(r => r._id.toString()));
+    this.aggregationQueue = this.aggregationQueue.then(() =>
+      this.collection
+        .aggregate(pipeline)
+        .toArray()
+        .then(r => r.map(r => r._id.toString()))
+    );
+
+    return this.aggregationQueue;
   }
 
   private fetchMoreItemToFillTheCursor() {
-    this.collection
-      .find<T>(this.options.filter)
-      .skip(this.options.skip ? this.options.skip + this.ids.size : this.ids.size)
-      .limit(this.options.limit - this.ids.size)
-      .next()
-      .then(data => this.next({kind: ChunkKind.Initial, document: data}))
+    // Use aggregation pipeline instead of find to ensure consistent cursor handling
+    // This prevents "cursor already in use" errors when skip and limit are both applied
+    const pipeline = [];
+
+    if (this.options.filter) {
+      pipeline.push({
+        $match: this.options.filter
+      });
+    }
+
+    if (this.options.sort) {
+      pipeline.push({
+        $sort: this.options.sort
+      });
+    }
+
+    // Calculate skip: original skip + already-fetched documents
+    const skipCount = (this.options.skip || 0) + this.ids.size;
+    pipeline.push({
+      $skip: skipCount
+    });
+
+    // Limit to fetch only one document at a time
+    pipeline.push({
+      $limit: 1
+    });
+
+    this.aggregationQueue = this.aggregationQueue
+      .then(() =>
+        this.collection
+          .aggregate<T>(pipeline)
+          .next()
+          .then(data => {
+            if (data) {
+              this.next({kind: ChunkKind.Initial, document: data});
+            }
+          })
+      )
       .catch(e => this.error(e));
   }
 
