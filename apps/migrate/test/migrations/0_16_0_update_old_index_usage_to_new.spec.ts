@@ -14,7 +14,7 @@ describe("Migrate index/unique flags into indexes array", () => {
   });
 
   beforeEach(async () => {
-    const connection = await start("replset");
+    const connection = await start("standalone");
     args = ["--database-uri", await getConnectionUri(), "--database-name", getDatabaseName()];
     db = connection.db(args[3]);
 
