@@ -271,7 +271,7 @@ describe("Realtime", () => {
       });
     });
 
-    xdescribe("query operations", () => {
+    describe("query operations", () => {
       beforeEach(() => {
         messageSpy.mockClear();
       });

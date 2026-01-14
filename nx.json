@@ -45,12 +45,12 @@
       "cache": false
     },
     "test": {
-      "cache": false,
+      "cache": true,
       "configurations": {
         "ci-cd": {
           "forceExit": true,
           "runInBand": true,
-          "silent": false
+          "silent": true
         },
         "local": {
           "forceExit": true,

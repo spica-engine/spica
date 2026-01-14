@@ -26,7 +26,6 @@ describe("MailerService Integration", () => {
       smtpPort = parseInt(smtpParts[1]);
       apiHost = apiParts[0];
       apiPort = parseInt(apiParts[1]);
-      console.log("URL", mailerUrl, smtpHost, smtpPort, apiHost, apiPort);
     } else {
       try {
         container = await new GenericContainer("mailhog/mailhog")
