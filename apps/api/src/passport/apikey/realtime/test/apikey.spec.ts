@@ -2,7 +2,7 @@ import {ForbiddenException, INestApplication, UnauthorizedException} from "@nest
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {GuardService} from "@spica-server/passport/guard/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
@@ -110,10 +110,6 @@ describe("Realtime", () => {
 
     it("should authorize and do the initial sync", done => {
       const messageSpy = jest.fn();
-      const timeout = setTimeout(() => {
-        ws.close().catch(() => {});
-        done(new Error("Test timeout: WebSocket connection did not receive expected messages"));
-      }, 5000);
 
       const ws = wsc.get("/passport/apikey", {
         headers: {
@@ -130,7 +126,6 @@ describe("Realtime", () => {
             {kind: ChunkKind.Initial, document: initialApikey},
             {kind: ChunkKind.EndOfInitial}
           ]);
-          clearTimeout(timeout);
           ws.close()
             .then(() => done())
             .catch(done);
@@ -143,10 +138,6 @@ describe("Realtime", () => {
       authGuardCheck.mockImplementation(() => {
         throw new UnauthorizedException();
       });
-      const timeout = setTimeout(() => {
-        ws.close().catch(() => {});
-        done(new Error("Test timeout: WebSocket did not close"));
-      }, 5000);
 
       const ws = wsc.get("/passport/apikey", {
         headers: {
@@ -154,7 +145,6 @@ describe("Realtime", () => {
         }
       });
       ws.onclose = () => {
-        clearTimeout(timeout);
         done();
       };
       ws.onmessage = e => {
@@ -166,10 +156,6 @@ describe("Realtime", () => {
       actionGuardCheck.mockImplementation(() => {
         throw new ForbiddenException("You do not have sufficient permissions to do this action.");
       });
-      const timeout = setTimeout(() => {
-        ws.close().catch(() => {});
-        done(new Error("Test timeout: WebSocket did not close"));
-      }, 5000);
 
       const ws = wsc.get("/passport/apikey", {
         headers: {
@@ -177,7 +163,6 @@ describe("Realtime", () => {
         }
       });
       ws.onclose = () => {
-        clearTimeout(timeout);
         done();
       };
       ws.onmessage = e => {
@@ -214,11 +199,6 @@ describe("Realtime", () => {
       const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
 
       it("should do the initial sync", done => {
-        const timeout = setTimeout(() => {
-          ws.close().catch(() => {});
-          done(new Error("Test timeout: Initial sync did not complete"));
-        }, 5000);
-
         const ws = wsc.get("/passport/apikey");
 
         ws.onmessage = async e => {
@@ -232,7 +212,6 @@ describe("Realtime", () => {
               {kind: ChunkKind.EndOfInitial}
             ]);
 
-            clearTimeout(timeout);
             await ws.close();
             done();
           }
@@ -242,11 +221,6 @@ describe("Realtime", () => {
       });
 
       it("should do the initial sync with limit", done => {
-        const timeout = setTimeout(() => {
-          ws.close().catch(() => {});
-          done(new Error("Test timeout: Initial sync with limit did not complete"));
-        }, 5000);
-
         const ws = wsc.get(url({limit: 2}));
 
         ws.onmessage = async e => {
@@ -259,7 +233,6 @@ describe("Realtime", () => {
               {kind: ChunkKind.EndOfInitial}
             ]);
 
-            clearTimeout(timeout);
             await ws.close();
             done();
           }
@@ -269,11 +242,6 @@ describe("Realtime", () => {
       });
 
       it("should do the initial sync with skip", done => {
-        const timeout = setTimeout(() => {
-          ws.close().catch(() => {});
-          done(new Error("Test timeout: Initial sync with skip did not complete"));
-        }, 5000);
-
         const ws = wsc.get(url({skip: 2}));
 
         ws.onmessage = async e => {
@@ -285,7 +253,6 @@ describe("Realtime", () => {
               {kind: ChunkKind.EndOfInitial}
             ]);
 
-            clearTimeout(timeout);
             await ws.close();
             done();
           }
@@ -310,11 +277,6 @@ describe("Realtime", () => {
           })
         ])
           .then(newApikey => {
-            const timeout = setTimeout(() => {
-              ws.close().catch(() => {});
-              done(new Error("Test timeout: Initial sync with skip and limit did not complete"));
-            }, 5000);
-
             const ws = wsc.get(url({skip: 2, limit: 2}));
 
             ws.onmessage = async e => {
@@ -327,7 +289,6 @@ describe("Realtime", () => {
                   {kind: ChunkKind.EndOfInitial}
                 ]);
 
-                clearTimeout(timeout);
                 await ws.close();
                 done();
               }
@@ -339,11 +300,6 @@ describe("Realtime", () => {
       });
 
       it("should do the initial sync with sort", done => {
-        const timeout = setTimeout(() => {
-          ws.close().catch(() => {});
-          done(new Error("Test timeout: Initial sync with sort did not complete"));
-        }, 5000);
-
         const ws = wsc.get(url({sort: {_id: -1}}));
 
         ws.onmessage = async e => {
@@ -357,7 +313,6 @@ describe("Realtime", () => {
               {kind: ChunkKind.EndOfInitial}
             ]);
 
-            clearTimeout(timeout);
             await ws.close();
             done();
           }
