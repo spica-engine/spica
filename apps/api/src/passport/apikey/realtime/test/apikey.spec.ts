@@ -61,7 +61,6 @@ describe("Realtime", () => {
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
 
-
     await app.listen(wsc.socket);
 
     const postRes = await req.post("/passport/apikey", {name: "test", active: true, key: "test"});
