@@ -46,7 +46,7 @@ describe("Preference Integration", () => {
     req = module.get(Request);
 
     let prefService = module.get(PreferenceService);
-    prefService.default({scope: "passport", identity: {attributes: {}}});
+    prefService.default({scope: "passport", identity: {}});
 
     await app.listen(req.socket);
   }, 120000);
@@ -95,39 +95,18 @@ describe("Preference Integration", () => {
   });
 
   it("should update identities when identity settings updated", async () => {
-    await req.put("/preference/passport", {
-      identity: {
-        attributes: {
-          properties: {
-            name: {type: "string"}
-          }
-        }
-      }
-    });
-
+    // This test is no longer relevant as identity attributes have been removed
     const identity = {
-      attributes: {
-        name: "test_name"
-      },
       identifier: "test_user",
       password: "test_password"
     };
     const identityId = await req.post("/passport/identity", identity).then(r => r.body._id);
 
-    await req.put("/preference/passport", {
-      identity: {
-        attributes: {
-          properties: {}
-        }
-      }
-    });
-
     const {body} = await req.get(`/passport/identity/${identityId}`);
     expect(body).toEqual({
       _id: identityId,
       identifier: "test_user",
-      policies: [],
-      attributes: {}
+      policies: []
     });
   });
 });

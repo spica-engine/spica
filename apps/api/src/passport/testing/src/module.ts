@@ -49,7 +49,7 @@ export class MockAuthResolverModule {}
 export class PassportTestingModule {
   constructor(@Optional() preference: PreferenceService) {
     if (preference) {
-      preference.default({scope: "passport", identity: {attributes: {}}});
+      preference.default({scope: "passport", identity: {}});
     }
   }
 

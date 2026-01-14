@@ -6,21 +6,12 @@ import {IAuthResolver} from "@spica-server/interface/bucket/common";
 
 @Injectable()
 export class AuthResolver implements IAuthResolver {
-  properties;
+  properties = {};
 
   constructor(
     private identityService: IdentityService,
     private prefService: PreferenceService
-  ) {
-    this.prefService.watch("passport", {propagateOnStart: true}).subscribe(schema => {
-      if (!schema || !schema.identity || !schema.identity.attributes) {
-        this.properties = {};
-      }
-
-      schema.identity.attributes.type = "object";
-      this.properties = schema.identity;
-    });
-  }
+  ) {}
 
   getProperties(): object {
     return this.properties;

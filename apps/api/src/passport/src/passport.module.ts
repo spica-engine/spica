@@ -46,7 +46,7 @@ class PassportCoreModule {
 @Module({})
 export class PassportModule {
   constructor(preference: PreferenceService) {
-    preference.default({scope: "passport", identity: {attributes: {}}, user: {attributes: {}}});
+    preference.default({scope: "passport", identity: {}, user: {attributes: {}}});
   }
 
   static forRoot(options: PassportOptions): DynamicModule {
