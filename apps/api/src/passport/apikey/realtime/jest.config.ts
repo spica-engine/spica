@@ -5,5 +5,6 @@ export default {
   preset: "../../../../../../jest.preset.js",
   testEnvironment: "node",
   coverageDirectory: path.join(workspaceRoot, "coverage/apps/api/passport/apikey/realtime"),
-  testMatch: ["<rootDir>/test/**/*.spec.ts"]
+  testMatch: ["<rootDir>/test/**/*.spec.ts"],
+  setupFilesAfterEnv: ["<rootDir>/jest.flaky.setup.js"]
 };
