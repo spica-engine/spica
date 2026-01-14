@@ -61,12 +61,6 @@ describe("Realtime", () => {
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
 
-    // wait for a while
-    await new Promise<void>(resolve => {
-      setTimeout(() => {
-        resolve();
-      }, 2000);
-    });
 
     await app.listen(wsc.socket);
 
