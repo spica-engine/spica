@@ -8,7 +8,7 @@ export class SmsService {
   async sendSms(sms: SmsSender): Promise<SmsSendResult> {
     if (!this.strategy.validateConfig()) {
       throw new InternalServerErrorException(
-        "SMS service is not properly configured. Please check your Twilio credentials."
+        "SMS service is not properly configured. Please check your the SMS service credentials."
       );
     }
     return await this.strategy.send(sms);

@@ -36,7 +36,7 @@ export class TwilioStrategy extends SmsStrategy {
       };
     } catch (error) {
       console.error("Error sending SMS via Twilio:", error);
-      throw new InternalServerErrorException("Failed to send SMS via Twilio:");
+      throw new InternalServerErrorException("Failed to send SMS via Twilio");
     }
   }
 
