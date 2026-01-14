@@ -4,7 +4,7 @@ import {VerificationService} from "@spica-server/passport/user/src/verification.
 import {UserService} from "@spica-server/passport/user/src/user.service";
 import {MailerService} from "@spica-server/mailer";
 import {MailerModule} from "@spica-server/mailer";
-import {NotFoundException} from "@nestjs/common";
+import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {hash} from "@spica-server/core/schema";
 import {CoreTestingModule} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
@@ -53,7 +53,8 @@ describe("Provider Verification", () => {
             failedAttemptLimit: 0
           },
           userRealtime: false,
-          hashSecret: "test-hash-secret"
+          hashSecret: "test-hash-secret",
+          verificationCodeExpiresIn: 300
         })
       ]
     })
@@ -75,14 +76,15 @@ describe("Provider Verification", () => {
   });
 
   describe("start provider verification", () => {
-    it("should insert verification code into collection", async () => {
+    it("should insert verification code into collection and send email", async () => {
       const userId = new ObjectId();
       const email = "test@example.com";
       const provider = "email";
 
       mockMailerService.sendMail.mockResolvedValue({
         accepted: [email],
-        rejected: []
+        rejected: [],
+        messageId: "test-message-id"
       });
 
       const result = await verificationService.startAuthProviderVerification(
@@ -91,8 +93,8 @@ describe("Provider Verification", () => {
         provider
       );
 
-      expect(result).toEqual({
-        message: "Verification code sent successfully",
+      expect(result).toMatchObject({
+        message: expect.stringContaining("successfully"),
         value: email
       });
 
@@ -109,12 +111,10 @@ describe("Provider Verification", () => {
         userId: userId,
         channel: provider,
         purpose: "verify",
-        active: true,
+        is_used: false,
         attempts: 0
       });
       expect(verification.code).toBeDefined();
-      expect(verification.expiredAt).toBeInstanceOf(Date);
-      expect(verification.expiredAt.getTime()).toBeGreaterThan(Date.now());
     });
 
     it("should throw error when mail is not accepted by SMTP", async () => {
@@ -129,11 +129,31 @@ describe("Provider Verification", () => {
 
       await expect(
         verificationService.startAuthProviderVerification(userId, email, provider)
-      ).rejects.toThrow("Mail was not accepted by SMTP");
+      ).rejects.toThrow(BadRequestException);
+    });
 
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
+    it("should throw error for invalid email format", async () => {
+      const userId = new ObjectId();
+      const invalidEmail = "not-an-email";
+      const provider = "email";
 
-      expect(verification).toBeNull();
+      await expect(
+        verificationService.startAuthProviderVerification(userId, invalidEmail, provider)
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockMailerService.sendMail).not.toHaveBeenCalled();
+    });
+
+    it("should throw error for unknown provider", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
+      const provider = "unknown-provider";
+
+      await expect(
+        verificationService.startAuthProviderVerification(userId, email, provider)
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockMailerService.sendMail).not.toHaveBeenCalled();
     });
   });
 
@@ -157,7 +177,8 @@ describe("Provider Verification", () => {
 
       mockMailerService.sendMail.mockResolvedValue({
         accepted: [email],
-        rejected: []
+        rejected: [],
+        messageId: "test-message-id"
       });
     });
 
@@ -179,14 +200,14 @@ describe("Provider Verification", () => {
       const updatedVerification = await db
         .collection("verification")
         .findOne({_id: verification._id});
-      expect(updatedVerification.active).toBe(false);
+      expect(updatedVerification.is_used).toBe(true);
 
       const user = await userService.findOne({_id: userId});
       expect(user.email).toMatchObject({
         value: email,
         verified: true
       });
-      expect(user.email.created_at).toBeInstanceOf(Date);
+      expect(user.email.createdAt).toBeInstanceOf(Date);
     });
 
     it("should fail with wrong code", async () => {
@@ -200,7 +221,7 @@ describe("Provider Verification", () => {
 
       const verification = await db.collection("verification").findOne({userId, channel: provider});
       expect(verification).toMatchObject({
-        active: true,
+        is_used: false,
         attempts: 1
       });
 
@@ -208,42 +229,15 @@ describe("Provider Verification", () => {
       expect(user.email).toBeUndefined();
     });
 
-    it("should fail with expired verification", async () => {
-      const expiredDate = new Date(Date.now() - 10 * 60 * 1000);
-
-      await db.collection("verification").insertOne({
-        userId,
-        destination: email,
-        expiredAt: expiredDate,
-        attempts: 0,
-        code: hash(randomCode, "verifyHashSecret"),
-        channel: provider,
-        purpose: "verify",
-        active: true
-      });
-
-      await expect(
-        verificationService.verifyAuthProvider(userId, randomCode, provider)
-      ).rejects.toThrow(NotFoundException);
-
-      const user = await userService.findOne({_id: userId});
-      expect(user.email).toBeUndefined();
-    });
-
     it("should fail when attempt count reaches limit", async () => {
-      await db.collection("verification").insertOne({
-        userId,
-        destination: email,
-        expiredAt: new Date(Date.now() + 5 * 60 * 1000),
-        attempts: 5,
-        code: hash(randomCode, "verifyHashSecret"),
-        channel: provider,
-        purpose: "verify",
-        active: true
-      });
+      await verificationService.startAuthProviderVerification(userId, email, provider);
+
+      const verification = await db.collection("verification").findOne({userId, channel: provider});
+
+      await db.collection("verification").updateOne({_id: verification._id}, {$set: {attempts: 5}});
 
       await expect(
-        verificationService.verifyAuthProvider(userId, randomCode, provider)
+        verificationService.verifyAuthProvider(userId, "123456", provider)
       ).rejects.toThrow(NotFoundException);
 
       const user = await userService.findOne({_id: userId});
@@ -265,7 +259,7 @@ describe("Provider Verification", () => {
 
       const verification = await db.collection("verification").findOne({userId, channel: provider});
       expect(verification).toMatchObject({
-        active: true,
+        is_used: false,
         attempts: 0
       });
     });
@@ -285,7 +279,7 @@ describe("Provider Verification", () => {
 
       const verification = await db.collection("verification").findOne({userId, channel: provider});
       expect(verification).toMatchObject({
-        active: true,
+        is_used: false,
         attempts: 0
       });
     });

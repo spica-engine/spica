@@ -27,7 +27,7 @@ export interface User {
   bannedUntil?: Date;
   email?: {
     value: string;
-    created_at: Date;
+    createdAt: Date;
     verified: boolean;
   };
 }
@@ -66,6 +66,7 @@ export interface UserOptions {
     blockDurationMinutes: number;
   };
   refreshTokenExpiresIn?: number;
+  verificationCodeExpiresIn?: number;
   passwordHistoryLimit: number;
   userRealtime: boolean;
   hashSecret?: string;
@@ -74,12 +75,12 @@ export interface UserOptions {
 export interface UserVerification {
   userId: ObjectId;
   destination: string;
-  expiredAt: Date;
   attempts: number;
   code: string;
   channel: string;
   purpose: "verify";
-  active: boolean;
+  is_used: boolean;
+  verificationCount?: number;
 }
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");

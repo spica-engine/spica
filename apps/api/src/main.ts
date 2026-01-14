@@ -310,6 +310,11 @@ const args = yargsInstance
     "user-hash-secret": {
       string: true,
       description: "Hash secret used for user-related operations."
+    },
+    "passport-user-verification-code-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued verification codes for users. Unit: second",
+      default: 60 * 5
     }
   })
   .demandOption("passport-secret")
@@ -770,7 +775,8 @@ const modules = [
         blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
       },
       userRealtime: args["user-realtime"],
-      hashSecret: args["user-hash-secret"]
+      hashSecret: args["user-hash-secret"],
+      verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
     }
   }),
   FunctionModule.forRoot({

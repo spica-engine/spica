@@ -1,57 +1,101 @@
-import {Injectable, NotFoundException, Inject} from "@nestjs/common";
+import {Injectable, NotFoundException, Inject, BadRequestException} from "@nestjs/common";
 import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {UserVerification, UserOptions, USER_OPTIONS} from "@spica-server/interface/passport/user";
 import {hash} from "@spica-server/core/schema";
-import {MailerService} from "@spica-server/mailer";
 import {UserService} from "./user.service";
 import {randomInt} from "crypto";
+import {VerificationProviderRegistry} from "./providers";
 
 @Injectable()
 export class VerificationService extends BaseCollection<UserVerification>("verification") {
+  private readonly MAX_ATTEMPTS = 5;
+
   constructor(
     db: DatabaseService,
-    private mailerService: MailerService,
+    private readonly providerRegistry: VerificationProviderRegistry,
     private userService: UserService,
     @Inject(USER_OPTIONS) private userOptions: UserOptions
   ) {
-    super(db);
+    super(db, {afterInit: () => this.upsertTTLIndex(this.userOptions.verificationCodeExpiresIn)});
   }
 
   async startAuthProviderVerification(id: ObjectId, value: string, provider: string) {
+    const verificationProvider = this.providerRegistry.getProvider(provider);
+
+    if (!verificationProvider.validateDestination(value)) {
+      throw new BadRequestException(
+        `Invalid destination format for provider '${provider}'. Please provide a valid ${provider} address.`
+      );
+    }
     const code = this.random6Digit();
     const hashedCode = hash(code, this.getHashSecret());
-    try {
-      const result = await this.mailerService.sendMail({
-        to: value,
-        subject: "Spica verification code",
-        text: `Your verification code for ${provider} is: ${code}`
-      });
 
-      const success =
-        result.accepted?.length > 0 && (!result.rejected || result.rejected.length === 0);
-
-      if (!success) {
-        throw new Error("Mail was not accepted by SMTP");
-      }
-
-      await this.insertOne({
+    const result = await this.findOneAndUpdate(
+      {
         userId: id,
-        destination: value,
-        expiredAt: new Date(Date.now() + 5 * 60 * 1000),
-        attempts: 0,
-        code: hashedCode,
         channel: provider,
         purpose: "verify",
-        active: true
+        is_used: false
+      },
+      {
+        $setOnInsert: {
+          userId: id,
+          destination: value,
+          purpose: "verify",
+          channel: provider,
+          attempts: 0,
+          createdAt: new Date()
+        },
+        $inc: {
+          verificationCount: 1
+        },
+        $set: {
+          code: hashedCode
+        }
+      },
+      {
+        upsert: true,
+        returnDocument: "after"
+      }
+    );
+
+    const verification = result;
+
+    if (!verification) {
+      throw new Error("Failed to create verification record");
+    }
+
+    if (verification.verificationCount > this.MAX_ATTEMPTS) {
+      throw new BadRequestException(
+        "Too many verification attempts. Please wait a bit before trying again."
+      );
+    }
+
+    try {
+      const sendResult = await verificationProvider.send({
+        destination: value,
+        code,
+        provider,
+        metadata: {
+          subject: "Spica verification code",
+          text: `Your verification code for ${provider} is: ${code}`
+        }
       });
 
+      if (!sendResult.success) {
+        throw new Error(sendResult.message || "Failed to send verification code");
+      }
+
       return {
-        message: "Verification code sent successfully",
-        value
+        message: sendResult.message || "Verification code sent successfully",
+        value,
+        metadata: sendResult.metadata
       };
     } catch (error) {
-      console.error("Error sending verification email:", error);
-      throw error;
+      console.error(`Error sending verification via ${provider}:`, error);
+      throw new BadRequestException(
+        error.message || `Failed to send verification code via ${provider}`
+      );
     }
   }
 
@@ -61,9 +105,8 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
         userId: id,
         channel: provider,
         purpose: "verify",
-        active: true,
-        attempts: {$lt: 5},
-        expiredAt: {$gt: new Date()}
+        is_used: false,
+        attempts: {$lt: this.MAX_ATTEMPTS}
       },
       {
         $inc: {attempts: 1}
@@ -80,23 +123,30 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
       throw new Error("Invalid verification code");
     }
 
-    await this.updateOne({_id: verification._id}, {$set: {active: false}});
+    try {
+      await Promise.all([
+        this.updateOne({_id: verification._id}, {$set: {is_used: true}}),
 
-    await this.userService.updateOne(
-      {_id: verification.userId},
-      {
-        $set: {
-          email: {
-            value: verification.destination,
-            created_at: new Date(),
-            verified: true
+        this.userService.updateOne(
+          {_id: verification.userId},
+          {
+            $set: {
+              email: {
+                value: verification.destination,
+                createdAt: new Date(),
+                verified: true
+              }
+            }
           }
-        }
-      }
-    );
-    return {
-      message: "Verification completed successfully"
-    };
+        )
+      ]);
+      return {
+        message: "Verification completed successfully"
+      };
+    } catch (error) {
+      console.error("Error during verification process:", error);
+      throw new Error("Error during verification process");
+    }
   }
 
   private random6Digit(): string {
