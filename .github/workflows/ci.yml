@@ -30,50 +30,9 @@ jobs:
             --set application.bucketDataHashSecret=lint-hash-secret \
             --set application.publicHost=lint.example.com
 
-  prepare_affected:
-    name: Prepare Affected Build Matrix
-    runs-on: ubuntu-latest
-    outputs:
-      projects: ${{ steps.affected.outputs.projects }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: yarn
-          cache-dependency-path: yarn.lock
-      - name: Restore Node Modules Cache
-        uses: actions/cache@v4
-        with:
-          path: "**/node_modules"
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
-            ${{ runner.os }}-node-modules-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-      - name: Fetch base branch
-        run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
-      - name: Disable Nx Cloud
-        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
-      - name: Calculate affected build projects
-        id: affected
-        run: |
-          projects=$(yarn -s nx show projects --affected -t build --json || echo "[]")
-          echo "projects=${projects:-[]}" >> "$GITHUB_OUTPUT"
-
   build_affected:
     name: Build Affected
     runs-on: ubuntu-latest
-    needs: prepare_affected
-    strategy:
-      fail-fast: false
-      matrix:
-        project: ${{ fromJson(needs.prepare_affected.outputs.projects) }}
     steps:
       - name: Free up some space on disk
         run: |
@@ -106,8 +65,8 @@ jobs:
         run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
-      - name: Run Build
-        run: yarn nx build ${{ matrix.project }}
+      - name: Build Affected
+        run: yarn nx affected -t build
 
   prepare_tests:
     name: Prepare Affected Test Matrix
@@ -149,7 +108,6 @@ jobs:
     name: Test Affected
     runs-on: ubuntu-latest
     needs:
-      - build_affected
       - prepare_tests
     strategy:
       fail-fast: false
