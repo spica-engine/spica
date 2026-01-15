@@ -3,9 +3,6 @@ name: Spica Continuous Integration
 env:
   origin_branch: master
   VERSION: ${{ github.sha }}
-  MONGODB_URL: "mongodb://172.17.0.1:27017"
-  MAILER_URL: "smtp://172.17.0.1:1025,api://172.17.0.1:8025"
-  RABBITMQ_URL: "amqp://172.17.0.1:5672"
 
 on:
   pull_request:
@@ -39,13 +36,6 @@ jobs:
     outputs:
       projects: ${{ steps.affected.outputs.projects }}
     steps:
-      - name: Free up some space on disk
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -73,7 +63,7 @@ jobs:
       - name: Calculate affected build projects
         id: affected
         run: |
-          projects=$(yarn -s nx print-affected --target=build --base=${{ env.origin_branch }} --head=HEAD --select=projects | tr ',' '\n' | sed '/^\s*$/d' | jq -R . | jq -s .)
+          projects=$(yarn -s nx show projects --affected --target=build --json || echo "[]")
           echo "projects=${projects:-[]}" >> "$GITHUB_OUTPUT"
 
   build_affected:
@@ -125,13 +115,6 @@ jobs:
     outputs:
       projects: ${{ steps.affected.outputs.projects }}
     steps:
-      - name: Free up some space on disk
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -159,7 +142,7 @@ jobs:
       - name: Calculate affected test projects
         id: affected
         run: |
-          projects=$(yarn -s nx print-affected --target=test --base=${{ env.origin_branch }} --head=HEAD --select=projects | tr ',' '\n' | sed '/^\s*$/d' | jq -R . | jq -s .)
+          projects=$(yarn -s nx show projects --affected --target=test --json || echo "[]")
           echo "projects=${projects:-[]}" >> "$GITHUB_OUTPUT"
 
   test_affected:
