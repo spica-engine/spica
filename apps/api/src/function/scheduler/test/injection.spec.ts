@@ -60,12 +60,13 @@ describe("Scheduler Injection", () => {
       ]
     }).compile();
     app = module.createNestApplication();
+    app.enableShutdownHooks();
     scheduler = module.get(Scheduler);
     addQueueSpy = jest.spyOn(scheduler["queue"], "addQueue");
     addEnqueuerSpy = jest.spyOn(scheduler.enqueuers, "add");
   });
 
-  afterEach(() => module.close());
+  afterEach(async () => await app.close());
 
   it("should inject the provided enqueuer and queue", async () => {
     await app.init();
