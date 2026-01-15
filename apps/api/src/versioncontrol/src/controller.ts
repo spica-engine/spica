@@ -7,12 +7,18 @@ export class VersionControlController {
   constructor(private vers: VersionManager) {}
 
   @Get("commands")
-  @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("versioncontrol:update", "versioncontrol")
+  )
   async getCommands() {
     return this.vers.availables();
   }
   @Post("commands/:cmd")
-  @UseGuards(AuthGuard(), ActionGuard("versioncontrol:update", "versioncontrol"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("versioncontrol:update", "versioncontrol")
+  )
   async performAction(@Param("cmd") cmd: string, @Body() body: any) {
     const cmdResult = await this.vers
       .exec(cmd, body)

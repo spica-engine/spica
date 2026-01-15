@@ -14,7 +14,7 @@ import {BucketService} from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {GuardService} from "@spica-server/passport/guard/services";
-import {resourceFilterFunction} from "@spica-server/passport/guard";
+import {resourceFilterFunction, extractStrategyType} from "@spica-server/passport/guard";
 import {graphqlHTTP} from "express-graphql";
 import {
   GraphQLError,
@@ -40,6 +40,7 @@ import {
 import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {FindResponse} from "@spica-server/interface/bucket/graphql";
 import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
+import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 
 import {
   createSchema,
@@ -269,7 +270,8 @@ export class GraphqlController implements OnModuleInit {
           resourceFilter,
           relationPaths: [...expressionFields, ...responseFields],
           filter: matchExpression,
-          projectMap: responseFields
+          projectMap: responseFields,
+          applyAcl: this.shouldApplyAcl(context)
         },
         {localize: true, paginate: true},
         {
@@ -306,7 +308,8 @@ export class GraphqlController implements OnModuleInit {
           req: context,
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          documentId: new ObjectId(documentId)
+          documentId: new ObjectId(documentId),
+          applyAcl: this.shouldApplyAcl(context)
         },
         {localize: true, paginate: false},
         {
@@ -342,7 +345,7 @@ export class GraphqlController implements OnModuleInit {
       const insertedDocument = await insertDocument(
         bucket,
         input,
-        {req: context},
+        {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: bucketId => this.bds.children(bucketId),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
@@ -375,7 +378,8 @@ export class GraphqlController implements OnModuleInit {
           relationPaths: requestedFields,
           projectMap: requestedFields,
           documentId: insertedDocument._id,
-          req: context
+          req: context,
+          applyAcl: this.shouldApplyAcl(context)
         },
         {localize: true},
         {
@@ -422,7 +426,7 @@ export class GraphqlController implements OnModuleInit {
       const previousDocument = await replaceDocument(
         bucket,
         {...input, _id: documentId},
-        {req: context},
+        {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: bucketId => this.bds.children(bucketId),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
@@ -458,7 +462,8 @@ export class GraphqlController implements OnModuleInit {
           relationPaths: requestedFields,
           projectMap: requestedFields,
           documentId: new ObjectId(documentId),
-          req: context
+          req: context,
+          applyAcl: this.shouldApplyAcl(context)
         },
         {localize: true},
         {
@@ -512,7 +517,7 @@ export class GraphqlController implements OnModuleInit {
         bucket,
         {...patchedDocument, _id: documentId},
         input,
-        {req: context},
+        {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: bucketId => this.bds.children(bucketId),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
@@ -547,7 +552,8 @@ export class GraphqlController implements OnModuleInit {
           relationPaths: requestedFields,
           projectMap: requestedFields,
           documentId: currentDocument._id,
-          req: context
+          req: context,
+          applyAcl: this.shouldApplyAcl(context)
         },
         {localize: true},
         {
@@ -594,7 +600,7 @@ export class GraphqlController implements OnModuleInit {
       const deletedDocument = await deleteDocument(
         bucket,
         documentId,
-        {req: context},
+        {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: schema => this.bds.children(schema),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
@@ -721,6 +727,11 @@ export class GraphqlController implements OnModuleInit {
     const preferences = await this.bs.getPreferences();
     return findLocale(language ? language : preferences.language.default, preferences);
   };
+
+  private shouldApplyAcl(req: any): boolean {
+    const strategyType = extractStrategyType(req);
+    return strategyType === ReqAuthStrategy.USER;
+  }
 }
 
 function throwError(message: string, statusCode: number) {

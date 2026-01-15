@@ -21,7 +21,7 @@ export class WebhookLogController {
   constructor(private logService: WebhookLogService) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("webhook:logs:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:logs:index"))
   getLogs(
     @Query("webhook", DEFAULT([]), ARRAY(String)) webhook: string[],
     @Query("begin", DATE) begin: Date,
@@ -63,7 +63,7 @@ export class WebhookLogController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("webhook:logs:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param("id", OBJECT_ID) id: ObjectId) {
     const deletedCount = await this.logService.deleteOne({_id: id});
@@ -73,7 +73,7 @@ export class WebhookLogController {
   }
 
   @Delete()
-  @UseGuards(AuthGuard(), ActionGuard("webhook:logs:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteMany(@Body(DEFAULT([]), ARRAY(value => new ObjectId(value))) ids: ObjectId[]) {
     const deletedCount = await this.logService.deleteMany({_id: {$in: ids}});

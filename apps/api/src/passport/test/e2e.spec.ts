@@ -218,27 +218,43 @@ describe("E2E Tests", () => {
       SchemaModule.forRoot(),
       DatabaseTestingModule.standalone(),
       PassportModule.forRoot({
-        expiresIn: EXPIRES_IN,
-        issuer: "spica",
-        maxExpiresIn: EXPIRES_IN,
         publicUrl: publicUrl,
         samlCertificateTTL: EXPIRES_IN,
-        secretOrKey: "spica",
         defaultStrategy: "IDENTITY",
-        defaultIdentityIdentifier: "spica",
-        defaultIdentityPassword: "spica",
-        audience: "spica",
-        defaultIdentityPolicies: ["PassportFullAccess"],
-        blockingOptions: {
-          failedAttemptLimit: 3,
-          blockDurationMinutes: 10
-        },
-        refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
-        passwordHistoryLimit: 2,
         apikeyRealtime: false,
-        identityRealtime: false,
+        policyRealtime: false,
         refreshTokenRealtime: false,
-        policyRealtime: false
+        userOptions: {
+          expiresIn: EXPIRES_IN,
+          maxExpiresIn: EXPIRES_IN,
+          issuer: "spica",
+          audience: "spica",
+          refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+          secretOrKey: "spica",
+          blockingOptions: {
+            failedAttemptLimit: 3,
+            blockDurationMinutes: 10
+          },
+          passwordHistoryLimit: 2,
+          userRealtime: false
+        },
+        identityOptions: {
+          expiresIn: EXPIRES_IN,
+          issuer: "spica",
+          maxExpiresIn: EXPIRES_IN,
+          secretOrKey: "spica",
+          defaultIdentityIdentifier: "spica",
+          defaultIdentityPassword: "spica",
+          audience: "spica",
+          defaultIdentityPolicies: ["PassportFullAccess"],
+          blockingOptions: {
+            failedAttemptLimit: 3,
+            blockDurationMinutes: 10
+          },
+          refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+          passwordHistoryLimit: 2,
+          identityRealtime: false
+        }
       }),
       PreferenceTestingModule,
       CoreTestingModule
@@ -345,7 +361,7 @@ describe("E2E Tests", () => {
       await login("spica", "spica");
 
       const {statusCode, body} = await req.post(
-        "passport/session/refresh",
+        "passport/identity/session/refresh",
         {},
         {
           Authorization: `IDENTITY ${token}`,
@@ -374,7 +390,7 @@ describe("E2E Tests", () => {
 
     it("should refresh expired jwts", async () => {
       const tokenExpirationDate = new Date(Date.now() + EXPIRES_IN * 1000 + 100);
-      jest.useFakeTimers();
+      jest.useFakeTimers({doNotFake: ["nextTick"]});
       jest.setSystemTime(tokenExpirationDate);
 
       // ensure token is expired
@@ -388,11 +404,8 @@ describe("E2E Tests", () => {
       expect(response.statusCode).toEqual(400);
       expect(response.body.message).toEqual("jwt expired");
 
-      jest.useRealTimers();
-
-      // refresh token
       const {body} = await req.post(
-        "passport/session/refresh",
+        "passport/identity/session/refresh",
         {},
         {
           Authorization: `IDENTITY ${token}`,
@@ -401,6 +414,8 @@ describe("E2E Tests", () => {
       );
 
       const newToken = body.token;
+
+      jest.useRealTimers();
 
       // new token should be valid
       response = await req.get(
@@ -447,6 +462,93 @@ describe("E2E Tests", () => {
       } = await getIdentities();
       expect(identity._id).toEqual(refreshToken.identity);
     });
+
+    it("should not refresh with expired refresh token", async () => {
+      const now = new Date();
+      jest.useFakeTimers({doNotFake: ["nextTick"]});
+      jest.setSystemTime(now);
+
+      const refreshTokenExpirationDate = new Date(
+        Date.now() + REFRESH_TOKEN_EXPIRES_IN * 1000 + 100
+      );
+      jest.setSystemTime(refreshTokenExpirationDate);
+
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toContain("jwt expired");
+
+      jest.useRealTimers();
+    });
+
+    it("should reject refresh with malformed access token", async () => {
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY malformed_token`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toContain("jwt malformed");
+    });
+
+    it("should reject refresh with malformed refresh token", async () => {
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: "refreshToken=malformed_token"
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toContain("jwt malformed");
+    });
+
+    it("should not refresh jwt if refresh token is disabled", async () => {
+      const parsedCookie = parseCookie(cookies[0]);
+
+      let {
+        body: [refreshToken]
+      } = await req.get(
+        "passport/refresh-token",
+        {filter: JSON.stringify({token: parsedCookie.value})},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+
+      await req.put(
+        `/passport/refresh-token/${refreshToken._id}`,
+        {disabled: true},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toEqual("Refresh token is disabled");
+    });
   });
 
   describe("SSO", () => {
@@ -481,7 +583,7 @@ describe("E2E Tests", () => {
       });
 
       it("should list strategies with public properties", async () => {
-        const {body: strategies} = await req.get("/passport/strategies");
+        const {body: strategies} = await req.get("/passport/identity/strategies");
         expect(strategies).toEqual([
           {
             _id: strategies[0]._id,
@@ -547,46 +649,65 @@ describe("E2E Tests", () => {
       });
 
       it("should get strategy login url", async () => {
-        const {body: strategies} = await req.get("/passport/strategies");
-        const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
+        const {body: strategies} = await req.get("/passport/identity/strategies");
+        const {body: strategy} = await req.get(
+          `/passport/identity/strategy/${strategies[0]._id}/url`
+        );
 
         expect(strategy.state).toBeDefined();
         expect(strategy.url.startsWith("/idp/login?SAMLRequest=")).toBe(true);
       });
 
       it("should complete SSO with success", done => {
-        req.get("/passport/strategies").then(({body: strategies}) => {
-          req.get(`/passport/strategy/${strategies[0]._id}/url`).then(({body: strategy}) => {
-            req.get("/passport/identify", {state: strategy.state}).then(async res => {
-              expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
-              expect(res.body.scheme).toEqual("IDENTITY");
-              expect(res.body.issuer).toEqual("passport/identity");
-              expect(res.body.token).toBeDefined();
+        req.get("/passport/identity/strategies").then(({body: strategies}) => {
+          req
+            .get(`/passport/identity/strategy/${strategies[0]._id}/url`)
+            .then(({body: strategy}) => {
+              req.get("/passport/identify", {state: strategy.state}).then(async res => {
+                expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
+                expect(res.body.scheme).toEqual("IDENTITY");
+                expect(res.body.issuer).toEqual("passport/identity");
+                expect(res.body.token).toBeDefined();
 
-              // make sure token is valid
-              const {
-                body: {identifier}
-              } = await req.get("/passport/identity/verify", {}, {authorization: res.body.token});
-              expect(identifier).toEqual("testuser");
-              done();
-            });
-
-            const {url: strategyUrl, params: strategyParams} = parseUrl(strategy.url, publicUrl);
-            req
-              .get(strategyUrl, strategyParams, {authorization: "testuser"})
-              .then(({body: {SAMLResponse, url: completeUrl}}) => {
-                // this last request because of we use test environment,
-                // actual SSO implementation handles this last step automatically on browser environment and redirects user to the panel as logged in
-                const request = parseUrl(completeUrl, publicUrl);
-                req
-                  .post(request.url, {SAMLResponse: SAMLResponse}, {}, request.params)
-                  .then(res => {
-                    expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
-                    expect(res.body).toBeUndefined();
-                  });
+                // make sure token is valid
+                const {
+                  body: {identifier}
+                } = await req.get("/passport/identity/verify", {}, {authorization: res.body.token});
+                expect(identifier).toEqual("testuser");
+                done();
               });
-          });
+
+              const {url: strategyUrl, params: strategyParams} = parseUrl(strategy.url, publicUrl);
+              req
+                .get(strategyUrl, strategyParams, {authorization: "testuser"})
+                .then(({body: {SAMLResponse, url: completeUrl}}) => {
+                  // this last request because of we use test environment,
+                  // actual SSO implementation handles this last step automatically on browser environment and redirects user to the panel as logged in
+                  const request = parseUrl(completeUrl, publicUrl);
+                  const completeEndpoint = `/passport/identity/strategy/${strategies[0]._id}/complete`;
+                  req
+                    .post(completeEndpoint, {SAMLResponse: SAMLResponse}, {}, request.params)
+                    .then(res => {
+                      expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
+                      expect(res.body).toBeUndefined();
+                    });
+                });
+            });
         });
+      });
+
+      it("should return error when sending SAML to user endpoints", async () => {
+        const {body: strategies} = await req.get(
+          "/passport/strategy",
+          {},
+          {
+            Authorization: `IDENTITY ${token}`
+          }
+        );
+        const id = strategies[0]._id;
+        const {statusCode, body} = await req.get(`/passport/user/strategy/${id}/url`);
+        expect(statusCode).toEqual(400);
+        expect(body.message).toBe("Strategy type is not supported for users.");
       });
     });
 
@@ -650,7 +771,7 @@ describe("E2E Tests", () => {
       });
 
       it("should list strategies", async () => {
-        const {body: strategies} = await req.get("/passport/strategies");
+        const {body: strategies} = await req.get("/passport/user/strategies");
         expect(strategies).toEqual([
           {
             _id: strategies[0]._id,
@@ -663,8 +784,8 @@ describe("E2E Tests", () => {
       });
 
       it("should get strategy login url", async () => {
-        const {body: strategies} = await req.get("/passport/strategies");
-        const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
+        const {body: strategies} = await req.get("/passport/user/strategies");
+        const {body: strategy} = await req.get(`/passport/user/strategy/${strategies[0]._id}/url`);
 
         expect(strategy.state).toBeDefined();
         expect(
@@ -675,29 +796,27 @@ describe("E2E Tests", () => {
       });
 
       it("should complete SSO with success", done => {
-        req.get("/passport/strategies").then(({body: strategies}) => {
-          req.get(`/passport/strategy/${strategies[0]._id}/url`).then(({body: strategy}) => {
-            const _ = req.get("/passport/identify", {state: strategy.state}).then(async res => {
+        req.get("/passport/user/strategies").then(({body: strategies}) => {
+          req.get(`/passport/user/strategy/${strategies[0]._id}/url`).then(({body: strategy}) => {
+            const _ = req.get("/passport/login", {state: strategy.state}).then(async res => {
               expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
-              expect(res.body.scheme).toEqual("IDENTITY");
-              expect(res.body.issuer).toEqual("passport/identity");
+              expect(res.body.scheme).toEqual("USER");
+              expect(res.body.issuer).toEqual("passport/user");
               expect(res.body.token).toBeDefined();
 
               // make sure token is valid
               const {body} = await req.get(
-                "/passport/identity/verify",
+                "/passport/user/verify",
                 {},
                 {authorization: res.body.token}
               );
-              expect(body.identifier).toEqual("testuser@testuser.com");
+              expect(body.username).toEqual("testuser@testuser.com");
               expect(body.attributes).toEqual({
                 email: "testuser@testuser.com",
                 picture: "url"
               });
               done();
             });
-
-            // we should get code and send it to the compelete endpoint manually, there is no such a step in real scenario
 
             // get code
             const {url: strategyUrl, params: strategyParams} = parseUrl(strategy.url, publicUrl);
@@ -707,12 +826,10 @@ describe("E2E Tests", () => {
               })
               .then(({body: code}) => {
                 // send code to the strategy complete endpoint
-                const {url: completeUrl, params: completeParams} = parseUrl(
-                  strategyParams.redirect_uri,
-                  publicUrl
-                );
+                const {params: completeParams} = parseUrl(strategyParams.redirect_uri, publicUrl);
+                const completeEndpoint = `/passport/user/strategy/${strategies[0]._id}/complete`;
                 req
-                  .get(completeUrl, {
+                  .get(completeEndpoint, {
                     ...completeParams,
                     code: code,
                     state: strategyParams.state
@@ -724,6 +841,15 @@ describe("E2E Tests", () => {
               });
           });
         });
+      });
+
+      it("should return error when sending OAuth to identity endpoints", async () => {
+        const {body: strategies} = await req.get("/passport/user/strategies");
+        const {statusCode, body} = await req.get(
+          `/passport/identity/strategy/${strategies[0]._id}/url`
+        );
+        expect(statusCode).toEqual(400);
+        expect(body.message).toBe("Strategy type is not supported for identities.");
       });
     });
   });

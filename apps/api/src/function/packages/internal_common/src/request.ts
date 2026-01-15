@@ -63,6 +63,7 @@ export class Axios implements HttpService {
 
   setBaseUrl(url: string) {
     this.instance.defaults.baseURL = url;
+    this.baseUrl = url;
   }
 
   setWriteDefaults(writeDefaults: {headers: {[key: string]: string}}) {

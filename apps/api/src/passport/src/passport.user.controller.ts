@@ -21,8 +21,8 @@ import {
   Optional,
   Headers
 } from "@nestjs/common";
-import {IdentityService} from "@spica-server/passport/identity";
-import {Identity, LoginCredentials} from "@spica-server/interface/passport/identity";
+import {UserService} from "@spica-server/passport/user";
+import {User, LoginCredentials} from "@spica-server/interface/passport/user";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body";
@@ -39,7 +39,7 @@ import {CommandType} from "@spica-server/interface/replication";
  * @name passport
  */
 @Controller("passport")
-export class PassportController {
+export class PassportUserController {
   readonly SESSION_TIMEOUT_MS = 60 * 1000;
   assertObservers = new Map<string, Subject<any>>();
 
@@ -53,15 +53,15 @@ export class PassportController {
     this.assertObservers.delete(id);
   }
 
-  identityToken = new Map<string, any>();
+  userToken = new Map<string, any>();
   refreshTokenMap = new Map<string, any>();
 
-  setIdentityToken(id, token) {
-    this.identityToken.set(id, token);
+  setUserToken(id, token) {
+    this.userToken.set(id, token);
   }
 
-  deleteIdentityToken(id) {
-    this.identityToken.delete(id);
+  deleteUserToken(id) {
+    this.userToken.delete(id);
   }
 
   setRefreshToken(id, token) {
@@ -74,13 +74,13 @@ export class PassportController {
 
   setRefreshTokenCookie(res: any, token: string) {
     const path = "passport/session/refresh";
-    res.cookie("refreshToken", token, this.identityService.getCookieOptions(path));
+    res.cookie("refreshToken", token, this.userService.getCookieOptions(path));
   }
 
   stateReqs = new Map<string, any>();
 
   constructor(
-    private identityService: IdentityService,
+    private userService: UserService,
     private strategyService: StrategyService,
     private authFactor: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices,
@@ -90,10 +90,10 @@ export class PassportController {
       this.commander.register(
         this,
         [
-          this.startIdentifyWithState,
-          this.completeIdentifyWithState,
-          this.setIdentityToken,
-          this.deleteIdentityToken,
+          this.startLoginWithState,
+          this.completeLoginWithState,
+          this.setUserToken,
+          this.deleteUserToken,
           this.setRefreshToken,
           this.deleteRefreshToken,
           this.setAssertObservers,
@@ -104,23 +104,23 @@ export class PassportController {
     }
   }
 
-  async getIdentity(identifier: string, password: string) {
-    const identity = await this.identityService.identify(identifier, password);
-    if (!identity) {
-      throw new UnauthorizedException("Identifier or password was incorrect.");
+  async getUser(username: string, password: string) {
+    const user = await this.userService.login(username, password);
+    if (!user) {
+      throw new UnauthorizedException("Username or password was incorrect.");
     }
-    return identity;
+    return user;
   }
 
-  async startIdentifyWithState(state: string, expires: number) {
-    let identity: Identity;
+  async startLoginWithState(state: string, expires: number) {
+    let user: User;
 
     if (!this.assertObservers.has(state)) {
       throw new BadRequestException("Authentication has failed due to invalid state.");
     }
     const observer = this.assertObservers.get(state);
 
-    const {user} = await observer
+    const {user: userData} = await observer
       .pipe(
         timeout(this.SESSION_TIMEOUT_MS),
         take(1),
@@ -138,64 +138,66 @@ export class PassportController {
       .toPromise();
     this.deleteAssertObservers(state);
 
-    const idenfitifer = user ? user.upn || user.id || user.name_id || user.email : undefined;
+    const username = userData
+      ? userData.upn || userData.id || userData.name_id || userData.email
+      : undefined;
 
-    if (!idenfitifer) {
+    if (!username) {
       throw new BadRequestException(
         "Response should include at least one of these values: upn, name_id, email, id."
       );
     }
 
-    identity = await this.identityService.findOne({identifier: idenfitifer});
+    user = await this.userService.findOne({username: username});
 
     // HQ sends attributes field which contains unacceptable fields for mongodb
-    delete user.attributes;
+    delete userData.attributes;
 
-    if (!identity) {
-      identity = await this.identityService.insertOne({
-        identifier: idenfitifer,
+    if (!user) {
+      user = await this.userService.insertOne({
+        username: username,
         password: undefined,
         policies: [],
-        attributes: user,
+        attributes: userData,
         lastPasswords: [],
         failedAttempts: [],
         lastLogin: undefined
       });
     }
 
-    this.completeIdentifyWithState(state, identity, expires);
+    this.completeLoginWithState(state, user, expires);
   }
 
-  async completeIdentifyWithState(state: string, identity: Identity, expires: number) {
+  async completeLoginWithState(state: string, user: User, expires: number) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
     if (!res || res.headerSent) {
       return;
     }
 
-    const {tokenSchema, refreshTokenSchema} = await this.signIdentity(identity, expires);
+    const {tokenSchema, refreshTokenSchema} = await this.signUser(user, expires);
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
     res.status(200).json(tokenSchema);
   }
 
-  async signIdentity(identity: Identity, expiresIn: number) {
-    const tokenSchema = this.identityService.sign(identity, expiresIn);
-    const refreshTokenSchema = await this.identityService.signRefreshToken(identity);
+  async signUser(user: User, expiresIn: number) {
+    const tokenSchema = this.userService.sign(user, expiresIn);
+    const refreshTokenSchema = await this.userService.signRefreshToken(user);
 
-    const id = identity._id.toHexString();
+    const id = user._id.toHexString();
     if (this.authFactor.hasFactor(id)) {
-      this.setIdentityToken(id, tokenSchema);
+      this.setUserToken(id, tokenSchema);
       this.setRefreshToken(id, refreshTokenSchema);
 
       setTimeout(() => {
-        this.deleteIdentityToken(id);
+        this.deleteUserToken(id);
         this.deleteRefreshToken(id);
       }, this.SESSION_TIMEOUT_MS);
 
       const challenge = await this.authFactor.start(id);
       const factorRes = {
         challenge,
-        answerUrl: `passport/identify/${identity._id}/factor-authentication`
+        answerUrl: `passport/login/${user._id}/factor-authentication`
       };
       return {factorRes};
     } else {
@@ -203,7 +205,7 @@ export class PassportController {
     }
   }
 
-  async _identify(identifier: string, password: string, state: string, expires: number, res) {
+  async _login(username: string, password: string, state: string, expires: number, res) {
     const catchError = e => {
       if (!res.headerSent) {
         res.status(e.status || 500).json(e.response || e);
@@ -214,22 +216,22 @@ export class PassportController {
       this.stateReqs.set(state, res);
       setTimeout(() => this.stateReqs.delete(state), this.SESSION_TIMEOUT_MS);
 
-      this.startIdentifyWithState(state, expires).catch(catchError);
+      this.startLoginWithState(state, expires).catch(catchError);
 
       return;
     }
 
-    const identity = await this.getIdentity(identifier, password).catch(catchError);
-    if (!identity) {
+    const user = await this.getUser(username, password).catch(catchError);
+    if (!user) {
       return;
     }
 
-    const identifyResult = await this.signIdentity(identity, expires).catch(catchError);
-    if (!identifyResult) {
+    const loginResult = await this.signUser(user, expires).catch(catchError);
+    if (!loginResult) {
       return;
     }
 
-    const {refreshTokenSchema, factorRes, tokenSchema} = identifyResult;
+    const {refreshTokenSchema, factorRes, tokenSchema} = loginResult;
     if (factorRes) {
       return res.status(200).json(factorRes);
     }
@@ -238,9 +240,9 @@ export class PassportController {
     return res.status(200).json(tokenSchema);
   }
 
-  @Get("identify")
-  async identify(
-    @Query("identifier") identifier: string,
+  @Get("login")
+  async login(
+    @Query("username") username: string,
     @Query("password") password: string,
     @Query("state") state: string,
     @Req() req: any,
@@ -249,25 +251,25 @@ export class PassportController {
   ) {
     req.res.append(
       "Warning",
-      `299 "Identify with 'GET' method has been deprecated. Use 'POST' instead."`
+      `299 "Login with 'GET' method has been deprecated. Use 'POST' instead."`
     );
-    this._identify(identifier, password, state, expires, req.res);
+    this._login(username, password, state, expires, req.res);
   }
 
-  @Post("identify")
-  async identifyWithPost(
+  @Post("login")
+  async loginWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
-    {identifier, password, expires, state}: LoginCredentials,
+    {username, password, expires, state}: LoginCredentials,
     @Res() res: any,
     @Next() next
   ) {
-    this._identify(identifier, password, state, expires, res);
+    this._login(username, password, state, expires, res);
   }
 
-  @Post("identify/:id/factor-authentication")
+  @Post("login/:id/factor-authentication")
   async authenticateWithFactor(@Param("id") id: string, @Body() body, @Res() res) {
     const hasFactor = this.authFactor.hasFactor(id);
-    const token = this.identityToken.get(id);
+    const token = this.userToken.get(id);
 
     if (!hasFactor || !token) {
       throw new BadRequestException("Login with credentials session is not started or timeouted.");
@@ -280,13 +282,13 @@ export class PassportController {
     const {answer} = body;
 
     const isAuthenticated = await this.authFactor.authenticate(id, answer).catch(e => {
-      this.deleteIdentityToken(id);
+      this.deleteUserToken(id);
       this.deleteRefreshToken(id);
       throw new BadRequestException(e);
     });
 
     if (!isAuthenticated) {
-      this.deleteIdentityToken(id);
+      this.deleteUserToken(id);
       this.deleteRefreshToken(id);
 
       throw new UnauthorizedException();
@@ -294,10 +296,10 @@ export class PassportController {
 
     const refreshTokenSchema = this.refreshTokenMap.get(id);
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
-    return res.status(200).json(this.identityToken.get(id));
+    return res.status(200).json(this.userToken.get(id));
   }
 
-  @Post("session/refresh")
+  @Post("user/session/refresh")
   async refreshToken(
     @Headers("authorization") accessToken: string,
     @Req() req: any,
@@ -311,24 +313,30 @@ export class PassportController {
 
     let tokenSchema;
     try {
-      tokenSchema = await this.identityService.refreshToken(accessToken, refreshToken);
+      tokenSchema = await this.userService.refreshToken(accessToken, refreshToken);
     } catch (error) {
       throw new BadRequestException(error);
     }
     res.status(200).json(tokenSchema);
   }
 
-  @Get("strategies")
+  @Get("user/strategies")
   async strategies() {
-    return this.strategyService.aggregate([{$project: {options: 0}}]).toArray();
+    return this.strategyService
+      .aggregate([{$match: {type: "oauth"}}, {$project: {options: 0}}])
+      .toArray();
   }
 
-  @Get("strategy/:id/url")
+  @Get("user/strategy/:id/url")
   async getUrl(@Param("id", OBJECT_ID) id: ObjectId) {
     const strategy = await this.strategyService.findOne({_id: id});
 
     if (!strategy) {
       throw new BadRequestException("Strategy does not exist.");
+    }
+
+    if (strategy.type !== "oauth") {
+      throw new BadRequestException("Strategy type is not supported for users.");
     }
 
     const service = this.strategyTypes.find(strategy.type, strategy.options.idp);
@@ -344,13 +352,7 @@ export class PassportController {
     return login;
   }
 
-  @Get("strategy/:name/metadata")
-  @Header("Content-type", "application/xml")
-  metadata(@Param("name") name: string) {
-    return this.strategyTypes.find("saml").createMetadata(name);
-  }
-
-  @All("strategy/:id/complete")
+  @All("user/strategy/:id/complete")
   @UseInterceptors(UrlEncodedBodyParser())
   @HttpCode(HttpStatus.NO_CONTENT)
   async complete(
@@ -373,13 +375,17 @@ export class PassportController {
       throw new BadRequestException("Strategy does not exist.");
     }
 
+    if (strategy.type !== "oauth") {
+      throw new BadRequestException("Strategy type is not supported for users.");
+    }
+
     const service = this.strategyTypes.find(strategy.type, strategy.options.idp);
 
     const observer = this.assertObservers.get(stateId);
 
     return service
       .assert(strategy, body, code)
-      .then(identity => observer.next(identity))
+      .then(user => observer.next(user))
       .catch(e => {
         observer.error(e.toString());
       });

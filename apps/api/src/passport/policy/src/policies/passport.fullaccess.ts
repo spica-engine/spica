@@ -3,6 +3,7 @@ import StrategyFullAccess from "./strategy.fullaccess";
 import ApiKeyFullAccess from "./apikey.fullaccess";
 import PolicyFullAccess from "./policy.fullaccess";
 import RefreshTokenFullAccess from "./refresh.token.fullaccess";
+import UserFullAccess from "./user.fullaccess";
 
 export default {
   _id: "PassportFullAccess",
@@ -13,6 +14,7 @@ export default {
     ...ApiKeyFullAccess.statement,
     ...PolicyFullAccess.statement,
     ...StrategyFullAccess.statement,
-    ...RefreshTokenFullAccess.statement
+    ...RefreshTokenFullAccess.statement,
+    ...UserFullAccess.statement
   ]
 };

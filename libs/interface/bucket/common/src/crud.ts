@@ -18,6 +18,7 @@ export interface CrudParams {
   skip?: number;
   limit?: number;
   projectMap: string[][];
+  applyAcl?: boolean;
 }
 
 export interface CrudFactories<T> {
