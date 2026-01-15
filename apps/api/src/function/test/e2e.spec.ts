@@ -230,7 +230,11 @@ describe("Queue shifting", () => {
     });
 
     afterEach(async () => {
-      await Promise.all([app.close().catch(console.error), app2.close().catch(console.error)]);
+      try {
+        await Promise.all([app.close().catch(console.error), app2.close()]);
+      } catch (error) {
+        console.error(error);
+      }
     });
 
     it("should wait until current event completed, return 503 for ones in queue", done => {
@@ -274,7 +278,11 @@ describe("Queue shifting", () => {
     });
 
     afterEach(async () => {
-      await Promise.all([app.close().catch(console.error), app2.close().catch(console.error)]);
+      try {
+        await Promise.all([app.close().catch(console.error), app2.close()]);
+      } catch (error) {
+        console.error(error);
+      }
     });
 
     // don't know but somehow scheduler trigger prevents API from exiting on the exit signal received If it runs every second
@@ -330,7 +338,11 @@ describe("Queue shifting", () => {
     });
 
     afterEach(async () => {
-      await Promise.all([app.close().catch(console.error), app2.close().catch(console.error)]);
+      try {
+        await Promise.all([app.close().catch(console.error), app2.close()]);
+      } catch (error) {
+        console.error(error);
+      }
     });
 
     async function triggerDatabaseEvent() {
@@ -386,7 +398,11 @@ describe("Queue shifting", () => {
     });
 
     afterEach(async () => {
-      await Promise.all([app.close().catch(console.error), app2.close().catch(console.error)]);
+      try {
+        await Promise.all([app.close().catch(console.error), app2.close()]);
+      } catch (error) {
+        console.error(error);
+      }
     });
 
     function triggerBucketDataEvent() {
