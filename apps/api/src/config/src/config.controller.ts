@@ -1,7 +1,9 @@
-import {Controller, Put, Param, Body, Get, UseGuards} from "@nestjs/common";
+import {Controller, Put, Param, Body, Get, UseGuards, NotFoundException} from "@nestjs/common";
 import {ConfigService} from "./config.service";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {ReturnDocument} from "@spica-server/database";
+import {Schema} from "@spica-server/core/schema";
+import {BaseConfig} from "@spica-server/interface/config";
 
 @Controller("config")
 export class ConfigController {
@@ -19,26 +21,37 @@ export class ConfigController {
 
   /**
    * Get a configuration by module name
-   * @param module - Module name
-   * @returns configuration document
+   * @param module Module name
+   * @returns Configuration document
    */
   @Get(":module")
   @UseGuards(AuthGuard(), ActionGuard("config:show"))
   async getConfig(@Param("module") module: string) {
-    return this.configService.findOne({module});
+    const config = await this.configService.findOne({module});
+    if (!config) {
+      throw new NotFoundException(`Configuration with module ${module} does not exist.`);
+    }
+    return config;
   }
 
   /**
    * Update an existing configuration
-   * @param module - Module name
-   * @param data - Configuration data
+   * @param module Module name
+   * @param data Configuration data
    * @returns Updated document
    */
   @Put(":module")
   @UseGuards(AuthGuard(), ActionGuard("config:update"))
-  async update(@Param("module") module: string, @Body() data: any) {
-    return this.configService.findOneAndReplace({module}, data, {
+  async update(
+    @Param("module") module: string,
+    @Body(Schema.validate("http://spica.internal/config")) data: BaseConfig
+  ) {
+    const updatedConfig = await this.configService.findOneAndReplace({module}, data, {
       returnDocument: ReturnDocument.AFTER
     });
+    if (!updatedConfig) {
+      throw new NotFoundException(`Configuration with module ${module} does not exist.`);
+    }
+    return updatedConfig;
   }
 }

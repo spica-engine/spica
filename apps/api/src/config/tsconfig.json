@@ -10,6 +10,9 @@
     },
     {
       "path": "../passport/guard"
+    },
+    {
+      "path": "../../../../libs/core/schema"
     }
   ]
 }

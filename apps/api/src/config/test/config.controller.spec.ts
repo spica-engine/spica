@@ -95,11 +95,13 @@ describe("ConfigController", () => {
   });
 
   describe("GET /config/:module", () => {
-    it("should return undefined response when config does not exist", async () => {
+    it("should return not found when config does not exist", async () => {
       const response = await request.get("/config/nonexistent");
 
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
-      expect(response.body).toBeUndefined();
+      expect([response.statusCode, response.statusText]).toEqual([404, "Not Found"]);
+      expect(response.body.message).toContain(
+        "Configuration with module nonexistent does not exist"
+      );
     });
 
     it("should get the correct config when multiple configs exist", async () => {
@@ -174,7 +176,7 @@ describe("ConfigController", () => {
       expect(getResponse.body.options.enableCache).toBeUndefined();
     });
 
-    it("should return undefined when updating non-existent config", async () => {
+    it("should return error when updating incorrect config type", async () => {
       const newConfig = {
         module: "nonexistent",
         options: {
@@ -184,8 +186,22 @@ describe("ConfigController", () => {
 
       const response = await request.put("/config/nonexistent", newConfig);
 
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
-      expect(response.body).toBeUndefined();
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect(response.body.message).toContain("module must be equal to one of the allowed values");
+    });
+
+    it("should return not found when updating not created config", async () => {
+      const newConfig = {
+        module: "bucket",
+        options: {
+          someSetting: true
+        }
+      };
+
+      const response = await request.put("/config/bucket", newConfig);
+
+      expect([response.statusCode, response.statusText]).toEqual([404, "Not Found"]);
+      expect(response.body.message).toContain("Configuration with module bucket does not exist");
     });
   });
 });
