@@ -69,6 +69,8 @@ jobs:
           - command: test-image:api --build-arg PROJECTS=api/passport/identity/**
           - command: test-image:api --build-arg PROJECTS=api/passport/policy/**
           - command: test-image:api --build-arg PROJECTS=api/passport/refresh_token/**
+          - command: test-image:api --build-arg PROJECTS=api/passport/user/** --build-arg MAILER_URL=smtp://172.17.0.1:1025,api://172.17.0.1:8025
+            mailer: true
           - command: test-image:api --build-arg PROJECTS=api/preference/**
           - command: test-image:api --build-arg PROJECTS=api/replication/**
           - command: test-image:api --build-arg PROJECTS=api/status/**

@@ -306,6 +306,15 @@ const args = yargsInstance
       boolean: true,
       description: "Enable/disable listening user realtime. Default value is true",
       default: true
+    },
+    "user-hash-secret": {
+      string: true,
+      description: "Hash secret used for user-related operations."
+    },
+    "passport-user-verification-code-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued verification codes for users. Unit: second",
+      default: 60 * 5
     }
   })
   .demandOption("passport-secret")
@@ -578,6 +587,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     if (bucketDataHashSecret) {
       args["bucket-data-hash-secret"] = bucketDataHashSecret;
     }
+    const userHashSecret = process.env.USER_HASH_SECRET;
+    if (userHashSecret) {
+      args["user-hash-secret"] = userHashSecret;
+    }
   })
   .check(args => {
     if (!args["passport-identity-token-expiration-seconds-limit"]) {
@@ -761,7 +774,9 @@ const modules = [
         failedAttemptLimit: args["passport-user-failed-login-attempt-limit"],
         blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
       },
-      userRealtime: args["user-realtime"]
+      userRealtime: args["user-realtime"],
+      hashSecret: args["user-hash-secret"],
+      verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
     }
   }),
   FunctionModule.forRoot({

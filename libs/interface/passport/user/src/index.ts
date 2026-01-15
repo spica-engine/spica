@@ -25,6 +25,11 @@ export interface User {
   lastLogin: Date;
   failedAttempts: Date[];
   bannedUntil?: Date;
+  email?: {
+    value: string;
+    createdAt: Date;
+    verified: boolean;
+  };
 }
 
 export interface LoginCredentials {
@@ -61,9 +66,21 @@ export interface UserOptions {
     blockDurationMinutes: number;
   };
   refreshTokenExpiresIn?: number;
+  verificationCodeExpiresIn?: number;
   passwordHistoryLimit: number;
   userRealtime: boolean;
+  hashSecret?: string;
 }
 
+export interface UserVerification {
+  userId: ObjectId;
+  destination: string;
+  attempts: number;
+  code: string;
+  channel: string;
+  purpose: "verify";
+  is_used: boolean;
+  verificationCount?: number;
+}
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
