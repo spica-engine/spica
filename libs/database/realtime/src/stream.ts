@@ -13,7 +13,6 @@ export class Emitter<T extends {_id: ObjectId}> {
   private sortSubscription: Subscription;
 
   private ids = new Set<string>();
-  private aggregationQueue: Promise<any> = Promise.resolve();
 
   private observable: Observable<StreamChunk<T>>;
   private observer: Subscriber<StreamChunk<T>>;
@@ -161,19 +160,16 @@ export class Emitter<T extends {_id: ObjectId}> {
         });
       }
 
-      this.aggregationQueue = this.aggregationQueue
-        .then(() =>
-          this.collection
-            .aggregate(pipeline)
-            .toArray()
-            .then((documents: T[]) => {
-              for (const document of documents) {
-                // we can not use this.next since it's designed for notifying all listeners
-                subscriber.next({kind: ChunkKind.Initial, document: document});
-                this.ids.add(document._id.toString());
-              }
-            })
-        )
+      this.collection
+        .aggregate(pipeline)
+        .toArray()
+        .then((documents: T[]) => {
+          for (const document of documents) {
+            // we can not use this.next since it's designed for notifying all listeners
+            subscriber.next({kind: ChunkKind.Initial, document: document});
+            this.ids.add(document._id.toString());
+          }
+        })
         .catch(e => subscriber.error(e))
         .finally(() => {
           // we can not use this.next since it's designed for notifying all listeners
@@ -298,14 +294,10 @@ export class Emitter<T extends {_id: ObjectId}> {
       }
     });
 
-    this.aggregationQueue = this.aggregationQueue.then(() =>
-      this.collection
-        .aggregate(pipeline)
-        .toArray()
-        .then(r => r.map(r => r._id.toString()))
-    );
-
-    return this.aggregationQueue;
+    return this.collection
+      .aggregate(pipeline)
+      .toArray()
+      .then(r => r.map(r => r._id.toString()));
   }
 
   private fetchMoreItemToFillTheCursor() {
@@ -336,17 +328,14 @@ export class Emitter<T extends {_id: ObjectId}> {
       $limit: this.options.limit - this.ids.size
     });
 
-    this.aggregationQueue = this.aggregationQueue
-      .then(() =>
-        this.collection
-          .aggregate<T>(pipeline)
-          .next()
-          .then(data => {
-            if (data) {
-              this.next({kind: ChunkKind.Initial, document: data});
-            }
-          })
-      )
+    this.collection
+      .aggregate<T>(pipeline)
+      .next()
+      .then(data => {
+        if (data) {
+          this.next({kind: ChunkKind.Initial, document: data});
+        }
+      })
       .catch(e => this.error(e));
   }
 
