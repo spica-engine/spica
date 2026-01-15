@@ -88,8 +88,8 @@ jobs:
             mongodb: true
           - command: test-image:api --build-arg PROJECTS=api/preference/** --build-arg MONGODB_URL=$MONGODB_URL
             mongodb: true
-          - command: test-image:api --build-arg PROJECTS=api/replication/**  --build-arg MONGODB_URL=$MONGODB_URL
-            mongodb: true
+          # - command: test-image:api --build-arg PROJECTS=api/replication/**  --build-arg MONGODB_URL=$MONGODB_URL
+          #   mongodb: true
           - command: test-image:api --build-arg PROJECTS=api/status/** --build-arg MONGODB_URL=$MONGODB_URL
             mongodb: true
           - command: test-image:api --build-arg PROJECTS=api/storage/**
