@@ -259,8 +259,11 @@ export class UserService extends BaseCollection<User>("user") {
   }
 
   checkUserBan(user: User) {
+    if (!user.bannedUntil) {
+      return;
+    }
     const bannedUntilDate = new Date(user.bannedUntil);
-    if (bannedUntilDate && new Date() < bannedUntilDate) {
+    if (!isNaN(bannedUntilDate.getTime()) && new Date() < bannedUntilDate) {
       const remainingSeconds = (bannedUntilDate.getTime() - new Date().getTime()) / 1000;
       throw new UnauthorizedException(
         `User is banned. Try again after ${this.formatRemainingDuration(remainingSeconds)}.`

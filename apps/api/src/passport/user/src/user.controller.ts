@@ -472,7 +472,7 @@ export class UserController {
   private async handlePasswordUpdate(
     id: ObjectId,
     newPassword: string
-  ): Promise<{password: string; deactivateJwtsBefore: number; lastPasswords: string[]}> {
+  ): Promise<{password: string; deactivateJwtsBefore?: number; lastPasswords?: string[]}> {
     const {password: currentPassword, lastPasswords} = await this.userService.findOne({_id: id});
 
     const isEqual = await compare(newPassword, currentPassword);
@@ -486,7 +486,7 @@ export class UserController {
       updates.lastPasswords = lastPasswords || [];
       updates.lastPasswords.push(currentPassword);
 
-      if (updates.lastPasswords.length == this.options.passwordHistoryLimit + 1) {
+      if (updates.lastPasswords.length === this.options.passwordHistoryLimit + 1) {
         updates.lastPasswords.shift();
       }
 
