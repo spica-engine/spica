@@ -25,6 +25,8 @@ import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
 import {EnvVarModule} from "@spica-server/env_var";
 import {MailerModule} from "@spica-server/mailer";
+import {SmsSenderModule} from "@spica-server/sms";
+
 import fs from "fs";
 import https from "https";
 import path from "path";
@@ -422,6 +424,27 @@ const args = yargsInstance
       default: 1000 * 60 * 60 * 24 * 2 // 2 days
     }
   })
+  /* Sms Sender Options */
+  .options({
+    "sms-sender-strategy": {
+      string: true,
+      description: "SMS service provider strategy. Default is twilio.",
+      default: "twilio",
+      choices: ["twilio"]
+    },
+    "twilio-sms-service-account-sid": {
+      string: true,
+      description: "Twilio SMS service Account SID."
+    },
+    "twilio-sms-service-auth-token": {
+      string: true,
+      description: "Twilio SMS service Auth Token."
+    },
+    "twilio-sms-service-from-number": {
+      string: true,
+      description: "Twilio SMS service From Number."
+    }
+  })
   /* Mailer Options */
   .options({
     "mailer-host": {
@@ -587,6 +610,22 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     if (bucketDataHashSecret) {
       args["bucket-data-hash-secret"] = bucketDataHashSecret;
     }
+
+    const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
+    if (twilioAccountSid) {
+      args["twilio-sms-service-account-sid"] = twilioAccountSid;
+    }
+
+    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+    if (twilioAuthToken) {
+      args["twilio-sms-service-auth-token"] = twilioAuthToken;
+    }
+
+    const twilioFromNumber = process.env.TWILIO_FROM_NUMBER;
+    if (twilioFromNumber) {
+      args["twilio-sms-service-from-number"] = twilioFromNumber;
+    }
+
     const userHashSecret = process.env.USER_HASH_SECRET;
     if (userHashSecret) {
       args["user-hash-secret"] = userHashSecret;
@@ -700,6 +739,14 @@ const modules = [
     },
     defaults: {
       from: args["mailer-from"]
+    }
+  }),
+  SmsSenderModule.forRoot({
+    strategy: args["sms-sender-strategy"] as "twilio",
+    twilio: {
+      accountSid: args["twilio-sms-service-account-sid"],
+      authToken: args["twilio-sms-service-auth-token"],
+      fromNumber: args["twilio-sms-service-from-number"]
     }
   }),
   SchemaModule.forRoot({
