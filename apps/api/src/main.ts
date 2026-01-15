@@ -207,7 +207,8 @@ const args = yargsInstance
         "StorageFullAccess",
         "StrategyFullAccess",
         "VersionControlFullAccess",
-        "WebhookFullAccess"
+        "WebhookFullAccess",
+        "ConfigFullAccess"
       ]
     },
     "passport-identity-limit": {

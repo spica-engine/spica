@@ -47,6 +47,9 @@ import VersionControlFullAccess from "./version.fullaccess";
 import WebhookFullAccess from "./webhook.fullaccess";
 import WebhookReadOnlyAccess from "./webhook.readonly";
 
+import ConfigFullAccess from "./config.fullaccess";
+import ConfigReadOnlyAccess from "./config.readonly";
+
 export default [
   ActivityFullAccess,
   ActivityReadOnlyAccess,
@@ -95,5 +98,8 @@ export default [
   VersionControlFullAccess,
 
   WebhookFullAccess,
-  WebhookReadOnlyAccess
+  WebhookReadOnlyAccess,
+
+  ConfigFullAccess,
+  ConfigReadOnlyAccess
 ];
