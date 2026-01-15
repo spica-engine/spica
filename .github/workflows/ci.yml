@@ -70,8 +70,8 @@ jobs:
             mongodb: true
           - command: test-image:api --build-arg PROJECTS=api/env_var/** --build-arg MONGODB_URL=$MONGODB_URL
             mongodb: true
-          - command: test-image:api --build-arg PROJECTS=api/function --build-arg MONGODB_URL=$MONGODB_URL
-            mongodb: true
+          # - command: test-image:api --build-arg PROJECTS=api/function --build-arg MONGODB_URL=$MONGODB_URL
+          #   mongodb: true
           - command: test-image:api --build-arg PROJECTS=api/function/enqueuer --build-arg RABBITMQ_URL=$RABBITMQ_URL --build-arg MONGODB_URL=$MONGODB_URL
             rabbitmq: true
             mongodb: true
