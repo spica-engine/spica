@@ -63,7 +63,7 @@ jobs:
       - name: Calculate affected build projects
         id: affected
         run: |
-          projects=$(yarn -s nx show projects --affected --target=build --json || echo "[]")
+          projects=$(yarn -s nx show projects --affected -t build --json || echo "[]")
           echo "projects=${projects:-[]}" >> "$GITHUB_OUTPUT"
 
   build_affected:
@@ -142,7 +142,7 @@ jobs:
       - name: Calculate affected test projects
         id: affected
         run: |
-          projects=$(yarn -s nx show projects --affected --target=test --json || echo "[]")
+          projects=$(yarn -s nx show projects --affected -t test --json || echo "[]")
           echo "projects=${projects:-[]}" >> "$GITHUB_OUTPUT"
 
   test_affected:
