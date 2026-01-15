@@ -4,11 +4,6 @@
   "type": "object",
   "required": ["module", "options"],
   "properties": {
-    "_id": {
-      "type": "string",
-      "format": "objectid",
-      "description": "Unique objectid of the configuration."
-    },
     "module": {
       "type": "string",
       "enum": [
