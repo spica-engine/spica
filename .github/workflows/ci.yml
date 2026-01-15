@@ -11,6 +11,9 @@ on:
   pull_request:
     branches: ["master"]
 
+permissions:
+  contents: read
+
 jobs:
   helm_lint:
     name: Helm Lint
@@ -30,76 +33,9 @@ jobs:
             --set application.bucketDataHashSecret=lint-hash-secret \
             --set application.publicHost=lint.example.com
 
-  run_command:
-    name: Run Command
+  build_affected:
+    name: Build Affected
     runs-on: ubuntu-latest
-    # strategy:
-    #   matrix:
-    #     include:
-    #       - command: format:check
-    #       - command: build:cli
-    #       - command: build:devkit:*
-    #       - command: build-image:api
-    #       - command: build-image:migrate
-    #       - command: build-image:mongoreplicationcontroller
-    #       - command: test:cli
-    #       - command: test:devkit:*
-    #         mongodb: true
-    #         prefix: MONGODB_URL=$MONGODB_URL
-    #       - command: test-image:migrate --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/activity/**
-    #       - command: test-image:api --build-arg PROJECTS=api/asset/** --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/bucket --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/bucket/cache
-    #       - command: test-image:api --build-arg PROJECTS=api/bucket/common --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/bucket/expression
-    #       - command: test-image:api --build-arg PROJECTS=api/bucket/graphql --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/bucket/history
-    #       - command: test-image:api --build-arg PROJECTS=api/bucket/hooks
-    #       - command: test-image:api --build-arg PROJECTS=api/bucket/realtime --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/bucket/schemas-realtime --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/bucket/services
-    #       - command: test-image:api --build-arg PROJECTS=api/dashboard/** --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/env_var/** --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       # - command: test-image:api --build-arg PROJECTS=api/function --build-arg MONGODB_URL=$MONGODB_URL
-    #       #   mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/function/enqueuer --build-arg RABBITMQ_URL=$RABBITMQ_URL --build-arg MONGODB_URL=$MONGODB_URL
-    #         rabbitmq: true
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/function/** --build-arg EXCLUDE='api/function/packages/**,api/function,api/function/enqueuer' --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/mailer/** --build-arg MAILER_URL=$MAILER_URL --build-arg MONGODB_URL=$MONGODB_URL
-    #         mailer: true
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/passport/** --build-arg EXCLUDE='api/passport/apikey/**,api/passport/identity/**' --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/passport/apikey/** --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/passport/identity/** --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/preference/** --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       # - command: test-image:api --build-arg PROJECTS=api/replication/**  --build-arg MONGODB_URL=$MONGODB_URL
-    #       #   mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/status/** --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:api --build-arg PROJECTS=api/storage/**
-    #       # - command: test-image:api --build-arg PROJECTS=api/versioncontrol/** --build-arg MONGODB_URL=$MONGODB_URL
-    #       #   mongodb: true
-    #       - command: test-image:core --build-arg PROJECTS=core/**
-    #       - command: test-image:database --build-arg PROJECTS=database/** --build-arg MONGODB_URL=$MONGODB_URL
-    #         mongodb: true
-    #       - command: test-image:filter --build-arg PROJECTS=filter/**
-
     steps:
       - name: Free up some space on disk
         run: |
@@ -108,17 +44,16 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
       - name: Checkout
         uses: actions/checkout@v4
-
+        with:
+          fetch-depth: 1
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
           cache: yarn
           cache-dependency-path: yarn.lock
-
       - name: Restore Node Modules Cache
         uses: actions/cache@v4
         with:
@@ -127,87 +62,97 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
             ${{ runner.os }}-node-modules-
-
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-
-      # necessary for the "nx lint" command
       - name: Fetch base branch
         run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
-
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+      - name: Run Build
+        run: yarn nx affected -t build
 
+  test_affected:
+    name: Test Affected
+    runs-on: ubuntu-latest
+    needs: build_affected
+    steps:
+      - name: Free up some space on disk
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore Node Modules Cache
+        uses: actions/cache@v4
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+            ${{ runner.os }}-node-modules-
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Fetch base branch
+        run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
+      - name: Disable Nx Cloud
+        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
       - name: Start MongoDB if needed
-        # if: ${{ matrix.mongodb || false }}
         run: |
           docker run -d --rm --name mongodb \
             -p 27017:27017 \
             mongo:7.0.14 \
             --replSet testset --bind_ip_all
-
           echo "Waiting for MongoDB to start..."
           for i in {1..10}; do
             if docker exec mongodb mongosh --eval "db.adminCommand('ping')" &> /dev/null; then
-              echo "MongoDB is ready. Initializing replica set..."
               docker exec mongodb mongosh --eval "rs.initiate({_id: 'testset', members: [{_id: 0, host: 'localhost:27017'}]})"
               sleep 5
-              echo "Verifying replica set status..."
               docker exec mongodb mongosh --eval "rs.status()"
-              echo "MongoDB replica set is ready."
               break
             fi
-            echo "Attempt $i: MongoDB not ready yet, waiting..."
             sleep 2
           done
-
       - name: Start RabbitMQ if needed
-        # if: ${{ matrix.rabbitmq || false }}
         run: |
           docker run -d --rm --name rabbitmq \
             -p 5672:5672 \
             rabbitmq:4.1
-
           echo "Waiting for RabbitMQ..."
           for i in {1..10}; do
             if nc -z localhost 5672; then
-              echo "RabbitMQ is ready."
               break
             fi
             sleep 2
           done
-
       - name: Start Mailer if needed
-        # if: ${{ matrix.mailer || false }}
         run: |
           docker run -d --rm --name mailer \
             -p 1025:1025 \
             -p 8025:8025 \
             mailhog/mailhog
-
           echo "Waiting for Mailer..."
           for i in {1..10}; do
             if nc -z localhost 1025 && nc -z localhost 8025; then
-              echo "Mailer is ready."
               break
             fi
             sleep 2
           done
-
-      - name: Run Build
-        run: yarn nx affected -t build
-
       - name: Run Tests
         run: yarn nx affected -t test
-
       - name: Stop RabbitMQ if needed
-        # if: ${{ matrix.rabbitmq || false }}
         run: docker stop rabbitmq || true
-
       - name: Stop Mailer if needed
-        # if: ${{ matrix.mailer || false }}
         run: docker stop mailer || true
-
       - name: Stop MongoDB if needed
-        # if: ${{ matrix.mongodb || false }}
         run: docker stop mongodb || true
