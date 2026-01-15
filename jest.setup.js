@@ -5,7 +5,7 @@ import {workspaceRoot} from "@nx/devkit";
 import {jest} from "@jest/globals";
 
 global.jest = jest;
-jest.setTimeout(60_000);
+jest.setTimeout(30_000);
 
 // directory for all tests
 const testTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "jest-"));
