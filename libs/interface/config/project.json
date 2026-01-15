@@ -1,0 +1,5 @@
+{
+  "name": "interface/config",
+  "sourceRoot": "libs/interface/config/src",
+  "projectType": "library"
+}
