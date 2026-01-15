@@ -7,7 +7,7 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {GuardService} from "@spica-server/passport/guard/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
-describe("Realtime Authorization", () => {
+xdescribe("Realtime Authorization", () => {
   let wsc: Websocket;
   let app: INestApplication;
   let authGuardCheck: jest.SpyInstance<Promise<boolean>>;

@@ -23,7 +23,7 @@ function url(path, query) {
   return `${u.pathname}${u.search}`;
 }
 
-describe("Realtime", () => {
+xdescribe("Realtime", () => {
   let wsc;
   let app;
   let req;

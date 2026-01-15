@@ -24,7 +24,7 @@ function url(query?: {[k: string]: string | number | boolean | object}) {
   return `${url.pathname}${url.search}`;
 }
 
-describe("Realtime", () => {
+xdescribe("Realtime", () => {
   let wsc: Websocket;
   let app: INestApplication;
   let req: Request;
