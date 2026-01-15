@@ -696,7 +696,7 @@ describe("E2E Tests", () => {
         });
       });
 
-      fit("should return error when sending SAML to user endpoints", async () => {
+      it("should return error when sending SAML to user endpoints", async () => {
         const {body: strategies} = await req.get(
           "/passport/strategy",
           {},
