@@ -10,6 +10,8 @@ export class SchemaResolver {
       validator.removeSchema("http://spica.internal/passport/update-user-with-attributes");
       validator.removeSchema("http://spica.internal/passport/create-user-with-attributes");
       validator.removeSchema("http://spica.internal/passport/user-attributes");
+      validator.removeSchema("http://spica.internal/passport/user-self-update-with-attributes");
+      validator.removeSchema("http://spica.internal/passport/user-update-with-attributes");
     });
   }
 
@@ -39,6 +41,22 @@ export class SchemaResolver {
         $id: "http://spica.internal/passport/update-user-with-attributes",
         allOf: [
           {$ref: "http://spica.internal/passport/user"},
+          {$ref: "http://spica.internal/passport/user-attributes"}
+        ]
+      };
+    } else if (uri == "http://spica.internal/passport/user-self-update-with-attributes") {
+      return {
+        $id: "http://spica.internal/passport/user-self-update-with-attributes",
+        allOf: [
+          {$ref: "http://spica.internal/passport/user-self-update"},
+          {$ref: "http://spica.internal/passport/user-attributes"}
+        ]
+      };
+    } else if (uri == "http://spica.internal/passport/user-update-with-attributes") {
+      return {
+        $id: "http://spica.internal/passport/user-update-with-attributes",
+        allOf: [
+          {$ref: "http://spica.internal/passport/user-update"},
           {$ref: "http://spica.internal/passport/user-attributes"}
         ]
       };

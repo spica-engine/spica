@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/passport/user-update",
+  "type": "object",
+  "title": "Schema for administrative user update (all fields)",
+  "properties": {
+    "username": {
+      "type": "string",
+      "title": "Username of the user",
+      "minLength": 3
+    },
+    "password": {
+      "type": "string",
+      "title": "Password of the user",
+      "minLength": 3
+    },
+    "deactivateJwtsBefore": {
+      "type": "number",
+      "title": "Unix timestamp (in seconds). All JWTs issued before this timestamp will be considered invalid"
+    },
+    "attributes": {
+      "type": "object",
+      "title": "Custom attributes of the user"
+    },
+    "bannedUntil": {
+      "type": "string",
+      "format": "date-time",
+      "title": "User ban expiration date. User cannot log in until this date passes"
+    },
+    "policies": {
+      "type": "array",
+      "title": "Policies assigned to the user",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
