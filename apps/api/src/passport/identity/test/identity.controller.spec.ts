@@ -1,17 +1,17 @@
-import { Test, TestingModule } from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
 import {
   DatabaseService,
   DatabaseTestingModule,
   ProfilingLevel
 } from "@spica-server/database/testing";
-import { PassportTestingModule } from "@spica-server/passport/testing";
-import { CoreTestingModule, Request } from "@spica-server/core/testing";
-import { IdentityModule } from "@spica-server/passport/identity";
-import { INestApplication } from "@nestjs/common";
-import { SchemaModule } from "@spica-server/core/schema";
-import { OBJECT_ID } from "@spica-server/core/schema/formats";
-import { PreferenceTestingModule } from "@spica-server/preference/testing";
-import { PolicyModule } from "@spica-server/passport/policy";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {IdentityModule} from "@spica-server/passport/identity";
+import {INestApplication} from "@nestjs/common";
+import {SchemaModule} from "@spica-server/core/schema";
+import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PolicyModule} from "@spica-server/passport/policy";
 
 describe("Identity Controller", () => {
   let module: TestingModule;
@@ -41,7 +41,7 @@ describe("Identity Controller", () => {
           },
           identityRealtime: false
         }),
-        PolicyModule.forRoot({ realtime: false })
+        PolicyModule.forRoot({realtime: false})
       ]
     }).compile();
     app = module.createNestApplication();
@@ -61,7 +61,7 @@ describe("Identity Controller", () => {
       await Promise.all([
         // unrelated operation to ensure ns filter working correctly
         db.collection("buckets").insertOne({}),
-        req.post("/passport/identity", { identifier: "user1", password: "password1" }),
+        req.post("/passport/identity", {identifier: "user1", password: "password1"}),
         req.get("/passport/identity")
       ]);
     });
@@ -74,7 +74,7 @@ describe("Identity Controller", () => {
 
     it("should filter identity profile entries by operation type", async () => {
       const res = await req.get("/passport/identity/profile", {
-        filter: JSON.stringify({ op: "insert" })
+        filter: JSON.stringify({op: "insert"})
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body.every(profileEntry => profileEntry.op == "insert")).toEqual(true);
@@ -91,8 +91,8 @@ describe("Identity Controller", () => {
     });
 
     it("should skip bucket1 profile entries", async () => {
-      const { body: allProfileEntries } = await req.get("/passport/identity/profile");
-      const res = await req.get("/passport/identity/profile", { skip: 1 });
+      const {body: allProfileEntries} = await req.get("/passport/identity/profile");
+      const res = await req.get("/passport/identity/profile", {skip: 1});
       expect(res.statusCode).toEqual(200);
       expect(res.body.length).toEqual(allProfileEntries.length - 1);
 
@@ -102,8 +102,8 @@ describe("Identity Controller", () => {
     });
 
     it("should sort bucket1 profile entries", async () => {
-      const { body: allProfileEntries } = await req.get("/passport/identity/profile");
-      const res = await req.get("/passport/identity/profile", { sort: JSON.stringify({ ts: -1 }) });
+      const {body: allProfileEntries} = await req.get("/passport/identity/profile");
+      const res = await req.get("/passport/identity/profile", {sort: JSON.stringify({ts: -1})});
       expect(res.statusCode).toEqual(200);
       expect(res.body).not.toEqual(allProfileEntries);
 
@@ -115,7 +115,7 @@ describe("Identity Controller", () => {
     // to prevent accessing other collections profile entries
     it("should ignore ns on filter", async () => {
       let res = await req.get("/passport/identity/profile", {
-        filter: JSON.stringify({ ns: "test.buckets" })
+        filter: JSON.stringify({ns: "test.buckets"})
       });
 
       expect(res.statusCode).toEqual(200);
@@ -126,7 +126,7 @@ describe("Identity Controller", () => {
     it("should ignore ns on the nested filter", async () => {
       let res = await req.get("/passport/identity/profile", {
         filter: JSON.stringify({
-          $or: [{ ns: "test.functions" }, { ns: "test.buckets" }]
+          $or: [{ns: "test.functions"}, {ns: "test.buckets"}]
         })
       });
 
