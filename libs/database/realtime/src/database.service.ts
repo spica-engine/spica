@@ -12,9 +12,9 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
 
   private changeStreams = new Map<string, ChangeStream>();
   private getChangeStream(name: string) {
-    if (this.changeStreams.has(name)) {
-      return this.changeStreams.get(name);
-    }
+    // if (this.changeStreams.has(name)) {
+    //   return this.changeStreams.get(name);
+    // }
 
     const changeStream = this.database.collection(name).watch([], {fullDocument: "updateLookup"});
     this.changeStreams.set(name, changeStream);
@@ -109,12 +109,12 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
   }
 
   private closeStreamSafely(stream: ChangeStream) {
-    // if (!stream.closed) {
-    //   return stream.close();
-    // } else {
-    //   console.warn(
-    //     `Change stream for collection ${stream.namespace.collection} is already closed.`
-    //   );
-    // }
+    if (!stream.closed) {
+      return stream.close();
+    } else {
+      console.warn(
+        `Change stream for collection ${stream.namespace.collection} is already closed.`
+      );
+    }
   }
 }
