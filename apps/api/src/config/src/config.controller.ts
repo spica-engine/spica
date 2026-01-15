@@ -26,7 +26,10 @@ export class ConfigController {
    */
   @Get(":module")
   @UseGuards(AuthGuard(), ActionGuard("config:show"))
-  async getConfig(@Param("module") module: string) {
+  async getConfig(
+    @Param("module", Schema.validate("http://spica.internal/config#/properties/module"))
+    module: string
+  ) {
     const config = await this.configService.findOne({module});
     if (!config) {
       throw new NotFoundException(`Configuration with module ${module} does not exist.`);
