@@ -33,9 +33,57 @@ jobs:
             --set application.bucketDataHashSecret=lint-hash-secret \
             --set application.publicHost=lint.example.com
 
+  prepare_affected:
+    name: Prepare Affected Build Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.affected.outputs.projects }}
+    steps:
+      - name: Free up some space on disk
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore Node Modules Cache
+        uses: actions/cache@v4
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+            ${{ runner.os }}-node-modules-
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Fetch base branch
+        run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
+      - name: Disable Nx Cloud
+        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+      - name: Calculate affected build projects
+        id: affected
+        run: |
+          projects=$(yarn -s nx print-affected --target=build --base=${{ env.origin_branch }} --head=HEAD --select=projects | tr ',' '\n' | sed '/^\s*$/d' | jq -R . | jq -s .)
+          echo "projects=${projects:-[]}" >> "$GITHUB_OUTPUT"
+
   build_affected:
     name: Build Affected
     runs-on: ubuntu-latest
+    needs: prepare_affected
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.prepare_affected.outputs.projects) }}
     steps:
       - name: Free up some space on disk
         run: |
@@ -69,12 +117,13 @@ jobs:
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
       - name: Run Build
-        run: yarn nx affected -t build
+        run: yarn nx build ${{ matrix.project }}
 
-  test_affected:
-    name: Test Affected
+  prepare_tests:
+    name: Prepare Affected Test Matrix
     runs-on: ubuntu-latest
-    needs: build_affected
+    outputs:
+      projects: ${{ steps.affected.outputs.projects }}
     steps:
       - name: Free up some space on disk
         run: |
@@ -107,52 +156,53 @@ jobs:
         run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
-      - name: Start MongoDB if needed
+      - name: Calculate affected test projects
+        id: affected
         run: |
-          docker run -d --rm --name mongodb \
-            -p 27017:27017 \
-            mongo:7.0.14 \
-            --replSet testset --bind_ip_all
-          echo "Waiting for MongoDB to start..."
-          for i in {1..10}; do
-            if docker exec mongodb mongosh --eval "db.adminCommand('ping')" &> /dev/null; then
-              docker exec mongodb mongosh --eval "rs.initiate({_id: 'testset', members: [{_id: 0, host: 'localhost:27017'}]})"
-              sleep 5
-              docker exec mongodb mongosh --eval "rs.status()"
-              break
-            fi
-            sleep 2
-          done
-      - name: Start RabbitMQ if needed
+          projects=$(yarn -s nx print-affected --target=test --base=${{ env.origin_branch }} --head=HEAD --select=projects | tr ',' '\n' | sed '/^\s*$/d' | jq -R . | jq -s .)
+          echo "projects=${projects:-[]}" >> "$GITHUB_OUTPUT"
+
+  test_affected:
+    name: Test Affected
+    runs-on: ubuntu-latest
+    needs:
+      - build_affected
+      - prepare_tests
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.prepare_tests.outputs.projects) }}
+    steps:
+      - name: Free up some space on disk
         run: |
-          docker run -d --rm --name rabbitmq \
-            -p 5672:5672 \
-            rabbitmq:4.1
-          echo "Waiting for RabbitMQ..."
-          for i in {1..10}; do
-            if nc -z localhost 5672; then
-              break
-            fi
-            sleep 2
-          done
-      - name: Start Mailer if needed
-        run: |
-          docker run -d --rm --name mailer \
-            -p 1025:1025 \
-            -p 8025:8025 \
-            mailhog/mailhog
-          echo "Waiting for Mailer..."
-          for i in {1..10}; do
-            if nc -z localhost 1025 && nc -z localhost 8025; then
-              break
-            fi
-            sleep 2
-          done
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore Node Modules Cache
+        uses: actions/cache@v4
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+            ${{ runner.os }}-node-modules-
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Fetch base branch
+        run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
+      - name: Disable Nx Cloud
+        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
       - name: Run Tests
-        run: yarn nx affected -t test
-      - name: Stop RabbitMQ if needed
-        run: docker stop rabbitmq || true
-      - name: Stop Mailer if needed
-        run: docker stop mailer || true
-      - name: Stop MongoDB if needed
-        run: docker stop mongodb || true
+        run: yarn nx test ${{ matrix.project }}
