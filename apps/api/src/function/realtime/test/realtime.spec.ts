@@ -21,7 +21,7 @@ function url(path: string, query?: {[k: string]: string | string[]}) {
   return `${url.pathname}${url.search}`;
 }
 
-xdescribe("Function Realtime", () => {
+describe("Function Realtime", () => {
   let wsc: Websocket;
   let app: INestApplication;
   let db: DatabaseService;
