@@ -25,6 +25,8 @@ import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
 import {EnvVarModule} from "@spica-server/env_var";
 import {MailerModule} from "@spica-server/mailer";
+import {SmsSenderModule} from "@spica-server/sms";
+
 import fs from "fs";
 import https from "https";
 import path from "path";
@@ -306,6 +308,15 @@ const args = yargsInstance
       boolean: true,
       description: "Enable/disable listening user realtime. Default value is true",
       default: true
+    },
+    "user-hash-secret": {
+      string: true,
+      description: "Hash secret used for user-related operations."
+    },
+    "passport-user-verification-code-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued verification codes for users. Unit: second",
+      default: 60 * 5
     }
   })
   .demandOption("passport-secret")
@@ -411,6 +422,27 @@ const args = yargsInstance
       number: true,
       description: "Storage period for unloaded files in milliseconds, default is 2 days",
       default: 1000 * 60 * 60 * 24 * 2 // 2 days
+    }
+  })
+  /* Sms Sender Options */
+  .options({
+    "sms-sender-strategy": {
+      string: true,
+      description: "SMS service provider strategy. Default is twilio.",
+      default: "twilio",
+      choices: ["twilio"]
+    },
+    "twilio-sms-service-account-sid": {
+      string: true,
+      description: "Twilio SMS service Account SID."
+    },
+    "twilio-sms-service-auth-token": {
+      string: true,
+      description: "Twilio SMS service Auth Token."
+    },
+    "twilio-sms-service-from-number": {
+      string: true,
+      description: "Twilio SMS service From Number."
     }
   })
   /* Mailer Options */
@@ -578,6 +610,26 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     if (bucketDataHashSecret) {
       args["bucket-data-hash-secret"] = bucketDataHashSecret;
     }
+
+    const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
+    if (twilioAccountSid) {
+      args["twilio-sms-service-account-sid"] = twilioAccountSid;
+    }
+
+    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+    if (twilioAuthToken) {
+      args["twilio-sms-service-auth-token"] = twilioAuthToken;
+    }
+
+    const twilioFromNumber = process.env.TWILIO_FROM_NUMBER;
+    if (twilioFromNumber) {
+      args["twilio-sms-service-from-number"] = twilioFromNumber;
+    }
+
+    const userHashSecret = process.env.USER_HASH_SECRET;
+    if (userHashSecret) {
+      args["user-hash-secret"] = userHashSecret;
+    }
   })
   .check(args => {
     if (!args["passport-identity-token-expiration-seconds-limit"]) {
@@ -689,6 +741,14 @@ const modules = [
       from: args["mailer-from"]
     }
   }),
+  SmsSenderModule.forRoot({
+    strategy: args["sms-sender-strategy"] as "twilio",
+    twilio: {
+      accountSid: args["twilio-sms-service-account-sid"],
+      authToken: args["twilio-sms-service-auth-token"],
+      fromNumber: args["twilio-sms-service-from-number"]
+    }
+  }),
   SchemaModule.forRoot({
     formats: [
       OBJECT_ID,
@@ -761,7 +821,9 @@ const modules = [
         failedAttemptLimit: args["passport-user-failed-login-attempt-limit"],
         blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
       },
-      userRealtime: args["user-realtime"]
+      userRealtime: args["user-realtime"],
+      hashSecret: args["user-hash-secret"],
+      verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
     }
   }),
   FunctionModule.forRoot({

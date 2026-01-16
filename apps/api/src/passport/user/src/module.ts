@@ -24,6 +24,8 @@ import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 import {UserRealtimeModule} from "../realtime";
+import {VerificationService} from "./verification.service";
+import {VerificationProviderRegistry, EmailVerificationProvider} from "./providers";
 
 @Global()
 @Module({})
@@ -32,8 +34,12 @@ export class UserModule {
     @Inject(USER_OPTIONS) options: UserOptions,
     private userService: UserService,
     private prefService: PreferenceService,
+    private verificationRegistry: VerificationProviderRegistry,
+    private emailProvider: EmailVerificationProvider,
     @Optional() @Inject(ASSET_REP_MANAGER) private repManager: IRepresentativeManager
   ) {
+    this.verificationRegistry.register(this.emailProvider);
+
     if (options.defaultUserUsername) {
       userService.default({
         username: options.defaultUserUsername,
@@ -88,6 +94,9 @@ export class UserModule {
       providers: [
         UserService,
         UserStrategy,
+        VerificationService,
+        VerificationProviderRegistry,
+        EmailVerificationProvider,
         {
           provide: USER_OPTIONS,
           useValue: options

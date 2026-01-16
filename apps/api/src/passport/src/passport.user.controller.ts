@@ -322,7 +322,9 @@ export class PassportUserController {
 
   @Get("user/strategies")
   async strategies() {
-    return this.strategyService.aggregate([{$project: {options: 0}}]).toArray();
+    return this.strategyService
+      .aggregate([{$match: {type: "oauth"}}, {$project: {options: 0}}])
+      .toArray();
   }
 
   @Get("user/strategy/:id/url")
@@ -331,6 +333,10 @@ export class PassportUserController {
 
     if (!strategy) {
       throw new BadRequestException("Strategy does not exist.");
+    }
+
+    if (strategy.type !== "oauth") {
+      throw new BadRequestException("Strategy type is not supported for users.");
     }
 
     const service = this.strategyTypes.find(strategy.type, strategy.options.idp);
@@ -344,12 +350,6 @@ export class PassportUserController {
     this.setAssertObservers(login.state);
 
     return login;
-  }
-
-  @Get("user/strategy/:name/metadata")
-  @Header("Content-type", "application/xml")
-  metadata(@Param("name") name: string) {
-    return this.strategyTypes.find("saml").createMetadata(name);
   }
 
   @All("user/strategy/:id/complete")
@@ -373,6 +373,10 @@ export class PassportUserController {
 
     if (!strategy) {
       throw new BadRequestException("Strategy does not exist.");
+    }
+
+    if (strategy.type !== "oauth") {
+      throw new BadRequestException("Strategy type is not supported for users.");
     }
 
     const service = this.strategyTypes.find(strategy.type, strategy.options.idp);
