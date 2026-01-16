@@ -17,7 +17,6 @@ import {registerStatusProvider} from "./status";
 import IdentitySchema from "./schemas/identity.json" with {type: "json"};
 import IdentityCreateSchema from "./schemas/identity-create.json" with {type: "json"};
 import AuthFactorSchema from "./schemas/authfactor.json" with {type: "json"};
-import {AuthResolver} from "./relation";
 import {AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {registerAssetHandlers} from "./asset";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
@@ -89,11 +88,6 @@ export class IdentityModule {
           provide: POLICY_PROVIDER,
           useFactory: PolicyProviderFactory,
           inject: [PolicyService]
-        },
-        {
-          provide: AUTH_RESOLVER,
-          useFactory: (identityService: IdentityService) => new AuthResolver(identityService),
-          inject: [IdentityService]
         }
       ]
     };

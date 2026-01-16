@@ -26,8 +26,7 @@ export class PreferenceController {
     private preference: PreferenceService,
     @Optional()
     @Inject(BUCKET_LANGUAGE_FINALIZER)
-    private bucketFactory: changeFactory,
-    private identityFactory: changeFactory
+    private bucketFactory: changeFactory
   ) {}
 
   @Get(":scope")
@@ -44,10 +43,6 @@ export class PreferenceController {
       const previousPrefs = await this.preference.get("bucket");
 
       await this.bucketFactory(previousPrefs, preference);
-    } else if (scope == "passport" && this.identityFactory) {
-      const previousPrefs = await this.preference.get("passport");
-
-      await this.identityFactory(previousPrefs, preference);
     }
 
     delete preference._id;

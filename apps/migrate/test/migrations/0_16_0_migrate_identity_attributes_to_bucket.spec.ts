@@ -18,7 +18,10 @@ describe("Migrate identity attributes to bucket", () => {
   beforeAll(() => {
     color.disableColor();
   });
-
+  const identity1Id = new ObjectId();
+  const identity2Id = new ObjectId();
+  const identity3Id = new ObjectId();
+  const identity4Id = new ObjectId();
   beforeEach(async () => {
     const connection = await start("replset");
     args = ["--database-uri", await getConnectionUri(), "--database-name", getDatabaseName()];
@@ -56,6 +59,7 @@ describe("Migrate identity attributes to bucket", () => {
 
     await db.collection("identity").insertMany([
       {
+        _id: identity1Id,
         identifier: "user1",
         password: "hashed_password_1",
         policies: [],
@@ -66,6 +70,7 @@ describe("Migrate identity attributes to bucket", () => {
         }
       },
       {
+        _id: identity2Id,
         identifier: "user2",
         password: "hashed_password_2",
         policies: [],
@@ -75,12 +80,14 @@ describe("Migrate identity attributes to bucket", () => {
         }
       },
       {
+        _id: identity3Id,
         identifier: "user3",
         password: "hashed_password_3",
         policies: []
         // No attributes
       },
       {
+        _id: identity4Id,
         identifier: "user4",
         password: "hashed_password_4",
         policies: [],
@@ -162,9 +169,31 @@ describe("Migrate identity attributes to bucket", () => {
     });
 
     const identities = await db.collection("identity").find({}).toArray();
-    identities.forEach(identity => {
-      expect(identity.attributes).toBeUndefined();
-    });
-    expect(identities.length).toBe(4);
+    expect(identities).toEqual([
+      {
+        _id: identity1Id,
+        identifier: "user1",
+        password: "hashed_password_1",
+        policies: []
+      },
+      {
+        _id: identity2Id,
+        identifier: "user2",
+        password: "hashed_password_2",
+        policies: []
+      },
+      {
+        _id: identity3Id,
+        identifier: "user3",
+        password: "hashed_password_3",
+        policies: []
+      },
+      {
+        _id: identity4Id,
+        identifier: "user4",
+        password: "hashed_password_4",
+        policies: []
+      }
+    ]);
   });
 });

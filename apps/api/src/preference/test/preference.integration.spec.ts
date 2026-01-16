@@ -3,11 +3,8 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceModule} from "@spica-server/preference";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {IdentityModule} from "@spica-server/passport/identity";
 import {INestApplication} from "@nestjs/common";
 import {BucketModule, BucketCoreModule} from "@spica-server/bucket";
-import {PolicyModule} from "@spica-server/passport/policy";
-import {PreferenceService} from "@spica-server/preference/services";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 
@@ -26,11 +23,6 @@ describe("Preference Integration", () => {
         PassportTestingModule.initialize(),
         PreferenceModule.forRoot(),
         CoreTestingModule,
-        //@ts-ignore
-        IdentityModule.forRoot({
-          secretOrKey: "key"
-        }),
-        PolicyModule.forRoot({realtime: false}),
         BucketModule.forRoot({
           hooks: false,
           history: false,
@@ -44,9 +36,6 @@ describe("Preference Integration", () => {
     }).compile();
     app = module.createNestApplication();
     req = module.get(Request);
-
-    let prefService = module.get(PreferenceService);
-    prefService.default({scope: "passport", identity: {}});
 
     await app.listen(req.socket);
   }, 120000);
