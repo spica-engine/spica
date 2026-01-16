@@ -44,22 +44,6 @@ export class SchemaResolver {
           {$ref: "http://spica.internal/passport/user-attributes"}
         ]
       };
-    } else if (uri == "http://spica.internal/passport/user-self-update-with-attributes") {
-      return {
-        $id: "http://spica.internal/passport/user-self-update-with-attributes",
-        allOf: [
-          {$ref: "http://spica.internal/passport/user-self-update"},
-          {$ref: "http://spica.internal/passport/user-attributes"}
-        ]
-      };
-    } else if (uri == "http://spica.internal/passport/user-update-with-attributes") {
-      return {
-        $id: "http://spica.internal/passport/user-update-with-attributes",
-        allOf: [
-          {$ref: "http://spica.internal/passport/user-update"},
-          {$ref: "http://spica.internal/passport/user-attributes"}
-        ]
-      };
     } else if (uri == "http://spica.internal/passport/user-attributes") {
       return this.pref.get("passport").then(preference => {
         // What we do here is we mark attributes property as required
