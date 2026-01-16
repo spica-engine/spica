@@ -135,7 +135,7 @@ describe("User Ban Logic", () => {
         `/passport/user/${testUserId}`,
         {
           username: "testuser",
-          bannedUntil: bannedUntil
+          bannedUntil: bannedUntil.toISOString()
         },
         {Authorization: `IDENTITY ${identityToken}`}
       );
@@ -162,7 +162,7 @@ describe("User Ban Logic", () => {
         `/passport/user/${testUserId}`,
         {
           username: "testuser",
-          bannedUntil: bannedUntil
+          bannedUntil: bannedUntil.toISOString()
         },
         {Authorization: `IDENTITY ${identityToken}`}
       );

@@ -337,45 +337,54 @@ export class UserController {
   }
 
   @UseInterceptors(activity(createUserActivity))
-  @Put(":id")
+  @Put(":id/self")
   @UseGuards(
     AuthGuard(),
+    ActionGuard(
+      "passport:user:update",
+      "passport/user/:id",
+      registerPolicyAttacher("UserFullAccess")
+    )
+  )
+  async updateSelf(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(Schema.validate("http://spica.internal/passport/user-self-update-with-attributes"))
+    user: Partial<User>
+  ) {
+    if (user.password) {
+      const passwordUpdates = await this.handlePasswordUpdate(id, user.password);
+      Object.assign(user, passwordUpdates);
+    }
+
+    delete user.authFactor;
+
+    return this.userService
+      .findOneAndUpdate({_id: id}, {$set: user}, {returnDocument: ReturnDocument.AFTER})
+      .then(updatedUser => {
+        if (!updatedUser) {
+          throw new NotFoundException(`User with ID ${id} not found`);
+        }
+        return this.afterUserUpsert(updatedUser);
+      })
+      .catch(exception => {
+        throw new BadRequestException(exception.message);
+      });
+  }
+
+  @UseInterceptors(activity(createUserActivity))
+  @Put(":id")
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
     ActionGuard("passport:user:update", undefined, registerPolicyAttacher("UserFullAccess"))
   )
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/update-user-with-attributes"))
+    @Body(Schema.validate("http://spica.internal/passport/user-update-with-attributes"))
     user: Partial<User>
   ) {
     if (user.password) {
-      const {password: currentPassword, lastPasswords} = await this.userService.findOne({_id: id});
-
-      const isEqual = await compare(user.password, currentPassword);
-      if (!isEqual) {
-        user.deactivateJwtsBefore = Date.now() / 1000;
-      }
-
-      if (this.options.passwordHistoryLimit > 0) {
-        user.lastPasswords = lastPasswords || [];
-
-        user.lastPasswords.push(currentPassword);
-
-        if (user.lastPasswords.length == this.options.passwordHistoryLimit + 1) {
-          user.lastPasswords.shift();
-        }
-
-        const isOneOfLastPasswords = (
-          await Promise.all(user.lastPasswords.map(oldPw => compare(user.password, oldPw)))
-        ).includes(true);
-
-        if (isOneOfLastPasswords) {
-          throw new BadRequestException(
-            `New password can't be the one of last ${this.options.passwordHistoryLimit} passwords.`
-          );
-        }
-      }
-
-      user.password = await hash(user.password);
+      const passwordUpdates = await this.handlePasswordUpdate(id, user.password);
+      Object.assign(user, passwordUpdates);
     }
 
     delete user.authFactor;
@@ -480,5 +489,42 @@ export class UserController {
     @Body("provider") provider: string
   ) {
     return this.verificationService.verifyAuthProvider(id, code, provider);
+  }
+
+  private async handlePasswordUpdate(
+    id: ObjectId,
+    newPassword: string
+  ): Promise<{password: string; deactivateJwtsBefore?: number; lastPasswords?: string[]}> {
+    const {password: currentPassword, lastPasswords} = await this.userService.findOne({_id: id});
+
+    const isEqual = await compare(newPassword, currentPassword);
+    const updates: any = {};
+
+    if (!isEqual) {
+      updates.deactivateJwtsBefore = Date.now() / 1000;
+    }
+
+    if (this.options.passwordHistoryLimit > 0) {
+      updates.lastPasswords = lastPasswords || [];
+      updates.lastPasswords.push(currentPassword);
+
+      if (updates.lastPasswords.length === this.options.passwordHistoryLimit + 1) {
+        updates.lastPasswords.shift();
+      }
+
+      const isOneOfLastPasswords = (
+        await Promise.all(updates.lastPasswords.map(oldPw => compare(newPassword, oldPw)))
+      ).includes(true);
+
+      if (isOneOfLastPasswords) {
+        throw new BadRequestException(
+          `New password can't be the one of last ${this.options.passwordHistoryLimit} passwords.`
+        );
+      }
+    }
+
+    updates.password = await hash(newPassword);
+
+    return updates;
   }
 }
