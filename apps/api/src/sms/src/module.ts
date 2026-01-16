@@ -5,10 +5,10 @@ import {TwilioStrategy} from "./strategy";
 
 @Global()
 @Module({})
-export class SmsSenderModule {
+export class SmsModule {
   static forRoot(options: SmsOptions): DynamicModule {
     return {
-      module: SmsSenderModule,
+      module: SmsModule,
       controllers: [],
       providers: [
         {
