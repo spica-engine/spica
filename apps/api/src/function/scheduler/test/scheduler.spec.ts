@@ -119,7 +119,6 @@ describe("Scheduler", () => {
 
   afterEach(async () => {
     scheduler.kill();
-    await app.close();
     jest.useRealTimers();
     spawnSpy.mockReset();
   });

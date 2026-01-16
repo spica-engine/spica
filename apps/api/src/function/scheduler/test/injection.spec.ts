@@ -64,12 +64,11 @@ describe("Scheduler Injection", () => {
     scheduler = module.get(Scheduler);
     addQueueSpy = jest.spyOn(scheduler["queue"], "addQueue");
     addEnqueuerSpy = jest.spyOn(scheduler.enqueuers, "add");
+
+    await app.init();
   });
 
-  afterEach(async () => await app.close());
-
   it("should inject the provided enqueuer and queue", async () => {
-    await app.init();
     expect(spyScheduler).toHaveBeenCalledTimes(1);
     expect(spyScheduler).toHaveBeenCalledWith(scheduler["queue"], undefined, undefined);
 

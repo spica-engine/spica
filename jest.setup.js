@@ -51,7 +51,7 @@ afterAll(async () => {
   }
 
   if (globalThis.__CLEANUPCALLBACKS) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
     await Promise.all(globalThis.__CLEANUPCALLBACKS.map(callback => callback()));
   }
 });
