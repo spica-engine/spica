@@ -8,10 +8,6 @@
       "type": "string",
       "title": "Password of the user",
       "minLength": 3
-    },
-    "attributes": {
-      "type": "object",
-      "title": "Custom attributes of the user"
     }
   },
   "additionalProperties": false

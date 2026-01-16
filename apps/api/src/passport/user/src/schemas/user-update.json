@@ -18,21 +18,10 @@
       "type": "number",
       "title": "Unix timestamp (in seconds). All JWTs issued before this timestamp will be considered invalid"
     },
-    "attributes": {
-      "type": "object",
-      "title": "Custom attributes of the user"
-    },
     "bannedUntil": {
       "type": "string",
       "format": "date-time",
       "title": "User ban expiration date. User cannot log in until this date passes"
-    },
-    "policies": {
-      "type": "array",
-      "title": "Policies assigned to the user",
-      "items": {
-        "type": "string"
-      }
     }
   },
   "additionalProperties": false
