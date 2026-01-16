@@ -7,6 +7,7 @@ export class VerificationProviderRegistry {
 
   register(provider: VerificationProvider | null): void {
     if (!provider) {
+      console.warn("Attempted to register a null provider. Skipping registration.");
       return;
     }
     if (this.providers.has(provider.name)) {

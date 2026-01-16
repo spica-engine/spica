@@ -22,7 +22,7 @@ export class PhoneVerificationProvider implements VerificationProvider {
       if (!result.success) {
         return {
           success: false,
-          message: "SMS was not sent successfully",
+          message: result.error || "SMS was not sent successfully",
           metadata: {
             error: result.error
           }
@@ -48,7 +48,7 @@ export class PhoneVerificationProvider implements VerificationProvider {
   }
 
   validateDestination(destination: string): boolean {
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    const phoneRegex = /^\+[1-9]\d{6,14}$/;
     const cleanedDestination = destination.replace(/[\s\-()]/g, "");
     return phoneRegex.test(cleanedDestination);
   }

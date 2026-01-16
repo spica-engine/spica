@@ -115,8 +115,6 @@ export class UserModule {
               const smsProvider = new PhoneVerificationProvider(smsService);
               registry.register(smsProvider);
             }
-
-            return true;
           },
           inject: [
             VerificationProviderRegistry,

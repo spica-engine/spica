@@ -476,7 +476,7 @@ describe("Provider Verification", () => {
       expect(user.phone).toBeUndefined();
     });
 
-    it("should fail when trying to verify sms with wrong provider", async () => {
+    it("should fail when trying to verify phone with wrong provider", async () => {
       await verificationService.startAuthProviderVerification(userId, phoneNumber, provider);
 
       const sentSms = mockSmsService.sendSms.mock.calls[0][0].body;
