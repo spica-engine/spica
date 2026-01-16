@@ -9,14 +9,17 @@ import {VerificationProviderRegistry} from "./providers";
 @Injectable()
 export class VerificationService extends BaseCollection<UserVerification>("verification") {
   private readonly MAX_ATTEMPTS = 5;
-
+  private readonly TTL_INDEX_EXPIRES_IN = 300;
   constructor(
     db: DatabaseService,
     private readonly providerRegistry: VerificationProviderRegistry,
     private userService: UserService,
     @Inject(USER_OPTIONS) private userOptions: UserOptions
   ) {
-    super(db, {afterInit: () => this.upsertTTLIndex(this.userOptions.verificationCodeExpiresIn)});
+    super(db, {
+      afterInit: () =>
+        this.upsertTTLIndex(this.userOptions.verificationCodeExpiresIn || this.TTL_INDEX_EXPIRES_IN)
+    });
   }
 
   async startAuthProviderVerification(id: ObjectId, value: string, provider: string) {
@@ -124,6 +127,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     }
 
     try {
+      const verifiedField = this.providerRegistry.getProvider(provider).name;
       await Promise.all([
         this.updateOne({_id: verification._id}, {$set: {is_used: true}}),
 
@@ -131,7 +135,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
           {_id: verification.userId},
           {
             $set: {
-              email: {
+              [verifiedField]: {
                 value: verification.destination,
                 createdAt: new Date(),
                 verified: true

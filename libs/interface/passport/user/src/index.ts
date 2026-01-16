@@ -30,6 +30,11 @@ export interface User {
     createdAt: Date;
     verified: boolean;
   };
+  phone?: {
+    value: string;
+    createdAt: Date;
+    verified: boolean;
+  };
 }
 
 export interface LoginCredentials {

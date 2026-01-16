@@ -12,6 +12,9 @@ export interface VerificationResult {
 }
 
 export interface VerificationProvider {
+  /**
+   * The name of the provider and the user field it updates (e.g., 'email', 'phone')
+   */
   readonly name: string;
 
   /**
@@ -28,3 +31,5 @@ export interface VerificationProvider {
    */
   validateDestination(destination: string): boolean;
 }
+
+export const VERIFICATION_PROVIDERS_INITIALIZER = Symbol.for("VERIFICATION_PROVIDERS_INITIALIZER");
