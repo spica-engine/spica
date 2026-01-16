@@ -471,6 +471,26 @@ export class UserController {
     return res;
   }
 
+  @Post(":id/start-provider-verification")
+  @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
+  startAuthProviderVerification(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body("value") value: string,
+    @Body("provider") provider: string
+  ) {
+    return this.verificationService.startAuthProviderVerification(id, value, provider);
+  }
+
+  @Post(":id/verify-provider")
+  @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
+  async verifyProvider(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body("code") code: string,
+    @Body("provider") provider: string
+  ) {
+    return this.verificationService.verifyAuthProvider(id, code, provider);
+  }
+
   private async handlePasswordUpdate(
     id: ObjectId,
     newPassword: string
@@ -506,25 +526,5 @@ export class UserController {
     updates.password = await hash(newPassword);
 
     return updates;
-  }
-  
-  @Post(":id/start-provider-verification")
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
-  startAuthProviderVerification(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Body("value") value: string,
-    @Body("provider") provider: string
-  ) {
-    return this.verificationService.startAuthProviderVerification(id, value, provider);
-  }
-
-  @Post(":id/verify-provider")
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
-  async verifyProvider(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Body("code") code: string,
-    @Body("provider") provider: string
-  ) {
-    return this.verificationService.verifyAuthProvider(id, code, provider);
   }
 }
