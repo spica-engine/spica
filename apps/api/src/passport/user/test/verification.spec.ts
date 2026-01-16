@@ -220,8 +220,7 @@ describe("Provider Verification", () => {
 
       const user = await userService.findOne({_id: userId});
       expect(user.email).toMatchObject({
-        value: email,
-        verified: true
+        value: email
       });
       expect(user.email.createdAt).toBeInstanceOf(Date);
     });
@@ -357,6 +356,13 @@ describe("Provider Verification", () => {
       await expect(
         verificationService.startAuthProviderVerification(userId, phoneNumber, provider)
       ).rejects.toThrow(BadRequestException);
+
+      expect(
+        verificationService.findOne({
+          userId,
+          channel: provider
+        })
+      ).resolves.toBeNull();
     });
 
     it("should throw error for invalid phone number format", async () => {
@@ -436,8 +442,7 @@ describe("Provider Verification", () => {
 
       const user = await userService.findOne({_id: userId});
       expect(user.phone).toMatchObject({
-        value: phoneNumber,
-        verified: true
+        value: phoneNumber
       });
       expect(user.phone.createdAt).toBeInstanceOf(Date);
     });

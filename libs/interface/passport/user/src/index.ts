@@ -28,12 +28,10 @@ export interface User {
   email?: {
     value: string;
     createdAt: Date;
-    verified: boolean;
   };
   phone?: {
     value: string;
     createdAt: Date;
-    verified: boolean;
   };
 }
 

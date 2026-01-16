@@ -86,6 +86,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
       });
 
       if (!sendResult.success) {
+        await this.findOneAndDelete({_id: verification._id});
         throw new Error(sendResult.message || "Failed to send verification code");
       }
 
@@ -96,6 +97,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
       };
     } catch (error) {
       console.error(`Error sending verification via ${provider}:`, error);
+      await this.findOneAndDelete({_id: verification._id});
       throw new BadRequestException(
         error.message || `Failed to send verification code via ${provider}`
       );
@@ -137,8 +139,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
             $set: {
               [verifiedField]: {
                 value: verification.destination,
-                createdAt: new Date(),
-                verified: true
+                createdAt: new Date()
               }
             }
           }
