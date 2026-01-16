@@ -334,7 +334,7 @@ export class IdentityController {
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:create"))
   async insertOne(
-    @Body(Schema.validate("http://spica.internal/passport/create-identity-with-attributes"))
+    @Body(Schema.validate("http://spica.internal/passport/identity-create"))
     identity: Identity
   ) {
     identity.password = await hash(identity.password);
@@ -372,7 +372,7 @@ export class IdentityController {
   )
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
+    @Body(Schema.validate("http://spica.internal/passport/identity"))
     identity: Partial<Identity>
   ) {
     if (identity.password) {

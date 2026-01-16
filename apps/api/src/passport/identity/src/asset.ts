@@ -32,17 +32,7 @@ export function registerAssetHandlers(
       return;
     }
 
-    const existing = await prefService.get("passport");
-    const attributes = mergeAttributes(
-      existing.identity.attributes,
-      resource.contents.schema.attributes
-    );
-
-    return prefService.updateOne(
-      {scope: "passport"},
-      {$set: {identity: {attributes}}},
-      {upsert: true}
-    );
+    return Promise.resolve();
   };
 
   const remove = async resource => {
@@ -50,13 +40,7 @@ export function registerAssetHandlers(
       return;
     }
 
-    const existing = await prefService.get("passport");
-    const attributes = extractAttributes(
-      existing.identity.attributes,
-      resource.contents.schema.attributes
-    );
-
-    return prefService.updateOne({scope: "passport"}, {$set: {identity: {attributes}}});
+    return Promise.resolve();
   };
 
   const operator = {
@@ -80,22 +64,4 @@ export function registerAssetHandlers(
   };
 
   registrar.exporter(_module, exporter);
-}
-
-function mergeAttributes(attributes1, attributes2) {
-  return {
-    ...(attributes1 || {}),
-    ...(attributes2 || {})
-  };
-}
-
-function extractAttributes(from, to) {
-  const attributes = {};
-  Object.entries(from).forEach(([key, value]) => {
-    if (!Object.keys(to).includes(key)) {
-      attributes[key] = value;
-    }
-  });
-
-  return attributes;
 }

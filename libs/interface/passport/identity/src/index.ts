@@ -17,9 +17,6 @@ export interface Identity {
   password: string;
   deactivateJwtsBefore?: number;
   policies: string[];
-  attributes?: {
-    [key: string]: any;
-  };
   authFactor?: FactorMeta;
   lastPasswords: string[];
   lastLogin: Date;
