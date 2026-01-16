@@ -3,6 +3,9 @@ name: Spica Continuous Integration
 env:
   origin_branch: master
   VERSION: ${{ github.sha }}
+  MONGODB_URL: "mongodb://172.17.0.1:27017"
+  MAILER_URL: "smtp://172.17.0.1:1025,api://172.17.0.1:8025"
+  RABBITMQ_URL: "amqp://172.17.0.1:5672"
 
 on:
   pull_request:
@@ -139,11 +142,72 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
             ${{ runner.os }}-node-modules-
+      - name: Start MongoDB if needed
+        run: |
+          docker run -d --rm --name mongodb \
+            -p 27017:27017 \
+            mongo:7.0.14 \
+            --replSet testset --bind_ip_all
+
+          echo "Waiting for MongoDB to start..."
+          for i in {1..10}; do
+            if docker exec mongodb mongosh --eval "db.adminCommand('ping')" &> /dev/null; then
+              echo "MongoDB is ready. Initializing replica set..."
+              docker exec mongodb mongosh --eval "rs.initiate({_id: 'testset', members: [{_id: 0, host: 'localhost:27017'}]})"
+              sleep 5
+              echo "Verifying replica set status..."
+              docker exec mongodb mongosh --eval "rs.status()"
+              echo "MongoDB replica set is ready."
+              break
+            fi
+            echo "Attempt $i: MongoDB not ready yet, waiting..."
+            sleep 2
+          done
+
+      - name: Start RabbitMQ if needed
+        run: |
+          docker run -d --rm --name rabbitmq \
+            -p 5672:5672 \
+            rabbitmq:4.1
+
+          echo "Waiting for RabbitMQ..."
+          for i in {1..10}; do
+            if nc -z localhost 5672; then
+              echo "RabbitMQ is ready."
+              break
+            fi
+            sleep 2
+          done
+      - name: Start Mailer if needed
+        run: |
+          docker run -d --rm --name mailer \
+            -p 1025:1025 \
+            -p 8025:8025 \
+            mailhog/mailhog
+
+          echo "Waiting for Mailer..."
+          for i in {1..10}; do
+            if nc -z localhost 1025 && nc -z localhost 8025; then
+              echo "Mailer is ready."
+              break
+            fi
+            sleep 2
+          done
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Fetch base branch
         run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+
       - name: Run Tests
-        run: yarn nx test ${{ matrix.project }}
+        run: MONGODB_URL=$MONGODB_URL MAILER_URL=$MAILER_URL RABBITMQ_URL=$RABBITMQ_URL yarn nx test ${{ matrix.project }}
+
+      - name: Stop RabbitMQ if needed
+        run: docker stop rabbitmq || true
+
+      - name: Stop Mailer if needed
+        run: docker stop mailer || true
+
+      - name: Stop MongoDB if needed
+        run: docker stop mongodb || true
