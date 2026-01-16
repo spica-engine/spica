@@ -4,7 +4,6 @@ import {randomBytes} from "crypto";
 import {GenericContainer} from "testcontainers";
 
 let uri;
-let databaseName;
 const MONGODB_BINARY_VERSION = "7.0.14";
 const mongoUrl = process.env.MONGODB_URL;
 
@@ -12,18 +11,15 @@ export async function start(topology: "standalone" | "replset") {
   let mongod: MongoMemoryReplSet | MongoMemoryServer | any;
   let clientOptions: MongoClientOptions;
 
-  // Replica set topology
   if (topology === "replset") {
-    // Priority 1: External MongoDB URL (for CI)
     if (mongoUrl) {
-      console.log("Using external MongoDB URL from MONGODB_URL environment variable");
+      console.debug("Using external MongoDB URL from MONGODB_URL environment variable");
       uri = mongoUrl;
       clientOptions = getReplicaClientOptions();
       return MongoClient.connect(uri, clientOptions);
     }
 
-    // Priority 2: Testcontainers (for local testing with containers)
-    console.log("Starting MongoDB replica set using GenericContainer...");
+    console.debug("Starting MongoDB replica set using GenericContainer...");
     const container = await new GenericContainer("mongo:7.0.14")
       .withExposedPorts(27017)
       .withCommand(["--replSet", "testset", "--bind_ip_all"])
@@ -47,8 +43,7 @@ export async function start(topology: "standalone" | "replset") {
 
     clientOptions = getReplicaClientOptions();
 
-    globalThis.__CLEANUPCALLBACKS = globalThis.__CLEANUPCALLBACKS || [];
-    globalThis.__CLEANUPCALLBACKS.push(() => setTimeout(() => container.stop(), 2000));
+    setGlobalCleanups(() => container.stop());
 
     return MongoClient.connect(uri, clientOptions);
   } else {
@@ -56,12 +51,16 @@ export async function start(topology: "standalone" | "replset") {
     clientOptions = {};
   }
 
-  globalThis.__CLEANUPCALLBACKS = globalThis.__CLEANUPCALLBACKS || [];
-  globalThis.__CLEANUPCALLBACKS.push(() => setTimeout(() => mongod.stop(), 2000));
+  setGlobalCleanups(() => mongod.stop());
 
   uri = mongod.getUri() + "&retryWrites=false";
 
   return MongoClient.connect(uri, clientOptions);
+}
+
+function setGlobalCleanups(stopCallback) {
+  globalThis.__CLEANUPCALLBACKS = globalThis.__CLEANUPCALLBACKS || [];
+  globalThis.__CLEANUPCALLBACKS.push(() => setTimeout(() => stopCallback(), 2000));
 }
 
 export async function connect(connectionUri: string) {

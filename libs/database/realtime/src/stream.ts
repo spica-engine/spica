@@ -301,8 +301,6 @@ export class Emitter<T extends {_id: ObjectId}> {
   }
 
   private fetchMoreItemToFillTheCursor() {
-    // Use aggregation pipeline instead of find to ensure consistent cursor handling
-    // This prevents "cursor already in use" errors when skip and limit are both applied
     const pipeline = [];
 
     if (this.options.filter) {
@@ -317,13 +315,11 @@ export class Emitter<T extends {_id: ObjectId}> {
       });
     }
 
-    // Calculate skip: original skip + already-fetched documents
     const skipCount = (this.options.skip || 0) + this.ids.size;
     pipeline.push({
       $skip: skipCount
     });
 
-    // Limit to fetch only one document at a time
     pipeline.push({
       $limit: this.options.limit - this.ids.size
     });

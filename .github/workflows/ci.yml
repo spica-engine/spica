@@ -142,7 +142,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
             ${{ runner.os }}-node-modules-
-      - name: Start MongoDB if needed
+      - name: Start MongoDB
         run: |
           docker run -d --rm --name mongodb \
             -p 27017:27017 \
@@ -164,7 +164,7 @@ jobs:
             sleep 2
           done
 
-      - name: Start RabbitMQ if needed
+      - name: Start RabbitMQ
         run: |
           docker run -d --rm --name rabbitmq \
             -p 5672:5672 \
@@ -178,7 +178,7 @@ jobs:
             fi
             sleep 2
           done
-      - name: Start Mailer if needed
+      - name: Start Mailer
         run: |
           docker run -d --rm --name mailer \
             -p 1025:1025 \
@@ -203,11 +203,11 @@ jobs:
       - name: Run Tests
         run: MONGODB_URL=$MONGODB_URL MAILER_URL=$MAILER_URL RABBITMQ_URL=$RABBITMQ_URL yarn nx test ${{ matrix.project }}
 
-      - name: Stop RabbitMQ if needed
+      - name: Stop RabbitMQ
         run: docker stop rabbitmq || true
 
-      - name: Stop Mailer if needed
+      - name: Stop Mailer
         run: docker stop mailer || true
 
-      - name: Stop MongoDB if needed
+      - name: Stop MongoDB
         run: docker stop mongodb || true
