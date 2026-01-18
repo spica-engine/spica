@@ -4,8 +4,7 @@ import os from "os";
 import {
   DatabaseService,
   DatabaseTestingModule,
-  getConnectionUri,
-  stream
+  getConnectionUri
 } from "@spica-server/database/testing";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
@@ -16,7 +15,6 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {event} from "@spica-server/function/queue/proto";
 import {JobReducer, ReplicationModule} from "@spica-server/replication";
-import {BucketModule} from "@spica-server/bucket";
 
 function sleep(ms: number) {
   return new Promise((resolve, _) => setTimeout(resolve, ms));
@@ -53,7 +51,7 @@ function getModuleBuilder(connectionUri?: string, dbName?: string) {
         : DatabaseTestingModule.replicaSet(),
       PreferenceTestingModule,
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
-      SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
+      SchemaModule.forRoot({formats: [OBJECT_ID]}),
       FunctionModule.forRoot({
         invocationLogs: false,
         path: os.tmpdir(),
@@ -78,21 +76,13 @@ function getModuleBuilder(connectionUri?: string, dbName?: string) {
         tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH,
         realtime: false
       }),
-      ReplicationModule.forRoot(),
-      BucketModule.forRoot({
-        cache: false,
-        graphql: false,
-        history: false,
-        hooks: true,
-        realtime: false
-      })
+      ReplicationModule.forRoot()
     ]
   });
 }
 
 async function startApp(grpcaddresses: string[]) {
   let fn;
-  let bucket;
 
   const module = await getModuleBuilder().compile();
   const db = module.get(DatabaseService);
@@ -123,18 +113,6 @@ async function startApp(grpcaddresses: string[]) {
   const req = module.get(Request);
   await app.listen(req.socket);
 
-  bucket = await req
-    .post("/bucket", {
-      title: "Bucket1",
-      description: "Bucket1",
-      properties: {
-        title: {
-          type: "string"
-        }
-      }
-    })
-    .then(r => r.body);
-
   fn = await req
     .post("/function", {
       name: "test",
@@ -150,30 +128,6 @@ async function startApp(grpcaddresses: string[]) {
           },
           type: "http",
           active: true
-        },
-        scheduler: {
-          options: {
-            timezone: "UTC",
-            frequency: "* * * * * *"
-          },
-          type: "schedule",
-          active: false
-        },
-        database: {
-          options: {
-            collection: "my_coll",
-            type: "INSERT"
-          },
-          type: "database",
-          active: true
-        },
-        bucket: {
-          options: {
-            bucket: bucket._id,
-            type: "INSERT"
-          },
-          type: "bucket",
-          active: true
         }
       },
       memoryLimit: 100
@@ -185,18 +139,6 @@ async function startApp(grpcaddresses: string[]) {
           await new Promise((resolve,reject) => setTimeout(resolve,5000));
           return res.status(200).send("OK")
         }
-
-        export function bucket(change){
-          return "OK";
-        }
-        
-        export function database(change){
-          return "OK";
-        }
-
-        export function scheduler(){
-          return "OK";
-        }
         `
   });
 
@@ -207,8 +149,7 @@ async function startApp(grpcaddresses: string[]) {
     scheduler,
     scheduler2,
     db,
-    fn,
-    bucket
+    fn
   };
 }
 
