@@ -25,7 +25,7 @@ describe("Identity", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot(),
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         PassportModule.forRoot({
           expiresIn: EXPIRES_IN,
           issuer: "spica",

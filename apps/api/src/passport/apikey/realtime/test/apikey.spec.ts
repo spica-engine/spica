@@ -2,7 +2,7 @@ import {ForbiddenException, INestApplication, UnauthorizedException} from "@nest
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {GuardService} from "@spica-server/passport/guard/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
@@ -60,6 +60,7 @@ describe("Realtime", () => {
     req = module.get(Request);
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
+
     await app.listen(wsc.socket);
 
     const postRes = await req.post("/passport/apikey", {name: "test", active: true, key: "test"});
@@ -67,7 +68,9 @@ describe("Realtime", () => {
     initialApikey = putRes.body;
   });
 
-  afterEach(async () => await app.close());
+  afterEach(async () => {
+    await app.close();
+  });
 
   describe("authorization", () => {
     let authGuardCheck: jest.SpyInstance<
@@ -123,7 +126,9 @@ describe("Realtime", () => {
             {kind: ChunkKind.Initial, document: initialApikey},
             {kind: ChunkKind.EndOfInitial}
           ]);
-          ws.close().then(() => done());
+          ws.close()
+            .then(() => done())
+            .catch(done);
         }
       };
       ws.connect;
@@ -133,12 +138,15 @@ describe("Realtime", () => {
       authGuardCheck.mockImplementation(() => {
         throw new UnauthorizedException();
       });
+
       const ws = wsc.get("/passport/apikey", {
         headers: {
           Authorization: "APIKEY test"
         }
       });
-      ws.onclose = () => done();
+      ws.onclose = () => {
+        done();
+      };
       ws.onmessage = e => {
         expect(e.data).toEqual(`{"kind":-1,"status":401,"message":"Unauthorized"}`);
       };
@@ -148,12 +156,15 @@ describe("Realtime", () => {
       actionGuardCheck.mockImplementation(() => {
         throw new ForbiddenException("You do not have sufficient permissions to do this action.");
       });
+
       const ws = wsc.get("/passport/apikey", {
         headers: {
           Authorization: "APIKEY test"
         }
       });
-      ws.onclose = () => done();
+      ws.onclose = () => {
+        done();
+      };
       ws.onmessage = e => {
         expect(e.data).toEqual(
           `{"kind":-1,"status":403,"message":"You do not have sufficient permissions to do this action."}`
@@ -264,26 +275,28 @@ describe("Realtime", () => {
             policies: undefined,
             active: true
           })
-        ]).then(newApikey => {
-          const ws = wsc.get(url({skip: 2, limit: 2}));
+        ])
+          .then(newApikey => {
+            const ws = wsc.get(url({skip: 2, limit: 2}));
 
-          ws.onmessage = async e => {
-            messageSpy(JSON.parse(e.data as string));
+            ws.onmessage = async e => {
+              messageSpy(JSON.parse(e.data as string));
 
-            if (e.data == lastMessage) {
-              expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
-                {kind: ChunkKind.Initial, document: apikeys[1]},
-                {kind: ChunkKind.Initial, document: newApikey[0]},
-                {kind: ChunkKind.EndOfInitial}
-              ]);
+              if (e.data == lastMessage) {
+                expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
+                  {kind: ChunkKind.Initial, document: apikeys[1]},
+                  {kind: ChunkKind.Initial, document: newApikey[0]},
+                  {kind: ChunkKind.EndOfInitial}
+                ]);
 
-              await ws.close();
-              done();
-            }
-          };
+                await ws.close();
+                done();
+              }
+            };
 
-          ws.connect;
-        });
+            ws.connect;
+          })
+          .catch(done);
       });
 
       it("should do the initial sync with sort", done => {

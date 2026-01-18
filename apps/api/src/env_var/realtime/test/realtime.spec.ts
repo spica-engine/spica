@@ -56,8 +56,8 @@ describe("EnvVar Realtime", () => {
     const messages: any[] = [];
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        socket.onclose = () => resolve(messages);
         socket.close();
-        resolve(messages);
       }, 500);
 
       socket.onmessage = e => {

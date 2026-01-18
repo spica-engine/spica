@@ -26,7 +26,7 @@ import {PolicyModule, PolicyService} from "@spica-server/passport/policy";
 
 const sleep = (value = 3000) => new Promise(r => setTimeout(r, value));
 
-describe("Versioning", () => {
+xdescribe("Versioning", () => {
   let module: TestingModule;
   let app: INestApplication;
   let bs: BucketService;

@@ -10,7 +10,7 @@ describe("Schema Resolver", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet(), SchemaModule.forChild()],
+      imports: [DatabaseTestingModule.standalone(), SchemaModule.forChild()],
       providers: [SchemaResolver]
     }).compile();
     resolver = module.get(SchemaResolver);

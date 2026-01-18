@@ -36,7 +36,7 @@ describe("Scheduler Injection", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         SchedulerModule.forRoot({
           invocationLogs: false,
           databaseName: undefined,
@@ -60,15 +60,15 @@ describe("Scheduler Injection", () => {
       ]
     }).compile();
     app = module.createNestApplication();
+    app.enableShutdownHooks();
     scheduler = module.get(Scheduler);
     addQueueSpy = jest.spyOn(scheduler["queue"], "addQueue");
     addEnqueuerSpy = jest.spyOn(scheduler.enqueuers, "add");
+
+    await app.init();
   });
 
-  afterEach(() => module.close());
-
   it("should inject the provided enqueuer and queue", async () => {
-    await app.init();
     expect(spyScheduler).toHaveBeenCalledTimes(1);
     expect(spyScheduler).toHaveBeenCalledWith(scheduler["queue"], undefined, undefined);
 
