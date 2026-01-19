@@ -22,7 +22,7 @@ export class RealtimeDashboardService implements OnGatewayConnection, OnGatewayD
     error => ({
       kind: ChunkKind.Error,
       status: error.status || 500,
-      message: error.message || "Unexpected errorrr"
+      message: error.message || "Unexpected error"
     }),
     this.realtime
   );
