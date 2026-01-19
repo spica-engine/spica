@@ -211,3 +211,22 @@ jobs:
 
       - name: Stop MongoDB
         run: docker stop mongodb || true
+
+  ci_success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs:
+      - helm_lint
+      - build_affected
+      - test_affected
+    if: always()
+    steps:
+      - name: Check all jobs
+        run: |
+          if [ "${{ needs.helm_lint.result }}" != "success" ] || \
+             [ "${{ needs.build_affected.result }}" != "success" ] || \
+             ([ "${{ needs.test_affected.result }}" != "success" ] && [ "${{ needs.test_affected.result }}" != "skipped" ]); then
+            echo "One or more jobs failed or were cancelled"
+            exit 1
+          fi
+          echo "All jobs completed successfully!"
