@@ -203,23 +203,38 @@ export class StorageController {
 
   /**
    * Removes multiple storage objects in a single operation.
+   * Accepts both ObjectIds and object names as elements.
    * Validates user has delete permissions for ALL objects before deleting any.
    * If user lacks permission for even one object, the entire operation is cancelled.
-   * @body Array of object IDs to delete
+   * @body Array of object IDs (ObjectId) or names (strings) to delete
+   * @example
+   * // Delete by IDs
+   * ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+   * // Delete by names
+   * ["file1.txt", "file2.pdf"]
+   * // Mixed
+   * ["507f1f77bcf86cd799439011", "file2.pdf"]
    */
   @UseInterceptors(JsonBodyParser(), activity(createStorageActivity))
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   async deleteMany(
-    @Body(DEFAULT([]), ARRAY(value => new ObjectId(value))) ids: ObjectId[],
+    @Body(
+      DEFAULT([]),
+      ARRAY((value: string) => OR(v => ObjectId.isValid(v), OBJECT_ID).transform(value, undefined))
+    )
+    elements: (ObjectId | string)[],
     @Req() req
   ) {
+    const resolvedIds = await this.resolveIdsFromElements(elements);
+
     await this.validateDeletePermissions(
-      ids.map(id => id.toString()),
+      resolvedIds.map(id => id.toString()),
       req
     );
-    await this.storage.deleteManyByIds(ids);
+
+    await this.storage.deleteManyByIds(resolvedIds);
   }
 
   /**
@@ -315,5 +330,36 @@ export class StorageController {
       promises.push(promise);
     }
     await Promise.all(promises);
+  }
+
+  private async resolveIdsFromElements(elements: (ObjectId | string)[]): Promise<ObjectId[]> {
+    const names: string[] = [];
+    for (const element of elements) {
+      if (!(element instanceof ObjectId)) {
+        names.push(element as string);
+      }
+    }
+
+    if (names.length === 0) {
+      return elements as ObjectId[];
+    }
+
+    const objects = await this.storage.find({name: {$in: names}});
+    const nameToIdMap = new Map<string, ObjectId>();
+
+    for (const object of objects) {
+      nameToIdMap.set(object.name, object._id as ObjectId);
+    }
+
+    return elements.map(element => {
+      if (element instanceof ObjectId) {
+        return element;
+      }
+      const id = nameToIdMap.get(element as string);
+      if (!id) {
+        throw new NotFoundException(`Storage object "${element}" could not be found`);
+      }
+      return id;
+    });
   }
 }

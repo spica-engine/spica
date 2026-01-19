@@ -25,7 +25,7 @@ describe("Identity", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot(),
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         PassportModule.forRoot({
           publicUrl: PUBLIC_URL,
           samlCertificateTTL: EXPIRES_IN,
