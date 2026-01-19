@@ -12,7 +12,7 @@ describe("hook module", () => {
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
-        imports: [DatabaseTestingModule.replicaSet()]
+        imports: [DatabaseTestingModule.standalone()]
       }).compile();
 
       database = module.get(DatabaseService);
@@ -60,7 +60,7 @@ describe("hook module", () => {
       const module = await Test.createTestingModule({
         imports: [
           ServicesModule.initialize(0),
-          DatabaseTestingModule.replicaSet(),
+          DatabaseTestingModule.standalone(),
           PreferenceTestingModule
         ]
       }).compile();

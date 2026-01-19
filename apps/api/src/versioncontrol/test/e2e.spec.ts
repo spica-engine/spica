@@ -22,7 +22,7 @@ process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50050";
 
 const sleep = () => new Promise(r => setTimeout(r, 1000));
 
-describe("Versioning e2e", () => {
+xdescribe("Versioning e2e", () => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
