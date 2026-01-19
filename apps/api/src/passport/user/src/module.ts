@@ -4,7 +4,12 @@ import {Validator, SchemaModule} from "@spica-server/core/schema";
 import {PreferenceService} from "@spica-server/preference/services";
 import {USER_SETTINGS_FINALIZER} from "@spica-server/interface/preference";
 import {JwtModule} from "@nestjs/jwt";
-import {UserOptions, USER_OPTIONS, POLICY_PROVIDER} from "@spica-server/interface/passport/user";
+import {
+  UserOptions,
+  USER_OPTIONS,
+  POLICY_PROVIDER,
+  VERIFICATION_PROVIDERS_INITIALIZER
+} from "@spica-server/interface/passport/user";
 import {UserController} from "./user.controller";
 import {UserService} from "./user.service";
 import {UserStrategy} from "./user.strategy";
@@ -23,7 +28,13 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 import {UserRealtimeModule} from "../realtime";
 import {VerificationService} from "./verification.service";
-import {VerificationProviderRegistry, EmailVerificationProvider} from "./providers";
+import {
+  VerificationProviderRegistry,
+  EmailVerificationProvider,
+  PhoneVerificationProvider
+} from "./providers";
+import {MailerService} from "@spica-server/mailer";
+import {SmsService} from "@spica-server/sms";
 
 @Global()
 @Module({})
@@ -32,12 +43,8 @@ export class UserModule {
     @Inject(USER_OPTIONS) options: UserOptions,
     private userService: UserService,
     private prefService: PreferenceService,
-    private verificationRegistry: VerificationProviderRegistry,
-    private emailProvider: EmailVerificationProvider,
     @Optional() @Inject(ASSET_REP_MANAGER) private repManager: IRepresentativeManager
   ) {
-    this.verificationRegistry.register(this.emailProvider);
-
     if (options.defaultUserUsername) {
       userService.default({
         username: options.defaultUserUsername,
@@ -88,10 +95,32 @@ export class UserModule {
         UserStrategy,
         VerificationService,
         VerificationProviderRegistry,
-        EmailVerificationProvider,
         {
           provide: USER_OPTIONS,
           useValue: options
+        },
+        {
+          provide: VERIFICATION_PROVIDERS_INITIALIZER,
+          useFactory: (
+            registry: VerificationProviderRegistry,
+            mailerService: MailerService | null,
+            smsService: SmsService | null
+          ) => {
+            if (mailerService) {
+              const emailProvider = new EmailVerificationProvider(mailerService);
+              registry.register(emailProvider);
+            }
+
+            if (smsService) {
+              const smsProvider = new PhoneVerificationProvider(smsService);
+              registry.register(smsProvider);
+            }
+          },
+          inject: [
+            VerificationProviderRegistry,
+            {token: MailerService, optional: true},
+            {token: SmsService, optional: true}
+          ]
         },
         {
           provide: SchemaResolver,

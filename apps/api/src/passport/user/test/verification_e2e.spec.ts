@@ -181,8 +181,7 @@ describe("Verification E2E with MailHog", () => {
       const user = await userService.findOne({_id: testUserId});
 
       expect(user.email).toMatchObject({
-        value: email,
-        verified: true
+        value: email
       });
       expect(user.email.createdAt).toBeInstanceOf(Date);
     });

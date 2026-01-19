@@ -25,7 +25,7 @@ import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
 import {EnvVarModule} from "@spica-server/env_var";
 import {MailerModule} from "@spica-server/mailer";
-import {SmsSenderModule} from "@spica-server/sms";
+import {SmsModule} from "@spica-server/sms";
 
 import fs from "fs";
 import https from "https";
@@ -741,7 +741,7 @@ const modules = [
       from: args["mailer-from"]
     }
   }),
-  SmsSenderModule.forRoot({
+  SmsModule.forRoot({
     strategy: args["sms-sender-strategy"] as "twilio",
     twilio: {
       accountSid: args["twilio-sms-service-account-sid"],
