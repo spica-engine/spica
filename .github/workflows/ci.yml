@@ -118,17 +118,12 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - prepare_tests
+    if: needs.prepare_tests.outputs.has_projects == 'true'
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ needs.prepare_tests.outputs.has_projects == 'true' && fromJson(needs.prepare_tests.outputs.projects) || fromJson('["none"]') }}
+        project: ${{ fromJson(needs.prepare_tests.outputs.projects) }}
     steps:
-      - name: Check if tests needed
-        if: matrix.project == 'none'
-        run: |
-          echo "No affected projects to test - skipping tests"
-          exit 0
-
       - name: Free up some space on disk
         run: |
           sudo rm -rf /usr/share/dotnet
@@ -224,6 +219,16 @@ jobs:
       - name: Stop MongoDB
         run: docker stop mongodb || true
 
+  test_affected_fallback:
+    name: Test Affected (No Tests)
+    runs-on: ubuntu-latest
+    needs:
+      - prepare_tests
+    if: needs.prepare_tests.outputs.has_projects != 'true'
+    steps:
+      - name: No tests to run
+        run: echo "No affected projects to test"
+
   ci_success:
     name: CI Success
     runs-on: ubuntu-latest
@@ -231,6 +236,7 @@ jobs:
       - helm_lint
       - build_affected
       - test_affected
+      - test_affected_fallback
     if: always()
     steps:
       - name: Check all jobs
@@ -238,12 +244,16 @@ jobs:
           result_helm="${{ needs.helm_lint.result }}"
           result_build="${{ needs.build_affected.result }}"
           result_test="${{ needs.test_affected.result }}"
+          result_test_fallback="${{ needs.test_affected_fallback.result }}"
 
-          if [ "$result_helm" != "success" ] || [ "$result_build" != "success" ] || ([ "$result_test" != "success" ] && [ "$result_test" != "skipped" ]); then
+          if [ "$result_helm" != "success" ] || [ "$result_build" != "success" ] || \
+             ([ "$result_test" != "success" ] && [ "$result_test" != "skipped" ]) || \
+             ([ "$result_test_fallback" != "success" ] && [ "$result_test_fallback" != "skipped" ]); then
             echo "One or more jobs failed or were cancelled"
             echo "Helm Lint: $result_helm"
             echo "Build Affected: $result_build"
             echo "Test Affected: $result_test"
+            echo "Test Affected Fallback: $result_test_fallback"
             exit 1
           fi
 
