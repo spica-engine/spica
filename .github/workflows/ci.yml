@@ -223,10 +223,16 @@ jobs:
     steps:
       - name: Check all jobs
         run: |
-          if [ "${{ needs.helm_lint.result }}" != "success" ] || \
-             [ "${{ needs.build_affected.result }}" != "success" ] || \
-             ([ "${{ needs.test_affected.result }}" != "success" ] && [ "${{ needs.test_affected.result }}" != "skipped" ]); then
+          result_helm="${{ needs.helm_lint.result }}"
+          result_build="${{ needs.build_affected.result }}"
+          result_test="${{ needs.test_affected.result }}"
+
+          if [ "$result_helm" != "success" ] || [ "$result_build" != "success" ] || ([ "$result_test" != "success" ] && [ "$result_test" != "skipped" ]); then
             echo "One or more jobs failed or were cancelled"
+            echo "Helm Lint: $result_helm"
+            echo "Build Affected: $result_build"
+            echo "Test Affected: $result_test"
             exit 1
           fi
+
           echo "All jobs completed successfully!"
