@@ -76,7 +76,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       projects: ${{ steps.affected.outputs.projects }}
-      has_projects: ${{ steps.affected.outputs.has_projects }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -107,18 +106,13 @@ jobs:
         run: |
           projects=$(yarn -s nx show projects --affected -t test --json || echo "[]")
           echo "projects=${projects:-[]}" >> "$GITHUB_OUTPUT"
-          if [ "$projects" = "[]" ] || [ -z "$projects" ]; then
-            echo "has_projects=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_projects=true" >> "$GITHUB_OUTPUT"
-          fi
 
   test_affected:
     name: Test Affected
     runs-on: ubuntu-latest
     needs:
       - prepare_tests
-    if: needs.prepare_tests.outputs.has_projects == 'true'
+    if: ${{ needs.prepare_tests.outputs.projects != '[]' && needs.prepare_tests.outputs.projects != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -219,16 +213,6 @@ jobs:
       - name: Stop MongoDB
         run: docker stop mongodb || true
 
-  test_affected_fallback:
-    name: Test Affected (No Tests)
-    runs-on: ubuntu-latest
-    needs:
-      - prepare_tests
-    if: needs.prepare_tests.outputs.has_projects != 'true'
-    steps:
-      - name: No tests to run
-        run: echo "No affected projects to test"
-
   ci_success:
     name: CI Success
     runs-on: ubuntu-latest
@@ -236,25 +220,14 @@ jobs:
       - helm_lint
       - build_affected
       - test_affected
-      - test_affected_fallback
     if: always()
     steps:
       - name: Check all jobs
         run: |
-          result_helm="${{ needs.helm_lint.result }}"
-          result_build="${{ needs.build_affected.result }}"
-          result_test="${{ needs.test_affected.result }}"
-          result_test_fallback="${{ needs.test_affected_fallback.result }}"
-
-          if [ "$result_helm" != "success" ] || [ "$result_build" != "success" ] || \
-             ([ "$result_test" != "success" ] && [ "$result_test" != "skipped" ]) || \
-             ([ "$result_test_fallback" != "success" ] && [ "$result_test_fallback" != "skipped" ]); then
+          if [ "${{ needs.helm_lint.result }}" != "success" ] || \
+             [ "${{ needs.build_affected.result }}" != "success" ] || \
+             ([ "${{ needs.test_affected.result }}" != "success" ] && [ "${{ needs.test_affected.result }}" != "skipped" ]); then
             echo "One or more jobs failed or were cancelled"
-            echo "Helm Lint: $result_helm"
-            echo "Build Affected: $result_build"
-            echo "Test Affected: $result_test"
-            echo "Test Affected Fallback: $result_test_fallback"
             exit 1
           fi
-
           echo "All jobs completed successfully!"
