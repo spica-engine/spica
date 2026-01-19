@@ -112,6 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - prepare_tests
+    if: ${{ needs.prepare_tests.outputs.projects != '[]' && needs.prepare_tests.outputs.projects != '' }}
     strategy:
       fail-fast: false
       matrix:
