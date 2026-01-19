@@ -76,6 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       projects: ${{ steps.affected.outputs.projects }}
+      has_projects: ${{ steps.affected.outputs.has_projects }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -106,18 +107,28 @@ jobs:
         run: |
           projects=$(yarn -s nx show projects --affected -t test --json || echo "[]")
           echo "projects=${projects:-[]}" >> "$GITHUB_OUTPUT"
+          if [ "$projects" = "[]" ] || [ -z "$projects" ]; then
+            echo "has_projects=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_projects=true" >> "$GITHUB_OUTPUT"
+          fi
 
   test_affected:
     name: Test Affected
     runs-on: ubuntu-latest
     needs:
       - prepare_tests
-    if: ${{ needs.prepare_tests.outputs.projects != '[]' && needs.prepare_tests.outputs.projects != '' }}
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ fromJson(needs.prepare_tests.outputs.projects) }}
+        project: ${{ needs.prepare_tests.outputs.has_projects == 'true' && fromJson(needs.prepare_tests.outputs.projects) || fromJson('["none"]') }}
     steps:
+      - name: Check if tests needed
+        if: matrix.project == 'none'
+        run: |
+          echo "No affected projects to test - skipping tests"
+          exit 0
+
       - name: Free up some space on disk
         run: |
           sudo rm -rf /usr/share/dotnet
