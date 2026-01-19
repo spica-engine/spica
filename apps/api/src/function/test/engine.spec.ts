@@ -81,7 +81,6 @@ describe("Engine", () => {
     try {
       subscribeSpy.mockReset();
       unsubscribeSpy.mockReset();
-      await module.close();
       await app.close();
     } catch (error) {
       console.error(error);
