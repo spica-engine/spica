@@ -363,9 +363,20 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   async handleResumableUpload(req: any, res: any) {
     const uploadLength = req.headers["upload-length"];
     if (uploadLength) {
-      await this.validateTotalStorageSize(parseInt(uploadLength));
+      const size = this.parseUploadLength(uploadLength);
+      await this.validateTotalStorageSize(size);
     }
     await this.service.handleResumableUpload(req, res);
+  }
+
+  private parseUploadLength(value: number): number {
+    const size = Number(value);
+
+    if (!Number.isFinite(size) || !Number.isInteger(size) || size < 0) {
+      throw new BadRequestException("Invalid Upload-Length header");
+    }
+
+    return size;
   }
 
   private escapeRegex(str: string): string {

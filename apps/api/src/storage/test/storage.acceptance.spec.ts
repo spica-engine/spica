@@ -1326,6 +1326,21 @@ describe("Storage Acceptance", () => {
       expect(postRes.statusCode).toBe(403);
       expect(postRes.body.message).toBe("Total storage object size limit exceeded");
     });
+
+    it("should fail with invalid Upload-Length header", async () => {
+      const invalidHeaders = ["abc", "-100", "Infinity", "NaN"];
+
+      for (const invalidLength of invalidHeaders) {
+        const postRes = await req.post("/storage/resumable", undefined, {
+          "Tus-Resumable": "1.0.0",
+          "Upload-Length": invalidLength,
+          "Upload-Metadata": `filename ${Buffer.from("test.txt").toString("base64")}`
+        });
+
+        expect(postRes.statusCode).toBe(400);
+        expect(postRes.body.message).toBe("Invalid Upload-Length header");
+      }
+    });
   });
 
   describe("get by name operations", () => {
