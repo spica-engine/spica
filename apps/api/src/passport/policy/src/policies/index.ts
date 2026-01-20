@@ -50,6 +50,9 @@ import WebhookReadOnlyAccess from "./webhook.readonly";
 import UserFullAccess from "./user.fullaccess";
 import UserReadOnlyAccess from "./user.readonly";
 
+import ConfigFullAccess from "./config.fullaccess";
+import ConfigReadOnlyAccess from "./config.readonly";
+
 export default [
   ActivityFullAccess,
   ActivityReadOnlyAccess,
@@ -101,5 +104,8 @@ export default [
   WebhookReadOnlyAccess,
 
   UserFullAccess,
-  UserReadOnlyAccess
+  UserReadOnlyAccess,
+
+  ConfigFullAccess,
+  ConfigReadOnlyAccess
 ];
