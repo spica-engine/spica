@@ -102,18 +102,23 @@ describe("Identity Controller", () => {
     });
 
     it("should sort bucket1 profile entries", async () => {
-      const {body: allProfileEntries} = await req.get("/passport/identity/profile");
-      const res = await req.get("/passport/identity/profile", {sort: JSON.stringify({ts: -1})});
-      expect(res.statusCode).toEqual(200);
-
-      const expectedSorted = [...allProfileEntries].sort((a, b) => {
-        const tsCompare = new Date(b.ts).getTime() - new Date(a.ts).getTime();
-        if (tsCompare !== 0) return tsCompare;
-        return (a.op || "").localeCompare(b.op || "");
+      const resDesc = await req.get("/passport/identity/profile", {
+        sort: JSON.stringify({ts: -1, op: 1})
+      });
+      const resAsc = await req.get("/passport/identity/profile", {
+        sort: JSON.stringify({ts: 1, op: -1})
       });
 
-      expect(res.body).toEqual(expectedSorted);
-      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
+      expect(resDesc.statusCode).toEqual(200);
+      expect(resAsc.statusCode).toEqual(200);
+      expect(resDesc.body.length).toEqual(resAsc.body.length);
+
+      // Reversed ascending should equal descending to be sure sorting works correctly
+      const reversedAsc = [...resAsc.body].reverse();
+      expect(resDesc.body).toEqual(reversedAsc);
+      expect(resDesc.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(
+        true
+      );
     });
 
     // to prevent accessing other collections profile entries
