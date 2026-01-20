@@ -57,6 +57,7 @@ describe("Storage Acceptance", () => {
           defaultPublicUrl: "http://insteadof",
           strategy: "default",
           objectSizeLimit: 0.1,
+          totalSizeLimit: 5, // 5 MB total storage limit
           resumableUploadExpiresIn: 1000 * 60 // 1 minute
         })
       ]
@@ -1295,6 +1296,28 @@ describe("Storage Acceptance", () => {
       jest.useRealTimers();
 
       expect(expiredRes.statusCode).toBe(404);
+    });
+
+    fit("should fail if resumable upload exceeds total storage limit", async () => {
+      const content = Buffer.alloc(5.1 * 1024 * 1024, "f"); // 5.1 MB (exceeds 5 MB limit)
+      const object = {
+        name: "large-file.txt",
+        content: {
+          data: new Binary(content),
+          type: "text/plain"
+        }
+      };
+
+      const actualSize = content.byteLength;
+
+      const postRes = await req.post("/storage/resumable", undefined, {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Length": String(actualSize),
+        "Upload-Metadata": `filename ${Buffer.from(object.name).toString("base64")}`
+      });
+
+      expect(postRes.statusCode).toBe(403);
+      expect(postRes.body.message).toBe("Total storage object size limit exceeded");
     });
   });
 
