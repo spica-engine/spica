@@ -1154,6 +1154,13 @@ describe("Storage Acceptance", () => {
   });
 
   describe("resumable upload", () => {
+    beforeEach(async () => {
+      const res = await req.get("/storage");
+      for (let obj of res.body) {
+        await req.delete("/storage", obj._id);
+      }
+    });
+
     it("should return upload url", async () => {
       const res = await req.post("/storage/resumable", undefined, {
         "Tus-Resumable": "1.0.0",
@@ -1298,7 +1305,7 @@ describe("Storage Acceptance", () => {
       expect(expiredRes.statusCode).toBe(404);
     });
 
-    fit("should fail if resumable upload exceeds total storage limit", async () => {
+    it("should fail if resumable upload exceeds total storage limit", async () => {
       const content = Buffer.alloc(5.1 * 1024 * 1024, "f"); // 5.1 MB (exceeds 5 MB limit)
       const object = {
         name: "large-file.txt",
