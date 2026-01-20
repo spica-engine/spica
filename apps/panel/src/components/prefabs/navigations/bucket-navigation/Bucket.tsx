@@ -13,7 +13,7 @@ import {
   Button
 } from "oziko-ui-kit";
 import styles from "../Navigation.module.scss";
-import bucketNavigationStyles from "./BucketNavigation.module.scss";
+import bucketNavigationStyles from "./Bucket.module.scss";
 
 import {
   memo,
@@ -32,7 +32,7 @@ import {useGetBucketsQuery} from "../../../../store/api";
 import {useUpdateBucketOrderMutation, type BucketType} from "../../../../store/api/bucketApi";
 import {useDrag, useDrop} from "react-dnd";
 import type {Identifier, XYCoord} from "dnd-core";
-import AddBucketPopup from "../../../../components/molecules/add-bucket-popup/AddBucketPopup";
+import AddBucketPopup from "../../../molecules/add-bucket-popup/AddBucketPopup";
 
 import BucketNavigatorPopup from "../../../molecules/bucket-navigator-popup/BucketNavigatorPopup";
 
@@ -74,6 +74,41 @@ type CategoryGroup = {
 
 const arraysEqual = (a: string[], b: string[]) =>
   a.length === b.length && a.every((item, index) => item === b[index]);
+
+const shouldPreventHover = (
+  containerRef: React.RefObject<HTMLElement | null>,
+  dragIndex: number,
+  hoverIndex: number,
+  monitor: {getClientOffset: () => XYCoord | null}
+): boolean => {
+  if (dragIndex === hoverIndex) {
+    return true;
+  }
+
+  if (!containerRef.current) {
+    return true;
+  }
+
+  const hoverBoundingRect = containerRef.current.getBoundingClientRect();
+  const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+
+  const clientOffset = monitor.getClientOffset();
+  if (!clientOffset) {
+    return true;
+  }
+
+  const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+  if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+    return true;
+  }
+
+  if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+    return true;
+  }
+
+  return false;
+};
 
 const safeReadCategoryOrder = (): string[] => {
   if (typeof globalThis === "undefined") {
@@ -168,32 +203,10 @@ const SortableBucketItem: FC<SortableBucketItemProps> = ({
         return;
       }
 
-      if (!containerRef.current) {
-        return;
-      }
-
       const dragIndex = item.index;
       const hoverIndex = index;
 
-      if (dragIndex === hoverIndex) {
-        return;
-      }
-
-      const hoverBoundingRect = containerRef.current.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-      const clientOffset = monitor.getClientOffset();
-      if (!clientOffset) {
-        return;
-      }
-
-      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
-      }
-
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+      if (shouldPreventHover(containerRef, dragIndex, hoverIndex, monitor)) {
         return;
       }
 
@@ -315,32 +328,10 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index
       handlerId: monitor.getHandlerId()
     }),
     hover: (item, monitor) => {
-      if (!containerRef.current) {
-        return;
-      }
-
       const dragIndex = item.index;
       const hoverIndex = index;
 
-      if (dragIndex === hoverIndex) {
-        return;
-      }
-
-      const hoverBoundingRect = containerRef.current.getBoundingClientRect();
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-      const clientOffset = monitor.getClientOffset();
-      if (!clientOffset) {
-        return;
-      }
-
-      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
-      }
-
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+      if (shouldPreventHover(containerRef, dragIndex, hoverIndex, monitor)) {
         return;
       }
 
@@ -389,7 +380,7 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index
   );
 };
 
-const BucketNavigation = () => {
+const Bucket = () => {
   const navigate = useNavigate();
   const {data: buckets = []} = useGetBucketsQuery();
   const [orderedBuckets, setOrderedBuckets] = useState<BucketNavigationItemData[]>([]);
@@ -713,4 +704,4 @@ const BucketNavigation = () => {
   );
 };
 
-export default memo(BucketNavigation);
+export default memo(Bucket);

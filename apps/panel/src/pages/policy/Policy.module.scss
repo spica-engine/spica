@@ -1,0 +1,224 @@
+.policyContainer {
+  padding: var(--padding-md);
+}
+
+.drawerContainer {
+  background-color: var(--color-background);
+  border-top-left-radius: var(--border-radius-xl);
+  border-bottom-left-radius: var(--border-radius-xl);
+
+  .drawerContent {
+    padding: var(--padding-xl);
+  }
+}
+
+.actionButton {
+  padding: 0;
+  width: unset !important;
+}
+
+.resourceContainer {
+  border: 1px solid var(--color-primary);
+  border-top-left-radius: var(--border-radius-md);
+  border-top-right-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.resourceHeader {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background-color: var(--color-primary);
+  padding: var(--padding-md) !important;
+
+  .importExportButton,
+  span {
+    color: var(--color-font-secondary) !important;
+    font-weight: bold;
+  }
+  span {
+    padding: 0 !important;
+  }
+  .importExportButton {
+    text-decoration: underline !important;
+    min-width: unset !important;
+    padding: 0 !important;
+  }
+}
+
+.accordionContainer {
+  padding: 0 var(--padding-sm) !important;
+  background-color: var(--color-menu-background) !important;
+  max-height: 680px !important;
+  align-items: start !important;
+  justify-content: start !important;
+  overflow-y: scroll !important;
+}
+
+.accordion {
+  border: none;
+  padding: 0 var(--padding-md) !important;
+
+  &:last-child {
+    border-bottom: none !important;
+  }
+
+  &:hover{
+    background-color: var(--color-zebra) !important;
+  }
+}
+
+.accordionItem {
+  &:last-child {
+    .accordion {
+      border-bottom: none !important;
+    }
+  }
+  &:hover{
+  background-color: var(--color-zebra) !important;
+  }
+}
+.openAccordion {
+  background-color: var(--color-zebra) !important;
+}
+.statementAccordion {
+  border-bottom: 1px solid var(--color-border) !important;
+
+  &:last-child {
+    border-bottom: none !important;
+  }
+}
+.actionAccordion {
+  border-bottom: 1px dashed var(--color-border) !important;
+
+  &:last-child {
+    border-bottom: none !important;
+  }
+}
+
+.accordionContent {
+  padding: 0 !important;
+}
+
+.moduleTitleContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  font-size: 1rem;
+}
+
+.actionTitleContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-weight: 400;
+  font-size: 0.9rem;
+  padding: 0 var(--padding-md) !important;
+}
+
+.resourceItems {
+  background-color: var(--color-background-secondary);
+  border-radius: var(--border-radius-sm);
+}
+
+.resourceSection {
+  margin-bottom: var(--padding-sm);
+
+  strong {
+    display: block;
+    margin-bottom: var(--padding-xs);
+    color: var(--color-font-primary);
+  }
+}
+
+.resourceHint {
+  color: var(--color-font-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.resourceNote {
+  display: flex;
+  align-items: center;
+  gap: var(--padding-xs);
+  color: var(--color-info);
+  font-size: 0.8rem;
+
+  background-color: var(--color-info-light);
+  border-radius: var(--border-radius-xs);
+  margin-top: var(--padding-sm);
+}
+
+.resourceList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--padding-xs);
+  margin-top: var(--padding-xs);
+}
+
+.resourceTag {
+  display: inline-block;
+
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: var(--border-radius-xs);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.emptyState {
+  color: var(--color-warning);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.actionCheckbox {
+  label {
+    border-color: var(--color-font-primary) !important;
+  }
+}
+
+.flatActionsContainer{
+  padding: 0 var(--padding-sm) !important;
+}
+
+.flatActionItem {
+
+
+    display: flex;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0 calc(var(--padding-xl) * 1.55) 0 var(--padding-md) !important;
+  
+    width: 100%;
+    border-bottom: 1px solid var(--color-border);
+
+    &:hover{
+      background-color: var(--color-zebra) !important;
+      cursor: pointer;
+    }
+
+}
+
+.actionContentContainer{
+  >  div:first-of-type {
+    padding: 0 !important;
+    max-height: 400px !important;
+    overflow-y: scroll !important;
+  }
+}
+
+.actionContentItemContainer{
+  padding: 0 var(--padding-xl);
+
+  &:nth-child(even){
+    background-color: var(--color-zebra);
+    border-radius: var(--border-radius-sm);
+  }
+}
+
+
+

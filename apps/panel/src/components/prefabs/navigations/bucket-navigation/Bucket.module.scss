@@ -2,7 +2,16 @@
 
 
 .bucketsItemContainer {
-    // padding: 0 var(--padding-sm) 0 var(--padding-md);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+    
+    &::-webkit-scrollbar {
+        display: none;
+    }
 
     .bucketItem {
         transition: opacity 0.2s ease-in-out;

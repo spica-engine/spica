@@ -6,16 +6,19 @@
 
   .select {
     background: none;
-    padding: 0;
+    padding: 0 !important;
+
   }
 
   .content {
-    padding: var(--padding-sm) var(--padding-md);
     border: var(--border-default);
     border-radius: var(--border-radius-md);
+    padding: 0 var(--padding-md) !important;
 
-    .left {
-      border-right: var(--border-default);
+    .separator {
+      width: 1px;
+      height: 100%;
+      background: var(--color-border);
     }
   }
 
