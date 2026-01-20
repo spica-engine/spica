@@ -3,11 +3,11 @@
  * email: rio.kenan@gmail.com
  */
 
-import React, {useRef} from "react";
+import React, {useCallback, useMemo, useRef} from "react";
 import {Accordion, Button, Checkbox, FlexElement} from "oziko-ui-kit";
 import styles from "./Policy.module.scss";
 import type {DisplayedStatement} from "./policyStatements";
-import type {PolicyCatalog} from "./policyCatalog";
+import type {ModuleStatement} from "./hook/useStatement";
 import {
   toggleAction,
   isActionActive,
@@ -22,20 +22,13 @@ import {resourceRendererRegistry} from "./resourceRenderers";
 interface ResourceProps {
   value: DisplayedStatement[];
   onChange: (statements: DisplayedStatement[]) => void;
-  catalog: PolicyCatalog;
+  modules: ModuleStatement[];
+  moduleData?: Record<string, unknown>;
 }
 
-const Resource: React.FC<ResourceProps> = ({value, onChange, catalog}) => {
+const Resource: React.FC<ResourceProps> = ({value, onChange, modules, moduleData}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-
-  const findOrCreateStatement = (module: string): DisplayedStatement => {
-    const existing = value.find(s => s.module === module);
-    if (existing) return existing;
-    return {module, actions: []};
-  };
-
-  const updateStatement = (
+  const updateStatement = useCallback((
     module: string,
     updater: (stmt: DisplayedStatement) => DisplayedStatement
   ) => {
@@ -55,38 +48,70 @@ const Resource: React.FC<ResourceProps> = ({value, onChange, catalog}) => {
         onChange(value.map((s, idx) => (idx === existingIndex ? updated : s)));
       }
     }
-  };
+  }, [onChange, value]);
 
-  const handleActionToggle = (module: string, actionName: string, acceptsResource: boolean) => {
+  const handleActionToggle = useCallback((module: string, actionName: string, acceptsResource: boolean) => {
     updateStatement(module, stmt => toggleAction(stmt, actionName, acceptsResource));
-  };
+  }, [updateStatement]);
 
-  const handleModuleToggle = (module: string, enable: boolean) => {
-    const catalogModule = catalog.modules.find(m => m.module === module);
-    if (!catalogModule) return;
+  const handleModuleToggle = useCallback((module: string, enable: boolean) => {
+    const moduleStatement = modules.find(m => m.module === module);
+    if (!moduleStatement) return;
 
-    updateStatement(module, stmt => toggleAllModuleActions(stmt, catalogModule.actions, enable));
-  };
+    updateStatement(module, stmt => toggleAllModuleActions(stmt, moduleStatement.actions, enable));
+  }, [modules, updateStatement]);
 
-  const handleResourceChange = (
+  const applyResourceChanges = useCallback((
+    module: string,
+    actionName: string,
+    changes: Array<{resourceId: string; type: "include" | "exclude"; checked: boolean}>
+  ) => {
+    if (changes.length === 0) return;
+    updateStatement(module, stmt => {
+      let statement = stmt;
+      const actionExists = stmt.actions.find(a => a.name === actionName);
+      
+      if (!actionExists) {
+        statement = toggleAction(stmt, actionName, true);
+      }
+
+      const resource = getActionResource(statement, actionName) || {include: [], exclude: []};
+      const includeSet = new Set(resource.include);
+      const excludeSet = new Set(resource.exclude);
+
+      changes.forEach(change => {
+        const targetSet = change.type === "include" ? includeSet : excludeSet;
+        if (change.checked) {
+          targetSet.add(change.resourceId);
+        } else {
+          targetSet.delete(change.resourceId);
+        }
+      });
+
+      return updateActionResource(statement, actionName, {
+        include: Array.from(includeSet),
+        exclude: Array.from(excludeSet)
+      });
+    });
+  }, [updateStatement]);
+
+  const handleResourceChange = useCallback((
     module: string,
     actionName: string,
     resourceId: string,
     type: "include" | "exclude",
     checked: boolean
   ) => {
-    updateStatement(module, stmt => {
-      const resource = getActionResource(stmt, actionName) || {include: [], exclude: []};
-      const list = resource[type];
+    applyResourceChanges(module, actionName, [{resourceId, type, checked}]);
+  }, [applyResourceChanges]);
 
-      const updated = {
-        ...resource,
-        [type]: checked ? [...list, resourceId] : list.filter(id => id !== resourceId)
-      };
-
-      return updateActionResource(stmt, actionName, updated);
-    });
-  };
+  const handleResourceBatchChange = useCallback((
+    module: string,
+    actionName: string,
+    changes: Array<{resourceId: string; type: "include" | "exclude"; checked: boolean}>
+  ) => {
+    applyResourceChanges(module, actionName, changes);
+  }, [applyResourceChanges]);
 
   const handleExport = () => {
     const json = JSON.stringify(value, null, 2);
@@ -134,23 +159,18 @@ const Resource: React.FC<ResourceProps> = ({value, onChange, catalog}) => {
     event.target.value = "";
   };
 
-  const renderResourceItems = (module: string, actionName: string) => {
+  const renderResourceItems = useCallback((module: string, actionName: string) => {
     const statement = value.find(s => s.module === module);
     const resource = statement ? getActionResource(statement, actionName) : undefined;
 
     if (!resource) return null;
 
-    // Get the catalog module to find resources for this action
-    const catalogModule = catalog.modules.find(m => m.module === module);
-    const catalogAction = catalogModule?.actions.find(a => a.name === actionName);
-    const resources = catalogAction?.resources || [];
-
-    // Try to get a custom resource renderer
-    const renderer = resourceRendererRegistry.getRenderer(module, actionName);
+    // Try to get a custom resource renderer by MODULE (not by action)
+    const renderer = resourceRendererRegistry.getRenderer(module);
     const customRendering = renderer.render({
       module,
       actionName,
-      resources,
+      resources: [],
       statement,
       onResourceChange: (resourceId: string, type: "include" | "exclude", checked: boolean) => {
         handleResourceChange(module, actionName, resourceId, type, checked);
@@ -162,7 +182,7 @@ const Resource: React.FC<ResourceProps> = ({value, onChange, catalog}) => {
       return customRendering;
     }
 
-    // Otherwise, fall back to default rendering
+
     const hasIncludes = resource.include.length > 0;
     const hasExcludes = resource.exclude.length > 0;
 
@@ -208,9 +228,9 @@ const Resource: React.FC<ResourceProps> = ({value, onChange, catalog}) => {
         </div>
       </FlexElement>
     );
-  };
+  }, [handleResourceChange, value]);
 
-  const renderActionContent = (module: string, actionName: string, acceptsResource: boolean) => {
+  const renderActionContent = useCallback((module: string, actionName: string, acceptsResource: boolean) => {
     if (!acceptsResource) return null;
 
     const statement = value.find(s => s.module === module);
@@ -219,59 +239,82 @@ const Resource: React.FC<ResourceProps> = ({value, onChange, catalog}) => {
     if (!active) return null;
 
     return renderResourceItems(module, actionName);
-  };
+  }, [renderResourceItems, value]);
 
-  const formatActionName = (actionName: string, module: string): string => {
+  const formatActionName = useCallback((actionName: string, module: string): string => {
     return actionName
       .replace(`${module}:`, "")
       .replace(/:/g, " ")
       .split(" ")
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
-  };
+  }, []);
 
-  const renderModuleContent = (catalogModule: PolicyCatalog['modules'][0]) => {
-    const statement = value.find(s => s.module === catalogModule.module);
-    const renderer = moduleRendererRegistry.getRenderer(catalogModule);
+  const moduleRendererExtras = useMemo(() => {
+    return {
+      moduleData,
+      onResourceChange: handleResourceChange,
+      onResourceBatchChange: handleResourceBatchChange
+    };
+  }, [handleResourceBatchChange, handleResourceChange, moduleData]);
 
-    return renderer.render({
-      catalogModule,
+  const renderModuleContent = useCallback((moduleStatement: ModuleStatement) => {
+    const statement = value.find(s => s.module === moduleStatement.module);
+    const { renderer, buildProps } = moduleRendererRegistry.getRendererConfig(moduleStatement.module);
+
+    // Build base context that all renderers receive
+    const baseContext = {
+      moduleStatement,
       statement,
-      onActionToggle: (actionName, acceptsResource) => {
-        handleActionToggle(catalogModule.module, actionName, acceptsResource);
+      onActionToggle: (actionName: string, acceptsResource: boolean) => {
+        handleActionToggle(moduleStatement.module, actionName, acceptsResource);
       },
-      renderActionContent: (actionName, acceptsResource) => {
-        return renderActionContent(catalogModule.module, actionName, acceptsResource);
+      renderActionContent: (actionName: string, acceptsResource: boolean) => {
+        return renderActionContent(moduleStatement.module, actionName, acceptsResource);
       },
       formatActionName
-    });
-  };
-
-  const moduleAccordionItems = catalog.modules.map(catalogModule => {
-    const statement = value.find(s => s.module === catalogModule.module);
-    const allEnabled = statement
-      ? areAllModuleActionsEnabled(statement, catalogModule.actions)
-      : false;
-
-    return {
-      title: (
-        <div className={styles.moduleTitleContainer}>
-          <span>{catalogModule.label}</span>
-          <Checkbox
-            checked={allEnabled}
-            onChange={(e) => {
-              e.stopPropagation();
-              handleModuleToggle(catalogModule.module, !allEnabled);
-            }}
-            onClick={e => e.stopPropagation()}
-            checkBoxClassName={styles.actionCheckbox}
-
-          />
-        </div>
-      ),
-      content: renderModuleContent(catalogModule)
     };
-  });
+
+    const rendererProps = buildProps ? buildProps(baseContext, moduleRendererExtras) : baseContext;
+    return renderer.render(rendererProps);
+  }, [formatActionName, handleActionToggle, moduleRendererExtras, renderActionContent, value]);
+
+  // Generate accordion items for modules
+  const moduleAccordionItems = useMemo(() => {
+    return modules.map(moduleStatement => {
+      const statement = value.find(s => s.module === moduleStatement.module);
+
+      const allEnabled = statement ? areAllModuleActionsEnabled(statement, moduleStatement.actions) : false;
+      const someEnabled = statement ? statement.actions.length > 0 : false;
+      const isIndeterminate = someEnabled && !allEnabled;
+      
+      // Format module name for display (capitalize and remove colons)
+      const moduleLabel = moduleStatement.module
+        .split(':')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+      
+      return {
+        title: (
+          <div className={styles.moduleTitleContainer}>
+            <span>{moduleLabel}</span>
+            <Checkbox
+              checked={allEnabled}
+              indeterminate={isIndeterminate}
+              aria-checked={isIndeterminate ? "mixed" : allEnabled}
+              onChange={e => {
+                e.stopPropagation();
+                handleModuleToggle(moduleStatement.module, !allEnabled);
+              }}
+              onClick={e => e.stopPropagation()}
+              checkBoxClassName={styles.actionCheckbox}
+            />
+          </div>
+        ),
+        content: renderModuleContent(moduleStatement)
+      };
+    });
+  }, [handleModuleToggle, modules, renderModuleContent, value]);
 
   return (
     <FlexElement
@@ -316,4 +359,4 @@ const Resource: React.FC<ResourceProps> = ({value, onChange, catalog}) => {
   );
 };
 
-export default Resource;
+export default React.memo(Resource);

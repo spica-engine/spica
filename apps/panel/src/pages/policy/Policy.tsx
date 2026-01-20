@@ -9,13 +9,18 @@ import {
   useCreatePolicyMutation,
   useUpdatePolicyMutation,
   useDeletePolicyMutation,
+  useGetStatementsQuery,
 } from "../../store/api/policyApi";
 import { Button, FlexElement, Icon, type TableColumn } from "oziko-ui-kit";
 import SpicaTable from "../../components/organisms/table/Table";
 import styles from "./Policy.module.scss";
 import PolicyDrawer, { type PolicyUpsertInput } from "./PolicyDrawer";
-import { mapApiStatementsToCatalog } from "./mapApiStatementsToCatalog";
-import { servicesData } from "./services";
+import { registerAllRenderers } from "./registerRenderers";
+import { useModuleDataRegistry } from "./moduleRenderers";
+import { useModuleStatements } from "./hook/useStatement";
+
+registerAllRenderers();
+
 
 export type PolicyItem = {
   _id: string;
@@ -27,17 +32,18 @@ export type PolicyItem = {
 
 const Policy = () => {
   const { data: policies, isLoading } = useGetPoliciesQuery();
+
+  const {data: statements} = useGetStatementsQuery();
   const [createPolicy] = useCreatePolicyMutation();
   const [updatePolicy] = useUpdatePolicyMutation();
   const [deletePolicy] = useDeletePolicyMutation();
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyItem | null>(null);
+  
+  const modules = useModuleStatements(statements ?? []);
+  const { moduleData, moduleDataElements } = useModuleDataRegistry();
 
-  // Transform services data to catalog format
-  const catalog = useMemo(() => {
-    return mapApiStatementsToCatalog(servicesData);
-  }, []);
 
   const openCreatePolicy = () => {
     setSelectedPolicy(null);
@@ -57,7 +63,6 @@ const Policy = () => {
   const handleSave = async (input: PolicyUpsertInput) => {
     try {
       if (selectedPolicy?._id) {
-        // Update existing policy
         await updatePolicy({
           id: selectedPolicy._id,
           body: {
@@ -67,7 +72,6 @@ const Policy = () => {
           },
         }).unwrap();
       } else {
-        // Create new policy
         await createPolicy({
           name: input.name,
           description: input.description,
@@ -163,12 +167,14 @@ const Policy = () => {
         </Button>
       </FlexElement>
 
+      {moduleDataElements}
       <SpicaTable data={policies ?? []} columns={columns} isLoading={isLoading} skeletonRowCount={10}/>
 
       <PolicyDrawer
         isOpen={isOpen}
         selectedPolicy={selectedPolicy}
-        catalog={catalog}
+        modules={modules}
+        moduleData={moduleData}
         onSave={handleSave}
         onCancel={handleCloseDrawer}
       />
