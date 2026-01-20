@@ -210,7 +210,7 @@ const args = yargsInstance
         "StrategyFullAccess",
         "VersionControlFullAccess",
         "WebhookFullAccess",
-        "UserFullAccess"
+        "UserFullAccess",
         "ConfigFullAccess"
       ]
     },
