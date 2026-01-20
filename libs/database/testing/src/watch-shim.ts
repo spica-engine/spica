@@ -1,6 +1,5 @@
 import {Db, MongoClient} from "@spica-server/database";
 import {ChangeStream} from "mongodb";
-import {registerChangeStream} from "./start";
 
 const originalCollection = Db.prototype.collection;
 
@@ -10,9 +9,6 @@ Db.prototype.collection = function (name: string) {
   coll.watch = function () {
     _prepare();
     const stream = originalWatch.bind(this)(...arguments);
-
-    // Register the stream for cleanup tracking
-    registerChangeStream(stream);
 
     stream.on("ready", () => {
       if (_resolve) {
@@ -30,9 +26,6 @@ const originalWatch = MongoClient.prototype.watch;
 MongoClient.prototype.watch = function () {
   _prepare();
   const stream = originalWatch.bind(this)(...arguments);
-
-  // Register the stream for cleanup tracking
-  registerChangeStream(stream);
 
   stream.on("ready", () => {
     if (_resolve) {
