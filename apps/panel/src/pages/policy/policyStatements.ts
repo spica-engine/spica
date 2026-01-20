@@ -120,15 +120,18 @@ export function updateActionResource(
 
 export function validateStatements(
   displayedStatements: DisplayedStatement[],
-  catalog: { modules: Array<{ module: string; actions: Array<{ name: string; acceptsResource: boolean }> }> }
+  modules: Array<{ module: string; actions: Array<{ action: string; resource?: { include: string[]; exclude: string[] } }> }>
 ): boolean {
   for (const statement of displayedStatements) {
-    const catalogModule = catalog.modules.find((m) => m.module === statement.module);
-    if (!catalogModule) continue;
+    const moduleStatement = modules.find((m) => m.module === statement.module);
+    if (!moduleStatement) continue;
 
     for (const action of statement.actions) {
-      const catalogAction = catalogModule.actions.find((a) => a.name === action.name);
-      if (catalogAction?.acceptsResource) {
+      // Check if the action exists in module and has resource defined (means it accepts resource)
+      const moduleAction = moduleStatement.actions.find((a) => a.action === action.name);
+      const acceptsResource = moduleAction?.resource !== undefined;
+      
+      if (acceptsResource) {
         if (!action.resource || action.resource.include.length === 0) {
           return false;
         }
@@ -141,16 +144,17 @@ export function validateStatements(
 
 export function toggleAllModuleActions(
   displayedStatement: DisplayedStatement,
-  moduleActions: Array<{ name: string; acceptsResource: boolean }>,
+  moduleActions: Array<{ action: string; resource?: { include: string[]; exclude: string[] } }>,
   enable: boolean
 ): DisplayedStatement {
   if (enable) {
-    const newActions = moduleActions.map((catalogAction) => {
-      const existingAction = displayedStatement.actions.find((a) => a.name === catalogAction.name);
+    const newActions = moduleActions.map((moduleAction) => {
+      const existingAction = displayedStatement.actions.find((a) => a.name === moduleAction.action);
       if (existingAction) return existingAction;
 
-      const newAction: DisplayedAction = { name: catalogAction.name };
-      if (catalogAction.acceptsResource) {
+      const newAction: DisplayedAction = { name: moduleAction.action };
+      // If module action has resource, it accepts resource
+      if (moduleAction.resource !== undefined) {
         newAction.resource = { include: [], exclude: [] };
       }
       return newAction;
@@ -164,10 +168,10 @@ export function toggleAllModuleActions(
 
 export function areAllModuleActionsEnabled(
   displayedStatement: DisplayedStatement,
-  moduleActions: Array<{ name: string }>
+  moduleActions: Array<{ action: string }>
 ): boolean {
   if (moduleActions.length === 0) return false;
-  return moduleActions.every((catalogAction) =>
-    displayedStatement.actions.some((a) => a.name === catalogAction.name)
+  return moduleActions.every((moduleAction) =>
+    displayedStatement.actions.some((a) => a.name === moduleAction.action)
   );
 }

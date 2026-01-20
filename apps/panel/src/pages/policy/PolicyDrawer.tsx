@@ -4,12 +4,12 @@
  */
 
 import { Button, Drawer, FlexElement, Icon, StringInput, TextAreaInput } from "oziko-ui-kit";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./Policy.module.scss";
 import type { PolicyItem } from "./Policy";
 import Resource from "./Resource";
 import type { DisplayedStatement } from "./policyStatements";
-import type { PolicyCatalog } from "./policyCatalog";
+import type { ModuleStatement } from "./hook/useStatement";
 import { groupStatements, flattenStatements, validateStatements } from "./policyStatements";
 
 export type PolicyUpsertInput = {
@@ -22,7 +22,8 @@ export type PolicyUpsertInput = {
 type PolicyDrawerProps = {
   isOpen: boolean;
   selectedPolicy: PolicyItem | null;
-  catalog: PolicyCatalog;
+  modules: ModuleStatement[];
+  moduleData?: Record<string, unknown>;
   onSave: (input: PolicyUpsertInput) => void;
   onCancel: () => void;
 };
@@ -30,15 +31,14 @@ type PolicyDrawerProps = {
 const PolicyDrawer = ({
   isOpen,
   selectedPolicy,
-  catalog,
+  modules,
+  moduleData,
   onSave,
   onCancel,
 }: PolicyDrawerProps) => {
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [displayedStatements, setDisplayedStatements] = useState<DisplayedStatement[]>([]);
-
-  const mode = useMemo(() => (selectedPolicy ? "edit" : "create"), [selectedPolicy]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -47,7 +47,6 @@ const PolicyDrawer = ({
       setName(selectedPolicy.name ?? "");
       setDescription(selectedPolicy.description ?? "");
       
-      // Convert flat statements to grouped UI format
       if (selectedPolicy.statement && selectedPolicy.statement.length > 0) {
         setDisplayedStatements(groupStatements(selectedPolicy.statement));
       } else {
@@ -60,15 +59,14 @@ const PolicyDrawer = ({
     }
   }, [isOpen, selectedPolicy]);
 
-  // Validation
+
   const isNameValid = name.trim().length > 0;
-  const areStatementsValid = validateStatements(displayedStatements, catalog);
+  const areStatementsValid = validateStatements(displayedStatements, modules);
   const isValid = isNameValid && areStatementsValid;
 
   const handleSave = () => {
     if (!isValid) return;
 
-    // Flatten statements back to API format
     const flatStatements = flattenStatements(displayedStatements);
 
     onSave({
@@ -105,7 +103,8 @@ const PolicyDrawer = ({
         <Resource
           value={displayedStatements}
           onChange={setDisplayedStatements}
-          catalog={catalog}
+          modules={modules}
+          moduleData={moduleData}
         />
 
         <FlexElement

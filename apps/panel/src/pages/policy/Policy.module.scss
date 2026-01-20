@@ -49,6 +49,10 @@
 .accordionContainer {
   padding: 0 var(--padding-sm) !important;
   background-color: var(--color-menu-background) !important;
+  max-height: 680px !important;
+  align-items: start !important;
+  justify-content: start !important;
+  overflow-y: scroll !important;
 }
 
 .accordion {
@@ -177,26 +181,44 @@
   }
 }
 
-.flatActionsContainer {
-  padding: var(--padding-md);
-  background-color: var(--color-background-secondary);
+.flatActionsContainer{
+  padding: 0 var(--padding-sm) !important;
 }
 
 .flatActionItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--padding-sm) var(--padding-md);
-  background-color: var(--color-background);
-  border-radius: var(--border-radius-sm);
-  border: 1px solid var(--color-border);
 
-  &:hover {
-    background-color: var(--color-background-hover);
-  }
 
-  span {
-    font-size: 0.9rem;
-    color: var(--color-font-primary);
+    display: flex;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0 calc(var(--padding-xl) * 1.55) 0 var(--padding-md) !important;
+  
+    width: 100%;
+    border-bottom: 1px solid var(--color-border);
+
+    &:hover{
+      background-color: var(--color-zebra) !important;
+      cursor: pointer;
+    }
+
+}
+
+.actionContentContainer{
+  >  div:first-of-type {
+    padding: 0 !important;
+    max-height: 400px !important;
+    overflow-y: scroll !important;
   }
 }
+
+.actionContentItemContainer{
+  padding: 0 var(--padding-xl);
+
+  &:nth-child(even){
+    background-color: var(--color-zebra);
+    border-radius: var(--border-radius-sm);
+  }
+}
+
+
+
