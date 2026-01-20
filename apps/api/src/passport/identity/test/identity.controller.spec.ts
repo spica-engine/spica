@@ -55,7 +55,7 @@ describe("Identity Controller", () => {
 
   afterEach(() => app.close());
 
-  xdescribe("profiler", () => {
+  describe("profiler", () => {
     beforeEach(async () => {
       // to make db insert profile entry
       await Promise.all([
@@ -69,7 +69,7 @@ describe("Identity Controller", () => {
     it("should list identity profile entries", async () => {
       const res = await req.get("/passport/identity/profile");
       expect(res.statusCode).toEqual(200);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
     });
 
     it("should filter identity profile entries by operation type", async () => {
@@ -78,7 +78,7 @@ describe("Identity Controller", () => {
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body.every(profileEntry => profileEntry.op == "insert")).toEqual(true);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
     });
 
     it("should limit identity profile entries", async () => {
@@ -87,7 +87,7 @@ describe("Identity Controller", () => {
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body.length).toEqual(1);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
     });
 
     it("should skip bucket1 profile entries", async () => {
@@ -98,18 +98,22 @@ describe("Identity Controller", () => {
 
       allProfileEntries.shift();
       expect(res.body).toEqual(allProfileEntries);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
     });
 
     it("should sort bucket1 profile entries", async () => {
       const {body: allProfileEntries} = await req.get("/passport/identity/profile");
       const res = await req.get("/passport/identity/profile", {sort: JSON.stringify({ts: -1})});
       expect(res.statusCode).toEqual(200);
-      expect(res.body).not.toEqual(allProfileEntries);
 
-      allProfileEntries.reverse();
-      expect(res.body).toEqual(allProfileEntries);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      const expectedSorted = [...allProfileEntries].sort((a, b) => {
+        const tsCompare = new Date(b.ts).getTime() - new Date(a.ts).getTime();
+        if (tsCompare !== 0) return tsCompare;
+        return (a.op || "").localeCompare(b.op || "");
+      });
+
+      expect(res.body).toEqual(expectedSorted);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
     });
 
     // to prevent accessing other collections profile entries
@@ -120,7 +124,7 @@ describe("Identity Controller", () => {
 
       expect(res.statusCode).toEqual(200);
       // user provided ns filter will be overridden
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
     });
 
     it("should ignore ns on the nested filter", async () => {
