@@ -2,8 +2,8 @@ import {DynamicModule, Global, Module} from "@nestjs/common";
 import {PassportModule as CorePassportModule} from "@nestjs/passport";
 import {ApiKeyModule} from "@spica-server/passport/apikey";
 import {IdentityModule} from "@spica-server/passport/identity";
+import {UserModule} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
-import {PreferenceService} from "@spica-server/preference/services";
 import {GuardService} from "@spica-server/passport/guard/services";
 import {RequestService} from "./options";
 import {
@@ -12,7 +12,8 @@ import {
   REQUEST_SERVICE,
   STRATEGIES
 } from "@spica-server/interface/passport";
-import {PassportController} from "./passport.controller";
+import {PassportIdentityController} from "./passport.identity.controller";
+import {PassportUserController} from "./passport.user.controller";
 import {SamlService} from "./strategy/services/saml.service";
 import {StrategyController} from "./strategy/strategy.controller";
 import {StrategyService} from "./strategy/services/strategy.service";
@@ -43,38 +44,23 @@ class PassportCoreModule {
 
 @Module({})
 export class PassportModule {
-  constructor(preference: PreferenceService) {
-    preference.default({scope: "passport", identity: {attributes: {}}});
-  }
+  constructor() {}
 
   static forRoot(options: PassportOptions): DynamicModule {
     return {
       module: PassportModule,
-      controllers: [PassportController, StrategyController],
+      controllers: [PassportIdentityController, PassportUserController, StrategyController],
       imports: [
         SchemaModule.forChild({
           schemas: [LoginSchema, StrategySchema]
         }),
         PassportCoreModule.initialize(options),
-        IdentityModule.forRoot({
-          expiresIn: options.expiresIn,
-          maxExpiresIn: options.maxExpiresIn,
-          issuer: options.issuer,
-          refreshTokenExpiresIn: options.refreshTokenExpiresIn,
-          secretOrKey: options.secretOrKey,
-          audience: options.audience,
-          defaultIdentityIdentifier: options.defaultIdentityIdentifier,
-          defaultIdentityPassword: options.defaultIdentityPassword,
-          defaultIdentityPolicies: options.defaultIdentityPolicies,
-          entryLimit: options.entryLimit,
-          passwordHistoryLimit: options.passwordHistoryLimit,
-          blockingOptions: options.blockingOptions,
-          identityRealtime: options.identityRealtime
-        }),
+        IdentityModule.forRoot(options.identityOptions),
+        UserModule.forRoot(options.userOptions),
         PolicyModule.forRoot({realtime: options.policyRealtime}),
         ApiKeyModule.forRoot({realtime: options.apikeyRealtime}),
         RefreshTokenModule.forRoot({
-          expiresIn: options.refreshTokenExpiresIn,
+          expiresIn: options.identityOptions.refreshTokenExpiresIn,
           realtime: options.refreshTokenRealtime
         }),
         AuthFactorModule

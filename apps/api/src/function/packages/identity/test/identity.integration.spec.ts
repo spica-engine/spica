@@ -27,27 +27,46 @@ describe("Identity", () => {
         SchemaModule.forRoot(),
         DatabaseTestingModule.standalone(),
         PassportModule.forRoot({
-          expiresIn: EXPIRES_IN,
-          issuer: "spica",
-          maxExpiresIn: MAX_EXPIRES_IN,
           publicUrl: PUBLIC_URL,
           samlCertificateTTL: EXPIRES_IN,
-          refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
-          secretOrKey: "spica",
-          defaultStrategy: "IDENTITY",
-          defaultIdentityIdentifier: "spica",
-          defaultIdentityPassword: "spica",
-          audience: "spica",
-          defaultIdentityPolicies: ["PassportFullAccess"],
-          blockingOptions: {
-            blockDurationMinutes: 0,
-            failedAttemptLimit: 0
-          },
-          passwordHistoryLimit: 0,
           apikeyRealtime: false,
-          identityRealtime: false,
           refreshTokenRealtime: false,
-          policyRealtime: false
+          policyRealtime: false,
+          defaultStrategy: "IDENTITY",
+          identityOptions: {
+            expiresIn: EXPIRES_IN,
+            issuer: "spica",
+            maxExpiresIn: MAX_EXPIRES_IN,
+            refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+            secretOrKey: "spica",
+            defaultIdentityIdentifier: "spica",
+            defaultIdentityPassword: "spica",
+            audience: "spica",
+            defaultIdentityPolicies: ["PassportFullAccess"],
+            blockingOptions: {
+              blockDurationMinutes: 0,
+              failedAttemptLimit: 0
+            },
+            passwordHistoryLimit: 0,
+            identityRealtime: false
+          },
+          userOptions: {
+            expiresIn: EXPIRES_IN,
+            issuer: "spica",
+            maxExpiresIn: MAX_EXPIRES_IN,
+            refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+            secretOrKey: "spica",
+            defaultUserUsername: "spica",
+            defaultUserPassword: "spica",
+            audience: "spica",
+            defaultUserPolicies: ["PassportFullAccess"],
+            blockingOptions: {
+              blockDurationMinutes: 0,
+              failedAttemptLimit: 0
+            },
+            passwordHistoryLimit: 0,
+            userRealtime: false
+          }
         }),
         PreferenceTestingModule,
         CoreTestingModule,

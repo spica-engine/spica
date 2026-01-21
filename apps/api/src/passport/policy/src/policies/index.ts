@@ -47,6 +47,9 @@ import VersionControlFullAccess from "./version.fullaccess";
 import WebhookFullAccess from "./webhook.fullaccess";
 import WebhookReadOnlyAccess from "./webhook.readonly";
 
+import UserFullAccess from "./user.fullaccess";
+import UserReadOnlyAccess from "./user.readonly";
+
 import ConfigFullAccess from "./config.fullaccess";
 import ConfigReadOnlyAccess from "./config.readonly";
 
@@ -99,6 +102,9 @@ export default [
 
   WebhookFullAccess,
   WebhookReadOnlyAccess,
+
+  UserFullAccess,
+  UserReadOnlyAccess,
 
   ConfigFullAccess,
   ConfigReadOnlyAccess

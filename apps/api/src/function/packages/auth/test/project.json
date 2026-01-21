@@ -1,0 +1,5 @@
+{
+  "name": "api/function/packages/auth/test",
+  "sourceRoot": "apps/api/src/function/packages/auth/test",
+  "projectType": "application"
+}
