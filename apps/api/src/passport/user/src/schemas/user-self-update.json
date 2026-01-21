@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/passport/user-self-update",
+  "type": "object",
+  "title": "Schema for user self-update (non-administrative fields)",
+  "properties": {
+    "password": {
+      "type": "string",
+      "title": "Password of the user",
+      "minLength": 3
+    }
+  },
+  "additionalProperties": false
+}

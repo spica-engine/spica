@@ -19,6 +19,8 @@ import {USER_POLICY_FINALIZER} from "@spica-server/interface/passport/policy";
 import {registerStatusProvider} from "./status";
 import userSchema from "./schemas/user.json" with {type: "json"};
 import userCreateSchema from "./schemas/user-create.json" with {type: "json"};
+import userUpdateSchema from "./schemas/user-update.json" with {type: "json"};
+import userSelfUpdateSchema from "./schemas/user-self-update.json" with {type: "json"};
 import AuthFactorSchema from "./schemas/authfactor.json" with {type: "json"};
 import {AuthResolver} from "./relation";
 import {AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
@@ -80,7 +82,13 @@ export class UserModule {
           }
         }),
         SchemaModule.forChild({
-          schemas: [userSchema, userCreateSchema, AuthFactorSchema],
+          schemas: [
+            userSchema,
+            userCreateSchema,
+            userUpdateSchema,
+            userSelfUpdateSchema,
+            AuthFactorSchema
+          ],
           customFields: [
             "options",
             // relation

@@ -10,6 +10,8 @@ export class SchemaResolver {
       validator.removeSchema("http://spica.internal/passport/update-user-with-attributes");
       validator.removeSchema("http://spica.internal/passport/create-user-with-attributes");
       validator.removeSchema("http://spica.internal/passport/user-attributes");
+      validator.removeSchema("http://spica.internal/passport/user-self-update-with-attributes");
+      validator.removeSchema("http://spica.internal/passport/user-update-with-attributes");
     });
   }
 

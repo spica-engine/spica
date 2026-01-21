@@ -237,7 +237,6 @@ describe("auth", () => {
 
     it("should update password", async () => {
       await auth.updatePassword(userId, {
-        username: "updateuser",
         password: "newpass"
       });
 

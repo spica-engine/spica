@@ -128,7 +128,7 @@ export async function updatePassword(
 
   user = deepCopyJSON(user);
 
-  const updatedUser = await service.put<UserGet>(`${userSegment}/${id}`, user, {
+  const updatedUser = await service.put<UserGet>(`${userSegment}/${id}/self`, user, {
     headers
   });
 
