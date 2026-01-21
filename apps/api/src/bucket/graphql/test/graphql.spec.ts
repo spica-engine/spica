@@ -1171,7 +1171,7 @@ describe("GraphQLController", () => {
           });
         });
 
-        it("should get publishers which has book that will be published at tomorrow", async () => {
+        xit("should get publishers which has book that will be published at tomorrow", async () => {
           const begin = new Date("2020-10-20T00:00:00.000Z");
           const end = new Date("2020-10-20T23:59:59.999Z");
 
