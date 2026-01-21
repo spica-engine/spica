@@ -17,11 +17,11 @@ describe("User Ban Logic", () => {
   const EXPIRES_IN = 60_000;
 
   const setupFakeTimers = () => {
+    const now = new Date();
     jest.useFakeTimers({
+      now: now.getTime(),
       doNotFake: ["nextTick"]
     });
-    const now = new Date();
-    jest.setSystemTime(now);
     return now;
   };
 

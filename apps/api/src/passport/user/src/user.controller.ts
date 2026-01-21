@@ -348,7 +348,7 @@ export class UserController {
   )
   async updateSelf(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/user-self-update-with-attributes"))
+    @Body(Schema.validate("http://spica.internal/passport/user-self-update"))
     user: Partial<User>
   ) {
     if (user.password) {
@@ -379,7 +379,7 @@ export class UserController {
   )
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/user-update-with-attributes"))
+    @Body(Schema.validate("http://spica.internal/passport/user-update"))
     user: Partial<User>
   ) {
     if (user.password) {
