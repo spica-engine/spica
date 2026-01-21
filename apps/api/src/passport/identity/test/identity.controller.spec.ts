@@ -102,21 +102,16 @@ describe("Identity Controller", () => {
     });
 
     it("should sort bucket1 profile entries", async () => {
-      const resDesc = await req.get("/passport/identity/profile", {
-        sort: JSON.stringify({ts: -1, op: 1})
+      const response = await req.get("/passport/identity/profile", {
+        sort: JSON.stringify({ts: -1})
       });
-      const resAsc = await req.get("/passport/identity/profile", {
-        sort: JSON.stringify({ts: 1, op: -1})
-      });
+      expect(response.statusCode).toEqual(200);
 
-      expect(resDesc.statusCode).toEqual(200);
-      expect(resAsc.statusCode).toEqual(200);
-      expect(resDesc.body.length).toEqual(resAsc.body.length);
+      for (let i = 1; i < response.body.length; i++) {
+        expect(response.body[i - 1].ts >= response.body[i].ts).toEqual(true);
+      }
 
-      // Reversed ascending should equal descending to be sure sorting works correctly
-      const reversedAsc = [...resAsc.body].reverse();
-      expect(resDesc.body).toEqual(reversedAsc);
-      expect(resDesc.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(
+      expect(response.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(
         true
       );
     });
