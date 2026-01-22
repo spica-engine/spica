@@ -80,10 +80,14 @@ export interface UserVerification {
   destination: string;
   attempts: number;
   code: string;
-  channel: string;
-  purpose: "verify";
+  strategy: "Otp";
+  purpose: string;
   is_used: boolean;
   verificationCount?: number;
+}
+
+export interface UserConfigSettings {
+  maxAttempts: number;
 }
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");

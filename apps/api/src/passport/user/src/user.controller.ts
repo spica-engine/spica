@@ -42,6 +42,7 @@ import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {VerificationService} from "./verification.service";
+import {ProviderVerificationService} from "./services/provider.verification.service";
 
 @Controller("passport/user")
 export class UserController {
@@ -66,6 +67,7 @@ export class UserController {
   constructor(
     private userService: UserService,
     private verificationService: VerificationService,
+    private providerVerificationService: ProviderVerificationService,
     @Inject(USER_OPTIONS) private options: UserOptions,
     private authFactor: AuthFactor,
     @Optional() private commander: ClassCommander
@@ -476,9 +478,11 @@ export class UserController {
   startAuthProviderVerification(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("value") value: string,
-    @Body("provider") provider: string
+    @Body("provider") provider: string,
+    @Body("strategy") strategy: "Otp",
+    @Body("purpose") purpose: string
   ) {
-    return this.verificationService.startAuthProviderVerification(id, value, provider);
+    return this.verificationService.startVerification(id, value, strategy, provider, purpose);
   }
 
   @Post(":id/verify-provider")
@@ -486,9 +490,10 @@ export class UserController {
   async verifyProvider(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("code") code: string,
-    @Body("provider") provider: string
+    @Body("provider") provider: string,
+    @Body("strategy") strategy: "Otp"
   ) {
-    return this.verificationService.verifyAuthProvider(id, code, provider);
+    return this.providerVerificationService.verifyProvider(id, code, strategy, provider);
   }
 
   private async handlePasswordUpdate(
