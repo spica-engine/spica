@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {PreferenceService} from "@spica-server/preference/services";
-import {IdentityService} from "./identity.service";
-import {Identity} from "@spica-server/interface/passport/identity";
+import {UserService} from "./user.service";
+import {User} from "@spica-server/interface/passport/user";
 import {IAuthResolver} from "@spica-server/interface/bucket/common";
 
 @Injectable()
@@ -9,16 +9,17 @@ export class AuthResolver implements IAuthResolver {
   properties;
 
   constructor(
-    private identityService: IdentityService,
+    private userService: UserService,
     private prefService: PreferenceService
   ) {
     this.prefService.watch("passport", {propagateOnStart: true}).subscribe(schema => {
-      if (!schema || !schema.identity || !schema.identity.attributes) {
+      if (!schema || !schema.user || !schema.user.attributes) {
         this.properties = {};
+        return;
       }
 
-      schema.identity.attributes.type = "object";
-      this.properties = schema.identity;
+      schema.user.attributes.type = "object";
+      this.properties = schema.user;
     });
   }
 
@@ -26,15 +27,15 @@ export class AuthResolver implements IAuthResolver {
     return this.properties;
   }
 
-  resolveRelations(identity: Identity, aggregation: object[]) {
-    // we don't need to find identity
-    return this.identityService._coll
+  resolveRelations(user: User, aggregation: object[]) {
+    // we don't need to find user
+    return this.userService._coll
       .aggregate([
         {
           $limit: 1
         },
         {
-          $replaceWith: {$literal: identity}
+          $replaceWith: {$literal: user}
         },
         ...aggregation
       ])

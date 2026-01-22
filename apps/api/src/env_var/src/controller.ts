@@ -30,7 +30,7 @@ export class EnvVarController {
   constructor(private evs: EnvVarService) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("env-var:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:index"))
   async find(
     @ResourceFilter() resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
@@ -43,14 +43,14 @@ export class EnvVarController {
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("env-var:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.findOne(this.evs, id);
   }
 
   @UseInterceptors(activity(createEnvVarActivity))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("env-var:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:create"))
   async insertOne(
     @Body(Schema.validate("http://spica.internal/env_var"))
     envVar: EnvVar
@@ -62,7 +62,7 @@ export class EnvVarController {
 
   @UseInterceptors(activity(createEnvVarActivity))
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("env-var:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:update"))
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/env_var"))
@@ -76,7 +76,7 @@ export class EnvVarController {
   @UseInterceptors(activity(createEnvVarActivity))
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("env-var:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("env-var:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.remove(this.evs, id);
   }
