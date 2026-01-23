@@ -309,14 +309,19 @@ describe("VerificationService", () => {
         messageId: "test-message-id"
       });
 
-      for (let i = 0; i < maxAttemptCount + 1; i++) {
-        await verificationService.startVerification(
+      for (let i = 0; i < maxAttemptCount; i++) {
+        const verification = await verificationService.startVerification(
           userId,
           email,
           STRATEGY,
           EMAIL_PROVIDER,
           PURPOSE
         );
+
+        expect(verification).toMatchObject({
+          message: expect.stringContaining("successfully"),
+          value: email
+        });
       }
       try {
         await verificationService.startVerification(

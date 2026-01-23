@@ -5,7 +5,6 @@ import {hash} from "@spica-server/core/schema";
 import {randomInt} from "crypto";
 import {VerificationProviderRegistry} from "./providers";
 import {UserConfigService} from "./config.service";
-import {UserService} from "./user.service";
 
 @Injectable()
 export class VerificationService extends BaseCollection<UserVerification>("verification") {
@@ -115,7 +114,13 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     strategy: "Otp",
     provider: string,
     purpose: string
-  ) {
+  ): Promise<{
+    userId: ObjectId;
+    destination: string;
+    verifiedField: string;
+    strategy: "Otp";
+    provider: string;
+  }> {
     const verification = await this.findOneAndUpdate(
       {
         userId: id,
@@ -167,6 +172,12 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
 
   private async getUserConfigMaxAttempts(): Promise<number> {
     const config = await this.userConfigService.getUserConfig();
-    return config?.["maxAttempts"];
+    const maxAttempt = config?.options?.["maxAttempts"];
+
+    if (!maxAttempt) {
+      throw new Error("User max attempt count not found.");
+    }
+
+    return maxAttempt;
   }
 }

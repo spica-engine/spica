@@ -15,7 +15,7 @@ export class ProviderVerificationService {
     code: string,
     strategy: "Otp",
     provider: string
-  ): Promise<any> {
+  ): Promise<{message: string; provider: string; destination: string}> {
     const response = await this.verificationService.verifyProvider(
       id,
       code,
@@ -23,9 +23,6 @@ export class ProviderVerificationService {
       provider,
       "verify"
     );
-    if (!response) {
-      throw new BadRequestException("Verification failed. Please check the code and try again.");
-    }
 
     await this.userService.updateOne(
       {_id: response.userId},

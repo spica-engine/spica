@@ -10,12 +10,18 @@ export class UserConfigService extends ConfigService {
   }
 
   setUserConfig(config: UserConfigSettings): void {
-    this.insertOne({
-      module: "User",
-      options: {
-        ...config
-      }
-    });
+    this.updateOne(
+      {module: "User"},
+      {
+        $set: {
+          module: "User",
+          options: {
+            ...config
+          }
+        }
+      },
+      {upsert: true}
+    );
   }
   getUserConfig() {
     return this.findOne({

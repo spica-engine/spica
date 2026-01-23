@@ -32,7 +32,6 @@ describe("Provider Verification E2E with MailHog", () => {
   const STRATEGY = "Otp";
   const PURPOSE = "verify";
   const EMAIL_PROVIDER = "email";
-  const PHONE_PROVIDER = "phone";
 
   beforeAll(async () => {
     const mailerUrl = process.env.MAILER_URL;
@@ -263,7 +262,7 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(body.total).toBe(0);
     });
 
-    it("should fail after trying with second time", async () => {
+    it("should fail when attempting verification a second time", async () => {
       const email = "maxattempts@example.com";
 
       const startResult = await verificationService.startVerification(
