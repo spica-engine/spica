@@ -104,8 +104,8 @@ describe("Provider Verification E2E with MailHog", () => {
     db = module.get(DatabaseService);
     userConfigService = module.get(UserConfigService);
 
-    userConfigService.setUserConfig({
-      maxAttempts: 3
+    userConfigService.set({
+      verificationProcessMaxAttempt: 3
     });
   }, 60000);
 
@@ -138,7 +138,7 @@ describe("Provider Verification E2E with MailHog", () => {
     it("should successfully verify user with correct code sent via email", async () => {
       const email = "test@example.com";
 
-      const startResult = await verificationService.startVerification(
+      const startResult = await verificationService.startVerificationProcess(
         testUserId,
         email,
         STRATEGY,
@@ -181,11 +181,12 @@ describe("Provider Verification E2E with MailHog", () => {
         is_used: false
       });
 
-      const verifyResult = await providerVerificationService.verifyProvider(
+      const verifyResult = await providerVerificationService.validateCredentialsVerification(
         testUserId,
         code,
         STRATEGY,
-        EMAIL_PROVIDER
+        EMAIL_PROVIDER,
+        PURPOSE
       );
 
       expect(verifyResult).toEqual({
@@ -209,7 +210,7 @@ describe("Provider Verification E2E with MailHog", () => {
     it("should fail verification when user enters wrong code", async () => {
       const email = "wrongcode@example.com";
 
-      const startResult = await verificationService.startVerification(
+      const startResult = await verificationService.startVerificationProcess(
         testUserId,
         email,
         STRATEGY,
@@ -240,7 +241,7 @@ describe("Provider Verification E2E with MailHog", () => {
       });
 
       await providerVerificationService
-        .verifyProvider(testUserId, wrongCode, STRATEGY, EMAIL_PROVIDER)
+        .validateCredentialsVerification(testUserId, wrongCode, STRATEGY, EMAIL_PROVIDER, PURPOSE)
         .catch(error => {
           expect(error.response.message).toBe("Invalid verification code");
         });
@@ -258,7 +259,7 @@ describe("Provider Verification E2E with MailHog", () => {
       const provider = "email";
 
       await verificationService
-        .startVerification(testUserId, invalidEmail, STRATEGY, provider, PURPOSE)
+        .startVerificationProcess(testUserId, invalidEmail, STRATEGY, provider, PURPOSE)
         .catch(error => {
           expect(error.message).toContain("Invalid destination format");
         });
@@ -272,7 +273,7 @@ describe("Provider Verification E2E with MailHog", () => {
     it("should fail when attempting verification a second time", async () => {
       const email = "maxattempts@example.com";
 
-      const startResult = await verificationService.startVerification(
+      const startResult = await verificationService.startVerificationProcess(
         testUserId,
         email,
         STRATEGY,
@@ -298,7 +299,7 @@ describe("Provider Verification E2E with MailHog", () => {
       });
 
       await providerVerificationService
-        .verifyProvider(testUserId, wrongCode, STRATEGY, EMAIL_PROVIDER)
+        .validateCredentialsVerification(testUserId, wrongCode, STRATEGY, EMAIL_PROVIDER, PURPOSE)
         .catch(error => {
           expect(error.response.message).toBe("Invalid verification code");
         });
@@ -308,7 +309,7 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(updatedVerification.is_used).toBe(true);
 
       await providerVerificationService
-        .verifyProvider(testUserId, wrongCode, STRATEGY, EMAIL_PROVIDER)
+        .validateCredentialsVerification(testUserId, wrongCode, STRATEGY, EMAIL_PROVIDER, PURPOSE)
         .catch(error => {
           expect(error.response.message).toBe("No verification found");
         });

@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {VerificationService} from "../verification.service";
-import {BadRequestException, Injectable} from "@nestjs/common";
+import {Injectable} from "@nestjs/common";
 import {UserService} from "../user.service";
 
 @Injectable()
@@ -10,18 +10,35 @@ export class ProviderVerificationService {
     private readonly userService: UserService
   ) {}
 
-  async verifyProvider(
+  async startCredentialsVerification(
+    id: ObjectId,
+    value: string,
+    strategy: string,
+    provider: string,
+    purpose: string
+  ): Promise<{message: string; value: string; metadata: Record<string, any>}> {
+    return await this.verificationService.startVerificationProcess(
+      id,
+      value,
+      strategy,
+      provider,
+      purpose
+    );
+  }
+
+  async validateCredentialsVerification(
     id: ObjectId,
     code: string,
-    strategy: "Otp",
-    provider: string
+    strategy: string,
+    provider: string,
+    purpose: string
   ): Promise<{message: string; provider: string; destination: string}> {
-    const response = await this.verificationService.verifyProvider(
+    const response = await this.verificationService.confirmVerificationProcess(
       id,
       code,
       strategy,
       provider,
-      "verify"
+      purpose
     );
 
     await this.userService.updateOne(

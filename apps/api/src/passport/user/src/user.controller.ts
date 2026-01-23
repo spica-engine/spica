@@ -482,7 +482,13 @@ export class UserController {
     @Body("strategy") strategy: "Otp",
     @Body("purpose") purpose: string
   ) {
-    return this.verificationService.startVerification(id, value, strategy, provider, purpose);
+    return this.providerVerificationService.startCredentialsVerification(
+      id,
+      value,
+      strategy,
+      provider,
+      purpose
+    );
   }
 
   @Post(":id/verify-provider")
@@ -491,9 +497,16 @@ export class UserController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("code") code: string,
     @Body("provider") provider: string,
-    @Body("strategy") strategy: "Otp"
+    @Body("strategy") strategy: string,
+    @Body("purpose") purpose: string
   ) {
-    return this.providerVerificationService.verifyProvider(id, code, strategy, provider);
+    return this.providerVerificationService.validateCredentialsVerification(
+      id,
+      code,
+      strategy,
+      provider,
+      purpose
+    );
   }
 
   private async handlePasswordUpdate(

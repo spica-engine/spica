@@ -21,10 +21,10 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     });
   }
 
-  async startVerification(
+  async startVerificationProcess(
     id: ObjectId,
     value: string,
-    strategy: "Otp",
+    strategy: string,
     provider: string,
     purpose: string
   ) {
@@ -54,7 +54,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
           createdAt: new Date()
         },
         $inc: {
-          verificationCount: 1
+          requestCount: 1
         },
         $set: {
           code: hashedCode
@@ -72,7 +72,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
       throw new Error("Failed to create verification record");
     }
     const maxAttempts = await this.getUserConfigMaxAttempts();
-    if (verification.verificationCount > maxAttempts) {
+    if (verification.requestCount > maxAttempts) {
       throw new BadRequestException(
         "Too many verification attempts. Please wait a bit before trying again."
       );
@@ -108,17 +108,17 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     }
   }
 
-  async verifyProvider(
+  async confirmVerificationProcess(
     id: ObjectId,
     code: string,
-    strategy: "Otp",
+    strategy: string,
     provider: string,
     purpose: string
   ): Promise<{
     userId: ObjectId;
     destination: string;
     verifiedField: string;
-    strategy: "Otp";
+    strategy: string;
     provider: string;
   }> {
     const verification = await this.findOneAndUpdate(
@@ -171,8 +171,8 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   private async getUserConfigMaxAttempts(): Promise<number> {
-    const config = await this.userConfigService.getUserConfig();
-    const maxAttempt = config?.options?.["maxAttempts"];
+    const config = await this.userConfigService.get();
+    const maxAttempt = config?.options?.["verificationProcessMaxAttempt"];
 
     if (!maxAttempt) {
       throw new Error("User max attempt count not found.");

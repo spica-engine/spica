@@ -94,8 +94,8 @@ describe("VerificationService", () => {
     smsService = module.get(SmsService);
     db = module.get(DatabaseService);
 
-    userConfigService.setUserConfig({
-      maxAttempts: maxAttemptCount
+    userConfigService.set({
+      verificationProcessMaxAttempt: maxAttemptCount
     });
   });
 
@@ -116,7 +116,7 @@ describe("VerificationService", () => {
         messageId: "test-message-id"
       });
 
-      const result = await verificationService.startVerification(
+      const result = await verificationService.startVerificationProcess(
         userId,
         email,
         STRATEGY,
@@ -159,7 +159,7 @@ describe("VerificationService", () => {
         messageId: "test-sms-message-id"
       });
 
-      const result = await verificationService.startVerification(
+      const result = await verificationService.startVerificationProcess(
         userId,
         phoneNumber,
         STRATEGY,
@@ -197,7 +197,7 @@ describe("VerificationService", () => {
       const invalidEmail = "not-an-email";
 
       await expect(
-        verificationService.startVerification(
+        verificationService.startVerificationProcess(
           userId,
           invalidEmail,
           STRATEGY,
@@ -220,7 +220,7 @@ describe("VerificationService", () => {
       const invalidPhone = "not-a-phone";
 
       await expect(
-        verificationService.startVerification(
+        verificationService.startVerificationProcess(
           userId,
           invalidPhone,
           STRATEGY,
@@ -244,7 +244,13 @@ describe("VerificationService", () => {
       const unknownProvider = "unknown-provider";
 
       await expect(
-        verificationService.startVerification(userId, email, STRATEGY, unknownProvider, PURPOSE)
+        verificationService.startVerificationProcess(
+          userId,
+          email,
+          STRATEGY,
+          unknownProvider,
+          PURPOSE
+        )
       ).rejects.toThrow(BadRequestException);
 
       const [mailCalls, verificationRecord] = await Promise.all([
@@ -266,7 +272,13 @@ describe("VerificationService", () => {
       });
 
       await expect(
-        verificationService.startVerification(userId, email, STRATEGY, EMAIL_PROVIDER, PURPOSE)
+        verificationService.startVerificationProcess(
+          userId,
+          email,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
       ).rejects.toThrow(BadRequestException);
 
       const verificationRecord = await verificationService.findOne({userId, destination: email});
@@ -283,7 +295,7 @@ describe("VerificationService", () => {
       });
 
       await expect(
-        verificationService.startVerification(
+        verificationService.startVerificationProcess(
           userId,
           phoneNumber,
           STRATEGY,
@@ -310,7 +322,7 @@ describe("VerificationService", () => {
       });
 
       for (let i = 0; i < maxAttemptCount; i++) {
-        const verification = await verificationService.startVerification(
+        const verification = await verificationService.startVerificationProcess(
           userId,
           email,
           STRATEGY,
@@ -324,7 +336,7 @@ describe("VerificationService", () => {
         });
       }
       try {
-        await verificationService.startVerification(
+        await verificationService.startVerificationProcess(
           userId,
           email,
           STRATEGY,
@@ -349,7 +361,7 @@ describe("VerificationService", () => {
         messageId: "test-message-id"
       });
 
-      const result = await verificationService.startVerification(
+      const result = await verificationService.startVerificationProcess(
         userId,
         email,
         STRATEGY,
@@ -362,7 +374,7 @@ describe("VerificationService", () => {
       const codeMatch = sentEmail.match(/is: (\d{6})/);
       const code = codeMatch[1];
 
-      const updatedVerification = await verificationService.verifyProvider(
+      const updatedVerification = await verificationService.confirmVerificationProcess(
         userId,
         code,
         STRATEGY,
@@ -395,10 +407,22 @@ describe("VerificationService", () => {
         messageId: "test-message-id"
       });
 
-      await verificationService.startVerification(userId, email, STRATEGY, EMAIL_PROVIDER, PURPOSE);
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
 
       await expect(
-        verificationService.verifyProvider(userId, wrongCode, STRATEGY, EMAIL_PROVIDER, PURPOSE)
+        verificationService.confirmVerificationProcess(
+          userId,
+          wrongCode,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
       ).rejects.toThrow(BadRequestException);
 
       const updatedVerification = await verificationService.findOne({userId, destination: email});
@@ -415,13 +439,19 @@ describe("VerificationService", () => {
         messageId: "test-message-id"
       });
 
-      await verificationService.startVerification(userId, email, STRATEGY, EMAIL_PROVIDER, PURPOSE);
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
 
       const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
       const codeMatch = sentEmail.match(/is: (\d{6})/);
       const code = codeMatch[1];
 
-      const verification = await verificationService.verifyProvider(
+      const verification = await verificationService.confirmVerificationProcess(
         userId,
         code,
         STRATEGY,
@@ -441,7 +471,13 @@ describe("VerificationService", () => {
       expect(updatedVerification.is_used).toBe(true);
 
       await expect(
-        verificationService.verifyProvider(userId, code, STRATEGY, EMAIL_PROVIDER, PURPOSE)
+        verificationService.confirmVerificationProcess(
+          userId,
+          code,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
       ).rejects.toThrow(NotFoundException);
 
       const finalVerification = await verificationService.findOne({userId, destination: email});
@@ -459,14 +495,26 @@ describe("VerificationService", () => {
         messageId: "test-message-id"
       });
 
-      await verificationService.startVerification(userId, email, STRATEGY, EMAIL_PROVIDER, PURPOSE);
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
 
       const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
       const codeMatch = sentEmail.match(/is: (\d{6})/);
       const code = codeMatch[1];
 
       await expect(
-        verificationService.verifyProvider(wrongUserId, code, STRATEGY, EMAIL_PROVIDER, PURPOSE)
+        verificationService.confirmVerificationProcess(
+          wrongUserId,
+          code,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
       ).rejects.toThrow(NotFoundException);
 
       const updatedVerification = await verificationService.findOne({userId, destination: email});
@@ -483,14 +531,26 @@ describe("VerificationService", () => {
         messageId: "test-message-id"
       });
 
-      await verificationService.startVerification(userId, email, STRATEGY, EMAIL_PROVIDER, PURPOSE);
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
 
       const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
       const codeMatch = sentEmail.match(/is: (\d{6})/);
       const code = codeMatch[1];
 
       await expect(
-        verificationService.verifyProvider(userId, code, STRATEGY, PHONE_PROVIDER, PURPOSE)
+        verificationService.confirmVerificationProcess(
+          userId,
+          code,
+          STRATEGY,
+          PHONE_PROVIDER,
+          PURPOSE
+        )
       ).rejects.toThrow(NotFoundException);
 
       const updatedVerification = await verificationService.findOne({userId, destination: email});
@@ -508,14 +568,26 @@ describe("VerificationService", () => {
         messageId: "test-message-id"
       });
 
-      await verificationService.startVerification(userId, email, STRATEGY, EMAIL_PROVIDER, PURPOSE);
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
 
       const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
       const codeMatch = sentEmail.match(/is: (\d{6})/);
       const code = codeMatch[1];
 
       await expect(
-        verificationService.verifyProvider(userId, code, STRATEGY, EMAIL_PROVIDER, wrongPurpose)
+        verificationService.confirmVerificationProcess(
+          userId,
+          code,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          wrongPurpose
+        )
       ).rejects.toThrow(NotFoundException);
 
       const updatedVerification = await verificationService.findOne({userId, destination: email});
@@ -531,7 +603,7 @@ describe("VerificationService", () => {
         messageId: "test-sms-message-id"
       });
 
-      await verificationService.startVerification(
+      await verificationService.startVerificationProcess(
         userId,
         phoneNumber,
         STRATEGY,
@@ -543,7 +615,7 @@ describe("VerificationService", () => {
       const codeMatch = sentSms.match(/is: (\d{6})/);
       const code = codeMatch[1];
 
-      const result = await verificationService.verifyProvider(
+      const result = await verificationService.confirmVerificationProcess(
         userId,
         code,
         STRATEGY,
@@ -576,7 +648,7 @@ describe("VerificationService", () => {
         messageId: "test-sms-message-id"
       });
 
-      await verificationService.startVerification(
+      await verificationService.startVerificationProcess(
         userId,
         phoneNumber,
         STRATEGY,
@@ -585,7 +657,13 @@ describe("VerificationService", () => {
       );
 
       await expect(
-        verificationService.verifyProvider(userId, wrongCode, STRATEGY, PHONE_PROVIDER, PURPOSE)
+        verificationService.confirmVerificationProcess(
+          userId,
+          wrongCode,
+          STRATEGY,
+          PHONE_PROVIDER,
+          PURPOSE
+        )
       ).rejects.toThrow(BadRequestException);
 
       const updatedVerification = await verificationService.findOne({
@@ -616,7 +694,7 @@ describe("VerificationService", () => {
         messageId: "test-message-id"
       });
 
-      const result = await verificationService.startVerification(
+      const result = await verificationService.startVerificationProcess(
         userId,
         email,
         STRATEGY,
@@ -629,11 +707,12 @@ describe("VerificationService", () => {
       const codeMatch = sentEmail.match(/is: (\d{6})/);
       const code = codeMatch[1];
 
-      const response = await providerVerificationService.verifyProvider(
+      const response = await providerVerificationService.validateCredentialsVerification(
         userId,
         code,
         STRATEGY,
-        EMAIL_PROVIDER
+        EMAIL_PROVIDER,
+        PURPOSE
       );
 
       expect(response).toMatchObject({

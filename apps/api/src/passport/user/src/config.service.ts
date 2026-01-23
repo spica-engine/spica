@@ -9,7 +9,7 @@ export class UserConfigService extends ConfigService {
     super(db);
   }
 
-  setUserConfig(config: UserConfigSettings): void {
+  set(config: UserConfigSettings): void {
     this.updateOne(
       {module: "User"},
       {
@@ -23,7 +23,7 @@ export class UserConfigService extends ConfigService {
       {upsert: true}
     );
   }
-  getUserConfig() {
+  get() {
     return this.findOne({
       module: "User"
     });
