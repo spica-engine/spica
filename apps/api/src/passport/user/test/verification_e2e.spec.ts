@@ -14,11 +14,13 @@ import {PolicyModule} from "@spica-server/passport/policy";
 import fetch from "node-fetch";
 import {GenericContainer} from "testcontainers";
 import {ProviderVerificationService} from "../src/services/provider.verification.service";
+import {UserConfigService} from "../src/config.service";
 
 describe("Provider Verification E2E with MailHog", () => {
   let module: TestingModule;
   let verificationService: VerificationService;
   let providerVerificationService: ProviderVerificationService;
+  let userConfigService: UserConfigService;
   let userService: UserService;
   let mailerService: MailerService;
   let db: DatabaseService;
@@ -100,6 +102,11 @@ describe("Provider Verification E2E with MailHog", () => {
     mailerService = module.get(MailerService);
     providerVerificationService = module.get(ProviderVerificationService);
     db = module.get(DatabaseService);
+    userConfigService = module.get(UserConfigService);
+
+    userConfigService.setUserConfig({
+      maxAttempts: 3
+    });
   }, 60000);
 
   afterAll(async () => {
