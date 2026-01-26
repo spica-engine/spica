@@ -37,6 +37,8 @@ import {
 } from "./providers";
 import {MailerService} from "@spica-server/mailer";
 import {SmsService} from "@spica-server/sms";
+import {UserConfigService} from "./config.service";
+import {ProviderVerificationService} from "./services/provider.verification.service";
 
 @Global()
 @Module({})
@@ -103,6 +105,8 @@ export class UserModule {
         UserStrategy,
         VerificationService,
         VerificationProviderRegistry,
+        ProviderVerificationService,
+        UserConfigService,
         {
           provide: USER_OPTIONS,
           useValue: options
