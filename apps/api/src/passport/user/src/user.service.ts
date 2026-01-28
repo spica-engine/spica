@@ -1,4 +1,4 @@
-import {Injectable, Inject, UnauthorizedException} from "@nestjs/common";
+import {Injectable, Inject, UnauthorizedException, BadRequestException} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {User, USER_OPTIONS, UserOptions} from "@spica-server/interface/passport/user";
 import {Validator} from "@spica-server/core/schema";
@@ -20,7 +20,17 @@ export class UserService extends BaseCollection<User>("user") {
   ) {
     super(database, {
       entryLimit: userOptions.entryLimit,
-      afterInit: () => this._coll.createIndex({username: 1}, {unique: true})
+      afterInit: () => {
+        this._coll.createIndex({username: 1}, {unique: true});
+        this._coll.createIndex(
+          {email: 1},
+          {unique: true, partialFilterExpression: {email: {$exists: true}}}
+        );
+        this._coll.createIndex(
+          {phone: 1},
+          {unique: true, partialFilterExpression: {phone: {$exists: true}}}
+        );
+      }
     });
   }
 
@@ -302,7 +312,7 @@ export class UserService extends BaseCollection<User>("user") {
     hash: string;
   } {
     if (!value) {
-      throw new Error("Value to encrypt is required.");
+      throw new BadRequestException("Value to encrypt is required.");
     }
 
     const secret = this.getEncryptionSecret();
@@ -321,8 +331,8 @@ export class UserService extends BaseCollection<User>("user") {
     authTag: string;
     salt: string;
   }): string {
-    if (!encryptedField || !encryptedField.encrypted) {
-      throw new Error("No encrypted data provided.");
+    if (!encryptedField) {
+      throw new BadRequestException("No encrypted data provided.");
     }
 
     const secret = this.getEncryptionSecret();
@@ -334,7 +344,7 @@ export class UserService extends BaseCollection<User>("user") {
 
     const decryptedUser = {...user};
 
-    if (user.email?.encrypted) {
+    if (user.email && "encrypted" in user.email) {
       decryptedUser.email = {
         value: this.decryptField({
           encrypted: user.email.encrypted,
@@ -346,7 +356,7 @@ export class UserService extends BaseCollection<User>("user") {
       };
     }
 
-    if (user.phone?.encrypted) {
+    if (user.phone && "encrypted" in user.phone) {
       decryptedUser.phone = {
         value: this.decryptField({
           encrypted: user.phone.encrypted,
@@ -363,7 +373,9 @@ export class UserService extends BaseCollection<User>("user") {
 
   private getEncryptionSecret(): string {
     if (!this.userOptions.hashSecret) {
-      throw new Error("User hash secret is not configured. Please set USER_HASH_SECRET");
+      throw new BadRequestException(
+        "User hash secret is not configured. Please set USER_HASH_SECRET"
+      );
     }
     return this.userOptions.hashSecret;
   }

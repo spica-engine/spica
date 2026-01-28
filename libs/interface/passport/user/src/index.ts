@@ -25,24 +25,8 @@ export interface User {
   lastLogin: Date;
   failedAttempts: Date[];
   bannedUntil?: Date;
-  email?: {
-    value?: string; // Decrypted value (only for client responses, not stored)
-    encrypted?: string;
-    iv?: string;
-    authTag?: string;
-    salt?: string;
-    hash?: string;
-    createdAt: Date;
-  };
-  phone?: {
-    value?: string; // Decrypted value (only for client responses, not stored)
-    encrypted?: string;
-    iv?: string;
-    authTag?: string;
-    salt?: string;
-    hash?: string;
-    createdAt: Date;
-  };
+  email?: EncryptableField;
+  phone?: EncryptableField;
 }
 
 export interface LoginCredentials {
@@ -101,3 +85,19 @@ export interface UserConfigSettings {
 }
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
+
+type EncryptedData = {
+  encrypted: string;
+  iv: string;
+  authTag: string;
+  salt: string;
+  hash: string;
+};
+
+type DecryptedData = {
+  value: string;
+};
+
+type EncryptableField = {
+  createdAt: Date;
+} & (DecryptedData | EncryptedData);

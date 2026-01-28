@@ -1,5 +1,6 @@
 import * as crypto from "crypto";
 import {EncryptedData} from "@spica-server/interface/core";
+import {BadRequestException} from "@nestjs/common";
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 const SALT_LENGTH = 64;
@@ -13,10 +14,10 @@ const KEY_LENGTH = 32;
  */
 export function encrypt(value: string, secret: string): EncryptedData {
   if (!value) {
-    throw new Error("Value to encrypt is required.");
+    throw new BadRequestException("Value to encrypt is required.");
   }
   if (!secret) {
-    throw new Error("Encryption secret is required.");
+    throw new BadRequestException("Encryption secret is required.");
   }
 
   const salt = crypto.randomBytes(SALT_LENGTH);
@@ -48,16 +49,16 @@ export function encrypt(value: string, secret: string): EncryptedData {
  */
 export function decrypt(encryptedData: EncryptedData, secret: string): string {
   if (!encryptedData) {
-    throw new Error("Encrypted data is required.");
+    throw new BadRequestException("Encrypted data is required.");
   }
   if (!secret) {
-    throw new Error("Decryption secret is required.");
+    throw new BadRequestException("Decryption secret is required.");
   }
 
   const {encrypted, iv, authTag, salt} = encryptedData;
 
   if (!encrypted || !iv || !authTag || !salt) {
-    throw new Error("Invalid encrypted data format.");
+    throw new BadRequestException("Invalid encrypted data format.");
   }
 
   const saltBuffer = Buffer.from(salt, "hex");

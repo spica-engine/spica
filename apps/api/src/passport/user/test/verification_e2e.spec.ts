@@ -103,7 +103,6 @@ describe("Provider Verification E2E with MailHog", () => {
     mailerService = module.get(MailerService);
     db = module.get(DatabaseService);
     userConfigService = module.get(UserConfigService);
-    req = module.get(Request);
 
     userConfigService.set({
       verificationProcessMaxAttempt: 3

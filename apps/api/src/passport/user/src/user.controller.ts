@@ -227,7 +227,7 @@ export class UserController {
     );
 
     if (!user) {
-      return new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
 
     return this.userService.decryptProviderFields(user);
