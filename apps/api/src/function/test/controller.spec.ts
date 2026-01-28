@@ -128,7 +128,15 @@ describe("Function Controller", () => {
       expect(res.timeout).toEqual(10);
 
       const enqueuerTitles = res.enqueuers.map(e => e.description && e.description.title);
-      const expectedEnqueuers = ["Http", "Firehose", "Database", "Scheduler", "System", "RabbitMQ"];
+      const expectedEnqueuers = [
+        "Http",
+        "Firehose",
+        "Database",
+        "Scheduler",
+        "System",
+        "RabbitMQ",
+        "gRPC"
+      ];
       expect(enqueuerTitles).toEqual(expect.arrayContaining(expectedEnqueuers));
       expect(enqueuerTitles.length).toEqual(expectedEnqueuers.length);
 
