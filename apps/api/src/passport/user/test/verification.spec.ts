@@ -94,7 +94,7 @@ describe("VerificationService", () => {
     smsService = module.get(SmsService);
     db = module.get(DatabaseService);
 
-    userConfigService.set({
+    await userConfigService.set({
       verificationProcessMaxAttempt: maxAttemptCount
     });
   });

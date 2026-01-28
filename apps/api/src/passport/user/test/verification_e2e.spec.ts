@@ -104,7 +104,7 @@ describe("Provider Verification E2E with MailHog", () => {
     db = module.get(DatabaseService);
     userConfigService = module.get(UserConfigService);
 
-    userConfigService.set({
+    await userConfigService.set({
       verificationProcessMaxAttempt: 3
     });
 
