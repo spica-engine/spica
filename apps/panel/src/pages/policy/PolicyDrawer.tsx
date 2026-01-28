@@ -9,8 +9,9 @@ import styles from "./Policy.module.scss";
 import type { PolicyItem } from "./Policy";
 import Resource from "./Resource";
 import type { DisplayedStatement } from "./policyStatements";
+import { flattenStatements, groupStatements, validateStatements } from "./policyStatements";
+import { usePolicyImportExport } from "./hook/usePolicyImportExport";
 import type { ModuleStatement } from "./hook/useStatement";
-import { groupStatements, flattenStatements, validateStatements } from "./policyStatements";
 
 export type PolicyUpsertInput = {
   name: string;
@@ -76,6 +77,22 @@ const PolicyDrawer = ({
     });
   };
 
+  const { fileInputRef, handleExport, handleImport, handleFileChange } = usePolicyImportExport({
+    name,
+    description,
+    displayedStatements,
+    selectedPolicy,
+    onImport: ({ name: importedName, description: importedDescription, statements }) => {
+      if (typeof importedName === "string") {
+        setName(importedName);
+      }
+      if (typeof importedDescription === "string") {
+        setDescription(importedDescription);
+      }
+      setDisplayedStatements(statements);
+    },
+  });
+
   return (
     <Drawer
       placement="right"
@@ -105,8 +122,16 @@ const PolicyDrawer = ({
           onChange={setDisplayedStatements}
           modules={modules}
           moduleData={moduleData}
+          onExport={handleExport}
+          onImport={handleImport}
         />
-
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+        />
         <FlexElement
           dimensionX="fill"
           alignment="rightCenter"
