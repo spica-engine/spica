@@ -3,7 +3,7 @@
  * email: rio.kenan@gmail.com
  */
 
-import React, {useCallback, useMemo, useRef} from "react";
+import React, {useCallback, useMemo} from "react";
 import {Accordion, Button, Checkbox, FlexElement} from "oziko-ui-kit";
 import styles from "./Policy.module.scss";
 import type {DisplayedStatement} from "./policyStatements";
@@ -24,10 +24,18 @@ interface ResourceProps {
   onChange: (statements: DisplayedStatement[]) => void;
   modules: ModuleStatement[];
   moduleData?: Record<string, unknown>;
+  onExport: () => void;
+  onImport: () => void;
 }
 
-const Resource: React.FC<ResourceProps> = ({value, onChange, modules, moduleData}) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+const Resource: React.FC<ResourceProps> = ({
+  value,
+  onChange,
+  modules,
+  moduleData,
+  onExport,
+  onImport
+}) => {
   const updateStatement = useCallback((
     module: string,
     updater: (stmt: DisplayedStatement) => DisplayedStatement
@@ -113,51 +121,14 @@ const Resource: React.FC<ResourceProps> = ({value, onChange, modules, moduleData
     applyResourceChanges(module, actionName, changes);
   }, [applyResourceChanges]);
 
-  const handleExport = () => {
-    const json = JSON.stringify(value, null, 2);
 
-    navigator.clipboard
-      .writeText(json)
-      .then(() => {
-        alert("Policy statements exported to clipboard!");
-      })
-      .catch(() => {
-        const blob = new Blob([json], {type: "application/json"});
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "policy-statements.json";
-        link.click();
-        URL.revokeObjectURL(url);
-      });
-  };
+  const handleExportClick = useCallback(() => {
+    onExport();
+  }, [onExport]);
 
-  const handleImport = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const imported = JSON.parse(e.target?.result as string);
-        if (Array.isArray(imported)) {
-          onChange(imported);
-          alert("Policy statements imported successfully!");
-        } else {
-          alert("Invalid import format. Expected an array of statements.");
-        }
-      } catch (error) {
-        alert("Failed to parse imported file. Please ensure it's valid JSON.");
-      }
-    };
-    reader.readAsText(file);
-
-    event.target.value = "";
-  };
+  const handleImportClick = useCallback(() => {
+    onImport();
+  }, [onImport]);
 
   const renderResourceItems = useCallback((module: string, actionName: string) => {
     const statement = value.find(s => s.module === module);
@@ -326,23 +297,24 @@ const Resource: React.FC<ResourceProps> = ({value, onChange, modules, moduleData
       <FlexElement dimensionX="fill" className={styles.resourceHeader}>
         <span>Resources</span>
         <FlexElement dimensionX="hug" alignment="rightCenter" direction="horizontal">
-          <Button variant="text" className={styles.importExportButton} onClick={handleImport}>
+          <Button
+            variant="text"
+            className={styles.importExportButton}
+            onClick={handleImportClick}
+          >
             Import
           </Button>
           <span>/</span>
-          <Button variant="text" className={styles.importExportButton} onClick={handleExport}>
+          <Button
+            variant="text"
+            className={styles.importExportButton}
+            onClick={handleExportClick}
+            disabled={value.length === 0}
+          >
             Export
           </Button>
         </FlexElement>
       </FlexElement>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="application/json"
-        style={{display: "none"}}
-        onChange={e => handleFileChange(e)}
-      />
 
         <Accordion
           items={moduleAccordionItems}
