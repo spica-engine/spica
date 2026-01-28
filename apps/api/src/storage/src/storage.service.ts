@@ -88,7 +88,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     const neededInMb = (existing + size) * Math.pow(10, -6);
     if (neededInMb > this.storageOptions.totalSizeLimit) {
-      throw new ForbiddenException("Total storage object size limit exceeded");
+      throw new BadRequestException("Total storage object size limit exceeded");
     }
   }
 
