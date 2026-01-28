@@ -1,6 +1,5 @@
 import {GrpcEnqueuer} from "@spica-server/function/enqueuer";
-import {EventQueue, GrpcQueue} from "@spica-server/function/queue";
-import {event, Grpc} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 
 function createTarget(cwd?: string, handler?: string) {
   const target = new event.Target();

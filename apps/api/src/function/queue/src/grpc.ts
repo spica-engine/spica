@@ -48,10 +48,13 @@ export class GrpcQueue extends Queue<typeof Grpc.UnimplementedQueueService.defin
     callback: grpc.sendUnaryData<Grpc.Request>
   ) {
     if (!this.queue.has(call.request.id)) {
+      if (this.callMap.has(call.request.id)) {
+        this.callMap.delete(call.request.id);
+      }
       callback(new Error(`Queue has no item with id ${call.request.id}`), undefined);
     } else {
       callback(undefined, this.queue.get(call.request.id));
-      this.queue.delete(call.request.id);
+      this.dequeue(call.request.id);
     }
   }
 
@@ -61,15 +64,16 @@ export class GrpcQueue extends Queue<typeof Grpc.UnimplementedQueueService.defin
   ) {
     if (!this.callMap.has(call.request.id)) {
       callback({code: 1, message: "Call not found"} as any, undefined);
+      return;
     } else {
       const grpcCall = this.callMap.get(call.request.id);
 
       if (grpcCall.cancelled) {
+        this.dequeue(call.request.id);
         callback({code: 1, message: "Call was cancelled"} as any, undefined);
         return;
       }
 
-      // Send metadata if present
       if (call.request.metadata && call.request.metadata.length > 0) {
         const metadata = new grpc.Metadata();
         call.request.metadata.forEach(header => {
@@ -78,15 +82,25 @@ export class GrpcQueue extends Queue<typeof Grpc.UnimplementedQueueService.defin
         grpcCall.sendMetadata(metadata);
       }
 
-      // Send response data
-      const responseData = call.request.data
-        ? JSON.parse(Buffer.from(call.request.data).toString())
-        : {};
-      grpcCall.sendMessage(responseData);
-      grpcCall.end();
+      try {
+        const responseData = call.request.data
+          ? JSON.parse(Buffer.from(call.request.data).toString())
+          : {};
+        grpcCall.sendMessage(responseData);
+        grpcCall.end();
 
-      this.dequeue(call.request.id);
-      callback(undefined, new Grpc.Response.Result());
+        this.dequeue(call.request.id);
+        callback(undefined, new Grpc.Response.Result());
+      } catch (err) {
+        this.dequeue(call.request.id);
+        callback(
+          {
+            code: grpc.status.INVALID_ARGUMENT,
+            message: `Failed to parse response data: ${err.message}`
+          },
+          undefined
+        );
+      }
     }
   }
 
@@ -103,16 +117,17 @@ export class GrpcQueue extends Queue<typeof Grpc.UnimplementedQueueService.defin
     callback: grpc.sendUnaryData<Grpc.Error.Result>
   ) {
     if (!this.callMap.has(call.request.id)) {
-      callback({code: 1, message: "Call not found"} as any, undefined);
+      callback({code: 1, message: "Call not found"}, undefined);
+      return;
     } else {
       const grpcCall = this.callMap.get(call.request.id);
 
       if (grpcCall.cancelled) {
-        callback({code: 1, message: "Call was already cancelled"} as any, undefined);
+        this.dequeue(call.request.id);
+        callback({code: 1, message: "Call was already cancelled"}, undefined);
         return;
       }
 
-      // Send error with metadata if present
       const metadata = new grpc.Metadata();
       if (call.request.metadata && call.request.metadata.length > 0) {
         call.request.metadata.forEach(header => {

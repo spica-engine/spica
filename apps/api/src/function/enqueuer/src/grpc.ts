@@ -15,6 +15,14 @@ interface GrpcSubscription {
   errorMessage?: string;
 }
 
+interface GrpcCallHandler {
+  sendMetadata: (metadata: grpc.Metadata) => void;
+  sendMessage: (message: any) => void;
+  sendError: (error: any) => void;
+  end: () => void;
+  cancelled: boolean;
+}
+
 export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
   type = event.Type.GRPC;
 
@@ -102,30 +110,25 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
 
     this.queue.enqueue(ev);
 
-    const metadata = call.metadata.getMap();
-    const metadataArray = Object.keys(metadata).map(key => {
-      const header = new Grpc.Header();
-      header.key = key;
-      header.value = Array.isArray(metadata[key])
-        ? metadata[key][0].toString()
-        : metadata[key].toString();
-      return header;
-    });
+    const metadataArray = this.convertMetadataToHeaders(call.metadata.getMap());
 
     const request = new Grpc.Request({
       id: ev.id,
       service: options.service,
       method: options.method,
-      payload: Buffer.from(JSON.stringify(call.request)),
+      payload: this.serializeJson(call.request),
       metadata: metadataArray
     });
 
-    const grpcCall = {
+    const grpcCall: GrpcCallHandler = {
       sendMetadata: (metadata: grpc.Metadata) => {
         call.sendMetadata(metadata);
       },
       sendMessage: (message: any) => {
         callback(null, message);
+      },
+      sendError: (error: any) => {
+        callback(error, null);
       },
       end: () => {},
       cancelled: false
@@ -162,7 +165,7 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
 
   private shift(
     rawRequest,
-    rawCall,
+    rawCall: GrpcCallHandler,
     target: {
       id: string;
       cwd: string;
@@ -183,15 +186,13 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
       cwd: target.cwd,
       handler: target.handler,
       context: new event.SchedulingContext({
-        env: Object.keys(target.context.env).reduce((envs, key) => {
-          envs.push(
+        env: target.context.env.map(
+          envVar =>
             new event.SchedulingContext.Env({
-              key,
-              value: target.context.env[key]
+              key: envVar.key,
+              value: envVar.value
             })
-          );
-          return envs;
-        }, []),
+        ),
         timeout: target.context.timeout
       })
     });
@@ -221,16 +222,52 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
     );
   }
 
+  private convertMetadataToHeaders(metadataMap: {
+    [key: string]: grpc.MetadataValue;
+  }): Grpc.Header[] {
+    return Object.keys(metadataMap).map(key => {
+      const value = metadataMap[key];
+      const header = new Grpc.Header();
+      header.key = key;
+      header.value = this.extractMetadataValue(value);
+      return header;
+    });
+  }
+
+  private extractMetadataValue(value: grpc.MetadataValue): string {
+    if (Array.isArray(value)) {
+      return value.length > 0 ? String(value[0]) : "";
+    }
+
+    return String(value);
+  }
+
+  private serializeJson(value: any): Buffer {
+    try {
+      return Buffer.from(JSON.stringify(value));
+    } catch (err) {
+      throw new Error(`Failed to serialize gRPC message: ${err.message}`);
+    }
+  }
+
+  private deserializeJson(buffer: Buffer) {
+    try {
+      return Buffer.from(JSON.parse(buffer.toString()));
+    } catch (err) {
+      throw new Error(`Failed to deserialize gRPC message: ${err.message}`);
+    }
+  }
+
   private createServiceDefinition(options: GrpcOptions): grpc.ServiceDefinition {
     return {
       [options.method]: {
         path: `/${options.service}/${options.method}`,
         requestStream: false,
         responseStream: false,
-        requestSerialize: (value: any) => Buffer.from(JSON.stringify(value)),
-        requestDeserialize: (value: Buffer) => JSON.parse(value.toString()),
-        responseSerialize: (value: any) => Buffer.from(JSON.stringify(value)),
-        responseDeserialize: (value: Buffer) => JSON.parse(value.toString())
+        requestSerialize: (value: any) => this.serializeJson(value),
+        requestDeserialize: (value: Buffer) => this.deserializeJson(value),
+        responseSerialize: (value: any) => this.serializeJson(value),
+        responseDeserialize: (value: Buffer) => this.deserializeJson(value)
       }
     };
   }
@@ -238,13 +275,14 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
   unsubscribe(target: event.Target): void {
     this.schedulerUnsubscription(target.id);
 
-    const indexesToRemove = [];
-
-    this.subscriptions.forEach((subscription, index) => {
-      const isCwdEqual = subscription.target.cwd == target.cwd;
-      const isHandlerEqual = subscription.target.handler == target.handler;
+    this.subscriptions = this.subscriptions.filter(subscription => {
+      const isCwdEqual = subscription.target.cwd === target.cwd;
+      const isHandlerEqual = subscription.target.handler === target.handler;
       const isMatchingTarget = target.handler ? isHandlerEqual && isCwdEqual : isCwdEqual;
-      if (!isMatchingTarget) return;
+
+      if (!isMatchingTarget) {
+        return true;
+      }
 
       if (subscription.server) {
         subscription.server.tryShutdown(err => {
@@ -257,12 +295,8 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
         });
       }
 
-      indexesToRemove.push(index);
+      return false;
     });
-
-    for (let i = indexesToRemove.length - 1; i >= 0; i--) {
-      this.subscriptions.splice(indexesToRemove[i], 1);
-    }
   }
 
   onEventsAreDrained(events: event.Event[]): Promise<any> {
