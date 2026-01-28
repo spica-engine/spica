@@ -132,6 +132,12 @@ describe("Provider Verification E2E with MailHog", () => {
   afterEach(async () => {
     await db.collection("verification").deleteMany({});
     await db.collection("user").deleteMany({});
+
+    try {
+      await fetch(`http://${apiHost}:${apiPort}/api/v1/messages`, {method: "DELETE"});
+    } catch (e) {
+      console.warn("Failed to clear MailHog messages:", e);
+    }
   });
 
   describe("Complete provider email verification flow", () => {
