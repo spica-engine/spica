@@ -15,16 +15,20 @@ export interface HttpService {
   request<T>(options: any): Promise<T>;
 }
 
-interface InitializeOptions {
+export interface PublicInitialization {
   publicUrl?: string;
 }
 
-export interface ApikeyInitialization extends InitializeOptions {
+export interface ApikeyInitialization extends PublicInitialization {
   apikey: string;
 }
 
-export interface IdentityInitialization extends InitializeOptions {
+export interface IdentityInitialization extends PublicInitialization {
   identity: string;
+}
+
+export interface UserInitialization extends PublicInitialization {
+  user: string;
 }
 
 export interface InitializationResult {

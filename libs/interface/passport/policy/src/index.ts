@@ -28,3 +28,4 @@ export interface ActionMap {
 
 export const APIKEY_POLICY_FINALIZER = Symbol.for("APIKEY_POLICY_FINALIZER");
 export const IDENTITY_POLICY_FINALIZER = Symbol.for("IDENTITY_POLICY_FINALIZER");
+export const USER_POLICY_FINALIZER = Symbol.for("USER_POLICY_FINALIZER");

@@ -7,50 +7,61 @@ export class SchemaResolver {
     private pref: PreferenceService
   ) {
     pref.watchPreference("passport").subscribe(() => {
-      validator.removeSchema("http://spica.internal/passport/update-identity-with-attributes");
-      validator.removeSchema("http://spica.internal/passport/create-identity-with-attributes");
-      validator.removeSchema("http://spica.internal/passport/identity-attributes");
+      validator.removeSchema("http://spica.internal/passport/update-user-with-attributes");
+      validator.removeSchema("http://spica.internal/passport/create-user-with-attributes");
+      validator.removeSchema("http://spica.internal/passport/user-attributes");
+      validator.removeSchema("http://spica.internal/passport/user-self-update-with-attributes");
+      validator.removeSchema("http://spica.internal/passport/user-update-with-attributes");
     });
   }
 
   async resolve(uri: string) {
-    if (uri == "http://spica.internal/passport/create-identity-with-attributes") {
+    if (uri == "http://spica.internal/passport/create-user-with-attributes") {
       return {
-        $id: "http://spica.internal/passport/create-identity-with-attributes",
+        $id: "http://spica.internal/passport/create-user-with-attributes",
         allOf: [
-          {$ref: "http://spica.internal/passport/identity-create"},
-          {$ref: "http://spica.internal/passport/identity-attributes"}
+          {$ref: "http://spica.internal/passport/user-create"},
+          {$ref: "http://spica.internal/passport/user-attributes"}
         ]
       };
-    } else if (uri == "http://spica.internal/passport/update-identity-with-attributes") {
+    } else if (uri == "http://spica.internal/passport/update-user-password") {
       return {
-        $id: "http://spica.internal/passport/update-identity-with-attributes",
+        $id: "http://spica.internal/passport/update-user-password",
+        type: "object",
+        required: ["password"],
+        properties: {
+          password: {
+            type: "string"
+          }
+        },
+        additionalProperties: false
+      };
+    } else if (uri == "http://spica.internal/passport/update-user-with-attributes") {
+      return {
+        $id: "http://spica.internal/passport/update-user-with-attributes",
         allOf: [
-          {$ref: "http://spica.internal/passport/identity"},
-          {$ref: "http://spica.internal/passport/identity-attributes"}
+          {$ref: "http://spica.internal/passport/user"},
+          {$ref: "http://spica.internal/passport/user-attributes"}
         ]
       };
-    } else if (uri == "http://spica.internal/passport/identity-attributes") {
+    } else if (uri == "http://spica.internal/passport/user-attributes") {
       return this.pref.get("passport").then(preference => {
         // What we do here is we mark attributes property as required
         // if there is any required property in it otherwise there
         // should not be an attributes property at all.
         const required = [];
-        if (
-          preference.identity.attributes.required &&
-          preference.identity.attributes.required.length
-        ) {
+        if (preference?.user?.attributes?.required && preference.user.attributes.required.length) {
           required.push("attributes");
         }
 
         let schema = {
-          $id: "http://spica.internal/passport/identity-attributes",
+          $id: "http://spica.internal/passport/user-attributes",
           type: "object",
           required,
           properties: {
             attributes: {
               type: "object",
-              ...preference.identity.attributes
+              ...(preference?.user?.attributes || {})
             }
           }
         };

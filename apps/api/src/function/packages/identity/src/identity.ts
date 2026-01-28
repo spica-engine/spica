@@ -91,7 +91,7 @@ export async function login(
   tokenLifeSpan?: number,
   headers?: object
 ): Promise<string | Challenge> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service
     .post<TokenScheme | ChallengeRes>(
@@ -123,7 +123,7 @@ export function isChallenge(tokenOrChallenge: any): tokenOrChallenge is Challeng
 }
 
 export async function loginWithStrategy(id: string): Promise<LoginWithStrategyResponse> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   const {url, state} = await service.get<{url: string; state: string}>(
     `/passport/strategy/${id}/url`
@@ -182,7 +182,7 @@ export function getStrategies(headers?: object) {
 }
 
 export function get(id: string, headers?: object): Promise<IdentityGet> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.get<IdentityGet>(`${identitySegment}/${id}`, {headers});
 }
@@ -217,7 +217,7 @@ export function getAll(
   } = {},
   headers?: object
 ): Promise<IdentityGet[] | IndexResult<IdentityGet>> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.get<IdentityGet[] | IndexResult<IdentityGet>>(identitySegment, {
     params: queryParams,
@@ -226,7 +226,7 @@ export function getAll(
 }
 
 export async function insert(identity: IdentityCreate, headers?: object): Promise<IdentityGet> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   identity = deepCopyJSON(identity);
   const desiredPolicies = identity.policies;
@@ -245,7 +245,7 @@ export async function update(
   identity: IdentityUpdate,
   headers?: object
 ): Promise<IdentityGet> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   const existingIdentity = await service.get<IdentityGet>(`${identitySegment}/${id}`);
 
@@ -270,13 +270,13 @@ export async function update(
 }
 
 export function remove(id: string, headers?: object): Promise<any> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.delete(`${identitySegment}/${id}`, {headers});
 }
 
 export function removeMany(ids: string[], headers?: object) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   const batchReqs = Batch.prepareRemoveRequest(
     ids,
@@ -297,7 +297,7 @@ export namespace policy {
     policyIds: string[] = [],
     headers?: object
   ): Promise<string[]> {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     const promises: Promise<IdentityGet>[] = [];
     const attachedPolicies = new Set<string>();
@@ -321,7 +321,7 @@ export namespace policy {
     policyIds: string[] = [],
     headers?: object
   ): Promise<string[]> {
-    checkInitialized(authorization);
+    checkInitialized(authorization, service);
 
     const promises: Promise<IdentityGet>[] = [];
     const detachedPolicies = new Set<string>();

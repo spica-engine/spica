@@ -88,6 +88,8 @@ describe("Status Interceptor", () => {
 
     it("should track request size and count for post request", async () => {
       const body = {message: "a".repeat(2 * MbInKb)};
+      await sleep(1000);
+
       await req.post("/test", body);
 
       const res = await req.get("/status/api");

@@ -29,6 +29,10 @@ application:
   replicas: 1
   secret:
   bucketDataHashSecret:
+  twilioAccountSid:
+  twilioAuthToken:
+  twilioFromNumber:
+  userHashSecret:
   defaultPassword: spica
   webBaseUrl: /spica/
   apiBaseUrl: /api/

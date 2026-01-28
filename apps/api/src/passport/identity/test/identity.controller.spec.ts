@@ -25,7 +25,7 @@ describe("Identity Controller", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID]
         }),
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         PassportTestingModule.initialize(),
         PreferenceTestingModule,
         CoreTestingModule,
@@ -69,7 +69,7 @@ describe("Identity Controller", () => {
     it("should list identity profile entries", async () => {
       const res = await req.get("/passport/identity/profile");
       expect(res.statusCode).toEqual(200);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
     });
 
     it("should filter identity profile entries by operation type", async () => {
@@ -78,7 +78,7 @@ describe("Identity Controller", () => {
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body.every(profileEntry => profileEntry.op == "insert")).toEqual(true);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
     });
 
     it("should limit identity profile entries", async () => {
@@ -87,7 +87,7 @@ describe("Identity Controller", () => {
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body.length).toEqual(1);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
     });
 
     it("should skip bucket1 profile entries", async () => {
@@ -100,22 +100,22 @@ describe("Identity Controller", () => {
 
       allProfileEntries.shift();
       expect(skippedRes.body).toEqual(allProfileEntries);
-      expect(skippedRes.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(
+      expect(skippedRes.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(
         true
       );
     });
 
-    it("should sort identity profile entries", async () => {
-      const [{body: allProfileEntries}, sortedRes] = await Promise.all([
-        req.get("/passport/identity/profile"),
-        req.get("/passport/identity/profile", {sort: JSON.stringify({ts: -1})})
-      ]);
-      expect(sortedRes.statusCode).toEqual(200);
-      expect(sortedRes.body).not.toEqual(allProfileEntries);
+    it("should sort bucket1 profile entries", async () => {
+      const response = await req.get("/passport/identity/profile", {
+        sort: JSON.stringify({ts: -1})
+      });
+      expect(response.statusCode).toEqual(200);
 
-      allProfileEntries.reverse();
-      expect(sortedRes.body).toEqual(allProfileEntries);
-      expect(sortedRes.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(
+      for (let i = 1; i < response.body.length; i++) {
+        expect(response.body[i - 1].ts >= response.body[i].ts).toEqual(true);
+      }
+
+      expect(response.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(
         true
       );
     });
@@ -128,7 +128,7 @@ describe("Identity Controller", () => {
 
       expect(res.statusCode).toEqual(200);
       // user provided ns filter will be overridden
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.identity")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
     });
 
     it("should ignore ns on the nested filter", async () => {

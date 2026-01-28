@@ -12,7 +12,7 @@ export class StatusController {
   }
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("status:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("status:index"))
   findAll(
     @ResourceFilter({pure: true})
     resourceFilter = {
@@ -35,7 +35,7 @@ export class StatusController {
   }
 
   @Get(":module")
-  @UseGuards(AuthGuard(), ActionGuard("status:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("status:show"))
   find(
     @Param("module") module: string,
     @Query("begin", DATE) begin: Date,

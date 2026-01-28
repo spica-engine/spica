@@ -4,4 +4,4 @@ export {
   ResourceFilter,
   resourceFilterFunction
 } from "./action.guard";
-export {AuthGuard, StrategyType} from "./auth.guard";
+export {AuthGuard, StrategyType, extractStrategyType} from "./auth.guard";

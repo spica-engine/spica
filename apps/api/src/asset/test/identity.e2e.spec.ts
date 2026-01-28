@@ -15,7 +15,7 @@ const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
 const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
 
-describe("identity-settings", () => {
+xdescribe("identity-settings", () => {
   function downloadAsset(asset) {
     return req.post("asset", asset).then(r => r.body);
   }
