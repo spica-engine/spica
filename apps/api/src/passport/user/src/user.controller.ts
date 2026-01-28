@@ -166,18 +166,26 @@ export class UserController {
     ).result();
 
     if (paginate) {
-      return this.userService
-        .aggregate<PaginationResponse<User>>(pipeline)
-        .next()
-        .then(r => {
-          if (!r.data.length) {
-            r.meta = {total: 0};
-          }
-          return r;
+      const result = await this.userService.aggregate<PaginationResponse<User>>(pipeline).next();
+
+      if (!result.data.length) {
+        result.meta = {total: 0};
+      } else {
+        result.data = result.data.map(user => {
+          return this.userService.decryptProviderFields(user);
         });
+      }
+
+      return result;
     }
 
-    return this.userService.aggregate<User[]>([...pipeline, ...seekingPipeline]).toArray();
+    const users = await this.userService
+      .aggregate<User>([...pipeline, ...seekingPipeline])
+      .toArray();
+
+    return users.map(user => {
+      return this.userService.decryptProviderFields(user);
+    });
   }
 
   @Get("factors")
@@ -212,8 +220,17 @@ export class UserController {
     AuthGuard(),
     ActionGuard("passport:user:show", undefined, registerPolicyAttacher("UserReadOnlyAccess"))
   )
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.userService.findOne({_id: id}, {projection: this.hideSecretsExpression()});
+  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    const user = await this.userService.findOne(
+      {_id: id},
+      {projection: this.hideSecretsExpression()}
+    );
+
+    if (!user) {
+      return new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return this.userService.decryptProviderFields(user);
   }
 
   @Post(":id/start-factor-verification")
@@ -335,7 +352,7 @@ export class UserController {
       });
     }
 
-    return user;
+    return this.userService.decryptProviderFields(user);
   }
 
   @UseInterceptors(activity(createUserActivity))

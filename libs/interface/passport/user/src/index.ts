@@ -26,11 +26,21 @@ export interface User {
   failedAttempts: Date[];
   bannedUntil?: Date;
   email?: {
-    value: string;
+    value?: string; // Decrypted value (only for client responses, not stored)
+    encrypted?: string;
+    iv?: string;
+    authTag?: string;
+    salt?: string;
+    hash?: string;
     createdAt: Date;
   };
   phone?: {
-    value: string;
+    value?: string; // Decrypted value (only for client responses, not stored)
+    encrypted?: string;
+    iv?: string;
+    authTag?: string;
+    salt?: string;
+    hash?: string;
     createdAt: Date;
   };
 }

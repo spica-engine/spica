@@ -1,10 +1,11 @@
 import {Test, TestingModule} from "@nestjs/testing";
+import {INestApplication} from "@nestjs/common";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {VerificationService} from "@spica-server/passport/user/src/verification.service";
 import {UserService} from "@spica-server/passport/user/src/user.service";
 import {MailerService} from "@spica-server/mailer";
 import {MailerModule} from "@spica-server/mailer";
-import {CoreTestingModule} from "@spica-server/core/testing";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
@@ -13,13 +14,13 @@ import {UserModule} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
 import fetch from "node-fetch";
 import {GenericContainer} from "testcontainers";
-import {ProviderVerificationService} from "../src/services/provider.verification.service";
 import {UserConfigService} from "../src/config.service";
 
 describe("Provider Verification E2E with MailHog", () => {
   let module: TestingModule;
+  let app: INestApplication;
+  let req: Request;
   let verificationService: VerificationService;
-  let providerVerificationService: ProviderVerificationService;
   let userConfigService: UserConfigService;
   let userService: UserService;
   let mailerService: MailerService;
@@ -35,7 +36,7 @@ describe("Provider Verification E2E with MailHog", () => {
   const PURPOSE = "verify";
   const EMAIL_PROVIDER = "email";
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const mailerUrl = process.env.MAILER_URL;
     let smtpHost = "localhost";
     apiHost = "localhost";
@@ -100,16 +101,22 @@ describe("Provider Verification E2E with MailHog", () => {
     verificationService = module.get(VerificationService);
     userService = module.get(UserService);
     mailerService = module.get(MailerService);
-    providerVerificationService = module.get(ProviderVerificationService);
     db = module.get(DatabaseService);
     userConfigService = module.get(UserConfigService);
+    req = module.get(Request);
 
     userConfigService.set({
       verificationProcessMaxAttempt: 3
     });
+
+    app = module.createNestApplication();
+    req = module.get(Request);
+    await app.listen(req.socket);
+    await app.init();
   }, 60000);
 
-  afterAll(async () => {
+  afterEach(async () => {
+    if (app) await app.close();
     if (module) await module.close();
     if (container) await container.stop();
   });
@@ -126,27 +133,24 @@ describe("Provider Verification E2E with MailHog", () => {
   afterEach(async () => {
     await db.collection("verification").deleteMany({});
     await db.collection("user").deleteMany({});
-
-    try {
-      await fetch(`http://${apiHost}:${apiPort}/api/v1/messages`, {method: "DELETE"});
-    } catch (e) {
-      console.warn("Failed to clear MailHog messages:", e);
-    }
   });
 
   describe("Complete provider email verification flow", () => {
     it("should successfully verify user with correct code sent via email", async () => {
       const email = "test@example.com";
 
-      const startResult = await verificationService.startVerificationProcess(
-        testUserId,
-        email,
-        STRATEGY,
-        EMAIL_PROVIDER,
-        PURPOSE
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY,
+          purpose: PURPOSE
+        }
       );
 
-      expect(startResult).toMatchObject({
+      expect(startResponse.statusCode).toBe(201);
+      expect(startResponse.body).toMatchObject({
         message: expect.stringContaining("successfully"),
         value: email
       });
@@ -181,15 +185,15 @@ describe("Provider Verification E2E with MailHog", () => {
         is_used: false
       });
 
-      const verifyResult = await providerVerificationService.validateCredentialsVerification(
-        testUserId,
+      const verifyResponse = await req.post(`/passport/user/${testUserId}/verify-provider`, {
         code,
-        STRATEGY,
-        EMAIL_PROVIDER,
-        PURPOSE
-      );
+        provider: EMAIL_PROVIDER,
+        strategy: STRATEGY,
+        purpose: PURPOSE
+      });
 
-      expect(verifyResult).toEqual({
+      expect(verifyResponse.statusCode).toBe(201);
+      expect(verifyResponse.body).toEqual({
         destination: email,
         message: "Verification completed successfully",
         provider: EMAIL_PROVIDER
@@ -199,26 +203,29 @@ describe("Provider Verification E2E with MailHog", () => {
 
       expect(updatedVerification.is_used).toBe(true);
 
-      const user = await userService.findOne({_id: testUserId});
+      const userResponse = await req.get(`/passport/user/${testUserId}`);
 
-      expect(user.email).toMatchObject({
-        value: email
+      expect(userResponse.body.email).toEqual({
+        value: email,
+        createdAt: userResponse.body.email.createdAt
       });
-      expect(user.email.createdAt).toBeInstanceOf(Date);
     });
 
     it("should fail verification when user enters wrong code", async () => {
       const email = "wrongcode@example.com";
 
-      const startResult = await verificationService.startVerificationProcess(
-        testUserId,
-        email,
-        STRATEGY,
-        EMAIL_PROVIDER,
-        PURPOSE
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY,
+          purpose: PURPOSE
+        }
       );
 
-      expect(startResult).toMatchObject({
+      expect(startResponse.statusCode).toBe(201);
+      expect(startResponse.body).toMatchObject({
         message: expect.stringContaining("successfully"),
         value: email
       });
@@ -240,29 +247,40 @@ describe("Provider Verification E2E with MailHog", () => {
         is_used: false
       });
 
-      await providerVerificationService
-        .validateCredentialsVerification(testUserId, wrongCode, STRATEGY, EMAIL_PROVIDER, PURPOSE)
-        .catch(error => {
-          expect(error.response.message).toBe("Invalid verification code");
-        });
+      const verifyResponse = await req.post(`/passport/user/${testUserId}/verify-provider`, {
+        code: wrongCode,
+        provider: EMAIL_PROVIDER,
+        strategy: STRATEGY,
+        purpose: PURPOSE
+      });
+
+      expect(verifyResponse.statusCode).toBe(400);
+      expect(verifyResponse.body.message).toBe("Invalid verification code");
 
       const updatedVerification = await verificationService.findOne({_id: verification._id});
 
       expect(updatedVerification.is_used).toBe(true);
 
-      const user = await userService.findOne({_id: testUserId});
-      expect(user.email).toBeUndefined();
+      const userResponse = await req.get(`/passport/user/${testUserId}`);
+
+      expect(userResponse.body.email).toBeUndefined();
     });
 
     it("should reject invalid email format", async () => {
       const invalidEmail = "not-an-email";
-      const provider = "email";
 
-      await verificationService
-        .startVerificationProcess(testUserId, invalidEmail, STRATEGY, provider, PURPOSE)
-        .catch(error => {
-          expect(error.message).toContain("Invalid destination format");
-        });
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: invalidEmail,
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(400);
+      expect(startResponse.body.message).toContain("Invalid destination format");
 
       const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
       const body: any = await resp.json();
@@ -273,15 +291,18 @@ describe("Provider Verification E2E with MailHog", () => {
     it("should fail when attempting verification a second time", async () => {
       const email = "maxattempts@example.com";
 
-      const startResult = await verificationService.startVerificationProcess(
-        testUserId,
-        email,
-        STRATEGY,
-        EMAIL_PROVIDER,
-        PURPOSE
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY,
+          purpose: PURPOSE
+        }
       );
 
-      expect(startResult).toMatchObject({
+      expect(startResponse.statusCode).toBe(201);
+      expect(startResponse.body).toMatchObject({
         message: expect.stringContaining("successfully"),
         value: email
       });
@@ -298,21 +319,29 @@ describe("Provider Verification E2E with MailHog", () => {
         is_used: false
       });
 
-      await providerVerificationService
-        .validateCredentialsVerification(testUserId, wrongCode, STRATEGY, EMAIL_PROVIDER, PURPOSE)
-        .catch(error => {
-          expect(error.response.message).toBe("Invalid verification code");
-        });
+      const firstVerifyResponse = await req.post(`/passport/user/${testUserId}/verify-provider`, {
+        code: wrongCode,
+        provider: EMAIL_PROVIDER,
+        strategy: STRATEGY,
+        purpose: PURPOSE
+      });
+
+      expect(firstVerifyResponse.statusCode).toBe(400);
+      expect(firstVerifyResponse.body.message).toBe("Invalid verification code");
 
       const updatedVerification = await verificationService.findOne({_id: verification._id});
 
       expect(updatedVerification.is_used).toBe(true);
 
-      await providerVerificationService
-        .validateCredentialsVerification(testUserId, wrongCode, STRATEGY, EMAIL_PROVIDER, PURPOSE)
-        .catch(error => {
-          expect(error.response.message).toBe("No verification found");
-        });
+      const secondVerifyResponse = await req.post(`/passport/user/${testUserId}/verify-provider`, {
+        code: wrongCode,
+        provider: EMAIL_PROVIDER,
+        strategy: STRATEGY,
+        purpose: PURPOSE
+      });
+
+      expect(secondVerifyResponse.statusCode).toBe(404);
+      expect(secondVerifyResponse.body.message).toBe("No verification found");
     });
   });
 });

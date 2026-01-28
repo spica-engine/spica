@@ -9,3 +9,4 @@ export {
   KeywordCxt
 } from "./src/validator";
 export {hash} from "./src/hash";
+export {encrypt, decrypt} from "./src/encrypt";

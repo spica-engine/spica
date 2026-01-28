@@ -730,7 +730,12 @@ describe("VerificationService", () => {
       const user = await userService.findOne({_id: userId});
 
       expect(user.email).toMatchObject({
-        value: email
+        encrypted: expect.any(String),
+        iv: expect.any(String),
+        authTag: expect.any(String),
+        salt: expect.any(String),
+        hash: expect.any(String),
+        createdAt: expect.any(Date)
       });
     });
   });

@@ -7,6 +7,7 @@ import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 import {v4 as uuidv4} from "uuid";
+import {encrypt, decrypt, hash as coreHash} from "@spica-server/core/schema";
 
 @Injectable()
 export class UserService extends BaseCollection<User>("user") {
@@ -291,5 +292,79 @@ export class UserService extends BaseCollection<User>("user") {
     }
 
     return result.join(" ");
+  }
+
+  encryptField(value: string): {
+    encrypted: string;
+    iv: string;
+    authTag: string;
+    salt: string;
+    hash: string;
+  } {
+    if (!value) {
+      throw new Error("Value to encrypt is required.");
+    }
+
+    const secret = this.getEncryptionSecret();
+    const encryptedData = encrypt(value, secret);
+    const hashValue = coreHash(value.toLowerCase(), secret);
+
+    return {
+      ...encryptedData,
+      hash: hashValue
+    };
+  }
+
+  decryptField(encryptedField: {
+    encrypted: string;
+    iv: string;
+    authTag: string;
+    salt: string;
+  }): string {
+    if (!encryptedField || !encryptedField.encrypted) {
+      throw new Error("No encrypted data provided.");
+    }
+
+    const secret = this.getEncryptionSecret();
+    return decrypt(encryptedField, secret);
+  }
+
+  decryptProviderFields(user: User): User {
+    if (!user) return user;
+
+    const decryptedUser = {...user};
+
+    if (user.email?.encrypted) {
+      decryptedUser.email = {
+        value: this.decryptField({
+          encrypted: user.email.encrypted,
+          iv: user.email.iv,
+          authTag: user.email.authTag,
+          salt: user.email.salt
+        }),
+        createdAt: user.email.createdAt
+      };
+    }
+
+    if (user.phone?.encrypted) {
+      decryptedUser.phone = {
+        value: this.decryptField({
+          encrypted: user.phone.encrypted,
+          iv: user.phone.iv,
+          authTag: user.phone.authTag,
+          salt: user.phone.salt
+        }),
+        createdAt: user.phone.createdAt
+      };
+    }
+
+    return decryptedUser;
+  }
+
+  private getEncryptionSecret(): string {
+    if (!this.userOptions.hashSecret) {
+      throw new Error("User hash secret is not configured. Please set USER_HASH_SECRET");
+    }
+    return this.userOptions.hashSecret;
   }
 }
