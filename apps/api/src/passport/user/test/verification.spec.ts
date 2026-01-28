@@ -1,27 +1,35 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {VerificationService} from "@spica-server/passport/user/src/verification.service";
-import {UserService} from "@spica-server/passport/user/src/user.service";
+import {ProviderVerificationService} from "@spica-server/passport/user/src/services/provider.verification.service";
+import {UserConfigService} from "@spica-server/passport/user/src/config.service";
 import {MailerService} from "@spica-server/mailer";
 import {MailerModule} from "@spica-server/mailer";
 import {SmsModule, SmsService} from "@spica-server/sms";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
-import {hash} from "@spica-server/core/schema";
 import {CoreTestingModule} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {SchemaModule} from "@spica-server/core/schema";
+import {_, SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
-import {UserModule} from "@spica-server/passport/user";
+import {UserModule, UserService} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
 
-describe("Provider Verification", () => {
+describe("VerificationService", () => {
   let module: TestingModule;
   let verificationService: VerificationService;
+  let providerVerificationService: ProviderVerificationService;
+  let userConfigService: UserConfigService;
   let userService: UserService;
   let mailerService: MailerService;
   let smsService: SmsService;
   let db: DatabaseService;
+  let maxAttemptCount = 3;
+
+  const STRATEGY = "Otp";
+  const PURPOSE = "verify";
+  const EMAIL_PROVIDER = "email";
+  const PHONE_PROVIDER = "phone";
 
   const mockMailerService = {
     sendMail: jest.fn()
@@ -31,7 +39,7 @@ describe("Provider Verification", () => {
     sendSms: jest.fn()
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
@@ -79,25 +87,28 @@ describe("Provider Verification", () => {
       .compile();
 
     verificationService = module.get(VerificationService);
+    providerVerificationService = module.get(ProviderVerificationService);
+    userConfigService = module.get(UserConfigService);
     userService = module.get(UserService);
     mailerService = module.get(MailerService);
     smsService = module.get(SmsService);
     db = module.get(DatabaseService);
 
+    userConfigService.set({
+      verificationProcessMaxAttempt: maxAttemptCount
+    });
+  });
+
+  afterEach(async () => {
+    await Promise.all([verificationService.deleteMany({}), userService.deleteMany({})]);
     mockMailerService.sendMail.mockReset();
     mockSmsService.sendSms.mockReset();
   });
 
-  afterEach(async () => {
-    await db.collection("verification").deleteMany({});
-    await db.collection("user").deleteMany({});
-  });
-
-  describe("start Email provider verification", () => {
-    it("should insert verification code into collection and send email", async () => {
+  describe("startVerification", () => {
+    it("should create verification record and send email for email provider", async () => {
       const userId = new ObjectId();
       const email = "test@example.com";
-      const provider = "email";
 
       mockMailerService.sendMail.mockResolvedValue({
         accepted: [email],
@@ -105,10 +116,12 @@ describe("Provider Verification", () => {
         messageId: "test-message-id"
       });
 
-      const result = await verificationService.startAuthProviderVerification(
+      const result = await verificationService.startVerificationProcess(
         userId,
         email,
-        provider
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
       );
 
       expect(result).toMatchObject({
@@ -119,196 +132,26 @@ describe("Provider Verification", () => {
       expect(mockMailerService.sendMail).toHaveBeenCalledWith({
         to: email,
         subject: "Spica verification code",
-        text: expect.stringContaining(`Your verification code for ${provider} is:`)
+        text: expect.stringContaining(`Your verification code for ${EMAIL_PROVIDER} is:`)
       });
 
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
-
-      expect(verification).toMatchObject({
-        destination: email,
+      const updatedVerification = await verificationService.findOne({
         userId: userId,
-        channel: provider,
-        purpose: "verify",
-        is_used: false,
-        attempts: 0
+        destination: email
       });
-      expect(verification.code).toBeDefined();
+
+      expect(updatedVerification).toMatchObject({
+        userId: userId,
+        destination: email,
+        is_used: false,
+        strategy: STRATEGY,
+        provider: EMAIL_PROVIDER,
+        purpose: PURPOSE
+      });
     });
 
-    it("should throw error when mail is not accepted by SMTP", async () => {
+    it("should create verification record and send SMS for phone provider", async () => {
       const userId = new ObjectId();
-      const email = "test@example.com";
-      const provider = "email";
-
-      mockMailerService.sendMail.mockResolvedValue({
-        accepted: [],
-        rejected: [email]
-      });
-
-      await expect(
-        verificationService.startAuthProviderVerification(userId, email, provider)
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it("should throw error for invalid email format", async () => {
-      const userId = new ObjectId();
-      const invalidEmail = "not-an-email";
-      const provider = "email";
-
-      await expect(
-        verificationService.startAuthProviderVerification(userId, invalidEmail, provider)
-      ).rejects.toThrow(BadRequestException);
-
-      expect(mockMailerService.sendMail).not.toHaveBeenCalled();
-    });
-
-    it("should throw error for unknown provider", async () => {
-      const userId = new ObjectId();
-      const email = "test@example.com";
-      const provider = "unknown-provider";
-
-      await expect(
-        verificationService.startAuthProviderVerification(userId, email, provider)
-      ).rejects.toThrow(BadRequestException);
-
-      expect(mockMailerService.sendMail).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("verify Email provider", () => {
-    let userId: ObjectId;
-    let email: string;
-    let provider: string;
-
-    beforeEach(async () => {
-      userId = new ObjectId();
-      email = "test@example.com";
-      provider = "email";
-
-      await userService.insertOne({
-        _id: userId,
-        username: "testuser",
-        password: "testpassword"
-      } as any);
-
-      mockMailerService.sendMail.mockResolvedValue({
-        accepted: [email],
-        rejected: [],
-        messageId: "test-message-id"
-      });
-    });
-
-    it("should verify successfully with correct code", async () => {
-      await verificationService.startAuthProviderVerification(userId, email, provider);
-
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
-
-      const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
-      const codeMatch = sentEmail.match(/is: (\d{6})/);
-      const code = codeMatch[1];
-
-      const result = await verificationService.verifyAuthProvider(userId, code, provider);
-
-      expect(result).toEqual({
-        message: "Verification completed successfully"
-      });
-
-      const updatedVerification = await db
-        .collection("verification")
-        .findOne({_id: verification._id});
-      expect(updatedVerification.is_used).toBe(true);
-
-      const user = await userService.findOne({_id: userId});
-      expect(user.email).toMatchObject({
-        value: email
-      });
-      expect(user.email.createdAt).toBeInstanceOf(Date);
-    });
-
-    it("should fail with wrong code", async () => {
-      await verificationService.startAuthProviderVerification(userId, email, provider);
-
-      const wrongCode = "9999999";
-
-      await expect(
-        verificationService.verifyAuthProvider(userId, wrongCode, provider)
-      ).rejects.toThrow("Invalid verification code");
-
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
-      expect(verification).toMatchObject({
-        is_used: false,
-        attempts: 1
-      });
-
-      const user = await userService.findOne({_id: userId});
-      expect(user.email).toBeUndefined();
-    });
-
-    it("should fail when attempt count reaches limit", async () => {
-      await verificationService.startAuthProviderVerification(userId, email, provider);
-
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
-
-      await db.collection("verification").updateOne({_id: verification._id}, {$set: {attempts: 5}});
-
-      await expect(
-        verificationService.verifyAuthProvider(userId, "123456", provider)
-      ).rejects.toThrow(NotFoundException);
-
-      const user = await userService.findOne({_id: userId});
-      expect(user.email).toBeUndefined();
-    });
-
-    it("should fail with wrong userId", async () => {
-      await verificationService.startAuthProviderVerification(userId, email, provider);
-
-      const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
-      const codeMatch = sentEmail.match(/is: (\d{6})/);
-      const code = codeMatch[1];
-
-      const wrongUserId = new ObjectId();
-
-      await expect(
-        verificationService.verifyAuthProvider(wrongUserId, code, provider)
-      ).rejects.toThrow(NotFoundException);
-
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
-      expect(verification).toMatchObject({
-        is_used: false,
-        attempts: 0
-      });
-    });
-    it("should fail when trying to verify email with wrong provider", async () => {
-      await verificationService.startAuthProviderVerification(userId, email, provider);
-
-      const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
-      const codeMatch = sentEmail.match(/is: (\d{6})/);
-      const code = codeMatch[1];
-
-      const wrongProvider = "phone";
-
-      await expect(
-        verificationService.verifyAuthProvider(userId, code, wrongProvider)
-      ).rejects.toThrow(NotFoundException);
-
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
-      expect(verification).toMatchObject({
-        is_used: false,
-        attempts: 0
-      });
-    });
-  });
-
-  describe("start Phone provider verification", () => {
-    let userId: ObjectId;
-    let provider: string;
-
-    beforeEach(async () => {
-      userId = new ObjectId();
-      provider = "phone";
-    });
-
-    it("should insert verification code into collection and send SMS", async () => {
       const phoneNumber = "+1234567890";
 
       mockSmsService.sendSms.mockResolvedValue({
@@ -316,10 +159,12 @@ describe("Provider Verification", () => {
         messageId: "test-sms-message-id"
       });
 
-      const result = await verificationService.startAuthProviderVerification(
+      const result = await verificationService.startVerificationProcess(
         userId,
         phoneNumber,
-        provider
+        STRATEGY,
+        PHONE_PROVIDER,
+        PURPOSE
       );
 
       expect(result).toMatchObject({
@@ -329,23 +174,119 @@ describe("Provider Verification", () => {
 
       expect(mockSmsService.sendSms).toHaveBeenCalledWith({
         to: phoneNumber,
-        body: expect.stringContaining(`Your verification code for ${provider} is:`)
+        body: expect.stringContaining(`Your verification code for ${PHONE_PROVIDER} is:`)
       });
 
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
-
-      expect(verification).toMatchObject({
-        destination: phoneNumber,
+      const updatedVerification = await verificationService.findOne({
         userId: userId,
-        channel: provider,
-        purpose: "verify",
-        is_used: false,
-        attempts: 0
+        destination: phoneNumber
       });
-      expect(verification.code).toBeDefined();
+
+      expect(updatedVerification).toMatchObject({
+        userId: userId,
+        destination: phoneNumber,
+        is_used: false,
+        strategy: STRATEGY,
+        provider: PHONE_PROVIDER,
+        purpose: PURPOSE
+      });
     });
 
-    it("should throw error when sms fails to send", async () => {
+    it("should throw error for invalid email format", async () => {
+      const userId = new ObjectId();
+      const invalidEmail = "not-an-email";
+
+      await expect(
+        verificationService.startVerificationProcess(
+          userId,
+          invalidEmail,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
+
+      const [mailCalls, verificationRecord] = await Promise.all([
+        Promise.resolve(mockMailerService.sendMail.mock.calls.length),
+        verificationService.findOne({userId, destination: invalidEmail})
+      ]);
+
+      expect(mailCalls).toBe(0);
+      expect(verificationRecord).toBeNull();
+    });
+
+    it("should throw error for invalid phone number format", async () => {
+      const userId = new ObjectId();
+      const invalidPhone = "not-a-phone";
+
+      await expect(
+        verificationService.startVerificationProcess(
+          userId,
+          invalidPhone,
+          STRATEGY,
+          PHONE_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
+
+      const [smsCalls, verificationRecord] = await Promise.all([
+        Promise.resolve(mockSmsService.sendSms.mock.calls.length),
+        verificationService.findOne({userId, destination: invalidPhone})
+      ]);
+
+      expect(smsCalls).toBe(0);
+      expect(verificationRecord).toBeNull();
+    });
+
+    it("should throw error for unknown provider", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
+      const unknownProvider = "unknown-provider";
+
+      await expect(
+        verificationService.startVerificationProcess(
+          userId,
+          email,
+          STRATEGY,
+          unknownProvider,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
+
+      const [mailCalls, verificationRecord] = await Promise.all([
+        Promise.resolve(mockMailerService.sendMail.mock.calls.length),
+        verificationService.findOne({userId, destination: email})
+      ]);
+
+      expect(mailCalls).toBe(0);
+      expect(verificationRecord).toBeNull();
+    });
+
+    it("should throw error when email is not accepted by SMTP", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [],
+        rejected: [email]
+      });
+
+      await expect(
+        verificationService.startVerificationProcess(
+          userId,
+          email,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
+
+      const verificationRecord = await verificationService.findOne({userId, destination: email});
+      expect(verificationRecord).toBeNull();
+    });
+
+    it("should throw error when SMS fails to send", async () => {
+      const userId = new ObjectId();
       const phoneNumber = "+1234567890";
 
       mockSmsService.sendSms.mockResolvedValue({
@@ -354,150 +295,442 @@ describe("Provider Verification", () => {
       });
 
       await expect(
-        verificationService.startAuthProviderVerification(userId, phoneNumber, provider)
-      ).rejects.toThrow(BadRequestException);
-
-      expect(
-        verificationService.findOne({
+        verificationService.startVerificationProcess(
           userId,
-          channel: provider
-        })
-      ).resolves.toBeNull();
-    });
-
-    it("should throw error for invalid phone number format", async () => {
-      const invalidPhone = "not-a-phone";
-
-      await expect(
-        verificationService.startAuthProviderVerification(userId, invalidPhone, provider)
+          phoneNumber,
+          STRATEGY,
+          PHONE_PROVIDER,
+          PURPOSE
+        )
       ).rejects.toThrow(BadRequestException);
 
-      expect(mockSmsService.sendSms).not.toHaveBeenCalled();
+      const verificationRecord = await verificationService.findOne({
+        userId,
+        destination: phoneNumber
+      });
+      expect(verificationRecord).toBeNull();
     });
 
-    it("should accept phone numbers with spaces and dashes", async () => {
-      const phoneNumber = "+1 234-567-890";
+    it("should throw error when verification count exceeds maximum attempts", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
 
-      mockSmsService.sendSms.mockResolvedValue({
-        success: true,
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
         messageId: "test-message-id"
       });
 
-      const result = await verificationService.startAuthProviderVerification(
-        userId,
-        phoneNumber,
-        provider
-      );
+      for (let i = 0; i < maxAttemptCount; i++) {
+        const verification = await verificationService.startVerificationProcess(
+          userId,
+          email,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        );
 
-      expect(result).toMatchObject({
-        message: expect.stringContaining("successfully"),
-        value: phoneNumber
-      });
-
-      expect(mockSmsService.sendSms).toHaveBeenCalled();
+        expect(verification).toMatchObject({
+          message: expect.stringContaining("successfully"),
+          value: email
+        });
+      }
+      try {
+        await verificationService.startVerificationProcess(
+          userId,
+          email,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        );
+      } catch (error) {
+        expect(error).toBeInstanceOf(BadRequestException);
+        expect(error.message).toContain("Too many verification attempts");
+      }
     });
   });
 
-  describe("verify Phone provider", () => {
-    let userId: ObjectId;
-    let phoneNumber: string;
-    let provider: string;
+  describe("verifyProvider", () => {
+    it("should verify successfully with correct code", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
 
-    beforeEach(async () => {
-      userId = new ObjectId();
-      phoneNumber = "+1234567890";
-      provider = "phone";
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-message-id"
+      });
 
-      await userService.insertOne({
-        _id: userId,
-        username: "testphoneuser",
-        password: "testpassword"
-      } as any);
+      const result = await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+      expect(result.message).toContain("Verification code sent successfully");
+
+      const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
+      const codeMatch = sentEmail.match(/is: (\d{6})/);
+      const code = codeMatch[1];
+
+      const updatedVerification = await verificationService.confirmVerificationProcess(
+        userId,
+        code,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      expect(updatedVerification).toMatchObject({
+        userId,
+        destination: email,
+        strategy: STRATEGY,
+        provider: EMAIL_PROVIDER
+      });
+
+      const finalVerification = await verificationService.findOne({
+        userId,
+        destination: email
+      });
+      expect(finalVerification.is_used).toBe(true);
+    });
+
+    it("should fail with wrong code and mark verification as used (one-time use)", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
+      const wrongCode = "999999";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-message-id"
+      });
+
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      await expect(
+        verificationService.confirmVerificationProcess(
+          userId,
+          wrongCode,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
+
+      const updatedVerification = await verificationService.findOne({userId, destination: email});
+      expect(updatedVerification.is_used).toBe(true);
+    });
+
+    it("should fail when trying to reuse the same verification", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-message-id"
+      });
+
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
+      const codeMatch = sentEmail.match(/is: (\d{6})/);
+      const code = codeMatch[1];
+
+      const verification = await verificationService.confirmVerificationProcess(
+        userId,
+        code,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      expect(verification).toMatchObject({
+        userId,
+        destination: email,
+        strategy: STRATEGY,
+        provider: EMAIL_PROVIDER
+      });
+
+      const updatedVerification = await verificationService.findOne({userId, destination: email});
+
+      expect(updatedVerification.is_used).toBe(true);
+
+      await expect(
+        verificationService.confirmVerificationProcess(
+          userId,
+          code,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(NotFoundException);
+
+      const finalVerification = await verificationService.findOne({userId, destination: email});
+      expect(finalVerification.is_used).toBe(true);
+    });
+
+    it("should fail with wrong userId", async () => {
+      const userId = new ObjectId();
+      const wrongUserId = new ObjectId();
+      const email = "test@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-message-id"
+      });
+
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
+      const codeMatch = sentEmail.match(/is: (\d{6})/);
+      const code = codeMatch[1];
+
+      await expect(
+        verificationService.confirmVerificationProcess(
+          wrongUserId,
+          code,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(NotFoundException);
+
+      const updatedVerification = await verificationService.findOne({userId, destination: email});
+      expect(updatedVerification.is_used).toBe(false);
+    });
+
+    it("should fail when trying to verify with wrong provider", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-message-id"
+      });
+
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
+      const codeMatch = sentEmail.match(/is: (\d{6})/);
+      const code = codeMatch[1];
+
+      await expect(
+        verificationService.confirmVerificationProcess(
+          userId,
+          code,
+          STRATEGY,
+          PHONE_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(NotFoundException);
+
+      const updatedVerification = await verificationService.findOne({userId, destination: email});
+      expect(updatedVerification.is_used).toBe(false);
+    });
+
+    it("should fail when trying to verify with wrong purpose", async () => {
+      const userId = new ObjectId();
+      const email = "test@example.com";
+      const wrongPurpose = "login";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-message-id"
+      });
+
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
+      const codeMatch = sentEmail.match(/is: (\d{6})/);
+      const code = codeMatch[1];
+
+      await expect(
+        verificationService.confirmVerificationProcess(
+          userId,
+          code,
+          STRATEGY,
+          EMAIL_PROVIDER,
+          wrongPurpose
+        )
+      ).rejects.toThrow(NotFoundException);
+
+      const updatedVerification = await verificationService.findOne({userId, destination: email});
+      expect(updatedVerification.is_used).toBe(false);
+    });
+
+    it("should verify phone provider successfully with correct code", async () => {
+      const userId = new ObjectId();
+      const phoneNumber = "+1234567890";
 
       mockSmsService.sendSms.mockResolvedValue({
         success: true,
         messageId: "test-sms-message-id"
       });
-    });
 
-    it("should verify Phone successfully with correct code", async () => {
-      await verificationService.startAuthProviderVerification(userId, phoneNumber, provider);
-
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
+      await verificationService.startVerificationProcess(
+        userId,
+        phoneNumber,
+        STRATEGY,
+        PHONE_PROVIDER,
+        PURPOSE
+      );
 
       const sentSms = mockSmsService.sendSms.mock.calls[0][0].body;
       const codeMatch = sentSms.match(/is: (\d{6})/);
       const code = codeMatch[1];
 
-      const result = await verificationService.verifyAuthProvider(userId, code, provider);
+      const result = await verificationService.confirmVerificationProcess(
+        userId,
+        code,
+        STRATEGY,
+        PHONE_PROVIDER,
+        PURPOSE
+      );
 
-      expect(result).toEqual({
-        message: "Verification completed successfully"
+      expect(result).toMatchObject({
+        userId,
+        destination: phoneNumber,
+        verifiedField: expect.any(String),
+        strategy: STRATEGY,
+        provider: PHONE_PROVIDER
       });
 
-      const updatedVerification = await db
-        .collection("verification")
-        .findOne({_id: verification._id});
-      expect(updatedVerification.is_used).toBe(true);
-
-      const user = await userService.findOne({_id: userId});
-      expect(user.phone).toMatchObject({
-        value: phoneNumber
+      const finalVerification = await verificationService.findOne({
+        userId,
+        destination: phoneNumber
       });
-      expect(user.phone.createdAt).toBeInstanceOf(Date);
+      expect(finalVerification.is_used).toBe(true);
     });
 
-    it("should fail Phone verification with wrong code", async () => {
-      await verificationService.startAuthProviderVerification(userId, phoneNumber, provider);
-
+    it("should fail phone verification with wrong code", async () => {
+      const userId = new ObjectId();
+      const phoneNumber = "+1234567890";
       const wrongCode = "999999";
 
-      await expect(
-        verificationService.verifyAuthProvider(userId, wrongCode, provider)
-      ).rejects.toThrow("Invalid verification code");
-
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
-      expect(verification).toMatchObject({
-        is_used: false,
-        attempts: 1
+      mockSmsService.sendSms.mockResolvedValue({
+        success: true,
+        messageId: "test-sms-message-id"
       });
 
-      const user = await userService.findOne({_id: userId});
-      expect(user.phone).toBeUndefined();
-    });
-
-    it("should fail Phone verification when attempt count reaches limit", async () => {
-      await verificationService.startAuthProviderVerification(userId, phoneNumber, provider);
-
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
-
-      await db.collection("verification").updateOne({_id: verification._id}, {$set: {attempts: 5}});
+      await verificationService.startVerificationProcess(
+        userId,
+        phoneNumber,
+        STRATEGY,
+        PHONE_PROVIDER,
+        PURPOSE
+      );
 
       await expect(
-        verificationService.verifyAuthProvider(userId, "123456", provider)
-      ).rejects.toThrow(NotFoundException);
+        verificationService.confirmVerificationProcess(
+          userId,
+          wrongCode,
+          STRATEGY,
+          PHONE_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
 
-      const user = await userService.findOne({_id: userId});
-      expect(user.phone).toBeUndefined();
+      const updatedVerification = await verificationService.findOne({
+        userId,
+        destination: phoneNumber
+      });
+      expect(updatedVerification.is_used).toBe(true);
+    });
+  });
+
+  describe("ProviderVerificationService", () => {
+    let userId: ObjectId;
+    beforeEach(async () => {
+      userId = new ObjectId();
+      await userService.insertOne({
+        _id: userId,
+        username: "testphoneuser",
+        password: "testpassword"
+      } as any);
     });
 
-    it("should fail when trying to verify phone with wrong provider", async () => {
-      await verificationService.startAuthProviderVerification(userId, phoneNumber, provider);
+    it("should successfully verify provider and update user", async () => {
+      const email = "test@example.com";
 
-      const sentSms = mockSmsService.sendSms.mock.calls[0][0].body;
-      const codeMatch = sentSms.match(/is: (\d{6})/);
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-message-id"
+      });
+
+      const result = await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+      expect(result.message).toContain("Verification code sent successfully");
+
+      const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
+      const codeMatch = sentEmail.match(/is: (\d{6})/);
       const code = codeMatch[1];
 
-      const wrongProvider = "email";
+      const response = await providerVerificationService.validateCredentialsVerification(
+        userId,
+        code,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
 
-      await expect(
-        verificationService.verifyAuthProvider(userId, code, wrongProvider)
-      ).rejects.toThrow(NotFoundException);
+      expect(response).toMatchObject({
+        message: "Verification completed successfully",
+        provider: EMAIL_PROVIDER,
+        destination: email
+      });
 
-      const verification = await db.collection("verification").findOne({userId, channel: provider});
-      expect(verification).toMatchObject({
-        is_used: false,
-        attempts: 0
+      const finalVerification = await verificationService.findOne({
+        userId,
+        destination: email
+      });
+      expect(finalVerification.is_used).toBe(true);
+
+      const user = await userService.findOne({_id: userId});
+
+      expect(user.email).toMatchObject({
+        value: email
       });
     });
   });

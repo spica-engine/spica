@@ -2,19 +2,18 @@ import {Injectable, NotFoundException, Inject, BadRequestException} from "@nestj
 import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {UserVerification, UserOptions, USER_OPTIONS} from "@spica-server/interface/passport/user";
 import {hash} from "@spica-server/core/schema";
-import {UserService} from "./user.service";
 import {randomInt} from "crypto";
 import {VerificationProviderRegistry} from "./providers";
+import {UserConfigService} from "./config.service";
 
 @Injectable()
 export class VerificationService extends BaseCollection<UserVerification>("verification") {
-  private readonly MAX_ATTEMPTS = 5;
   private readonly TTL_INDEX_EXPIRES_IN = 300;
   constructor(
     db: DatabaseService,
     private readonly providerRegistry: VerificationProviderRegistry,
-    private userService: UserService,
-    @Inject(USER_OPTIONS) private userOptions: UserOptions
+    @Inject(USER_OPTIONS) private userOptions: UserOptions,
+    private readonly userConfigService: UserConfigService
   ) {
     super(db, {
       afterInit: () =>
@@ -22,9 +21,14 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     });
   }
 
-  async startAuthProviderVerification(id: ObjectId, value: string, provider: string) {
+  async startVerificationProcess(
+    id: ObjectId,
+    value: string,
+    strategy: string,
+    provider: string,
+    purpose: string
+  ) {
     const verificationProvider = this.providerRegistry.getProvider(provider);
-
     if (!verificationProvider.validateDestination(value)) {
       throw new BadRequestException(
         `Invalid destination format for provider '${provider}'. Please provide a valid ${provider} address.`
@@ -36,21 +40,21 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     const result = await this.findOneAndUpdate(
       {
         userId: id,
-        channel: provider,
-        purpose: "verify",
+        strategy: strategy,
+        purpose: purpose,
         is_used: false
       },
       {
         $setOnInsert: {
           userId: id,
           destination: value,
-          purpose: "verify",
-          channel: provider,
-          attempts: 0,
+          provider: provider,
+          purpose: purpose,
+          strategy: strategy,
           createdAt: new Date()
         },
         $inc: {
-          verificationCount: 1
+          requestCount: 1
         },
         $set: {
           code: hashedCode
@@ -67,8 +71,8 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     if (!verification) {
       throw new Error("Failed to create verification record");
     }
-
-    if (verification.verificationCount > this.MAX_ATTEMPTS) {
+    const maxAttempts = await this.getUserConfigMaxAttempts();
+    if (verification.requestCount > maxAttempts) {
       throw new BadRequestException(
         "Too many verification attempts. Please wait a bit before trying again."
       );
@@ -104,17 +108,29 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     }
   }
 
-  async verifyAuthProvider(id: ObjectId, code: string, provider: string) {
+  async confirmVerificationProcess(
+    id: ObjectId,
+    code: string,
+    strategy: string,
+    provider: string,
+    purpose: string
+  ): Promise<{
+    userId: ObjectId;
+    destination: string;
+    verifiedField: string;
+    strategy: string;
+    provider: string;
+  }> {
     const verification = await this.findOneAndUpdate(
       {
         userId: id,
-        channel: provider,
-        purpose: "verify",
-        is_used: false,
-        attempts: {$lt: this.MAX_ATTEMPTS}
+        strategy: strategy,
+        provider: provider,
+        purpose: purpose,
+        is_used: false
       },
       {
-        $inc: {attempts: 1}
+        $set: {is_used: true}
       }
     );
 
@@ -125,28 +141,17 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     const isCodeValid = hash(code, this.getHashSecret()) === verification.code;
 
     if (!isCodeValid) {
-      throw new Error("Invalid verification code");
+      throw new BadRequestException("Invalid verification code");
     }
 
     try {
       const verifiedField = this.providerRegistry.getProvider(provider).name;
-      await Promise.all([
-        this.updateOne({_id: verification._id}, {$set: {is_used: true}}),
-
-        this.userService.updateOne(
-          {_id: verification.userId},
-          {
-            $set: {
-              [verifiedField]: {
-                value: verification.destination,
-                createdAt: new Date()
-              }
-            }
-          }
-        )
-      ]);
       return {
-        message: "Verification completed successfully"
+        userId: verification.userId,
+        destination: verification.destination,
+        verifiedField,
+        strategy,
+        provider
       };
     } catch (error) {
       console.error("Error during verification process:", error);
@@ -163,5 +168,16 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
       throw new Error("User hash secret is not configured. Please set USER_HASH_SECRET");
     }
     return this.userOptions.hashSecret;
+  }
+
+  private async getUserConfigMaxAttempts(): Promise<number> {
+    const config = await this.userConfigService.get();
+    const maxAttempt = config?.options?.["verificationProcessMaxAttempt"];
+
+    if (!maxAttempt) {
+      throw new Error("User max attempt count not found.");
+    }
+
+    return maxAttempt;
   }
 }
