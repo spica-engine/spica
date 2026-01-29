@@ -28,6 +28,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import fs from "fs";
 import * as CRUD from "@spica-server/function/src/crud";
+import {safeSubscribe, delayForSubscriptionSetup} from "./test-helpers";
 
 describe("SyncEngine Integration - Function Dependency", () => {
   let module: TestingModule;
@@ -151,57 +152,86 @@ describe("SyncEngine Integration - Function Dependency", () => {
     };
 
     createTestFunction(_id, name).then(async fn => {
-      const subs = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
-        subs.unsubscribe();
-        expect(new Date(sync.created_at)).toBeInstanceOf(Date);
-        expect(sync.status).toBe(SyncStatuses.PENDING);
-        expect(sync.change_log).toEqual({
-          _id: sync.change_log._id,
-          module: "function",
-          sub_module: "package",
-          origin: ChangeOrigin.DOCUMENT,
-          type: ChangeType.CREATE,
-          resource_id: _id.toString(),
-          resource_slug: name,
-          resource_content: JSON.stringify(packageJsonContent, null, 2),
-          resource_extension: "json",
-          created_at: sync.change_log.created_at,
-          initiator: ChangeInitiator.EXTERNAL
-        });
-        done();
-      });
-      CRUD.dependencies.create(functionService, functionEngine, fn._id, packageJsonContent);
-    });
-  });
-
-  it("should sync dependency from document to representatives", done => {
-    const _id = new ObjectId();
-    const name = "TestFuncDepDocToRep";
-    const packageJsonContent = {
-      name: name,
-      description: "A function for dependency testing",
-      version: "0.0.1",
-      private: true,
-      keywords: ["spica", "function", "node.js"],
-      license: "UNLICENSED",
-      main: `.build/${name}/index.mjs`
-    };
-    createTestFunction(_id, name).then(async fn => {
-      const repSub = repManager
-        .watch("function", ["package.json"], ["add", "change"])
-        .subscribe(fileEvent => {
-          repSub.unsubscribe();
-          expect(JSON.parse(fileEvent.content)).toEqual(packageJsonContent);
+      const subs = safeSubscribe(
+        syncProcessor.watch(SyncStatuses.PENDING),
+        async sync => {
+          subs.unsubscribe();
+          expect(new Date(sync.created_at)).toBeInstanceOf(Date);
+          expect(sync.status).toBe(SyncStatuses.PENDING);
+          expect(sync.change_log).toEqual({
+            _id: sync.change_log._id,
+            module: "function",
+            sub_module: "package",
+            origin: ChangeOrigin.DOCUMENT,
+            type: ChangeType.CREATE,
+            resource_id: _id.toString(),
+            resource_slug: name,
+            resource_content: JSON.stringify(packageJsonContent, null, 2),
+            resource_extension: "json",
+            created_at: sync.change_log.created_at,
+            initiator: ChangeInitiator.EXTERNAL
+          });
           done();
-        });
+        },
+        done
+      );
 
-      const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-        syncSub.unsubscribe();
-        syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-      });
-      CRUD.dependencies.create(functionService, functionEngine, fn._id, packageJsonContent);
+      setTimeout(() => {
+        CRUD.dependencies.create(functionService, functionEngine, fn._id, packageJsonContent);
+      }, delayForSubscriptionSetup);
     });
   });
+
+  it(
+    "should sync dependency from document to representatives",
+    done => {
+      const _id = new ObjectId();
+      const name = "TestFuncDepDocToRep";
+      const packageJsonContent = {
+        name: name,
+        description: "A function for dependency testing",
+        version: "0.0.1",
+        private: true,
+        keywords: ["spica", "function", "node.js"],
+        license: "UNLICENSED",
+        main: `.build/${name}/index.mjs`
+      };
+      createTestFunction(_id, name).then(async fn => {
+        let subscriptionsClosed = 0;
+        const checkAllClosed = () => {
+          subscriptionsClosed++;
+          if (subscriptionsClosed === 2) {
+            done();
+          }
+        };
+
+        const repSub = safeSubscribe(
+          repManager.watch("function", ["package.json"], ["add", "change"]),
+          fileEvent => {
+            repSub.unsubscribe();
+            expect(JSON.parse(fileEvent.content)).toEqual(packageJsonContent);
+            checkAllClosed();
+          },
+          done
+        );
+
+        const syncSub = safeSubscribe(
+          syncProcessor.watch(SyncStatuses.PENDING),
+          sync => {
+            syncSub.unsubscribe();
+            syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+            checkAllClosed();
+          },
+          done
+        );
+
+        setTimeout(() => {
+          CRUD.dependencies.create(functionService, functionEngine, fn._id, packageJsonContent);
+        }, delayForSubscriptionSetup);
+      });
+    },
+    15000
+  );
 
   it("should create pending sync when package.json changes come from representative", done => {
     const name = "TestFuncDepFromRep";
@@ -224,67 +254,98 @@ describe("SyncEngine Integration - Function Dependency", () => {
       2
     );
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      syncSub.unsubscribe();
-      expect(sync).toEqual({
-        _id: sync._id,
-        status: SyncStatuses.PENDING,
-        change_log: {
-          _id: sync.change_log._id,
-          module: "function",
-          sub_module: "package",
-          origin: ChangeOrigin.REPRESENTATIVE,
-          type: ChangeType.CREATE,
-          resource_id: null,
-          resource_slug: name,
-          resource_content: packageContent,
-          resource_extension: fileExtension,
-          created_at: sync.change_log.created_at,
-          initiator: ChangeInitiator.EXTERNAL
-        },
-        created_at: sync.created_at,
-        updated_at: sync.updated_at
-      });
-      done();
-    });
-
-    repManager.write("function", name, fileName, packageContent, fileExtension);
-  });
-
-  it("should sync dependency changes from representative to documents after approval", done => {
-    const _id = new ObjectId();
-    const name = "TestFuncDepRepApproved";
-    const fileName = "package";
-    const fileExtension = "json";
-    const packageContent = JSON.stringify(
-      {
-        name,
-        description: "A function for dependency testing",
-        version: "0.0.1",
-        dependencies: {
-          lodash: "^4.17.21"
-        },
-        private: true,
-        keywords: ["spica", "function", "node.js"],
-        license: "UNLICENSED",
-        main: `.build/${name}/index.mjs`
+    const syncSub = safeSubscribe(
+      syncProcessor.watch(SyncStatuses.PENDING),
+      sync => {
+        syncSub.unsubscribe();
+        expect(sync).toEqual({
+          _id: sync._id,
+          status: SyncStatuses.PENDING,
+          change_log: {
+            _id: sync.change_log._id,
+            module: "function",
+            sub_module: "package",
+            origin: ChangeOrigin.REPRESENTATIVE,
+            type: ChangeType.CREATE,
+            resource_id: null,
+            resource_slug: name,
+            resource_content: packageContent,
+            resource_extension: fileExtension,
+            created_at: sync.change_log.created_at,
+            initiator: ChangeInitiator.EXTERNAL
+          },
+          created_at: sync.created_at,
+          updated_at: sync.updated_at
+        });
+        done();
       },
-      null,
-      2
+      done
     );
 
-    createTestFunction(_id, name).then(async () => {
-      const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
-        syncSub.unsubscribe();
-        await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-      });
-      const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
-        succeededSub.unsubscribe();
-        const deps = await CRUD.dependencies.findOne(functionService, functionEngine, _id);
-        expect(deps).toEqual([{name: "lodash", version: "^4.17.21", types: {}}]);
-        done();
-      });
+    setTimeout(() => {
       repManager.write("function", name, fileName, packageContent, fileExtension);
-    });
+    }, delayForSubscriptionSetup);
   });
+
+  it(
+    "should sync dependency changes from representative to documents after approval",
+    done => {
+      const _id = new ObjectId();
+      const name = "TestFuncDepRepApproved";
+      const fileName = "package";
+      const fileExtension = "json";
+      const packageContent = JSON.stringify(
+        {
+          name,
+          description: "A function for dependency testing",
+          version: "0.0.1",
+          dependencies: {
+            lodash: "^4.17.21"
+          },
+          private: true,
+          keywords: ["spica", "function", "node.js"],
+          license: "UNLICENSED",
+          main: `.build/${name}/index.mjs`
+        },
+        null,
+        2
+      );
+
+      createTestFunction(_id, name).then(async () => {
+        let subscriptionsClosed = 0;
+        const checkAllClosed = () => {
+          subscriptionsClosed++;
+          if (subscriptionsClosed === 2) {
+            done();
+          }
+        };
+
+        const syncSub = safeSubscribe(
+          syncProcessor.watch(SyncStatuses.PENDING),
+          async sync => {
+            syncSub.unsubscribe();
+            await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+            checkAllClosed();
+          },
+          done
+        );
+
+        const succeededSub = safeSubscribe(
+          syncProcessor.watch(SyncStatuses.SUCCEEDED),
+          async sync => {
+            succeededSub.unsubscribe();
+            const deps = await CRUD.dependencies.findOne(functionService, functionEngine, _id);
+            expect(deps).toEqual([{name: "lodash", version: "^4.17.21", types: {}}]);
+            checkAllClosed();
+          },
+          done
+        );
+
+        setTimeout(() => {
+          repManager.write("function", name, fileName, packageContent, fileExtension);
+        }, delayForSubscriptionSetup);
+      });
+    },
+    15000
+  );
 });
