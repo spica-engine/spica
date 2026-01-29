@@ -6,7 +6,7 @@
 import React from "react";
 import type { ModuleRenderer, BaseModuleContext } from "../moduleRenderers";
 import { Icon } from "oziko-ui-kit";
-import type { BucketType } from "../../../store/api/bucketApi";
+import type { SpicaFunction } from "../../../store/api/functionApi";
 import {
   buildResourceAccordionItems,
   renderFlatActions,
@@ -16,18 +16,18 @@ import {
   type OnResourceChange
 } from "../moduleRendererHelpers";
 
-export interface BucketModuleProps extends BaseModuleContext {
-  buckets?: BucketType[];
+export interface FunctionModuleProps extends BaseModuleContext {
+  functions?: SpicaFunction[];
   onResourceChange?: OnResourceChange;
   onResourceBatchChange?: OnResourceBatchChange;
 }
 
-export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
-  render(props: BucketModuleProps): React.ReactNode {
+export class FunctionModuleRenderer implements ModuleRenderer<FunctionModuleProps> {
+  render(props: FunctionModuleProps): React.ReactNode {
     const {
       moduleStatement,
       statement,
-      buckets,
+      functions,
       formatActionName,
       onResourceChange,
       onResourceBatchChange,
@@ -37,7 +37,7 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
     const { actionsWithoutResource, actionsWithResource } = splitActions(moduleStatement.actions);
 
     return (
-      <div data-module="bucket">
+      <div data-module="function">
         {renderFlatActions({
           actions: actionsWithoutResource,
           module: moduleStatement.module,
@@ -55,11 +55,11 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
             onResourceChange,
             onResourceBatchChange,
             itemConfig: {
-              items: buckets,
-              getId: bucket => bucket._id,
-              getKey: bucket => bucket._id,
-              getLabel: bucket => bucket.title,
-              getIcon: () => <Icon name="bucket" size="md" />
+              items: functions,
+              getId: func => func._id || "",
+              getKey: func => func._id || func.name,
+              getLabel: func => func.name,
+              getIcon: () => <Icon name="layers" size="md" />
             }
           })
         )}

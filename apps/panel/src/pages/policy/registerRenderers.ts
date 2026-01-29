@@ -12,6 +12,13 @@ import { BucketModuleRenderer } from "./modules/BucketModuleRenderer";
 import { BucketResourceRenderer } from "./resources/BucketResourceRenderer";
 import type { BucketType } from "../../store/api/bucketApi";
 import { useGetBucketsQuery } from "../../store/api/bucketApi";
+import { useGetApiKeysQuery, type ApiKey } from "../../store/api/apiKeyApi";
+import { useGetDashboardsQuery, type Dashboard } from "../../store/api/dashboardApi";
+import { useGetFunctionsQuery, type SpicaFunction } from "../../store/api/functionApi";
+import { useGetIdentitiesQuery, type Identity } from "../../store/api/identityApi";
+import { useGetPoliciesQuery, type Policy } from "../../store/api/policyApi";
+import { useGetWebhooksQuery, type Webhook } from "../../store/api/webhookApi";
+import { useGetAuthenticationStrategiesQuery, type AuthenticationStrategy } from "../../store/api/authenticationStrategyApi";
 
 type BucketModuleExtras = {
   moduleData?: Record<string, unknown>;

@@ -6,7 +6,7 @@
 import React from "react";
 import type { ModuleRenderer, BaseModuleContext } from "../moduleRenderers";
 import { Icon } from "oziko-ui-kit";
-import type { BucketType } from "../../../store/api/bucketApi";
+import type { Policy } from "../../../store/api/policyApi";
 import {
   buildResourceAccordionItems,
   renderFlatActions,
@@ -16,18 +16,18 @@ import {
   type OnResourceChange
 } from "../moduleRendererHelpers";
 
-export interface BucketModuleProps extends BaseModuleContext {
-  buckets?: BucketType[];
+export interface PolicyModuleProps extends BaseModuleContext {
+  policies?: Policy[];
   onResourceChange?: OnResourceChange;
   onResourceBatchChange?: OnResourceBatchChange;
 }
 
-export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
-  render(props: BucketModuleProps): React.ReactNode {
+export class PolicyModuleRenderer implements ModuleRenderer<PolicyModuleProps> {
+  render(props: PolicyModuleProps): React.ReactNode {
     const {
       moduleStatement,
       statement,
-      buckets,
+      policies,
       formatActionName,
       onResourceChange,
       onResourceBatchChange,
@@ -37,7 +37,7 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
     const { actionsWithoutResource, actionsWithResource } = splitActions(moduleStatement.actions);
 
     return (
-      <div data-module="bucket">
+      <div data-module="policy">
         {renderFlatActions({
           actions: actionsWithoutResource,
           module: moduleStatement.module,
@@ -55,11 +55,11 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
             onResourceChange,
             onResourceBatchChange,
             itemConfig: {
-              items: buckets,
-              getId: bucket => bucket._id,
-              getKey: bucket => bucket._id,
-              getLabel: bucket => bucket.title,
-              getIcon: () => <Icon name="bucket" size="md" />
+              items: policies,
+              getId: policy => policy._id,
+              getKey: policy => policy._id,
+              getLabel: policy => policy.name,
+              getIcon: () => <Icon name="lock" size="md" />
             }
           })
         )}

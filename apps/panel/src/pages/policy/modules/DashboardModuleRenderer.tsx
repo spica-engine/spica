@@ -6,7 +6,7 @@
 import React from "react";
 import type { ModuleRenderer, BaseModuleContext } from "../moduleRenderers";
 import { Icon } from "oziko-ui-kit";
-import type { BucketType } from "../../../store/api/bucketApi";
+import type { Dashboard } from "../../../store/api/dashboardApi";
 import {
   buildResourceAccordionItems,
   renderFlatActions,
@@ -16,18 +16,18 @@ import {
   type OnResourceChange
 } from "../moduleRendererHelpers";
 
-export interface BucketModuleProps extends BaseModuleContext {
-  buckets?: BucketType[];
+export interface DashboardModuleProps extends BaseModuleContext {
+  dashboards?: Dashboard[];
   onResourceChange?: OnResourceChange;
   onResourceBatchChange?: OnResourceBatchChange;
 }
 
-export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
-  render(props: BucketModuleProps): React.ReactNode {
+export class DashboardModuleRenderer implements ModuleRenderer<DashboardModuleProps> {
+  render(props: DashboardModuleProps): React.ReactNode {
     const {
       moduleStatement,
       statement,
-      buckets,
+      dashboards,
       formatActionName,
       onResourceChange,
       onResourceBatchChange,
@@ -37,7 +37,7 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
     const { actionsWithoutResource, actionsWithResource } = splitActions(moduleStatement.actions);
 
     return (
-      <div data-module="bucket">
+      <div data-module="dashboard">
         {renderFlatActions({
           actions: actionsWithoutResource,
           module: moduleStatement.module,
@@ -55,11 +55,11 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
             onResourceChange,
             onResourceBatchChange,
             itemConfig: {
-              items: buckets,
-              getId: bucket => bucket._id,
-              getKey: bucket => bucket._id,
-              getLabel: bucket => bucket.title,
-              getIcon: () => <Icon name="bucket" size="md" />
+              items: dashboards,
+              getId: dashboard => dashboard._id || "",
+              getKey: dashboard => dashboard._id || dashboard.name,
+              getLabel: dashboard => dashboard.name,
+              getIcon: () => <Icon name="dashboard" size="md" />
             }
           })
         )}

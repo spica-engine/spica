@@ -6,7 +6,7 @@
 import React from "react";
 import type { ModuleRenderer, BaseModuleContext } from "../moduleRenderers";
 import { Icon } from "oziko-ui-kit";
-import type { BucketType } from "../../../store/api/bucketApi";
+import type { Identity } from "../../../store/api/identityApi";
 import {
   buildResourceAccordionItems,
   renderFlatActions,
@@ -16,18 +16,18 @@ import {
   type OnResourceChange
 } from "../moduleRendererHelpers";
 
-export interface BucketModuleProps extends BaseModuleContext {
-  buckets?: BucketType[];
+export interface IdentityModuleProps extends BaseModuleContext {
+  identities?: Identity[];
   onResourceChange?: OnResourceChange;
   onResourceBatchChange?: OnResourceBatchChange;
 }
 
-export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
-  render(props: BucketModuleProps): React.ReactNode {
+export class IdentityModuleRenderer implements ModuleRenderer<IdentityModuleProps> {
+  render(props: IdentityModuleProps): React.ReactNode {
     const {
       moduleStatement,
       statement,
-      buckets,
+      identities,
       formatActionName,
       onResourceChange,
       onResourceBatchChange,
@@ -37,14 +37,15 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
     const { actionsWithoutResource, actionsWithResource } = splitActions(moduleStatement.actions);
 
     return (
-      <div data-module="bucket">
+      <div data-module="passport:identity">
         {renderFlatActions({
           actions: actionsWithoutResource,
           module: moduleStatement.module,
           statement,
           formatActionName,
           onActionToggle,
-          containerGap: 10
+          containerGap: 0,
+          itemGap: 0
         })}
         {renderResourceAccordion(
           buildResourceAccordionItems({
@@ -55,11 +56,11 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
             onResourceChange,
             onResourceBatchChange,
             itemConfig: {
-              items: buckets,
-              getId: bucket => bucket._id,
-              getKey: bucket => bucket._id,
-              getLabel: bucket => bucket.title,
-              getIcon: () => <Icon name="bucket" size="md" />
+              items: identities,
+              getId: identity => identity._id || "",
+              getKey: identity => identity._id || "",
+              getLabel: identity => identity._id,
+              getIcon: () => <Icon name="person" size="md" />
             }
           })
         )}
