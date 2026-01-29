@@ -11,7 +11,8 @@ export default {
   projects: [
     {
       ...commonConfig,
-      testMatch: ["<rootDir>/test/*.spec.ts"]
+      testMatch: ["<rootDir>/test/*.spec.ts"],
+      setupFilesAfterEnv: [path.join(workspaceRoot, "jest.flaky.setup.js")]
     }
   ]
 };
