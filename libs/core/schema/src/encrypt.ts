@@ -1,10 +1,8 @@
 import * as crypto from "crypto";
-import {EncryptedData} from "@spica-server/interface/core";
+import {EncryptedData} from "@spica-server/interface/passport/user";
 import {BadRequestException} from "@nestjs/common";
 const ALGORITHM = "aes-256-gcm";
-const IV_LENGTH = 16;
-const SALT_LENGTH = 64;
-const KEY_LENGTH = 32;
+const IV_LENGTH = 12;
 
 /**
  * Encrypts a value using AES-256-GCM
@@ -19,14 +17,11 @@ export function encrypt(value: string, secret: string): EncryptedData {
   if (!secret) {
     throw new BadRequestException("Encryption secret is required.");
   }
-
-  const salt = crypto.randomBytes(SALT_LENGTH);
-
-  const key = crypto.scryptSync(secret, salt, KEY_LENGTH);
+  const secretBuffer = Buffer.from(secret, "utf-8");
 
   const iv = crypto.randomBytes(IV_LENGTH);
 
-  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+  const cipher = crypto.createCipheriv(ALGORITHM, secretBuffer, iv);
 
   let encrypted = cipher.update(value, "utf8", "hex");
   encrypted += cipher.final("hex");
@@ -36,8 +31,7 @@ export function encrypt(value: string, secret: string): EncryptedData {
   return {
     encrypted,
     iv: iv.toString("hex"),
-    authTag: authTag.toString("hex"),
-    salt: salt.toString("hex")
+    authTag: authTag.toString("hex")
   };
 }
 
@@ -55,16 +49,14 @@ export function decrypt(encryptedData: EncryptedData, secret: string): string {
     throw new BadRequestException("Decryption secret is required.");
   }
 
-  const {encrypted, iv, authTag, salt} = encryptedData;
+  const {encrypted, iv, authTag} = encryptedData;
 
-  if (!encrypted || !iv || !authTag || !salt) {
+  if (!encrypted || !iv || !authTag) {
     throw new BadRequestException("Invalid encrypted data format.");
   }
 
-  const saltBuffer = Buffer.from(salt, "hex");
-  const key = crypto.scryptSync(secret, saltBuffer, KEY_LENGTH);
-
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, Buffer.from(iv, "hex"));
+  const secretBuffer = Buffer.from(secret, "utf-8");
+  const decipher = crypto.createDecipheriv(ALGORITHM, secretBuffer, Buffer.from(iv, "hex"));
 
   decipher.setAuthTag(Buffer.from(authTag, "hex"));
 

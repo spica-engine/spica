@@ -1,6 +1,11 @@
 import {Injectable, Inject, UnauthorizedException, BadRequestException} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {User, USER_OPTIONS, UserOptions} from "@spica-server/interface/passport/user";
+import {
+  User,
+  USER_OPTIONS,
+  UserOptions,
+  DecryptedUser
+} from "@spica-server/interface/passport/user";
 import {Validator} from "@spica-server/core/schema";
 import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash";
@@ -22,14 +27,6 @@ export class UserService extends BaseCollection<User>("user") {
       entryLimit: userOptions.entryLimit,
       afterInit: () => {
         this._coll.createIndex({username: 1}, {unique: true});
-        this._coll.createIndex(
-          {email: 1},
-          {unique: true, partialFilterExpression: {email: {$exists: true}}}
-        );
-        this._coll.createIndex(
-          {phone: 1},
-          {unique: true, partialFilterExpression: {phone: {$exists: true}}}
-        );
       }
     });
   }
@@ -308,38 +305,29 @@ export class UserService extends BaseCollection<User>("user") {
     encrypted: string;
     iv: string;
     authTag: string;
-    salt: string;
-    hash: string;
   } {
     if (!value) {
       throw new BadRequestException("Value to encrypt is required.");
     }
 
-    const secret = this.getEncryptionSecret();
+    const secret = this.getProviderEncryptionSecret();
     const encryptedData = encrypt(value, secret);
-    const hashValue = coreHash(value.toLowerCase(), secret);
 
     return {
-      ...encryptedData,
-      hash: hashValue
+      ...encryptedData
     };
   }
 
-  decryptField(encryptedField: {
-    encrypted: string;
-    iv: string;
-    authTag: string;
-    salt: string;
-  }): string {
+  decryptField(encryptedField: {encrypted: string; iv: string; authTag: string}): string {
     if (!encryptedField) {
       throw new BadRequestException("No encrypted data provided.");
     }
 
-    const secret = this.getEncryptionSecret();
+    const secret = this.getProviderEncryptionSecret();
     return decrypt(encryptedField, secret);
   }
 
-  decryptProviderFields(user: User): User {
+  decryptProviderFields(user: User): DecryptedUser | User {
     if (!user) return user;
 
     const decryptedUser = {...user};
@@ -349,8 +337,7 @@ export class UserService extends BaseCollection<User>("user") {
         value: this.decryptField({
           encrypted: user.email.encrypted,
           iv: user.email.iv,
-          authTag: user.email.authTag,
-          salt: user.email.salt
+          authTag: user.email.authTag
         }),
         createdAt: user.email.createdAt
       };
@@ -361,8 +348,7 @@ export class UserService extends BaseCollection<User>("user") {
         value: this.decryptField({
           encrypted: user.phone.encrypted,
           iv: user.phone.iv,
-          authTag: user.phone.authTag,
-          salt: user.phone.salt
+          authTag: user.phone.authTag
         }),
         createdAt: user.phone.createdAt
       };
@@ -371,12 +357,12 @@ export class UserService extends BaseCollection<User>("user") {
     return decryptedUser;
   }
 
-  private getEncryptionSecret(): string {
-    if (!this.userOptions.hashSecret) {
+  private getProviderEncryptionSecret(): string {
+    if (!this.userOptions.providerHashSecret) {
       throw new BadRequestException(
-        "User hash secret is not configured. Please set USER_HASH_SECRET"
+        "User hash secret is not configured. Please set USER_PROVIDER_HASH_SECRET"
       );
     }
-    return this.userOptions.hashSecret;
+    return this.userOptions.providerHashSecret;
   }
 }

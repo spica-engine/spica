@@ -66,7 +66,8 @@ export interface UserOptions {
   verificationCodeExpiresIn?: number;
   passwordHistoryLimit: number;
   userRealtime: boolean;
-  hashSecret?: string;
+  verificationHashSecret?: string;
+  providerHashSecret?: string;
 }
 
 export interface UserVerification {
@@ -86,12 +87,10 @@ export interface UserConfigSettings {
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
 
-type EncryptedData = {
+export type EncryptedData = {
   encrypted: string;
   iv: string;
   authTag: string;
-  salt: string;
-  hash: string;
 };
 
 type DecryptedData = {
@@ -101,3 +100,8 @@ type DecryptedData = {
 type EncryptableField = {
   createdAt: Date;
 } & (DecryptedData | EncryptedData);
+
+export type DecryptedUser = User & {
+  email?: {value: string; createdAt: Date};
+  phone?: {value: string; createdAt: Date};
+};

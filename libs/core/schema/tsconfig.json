@@ -8,6 +8,10 @@
 
     {
       "path": "../../interface/core"
+    },
+
+    {
+      "path": "../../interface/passport/user"
     }
   ]
 }

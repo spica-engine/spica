@@ -92,7 +92,8 @@ describe("Provider Verification E2E with MailHog", () => {
             failedAttemptLimit: 0
           },
           userRealtime: false,
-          hashSecret: "test-hash-secret",
+          verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
+          providerHashSecret: "3fe2e8060da06c70906096b43db6de11",
           verificationCodeExpiresIn: 300
         })
       ]

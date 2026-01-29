@@ -75,7 +75,8 @@ describe("VerificationService", () => {
             failedAttemptLimit: 0
           },
           userRealtime: false,
-          hashSecret: "test-hash-secret",
+          verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
+          providerHashSecret: "3fe2e8060da06c70906096b43db6de11",
           verificationCodeExpiresIn: 300
         })
       ]
@@ -729,14 +730,9 @@ describe("VerificationService", () => {
 
       const user = await userService.findOne({_id: userId});
 
-      expect(user.email).toMatchObject({
-        encrypted: expect.any(String),
-        iv: expect.any(String),
-        authTag: expect.any(String),
-        salt: expect.any(String),
-        hash: expect.any(String),
-        createdAt: expect.any(Date)
-      });
+      const UserWithEmail = userService.decryptProviderFields(user);
+
+      expect(UserWithEmail.email.value).toBe(email);
     });
   });
 });

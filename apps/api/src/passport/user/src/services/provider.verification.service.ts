@@ -51,8 +51,6 @@ export class ProviderVerificationService {
             encrypted: encryptedData.encrypted,
             iv: encryptedData.iv,
             authTag: encryptedData.authTag,
-            salt: encryptedData.salt,
-            hash: encryptedData.hash,
             createdAt: new Date()
           }
         }

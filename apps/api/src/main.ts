@@ -310,9 +310,13 @@ const args = yargsInstance
       description: "Enable/disable listening user realtime. Default value is true",
       default: true
     },
-    "user-hash-secret": {
+    "user-verification-hash-secret": {
       string: true,
-      description: "Hash secret used for user-related operations."
+      description: "Hash secret used for user verification related operations."
+    },
+    "user-provider-hash-secret": {
+      string: true,
+      description: "Hash secret used for user provider hashing operations."
     },
     "passport-user-verification-code-expires-in": {
       number: true,
@@ -627,9 +631,14 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["twilio-sms-service-from-number"] = twilioFromNumber;
     }
 
-    const userHashSecret = process.env.USER_HASH_SECRET;
-    if (userHashSecret) {
-      args["user-hash-secret"] = userHashSecret;
+    const userVerificationHashSecret = process.env.USER_VERIFICATION_HASH_SECRET;
+    if (userVerificationHashSecret) {
+      args["user-verification-hash-secret"] = userVerificationHashSecret;
+    }
+
+    const userProviderHashSecret = process.env.USER_PROVIDER_HASH_SECRET;
+    if (userProviderHashSecret) {
+      args["user-provider-hash-secret"] = userProviderHashSecret;
     }
   })
   .check(args => {
@@ -823,7 +832,8 @@ const modules = [
         blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
       },
       userRealtime: args["user-realtime"],
-      hashSecret: args["user-hash-secret"],
+      verificationHashSecret: args["user-verification-hash-secret"],
+      providerHashSecret: args["user-provider-hash-secret"],
       verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
     }
   }),
