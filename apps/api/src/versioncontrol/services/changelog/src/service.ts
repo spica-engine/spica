@@ -11,6 +11,6 @@ import {ChangeLog} from "@spica-server/interface/versioncontrol";
 @Injectable()
 export class ChangeLogService extends BaseCollection<ChangeLog>("changelog") {
   constructor(db: DatabaseService) {
-    super(db, {afterInit: () => this.upsertTTLIndex(5 * 60)});
+    super(db);
   }
 }

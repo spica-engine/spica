@@ -56,9 +56,7 @@ export function registerAssetHandlers(
       return;
     }
 
-    const schema = await prefService.get("passport").then(s => {
-      return s.identity;
-    });
+    const schema = {};
 
     return manager.write(_module, "identity", "schema", schema, "yaml");
   };

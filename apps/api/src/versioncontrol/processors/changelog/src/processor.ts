@@ -84,6 +84,9 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
     }
 
     if (result.cycle_count >= 1) {
+      this.service.findOneAndDelete(filter, result._id).catch(error => {
+        console.error("Error deleting processed change log:", error);
+      });
       return;
     }
 
