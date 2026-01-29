@@ -12,7 +12,7 @@ import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 import {v4 as uuidv4} from "uuid";
-import {encrypt, decrypt, hash as coreHash} from "@spica-server/core/schema";
+import {encrypt, decrypt} from "@spica-server/core/schema";
 
 @Injectable()
 export class UserService extends BaseCollection<User>("user") {
@@ -327,7 +327,7 @@ export class UserService extends BaseCollection<User>("user") {
     return decrypt(encryptedField, secret);
   }
 
-  decryptProviderFields(user: User): DecryptedUser | User {
+  decryptProviderFields(user: User): any {
     if (!user) return user;
 
     const decryptedUser = {...user};
@@ -358,11 +358,11 @@ export class UserService extends BaseCollection<User>("user") {
   }
 
   private getProviderEncryptionSecret(): string {
-    if (!this.userOptions.providerHashSecret) {
+    if (!this.userOptions.providerEncryptionSecret) {
       throw new BadRequestException(
         "User hash secret is not configured. Please set USER_PROVIDER_HASH_SECRET"
       );
     }
-    return this.userOptions.providerHashSecret;
+    return this.userOptions.providerEncryptionSecret;
   }
 }

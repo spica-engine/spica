@@ -67,7 +67,7 @@ export interface UserOptions {
   passwordHistoryLimit: number;
   userRealtime: boolean;
   verificationHashSecret?: string;
-  providerHashSecret?: string;
+  providerEncryptionSecret?: string;
 }
 
 export interface UserVerification {

@@ -314,9 +314,9 @@ const args = yargsInstance
       string: true,
       description: "Hash secret used for user verification related operations."
     },
-    "user-provider-hash-secret": {
+    "user-provider-encryption-secret": {
       string: true,
-      description: "Hash secret used for user provider hashing operations."
+      description: "Encryption secret used for user provider encryption operations."
     },
     "passport-user-verification-code-expires-in": {
       number: true,
@@ -636,9 +636,9 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["user-verification-hash-secret"] = userVerificationHashSecret;
     }
 
-    const userProviderHashSecret = process.env.USER_PROVIDER_HASH_SECRET;
-    if (userProviderHashSecret) {
-      args["user-provider-hash-secret"] = userProviderHashSecret;
+    const userProviderEncryptionSecret = process.env.USER_PROVIDER_ENCRYPTION_SECRET;
+    if (userProviderEncryptionSecret) {
+      args["user-provider-encryption-secret"] = userProviderEncryptionSecret;
     }
   })
   .check(args => {
@@ -833,7 +833,7 @@ const modules = [
       },
       userRealtime: args["user-realtime"],
       verificationHashSecret: args["user-verification-hash-secret"],
-      providerHashSecret: args["user-provider-hash-secret"],
+      providerEncryptionSecret: args["user-provider-encryption-secret"],
       verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
     }
   }),
