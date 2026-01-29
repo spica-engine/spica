@@ -22,6 +22,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
+import {safeSubscribe, delayForSubscriptionSetup} from "./test-helpers";
 
 describe("SyncEngine Integration - Policy", () => {
   let module: TestingModule;
@@ -86,53 +87,44 @@ describe("SyncEngine Integration - Policy", () => {
       ]
     };
 
-    const subs = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      expect(new Date(sync.created_at)).toBeInstanceOf(Date);
-      expect(sync.created_at).toEqual(sync.updated_at);
-      expect(sync.status).toBe(SyncStatuses.PENDING);
-      expect(sync.change_log).toEqual({
-        _id: sync.change_log._id,
-        module: "policy",
-        sub_module: "schema",
-        origin: ChangeOrigin.DOCUMENT,
-        type: ChangeType.CREATE,
-        resource_id: _id.toHexString(),
-        resource_slug: name,
-        resource_content: YAML.stringify(testPolicy),
-        resource_extension: "yaml",
-        created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
-      });
-      subs.unsubscribe();
-      done();
-    });
+    const subs = safeSubscribe(
+      syncProcessor.watch(SyncStatuses.PENDING),
+      sync => {
+        expect(new Date(sync.created_at)).toBeInstanceOf(Date);
+        expect(sync.created_at).toEqual(sync.updated_at);
+        expect(sync.status).toBe(SyncStatuses.PENDING);
+        expect(sync.change_log).toEqual({
+          _id: sync.change_log._id,
+          module: "policy",
+          sub_module: "schema",
+          origin: ChangeOrigin.DOCUMENT,
+          type: ChangeType.CREATE,
+          resource_id: _id.toHexString(),
+          resource_slug: name,
+          resource_content: YAML.stringify(testPolicy),
+          resource_extension: "yaml",
+          created_at: sync.change_log.created_at,
+          initiator: ChangeInitiator.EXTERNAL
+        });
+        subs.unsubscribe();
+        done();
+      },
+      done
+    );
 
-    policyService.insertOne(testPolicy);
+    setTimeout(() => {
+      policyService.insertOne(testPolicy);
+    }, delayForSubscriptionSetup);
   });
 
-  it("should sync changes from document to representatives", done => {
-    const _id = new ObjectId();
-    const name = "Test Policy Doc to Rep";
+  it(
+    "should sync changes from document to representatives",
+    done => {
+      const _id = new ObjectId();
+      const name = "Test Policy Doc to Rep";
 
-    const testPolicy: Policy = {
-      _id,
-      name,
-      description: "A policy for testing",
-      statement: [
-        {
-          module: "bucket:data",
-          action: "bucket:data:show",
-          resource: "bucket_id/*"
-        }
-      ]
-    };
-
-    const repSub = repManager.watch("policy", ["schema.yaml"], ["add"]).subscribe(fileEvent => {
-      repSub.unsubscribe();
-      const yamlContent = fileEvent.content;
-      const schema = YAML.parse(yamlContent);
-      expect(schema).toEqual({
-        _id: _id.toString(),
+      const testPolicy: Policy = {
+        _id,
         name,
         description: "A policy for testing",
         statement: [
@@ -142,17 +134,55 @@ describe("SyncEngine Integration - Policy", () => {
             resource: "bucket_id/*"
           }
         ]
-      });
-      done();
-    });
+      };
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      syncSub.unsubscribe();
-      syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-    });
+      let subscriptionsClosed = 0;
+      const checkAllClosed = () => {
+        subscriptionsClosed++;
+        if (subscriptionsClosed === 2) {
+          done();
+        }
+      };
 
-    policyService.insertOne(testPolicy);
-  });
+      const repSub = safeSubscribe(
+        repManager.watch("policy", ["schema.yaml"], ["add"]),
+        fileEvent => {
+          repSub.unsubscribe();
+          const yamlContent = fileEvent.content;
+          const schema = YAML.parse(yamlContent);
+          expect(schema).toEqual({
+            _id: _id.toString(),
+            name,
+            description: "A policy for testing",
+            statement: [
+              {
+                module: "bucket:data",
+                action: "bucket:data:show",
+                resource: "bucket_id/*"
+              }
+            ]
+          });
+          checkAllClosed();
+        },
+        done
+      );
+
+      const syncSub = safeSubscribe(
+        syncProcessor.watch(SyncStatuses.PENDING),
+        sync => {
+          syncSub.unsubscribe();
+          syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+          checkAllClosed();
+        },
+        done
+      );
+
+      setTimeout(() => {
+        policyService.insertOne(testPolicy);
+      }, delayForSubscriptionSetup);
+    },
+    15000
+  );
 
   it("should create pending sync when changes come from representative", done => {
     const policyName = "Test Policy from Rep";
@@ -175,58 +205,43 @@ describe("SyncEngine Integration - Policy", () => {
 
     const policyYaml = YAML.stringify(testPolicy);
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      expect(sync.change_log).toEqual({
-        _id: sync.change_log._id,
-        module: "policy",
-        sub_module: "schema",
-        origin: ChangeOrigin.REPRESENTATIVE,
-        type: ChangeType.CREATE,
-        resource_id: sync.change_log.resource_id,
-        resource_slug: policyName,
-        resource_content: policyYaml,
-        resource_extension: fileExtension,
-        created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
-      });
-      expect(sync.status).toBe(SyncStatuses.PENDING);
-      syncSub.unsubscribe();
-      done();
-    });
+    const syncSub = safeSubscribe(
+      syncProcessor.watch(SyncStatuses.PENDING),
+      sync => {
+        expect(sync.change_log).toEqual({
+          _id: sync.change_log._id,
+          module: "policy",
+          sub_module: "schema",
+          origin: ChangeOrigin.REPRESENTATIVE,
+          type: ChangeType.CREATE,
+          resource_id: sync.change_log.resource_id,
+          resource_slug: policyName,
+          resource_content: policyYaml,
+          resource_extension: fileExtension,
+          created_at: sync.change_log.created_at,
+          initiator: ChangeInitiator.EXTERNAL
+        });
+        expect(sync.status).toBe(SyncStatuses.PENDING);
+        syncSub.unsubscribe();
+        done();
+      },
+      done
+    );
 
-    repManager.write("policy", policyName, fileName, policyYaml, fileExtension);
+    setTimeout(() => {
+      repManager.write("policy", policyName, fileName, policyYaml, fileExtension);
+    }, delayForSubscriptionSetup);
   });
 
-  it("should sync changes from representative to documents after approval", done => {
-    const policyName = "Test Policy from Rep Approved";
-    const fileName = "schema";
-    const fileExtension = "yaml";
+  it(
+    "should sync changes from representative to documents after approval",
+    done => {
+      const policyName = "Test Policy from Rep Approved";
+      const fileName = "schema";
+      const fileExtension = "yaml";
 
-    const policyId = new ObjectId();
-    const testPolicy: Policy = {
-      _id: policyId,
-      name: policyName,
-      description: "A policy for testing from representative with approval",
-      statement: [
-        {
-          module: "storage",
-          action: "storage:index",
-          resource: "*"
-        }
-      ]
-    };
-
-    const policyYaml = YAML.stringify(testPolicy);
-
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
-      syncSub.unsubscribe();
-      await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-    });
-
-    const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async () => {
-      succeededSub.unsubscribe();
-      const insertedPolicy = await policyService.findOne({_id: policyId});
-      expect(insertedPolicy).toEqual({
+      const policyId = new ObjectId();
+      const testPolicy: Policy = {
         _id: policyId,
         name: policyName,
         description: "A policy for testing from representative with approval",
@@ -237,10 +252,54 @@ describe("SyncEngine Integration - Policy", () => {
             resource: "*"
           }
         ]
-      });
-      done();
-    });
+      };
 
-    repManager.write("policy", policyName, fileName, policyYaml, fileExtension);
-  });
+      const policyYaml = YAML.stringify(testPolicy);
+
+      let subscriptionsClosed = 0;
+      const checkAllClosed = () => {
+        subscriptionsClosed++;
+        if (subscriptionsClosed === 2) {
+          done();
+        }
+      };
+
+      const syncSub = safeSubscribe(
+        syncProcessor.watch(SyncStatuses.PENDING),
+        async sync => {
+          syncSub.unsubscribe();
+          await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+          checkAllClosed();
+        },
+        done
+      );
+
+      const succeededSub = safeSubscribe(
+        syncProcessor.watch(SyncStatuses.SUCCEEDED),
+        async () => {
+          succeededSub.unsubscribe();
+          const insertedPolicy = await policyService.findOne({_id: policyId});
+          expect(insertedPolicy).toEqual({
+            _id: policyId,
+            name: policyName,
+            description: "A policy for testing from representative with approval",
+            statement: [
+              {
+                module: "storage",
+                action: "storage:index",
+                resource: "*"
+              }
+            ]
+          });
+          checkAllClosed();
+        },
+        done
+      );
+
+      setTimeout(() => {
+        repManager.write("policy", policyName, fileName, policyYaml, fileExtension);
+      }, delayForSubscriptionSetup);
+    },
+    15000
+  );
 });

@@ -28,6 +28,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import fs from "fs";
 import * as CRUD from "@spica-server/function/src/crud";
+import {safeSubscribe, delayForSubscriptionSetup} from "./test-helpers";
 
 describe("SyncEngine Integration - Function Index", () => {
   let module: TestingModule;
@@ -142,55 +143,82 @@ describe("SyncEngine Integration - Function Index", () => {
     const indexContent = `export function handler(req, res) { res.send("Hello"); }`;
 
     createTestFunction(_id, name).then(async fn => {
-      const subs = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-        subs.unsubscribe();
+      const subs = safeSubscribe(
+        syncProcessor.watch(SyncStatuses.PENDING),
+        sync => {
+          subs.unsubscribe();
 
-        expect(new Date(sync.created_at)).toBeInstanceOf(Date);
-        expect(sync.status).toBe(SyncStatuses.PENDING);
-        expect(sync.change_log).toEqual({
-          _id: sync.change_log._id,
-          module: "function",
-          sub_module: "index",
-          origin: ChangeOrigin.DOCUMENT,
-          type: ChangeType.CREATE,
-          resource_id: _id.toString(),
-          resource_slug: name,
-          resource_content: indexContent,
-          resource_extension: "js",
-          created_at: sync.change_log.created_at,
-          initiator: ChangeInitiator.EXTERNAL
-        });
-        done();
-      });
-
-      await CRUD.index.write(functionService, functionEngine, fn._id, indexContent);
-    });
-  });
-
-  it("should sync index changes from document to representatives", done => {
-    const _id = new ObjectId();
-    const name = "TestFuncIndexDocToRep";
-    const indexContent = `export function handler(req, res) { res.send("Hello from Doc"); }`;
-
-    createTestFunction(_id, name).then(async fn => {
-      const repSub = repManager
-        .watch("function", ["index.js"], ["add", "change"])
-        .subscribe(fileEvent => {
-          repSub.unsubscribe();
-          expect(fileEvent.content).toEqual(
-            `export function handler(req, res) { res.send("Hello from Doc"); }`
-          );
+          expect(new Date(sync.created_at)).toBeInstanceOf(Date);
+          expect(sync.status).toBe(SyncStatuses.PENDING);
+          expect(sync.change_log).toEqual({
+            _id: sync.change_log._id,
+            module: "function",
+            sub_module: "index",
+            origin: ChangeOrigin.DOCUMENT,
+            type: ChangeType.CREATE,
+            resource_id: _id.toString(),
+            resource_slug: name,
+            resource_content: indexContent,
+            resource_extension: "js",
+            created_at: sync.change_log.created_at,
+            initiator: ChangeInitiator.EXTERNAL
+          });
           done();
-        });
+        },
+        done
+      );
 
-      const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-        syncSub.unsubscribe();
-        syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-      });
-
-      await CRUD.index.write(functionService, functionEngine, fn._id, indexContent);
+      setTimeout(async () => {
+        await CRUD.index.write(functionService, functionEngine, fn._id, indexContent);
+      }, delayForSubscriptionSetup);
     });
   });
+
+  it(
+    "should sync index changes from document to representatives",
+    done => {
+      const _id = new ObjectId();
+      const name = "TestFuncIndexDocToRep";
+      const indexContent = `export function handler(req, res) { res.send("Hello from Doc"); }`;
+
+      createTestFunction(_id, name).then(async fn => {
+        let subscriptionsClosed = 0;
+        const checkAllClosed = () => {
+          subscriptionsClosed++;
+          if (subscriptionsClosed === 2) {
+            done();
+          }
+        };
+
+        const repSub = safeSubscribe(
+          repManager.watch("function", ["index.js"], ["add", "change"]),
+          fileEvent => {
+            repSub.unsubscribe();
+            expect(fileEvent.content).toEqual(
+              `export function handler(req, res) { res.send("Hello from Doc"); }`
+            );
+            checkAllClosed();
+          },
+          done
+        );
+
+        const syncSub = safeSubscribe(
+          syncProcessor.watch(SyncStatuses.PENDING),
+          sync => {
+            syncSub.unsubscribe();
+            syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+            checkAllClosed();
+          },
+          done
+        );
+
+        setTimeout(async () => {
+          await CRUD.index.write(functionService, functionEngine, fn._id, indexContent);
+        }, delayForSubscriptionSetup);
+      });
+    },
+    15000
+  );
 
   it("should create pending sync when index changes come from representative", done => {
     const _id = new ObjectId();
@@ -200,53 +228,82 @@ describe("SyncEngine Integration - Function Index", () => {
     const indexContent = `export function handler(req, res) { res.send("Hello from Rep"); }`;
 
     createTestFunction(_id, name).then(async () => {
-      const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-        expect(sync.status).toBe(SyncStatuses.PENDING);
-        expect(sync.change_log).toEqual({
-          _id: sync.change_log._id,
-          module: "function",
-          sub_module: "index",
-          origin: ChangeOrigin.REPRESENTATIVE,
-          type: ChangeType.CREATE,
-          resource_id: _id.toString(),
-          resource_slug: name,
-          resource_content: indexContent,
-          resource_extension: "mjs",
-          created_at: sync.change_log.created_at,
-          initiator: ChangeInitiator.EXTERNAL
-        });
-        syncSub.unsubscribe();
-        done();
-      });
+      const syncSub = safeSubscribe(
+        syncProcessor.watch(SyncStatuses.PENDING),
+        sync => {
+          expect(sync.status).toBe(SyncStatuses.PENDING);
+          expect(sync.change_log).toEqual({
+            _id: sync.change_log._id,
+            module: "function",
+            sub_module: "index",
+            origin: ChangeOrigin.REPRESENTATIVE,
+            type: ChangeType.CREATE,
+            resource_id: _id.toString(),
+            resource_slug: name,
+            resource_content: indexContent,
+            resource_extension: "mjs",
+            created_at: sync.change_log.created_at,
+            initiator: ChangeInitiator.EXTERNAL
+          });
+          syncSub.unsubscribe();
+          done();
+        },
+        done
+      );
 
-      repManager.write("function", name, fileName, indexContent, fileExtension);
+      setTimeout(() => {
+        repManager.write("function", name, fileName, indexContent, fileExtension);
+      }, delayForSubscriptionSetup);
     });
   });
 
-  it("should sync index changes from representative to documents after approval", done => {
-    const _id = new ObjectId();
-    const name = "TestFuncIndexRepApproved";
-    const fileName = "index";
-    const fileExtension = "mjs";
-    const indexContent = `export function handler(req, res) { res.send("Hello from Rep Approved"); }`;
+  it(
+    "should sync index changes from representative to documents after approval",
+    done => {
+      const _id = new ObjectId();
+      const name = "TestFuncIndexRepApproved";
+      const fileName = "index";
+      const fileExtension = "mjs";
+      const indexContent = `export function handler(req, res) { res.send("Hello from Rep Approved"); }`;
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
-      syncSub.unsubscribe();
-      await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-    });
+      let subscriptionsClosed = 0;
+      const checkAllClosed = () => {
+        subscriptionsClosed++;
+        if (subscriptionsClosed === 2) {
+          done();
+        }
+      };
 
-    createTestFunction(_id, name).then(() => {
-      const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async () => {
-        succeededSub.unsubscribe();
+      const syncSub = safeSubscribe(
+        syncProcessor.watch(SyncStatuses.PENDING),
+        async sync => {
+          syncSub.unsubscribe();
+          await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+          checkAllClosed();
+        },
+        done
+      );
 
-        const result = await CRUD.index.find(functionService, functionEngine, _id);
-        expect(result.index).toEqual(
-          `export function handler(req, res) { res.send("Hello from Rep Approved"); }`
+      createTestFunction(_id, name).then(() => {
+        const succeededSub = safeSubscribe(
+          syncProcessor.watch(SyncStatuses.SUCCEEDED),
+          async () => {
+            succeededSub.unsubscribe();
+
+            const result = await CRUD.index.find(functionService, functionEngine, _id);
+            expect(result.index).toEqual(
+              `export function handler(req, res) { res.send("Hello from Rep Approved"); }`
+            );
+            checkAllClosed();
+          },
+          done
         );
-        done();
-      });
 
-      repManager.write("function", name, fileName, indexContent, fileExtension);
-    });
-  });
+        setTimeout(() => {
+          repManager.write("function", name, fileName, indexContent, fileExtension);
+        }, delayForSubscriptionSetup);
+      });
+    },
+    15000
+  );
 });
