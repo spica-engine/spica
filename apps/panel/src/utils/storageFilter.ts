@@ -70,12 +70,12 @@ const STORAGE_FILTER_TEMPLATE: TypeFilterValue = {
   type: STORAGE_TYPE_OPTIONS.slice(0, 2).map(option => option.value),
   fileSize: {
     min: {
-      value: 1,
+      value: null,
       unit: "MB"
     },
     max: {
-      value: 10,
-      unit: "GM"
+      value: null,
+      unit: "MB"
     }
   },
   quickdate: null,

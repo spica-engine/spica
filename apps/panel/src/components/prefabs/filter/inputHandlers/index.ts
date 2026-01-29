@@ -9,9 +9,11 @@ import NumberInputHandler from './NumberInputHandler';
 import RelationInputHandler from './RelationInputHandler';  
 import ArrayInputHandler from './ArrayInputHandler';
 
+import ObjectInputHandler from './ObjectInputHandler';
+
 filterInputHandlerRegistry.register('string', StringInputHandler);
 filterInputHandlerRegistry.register('number', NumberInputHandler);
 filterInputHandlerRegistry.register('relation', RelationInputHandler);
 filterInputHandlerRegistry.register('array', ArrayInputHandler);
-
+filterInputHandlerRegistry.register('object', ObjectInputHandler);
 filterInputHandlerRegistry.registerDefault(StringInputHandler);
