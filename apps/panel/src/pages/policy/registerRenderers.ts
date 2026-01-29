@@ -8,7 +8,6 @@ import { moduleDataRegistry, moduleRendererRegistry, type ModuleDataProvider } f
 import { resourceRendererRegistry } from "./resourceRenderers";
 
 import { BucketModuleRenderer } from "./modules/BucketModuleRenderer";
-import { AssetModuleRenderer } from "./modules/AssetModuleRenderer";
 
 import { BucketResourceRenderer } from "./resources/BucketResourceRenderer";
 import type { BucketType } from "../../store/api/bucketApi";
@@ -62,7 +61,6 @@ export function registerAllRenderers(): void {
         : undefined
     };
   });
-  moduleRendererRegistry.register("apis", new AssetModuleRenderer()); 
   resourceRendererRegistry.register("bucket", new BucketResourceRenderer());
   moduleDataRegistry.register("bucket", BucketModuleDataProvider);
 }
