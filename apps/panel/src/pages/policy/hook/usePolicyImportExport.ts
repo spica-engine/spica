@@ -57,6 +57,12 @@ export const usePolicyImportExport = ({
     fileInputRef.current?.click();
   }, []);
 
+  const resetFileInput = useCallback(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, []);
+
   const validateImportedData = useCallback(
     (imported: unknown): {
       statements: DisplayedStatement[];
@@ -68,6 +74,16 @@ export const usePolicyImportExport = ({
       }
 
       const hasStatementField = "statement" in imported;
+      const metadata = hasStatementField
+        ? {
+            name: "name" in imported
+              ? (imported as { name?: string }).name
+              : undefined,
+            description: "description" in imported
+              ? (imported as { description?: string }).description
+              : undefined,
+          }
+        : {};
       const payload = hasStatementField
         ? (imported as { statement?: unknown }).statement
         : imported;
@@ -88,12 +104,7 @@ export const usePolicyImportExport = ({
       if (isDisplayedFormat) {
         return {
           statements: payload as DisplayedStatement[],
-          name: hasStatementField && "name" in imported
-            ? (imported as { name?: string }).name
-            : undefined,
-          description: hasStatementField && "description" in imported
-            ? (imported as { description?: string }).description
-            : undefined,
+          ...metadata,
         };
       }
 
@@ -109,12 +120,7 @@ export const usePolicyImportExport = ({
       if (isFlatFormat) {
         return {
           statements: groupStatements(payload as PolicyStatement[]),
-          name: hasStatementField && "name" in imported
-            ? (imported as { name?: string }).name
-            : undefined,
-          description: hasStatementField && "description" in imported
-            ? (imported as { description?: string }).description
-            : undefined,
+          ...metadata,
         };
       }
 
@@ -135,14 +141,14 @@ export const usePolicyImportExport = ({
 
       if (!isJsonFile) {
         alert("Only JSON files are supported.");
-        event.target.value = "";
+        resetFileInput();
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      const readAndImport = async () => {
         try {
-          const imported = JSON.parse(e.target?.result as string);
+          const text = await file.text();
+          const imported = JSON.parse(text);
           const validated = validateImportedData(imported);
 
           if (!validated) {
@@ -154,17 +160,14 @@ export const usePolicyImportExport = ({
         } catch (error) {
           console.error("Import error:", error);
           alert("Failed to parse imported file. Please ensure it's valid JSON.");
+        } finally {
+          resetFileInput();
         }
       };
 
-      reader.onerror = () => {
-        alert("Failed to read file. Please try again.");
-      };
-
-      reader.readAsText(file);
-      event.target.value = ""; // Reset input
+      void readAndImport();
     },
-    [validateImportedData, onImport]
+    [onImport, resetFileInput, validateImportedData]
   );
 
   return {
