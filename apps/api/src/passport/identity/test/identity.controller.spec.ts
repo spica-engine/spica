@@ -91,14 +91,18 @@ describe("Identity Controller", () => {
     });
 
     it("should skip bucket1 profile entries", async () => {
-      const {body: allProfileEntries} = await req.get("/passport/identity/profile");
-      const res = await req.get("/passport/identity/profile", {skip: 1});
-      expect(res.statusCode).toEqual(200);
-      expect(res.body.length).toEqual(allProfileEntries.length - 1);
+      const [{body: allProfileEntries}, skippedRes] = await Promise.all([
+        req.get("/passport/identity/profile"),
+        req.get("/passport/identity/profile", {skip: 1})
+      ]);
+      expect(skippedRes.statusCode).toEqual(200);
+      expect(skippedRes.body.length).toEqual(allProfileEntries.length - 1);
 
       allProfileEntries.shift();
-      expect(res.body).toEqual(allProfileEntries);
-      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(true);
+      expect(skippedRes.body).toEqual(allProfileEntries);
+      expect(skippedRes.body.every(profileEntry => profileEntry.ns.endsWith(".identity"))).toEqual(
+        true
+      );
     });
 
     it("should sort bucket1 profile entries", async () => {

@@ -14,7 +14,7 @@ describe("Bucket Schema Resolver", () => {
     constructor() {}
     findOne() {}
     getPreferences() {}
-    watch(bucketId: string, propagateOnStart: boolean) {
+    watchBucket(bucketId: string, propagateOnStart: boolean) {
       return new Observable(observer => {
         if (propagateOnStart) {
           Promise.resolve(observer.next(bucket));

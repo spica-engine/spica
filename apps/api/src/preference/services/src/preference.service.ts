@@ -20,7 +20,7 @@ export class PreferenceService extends BaseCollection("preferences") {
     super(db, {afterInit: () => {}});
   }
 
-  watch<T extends Preference>(
+  watchPreference<T extends Preference>(
     scope: string,
     {propagateOnStart}: {propagateOnStart: boolean} = {propagateOnStart: false}
   ): Observable<T> {

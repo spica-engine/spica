@@ -138,25 +138,27 @@ describe("BucketDataController profiler", () => {
   });
 
   it("should skip bucket1 profile entries", async () => {
-    const {body: allProfileEntries} = await req.get(`/bucket/${bucket1._id}/data/profile`);
-    const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {skip: 1});
-    expect(res.statusCode).toEqual(200);
-    expect(res.body.length).toEqual(allProfileEntries.length - 1);
+    const [{body: allProfileEntries}, skippedRes] = await Promise.all([
+      req.get(`/bucket/${bucket1._id}/data/profile`),
+      req.get(`/bucket/${bucket1._id}/data/profile`, {skip: 1})
+    ]);
+    expect(skippedRes.statusCode).toEqual(200);
+    expect(skippedRes.body.length).toEqual(allProfileEntries.length - 1);
 
     allProfileEntries.shift();
-    expect(res.body).toEqual(allProfileEntries);
+    expect(skippedRes.body).toEqual(allProfileEntries);
   });
 
   it("should sort bucket1 profile entries", async () => {
-    const {body: allProfileEntries} = await req.get(`/bucket/${bucket1._id}/data/profile`);
-    const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
-      sort: JSON.stringify({ts: -1})
-    });
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).not.toEqual(allProfileEntries);
+    const [{body: allProfileEntries}, sortedRes] = await Promise.all([
+      req.get(`/bucket/${bucket1._id}/data/profile`),
+      req.get(`/bucket/${bucket1._id}/data/profile`, {sort: JSON.stringify({ts: -1})})
+    ]);
+    expect(sortedRes.statusCode).toEqual(200);
+    expect(sortedRes.body).not.toEqual(allProfileEntries);
 
     allProfileEntries.reverse();
-    expect(res.body).toEqual(allProfileEntries);
+    expect(sortedRes.body).toEqual(allProfileEntries);
   });
 
   // to prevent accessing other collections profile entries

@@ -1,5 +1,7 @@
+import {ObjectId} from "@spica-server/database";
+
 export interface Policy {
-  _id: string;
+  _id: string | ObjectId;
   name: string;
   description?: string;
   statement: Statement[];

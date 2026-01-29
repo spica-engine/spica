@@ -24,7 +24,7 @@ export class BucketSchemaResolver implements OnModuleDestroy {
     if (ObjectId.isValid(uri)) {
       let bucketWatcher = this.bucketWatchers.get(uri);
       if (!bucketWatcher) {
-        bucketWatcher = this.bucketService.watch(uri, true);
+        bucketWatcher = this.bucketService.watchBucket(uri, true);
         this.bucketWatchers.set(uri, bucketWatcher);
       }
       return combineLatest([this.preferenceWatcher, bucketWatcher]).pipe(
