@@ -61,7 +61,6 @@ export class AuthenticationStrategyModuleRenderer implements ModuleRenderer<Auth
               getId: strategy => strategy._id,
               getKey: strategy => strategy._id,
               getLabel: strategy => strategy.title,
-              getIcon: () => <Icon name="shield" size="md" />
             }
           })
         )}

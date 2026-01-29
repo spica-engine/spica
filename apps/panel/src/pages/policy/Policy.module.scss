@@ -176,6 +176,9 @@
 }
 
 .actionCheckbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   label {
     border-color: var(--color-font-primary) !important;
   }
@@ -213,6 +216,7 @@
 
 .actionContentItemContainer{
   padding: 0 var(--padding-xl);
+  padding-right: calc(var(--padding-xl) * 1.5);
 
   &:nth-child(even){
     background-color: var(--color-zebra);
