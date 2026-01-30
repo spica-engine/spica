@@ -17,6 +17,9 @@ const operatorMap: Record<string, string> = {
   'Not Contains': '$not',
   'In': '$in',
   'Not In': '$nin',
+  'Include All': '$all',
+  'Include One': '$in',
+  'Not Include': '$nin',
 };
 
 function isPlainObject(value: any): value is Record<string, any> {

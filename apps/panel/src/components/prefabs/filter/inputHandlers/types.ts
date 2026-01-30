@@ -36,4 +36,5 @@ export type FilterValueInputProps = {
   condition: FilterCondition;
   property?: Property;
   onValueChange: (conditionId: string, value: any) => void;
+  onOperatorChange?: (conditionId: string, operator: string) => void;
 };

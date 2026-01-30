@@ -12,6 +12,7 @@ import { convertConditionsToFilter } from './filterUtils';
 import type { FilterCondition } from './inputHandlers/types';
 import { getCompleteConditions, canAddCondition } from './validation';
 import { mapPropertyTypeToValueType, getEmptyValueForType } from './conditionValueType';
+import { getDefaultOperator, getOperatorOptions } from './operatorRegistry';
 
 export type { FilterCondition } from './inputHandlers/types';
 
@@ -90,12 +91,14 @@ const Filter: React.FC<FilterProps> = ({ bucketProperties, onChange, resetKey, c
       const property = bucketProperties[fieldKey];
       const valueType = mapPropertyTypeToValueType(property);
       const value = getEmptyValueForType(valueType);
+      const operator = getDefaultOperator(valueType);
       
       return {
         ...condition,
         field: fieldKey,
         valueType,
-        value
+        value,
+        operator
       };
     }));
   }, [bucketProperties]);
@@ -104,6 +107,14 @@ const Filter: React.FC<FilterProps> = ({ bucketProperties, onChange, resetKey, c
     setConditions(prev => prev.map(condition => 
       condition.id === conditionId 
         ? { ...condition, value }
+        : condition
+    ));
+  }, []);
+
+  const handleOperatorChange = useCallback((conditionId: string, operator: string) => {
+    setConditions(prev => prev.map(condition => 
+      condition.id === conditionId 
+        ? { ...condition, operator }
         : condition
     ));
   }, []);
@@ -182,7 +193,20 @@ const Filter: React.FC<FilterProps> = ({ bucketProperties, onChange, resetKey, c
                 />
               </li>
               <li className={styles.condition}>
-                <span>{condition.operator}</span>
+                {(() => {
+                  const operatorOptions = getOperatorOptions(condition.valueType);
+                  return operatorOptions ? (
+                    <Select
+                      options={operatorOptions}
+                      value={condition.operator}
+                      onChange={(value) => handleOperatorChange(condition.id, value as string)}
+                      dimensionY="fill"
+                      dimensionX={120}
+                    />
+                  ) : (
+                    <span>{condition.operator}</span>
+                  );
+                })()}
               </li>
               <li className={styles.filterInput}>
                 <FlexElement dimensionY="fill" dimensionX={200}>
@@ -190,6 +214,7 @@ const Filter: React.FC<FilterProps> = ({ bucketProperties, onChange, resetKey, c
                   condition={condition}
                   property={getFieldProperty(condition.field)}
                   onValueChange={handleValueChange}
+                  onOperatorChange={handleOperatorChange}
                 />
 
                 </FlexElement>

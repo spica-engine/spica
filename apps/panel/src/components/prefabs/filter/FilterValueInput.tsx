@@ -12,10 +12,17 @@ import './inputHandlers';
 const FilterValueInput: React.FC<FilterValueInputProps> = ({
   condition,
   property,
-  onValueChange
+  onValueChange,
+  onOperatorChange
 }) => {
   const handleChange = (value: any) => {
     onValueChange(condition.id, value);
+  };
+
+  const handleOperatorChange = (operator: string) => {
+    if (onOperatorChange) {
+      onOperatorChange(condition.id, operator);
+    }
   };
 
   const InputHandler = filterInputHandlerRegistry.get(condition.valueType);
@@ -44,6 +51,7 @@ const FilterValueInput: React.FC<FilterValueInputProps> = ({
       property={property}
       value={condition.value}
       onChange={handleChange}
+      onOperatorChange={handleOperatorChange}
     />
   );
 };
