@@ -21,6 +21,8 @@ import { FunctionLogsModuleRenderer } from "./modules/FunctionLogsModuleRenderer
 import { WebhookLogsModuleRenderer } from "./modules/WebhookLogsModuleRenderer";
 import { PreferenceModuleRenderer, type PreferenceResourceItem } from "./modules/PreferenceModuleRenderer";
 import { StatusModuleRenderer, type StatusResourceItem } from "./modules/StatusModuleRenderer";
+import { ApiKeyPolicyModuleRenderer } from "./modules/ApiKeyPolicyModuleRenderer";
+import { IdentityPolicyModuleRenderer } from "./modules/IdentityPolicyModuleRenderer";
 
 import { BucketResourceRenderer } from "./resources/BucketResourceRenderer";
 import type { BucketType } from "../../store/api/bucketApi";
@@ -155,6 +157,50 @@ const StatusModuleDataProvider = createStaticDataProvider("statusResources", [
   { title: "All Resources", value: "*" }
 ]);
 
+const ApiKeyPolicyModuleDataProvider: ModuleDataProvider = ({ onData }) => {
+  const apiKeysQuery = useGetApiKeysQuery();
+  const policiesQuery = useGetPoliciesQuery();
+
+  // Handle nested data response patterns
+  let apiKeys: ApiKey[] | undefined;
+  if (apiKeysQuery.data && typeof apiKeysQuery.data === 'object' && 'data' in apiKeysQuery.data) {
+    apiKeys = (apiKeysQuery.data as { data?: ApiKey[] }).data;
+  } else {
+    apiKeys = apiKeysQuery.data as ApiKey[] | undefined;
+  }
+
+  useEffect(() => {
+    onData({
+      apiKeys: apiKeys ?? [],
+      policies: policiesQuery.data ?? []
+    });
+  }, [apiKeys, policiesQuery.data, onData]);
+
+  return null;
+};
+
+const IdentityPolicyModuleDataProvider: ModuleDataProvider = ({ onData }) => {
+  const identitiesQuery = useGetIdentitiesQuery();
+  const policiesQuery = useGetPoliciesQuery();
+
+  // Handle nested data response patterns
+  let identities: Identity[] | undefined;
+  if (identitiesQuery.data && typeof identitiesQuery.data === 'object' && 'data' in identitiesQuery.data) {
+    identities = (identitiesQuery.data as { data?: Identity[] }).data;
+  } else {
+    identities = identitiesQuery.data as Identity[] | undefined;
+  }
+
+  useEffect(() => {
+    onData({
+      identities: identities ?? [],
+      policies: policiesQuery.data ?? []
+    });
+  }, [identities, policiesQuery.data, onData]);
+
+  return null;
+};
+
 function createContextTransformer<TData>(dataKey: string) {
   return (baseContext: any, extras: any) => {
     const { moduleData, onResourceChange, onResourceBatchChange } = extras as BaseModuleExtras;
@@ -164,6 +210,50 @@ function createContextTransformer<TData>(dataKey: string) {
     return {
       ...baseContext,
       [dataKey]: typedData?.[dataKey],
+      onResourceChange: onResourceChange
+        ? (actionName: string, resourceId: string, type: ResourceChangeType, checked: boolean) =>
+            onResourceChange(moduleName, actionName, resourceId, type, checked)
+        : undefined,
+      onResourceBatchChange: onResourceBatchChange
+        ? (actionName: string, changes: Array<ResourceChange>) =>
+            onResourceBatchChange(moduleName, actionName, changes)
+        : undefined
+    };
+  };
+}
+
+function createApiKeyPolicyContextTransformer() {
+  return (baseContext: any, extras: any) => {
+    const { moduleData, onResourceChange, onResourceBatchChange } = extras as BaseModuleExtras;
+    const moduleName = baseContext.moduleStatement.module;
+    const typedData = moduleData?.[moduleName] as { apiKeys?: ApiKey[]; policies?: Policy[] } | undefined;
+    
+    return {
+      ...baseContext,
+      apiKeys: typedData?.apiKeys,
+      policies: typedData?.policies,
+      onResourceChange: onResourceChange
+        ? (actionName: string, resourceId: string, type: ResourceChangeType, checked: boolean) =>
+            onResourceChange(moduleName, actionName, resourceId, type, checked)
+        : undefined,
+      onResourceBatchChange: onResourceBatchChange
+        ? (actionName: string, changes: Array<ResourceChange>) =>
+            onResourceBatchChange(moduleName, actionName, changes)
+        : undefined
+    };
+  };
+}
+
+function createIdentityPolicyContextTransformer() {
+  return (baseContext: any, extras: any) => {
+    const { moduleData, onResourceChange, onResourceBatchChange } = extras as BaseModuleExtras;
+    const moduleName = baseContext.moduleStatement.module;
+    const typedData = moduleData?.[moduleName] as { identities?: Identity[]; policies?: Policy[] } | undefined;
+    
+    return {
+      ...baseContext,
+      identities: typedData?.identities,
+      policies: typedData?.policies,
       onResourceChange: onResourceChange
         ? (actionName: string, resourceId: string, type: ResourceChangeType, checked: boolean) =>
             onResourceChange(moduleName, actionName, resourceId, type, checked)
@@ -252,6 +342,18 @@ const MODULE_CONFIGS: ModuleConfig[] = [
     renderer: new AuthenticationStrategyModuleRenderer(),
     contextTransformer: createContextTransformer<AuthenticationStrategy[]>("strategies"),
     dataProvider: AuthenticationStrategyModuleDataProvider
+  },
+  {
+    name: "passport:apikey:policy",
+    renderer: new ApiKeyPolicyModuleRenderer(),
+    contextTransformer: createApiKeyPolicyContextTransformer(),
+    dataProvider: ApiKeyPolicyModuleDataProvider
+  },
+  {
+    name: "passport:identity:policy",
+    renderer: new IdentityPolicyModuleRenderer(),
+    contextTransformer: createIdentityPolicyContextTransformer(),
+    dataProvider: IdentityPolicyModuleDataProvider
   },
   {
     name: "preference",

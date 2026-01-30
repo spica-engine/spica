@@ -276,21 +276,27 @@ const Resource: React.FC<ResourceProps> = ({
         .map(part => part.charAt(0).toUpperCase() + part.slice(1))
         .join(' ');
       
+
+      const modulesWithoutCheckbox = ['passport:apikey:policy', 'passport:identity:policy'];
+      const showCheckbox = !modulesWithoutCheckbox.includes(moduleStatement.module);
+      
       return {
         title: (
           <div className={styles.moduleTitleContainer}>
             <span>{moduleLabel}</span>
-            <Checkbox
-              checked={allEnabled}
-              indeterminate={isIndeterminate}
-              aria-checked={isIndeterminate ? "mixed" : allEnabled}
-              onChange={e => {
-                e.stopPropagation();
-                handleModuleToggle(moduleStatement.module, !allEnabled);
-              }}
-              onClick={e => e.stopPropagation()}
-              checkBoxClassName={styles.actionCheckbox}
-            />
+            {showCheckbox && (
+              <Checkbox
+                checked={allEnabled}
+                indeterminate={isIndeterminate}
+                aria-checked={isIndeterminate ? "mixed" : allEnabled}
+                onChange={e => {
+                  e.stopPropagation();
+                  handleModuleToggle(moduleStatement.module, !allEnabled);
+                }}
+                onClick={e => e.stopPropagation()}
+                checkBoxClassName={styles.actionCheckbox}
+              />
+            )}
           </div>
         ),
         content: renderModuleContent(moduleStatement)
