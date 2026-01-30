@@ -6,7 +6,7 @@
 import React from "react";
 import type { ModuleRenderer, BaseModuleContext } from "../moduleRenderers";
 import { Icon } from "oziko-ui-kit";
-import type { BucketType } from "../../../store/api/bucketApi";
+import type { AuthenticationStrategy } from "../../../store/api/authenticationStrategyApi";
 import {
   buildResourceAccordionItems,
   renderFlatActions,
@@ -16,18 +16,20 @@ import {
   type OnResourceChange
 } from "../moduleRendererHelpers";
 
-export interface BucketModuleProps extends BaseModuleContext {
-  buckets?: BucketType[];
+export interface AuthenticationStrategyModuleProps extends BaseModuleContext {
+  strategies?: AuthenticationStrategy[];
   onResourceChange?: OnResourceChange;
   onResourceBatchChange?: OnResourceBatchChange;
 }
 
-export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
-  render(props: BucketModuleProps): React.ReactNode {
+
+
+export class AuthenticationStrategyModuleRenderer implements ModuleRenderer<AuthenticationStrategyModuleProps> {
+  render(props: AuthenticationStrategyModuleProps): React.ReactNode {
     const {
       moduleStatement,
       statement,
-      buckets,
+      strategies,
       formatActionName,
       onResourceChange,
       onResourceBatchChange,
@@ -37,7 +39,7 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
     const { actionsWithoutResource, actionsWithResource } = splitActions(moduleStatement.actions);
 
     return (
-      <div data-module="bucket">
+      <div data-module="passport:strategy">
         {renderFlatActions({
           actions: actionsWithoutResource,
           module: moduleStatement.module,
@@ -55,11 +57,10 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
             onResourceChange,
             onResourceBatchChange,
             itemConfig: {
-              items: buckets,
-              getId: bucket => bucket._id,
-              getKey: bucket => bucket._id,
-              getLabel: bucket => bucket.title,
-              getIcon: () => <Icon name="bucket" size="md" />
+              items: strategies,
+              getId: strategy => strategy._id,
+              getKey: strategy => strategy._id,
+              getLabel: strategy => strategy.title,
             }
           })
         )}

@@ -6,7 +6,7 @@
 import React from "react";
 import type { ModuleRenderer, BaseModuleContext } from "../moduleRenderers";
 import { Icon } from "oziko-ui-kit";
-import type { BucketType } from "../../../store/api/bucketApi";
+import type { ApiKey } from "../../../store/api/apiKeyApi";
 import {
   buildResourceAccordionItems,
   renderFlatActions,
@@ -16,18 +16,18 @@ import {
   type OnResourceChange
 } from "../moduleRendererHelpers";
 
-export interface BucketModuleProps extends BaseModuleContext {
-  buckets?: BucketType[];
+export interface ApiKeyModuleProps extends BaseModuleContext {
+  apiKeys?: ApiKey[];
   onResourceChange?: OnResourceChange;
   onResourceBatchChange?: OnResourceBatchChange;
 }
 
-export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
-  render(props: BucketModuleProps): React.ReactNode {
+export class ApiKeyModuleRenderer implements ModuleRenderer<ApiKeyModuleProps> {
+  render(props: ApiKeyModuleProps): React.ReactNode {
     const {
       moduleStatement,
       statement,
-      buckets,
+      apiKeys,
       formatActionName,
       onResourceChange,
       onResourceBatchChange,
@@ -37,7 +37,7 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
     const { actionsWithoutResource, actionsWithResource } = splitActions(moduleStatement.actions);
 
     return (
-      <div data-module="bucket">
+      <div data-module="passport:apikey">
         {renderFlatActions({
           actions: actionsWithoutResource,
           module: moduleStatement.module,
@@ -55,11 +55,11 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
             onResourceChange,
             onResourceBatchChange,
             itemConfig: {
-              items: buckets,
-              getId: bucket => bucket._id,
-              getKey: bucket => bucket._id,
-              getLabel: bucket => bucket.title,
-              getIcon: () => <Icon name="bucket" size="md" />
+              items: apiKeys,
+              getId: apiKey => apiKey._id ?? "",
+              getKey: apiKey => apiKey._id ?? apiKey.name,
+              getLabel: apiKey => apiKey.name,
+              getIcon: () => <Icon name="key" size="md" />
             }
           })
         )}

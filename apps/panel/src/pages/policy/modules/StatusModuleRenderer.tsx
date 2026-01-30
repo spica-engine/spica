@@ -5,8 +5,6 @@
 
 import React from "react";
 import type { ModuleRenderer, BaseModuleContext } from "../moduleRenderers";
-import { Icon } from "oziko-ui-kit";
-import type { BucketType } from "../../../store/api/bucketApi";
 import {
   buildResourceAccordionItems,
   renderFlatActions,
@@ -16,28 +14,35 @@ import {
   type OnResourceChange
 } from "../moduleRendererHelpers";
 
-export interface BucketModuleProps extends BaseModuleContext {
-  buckets?: BucketType[];
+export type StatusResourceItem = {
+  title: string;
+  value: string;
+};
+
+export interface StatusModuleProps extends BaseModuleContext {
+  statusResources?: StatusResourceItem[];
   onResourceChange?: OnResourceChange;
   onResourceBatchChange?: OnResourceBatchChange;
 }
 
-export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
-  render(props: BucketModuleProps): React.ReactNode {
+export class StatusModuleRenderer implements ModuleRenderer<StatusModuleProps> {
+  render(props: StatusModuleProps): React.ReactNode {
     const {
       moduleStatement,
       statement,
-      buckets,
+      statusResources,
       formatActionName,
       onResourceChange,
       onResourceBatchChange,
       onActionToggle
     } = props;
 
-    const { actionsWithoutResource, actionsWithResource } = splitActions(moduleStatement.actions);
+    const { actionsWithoutResource, actionsWithResource } = splitActions(moduleStatement.actions, {
+      dedupeByName: true
+    });
 
     return (
-      <div data-module="bucket">
+      <div data-module="status">
         {renderFlatActions({
           actions: actionsWithoutResource,
           module: moduleStatement.module,
@@ -55,11 +60,10 @@ export class BucketModuleRenderer implements ModuleRenderer<BucketModuleProps> {
             onResourceChange,
             onResourceBatchChange,
             itemConfig: {
-              items: buckets,
-              getId: bucket => bucket._id,
-              getKey: bucket => bucket._id,
-              getLabel: bucket => bucket.title,
-              getIcon: () => <Icon name="bucket" size="md" />
+              items: statusResources,
+              getId: resource => resource.value,
+              getKey: resource => resource.value,
+              getLabel: resource => resource.title
             }
           })
         )}
