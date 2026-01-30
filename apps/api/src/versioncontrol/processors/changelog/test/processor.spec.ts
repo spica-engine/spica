@@ -173,6 +173,7 @@ describe("ChangeLogProcessor", () => {
     };
 
     await Promise.all([processor.push(first), processor.push(second)]);
+    await new Promise(resolve => setTimeout(resolve, 1000));
     const changes = await processor["service"]._coll.find().toArray();
     expect(changes.length).toBe(0);
   });
