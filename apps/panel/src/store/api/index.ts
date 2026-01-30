@@ -14,6 +14,22 @@ export type {
 } from './authApi';
 
 export {
+  authenticationStrategyApi,
+  authenticationStrategyApiReducerPath,
+  authenticationStrategyApiMiddleware,
+  useGetAuthenticationStrategiesQuery,
+  useLazyGetAuthenticationStrategiesQuery,
+  useGetAuthenticationStrategyQuery,
+  useLazyGetAuthenticationStrategyQuery,
+} from './authenticationStrategyApi';
+
+export type {
+  AuthenticationStrategy,
+  AuthenticationStrategyListResponse,
+  AuthenticationStrategyOptions,
+} from './authenticationStrategyApi';
+
+export {
   bucketApi,
   bucketApiReducerPath,
   bucketApiMiddleware,
@@ -111,6 +127,41 @@ export type {
   UpdateFunctionRequest,
   ExecuteFunctionRequest,
 } from './functionApi';
+
+export {
+  apiKeyApi,
+  apiKeyApiReducerPath,
+  apiKeyApiMiddleware,
+  useGetApiKeysQuery,
+  useGetApiKeyQuery,
+  useCreateApiKeyMutation,
+  useUpdateApiKeyMutation,
+  useDeleteApiKeyMutation,
+  useGetApiKeyPoliciesQuery,
+  useUpdateApiKeyPoliciesMutation,
+} from './apiKeyApi';
+
+export type {
+  ApiKey,
+  ApiKeyListResponse,
+  ApiKeyOptions,
+  CreateApiKeyRequest,
+  UpdateApiKeyRequest,
+} from './apiKeyApi';
+
+export {
+  dashboardApi,
+  dashboardApiReducerPath,
+  dashboardApiMiddleware,
+  useGetDashboardsQuery,
+  useLazyGetDashboardsQuery,
+} from './dashboardApi';
+
+export type {
+  Dashboard,
+  DashboardListResponse,
+  DashboardOptions,
+} from './dashboardApi';
 
 export {
   useIdentityManagement,
