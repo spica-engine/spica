@@ -46,4 +46,8 @@ export interface GrpcOptions {
   method: string;
   host?: string;
   port?: number;
+  cert?: string;
+  key?: string;
+  ca?: string;
+  requestClientCert?: boolean;
 }

@@ -1,5 +1,9 @@
 import {GrpcEnqueuer} from "@spica-server/function/enqueuer";
 import {event} from "@spica-server/function/queue/proto";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import {execSync} from "child_process";
 
 function createTarget(cwd?: string, handler?: string) {
   const target = new event.Target();
@@ -16,6 +20,30 @@ describe("grpc enqueuer", () => {
   let grpcQueue: {enqueue: jest.Mock; dequeue: jest.Mock; get: jest.Mock};
 
   let schedulerUnsubscriptionSpy: jest.Mock;
+  let testKey: string;
+  let testCert: string;
+  let tmpDir: string;
+
+  beforeAll(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "grpc-test-"));
+    const keyPath = path.join(tmpDir, "key.pem");
+    const certPath = path.join(tmpDir, "cert.pem");
+
+    execSync(
+      `openssl req -x509 -nodes -newkey rsa:2048 -keyout ${keyPath} -out ${certPath} -days 1 -subj "/CN=localhost"`
+    );
+
+    testKey = fs.readFileSync(keyPath, "utf8");
+    testCert = fs.readFileSync(certPath, "utf8");
+  });
+
+  afterAll(() => {
+    try {
+      fs.rmSync(tmpDir, {recursive: true, force: true});
+    } catch (e) {
+      console.error("Failed to remove temporary directory:", e);
+    }
+  });
 
   beforeEach(() => {
     noopTarget = createTarget();
@@ -154,5 +182,23 @@ describe("grpc enqueuer", () => {
     const subscription = grpcEnqueuer["subscriptions"][0];
     expect(subscription.closed).toBe(true);
     expect(subscription.errorMessage).toBeDefined();
+  });
+
+  it("should start a secure (TLS) grpc server when cert/key provided", async () => {
+    const options = {
+      service: "SecureService",
+      method: "SecureMethod",
+      host: "127.0.0.1",
+      port: 50060,
+      key: testKey,
+      cert: testCert
+    };
+
+    await grpcEnqueuer.subscribe(noopTarget, options);
+
+    const subscriptions = grpcEnqueuer["subscriptions"];
+    expect(subscriptions.length).toEqual(1);
+    expect(subscriptions[0].server).toBeDefined();
+    expect(subscriptions[0].closed).toBe(false);
   });
 });

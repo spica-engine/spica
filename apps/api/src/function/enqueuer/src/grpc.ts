@@ -73,25 +73,61 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
       const port = options.port || 50051;
       const host = options.host || "0.0.0.0";
 
+      const credentials = this.buildServerCredentials(options);
+
       await new Promise<void>((resolve, reject) => {
-        server.bindAsync(
-          `${host}:${port}`,
-          grpc.ServerCredentials.createInsecure(),
-          (err, port) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-            server.start();
-            console.log(
-              `gRPC server for ${options.service}.${options.method} started on port ${port}`
-            );
-            resolve();
+        server.bindAsync(`${host}:${port}`, credentials, (err, port) => {
+          if (err) {
+            reject(err);
+            return;
           }
-        );
+          server.start();
+          console.log(
+            `gRPC server for ${options.service}.${options.method} started on port ${port}`
+          );
+          resolve();
+        });
       });
     } catch (err) {
       this.setAsClosed(subscription, target, `Failed to start gRPC server: ${err.message}`);
+    }
+  }
+
+  private buildServerCredentials(options: GrpcOptions): grpc.ServerCredentials {
+    try {
+      const hasKey = Boolean(options.key);
+      const hasCert = Boolean(options.cert);
+
+      if (!hasKey || !hasCert) {
+        console.warn(
+          `gRPC server for ${options.service}.${options.method} is running without secure connection. Consider providing TLS credentials.`
+        );
+        return grpc.ServerCredentials.createInsecure();
+      }
+
+      const privateKey: Buffer = Buffer.from(options.key);
+      const certChain: Buffer = Buffer.from(options.cert);
+
+      const rootCerts: Buffer | null = options.ca ? Buffer.from(options.ca) : null;
+
+      const checkClientCert = Boolean(options.requestClientCert);
+
+      return grpc.ServerCredentials.createSsl(
+        rootCerts,
+        [
+          {
+            private_key: privateKey,
+            cert_chain: certChain
+          }
+        ],
+        checkClientCert
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load TLS credentials for gRPC server, falling back to insecure:",
+        err
+      );
+      return grpc.ServerCredentials.createInsecure();
     }
   }
 
