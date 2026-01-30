@@ -166,15 +166,30 @@ describe("Reserved filter values integration", () => {
   };
 
   it("convert reserved key names to their corresponding types(created_at & updated_at to date)", async () => {
-    const filter = {created_at: "2000-01-01T00:00:00.000Z"};
-    const date = new Date("2000-01-01T00:00:00.000Z");
+    const filterCreated = {created_at: "2000-01-01T00:00:00.000Z"};
+    const dateCreated = new Date("2000-01-01T00:00:00.000Z");
 
-    const replaced: any = await constructFilterValues(filter, schema, relationResolverMock);
-    expect(replaced.created_at instanceof Date).toBeTruthy();
-    expect(replaced.created_at).toEqual(date);
+    const filterUpdated = {updated_at: "2000-01-05T00:00:00.000Z"};
+    const dateUpdated = new Date("2000-01-05T00:00:00.000Z");
+
+    const replacedCreated: any = await constructFilterValues(
+      filterCreated,
+      schema,
+      relationResolverMock
+    );
+    expect(replacedCreated.created_at instanceof Date).toBeTruthy();
+    expect(replacedCreated.created_at).toEqual(dateCreated);
+
+    const replacedUpdated: any = await constructFilterValues(
+      filterUpdated,
+      schema,
+      relationResolverMock
+    );
+    expect(replacedUpdated.updated_at instanceof Date).toBeTruthy();
+    expect(replacedUpdated.updated_at).toEqual(dateUpdated);
   });
 
-  it("does not convert not reserved key fields", async () => {
+  it("does not convert reserved key fields if their type is not valid", async () => {
     const filter = {created_at: "not-a-date"};
 
     const replaced: any = await constructFilterValues(filter, schema, relationResolverMock);

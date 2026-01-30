@@ -5,7 +5,7 @@ import {
   extractFilterPropertyMap,
   replaceFilter,
   replaceFilterObjectIds,
-  replaceFilterDates as replacePreservedFilterDates
+  replaceFilterDates as replaceReservedFilterDates
 } from "@spica-server/filter";
 import {ValueConstructor} from "@spica-server/interface/filter";
 import {FilterReplacer, RelationResolver} from "@spica-server/interface/bucket/common";
@@ -43,9 +43,10 @@ export const constructFilterValues = async (
   relationResolver: RelationResolver,
   hashSecret?: string
 ) => {
+  console.log("constructFilterValues in:", filter);
   const replacers: FilterReplacer[] = [
     replaceFilterObjectIds,
-    replacePreservedFilterDates,
+    replaceReservedFilterDates,
     replaceFilterDates,
     (filter, bucket, resolver) => replaceFilterHash(filter, bucket, resolver, hashSecret)
   ];
