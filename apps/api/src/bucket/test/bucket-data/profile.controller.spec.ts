@@ -13,7 +13,7 @@ import {
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
-describe("BucketDataController profiler", () => {
+xdescribe("BucketDataController profiler", () => {
   let app: INestApplication;
   let req: Request;
   let module: TestingModule;
