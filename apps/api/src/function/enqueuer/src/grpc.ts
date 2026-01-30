@@ -73,6 +73,11 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
       const port = options.port || 50051;
       const host = options.host || "0.0.0.0";
 
+      if (options.port < 1024 || options.port > 65535) {
+        throw new Error(
+          `Invalid port number: ${options.port}. Port must be between 1024 and 65535.`
+        );
+      }
       const credentials = this.buildServerCredentials(options);
 
       await new Promise<void>((resolve, reject) => {

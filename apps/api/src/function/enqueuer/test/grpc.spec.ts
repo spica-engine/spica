@@ -201,4 +201,49 @@ describe("grpc enqueuer", () => {
     expect(subscriptions[0].server).toBeDefined();
     expect(subscriptions[0].closed).toBe(false);
   });
+
+  fit("should reject privileged ports (e.g. 80)", async () => {
+    const options = {
+      service: "PrivilegedService",
+      method: "PrivMethod",
+      host: "127.0.0.1",
+      port: 80
+    };
+
+    await grpcEnqueuer.subscribe(noopTarget, options);
+
+    const sub = grpcEnqueuer["subscriptions"].find(s => s.options.service === "PrivilegedService");
+    expect(sub).toBeDefined();
+    expect(sub!.closed).toBe(true);
+    expect(sub.errorMessage).toContain("Port must be between 1024 and 65535");
+  });
+
+  it("should fail when two enqueuers bind the same port", async () => {
+    const options = {
+      service: "DupService",
+      method: "DupMethod",
+      host: "127.0.0.1",
+      port: 50061
+    };
+
+    await grpcEnqueuer.subscribe(noopTarget, options);
+    const sub1 = grpcEnqueuer["subscriptions"].find(s => s.options.service === "DupService");
+    expect(sub1).toBeDefined();
+    expect(sub1!.closed).toBe(false);
+
+    const grpcEnqueuer2 = new GrpcEnqueuer(
+      eventQueue as any,
+      grpcQueue as any,
+      schedulerUnsubscriptionSpy
+    );
+
+    const target2 = createTarget("/tmp/fn3", "handler3");
+    await grpcEnqueuer2.subscribe(target2, options);
+
+    const sub2 = grpcEnqueuer2["subscriptions"].find(s => s.target.cwd === "/tmp/fn3");
+    expect(sub2).toBeDefined();
+    expect(sub2!.closed).toBe(true);
+    expect(sub2!.errorMessage).toBeDefined();
+    expect(sub2.errorMessage).toContain("EADDRINUSE: address already in use");
+  });
 });
