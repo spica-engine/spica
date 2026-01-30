@@ -40,3 +40,14 @@ export interface ScheduleOptions {
 export interface EventOptions {
   name: "READY";
 }
+
+export interface GrpcOptions {
+  service: string;
+  method: string;
+  host?: string;
+  port?: number;
+  cert?: string;
+  key?: string;
+  ca?: string;
+  requestClientCert?: boolean;
+}
