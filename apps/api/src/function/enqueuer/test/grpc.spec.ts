@@ -202,7 +202,7 @@ describe("grpc enqueuer", () => {
     expect(subscriptions[0].closed).toBe(false);
   });
 
-  fit("should reject privileged ports (e.g. 80)", async () => {
+  it("should reject privileged ports (e.g. 80)", async () => {
     const options = {
       service: "PrivilegedService",
       method: "PrivMethod",
