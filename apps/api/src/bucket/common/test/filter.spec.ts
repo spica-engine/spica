@@ -1,4 +1,5 @@
-import {replaceFilterDates} from "@spica-server/bucket/common";
+import {replaceFilterDates, constructFilterValues} from "@spica-server/bucket/common";
+import {Bucket} from "@spica-server/interface/bucket";
 
 describe("Bucket data filter", () => {
   describe("filter", () => {
@@ -143,5 +144,50 @@ describe("Bucket data filter", () => {
         expect(replacedFilter).toEqual({...filter, "addresses.built_at": dueDate1});
       });
     });
+  });
+});
+
+describe("Reserved filter values integration", () => {
+  const relationResolverMock = async () => {
+    return null;
+  };
+
+  const schema: Bucket = {
+    title: "test",
+    description: "test",
+    primary: "title",
+    acl: {
+      read: "true==true",
+      write: "true==true"
+    },
+    properties: {
+      title: {type: "string", options: {position: "left"}}
+    }
+  };
+
+  it("convert reserved key names to their corresponding types(created_at & updated_at to date)", async () => {
+    const filter = {created_at: "2000-01-01T00:00:00.000Z"};
+    const date = new Date("2000-01-01T00:00:00.000Z");
+
+    const replaced: any = await constructFilterValues(filter, schema, relationResolverMock);
+    expect(replaced.created_at instanceof Date).toBeTruthy();
+    expect(replaced.created_at).toEqual(date);
+  });
+
+  it("does not convert not reserved key fields", async () => {
+    const filter = {created_at: "not-a-date"};
+
+    const replaced: any = await constructFilterValues(filter, schema, relationResolverMock);
+    expect(typeof replaced.created_at).toBe("string");
+    expect(replaced.created_at).toBe("not-a-date");
+  });
+
+  it("type given fields should work as intended", async () => {
+    const date = new Date();
+    const filter = {some_date: date};
+
+    const replaced: any = await constructFilterValues(filter, schema, relationResolverMock);
+    expect(replaced.some_date instanceof Date).toBeTruthy();
+    expect(replaced.some_date).toEqual(date);
   });
 });

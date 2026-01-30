@@ -4,7 +4,8 @@ import {getPropertyByPath} from "./schema";
 import {
   extractFilterPropertyMap,
   replaceFilter,
-  replaceFilterObjectIds
+  replaceFilterObjectIds,
+  replaceFilterDates as replacePreservedFilterDates
 } from "@spica-server/filter";
 import {ValueConstructor} from "@spica-server/interface/filter";
 import {FilterReplacer, RelationResolver} from "@spica-server/interface/bucket/common";
@@ -44,6 +45,7 @@ export const constructFilterValues = async (
 ) => {
   const replacers: FilterReplacer[] = [
     replaceFilterObjectIds,
+    replacePreservedFilterDates,
     replaceFilterDates,
     (filter, bucket, resolver) => replaceFilterHash(filter, bucket, resolver, hashSecret)
   ];
