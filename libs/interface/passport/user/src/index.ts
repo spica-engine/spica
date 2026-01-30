@@ -25,14 +25,8 @@ export interface User {
   lastLogin: Date;
   failedAttempts: Date[];
   bannedUntil?: Date;
-  email?: {
-    value: string;
-    createdAt: Date;
-  };
-  phone?: {
-    value: string;
-    createdAt: Date;
-  };
+  email?: EncryptableField;
+  phone?: EncryptableField;
 }
 
 export interface LoginCredentials {
@@ -72,7 +66,8 @@ export interface UserOptions {
   verificationCodeExpiresIn?: number;
   passwordHistoryLimit: number;
   userRealtime: boolean;
-  hashSecret?: string;
+  verificationHashSecret?: string;
+  providerEncryptionSecret?: string;
 }
 
 export interface UserVerification {
@@ -91,3 +86,22 @@ export interface UserConfigSettings {
 }
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
+
+export type EncryptedData = {
+  encrypted: string;
+  iv: string;
+  authTag: string;
+};
+
+type DecryptedData = {
+  value: string;
+};
+
+type EncryptableField = {
+  createdAt: Date;
+} & (DecryptedData | EncryptedData);
+
+export type DecryptedUser = User & {
+  email?: {value: string; createdAt: Date};
+  phone?: {value: string; createdAt: Date};
+};

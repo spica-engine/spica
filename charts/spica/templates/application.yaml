@@ -104,11 +104,16 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
                   key: bucketDataHashSecret
-            - name: USER_HASH_SECRET
+            - name: USER_VERIFICATION_HASH_SECRET
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
-                  key: userHashSecret
+                  key: userVerificationHashSecret
+            - name: USER_PROVIDER_ENCRYPTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: userProviderEncryptionSecret
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:
