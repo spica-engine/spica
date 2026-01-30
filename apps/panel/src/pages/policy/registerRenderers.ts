@@ -21,7 +21,7 @@ import { FunctionLogsModuleRenderer } from "./modules/FunctionLogsModuleRenderer
 import { WebhookLogsModuleRenderer } from "./modules/WebhookLogsModuleRenderer";
 import { PreferenceModuleRenderer, type PreferenceResourceItem } from "./modules/PreferenceModuleRenderer";
 import { StatusModuleRenderer, type StatusResourceItem } from "./modules/StatusModuleRenderer";
-
+import { StorageModuleRenderer } from "./modules/StorageModuleRenderer";
 import { BucketResourceRenderer } from "./resources/BucketResourceRenderer";
 import type { BucketType } from "../../store/api/bucketApi";
 import { useGetBucketsQuery } from "../../store/api/bucketApi";
@@ -32,6 +32,7 @@ import { useGetIdentitiesQuery, type Identity } from "../../store/api/identityAp
 import { useGetPoliciesQuery, type Policy } from "../../store/api/policyApi";
 import { useGetWebhooksQuery, type Webhook } from "../../store/api/webhookApi";
 import { useGetAuthenticationStrategiesQuery, type AuthenticationStrategy } from "../../store/api/authenticationStrategyApi";
+import { useGetStorageItemsQuery, type Storage } from "../../store/api/storageApi";
 
 type ResourceChangeType = "include" | "exclude";
 
@@ -139,6 +140,11 @@ const WebhookModuleDataProvider = createQueryDataProvider(
 const AuthenticationStrategyModuleDataProvider = createQueryDataProvider(
   useGetAuthenticationStrategiesQuery,
   "strategies"
+);
+
+const StorageModuleDataProvider = createQueryDataProvider(
+  useGetStorageItemsQuery,
+  "storages"
 );
 
 const PreferenceModuleDataProvider = createStaticDataProvider("preferences", [
@@ -253,6 +259,12 @@ const MODULE_CONFIGS: ModuleConfig[] = [
     contextTransformer: createContextTransformer<AuthenticationStrategy[]>("strategies"),
     dataProvider: AuthenticationStrategyModuleDataProvider
   },
+  {
+        name: "storage",
+        renderer: new StorageModuleRenderer(),
+        contextTransformer: createContextTransformer<Storage[]>("storages"),
+        dataProvider: StorageModuleDataProvider
+      },
   {
     name: "preference",
     renderer: new PreferenceModuleRenderer(),
