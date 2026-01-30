@@ -91,7 +91,8 @@ export class VCRepresentativeManager implements IRepresentativeManager {
       const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
         persistent: true,
-        depth: 2
+        depth: 2,
+        awaitWriteFinish: true
       });
 
       watcher.on("all", async (event, path) => {

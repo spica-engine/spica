@@ -26,7 +26,7 @@ describe("ChangeLogProcessor", () => {
     await processor["service"]._coll.drop();
   });
 
-  it("should watch changes", done => {
+  it("should watch changes for insert", done => {
     const change: ChangeLog = {
       created_at: new Date(),
       module: "test",
@@ -145,7 +145,7 @@ describe("ChangeLogProcessor", () => {
     processor.push(unrelatedChange);
   });
 
-  it("should handle infinite sync", async () => {
+  it("should prevent infinite sync", async () => {
     const first: ChangeLog = {
       created_at: new Date(),
       module: "test",
@@ -172,53 +172,8 @@ describe("ChangeLogProcessor", () => {
       initiator: ChangeInitiator.EXTERNAL
     };
 
-    const third: ChangeLog = {
-      created_at: new Date(),
-      module: "test",
-      sub_module: "subTest",
-      origin: ChangeOrigin.REPRESENTATIVE,
-      type: ChangeType.CREATE,
-      resource_content: "different content",
-      resource_id: "123",
-      resource_slug: "slug",
-      resource_extension: "",
-      initiator: ChangeInitiator.EXTERNAL
-    };
-
-    await processor.push(first);
-    await processor.push(second);
-    await processor.push(third);
-
+    await Promise.all([processor.push(first), processor.push(second)]);
     const changes = await processor["service"]._coll.find().toArray();
-    expect(changes.length).toBe(2);
-    expect(changes[0]).toEqual({
-      _id: changes[0]._id,
-      created_at: first.created_at,
-      module: first.module,
-      sub_module: first.sub_module,
-      origin: ChangeOrigin.DOCUMENT,
-      type: ChangeType.CREATE,
-      resource_content: first.resource_content,
-      resource_id: first.resource_id,
-      resource_slug: first.resource_slug,
-      resource_extension: first.resource_extension,
-      initiator: ChangeInitiator.EXTERNAL,
-      cycle_count: 1
-    });
-
-    expect(changes[1]).toEqual({
-      _id: changes[1]._id,
-      created_at: third.created_at,
-      module: third.module,
-      sub_module: third.sub_module,
-      origin: ChangeOrigin.REPRESENTATIVE,
-      type: ChangeType.CREATE,
-      resource_content: third.resource_content,
-      resource_id: third.resource_id,
-      resource_slug: third.resource_slug,
-      resource_extension: third.resource_extension,
-      initiator: ChangeInitiator.EXTERNAL,
-      cycle_count: 0.5
-    });
+    expect(changes.length).toBe(0);
   });
 });

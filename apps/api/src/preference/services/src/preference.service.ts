@@ -55,7 +55,7 @@ export class PreferenceService extends BaseCollection("preferences") {
   get<T extends Preference>(scope: string) {
     return this._coll
       .findOne<T>({scope})
-      .then(preference => preference || deepCopy(this._defaults.get(scope) as T));
+      .then(preference => preference || deepCopy((this._defaults.get(scope) as T) || {}));
   }
 
   replace<T extends Preference>(

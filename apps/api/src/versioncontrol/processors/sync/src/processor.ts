@@ -2,6 +2,7 @@ import {Injectable} from "@nestjs/common";
 import {filter, map, Observable} from "rxjs";
 import {
   ApprovedSync,
+  ChangeInitiator,
   ISyncProcessor,
   PendingSync,
   Sync,
@@ -14,6 +15,15 @@ import {ObjectId} from "@spica-server/database";
 export class SyncProcessor implements ISyncProcessor {
   constructor(private readonly service: SyncService) {}
   push(...syncs: (PendingSync | ApprovedSync)[]): Promise<Sync[]> {
+    const autoApproveIfInternalChange = sync => {
+      if (sync.change_log.initiator === ChangeInitiator.INTERNAL) {
+        sync.status = SyncStatuses.APPROVED;
+      }
+
+      return sync;
+    };
+    syncs = syncs.map(autoApproveIfInternalChange);
+
     return this.service.insertMany(syncs).then(() => syncs);
   }
 

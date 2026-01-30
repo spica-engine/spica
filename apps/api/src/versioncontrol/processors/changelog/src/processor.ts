@@ -8,7 +8,6 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {ChangeLogAggregator} from "./interface";
 import {ChangeLogService} from "@spica-server/versioncontrol/services/changelog";
-import {ReturnDocument} from "@spica-server/database";
 
 @Injectable()
 export class ChangeLogProcessor implements IChangeLogProcessor {
@@ -58,39 +57,27 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
       origin:
         changeLog.origin === ChangeOrigin.DOCUMENT
           ? ChangeOrigin.REPRESENTATIVE
-          : ChangeOrigin.DOCUMENT,
-      cycle_count: {$lt: 1}
-    };
-
-    const update = {
-      $setOnInsert: changeLog,
-      $inc: {
-        cycle_count: 0.5
-      }
+          : ChangeOrigin.DOCUMENT
     };
 
     const options = {
-      sort: {_id: -1 as const},
-      upsert: true,
-      returnDocument: ReturnDocument.AFTER
+      sort: {_id: -1 as const}
     };
 
-    let result: any;
+    let wasReflection: any;
 
     try {
-      result = await this.service.findOneAndUpdate(filter, update, options);
+      wasReflection = !!(await this.service.findOneAndDelete(filter, options));
+      console.log("Reflected change log:", changeLog, "Was reflection:", wasReflection);
     } catch (error) {
       console.error("Error pushing change log:", error);
     }
 
-    if (result.cycle_count >= 1) {
-      this.service.findOneAndDelete(filter, result._id).catch(error => {
-        console.error("Error deleting processed change log:", error);
-      });
-      return;
+    if (wasReflection) {
+      return changeLog;
     }
 
-    return result;
+    return this.service.insertOne(changeLog);
   }
 
   watch(): Observable<ChangeLog> {
@@ -99,7 +86,6 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
       .pipe(
         map(change => {
           const doc = change["fullDocument"] as any;
-          delete doc.cycle_count;
           return doc as ChangeLog;
         }),
         bufferTime(2000),

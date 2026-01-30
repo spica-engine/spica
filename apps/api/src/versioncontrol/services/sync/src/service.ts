@@ -5,7 +5,6 @@ import {
   ChangeStreamOptions,
   DatabaseService
 } from "@spica-server/database";
-import {Observable} from "rxjs";
 import {Sync} from "@spica-server/interface/versioncontrol";
 
 @Injectable()

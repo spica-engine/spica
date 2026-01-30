@@ -2,6 +2,7 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {
   ApplyResult,
   ChangeLog,
+  ChangeType,
   DocumentChangeSupplier,
   RepresentativeChangeApplier,
   SyncStatuses
@@ -18,6 +19,11 @@ export const getApplier = (
     apply: async (change: ChangeLog) => {
       let result: ApplyResult = {status: SyncStatuses.SUCCEEDED};
       try {
+        if (change.type === ChangeType.DELETE) {
+          await repManager.rm(module, change.resource_slug);
+          return result;
+        }
+
         await repManager.write(
           module,
           change.resource_slug,
