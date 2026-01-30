@@ -36,6 +36,18 @@ const Resource: React.FC<ResourceProps> = ({
   onExport,
   onImport
 }) => {
+  const statementsByModule = useMemo(() => {
+    const map = new Map<string, DisplayedStatement>();
+    value.forEach(statement => {
+      map.set(statement.module, statement);
+    });
+    return map;
+  }, [value]);
+
+  const getStatement = useCallback(
+    (module: string) => statementsByModule.get(module),
+    [statementsByModule]
+  );
   const updateStatement = useCallback((
     module: string,
     updater: (stmt: DisplayedStatement) => DisplayedStatement
@@ -131,7 +143,7 @@ const Resource: React.FC<ResourceProps> = ({
   }, [onImport]);
 
   const renderResourceItems = useCallback((module: string, actionName: string) => {
-    const statement = value.find(s => s.module === module);
+    const statement = getStatement(module);
     const resource = statement ? getActionResource(statement, actionName) : undefined;
 
     if (!resource) return null;
@@ -141,7 +153,6 @@ const Resource: React.FC<ResourceProps> = ({
     const customRendering = renderer.render({
       module,
       actionName,
-      resources: [],
       statement,
       onResourceChange: (resourceId: string, type: "include" | "exclude", checked: boolean) => {
         handleResourceChange(module, actionName, resourceId, type, checked);
@@ -199,18 +210,18 @@ const Resource: React.FC<ResourceProps> = ({
         </div>
       </FlexElement>
     );
-  }, [handleResourceChange, value]);
+  }, [getStatement, handleResourceChange]);
 
   const renderActionContent = useCallback((module: string, actionName: string, acceptsResource: boolean) => {
     if (!acceptsResource) return null;
 
-    const statement = value.find(s => s.module === module);
+    const statement = getStatement(module);
     const active = statement ? isActionActive(statement, actionName) : false;
 
     if (!active) return null;
 
     return renderResourceItems(module, actionName);
-  }, [renderResourceItems, value]);
+  }, [getStatement, renderResourceItems]);
 
   const formatActionName = useCallback((actionName: string, module: string): string => {
     return actionName
@@ -230,7 +241,7 @@ const Resource: React.FC<ResourceProps> = ({
   }, [handleResourceBatchChange, handleResourceChange, moduleData]);
 
   const renderModuleContent = useCallback((moduleStatement: ModuleStatement) => {
-    const statement = value.find(s => s.module === moduleStatement.module);
+    const statement = getStatement(moduleStatement.module);
     const { renderer, buildProps } = moduleRendererRegistry.getRendererConfig(moduleStatement.module);
 
     // Build base context that all renderers receive
@@ -248,12 +259,12 @@ const Resource: React.FC<ResourceProps> = ({
 
     const rendererProps = buildProps ? buildProps(baseContext, moduleRendererExtras) : baseContext;
     return renderer.render(rendererProps);
-  }, [formatActionName, handleActionToggle, moduleRendererExtras, renderActionContent, value]);
+  }, [formatActionName, getStatement, handleActionToggle, moduleRendererExtras, renderActionContent]);
 
   // Generate accordion items for modules
   const moduleAccordionItems = useMemo(() => {
     return modules.map(moduleStatement => {
-      const statement = value.find(s => s.module === moduleStatement.module);
+      const statement = getStatement(moduleStatement.module);
 
       const allEnabled = statement ? areAllModuleActionsEnabled(statement, moduleStatement.actions) : false;
       const someEnabled = statement ? statement.actions.length > 0 : false;
@@ -285,7 +296,7 @@ const Resource: React.FC<ResourceProps> = ({
         content: renderModuleContent(moduleStatement)
       };
     });
-  }, [handleModuleToggle, modules, renderModuleContent, value]);
+  }, [getStatement, handleModuleToggle, modules, renderModuleContent]);
 
   return (
     <FlexElement

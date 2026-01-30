@@ -3,7 +3,7 @@
  * email: rio.kenan@gmail.com
  */
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   useGetPoliciesQuery,
   useCreatePolicyMutation,
@@ -45,22 +45,22 @@ const Policy = () => {
   const { moduleData, moduleDataElements } = useModuleDataRegistry();
 
 
-  const openCreatePolicy = () => {
+  const openCreatePolicy = useCallback(() => {
     setSelectedPolicy(null);
     setIsOpen(true);
-  };
+  }, []);
 
-  const openEditPolicy = (policy: PolicyItem) => {
+  const openEditPolicy = useCallback((policy: PolicyItem) => {
     setSelectedPolicy(policy);
     setIsOpen(true);
-  };
+  }, []);
 
-  const handleCloseDrawer = () => {
+  const handleCloseDrawer = useCallback(() => {
     setIsOpen(false);
     setSelectedPolicy(null);
-  };
+  }, []);
 
-  const handleSave = async (input: PolicyUpsertInput) => {
+  const handleSave = useCallback(async (input: PolicyUpsertInput) => {
     try {
       if (selectedPolicy?._id) {
         await updatePolicy({
@@ -83,9 +83,9 @@ const Policy = () => {
       console.error("Failed to save policy:", error);
       alert("Failed to save policy. Please try again.");
     }
-  };
+  }, [createPolicy, handleCloseDrawer, selectedPolicy, updatePolicy]);
 
-  const handleDeletePolicy = async (policyId: string) => {
+  const handleDeletePolicy = useCallback(async (policyId: string) => {
     if (!confirm("Are you sure you want to delete this policy?")) return;
 
     try {
@@ -94,36 +94,36 @@ const Policy = () => {
       console.error("Failed to delete policy:", error);
       alert("Failed to delete policy. Please try again.");
     }
-  };
+  }, [deletePolicy]);
 
-  const columns: TableColumn<PolicyItem>[] = useMemo(
-    () => [
+  const columns: TableColumn<PolicyItem>[] = useMemo(() => {
+    return [
       {
-        header: <FlexElement>#</FlexElement>, 
+        header: <FlexElement>#</FlexElement>,
         key: "_id",
-        renderCell: ({ row }) => <span>{row._id}</span>,
+        renderCell: ({ row }) => <span>{row._id}</span>
       },
       {
-        header: <FlexElement>Name</FlexElement>,   
+        header: <FlexElement>Name</FlexElement>,
         key: "name",
-        renderCell: ({ row }) => <span>{row.name}</span>,
+        renderCell: ({ row }) => <span>{row.name}</span>
       },
       {
-        header: <FlexElement>Description</FlexElement>, 
+        header: <FlexElement>Description</FlexElement>,
         key: "description",
-        renderCell: ({ row }) => <span>{row.description}</span>,
+        renderCell: ({ row }) => <span>{row.description}</span>
       },
       {
-        header: <FlexElement dimensionX="fill" alignment="rightCenter" direction="horizontal">Actions</FlexElement>,
+        header: (
+          <FlexElement dimensionX="fill" alignment="rightCenter" direction="horizontal">
+            Actions
+          </FlexElement>
+        ),
         key: "actions",
-        width: '100px',
-        minWidth: '100px',
+        width: "100px",
+        minWidth: "100px",
         renderCell: ({ row }) => (
-          <FlexElement
-            dimensionX="fill"
-            alignment="rightCenter"
-            direction="horizontal"
-          >
+          <FlexElement dimensionX="fill" alignment="rightCenter" direction="horizontal">
             <Button
               variant="icon"
               color="default"
@@ -142,11 +142,10 @@ const Policy = () => {
               <Icon name="lock" />
             </Button>
           </FlexElement>
-        ),
-      },
-    ],
-    []
-  );
+        )
+      }
+    ];
+  }, [handleDeletePolicy, openEditPolicy]);
 
   return (
     <FlexElement

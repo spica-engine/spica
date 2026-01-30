@@ -9,6 +9,7 @@ import type {ModuleStatement} from "./hook/useStatement";
 import type {DisplayedStatement} from "./policyStatements";
 import {isActionActive} from "./policyStatements";
 import styles from "./Policy.module.scss";
+import { renderFlatActions } from "./moduleRendererHelpers";
 
 
 export interface BaseModuleContext {
@@ -36,39 +37,16 @@ export type ModuleRendererPropsFactory<TProps = BaseModuleContext> = (
 
 export class FlatModuleRenderer implements ModuleRenderer<BaseModuleContext> {
   render(context: BaseModuleContext): React.ReactNode {
-    const {moduleStatement, statement, onActionToggle, formatActionName} = context;
+    const { moduleStatement, statement, onActionToggle, formatActionName } = context;
 
-    return (
-      <FlexElement
-        dimensionX="fill"
-        direction="vertical"
-        gap={10}
-        className={styles.flatActionsContainer}
-      >
-        {moduleStatement.actions.map(moduleAction => {
-          const active = statement ? isActionActive(statement, moduleAction.action) : false;
-          const acceptsResource = moduleAction.resource !== undefined;
-
-          return (
-            <FlexElement
-              key={moduleAction.action}
-              dimensionX="fill"
-              direction="horizontal"
-              className={styles.flatActionItem}
-            >
-              <span>{formatActionName(moduleAction.action, moduleStatement.module)}</span>
-              <Checkbox
-                checked={active}
-                onChange={() => {
-                  onActionToggle(moduleAction.action, acceptsResource);
-                }}
-                checkBoxClassName={styles.actionCheckbox}
-              />
-            </FlexElement>
-          );
-        })}
-      </FlexElement>
-    );
+    return renderFlatActions({
+      actions: moduleStatement.actions,
+      module: moduleStatement.module,
+      statement,
+      formatActionName,
+      onActionToggle,
+      containerGap: 10
+    });
   }
 }
 

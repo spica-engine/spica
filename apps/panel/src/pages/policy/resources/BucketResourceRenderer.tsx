@@ -15,7 +15,7 @@ export interface BucketResourceProps extends ResourceRendererContext {
 
 export class BucketResourceRenderer implements ResourceRenderer<BucketResourceProps> {
   render(props: BucketResourceProps): React.ReactNode | null {
-    const { module, actionName, resources, statement } = props;
+    const { module, actionName, statement } = props;
     return null;
   }
 }
