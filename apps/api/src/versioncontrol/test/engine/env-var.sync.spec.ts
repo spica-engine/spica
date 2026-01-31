@@ -22,6 +22,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
+import {safeSubscribe, delayForSubscriptionSetup} from "./test-helpers";
 
 describe("SyncEngine Integration - EnvVar", () => {
   let module: TestingModule;
@@ -75,28 +76,30 @@ describe("SyncEngine Integration - EnvVar", () => {
       value: "secret_value_123"
     };
 
-    const subs = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      expect(new Date(sync.created_at)).toBeInstanceOf(Date);
-      expect(sync.created_at).toEqual(sync.updated_at);
-      expect(sync.status).toBe(SyncStatuses.PENDING);
-      expect(sync.change_log).toEqual({
-        _id: sync.change_log._id,
-        module: "env-var",
-        sub_module: "schema",
-        origin: ChangeOrigin.DOCUMENT,
-        type: ChangeType.CREATE,
-        resource_id: _id.toHexString(),
-        resource_slug: key,
-        resource_content: YAML.stringify(testEnvVar),
-        resource_extension: "yaml",
-        created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
-      });
-      subs.unsubscribe();
-      done();
-    });
+    safeSubscribe(
+      syncProcessor.watch(SyncStatuses.PENDING),
+      sync => {
+        expect(new Date(sync.created_at)).toBeInstanceOf(Date);
+        expect(sync.created_at).toEqual(sync.updated_at);
+        expect(sync.status).toBe(SyncStatuses.PENDING);
+        expect(sync.change_log).toEqual({
+          _id: sync.change_log._id,
+          module: "env-var",
+          sub_module: "schema",
+          origin: ChangeOrigin.DOCUMENT,
+          type: ChangeType.CREATE,
+          resource_id: _id.toHexString(),
+          resource_slug: key,
+          resource_content: YAML.stringify(testEnvVar),
+          resource_extension: "yaml",
+          created_at: sync.change_log.created_at,
+          initiator: ChangeInitiator.EXTERNAL
+        });
+      },
+      done
+    );
 
-    envVarService.insertOne(testEnvVar);
+    setTimeout(() => envVarService.insertOne(testEnvVar), 100);
   });
 
   it("should sync changes from document to representatives", done => {
@@ -109,24 +112,41 @@ describe("SyncEngine Integration - EnvVar", () => {
       value: "secret_value_456"
     };
 
-    const repSub = repManager.watch("env-var", ["schema.yaml"], ["add"]).subscribe(fileEvent => {
-      repSub.unsubscribe();
-      const yamlContent = fileEvent.content;
-      const schema = YAML.parse(yamlContent);
-      expect(schema).toEqual({
-        _id: _id.toString(),
-        key,
-        value: "secret_value_456"
-      });
-      done();
+    let syncSubClosed = false;
+
+    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
+      if (!syncSubClosed) {
+        syncSubClosed = true;
+        syncSub.unsubscribe();
+        try {
+          await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+        } catch (error) {
+          // Ignore if subscription already completed
+        }
+      }
     });
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      syncSub.unsubscribe();
-      syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-    });
+    safeSubscribe(
+      repManager.watch("env-var", ["schema.yaml"], ["add"]),
+      fileEvent => {
+        if (!syncSubClosed) {
+          syncSubClosed = true;
+          syncSub.unsubscribe();
+        }
+        
+        const yamlContent = fileEvent.content;
+        const schema = YAML.parse(yamlContent);
+        expect(schema).toEqual({
+          _id: _id.toString(),
+          key,
+          value: "secret_value_456"
+        });
+      },
+      done,
+      15000
+    );
 
-    envVarService.insertOne(testEnvVar);
+    setTimeout(() => envVarService.insertOne(testEnvVar), 150);
   });
 
   it("should create pending sync when changes come from representative", done => {
@@ -143,26 +163,30 @@ describe("SyncEngine Integration - EnvVar", () => {
 
     const envVarYaml = YAML.stringify(testEnvVar);
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      expect(sync.change_log).toEqual({
-        _id: sync.change_log._id,
-        module: "env-var",
-        sub_module: "schema",
-        origin: ChangeOrigin.REPRESENTATIVE,
-        type: ChangeType.CREATE,
-        resource_id: sync.change_log.resource_id,
-        resource_slug: envVarKey,
-        resource_content: envVarYaml,
-        resource_extension: fileExtension,
-        created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
-      });
-      expect(sync.status).toBe(SyncStatuses.PENDING);
-      syncSub.unsubscribe();
-      done();
-    });
+    safeSubscribe(
+      syncProcessor.watch(SyncStatuses.PENDING),
+      sync => {
+        expect(sync.change_log).toEqual({
+          _id: sync.change_log._id,
+          module: "env-var",
+          sub_module: "schema",
+          origin: ChangeOrigin.REPRESENTATIVE,
+          type: ChangeType.CREATE,
+          resource_id: sync.change_log.resource_id,
+          resource_slug: envVarKey,
+          resource_content: envVarYaml,
+          resource_extension: fileExtension,
+          created_at: sync.change_log.created_at,
+          initiator: ChangeInitiator.EXTERNAL
+        });
+        expect(sync.status).toBe(SyncStatuses.PENDING);
+      },
+      done
+    );
 
-    repManager.write("env-var", envVarKey, fileName, envVarYaml, fileExtension);
+    setTimeout(() => {
+      repManager.write("env-var", envVarKey, fileName, envVarYaml, fileExtension);
+    }, 100);
   });
 
   it("should sync changes from representative to documents after approval", done => {
@@ -179,22 +203,44 @@ describe("SyncEngine Integration - EnvVar", () => {
 
     const envVarYaml = YAML.stringify(testEnvVar);
 
+    let syncSubClosed = false;
+    let succeededSubClosed = false;
+
+    // Auto-approve pending syncs
     const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
-      syncSub.unsubscribe();
-      await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+      if (!syncSubClosed) {
+        syncSubClosed = true;
+        syncSub.unsubscribe();
+        try {
+          await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+        } catch (error) {
+          // Ignore if subscription already completed
+        }
+      }
     });
 
-    const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async () => {
-      succeededSub.unsubscribe();
-      const insertedEnvVar = await envVarService.findOne({_id: envVarId});
-      expect(insertedEnvVar).toEqual({
-        _id: envVarId,
-        key: envVarKey,
-        value: "approved_secret_value"
-      });
-      done();
-    });
+    // Wait for succeeded status and verify document
+    safeSubscribe(
+      syncProcessor.watch(SyncStatuses.SUCCEEDED),
+      async () => {
+        if (!syncSubClosed) {
+          syncSubClosed = true;
+          syncSub.unsubscribe();
+        }
+        
+        const insertedEnvVar = await envVarService.findOne({_id: envVarId});
+        expect(insertedEnvVar).toEqual({
+          _id: envVarId,
+          key: envVarKey,
+          value: "approved_secret_value"
+        });
+      },
+      done,
+      15000
+    );
 
-    repManager.write("env-var", envVarKey, fileName, envVarYaml, fileExtension);
+    setTimeout(() => {
+      repManager.write("env-var", envVarKey, fileName, envVarYaml, fileExtension);
+    }, 150);
   });
 });

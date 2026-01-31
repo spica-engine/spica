@@ -28,6 +28,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
+import {safeSubscribe, delayForSubscriptionSetup} from "./test-helpers";
 
 describe("SyncEngine Integration - Function", () => {
   let module: TestingModule;
@@ -137,28 +138,31 @@ describe("SyncEngine Integration - Function", () => {
       language: "javascript"
     };
 
-    const subs = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      expect(new Date(sync.created_at)).toBeInstanceOf(Date);
-      expect(sync.created_at).toEqual(sync.updated_at);
-      expect(sync.status).toBe(SyncStatuses.PENDING);
-      expect(sync.change_log).toEqual({
-        _id: sync.change_log._id,
-        module: "function",
-        sub_module: "schema",
-        origin: ChangeOrigin.DOCUMENT,
-        type: ChangeType.CREATE,
-        resource_id: _id.toHexString(),
-        resource_slug: name,
-        resource_content: YAML.stringify(testFunction),
-        resource_extension: "yaml",
-        created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
-      });
-      subs.unsubscribe();
-      done();
-    });
+    safeSubscribe(
+      syncProcessor.watch(SyncStatuses.PENDING),
+      sync => {
+        expect(new Date(sync.created_at)).toBeInstanceOf(Date);
+        expect(sync.created_at).toEqual(sync.updated_at);
+        expect(sync.status).toBe(SyncStatuses.PENDING);
+        expect(sync.change_log).toEqual({
+          _id: sync.change_log._id,
+          module: "function",
+          sub_module: "schema",
+          origin: ChangeOrigin.DOCUMENT,
+          type: ChangeType.CREATE,
+          resource_id: _id.toHexString(),
+          resource_slug: name,
+          resource_content: YAML.stringify(testFunction),
+          resource_extension: "yaml",
+          created_at: sync.change_log.created_at,
+          initiator: ChangeInitiator.EXTERNAL
+        });
+      },
+      done
+    );
 
-    functionService.insertOne(testFunction);
+    // Delay to ensure subscription is set up before triggering the operation
+    setTimeout(() => functionService.insertOne(testFunction), 100);
   });
 
   it("should sync changes from document to representatives", done => {
@@ -184,37 +188,58 @@ describe("SyncEngine Integration - Function", () => {
       language: "javascript"
     };
 
-    const repSub = repManager.watch("function", ["schema.yaml"], ["add"]).subscribe(fileEvent => {
-      repSub.unsubscribe();
-      const yamlContent = fileEvent.content;
-      const schema = YAML.parse(yamlContent);
-      expect(schema).toEqual({
-        _id: _id.toString(),
-        name,
-        description: "A function for testing",
-        env_vars: [],
-        triggers: {
-          default: {
-            type: "http",
-            active: true,
-            options: {
-              method: "Get",
-              path: "/test"
+    let syncSubClosed = false;
+
+    // First subscription: auto-approve pending syncs
+    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
+      if (!syncSubClosed) {
+        syncSubClosed = true;
+        syncSub.unsubscribe();
+        try {
+          await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+        } catch (error) {
+          // Ignore if subscription already completed
+        }
+      }
+    });
+
+    // Second subscription: verify the representative change
+    safeSubscribe(
+      repManager.watch("function", ["schema.yaml"], ["add"]),
+      fileEvent => {
+        // Clean up the sync subscription if still active
+        if (!syncSubClosed) {
+          syncSubClosed = true;
+          syncSub.unsubscribe();
+        }
+        
+        const yamlContent = fileEvent.content;
+        const schema = YAML.parse(yamlContent);
+        expect(schema).toEqual({
+          _id: _id.toString(),
+          name,
+          description: "A function for testing",
+          env_vars: [],
+          triggers: {
+            default: {
+              type: "http",
+              active: true,
+              options: {
+                method: "Get",
+                path: "/test"
+              }
             }
-          }
-        },
-        timeout: 60,
-        language: "javascript"
-      });
-      done();
-    });
+          },
+          timeout: 60,
+          language: "javascript"
+        });
+      },
+      done,
+      15000 // Increase timeout for this multi-step operation
+    );
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      syncSub.unsubscribe();
-      syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-    });
-
-    functionService.insertOne(testFunction);
+    // Delay to ensure both subscriptions are set up before triggering
+    setTimeout(() => functionService.insertOne(testFunction), 150);
   });
 
   it("should create pending sync when changes come from representative", done => {

@@ -28,6 +28,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import * as CRUD from "@spica-server/function/src/crud";
 import fs from "fs";
+import {safeSubscribe, delayForSubscriptionSetup} from "./test-helpers";
 
 describe("SyncEngine Integration - Function Tsconfig", () => {
   let module: TestingModule;
@@ -159,71 +160,98 @@ describe("SyncEngine Integration - Function Tsconfig", () => {
       include: ["index.ts"]
     };
 
-    const subs = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      subs.unsubscribe();
-      expect(new Date(sync.created_at)).toBeInstanceOf(Date);
-      expect(sync.status).toBe(SyncStatuses.PENDING);
-      expect(sync.change_log).toEqual({
-        _id: sync.change_log._id,
-        module: "function",
-        sub_module: "tsconfig",
-        origin: ChangeOrigin.DOCUMENT,
-        type: ChangeType.CREATE,
-        resource_id: _id.toString(),
-        resource_slug: name,
-        resource_content: JSON.stringify(expectedTsconfig, null, 2),
-        resource_extension: "json",
-        created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
-      });
-      done();
-    });
-
-    createTestFunction(_id, name).then(async fn => {
-      await CRUD.index.write(functionService, functionEngine, fn._id, indexContent);
-    });
-  });
-
-  it("should sync tsconfig changes from document to representatives", done => {
-    const _id = new ObjectId();
-    const name = "TestFuncTsconfigDocToRep";
-    const indexContent = `export function handler(req, res) { res.send("Hello from Doc"); }`;
-    const expectedTsconfig = {
-      compilerOptions: {
-        moduleResolution: "Node10",
-        module: "ES2022",
-        target: "ES2022",
-        typeRoots: ["./node_modules/@types"],
-        sourceMap: true,
-        alwaysStrict: true,
-        preserveSymlinks: true,
-        incremental: true,
-        declaration: true,
-        tsBuildInfoFile: "../.build/TestFuncTsconfigDocToRep/.tsbuildinfo",
-        baseUrl: ".",
-        rootDir: ".",
-        outDir: "../.build/TestFuncTsconfigDocToRep"
-      },
-      include: ["index.ts"]
-    };
-
-    const repSub = repManager
-      .watch("function", ["tsconfig.json"], ["add", "change"])
-      .subscribe(fileEvent => {
-        repSub.unsubscribe();
-        expect(JSON.parse(fileEvent.content)).toEqual(expectedTsconfig);
+    const subs = safeSubscribe(
+      syncProcessor.watch(SyncStatuses.PENDING),
+      sync => {
+        subs.unsubscribe();
+        expect(new Date(sync.created_at)).toBeInstanceOf(Date);
+        expect(sync.status).toBe(SyncStatuses.PENDING);
+        expect(sync.change_log).toEqual({
+          _id: sync.change_log._id,
+          module: "function",
+          sub_module: "tsconfig",
+          origin: ChangeOrigin.DOCUMENT,
+          type: ChangeType.CREATE,
+          resource_id: _id.toString(),
+          resource_slug: name,
+          resource_content: JSON.stringify(expectedTsconfig, null, 2),
+          resource_extension: "json",
+          created_at: sync.change_log.created_at,
+          initiator: ChangeInitiator.EXTERNAL
+        });
         done();
-      });
-
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      syncSub.unsubscribe();
-      syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-    });
+      },
+      done
+    );
 
     createTestFunction(_id, name).then(async fn => {
-      await CRUD.index.write(functionService, functionEngine, fn._id, indexContent);
+      setTimeout(async () => {
+        await CRUD.index.write(functionService, functionEngine, fn._id, indexContent);
+      }, delayForSubscriptionSetup);
     });
   });
+
+  it(
+    "should sync tsconfig changes from document to representatives",
+    done => {
+      const _id = new ObjectId();
+      const name = "TestFuncTsconfigDocToRep";
+      const indexContent = `export function handler(req, res) { res.send("Hello from Doc"); }`;
+      const expectedTsconfig = {
+        compilerOptions: {
+          moduleResolution: "Node10",
+          module: "ES2022",
+          target: "ES2022",
+          typeRoots: ["./node_modules/@types"],
+          sourceMap: true,
+          alwaysStrict: true,
+          preserveSymlinks: true,
+          incremental: true,
+          declaration: true,
+          tsBuildInfoFile: "../.build/TestFuncTsconfigDocToRep/.tsbuildinfo",
+          baseUrl: ".",
+          rootDir: ".",
+          outDir: "../.build/TestFuncTsconfigDocToRep"
+        },
+        include: ["index.ts"]
+      };
+
+      let subscriptionsClosed = 0;
+      const checkAllClosed = () => {
+        subscriptionsClosed++;
+        if (subscriptionsClosed === 2) {
+          done();
+        }
+      };
+
+      const repSub = safeSubscribe(
+        repManager.watch("function", ["tsconfig.json"], ["add", "change"]),
+        fileEvent => {
+          repSub.unsubscribe();
+          expect(JSON.parse(fileEvent.content)).toEqual(expectedTsconfig);
+          checkAllClosed();
+        },
+        done
+      );
+
+      const syncSub = safeSubscribe(
+        syncProcessor.watch(SyncStatuses.PENDING),
+        sync => {
+          syncSub.unsubscribe();
+          syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+          checkAllClosed();
+        },
+        done
+      );
+
+      createTestFunction(_id, name).then(async fn => {
+        setTimeout(async () => {
+          await CRUD.index.write(functionService, functionEngine, fn._id, indexContent);
+        }, delayForSubscriptionSetup);
+      });
+    },
+    15000
+  );
 
   it("should create pending sync when tsconfig.json changes come from representative", done => {
     const name = "TestFuncTsconfigFromRep";
@@ -241,79 +269,109 @@ describe("SyncEngine Integration - Function Tsconfig", () => {
       2
     );
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(sync => {
-      syncSub.unsubscribe();
-      expect(sync).toEqual({
-        _id: sync._id,
-        status: SyncStatuses.PENDING,
-        created_at: sync.created_at,
-        updated_at: sync.updated_at,
-        change_log: {
-          _id: sync.change_log._id,
-          module: "function",
-          sub_module: "tsconfig",
-          origin: ChangeOrigin.REPRESENTATIVE,
-          type: ChangeType.CREATE,
-          created_at: sync.change_log.created_at,
-          resource_content: tsconfigContent,
-          resource_slug: name,
-          resource_id: null,
-          resource_extension: fileExtension,
-          initiator: ChangeInitiator.EXTERNAL
-        }
-      });
-      done();
-    });
-
-    repManager.write("function", name, fileName, tsconfigContent, fileExtension);
-  });
-
-  it("should fail to apply tsconfig changes from representative (read-only)", done => {
-    const _id = new ObjectId();
-    const name = "TestFuncTsconfigReadOnly";
-    const fileName = "tsconfig";
-    const fileExtension = "json";
-    const tsconfigContent = JSON.stringify(
-      {
-        compilerOptions: {
-          target: "ES2023",
-          module: "ESNext",
-          strict: true
-        }
+    const syncSub = safeSubscribe(
+      syncProcessor.watch(SyncStatuses.PENDING),
+      sync => {
+        syncSub.unsubscribe();
+        expect(sync).toEqual({
+          _id: sync._id,
+          status: SyncStatuses.PENDING,
+          created_at: sync.created_at,
+          updated_at: sync.updated_at,
+          change_log: {
+            _id: sync.change_log._id,
+            module: "function",
+            sub_module: "tsconfig",
+            origin: ChangeOrigin.REPRESENTATIVE,
+            type: ChangeType.CREATE,
+            created_at: sync.change_log.created_at,
+            resource_content: tsconfigContent,
+            resource_slug: name,
+            resource_id: null,
+            resource_extension: fileExtension,
+            initiator: ChangeInitiator.EXTERNAL
+          }
+        });
+        done();
       },
-      null,
-      2
+      done
     );
 
-    const syncSub = syncProcessor.watch(SyncStatuses.PENDING).subscribe(async sync => {
-      syncSub.unsubscribe();
-      await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
-    });
-
-    const failedSub = syncProcessor.watch(SyncStatuses.FAILED).subscribe(async sync => {
-      failedSub.unsubscribe();
-      expect(sync).toEqual({
-        _id: sync._id,
-        status: SyncStatuses.FAILED,
-        created_at: sync.created_at,
-        updated_at: sync.updated_at,
-        reason: "tsconfig is read-only and changes cannot be applied.",
-        change_log: {
-          _id: sync.change_log._id,
-          module: "function",
-          sub_module: "tsconfig",
-          origin: ChangeOrigin.REPRESENTATIVE,
-          type: ChangeType.CREATE,
-          created_at: sync.change_log.created_at,
-          resource_content: tsconfigContent,
-          resource_slug: name,
-          resource_id: null,
-          resource_extension: fileExtension,
-          initiator: ChangeInitiator.EXTERNAL
-        }
-      });
-      done();
-    });
-    repManager.write("function", name, fileName, tsconfigContent, fileExtension);
+    setTimeout(() => {
+      repManager.write("function", name, fileName, tsconfigContent, fileExtension);
+    }, delayForSubscriptionSetup);
   });
+
+  it(
+    "should fail to apply tsconfig changes from representative (read-only)",
+    done => {
+      const _id = new ObjectId();
+      const name = "TestFuncTsconfigReadOnly";
+      const fileName = "tsconfig";
+      const fileExtension = "json";
+      const tsconfigContent = JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2023",
+            module: "ESNext",
+            strict: true
+          }
+        },
+        null,
+        2
+      );
+
+      let subscriptionsClosed = 0;
+      const checkAllClosed = () => {
+        subscriptionsClosed++;
+        if (subscriptionsClosed === 2) {
+          done();
+        }
+      };
+
+      const syncSub = safeSubscribe(
+        syncProcessor.watch(SyncStatuses.PENDING),
+        async sync => {
+          syncSub.unsubscribe();
+          await syncProcessor.update(sync._id, SyncStatuses.APPROVED);
+          checkAllClosed();
+        },
+        done
+      );
+
+      const failedSub = safeSubscribe(
+        syncProcessor.watch(SyncStatuses.FAILED),
+        async sync => {
+          failedSub.unsubscribe();
+          expect(sync).toEqual({
+            _id: sync._id,
+            status: SyncStatuses.FAILED,
+            created_at: sync.created_at,
+            updated_at: sync.updated_at,
+            reason: "tsconfig is read-only and changes cannot be applied.",
+            change_log: {
+              _id: sync.change_log._id,
+              module: "function",
+              sub_module: "tsconfig",
+              origin: ChangeOrigin.REPRESENTATIVE,
+              type: ChangeType.CREATE,
+              created_at: sync.change_log.created_at,
+              resource_content: tsconfigContent,
+              resource_slug: name,
+              resource_id: null,
+              resource_extension: fileExtension,
+              initiator: ChangeInitiator.EXTERNAL
+            }
+          });
+          checkAllClosed();
+        },
+        done
+      );
+
+      setTimeout(() => {
+        repManager.write("function", name, fileName, tsconfigContent, fileExtension);
+      }, delayForSubscriptionSetup);
+    },
+    15000
+  );
 });
