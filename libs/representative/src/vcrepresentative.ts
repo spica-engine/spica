@@ -1,19 +1,30 @@
 import {Injectable} from "@nestjs/common";
 import fs from "fs";
 import path from "path";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {
+  IRepresentativeManager,
+  RepresentativeFileEvent
+} from "@spica-server/interface/representative";
 import chokidar from "chokidar";
 import {Observable} from "rxjs";
-import {
-  ChangeTypes,
-  RepChange,
-  ResourceType,
-  RepresentativeManagerResource
-} from "@spica-server/interface/versioncontrol";
+import {ChangeType} from "@spica-server/interface/versioncontrol";
 
 @Injectable()
 export class VCRepresentativeManager implements IRepresentativeManager {
-  constructor(protected cwd: string) {}
+  constructor(protected cwd: string) {
+    try {
+      const entries = fs.readdirSync(this.cwd);
+      for (const entry of entries) {
+        if (entry.startsWith(".")) continue;
+        fs.rmSync(path.join(this.cwd, entry), {
+          recursive: true,
+          force: true
+        });
+      }
+    } catch (error) {
+      console.error("Error emptying representative directory:", error);
+    }
+  }
 
   getModuleDir(module: string) {
     return path.join(this.cwd, module);
@@ -52,8 +63,9 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     fs.mkdirSync(path, {recursive: true});
   }
 
-  readFile(path: string) {
-    return fs.readFileSync(path, "utf-8");
+  read(module: string, id: string, fileName: string) {
+    const fullPath = path.join(this.getModuleDir(module), id, fileName);
+    return fs.promises.readFile(fullPath, "utf-8");
   }
 
   rm(module?: string, id?: string) {
@@ -70,30 +82,20 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     return fs.promises.rm(dir, {recursive: true});
   }
 
-  // delete later
-  async read() {
-    return [];
-  }
-
   watch(module: string, files: string[], events: string[] = ["add", "change", "unlink"]) {
-    if (files.length == 0) {
-      console.warn(`VCRepresentativeManager.watch: No watch files specified for ${module}.`);
-      return new Observable<RepChange<RepresentativeManagerResource>>(observer => {
-        return () => observer.complete();
-      });
-    }
     const moduleDir = this.getModuleDir(module);
 
     this.createModuleDirectory(moduleDir);
 
-    return new Observable<RepChange<RepresentativeManagerResource>>(subscriber => {
+    return new Observable<RepresentativeFileEvent>(subscriber => {
       const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
         persistent: true,
-        depth: 2
+        depth: 2,
+        awaitWriteFinish: true
       });
 
-      watcher.on("all", (event, path) => {
+      watcher.on("all", async (event, path) => {
         const isTrackedEvent = events.includes(event);
         if (!isTrackedEvent) return;
 
@@ -104,36 +106,43 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         const isTrackedFile = files.some(file => parts[1] == file);
         if (!isCorrectDepth || !isTrackedFile) return;
 
-        let changeType: ChangeTypes;
-        let resource: RepresentativeManagerResource;
+        const extension = parts[1].split(".").at(-1);
+
+        let repFileEvent: RepresentativeFileEvent;
 
         switch (event) {
           case "add":
-            changeType = ChangeTypes.INSERT;
-            resource = {content: this.readFile(path), slug: parts[0]};
+            repFileEvent = {
+              content: await this.read(module, parts[0], parts[1]),
+              slug: parts[0],
+              extension,
+              type: ChangeType.CREATE
+            };
             break;
 
           case "change":
-            changeType = ChangeTypes.UPDATE;
-            resource = {content: this.readFile(path), slug: parts[0]};
+            repFileEvent = {
+              content: await this.read(module, parts[0], parts[1]),
+              slug: parts[0],
+              extension,
+              type: ChangeType.UPDATE
+            };
             break;
 
           case "unlink":
-            changeType = ChangeTypes.DELETE;
-            resource = {content: "", slug: parts[0]};
+            repFileEvent = {
+              content: null,
+              slug: parts[0],
+              extension,
+              type: ChangeType.DELETE
+            };
             break;
 
           default:
             return;
         }
 
-        const repChange: RepChange<RepresentativeManagerResource> = {
-          resourceType: ResourceType.REPRESENTATIVE,
-          changeType,
-          resource
-        };
-
-        subscriber.next(repChange);
+        subscriber.next(repFileEvent);
       });
 
       watcher.on("error", err => subscriber.error(err));
