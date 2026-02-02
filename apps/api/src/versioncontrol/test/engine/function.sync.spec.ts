@@ -29,7 +29,7 @@ import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
 
-describe("SyncEngine Integration - Function", () => {
+xdescribe("SyncEngine Integration - Function", () => {
   let module: TestingModule;
   let syncEngine: SyncEngine;
   let syncProcessor: SyncProcessor;

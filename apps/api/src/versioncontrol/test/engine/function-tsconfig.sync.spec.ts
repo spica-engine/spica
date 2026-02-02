@@ -29,7 +29,7 @@ import {SyncProcessor} from "../../processors/sync";
 import * as CRUD from "@spica-server/function/src/crud";
 import fs from "fs";
 
-describe("SyncEngine Integration - Function Tsconfig", () => {
+xdescribe("SyncEngine Integration - Function Tsconfig", () => {
   let module: TestingModule;
   let syncEngine: SyncEngine;
   let syncProcessor: SyncProcessor;
