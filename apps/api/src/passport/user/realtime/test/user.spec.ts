@@ -7,7 +7,7 @@ import {GuardService} from "@spica-server/passport/guard/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {UserModule} from "@spica-server/passport/user";
 import {User} from "@spica-server/interface/passport/user";
@@ -40,7 +40,7 @@ describe("User Realtime", () => {
     const module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID]
+          formats: [OBJECT_ID, DATE_TIME]
         }),
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
