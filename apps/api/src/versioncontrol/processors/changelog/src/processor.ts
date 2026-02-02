@@ -49,32 +49,12 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
   constructor(private readonly service: ChangeLogService) {}
 
   async push(changeLog: ChangeLog) {
-    const filter = {
-      type: changeLog.type,
-      module: changeLog.module,
-      sub_module: changeLog.sub_module,
-      resource_id: changeLog.resource_id,
-      origin:
-        changeLog.origin === ChangeOrigin.DOCUMENT
-          ? ChangeOrigin.REPRESENTATIVE
-          : ChangeOrigin.DOCUMENT
-    };
+    let wasReflection;
 
-    const options = {
-      sort: {_id: -1 as const}
-    };
-
-    let wasReflection: any;
-
-    try {
-      wasReflection = !!(await this.service.findOneAndDelete(filter, options));
-      console.log("Reflected change log:", changeLog, "Was reflection:", wasReflection);
-    } catch (error) {
-      console.error("Error pushing change log:", error);
-    }
+    wasReflection = await this.manageChangeReflection(changeLog).then(res => res.wasReflection);
 
     if (wasReflection) {
-      return changeLog;
+      return;
     }
 
     return this.service.insertOne(changeLog);
@@ -93,5 +73,26 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
         map(logs => this.aggregators.reduce((acc, aggregator) => aggregator(acc), logs)),
         mergeMap(aggregatedLogs => from(aggregatedLogs))
       );
+  }
+
+  private manageChangeReflection(changeLog: ChangeLog): Promise<{wasReflection: boolean}> {
+    const filter = {
+      type: changeLog.type,
+      module: changeLog.module,
+      sub_module: changeLog.sub_module,
+      resource_id: changeLog.resource_id,
+      origin:
+        changeLog.origin === ChangeOrigin.DOCUMENT
+          ? ChangeOrigin.REPRESENTATIVE
+          : ChangeOrigin.DOCUMENT
+    };
+
+    const options = {
+      sort: {_id: -1 as const}
+    };
+
+    return this.service
+      .findOneAndDelete(filter, options)
+      .then(result => ({wasReflection: !!result}));
   }
 }
