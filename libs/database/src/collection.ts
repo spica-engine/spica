@@ -28,7 +28,6 @@ export class _MixinCollection<T> {
   _coll: Collection<T>;
 
   options: InitializeOptions;
-  ready: Promise<void>;
 
   constructor(
     public readonly db: DatabaseService,
@@ -40,11 +39,9 @@ export class _MixinCollection<T> {
     this.options = this._options;
 
     if (this.options.collectionOptions || this.options.afterInit) {
-      this.ready = this.initCollection().then(() => {
+      this.initCollection().then(() => {
         if (this.options.afterInit) this.options.afterInit();
       });
-    } else {
-      this.ready = Promise.resolve();
     }
   }
 
@@ -201,13 +198,9 @@ export class _MixinCollection<T> {
     return new Observable(observer => {
       let stream: ChangeStream<T>;
 
-      this.ready
-        .then(() => {
-          stream = this._coll.watch(pipeline, options);
-          stream.on("change", change => observer.next(change));
-          stream.on("error", error => observer.error(error));
-        })
-        .catch(error => observer.error(error));
+      stream = this._coll.watch(pipeline, options);
+      stream.on("change", change => observer.next(change));
+      stream.on("error", error => observer.error(error));
 
       return () => {
         if (!stream.closed) {
