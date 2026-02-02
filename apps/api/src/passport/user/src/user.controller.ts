@@ -43,6 +43,7 @@ import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {VerificationService} from "./verification.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
+import {PasswordlessService} from "./services/passwordless.service";
 
 @Controller("passport/user")
 export class UserController {
@@ -68,6 +69,7 @@ export class UserController {
     private userService: UserService,
     private verificationService: VerificationService,
     private providerVerificationService: ProviderVerificationService,
+    private passwordlessService: PasswordlessService,
     @Inject(USER_OPTIONS) private options: UserOptions,
     private authFactor: AuthFactor,
     @Optional() private commander: ClassCommander
@@ -524,6 +526,30 @@ export class UserController {
       provider,
       purpose
     );
+  }
+
+  @Post("passwordless/start")
+  startPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-start"))
+    body: {
+      username: string;
+      strategy: string;
+      value: string;
+    }
+  ) {
+    return this.passwordlessService.start(body.username, body.strategy, body.value);
+  }
+
+  @Post("passwordless/verify")
+  verifyPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-verify"))
+    body: {
+      username: string;
+      strategy: string;
+      code: string;
+    }
+  ) {
+    return this.passwordlessService.verify(body.username, body.strategy, body.code);
   }
 
   private async handlePasswordUpdate(

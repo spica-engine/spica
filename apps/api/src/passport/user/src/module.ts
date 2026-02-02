@@ -22,6 +22,8 @@ import userCreateSchema from "./schemas/user-create.json" with {type: "json"};
 import userUpdateSchema from "./schemas/user-update.json" with {type: "json"};
 import userSelfUpdateSchema from "./schemas/user-self-update.json" with {type: "json"};
 import AuthFactorSchema from "./schemas/authfactor.json" with {type: "json"};
+import passwordlessStartSchema from "./schemas/passwordless-start.json" with {type: "json"};
+import passwordlessVerifySchema from "./schemas/passwordless-verify.json" with {type: "json"};
 import {AuthResolver} from "./relation";
 import {AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {registerAssetHandlers} from "./asset";
@@ -39,6 +41,7 @@ import {MailerService} from "@spica-server/mailer";
 import {SmsService} from "@spica-server/sms";
 import {UserConfigService} from "./config.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
+import {PasswordlessService} from "./services/passwordless.service";
 
 @Global()
 @Module({})
@@ -89,7 +92,9 @@ export class UserModule {
             userCreateSchema,
             userUpdateSchema,
             userSelfUpdateSchema,
-            AuthFactorSchema
+            AuthFactorSchema,
+            passwordlessStartSchema,
+            passwordlessVerifySchema
           ],
           customFields: [
             "options",
@@ -104,6 +109,8 @@ export class UserModule {
         UserService,
         UserStrategy,
         VerificationService,
+        PasswordlessService,
+        UserConfigService,
         VerificationProviderRegistry,
         ProviderVerificationService,
         UserConfigService,

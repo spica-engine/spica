@@ -68,6 +68,10 @@ export interface UserOptions {
   userRealtime: boolean;
   verificationHashSecret?: string;
   providerEncryptionSecret?: string;
+  passwordlessLogin?: {
+    isActive: boolean;
+    provider: "phone" | "email";
+  };
 }
 
 export interface UserVerification {
@@ -83,6 +87,11 @@ export interface UserVerification {
 
 export interface UserConfigSettings {
   verificationProcessMaxAttempt: number;
+  passwordlessLogin?: PasswordlessLoginConfig;
+}
+export interface PasswordlessLoginConfig {
+  isActive: boolean;
+  provider: "phone" | "email";
 }
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
