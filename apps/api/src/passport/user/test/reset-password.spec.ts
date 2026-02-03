@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {PasswordResetService} from "@spica-server/passport/user/src/services/password-reset.service";
 import {UserConfigService} from "@spica-server/passport/user/src/config.service";
 import {MailerService} from "@spica-server/mailer";
@@ -9,10 +9,11 @@ import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {CoreTestingModule} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {_, SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {UserModule, UserService} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
+import {compare} from "@spica-server/passport/identity/src/hash";
 
 describe("PasswordResetService", () => {
   let module: TestingModule;
@@ -278,7 +279,8 @@ describe("PasswordResetService", () => {
       });
 
       const updatedUser = await userService.findOne({_id: user._id});
-      expect(updatedUser.password).not.toBe(oldPassword);
+      const isMatch = await compare(newPassword, updatedUser.password);
+      expect(isMatch).toBe(true);
     });
 
     it("should throw error with wrong verification code", async () => {
@@ -394,7 +396,8 @@ describe("PasswordResetService", () => {
       });
 
       const updatedUser = await userService.findOne({_id: user._id});
-      expect(updatedUser.password).not.toBe(oldPassword);
+      const isMatch = await compare(newPassword, updatedUser.password);
+      expect(isMatch).toBe(true);
     });
   });
 });
