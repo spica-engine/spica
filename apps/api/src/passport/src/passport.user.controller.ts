@@ -150,15 +150,11 @@ export class PassportUserController {
 
     user = await this.userService.findOne({username: username});
 
-    // HQ sends attributes field which contains unacceptable fields for mongodb
-    delete userData.attributes;
-
     if (!user) {
       user = await this.userService.insertOne({
         username: username,
         password: undefined,
         policies: [],
-        attributes: userData,
         lastPasswords: [],
         failedAttempts: [],
         lastLogin: undefined
