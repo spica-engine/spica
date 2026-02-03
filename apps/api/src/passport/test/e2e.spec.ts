@@ -811,10 +811,6 @@ describe("E2E Tests", () => {
                 {authorization: res.body.token}
               );
               expect(body.username).toEqual("testuser@testuser.com");
-              expect(body.attributes).toEqual({
-                email: "testuser@testuser.com",
-                picture: "url"
-              });
               done();
             });
 

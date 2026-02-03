@@ -325,7 +325,7 @@ export class UserController {
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:create"))
   async insertOne(
-    @Body(Schema.validate("http://spica.internal/passport/create-user"))
+    @Body(Schema.validate("http://spica.internal/passport/user-create"))
     user: User
   ) {
     user.password = await hash(user.password);
