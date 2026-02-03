@@ -68,10 +68,6 @@ export interface UserOptions {
   userRealtime: boolean;
   verificationHashSecret?: string;
   providerEncryptionSecret?: string;
-  passwordlessLogin?: {
-    isActive: boolean;
-    provider: "phone" | "email";
-  };
 }
 
 export interface UserVerification {

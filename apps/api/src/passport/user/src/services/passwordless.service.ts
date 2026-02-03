@@ -11,7 +11,7 @@ export class PasswordlessService {
     private userService: UserService
   ) {}
 
-  async start(username: string, strategy: string, value: string) {
+  async start(username: string, strategy: string) {
     const config = await this.userConfigService.getPasswordlessLoginConfig();
 
     if (!config?.isActive) {
@@ -20,10 +20,17 @@ export class PasswordlessService {
 
     const provider = config.provider;
     const user = await this.findUserByUsername(username);
-
     if (!user) {
       throw new NotFoundException(`No user found with username: ${username}`);
     }
+
+    const providerField = (user as any)[provider];
+
+    if (!providerField || !providerField.encrypted) {
+      throw new BadRequestException(`User does not have a verified provider`);
+    }
+
+    const value = this.userService.decryptField(providerField);
 
     try {
       const sendResult = await this.verificationService.startVerificationProcess(

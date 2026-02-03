@@ -534,10 +534,9 @@ export class UserController {
     body: {
       username: string;
       strategy: string;
-      value: string;
     }
   ) {
-    return this.passwordlessService.start(body.username, body.strategy, body.value);
+    return this.passwordlessService.start(body.username, body.strategy);
   }
 
   @Post("passwordless/verify")

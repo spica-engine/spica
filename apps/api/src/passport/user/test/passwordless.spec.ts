@@ -1,12 +1,12 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {PasswordlessService} from "@spica-server/passport/user/src/services/passwordless.service";
 import {UserService} from "@spica-server/passport/user/src/user.service";
 import {UserConfigService} from "@spica-server/passport/user/src/config.service";
 import {MailerService} from "@spica-server/mailer";
 import {MailerModule} from "@spica-server/mailer";
 import {SmsModule, SmsService} from "@spica-server/sms";
-import {BadRequestException, NotFoundException, UnauthorizedException} from "@nestjs/common";
+import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {CoreTestingModule} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
@@ -115,6 +115,9 @@ describe("Passwordless Login", () => {
     let user: User;
 
     beforeEach(async () => {
+      const encryptedEmail = userService.encryptField(testEmail);
+      const encryptedPhone = userService.encryptField(testPhone);
+
       user = await userService.insertOne({
         username: "testuser",
         password: "hashedpassword",
@@ -122,13 +125,15 @@ describe("Passwordless Login", () => {
         lastPasswords: [],
         failedAttempts: [],
         email: {
-          value: testEmail,
-          verified: true,
+          encrypted: encryptedEmail.encrypted,
+          iv: encryptedEmail.iv,
+          authTag: encryptedEmail.authTag,
           createdAt: new Date()
         },
         phone: {
-          value: testPhone,
-          verified: true,
+          encrypted: encryptedPhone.encrypted,
+          iv: encryptedPhone.iv,
+          authTag: encryptedPhone.authTag,
           createdAt: new Date()
         }
       } as any);
@@ -144,13 +149,10 @@ describe("Passwordless Login", () => {
         isActive: false,
         provider: "email"
       });
-      try {
-        await passwordlessService.start(username, strategy, testEmail);
-      } catch (error) {
-        expect(error).toBeInstanceOf(BadRequestException);
-        expect(error.message).toContain("Passwordless login is not enabled");
-        expect(error.status).toBe(400);
-      }
+      await expect(passwordlessService.start(username, strategy)).rejects.toMatchObject({
+        message: expect.stringContaining("Passwordless login is not enabled"),
+        status: 400
+      });
     });
 
     it("should send verification code via email when enabled", async () => {
@@ -160,7 +162,7 @@ describe("Passwordless Login", () => {
         messageId: "test-message-id"
       });
 
-      const result = await passwordlessService.start(username, strategy, testEmail);
+      const result = await passwordlessService.start(username, strategy);
 
       expect(result).toMatchObject({
         message: expect.stringContaining("successfully")
@@ -184,7 +186,7 @@ describe("Passwordless Login", () => {
         message: "SMS sent successfully"
       });
 
-      const result = await passwordlessService.start(username, strategy, testPhone);
+      const result = await passwordlessService.start(username, strategy);
 
       expect(result).toMatchObject({
         message: expect.stringContaining("successfully")
@@ -198,7 +200,7 @@ describe("Passwordless Login", () => {
 
     it("should throw error when user does not exist", async () => {
       try {
-        await passwordlessService.start("nonexistent", strategy, "nonexistent@example.com");
+        await passwordlessService.start("nonexistent", strategy);
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundException);
         expect(error.message).toContain("No user found with username");
@@ -210,7 +212,7 @@ describe("Passwordless Login", () => {
       mockMailerService.sendMail.mockRejectedValue(new Error("Send failed"));
 
       try {
-        await passwordlessService.start(username, strategy, testEmail);
+        await passwordlessService.start(username, strategy);
       } catch (error) {
         expect(error).toBeInstanceOf(BadRequestException);
         expect(error.message).toContain("Failed to send");
@@ -226,6 +228,9 @@ describe("Passwordless Login", () => {
     let verificationCode: string;
 
     beforeEach(async () => {
+      const encryptedEmail = userService.encryptField(testEmail);
+      const encryptedPhone = userService.encryptField(testPhone);
+
       user = await userService.insertOne({
         username: "testuser",
         password: "hashedpassword",
@@ -233,13 +238,15 @@ describe("Passwordless Login", () => {
         lastPasswords: [],
         failedAttempts: [],
         email: {
-          value: testEmail,
-          verified: true,
+          encrypted: encryptedEmail.encrypted,
+          iv: encryptedEmail.iv,
+          authTag: encryptedEmail.authTag,
           createdAt: new Date()
         },
         phone: {
-          value: testPhone,
-          verified: true,
+          encrypted: encryptedPhone.encrypted,
+          iv: encryptedPhone.iv,
+          authTag: encryptedPhone.authTag,
           createdAt: new Date()
         }
       } as any);
@@ -268,17 +275,14 @@ describe("Passwordless Login", () => {
         provider: "email"
       });
 
-      try {
-        await passwordlessService.verify(username, strategy, "123456");
-      } catch (error) {
-        expect(error).toBeInstanceOf(BadRequestException);
-        expect(error.message).toContain("Passwordless login is not enabled");
-        expect(error.status).toBe(400);
-      }
+      await expect(passwordlessService.start(username, strategy)).rejects.toMatchObject({
+        message: expect.stringContaining("Passwordless login is not enabled"),
+        status: 400
+      });
     });
 
     it("should successfully login", async () => {
-      await passwordlessService.start(username, strategy, testEmail);
+      await passwordlessService.start(username, strategy);
 
       const result = await passwordlessService.verify(username, strategy, verificationCode);
 
@@ -294,7 +298,7 @@ describe("Passwordless Login", () => {
     });
 
     it("should throw error for invalid verification code", async () => {
-      await passwordlessService.start(username, strategy, testEmail);
+      await passwordlessService.start(username, strategy);
 
       try {
         await passwordlessService.verify(username, strategy, "000000");
@@ -327,7 +331,7 @@ describe("Passwordless Login", () => {
 
     it("should update last login after successful verification", async () => {
       const beforeLogin = new Date();
-      await passwordlessService.start(username, strategy, testEmail);
+      await passwordlessService.start(username, strategy);
 
       await passwordlessService.verify(username, strategy, verificationCode);
 
@@ -337,7 +341,7 @@ describe("Passwordless Login", () => {
     });
 
     it("should mark verification as used after successful login", async () => {
-      await passwordlessService.start(username, strategy, testEmail);
+      await passwordlessService.start(username, strategy);
       await passwordlessService.verify(username, strategy, verificationCode);
       try {
         await passwordlessService.verify(username, strategy, verificationCode);
@@ -365,7 +369,7 @@ describe("Passwordless Login", () => {
         });
       });
 
-      await passwordlessService.start(username, strategy, testPhone);
+      await passwordlessService.start(username, strategy);
 
       const result = await passwordlessService.verify(username, strategy, verificationCode);
 
