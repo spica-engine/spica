@@ -19,7 +19,6 @@ import userCreateSchema from "./schemas/user-create.json" with {type: "json"};
 import userUpdateSchema from "./schemas/user-update.json" with {type: "json"};
 import userSelfUpdateSchema from "./schemas/user-self-update.json" with {type: "json"};
 import AuthFactorSchema from "./schemas/authfactor.json" with {type: "json"};
-import {AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 import {UserRealtimeModule} from "../realtime";
 import {VerificationService} from "./verification.service";
@@ -57,7 +56,7 @@ export class UserModule {
     const module: DynamicModule = {
       module: UserModule,
       controllers: [UserController],
-      exports: [UserService, UserStrategy, USER_POLICY_FINALIZER, AUTH_RESOLVER],
+      exports: [UserService, UserStrategy, USER_POLICY_FINALIZER],
       imports: [
         RefreshTokenServicesModule,
         JwtModule.register({
