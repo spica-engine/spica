@@ -125,6 +125,8 @@ describe("Passwordless Login E2E with MailHog", () => {
   });
 
   beforeEach(async () => {
+    const encryptedEmail = userService.encryptField(testEmail);
+
     await userService.insertOne({
       username: testUsername,
       password: "hashedpassword",
@@ -132,8 +134,9 @@ describe("Passwordless Login E2E with MailHog", () => {
       lastPasswords: [],
       failedAttempts: [],
       email: {
-        value: testEmail,
-        verified: true,
+        encrypted: encryptedEmail.encrypted,
+        iv: encryptedEmail.iv,
+        authTag: encryptedEmail.authTag,
         createdAt: new Date()
       }
     } as any);
@@ -155,8 +158,7 @@ describe("Passwordless Login E2E with MailHog", () => {
     it("should successfully complete passwordless login with correct code", async () => {
       const startResponse = await req.post("/passport/user/passwordless/start", {
         username: testUsername,
-        strategy: STRATEGY,
-        value: testEmail
+        strategy: STRATEGY
       });
 
       expect(startResponse.statusCode).toBe(201);
@@ -203,8 +205,7 @@ describe("Passwordless Login E2E with MailHog", () => {
     it("should fail verification with wrong code", async () => {
       const startResponse = await req.post("/passport/user/passwordless/start", {
         username: testUsername,
-        strategy: STRATEGY,
-        value: testEmail
+        strategy: STRATEGY
       });
 
       expect(startResponse.statusCode).toBe(201);
