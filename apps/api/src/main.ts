@@ -78,13 +78,6 @@ const args = yargsInstance
   .demandOption("database-name")
   .demandOption("database-uri")
   /* Dashboard Options */
-  .options({
-    "dashboard-realtime": {
-      boolean: true,
-      description: "Enable/disable listening dashboards realtime. Default value is true",
-      default: true
-    }
-  })
   /* Feature Toggling: Bucket and Activity Stream */
   .options({
     "bucket-cache": {
@@ -110,11 +103,6 @@ const args = yargsInstance
     "bucket-history": {
       boolean: true,
       description: "Whether Bucket History feature is enabled.",
-      default: true
-    },
-    "experimental-bucket-realtime": {
-      boolean: true,
-      description: "Whether the experimental Bucket realtime feature is enabled.",
       default: true
     },
     "bucket-data-limit": {
@@ -218,26 +206,6 @@ const args = yargsInstance
       number: true,
       description: "Maximum number of identity that can be inserted."
     },
-    "refresh-token-realtime": {
-      boolean: true,
-      description: "Enable/disable realtime refresh token listening. Default value is true",
-      default: true
-    },
-    "apikey-realtime": {
-      boolean: true,
-      description: "Enable/disable listening apikey realtime. Default value is true",
-      default: true
-    },
-    "policy-realtime": {
-      boolean: true,
-      description: "Enable/disable listening policy realtime. Default value is true",
-      default: true
-    },
-    "identity-realtime": {
-      boolean: true,
-      description: "Enable/disable listening identity realtime. Default value is true",
-      default: true
-    },
     "passport-user-token-expires-in": {
       number: true,
       description: "Default lifespan of the issued JWT tokens for users. Unit: second",
@@ -305,11 +273,6 @@ const args = yargsInstance
       number: true,
       description: "Maximum number of users that can be inserted."
     },
-    "user-realtime": {
-      boolean: true,
-      description: "Enable/disable listening user realtime. Default value is true",
-      default: true
-    },
     "user-verification-hash-secret": {
       string: true,
       description: "Hash secret used for user verification related operations."
@@ -356,16 +319,6 @@ const args = yargsInstance
       boolean: true,
       description: "Enable/disable function workers debugging mode. Default value is true",
       default: false
-    },
-    "function-realtime": {
-      boolean: true,
-      description: "Enable/disable tracking functions realtime. Default value is true.",
-      default: true
-    },
-    "function-realtime-logs": {
-      boolean: true,
-      description: "Enable/disable tracking function logs realtime. Default value is true.",
-      default: true
     },
     "function-logger": {
       boolean: true,
@@ -587,12 +540,6 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     description: "Regex to filter access logs by status code",
     default: ".*"
   })
-  /* Environment Variable Options */
-  .option("env-var-realtime", {
-    boolean: true,
-    description: "Enable/disable realtime updates for environment variables.",
-    default: true
-  })
   .middleware(args => {
     const username = process.env.MONGODB_USERNAME;
     const password = process.env.MONGODB_PASSWORD;
@@ -726,7 +673,7 @@ const modules = [
   BatchModule.forRoot({
     port: args["port"]
   }),
-  DashboardModule.forRoot({realtime: args["dashboard-realtime"]}),
+  DashboardModule.forRoot({realtime: true}),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {
@@ -737,7 +684,7 @@ const modules = [
     readPreference: args["database-read-preference"]
   }),
   EnvVarModule.forRoot({
-    realtime: args["env-var-realtime"]
+    realtime: true
   }),
   MailerModule.forRoot({
     host: args["mailer-host"],
@@ -771,7 +718,7 @@ const modules = [
   BucketModule.forRoot({
     hooks: args["bucket-hooks"],
     history: args["bucket-history"],
-    realtime: args["experimental-bucket-realtime"],
+    realtime: true,
     cache: args["bucket-cache"],
     cacheTtl: args["bucket-cache-ttl"],
     bucketDataLimit: args["bucket-data-limit"],
@@ -794,9 +741,9 @@ const modules = [
     publicUrl: args["public-url"],
     defaultStrategy: args["passport-default-strategy"],
     samlCertificateTTL: args["passport-saml-certificate-ttl"],
-    apikeyRealtime: args["apikey-realtime"],
-    refreshTokenRealtime: args["refresh-token-realtime"],
-    policyRealtime: args["policy-realtime"],
+    apikeyRealtime: true,
+    refreshTokenRealtime: true,
+    policyRealtime: true,
     identityOptions: {
       expiresIn: args["passport-identity-token-expires-in"],
       maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
@@ -813,7 +760,7 @@ const modules = [
         failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
         blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
       },
-      identityRealtime: args["identity-realtime"]
+      identityRealtime: true
     },
     userOptions: {
       expiresIn: args["passport-user-token-expires-in"],
@@ -831,7 +778,7 @@ const modules = [
         failedAttemptLimit: args["passport-user-failed-login-attempt-limit"],
         blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
       },
-      userRealtime: args["user-realtime"],
+      userRealtime: true,
       verificationHashSecret: args["user-verification-hash-secret"],
       providerEncryptionSecret: args["user-provider-encryption-secret"],
       verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
@@ -855,10 +802,10 @@ const modules = [
     },
     debug: args["function-debug"],
     maxConcurrency: args["function-worker-concurrency"],
-    realtimeLogs: args["function-realtime-logs"],
+    realtimeLogs: true,
     logger: args["function-logger"],
     invocationLogs: args["function-invocation-logs"],
-    realtime: args["function-realtime"]
+    realtime: true
   })
 ];
 
