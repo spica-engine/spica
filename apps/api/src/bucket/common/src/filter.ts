@@ -3,6 +3,7 @@ import * as Relation from "./relation";
 import {getPropertyByPath} from "./schema";
 import {
   extractFilterPropertyMap,
+  FilterReplaceManager,
   replaceFilter,
   replaceFilterObjectIds,
   replaceFilterDates as replaceReservedFilterDates
@@ -43,17 +44,15 @@ export const constructFilterValues = async (
   relationResolver: RelationResolver,
   hashSecret?: string
 ) => {
-  console.log("constructFilterValues in:", filter);
-  const replacers: FilterReplacer[] = [
+  const wrappedReplacers = [
     replaceFilterObjectIds,
     replaceReservedFilterDates,
-    replaceFilterDates,
-    (filter, bucket, resolver) => replaceFilterHash(filter, bucket, resolver, hashSecret)
+    (filter: object) => replaceFilterDates(filter, bucket, relationResolver),
+    (filter: object) => replaceFilterHash(filter, bucket, relationResolver, hashSecret)
   ];
-  for (let replacer of replacers) {
-    filter = await replacer(filter, bucket, relationResolver);
-  }
-  return filter;
+
+  const manager = new FilterReplaceManager(wrappedReplacers);
+  return manager.replace(filter);
 };
 
 export async function replaceFilterDates(
