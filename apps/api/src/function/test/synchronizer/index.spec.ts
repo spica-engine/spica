@@ -169,9 +169,9 @@ describe("Function Index Synchronizer", () => {
       CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         await engine.update(fn, indexContent);
         const observable = indexSupplier.listen();
-        observable.subscribe(async (changeLog: ChangeLog) => {
+        observable.subscribe((changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
-            await engine.update(fn, updatedContent);
+            engine.update(fn, updatedContent);
             return;
           }
           expect(changeLog).toEqual({
@@ -191,7 +191,7 @@ describe("Function Index Synchronizer", () => {
       });
     });
 
-    it("should emit ChangeLog when function index is cleared (deleted)", done => {
+    it("should emit ChangeLog when function index is removed", done => {
       const mockFunction: Function = {
         _id: new ObjectId(),
         name: "test_delete_function",

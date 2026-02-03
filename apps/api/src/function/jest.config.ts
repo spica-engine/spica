@@ -16,6 +16,14 @@ export default {
     },
     {
       ...commonConfig,
+      testMatch: ["<rootDir>/test/activity/*.spec.ts"]
+    },
+    {
+      ...commonConfig,
+      testMatch: ["<rootDir>/test/synchronizer/*.spec.ts"]
+    },
+    {
+      ...commonConfig,
       testMatch: ["<rootDir>/test/e2e-bucket.spec.ts"],
       setupFilesAfterEnv: [path.join(workspaceRoot, "jest.flaky.setup.js")]
     },

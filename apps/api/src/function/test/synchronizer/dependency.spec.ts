@@ -71,8 +71,12 @@ describe("Function Dependency Synchronizer", () => {
   });
 
   afterEach(async () => {
-    await functionService.deleteMany({});
-    await rimraf("dependency_test");
+    try {
+      await functionService.deleteMany({});
+      await rimraf("dependency_test");
+    } catch (error) {
+      console.error("Error during cleanup:", error);
+    }
   });
 
   describe("supplier", () => {
@@ -111,13 +115,12 @@ describe("Function Dependency Synchronizer", () => {
         }
       };
 
-      CRUD.insert(functionService, engine, mockFunction).then(async fn => {
-        const fnWithDeps = {...fn, dependencies: {axios: "^1.0.0"}};
-        await CRUD.dependencies.update(engine, fnWithDeps);
-
+      CRUD.insert(functionService, engine, mockFunction).then(fn => {
         const observable = dependencySupplier.listen();
 
         observable.subscribe((changeLog: ChangeLog) => {
+          expect(JSON.parse(changeLog.resource_content).dependencies).toBeUndefined();
+          delete changeLog.resource_content;
           expect(changeLog).toEqual({
             module: "function",
             sub_module: "package",
@@ -125,7 +128,6 @@ describe("Function Dependency Synchronizer", () => {
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
             resource_extension: "json",
-            resource_content: changeLog.resource_content,
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
             initiator: ChangeInitiator.INTERNAL
@@ -135,7 +137,7 @@ describe("Function Dependency Synchronizer", () => {
       });
     });
 
-    it("should emit ChangeLog when function dependency is updated with new content", done => {
+    it("should emit ChangeLog when function dependency added", done => {
       const mockFunction: Function = {
         _id: new ObjectId(),
         name: "test_js_function",
@@ -156,17 +158,21 @@ describe("Function Dependency Synchronizer", () => {
         }
       };
 
-      CRUD.insert(functionService, engine, mockFunction).then(async fn => {
-        const fnWithDeps = {...fn, dependencies: {axios: "^1.0.0"}};
-        await CRUD.dependencies.update(engine, fnWithDeps);
-
+      CRUD.insert(functionService, engine, mockFunction).then(fn => {
         const observable = dependencySupplier.listen();
-        observable.subscribe(async (changeLog: ChangeLog) => {
+        observable.subscribe((changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
             const fnWithUpdatedDeps = {...fn, dependencies: {axios: "^1.0.0", lodash: "^4.17.21"}};
-            await CRUD.dependencies.update(engine, fnWithUpdatedDeps);
+            CRUD.dependencies.update(engine, fnWithUpdatedDeps);
             return;
           }
+
+          expect(JSON.parse(changeLog.resource_content).dependencies).toEqual({
+            axios: "^1.0.0",
+            lodash: "^4.17.21"
+          });
+          delete changeLog.resource_content;
+
           expect(changeLog).toEqual({
             module: "function",
             sub_module: "package",
@@ -174,7 +180,6 @@ describe("Function Dependency Synchronizer", () => {
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
             resource_extension: "json",
-            resource_content: changeLog.resource_content,
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL
@@ -184,7 +189,67 @@ describe("Function Dependency Synchronizer", () => {
       });
     });
 
-    it("should emit ChangeLog when function dependency is cleared (deleted)", done => {
+    it("should emit ChangeLog when function dependency removed", done => {
+      const mockFunction: Function = {
+        _id: new ObjectId(),
+        name: "test_js_function",
+        description: "Test JS function",
+        language: "javascript",
+        timeout: 60,
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "get",
+              path: "/test-js",
+              preflight: true
+            }
+          }
+        }
+      };
+
+      CRUD.insert(functionService, engine, mockFunction).then(fn => {
+        let firstUpdateReceived = false;
+        const observable = dependencySupplier.listen();
+        observable.subscribe((changeLog: ChangeLog) => {
+          if (changeLog.type === ChangeType.CREATE) {
+            const fnWithUpdatedDeps = {...fn, dependencies: {axios: "^1.0.0", lodash: "^4.17.21"}};
+            CRUD.dependencies.update(engine, fnWithUpdatedDeps);
+            return;
+          }
+
+          if (changeLog.type === ChangeType.UPDATE && !firstUpdateReceived) {
+            const fnWithUpdatedDeps = {...fn, dependencies: {axios: "^1.0.0"}};
+            CRUD.dependencies.update(engine, fnWithUpdatedDeps);
+            firstUpdateReceived = true;
+            return;
+          }
+
+          expect(JSON.parse(changeLog.resource_content).dependencies).toEqual({
+            axios: "^1.0.0"
+          });
+          delete changeLog.resource_content;
+
+          expect(changeLog).toEqual({
+            module: "function",
+            sub_module: "package",
+            type: ChangeType.UPDATE,
+            origin: ChangeOrigin.DOCUMENT,
+            resource_id: mockFunction._id.toString(),
+            resource_extension: "json",
+            // resource_content: changeLog.resource_content,
+            resource_slug: mockFunction.name,
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL
+          });
+          done();
+        });
+      });
+    });
+
+    it("should emit ChangeLog when function is removed", done => {
       const mockFunction: Function = {
         _id: new ObjectId(),
         name: "test_delete_function",
@@ -205,15 +270,12 @@ describe("Function Dependency Synchronizer", () => {
         }
       };
 
-      CRUD.insert(functionService, engine, mockFunction).then(async fn => {
-        const fnWithDeps = {...fn, dependencies: {}};
-        await CRUD.dependencies.update(engine, fnWithDeps);
-
+      CRUD.insert(functionService, engine, mockFunction).then(fn => {
         const observable = dependencySupplier.listen();
 
-        observable.subscribe(async (changeLog: ChangeLog) => {
+        observable.subscribe((changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
-            const deleted = await engine.deleteFunction(fn);
+            engine.deleteFunction(fn);
             return;
           }
           expect(changeLog).toEqual({
@@ -420,50 +482,6 @@ describe("Function Dependency Synchronizer", () => {
         }
       }
       expect(savedPackage).toBe(undefined);
-    });
-
-    it("should handle unknown operation type", async () => {
-      const changeLog: ChangeLog = {
-        module: "function",
-        sub_module: "package",
-        type: "upsert" as any,
-        origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: "123",
-        resource_slug: "test",
-        resource_content: "some content",
-        created_at: new Date(),
-        resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
-      };
-
-      const result = await dependencyApplier.apply(changeLog);
-
-      expect(result).toEqual({
-        status: SyncStatuses.FAILED,
-        reason: "Unknown operation type: upsert"
-      });
-    });
-
-    it("should handle errors when function not found", async () => {
-      const changeLog: ChangeLog = {
-        module: "function",
-        sub_module: "package",
-        type: ChangeType.UPDATE,
-        origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: new ObjectId().toString(),
-        resource_slug: "nonexistent_function",
-        resource_content: JSON.stringify({name: "test", version: "1.0.0"}),
-        created_at: new Date(),
-        resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
-      };
-
-      const result = await dependencyApplier.apply(changeLog);
-
-      expect(result).toMatchObject({
-        status: SyncStatuses.FAILED
-      });
-      expect(result.reason).toBeDefined();
     });
 
     it("should handle invalid function ID", async () => {

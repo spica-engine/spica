@@ -267,7 +267,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
         persistent: true,
-        depth: 2
+        depth: 2,
+        awaitWriteFinish: true
       });
 
       const handleFileEvent = async (path: string, type: "create" | "update" | "delete") => {
