@@ -14,6 +14,10 @@ import {deepCopy} from "@spica-server/core/patch";
 import {getApplier, getSupplier} from "../../src/synchronizer/schema";
 import {firstValueFrom} from "rxjs";
 
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 describe("Policy Synchronizer", () => {
   let module: TestingModule;
   let ps: PolicyService;
@@ -116,7 +120,9 @@ describe("Policy Synchronizer", () => {
         done();
       });
 
-      ps.insertOne(mockPolicy);
+      sleep(1000).then(() => {
+        ps.insertOne(mockPolicy);
+      });
     });
 
     it("should emit ChangeLog on policy update", done => {
