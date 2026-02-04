@@ -197,7 +197,7 @@ describe("Function tsconfig Synchronizer", () => {
         done();
       });
 
-      sleep(1000).then(() => {
+      sleep(2000).then(() => {
         CRUD.insert(functionService, engine, mockFunction).then(async fn => {
           await CRUD.index.write(functionService, engine, fn._id, index);
         });

@@ -11,7 +11,7 @@ export default {
   projects: [
     {
       ...commonConfig,
-      testMatch: ["<rootDir>/tsconfig.spec.ts"]
+      testMatch: ["<rootDir>/*.spec.ts"]
     }
   ]
 };
