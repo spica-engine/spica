@@ -24,9 +24,10 @@ describe("Function Index Synchronizer", () => {
   let database: DatabaseService;
   let evs: EnvVarService;
   let scheduler: Scheduler;
+  let module;
 
   beforeEach(async () => {
-    const module = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         SchedulerModule.forRoot({
           invocationLogs: false,
