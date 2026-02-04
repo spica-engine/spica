@@ -186,7 +186,7 @@ describe("Queue shifting - Database", () => {
 
   afterEach(async () => {
     try {
-      await Promise.all([app.close().catch(console.error), app2.close()]);
+      await Promise.all([app.close(), app2.close()]);
     } catch (error) {
       console.error(error);
     }
