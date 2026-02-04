@@ -88,9 +88,7 @@ describe("BucketDataController", () => {
       describe("when name is hidden for noop", () => {
         beforeEach(async () => {
           bucket.properties.name.acl = "auth.identifier != 'noop'";
-          await req
-            .put(`/bucket/${bucket._id}`, bucket)
-            .then(response => console.log(response.body));
+          await req.put(`/bucket/${bucket._id}`, bucket);
         });
 
         it("shouldn't see name field", async () => {
@@ -99,7 +97,6 @@ describe("BucketDataController", () => {
             {},
             {Authorization: "USER test"}
           );
-          console.log(response.body);
           expect(response.body.length).toBe(5);
           response.body.forEach((item: any) => {
             expect(item).not.toHaveProperty("name");

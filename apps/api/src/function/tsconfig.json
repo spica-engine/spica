@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json", "test/synchronizer/schema.spec.ts"],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "../versioncontrol"
@@ -31,9 +31,6 @@
     },
     {
       "path": "../../../../libs/database/pipeline"
-    },
-    {
-      "path": "../../../../libs/database/testing"
     }
   ]
 }
