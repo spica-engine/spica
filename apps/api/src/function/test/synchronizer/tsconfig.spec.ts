@@ -85,8 +85,8 @@ describe("Function tsconfig Synchronizer", () => {
 
   afterEach(async () => {
     try {
-      await functionService.deleteMany({});
       await rimraf("tsconfig_test");
+      await module.close();
     } catch (error) {
       console.error("Error during afterEach cleanup:", error);
     }

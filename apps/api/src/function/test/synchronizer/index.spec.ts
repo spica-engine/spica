@@ -72,8 +72,12 @@ describe("Function Index Synchronizer", () => {
   });
 
   afterEach(async () => {
-    await functionService.deleteMany({});
-    await rimraf("index_test");
+    try {
+      await rimraf("index_test");
+      await module.close();
+    } catch (error) {
+      console.error("Error during cleanup:", error);
+    }
   });
 
   describe("supplier", () => {

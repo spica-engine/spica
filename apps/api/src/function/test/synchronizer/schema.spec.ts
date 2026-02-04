@@ -74,8 +74,12 @@ describe("Function Synchronizer", () => {
   });
 
   afterEach(async () => {
-    rimraf.sync("test_root");
-    await module.close();
+    try {
+      await rimraf("test_root");
+      await module.close();
+    } catch (error) {
+      console.error("Error during cleanup:", error);
+    }
   });
 
   describe("functionfuncSupplier", () => {

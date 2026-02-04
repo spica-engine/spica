@@ -72,8 +72,8 @@ describe("Function Dependency Synchronizer", () => {
 
   afterEach(async () => {
     try {
-      await functionService.deleteMany({});
       await rimraf("dependency_test");
+      await module.close();
     } catch (error) {
       console.error("Error during cleanup:", error);
     }
