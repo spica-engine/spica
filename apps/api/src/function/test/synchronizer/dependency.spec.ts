@@ -17,6 +17,10 @@ import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 describe("Function Dependency Synchronizer", () => {
   let functionService: FunctionService;
   let engine: FunctionEngine;
@@ -116,10 +120,10 @@ describe("Function Dependency Synchronizer", () => {
         }
       };
 
-      CRUD.insert(functionService, engine, mockFunction).then(fn => {
-        const observable = dependencySupplier.listen();
+      CRUD.insert(functionService, engine, mockFunction).then(async fn => {
+        await sleep(1000);
 
-        observable.subscribe((changeLog: ChangeLog) => {
+        const subs = dependencySupplier.listen().subscribe((changeLog: ChangeLog) => {
           expect(JSON.parse(changeLog.resource_content).dependencies).toBeUndefined();
           delete changeLog.resource_content;
           expect(changeLog).toEqual({
@@ -133,6 +137,7 @@ describe("Function Dependency Synchronizer", () => {
             created_at: expect.any(Date),
             initiator: ChangeInitiator.INTERNAL
           });
+          subs.unsubscribe();
           done();
         });
       });
@@ -159,9 +164,9 @@ describe("Function Dependency Synchronizer", () => {
         }
       };
 
-      CRUD.insert(functionService, engine, mockFunction).then(fn => {
-        const observable = dependencySupplier.listen();
-        observable.subscribe((changeLog: ChangeLog) => {
+      CRUD.insert(functionService, engine, mockFunction).then(async fn => {
+        await sleep(1000);
+        const subs = dependencySupplier.listen().subscribe((changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
             const fnWithUpdatedDeps = {...fn, dependencies: {axios: "^1.0.0", lodash: "^4.17.21"}};
             CRUD.dependencies.update(engine, fnWithUpdatedDeps);
@@ -185,6 +190,7 @@ describe("Function Dependency Synchronizer", () => {
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL
           });
+          subs.unsubscribe();
           done();
         });
       });
@@ -211,10 +217,10 @@ describe("Function Dependency Synchronizer", () => {
         }
       };
 
-      CRUD.insert(functionService, engine, mockFunction).then(fn => {
+      CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         let firstUpdateReceived = false;
-        const observable = dependencySupplier.listen();
-        observable.subscribe((changeLog: ChangeLog) => {
+        await sleep(1000);
+        const subs = dependencySupplier.listen().subscribe((changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
             const fnWithUpdatedDeps = {...fn, dependencies: {axios: "^1.0.0", lodash: "^4.17.21"}};
             CRUD.dependencies.update(engine, fnWithUpdatedDeps);
@@ -231,7 +237,6 @@ describe("Function Dependency Synchronizer", () => {
           expect(JSON.parse(changeLog.resource_content).dependencies).toEqual({
             axios: "^1.0.0"
           });
-          delete changeLog.resource_content;
 
           expect(changeLog).toEqual({
             module: "function",
@@ -240,11 +245,13 @@ describe("Function Dependency Synchronizer", () => {
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
             resource_extension: "json",
-            // resource_content: changeLog.resource_content,
+            resource_content: changeLog.resource_content,
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL
           });
+
+          subs.unsubscribe();
           done();
         });
       });
@@ -271,10 +278,9 @@ describe("Function Dependency Synchronizer", () => {
         }
       };
 
-      CRUD.insert(functionService, engine, mockFunction).then(fn => {
-        const observable = dependencySupplier.listen();
-
-        observable.subscribe((changeLog: ChangeLog) => {
+      CRUD.insert(functionService, engine, mockFunction).then(async fn => {
+        await sleep(1000);
+        const subs = dependencySupplier.listen().subscribe((changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
             engine.deleteFunction(fn);
             return;
@@ -291,6 +297,8 @@ describe("Function Dependency Synchronizer", () => {
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL
           });
+
+          subs.unsubscribe();
           done();
         });
       });

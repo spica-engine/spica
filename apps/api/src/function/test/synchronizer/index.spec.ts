@@ -18,6 +18,10 @@ import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 describe("Function Index Synchronizer", () => {
   let functionService: FunctionService;
   let engine: FunctionEngine;
@@ -123,8 +127,8 @@ describe("Function Index Synchronizer", () => {
 
       CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         await engine.update(fn, indexContent);
-        const observable = indexSupplier.listen();
-        observable.subscribe((changeLog: ChangeLog) => {
+        await sleep(1000);
+        const subs = indexSupplier.listen().subscribe((changeLog: ChangeLog) => {
           expect(changeLog).toEqual({
             module: "function",
             sub_module: "index",
@@ -137,6 +141,7 @@ describe("Function Index Synchronizer", () => {
             created_at: expect.any(Date),
             initiator: ChangeInitiator.INTERNAL
           });
+          subs.unsubscribe();
           done();
         });
       });
@@ -173,8 +178,9 @@ describe("Function Index Synchronizer", () => {
 
       CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         await engine.update(fn, indexContent);
-        const observable = indexSupplier.listen();
-        observable.subscribe((changeLog: ChangeLog) => {
+        await sleep(1000);
+
+        const subs = indexSupplier.listen().subscribe((changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
             engine.update(fn, updatedContent);
             return;
@@ -191,6 +197,8 @@ describe("Function Index Synchronizer", () => {
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL
           });
+
+          subs.unsubscribe();
           done();
         });
       });
@@ -223,9 +231,9 @@ describe("Function Index Synchronizer", () => {
 
       CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         await engine.update(fn, indexContent);
-        const observable = indexSupplier.listen();
+        await sleep(1000);
 
-        observable.subscribe(async (changeLog: ChangeLog) => {
+        const subs = indexSupplier.listen().subscribe(async (changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
             await engine.deleteFunction(fn);
             return;
@@ -242,6 +250,8 @@ describe("Function Index Synchronizer", () => {
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL
           });
+
+          subs.unsubscribe();
           done();
         });
       });

@@ -16,6 +16,10 @@ import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 describe("Function tsconfig Synchronizer", () => {
   let functionService: FunctionService;
   let engine: FunctionEngine;
@@ -108,7 +112,7 @@ describe("Function tsconfig Synchronizer", () => {
       });
     });
 
-    fit("should emit ChangeLog for initial sync of existing TypeScript function", done => {
+    it("should emit ChangeLog for initial sync of existing TypeScript function", done => {
       const mockFunction: Function = {
         _id: new ObjectId(),
         name: "existing_ts_function",
@@ -133,10 +137,9 @@ describe("Function tsconfig Synchronizer", () => {
       CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         await CRUD.index.write(functionService, engine, fn._id, index);
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const observable = tsconfigSupplier.listen();
+        await sleep(1000);
 
-        observable.subscribe((changeLog: ChangeLog) => {
+        const subs = tsconfigSupplier.listen().subscribe((changeLog: ChangeLog) => {
           expect(changeLog).toEqual({
             module: "function",
             sub_module: "tsconfig",
@@ -149,6 +152,7 @@ describe("Function tsconfig Synchronizer", () => {
             created_at: expect.any(Date),
             initiator: ChangeInitiator.INTERNAL
           });
+          subs.unsubscribe();
           done();
         });
       });
@@ -176,9 +180,7 @@ describe("Function tsconfig Synchronizer", () => {
       };
       const index = `export function handler(req, res) { res.send("Hello World"); }`;
 
-      const observable = tsconfigSupplier.listen();
-
-      observable.subscribe(async (changeLog: ChangeLog) => {
+      const subs = tsconfigSupplier.listen().subscribe((changeLog: ChangeLog) => {
         expect(changeLog).toEqual({
           module: "function",
           sub_module: "tsconfig",
@@ -191,11 +193,14 @@ describe("Function tsconfig Synchronizer", () => {
           created_at: expect.any(Date),
           initiator: ChangeInitiator.EXTERNAL
         });
+        subs.unsubscribe();
         done();
       });
 
-      CRUD.insert(functionService, engine, mockFunction).then(async fn => {
-        await CRUD.index.write(functionService, engine, fn._id, index);
+      sleep(1000).then(() => {
+        CRUD.insert(functionService, engine, mockFunction).then(async fn => {
+          await CRUD.index.write(functionService, engine, fn._id, index);
+        });
       });
     });
 
@@ -223,9 +228,9 @@ describe("Function tsconfig Synchronizer", () => {
       CRUD.insert(functionService, engine, mockFunction).then(async fn => {
         await CRUD.index.write(functionService, engine, fn._id, index);
 
-        const observable = tsconfigSupplier.listen();
+        await sleep(1000);
 
-        observable.subscribe(async (changeLog: ChangeLog) => {
+        const subs = tsconfigSupplier.listen().subscribe(async (changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
             await engine.deleteFunction(fn);
             return;
@@ -244,6 +249,8 @@ describe("Function tsconfig Synchronizer", () => {
               created_at: expect.any(Date),
               initiator: ChangeInitiator.EXTERNAL
             });
+
+            subs.unsubscribe();
             done();
           }
         });

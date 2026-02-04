@@ -18,6 +18,10 @@ import {deepCopy} from "@spica-server/core/patch";
 import {skip, firstValueFrom} from "rxjs";
 import {rimraf} from "rimraf";
 
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 describe("Function Synchronizer", () => {
   let module: TestingModule;
   let fs: FunctionService;
@@ -118,6 +122,8 @@ describe("Function Synchronizer", () => {
       };
       await fs.insertOne(mockFunction);
 
+      sleep(1000);
+
       const changeLog = await firstValueFrom(funcSupplier.listen());
 
       expect(changeLog).toEqual({
@@ -154,9 +160,7 @@ describe("Function Synchronizer", () => {
         language: "javascript"
       };
 
-      const observable = funcSupplier.listen();
-
-      observable.subscribe(changeLog => {
+      const subs = funcSupplier.listen().subscribe(changeLog => {
         expect(changeLog).toEqual({
           module: "function",
           sub_module: "schema",
@@ -170,10 +174,13 @@ describe("Function Synchronizer", () => {
           initiator: ChangeInitiator.EXTERNAL
         });
 
+        subs.unsubscribe();
         done();
       });
 
-      fs.insertOne(mockFunction);
+      sleep(1000).then(() => {
+        fs.insertOne(mockFunction);
+      });
     });
 
     it("should emit ChangeLog on function update", done => {
@@ -217,9 +224,7 @@ describe("Function Synchronizer", () => {
       };
       const expectedUpdatedFunction = deepCopy(updatedFunction);
 
-      const observable = funcSupplier.listen().pipe(skip(1));
-
-      observable.subscribe(changeLog => {
+      const subs = funcSupplier.listen().subscribe(changeLog => {
         if (changeLog.type === ChangeType.UPDATE) {
           expect(changeLog).toEqual({
             module: "function",
@@ -233,15 +238,17 @@ describe("Function Synchronizer", () => {
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL
           });
+
+          subs.unsubscribe();
           done();
         }
       });
 
-      (async () => {
+      sleep(1000).then(async () => {
         await fs.insertOne(initialFunction);
         const {_id, language, ...updateFields} = updatedFunction;
         await fs.findOneAndUpdate({_id: functionId}, {$set: updateFields});
-      })().catch(err => done(err));
+      });
     });
 
     it("should emit ChangeLog on function delete", done => {
@@ -265,9 +272,7 @@ describe("Function Synchronizer", () => {
         language: "javascript"
       };
 
-      const observable = funcSupplier.listen().pipe(skip(1));
-
-      observable.subscribe(changeLog => {
+      const subs = funcSupplier.listen().subscribe(changeLog => {
         if (changeLog.type === ChangeType.DELETE) {
           expect(changeLog).toEqual({
             module: "function",
@@ -281,14 +286,15 @@ describe("Function Synchronizer", () => {
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL
           });
+          subs.unsubscribe();
           done();
         }
       });
 
-      (async () => {
+      sleep(1000).then(async () => {
         await fs.insertOne(functionToDelete);
         await fs.findOneAndDelete({_id: functionId});
-      })().catch(err => done(err));
+      });
     });
   });
 
