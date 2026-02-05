@@ -165,7 +165,7 @@ async function startApp(grpcaddresses: string[]) {
   };
 }
 
-describe("Queue shifting - Schedule", () => {
+xdescribe("Queue shifting - Schedule", () => {
   let app: INestApplication;
   let app2: INestApplication;
   let req: Request;

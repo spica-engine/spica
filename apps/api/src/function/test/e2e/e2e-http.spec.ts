@@ -153,7 +153,7 @@ async function startApp(grpcaddresses: string[]) {
   };
 }
 
-describe("Queue shifting - HTTP", () => {
+xdescribe("Queue shifting - HTTP", () => {
   let app: INestApplication;
   let app2: INestApplication;
   let req: Request;

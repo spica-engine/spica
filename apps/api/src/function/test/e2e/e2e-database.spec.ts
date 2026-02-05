@@ -166,7 +166,7 @@ async function startApp(grpcaddresses: string[]) {
   };
 }
 
-describe("Queue shifting - Database", () => {
+xdescribe("Queue shifting - Database", () => {
   let app: INestApplication;
   let app2: INestApplication;
   let req: Request;

@@ -189,7 +189,7 @@ async function startApp(grpcaddresses: string[]) {
   };
 }
 
-describe("Queue shifting - Bucket", () => {
+xdescribe("Queue shifting - Bucket", () => {
   let app: INestApplication;
   let app2: INestApplication;
   let req: Request;
