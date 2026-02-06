@@ -44,11 +44,8 @@ export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
         const envVar: EnvVar = YAML.parse(change.resource_content);
         switch (type) {
           case ChangeType.CREATE:
-            await CRUD.insert(evs, envVar);
-            return {status: SyncStatuses.SUCCEEDED};
-
           case ChangeType.UPDATE:
-            await CRUD.replace(evs, envVar);
+            await CRUD.upsert(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:

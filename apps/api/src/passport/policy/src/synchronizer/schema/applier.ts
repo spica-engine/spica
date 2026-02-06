@@ -49,11 +49,8 @@ export function getApplier(
 
         switch (operationType) {
           case ChangeType.CREATE:
-            await CRUD.insert(ps, policy);
-            return {status: SyncStatuses.SUCCEEDED};
-
           case ChangeType.UPDATE:
-            await CRUD.replace(ps, policy);
+            await CRUD.upsert(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:

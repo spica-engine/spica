@@ -59,7 +59,7 @@ xdescribe("SyncEngine Integration - Function Dependency", () => {
       timeout: 60,
       language: "javascript"
     };
-    await CRUD.insertSchema(functionService, functionEngine, testFunction);
+    await CRUD.insert(functionService, functionEngine, testFunction);
     return testFunction;
   };
 

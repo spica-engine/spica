@@ -54,6 +54,18 @@ export async function insert(evs: EnvVarService, envVar: EnvVar) {
   return envVar;
 }
 
+export async function upsert(evs: EnvVarService, envVar: EnvVar) {
+  let existing;
+  if (envVar._id) {
+    existing = await evs.findOne({_id: new ObjectId(envVar._id)});
+  }
+
+  if (existing) {
+    return replace(evs, envVar);
+  } else {
+    return insert(evs, envVar);
+  }
+}
 export async function replace(evs: EnvVarService, envVar: EnvVar) {
   const _id = new ObjectId(envVar._id);
   delete envVar._id;
