@@ -36,11 +36,11 @@ export const getApplier = (
       let fn: Function;
       try {
         fn = YAML.parse(content);
+        return findFnByName(fn?.name);
       } catch (error) {
         console.error("YAML parsing error:", error);
         return Promise.resolve(null);
       }
-      return findFnByName(fn.name);
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {

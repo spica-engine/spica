@@ -32,12 +32,11 @@ export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
 
       try {
         envVar = YAML.parse(content);
+        return findEnvVarByKey(envVar?.key);
       } catch (error) {
         console.error("YAML parsing error:", error);
         return Promise.resolve(null);
       }
-
-      return findEnvVarByKey(envVar.key);
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {

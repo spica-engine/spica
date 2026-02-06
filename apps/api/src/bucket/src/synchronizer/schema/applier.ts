@@ -36,12 +36,11 @@ export const getApplier = (
 
       try {
         bucket = YAML.parse(content);
+        return findBucketByTitle(bucket?.title);
       } catch (error) {
         console.error("YAML parsing error:", error);
         return Promise.resolve(null);
       }
-
-      return findBucketByTitle(bucket.title);
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
