@@ -45,7 +45,19 @@ export const getApplier = (
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
-        const bucket: Bucket = YAML.parse(change.resource_content);
+        const bucket = YAML.parse(change.resource_content);
+
+        const fillPrimaryFields = (change: ChangeLog, bucket) => {
+          if (change.resource_id) {
+            bucket._id = change.resource_id;
+          }
+
+          if (change.resource_slug) {
+            bucket.title = change.resource_slug;
+          }
+        };
+
+        fillPrimaryFields(change, bucket);
 
         switch (operationType) {
           case ChangeType.CREATE:

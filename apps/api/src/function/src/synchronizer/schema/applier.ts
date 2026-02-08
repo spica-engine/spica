@@ -47,6 +47,18 @@ export const getApplier = (
         const operationType = change.type;
         const fn: Function = YAML.parse(change.resource_content);
 
+        const fillPrimaryFields = (change: ChangeLog, fn) => {
+          if (change.resource_id) {
+            fn._id = change.resource_id;
+          }
+
+          if (change.resource_slug) {
+            fn.name = change.resource_slug;
+          }
+        };
+
+        fillPrimaryFields(change, fn);
+
         switch (operationType) {
           case ChangeType.CREATE:
           case ChangeType.UPDATE:

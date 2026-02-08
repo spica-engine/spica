@@ -42,6 +42,19 @@ export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
       try {
         const type = change.type;
         const envVar: EnvVar = YAML.parse(change.resource_content);
+
+        const fillPrimaryFields = (change: ChangeLog, envVar) => {
+          if (change.resource_id) {
+            envVar._id = change.resource_id;
+          }
+
+          if (change.resource_slug) {
+            envVar.key = change.resource_slug;
+          }
+        };
+
+        fillPrimaryFields(change, envVar);
+
         switch (type) {
           case ChangeType.CREATE:
           case ChangeType.UPDATE:

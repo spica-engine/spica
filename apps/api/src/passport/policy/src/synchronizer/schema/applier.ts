@@ -47,6 +47,18 @@ export function getApplier(
         const operationType = change.type;
         const policy: Policy = YAML.parse(change.resource_content);
 
+        const fillPrimaryFields = (change: ChangeLog, policy) => {
+          if (change.resource_id) {
+            policy._id = change.resource_id;
+          }
+
+          if (change.resource_slug) {
+            policy.name = change.resource_slug;
+          }
+        };
+
+        fillPrimaryFields(change, policy);
+
         switch (operationType) {
           case ChangeType.CREATE:
           case ChangeType.UPDATE:
