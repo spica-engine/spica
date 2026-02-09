@@ -54,9 +54,6 @@ export interface UserOptions {
   issuer: string;
   audience?: string;
   secretOrKey: string;
-  defaultUserUsername?: string;
-  defaultUserPassword?: string;
-  defaultUserPolicies?: string[];
   entryLimit?: number;
   blockingOptions: {
     failedAttemptLimit: number;

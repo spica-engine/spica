@@ -268,39 +268,6 @@ const args = yargsInstance
       description: "Default lifespan of the issued refresh JWT tokens for users. Unit: second",
       default: 60 * 60 * 24 * 3
     },
-    "passport-default-user-username": {
-      string: true,
-      description: "Username of the default user.",
-      default: "spica"
-    },
-    "passport-default-user-password": {
-      string: true,
-      description: "Password of the default user account.",
-      default: "spica"
-    },
-    "passport-default-user-policies": {
-      array: true,
-      description: "Policies to attach to the default user.",
-      default: [
-        "ActivityFullAccess",
-        "ApiKeyFullAccess",
-        "AssetFullAccess",
-        "BucketFullAccess",
-        "DashboardFullAccess",
-        "EnvVarFullAccess",
-        "FunctionFullAccess",
-        "PassportFullAccess",
-        "PolicyFullAccess",
-        "PreferenceFullAccess",
-        "RefreshTokenFullAccess",
-        "StatusFullAccess",
-        "StorageFullAccess",
-        "StrategyFullAccess",
-        "VersionControlFullAccess",
-        "WebhookFullAccess",
-        "UserFullAccess"
-      ]
-    },
     "passport-user-limit": {
       number: true,
       description: "Maximum number of users that can be inserted."
@@ -827,9 +794,6 @@ const modules = [
       refreshTokenExpiresIn: args["passport-user-refresh-token-expires-in"],
       secretOrKey: args["passport-secret"],
       audience: "spica.io",
-      defaultUserUsername: args["passport-default-user-username"],
-      defaultUserPassword: args["passport-default-user-password"],
-      defaultUserPolicies: args["passport-default-user-policies"],
       entryLimit: args["passport-user-limit"],
       passwordHistoryLimit: args["passport-user-password-history-limit"],
       blockingOptions: {
