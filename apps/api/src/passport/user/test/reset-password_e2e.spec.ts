@@ -1,7 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {UserService} from "@spica-server/passport/user/src/user.service";
+import {compare} from "@spica-server/passport/user/src/hash";
 import {MailerService} from "@spica-server/mailer";
 import {MailerModule} from "@spica-server/mailer";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
@@ -22,7 +23,6 @@ describe("Password Reset E2E with MailHog", () => {
   let userConfigService: UserConfigService;
   let userService: UserService;
   let mailerService: MailerService;
-  let db: DatabaseService;
   let container: any;
   let smtpPort: number;
   let apiPort: number;
@@ -97,12 +97,14 @@ describe("Password Reset E2E with MailHog", () => {
 
     userService = module.get(UserService);
     mailerService = module.get(MailerService);
-    db = module.get(DatabaseService);
     userConfigService = module.get(UserConfigService);
 
     await userConfigService.set({
       verificationProcessMaxAttempt: 3,
-      resetPasswordProvider: EMAIL_PROVIDER
+      resetPasswordProvider: {
+        provider: EMAIL_PROVIDER,
+        strategy: STRATEGY
+      }
     });
 
     app = module.createNestApplication();
@@ -115,17 +117,6 @@ describe("Password Reset E2E with MailHog", () => {
     if (app) await app.close();
     if (module) await module.close();
     if (container) await container.stop();
-  });
-
-  afterEach(async () => {
-    await db.collection("verification").deleteMany({});
-    await db.collection("user").deleteMany({});
-
-    try {
-      await fetch(`http://${apiHost}:${apiPort}/api/v1/messages`, {method: "DELETE"});
-    } catch (e) {
-      console.warn("Failed to clear MailHog messages:", e);
-    }
   });
 
   describe("Complete password reset flow", () => {
@@ -143,9 +134,7 @@ describe("Password Reset E2E with MailHog", () => {
       } as any);
 
       const startResponse = await req.post("/passport/user/forgot-password/start", {
-        username,
-        provider: EMAIL_PROVIDER,
-        strategy: STRATEGY
+        username
       });
 
       expect(startResponse.statusCode).toBe(201);
@@ -174,7 +163,6 @@ describe("Password Reset E2E with MailHog", () => {
       const resetResponse = await req.post("/passport/user/forgot-password/verify", {
         username,
         code,
-        strategy: STRATEGY,
         newPassword
       });
 
@@ -184,7 +172,9 @@ describe("Password Reset E2E with MailHog", () => {
       });
 
       const user = await userService.findOne({username});
-      expect(user.password).not.toBe(oldPassword);
+      const updatedUser = await userService.findOne({_id: user._id});
+      const isMatch = await compare(newPassword, updatedUser.password);
+      expect(isMatch).toBe(true);
     });
 
     it("should fail password reset with wrong verification code", async () => {
@@ -201,9 +191,7 @@ describe("Password Reset E2E with MailHog", () => {
       } as any);
 
       const startResponse = await req.post("/passport/user/forgot-password/start", {
-        username,
-        provider: EMAIL_PROVIDER,
-        strategy: STRATEGY
+        username
       });
 
       expect(startResponse.statusCode).toBe(201);
@@ -219,7 +207,6 @@ describe("Password Reset E2E with MailHog", () => {
       const resetResponse = await req.post("/passport/user/forgot-password/verify", {
         username,
         code: wrongCode,
-        strategy: STRATEGY,
         newPassword
       });
 
@@ -227,7 +214,9 @@ describe("Password Reset E2E with MailHog", () => {
       expect(resetResponse.body.message).toBe("Failed to reset password.");
 
       const user = await userService.findOne({username});
-      expect(user.password).toBe(oldPassword);
+      const updatedUser = await userService.findOne({_id: user._id});
+      const isMatch = await compare(oldPassword, updatedUser.password);
+      expect(isMatch).toBe(false);
     });
   });
 });

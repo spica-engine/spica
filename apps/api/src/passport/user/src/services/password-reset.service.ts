@@ -11,24 +11,19 @@ export class PasswordResetService {
     private readonly verificationService: VerificationService
   ) {}
 
-  async startForgotPasswordProcess(
-    username: string,
-    provider: string,
-    strategy: string
-  ): Promise<{message: string}> {
+  async startForgotPasswordProcess(username: string): Promise<{message: string}> {
+    const config = await this.userConfigService.getResetPasswordConfig();
+    if (!config) {
+      throw new BadRequestException("Reset password provider is not configured.");
+    }
+
     const user = await this.userService.findOne({username});
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
-    const providerField = user[provider];
-    if (!providerField) {
-      throw new BadRequestException(`User does not have a verified ${provider}.`);
-    }
-
-    if (!("encrypted" in providerField)) {
-      throw new BadRequestException(`User ${provider} is not properly configured.`);
-    }
+    const providerField = user[config.provider] as any;
+    this.userService.isUserVerifiedProvider(user, config.provider);
 
     const decryptedValue = this.userService.decryptField({
       encrypted: providerField.encrypted,
@@ -39,8 +34,8 @@ export class PasswordResetService {
     await this.verificationService.startVerificationProcess(
       user._id,
       decryptedValue,
-      strategy,
-      provider,
+      config.strategy,
+      config.provider,
       "password_reset"
     );
 
@@ -49,15 +44,10 @@ export class PasswordResetService {
     };
   }
 
-  async verifyAndResetPassword(
-    username: string,
-    code: string,
-    strategy: string,
-    newPassword: string
-  ) {
+  async verifyAndResetPassword(username: string, code: string, newPassword: string) {
     try {
-      const provider = await this.userConfigService.getResetPasswordConfig();
-      if (!provider) {
+      const config = await this.userConfigService.getResetPasswordConfig();
+      if (!config) {
         throw new BadRequestException("Reset password provider is not configured.");
       }
       const user = await this.userService.findOne({username});
@@ -65,16 +55,12 @@ export class PasswordResetService {
         throw new NotFoundException("User not found");
       }
 
-      const providerField = user[provider];
-      if (!providerField || !("encrypted" in providerField)) {
-        throw new BadRequestException(`User does not have a verified ${provider}.`);
-      }
-
+      this.userService.isUserVerifiedProvider(user, config.provider);
       const response = await this.verificationService.confirmVerificationProcess(
         user._id,
         code,
-        strategy,
-        provider,
+        config.strategy,
+        config.provider,
         "password_reset"
       );
 
