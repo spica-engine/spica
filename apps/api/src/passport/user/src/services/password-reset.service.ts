@@ -12,15 +12,7 @@ export class PasswordResetService {
   ) {}
 
   async startForgotPasswordProcess(username: string): Promise<{message: string}> {
-    const config = await this.userConfigService.getResetPasswordConfig();
-    if (!config) {
-      throw new BadRequestException("Reset password provider is not configured.");
-    }
-
-    const user = await this.userService.findOne({username});
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
+    const {user, config} = await this.validateAndGetUser(username);
 
     const providerField = user[config.provider] as any;
     this.userService.isUserVerifiedProvider(user, config.provider);
@@ -46,14 +38,7 @@ export class PasswordResetService {
 
   async verifyAndResetPassword(username: string, code: string, newPassword: string) {
     try {
-      const config = await this.userConfigService.getResetPasswordConfig();
-      if (!config) {
-        throw new BadRequestException("Reset password provider is not configured.");
-      }
-      const user = await this.userService.findOne({username});
-      if (!user) {
-        throw new NotFoundException("User not found");
-      }
+      const {user, config} = await this.validateAndGetUser(username);
 
       this.userService.isUserVerifiedProvider(user, config.provider);
       const response = await this.verificationService.confirmVerificationProcess(
@@ -78,5 +63,19 @@ export class PasswordResetService {
     return {
       message: "Password has been reset successfully. You can now log in with your new password."
     };
+  }
+
+  private async validateAndGetUser(username: string) {
+    const config = await this.userConfigService.getResetPasswordConfig();
+    if (!config) {
+      throw new BadRequestException("Reset password provider is not configured.");
+    }
+
+    const user = await this.userService.findOne({username});
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    return {user, config};
   }
 }
