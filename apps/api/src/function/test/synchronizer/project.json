@@ -1,0 +1,15 @@
+{
+  "name": "api/function/test/synchronizer",
+  "sourceRoot": "apps/api/src/function/test/synchronizer",
+  "projectType": "application",
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "projects": ["api/function/compiler/typescript"],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}
