@@ -87,7 +87,10 @@ export interface UserConfigSettings {
 }
 export interface PasswordlessLoginConfig {
   isActive: boolean;
-  provider: "phone" | "email";
+  passwordlessLoginProvider: {
+    provider: "email" | "phone";
+    strategy: string;
+  };
 }
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");

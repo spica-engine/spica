@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
-import {PasswordlessService} from "@spica-server/passport/user/src/services/passwordless.service";
+import {PasswordlessLoginService} from "@spica-server/passport/user/src/services/passwordless-login.service";
 import {UserService} from "@spica-server/passport/user/src/user.service";
 import {UserConfigService} from "@spica-server/passport/user/src/config.service";
 import {MailerModule} from "@spica-server/mailer";
@@ -19,7 +19,7 @@ describe("Passwordless Login E2E with MailHog", () => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
-  let passwordlessService: PasswordlessService;
+  let passwordlessService: PasswordlessLoginService;
   let userConfigService: UserConfigService;
   let userService: UserService;
   let db: DatabaseService;
@@ -98,7 +98,7 @@ describe("Passwordless Login E2E with MailHog", () => {
       ]
     }).compile();
 
-    passwordlessService = module.get(PasswordlessService);
+    passwordlessService = module.get(PasswordlessLoginService);
     userService = module.get(UserService);
     db = module.get(DatabaseService);
     userConfigService = module.get(UserConfigService);
@@ -109,7 +109,10 @@ describe("Passwordless Login E2E with MailHog", () => {
 
     await userConfigService.updatePasswordlessLoginConfig({
       isActive: true,
-      provider: EMAIL_PROVIDER
+      passwordlessLoginProvider: {
+        provider: EMAIL_PROVIDER,
+        strategy: STRATEGY
+      }
     });
 
     app = module.createNestApplication();
@@ -142,23 +145,10 @@ describe("Passwordless Login E2E with MailHog", () => {
     } as any);
   });
 
-  afterEach(async () => {
-    await db.collection("verification").deleteMany({});
-    await db.collection("user").deleteMany({});
-    await db.collection("refresh_token").deleteMany({});
-
-    try {
-      await fetch(`http://${apiHost}:${apiPort}/api/v1/messages`, {method: "DELETE"});
-    } catch (e) {
-      console.warn("Failed to clear MailHog messages:", e);
-    }
-  });
-
   describe("Passwordless Login Flow", () => {
     it("should successfully complete passwordless login with correct code", async () => {
-      const startResponse = await req.post("/passport/user/passwordless/start", {
-        username: testUsername,
-        strategy: STRATEGY
+      const startResponse = await req.post("/passport/user/passwordless-login/start", {
+        username: testUsername
       });
 
       expect(startResponse.statusCode).toBe(201);
@@ -184,9 +174,8 @@ describe("Passwordless Login E2E with MailHog", () => {
       expect(codeMatch).toBeTruthy();
       const code = codeMatch[1];
 
-      const verifyResponse = await req.post("/passport/user/passwordless/verify", {
+      const verifyResponse = await req.post("/passport/user/passwordless-login/verify", {
         username: testUsername,
-        strategy: STRATEGY,
         code
       });
 
@@ -203,9 +192,8 @@ describe("Passwordless Login E2E with MailHog", () => {
     });
 
     it("should fail verification with wrong code", async () => {
-      const startResponse = await req.post("/passport/user/passwordless/start", {
-        username: testUsername,
-        strategy: STRATEGY
+      const startResponse = await req.post("/passport/user/passwordless-login/start", {
+        username: testUsername
       });
 
       expect(startResponse.statusCode).toBe(201);
@@ -219,14 +207,63 @@ describe("Passwordless Login E2E with MailHog", () => {
       expect(body.total).toBeGreaterThan(0);
 
       const wrongCode = "000000";
-      const verifyResponse = await req.post("/passport/user/passwordless/verify", {
+      const verifyResponse = await req.post("/passport/user/passwordless-login/verify", {
         username: testUsername,
-        strategy: STRATEGY,
         code: wrongCode
       });
 
       expect(verifyResponse.statusCode).toBe(400);
       expect(verifyResponse.body.message).toContain("Failed to complete passwordless login");
+    });
+
+    it("should fail verification when using an already used code", async () => {
+      const startResponse = await req.post("/passport/user/passwordless-login/start", {
+        username: testUsername
+      });
+
+      expect(startResponse.statusCode).toBe(201);
+      expect(startResponse.body).toMatchObject({
+        message: expect.stringContaining("successfully")
+      });
+
+      const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
+      const body: any = await resp.json();
+
+      expect(body.total).toBeGreaterThan(0);
+      const item: any = body.items[0];
+      expect(item).toBeDefined();
+
+      const raw =
+        item.Raw && item.Raw.Data
+          ? item.Raw.Data
+          : item.Content && item.Content.Body
+            ? item.Content.Body
+            : "";
+
+      const codeMatch = raw.match(/is: (\d{6})/);
+      expect(codeMatch).toBeTruthy();
+      const code = codeMatch[1];
+
+      const firstVerifyResponse = await req.post("/passport/user/passwordless-login/verify", {
+        username: testUsername,
+        code
+      });
+
+      expect(firstVerifyResponse.statusCode).toBe(201);
+      expect(firstVerifyResponse.body).toMatchObject({
+        token: expect.any(String),
+        scheme: "USER",
+        issuer: "passport/user",
+        refreshToken: expect.any(String)
+      });
+
+      const secondVerifyResponse = await req.post("/passport/user/passwordless-login/verify", {
+        username: testUsername,
+        code
+      });
+
+      expect(secondVerifyResponse.statusCode).toBe(400);
+      expect(secondVerifyResponse.body.message).toContain("Failed to complete passwordless login");
     });
   });
 });

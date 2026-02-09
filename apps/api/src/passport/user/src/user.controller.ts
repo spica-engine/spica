@@ -43,7 +43,7 @@ import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {VerificationService} from "./verification.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
-import {PasswordlessService} from "./services/passwordless.service";
+import {PasswordlessLoginService} from "./services/passwordless-login.service";
 
 @Controller("passport/user")
 export class UserController {
@@ -69,7 +69,7 @@ export class UserController {
     private userService: UserService,
     private verificationService: VerificationService,
     private providerVerificationService: ProviderVerificationService,
-    private passwordlessService: PasswordlessService,
+    private passwordlessLoginService: PasswordlessLoginService,
     @Inject(USER_OPTIONS) private options: UserOptions,
     private authFactor: AuthFactor,
     @Optional() private commander: ClassCommander
@@ -528,27 +528,25 @@ export class UserController {
     );
   }
 
-  @Post("passwordless/start")
+  @Post("passwordless-login/start")
   startPasswordlessLogin(
-    @Body(Schema.validate("http://spica.internal/passport/passwordless-start"))
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-start"))
     body: {
       username: string;
-      strategy: string;
     }
   ) {
-    return this.passwordlessService.start(body.username, body.strategy);
+    return this.passwordlessLoginService.start(body.username);
   }
 
-  @Post("passwordless/verify")
+  @Post("passwordless-login/verify")
   verifyPasswordlessLogin(
-    @Body(Schema.validate("http://spica.internal/passport/passwordless-verify"))
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-verify"))
     body: {
       username: string;
-      strategy: string;
       code: string;
     }
   ) {
-    return this.passwordlessService.verify(body.username, body.strategy, body.code);
+    return this.passwordlessLoginService.verify(body.username, body.code);
   }
 
   private async handlePasswordUpdate(
