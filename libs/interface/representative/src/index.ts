@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {RepChange, RepresentativeManagerResource} from "@spica-server/interface/versioncontrol";
+import {ChangeType} from "@spica-server/interface/versioncontrol";
 
 export interface IRepresentativeManager {
   write(
@@ -11,17 +11,16 @@ export interface IRepresentativeManager {
     accessMode?: "readwrite" | "readonly"
   ): Promise<void>;
 
-  read(
-    module: string,
-    resNameValidator: (name: string) => boolean,
-    fileNameFilter: string[]
-  ): Promise<{_id: string; contents: {[key: string]: any}}[]>;
+  read(module: string, id: string, fileName: string): Promise<any>;
 
   rm(module?: string, id?: string): Promise<void>;
 
-  watch(
-    module: string,
-    file: string[],
-    events?: string[]
-  ): Observable<RepChange<RepresentativeManagerResource>>;
+  watch(module: string, file: string[], events?: string[]): Observable<RepresentativeFileEvent>;
+}
+
+export interface RepresentativeFileEvent {
+  slug: string;
+  content: string;
+  extension: string;
+  type: ChangeType;
 }
