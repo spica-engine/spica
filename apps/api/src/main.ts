@@ -318,6 +318,10 @@ const args = yargsInstance
       string: true,
       description: "Encryption secret used for user provider encryption operations."
     },
+    "user-provider-hash-secret": {
+      string: true,
+      description: "Hash secret used for user provider hash operations."
+    },
     "passport-user-verification-code-expires-in": {
       number: true,
       description: "Default lifespan of the issued verification codes for users. Unit: second",
@@ -645,6 +649,11 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     if (userProviderEncryptionSecret) {
       args["user-provider-encryption-secret"] = userProviderEncryptionSecret;
     }
+
+    const userProviderHashSecret = process.env.USER_PROVIDER_HASH_SECRET;
+    if (userProviderHashSecret) {
+      args["user-provider-hash-secret"] = userProviderHashSecret;
+    }
   })
   .check(args => {
     if (!args["passport-identity-token-expiration-seconds-limit"]) {
@@ -839,6 +848,7 @@ const modules = [
       userRealtime: args["user-realtime"],
       verificationHashSecret: args["user-verification-hash-secret"],
       providerEncryptionSecret: args["user-provider-encryption-secret"],
+      providerHashSecret: args["user-provider-hash-secret"],
       verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
     }
   }),

@@ -68,6 +68,7 @@ export interface UserOptions {
   userRealtime: boolean;
   verificationHashSecret?: string;
   providerEncryptionSecret?: string;
+  providerHashSecret?: string;
 }
 
 export interface UserVerification {
@@ -93,13 +94,15 @@ export type EncryptedData = {
   authTag: string;
 };
 
+export type EncryptedDataWithHash = EncryptedData & {hash?: string};
+
 type DecryptedData = {
   value: string;
 };
 
 type EncryptableField = {
   createdAt: Date;
-} & (DecryptedData | EncryptedData);
+} & (DecryptedData | EncryptedDataWithHash);
 
 export type DecryptedUser = User & {
   email?: {value: string; createdAt: Date};

@@ -43,6 +43,7 @@ import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {VerificationService} from "./verification.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
+import * as CRUD from "./crud";
 
 @Controller("passport/user")
 export class UserController {
@@ -146,9 +147,11 @@ export class UserController {
     @Query("filter", JSONP) filter: object,
     @ResourceFilter() resourceFilter: object
   ) {
+    const transformedFilter = CRUD.transformProviderFilter(this.userService, filter);
+
     const pipelineBuilder = await new PipelineBuilder()
       .filterResources(resourceFilter)
-      .filterByUserRequest(filter);
+      .filterByUserRequest(transformedFilter);
 
     const seekingPipeline = new PipelineBuilder()
       .sort(sort)
@@ -171,9 +174,12 @@ export class UserController {
       if (!result.data.length) {
         result.meta = {total: 0};
       } else {
-        result.data = result.data.map(user => {
-          return this.userService.decryptProviderFields(user);
-        });
+        result.data = await Promise.all(
+          result.data.map(async user => {
+            const decrypted = await CRUD.findOne(this.userService, {_id: user._id});
+            return decrypted || user;
+          })
+        );
       }
 
       return result;
@@ -183,9 +189,12 @@ export class UserController {
       .aggregate<User>([...pipeline, ...seekingPipeline])
       .toArray();
 
-    return users.map(user => {
-      return this.userService.decryptProviderFields(user);
-    });
+    return Promise.all(
+      users.map(async user => {
+        const decrypted = await CRUD.findOne(this.userService, {_id: user._id});
+        return decrypted || user;
+      })
+    );
   }
 
   @Get("factors")
@@ -221,7 +230,8 @@ export class UserController {
     ActionGuard("passport:user:show", undefined, registerPolicyAttacher("UserReadOnlyAccess"))
   )
   async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const user = await this.userService.findOne(
+    const user = await CRUD.findOne(
+      this.userService,
       {_id: id},
       {projection: this.hideSecretsExpression()}
     );
@@ -230,7 +240,7 @@ export class UserController {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return this.userService.decryptProviderFields(user);
+    return user;
   }
 
   @Post(":id/start-factor-verification")
