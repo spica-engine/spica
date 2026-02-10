@@ -32,7 +32,9 @@ application:
   twilioAccountSid:
   twilioAuthToken:
   twilioFromNumber:
-  userHashSecret:
+  userVerificationHashSecret:
+  userProviderEncryptionSecret:
+  userProviderHashSecret:
   defaultPassword: spica
   webBaseUrl: /spica/
   apiBaseUrl: /api/
