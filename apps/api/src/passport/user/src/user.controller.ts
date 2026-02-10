@@ -174,12 +174,9 @@ export class UserController {
       if (!result.data.length) {
         result.meta = {total: 0};
       } else {
-        result.data = await Promise.all(
-          result.data.map(async user => {
-            const decrypted = await CRUD.findOne(this.userService, {_id: user._id});
-            return decrypted || user;
-          })
-        );
+        result.data = result.data.map(user => {
+          return this.userService.decryptProviderFields(user);
+        });
       }
 
       return result;
@@ -189,12 +186,9 @@ export class UserController {
       .aggregate<User>([...pipeline, ...seekingPipeline])
       .toArray();
 
-    return Promise.all(
-      users.map(async user => {
-        const decrypted = await CRUD.findOne(this.userService, {_id: user._id});
-        return decrypted || user;
-      })
-    );
+    return users.map(user => {
+      return this.userService.decryptProviderFields(user);
+    });
   }
 
   @Get("factors")

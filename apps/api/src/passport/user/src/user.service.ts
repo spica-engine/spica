@@ -29,12 +29,12 @@ export class UserService extends BaseCollection<User>("user") {
         this._coll.createIndex({username: 1}, {unique: true});
         this._coll.createIndex(
           {"email.hash": 1},
-          {unique: true, partialFilterExpression: {"email.encrypted": {$exists: true}}}
+          {unique: true, partialFilterExpression: {"email.hash": {$exists: true}}}
         );
 
         this._coll.createIndex(
           {"phone.hash": 1},
-          {unique: true, partialFilterExpression: {"phone.encrypted": {$exists: true}}}
+          {unique: true, partialFilterExpression: {"phone.hash": {$exists: true}}}
         );
       }
     });

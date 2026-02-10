@@ -117,14 +117,16 @@ describe("User Email Hashing and Encryption", () => {
     });
 
     expect(getRes.statusCode).toBe(200);
-    expect(getRes.body).toMatchObject({
+    expect(getRes.body).toEqual({
       _id: testUserId,
       username: "testuser",
       email: {
         value: "test@example.com",
         createdAt: createdAt.toISOString()
       },
-      policies: []
+      policies: [],
+      lastLogin: null,
+      failedAttempts: []
     });
   });
 
@@ -138,13 +140,16 @@ describe("User Email Hashing and Encryption", () => {
     );
     expect(listRes.statusCode).toBe(200);
     expect(listRes.body.length).toBe(1);
-    expect(listRes.body[0]).toMatchObject({
+    expect(listRes.body[0]).toEqual({
       _id: testUserId,
       username: "testuser",
       email: {
         value: "test@example.com",
         createdAt: createdAt.toISOString()
-      }
+      },
+      policies: [],
+      lastLogin: null,
+      failedAttempts: []
     });
   });
 
@@ -158,13 +163,16 @@ describe("User Email Hashing and Encryption", () => {
     );
     expect(listRes.statusCode).toBe(200);
     expect(listRes.body.length).toBe(1);
-    expect(listRes.body[0]).toMatchObject({
+    expect(listRes.body[0]).toEqual({
       _id: testUserId,
       username: "testuser",
       email: {
         value: "test@example.com",
         createdAt: createdAt.toISOString()
-      }
+      },
+      policies: [],
+      lastLogin: null,
+      failedAttempts: []
     });
   });
 

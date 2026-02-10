@@ -1,6 +1,6 @@
 import {UserService} from "./user.service";
 import {User, DecryptedUser} from "@spica-server/interface/passport/user";
-import {Filter, FindOptions, WithId, ModifyResult} from "mongodb";
+import {Filter, FindOptions} from "@spica-server/database";
 
 export async function findOne(
   userService: UserService,
@@ -8,7 +8,7 @@ export async function findOne(
   options?: FindOptions
 ): Promise<DecryptedUser | null> {
   const transformedFilter = transformProviderFilter(userService, filter);
-  const user = await userService._coll.findOne(transformedFilter, options);
+  const user = await userService.findOne(transformedFilter, options);
   if (!user) {
     return null;
   }
