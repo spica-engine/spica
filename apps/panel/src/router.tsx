@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/guards/ProtectedRoute";
 import Storage from "./pages/storage/Storage";
 import StorageItem from "./pages/storage-view/StorageView";
 import Policy from "./pages/policy/Policy";
+import Activities from "./pages/activities/Activities";
 
 const router = createBrowserRouter([
   {
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
       {
         path: "passport/policy",
         element: <Policy />
+      },
+      {
+        path: "activity",
+        element: <Activities />
       },
       {
         path: "diagram",
