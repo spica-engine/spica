@@ -3,11 +3,11 @@ import * as Relation from "./relation";
 import {getPropertyByPath} from "./schema";
 import {
   extractFilterPropertyMap,
+  FilterReplaceManager,
   replaceFilter,
   replaceFilterObjectIds
 } from "@spica-server/filter";
-import {ValueConstructor} from "@spica-server/interface/filter";
-import {FilterReplacer, RelationResolver} from "@spica-server/interface/bucket/common";
+import {RelationResolver} from "@spica-server/interface/bucket/common";
 import {Bucket} from "@spica-server/interface/bucket";
 import {hash} from "@spica-server/core/schema";
 // this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
@@ -42,15 +42,14 @@ export const constructFilterValues = async (
   relationResolver: RelationResolver,
   hashSecret?: string
 ) => {
-  const replacers: FilterReplacer[] = [
+  const wrappedReplacers = [
     replaceFilterObjectIds,
-    replaceFilterDates,
-    (filter, bucket, resolver) => replaceFilterHash(filter, bucket, resolver, hashSecret)
+    (filter: object) => replaceFilterDates(filter, bucket, relationResolver),
+    (filter: object) => replaceFilterHash(filter, bucket, relationResolver, hashSecret)
   ];
-  for (let replacer of replacers) {
-    filter = await replacer(filter, bucket, relationResolver);
-  }
-  return filter;
+
+  const manager = new FilterReplaceManager(wrappedReplacers);
+  return manager.replace(filter);
 };
 
 export async function replaceFilterDates(

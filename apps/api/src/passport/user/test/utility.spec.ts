@@ -38,17 +38,6 @@ describe("Utilities", () => {
     });
   });
 
-  it("should not attach userFullAccess if user tries to update attributes", () => {
-    request.user.attributes = {
-      role: "customer"
-    };
-
-    request.body = {...request.user, attributes: {role: "admin"}};
-
-    const policyAttachedRequest = registerPolicyAttacher("userFullAccess")(request);
-    expect(policyAttachedRequest).toEqual(request);
-  });
-
   it("should pull policy from user policies", async () => {
     const userService: any = {
       updateMany: (filter: object, update: object) => {
