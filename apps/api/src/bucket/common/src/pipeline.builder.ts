@@ -61,15 +61,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
     this.isRuleFilteringDocuments = !this.areRulesSame(this.schema.acl.read, this.defaultRule);
 
     const propertyMap = expression.extractPropertyMap(this.schema.acl.read);
-    const {documentPropertyMap, authPropertyMap} = categorizePropertyMap(propertyMap);
-
-    const authRelationMap = await createRelationMap({
-      paths: authPropertyMap,
-      properties: this.factories.authResolver.getProperties(),
-      resolve: this.factories.schema
-    });
-    const authRelationStage = getRelationPipeline(authRelationMap, undefined);
-    user = await this.factories.authResolver.resolveRelations(user, authRelationStage);
+    const {documentPropertyMap} = categorizePropertyMap(propertyMap);
 
     const documentRelationMap = await this.buildRelationMap(documentPropertyMap);
     const documentRelationStage = getRelationPipeline(documentRelationMap, this.locale);
