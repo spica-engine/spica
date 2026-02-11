@@ -1,4 +1,10 @@
-import {BadRequestException, Inject, Injectable, NotFoundException} from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException
+} from "@nestjs/common";
 import {
   BaseCollection,
   DatabaseService,
@@ -82,7 +88,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     const neededInMb = (existing + size) * Math.pow(10, -6);
     if (neededInMb > this.storageOptions.totalSizeLimit) {
-      throw new Error("Total storage object size limit exceeded");
+      throw new BadRequestException("Total storage object size limit exceeded");
     }
   }
 
@@ -355,7 +361,22 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
   }
 
   async handleResumableUpload(req: any, res: any) {
+    const uploadLength = req.headers["upload-length"];
+    if (uploadLength) {
+      const size = this.parseUploadLength(uploadLength);
+      await this.validateTotalStorageSize(size);
+    }
     await this.service.handleResumableUpload(req, res);
+  }
+
+  private parseUploadLength(value: number): number {
+    const size = Number(value);
+
+    if (!Number.isFinite(size) || !Number.isInteger(size) || size < 0) {
+      throw new BadRequestException("Invalid Upload-Length header");
+    }
+
+    return size;
   }
 
   private escapeRegex(str: string): string {
