@@ -39,16 +39,6 @@ export class UserModule {
     @Inject(USER_OPTIONS) options: UserOptions,
     private userService: UserService
   ) {
-    if (options.defaultUserUsername) {
-      userService.default({
-        username: options.defaultUserUsername,
-        password: options.defaultUserPassword,
-        policies: options.defaultUserPolicies,
-        lastPasswords: [],
-        failedAttempts: [],
-        lastLogin: undefined
-      });
-    }
     registerStatusProvider(userService);
   }
 
