@@ -12,7 +12,6 @@ import {
   DatabaseException,
   ForbiddenException
 } from "./exception";
-import {IAuthResolver} from "@spica-server/interface/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {BucketPipelineBuilder} from "./pipeline.builder";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
@@ -174,7 +173,6 @@ export async function insertDocument(
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
     deleteOne: (documentId: ObjectId) => Promise<void>;
-    authResolver: IAuthResolver;
   }
 ) {
   const collection = factories.collection(schema);
@@ -187,8 +185,7 @@ export async function insertDocument(
       // unlike others, we have to run this pipeline against buckets in case the target
       // collection is empty.
       collection.collection("buckets"),
-      params.req.user,
-      factories.authResolver
+      params.req.user
     );
   }
   if (
@@ -218,7 +215,6 @@ export async function replaceDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
-    authResolver: IAuthResolver;
   },
   options: {
     returnDocument: ReturnDocument;
@@ -227,14 +223,7 @@ export async function replaceDocument(
   const collection = factories.collection(schema);
 
   if (params.applyAcl) {
-    await executeWriteRule(
-      schema,
-      factories.schema,
-      document,
-      collection,
-      params.req.user,
-      factories.authResolver
-    );
+    await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
   }
 
   const documentId = document._id;
@@ -258,7 +247,6 @@ export async function patchDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
-    authResolver: IAuthResolver;
   },
   options: {
     returnDocument: ReturnDocument;
@@ -266,14 +254,7 @@ export async function patchDocument(
 ) {
   const collection = factories.collection(schema);
   if (params.applyAcl) {
-    await executeWriteRule(
-      schema,
-      factories.schema,
-      document,
-      collection,
-      params.req.user,
-      factories.authResolver
-    );
+    await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
   }
 
   delete patch._id;
@@ -297,7 +278,6 @@ export async function deleteDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<BucketDocument>;
     schema: (schema: string | ObjectId) => Promise<Bucket>;
-    authResolver: IAuthResolver;
   }
 ) {
   const collection = factories.collection(schema);
@@ -309,14 +289,7 @@ export async function deleteDocument(
   }
 
   if (params.applyAcl) {
-    await executeWriteRule(
-      schema,
-      factories.schema,
-      document,
-      collection,
-      params.req.user,
-      factories.authResolver
-    );
+    await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
   }
 
   const deletedCount = await collection.deleteOne({_id: document._id});
@@ -331,8 +304,7 @@ async function executeWriteRule(
   resolve: (id: string) => Promise<Bucket>,
   document: BucketDocument,
   collection: BaseCollection<unknown>,
-  auth: object,
-  authResolver: IAuthResolver
+  auth: object
 ) {
   let propertyMap = [];
 
@@ -342,15 +314,7 @@ async function executeWriteRule(
     throw new ACLSyntaxException(error.message);
   }
 
-  const {authPropertyMap, documentPropertyMap} = categorizePropertyMap(propertyMap);
-
-  const authRelationMap = await createRelationMap({
-    paths: authPropertyMap,
-    properties: authResolver.getProperties(),
-    resolve: resolve
-  });
-  const authRelationStage = getRelationPipeline(authRelationMap, undefined);
-  auth = await authResolver.resolveRelations(auth, authRelationStage);
+  const {documentPropertyMap} = categorizePropertyMap(propertyMap);
 
   const documentRelationMap = await createRelationMap({
     properties: schema.properties,

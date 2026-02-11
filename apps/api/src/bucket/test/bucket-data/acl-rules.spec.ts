@@ -66,9 +66,6 @@ describe("ACL Rules with Different Authentication Strategies", () => {
             issuer: "spica",
             secretOrKey: "spica",
             audience: "spica",
-            defaultUserUsername: "defaultuser",
-            defaultUserPassword: "defaultpassword",
-            defaultUserPolicies: [],
             blockingOptions: {
               failedAttemptLimit: 3,
               blockDurationMinutes: 10

@@ -57,6 +57,7 @@ describe("Storage Acceptance", () => {
           defaultPublicUrl: "http://insteadof",
           strategy: "default",
           objectSizeLimit: 0.1,
+          totalSizeLimit: 5, // 5 MB total storage limit
           resumableUploadExpiresIn: 1000 * 60 // 1 minute
         })
       ]
@@ -1153,6 +1154,11 @@ describe("Storage Acceptance", () => {
   });
 
   describe("resumable upload", () => {
+    beforeEach(async () => {
+      const res = await req.get("/storage");
+      await Promise.all(res.body.map((obj: any) => req.delete("/storage", obj._id)));
+    });
+
     it("should return upload url", async () => {
       const res = await req.post("/storage/resumable", undefined, {
         "Tus-Resumable": "1.0.0",
@@ -1295,6 +1301,89 @@ describe("Storage Acceptance", () => {
       jest.useRealTimers();
 
       expect(expiredRes.statusCode).toBe(404);
+    });
+
+    it("should fail if resumable upload exceeds total storage limit", async () => {
+      const content = Buffer.alloc(5.1 * 1024 * 1024, "f"); // 5.1 MB (exceeds 5 MB limit)
+      const object = {
+        name: "large-file.txt",
+        content: {
+          data: new Binary(content),
+          type: "text/plain"
+        }
+      };
+
+      const actualSize = content.byteLength;
+
+      const postRes = await req.post("/storage/resumable", undefined, {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Length": String(actualSize),
+        "Upload-Metadata": `filename ${Buffer.from(object.name).toString("base64")}`
+      });
+
+      expect(postRes.statusCode).toBe(400);
+      expect(postRes.body.message).toBe("Total storage object size limit exceeded");
+    });
+
+    it("should fail with invalid Upload-Length header", async () => {
+      const invalidHeaders = ["abc", "-100", "Infinity", "NaN"];
+
+      const responses = await Promise.all(
+        invalidHeaders.map(invalidLength =>
+          req.post("/storage/resumable", undefined, {
+            "Tus-Resumable": "1.0.0",
+            "Upload-Length": invalidLength,
+            "Upload-Metadata": `filename ${Buffer.from("test.txt").toString("base64")}`
+          })
+        )
+      );
+
+      responses.forEach(postRes => {
+        expect(postRes.statusCode).toBe(400);
+        expect(postRes.body.message).toBe("Invalid Upload-Length header");
+      });
+    });
+
+    it("should allow deferred-length upload without upfront size validation", async () => {
+      const content = Buffer.from("deferred upload content");
+      const object = {
+        name: "deferred-file.txt",
+        content: {
+          data: new Binary(content),
+          type: "text/plain"
+        }
+      };
+
+      const actualSize = content.byteLength;
+
+      const postRes = await req.post("/storage/resumable", undefined, {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Defer-Length": "1",
+        "Upload-Metadata": `filename ${Buffer.from(object.name).toString("base64")}`
+      });
+
+      expect(postRes.statusCode).toBe(201);
+      expect(postRes.headers["location"]).toBeDefined();
+
+      const fileId = postRes.headers["location"].split("/").at(-1);
+      const url = `/storage/resumable/${fileId}`;
+
+      const patchRes = await req.patch(url, content, {
+        "Tus-Resumable": "1.0.0",
+        "Upload-Offset": "0",
+        "Upload-Length": String(actualSize),
+        "Content-Type": "application/offset+octet-stream"
+      });
+
+      expect(patchRes.statusCode).toBe(204);
+      expect(patchRes.headers["upload-offset"]).toBe(String(actualSize));
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const {body} = await req.get("/storage");
+      const uploadedObject = body.find((obj: any) => obj.name === object.name);
+      expect(uploadedObject).toBeDefined();
+      expect(uploadedObject.content.size).toBe(actualSize);
     });
   });
 
