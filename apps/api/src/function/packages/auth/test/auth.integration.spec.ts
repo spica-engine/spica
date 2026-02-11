@@ -67,9 +67,6 @@ describe("auth", () => {
             issuer: "spica",
             secretOrKey: "spica",
             audience: "spica",
-            defaultUserUsername: "spica",
-            defaultUserPassword: "spica",
-            defaultUserPolicies: ["PassportFullAccess"],
             blockingOptions: {
               blockDurationMinutes: 0,
               failedAttemptLimit: 0
