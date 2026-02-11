@@ -22,7 +22,9 @@ describe("BucketDataController", () => {
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
-        PassportTestingModule.initialize(),
+        PassportTestingModule.initialize({
+          overriddenStrategyType: "USER"
+        }),
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         BucketModule.forRoot({
@@ -90,8 +92,11 @@ describe("BucketDataController", () => {
         });
 
         it("shouldn't see name field", async () => {
-          const response = await req.get(`/bucket/${bucket._id}/data`);
-
+          const response = await req.get(
+            `/bucket/${bucket._id}/data`,
+            {},
+            {Authorization: "USER test"}
+          );
           expect(response.body.length).toBe(5);
           response.body.forEach((item: any) => {
             expect(item).not.toHaveProperty("name");
@@ -107,7 +112,13 @@ describe("BucketDataController", () => {
         });
 
         it("should only show name if age > 24", async () => {
-          const response = await req.get(`/bucket/${bucket._id}/data`);
+          const response = await req.get(
+            `/bucket/${bucket._id}/data`,
+            {},
+            {
+              Authorization: "USER test"
+            }
+          );
 
           expect(response.body.length).toBe(5);
           expect(response.body).toEqual([

@@ -164,10 +164,12 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   }
 
   private getHashSecret(): string {
-    if (!this.userOptions.hashSecret) {
-      throw new Error("User hash secret is not configured. Please set USER_HASH_SECRET");
+    if (!this.userOptions.verificationHashSecret) {
+      throw new Error(
+        "User hash secret is not configured. Please set USER_VERIFICATION_HASH_SECRET"
+      );
     }
-    return this.userOptions.hashSecret;
+    return this.userOptions.verificationHashSecret;
   }
 
   private async getUserConfigMaxAttempts(): Promise<number> {

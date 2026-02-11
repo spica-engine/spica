@@ -4,7 +4,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 describe("User Update Endpoints", () => {
@@ -21,7 +21,7 @@ describe("User Update Endpoints", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID]
+          formats: [OBJECT_ID, DATE_TIME]
         }),
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,

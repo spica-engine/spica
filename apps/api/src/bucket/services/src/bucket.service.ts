@@ -107,7 +107,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     return schema;
   }
 
-  watch(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
+  watchBucket(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
     return new Observable(observer => {
       if (propagateOnStart) {
         super.findOne({_id: new ObjectId(bucketId)}).then(bucket => observer.next(bucket));
@@ -136,7 +136,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   }
 
   watchPreferences(propagateOnStart: boolean): Observable<BucketPreferences> {
-    return this.pref.watch("bucket", {propagateOnStart});
+    return this.pref.watchPreference("bucket", {propagateOnStart});
   }
 
   getPredefinedDefaults(): Default[] {

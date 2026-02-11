@@ -9,8 +9,8 @@ export class UserConfigService extends ConfigService {
     super(db);
   }
 
-  set(config: UserConfigSettings): void {
-    this.updateOne(
+  async set(config: UserConfigSettings): Promise<void> {
+    await this.updateOne(
       {module: "User"},
       {
         $set: {

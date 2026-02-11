@@ -41,12 +41,16 @@ export class ProviderVerificationService {
       purpose
     );
 
+    const encryptedData = this.userService.encryptField(response.destination);
+
     await this.userService.updateOne(
       {_id: response.userId},
       {
         $set: {
           [response.verifiedField]: {
-            value: response.destination,
+            encrypted: encryptedData.encrypted,
+            iv: encryptedData.iv,
+            authTag: encryptedData.authTag,
             createdAt: new Date()
           }
         }

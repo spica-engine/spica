@@ -310,9 +310,13 @@ const args = yargsInstance
       description: "Enable/disable listening user realtime. Default value is true",
       default: true
     },
-    "user-hash-secret": {
+    "user-verification-hash-secret": {
       string: true,
-      description: "Hash secret used for user-related operations."
+      description: "Hash secret used for user verification related operations."
+    },
+    "user-provider-encryption-secret": {
+      string: true,
+      description: "Encryption secret used for user provider encryption operations."
     },
     "passport-user-verification-code-expires-in": {
       number: true,
@@ -589,6 +593,11 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     description: "Enable/disable realtime updates for environment variables.",
     default: true
   })
+  .option("versioncontrol-sync-realtime", {
+    boolean: true,
+    description: "Enable/disable listening to version control sync realtime. Default value is true",
+    default: true
+  })
   .middleware(args => {
     const username = process.env.MONGODB_USERNAME;
     const password = process.env.MONGODB_PASSWORD;
@@ -627,9 +636,14 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["twilio-sms-service-from-number"] = twilioFromNumber;
     }
 
-    const userHashSecret = process.env.USER_HASH_SECRET;
-    if (userHashSecret) {
-      args["user-hash-secret"] = userHashSecret;
+    const userVerificationHashSecret = process.env.USER_VERIFICATION_HASH_SECRET;
+    if (userVerificationHashSecret) {
+      args["user-verification-hash-secret"] = userVerificationHashSecret;
+    }
+
+    const userProviderEncryptionSecret = process.env.USER_PROVIDER_ENCRYPTION_SECRET;
+    if (userProviderEncryptionSecret) {
+      args["user-provider-encryption-secret"] = userProviderEncryptionSecret;
     }
   })
   .check(args => {
@@ -823,7 +837,8 @@ const modules = [
         blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
       },
       userRealtime: args["user-realtime"],
-      hashSecret: args["user-hash-secret"],
+      verificationHashSecret: args["user-verification-hash-secret"],
+      providerEncryptionSecret: args["user-provider-encryption-secret"],
       verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
     }
   }),
@@ -868,7 +883,8 @@ if (args["version-control"]) {
   modules.push(
     VersionControlModule.forRoot({
       persistentPath: args["persistent-path"],
-      isReplicationEnabled: args["replication"]
+      isReplicationEnabled: args["replication"],
+      realtime: args["versioncontrol-sync-realtime"]
     })
   );
 }

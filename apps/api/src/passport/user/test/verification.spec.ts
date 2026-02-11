@@ -75,7 +75,8 @@ describe("VerificationService", () => {
             failedAttemptLimit: 0
           },
           userRealtime: false,
-          hashSecret: "test-hash-secret",
+          verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
+          providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
           verificationCodeExpiresIn: 300
         })
       ]
@@ -94,7 +95,7 @@ describe("VerificationService", () => {
     smsService = module.get(SmsService);
     db = module.get(DatabaseService);
 
-    userConfigService.set({
+    await userConfigService.set({
       verificationProcessMaxAttempt: maxAttemptCount
     });
   });
@@ -729,9 +730,9 @@ describe("VerificationService", () => {
 
       const user = await userService.findOne({_id: userId});
 
-      expect(user.email).toMatchObject({
-        value: email
-      });
+      const UserWithEmail = userService.decryptProviderFields(user);
+
+      expect(UserWithEmail.email.value).toBe(email);
     });
   });
 });
