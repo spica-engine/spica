@@ -412,17 +412,17 @@ export class UserService extends BaseCollection<User>("user") {
 
     return updates;
   }
-  isUserVerifiedProvider(user: User, provider: string): boolean {
+  async isUserVerifiedProvider(user: User, provider: string): Promise<boolean> {
     const providerField = user[provider];
 
     if (!providerField) {
-      throw new BadRequestException(`User does not have a verified ${provider}.`);
+      return Promise.reject(`User does not have a ${provider} field.`);
     }
 
     if (!("encrypted" in providerField)) {
-      throw new BadRequestException(`User ${provider} is not properly configured.`);
+      return Promise.reject(`User ${provider} field is not properly configured.`);
     }
 
-    return true;
+    return Promise.resolve(true);
   }
 }

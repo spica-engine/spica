@@ -11,12 +11,15 @@ export class PasswordResetService {
     private readonly verificationService: VerificationService
   ) {}
 
-  async startForgotPasswordProcess(username: string): Promise<{message: string}> {
-    const {user, config} = await this.validateAndGetUser(username);
+  async startForgotPasswordProcess(
+    username: string,
+    provider: "email" | "phone"
+  ): Promise<{message: string}> {
+    const {user, strategy} = await this.validateUserAndProvider(username, provider);
 
-    const providerField = user[config.provider] as any;
-    this.userService.isUserVerifiedProvider(user, config.provider);
+    await this.userService.isUserVerifiedProvider(user, provider);
 
+    const providerField = user[provider] as any;
     const decryptedValue = this.userService.decryptField({
       encrypted: providerField.encrypted,
       iv: providerField.iv,
@@ -26,8 +29,8 @@ export class PasswordResetService {
     await this.verificationService.startVerificationProcess(
       user._id,
       decryptedValue,
-      config.strategy,
-      config.provider,
+      strategy,
+      provider,
       "password_reset"
     );
 
@@ -36,16 +39,22 @@ export class PasswordResetService {
     };
   }
 
-  async verifyAndResetPassword(username: string, code: string, newPassword: string) {
+  async verifyAndResetPassword(
+    username: string,
+    code: string,
+    newPassword: string,
+    provider: "email" | "phone"
+  ) {
     try {
-      const {user, config} = await this.validateAndGetUser(username);
+      const {user, strategy} = await this.validateUserAndProvider(username, provider);
 
-      this.userService.isUserVerifiedProvider(user, config.provider);
+      await this.userService.isUserVerifiedProvider(user, provider);
+
       const response = await this.verificationService.confirmVerificationProcess(
         user._id,
         code,
-        config.strategy,
-        config.provider,
+        strategy,
+        provider,
         "password_reset"
       );
 
@@ -65,17 +74,29 @@ export class PasswordResetService {
     };
   }
 
-  private async validateAndGetUser(username: string) {
-    const config = await this.userConfigService.getResetPasswordConfig();
-    if (!config) {
-      throw new BadRequestException("Reset password provider is not configured.");
-    }
-
+  private async validateUserAndProvider(
+    username: string,
+    provider: "email" | "phone"
+  ): Promise<{user: any; strategy: string}> {
     const user = await this.userService.findOne({username});
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
-    return {user, config};
+    const resetPasswordProviders = await this.userConfigService.getResetPasswordConfig();
+    if (!resetPasswordProviders || resetPasswordProviders.length === 0) {
+      throw new BadRequestException("Reset password providers are not configured.");
+    }
+
+    const providerConfig = resetPasswordProviders.find(p => p.provider === provider);
+    if (!providerConfig) {
+      throw new BadRequestException(
+        `Reset password via ${provider} is not configured. Available providers: ${resetPasswordProviders
+          .map(p => p.provider)
+          .join(", ")}`
+      );
+    }
+
+    return {user, strategy: providerConfig.strategy};
   }
 }

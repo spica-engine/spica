@@ -128,10 +128,12 @@ describe("Password Reset E2E with MailHog", () => {
 
     await userConfigService.set({
       verificationProcessMaxAttempt: 3,
-      resetPasswordProvider: {
-        provider: EMAIL_PROVIDER,
-        strategy: STRATEGY
-      }
+      resetPasswordProvider: [
+        {
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY
+        }
+      ]
     });
 
     app = module.createNestApplication();
@@ -164,7 +166,8 @@ describe("Password Reset E2E with MailHog", () => {
   describe("Complete password reset flow", () => {
     it("should successfully reset password with correct verification code", async () => {
       const startResponse = await req.post("/passport/user/forgot-password/start", {
-        username
+        username,
+        provider: EMAIL_PROVIDER
       });
 
       expect(startResponse.statusCode).toBe(201);
@@ -193,7 +196,8 @@ describe("Password Reset E2E with MailHog", () => {
       const resetResponse = await req.post("/passport/user/forgot-password/verify", {
         username,
         code,
-        newPassword
+        newPassword,
+        provider: EMAIL_PROVIDER
       });
 
       expect(resetResponse.statusCode).toBe(201);
@@ -212,7 +216,8 @@ describe("Password Reset E2E with MailHog", () => {
 
     it("should fail password reset with wrong verification code", async () => {
       const startResponse = await req.post("/passport/user/forgot-password/start", {
-        username
+        username,
+        provider: EMAIL_PROVIDER
       });
 
       expect(startResponse.statusCode).toBe(201);
@@ -228,7 +233,8 @@ describe("Password Reset E2E with MailHog", () => {
       const resetResponse = await req.post("/passport/user/forgot-password/verify", {
         username,
         code: wrongCode,
-        newPassword
+        newPassword,
+        provider: EMAIL_PROVIDER
       });
 
       expect(resetResponse.statusCode).toBe(400);

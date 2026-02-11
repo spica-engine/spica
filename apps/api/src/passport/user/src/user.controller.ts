@@ -533,9 +533,10 @@ export class UserController {
     @Body(Schema.validate("http://spica.internal/passport/forgot-password-start"))
     body: {
       username: string;
+      provider: "email" | "phone";
     }
   ) {
-    return this.passwordResetService.startForgotPasswordProcess(body.username);
+    return this.passwordResetService.startForgotPasswordProcess(body.username, body.provider);
   }
 
   @Post("forgot-password/verify")
@@ -545,12 +546,14 @@ export class UserController {
       username: string;
       code: string;
       newPassword: string;
+      provider: "email" | "phone";
     }
   ) {
     return this.passwordResetService.verifyAndResetPassword(
       body.username,
       body.code,
-      body.newPassword
+      body.newPassword,
+      body.provider
     );
   }
 }

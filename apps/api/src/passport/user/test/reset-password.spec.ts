@@ -94,10 +94,12 @@ describe("PasswordResetService", () => {
 
     await userConfigService.set({
       verificationProcessMaxAttempt: maxAttemptCount,
-      resetPasswordProvider: {
-        provider: EMAIL_PROVIDER,
-        strategy: STRATEGY
-      }
+      resetPasswordProvider: [
+        {
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY
+        }
+      ]
     });
   });
 
@@ -125,7 +127,10 @@ describe("PasswordResetService", () => {
         messageId: "test-message-id"
       });
 
-      const result = await passwordResetService.startForgotPasswordProcess(username);
+      const result = await passwordResetService.startForgotPasswordProcess(
+        username,
+        EMAIL_PROVIDER
+      );
 
       expect(result).toEqual({
         message: "Reset password verification code sent successfully."
@@ -143,10 +148,12 @@ describe("PasswordResetService", () => {
       const phoneNumber = "+1234567890";
       await userConfigService.set({
         verificationProcessMaxAttempt: maxAttemptCount,
-        resetPasswordProvider: {
-          provider: PHONE_PROVIDER,
-          strategy: STRATEGY
-        }
+        resetPasswordProvider: [
+          {
+            provider: PHONE_PROVIDER,
+            strategy: STRATEGY
+          }
+        ]
       });
       const encryptedPhone = userService.encryptField(phoneNumber);
       await userService.insertOne({
@@ -160,7 +167,10 @@ describe("PasswordResetService", () => {
         messageId: "test-sms-message-id"
       });
 
-      const result = await passwordResetService.startForgotPasswordProcess(username);
+      const result = await passwordResetService.startForgotPasswordProcess(
+        username,
+        PHONE_PROVIDER
+      );
 
       expect(result).toEqual({
         message: "Reset password verification code sent successfully."
@@ -175,9 +185,9 @@ describe("PasswordResetService", () => {
     it("should throw error when user does not exist", async () => {
       const username = "nonexistentuser";
 
-      await expect(passwordResetService.startForgotPasswordProcess(username)).rejects.toThrow(
-        NotFoundException
-      );
+      await expect(
+        passwordResetService.startForgotPasswordProcess(username, EMAIL_PROVIDER)
+      ).rejects.toThrow(NotFoundException);
 
       expect(mockMailerService.sendMail).not.toHaveBeenCalled();
     });
@@ -190,10 +200,10 @@ describe("PasswordResetService", () => {
         password: "oldPassword123"
       } as any);
 
-      await expect(passwordResetService.startForgotPasswordProcess(username)).rejects.toThrow(
-        BadRequestException
-      );
-
+      const error = await passwordResetService
+        .startForgotPasswordProcess(username, EMAIL_PROVIDER)
+        .catch(e => e);
+      expect(error).toContain("User does not have a email field.");
       expect(mockMailerService.sendMail).not.toHaveBeenCalled();
     });
 
@@ -213,14 +223,24 @@ describe("PasswordResetService", () => {
         rejected: [email]
       });
 
-      await expect(passwordResetService.startForgotPasswordProcess(username)).rejects.toThrow(
-        BadRequestException
-      );
+      await expect(
+        passwordResetService.startForgotPasswordProcess(username, EMAIL_PROVIDER)
+      ).rejects.toThrow(BadRequestException);
     });
 
     it("should handle SMS send failure", async () => {
       const username = "testuser";
       const phoneNumber = "+1234567890";
+
+      await userConfigService.set({
+        verificationProcessMaxAttempt: maxAttemptCount,
+        resetPasswordProvider: [
+          {
+            provider: PHONE_PROVIDER,
+            strategy: STRATEGY
+          }
+        ]
+      });
 
       const encryptedPhone = userService.encryptField(phoneNumber);
       await userService.insertOne({
@@ -234,9 +254,9 @@ describe("PasswordResetService", () => {
         error: "SMS service unavailable"
       });
 
-      await expect(passwordResetService.startForgotPasswordProcess(username)).rejects.toThrow(
-        BadRequestException
-      );
+      await expect(
+        passwordResetService.startForgotPasswordProcess(username, PHONE_PROVIDER)
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -260,7 +280,7 @@ describe("PasswordResetService", () => {
         messageId: "test-message-id"
       });
 
-      await passwordResetService.startForgotPasswordProcess(username);
+      await passwordResetService.startForgotPasswordProcess(username, EMAIL_PROVIDER);
 
       const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
       const codeMatch = sentEmail.match(/is: (\d{6})/);
@@ -269,7 +289,8 @@ describe("PasswordResetService", () => {
       const resetResult = await passwordResetService.verifyAndResetPassword(
         username,
         code,
-        newPassword
+        newPassword,
+        EMAIL_PROVIDER
       );
 
       expect(resetResult).toEqual({
@@ -296,10 +317,12 @@ describe("PasswordResetService", () => {
 
       await userConfigService.set({
         verificationProcessMaxAttempt: maxAttemptCount,
-        resetPasswordProvider: {
-          provider: EMAIL_PROVIDER,
-          strategy: STRATEGY
-        }
+        resetPasswordProvider: [
+          {
+            provider: EMAIL_PROVIDER,
+            strategy: STRATEGY
+          }
+        ]
       });
 
       mockMailerService.sendMail.mockResolvedValue({
@@ -308,10 +331,15 @@ describe("PasswordResetService", () => {
         messageId: "test-message-id"
       });
 
-      await passwordResetService.startForgotPasswordProcess(username);
+      await passwordResetService.startForgotPasswordProcess(username, EMAIL_PROVIDER);
 
       await expect(
-        passwordResetService.verifyAndResetPassword(username, wrongCode, newPassword)
+        passwordResetService.verifyAndResetPassword(
+          username,
+          wrongCode,
+          newPassword,
+          EMAIL_PROVIDER
+        )
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -321,7 +349,7 @@ describe("PasswordResetService", () => {
       const newPassword = "newPassword456";
 
       await expect(
-        passwordResetService.verifyAndResetPassword(username, code, newPassword)
+        passwordResetService.verifyAndResetPassword(username, code, newPassword, EMAIL_PROVIDER)
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -343,16 +371,21 @@ describe("PasswordResetService", () => {
         messageId: "test-message-id"
       });
 
-      await passwordResetService.startForgotPasswordProcess(username);
+      await passwordResetService.startForgotPasswordProcess(username, EMAIL_PROVIDER);
 
       const sentEmail = mockMailerService.sendMail.mock.calls[0][0].text;
       const codeMatch = sentEmail.match(/is: (\d{6})/);
       const code = codeMatch[1];
 
-      await passwordResetService.verifyAndResetPassword(username, code, newPassword);
+      await passwordResetService.verifyAndResetPassword(
+        username,
+        code,
+        newPassword,
+        EMAIL_PROVIDER
+      );
 
       await expect(
-        passwordResetService.verifyAndResetPassword(username, code, newPassword)
+        passwordResetService.verifyAndResetPassword(username, code, newPassword, EMAIL_PROVIDER)
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -371,10 +404,12 @@ describe("PasswordResetService", () => {
 
       await userConfigService.set({
         verificationProcessMaxAttempt: maxAttemptCount,
-        resetPasswordProvider: {
-          provider: PHONE_PROVIDER,
-          strategy: STRATEGY
-        }
+        resetPasswordProvider: [
+          {
+            provider: PHONE_PROVIDER,
+            strategy: STRATEGY
+          }
+        ]
       });
 
       mockSmsService.sendSms.mockResolvedValue({
@@ -382,7 +417,7 @@ describe("PasswordResetService", () => {
         messageId: "test-sms-message-id"
       });
 
-      await passwordResetService.startForgotPasswordProcess(username);
+      await passwordResetService.startForgotPasswordProcess(username, PHONE_PROVIDER);
 
       const sentSms = mockSmsService.sendSms.mock.calls[0][0].body;
       const codeMatch = sentSms.match(/is: (\d{6})/);
@@ -391,7 +426,8 @@ describe("PasswordResetService", () => {
       const resetResult = await passwordResetService.verifyAndResetPassword(
         username,
         code,
-        newPassword
+        newPassword,
+        PHONE_PROVIDER
       );
 
       expect(resetResult).toEqual({
