@@ -57,7 +57,6 @@ import {
   createBucketDataActivity
 } from "@spica-server/bucket/common";
 import {applyPatch} from "@spica-server/core/patch";
-import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {BucketDocument} from "@spica-server/interface/bucket";
 import {BUCKET_DATA_HASH_SECRET} from "@spica-server/interface/bucket";
 
@@ -71,7 +70,6 @@ export class BucketDataController {
     private bs: BucketService,
     private bds: BucketDataService,
     private validator: Validator,
-    @Inject(AUTH_RESOLVER) private authResolver: IAuthResolver,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
     @Optional() @Inject() private activityService: ActivityService,
@@ -148,8 +146,7 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        authResolver: this.authResolver
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
       this.hashSecret
     ).catch(this.errorHandler);
@@ -244,8 +241,7 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        authResolver: this.authResolver
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
       this.hashSecret
     ).catch(this.errorHandler);
@@ -304,8 +300,7 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId),
-        authResolver: this.authResolver
+        deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId)
       }
     ).catch(this.errorHandler);
 
@@ -369,8 +364,7 @@ export class BucketDataController {
       {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        authResolver: this.authResolver
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
     ).catch(this.errorHandler);
 
@@ -452,8 +446,7 @@ export class BucketDataController {
       {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        authResolver: this.authResolver
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
       {returnDocument: ReturnDocument.AFTER}
     ).catch(this.errorHandler);
@@ -513,8 +506,7 @@ export class BucketDataController {
       {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        authResolver: this.authResolver
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
     ).catch(this.errorHandler);
 

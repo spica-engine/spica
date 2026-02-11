@@ -1,25 +1,12 @@
 import {ObjectId} from "@spica-server/database";
 import {FactorMeta} from "@spica-server/interface/passport/authfactor";
 
-export interface UserSettingsContents {
-  schema: UserSchema;
-}
-
-export interface UserSchema {
-  attributes: {
-    [key: string]: any;
-  };
-}
-
 export interface User {
   _id?: ObjectId;
   username: string;
   password: string;
   deactivateJwtsBefore?: number;
   policies: string[];
-  attributes?: {
-    [key: string]: any;
-  };
   authFactor?: FactorMeta;
   lastPasswords: string[];
   lastLogin: Date;

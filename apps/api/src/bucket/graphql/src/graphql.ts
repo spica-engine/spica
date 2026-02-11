@@ -37,7 +37,6 @@ import {
   findLocale,
   insertActivity
 } from "@spica-server/bucket/common";
-import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {FindResponse} from "@spica-server/interface/bucket/graphql";
 import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
@@ -141,7 +140,6 @@ export class GraphqlController implements OnModuleInit {
     private bds: BucketDataService,
     private guardService: GuardService,
     private validator: Validator,
-    @Inject(AUTH_RESOLVER) private authResolver: IAuthResolver,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
     @Optional() private hookChangeEmitter: ChangeEmitter
@@ -277,8 +275,7 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-          authResolver: this.authResolver
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       );
     };
@@ -316,8 +313,7 @@ export class GraphqlController implements OnModuleInit {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) =>
-            Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId)),
-          authResolver: this.authResolver
+            Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
         }
       );
 
@@ -352,8 +348,7 @@ export class GraphqlController implements OnModuleInit {
           deleteOne: async documentId => {
             const deleteFn = this.delete(bucket, false);
             await deleteFn(root, {_id: documentId}, context, info);
-          },
-          authResolver: this.authResolver
+          }
         }
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
       if (!insertedDocument) {
@@ -385,8 +380,7 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-          authResolver: this.authResolver
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       );
 
@@ -429,8 +423,7 @@ export class GraphqlController implements OnModuleInit {
         {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-          authResolver: this.authResolver
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
@@ -469,8 +462,7 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-          authResolver: this.authResolver
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       );
 
@@ -520,8 +512,7 @@ export class GraphqlController implements OnModuleInit {
         {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-          authResolver: this.authResolver
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
         {returnDocument: ReturnDocument.AFTER}
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
@@ -559,8 +550,7 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-          authResolver: this.authResolver
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       );
 
@@ -603,8 +593,7 @@ export class GraphqlController implements OnModuleInit {
         {req: context, applyAcl: this.shouldApplyAcl(context)},
         {
           collection: schema => this.bds.children(schema),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-          authResolver: this.authResolver
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
