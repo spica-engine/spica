@@ -533,9 +533,10 @@ export class UserController {
     @Body(Schema.validate("http://spica.internal/passport/passwordless-login-start"))
     body: {
       username: string;
+      provider: "email" | "phone";
     }
   ) {
-    return this.passwordlessLoginService.start(body.username);
+    return this.passwordlessLoginService.start(body.username, body.provider);
   }
 
   @Post("passwordless-login/verify")
@@ -544,9 +545,10 @@ export class UserController {
     body: {
       username: string;
       code: string;
+      provider: "email" | "phone";
     }
   ) {
-    return this.passwordlessLoginService.verify(body.username, body.code);
+    return this.passwordlessLoginService.verify(body.username, body.code, body.provider);
   }
 
   private async handlePasswordUpdate(

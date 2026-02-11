@@ -11,14 +11,13 @@ export class PasswordlessLoginService {
     private userService: UserService
   ) {}
 
-  async start(username: string) {
-    const {config, user} = await this.validateAndGetUser(username);
+  async start(username: string, provider: "email" | "phone") {
+    const {providerConfig, user} = await this.validateAndGetUser(username, provider);
 
-    //Todo! use provider control from userService
-    const providerField = (user as any)[config.passwordlessLoginProvider.provider];
+    const providerField = (user as any)[provider];
 
     if (!providerField || !providerField.encrypted) {
-      throw new BadRequestException(`User does not have a verified provider`);
+      throw new BadRequestException(`User does not have a verified ${provider}`);
     }
 
     const value = this.userService.decryptField(providerField);
@@ -27,8 +26,8 @@ export class PasswordlessLoginService {
       const sendResult = await this.verificationService.startVerificationProcess(
         user._id,
         value,
-        config.passwordlessLoginProvider.strategy,
-        config.passwordlessLoginProvider.provider,
+        providerConfig.strategy,
+        provider,
         "passwordless_login"
       );
 
@@ -38,15 +37,15 @@ export class PasswordlessLoginService {
       };
     } catch (error) {
       console.error(
-        `Error starting passwordless verification via ${config.passwordlessLoginProvider.provider}:`,
+        `Error starting passwordless verification via ${providerConfig.provider}:`,
         error
       );
       throw new BadRequestException("Failed to send verification code");
     }
   }
 
-  async verify(username: string, code: string) {
-    const {config, user} = await this.validateAndGetUser(username);
+  async verify(username: string, code: string, provider: "email" | "phone") {
+    const {providerConfig, user} = await this.validateAndGetUser(username, provider);
 
     this.userService.checkUserIsBlocked(user);
     this.userService.checkUserBan(user);
@@ -55,8 +54,8 @@ export class PasswordlessLoginService {
       await this.verificationService.confirmVerificationProcess(
         user._id,
         code,
-        config.passwordlessLoginProvider.strategy,
-        config.passwordlessLoginProvider.provider,
+        providerConfig.strategy,
+        provider,
         "passwordless_login"
       );
 
@@ -79,11 +78,21 @@ export class PasswordlessLoginService {
     }
   }
 
-  private async validateAndGetUser(username: string) {
+  private async validateAndGetUser(username: string, provider: "email" | "phone") {
     const config = await this.userConfigService.getPasswordlessLoginConfig();
 
     if (!config?.isActive) {
       throw new BadRequestException("Passwordless login is not enabled");
+    }
+
+    if (!config.passwordlessLoginProvider || !Array.isArray(config.passwordlessLoginProvider)) {
+      throw new BadRequestException("Passwordless login providers are not configured");
+    }
+
+    const providerConfig = config.passwordlessLoginProvider.find(p => p.provider === provider);
+
+    if (!providerConfig) {
+      throw new BadRequestException(`Passwordless login is not enabled for ${provider}`);
     }
 
     const user = await this.findUserByUsername(username);
@@ -92,7 +101,7 @@ export class PasswordlessLoginService {
       throw new NotFoundException(`No user found with username: ${username}`);
     }
 
-    return {config, user};
+    return {providerConfig, user};
   }
 
   private findUserByUsername(username: string) {

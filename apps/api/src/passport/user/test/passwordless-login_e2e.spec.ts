@@ -109,10 +109,12 @@ describe("Passwordless Login E2E with MailHog", () => {
 
     await userConfigService.updatePasswordlessLoginConfig({
       isActive: true,
-      passwordlessLoginProvider: {
-        provider: EMAIL_PROVIDER,
-        strategy: STRATEGY
-      }
+      passwordlessLoginProvider: [
+        {
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY
+        }
+      ]
     });
 
     app = module.createNestApplication();
@@ -148,7 +150,8 @@ describe("Passwordless Login E2E with MailHog", () => {
   describe("Passwordless Login Flow", () => {
     it("should successfully complete passwordless login with correct code", async () => {
       const startResponse = await req.post("/passport/user/passwordless-login/start", {
-        username: testUsername
+        username: testUsername,
+        provider: EMAIL_PROVIDER
       });
 
       expect(startResponse.statusCode).toBe(201);
@@ -176,7 +179,8 @@ describe("Passwordless Login E2E with MailHog", () => {
 
       const verifyResponse = await req.post("/passport/user/passwordless-login/verify", {
         username: testUsername,
-        code
+        code,
+        provider: EMAIL_PROVIDER
       });
 
       expect(verifyResponse.statusCode).toBe(201);
@@ -193,7 +197,8 @@ describe("Passwordless Login E2E with MailHog", () => {
 
     it("should fail verification with wrong code", async () => {
       const startResponse = await req.post("/passport/user/passwordless-login/start", {
-        username: testUsername
+        username: testUsername,
+        provider: EMAIL_PROVIDER
       });
 
       expect(startResponse.statusCode).toBe(201);
@@ -209,7 +214,8 @@ describe("Passwordless Login E2E with MailHog", () => {
       const wrongCode = "000000";
       const verifyResponse = await req.post("/passport/user/passwordless-login/verify", {
         username: testUsername,
-        code: wrongCode
+        code: wrongCode,
+        provider: EMAIL_PROVIDER
       });
 
       expect(verifyResponse.statusCode).toBe(400);
@@ -218,7 +224,8 @@ describe("Passwordless Login E2E with MailHog", () => {
 
     it("should fail verification when using an already used code", async () => {
       const startResponse = await req.post("/passport/user/passwordless-login/start", {
-        username: testUsername
+        username: testUsername,
+        provider: EMAIL_PROVIDER
       });
 
       expect(startResponse.statusCode).toBe(201);
@@ -246,7 +253,8 @@ describe("Passwordless Login E2E with MailHog", () => {
 
       const firstVerifyResponse = await req.post("/passport/user/passwordless-login/verify", {
         username: testUsername,
-        code
+        code,
+        provider: EMAIL_PROVIDER
       });
 
       expect(firstVerifyResponse.statusCode).toBe(201);
@@ -259,7 +267,8 @@ describe("Passwordless Login E2E with MailHog", () => {
 
       const secondVerifyResponse = await req.post("/passport/user/passwordless-login/verify", {
         username: testUsername,
-        code
+        code,
+        provider: EMAIL_PROVIDER
       });
 
       expect(secondVerifyResponse.statusCode).toBe(400);
