@@ -56,10 +56,7 @@ describe("Identity", () => {
             maxExpiresIn: MAX_EXPIRES_IN,
             refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
             secretOrKey: "spica",
-            defaultUserUsername: "spica",
-            defaultUserPassword: "spica",
             audience: "spica",
-            defaultUserPolicies: ["PassportFullAccess"],
             blockingOptions: {
               blockDurationMinutes: 0,
               failedAttemptLimit: 0
