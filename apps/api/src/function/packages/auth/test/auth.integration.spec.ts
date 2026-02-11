@@ -169,62 +169,112 @@ describe("auth", () => {
       });
     });
 
-    it("should store refresh token after sign in", async () => {
-      expect(auth.getRefreshToken()).toBeUndefined();
+    it("should refresh access token using refresh token (SDK)", async () => {
+      const loginResponse = await Axios.post(
+        `${PUBLIC_URL}/passport/login`,
+        {
+          username: "user1",
+          password: "pass1"
+        },
+        {
+          headers: {"X-Spica-SDK": "true"}
+        }
+      );
 
-      await auth.signIn("user1", "pass1");
+      const {token: accessToken, refreshToken} = loginResponse.data;
 
-      const refreshToken = auth.getRefreshToken();
+      expect(accessToken).toBeDefined();
       expect(refreshToken).toBeDefined();
-      expect(typeof refreshToken).toBe("string");
-    });
 
-    it("should refresh access token using stored refresh token", async () => {
-      const originalToken = await auth.signIn("user1", "pass1");
-      const refreshToken = auth.getRefreshToken();
-
-      expect(refreshToken).toBeDefined();
-      // Wait 2 seconds to ensure different iat timestamp for tokens to be differ from each other
+      // Wait to ensure different iat timestamp
       await new Promise(resolve => setTimeout(resolve, 2000));
-      const newToken = await auth.refreshAccessToken(originalToken);
+
+      const newToken = await auth.refreshAccessToken(accessToken, refreshToken);
 
       expect(newToken).toBeDefined();
       expect(typeof newToken).toBe("string");
-      expect(newToken).not.toEqual(originalToken);
+      expect(newToken).not.toEqual(accessToken);
 
       const decoded = jwtDecode<any>(newToken);
       expect(decoded.username).toEqual("user1");
     });
 
-    it("should refresh access token using explicit refresh token from different session", async () => {
-      const firstToken = await auth.signIn("user1", "pass1");
-      const firstRefreshToken = auth.getRefreshToken();
+    it("should NOT include refreshToken in body for browser login (security)", async () => {
+      const loginResponse = await Axios.post(`${PUBLIC_URL}/passport/login`, {
+        username: "user1",
+        password: "pass1"
+      });
 
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const {token: accessToken, refreshToken} = loginResponse.data;
 
-      await auth.signIn("user1", "pass1");
-      const secondRefreshToken = auth.getRefreshToken();
-
-      // Use the first refresh token with the second access token
-      const newToken = await auth.refreshAccessToken(firstToken, firstRefreshToken);
-
-      expect(newToken).toBeDefined();
-      expect(typeof newToken).toBe("string");
-
-      const decoded = jwtDecode<any>(newToken);
-      expect(decoded.username).toEqual("user1");
-
-      // Verify the stored refresh token wasn't used
-      expect(secondRefreshToken).not.toEqual(firstRefreshToken);
+      expect(accessToken).toBeDefined();
+      expect(refreshToken).toBeUndefined();
     });
 
-    it("should throw error when refreshing without available refresh token", async () => {
-      const auth2 = await importFreshAuthModule();
-      auth2.initialize({identity: token, publicUrl: PUBLIC_URL});
+    it("should reject refresh request without SDK header when using body", async () => {
+      const loginResponse = await Axios.post(
+        `${PUBLIC_URL}/passport/login`,
+        {
+          username: "user1",
+          password: "pass1"
+        },
+        {
+          headers: {"X-Spica-SDK": "true"}
+        }
+      );
 
-      const error = await auth2.refreshAccessToken("some_token").catch(e => e.message);
+      const {token: accessToken, refreshToken} = loginResponse.data;
 
-      expect(error).toContain("No refresh token available");
+      let error;
+      try {
+        await Axios.post(
+          `${PUBLIC_URL}/passport/user/session/refresh`,
+          {refreshToken},
+          {
+            headers: {Authorization: `USER ${accessToken}`}
+          }
+        );
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).toBeDefined();
+      expect(error.response.status).toBe(400);
+    });
+
+    it("should reject SDK refresh request without refreshToken in body", async () => {
+      const loginResponse = await Axios.post(
+        `${PUBLIC_URL}/passport/login`,
+        {
+          username: "user1",
+          password: "pass1"
+        },
+        {
+          headers: {"X-Spica-SDK": "true"}
+        }
+      );
+
+      const {token: accessToken} = loginResponse.data;
+
+      let error;
+      try {
+        await Axios.post(
+          `${PUBLIC_URL}/passport/user/session/refresh`,
+          {}, // Missing refreshToken
+          {
+            headers: {
+              Authorization: `USER ${accessToken}`,
+              "X-Spica-SDK": "true"
+            }
+          }
+        );
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).toBeDefined();
+      expect(error.response.status).toBe(401);
+      expect(error.response.data.message).toContain("SDK");
     });
   });
 
