@@ -168,6 +168,64 @@ describe("auth", () => {
         error: "Bad Request"
       });
     });
+
+    it("should store refresh token after sign in", async () => {
+      expect(auth.getRefreshToken()).toBeUndefined();
+
+      await auth.signIn("user1", "pass1");
+
+      const refreshToken = auth.getRefreshToken();
+      expect(refreshToken).toBeDefined();
+      expect(typeof refreshToken).toBe("string");
+    });
+
+    it("should refresh access token using stored refresh token", async () => {
+      const originalToken = await auth.signIn("user1", "pass1");
+      const refreshToken = auth.getRefreshToken();
+
+      expect(refreshToken).toBeDefined();
+      // Wait 2 seconds to ensure different iat timestamp for tokens to be differ from each other
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const newToken = await auth.refreshAccessToken(originalToken);
+
+      expect(newToken).toBeDefined();
+      expect(typeof newToken).toBe("string");
+      expect(newToken).not.toEqual(originalToken);
+
+      const decoded = jwtDecode<any>(newToken);
+      expect(decoded.username).toEqual("user1");
+    });
+
+    it("should refresh access token using explicit refresh token from different session", async () => {
+      const firstToken = await auth.signIn("user1", "pass1");
+      const firstRefreshToken = auth.getRefreshToken();
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      await auth.signIn("user1", "pass1");
+      const secondRefreshToken = auth.getRefreshToken();
+
+      // Use the first refresh token with the second access token
+      const newToken = await auth.refreshAccessToken(firstToken, firstRefreshToken);
+
+      expect(newToken).toBeDefined();
+      expect(typeof newToken).toBe("string");
+
+      const decoded = jwtDecode<any>(newToken);
+      expect(decoded.username).toEqual("user1");
+
+      // Verify the stored refresh token wasn't used
+      expect(secondRefreshToken).not.toEqual(firstRefreshToken);
+    });
+
+    it("should throw error when refreshing without available refresh token", async () => {
+      const auth2 = await importFreshAuthModule();
+      auth2.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      const error = await auth2.refreshAccessToken("some_token").catch(e => e.message);
+
+      expect(error).toContain("No refresh token available");
+    });
   });
 
   describe("sign up", () => {

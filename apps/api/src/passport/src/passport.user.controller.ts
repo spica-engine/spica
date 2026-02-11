@@ -233,7 +233,7 @@ export class PassportUserController {
     }
 
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
-    return res.status(200).json(tokenSchema);
+    return res.status(200).json({...tokenSchema, refreshToken: refreshTokenSchema.token});
   }
 
   @Get("login")
@@ -298,10 +298,11 @@ export class PassportUserController {
   @Post("user/session/refresh")
   async refreshToken(
     @Headers("authorization") accessToken: string,
+    @Body() body: any,
     @Req() req: any,
     @Res() res: any
   ) {
-    const {refreshToken} = req.cookies || {};
+    const refreshToken = body?.refreshToken || (req.cookies || {}).refreshToken;
 
     if (!refreshToken) {
       throw new UnauthorizedException("Refresh token does not exist.");

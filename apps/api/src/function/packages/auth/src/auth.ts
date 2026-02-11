@@ -13,6 +13,8 @@ let authorization;
 
 let service: HttpService;
 
+let storedRefreshToken: string | undefined;
+
 const userSegment = "passport/user";
 
 /**
@@ -77,6 +79,10 @@ export async function signIn(
     {headers}
   );
 
+  if (response.refreshToken) {
+    storedRefreshToken = response.refreshToken;
+  }
+
   return response.token;
 }
 
@@ -133,4 +139,49 @@ export async function updatePassword(
   });
 
   return updatedUser;
+}
+
+/**
+ * Get the stored refresh token from the last successful sign-in.
+ *
+ * @returns The stored refresh token, or undefined if not available
+ */
+export function getRefreshToken(): string | undefined {
+  return storedRefreshToken;
+}
+
+/**
+ * Refresh an access token using a refresh token.
+ * Uses the internally stored refresh token from the last sign-in,
+ * or accepts an explicit refresh token parameter.
+ *
+ * @param accessToken - The current (possibly expired) access token
+ * @param refreshTokenParam - Optional explicit refresh token. If omitted, uses the stored one from signIn.
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to the new access token
+ */
+export async function refreshAccessToken(
+  accessToken: string,
+  refreshTokenParam?: string,
+  headers?: object
+): Promise<string> {
+  checkInitialized(authorization, service, {skipAuthCheck: true});
+
+  const token = refreshTokenParam || storedRefreshToken;
+
+  if (!token) {
+    throw new Error("No refresh token available. signIn first or provide a refresh token.");
+  }
+
+  const response = await service.post<TokenScheme>(
+    `${userSegment}/session/refresh`,
+    {refreshToken: token},
+    {headers: {Authorization: `USER ${accessToken}`, ...headers}}
+  );
+
+  if (response.refreshToken) {
+    storedRefreshToken = response.refreshToken;
+  }
+
+  return response.token;
 }
