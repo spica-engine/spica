@@ -4,7 +4,7 @@ export interface AuthenticationStrategy {
   _id: string;
   name: string;
   title: string;
-  type: string;
+  type: "saml" | "oauth";
   icon?: string;
   [key: string]: any;
 }

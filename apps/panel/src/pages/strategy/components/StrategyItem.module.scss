@@ -1,0 +1,29 @@
+.strategyItem {
+  padding: var(--padding-lg);
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-soft-light);
+  min-width: 0;
+  cursor: pointer;
+
+  &:hover {
+    .deleteButton {
+      display: block !important;
+    }
+  }
+}
+
+.strategyItem {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 55px !important;
+  border: var(--border-default) !important;
+  color: var(--color-font-primary) !important;
+}
+
+.deleteButton {
+  min-width: unset !important;
+  width: unset !important;
+  display: none !important;
+  padding: 0 !important;
+}
