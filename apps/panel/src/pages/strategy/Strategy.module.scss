@@ -1,0 +1,67 @@
+.strategyContainer {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)) !important;
+  gap: var(--padding-lg) !important;
+}
+
+.strategyItem {
+  padding: var(--padding-lg);
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-soft-light);
+  min-width: 0;
+  cursor: pointer;
+
+  &:hover {
+    .deleteButton {
+      display: block !important;
+    }
+  }
+}
+
+.addStrategyButton, .strategyItem, .skeletonStrategyItem {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 55px !important;
+  border: var(--border-default) !important;
+  color: var(--color-font-primary) !important;
+
+}
+.skeletonStrategyItem{
+  background-color: var(--color-layout-background) !important;
+}
+
+.addStrategyButton{
+  background-color: var(--color-layout-background) !important;
+  border-color: var(--color-border) !important;
+}
+
+.drawerForm {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawerContent {
+  padding: var(--padding-lg);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.drawerTitle {
+  margin-bottom: var(--padding-md);
+}
+
+.drawerActions {
+  margin-top: var(--padding-lg);
+  padding-top: var(--padding-lg);
+  border-top: var(--border-default);
+}
+
+.deleteButton{
+  min-width: unset !important; 
+  width: unset !important;
+  display: none !important; 
+  padding: 0 !important;
+}
