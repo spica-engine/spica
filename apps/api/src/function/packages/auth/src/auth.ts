@@ -76,10 +76,7 @@ export async function signIn(
       expires: tokenLifeSpan
     },
     {
-      headers: {
-        "X-Spica-SDK": "true",
-        ...headers
-      }
+      headers: {}
     }
   );
 
@@ -90,7 +87,7 @@ export async function signIn(
  * Sign up a new user.
  * Requires prior initialization call with API key.
  *
- * @param user - User data to create (username, password, optional attributes)
+ * @param user - User data to create (username, password)
  * @param headers - Optional headers to include in the request
  * @returns Promise resolving to created user information (without password)
  */
