@@ -72,5 +72,22 @@ describe("@spica-devkit/auth", () => {
 
       expect(user).toEqual({username: "test", password: "test"});
     });
+
+    it("should refresh token", async () => {
+      Auth.refreshAccessToken("old_token", {Cookie: "refresh_token=refresh_token_value"});
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/session/refresh",
+        {},
+        {
+          headers: {
+            Authorization: "old_token",
+            Cookie: "refresh_token=refresh_token_value"
+          },
+          withCredentials: true
+        }
+      );
+    });
   });
 });

@@ -410,7 +410,8 @@ describe("auth", () => {
   describe("refreshAccessToken", () => {
     let auth;
     let userToken: string;
-    let cookies: string[];
+    let shortLivedToken: string;
+    let shortLivedCookies: string[];
 
     beforeEach(async () => {
       auth = await importFreshAuthModule();
@@ -421,13 +422,21 @@ describe("auth", () => {
         password: "refresh_pass"
       });
 
-      const loginResponse = await Axios.post(`${PUBLIC_URL}/passport/login`, {
-        username: "refresh_user",
-        password: "refresh_pass"
-      });
+      const [loginResponse, shortLivedResponse] = await Promise.all([
+        Axios.post(`${PUBLIC_URL}/passport/login`, {
+          username: "refresh_user",
+          password: "refresh_pass"
+        }),
+        Axios.post(`${PUBLIC_URL}/passport/login`, {
+          username: "refresh_user",
+          password: "refresh_pass",
+          expires: 1
+        })
+      ]);
 
       userToken = loginResponse.data.token;
-      cookies = loginResponse.headers["set-cookie"];
+      shortLivedToken = shortLivedResponse.data.token;
+      shortLivedCookies = shortLivedResponse.headers["set-cookie"];
     });
 
     afterEach(() => {
@@ -435,47 +444,23 @@ describe("auth", () => {
     });
 
     it("should fail refresh without cookies", async () => {
-      const error = await Axios.post(
-        `${PUBLIC_URL}/passport/user/session/refresh`,
-        {},
-        {
-          headers: {
-            Authorization: `USER ${userToken}`
-          }
-        }
-      ).catch(e => e.response.data);
+      const error = await auth.refreshAccessToken(`USER ${userToken}`).catch(e => e);
 
       expect(error.statusCode).toEqual(401);
       expect(error.message).toContain("Refresh token does not exist");
     });
 
     it("should refresh expired access token with valid refresh token", async () => {
-      const shortLivedResponse = await Axios.post(`${PUBLIC_URL}/passport/login`, {
-        username: "refresh_user",
-        password: "refresh_pass",
-        expires: 1
-      });
-
-      const shortLivedToken = shortLivedResponse.data.token;
-      const shortLivedCookies = shortLivedResponse.headers["set-cookie"];
-
+      // Wait for token to expire
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const verifyError = await auth.verifyToken(shortLivedToken).catch(e => e);
       expect(verifyError.message).toContain("jwt expired");
 
-      const refreshResponse = await Axios.post(
-        `${PUBLIC_URL}/passport/user/session/refresh`,
-        {},
-        {
-          headers: {
-            Authorization: `USER ${shortLivedToken}`,
-            Cookie: shortLivedCookies.join("; ")
-          }
-        }
-      );
+      const newToken = await auth.refreshAccessToken(`USER ${shortLivedToken}`, {
+        Cookie: shortLivedCookies.join("; ")
+      });
 
-      const newToken = refreshResponse.data.token;
       expect(newToken).toBeDefined();
 
       const verifiedUser = await auth.verifyToken(newToken);
