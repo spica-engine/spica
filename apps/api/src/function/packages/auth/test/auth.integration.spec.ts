@@ -435,7 +435,15 @@ describe("auth", () => {
     });
 
     it("should fail refresh without cookies", async () => {
-      const error = await auth.refreshAccessToken(`USER ${userToken}`, "").catch(e => e);
+      const error = await Axios.post(
+        `${PUBLIC_URL}/passport/user/session/refresh`,
+        {},
+        {
+          headers: {
+            Authorization: `USER ${userToken}`
+          }
+        }
+      ).catch(e => e.response.data);
 
       expect(error.statusCode).toEqual(401);
       expect(error.message).toContain("Refresh token does not exist");
@@ -456,11 +464,18 @@ describe("auth", () => {
       const verifyError = await auth.verifyToken(shortLivedToken).catch(e => e);
       expect(verifyError.message).toContain("jwt expired");
 
-      const newToken = await auth.refreshAccessToken(
-        `USER ${shortLivedToken}`,
-        shortLivedCookies.join("; ")
+      const refreshResponse = await Axios.post(
+        `${PUBLIC_URL}/passport/user/session/refresh`,
+        {},
+        {
+          headers: {
+            Authorization: `USER ${shortLivedToken}`,
+            Cookie: shortLivedCookies.join("; ")
+          }
+        }
       );
 
+      const newToken = refreshResponse.data.token;
       expect(newToken).toBeDefined();
 
       const verifiedUser = await auth.verifyToken(newToken);

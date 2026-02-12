@@ -141,15 +141,10 @@ export async function updatePassword(
  * This function is designed for browser usage, wont be working in Node.js environment due to cookie handling.
  *
  * @param accessToken - The current (possibly expired) access token
- * @param refreshToken - The refresh token value or full cookie string to use for refreshing
  * @param headers - Optional headers to include in the request
  * @returns Promise resolving to the new access token
  */
-export async function refreshAccessToken(
-  accessToken: string,
-  refreshToken: string,
-  headers?: object
-): Promise<string> {
+export async function refreshAccessToken(accessToken: string, headers?: object): Promise<string> {
   checkInitialized(authorization, service);
 
   const response = await service.post<TokenScheme>(
@@ -158,9 +153,9 @@ export async function refreshAccessToken(
     {
       headers: {
         Authorization: accessToken,
-        Cookie: refreshToken,
         ...headers
-      }
+      },
+      withCredentials: true
     }
   );
 
