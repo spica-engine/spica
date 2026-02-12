@@ -75,9 +75,7 @@ export async function signIn(
       password,
       expires: tokenLifeSpan
     },
-    {
-      headers: {}
-    }
+    {headers}
   );
 
   return response.token;
