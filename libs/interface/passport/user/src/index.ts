@@ -100,3 +100,10 @@ export type DecryptedUser = User & {
   email?: {value: string; createdAt: Date};
   phone?: {value: string; createdAt: Date};
 };
+
+export type UserAdminUpdate = Pick<
+  User,
+  "username" | "password" | "bannedUntil" | "deactivateJwtsBefore"
+>;
+
+export type UserSelfUpdate = Pick<User, "password">;

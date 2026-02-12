@@ -8,7 +8,7 @@ import {
   UserInitialization
 } from "@spica-server/interface/function/packages";
 import {deepCopyJSON} from "@spica-server/core/copy";
-
+import {UserAdminUpdate, UserSelfUpdate} from "@spica-server/interface/passport/user";
 let authorization;
 
 let service: HttpService;
@@ -121,7 +121,7 @@ export function get(id: string, headers?: object): Promise<UserGet> {
  */
 export async function updatePassword(
   id: string,
-  user: UserUpdate,
+  user: UserSelfUpdate,
   headers?: object
 ): Promise<UserGet> {
   checkInitialized(authorization, service);
@@ -129,6 +129,30 @@ export async function updatePassword(
   user = deepCopyJSON(user);
 
   const updatedUser = await service.put<UserGet>(`${userSegment}/${id}/self`, user, {
+    headers
+  });
+
+  return updatedUser;
+}
+/**
+ * Update user information.
+ * Note: This function is designed for administrative use.
+ *
+ * @param id - User ID to update
+ * @param user - Update data containing user information (except password)
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to updated user information (without password)
+ */
+export async function update(
+  id: string,
+  user: UserAdminUpdate,
+  headers?: object
+): Promise<UserGet> {
+  checkInitialized(authorization, service);
+
+  user = deepCopyJSON(user);
+
+  const updatedUser = await service.put<UserGet>(`${userSegment}/${id}`, user, {
     headers
   });
 

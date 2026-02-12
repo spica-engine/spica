@@ -249,6 +249,54 @@ describe("auth", () => {
       expect(user._id).toEqual(userId);
       expect(user.username).toEqual("updateuser");
     });
+    it("should update user(administrative update)", async () => {
+      const auth = await importFreshAuthModule();
+      auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      const user = await auth.signUp({
+        username: "testuser",
+        password: "testpass"
+      });
+
+      const updatedUser = await auth.update(user._id, {
+        username: "updatedusername"
+      });
+
+      expect(updatedUser._id).toEqual(user._id);
+      expect(updatedUser.username).toEqual("updatedusername");
+
+      const signInToken = await auth.signIn("updatedusername", "testpass");
+      const decodedToken = jwtDecode<any>(signInToken);
+
+      expect(decodedToken.username).toEqual("updatedusername");
+    });
+
+    it("should fail to update user with USER token for administrative update", async () => {
+      const authWithIdentity = await importFreshAuthModule();
+      authWithIdentity.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      const user = await authWithIdentity.signUp({
+        username: "testuser2",
+        password: "testpass2"
+      });
+
+      const userToken = await authWithIdentity.signIn("testuser2", "testpass2");
+
+      const authWithUserToken = await importFreshAuthModule();
+      authWithUserToken.initialize({user: userToken, publicUrl: PUBLIC_URL});
+
+      const error = await authWithUserToken
+        .update(user._id, {
+          username: "shouldnotwork"
+        })
+        .catch(e => e);
+
+      expect(error).toBeDefined();
+      expect(error.statusCode).toEqual(401);
+
+      const unchangedUser = await authWithIdentity.get(user._id);
+      expect(unchangedUser.username).toEqual("testuser2");
+    });
   });
 
   describe("verifyToken initialization", () => {

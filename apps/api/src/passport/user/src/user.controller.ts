@@ -35,7 +35,9 @@ import {
   USER_OPTIONS,
   UserOptions,
   PaginationResponse,
-  POLICY_PROVIDER
+  POLICY_PROVIDER,
+  UserAdminUpdate,
+  UserSelfUpdate
 } from "@spica-server/interface/passport/user";
 import {registerPolicyAttacher} from "./utility";
 import {ClassCommander} from "@spica-server/replication";
@@ -372,14 +374,12 @@ export class UserController {
   async updateSelf(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/user-self-update"))
-    user: Partial<User>
+    user: UserSelfUpdate
   ) {
     if (user.password) {
       const passwordUpdates = await this.userService.handlePasswordUpdate(id, user.password);
       Object.assign(user, passwordUpdates);
     }
-
-    delete user.authFactor;
 
     return this.userService
       .findOneAndUpdate({_id: id}, {$set: user}, {returnDocument: ReturnDocument.AFTER})
@@ -403,14 +403,12 @@ export class UserController {
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/user-update"))
-    user: Partial<User>
+    user: UserAdminUpdate
   ) {
     if (user.password) {
       const passwordUpdates = await this.userService.handlePasswordUpdate(id, user.password);
       Object.assign(user, passwordUpdates);
     }
-
-    delete user.authFactor;
 
     return this.userService
       .findOneAndUpdate({_id: id}, {$set: user}, {returnDocument: ReturnDocument.AFTER})
