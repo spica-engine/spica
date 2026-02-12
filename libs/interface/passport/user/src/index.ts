@@ -1,25 +1,12 @@
 import {ObjectId} from "@spica-server/database";
 import {FactorMeta} from "@spica-server/interface/passport/authfactor";
 
-export interface UserSettingsContents {
-  schema: UserSchema;
-}
-
-export interface UserSchema {
-  attributes: {
-    [key: string]: any;
-  };
-}
-
 export interface User {
   _id?: ObjectId;
   username: string;
   password: string;
   deactivateJwtsBefore?: number;
   policies: string[];
-  attributes?: {
-    [key: string]: any;
-  };
   authFactor?: FactorMeta;
   lastPasswords: string[];
   lastLogin: Date;
@@ -54,9 +41,6 @@ export interface UserOptions {
   issuer: string;
   audience?: string;
   secretOrKey: string;
-  defaultUserUsername?: string;
-  defaultUserPassword?: string;
-  defaultUserPolicies?: string[];
   entryLimit?: number;
   blockingOptions: {
     failedAttemptLimit: number;
@@ -84,6 +68,10 @@ export interface UserVerification {
 export interface UserConfigSettings {
   verificationProcessMaxAttempt: number;
   passwordlessLogin?: PasswordlessLoginConfig;
+  resetPasswordProvider?: Array<{
+    provider: "email" | "phone";
+    strategy: string;
+  }>;
 }
 export interface PasswordlessLoginConfig {
   isActive: boolean;

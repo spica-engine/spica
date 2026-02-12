@@ -7,7 +7,6 @@ import {UserConfigSettings} from "@spica-server/interface/passport/user";
 @Injectable()
 export class UserConfigService extends ConfigService {
   private readonly MODULE_NAME = "User";
-
   constructor(db: DatabaseService) {
     super(db);
   }
@@ -48,6 +47,28 @@ export class UserConfigService extends ConfigService {
       {
         $set: {
           "options.passwordlessLogin": passwordlessLogin
+        }
+      },
+      {upsert: true}
+    );
+  }
+
+  async getResetPasswordConfig(): Promise<UserConfigSettings["resetPasswordProvider"]> {
+    const config = (await this.findOne({
+      module: this.MODULE_NAME
+    })) as BaseConfig<UserConfigSettings>;
+
+    return config?.options?.resetPasswordProvider;
+  }
+
+  async updateResetPasswordConfig(
+    resetPasswordProvider: UserConfigSettings["resetPasswordProvider"]
+  ): Promise<void> {
+    await this.updateOne(
+      {module: this.MODULE_NAME},
+      {
+        $set: {
+          "options.resetPasswordProvider": resetPasswordProvider
         }
       },
       {upsert: true}
