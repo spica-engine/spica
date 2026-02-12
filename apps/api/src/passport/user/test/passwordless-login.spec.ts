@@ -151,7 +151,9 @@ describe("Passwordless Login", () => {
         ]
       });
       await expect(passwordlessService.start(username, "email")).rejects.toMatchObject({
-        message: expect.stringContaining("Passwordless login is not enabled"),
+        message: expect.stringContaining(
+          "Provider or Passwordless login is not configured properly."
+        ),
         status: 400
       });
     });
@@ -209,7 +211,7 @@ describe("Passwordless Login", () => {
         await passwordlessService.start("nonexistent", "email");
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toContain("No user found with username");
+        expect(error.message).toContain("No user found");
         expect(error.status).toBe(404);
       }
     });
@@ -292,7 +294,9 @@ describe("Passwordless Login", () => {
       });
 
       await expect(passwordlessService.start(username, "email")).rejects.toMatchObject({
-        message: expect.stringContaining("Passwordless login is not enabled"),
+        message: expect.stringContaining(
+          "Provider or Passwordless login is not configured properly."
+        ),
         status: 400
       });
     });
@@ -340,7 +344,7 @@ describe("Passwordless Login", () => {
         await passwordlessService.verify("nonexistent", "123456", "email");
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toContain("No user found with username");
+        expect(error.message).toContain("No user found");
         expect(error.status).toBe(404);
       }
     });

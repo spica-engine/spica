@@ -78,6 +78,7 @@ export class PasswordResetService {
     username: string,
     provider: "email" | "phone"
   ): Promise<{user: any; strategy: string}> {
+    const errorMessage = "Provider or Reset password is not configured properly.";
     const user = await this.userService.findOne({username});
     if (!user) {
       throw new NotFoundException("User not found");
@@ -85,16 +86,12 @@ export class PasswordResetService {
 
     const resetPasswordProviders = await this.userConfigService.getResetPasswordConfig();
     if (!resetPasswordProviders || resetPasswordProviders.length === 0) {
-      throw new BadRequestException("Reset password providers are not configured.");
+      throw new BadRequestException(errorMessage);
     }
 
     const providerConfig = resetPasswordProviders.find(p => p.provider === provider);
     if (!providerConfig) {
-      throw new BadRequestException(
-        `Reset password via ${provider} is not configured. Available providers: ${resetPasswordProviders
-          .map(p => p.provider)
-          .join(", ")}`
-      );
+      throw new BadRequestException(errorMessage);
     }
 
     return {user, strategy: providerConfig.strategy};
