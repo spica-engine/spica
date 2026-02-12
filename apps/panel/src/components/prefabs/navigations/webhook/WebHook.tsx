@@ -70,7 +70,7 @@ const WebHook = () => {
               suffix={{
                 children: (
                   <Popover
-                    trigger="click"
+                    trigger="hover"
                     content={
                       <FlexElement direction="vertical" gap={8} alignment="leftTop">
                         <InfoRow
@@ -106,8 +106,8 @@ const WebHook = () => {
         ));
       })()}
 
-      <FlexElement dimensionX="fill" alignment="center">
-        <Button variant="text" onClick={handleOpenDrawer}>
+      <FlexElement dimensionX="fill" alignment="center" className={webhookStyles.addWebhookButtonContainer}>
+        <Button  variant="text" onClick={handleOpenDrawer} className={webhookStyles.addWebhookButton}>
           <Icon name="plus" /> Add Webhook
         </Button>
       </FlexElement>
