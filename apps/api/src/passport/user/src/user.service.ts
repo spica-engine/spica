@@ -1,5 +1,5 @@
 import {Injectable, Inject, UnauthorizedException, BadRequestException} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {
   User,
   USER_OPTIONS,
@@ -391,5 +391,66 @@ export class UserService extends BaseCollection<User>("user") {
       );
     }
     return this.userOptions.providerHashSecret;
+  }
+  
+  async handlePasswordUpdate(
+    id: ObjectId,
+    newPassword: string,
+    skipCurrentPasswordCheck: boolean = false
+  ): Promise<{password: string; deactivateJwtsBefore?: number; lastPasswords?: string[]}> {
+    const user = await this.findOne({_id: id});
+
+    if (!user) {
+      throw new BadRequestException("User not found");
+    }
+
+    const {password: currentPassword, lastPasswords} = user;
+    const updates: any = {};
+
+    if (!skipCurrentPasswordCheck) {
+      const isEqual = await compare(newPassword, currentPassword);
+      if (!isEqual) {
+        updates.deactivateJwtsBefore = Date.now() / 1000;
+      }
+    } else {
+      updates.deactivateJwtsBefore = Date.now() / 1000;
+    }
+
+    if (this.userOptions.passwordHistoryLimit > 0) {
+      updates.lastPasswords = lastPasswords || [];
+      updates.lastPasswords.push(currentPassword);
+
+      if (updates.lastPasswords.length === this.userOptions.passwordHistoryLimit + 1) {
+        updates.lastPasswords.shift();
+      }
+
+      const isOneOfLastPasswords = (
+        await Promise.all(updates.lastPasswords.map(oldPw => compare(newPassword, oldPw)))
+      ).includes(true);
+
+      if (isOneOfLastPasswords) {
+        throw new BadRequestException(
+          `New password can't be the one of last ${this.userOptions.passwordHistoryLimit} passwords.`
+        );
+      }
+    }
+
+    updates.password = await hash(newPassword);
+
+    return updates;
+  }
+
+  async isUserVerifiedProvider(user: User, provider: string): Promise<boolean> {
+    const providerField = user[provider];
+
+    if (!providerField) {
+      return Promise.reject(`User does not have a ${provider} field.`);
+    }
+
+    if (!("encrypted" in providerField)) {
+      return Promise.reject(`User ${provider} field is not properly configured.`);
+    }
+
+    return Promise.resolve(true);
   }
 }

@@ -43,6 +43,8 @@ import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {VerificationService} from "./verification.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
+import {PasswordlessLoginService} from "./services/passwordless-login.service";
+import {PasswordResetService} from "./services/password-reset.service";
 import * as CRUD from "./crud";
 
 @Controller("passport/user")
@@ -69,6 +71,8 @@ export class UserController {
     private userService: UserService,
     private verificationService: VerificationService,
     private providerVerificationService: ProviderVerificationService,
+    private passwordlessLoginService: PasswordlessLoginService,
+    private passwordResetService: PasswordResetService,
     @Inject(USER_OPTIONS) private options: UserOptions,
     private authFactor: AuthFactor,
     @Optional() private commander: ClassCommander
@@ -375,7 +379,7 @@ export class UserController {
     user: Partial<User>
   ) {
     if (user.password) {
-      const passwordUpdates = await this.handlePasswordUpdate(id, user.password);
+      const passwordUpdates = await this.userService.handlePasswordUpdate(id, user.password);
       Object.assign(user, passwordUpdates);
     }
 
@@ -406,7 +410,7 @@ export class UserController {
     user: Partial<User>
   ) {
     if (user.password) {
-      const passwordUpdates = await this.handlePasswordUpdate(id, user.password);
+      const passwordUpdates = await this.userService.handlePasswordUpdate(id, user.password);
       Object.assign(user, passwordUpdates);
     }
 
@@ -530,40 +534,54 @@ export class UserController {
     );
   }
 
-  private async handlePasswordUpdate(
-    id: ObjectId,
-    newPassword: string
-  ): Promise<{password: string; deactivateJwtsBefore?: number; lastPasswords?: string[]}> {
-    const {password: currentPassword, lastPasswords} = await this.userService.findOne({_id: id});
-
-    const isEqual = await compare(newPassword, currentPassword);
-    const updates: any = {};
-
-    if (!isEqual) {
-      updates.deactivateJwtsBefore = Date.now() / 1000;
+  @Post("passwordless-login/start")
+  startPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-start"))
+    body: {
+      username: string;
+      provider: "email" | "phone";
     }
+  ) {
+    return this.passwordlessLoginService.start(body.username, body.provider);
+  }
 
-    if (this.options.passwordHistoryLimit > 0) {
-      updates.lastPasswords = lastPasswords || [];
-      updates.lastPasswords.push(currentPassword);
-
-      if (updates.lastPasswords.length === this.options.passwordHistoryLimit + 1) {
-        updates.lastPasswords.shift();
-      }
-
-      const isOneOfLastPasswords = (
-        await Promise.all(updates.lastPasswords.map(oldPw => compare(newPassword, oldPw)))
-      ).includes(true);
-
-      if (isOneOfLastPasswords) {
-        throw new BadRequestException(
-          `New password can't be the one of last ${this.options.passwordHistoryLimit} passwords.`
-        );
-      }
+  @Post("passwordless-login/verify")
+  verifyPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-verify"))
+    body: {
+      username: string;
+      code: string;
+      provider: "email" | "phone";
     }
+  ) {
+    return this.passwordlessLoginService.verify(body.username, body.code, body.provider);
+  }
+  @Post("forgot-password/start")
+  async startForgotPassword(
+    @Body(Schema.validate("http://spica.internal/passport/forgot-password-start"))
+    body: {
+      username: string;
+      provider: "email" | "phone";
+    }
+  ) {
+    return this.passwordResetService.startForgotPasswordProcess(body.username, body.provider);
+  }
 
-    updates.password = await hash(newPassword);
-
-    return updates;
+  @Post("forgot-password/verify")
+  async verifyForgotPassword(
+    @Body(Schema.validate("http://spica.internal/passport/forgot-password-verify"))
+    body: {
+      username: string;
+      code: string;
+      newPassword: string;
+      provider: "email" | "phone";
+    }
+  ) {
+    return this.passwordResetService.verifyAndResetPassword(
+      body.username,
+      body.code,
+      body.newPassword,
+      body.provider
+    );
   }
 }

@@ -19,6 +19,10 @@ import userCreateSchema from "./schemas/user-create.json" with {type: "json"};
 import userUpdateSchema from "./schemas/user-update.json" with {type: "json"};
 import userSelfUpdateSchema from "./schemas/user-self-update.json" with {type: "json"};
 import AuthFactorSchema from "./schemas/authfactor.json" with {type: "json"};
+import passwordlessLoginStartSchema from "./schemas/passwordless-login-start.json" with {type: "json"};
+import passwordlessLoginVerifySchema from "./schemas/passwordless-login-verify.json" with {type: "json"};
+import forgotPasswordStartSchema from "./schemas/forgot-password-start.json" with {type: "json"};
+import forgotPasswordVerifySchema from "./schemas/forgot-password-verify.json" with {type: "json"};
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 import {UserRealtimeModule} from "../realtime";
 import {VerificationService} from "./verification.service";
@@ -31,6 +35,8 @@ import {MailerService} from "@spica-server/mailer";
 import {SmsService} from "@spica-server/sms";
 import {UserConfigService} from "./config.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
+import {PasswordlessLoginService} from "./services/passwordless-login.service";
+import {PasswordResetService} from "./services/password-reset.service";
 
 @Global()
 @Module({})
@@ -62,7 +68,11 @@ export class UserModule {
             userCreateSchema,
             userUpdateSchema,
             userSelfUpdateSchema,
-            AuthFactorSchema
+            AuthFactorSchema,
+            passwordlessLoginStartSchema,
+            passwordlessLoginVerifySchema,
+            forgotPasswordStartSchema,
+            forgotPasswordVerifySchema
           ],
           customFields: [
             "options",
@@ -77,8 +87,11 @@ export class UserModule {
         UserService,
         UserStrategy,
         VerificationService,
+        PasswordlessLoginService,
+        UserConfigService,
         VerificationProviderRegistry,
         ProviderVerificationService,
+        PasswordResetService,
         UserConfigService,
         {
           provide: USER_OPTIONS,

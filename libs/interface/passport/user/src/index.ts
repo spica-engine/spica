@@ -68,6 +68,17 @@ export interface UserVerification {
 
 export interface UserConfigSettings {
   verificationProcessMaxAttempt: number;
+  passwordlessLogin?: PasswordlessLoginConfig;
+  resetPasswordProvider?: Array<{
+    provider: "email" | "phone";
+    strategy: string;
+  }>;
+}
+export interface PasswordlessLoginConfig {
+  passwordlessLoginProvider: Array<{
+    provider: "email" | "phone";
+    strategy: string;
+  }>;
 }
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
