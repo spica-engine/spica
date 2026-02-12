@@ -31,6 +31,28 @@ export class UserConfigService extends ConfigService {
     });
   }
 
+  async getPasswordlessLoginConfig(): Promise<UserConfigSettings["passwordlessLogin"]> {
+    const config = (await this.findOne({
+      module: this.MODULE_NAME
+    })) as BaseConfig<UserConfigSettings>;
+
+    return config?.options?.passwordlessLogin;
+  }
+
+  async updatePasswordlessLoginConfig(
+    passwordlessLogin: UserConfigSettings["passwordlessLogin"]
+  ): Promise<void> {
+    await this.updateOne(
+      {module: this.MODULE_NAME},
+      {
+        $set: {
+          "options.passwordlessLogin": passwordlessLogin
+        }
+      },
+      {upsert: true}
+    );
+  }
+
   async getResetPasswordConfig(): Promise<UserConfigSettings["resetPasswordProvider"]> {
     const config = (await this.findOne({
       module: this.MODULE_NAME

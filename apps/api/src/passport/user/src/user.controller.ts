@@ -43,6 +43,7 @@ import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {VerificationService} from "./verification.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
+import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
 
 @Controller("passport/user")
@@ -69,6 +70,7 @@ export class UserController {
     private userService: UserService,
     private verificationService: VerificationService,
     private providerVerificationService: ProviderVerificationService,
+    private passwordlessLoginService: PasswordlessLoginService,
     private passwordResetService: PasswordResetService,
     @Inject(USER_OPTIONS) private options: UserOptions,
     private authFactor: AuthFactor,
@@ -528,6 +530,28 @@ export class UserController {
     );
   }
 
+  @Post("passwordless-login/start")
+  startPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-start"))
+    body: {
+      username: string;
+      provider: "email" | "phone";
+    }
+  ) {
+    return this.passwordlessLoginService.start(body.username, body.provider);
+  }
+
+  @Post("passwordless-login/verify")
+  verifyPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-verify"))
+    body: {
+      username: string;
+      code: string;
+      provider: "email" | "phone";
+    }
+  ) {
+    return this.passwordlessLoginService.verify(body.username, body.code, body.provider);
+  }
   @Post("forgot-password/start")
   async startForgotPassword(
     @Body(Schema.validate("http://spica.internal/passport/forgot-password-start"))
