@@ -36,7 +36,6 @@ import {
   UserOptions,
   PaginationResponse,
   POLICY_PROVIDER,
-  UserAdminUpdate,
   UserSelfUpdate
 } from "@spica-server/interface/passport/user";
 import {registerPolicyAttacher} from "./utility";
@@ -403,7 +402,7 @@ export class UserController {
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/user-update"))
-    user: UserAdminUpdate
+    user: Pick<User, "username" | "password" | "bannedUntil" | "deactivateJwtsBefore">
   ) {
     if (user.password) {
       const passwordUpdates = await this.userService.handlePasswordUpdate(id, user.password);

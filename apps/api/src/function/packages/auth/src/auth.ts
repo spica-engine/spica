@@ -8,7 +8,7 @@ import {
   UserInitialization
 } from "@spica-server/interface/function/packages";
 import {deepCopyJSON} from "@spica-server/core/copy";
-import {UserAdminUpdate, UserSelfUpdate} from "@spica-server/interface/passport/user";
+import {UserSelfUpdate} from "@spica-server/interface/passport/user";
 let authorization;
 
 let service: HttpService;
@@ -135,26 +135,80 @@ export async function updatePassword(
   return updatedUser;
 }
 /**
- * Update user information.
- * Note: This function is designed for administrative use.
+ * Update a user's username.
+ * Requires prior initialization call with appropriate authorization.
  *
  * @param id - User ID to update
- * @param user - Update data containing user information (except password)
+ * @param username - New username for the user
  * @param headers - Optional headers to include in the request
  * @returns Promise resolving to updated user information (without password)
  */
-export async function update(
+export async function updateUsername(
   id: string,
-  user: UserAdminUpdate,
+  username: string,
   headers?: object
 ): Promise<UserGet> {
   checkInitialized(authorization, service);
 
-  user = deepCopyJSON(user);
+  const updatedUser = await service.put<UserGet>(
+    `${userSegment}/${id}`,
+    {username},
+    {
+      headers
+    }
+  );
 
-  const updatedUser = await service.put<UserGet>(`${userSegment}/${id}`, user, {
-    headers
-  });
+  return updatedUser;
+}
+
+/**
+ * Ban a user until a specific date.
+ * User will not be able to log in until the ban expires.
+ * Requires prior initialization call with appropriate authorization.
+ *
+ * @param id - User ID to ban
+ * @param bannedUntil - Date when the ban expires (user can log in after this date)
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to updated user information (without password)
+ */
+export async function ban(id: string, bannedUntil: Date, headers?: object): Promise<UserGet> {
+  checkInitialized(authorization, service);
+
+  const updatedUser = await service.put<UserGet>(
+    `${userSegment}/${id}`,
+    {bannedUntil: bannedUntil.toISOString()},
+    {
+      headers
+    }
+  );
+
+  return updatedUser;
+}
+
+/**
+ * Deactivate all JWT tokens issued before a specific date.
+ * This forces users to re-authenticate after a security incident or password change.
+ * Requires prior initialization call with appropriate authorization.
+ *
+ * @param id - User ID whose tokens should be deactivated
+ * @param deactivateJwtsBefore - Date before which all JWTs are considered invalid
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to updated user information (without password)
+ */
+export async function deactivateUserTokens(
+  id: string,
+  deactivateJwtsBefore: Date,
+  headers?: object
+): Promise<UserGet> {
+  checkInitialized(authorization, service);
+
+  const updatedUser = await service.put<UserGet>(
+    `${userSegment}/${id}`,
+    {deactivateJwtsBefore: Math.floor(deactivateJwtsBefore.getTime() / 1000)},
+    {
+      headers
+    }
+  );
 
   return updatedUser;
 }
