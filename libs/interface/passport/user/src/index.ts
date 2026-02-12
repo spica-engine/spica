@@ -74,7 +74,6 @@ export interface UserConfigSettings {
   }>;
 }
 export interface PasswordlessLoginConfig {
-  isActive: boolean;
   passwordlessLoginProvider: Array<{
     provider: "email" | "phone";
     strategy: string;

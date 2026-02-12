@@ -130,7 +130,6 @@ describe("Passwordless Login", () => {
       } as any);
 
       await userConfigService.updatePasswordlessLoginConfig({
-        isActive: true,
         passwordlessLoginProvider: [
           {
             provider: "email",
@@ -141,19 +140,8 @@ describe("Passwordless Login", () => {
     });
 
     it("should throw error when passwordless login is not enabled", async () => {
-      await userConfigService.updatePasswordlessLoginConfig({
-        isActive: false,
-        passwordlessLoginProvider: [
-          {
-            provider: "email",
-            strategy: strategy
-          }
-        ]
-      });
       await expect(passwordlessService.start(username, "email")).rejects.toMatchObject({
-        message: expect.stringContaining(
-          "Provider or Passwordless login is not configured properly."
-        ),
+        message: expect.stringContaining("Failed to send verification code"),
         status: 400
       });
     });
@@ -180,7 +168,6 @@ describe("Passwordless Login", () => {
 
     it("should send verification code via phone when enabled", async () => {
       await userConfigService.updatePasswordlessLoginConfig({
-        isActive: true,
         passwordlessLoginProvider: [
           {
             provider: "phone",
@@ -260,7 +247,6 @@ describe("Passwordless Login", () => {
       } as any);
 
       await userConfigService.updatePasswordlessLoginConfig({
-        isActive: true,
         passwordlessLoginProvider: [
           {
             provider: "email",
@@ -283,20 +269,9 @@ describe("Passwordless Login", () => {
     });
 
     it("should throw error when passwordless login is not enabled", async () => {
-      await userConfigService.updatePasswordlessLoginConfig({
-        isActive: false,
-        passwordlessLoginProvider: [
-          {
-            provider: "email",
-            strategy: strategy
-          }
-        ]
-      });
-
+      await userConfigService.updatePasswordlessLoginConfig(undefined);
       await expect(passwordlessService.start(username, "email")).rejects.toMatchObject({
-        message: expect.stringContaining(
-          "Provider or Passwordless login is not configured properly."
-        ),
+        message: expect.stringContaining("Passwordless login is not configured properly."),
         status: 400
       });
     });
@@ -374,7 +349,6 @@ describe("Passwordless Login", () => {
 
     it("should work with phone provider", async () => {
       await userConfigService.updatePasswordlessLoginConfig({
-        isActive: true,
         passwordlessLoginProvider: [
           {
             provider: "phone",

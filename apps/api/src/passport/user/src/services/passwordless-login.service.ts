@@ -77,10 +77,10 @@ export class PasswordlessLoginService {
   }
 
   private async validateAndGetUser(username: string, provider: "email" | "phone") {
-    const errorMessage = "Provider or Passwordless login is not configured properly.";
+    const errorMessage = "Passwordless login is not configured properly.";
     const config = await this.userConfigService.getPasswordlessLoginConfig();
 
-    if (!config?.isActive) {
+    if (!config) {
       throw new BadRequestException(errorMessage);
     }
 

@@ -108,7 +108,6 @@ describe("Passwordless Login E2E with MailHog", () => {
     });
 
     await userConfigService.updatePasswordlessLoginConfig({
-      isActive: true,
       passwordlessLoginProvider: [
         {
           provider: EMAIL_PROVIDER,
