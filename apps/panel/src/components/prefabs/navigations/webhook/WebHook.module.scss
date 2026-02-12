@@ -1,0 +1,19 @@
+.webhookLink {
+  display: block;
+  text-decoration: none;
+}
+
+
+
+.infoItem{
+  font-weight: bold !important;
+  font-size: var(--font-size-sm) !important;
+}
+
+.active{
+  color: var(--color-success) !important;
+}
+
+.inactive{
+  color: var(--color-danger) !important;
+}

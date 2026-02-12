@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/guards/ProtectedRoute";
 import Storage from "./pages/storage/Storage";
 import StorageItem from "./pages/storage-view/StorageView";
 import Policy from "./pages/policy/Policy";
+import Webhook from "./pages/webhook/Webhook";
 
 const router = createBrowserRouter([
   {
@@ -55,6 +56,10 @@ const router = createBrowserRouter([
       {
         path: "storage",
         element: <Storage />
+      },
+      {
+        path: "webhook/:webhookId",
+        element: <Webhook />
       }
     ]
   },
