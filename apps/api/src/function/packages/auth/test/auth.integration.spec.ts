@@ -8,6 +8,7 @@ import {PassportModule} from "@spica-server/passport";
 import Axios from "axios";
 import {jwtDecode} from "jwt-decode";
 import {BatchModule} from "@spica-server/batch";
+import cookieParser from "cookie-parser";
 import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 
 const EXPIRES_IN = 60 * 60 * 24;
@@ -82,6 +83,7 @@ describe("auth", () => {
       ]
     }).compile();
     app = module.createNestApplication();
+    app.use(cookieParser());
     await app.listen(PORT);
 
     await new Promise((resolve, _) => setTimeout(resolve, 3000));
@@ -167,114 +169,6 @@ describe("auth", () => {
         message: "jwt malformed",
         error: "Bad Request"
       });
-    });
-
-    it("should refresh access token using refresh token (SDK)", async () => {
-      const loginResponse = await Axios.post(
-        `${PUBLIC_URL}/passport/login`,
-        {
-          username: "user1",
-          password: "pass1"
-        },
-        {
-          headers: {"X-Spica-SDK": "true"}
-        }
-      );
-
-      const {token: accessToken, refreshToken} = loginResponse.data;
-
-      expect(accessToken).toBeDefined();
-      expect(refreshToken).toBeDefined();
-
-      // Wait to ensure different iat timestamp
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const newToken = await auth.refreshAccessToken(accessToken, refreshToken);
-
-      expect(newToken).toBeDefined();
-      expect(typeof newToken).toBe("string");
-      expect(newToken).not.toEqual(accessToken);
-
-      const decoded = jwtDecode<any>(newToken);
-      expect(decoded.username).toEqual("user1");
-    });
-
-    it("should NOT include refreshToken in body for browser login (security)", async () => {
-      const loginResponse = await Axios.post(`${PUBLIC_URL}/passport/login`, {
-        username: "user1",
-        password: "pass1"
-      });
-
-      const {token: accessToken, refreshToken} = loginResponse.data;
-
-      expect(accessToken).toBeDefined();
-      expect(refreshToken).toBeUndefined();
-    });
-
-    it("should reject refresh request without SDK header when using body", async () => {
-      const loginResponse = await Axios.post(
-        `${PUBLIC_URL}/passport/login`,
-        {
-          username: "user1",
-          password: "pass1"
-        },
-        {
-          headers: {"X-Spica-SDK": "true"}
-        }
-      );
-
-      const {token: accessToken, refreshToken} = loginResponse.data;
-
-      let error;
-      try {
-        await Axios.post(
-          `${PUBLIC_URL}/passport/user/session/refresh`,
-          {refreshToken},
-          {
-            headers: {Authorization: `USER ${accessToken}`}
-          }
-        );
-      } catch (e) {
-        error = e;
-      }
-
-      expect(error).toBeDefined();
-      expect(error.response.status).toBe(400);
-    });
-
-    it("should reject SDK refresh request without refreshToken in body", async () => {
-      const loginResponse = await Axios.post(
-        `${PUBLIC_URL}/passport/login`,
-        {
-          username: "user1",
-          password: "pass1"
-        },
-        {
-          headers: {"X-Spica-SDK": "true"}
-        }
-      );
-
-      const {token: accessToken} = loginResponse.data;
-
-      let error;
-      try {
-        await Axios.post(
-          `${PUBLIC_URL}/passport/user/session/refresh`,
-          {}, // Missing refreshToken
-          {
-            headers: {
-              Authorization: `USER ${accessToken}`,
-              "X-Spica-SDK": "true"
-            }
-          }
-        );
-      } catch (e) {
-        error = e;
-      }
-
-      expect(error).toBeDefined();
-      expect(error.response.status).toBe(401);
-      expect(error.response.data.message).toContain("SDK");
     });
   });
 
@@ -510,6 +404,67 @@ describe("auth", () => {
 
       expect(decodedToken.username).toEqual("signin_user2");
       expect(decodedToken.iss).toEqual("spica");
+    });
+  });
+
+  describe("refreshAccessToken", () => {
+    let auth;
+    let userToken: string;
+    let cookies: string[];
+
+    beforeEach(async () => {
+      auth = await importFreshAuthModule();
+      auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      await auth.signUp({
+        username: "refresh_user",
+        password: "refresh_pass"
+      });
+
+      const loginResponse = await Axios.post(`${PUBLIC_URL}/passport/login`, {
+        username: "refresh_user",
+        password: "refresh_pass"
+      });
+
+      userToken = loginResponse.data.token;
+      cookies = loginResponse.headers["set-cookie"];
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
+    it("should fail refresh without cookies", async () => {
+      const error = await auth.refreshAccessToken(`USER ${userToken}`, "").catch(e => e);
+
+      expect(error.statusCode).toEqual(401);
+      expect(error.message).toContain("Refresh token does not exist");
+    });
+
+    it("should refresh expired access token with valid refresh token", async () => {
+      const shortLivedResponse = await Axios.post(`${PUBLIC_URL}/passport/login`, {
+        username: "refresh_user",
+        password: "refresh_pass",
+        expires: 1
+      });
+
+      const shortLivedToken = shortLivedResponse.data.token;
+      const shortLivedCookies = shortLivedResponse.headers["set-cookie"];
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const verifyError = await auth.verifyToken(shortLivedToken).catch(e => e);
+      expect(verifyError.message).toContain("jwt expired");
+
+      const newToken = await auth.refreshAccessToken(
+        `USER ${shortLivedToken}`,
+        shortLivedCookies.join("; ")
+      );
+
+      expect(newToken).toBeDefined();
+
+      const verifiedUser = await auth.verifyToken(newToken);
+      expect(verifiedUser.username).toEqual("refresh_user");
     });
   });
 });

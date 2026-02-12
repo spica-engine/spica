@@ -90,7 +90,7 @@ export async function signIn(
  * Sign up a new user.
  * Requires prior initialization call with API key.
  *
- * @param user - User data to create (username, password)
+ * @param user - User data to create (username, password, optional attributes)
  * @param headers - Optional headers to include in the request
  * @returns Promise resolving to created user information (without password)
  */
@@ -143,10 +143,10 @@ export async function updatePassword(
 
 /**
  * Refresh an access token using a refresh token.
- * This function is designed for server-side SDK usage with explicit token management.
+ * This function is designed for browser usage, wont be working in Node.js environment due to cookie handling.
  *
  * @param accessToken - The current (possibly expired) access token
- * @param refreshToken - The refresh token to use for refreshing
+ * @param refreshToken - The refresh token value or full cookie string to use for refreshing
  * @param headers - Optional headers to include in the request
  * @returns Promise resolving to the new access token
  */
@@ -155,15 +155,15 @@ export async function refreshAccessToken(
   refreshToken: string,
   headers?: object
 ): Promise<string> {
-  checkInitialized(authorization, service, {skipAuthCheck: true});
+  checkInitialized(authorization, service);
 
   const response = await service.post<TokenScheme>(
     `${userSegment}/session/refresh`,
-    {refreshToken},
+    {},
     {
       headers: {
-        Authorization: `USER ${accessToken}`,
-        "X-Spica-SDK": "true",
+        Authorization: accessToken,
+        Cookie: refreshToken,
         ...headers
       }
     }

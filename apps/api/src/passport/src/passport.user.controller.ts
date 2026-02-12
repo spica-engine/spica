@@ -201,14 +201,7 @@ export class PassportUserController {
     }
   }
 
-  async _login(
-    username: string,
-    password: string,
-    state: string,
-    expires: number,
-    res,
-    isSdkRequest: boolean = false
-  ) {
+  async _login(username: string, password: string, state: string, expires: number, res) {
     const catchError = e => {
       if (!res.headerSent) {
         res.status(e.status || 500).json(e.response || e);
@@ -240,12 +233,7 @@ export class PassportUserController {
     }
 
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
-
-    if (isSdkRequest) {
-      return res.status(200).json({...tokenSchema, refreshToken: refreshTokenSchema.token});
-    } else {
-      return res.status(200).json(tokenSchema);
-    }
+    return res.status(200).json(tokenSchema);
   }
 
   @Get("login")
@@ -253,7 +241,6 @@ export class PassportUserController {
     @Query("username") username: string,
     @Query("password") password: string,
     @Query("state") state: string,
-    @Headers("x-spica-sdk") sdkHeader: string,
     @Req() req: any,
     @Next() next,
     @Query("expires", NUMBER) expires?: number
@@ -262,18 +249,17 @@ export class PassportUserController {
       "Warning",
       `299 "Login with 'GET' method has been deprecated. Use 'POST' instead."`
     );
-    this._login(username, password, state, expires, req.res, !!sdkHeader);
+    this._login(username, password, state, expires, req.res);
   }
 
   @Post("login")
   async loginWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
     {username, password, expires, state}: LoginCredentials,
-    @Headers("x-spica-sdk") sdkHeader: string,
     @Res() res: any,
     @Next() next
   ) {
-    this._login(username, password, state, expires, res, !!sdkHeader);
+    this._login(username, password, state, expires, res);
   }
 
   @Post("login/:id/factor-authentication")
@@ -312,23 +298,13 @@ export class PassportUserController {
   @Post("user/session/refresh")
   async refreshToken(
     @Headers("authorization") accessToken: string,
-    @Headers("x-spica-sdk") sdkHeader: string,
-    @Body() body: any,
     @Req() req: any,
     @Res() res: any
   ) {
-    let refreshToken: string;
+    const {refreshToken} = req.cookies || {};
 
-    if (sdkHeader) {
-      refreshToken = body?.refreshToken;
-      if (!refreshToken) {
-        throw new UnauthorizedException("SDK requests must provide refreshToken in request body.");
-      }
-    } else {
-      refreshToken = req.cookies || {};
-      if (!refreshToken) {
-        throw new UnauthorizedException("Refresh token does not exist.");
-      }
+    if (!refreshToken) {
+      throw new UnauthorizedException("Refresh token does not exist.");
     }
 
     let tokenSchema;
