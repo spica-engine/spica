@@ -134,6 +134,32 @@ export async function updatePassword(
 
   return updatedUser;
 }
+
+/**
+ * Refresh an access token using a refresh token.
+ * This function is designed for browser usage, wont be working in Node.js environment due to cookie handling.
+ *
+ * @param accessToken - The current (possibly expired) access token
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to the new access token
+ */
+export async function refreshAccessToken(accessToken: string, headers?: object): Promise<string> {
+  checkInitialized(authorization, service);
+
+  const response = await service.post<TokenScheme>(
+    `${userSegment}/session/refresh`,
+    {},
+    {
+      headers: {
+        Authorization: accessToken,
+        ...headers
+      },
+      withCredentials: true
+    }
+  );
+
+  return response.token;
+}
 /**
  * Update a user's username.
  * Requires prior initialization call with appropriate authorization.
