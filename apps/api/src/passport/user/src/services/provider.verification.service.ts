@@ -42,6 +42,7 @@ export class ProviderVerificationService {
     );
 
     const encryptedData = this.userService.encryptField(response.destination);
+    const hashedValue = this.userService.hashProviderValue(response.destination);
 
     await this.userService.updateOne(
       {_id: response.userId},
@@ -51,7 +52,8 @@ export class ProviderVerificationService {
             encrypted: encryptedData.encrypted,
             iv: encryptedData.iv,
             authTag: encryptedData.authTag,
-            createdAt: new Date()
+            createdAt: new Date(),
+            hash: hashedValue
           }
         }
       }

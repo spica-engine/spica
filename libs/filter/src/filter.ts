@@ -99,7 +99,7 @@ export function replaceFilter(
   return filter;
 }
 
-function constructValue(value: object, ctor: ValueConstructor) {
+export function constructValue(value: object, ctor: ValueConstructor) {
   // { "key": { ... } }
   if (typeof value == "object") {
     for (let [k, v] of Object.entries(value)) {

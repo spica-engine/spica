@@ -114,6 +114,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
                   key: userProviderEncryptionSecret
+            - name: USER_PROVIDER_HASH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: userProviderHashSecret
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:

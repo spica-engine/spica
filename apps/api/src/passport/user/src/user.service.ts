@@ -6,7 +6,7 @@ import {
   UserOptions,
   DecryptedUser
 } from "@spica-server/interface/passport/user";
-import {Validator} from "@spica-server/core/schema";
+import {Validator, hash as hashValue} from "@spica-server/core/schema";
 import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
@@ -27,6 +27,15 @@ export class UserService extends BaseCollection<User>("user") {
       entryLimit: userOptions.entryLimit,
       afterInit: () => {
         this._coll.createIndex({username: 1}, {unique: true});
+        this._coll.createIndex(
+          {"email.hash": 1},
+          {unique: true, partialFilterExpression: {"email.hash": {$exists: true}}}
+        );
+
+        this._coll.createIndex(
+          {"phone.hash": 1},
+          {unique: true, partialFilterExpression: {"phone.hash": {$exists: true}}}
+        );
       }
     });
   }
@@ -357,15 +366,33 @@ export class UserService extends BaseCollection<User>("user") {
     return decryptedUser;
   }
 
+  hashProviderValue(value: string): string {
+    if (!value) {
+      throw new BadRequestException("Value to hash is required.");
+    }
+
+    const secret = this.getProviderHashSecret();
+    return hashValue(value, secret);
+  }
+
   private getProviderEncryptionSecret(): string {
     if (!this.userOptions.providerEncryptionSecret) {
       throw new BadRequestException(
-        "User hash secret is not configured. Please set USER_PROVIDER_HASH_SECRET"
+        "User encryption secret is not configured. Please set USER_PROVIDER_ENCRYPTION_SECRET"
       );
     }
     return this.userOptions.providerEncryptionSecret;
   }
 
+  private getProviderHashSecret(): string {
+    if (!this.userOptions.providerHashSecret) {
+      throw new BadRequestException(
+        "Provider hash secret is not configured. Please set USER_PROVIDER_HASH_SECRET"
+      );
+    }
+    return this.userOptions.providerHashSecret;
+  }
+  
   async handlePasswordUpdate(
     id: ObjectId,
     newPassword: string,
@@ -412,6 +439,7 @@ export class UserService extends BaseCollection<User>("user") {
 
     return updates;
   }
+
   async isUserVerifiedProvider(user: User, provider: string): Promise<boolean> {
     const providerField = user[provider];
 

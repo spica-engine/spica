@@ -46,6 +46,7 @@ import {VerificationService} from "./verification.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
 import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
+import {UserPipelineBuilder} from "./pipeline.builder";
 
 @Controller("passport/user")
 export class UserController {
@@ -151,7 +152,7 @@ export class UserController {
     @Query("filter", JSONP) filter: object,
     @ResourceFilter() resourceFilter: object
   ) {
-    const pipelineBuilder = await new PipelineBuilder()
+    const pipelineBuilder = await new UserPipelineBuilder(this.userService)
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);
 
@@ -162,13 +163,11 @@ export class UserController {
       .setVisibilityOfFields(this.hideSecretsExpression())
       .result();
 
-    const pipeline = (
-      await pipelineBuilder.paginate(
-        paginate,
-        seekingPipeline,
-        this.userService.estimatedDocumentCount()
-      )
-    ).result();
+    const pipeline = (await pipelineBuilder.paginate(
+      paginate,
+      seekingPipeline,
+      this.userService.estimatedDocumentCount()
+    )).result();
 
     if (paginate) {
       const result = await this.userService.aggregate<PaginationResponse<User>>(pipeline).next();
@@ -226,16 +225,23 @@ export class UserController {
     ActionGuard("passport:user:show", undefined, registerPolicyAttacher("UserReadOnlyAccess"))
   )
   async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const user = await this.userService.findOne(
-      {_id: id},
-      {projection: this.hideSecretsExpression()}
-    );
+    const pipelineBuilder = new UserPipelineBuilder(this.userService)
+      .findOneIfRequested(id)
+      .setVisibilityOfFields(this.hideSecretsExpression());
+
+    const pipeline = await pipelineBuilder.result();
+    let user = await this.userService
+      .aggregate<User>(pipeline)
+      .toArray()
+      .then(users => users[0]);
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return this.userService.decryptProviderFields(user);
+    user = this.userService.decryptProviderFields(user);
+
+    return user;
   }
 
   @Post(":id/start-factor-verification")
@@ -255,12 +261,9 @@ export class UserController {
     const factor = this.setUserFactor(id, meta);
 
     // to keep this global value clear
-    setTimeout(
-      () => {
-        this.deleteUserFactor(id);
-      },
-      1000 * 60 * 5
-    );
+    setTimeout(() => {
+      this.deleteUserFactor(id);
+    }, 1000 * 60 * 5);
 
     const challenge = await factor.start();
 
@@ -528,48 +531,48 @@ export class UserController {
   }
 
   @Post("passwordless-login/start")
-  startPasswordlessLogin(
-    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-start"))
-    body: {
-      username: string;
-      provider: "email" | "phone";
-    }
-  ) {
+  startPasswordlessLogin(@Body(
+    Schema.validate("http://spica.internal/passport/passwordless-login-start")
+  )
+  body: {
+    username: string;
+    provider: "email" | "phone";
+  }) {
     return this.passwordlessLoginService.start(body.username, body.provider);
   }
 
   @Post("passwordless-login/verify")
-  verifyPasswordlessLogin(
-    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-verify"))
-    body: {
-      username: string;
-      code: string;
-      provider: "email" | "phone";
-    }
-  ) {
+  verifyPasswordlessLogin(@Body(
+    Schema.validate("http://spica.internal/passport/passwordless-login-verify")
+  )
+  body: {
+    username: string;
+    code: string;
+    provider: "email" | "phone";
+  }) {
     return this.passwordlessLoginService.verify(body.username, body.code, body.provider);
   }
   @Post("forgot-password/start")
-  async startForgotPassword(
-    @Body(Schema.validate("http://spica.internal/passport/forgot-password-start"))
-    body: {
-      username: string;
-      provider: "email" | "phone";
-    }
-  ) {
+  async startForgotPassword(@Body(
+    Schema.validate("http://spica.internal/passport/forgot-password-start")
+  )
+  body: {
+    username: string;
+    provider: "email" | "phone";
+  }) {
     return this.passwordResetService.startForgotPasswordProcess(body.username, body.provider);
   }
 
   @Post("forgot-password/verify")
-  async verifyForgotPassword(
-    @Body(Schema.validate("http://spica.internal/passport/forgot-password-verify"))
-    body: {
-      username: string;
-      code: string;
-      newPassword: string;
-      provider: "email" | "phone";
-    }
-  ) {
+  async verifyForgotPassword(@Body(
+    Schema.validate("http://spica.internal/passport/forgot-password-verify")
+  )
+  body: {
+    username: string;
+    code: string;
+    newPassword: string;
+    provider: "email" | "phone";
+  }) {
     return this.passwordResetService.verifyAndResetPassword(
       body.username,
       body.code,
