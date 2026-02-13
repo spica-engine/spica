@@ -8,6 +8,7 @@ import {PassportModule} from "@spica-server/passport";
 import Axios from "axios";
 import {jwtDecode} from "jwt-decode";
 import {BatchModule} from "@spica-server/batch";
+import cookieParser from "cookie-parser";
 import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 
 const EXPIRES_IN = 60 * 60 * 24;
@@ -82,6 +83,7 @@ describe("auth", () => {
       ]
     }).compile();
     app = module.createNestApplication();
+    app.use(cookieParser());
     await app.listen(PORT);
 
     await new Promise((resolve, _) => setTimeout(resolve, 3000));
@@ -495,6 +497,67 @@ describe("auth", () => {
 
       expect(decodedToken.username).toEqual("signin_user2");
       expect(decodedToken.iss).toEqual("spica");
+    });
+  });
+
+  describe("refreshAccessToken", () => {
+    let auth;
+    let userToken: string;
+    let shortLivedToken: string;
+    let shortLivedCookies: string[];
+
+    beforeEach(async () => {
+      auth = await importFreshAuthModule();
+      auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      await auth.signUp({
+        username: "refresh_user",
+        password: "refresh_pass"
+      });
+
+      const [loginResponse, shortLivedResponse] = await Promise.all([
+        Axios.post(`${PUBLIC_URL}/passport/login`, {
+          username: "refresh_user",
+          password: "refresh_pass"
+        }),
+        Axios.post(`${PUBLIC_URL}/passport/login`, {
+          username: "refresh_user",
+          password: "refresh_pass",
+          expires: 1
+        })
+      ]);
+
+      userToken = loginResponse.data.token;
+      shortLivedToken = shortLivedResponse.data.token;
+      shortLivedCookies = shortLivedResponse.headers["set-cookie"];
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
+    it("should fail refresh without cookies", async () => {
+      const error = await auth.refreshAccessToken(`USER ${userToken}`).catch(e => e);
+
+      expect(error.statusCode).toEqual(401);
+      expect(error.message).toContain("Refresh token does not exist");
+    });
+
+    it("should refresh expired access token with valid refresh token", async () => {
+      // Wait for token to expire
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const verifyError = await auth.verifyToken(shortLivedToken).catch(e => e);
+      expect(verifyError.message).toContain("jwt expired");
+
+      const newToken = await auth.refreshAccessToken(`USER ${shortLivedToken}`, {
+        Cookie: shortLivedCookies.join("; ")
+      });
+
+      expect(newToken).toBeDefined();
+
+      const verifiedUser = await auth.verifyToken(newToken);
+      expect(verifiedUser.username).toEqual("refresh_user");
     });
   });
 });
