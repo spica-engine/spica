@@ -1,0 +1,44 @@
+.activities {
+  padding: var(--padding-md);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--padding-md);
+}
+
+.tableContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyState {
+  padding: var(--padding-lg);
+  text-align: center;
+  color: var(--color-font-primary);
+  background-color: var(--color-soft-light);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+}
+.table{
+    width: 100%;
+  overflow: scroll;
+  
+
+}
+
+.resourceLink {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-font-primary);
+  text-decoration: none;
+
+  span {
+    font-weight: bold;
+  }
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

@@ -12,20 +12,23 @@ type SpicaTableProps<T> = {
   data: T[];
   isLoading?: boolean;
   skeletonRowCount?: number;
+  fixedColumns?: string[];
+  tableClassName?: string;
 }
 
 
-const SpicaTable = <T,>({ columns, data, isLoading, skeletonRowCount }: SpicaTableProps<T>) => {
+const SpicaTable = <T,>({ columns, data, isLoading, skeletonRowCount, fixedColumns, tableClassName }: SpicaTableProps<T>) => {
   return (
     <Table
     columns={columns}
     data={data}
-    tableClassName={styles.table}
+    tableClassName={tableClassName ?? styles.table}
     headerClassName={`${styles.header} ${styles.policyTableHeaders}`}
     columnClassName={`${styles.column} ${styles.policyTableColumns}`}
     cellClassName={styles.cell}
     loading={isLoading}
     skeletonRowCount={skeletonRowCount ?? 10}
+    fixedColumns={fixedColumns ?? []}
   />
   )
 }

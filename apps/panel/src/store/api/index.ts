@@ -164,6 +164,21 @@ export type {
 } from './dashboardApi';
 
 export {
+  activitiesApi,
+  activitiesApiReducerPath,
+  activitiesApiMiddleware,
+  useGetActivitiesQuery,
+  useLazyGetActivitiesQuery,
+} from './activitiesApi';
+
+export type {
+  Activity,
+  ActivityListResponse,
+  ActivityOptions,
+  ActivityFilterResource,
+} from './activitiesApi';
+
+export {
   useIdentityManagement,
   useIdentityList,
   useIdentityDetails,
