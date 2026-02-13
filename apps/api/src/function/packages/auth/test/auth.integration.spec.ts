@@ -305,16 +305,19 @@ describe("auth", () => {
 
       expect(oldDecodedToken.username).toEqual("tokenuser");
 
-      const deactivateDate = new Date();
+      const date = new Date();
+      const deactivateDate = new Date(date.getTime() + 10 * 1000);
 
       const updatedUser = await auth.deactivateUserTokens(user._id, deactivateDate);
-
       expect(updatedUser._id).toEqual(user._id);
 
-      const verifyError = await auth.verifyToken(oldToken).catch(e => e);
+      const authWithOldToken = await importFreshAuthModule();
+      authWithOldToken.initialize({user: oldToken, publicUrl: PUBLIC_URL});
 
-      expect(verifyError).toBeDefined();
-      expect(verifyError.deactivateJwtsBefore).toEqual(undefined);
+      const error = await authWithOldToken.get(user._id).catch(e => e);
+      expect(error).toBeDefined();
+      expect(error.statusCode).toEqual(400);
+      expect(error.message).toContain("Invalid JWT");
     });
 
     it("should fail to update username with USER token", async () => {
