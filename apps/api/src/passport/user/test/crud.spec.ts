@@ -188,4 +188,63 @@ describe("User Email Hashing and Encryption", () => {
     expect(listRes.statusCode).toBe(200);
     expect(listRes.body.length).toBe(0);
   });
+
+  it("should find user with logical query operators using email", async () => {
+    const listRes = await req.get(
+      "/passport/user",
+      {
+        filter: JSON.stringify({
+          $or: [{email: "test@example.com"}, {username: "nonexistent"}]
+        })
+      },
+      {
+        Authorization: `IDENTITY ${adminToken}`
+      }
+    );
+
+    expect(listRes.statusCode).toBe(200);
+    expect(listRes.body.length).toBe(1);
+    expect(listRes.body[0]).toEqual({
+      _id: testUserId,
+      username: "testuser",
+      email: {
+        value: "test@example.com",
+        createdAt: createdAt.toISOString()
+      },
+      policies: [],
+      lastLogin: null,
+      failedAttempts: []
+    });
+  });
+
+  it("should work with nested logical operators using email", async () => {
+    const listRes = await req.get(
+      "/passport/user",
+      {
+        filter: JSON.stringify({
+          $or: [
+            {$and: [{email: "test@example.com"}, {username: "testuser"}]},
+            {username: "nonexistent"}
+          ]
+        })
+      },
+      {
+        Authorization: `IDENTITY ${adminToken}`
+      }
+    );
+
+    expect(listRes.statusCode).toBe(200);
+    expect(listRes.body.length).toBe(1);
+    expect(listRes.body[0]).toEqual({
+      _id: testUserId,
+      username: "testuser",
+      email: {
+        value: "test@example.com",
+        createdAt: createdAt.toISOString()
+      },
+      policies: [],
+      lastLogin: null,
+      failedAttempts: []
+    });
+  });
 });
