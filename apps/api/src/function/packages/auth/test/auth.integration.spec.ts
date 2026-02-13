@@ -251,6 +251,99 @@ describe("auth", () => {
       expect(user._id).toEqual(userId);
       expect(user.username).toEqual("updateuser");
     });
+    it("should update username", async () => {
+      const auth = await importFreshAuthModule();
+      auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      const user = await auth.signUp({
+        username: "testuser",
+        password: "testpass"
+      });
+
+      const updatedUser = await auth.updateUsername(user._id, "updatedusername");
+
+      expect(updatedUser._id).toEqual(user._id);
+      expect(updatedUser.username).toEqual("updatedusername");
+
+      const signInToken = await auth.signIn("updatedusername", "testpass");
+      const decodedToken = jwtDecode<any>(signInToken);
+
+      expect(decodedToken.username).toEqual("updatedusername");
+    });
+
+    it("should ban user", async () => {
+      const auth = await importFreshAuthModule();
+      auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      const user = await auth.signUp({
+        username: "banneduser",
+        password: "testpass"
+      });
+
+      const banDate = new Date();
+      banDate.setDate(banDate.getDate() + 1);
+
+      const updatedUser = await auth.ban(user._id, banDate);
+
+      expect(updatedUser._id).toEqual(user._id);
+      expect(updatedUser.username).toEqual("banneduser");
+
+      const error = await auth.signIn("banneduser", "testpass").catch(e => e);
+      expect(error.statusCode).toEqual(401);
+      expect(error.message).toContain("User is banned");
+    });
+
+    it("should deactivate user tokens", async () => {
+      const auth = await importFreshAuthModule();
+      auth.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      const user = await auth.signUp({
+        username: "tokenuser",
+        password: "testpass"
+      });
+
+      const oldToken = await auth.signIn("tokenuser", "testpass");
+      const oldDecodedToken = jwtDecode<any>(oldToken);
+
+      expect(oldDecodedToken.username).toEqual("tokenuser");
+
+      const date = new Date();
+      const deactivateDate = new Date(date.getTime() + 10 * 1000);
+
+      const updatedUser = await auth.deactivateUserTokens(user._id, deactivateDate);
+      expect(updatedUser._id).toEqual(user._id);
+
+      const authWithOldToken = await importFreshAuthModule();
+      authWithOldToken.initialize({user: oldToken, publicUrl: PUBLIC_URL});
+
+      const error = await authWithOldToken.get(user._id).catch(e => e);
+      expect(error).toBeDefined();
+      expect(error.statusCode).toEqual(400);
+      expect(error.message).toContain("Invalid JWT");
+    });
+
+    it("should fail to update username with USER token", async () => {
+      const authWithIdentity = await importFreshAuthModule();
+      authWithIdentity.initialize({identity: token, publicUrl: PUBLIC_URL});
+
+      const user = await authWithIdentity.signUp({
+        username: "testuser2",
+        password: "testpass2"
+      });
+
+      const userToken = await authWithIdentity.signIn("testuser2", "testpass2");
+
+      const authWithUserToken = await importFreshAuthModule();
+      authWithUserToken.initialize({user: userToken, publicUrl: PUBLIC_URL});
+
+      const error = await authWithUserToken.updateUsername(user._id, "shouldnotwork").catch(e => e);
+
+      expect(error).toBeDefined();
+      expect(error.statusCode).toEqual(401);
+
+      const unchangedUser = await authWithIdentity.get(user._id);
+      expect(unchangedUser.username).toEqual("testuser2");
+    });
   });
 
   describe("verifyToken initialization", () => {
