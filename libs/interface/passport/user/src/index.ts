@@ -103,3 +103,5 @@ export type DecryptedUser = User & {
   email?: {value: string; createdAt: Date};
   phone?: {value: string; createdAt: Date};
 };
+
+export type UserSelfUpdate = Pick<User, "password">;
