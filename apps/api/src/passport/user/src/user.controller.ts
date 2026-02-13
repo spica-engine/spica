@@ -225,7 +225,7 @@ export class UserController {
     ActionGuard("passport:user:show", undefined, registerPolicyAttacher("UserReadOnlyAccess"))
   )
   async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const pipelineBuilder = await new UserPipelineBuilder(this.userService)
+    const pipelineBuilder = new UserPipelineBuilder(this.userService)
       .findOneIfRequested(id)
       .setVisibilityOfFields(this.hideSecretsExpression());
 
