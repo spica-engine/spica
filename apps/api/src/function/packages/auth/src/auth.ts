@@ -159,6 +159,7 @@ export async function refreshAccessToken(accessToken: string, headers?: object):
   );
 
   return response.token;
+}
 /**
  * Update a user's username.
  * Requires prior initialization call with appropriate authorization.
