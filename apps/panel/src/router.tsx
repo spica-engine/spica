@@ -12,6 +12,7 @@ import Storage from "./pages/storage/Storage";
 import StorageItem from "./pages/storage-view/StorageView";
 import Policy from "./pages/policy/Policy";
 import Webhook from "./pages/webhook/Webhook";
+import Strategy from "./pages/strategy/Strategy";
 
 const router = createBrowserRouter([
   {
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: "passport/policy",
         element: <Policy />
+      },
+      {
+        path: "passport/strategy",
+        element: <Strategy />
       },
       {
         path: "diagram",

@@ -4,7 +4,7 @@ export interface AuthenticationStrategy {
   _id: string;
   name: string;
   title: string;
-  type: string;
+  type: "saml" | "oauth";
   icon?: string;
   [key: string]: any;
 }
@@ -21,6 +21,24 @@ export interface AuthenticationStrategyOptions {
   skip?: number;
   sort?: Record<string, 1 | -1>;
   filter?: Record<string, any>;
+}
+
+export interface AddStrategyInput {
+  type: "saml" | "oauth";
+  name: string;
+  title: string;
+  options: {
+    ip: {
+      login_url: string;
+      logout_url: string;
+      certificate: string;
+    };
+  };
+  icon?: string;
+}
+
+export interface UpdateStrategyInput extends AddStrategyInput {
+  _id: string;
 }
 
 type AuthenticationStrategyListApiResponse =
@@ -66,6 +84,60 @@ export const authenticationStrategyApi = baseApi.injectEndpoints({
       query: (id) => `passport/strategy/${id}`,
       providesTags: (result, error, id) => [{ type: STRATEGY_TAG, id }],
     }),
+
+    addStrategy: builder.mutation<AuthenticationStrategy, AddStrategyInput>({
+      query: (body) => ({
+        url: "passport/strategy",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [STRATEGY_TAGS.LIST],
+    }),
+
+    updateStrategy: builder.mutation<
+      AuthenticationStrategy,
+      UpdateStrategyInput & { _hasChanges?: boolean }
+    >({
+      queryFn: async (arg, _queryApi, _extraOptions, baseQuery) => {
+        if (arg._hasChanges === false) {
+          return {
+            data: {
+              _id: arg._id,
+              name: arg.name,
+              title: arg.title,
+              type: arg.type,
+              options: arg.options,
+            } as AuthenticationStrategy,
+          };
+        }
+        const { _id, _hasChanges, ...body } = arg;
+        const result = await baseQuery({
+          url: `passport/strategy/${_id}`,
+          method: "PUT",
+          body,
+        });
+        if (result.error) return { error: result.error };
+        return { data: result.data as AuthenticationStrategy };
+      },
+      invalidatesTags: (result, error, arg) =>
+        arg._hasChanges === false
+          ? []
+          : [
+              STRATEGY_TAGS.LIST,
+              { type: STRATEGY_TAG, id: arg._id },
+            ],
+    }),
+
+    deleteStrategy: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `passport/strategy/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, id) => [
+        STRATEGY_TAGS.LIST,
+        { type: STRATEGY_TAG, id },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -75,6 +147,9 @@ export const {
   useLazyGetAuthenticationStrategiesQuery,
   useGetAuthenticationStrategyQuery,
   useLazyGetAuthenticationStrategyQuery,
+  useAddStrategyMutation,
+  useUpdateStrategyMutation,
+  useDeleteStrategyMutation,
 } = authenticationStrategyApi;
 
 export const authenticationStrategyApiReducerPath =
