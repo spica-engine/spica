@@ -72,7 +72,8 @@ export interface WebhookLogOptions {
   webhooks?: string[];
   begin?: string | Date;
   end?: string | Date;
-  succeed?: boolean;
+  /** true = succeeded only, false = failed only, null = all logs */
+  succeed?: boolean | null;
   limit?: number;
   skip?: number;
 }
@@ -123,7 +124,7 @@ export const webhookApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [WEBHOOK_TAG],
+      invalidatesTags: [WEBHOOK_TAGS.LIST],
     }),
 
     updateWebhook: builder.mutation<Webhook, { id: string; body: UpdateWebhookRequest }>({
@@ -132,7 +133,10 @@ export const webhookApi = baseApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: WEBHOOK_TAG, id }, WEBHOOK_TAG],
+      invalidatesTags: (result, error, { id }) => [
+        { type: WEBHOOK_TAG, id },
+        WEBHOOK_TAGS.LIST,
+      ],
     }),
 
     deleteWebhook: builder.mutation<void, string>({
@@ -140,7 +144,10 @@ export const webhookApi = baseApi.injectEndpoints({
         url: `/webhook/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, id) => [{ type: WEBHOOK_TAG, id }, WEBHOOK_TAG],
+      invalidatesTags: (result, error, id) => [
+        { type: WEBHOOK_TAG, id },
+        WEBHOOK_TAGS.LIST,
+      ],
     }),
 
     getWebhookCollections: builder.query<{ id: string; slug: string }[], void>({
@@ -159,7 +166,7 @@ export const webhookApi = baseApi.injectEndpoints({
         const endIso = toIsoString(end);
         if (beginIso) params.append('begin', beginIso);
         if (endIso) params.append('end', endIso);
-        if (succeed != null) params.append('succeed', String(succeed));
+        if (succeed !== undefined) params.append('succeed', String(succeed));
         if (limit != null) params.append('limit', String(limit));
         if (skip != null) params.append('skip', String(skip));
 
