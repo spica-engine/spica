@@ -53,7 +53,6 @@ export function verifyToken(token: string, headers: object = {}) {
 /**
  * Sign in with username and password.
  * Requires prior initialization call.
- * For SDK usage, automatically includes X-Spica-SDK header to receive refresh token in response.
  *
  * @param username - User's username
  * @param password - User's password
