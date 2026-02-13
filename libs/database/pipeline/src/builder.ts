@@ -12,7 +12,10 @@ export class PipelineBuilder implements IPipelineBuilder {
   protected isFilterApplied = false;
 
   constructor(
-    private filterReplacers: FilterReplacer[] = [replaceFilterObjectIds, replaceFilterDates]
+    private readonly filterReplacers: FilterReplacer[] = [
+      replaceFilterObjectIds,
+      replaceFilterDates
+    ]
   ) {}
 
   attachToPipeline(condition: unknown, ...attachedObject: object[]) {

@@ -4,7 +4,7 @@ import {replaceProviderFilter} from "./filter";
 import {replaceFilterDates, replaceFilterObjectIds} from "@spica-server/filter";
 
 export class UserPipelineBuilder extends PipelineBuilder {
-  constructor(private userService: UserService) {
+  constructor(private readonly userService: UserService) {
     const filterProviderReplacer = async (filter: object) =>
       replaceProviderFilter(filter, value => this.userService.hashProviderValue(value));
     super([filterProviderReplacer, replaceFilterObjectIds, replaceFilterDates]);
