@@ -154,7 +154,13 @@ export function replaceProviderFilter(filter: object, hashFn: (value: string) =>
 
     if (key === "email" || key === "phone") {
       const hashedKey = `${key}.hash`;
-      result[hashedKey] = constructValue(value, hashFn);
+      //Todo! this part added to support both {email: "value"} and {email: {value: "value"}} filter formats.
+      //can be removed after the filter format is standardized
+      let valueToHash = value;
+      if (typeof value === "object" && !Array.isArray(value) && "value" in value) {
+        valueToHash = value.value;
+      }
+      result[hashedKey] = constructValue(valueToHash, hashFn);
     } else {
       result[key] = value;
     }
