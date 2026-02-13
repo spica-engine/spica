@@ -26,37 +26,66 @@ export function titleCase(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
+function joinResource(resource: string[], separator: string): string {
+  return resource.join(separator);
+}
+
+function isDefined<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
+}
+
 /** Format resource array for display based on module (resource[0]) */
-export function formatActivityResourceDisplay(resource: string[] | unknown): string {
+export function formatActivityResourceDisplay(resource: unknown): string {
   if (!Array.isArray(resource) || resource.length === 0) return "-";
 
-  const module = resource[0];
+  const arr = resource as string[];
+  const module = arr[0];
+  const fallbackComma = () => joinResource(arr, ", ");
+  const fallbackDash = () => joinResource(arr, "-");
 
   switch (module) {
     case "passport":
       // (resource[1] | titlecase) + "-" + resource[2] e.g. "Policy-123"
-      return resource[1] != null && resource[2] != null
-        ? `${titleCase(String(resource[1]))}-${resource[2]}`
-        : (resource as string[]).join("-");
+      return isDefined(arr[1]) && isDefined(arr[2])
+        ? `${titleCase(String(arr[1]))}-${arr[2]}`
+        : fallbackDash();
 
     case "function":
-      return resource[1] != null ? String(resource[1]) : (resource as string[]).join(", ");
+    case "storage":
+      return isDefined(arr[1]) ? String(arr[1]) : fallbackComma();
 
     case "preference":
-      return resource[1] != null ? titleCase(String(resource[1])) : (resource as string[]).join(", ");
-
-    case "storage":
-      return resource[1] != null ? String(resource[1]) : (resource as string[]).join(", ");
+      return isDefined(arr[1]) ? titleCase(String(arr[1])) : fallbackComma();
 
     case "bucket":
-      if (resource[2] === "data" && resource[3] != null) {
-        return `Bucket Data-${resource[3]}`;
+      if (arr[2] === "data" && isDefined(arr[3])) {
+        return `Bucket Data-${arr[3]}`;
       }
-      return resource[1] != null ? String(resource[1]) : (resource as string[]).join(", ");
+      return isDefined(arr[1]) ? String(arr[1]) : fallbackComma();
 
     default:
-      return (resource as string[]).join(", ");
+      return fallbackComma();
   }
+}
+
+const MODULE_LINK_PREFIX: Record<string, string> = {
+  storage: "storage-view",
+  passport: "passport",
+  function: "function"
+};
+
+function getResourceLink(resource: string[]): string | null {
+  const [module, id] = resource;
+  if (module === "preference") {
+    if (id === "passport") return "passport/settings";
+    if (id === "bucket") return "bucket/settings";
+    return null;
+  }
+  if (module === "bucket") {
+    return id ? `bucket/${id}` : null; // data or schema - both use bucket/:bucketId
+  }
+  const prefix = MODULE_LINK_PREFIX[module];
+  return prefix && id ? `${prefix}/${id}` : null;
 }
 
 /** Build navigation path for activity (null if delete or no link) */
@@ -66,40 +95,12 @@ export function buildActivityLink(activity: Activity): string | null {
   const resource = activity.resource;
   if (!Array.isArray(resource) || resource.length === 0) return null;
 
-  const module = resource[0];
-
-  switch (module) {
-    case "storage":
-      return resource[1] ? `storage-view/${resource[1]}` : null;
-
-    case "passport":
-      if (resource[1]) {
-        return `passport/${resource[1]}`; // passport/identity, passport/policy, passport/apikey
-      }
-      return null;
-
-    case "preference":
-      if (resource[1] === "passport") return "passport/settings";
-      if (resource[1] === "bucket") return "bucket/settings";
-      return null;
-
-    case "function":
-      return resource[1] ? `function/${resource[1]}` : null;
-
-    case "bucket":
-      if (resource[2] === "data" && resource[1] && resource[3]) {
-        return `bucket/${resource[1]}`; // Bucket data - panel uses bucket/:bucketId
-      }
-      return resource[1] ? `bucket/${resource[1]}` : null;
-
-    default:
-      return null;
-  }
+  return getResourceLink(resource);
 }
 
 /** Format module name for display (resource[0]) */
-export function formatActivityModule(resource: string[] | unknown): string {
+export function formatActivityModule(resource: unknown): string {
   if (!Array.isArray(resource) || resource.length === 0) return "-";
-  const first = resource[0];
-  return first != null ? titleCase(String(first)) : "-";
+  const first = (resource as string[])[0];
+  return isDefined(first) ? titleCase(String(first)) : "-";
 }

@@ -11,6 +11,7 @@ import type { TypeMenuItems } from "../../../types/sidebar";
 import Storage from "./storage-navigation/Storage";
 import Bucket from "./bucket-navigation/Bucket";
 import AccessManagement from "./access-management/AccessManagement";
+import WebHook from "./webhook/WebHook";
 
 export type NavigationPrefabProps = {
   menuItem?: TypeMenuItems;
@@ -23,6 +24,7 @@ export const navigationRegistry: Record<string, NavigationComponent> = {
   storage: Storage,
   bucket: Bucket,
   accessManagement: AccessManagement,
+  webhook: WebHook,
   // Add more navigation prefabs here as they are created
 };
 
