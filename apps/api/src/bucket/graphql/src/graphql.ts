@@ -38,7 +38,7 @@ import {
   insertActivity
 } from "@spica-server/bucket/common";
 import {FindResponse} from "@spica-server/interface/bucket/graphql";
-import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
+import {Bucket, BUCKET_DATA_HASH_SECRET, BucketDocument} from "@spica-server/interface/bucket";
 import {BUCKET_DATA_ENCRYPTION_SECRET} from "@spica-server/interface/bucket";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 
@@ -144,6 +144,7 @@ export class GraphqlController implements OnModuleInit {
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
     @Optional() private hookChangeEmitter: ChangeEmitter,
+    @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
     @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
   ) {
     this.bs.schemaChangeEmitter.subscribe(() => {
@@ -279,7 +280,7 @@ export class GraphqlController implements OnModuleInit {
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
-        undefined,
+        this.hashSecret,
         this.encryptionSecret
       );
     };
@@ -319,7 +320,7 @@ export class GraphqlController implements OnModuleInit {
           schema: (bucketId: string) =>
             Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
         },
-        undefined,
+        this.hashSecret,
         this.encryptionSecret
       );
 
@@ -388,7 +389,7 @@ export class GraphqlController implements OnModuleInit {
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
-        undefined,
+        this.hashSecret,
         this.encryptionSecret
       );
 
@@ -472,7 +473,7 @@ export class GraphqlController implements OnModuleInit {
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
-        undefined,
+        this.hashSecret,
         this.encryptionSecret
       );
 
@@ -562,7 +563,7 @@ export class GraphqlController implements OnModuleInit {
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
-        undefined,
+        this.hashSecret,
         this.encryptionSecret
       );
 
