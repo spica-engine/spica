@@ -121,8 +121,7 @@ const args = yargsInstance
     },
     "bucket-data-encryption-secret": {
       string: true,
-      description:
-        "Secret (exactly 32 bytes) to be used for encrypting/decrypting values in bucket data."
+      description: "Secret to be used for encrypting/decrypting values in bucket data."
     }
   })
   /* Passport Options  */
