@@ -1,6 +1,7 @@
 import {ObjectId} from "@spica-server/database";
 import {Format} from "@spica-server/interface/core";
 import {hash} from "./hash";
+import {encrypt} from "./encrypt";
 
 export const OBJECT_ID: Format = {
   name: "objectid",
@@ -38,6 +39,19 @@ export function createHashFormat(hashSecret: string): Format {
     type: "string",
     coerce: (value: string) => {
       return hash(value, hashSecret);
+    },
+    validate: (value: string) => {
+      return typeof value === "string" && value.length > 0;
+    }
+  };
+}
+
+export function createEncryptedFormat(encryptionSecret: string): Format {
+  return {
+    name: "encrypted",
+    type: "string",
+    coerce: (value: string) => {
+      return encrypt(value, encryptionSecret);
     },
     validate: (value: string) => {
       return typeof value === "string" && value.length > 0;

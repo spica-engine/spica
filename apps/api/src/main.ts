@@ -9,7 +9,8 @@ import {
   DATE_TIME,
   OBJECTID_STRING,
   OBJECT_ID,
-  createHashFormat
+  createHashFormat,
+  createEncryptedFormat
 } from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
@@ -117,6 +118,11 @@ const args = yargsInstance
     "bucket-data-hash-secret": {
       string: true,
       description: "Secret to be used for hashing values in bucket data."
+    },
+    "bucket-data-encryption-secret": {
+      string: true,
+      description:
+        "Secret (exactly 32 bytes) to be used for encrypting/decrypting values in bucket data."
     }
   })
   /* Passport Options  */
@@ -539,6 +545,11 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["bucket-data-hash-secret"] = bucketDataHashSecret;
     }
 
+    const bucketDataEncryptionSecret = process.env.BUCKET_DATA_ENCRYPTION_SECRET;
+    if (bucketDataEncryptionSecret) {
+      args["bucket-data-encryption-secret"] = bucketDataEncryptionSecret;
+    }
+
     const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
     if (twilioAccountSid) {
       args["twilio-sms-service-account-sid"] = twilioAccountSid;
@@ -692,7 +703,8 @@ const modules = [
       OBJECT_ID,
       DATE_TIME,
       OBJECTID_STRING,
-      createHashFormat(args["bucket-data-hash-secret"])
+      createHashFormat(args["bucket-data-hash-secret"]),
+      createEncryptedFormat(args["bucket-data-encryption-secret"])
     ],
     defaults: [CREATED_AT, UPDATED_AT]
   }),
@@ -704,7 +716,8 @@ const modules = [
     cacheTtl: args["bucket-cache-ttl"],
     bucketDataLimit: args["bucket-data-limit"],
     graphql: args["bucket-graphql"],
-    hashSecret: args["bucket-data-hash-secret"]
+    hashSecret: args["bucket-data-hash-secret"],
+    encryptionSecret: args["bucket-data-encryption-secret"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",

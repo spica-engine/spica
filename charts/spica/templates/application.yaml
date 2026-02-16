@@ -104,6 +104,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
                   key: bucketDataHashSecret
+            - name: BUCKET_DATA_ENCRYPTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: bucketDataEncryptionSecret
             - name: USER_VERIFICATION_HASH_SECRET
               valueFrom:
                 secretKeyRef:

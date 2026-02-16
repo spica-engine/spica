@@ -39,6 +39,7 @@ import {
 } from "@spica-server/bucket/common";
 import {FindResponse} from "@spica-server/interface/bucket/graphql";
 import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
+import {BUCKET_DATA_ENCRYPTION_SECRET} from "@spica-server/interface/bucket";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 
 import {
@@ -142,7 +143,8 @@ export class GraphqlController implements OnModuleInit {
     private validator: Validator,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
-    @Optional() private hookChangeEmitter: ChangeEmitter
+    @Optional() private hookChangeEmitter: ChangeEmitter,
+    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
   ) {
     this.bs.schemaChangeEmitter.subscribe(() => {
       this.bs.find().then(buckets => {
@@ -276,7 +278,9 @@ export class GraphqlController implements OnModuleInit {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+        },
+        undefined,
+        this.encryptionSecret
       );
     };
   }
@@ -314,7 +318,9 @@ export class GraphqlController implements OnModuleInit {
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) =>
             Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
-        }
+        },
+        undefined,
+        this.encryptionSecret
       );
 
       return document;
@@ -381,7 +387,9 @@ export class GraphqlController implements OnModuleInit {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+        },
+        undefined,
+        this.encryptionSecret
       );
 
       if (this.hookChangeEmitter) {
@@ -463,7 +471,9 @@ export class GraphqlController implements OnModuleInit {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+        },
+        undefined,
+        this.encryptionSecret
       );
 
       if (this.hookChangeEmitter) {
@@ -551,7 +561,9 @@ export class GraphqlController implements OnModuleInit {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+        },
+        undefined,
+        this.encryptionSecret
       );
 
       if (this.hookChangeEmitter) {

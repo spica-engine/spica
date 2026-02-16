@@ -23,34 +23,39 @@ import {
   RelationMap
 } from "@spica-server/interface/bucket/common";
 import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface/bucket";
+import {decryptDocumentFields} from "./decrypt";
 
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<false>,
   factories: CrudFactories<T>,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<T[]>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<true>,
   factories: CrudFactories<T>,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<CrudPagination<T>>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<boolean>,
   factories: CrudFactories<T>,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<T[] | CrudPagination<T>>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<boolean>,
   factories: CrudFactories<T>,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<unknown> {
   const collection = factories.collection(schema);
   const pipelineBuilder = new BucketPipelineBuilder(schema, factories, hashSecret);
@@ -128,15 +133,29 @@ export async function findDocuments<T>(
       .catch(error => {
         throw new DatabaseException(error.message);
       });
-    return result.data.length ? result : {meta: {total: 0}, data: []};
+    if (!result.data.length) {
+      return {meta: {total: 0}, data: []};
+    }
+    if (encryptionSecret) {
+      result.data = result.data.map(doc =>
+        decryptDocumentFields(doc as any, schema, encryptionSecret)
+      ) as T[];
+    }
+    return result;
   }
 
-  return collection
+  const documents = await collection
     .aggregate<T>([...pipeline, ...seeking])
     .toArray()
     .catch(error => {
       throw new DatabaseException(error.message);
     });
+
+  if (encryptionSecret) {
+    return documents.map(doc => decryptDocumentFields(doc as any, schema, encryptionSecret)) as T[];
+  }
+
+  return documents;
 }
 function buildAclProjection(properties: Record<string, {acl?: string}>, user: any) {
   const result: Record<string, object | number> = {};

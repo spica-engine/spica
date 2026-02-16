@@ -1,6 +1,11 @@
 import * as crypto from "crypto";
-import {EncryptedData} from "@spica-server/interface/passport/user";
 import {BadRequestException} from "@nestjs/common";
+
+export type EncryptedData = {
+  encrypted: string;
+  iv: string;
+  authTag: string;
+};
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
 

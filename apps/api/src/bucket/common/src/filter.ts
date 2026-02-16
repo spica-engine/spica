@@ -42,6 +42,8 @@ export const constructFilterValues = async (
   relationResolver: RelationResolver,
   hashSecret?: string
 ) => {
+  filter = await removeEncryptedFieldFilters(filter, bucket, relationResolver);
+
   const wrappedReplacers = [
     replaceFilterObjectIds,
     (filter: object) => replaceFilterDates(filter, bucket, relationResolver),
@@ -109,4 +111,48 @@ export async function replaceFilterHash(
 
 function HashIfValid(val: any, hashSecret: string): string {
   return typeof val === "string" ? hash(val, hashSecret) : val;
+}
+
+export async function removeEncryptedFieldFilters(
+  filter: object,
+  bucket: Bucket,
+  relationResolver: RelationResolver
+): Promise<object> {
+  const propertyMap = extractFilterPropertyMap(filter);
+  const relationResolvedSchema = await Relation.getRelationResolvedBucketSchema(
+    bucket,
+    propertyMap,
+    relationResolver
+  );
+
+  for (const [key] of Object.entries(filter)) {
+    if (["$or", "$and", "$nor"].includes(key)) {
+      const expressions = filter[key];
+      if (Array.isArray(expressions)) {
+        for (let i = 0; i < expressions.length; i++) {
+          expressions[i] = await removeEncryptedFieldFilters(
+            expressions[i],
+            bucket,
+            relationResolver
+          );
+        }
+        filter[key] = expressions.filter(expr => Object.keys(expr).length > 0);
+        if (filter[key].length === 0) {
+          delete filter[key];
+        }
+      }
+      continue;
+    }
+
+    const property = getPropertyByPath(relationResolvedSchema.properties, key);
+    if (
+      property &&
+      (property.type == "encrypted" ||
+        (property.type == "array" && property.items && property.items.type == "encrypted"))
+    ) {
+      delete filter[key];
+    }
+  }
+
+  return filter;
 }

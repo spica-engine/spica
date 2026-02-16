@@ -58,7 +58,10 @@ import {
 } from "@spica-server/bucket/common";
 import {applyPatch} from "@spica-server/core/patch";
 import {BucketDocument} from "@spica-server/interface/bucket";
-import {BUCKET_DATA_HASH_SECRET} from "@spica-server/interface/bucket";
+import {
+  BUCKET_DATA_HASH_SECRET,
+  BUCKET_DATA_ENCRYPTION_SECRET
+} from "@spica-server/interface/bucket";
 
 /**
  * All APIs related to bucket documents.
@@ -73,7 +76,8 @@ export class BucketDataController {
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
     @Optional() @Inject() private activityService: ActivityService,
-    @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string
+    @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
+    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
   ) {}
 
   /**
@@ -148,7 +152,8 @@ export class BucketDataController {
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
-      this.hashSecret
+      this.hashSecret,
+      this.encryptionSecret
     ).catch(this.errorHandler);
   }
 
@@ -243,7 +248,8 @@ export class BucketDataController {
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
-      this.hashSecret
+      this.hashSecret,
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     return document;

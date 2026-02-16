@@ -10,3 +10,5 @@ export {
 } from "./src/validator";
 export {hash} from "./src/hash";
 export {encrypt, decrypt} from "./src/encrypt";
+export type {EncryptedData} from "./src/encrypt";
+export {createEncryptedFormat} from "./src/formats";
