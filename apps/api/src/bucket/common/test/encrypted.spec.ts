@@ -173,12 +173,15 @@ describe("Encrypted Field", () => {
       expect(dbDoc.label).toBe("doc1");
       expect(dbDoc.age).toBe(30);
 
-      // DB should store encrypted object with iv, encrypted, authTag
+      // DB should store encrypted object with iv, encrypted, authTag, and deterministic hash
       expect(dbDoc.secret_note).toBeDefined();
       expect(typeof dbDoc.secret_note).toBe("object");
       expect(dbDoc.secret_note.encrypted).toBeDefined();
       expect(dbDoc.secret_note.iv).toBeDefined();
       expect(dbDoc.secret_note.authTag).toBeDefined();
+      expect(dbDoc.secret_note.hash).toBeDefined();
+      expect(typeof dbDoc.secret_note.hash).toBe("string");
+      expect(dbDoc.secret_note.hash).toHaveLength(64);
       // Must not store plaintext
       expect(dbDoc.secret_note.encrypted).not.toBe("my-secret-value");
     });
@@ -301,7 +304,7 @@ describe("Encrypted Field", () => {
     });
   });
 
-  describe("Filter Operations - Encrypted field filters are silently ignored", () => {
+  describe("Filter Operations - Encrypted field filters match via deterministic hash", () => {
     beforeEach(async () => {
       await req.post(`/bucket/${bucketId}/data`, {
         label: "alice",
@@ -316,23 +319,41 @@ describe("Encrypted Field", () => {
       });
     });
 
-    it("should ignore filter on encrypted field and return all documents", async () => {
+    it("should filter on encrypted field and return matching document", async () => {
       const response = await req.get(`/bucket/${bucketId}/data`, {
         filter: JSON.stringify({secret_note: "alice-secret"})
       });
 
-      // Filter on encrypted field is silently stripped, so all docs are returned
-      expect(response.body.length).toBe(2);
+      expect(response.body.length).toBe(1);
+      expect(response.body[0].label).toBe("alice");
+      expect(response.body[0].secret_note).toBe("alice-secret");
     });
 
-    it("should keep non-encrypted filters while stripping encrypted ones", async () => {
+    it("should keep non-encrypted filters alongside encrypted ones", async () => {
       const response = await req.get(`/bucket/${bucketId}/data`, {
         filter: JSON.stringify({secret_note: "alice-secret", age: 28})
       });
 
-      // Only the age filter applies
       expect(response.body.length).toBe(1);
       expect(response.body[0].label).toBe("alice");
+    });
+
+    it("should return no results when encrypted field filter does not match", async () => {
+      const response = await req.get(`/bucket/${bucketId}/data`, {
+        filter: JSON.stringify({secret_note: "nonexistent-secret"})
+      });
+
+      expect(response.body.length).toBe(0);
+    });
+
+    it("should filter encrypted field with $in operator", async () => {
+      const response = await req.get(`/bucket/${bucketId}/data`, {
+        filter: JSON.stringify({secret_note: {$in: ["alice-secret", "nonexistent"]}})
+      });
+
+      expect(response.body.length).toBe(1);
+      expect(response.body[0].label).toBe("alice");
+      expect(response.body[0].secret_note).toBe("alice-secret");
     });
 
     it("should handle $or with encrypted field filters", async () => {
@@ -342,8 +363,8 @@ describe("Encrypted Field", () => {
         })
       });
 
-      // The encrypted filter clause is stripped; the remaining $or has {age: 32}
-      expect(response.body.length).toBeGreaterThanOrEqual(1);
+      // Both clauses should match: alice via encrypted hash, bob via age
+      expect(response.body.length).toBe(2);
     });
   });
 
@@ -370,6 +391,9 @@ describe("Encrypted Field", () => {
       expect(dbDoc.ssn.encrypted).toBeDefined();
       expect(dbDoc.ssn.iv).toBeDefined();
       expect(dbDoc.ssn.authTag).toBeDefined();
+      expect(dbDoc.ssn.hash).toBeDefined();
+      expect(typeof dbDoc.ssn.hash).toBe("string");
+      expect(dbDoc.ssn.hash).toHaveLength(64);
 
       // Read: password stays hashed, ssn is decrypted
       const readResponse = await req.get(`/bucket/${mixedBucketId}/data/${docId}`, {});

@@ -51,7 +51,8 @@ export function createEncryptedFormat(encryptionSecret: string): Format {
     name: "encrypted",
     type: "string",
     coerce: (value: string) => {
-      return encrypt(value, encryptionSecret);
+      const encryptedData = encrypt(value, encryptionSecret);
+      return {...encryptedData, hash: hash(value, encryptionSecret)};
     },
     validate: (value: string) => {
       return typeof value === "string" && value.length > 0;

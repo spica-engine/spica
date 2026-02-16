@@ -5,6 +5,7 @@ export type EncryptedData = {
   encrypted: string;
   iv: string;
   authTag: string;
+  hash?: string;
 };
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;

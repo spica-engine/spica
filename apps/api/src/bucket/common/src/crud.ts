@@ -58,7 +58,7 @@ export async function findDocuments<T>(
   encryptionSecret?: string
 ): Promise<unknown> {
   const collection = factories.collection(schema);
-  const pipelineBuilder = new BucketPipelineBuilder(schema, factories, hashSecret);
+  const pipelineBuilder = new BucketPipelineBuilder(schema, factories, hashSecret, encryptionSecret);
   const seekingPipelineBuilder = new PipelineBuilder();
 
   let rulePropertyMap;

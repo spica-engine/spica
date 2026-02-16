@@ -2,6 +2,7 @@ import {ObjectId} from "@spica-server/database";
 import * as Relation from "./relation";
 import {getPropertyByPath} from "./schema";
 import {
+  constructValue,
   extractFilterPropertyMap,
   FilterReplaceManager,
   replaceFilter,
@@ -40,14 +41,14 @@ export const constructFilterValues = async (
   filter: object,
   bucket: Bucket,
   relationResolver: RelationResolver,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ) => {
-  filter = await removeEncryptedFieldFilters(filter, bucket, relationResolver);
-
   const wrappedReplacers = [
     replaceFilterObjectIds,
     (filter: object) => replaceFilterDates(filter, bucket, relationResolver),
-    (filter: object) => replaceFilterHash(filter, bucket, relationResolver, hashSecret)
+    (filter: object) => replaceFilterHash(filter, bucket, relationResolver, hashSecret),
+    (filter: object) => replaceFilterEncrypted(filter, bucket, relationResolver, encryptionSecret)
   ];
 
   const manager = new FilterReplaceManager(wrappedReplacers);
@@ -113,11 +114,16 @@ function HashIfValid(val: any, hashSecret: string): string {
   return typeof val === "string" ? hash(val, hashSecret) : val;
 }
 
-export async function removeEncryptedFieldFilters(
+export async function replaceFilterEncrypted(
   filter: object,
   bucket: Bucket,
-  relationResolver: RelationResolver
+  relationResolver: RelationResolver,
+  encryptionSecret?: string
 ): Promise<object> {
+  if (!encryptionSecret) {
+    return filter;
+  }
+
   const propertyMap = extractFilterPropertyMap(filter);
   const relationResolvedSchema = await Relation.getRelationResolvedBucketSchema(
     bucket,
@@ -125,34 +131,38 @@ export async function removeEncryptedFieldFilters(
     relationResolver
   );
 
-  for (const [key] of Object.entries(filter)) {
+  return replaceEncryptedKeysRecursive(filter, relationResolvedSchema.properties, encryptionSecret);
+}
+
+function replaceEncryptedKeysRecursive(
+  filter: object,
+  properties: object,
+  encryptionSecret: string
+): object {
+  for (const [key, value] of Object.entries(filter)) {
     if (["$or", "$and", "$nor"].includes(key)) {
-      const expressions = filter[key];
-      if (Array.isArray(expressions)) {
-        for (let i = 0; i < expressions.length; i++) {
-          expressions[i] = await removeEncryptedFieldFilters(
-            expressions[i],
-            bucket,
-            relationResolver
-          );
-        }
-        filter[key] = expressions.filter(expr => Object.keys(expr).length > 0);
-        if (filter[key].length === 0) {
-          delete filter[key];
-        }
+      if (Array.isArray(value)) {
+        filter[key] = value.map(expr =>
+          replaceEncryptedKeysRecursive(expr, properties, encryptionSecret)
+        );
       }
       continue;
     }
 
-    const property = getPropertyByPath(relationResolvedSchema.properties, key);
+    const property = getPropertyByPath(properties, key);
     if (
       property &&
       (property.type == "encrypted" ||
         (property.type == "array" && property.items && property.items.type == "encrypted"))
     ) {
+      const hashedValue = constructValue(value, v => EncryptedHashIfValid(v, encryptionSecret));
       delete filter[key];
+      filter[`${key}.hash`] = hashedValue;
     }
   }
-
   return filter;
+}
+
+function EncryptedHashIfValid(val: any, encryptionSecret: string): any {
+  return typeof val === "string" ? hash(val, encryptionSecret) : val;
 }
