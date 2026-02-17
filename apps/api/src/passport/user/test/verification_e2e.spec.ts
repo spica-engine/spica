@@ -399,7 +399,8 @@ describe("Provider Verification E2E with MailHog", () => {
             ? item.Content.Body
             : "";
 
-      const tokenMatch = raw.match(/token=([A-Za-z0-9_-]+)/);
+      const cleanedRaw = raw.replace(/=\r?\n/g, "").replace(/=3D/g, "=");
+      const tokenMatch = cleanedRaw.match(/token=([A-Za-z0-9_-]+)/);
       expect(tokenMatch).toBeTruthy();
       const token = tokenMatch[1];
 
@@ -477,7 +478,8 @@ describe("Provider Verification E2E with MailHog", () => {
           : item.Content && item.Content.Body
             ? item.Content.Body
             : "";
-      const tokenMatch = raw.match(/token=([A-Za-z0-9_-]+)/);
+      const cleanedRaw = raw.replace(/=\r?\n/g, "").replace(/=3D/g, "=");
+      const tokenMatch = cleanedRaw.match(/token=([A-Za-z0-9_-]+)/);
       const token = tokenMatch[1];
 
       const firstVerify = await req.get(`/passport/user/verify-magic-link?token=${token}`);

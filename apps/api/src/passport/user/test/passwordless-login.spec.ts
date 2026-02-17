@@ -35,7 +35,7 @@ describe("Passwordless Login", () => {
   const testEmail = "test@example.com";
   const testPhone = "+1234567890";
   const username = "testuser";
-  const strategy = "otp";
+  const strategy = "Otp";
   let maxAttemptCount = 5;
 
   beforeEach(async () => {

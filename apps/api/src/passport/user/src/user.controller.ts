@@ -200,6 +200,14 @@ export class UserController {
     return this.authFactor.getSchemas();
   }
 
+  @Get("verify-magic-link")
+  async verifyMagicLink(@Query("token") token: string) {
+    if (!token) {
+      throw new BadRequestException("Token query parameter is required.");
+    }
+    return this.providerVerificationService.validateCredentialsVerification(token, "MagicLink");
+  }
+
   @Delete(":id/factors")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(
@@ -533,14 +541,6 @@ export class UserController {
       provider,
       purpose
     );
-  }
-
-  @Get("verify-magic-link")
-  async verifyMagicLink(@Query("token") token: string) {
-    if (!token) {
-      throw new BadRequestException("Token query parameter is required.");
-    }
-    return this.providerVerificationService.validateCredentialsVerification(token, "MagicLink");
   }
 
   @Post("passwordless-login/start")
