@@ -47,7 +47,19 @@ export function getConnectionHandlers(
     }
 
     const collection = await getCollectionName(client, req);
-    const options = await getFindOptions(client, req);
+
+    let options;
+    try {
+      options = await getFindOptions(client, req);
+    } catch (error) {
+      client.send(JSON.stringify({code: error.statusCode || 400, message: error.message}));
+      client.close(1003);
+      return;
+    }
+
+    if (!options) {
+      return;
+    }
 
     const documentTransform = documentTransformFactory
       ? await documentTransformFactory(client, req)
