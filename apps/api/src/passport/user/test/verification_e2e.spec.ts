@@ -95,7 +95,8 @@ describe("Provider Verification E2E with MailHog", () => {
           verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
           providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
           providerHashSecret: "8be2e8060da06c70906096b43db6de99",
-          verificationCodeExpiresIn: 300
+          verificationCodeExpiresIn: 300,
+          refreshTokenHashSecret: "refresh_token_hash_secret"
         })
       ]
     }).compile();

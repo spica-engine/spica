@@ -10,6 +10,7 @@ import {PassportModule} from "@spica-server/passport";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 const EXPIRES_IN = 60_000;
+const REFRESH_TOKEN_HASH_SECRET = "refresh_token_hash_secret";
 
 describe("ACL Rules with Different Authentication Strategies", () => {
   let app: INestApplication;
@@ -57,6 +58,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
               blockDurationMinutes: 10
             },
             refreshTokenExpiresIn: 60 * 60 * 24 * 3,
+            refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
+
             passwordHistoryLimit: 2,
             identityRealtime: false
           },
@@ -71,6 +74,8 @@ describe("ACL Rules with Different Authentication Strategies", () => {
               blockDurationMinutes: 10
             },
             refreshTokenExpiresIn: 60 * 60 * 24 * 3,
+            refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
+
             passwordHistoryLimit: 2,
             userRealtime: false
           }

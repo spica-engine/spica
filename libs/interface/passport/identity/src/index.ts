@@ -57,7 +57,7 @@ export interface IdentityOptions {
     blockDurationMinutes: number;
   };
   refreshTokenExpiresIn?: number;
-  refreshTokenHashSecret?: string;
+  refreshTokenHashSecret: string;
   passwordHistoryLimit: number;
   identityRealtime: boolean;
 }

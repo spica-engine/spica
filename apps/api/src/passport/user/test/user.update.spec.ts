@@ -47,6 +47,7 @@ describe("User Update Endpoints", () => {
               failedAttemptLimit: 0
             },
             refreshTokenExpiresIn: 60000,
+            refreshTokenHashSecret: "refresh_token_hash_secret",
             passwordHistoryLimit: 0,
             identityRealtime: false
           },
@@ -61,6 +62,7 @@ describe("User Update Endpoints", () => {
               failedAttemptLimit: 0
             },
             refreshTokenExpiresIn: 60000,
+            refreshTokenHashSecret: "refresh_token_hash_secret",
             passwordHistoryLimit: 0,
             userRealtime: false
           }

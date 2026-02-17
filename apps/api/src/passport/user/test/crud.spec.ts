@@ -47,6 +47,7 @@ describe("User Email Hashing and Encryption", () => {
               failedAttemptLimit: 0
             },
             refreshTokenExpiresIn: 60000,
+            refreshTokenHashSecret: "refresh_token_hash_secret",
             passwordHistoryLimit: 0,
             identityRealtime: false
           },
@@ -61,6 +62,7 @@ describe("User Email Hashing and Encryption", () => {
               failedAttemptLimit: 0
             },
             refreshTokenExpiresIn: 60000,
+            refreshTokenHashSecret: "refresh_token_hash_secret",
             passwordHistoryLimit: 0,
             userRealtime: false,
             providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",

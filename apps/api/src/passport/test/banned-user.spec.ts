@@ -62,6 +62,7 @@ describe("User Ban Logic", () => {
               blockDurationMinutes: 10
             },
             refreshTokenExpiresIn: 60 * 60 * 24 * 3,
+            refreshTokenHashSecret: "refresh_token_hash_secret",
             passwordHistoryLimit: 2,
             identityRealtime: false
           },
@@ -76,6 +77,7 @@ describe("User Ban Logic", () => {
               blockDurationMinutes: 10
             },
             refreshTokenExpiresIn: 60 * 60 * 24 * 3,
+            refreshTokenHashSecret: "refresh_token_hash_secret",
             passwordHistoryLimit: 2,
             userRealtime: false
           }
