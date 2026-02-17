@@ -163,11 +163,13 @@ export class UserController {
       .setVisibilityOfFields(this.hideSecretsExpression())
       .result();
 
-    const pipeline = (await pipelineBuilder.paginate(
-      paginate,
-      seekingPipeline,
-      this.userService.estimatedDocumentCount()
-    )).result();
+    const pipeline = (
+      await pipelineBuilder.paginate(
+        paginate,
+        seekingPipeline,
+        this.userService.estimatedDocumentCount()
+      )
+    ).result();
 
     if (paginate) {
       const result = await this.userService.aggregate<PaginationResponse<User>>(pipeline).next();
@@ -261,9 +263,12 @@ export class UserController {
     const factor = this.setUserFactor(id, meta);
 
     // to keep this global value clear
-    setTimeout(() => {
-      this.deleteUserFactor(id);
-    }, 1000 * 60 * 5);
+    setTimeout(
+      () => {
+        this.deleteUserFactor(id);
+      },
+      1000 * 60 * 5
+    );
 
     const challenge = await factor.start();
 
@@ -500,7 +505,7 @@ export class UserController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("value") value: string,
     @Body("provider") provider: string,
-    @Body("strategy") strategy: "Otp",
+    @Body("strategy") strategy: "Otp" | "MagicLink",
     @Body("purpose") purpose: string
   ) {
     return this.providerVerificationService.startCredentialsVerification(
@@ -522,57 +527,65 @@ export class UserController {
     @Body("purpose") purpose: string
   ) {
     return this.providerVerificationService.validateCredentialsVerification(
-      id,
       code,
       strategy,
+      id,
       provider,
       purpose
     );
   }
 
+  @Get("verify-magic-link")
+  async verifyMagicLink(@Query("token") token: string) {
+    if (!token) {
+      throw new BadRequestException("Token query parameter is required.");
+    }
+    return this.providerVerificationService.validateCredentialsVerification(token, "MagicLink");
+  }
+
   @Post("passwordless-login/start")
-  startPasswordlessLogin(@Body(
-    Schema.validate("http://spica.internal/passport/passwordless-login-start")
-  )
-  body: {
-    username: string;
-    provider: "email" | "phone";
-  }) {
+  startPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-start"))
+    body: {
+      username: string;
+      provider: "email" | "phone";
+    }
+  ) {
     return this.passwordlessLoginService.start(body.username, body.provider);
   }
 
   @Post("passwordless-login/verify")
-  verifyPasswordlessLogin(@Body(
-    Schema.validate("http://spica.internal/passport/passwordless-login-verify")
-  )
-  body: {
-    username: string;
-    code: string;
-    provider: "email" | "phone";
-  }) {
+  verifyPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-verify"))
+    body: {
+      username: string;
+      code: string;
+      provider: "email" | "phone";
+    }
+  ) {
     return this.passwordlessLoginService.verify(body.username, body.code, body.provider);
   }
   @Post("forgot-password/start")
-  async startForgotPassword(@Body(
-    Schema.validate("http://spica.internal/passport/forgot-password-start")
-  )
-  body: {
-    username: string;
-    provider: "email" | "phone";
-  }) {
+  async startForgotPassword(
+    @Body(Schema.validate("http://spica.internal/passport/forgot-password-start"))
+    body: {
+      username: string;
+      provider: "email" | "phone";
+    }
+  ) {
     return this.passwordResetService.startForgotPasswordProcess(body.username, body.provider);
   }
 
   @Post("forgot-password/verify")
-  async verifyForgotPassword(@Body(
-    Schema.validate("http://spica.internal/passport/forgot-password-verify")
-  )
-  body: {
-    username: string;
-    code: string;
-    newPassword: string;
-    provider: "email" | "phone";
-  }) {
+  async verifyForgotPassword(
+    @Body(Schema.validate("http://spica.internal/passport/forgot-password-verify"))
+    body: {
+      username: string;
+      code: string;
+      newPassword: string;
+      provider: "email" | "phone";
+    }
+  ) {
     return this.passwordResetService.verifyAndResetPassword(
       body.username,
       body.code,

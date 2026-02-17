@@ -710,9 +710,9 @@ describe("VerificationService", () => {
       const code = codeMatch[1];
 
       const response = await providerVerificationService.validateCredentialsVerification(
-        userId,
         code,
         STRATEGY,
+        userId,
         EMAIL_PROVIDER,
         PURPOSE
       );
@@ -734,6 +734,449 @@ describe("VerificationService", () => {
       const UserWithEmail = userService.decryptProviderFields(user);
 
       expect(UserWithEmail.email.value).toBe(email);
+    });
+  });
+
+  describe("MagicLink Strategy - VerificationService", () => {
+    const MAGIC_LINK_STRATEGY = "MagicLink";
+
+    beforeEach(async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: "MagicLink"},
+        {provider: "phone", strategy: "MagicLink"}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
+    });
+
+    it("should create verification record and send magic link via email", async () => {
+      const userId = new ObjectId();
+      const email = "magiclink@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-magic-link-id"
+      });
+
+      const result = await verificationService.startVerificationProcess(
+        userId,
+        email,
+        MAGIC_LINK_STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      expect(result).toMatchObject({
+        message: expect.stringContaining("successfully"),
+        value: email
+      });
+
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith({
+        to: email,
+        subject: expect.stringContaining("verification"),
+        text: expect.stringContaining("verify-magic-link?token=")
+      });
+
+      const verification = await verificationService.findOne({
+        userId,
+        destination: email
+      });
+
+      expect(verification).toMatchObject({
+        userId,
+        destination: email,
+        is_used: false,
+        strategy: MAGIC_LINK_STRATEGY,
+        provider: EMAIL_PROVIDER,
+        purpose: PURPOSE
+      });
+    });
+
+    it("should create verification record and send magic link via SMS", async () => {
+      const userId = new ObjectId();
+      const phone = "+9876543210";
+
+      mockSmsService.sendSms.mockResolvedValue({
+        success: true,
+        messageId: "test-magic-sms-id"
+      });
+
+      const result = await verificationService.startVerificationProcess(
+        userId,
+        phone,
+        MAGIC_LINK_STRATEGY,
+        PHONE_PROVIDER,
+        PURPOSE
+      );
+
+      expect(result).toMatchObject({
+        message: expect.stringContaining("successfully"),
+        value: phone
+      });
+
+      expect(mockSmsService.sendSms).toHaveBeenCalledWith({
+        to: phone,
+        body: expect.stringContaining("verify-magic-link?token=")
+      });
+
+      const verification = await verificationService.findOne({
+        userId,
+        destination: phone
+      });
+
+      expect(verification).toMatchObject({
+        userId,
+        destination: phone,
+        is_used: false,
+        strategy: MAGIC_LINK_STRATEGY,
+        provider: PHONE_PROVIDER,
+        purpose: PURPOSE
+      });
+    });
+
+    it("should confirm magic link verification with valid token", async () => {
+      const userId = new ObjectId();
+      const email = "confirm-magic@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-id"
+      });
+
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        MAGIC_LINK_STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      const sentText = mockMailerService.sendMail.mock.calls[0][0].text;
+      const tokenMatch = sentText.match(/token=([A-Za-z0-9_-]+)/);
+      expect(tokenMatch).toBeTruthy();
+      const token = tokenMatch[1];
+
+      const result = await verificationService.confirmMagicLinkVerification(token);
+
+      expect(result).toMatchObject({
+        userId,
+        destination: email,
+        verifiedField: EMAIL_PROVIDER,
+        strategy: MAGIC_LINK_STRATEGY,
+        provider: EMAIL_PROVIDER
+      });
+
+      const verification = await verificationService.findOne({
+        userId,
+        destination: email
+      });
+      expect(verification.is_used).toBe(true);
+    });
+
+    it("should fail confirmation with tampered token", async () => {
+      const userId = new ObjectId();
+      const email = "tampered@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-id"
+      });
+
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        MAGIC_LINK_STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      const tamperedToken = "dGhpcyBpcyBub3QgYSB2YWxpZCB0b2tlbg";
+
+      await expect(verificationService.confirmMagicLinkVerification(tamperedToken)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
+    it("should fail confirmation when token is reused", async () => {
+      const userId = new ObjectId();
+      const email = "reuse-magic@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-id"
+      });
+
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        MAGIC_LINK_STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      const sentText = mockMailerService.sendMail.mock.calls[0][0].text;
+      const tokenMatch = sentText.match(/token=([A-Za-z0-9_-]+)/);
+      const token = tokenMatch[1];
+
+      await verificationService.confirmMagicLinkVerification(token);
+
+      await expect(verificationService.confirmMagicLinkVerification(token)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it("should fail when MagicLink is not enabled for the provider", async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "phone", strategy: "MagicLink"}
+      ]);
+
+      const userId = new ObjectId();
+      const email = "not-enabled@example.com";
+
+      await expect(
+        verificationService.startVerificationProcess(
+          userId,
+          email,
+          MAGIC_LINK_STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockMailerService.sendMail).not.toHaveBeenCalled();
+    });
+
+    it("should fail when providerVerificationConfig is not set", async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
+
+      const userId = new ObjectId();
+      const email = "no-config@example.com";
+
+      await expect(
+        verificationService.startVerificationProcess(
+          userId,
+          email,
+          MAGIC_LINK_STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockMailerService.sendMail).not.toHaveBeenCalled();
+    });
+
+    it("should throw for unknown strategy", async () => {
+      const userId = new ObjectId();
+      const email = "unknown-strategy@example.com";
+
+      await expect(
+        verificationService.startVerificationProcess(
+          userId,
+          email,
+          "UnknownStrategy",
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("should enforce max attempts for magic link strategy", async () => {
+      const userId = new ObjectId();
+      const email = "maxattempt-magic@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-id"
+      });
+
+      for (let i = 0; i < maxAttemptCount; i++) {
+        await verificationService.startVerificationProcess(
+          userId,
+          email,
+          MAGIC_LINK_STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        );
+      }
+
+      await expect(
+        verificationService.startVerificationProcess(
+          userId,
+          email,
+          MAGIC_LINK_STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("should clean up verification record when email fails to send", async () => {
+      const userId = new ObjectId();
+      const email = "fail-send@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [],
+        rejected: [email]
+      });
+
+      await expect(
+        verificationService.startVerificationProcess(
+          userId,
+          email,
+          MAGIC_LINK_STRATEGY,
+          EMAIL_PROVIDER,
+          PURPOSE
+        )
+      ).rejects.toThrow(BadRequestException);
+
+      const verification = await verificationService.findOne({
+        userId,
+        destination: email
+      });
+      expect(verification).toBeNull();
+    });
+  });
+
+  describe("MagicLink Strategy - ProviderVerificationService", () => {
+    const MAGIC_LINK_STRATEGY = "MagicLink";
+    let userId: ObjectId;
+
+    beforeEach(async () => {
+      userId = new ObjectId();
+      await userService.insertOne({
+        _id: userId,
+        username: "magiclink-user",
+        password: "testpassword"
+      } as any);
+
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: "MagicLink"},
+        {provider: "phone", strategy: "MagicLink"}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
+    });
+
+    it("should verify provider via magic link and update user document", async () => {
+      const email = "provider-magic@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-id"
+      });
+
+      await providerVerificationService.startCredentialsVerification(
+        userId,
+        email,
+        MAGIC_LINK_STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      const sentText = mockMailerService.sendMail.mock.calls[0][0].text;
+      const tokenMatch = sentText.match(/token=([A-Za-z0-9_-]+)/);
+      const token = tokenMatch[1];
+
+      const response = await providerVerificationService.validateCredentialsVerification(
+        token,
+        MAGIC_LINK_STRATEGY
+      );
+
+      expect(response).toMatchObject({
+        message: "Verification completed successfully",
+        provider: EMAIL_PROVIDER,
+        destination: email
+      });
+
+      const user = await userService.findOne({_id: userId});
+      const decrypted = userService.decryptProviderFields(user);
+      expect(decrypted.email.value).toBe(email);
+    });
+
+    it("should verify phone provider via magic link and update user document", async () => {
+      const phone = "+1122334455";
+
+      mockSmsService.sendSms.mockResolvedValue({
+        success: true,
+        messageId: "test-sms-id"
+      });
+
+      await providerVerificationService.startCredentialsVerification(
+        userId,
+        phone,
+        MAGIC_LINK_STRATEGY,
+        PHONE_PROVIDER,
+        PURPOSE
+      );
+
+      const sentBody = mockSmsService.sendSms.mock.calls[0][0].body;
+      const tokenMatch = sentBody.match(/token=([A-Za-z0-9_-]+)/);
+      const token = tokenMatch[1];
+
+      const response = await providerVerificationService.validateCredentialsVerification(
+        token,
+        MAGIC_LINK_STRATEGY
+      );
+
+      expect(response).toMatchObject({
+        message: "Verification completed successfully",
+        provider: PHONE_PROVIDER,
+        destination: phone
+      });
+
+      const user = await userService.findOne({_id: userId});
+      const decrypted = userService.decryptProviderFields(user);
+      expect(decrypted.phone.value).toBe(phone);
+    });
+
+    it("should handle OTP flow through validateCredentialsVerification", async () => {
+      const email = "otp-via-validate@example.com";
+
+      mockMailerService.sendMail.mockResolvedValue({
+        accepted: [email],
+        rejected: [],
+        messageId: "test-id"
+      });
+
+      await verificationService.startVerificationProcess(
+        userId,
+        email,
+        STRATEGY,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      const sentText = mockMailerService.sendMail.mock.calls[0][0].text;
+      const codeMatch = sentText.match(/is: (\d{6})/);
+      const code = codeMatch[1];
+
+      const response = await providerVerificationService.validateCredentialsVerification(
+        code,
+        STRATEGY,
+        userId,
+        EMAIL_PROVIDER,
+        PURPOSE
+      );
+
+      expect(response).toMatchObject({
+        message: "Verification completed successfully",
+        provider: EMAIL_PROVIDER,
+        destination: email
+      });
+
+      const user = await userService.findOne({_id: userId});
+      const decrypted = userService.decryptProviderFields(user);
+      expect(decrypted.email.value).toBe(email);
     });
   });
 });
