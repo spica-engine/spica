@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule, hash} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {RefreshTokenModule} from "@spica-server/passport/refresh_token";
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
@@ -567,4 +567,91 @@ describe("ApiKey", () => {
   //       });
   //     });
   //   });
+});
+
+describe("RefreshToken with hash secret", () => {
+  const HASH_SECRET = "test_refresh_token_hash_secret";
+  const TOKEN_EXPIRES_IN = 1 * 24 * 60 * 60;
+
+  let req: Request;
+  let app: INestApplication;
+  let service: RefreshTokenService;
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      imports: [
+        DatabaseTestingModule.standalone(),
+        CoreTestingModule,
+        PassportTestingModule.initialize(),
+        RefreshTokenModule.forRoot({
+          expiresIn: TOKEN_EXPIRES_IN,
+          realtime: false,
+          refreshTokenHashSecret: HASH_SECRET
+        }),
+        SchemaModule.forRoot({formats: [OBJECT_ID]})
+      ]
+    }).compile();
+
+    req = module.get(Request);
+    service = module.get(RefreshTokenService);
+    app = module.createNestApplication();
+    await app.listen(req.socket);
+  });
+
+  afterEach(() => app.close());
+
+  it("should hash filter token value before querying", async () => {
+    const rawToken = "my_raw_refresh_token";
+    const hashedToken = hash(rawToken, HASH_SECRET);
+    const clientMeta = {
+      user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      ip_address: "192.168.1.100"
+    };
+    await service.insertOne({
+      _id: new ObjectId("aaa00000000000000000000a"),
+      identity: "user1",
+      token: hashedToken,
+      created_at: new Date("2000-01-01T00:00:00.000Z"),
+      expired_at: new Date("2099-01-01T00:00:00.000Z"),
+      last_used_at: new Date("2000-01-01T00:00:00.000Z"),
+      client_meta: clientMeta
+    });
+
+    const res = await req.get("/passport/refresh-token", {
+      filter: JSON.stringify({token: rawToken})
+    });
+
+    expect(res.body.length).toEqual(1);
+    expect(res.body[0]).toEqual({
+      _id: "aaa00000000000000000000a",
+      identity: "user1",
+      token: hashedToken,
+      created_at: "2000-01-01T00:00:00.000Z",
+      expired_at: "2099-01-01T00:00:00.000Z",
+      last_used_at: "2000-01-01T00:00:00.000Z",
+      client_meta: {
+        user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        ip_address: "192.168.1.100"
+      }
+    });
+  });
+
+  it("should not match when filter token does not correspond to stored hash", async () => {
+    const hashedToken = hash("real_token", HASH_SECRET);
+
+    await service.insertOne({
+      _id: new ObjectId("bbb00000000000000000000b"),
+      identity: "user1",
+      token: hashedToken,
+      created_at: new Date("2000-01-01T00:00:00.000Z"),
+      expired_at: new Date("2099-01-01T00:00:00.000Z"),
+      last_used_at: new Date("2000-01-01T00:00:00.000Z")
+    });
+
+    const res = await req.get("/passport/refresh-token", {
+      filter: JSON.stringify({token: "wrong_token"})
+    });
+
+    expect(res.body.length).toEqual(0);
+  });
 });

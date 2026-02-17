@@ -34,6 +34,7 @@ import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface/passport
 import {AuthFactor} from "@spica-server/passport/authfactor";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
+import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
 
 /**
  * @name passport
@@ -78,6 +79,14 @@ export class PassportUserController {
   }
 
   stateReqs = new Map<string, any>();
+  clientMetaMap = new Map<string, ClientMeta>();
+
+  private extractClientMeta(req: any): ClientMeta {
+    return {
+      user_agent: req.headers?.["user-agent"],
+      ip_address: req.ip
+    };
+  }
 
   constructor(
     private userService: UserService,
@@ -161,24 +170,31 @@ export class PassportUserController {
       });
     }
 
-    this.completeLoginWithState(state, user, expires);
+    const clientMeta = this.clientMetaMap.get(state);
+    this.clientMetaMap.delete(state);
+    this.completeLoginWithState(state, user, expires, clientMeta);
   }
 
-  async completeLoginWithState(state: string, user: User, expires: number) {
+  async completeLoginWithState(
+    state: string,
+    user: User,
+    expires: number,
+    clientMeta?: ClientMeta
+  ) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
     if (!res || res.headerSent) {
       return;
     }
 
-    const {tokenSchema, refreshTokenSchema} = await this.signUser(user, expires);
+    const {tokenSchema, refreshTokenSchema} = await this.signUser(user, expires, clientMeta);
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
     res.status(200).json(tokenSchema);
   }
 
-  async signUser(user: User, expiresIn: number) {
+  async signUser(user: User, expiresIn: number, clientMeta?: ClientMeta) {
     const tokenSchema = this.userService.sign(user, expiresIn);
-    const refreshTokenSchema = await this.userService.signRefreshToken(user);
+    const refreshTokenSchema = await this.userService.signRefreshToken(user, clientMeta);
 
     const id = user._id.toHexString();
     if (this.authFactor.hasFactor(id)) {
@@ -201,7 +217,14 @@ export class PassportUserController {
     }
   }
 
-  async _login(username: string, password: string, state: string, expires: number, res) {
+  async _login(
+    username: string,
+    password: string,
+    state: string,
+    expires: number,
+    res,
+    clientMeta?: ClientMeta
+  ) {
     const catchError = e => {
       if (!res.headerSent) {
         res.status(e.status || 500).json(e.response || e);
@@ -211,6 +234,10 @@ export class PassportUserController {
     if (state) {
       this.stateReqs.set(state, res);
       setTimeout(() => this.stateReqs.delete(state), this.SESSION_TIMEOUT_MS);
+      if (clientMeta) {
+        this.clientMetaMap.set(state, clientMeta);
+        setTimeout(() => this.clientMetaMap.delete(state), this.SESSION_TIMEOUT_MS);
+      }
 
       this.startLoginWithState(state, expires).catch(catchError);
 
@@ -222,7 +249,7 @@ export class PassportUserController {
       return;
     }
 
-    const loginResult = await this.signUser(user, expires).catch(catchError);
+    const loginResult = await this.signUser(user, expires, clientMeta).catch(catchError);
     if (!loginResult) {
       return;
     }
@@ -249,17 +276,18 @@ export class PassportUserController {
       "Warning",
       `299 "Login with 'GET' method has been deprecated. Use 'POST' instead."`
     );
-    this._login(username, password, state, expires, req.res);
+    this._login(username, password, state, expires, req.res, this.extractClientMeta(req));
   }
 
   @Post("login")
   async loginWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
     {username, password, expires, state}: LoginCredentials,
+    @Req() req: any,
     @Res() res: any,
     @Next() next
   ) {
-    this._login(username, password, state, expires, res);
+    this._login(username, password, state, expires, res, this.extractClientMeta(req));
   }
 
   @Post("login/:id/factor-authentication")

@@ -163,11 +163,13 @@ export class UserController {
       .setVisibilityOfFields(this.hideSecretsExpression())
       .result();
 
-    const pipeline = (await pipelineBuilder.paginate(
-      paginate,
-      seekingPipeline,
-      this.userService.estimatedDocumentCount()
-    )).result();
+    const pipeline = (
+      await pipelineBuilder.paginate(
+        paginate,
+        seekingPipeline,
+        this.userService.estimatedDocumentCount()
+      )
+    ).result();
 
     if (paginate) {
       const result = await this.userService.aggregate<PaginationResponse<User>>(pipeline).next();
@@ -261,9 +263,12 @@ export class UserController {
     const factor = this.setUserFactor(id, meta);
 
     // to keep this global value clear
-    setTimeout(() => {
-      this.deleteUserFactor(id);
-    }, 1000 * 60 * 5);
+    setTimeout(
+      () => {
+        this.deleteUserFactor(id);
+      },
+      1000 * 60 * 5
+    );
 
     const challenge = await factor.start();
 
@@ -531,48 +536,58 @@ export class UserController {
   }
 
   @Post("passwordless-login/start")
-  startPasswordlessLogin(@Body(
-    Schema.validate("http://spica.internal/passport/passwordless-login-start")
-  )
-  body: {
-    username: string;
-    provider: "email" | "phone";
-  }) {
+  startPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-start"))
+    body: {
+      username: string;
+      provider: "email" | "phone";
+    }
+  ) {
     return this.passwordlessLoginService.start(body.username, body.provider);
   }
 
   @Post("passwordless-login/verify")
-  verifyPasswordlessLogin(@Body(
-    Schema.validate("http://spica.internal/passport/passwordless-login-verify")
-  )
-  body: {
-    username: string;
-    code: string;
-    provider: "email" | "phone";
-  }) {
-    return this.passwordlessLoginService.verify(body.username, body.code, body.provider);
+  verifyPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-verify"))
+    body: {
+      username: string;
+      code: string;
+      provider: "email" | "phone";
+    },
+    @Req() req: any
+  ) {
+    const clientMeta = {
+      user_agent: req.headers?.["user-agent"],
+      ip_address: req.ip
+    };
+    return this.passwordlessLoginService.verify(
+      body.username,
+      body.code,
+      body.provider,
+      clientMeta
+    );
   }
   @Post("forgot-password/start")
-  async startForgotPassword(@Body(
-    Schema.validate("http://spica.internal/passport/forgot-password-start")
-  )
-  body: {
-    username: string;
-    provider: "email" | "phone";
-  }) {
+  async startForgotPassword(
+    @Body(Schema.validate("http://spica.internal/passport/forgot-password-start"))
+    body: {
+      username: string;
+      provider: "email" | "phone";
+    }
+  ) {
     return this.passwordResetService.startForgotPasswordProcess(body.username, body.provider);
   }
 
   @Post("forgot-password/verify")
-  async verifyForgotPassword(@Body(
-    Schema.validate("http://spica.internal/passport/forgot-password-verify")
-  )
-  body: {
-    username: string;
-    code: string;
-    newPassword: string;
-    provider: "email" | "phone";
-  }) {
+  async verifyForgotPassword(
+    @Body(Schema.validate("http://spica.internal/passport/forgot-password-verify"))
+    body: {
+      username: string;
+      code: string;
+      newPassword: string;
+      provider: "email" | "phone";
+    }
+  ) {
     return this.passwordResetService.verifyAndResetPassword(
       body.username,
       body.code,

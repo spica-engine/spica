@@ -35,6 +35,7 @@ application:
   userVerificationHashSecret:
   userProviderEncryptionSecret:
   userProviderHashSecret:
+  refreshTokenHashSecret:
   defaultPassword: spica
   webBaseUrl: /spica/
   apiBaseUrl: /api/

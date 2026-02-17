@@ -119,6 +119,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
                   key: userProviderHashSecret
+            - name: REFRESH_TOKEN_HASH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: refreshTokenHashSecret
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:

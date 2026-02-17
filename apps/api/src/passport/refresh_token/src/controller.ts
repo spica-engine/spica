@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   NotFoundException,
   Param,
   Put,
@@ -18,10 +19,15 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 import {RefreshToken, PaginationResponse} from "@spica-server/interface/passport/refresh_token";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {hash} from "@spica-server/core/schema";
+import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options";
 
 @Controller("passport/refresh-token")
 export class RefreshTokenController {
-  constructor(private service: RefreshTokenService) {}
+  constructor(
+    private service: RefreshTokenService,
+    @Inject(REFRESH_TOKEN_OPTIONS) private options: RefreshTokenOptions
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:index"))
@@ -33,6 +39,10 @@ export class RefreshTokenController {
     @Query("filter", JSONP) filter: object,
     @ResourceFilter() resourceFilter: object
   ) {
+    if (filter && filter["token"] && this.options.refreshTokenHashSecret) {
+      filter["token"] = hash(filter["token"], this.options.refreshTokenHashSecret);
+    }
+
     const pipelineBuilder = await new PipelineBuilder()
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);

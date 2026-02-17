@@ -34,6 +34,7 @@ import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface/passport
 import {AuthFactor} from "@spica-server/passport/authfactor";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
+import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
 
 /**
  * @name passport
@@ -78,6 +79,14 @@ export class PassportIdentityController {
   }
 
   stateReqs = new Map<string, any>();
+  clientMetaMap = new Map<string, ClientMeta>();
+
+  private extractClientMeta(req: any): ClientMeta {
+    return {
+      user_agent: req.headers?.["user-agent"],
+      ip_address: req.ip
+    };
+  }
 
   constructor(
     private identityService: IdentityService,
@@ -159,24 +168,35 @@ export class PassportIdentityController {
       });
     }
 
-    this.completeIdentifyWithState(state, identity, expires);
+    const clientMeta = this.clientMetaMap.get(state);
+    this.clientMetaMap.delete(state);
+    this.completeIdentifyWithState(state, identity, expires, clientMeta);
   }
 
-  async completeIdentifyWithState(state: string, identity: Identity, expires: number) {
+  async completeIdentifyWithState(
+    state: string,
+    identity: Identity,
+    expires: number,
+    clientMeta?: ClientMeta
+  ) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
     if (!res || res.headerSent) {
       return;
     }
 
-    const {tokenSchema, refreshTokenSchema} = await this.signIdentity(identity, expires);
+    const {tokenSchema, refreshTokenSchema} = await this.signIdentity(
+      identity,
+      expires,
+      clientMeta
+    );
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
     res.status(200).json(tokenSchema);
   }
 
-  async signIdentity(identity: Identity, expiresIn: number) {
+  async signIdentity(identity: Identity, expiresIn: number, clientMeta?: ClientMeta) {
     const tokenSchema = this.identityService.sign(identity, expiresIn);
-    const refreshTokenSchema = await this.identityService.signRefreshToken(identity);
+    const refreshTokenSchema = await this.identityService.signRefreshToken(identity, clientMeta);
 
     const id = identity._id.toHexString();
     if (this.authFactor.hasFactor(id)) {
@@ -199,7 +219,14 @@ export class PassportIdentityController {
     }
   }
 
-  async _identify(identifier: string, password: string, state: string, expires: number, res) {
+  async _identify(
+    identifier: string,
+    password: string,
+    state: string,
+    expires: number,
+    res,
+    clientMeta?: ClientMeta
+  ) {
     const catchError = e => {
       if (!res.headerSent) {
         res.status(e.status || 500).json(e.response || e);
@@ -209,6 +236,10 @@ export class PassportIdentityController {
     if (state) {
       this.stateReqs.set(state, res);
       setTimeout(() => this.stateReqs.delete(state), this.SESSION_TIMEOUT_MS);
+      if (clientMeta) {
+        this.clientMetaMap.set(state, clientMeta);
+        setTimeout(() => this.clientMetaMap.delete(state), this.SESSION_TIMEOUT_MS);
+      }
 
       this.startIdentifyWithState(state, expires).catch(catchError);
 
@@ -220,7 +251,7 @@ export class PassportIdentityController {
       return;
     }
 
-    const identifyResult = await this.signIdentity(identity, expires).catch(catchError);
+    const identifyResult = await this.signIdentity(identity, expires, clientMeta).catch(catchError);
     if (!identifyResult) {
       return;
     }
@@ -247,17 +278,18 @@ export class PassportIdentityController {
       "Warning",
       `299 "Identify with 'GET' method has been deprecated. Use 'POST' instead."`
     );
-    this._identify(identifier, password, state, expires, req.res);
+    this._identify(identifier, password, state, expires, req.res, this.extractClientMeta(req));
   }
 
   @Post("identify")
   async identifyWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
     {identifier, password, expires, state}: LoginCredentials,
+    @Req() req: any,
     @Res() res: any,
     @Next() next
   ) {
-    this._identify(identifier, password, state, expires, res);
+    this._identify(identifier, password, state, expires, res, this.extractClientMeta(req));
   }
 
   @Post("identify/:id/factor-authentication")
