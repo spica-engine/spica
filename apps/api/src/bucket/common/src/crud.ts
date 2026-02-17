@@ -58,7 +58,12 @@ export async function findDocuments<T>(
   encryptionSecret?: string
 ): Promise<unknown> {
   const collection = factories.collection(schema);
-  const pipelineBuilder = new BucketPipelineBuilder(schema, factories, hashSecret, encryptionSecret);
+  const pipelineBuilder = new BucketPipelineBuilder(
+    schema,
+    factories,
+    hashSecret,
+    encryptionSecret
+  );
   const seekingPipelineBuilder = new PipelineBuilder();
 
   let rulePropertyMap;
@@ -192,7 +197,8 @@ export async function insertDocument(
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
     deleteOne: (documentId: ObjectId) => Promise<void>;
-  }
+  },
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
@@ -221,7 +227,13 @@ export async function insertDocument(
     }
   }
 
-  return collection.insertOne(document).catch(handleWriteErrors);
+  const inserted = await collection.insertOne(document).catch(handleWriteErrors);
+
+  if (encryptionSecret && inserted) {
+    return decryptDocumentFields(inserted, schema, encryptionSecret);
+  }
+
+  return inserted;
 }
 
 export async function replaceDocument(
@@ -237,7 +249,8 @@ export async function replaceDocument(
   },
   options: {
     returnDocument: ReturnDocument;
-  } = {returnDocument: ReturnDocument.BEFORE}
+  } = {returnDocument: ReturnDocument.BEFORE},
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
@@ -248,11 +261,17 @@ export async function replaceDocument(
   const documentId = document._id;
   delete document._id;
 
-  return collection
+  const replaced = await collection
     .findOneAndReplace({_id: documentId}, document, {
       returnDocument: options.returnDocument
     })
     .catch(handleWriteErrors);
+
+  if (encryptionSecret && replaced) {
+    return decryptDocumentFields(replaced, schema, encryptionSecret);
+  }
+
+  return replaced;
 }
 
 export async function patchDocument(
@@ -269,7 +288,8 @@ export async function patchDocument(
   },
   options: {
     returnDocument: ReturnDocument;
-  } = {returnDocument: ReturnDocument.BEFORE}
+  } = {returnDocument: ReturnDocument.BEFORE},
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
   if (params.applyAcl) {
@@ -280,11 +300,17 @@ export async function patchDocument(
 
   const updateQuery = getUpdateQueryForPatch(patch, document);
 
-  return collection
+  const patched = await collection
     .findOneAndUpdate({_id: document._id}, updateQuery, {
       returnDocument: options.returnDocument
     })
     .catch(handleWriteErrors);
+
+  if (encryptionSecret && patched) {
+    return decryptDocumentFields(patched, schema, encryptionSecret);
+  }
+
+  return patched;
 }
 
 export async function deleteDocument(
@@ -297,7 +323,8 @@ export async function deleteDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<BucketDocument>;
     schema: (schema: string | ObjectId) => Promise<Bucket>;
-  }
+  },
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
@@ -314,6 +341,9 @@ export async function deleteDocument(
   const deletedCount = await collection.deleteOne({_id: document._id});
 
   if (deletedCount == 1) {
+    if (encryptionSecret) {
+      return decryptDocumentFields(document, schema, encryptionSecret);
+    }
     return document;
   }
 }

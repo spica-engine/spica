@@ -47,7 +47,8 @@ import {
   replaceDocument,
   authIdToString,
   isJSONFilter,
-  filterReviver
+  filterReviver,
+  decryptDocumentFields
 } from "@spica-server/bucket/common";
 import {expressionFilterParser} from "./filter";
 import {
@@ -307,7 +308,8 @@ export class BucketDataController {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId)
-      }
+      },
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!document) {
@@ -371,7 +373,9 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-      }
+      },
+      undefined,
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!previousDocument) {
@@ -394,6 +398,10 @@ export class BucketDataController {
         previousDocument,
         currentDocument
       );
+    }
+
+    if (this.encryptionSecret) {
+      return decryptDocumentFields(currentDocument, schema, this.encryptionSecret);
     }
 
     return currentDocument;
@@ -454,7 +462,8 @@ export class BucketDataController {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
-      {returnDocument: ReturnDocument.AFTER}
+      {returnDocument: ReturnDocument.AFTER},
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!currentDocument) {
@@ -513,7 +522,8 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-      }
+      },
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!deletedDocument) {

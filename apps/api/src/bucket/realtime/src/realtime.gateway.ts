@@ -161,7 +161,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver(),
           deleteOne: id => this.delete(client, {_id: id})
-        }
+        },
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -231,7 +232,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver()
-        }
+        },
+        undefined,
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -334,7 +337,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver()
         },
-        {returnDocument: ReturnDocument.AFTER}
+        {returnDocument: ReturnDocument.AFTER},
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -409,7 +413,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver()
-        }
+        },
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, 500, error.message);

@@ -166,6 +166,11 @@ describe("Encrypted Field", () => {
       const response = await req.post(`/bucket/${bucketId}/data`, document);
       const insertedDoc = response.body;
 
+      // API response should return decrypted plaintext
+      expect(insertedDoc.label).toBe("doc1");
+      expect(insertedDoc.age).toBe(30);
+      expect(insertedDoc.secret_note).toBe("my-secret-value");
+
       const dbDoc = await database
         .collection(`bucket_${bucketId}`)
         .findOne({_id: new ObjectId(insertedDoc._id)});
@@ -192,7 +197,12 @@ describe("Encrypted Field", () => {
       const documentId = insertResponse.body._id;
 
       const updatedDoc = {label: "doc-replace", secret_note: "new-secret", age: 26};
-      await req.put(`/bucket/${bucketId}/data/${documentId}`, updatedDoc);
+      const replaceResponse = await req.put(`/bucket/${bucketId}/data/${documentId}`, updatedDoc);
+
+      // API response should return decrypted plaintext
+      expect(replaceResponse.body.label).toBe("doc-replace");
+      expect(replaceResponse.body.age).toBe(26);
+      expect(replaceResponse.body.secret_note).toBe("new-secret");
 
       const dbDoc = await database
         .collection(`bucket_${bucketId}`)
@@ -234,6 +244,11 @@ describe("Encrypted Field", () => {
 
       const response = await req.post(`/bucket/${nestedBucketId}/data`, document);
       const insertedDoc = response.body;
+
+      // API response should return decrypted plaintext
+      expect(insertedDoc.label).toBe("nested-doc");
+      expect(insertedDoc.credentials.username).toBe("admin");
+      expect(insertedDoc.credentials.api_key).toBe("sk-live-abc123");
 
       const dbDoc = await database
         .collection(`bucket_${nestedBucketId}`)
