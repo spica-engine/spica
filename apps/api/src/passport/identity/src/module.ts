@@ -50,7 +50,7 @@ export class IdentityModule {
     const module: DynamicModule = {
       module: IdentityModule,
       controllers: [IdentityController],
-      exports: [IdentityService, IdentityStrategy, IDENTITY_POLICY_FINALIZER],
+      exports: [IdentityService, IdentityStrategy, IDENTITY_POLICY_FINALIZER, IDENTITY_OPTIONS],
       imports: [
         RefreshTokenServicesModule,
         JwtModule.register({

@@ -35,6 +35,8 @@ import {AuthFactor} from "@spica-server/passport/authfactor";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
+import {IDENTITY_OPTIONS, IdentityOptions} from "@spica-server/interface/passport/identity";
+import {buildClientMeta} from "./client-meta";
 
 /**
  * @name passport
@@ -82,10 +84,7 @@ export class PassportIdentityController {
   clientMetaMap = new Map<string, ClientMeta>();
 
   private extractClientMeta(req: any): ClientMeta {
-    return {
-      user_agent: req.headers?.["user-agent"],
-      ip_address: req.ip
-    };
+    return buildClientMeta(req, this.identityOptions.refreshTokenHashSecret);
   }
 
   constructor(
@@ -93,6 +92,7 @@ export class PassportIdentityController {
     private strategyService: StrategyService,
     private authFactor: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices,
+    @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions,
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
@@ -337,9 +337,11 @@ export class PassportIdentityController {
       throw new UnauthorizedException("Refresh token does not exist.");
     }
 
+    const clientMeta = this.extractClientMeta(req);
+
     let tokenSchema;
     try {
-      tokenSchema = await this.identityService.refreshToken(accessToken, refreshToken);
+      tokenSchema = await this.identityService.refreshToken(accessToken, refreshToken, clientMeta);
     } catch (error) {
       throw new BadRequestException(error);
     }

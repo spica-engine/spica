@@ -1,8 +1,8 @@
 import {ObjectId} from "@spica-server/database";
 
 export interface ClientMeta {
-  user_agent?: string;
-  ip_address?: string;
+  fingerprint: string;
+  device_label?: string;
 }
 
 export interface RefreshToken {

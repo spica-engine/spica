@@ -47,6 +47,7 @@ import {ProviderVerificationService} from "./services/provider.verification.serv
 import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
 import {UserPipelineBuilder} from "./pipeline.builder";
+import {buildClientMeta} from "@spica-server/passport/src/client-meta";
 
 @Controller("passport/user")
 export class UserController {
@@ -556,10 +557,7 @@ export class UserController {
     },
     @Req() req: any
   ) {
-    const clientMeta = {
-      user_agent: req.headers?.["user-agent"],
-      ip_address: req.ip
-    };
+    const clientMeta = buildClientMeta(req, this.options.refreshTokenHashSecret);
     return this.passwordlessLoginService.verify(
       body.username,
       body.code,

@@ -52,7 +52,7 @@ export class UserModule {
     const module: DynamicModule = {
       module: UserModule,
       controllers: [UserController],
-      exports: [UserService, UserStrategy, USER_POLICY_FINALIZER],
+      exports: [UserService, UserStrategy, USER_POLICY_FINALIZER, USER_OPTIONS],
       imports: [
         RefreshTokenServicesModule,
         JwtModule.register({

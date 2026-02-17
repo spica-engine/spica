@@ -120,7 +120,11 @@ export class UserService extends BaseCollection<User>("user") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenCanBeUsed(accessToken: string, refreshToken: string) {
+  private async verifyTokenCanBeUsed(
+    accessToken: string,
+    refreshToken: string,
+    clientMeta?: ClientMeta
+  ) {
     const hashedToken = this.hashRefreshToken(refreshToken);
     const refreshTokenData = await this.refreshTokenService.findOne({token: hashedToken});
     if (!refreshTokenData) {
@@ -135,6 +139,17 @@ export class UserService extends BaseCollection<User>("user") {
 
     if (refreshTokenData.user !== String(user._id)) {
       return Promise.reject("Refresh and access token usernames are mismatched");
+    }
+
+    if (
+      clientMeta?.fingerprint &&
+      refreshTokenData.client_meta?.fingerprint &&
+      clientMeta.fingerprint !== refreshTokenData.client_meta.fingerprint
+    ) {
+      console.warn(
+        `Fingerprint mismatch on refresh for user ${refreshTokenData.user}. ` +
+          `Expected: ${refreshTokenData.client_meta.fingerprint}, Got: ${clientMeta.fingerprint}`
+      );
     }
 
     return Promise.resolve();
@@ -152,10 +167,10 @@ export class UserService extends BaseCollection<User>("user") {
     return user;
   }
 
-  async refreshToken(accessToken: string, refreshToken: string) {
+  async refreshToken(accessToken: string, refreshToken: string, clientMeta?: ClientMeta) {
     accessToken = this.extractAccessToken(accessToken);
     await this.verifyTokenCanBeRefreshed(accessToken, refreshToken);
-    await this.verifyTokenCanBeUsed(accessToken, refreshToken);
+    await this.verifyTokenCanBeUsed(accessToken, refreshToken, clientMeta);
     await this.updateRefreshTokenLastUsedAt(refreshToken);
     const user = await this.findUserOfToken(accessToken);
     return this.sign(user);

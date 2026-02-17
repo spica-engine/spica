@@ -604,8 +604,8 @@ describe("RefreshToken with hash secret", () => {
     const rawToken = "my_raw_refresh_token";
     const hashedToken = hash(rawToken, HASH_SECRET);
     const clientMeta = {
-      user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-      ip_address: "192.168.1.100"
+      fingerprint: "abc123fingerprintHash",
+      device_label: "Chrome 120 / macOS 14"
     };
     await service.insertOne({
       _id: new ObjectId("aaa00000000000000000000a"),
@@ -630,8 +630,8 @@ describe("RefreshToken with hash secret", () => {
       expired_at: "2099-01-01T00:00:00.000Z",
       last_used_at: "2000-01-01T00:00:00.000Z",
       client_meta: {
-        user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-        ip_address: "192.168.1.100"
+        fingerprint: "abc123fingerprintHash",
+        device_label: "Chrome 120 / macOS 14"
       }
     });
   });

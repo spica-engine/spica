@@ -843,6 +843,7 @@ NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false
 }).then(async app => {
+  app.getHttpAdapter().getInstance().set("trust proxy", true);
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
     Middlewares.Headers({

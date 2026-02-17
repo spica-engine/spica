@@ -585,8 +585,8 @@ describe("E2E Tests", () => {
 
       expect(refreshToken).toBeDefined();
       expect(refreshToken.client_meta).toBeDefined();
-      expect(refreshToken.client_meta.user_agent).toBeDefined();
-      expect(refreshToken.client_meta.ip_address).toBeDefined();
+      expect(refreshToken.client_meta.fingerprint).toBeDefined();
+      expect(typeof refreshToken.client_meta.fingerprint).toEqual("string");
     });
   });
 
