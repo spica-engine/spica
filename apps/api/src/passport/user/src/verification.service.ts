@@ -21,7 +21,7 @@ interface MagicLinkPayload {
 }
 
 interface VerificationStrategyHandler {
-  validatePreConditions?(provider: string): Promise<void>;
+  validatePreConditions(provider: string): Promise<void>;
   generateCode(id: ObjectId, value: string, provider: string, purpose: string): string;
   buildSendPayload(rawCode: string, value: string, provider: string): Partial<VerificationMessage>;
 }
@@ -151,6 +151,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     switch (strategy) {
       case "Otp":
         return {
+          validatePreConditions: provider => this.checkStrategyEnabled(provider, "Otp"),
           generateCode: () => this.random6Digit(),
           buildSendPayload: (code, _value, provider) => ({
             code,
@@ -162,7 +163,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
         };
       case "MagicLink":
         return {
-          validatePreConditions: provider => this.checkMagicLinkEnabled(provider),
+          validatePreConditions: provider => this.checkStrategyEnabled(provider, "MagicLink"),
           generateCode: (id, value, provider, purpose) => {
             if (!this.userOptions.publicUrl) {
               throw new BadRequestException(
@@ -329,19 +330,19 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
     return payload;
   }
 
-  private async checkMagicLinkEnabled(provider: string): Promise<void> {
+  private async checkStrategyEnabled(provider: string, strategy: string): Promise<void> {
     const config = await this.userConfigService.getProviderVerificationConfig();
     if (!config) {
       throw new BadRequestException(
-        "Provider verification config is not set. Please configure providerVerificationConfig to enable MagicLink strategy."
+        "Provider verification config is not set. Please configure providerVerificationConfig to enable the strategy."
       );
     }
 
-    const providerConfig = config.find(c => c.provider === provider && c.strategy === "MagicLink");
+    const providerConfig = config.find(c => c.provider === provider && c.strategy === strategy);
 
     if (!providerConfig) {
       throw new BadRequestException(
-        `MagicLink strategy is not enabled for provider '${provider}'. Update providerVerificationConfig to enable it.`
+        `${strategy} strategy is not enabled for provider '${provider}'. Update providerVerificationConfig to enable it.`
       );
     }
   }
