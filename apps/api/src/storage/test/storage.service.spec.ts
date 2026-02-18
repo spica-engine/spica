@@ -199,7 +199,6 @@ describe("Storage Service", () => {
     const obj = {...storageObject, name: "photo.png"};
     await storageService.insert([obj]);
 
-    const inserted = await storageService.get(storageObjectId);
     const result = await storageService.updateMeta(storageObjectId, "renamed_photo");
 
     expect(result.name).toBe("renamed_photo.png");
