@@ -101,20 +101,23 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     skip: number = 0,
     sort?: any
   ): Promise<StorageResponse[]> {
-    const convertedResourceFilter = StoragePipelineBuilder.createResourceFilter(
-      resourceFilter as {include?: string[]; exclude?: string[]}
-    );
+    const convertedResourceFilter = StoragePipelineBuilder.createResourceFilter(resourceFilter as {
+      include?: string[];
+      exclude?: string[];
+    });
 
     const pathFilter = StoragePipelineBuilder.createPathFilter(path);
 
-    const pipelineBuilder = (
-      await new PipelineBuilder()
-        .filterResources(convertedResourceFilter)
-        .attachToPipeline(true, {$match: pathFilter})
-        .filterByUserRequest(filter)
-    ).result();
+    const pipelineBuilder = (await new PipelineBuilder()
+      .filterResources(convertedResourceFilter)
+      .attachToPipeline(true, {$match: pathFilter})
+      .filterByUserRequest(filter)).result();
 
-    const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
+    const seeking = new PipelineBuilder()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .result();
 
     return this._coll
       .aggregate<StorageResponse>([...pipelineBuilder, ...seeking])
@@ -142,11 +145,17 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);
 
-    const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
+    const seeking = new PipelineBuilder()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .result();
 
-    const pipeline = (
-      await pipelineBuilder.paginate(paginate, seeking, this.estimatedDocumentCount())
-    ).result();
+    const pipeline = (await pipelineBuilder.paginate(
+      paginate,
+      seeking,
+      this.estimatedDocumentCount()
+    )).result();
 
     if (paginate) {
       return this._coll
@@ -187,75 +196,49 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   async delete(idOrName: ObjectId | string): Promise<void> {
     const query = idOrName instanceof ObjectId ? {_id: idOrName} : {name: idOrName};
-    const existing = await this._coll.findOne(query);
+    const result = await this._coll.findOneAndDelete(query);
 
-    if (!existing) {
+    if (!result) {
       throw new NotFoundException(`Storage object could not be found`);
     }
 
-    const deletedDoc = {...existing};
-    const folderName = existing.name;
-    const escapedName = this.escapeRegex(folderName);
-    let deletedSubDocs: any[] = [];
+    // rollback will cost much, in fact api could crash, best-effort deletion is enough, so we do not use transaction here
+    try {
+      await this.service.delete(result.name);
+      const folderName = result.name;
 
-    const tx = new TransactionExecutor();
+      const escapedName = this.escapeRegex(folderName);
 
-    tx.add({
-      execute: async () => {
-        await this._coll.findOneAndDelete(query);
-      },
-      rollback: async () => {
-        await this._coll.insertOne(deletedDoc);
-      }
-    });
-
-    tx.add({
-      execute: async () => {
-        await this.service.delete(existing.name);
-      },
-      rollback: async () => {
-        // Cannot restore deleted content from strategy — best-effort
-      }
-    });
-
-    tx.add({
-      execute: async () => {
-        const subDocs = await this._coll
-          .find({name: {$regex: new RegExp(`^${escapedName}`)}})
-          .toArray();
-        deletedSubDocs = subDocs;
-        if (subDocs.length > 0) {
-          await this._coll.deleteMany({
-            name: {$regex: new RegExp(`^${escapedName}`)}
-          });
-        }
-      },
-      rollback: async () => {
-        if (deletedSubDocs.length > 0) {
-          await this._coll.insertMany(deletedSubDocs);
-        }
-      }
-    });
-
-    await tx.execute();
+      await this._coll.deleteMany({
+        name: {$regex: new RegExp(`^${escapedName}`)}
+      });
+    } catch (error) {
+      console.error(`Failed to delete storage object ${result.name} from storage:`, error);
+    }
   }
+
   async deleteManyByIds(ids: ObjectId[]): Promise<void> {
     const objects = await this._coll.find({_id: {$in: ids}}).toArray();
     if (objects.length === 0) {
       return;
     }
 
-    const deletePromises = objects.map(object => this.service.delete(object.name));
-    await Promise.all(deletePromises);
+    // rollback will cost much, in fact api could crash, best-effort deletion is enough, so we do not use transaction here
+    try {
+      const deletePromises = objects.map(object => this.service.delete(object.name));
+      await Promise.all(deletePromises);
 
-    const folderDeletionPromises = objects.map(async object => {
-      const escapedName = this.escapeRegex(object.name);
-      await this._coll.deleteMany({
-        name: {$regex: new RegExp(`^${escapedName}`)}
+      const folderDeletionPromises = objects.map(async object => {
+        const escapedName = this.escapeRegex(object.name);
+        await this._coll.deleteMany({
+          name: {$regex: new RegExp(`^${escapedName}`)}
+        });
       });
-    });
 
-    await Promise.all(folderDeletionPromises);
+      await Promise.all(folderDeletionPromises);
+    } catch (error) {
+      console.error(`Failed to delete storage objects from storage:`, error);
+    }
   }
 
   async updateMeta(_id: ObjectId, name: string) {
@@ -267,7 +250,6 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     const oldName = existing.name;
 
     if (oldName !== name) {
-      const escapedOld = this.escapeRegex(oldName);
       const tx = new TransactionExecutor();
 
       tx.add({
@@ -279,58 +261,46 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
         }
       });
 
+      const getUpdateFilterForRename = name => {
+        const escapedName = this.escapeRegex(name);
+        return {
+          $or: [{name: name}, {name: {$regex: new RegExp(`^${escapedName}`)}}]
+        };
+      };
+
+      const getUpdatePipelineForRename = (oldName, newName) => {
+        return [
+          {
+            $set: {
+              name: {
+                $cond: [
+                  {$eq: ["$name", oldName]},
+                  newName,
+                  {
+                    $replaceOne: {
+                      input: "$name",
+                      find: oldName,
+                      replacement: newName
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ];
+      };
+
       tx.add({
         execute: async () => {
           await this._coll.updateMany(
-            {
-              $or: [{name: oldName}, {name: {$regex: new RegExp(`^${escapedOld}`)}}]
-            },
-            [
-              {
-                $set: {
-                  name: {
-                    $cond: [
-                      {$eq: ["$name", oldName]},
-                      name,
-                      {
-                        $replaceOne: {
-                          input: "$name",
-                          find: oldName,
-                          replacement: name
-                        }
-                      }
-                    ]
-                  }
-                }
-              }
-            ]
+            getUpdateFilterForRename(oldName),
+            getUpdatePipelineForRename(oldName, name)
           );
         },
         rollback: async () => {
-          const escapedNew = this.escapeRegex(name);
           await this._coll.updateMany(
-            {
-              $or: [{name: name}, {name: {$regex: new RegExp(`^${escapedNew}`)}}]
-            },
-            [
-              {
-                $set: {
-                  name: {
-                    $cond: [
-                      {$eq: ["$name", name]},
-                      oldName,
-                      {
-                        $replaceOne: {
-                          input: "$name",
-                          find: name,
-                          replacement: oldName
-                        }
-                      }
-                    ]
-                  }
-                }
-              }
-            ]
+            getUpdateFilterForRename(name),
+            getUpdatePipelineForRename(name, oldName)
           );
         }
       });
@@ -354,71 +324,26 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     const oldName = existing.name;
     const newName = object.name;
-    const contentData = object.content.data;
 
-    const tx = new TransactionExecutor();
-
-    if (contentData) {
-      // Read old content before mutation so we can restore on rollback
-      let oldContent: Buffer | undefined;
-      try {
-        oldContent = await this.service.read(oldName);
-      } catch {
-        // Old content may not exist yet
-      }
-
-      tx.add({
-        execute: async () => {
-          await this.write(newName, contentData, object.content.type);
-        },
-        rollback: async () => {
-          // Restore old content to undo the overwrite
-          if (oldContent) {
-            await this.service.write(oldName, oldContent, existing.content.type);
-          }
-          // Remove newly written file if names differ
-          if (oldName !== newName) {
-            try {
-              await this.service.delete(newName);
-            } catch {
-              // Best-effort cleanup
-            }
-          }
+    try {
+      if (object.content.data) {
+        if (oldName !== newName) {
+          // rollback will cost much, in fact api could crash, best-effort deletion is enough, so we do not use transaction here
+          this.service.delete(oldName);
         }
+        await this.write(newName, object.content.data, object.content.type);
+      }
+
+      delete object.content.data;
+      delete object._id;
+      object.updated_at = new Date();
+
+      return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
+        return {...object, _id: _id};
       });
-
-      if (oldName !== newName) {
-        tx.add({
-          execute: async () => {
-            await this.service.delete(oldName);
-          },
-          rollback: async () => {
-            if (oldContent) {
-              await this.service.write(oldName, oldContent, existing.content.type);
-            }
-          }
-        });
-      }
+    } catch (error) {
+      console.error(`Failed to update storage object ${existing.name} in storage:`, error);
     }
-
-    delete object.content.data;
-    delete object._id;
-    object.updated_at = new Date();
-
-    const existingSnapshot = {...existing};
-    tx.add({
-      execute: async () => {
-        await this._coll.findOneAndUpdate({_id}, {$set: object});
-      },
-      rollback: async () => {
-        const {_id: docId, ...rest} = existingSnapshot;
-        await this._coll.findOneAndUpdate({_id}, {$set: rest});
-      }
-    });
-
-    await tx.execute();
-
-    return {...object, _id: _id};
   }
 
   async insert(objects: StorageObject<fs.ReadStream | Buffer>[]): Promise<StorageObjectMeta[]> {
@@ -459,35 +384,24 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       }
     });
 
-    // Each file write is a separate step so rollback cleans up written files
     for (let i = 0; i < objects.length; i++) {
       tx.add({
         execute: async () => {
-          await this.write(insertedObjects[i].name, datas[i], insertedObjects[i].content.type);
+          try {
+            await this.write(insertedObjects[i].name, datas[i], insertedObjects[i].content.type);
+          } catch (error) {
+            throw new Error(
+              `Error: Failed to write object ${insertedObjects[i].name} to storage. Reason: ${error}`
+            );
+          }
         },
         rollback: async () => {
-          try {
-            await this.service.delete(insertedObjects[i].name);
-          } catch {
-            // Best-effort cleanup
-          }
+          await this.service.delete(insertedObjects[i].name);
         }
       });
     }
 
-    try {
-      await tx.execute();
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      const failedName = insertedObjects
-        ? insertedObjects.find((_, idx) => idx < objects.length)?.name
-        : "unknown";
-      throw new Error(
-        `Error: Failed to write object to storage. Reason: ${error.message || error}`
-      );
-    }
+    await tx.execute();
 
     return insertedObjects;
   }
