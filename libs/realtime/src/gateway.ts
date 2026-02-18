@@ -54,17 +54,17 @@ export function getConnectionHandlers(
       : undefined;
 
     const stream = realtime.find(collection, options).pipe(
-      catchError(error => {
-        const errMsg = buildErrorMessage(error);
-        client.send(JSON.stringify(errMsg));
-        client.close(1003);
-        return of(null);
-      }),
       map(data => {
         if (data !== null && documentTransform) {
           return documentTransform(data);
         }
         return data;
+      }),
+      catchError(error => {
+        const errMsg = buildErrorMessage(error);
+        client.send(JSON.stringify(errMsg));
+        client.close(1003);
+        return of(null);
       })
     );
 
