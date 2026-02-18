@@ -4,7 +4,7 @@ import {randomBytes} from "crypto";
 import {GenericContainer} from "testcontainers";
 
 let uri;
-const MONGODB_BINARY_VERSION = "7.0.14";
+const MONGODB_BINARY_VERSION = "8.0.4";
 const mongoUrl = process.env.MONGODB_URL;
 
 export async function start(topology: "standalone" | "replset") {
@@ -20,7 +20,7 @@ export async function start(topology: "standalone" | "replset") {
     }
 
     console.debug("Starting MongoDB replica set using GenericContainer...");
-    const container = await new GenericContainer("mongo:7.0.14")
+    const container = await new GenericContainer("mongo:8.0.4")
       .withExposedPorts(27017)
       .withCommand(["--replSet", "testset", "--bind_ip_all"])
       .start();

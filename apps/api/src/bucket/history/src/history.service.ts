@@ -120,9 +120,10 @@ export class HistoryService {
   }
 
   async insertOne(history: History): Promise<InsertOneResult> {
-    const recordCount = await this.collection
-      .find({$and: [{bucket_id: history.bucket_id}, {document_id: history.document_id}]})
-      .count();
+    const recordCount = await this.collection.countDocuments({
+      bucket_id: history.bucket_id,
+      document_id: history.document_id
+    });
 
     if (recordCount >= 10) {
       await this.collection.deleteOne({

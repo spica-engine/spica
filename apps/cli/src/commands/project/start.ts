@@ -480,7 +480,7 @@ export default function (program: Program): Command {
       validator: CaporalValidator.STRING
     })
     .option("--mongo-version", "Version of the MongoDB image to run.", {
-      default: "7.0",
+      default: "8.0",
       validator: CaporalValidator.STRING
     })
     .option("-o, --open", "Open project authorization page after creation.", {
