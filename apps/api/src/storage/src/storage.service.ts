@@ -25,6 +25,7 @@ import {
 import {Strategy} from "./strategy/strategy";
 
 import fs from "fs";
+import path from "path";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
@@ -228,6 +229,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
 
     const oldName = existing.name;
+    name = this.preserveExtension(oldName, name);
 
     if (oldName !== name) {
       await this.service.rename(oldName, name);
@@ -274,6 +276,7 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     await this.validateTotalStorageSize(object.content.size - existing.content.size);
 
     const oldName = existing.name;
+    object.name = this.preserveExtension(oldName, object.name);
     const newName = object.name;
 
     if (object.content.data) {
@@ -377,6 +380,17 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     }
 
     return size;
+  }
+
+  private preserveExtension(oldName: string, newName: string): string {
+    const oldExt = path.extname(oldName);
+    const newExt = path.extname(newName);
+
+    if (oldExt && !newExt) {
+      return newName + oldExt;
+    }
+
+    return newName;
   }
 
   private escapeRegex(str: string): string {

@@ -195,6 +195,45 @@ describe("Storage Service", () => {
     ).resolves.not.toThrow();
   });
 
+  it("should preserve file extension on rename when new name has no extension", async () => {
+    const obj = {...storageObject, name: "photo.png"};
+    await storageService.insert([obj]);
+
+    const inserted = await storageService.get(storageObjectId);
+    const result = await storageService.updateMeta(storageObjectId, "renamed_photo");
+
+    expect(result.name).toBe("renamed_photo.png");
+  });
+
+  it("should not override extension on rename when new name already has one", async () => {
+    const obj = {...storageObject, name: "photo.png"};
+    await storageService.insert([obj]);
+
+    const result = await storageService.updateMeta(storageObjectId, "photo.jpg");
+
+    expect(result.name).toBe("photo.jpg");
+  });
+
+  it("should preserve file extension on update when new name has no extension", async () => {
+    const obj = {...storageObject, name: "doc.pdf"};
+    await storageService.insert([obj]);
+
+    const updatedData = {
+      _id: storageObjectId,
+      name: "renamed_doc",
+      url: "url",
+      content: {
+        data: Buffer.from("new content"),
+        type: "application/pdf",
+        size: 11
+      }
+    };
+    await storageService.update(storageObjectId, updatedData);
+
+    const result = await storageService.get(storageObjectId);
+    expect(result.name).toBe("renamed_doc.pdf");
+  });
+
   it("should delete single storage object by id", async () => {
     await expect(storageService.insert([storageObject])).resolves.not.toThrow();
     await expect(storageService.delete(storageObjectId)).resolves.not.toThrow();
