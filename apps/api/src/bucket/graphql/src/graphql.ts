@@ -35,7 +35,8 @@ import {
   clearRelations,
   getDependents,
   findLocale,
-  insertActivity
+  insertActivity,
+  decryptDocumentFields
 } from "@spica-server/bucket/common";
 import {FindResponse} from "@spica-server/interface/bucket/graphql";
 import {Bucket, BUCKET_DATA_HASH_SECRET, BucketDocument} from "@spica-server/interface/bucket";
@@ -511,7 +512,15 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
-      const previousDocument = await this.bds.children(bucket).findOne({_id: documentId});
+      let previousDocument = await this.bds.children(bucket).findOne({_id: documentId});
+      if (this.encryptionSecret) {
+        previousDocument = decryptDocumentFields(
+          previousDocument,
+          bucket,
+          this.encryptionSecret,
+          bucketId => this.bs.findOne({_id: new ObjectId(bucketId)})
+        );
+      }
 
       const patchedDocument = applyPatch(previousDocument, input);
 

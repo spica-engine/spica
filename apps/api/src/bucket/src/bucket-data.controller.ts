@@ -366,13 +366,14 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
+    const schemaResolver = (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)});
     const previousDocument = await replaceDocument(
       schema,
       {...document, _id: documentId},
       {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        schema: schemaResolver
       },
       undefined,
       this.encryptionSecret
@@ -401,7 +402,7 @@ export class BucketDataController {
     }
 
     if (this.encryptionSecret) {
-      return decryptDocumentFields(currentDocument, schema, this.encryptionSecret);
+      return decryptDocumentFields(currentDocument, schema, this.encryptionSecret, schemaResolver);
     }
 
     return currentDocument;

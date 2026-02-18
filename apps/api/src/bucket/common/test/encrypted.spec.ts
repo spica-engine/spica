@@ -418,4 +418,119 @@ describe("Encrypted Field", () => {
       expect(readResponse.body.ssn).toBe("123-45-6789");
     });
   });
+
+  describe("Error Handling", () => {
+    it("should throw descriptive error when encrypted data is corrupted", async () => {
+      const insertResponse = await req.post(`/bucket/${bucketId}/data`, {
+        label: "test-corruption",
+        secret_note: "original-secret",
+        age: 40
+      });
+      const docId = insertResponse.body._id;
+
+      // Manually corrupt the encrypted data in DB
+      await database.collection(`bucket_${bucketId}`).updateOne(
+        {_id: new ObjectId(docId)},
+        {
+          $set: {
+            "secret_note.encrypted": "corrupted-invalid-base64",
+            "secret_note.iv": "invalid-iv",
+            "secret_note.authTag": "invalid-tag"
+          }
+        }
+      );
+
+      // Attempt to read should fail with descriptive error
+      const response = await req.get(`/bucket/${bucketId}/data/${docId}`, {}).catch(e => e);
+
+      expect(response.statusCode).toBe(500);
+      expect(response.body.message).toContain("Decryption failed for document");
+      expect(response.body.message).toContain(docId);
+    });
+
+    it("should handle decryption failure in nested encrypted fields", async () => {
+      const insertResponse = await req.post(`/bucket/${nestedBucketId}/data`, {
+        label: "nested-corruption",
+        credentials: {
+          username: "admin",
+          api_key: "sk-live-original"
+        }
+      });
+      const docId = insertResponse.body._id;
+
+      // Corrupt the nested encrypted field in DB
+      await database.collection(`bucket_${nestedBucketId}`).updateOne(
+        {_id: new ObjectId(docId)},
+        {
+          $set: {
+            "credentials.api_key.encrypted": "corrupted-data",
+            "credentials.api_key.iv": "bad-iv",
+            "credentials.api_key.authTag": "bad-tag"
+          }
+        }
+      );
+
+      const response = await req.get(`/bucket/${nestedBucketId}/data/${docId}`, {}).catch(e => e);
+
+      expect(response.statusCode).toBe(500);
+      expect(response.body.message).toContain("Decryption failed for document");
+      expect(response.body.message).toContain(docId);
+    });
+
+    it("should handle decryption failure in array of encrypted fields", async () => {
+      // Create a bucket with encrypted array field
+      const arrayBucketId = new ObjectId().toHexString();
+      const arrayBucket = {
+        _id: arrayBucketId,
+        title: "Array Encrypted Bucket",
+        description: "Bucket with array of encrypted fields",
+        icon: "lock",
+        primary: "name",
+        readOnly: false,
+        acl: {write: "true==true", read: "true==true"},
+        properties: {
+          name: {
+            type: "string",
+            title: "Name"
+          },
+          secrets: {
+            type: "array",
+            title: "Secrets",
+            items: {
+              type: "encrypted"
+            }
+          }
+        }
+      };
+
+      await req.post("/bucket", arrayBucket);
+
+      const insertResponse = await req.post(`/bucket/${arrayBucketId}/data`, {
+        name: "array-test",
+        secrets: ["secret1", "secret2", "secret3"]
+      });
+      const docId = insertResponse.body._id;
+
+      // Corrupt one element in the encrypted array
+      const dbDoc = await database
+        .collection(`bucket_${arrayBucketId}`)
+        .findOne({_id: new ObjectId(docId)});
+
+      dbDoc.secrets[1] = {
+        encrypted: "corrupted",
+        iv: "bad-iv",
+        authTag: "bad-tag"
+      };
+
+      await database
+        .collection(`bucket_${arrayBucketId}`)
+        .updateOne({_id: new ObjectId(docId)}, {$set: {secrets: dbDoc.secrets}});
+
+      const response = await req.get(`/bucket/${arrayBucketId}/data/${docId}`, {}).catch(e => e);
+
+      expect(response.statusCode).toBe(500);
+      expect(response.body.message).toContain("Decryption failed for document");
+      expect(response.body.message).toContain(docId);
+    });
+  });
 });

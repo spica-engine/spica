@@ -143,7 +143,7 @@ export async function findDocuments<T>(
     }
     if (encryptionSecret) {
       result.data = result.data.map(doc =>
-        decryptDocumentFields(doc as any, schema, encryptionSecret)
+        decryptDocumentFields(doc as any, schema, encryptionSecret, factories.schema)
       ) as T[];
     }
     return result;
@@ -157,7 +157,9 @@ export async function findDocuments<T>(
     });
 
   if (encryptionSecret) {
-    return documents.map(doc => decryptDocumentFields(doc as any, schema, encryptionSecret)) as T[];
+    return documents.map(doc =>
+      decryptDocumentFields(doc as any, schema, encryptionSecret, factories.schema)
+    ) as T[];
   }
 
   return documents;
@@ -230,7 +232,7 @@ export async function insertDocument(
   const inserted = await collection.insertOne(document).catch(handleWriteErrors);
 
   if (encryptionSecret && inserted) {
-    return decryptDocumentFields(inserted, schema, encryptionSecret);
+    return decryptDocumentFields(inserted, schema, encryptionSecret, factories.schema);
   }
 
   return inserted;
@@ -268,7 +270,7 @@ export async function replaceDocument(
     .catch(handleWriteErrors);
 
   if (encryptionSecret && replaced) {
-    return decryptDocumentFields(replaced, schema, encryptionSecret);
+    return decryptDocumentFields(replaced, schema, encryptionSecret, factories.schema);
   }
 
   return replaced;
@@ -307,7 +309,7 @@ export async function patchDocument(
     .catch(handleWriteErrors);
 
   if (encryptionSecret && patched) {
-    return decryptDocumentFields(patched, schema, encryptionSecret);
+    return decryptDocumentFields(patched, schema, encryptionSecret, factories.schema);
   }
 
   return patched;
@@ -342,7 +344,7 @@ export async function deleteDocument(
 
   if (deletedCount == 1) {
     if (encryptionSecret) {
-      return decryptDocumentFields(document, schema, encryptionSecret);
+      return decryptDocumentFields(document, schema, encryptionSecret, factories.schema);
     }
     return document;
   }
