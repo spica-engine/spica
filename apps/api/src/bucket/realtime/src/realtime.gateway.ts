@@ -78,7 +78,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
               if (!chunk || !chunk.document) return chunk;
               return {
                 ...chunk,
-                document: decryptDocumentFields(chunk.document, schema, this.encryptionSecret)
+                document: decryptDocumentFields(
+                  chunk.document,
+                  schema,
+                  this.encryptionSecret,
+                  this.getBucketResolver(),
+                  chunk.document._id
+                )
               };
             };
           }
