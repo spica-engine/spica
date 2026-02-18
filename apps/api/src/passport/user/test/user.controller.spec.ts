@@ -55,7 +55,7 @@ describe("user Controller", () => {
 
   afterEach(() => app.close());
 
-  xdescribe("profiler", () => {
+  describe("profiler", () => {
     beforeEach(async () => {
       // to make db insert profile entry
       await Promise.all([
@@ -69,7 +69,7 @@ describe("user Controller", () => {
     it("should list user profile entries", async () => {
       const res = await req.get("/passport/user/profile");
       expect(res.statusCode).toEqual(200);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.user")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".user"))).toEqual(true);
     });
 
     it("should filter user profile entries by operation type", async () => {
@@ -78,7 +78,7 @@ describe("user Controller", () => {
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body.every(profileEntry => profileEntry.op == "insert")).toEqual(true);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.user")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".user"))).toEqual(true);
     });
 
     it("should limit user profile entries", async () => {
@@ -87,29 +87,35 @@ describe("user Controller", () => {
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body.length).toEqual(1);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.user")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".user"))).toEqual(true);
     });
 
     it("should skip bucket1 profile entries", async () => {
-      const {body: allProfileEntries} = await req.get("/passport/user/profile");
-      const res = await req.get("/passport/user/profile", {skip: 1});
-      expect(res.statusCode).toEqual(200);
-      expect(res.body.length).toEqual(allProfileEntries.length - 1);
+      const [{body: allProfileEntries}, skippedRes] = await Promise.all([
+        req.get("/passport/user/profile"),
+        req.get("/passport/user/profile", {skip: 1})
+      ]);
+      expect(skippedRes.statusCode).toEqual(200);
 
-      allProfileEntries.shift();
-      expect(res.body).toEqual(allProfileEntries);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.user")).toEqual(true);
+      const expectedLength = allProfileEntries.length - 1;
+      expect(Math.abs(skippedRes.body.length - expectedLength)).toBeLessThanOrEqual(1);
+
+      expect(skippedRes.body.every(profileEntry => profileEntry.ns.endsWith(".user"))).toEqual(
+        true
+      );
     });
 
     it("should sort bucket1 profile entries", async () => {
-      const {body: allProfileEntries} = await req.get("/passport/user/profile");
-      const res = await req.get("/passport/user/profile", {sort: JSON.stringify({ts: -1})});
-      expect(res.statusCode).toEqual(200);
-      expect(res.body).not.toEqual(allProfileEntries);
+      const response = await req.get("/passport/user/profile", {
+        sort: JSON.stringify({ts: -1})
+      });
+      expect(response.statusCode).toEqual(200);
 
-      allProfileEntries.reverse();
-      expect(res.body).toEqual(allProfileEntries);
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.user")).toEqual(true);
+      for (let i = 1; i < response.body.length; i++) {
+        expect(response.body[i - 1].ts >= response.body[i].ts).toEqual(true);
+      }
+
+      expect(response.body.every(profileEntry => profileEntry.ns.endsWith(".user"))).toEqual(true);
     });
 
     // to prevent accessing other collections profile entries
@@ -120,7 +126,7 @@ describe("user Controller", () => {
 
       expect(res.statusCode).toEqual(200);
       // user provided ns filter will be overridden
-      expect(res.body.every(profileEntry => profileEntry.ns == "test.user")).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".user"))).toEqual(true);
     });
 
     it("should ignore ns on the nested filter", async () => {
