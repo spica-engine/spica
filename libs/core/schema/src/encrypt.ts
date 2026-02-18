@@ -23,11 +23,12 @@ export function encrypt(value: string, secret: string): EncryptedData {
   if (!secret) {
     throw new BadRequestException("Encryption secret is required.");
   }
-  const secretBuffer = Buffer.from(secret, "utf-8");
+
+  const key = deriveKey(secret);
 
   const iv = crypto.randomBytes(IV_LENGTH);
 
-  const cipher = crypto.createCipheriv(ALGORITHM, secretBuffer, iv);
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
   let encrypted = cipher.update(value, "utf8", "hex");
   encrypted += cipher.final("hex");
@@ -61,8 +62,8 @@ export function decrypt(encryptedData: EncryptedData, secret: string): string {
     throw new BadRequestException("Invalid encrypted data format.");
   }
 
-  const secretBuffer = Buffer.from(secret, "utf-8");
-  const decipher = crypto.createDecipheriv(ALGORITHM, secretBuffer, Buffer.from(iv, "hex"));
+  const key = deriveKey(secret);
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, Buffer.from(iv, "hex"));
 
   decipher.setAuthTag(Buffer.from(authTag, "hex"));
 
@@ -70,4 +71,8 @@ export function decrypt(encryptedData: EncryptedData, secret: string): string {
   decrypted += decipher.final("utf8");
 
   return decrypted;
+}
+
+function deriveKey(secret: string): Buffer {
+  return crypto.createHash("sha256").update(secret, "utf8").digest();
 }
