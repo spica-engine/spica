@@ -35,6 +35,8 @@ describe("Provider Verification E2E with MailHog", () => {
   const STRATEGY = "Otp";
   const PURPOSE = "verify";
   const EMAIL_PROVIDER = "email";
+  const PHONE_NUMBER_PROVIDER = "phone";
+  const MAGIC_LINK_STRATEGY = "MagicLink";
 
   beforeEach(async () => {
     const mailerUrl = process.env.MAILER_URL;
@@ -144,6 +146,16 @@ describe("Provider Verification E2E with MailHog", () => {
   });
 
   describe("Complete provider email verification flow", () => {
+    beforeEach(async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: STRATEGY}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
+    });
+
     it("should successfully verify user with correct code sent via email", async () => {
       const email = "test@example.com";
 
@@ -351,11 +363,26 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(secondVerifyResponse.statusCode).toBe(404);
       expect(secondVerifyResponse.body.message).toBe("No verification found");
     });
+
+    it("should reject start when strategy is not configured for the provider", async () => {
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: "12312312",
+          provider: PHONE_NUMBER_PROVIDER,
+          strategy: MAGIC_LINK_STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(400);
+      expect(startResponse.body.message).toContain(
+        "MagicLink strategy is not enabled for phone provider"
+      );
+    });
   });
 
   describe("MagicLink provider verification flow", () => {
-    const MAGIC_LINK_STRATEGY = "MagicLink";
-
     beforeEach(async () => {
       await userConfigService.updateProviderVerificationConfig([
         {provider: "email", strategy: "MagicLink"}

@@ -100,15 +100,21 @@ describe("VerificationService", () => {
     await userConfigService.set({
       verificationProcessMaxAttempt: maxAttemptCount
     });
+
+    await userConfigService.updateProviderVerificationConfig([
+      {provider: "email", strategy: STRATEGY}
+    ]);
   });
 
   afterEach(async () => {
     await Promise.all([verificationService.deleteMany({}), userService.deleteMany({})]);
     mockMailerService.sendMail.mockReset();
     mockSmsService.sendSms.mockReset();
+
+    await userConfigService.updateProviderVerificationConfig(undefined);
   });
 
-  describe("startVerification", () => {
+  describe("OTP - startVerification", () => {
     it("should create verification record and send email for email provider", async () => {
       const userId = new ObjectId();
       const email = "test@example.com";
@@ -353,7 +359,7 @@ describe("VerificationService", () => {
     });
   });
 
-  describe("verifyProvider", () => {
+  describe("OTP - verifyProvider", () => {
     it("should verify successfully with correct code", async () => {
       const userId = new ObjectId();
       const email = "test@example.com";
@@ -677,7 +683,7 @@ describe("VerificationService", () => {
     });
   });
 
-  describe("ProviderVerificationService", () => {
+  describe("OTP - ProviderVerificationService", () => {
     let userId: ObjectId;
     beforeEach(async () => {
       userId = new ObjectId();
@@ -738,7 +744,7 @@ describe("VerificationService", () => {
     });
   });
 
-  describe("MagicLink Strategy - VerificationService", () => {
+  describe("MagicLink - VerificationService", () => {
     const MAGIC_LINK_STRATEGY = "MagicLink";
 
     beforeEach(async () => {
@@ -1045,7 +1051,7 @@ describe("VerificationService", () => {
     });
   });
 
-  describe("MagicLink Strategy - ProviderVerificationService", () => {
+  describe("MagicLink - ProviderVerificationService", () => {
     const MAGIC_LINK_STRATEGY = "MagicLink";
     let userId: ObjectId;
 
@@ -1138,46 +1144,6 @@ describe("VerificationService", () => {
       const user = await userService.findOne({_id: userId});
       const decrypted = userService.decryptProviderFields(user);
       expect(decrypted.phone.value).toBe(phone);
-    });
-
-    it("should handle OTP flow through validateCredentialsVerification", async () => {
-      const email = "otp-via-validate@example.com";
-
-      mockMailerService.sendMail.mockResolvedValue({
-        accepted: [email],
-        rejected: [],
-        messageId: "test-id"
-      });
-
-      await verificationService.startVerificationProcess(
-        userId,
-        email,
-        STRATEGY,
-        EMAIL_PROVIDER,
-        PURPOSE
-      );
-
-      const sentText = mockMailerService.sendMail.mock.calls[0][0].text;
-      const codeMatch = sentText.match(/is: (\d{6})/);
-      const code = codeMatch[1];
-
-      const response = await providerVerificationService.validateCredentialsVerification(
-        code,
-        STRATEGY,
-        userId,
-        EMAIL_PROVIDER,
-        PURPOSE
-      );
-
-      expect(response).toMatchObject({
-        message: "Verification completed successfully",
-        provider: EMAIL_PROVIDER,
-        destination: email
-      });
-
-      const user = await userService.findOne({_id: userId});
-      const decrypted = userService.decryptProviderFields(user);
-      expect(decrypted.email.value).toBe(email);
     });
   });
 });
