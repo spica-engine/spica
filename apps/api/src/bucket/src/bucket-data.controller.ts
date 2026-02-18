@@ -36,7 +36,7 @@ import {
 } from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
 import {
@@ -107,6 +107,7 @@ export class BucketDataController {
   async find(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @ResourceFilter() resourceFilter: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
@@ -132,6 +133,7 @@ export class BucketDataController {
     return findDocuments(
       schema,
       {
+        resourceFilter,
         relationPaths,
         language: acceptedLanguage,
         filter,
