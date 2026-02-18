@@ -490,8 +490,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     options.filter.$and.push(policyMatch.$match);
 
     req = authIdToString(req);
-    const ruleMatch = expression.aggregate(schema.acl.read, {auth: req.user}, "match");
-    options.filter.$and.push(ruleMatch);
+    if (this.shouldApplyAcl(req)) {
+      const ruleMatch = expression.aggregate(schema.acl.read, {auth: req.user}, "match");
+      options.filter.$and.push(ruleMatch);
+    }
 
     let filter = req.query.get("filter");
 
