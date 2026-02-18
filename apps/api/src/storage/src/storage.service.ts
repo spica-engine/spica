@@ -23,6 +23,7 @@ import {
   PaginatedStorageResponse
 } from "@spica-server/interface/storage";
 import {Strategy} from "./strategy/strategy";
+import {TransactionExecutor} from "@spica-server/transaction";
 
 import fs from "fs";
 
@@ -186,21 +187,57 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
   async delete(idOrName: ObjectId | string): Promise<void> {
     const query = idOrName instanceof ObjectId ? {_id: idOrName} : {name: idOrName};
-    const result = await this._coll.findOneAndDelete(query);
+    const existing = await this._coll.findOne(query);
 
-    if (!result) {
+    if (!existing) {
       throw new NotFoundException(`Storage object could not be found`);
     }
 
-    await this.service.delete(result.name);
-
-    const folderName = result.name;
-
+    const deletedDoc = {...existing};
+    const folderName = existing.name;
     const escapedName = this.escapeRegex(folderName);
+    let deletedSubDocs: any[] = [];
 
-    await this._coll.deleteMany({
-      name: {$regex: new RegExp(`^${escapedName}`)}
+    const tx = new TransactionExecutor();
+
+    tx.add({
+      execute: async () => {
+        await this._coll.findOneAndDelete(query);
+      },
+      rollback: async () => {
+        await this._coll.insertOne(deletedDoc);
+      }
     });
+
+    tx.add({
+      execute: async () => {
+        await this.service.delete(existing.name);
+      },
+      rollback: async () => {
+        // Cannot restore deleted content from strategy — best-effort
+      }
+    });
+
+    tx.add({
+      execute: async () => {
+        const subDocs = await this._coll
+          .find({name: {$regex: new RegExp(`^${escapedName}`)}})
+          .toArray();
+        deletedSubDocs = subDocs;
+        if (subDocs.length > 0) {
+          await this._coll.deleteMany({
+            name: {$regex: new RegExp(`^${escapedName}`)}
+          });
+        }
+      },
+      rollback: async () => {
+        if (deletedSubDocs.length > 0) {
+          await this._coll.insertMany(deletedSubDocs);
+        }
+      }
+    });
+
+    await tx.execute();
   }
   async deleteManyByIds(ids: ObjectId[]): Promise<void> {
     const objects = await this._coll.find({_id: {$in: ids}}).toArray();
@@ -230,33 +267,75 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     const oldName = existing.name;
 
     if (oldName !== name) {
-      await this.service.rename(oldName, name);
-
       const escapedOld = this.escapeRegex(oldName);
-      await this._coll.updateMany(
-        {
-          $or: [{name: oldName}, {name: {$regex: new RegExp(`^${escapedOld}`)}}]
+      const tx = new TransactionExecutor();
+
+      tx.add({
+        execute: async () => {
+          await this.service.rename(oldName, name);
         },
-        [
-          {
-            $set: {
-              name: {
-                $cond: [
-                  {$eq: ["$name", oldName]},
-                  name,
-                  {
-                    $replaceOne: {
-                      input: "$name",
-                      find: oldName,
-                      replacement: name
-                    }
+        rollback: async () => {
+          await this.service.rename(name, oldName);
+        }
+      });
+
+      tx.add({
+        execute: async () => {
+          await this._coll.updateMany(
+            {
+              $or: [{name: oldName}, {name: {$regex: new RegExp(`^${escapedOld}`)}}]
+            },
+            [
+              {
+                $set: {
+                  name: {
+                    $cond: [
+                      {$eq: ["$name", oldName]},
+                      name,
+                      {
+                        $replaceOne: {
+                          input: "$name",
+                          find: oldName,
+                          replacement: name
+                        }
+                      }
+                    ]
                   }
-                ]
+                }
               }
-            }
-          }
-        ]
-      );
+            ]
+          );
+        },
+        rollback: async () => {
+          const escapedNew = this.escapeRegex(name);
+          await this._coll.updateMany(
+            {
+              $or: [{name: name}, {name: {$regex: new RegExp(`^${escapedNew}`)}}]
+            },
+            [
+              {
+                $set: {
+                  name: {
+                    $cond: [
+                      {$eq: ["$name", name]},
+                      oldName,
+                      {
+                        $replaceOne: {
+                          input: "$name",
+                          find: name,
+                          replacement: oldName
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          );
+        }
+      });
+
+      await tx.execute();
     }
     existing.name = name;
     return existing;
@@ -275,21 +354,71 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     const oldName = existing.name;
     const newName = object.name;
+    const contentData = object.content.data;
 
-    if (object.content.data) {
-      if (oldName !== newName) {
-        this.service.delete(oldName);
+    const tx = new TransactionExecutor();
+
+    if (contentData) {
+      // Read old content before mutation so we can restore on rollback
+      let oldContent: Buffer | undefined;
+      try {
+        oldContent = await this.service.read(oldName);
+      } catch {
+        // Old content may not exist yet
       }
-      await this.write(newName, object.content.data, object.content.type);
+
+      tx.add({
+        execute: async () => {
+          await this.write(newName, contentData, object.content.type);
+        },
+        rollback: async () => {
+          // Restore old content to undo the overwrite
+          if (oldContent) {
+            await this.service.write(oldName, oldContent, existing.content.type);
+          }
+          // Remove newly written file if names differ
+          if (oldName !== newName) {
+            try {
+              await this.service.delete(newName);
+            } catch {
+              // Best-effort cleanup
+            }
+          }
+        }
+      });
+
+      if (oldName !== newName) {
+        tx.add({
+          execute: async () => {
+            await this.service.delete(oldName);
+          },
+          rollback: async () => {
+            if (oldContent) {
+              await this.service.write(oldName, oldContent, existing.content.type);
+            }
+          }
+        });
+      }
     }
 
     delete object.content.data;
     delete object._id;
     object.updated_at = new Date();
 
-    return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
-      return {...object, _id: _id};
+    const existingSnapshot = {...existing};
+    tx.add({
+      execute: async () => {
+        await this._coll.findOneAndUpdate({_id}, {$set: object});
+      },
+      rollback: async () => {
+        const {_id: docId, ...rest} = existingSnapshot;
+        await this._coll.findOneAndUpdate({_id}, {$set: rest});
+      }
     });
+
+    await tx.execute();
+
+    return {...object, _id: _id};
   }
 
   async insert(objects: StorageObject<fs.ReadStream | Buffer>[]): Promise<StorageObjectMeta[]> {
@@ -306,34 +435,58 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     let insertedObjects: StorageObjectMeta[];
 
-    try {
-      insertedObjects = await this._coll
-        .insertMany(schemas)
-        .then(result => schemas.map((s, i) => ({...s, _id: result.insertedIds[i]})));
-    } catch (exception) {
-      throw new BadRequestException(
-        exception.code === 11000 ? "An object with this name already exists." : exception.message
-      );
+    const tx = new TransactionExecutor();
+
+    tx.add({
+      execute: async () => {
+        try {
+          insertedObjects = await this._coll
+            .insertMany(schemas)
+            .then(result => schemas.map((s, i) => ({...s, _id: result.insertedIds[i]})));
+        } catch (exception) {
+          throw new BadRequestException(
+            exception.code === 11000
+              ? "An object with this name already exists."
+              : exception.message
+          );
+        }
+      },
+      rollback: async () => {
+        if (insertedObjects) {
+          const idsToDelete = insertedObjects.map(o => o._id);
+          await this._coll.deleteMany({_id: {$in: idsToDelete}});
+        }
+      }
+    });
+
+    // Each file write is a separate step so rollback cleans up written files
+    for (let i = 0; i < objects.length; i++) {
+      tx.add({
+        execute: async () => {
+          await this.write(insertedObjects[i].name, datas[i], insertedObjects[i].content.type);
+        },
+        rollback: async () => {
+          try {
+            await this.service.delete(insertedObjects[i].name);
+          } catch {
+            // Best-effort cleanup
+          }
+        }
+      });
     }
 
-    for (const [i, object] of insertedObjects.entries()) {
-      try {
-        await this.write(object.name, datas[i], object.content.type);
-      } catch (error) {
-        const idsToDelete = insertedObjects.map(o => o._id);
-        await this._coll.deleteMany({_id: {$in: idsToDelete}});
-        const namesToDelete = insertedObjects.map(o => o.name);
-
-        const deletePromises = [];
-        namesToDelete.slice(0, i).forEach(name => {
-          deletePromises.push(this.service.delete(name));
-        });
-        await Promise.all(deletePromises);
-
-        throw new Error(
-          `Error: Failed to write object ${object.name} to storage. Reason: ${error}`
-        );
+    try {
+      await tx.execute();
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
       }
+      const failedName = insertedObjects
+        ? insertedObjects.find((_, idx) => idx < objects.length)?.name
+        : "unknown";
+      throw new Error(
+        `Error: Failed to write object to storage. Reason: ${error.message || error}`
+      );
     }
 
     return insertedObjects;

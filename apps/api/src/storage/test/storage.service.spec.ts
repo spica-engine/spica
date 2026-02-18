@@ -142,7 +142,7 @@ describe("Storage Service", () => {
     });
 
     await expect(storageService.insert(storageObjects)).rejects.toThrow(
-      "Error: Failed to write object name2 to storage. Reason: Upload failed for Item"
+      "Error: Failed to write object to storage. Reason: Upload failed for Item"
     );
 
     const insertedObjects = await storageService.find();
@@ -153,6 +153,113 @@ describe("Storage Service", () => {
     );
     const result = await Promise.all(objectPromises);
     expect(result).toEqual(["ENOENT", "ENOENT", "ENOENT"]);
+  });
+
+  describe("transaction rollback consistency", () => {
+    it("should revert update when strategy write fails", async () => {
+      await storageService.insert([storageObject]);
+
+      const originalObj = await storageService.get(storageObjectId);
+      const originalData = originalObj.content.data;
+      const originalName = originalObj.name;
+
+      const originalWrite = strategyInstance.write.bind(strategyInstance);
+      jest.spyOn(strategyInstance, "write").mockImplementation((id: string, data: Buffer) => {
+        if (id === "updated_name") {
+          return Promise.reject(new Error("Strategy write failed"));
+        }
+        return originalWrite(id, data);
+      });
+
+      const updatedData = {
+        _id: storageObjectId,
+        name: "updated_name",
+        url: "url",
+        content: {
+          data: Buffer.from("new content"),
+          type: "newtype",
+          size: 10
+        }
+      };
+
+      await expect(storageService.update(storageObjectId, updatedData)).rejects.toThrow(
+        "Strategy write failed"
+      );
+
+      // MongoDB doc should remain unchanged
+      const afterObj = await storageService.get(storageObjectId);
+      expect(afterObj.name).toBe(originalName);
+      expect(afterObj.content.data).toEqual(originalData);
+    });
+
+    it("should revert update when MongoDB update fails", async () => {
+      await storageService.insert([storageObject]);
+
+      const originalObj = await storageService.get(storageObjectId);
+      const originalData = originalObj.content.data;
+      const originalName = originalObj.name;
+
+      jest
+        .spyOn((storageService as any)._coll, "findOneAndUpdate")
+        .mockRejectedValueOnce(new Error("MongoDB update failed"));
+
+      const updatedData = {
+        _id: storageObjectId,
+        name: "name",
+        url: "url",
+        content: {
+          data: Buffer.from("new content"),
+          type: "newtype",
+          size: 10
+        }
+      };
+
+      await expect(storageService.update(storageObjectId, updatedData)).rejects.toThrow(
+        "MongoDB update failed"
+      );
+
+      // Original data should still be readable from strategy
+      const storedContent = await strategyInstance.read(originalName);
+      expect(storedContent).toEqual(originalData);
+    });
+
+    it("should revert updateMeta when MongoDB updateMany fails", async () => {
+      await storageService.insert([storageObject]);
+      const originalName = storageObject.name;
+      const newName = "renamed_object";
+
+      jest
+        .spyOn((storageService as any)._coll, "updateMany")
+        .mockRejectedValueOnce(new Error("MongoDB updateMany failed"));
+
+      await expect(storageService.updateMeta(storageObjectId, newName)).rejects.toThrow(
+        "MongoDB updateMany failed"
+      );
+
+      // Strategy file should be renamed back to original name
+      const storedContent = await strategyInstance.read(originalName);
+      expect(storedContent).toEqual(Buffer.from("abc"));
+
+      // Reading the new name should fail (it was rolled back)
+      await expect(strategyInstance.read(newName)).rejects.toThrow();
+    });
+
+    it("should revert delete when strategy delete fails", async () => {
+      await storageService.insert([storageObject]);
+
+      jest
+        .spyOn(strategyInstance, "delete")
+        .mockRejectedValueOnce(new Error("Strategy delete failed"));
+
+      await expect(storageService.delete(storageObjectId)).rejects.toThrow(
+        "Strategy delete failed"
+      );
+
+      // MongoDB doc should be restored
+      const obj = await storageService.get(storageObjectId);
+      expect(obj).not.toBeNull();
+      expect(obj.name).toBe("name");
+    });
   });
 
   it("should update storage object", async () => {
