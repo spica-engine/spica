@@ -47,7 +47,7 @@ import {ProviderVerificationService} from "./services/provider.verification.serv
 import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
 import {UserPipelineBuilder} from "./pipeline.builder";
-import {buildClientMeta} from "@spica-server/passport/src/client-meta";
+import {buildClientMeta} from "@spica-server/core";
 
 @Controller("passport/user")
 export class UserController {

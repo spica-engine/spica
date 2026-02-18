@@ -40,9 +40,6 @@
     },
     {
       "path": "../../config"
-    },
-    {
-      "path": "../../passport"
     }
   ]
 }

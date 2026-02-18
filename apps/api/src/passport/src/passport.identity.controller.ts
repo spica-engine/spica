@@ -36,7 +36,7 @@ import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
 import {IDENTITY_OPTIONS, IdentityOptions} from "@spica-server/interface/passport/identity";
-import {buildClientMeta} from "./client-meta";
+import {buildClientMeta} from "@spica-server/core";
 
 /**
  * @name passport

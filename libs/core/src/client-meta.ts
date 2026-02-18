@@ -1,6 +1,6 @@
 import {hash} from "@spica-server/core/schema";
-import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
 import {UAParser} from "ua-parser-js";
+import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
 
 export function buildClientMeta(req: any, hashSecret: string): ClientMeta {
   const ip = req.ip || "unknown";
