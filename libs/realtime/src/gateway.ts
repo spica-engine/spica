@@ -40,9 +40,7 @@ export function getConnectionHandlers(
         } as any);
       }
     } catch (error) {
-      const errMsg = buildErrorMessage(error);
-      client.send(JSON.stringify(errMsg));
-      client.close(1003);
+      closeGracefully(client, error);
       return;
     }
 
@@ -52,8 +50,7 @@ export function getConnectionHandlers(
     try {
       options = await getFindOptions(client, req);
     } catch (error) {
-      client.send(JSON.stringify({code: error.statusCode || 400, message: error.message}));
-      client.close(1003);
+      closeGracefully(client, error);
       return;
     }
 
@@ -73,9 +70,7 @@ export function getConnectionHandlers(
         return data;
       }),
       catchError(error => {
-        const errMsg = buildErrorMessage(error);
-        client.send(JSON.stringify(errMsg));
-        client.close(1003);
+        closeGracefully(client, error);
         return of(null);
       })
     );
@@ -94,6 +89,13 @@ export function getConnectionHandlers(
     if (realtime.doesEmitterExist(collection, options)) {
       realtime.removeEmitter(collection, options);
     }
+  }
+
+  function closeGracefully(client: any, error: Error) {
+    const errMsg = buildErrorMessage(error);
+    client.send(JSON.stringify(errMsg));
+    client.close(1003);
+    return;
   }
 
   return {
