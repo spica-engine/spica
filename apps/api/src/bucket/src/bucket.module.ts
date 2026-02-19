@@ -148,7 +148,13 @@ export class BucketCoreModule {
   static initialize(options: BucketOptions) {
     return {
       module: BucketCoreModule,
-      imports: [ServicesModule.initialize(options.bucketDataLimit, options.hashSecret)],
+      imports: [
+        ServicesModule.initialize(
+          options.bucketDataLimit,
+          options.hashSecret,
+          options.encryptionSecret
+        )
+      ],
       providers: [
         {
           provide: BUCKET_LANGUAGE_FINALIZER,
