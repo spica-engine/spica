@@ -100,21 +100,26 @@ describe("VerificationService", () => {
     await userConfigService.set({
       verificationProcessMaxAttempt: maxAttemptCount
     });
-
-    await userConfigService.updateProviderVerificationConfig([
-      {provider: "email", strategy: STRATEGY}
-    ]);
   });
 
   afterEach(async () => {
     await Promise.all([verificationService.deleteMany({}), userService.deleteMany({})]);
     mockMailerService.sendMail.mockReset();
     mockSmsService.sendSms.mockReset();
-
-    await userConfigService.updateProviderVerificationConfig(undefined);
   });
 
   describe("OTP - startVerification", () => {
+    beforeEach(async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: STRATEGY},
+        {provider: "phone", strategy: STRATEGY}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
+    });
+
     it("should create verification record and send email for email provider", async () => {
       const userId = new ObjectId();
       const email = "test@example.com";
@@ -360,6 +365,17 @@ describe("VerificationService", () => {
   });
 
   describe("OTP - verifyProvider", () => {
+    beforeEach(async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: STRATEGY},
+        {provider: "phone", strategy: STRATEGY}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
+    });
+
     it("should verify successfully with correct code", async () => {
       const userId = new ObjectId();
       const email = "test@example.com";
@@ -692,6 +708,15 @@ describe("VerificationService", () => {
         username: "testphoneuser",
         password: "testpassword"
       } as any);
+
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: STRATEGY},
+        {provider: "phone", strategy: STRATEGY}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
     });
 
     it("should successfully verify provider and update user", async () => {

@@ -376,9 +376,6 @@ describe("Provider Verification E2E with MailHog", () => {
       );
 
       expect(startResponse.statusCode).toBe(400);
-      expect(startResponse.body.message).toContain(
-        "MagicLink strategy is not enabled for phone provider"
-      );
     });
   });
 

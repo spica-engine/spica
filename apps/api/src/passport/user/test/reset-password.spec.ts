@@ -101,12 +101,18 @@ describe("PasswordResetService", () => {
         }
       ]
     });
+
+    await userConfigService.updateProviderVerificationConfig([
+      {provider: EMAIL_PROVIDER, strategy: STRATEGY},
+      {provider: PHONE_PROVIDER, strategy: STRATEGY}
+    ]);
   });
 
   afterEach(async () => {
     await userService.deleteMany({});
     mockMailerService.sendMail.mockReset();
     mockSmsService.sendSms.mockReset();
+    await userConfigService.updateProviderVerificationConfig(undefined);
   });
 
   describe("startForgotPasswordProcess", () => {
@@ -155,6 +161,9 @@ describe("PasswordResetService", () => {
           }
         ]
       });
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: PHONE_PROVIDER, strategy: STRATEGY}
+      ]);
       const encryptedPhone = userService.encryptField(phoneNumber);
       await userService.insertOne({
         username,
@@ -241,6 +250,9 @@ describe("PasswordResetService", () => {
           }
         ]
       });
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: PHONE_PROVIDER, strategy: STRATEGY}
+      ]);
 
       const encryptedPhone = userService.encryptField(phoneNumber);
       await userService.insertOne({
@@ -324,6 +336,9 @@ describe("PasswordResetService", () => {
           }
         ]
       });
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: EMAIL_PROVIDER, strategy: STRATEGY}
+      ]);
 
       mockMailerService.sendMail.mockResolvedValue({
         accepted: [email],
@@ -411,6 +426,9 @@ describe("PasswordResetService", () => {
           }
         ]
       });
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: PHONE_PROVIDER, strategy: STRATEGY}
+      ]);
 
       mockSmsService.sendSms.mockResolvedValue({
         success: true,
