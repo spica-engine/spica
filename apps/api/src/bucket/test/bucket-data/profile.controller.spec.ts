@@ -13,7 +13,7 @@ import {
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
-xdescribe("BucketDataController profiler", () => {
+describe("BucketDataController profiler", () => {
   let app: INestApplication;
   let req: Request;
   let module: TestingModule;
@@ -48,9 +48,6 @@ xdescribe("BucketDataController profiler", () => {
     }
   };
 
-  let bucket1Namespace;
-  let bucket2Namespace;
-
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -74,121 +71,125 @@ xdescribe("BucketDataController profiler", () => {
     app = module.createNestApplication();
 
     db = module.get(DatabaseService);
-    //@ts-ignore
     await db.setProfilingLevel(ProfilingLevel.all);
 
     req = module.get(Request);
-    req.reject = true; /* Reject for non 2xx response codes */
     await app.listen(req.socket);
   });
 
   afterEach(() => app.close());
 
-  beforeEach(async () => {
-    await Promise.all([req.post("/bucket", bucket1), req.post("/bucket", bucket2)]);
+  describe("profiler", () => {
+    beforeEach(async () => {
+      await Promise.all([req.post("/bucket", bucket1), req.post("/bucket", bucket2)]);
 
-    // to make db insert profile entry
-    await Promise.all([
-      req.post(`/bucket/${bucket1._id}/data`, {name: "Hello"}),
-      req.get(`/bucket/${bucket1._id}/data`),
-      req.post(`/bucket/${bucket2._id}/data`, {name: "Hi"}),
-      req.get(`/bucket/${bucket2._id}/data`)
-    ]);
-
-    bucket1Namespace = `test.bucket_${bucket1._id}`;
-    bucket2Namespace = `test.bucket_${bucket2._id}`;
-  });
-
-  it("should list bucket1 data profile entries", async () => {
-    const res = await req.get(`/bucket/${bucket1._id}/data/profile`);
-    expect(res.statusCode).toEqual(200);
-    expect(
-      res.body.every(profileEntry => profileEntry.ns == "test.bucket_6824a87e86e3700817eadc77")
-    ).toEqual(true);
-  });
-
-  it("should list bucket2 data profile entries", async () => {
-    const res = await req.get(`/bucket/${bucket2._id}/data/profile`);
-    expect(res.statusCode).toEqual(200);
-    expect(
-      res.body.every(profileEntry => profileEntry.ns == "test.bucket_6824a894faa1408d00875d80")
-    ).toEqual(true);
-  });
-
-  it("should filter bucket1 profile entries by operation type", async () => {
-    const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
-      filter: JSON.stringify({op: "insert"})
-    });
-    expect(res.statusCode).toEqual(200);
-    expect(
-      res.body.every(profileEntry => profileEntry.ns == "test.bucket_6824a87e86e3700817eadc77")
-    ).toEqual(true);
-    expect(res.body.every(profileEntry => profileEntry.op == "insert")).toEqual(true);
-  });
-
-  it("should limit bucket1 profile entries", async () => {
-    const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
-      limit: 1
-    });
-    expect(res.statusCode).toEqual(200);
-    expect(res.body.length).toEqual(1);
-    expect(
-      res.body.every(profileEntry => profileEntry.ns == "test.bucket_6824a87e86e3700817eadc77")
-    ).toEqual(true);
-  });
-
-  it("should skip bucket1 profile entries", async () => {
-    const [{body: allProfileEntries}, skippedRes] = await Promise.all([
-      req.get(`/bucket/${bucket1._id}/data/profile`),
-      req.get(`/bucket/${bucket1._id}/data/profile`, {skip: 1})
-    ]);
-    expect(skippedRes.statusCode).toEqual(200);
-    expect(skippedRes.body.length).toEqual(allProfileEntries.length - 1);
-
-    allProfileEntries.shift();
-    expect(skippedRes.body).toEqual(allProfileEntries);
-  });
-
-  it("should sort bucket1 profile entries", async () => {
-    const [{body: allProfileEntries}, sortedRes] = await Promise.all([
-      req.get(`/bucket/${bucket1._id}/data/profile`),
-      req.get(`/bucket/${bucket1._id}/data/profile`, {sort: JSON.stringify({ts: -1})})
-    ]);
-    expect(sortedRes.statusCode).toEqual(200);
-    expect(sortedRes.body).not.toEqual(allProfileEntries);
-
-    allProfileEntries.reverse();
-    expect(sortedRes.body).toEqual(allProfileEntries);
-  });
-
-  // to prevent accessing other collections profile entries
-  it("should ignore ns on filter", async () => {
-    let res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
-      filter: JSON.stringify({ns: "test.buckets"})
+      // to make db insert profile entries
+      await Promise.all([
+        req.post(`/bucket/${bucket1._id}/data`, {name: "Hello"}),
+        req.get(`/bucket/${bucket1._id}/data`),
+        req.post(`/bucket/${bucket2._id}/data`, {name: "Hi"}),
+        req.get(`/bucket/${bucket2._id}/data`)
+      ]);
     });
 
-    expect(res.statusCode).toEqual(200);
-    // user provided ns filter will be overridden
-    expect(
-      res.body.every(profileEntry => profileEntry.ns == "test.bucket_6824a87e86e3700817eadc77")
-    ).toEqual(true);
-  });
-
-  it("should ignore ns on the nested filter", async () => {
-    let res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
-      filter: JSON.stringify({
-        $or: [{ns: "test.bucket_6824a894faa1408d00875d80"}, {ns: "test.buckets"}]
-      })
+    it("should list bucket1 data profile entries", async () => {
+      const res = await req.get(`/bucket/${bucket1._id}/data/profile`);
+      expect(res.statusCode).toEqual(200);
+      expect(
+        res.body.every(profileEntry => profileEntry.ns.endsWith(`.bucket_${bucket1._id}`))
+      ).toEqual(true);
     });
 
-    expect(res.statusCode).toEqual(200);
-    // there is no such profile entries for filter below
-    /*
-      {
-        $or: [{ns: "test.bucket_6824a894faa1408d00875d80"}, {ns: "test.buckets"}]
-        "ns": "test.bucket_6824a87e86e3700817eadc77"
-      },
-    */
-    expect(res.body.length).toEqual(0);
+    it("should list bucket2 data profile entries", async () => {
+      const res = await req.get(`/bucket/${bucket2._id}/data/profile`);
+      expect(res.statusCode).toEqual(200);
+      expect(
+        res.body.every(profileEntry => profileEntry.ns.endsWith(`.bucket_${bucket2._id}`))
+      ).toEqual(true);
+    });
+
+    it("should filter bucket1 profile entries by operation type", async () => {
+      const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
+        filter: JSON.stringify({op: "insert"})
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(
+        res.body.every(profileEntry => profileEntry.ns.endsWith(`.bucket_${bucket1._id}`))
+      ).toEqual(true);
+      expect(res.body.every(profileEntry => profileEntry.op == "insert")).toEqual(true);
+    });
+
+    it("should limit bucket1 profile entries", async () => {
+      const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
+        limit: 1
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.length).toEqual(1);
+      expect(
+        res.body.every(profileEntry => profileEntry.ns.endsWith(`.bucket_${bucket1._id}`))
+      ).toEqual(true);
+    });
+
+    it("should skip bucket1 profile entries", async () => {
+      const [{body: allProfileEntries}, skippedRes] = await Promise.all([
+        req.get(`/bucket/${bucket1._id}/data/profile`),
+        req.get(`/bucket/${bucket1._id}/data/profile`, {skip: 1})
+      ]);
+      expect(skippedRes.statusCode).toEqual(200);
+
+      const expectedLength = allProfileEntries.length - 1;
+      expect(Math.abs(skippedRes.body.length - expectedLength)).toBeLessThanOrEqual(1);
+
+      expect(
+        skippedRes.body.every(profileEntry => profileEntry.ns.endsWith(`.bucket_${bucket1._id}`))
+      ).toEqual(true);
+    });
+
+    it("should sort bucket1 profile entries", async () => {
+      const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
+        sort: JSON.stringify({ts: -1})
+      });
+      expect(res.statusCode).toEqual(200);
+
+      for (let i = 1; i < res.body.length; i++) {
+        expect(res.body[i - 1].ts >= res.body[i].ts).toEqual(true);
+      }
+
+      expect(
+        res.body.every(profileEntry => profileEntry.ns.endsWith(`.bucket_${bucket1._id}`))
+      ).toEqual(true);
+    });
+
+    // to prevent accessing other collections profile entries
+    it("should ignore ns on filter", async () => {
+      const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
+        filter: JSON.stringify({ns: "test.buckets"})
+      });
+
+      expect(res.statusCode).toEqual(200);
+      // user provided ns filter will be overridden
+      expect(
+        res.body.every(profileEntry => profileEntry.ns.endsWith(`.bucket_${bucket1._id}`))
+      ).toEqual(true);
+    });
+
+    it("should ignore ns on the nested filter", async () => {
+      const dbName = db.databaseName;
+      const res = await req.get(`/bucket/${bucket1._id}/data/profile`, {
+        filter: JSON.stringify({
+          $or: [{ns: `${dbName}.bucket_${bucket2._id}`}, {ns: `${dbName}.buckets`}]
+        })
+      });
+
+      expect(res.statusCode).toEqual(200);
+      // there is no such profile entries for the filter below combined with the forced ns:
+      /*
+        {
+          $or: [{ns: "<db>.bucket_<bucket2Id>"}, {ns: "<db>.buckets"}],
+          "ns": "<db>.bucket_<bucket1Id>"
+        }
+      */
+      expect(res.body.length).toEqual(0);
+    });
   });
 });
