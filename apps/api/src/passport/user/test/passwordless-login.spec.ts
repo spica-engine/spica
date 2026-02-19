@@ -115,18 +115,10 @@ describe("Passwordless Login", () => {
         policies: [],
         lastPasswords: [],
         failedAttempts: [],
-        email: {
-          encrypted: encryptedEmail.encrypted,
-          iv: encryptedEmail.iv,
-          authTag: encryptedEmail.authTag,
-          createdAt: new Date()
-        },
-        phone: {
-          encrypted: encryptedPhone.encrypted,
-          iv: encryptedPhone.iv,
-          authTag: encryptedPhone.authTag,
-          createdAt: new Date()
-        }
+        email: encryptedEmail,
+        email_verified_at: new Date(),
+        phone: encryptedPhone,
+        phone_verified_at: new Date()
       } as any);
 
       await userConfigService.updatePasswordlessLoginConfig({
@@ -241,18 +233,10 @@ describe("Passwordless Login", () => {
         policies: [],
         lastPasswords: [],
         failedAttempts: [],
-        email: {
-          encrypted: encryptedEmail.encrypted,
-          iv: encryptedEmail.iv,
-          authTag: encryptedEmail.authTag,
-          createdAt: new Date()
-        },
-        phone: {
-          encrypted: encryptedPhone.encrypted,
-          iv: encryptedPhone.iv,
-          authTag: encryptedPhone.authTag,
-          createdAt: new Date()
-        }
+        email: encryptedEmail,
+        email_verified_at: new Date(),
+        phone: encryptedPhone,
+        phone_verified_at: new Date()
       } as any);
 
       await userConfigService.updatePasswordlessLoginConfig({

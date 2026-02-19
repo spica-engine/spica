@@ -12,6 +12,10 @@
 
     {
       "path": "../../interface/passport/user"
+    },
+
+    {
+      "path": "../encryption"
     }
   ]
 }

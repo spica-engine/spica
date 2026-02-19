@@ -765,7 +765,7 @@ describe("VerificationService", () => {
 
       const UserWithEmail = userService.decryptProviderFields(user);
 
-      expect(UserWithEmail.email.value).toBe(email);
+      expect(UserWithEmail.email).toBe(email);
     });
   });
 
@@ -1132,7 +1132,7 @@ describe("VerificationService", () => {
 
       const user = await userService.findOne({_id: userId});
       const decrypted = userService.decryptProviderFields(user);
-      expect(decrypted.email.value).toBe(email);
+      expect(decrypted.email).toBe(email);
     });
 
     it("should verify phone provider via magic link and update user document", async () => {
@@ -1168,7 +1168,7 @@ describe("VerificationService", () => {
 
       const user = await userService.findOne({_id: userId});
       const decrypted = userService.decryptProviderFields(user);
-      expect(decrypted.phone.value).toBe(phone);
+      expect(decrypted.phone).toBe(phone);
     });
   });
 });

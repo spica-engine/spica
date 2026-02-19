@@ -152,12 +152,8 @@ describe("Password Reset E2E with MailHog", () => {
       policies: [],
       lastPasswords: [],
       failedAttempts: [],
-      email: {
-        encrypted: encryptedEmail.encrypted,
-        iv: encryptedEmail.iv,
-        authTag: encryptedEmail.authTag,
-        createdAt: new Date()
-      }
+      email: encryptedEmail,
+      email_verified_at: new Date()
     } as any);
   }, 60000);
 
@@ -190,8 +186,8 @@ describe("Password Reset E2E with MailHog", () => {
         item.Raw && item.Raw.Data
           ? item.Raw.Data
           : item.Content && item.Content.Body
-            ? item.Content.Body
-            : "";
+          ? item.Content.Body
+          : "";
 
       const codeMatch = raw.match(/is: (\d{6})/);
       expect(codeMatch).toBeTruthy();
