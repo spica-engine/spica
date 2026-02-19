@@ -47,7 +47,8 @@ import {
   replaceDocument,
   authIdToString,
   isJSONFilter,
-  filterReviver
+  filterReviver,
+  decryptDocumentFields
 } from "@spica-server/bucket/common";
 import {expressionFilterParser} from "./filter";
 import {
@@ -58,7 +59,10 @@ import {
 } from "@spica-server/bucket/common";
 import {applyPatch} from "@spica-server/core/patch";
 import {BucketDocument} from "@spica-server/interface/bucket";
-import {BUCKET_DATA_HASH_SECRET} from "@spica-server/interface/bucket";
+import {
+  BUCKET_DATA_HASH_SECRET,
+  BUCKET_DATA_ENCRYPTION_SECRET
+} from "@spica-server/interface/bucket";
 
 /**
  * All APIs related to bucket documents.
@@ -73,7 +77,8 @@ export class BucketDataController {
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
     @Optional() @Inject() private activityService: ActivityService,
-    @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string
+    @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
+    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
   ) {}
 
   /**
@@ -148,7 +153,8 @@ export class BucketDataController {
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
-      this.hashSecret
+      this.hashSecret,
+      this.encryptionSecret
     ).catch(this.errorHandler);
   }
 
@@ -243,7 +249,8 @@ export class BucketDataController {
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
-      this.hashSecret
+      this.hashSecret,
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     return document;
@@ -301,7 +308,8 @@ export class BucketDataController {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId)
-      }
+      },
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!document) {
@@ -358,14 +366,17 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
+    const schemaResolver = (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)});
     const previousDocument = await replaceDocument(
       schema,
       {...document, _id: documentId},
       {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-      }
+        schema: schemaResolver
+      },
+      undefined,
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!previousDocument) {
@@ -388,6 +399,10 @@ export class BucketDataController {
         previousDocument,
         currentDocument
       );
+    }
+
+    if (this.encryptionSecret) {
+      return decryptDocumentFields(currentDocument, schema, this.encryptionSecret, schemaResolver);
     }
 
     return currentDocument;
@@ -448,7 +463,8 @@ export class BucketDataController {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
-      {returnDocument: ReturnDocument.AFTER}
+      {returnDocument: ReturnDocument.AFTER},
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!currentDocument) {
@@ -507,7 +523,8 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-      }
+      },
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!deletedDocument) {
