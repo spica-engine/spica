@@ -5,15 +5,20 @@ import {
   ObjectId,
   start
 } from "@spica-server/database/testing";
+import {MongoClient} from "mongodb";
 import color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate";
 import path from "path";
 
 process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/apps/migrate/src");
 
+// Starting a MongoDB replica set via Docker can take well over 30 s
+jest.setTimeout(120_000);
+
 describe("Migrate identity attributes to bucket", () => {
   let db: Db;
   let args: string[];
+  let connection: MongoClient;
 
   beforeAll(() => {
     color.disableColor();
@@ -22,8 +27,12 @@ describe("Migrate identity attributes to bucket", () => {
   const identity2Id = new ObjectId();
   const identity3Id = new ObjectId();
   const identity4Id = new ObjectId();
+  afterEach(async () => {
+    await connection?.close();
+  });
+
   beforeEach(async () => {
-    const connection = await start("replset");
+    connection = await start("replset");
     args = ["--database-uri", await getConnectionUri(), "--database-name", getDatabaseName()];
     db = connection.db(args[3]);
 
