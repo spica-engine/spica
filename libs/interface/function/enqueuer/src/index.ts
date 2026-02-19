@@ -40,3 +40,14 @@ export interface ScheduleOptions {
 export interface EventOptions {
   name: "READY";
 }
+
+export interface AgentToolOptions {
+  name: string;
+  description: string;
+  parameters: object;
+  outputSchema?: object;
+  auth?: {
+    type: "apikey" | "bearer";
+    key: string;
+  };
+}

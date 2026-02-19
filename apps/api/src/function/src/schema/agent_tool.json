@@ -1,0 +1,52 @@
+{
+  "$id": "http://spica.internal/function/enqueuer/agent_tool",
+  "title": "Agent Tool",
+  "description": "MCP tool trigger for AI agents",
+  "type": "object",
+  "required": ["name", "description", "parameters"],
+  "properties": {
+    "name": {
+      "title": "Tool Name",
+      "description": "Unique name of the MCP tool. This is how agents will identify and call the tool.",
+      "type": "string",
+      "examples": ["get_weather", "search_documents"]
+    },
+    "description": {
+      "title": "Description",
+      "description": "Human-readable description of what the tool does. Agents use this to decide when to call the tool.",
+      "type": "string",
+      "examples": ["Retrieves current weather data for a given location"]
+    },
+    "parameters": {
+      "title": "Input Parameters",
+      "description": "JSON Schema defining the tool's input parameters (MCP inputSchema).",
+      "type": "object"
+    },
+    "outputSchema": {
+      "title": "Output Schema",
+      "description": "Optional JSON Schema defining the expected shape of the tool's output for consistent agent responses.",
+      "type": "object"
+    },
+    "auth": {
+      "title": "Authentication",
+      "description": "Optional per-tool authentication configuration.",
+      "type": "object",
+      "required": ["type", "key"],
+      "properties": {
+        "type": {
+          "title": "Auth Type",
+          "description": "Authentication method for this tool.",
+          "type": "string",
+          "enum": ["apikey", "bearer"]
+        },
+        "key": {
+          "title": "Key",
+          "description": "The API key or bearer token value.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
