@@ -30,6 +30,7 @@ import {generateLog} from "@spica-server/function/runtime/logger";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/interface/status";
+import {GuardService} from "@spica-server/passport/guard/services";
 import uniqid from "uniqid";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "@spica-server/interface/function/scheduler";
 import {Subject} from "rxjs";
@@ -60,7 +61,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
     @Optional() private jobReducer: JobReducer,
-    @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker
+    @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker,
+    @Optional() private guardService: GuardService
   ) {
     if (this.commander) {
       this.commander.register(this, [this.outdateWorkers], CommandType.SYNC);
@@ -105,7 +107,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.http.httpAdapter.getInstance(),
         this.options.corsOptions,
         schedulerUnsubscription,
-        this.attachStatusTracker
+        this.attachStatusTracker,
+        this.guardService
       )
     );
 

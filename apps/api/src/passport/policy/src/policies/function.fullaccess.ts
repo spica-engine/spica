@@ -9,6 +9,11 @@ export default {
     ...FunctionReadOnlyAccess.statement,
     ...EnvVarFullAccess.statement,
     {
+      action: "function:execute",
+      resource: {include: ["*/*"], exclude: []},
+      module: "function"
+    },
+    {
       action: "function:create",
       module: "function"
     },
