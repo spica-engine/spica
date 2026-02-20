@@ -141,17 +141,6 @@ export class UserService extends BaseCollection<User>("user") {
       return Promise.reject("Refresh and access token usernames are mismatched");
     }
 
-    if (
-      clientMeta?.fingerprint &&
-      refreshTokenData.client_meta?.fingerprint &&
-      clientMeta.fingerprint !== refreshTokenData.client_meta.fingerprint
-    ) {
-      console.warn(
-        `Fingerprint mismatch on refresh for user ${refreshTokenData.user}. ` +
-          `Expected: ${refreshTokenData.client_meta.fingerprint}, Got: ${clientMeta.fingerprint}`
-      );
-    }
-
     return Promise.resolve();
   }
 

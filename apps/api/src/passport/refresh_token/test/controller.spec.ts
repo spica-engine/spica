@@ -74,13 +74,12 @@ describe("ApiKey", () => {
   afterEach(() => app.close());
 
   describe("find", () => {
-    it("should return tokens", async () => {
+    it("should return tokens without sensitive fields", async () => {
       const res = await req.get("/passport/refresh-token");
       expect(res.body).toEqual([
         {
           _id: "68399c4c347570ceac5d4806",
           identity: "user1",
-          token: "token1",
           created_at: "2000-01-01T00:00:00.000Z",
           expired_at: "2000-01-02T00:00:00.000Z",
           last_used_at: "2000-01-01T00:00:00.000Z"
@@ -88,7 +87,6 @@ describe("ApiKey", () => {
         {
           _id: "68399c56afa9a30634a8fefd",
           identity: "user2",
-          token: "token2",
           created_at: "2000-01-01T12:00:00.000Z",
           expired_at: "2000-01-02T00:00:00.000Z",
           last_used_at: "2000-01-01T12:00:00.000Z"
@@ -102,7 +100,6 @@ describe("ApiKey", () => {
         {
           _id: "68399c4c347570ceac5d4806",
           identity: "user1",
-          token: "token1",
           created_at: "2000-01-01T00:00:00.000Z",
           expired_at: "2000-01-02T00:00:00.000Z",
           last_used_at: "2000-01-01T00:00:00.000Z"
@@ -116,7 +113,6 @@ describe("ApiKey", () => {
         {
           _id: "68399c56afa9a30634a8fefd",
           identity: "user2",
-          token: "token2",
           created_at: "2000-01-01T12:00:00.000Z",
           expired_at: "2000-01-02T00:00:00.000Z",
           last_used_at: "2000-01-01T12:00:00.000Z"
@@ -132,7 +128,6 @@ describe("ApiKey", () => {
         {
           _id: "68399c56afa9a30634a8fefd",
           identity: "user2",
-          token: "token2",
           created_at: "2000-01-01T12:00:00.000Z",
           expired_at: "2000-01-02T00:00:00.000Z",
           last_used_at: "2000-01-01T12:00:00.000Z"
@@ -140,7 +135,6 @@ describe("ApiKey", () => {
         {
           _id: "68399c4c347570ceac5d4806",
           identity: "user1",
-          token: "token1",
           created_at: "2000-01-01T00:00:00.000Z",
           expired_at: "2000-01-02T00:00:00.000Z",
           last_used_at: "2000-01-01T00:00:00.000Z"
@@ -156,7 +150,6 @@ describe("ApiKey", () => {
         {
           _id: "68399c56afa9a30634a8fefd",
           identity: "user2",
-          token: "token2",
           created_at: "2000-01-01T12:00:00.000Z",
           expired_at: "2000-01-02T00:00:00.000Z",
           last_used_at: "2000-01-01T12:00:00.000Z"
@@ -174,7 +167,6 @@ describe("ApiKey", () => {
           {
             _id: "68399c4c347570ceac5d4806",
             identity: "user1",
-            token: "token1",
             created_at: "2000-01-01T00:00:00.000Z",
             expired_at: "2000-01-02T00:00:00.000Z",
             last_used_at: "2000-01-01T00:00:00.000Z"
@@ -182,7 +174,6 @@ describe("ApiKey", () => {
           {
             _id: "68399c56afa9a30634a8fefd",
             identity: "user2",
-            token: "token2",
             created_at: "2000-01-01T12:00:00.000Z",
             expired_at: "2000-01-02T00:00:00.000Z",
             last_used_at: "2000-01-01T12:00:00.000Z"
@@ -193,12 +184,11 @@ describe("ApiKey", () => {
   });
 
   describe("findOne", () => {
-    it("should get specific token", async () => {
+    it("should get specific token without sensitive fields", async () => {
       const res = await req.get("/passport/refresh-token/68399c4c347570ceac5d4806");
       expect(res.body).toEqual({
         _id: "68399c4c347570ceac5d4806",
         identity: "user1",
-        token: "token1",
         created_at: "2000-01-01T00:00:00.000Z",
         expired_at: "2000-01-02T00:00:00.000Z",
         last_used_at: "2000-01-01T00:00:00.000Z"
@@ -247,7 +237,6 @@ describe("ApiKey", () => {
       expect(res.body).toEqual({
         _id: "68399c4c347570ceac5d4806",
         identity: "user1",
-        token: "token1",
         created_at: "2000-01-01T00:00:00.000Z",
         expired_at: "2000-01-02T00:00:00.000Z",
         last_used_at: "2000-01-01T00:00:00.000Z",
@@ -263,7 +252,6 @@ describe("ApiKey", () => {
       expect(res.body).toEqual({
         _id: "68399c4c347570ceac5d4806",
         identity: "user1",
-        token: "token1",
         created_at: "2000-01-01T00:00:00.000Z",
         expired_at: "2000-01-02T00:00:00.000Z",
         last_used_at: "2000-01-01T00:00:00.000Z",
@@ -292,7 +280,6 @@ describe("ApiKey", () => {
       expect(res.body).toEqual({
         _id: "68399c4c347570ceac5d4806",
         identity: "user1",
-        token: "token1",
         created_at: "2000-01-01T00:00:00.000Z",
         expired_at: "2000-01-02T00:00:00.000Z",
         last_used_at: "2000-01-01T00:00:00.000Z",
@@ -625,15 +612,55 @@ describe("RefreshToken with hash secret", () => {
     expect(res.body[0]).toEqual({
       _id: "aaa00000000000000000000a",
       identity: "user1",
-      token: hashedToken,
       created_at: "2000-01-01T00:00:00.000Z",
       expired_at: "2099-01-01T00:00:00.000Z",
       last_used_at: "2000-01-01T00:00:00.000Z",
       client_meta: {
-        fingerprint: "abc123fingerprintHash",
         device_label: "Chrome 120 / macOS 14"
       }
     });
+  });
+
+  it("hash filter should work with token value using $in operator", async () => {
+    const rawToken = "my_raw_refresh_token";
+    const hashedToken = hash(rawToken, HASH_SECRET);
+    await service.insertOne({
+      _id: new ObjectId("aaa00000000000000000000a"),
+      identity: "user1",
+      token: hashedToken,
+      created_at: new Date("2000-01-01T00:00:00.000Z"),
+      expired_at: new Date("2099-01-01T00:00:00.000Z"),
+      last_used_at: new Date("2000-01-01T00:00:00.000Z")
+    });
+
+    const res = await req.get("/passport/refresh-token", {
+      filter: JSON.stringify({token: {$in: [rawToken]}})
+    });
+
+    expect(res.body.length).toEqual(1);
+    expect(res.body[0]._id).toEqual("aaa00000000000000000000a");
+    expect(res.body[0].token).toBeUndefined();
+  });
+
+  it("hash filter should work with token value using $or operator", async () => {
+    const rawToken = "my_raw_refresh_token";
+    const hashedToken = hash(rawToken, HASH_SECRET);
+    await service.insertOne({
+      _id: new ObjectId("aaa00000000000000000000a"),
+      identity: "user1",
+      token: hashedToken,
+      created_at: new Date("2000-01-01T00:00:00.000Z"),
+      expired_at: new Date("2099-01-01T00:00:00.000Z"),
+      last_used_at: new Date("2000-01-01T00:00:00.000Z")
+    });
+
+    const res = await req.get("/passport/refresh-token", {
+      filter: JSON.stringify({$or: [{token: rawToken}]})
+    });
+
+    expect(res.body.length).toEqual(1);
+    expect(res.body[0]._id).toEqual("aaa00000000000000000000a");
+    expect(res.body[0].token).toBeUndefined();
   });
 
   it("should not match when filter token does not correspond to stored hash", async () => {

@@ -128,17 +128,6 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       return Promise.reject("Refresh and access token identifiers are mismatched");
     }
 
-    if (
-      clientMeta?.fingerprint &&
-      refreshTokenData.client_meta?.fingerprint &&
-      clientMeta.fingerprint !== refreshTokenData.client_meta.fingerprint
-    ) {
-      console.warn(
-        `Fingerprint mismatch on refresh for identity ${refreshTokenData.identity}. ` +
-          `Expected: ${refreshTokenData.client_meta.fingerprint}, Got: ${clientMeta.fingerprint}`
-      );
-    }
-
     return Promise.resolve();
   }
 

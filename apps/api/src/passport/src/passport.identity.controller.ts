@@ -83,6 +83,14 @@ export class PassportIdentityController {
   stateReqs = new Map<string, any>();
   clientMetaMap = new Map<string, ClientMeta>();
 
+  setClientMeta(id: string, clientMeta: ClientMeta) {
+    this.clientMetaMap.set(id, clientMeta);
+  }
+
+  deleteClientMeta(id: string) {
+    this.clientMetaMap.delete(id);
+  }
+
   private extractClientMeta(req: any): ClientMeta {
     return buildClientMeta(req, this.identityOptions.refreshTokenHashSecret);
   }
@@ -106,7 +114,9 @@ export class PassportIdentityController {
           this.setRefreshToken,
           this.deleteRefreshToken,
           this.setAssertObservers,
-          this.deleteAssertObservers
+          this.deleteAssertObservers,
+          this.setClientMeta,
+          this.deleteClientMeta
         ],
         CommandType.SYNC
       );
@@ -169,7 +179,7 @@ export class PassportIdentityController {
     }
 
     const clientMeta = this.clientMetaMap.get(state);
-    this.clientMetaMap.delete(state);
+    this.deleteClientMeta(state);
     this.completeIdentifyWithState(state, identity, expires, clientMeta);
   }
 
@@ -237,8 +247,8 @@ export class PassportIdentityController {
       this.stateReqs.set(state, res);
       setTimeout(() => this.stateReqs.delete(state), this.SESSION_TIMEOUT_MS);
       if (clientMeta) {
-        this.clientMetaMap.set(state, clientMeta);
-        setTimeout(() => this.clientMetaMap.delete(state), this.SESSION_TIMEOUT_MS);
+        this.setClientMeta(state, clientMeta);
+        setTimeout(() => this.deleteClientMeta(state), this.SESSION_TIMEOUT_MS);
       }
 
       this.startIdentifyWithState(state, expires).catch(catchError);

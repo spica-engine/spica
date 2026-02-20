@@ -19,11 +19,13 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 import {RefreshToken, PaginationResponse} from "@spica-server/interface/passport/refresh_token";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {hash} from "@spica-server/core/schema";
 import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options";
+import {RefreshTokenPipelineBuilder} from "./pipeline.builder";
 
 @Controller("passport/refresh-token")
 export class RefreshTokenController {
+  private readonly HIDDEN_FIELDS = {token: 0, "client_meta.fingerprint": 0} as const;
+
   constructor(
     private service: RefreshTokenService,
     @Inject(REFRESH_TOKEN_OPTIONS) private options: RefreshTokenOptions
@@ -39,15 +41,18 @@ export class RefreshTokenController {
     @Query("filter", JSONP) filter: object,
     @ResourceFilter() resourceFilter: object
   ) {
-    if (filter && filter["token"] && this.options.refreshTokenHashSecret) {
-      filter["token"] = hash(filter["token"], this.options.refreshTokenHashSecret);
-    }
-
-    const pipelineBuilder = await new PipelineBuilder()
+    const pipelineBuilder = await new RefreshTokenPipelineBuilder(
+      this.options.refreshTokenHashSecret
+    )
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);
 
-    const seekingPipeline = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
+    const seekingPipeline = new PipelineBuilder()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .setVisibilityOfFields({...this.HIDDEN_FIELDS})
+      .result();
 
     const pipeline = (
       await pipelineBuilder.paginate(
@@ -75,12 +80,20 @@ export class RefreshTokenController {
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.service.findOne({_id: id}).then(r => {
-      if (!r) {
-        throw new NotFoundException();
-      }
-      return r;
-    });
+    const pipeline = new PipelineBuilder()
+      .findOneIfRequested(id)
+      .setVisibilityOfFields({...this.HIDDEN_FIELDS})
+      .result();
+
+    return this.service
+      .aggregate<RefreshToken>(pipeline)
+      .next()
+      .then(r => {
+        if (!r) {
+          throw new NotFoundException();
+        }
+        return r;
+      });
   }
 
   @Put(":id")
@@ -95,7 +108,7 @@ export class RefreshTokenController {
     const updatedToken = await this.service.findOneAndUpdate(
       {_id: id},
       {$set: {disabled}},
-      {returnDocument: "after"}
+      {returnDocument: "after", projection: this.HIDDEN_FIELDS}
     );
 
     if (!updatedToken) {

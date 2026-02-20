@@ -83,6 +83,14 @@ export class PassportUserController {
   stateReqs = new Map<string, any>();
   clientMetaMap = new Map<string, ClientMeta>();
 
+  setClientMeta(id: string, clientMeta: ClientMeta) {
+    this.clientMetaMap.set(id, clientMeta);
+  }
+
+  deleteClientMeta(id: string) {
+    this.clientMetaMap.delete(id);
+  }
+
   private extractClientMeta(req: any): ClientMeta {
     return buildClientMeta(req, this.userOptions.refreshTokenHashSecret);
   }
@@ -106,7 +114,9 @@ export class PassportUserController {
           this.setRefreshToken,
           this.deleteRefreshToken,
           this.setAssertObservers,
-          this.deleteAssertObservers
+          this.deleteAssertObservers,
+          this.setClientMeta,
+          this.deleteClientMeta
         ],
         CommandType.SYNC
       );
@@ -171,7 +181,7 @@ export class PassportUserController {
     }
 
     const clientMeta = this.clientMetaMap.get(state);
-    this.clientMetaMap.delete(state);
+    this.deleteClientMeta(state);
     this.completeLoginWithState(state, user, expires, clientMeta);
   }
 
@@ -235,8 +245,8 @@ export class PassportUserController {
       this.stateReqs.set(state, res);
       setTimeout(() => this.stateReqs.delete(state), this.SESSION_TIMEOUT_MS);
       if (clientMeta) {
-        this.clientMetaMap.set(state, clientMeta);
-        setTimeout(() => this.clientMetaMap.delete(state), this.SESSION_TIMEOUT_MS);
+        this.setClientMeta(state, clientMeta);
+        setTimeout(() => this.deleteClientMeta(state), this.SESSION_TIMEOUT_MS);
       }
 
       this.startLoginWithState(state, expires).catch(catchError);
