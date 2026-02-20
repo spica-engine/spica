@@ -10,7 +10,7 @@ import {
 } from "@nestjs/common";
 import {BucketService, compile} from "@spica-server/bucket/services";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {AuthGuard} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {applyPatch} from "./differ";
 import {HistoryService} from "./history.service";
 
@@ -22,7 +22,10 @@ export class HistoryController {
   ) {}
 
   @Get(":documentId")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("bucket:data:index", "bucket/:bucketId/data")
+  )
   getHistories(
     @Param("bucketId", OBJECT_ID) bucket_id: ObjectId,
     @Param("documentId", OBJECT_ID) document_id: ObjectId
@@ -31,7 +34,10 @@ export class HistoryController {
   }
 
   @Get(":documentId/:historyId")
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("bucket:data:index", "bucket/:bucketId/data")
+  )
   async revertTo(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
@@ -49,7 +55,10 @@ export class HistoryController {
   }
 
   @Delete()
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("bucket:data:delete", "bucket/:bucketId/data")
+  )
   @HttpCode(HttpStatus.NO_CONTENT)
   async clearHistories(@Param("bucketId", OBJECT_ID) bucketId: ObjectId) {
     const res = await this.historyService.deleteMany({bucket_id: bucketId});
