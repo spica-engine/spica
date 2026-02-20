@@ -11,7 +11,7 @@ export default {
     {
       action: "function:invoke",
       resource: {include: ["*/*"], exclude: []},
-      module: "function"
+      module: "function:invoke"
     },
     {
       action: "function:create",

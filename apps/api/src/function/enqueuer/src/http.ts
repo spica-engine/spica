@@ -105,15 +105,19 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         if (options.authorize) {
           try {
             const originalRoute = req.route;
-            req.route = {path: "/function/:functionId/:handler"} as any;
+            req.route = {path: "function/:functionId/invoke/:handlerId"} as any;
 
             const originalParams = req.params;
-            req.params = {functionId: target.id, handler: target.handler};
+            req.params = {functionId: target.id, handlerId: target.handler};
 
             await this.guardService.checkAction({
               request: req,
               response: res,
-              actions: "function:invoke"
+              actions: ["function:invoke"],
+              options: {
+                resourceFilter: false
+              },
+              format: "function/:functionId/invoke/:handlerId"
             });
 
             req.params = originalParams;
