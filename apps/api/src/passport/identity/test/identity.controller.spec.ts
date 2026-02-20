@@ -208,10 +208,15 @@ describe("Identity Controller", () => {
       });
     });
 
-    it("should return null for non-existing identity", async () => {
-      const res = await req.get("/passport/identity/000000000000000000000000");
-      expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual(undefined);
+    it("should return 404 for non-existing identity", async () => {
+      const nonExistingId = "000000000000000000000000";
+      const res = await req.get(`/passport/identity/${nonExistingId}`);
+      expect(res.statusCode).toEqual(404);
+      expect(res.body).toEqual({
+        statusCode: 404,
+        message: `Identity with ID ${nonExistingId} not found.`,
+        error: "Not Found"
+      });
     });
   });
 
@@ -271,13 +276,14 @@ describe("Identity Controller", () => {
     });
 
     it("should return 400 with not found message for non-existing identity", async () => {
-      const res = await req.put("/passport/identity/000000000000000000000000", {
+      const nonExistingId = "000000000000000000000000";
+      const res = await req.put(`/passport/identity/${nonExistingId}`, {
         identifier: "ghost"
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toEqual({
         statusCode: 400,
-        message: expect.stringContaining("not found"),
+        message: `Identity with ID ${nonExistingId} not found`,
         error: "Bad Request"
       });
     });
@@ -306,8 +312,12 @@ describe("Identity Controller", () => {
       expect(res.statusCode).toEqual(204);
 
       const getRes = await req.get(`/passport/identity/${identity1Id}`);
-      expect(getRes.statusCode).toEqual(200);
-      expect(getRes.body).toEqual(undefined);
+      expect(getRes.statusCode).toEqual(404);
+      expect(getRes.body).toEqual({
+        statusCode: 404,
+        message: `Identity with ID ${identity1Id} not found.`,
+        error: "Not Found"
+      });
     });
 
     it("should not delete the last identity", async () => {
