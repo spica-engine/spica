@@ -90,22 +90,20 @@ describe("user Controller", () => {
       expect(res.body.every(profileEntry => profileEntry.ns.endsWith(".user"))).toEqual(true);
     });
 
-    it("should skip bucket1 profile entries", async () => {
+    it("should skip user profile entries", async () => {
       const [{body: allProfileEntries}, skippedRes] = await Promise.all([
-        req.get("/passport/user/profile"),
-        req.get("/passport/user/profile", {skip: 1})
+        req.get("/passport/user/profile", {limit: 2, sort: JSON.stringify({_id: 1})}),
+        req.get("/passport/user/profile", {skip: 1, limit: 1, sort: JSON.stringify({_id: 1})})
       ]);
       expect(skippedRes.statusCode).toEqual(200);
-
-      const expectedLength = allProfileEntries.length - 1;
-      expect(Math.abs(skippedRes.body.length - expectedLength)).toBeLessThanOrEqual(1);
-
+      expect(skippedRes.body.length).toEqual(1);
+      expect(skippedRes.body[0]._id).toEqual(allProfileEntries[1]._id);
       expect(skippedRes.body.every(profileEntry => profileEntry.ns.endsWith(".user"))).toEqual(
         true
       );
     });
 
-    it("should sort bucket1 profile entries", async () => {
+    it("should sort user profile entries", async () => {
       const response = await req.get("/passport/user/profile", {
         sort: JSON.stringify({ts: -1})
       });
@@ -130,19 +128,20 @@ describe("user Controller", () => {
     });
 
     it("should ignore ns on the nested filter", async () => {
+      const dbName = db.databaseName;
       let res = await req.get("/passport/user/profile", {
         filter: JSON.stringify({
-          $or: [{ns: "test.functions"}, {ns: "test.buckets"}]
+          $or: [{ns: `${dbName}.functions`}, {ns: `${dbName}.buckets`}]
         })
       });
 
       expect(res.statusCode).toEqual(200);
-      // there is no such profile entries for filter below
+      // there is no such profile entries for filter below combined with the forced ns:
       /*
       {
-        $or: [{ns: "test.functions"}, {ns: "test.buckets"}]
-        "ns": "test.user"
-      },
+        $or: [{ns: "<db>.functions"}, {ns: "<db>.buckets"}],
+        "ns": "<db>.user"
+      }
     */
       expect(res.body.length).toEqual(0);
     });
