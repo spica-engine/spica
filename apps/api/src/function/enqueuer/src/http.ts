@@ -104,7 +104,9 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
 
         if (options.authorize) {
           try {
+            const originalRoute = req.route;
             req.route = {path: "/function/:functionId/:handler"} as any;
+
             const originalParams = req.params;
             req.params = {functionId: target.id, handler: target.handler};
 
@@ -115,6 +117,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
             });
 
             req.params = originalParams;
+            req.route = originalRoute;
           } catch (e) {
             const status = e.status || 403;
             if (!res.headersSent) {
