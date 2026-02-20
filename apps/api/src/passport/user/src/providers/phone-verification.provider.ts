@@ -14,9 +14,14 @@ export class PhoneVerificationProvider implements VerificationProvider {
 
   async send(message: VerificationMessage): Promise<VerificationResult> {
     try {
+      const body = message.magicLinkUrl
+        ? message.metadata?.text ||
+          `Verify your phone by clicking this link: ${message.magicLinkUrl}`
+        : message.metadata?.text || `Your verification code is: ${message.code}`;
+
       const result = await this.smsService.sendSms({
         to: message.destination,
-        body: message.metadata?.text || `Your verification code is: ${message.code}`
+        body
       });
 
       if (!result.success) {
