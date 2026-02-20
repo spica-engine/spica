@@ -27,8 +27,8 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     httpServer: express.Application,
     private corsOptions: CorsOptions,
     private schedulerUnsubscription: (targetId: string) => void,
-    private attachStatusTracker?: AttachStatusTracker,
-    private guardService?: IGuardService
+    private guardService: IGuardService,
+    private attachStatusTracker?: AttachStatusTracker
   ) {
     super();
     this.router.use(
@@ -85,7 +85,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
 
     const fn = async (req: express.Request, res: express.Response) => {
       const shouldAuthenticate =
-        this.guardService && Array.isArray(options.authenticate) && options.authenticate.length > 0;
+        Array.isArray(options.authenticate) && options.authenticate.length > 0;
 
       if (shouldAuthenticate) {
         try {

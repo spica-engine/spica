@@ -7,6 +7,13 @@ import {event} from "@spica-server/function/queue/proto";
 import {HttpMethod} from "@spica-server/interface/function/enqueuer";
 import {IGuardService} from "@spica-server/interface/passport/guard";
 
+function createNoopGuardService(): IGuardService {
+  return {
+    checkAuthorization: jest.fn().mockResolvedValue(true),
+    checkAction: jest.fn().mockResolvedValue(true)
+  } as any;
+}
+
 /**
  * TODO: Provide some tests for req.query, req.headers and req.params
  * TODO: Check if req.method, req.url, req.path is set
@@ -63,7 +70,8 @@ describe("http enqueuer", () => {
       httpQueue as any,
       app.getHttpAdapter().getInstance(),
       corsOptions,
-      schedulerUnsubscriptionSpy
+      schedulerUnsubscriptionSpy,
+      createNoopGuardService()
     );
   });
 
@@ -398,7 +406,6 @@ describe("http enqueuer with authentication and authorization", () => {
       app.getHttpAdapter().getInstance(),
       corsOptions,
       schedulerUnsubscriptionSpy,
-      undefined,
       guardService as any
     );
   });
