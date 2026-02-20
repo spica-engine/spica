@@ -35,7 +35,7 @@ describe("Passwordless Login", () => {
   const testEmail = "test@example.com";
   const testPhone = "+1234567890";
   const username = "testuser";
-  const strategy = "otp";
+  const strategy = "Otp";
   let maxAttemptCount = 5;
 
   beforeEach(async () => {
@@ -138,6 +138,15 @@ describe("Passwordless Login", () => {
           }
         ]
       });
+
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: strategy},
+        {provider: "phone", strategy: strategy}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
     });
 
     it("should throw error when passwordless login is not enabled", async () => {
@@ -255,6 +264,11 @@ describe("Passwordless Login", () => {
           }
         ]
       });
+
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: strategy},
+        {provider: "phone", strategy: strategy}
+      ]);
 
       mockMailerService.sendMail.mockImplementation(options => {
         const codeMatch = options.text.match(/Your verification code for email is: (\d{6})/);

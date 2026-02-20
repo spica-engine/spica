@@ -36,7 +36,8 @@
         "relation",
         "location",
         "json",
-        "hash"
+        "hash",
+        "encrypted"
       ]
     },
     "stringArray": {

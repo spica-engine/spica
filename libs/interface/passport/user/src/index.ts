@@ -54,6 +54,7 @@ export interface UserOptions {
   verificationHashSecret?: string;
   providerEncryptionSecret?: string;
   providerHashSecret?: string;
+  publicUrl?: string;
 }
 
 export interface UserVerification {
@@ -73,6 +74,10 @@ export interface UserConfigSettings {
   resetPasswordProvider?: Array<{
     provider: "email" | "phone";
     strategy: string;
+  }>;
+  providerVerificationConfig?: Array<{
+    provider: "email" | "phone";
+    strategy: "Otp" | "MagicLink";
   }>;
 }
 export interface PasswordlessLoginConfig {

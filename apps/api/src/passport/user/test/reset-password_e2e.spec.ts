@@ -138,6 +138,10 @@ describe("Password Reset E2E with MailHog", () => {
       ]
     });
 
+    await userConfigService.updateProviderVerificationConfig([
+      {provider: EMAIL_PROVIDER, strategy: STRATEGY}
+    ]);
+
     app = module.createNestApplication();
     req = module.get(Request);
     await app.listen(req.socket);

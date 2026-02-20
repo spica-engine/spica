@@ -30,7 +30,7 @@ describe("Passwordless Login E2E with MailHog", () => {
 
   const testEmail = "passwordless@example.com";
   const testUsername = "passwordlessuser";
-  const STRATEGY = "otp";
+  const STRATEGY = "Otp";
   const EMAIL_PROVIDER = "email";
 
   beforeEach(async () => {
@@ -116,6 +116,10 @@ describe("Passwordless Login E2E with MailHog", () => {
         }
       ]
     });
+
+    await userConfigService.updateProviderVerificationConfig([
+      {provider: EMAIL_PROVIDER, strategy: STRATEGY}
+    ]);
 
     app = module.createNestApplication();
     req = module.get(Request);

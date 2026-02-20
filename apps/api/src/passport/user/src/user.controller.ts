@@ -201,6 +201,14 @@ export class UserController {
     return this.authFactor.getSchemas();
   }
 
+  @Get("verify-magic-link")
+  async verifyMagicLink(@Query("token") token: string) {
+    if (!token) {
+      throw new BadRequestException("Token query parameter is required.");
+    }
+    return this.providerVerificationService.validateCredentialsVerification(token, "MagicLink");
+  }
+
   @Delete(":id/factors")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(
@@ -506,7 +514,7 @@ export class UserController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("value") value: string,
     @Body("provider") provider: string,
-    @Body("strategy") strategy: "Otp",
+    @Body("strategy") strategy: "Otp" | "MagicLink",
     @Body("purpose") purpose: string
   ) {
     return this.providerVerificationService.startCredentialsVerification(
@@ -528,9 +536,9 @@ export class UserController {
     @Body("purpose") purpose: string
   ) {
     return this.providerVerificationService.validateCredentialsVerification(
-      id,
       code,
       strategy,
+      id,
       provider,
       purpose
     );

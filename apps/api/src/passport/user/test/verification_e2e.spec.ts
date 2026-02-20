@@ -35,6 +35,8 @@ describe("Provider Verification E2E with MailHog", () => {
   const STRATEGY = "Otp";
   const PURPOSE = "verify";
   const EMAIL_PROVIDER = "email";
+  const PHONE_NUMBER_PROVIDER = "phone";
+  const MAGIC_LINK_STRATEGY = "MagicLink";
 
   beforeEach(async () => {
     const mailerUrl = process.env.MAILER_URL;
@@ -96,7 +98,8 @@ describe("Provider Verification E2E with MailHog", () => {
           providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
           providerHashSecret: "8be2e8060da06c70906096b43db6de99",
           verificationCodeExpiresIn: 300,
-          refreshTokenHashSecret: "refresh_token_hash_secret"
+          refreshTokenHashSecret: "refresh_token_hash_secret",
+          publicUrl: "http://localhost"
         })
       ]
     }).compile();
@@ -144,6 +147,16 @@ describe("Provider Verification E2E with MailHog", () => {
   });
 
   describe("Complete provider email verification flow", () => {
+    beforeEach(async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: STRATEGY}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
+    });
+
     it("should successfully verify user with correct code sent via email", async () => {
       const email = "test@example.com";
 
@@ -350,6 +363,176 @@ describe("Provider Verification E2E with MailHog", () => {
 
       expect(secondVerifyResponse.statusCode).toBe(404);
       expect(secondVerifyResponse.body.message).toBe("No verification found");
+    });
+
+    it("should reject start when strategy is not configured for the provider", async () => {
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: "12312312",
+          provider: PHONE_NUMBER_PROVIDER,
+          strategy: MAGIC_LINK_STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(400);
+    });
+  });
+
+  describe("MagicLink provider verification flow", () => {
+    beforeEach(async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: "MagicLink"}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
+    });
+
+    it("should send magic link email and verify via GET endpoint", async () => {
+      const email = "magiclink-e2e@example.com";
+
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: MAGIC_LINK_STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(201);
+      expect(startResponse.body).toMatchObject({
+        message: expect.stringContaining("successfully"),
+        value: email
+      });
+
+      const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
+      const body: any = await resp.json();
+
+      expect(body.total).toBeGreaterThan(0);
+      const item: any = body.items[0];
+      expect(item).toBeDefined();
+
+      const raw =
+        item.Raw && item.Raw.Data
+          ? item.Raw.Data
+          : item.Content && item.Content.Body
+            ? item.Content.Body
+            : "";
+
+      const cleanedRaw = raw.replace(/=\r?\n/g, "").replace(/=3D/g, "=");
+      const tokenMatch = cleanedRaw.match(/token=([A-Za-z0-9_-]+)/);
+      expect(tokenMatch).toBeTruthy();
+      const token = tokenMatch[1];
+
+      const verification = await verificationService.findOne({
+        userId: testUserId,
+        provider: EMAIL_PROVIDER,
+        strategy: MAGIC_LINK_STRATEGY
+      });
+
+      expect(verification).toMatchObject({
+        userId: testUserId,
+        destination: email,
+        purpose: PURPOSE,
+        strategy: MAGIC_LINK_STRATEGY,
+        is_used: false
+      });
+
+      const verifyResponse = await req.get(`/passport/user/verify-magic-link?token=${token}`);
+
+      expect(verifyResponse.statusCode).toBe(200);
+      expect(verifyResponse.body).toEqual({
+        destination: email,
+        message: "Verification completed successfully",
+        provider: EMAIL_PROVIDER
+      });
+
+      const updatedVerification = await verificationService.findOne({_id: verification._id});
+      expect(updatedVerification.is_used).toBe(true);
+
+      const userResponse = await req.get(`/passport/user/${testUserId}`);
+      expect(userResponse.body.email).toEqual({
+        value: email,
+        createdAt: userResponse.body.email.createdAt
+      });
+    });
+
+    it("should fail magic link verification with tampered token", async () => {
+      const tamperedToken = "dGhpcyBpcyBub3QgYSB2YWxpZCB0b2tlbg";
+
+      const verifyResponse = await req.get(
+        `/passport/user/verify-magic-link?token=${tamperedToken}`
+      );
+
+      expect(verifyResponse.statusCode).toBe(400);
+    });
+
+    it("should fail magic link verification when token is missing", async () => {
+      const verifyResponse = await req.get("/passport/user/verify-magic-link");
+
+      expect(verifyResponse.statusCode).toBe(400);
+      expect(verifyResponse.body.message).toBe("Token query parameter is required.");
+    });
+
+    it("should fail when using magic link token a second time", async () => {
+      const email = "reuse-e2e@example.com";
+
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: MAGIC_LINK_STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(201);
+
+      const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
+      const body: any = await resp.json();
+      const item: any = body.items[0];
+      const raw =
+        item.Raw && item.Raw.Data
+          ? item.Raw.Data
+          : item.Content && item.Content.Body
+            ? item.Content.Body
+            : "";
+      const cleanedRaw = raw.replace(/=\r?\n/g, "").replace(/=3D/g, "=");
+      const tokenMatch = cleanedRaw.match(/token=([A-Za-z0-9_-]+)/);
+      const token = tokenMatch[1];
+
+      const firstVerify = await req.get(`/passport/user/verify-magic-link?token=${token}`);
+      expect(firstVerify.statusCode).toBe(200);
+
+      const secondVerify = await req.get(`/passport/user/verify-magic-link?token=${token}`);
+      expect(secondVerify.statusCode).toBe(404);
+    });
+
+    it("should reject start when MagicLink strategy is not configured for the provider", async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "phone", strategy: "MagicLink"}
+      ]);
+
+      const email = "not-configured@example.com";
+
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: MAGIC_LINK_STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(400);
+      expect(startResponse.body.message).toContain("MagicLink strategy is not enabled");
     });
   });
 });

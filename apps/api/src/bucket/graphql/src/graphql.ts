@@ -35,10 +35,12 @@ import {
   clearRelations,
   getDependents,
   findLocale,
-  insertActivity
+  insertActivity,
+  decryptDocumentFields
 } from "@spica-server/bucket/common";
 import {FindResponse} from "@spica-server/interface/bucket/graphql";
-import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
+import {Bucket, BUCKET_DATA_HASH_SECRET, BucketDocument} from "@spica-server/interface/bucket";
+import {BUCKET_DATA_ENCRYPTION_SECRET} from "@spica-server/interface/bucket";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 
 import {
@@ -142,7 +144,9 @@ export class GraphqlController implements OnModuleInit {
     private validator: Validator,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
-    @Optional() private hookChangeEmitter: ChangeEmitter
+    @Optional() private hookChangeEmitter: ChangeEmitter,
+    @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
+    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
   ) {
     this.bs.schemaChangeEmitter.subscribe(() => {
       this.bs.find().then(buckets => {
@@ -276,7 +280,9 @@ export class GraphqlController implements OnModuleInit {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+        },
+        this.hashSecret,
+        this.encryptionSecret
       );
     };
   }
@@ -314,7 +320,9 @@ export class GraphqlController implements OnModuleInit {
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) =>
             Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
-        }
+        },
+        this.hashSecret,
+        this.encryptionSecret
       );
 
       return document;
@@ -349,7 +357,8 @@ export class GraphqlController implements OnModuleInit {
             const deleteFn = this.delete(bucket, false);
             await deleteFn(root, {_id: documentId}, context, info);
           }
-        }
+        },
+        this.encryptionSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
       if (!insertedDocument) {
         return;
@@ -381,7 +390,9 @@ export class GraphqlController implements OnModuleInit {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+        },
+        this.hashSecret,
+        this.encryptionSecret
       );
 
       if (this.hookChangeEmitter) {
@@ -424,7 +435,9 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: bucketId => this.bds.children(bucketId),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+        },
+        undefined,
+        this.encryptionSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!previousDocument) {
@@ -463,7 +476,9 @@ export class GraphqlController implements OnModuleInit {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+        },
+        this.hashSecret,
+        this.encryptionSecret
       );
 
       if (this.hookChangeEmitter) {
@@ -497,7 +512,15 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
-      const previousDocument = await this.bds.children(bucket).findOne({_id: documentId});
+      let previousDocument = await this.bds.children(bucket).findOne({_id: documentId});
+      if (this.encryptionSecret) {
+        previousDocument = decryptDocumentFields(
+          previousDocument,
+          bucket,
+          this.encryptionSecret,
+          bucketId => this.bs.findOne({_id: new ObjectId(bucketId)})
+        );
+      }
 
       const patchedDocument = applyPatch(previousDocument, input);
 
@@ -514,7 +537,8 @@ export class GraphqlController implements OnModuleInit {
           collection: bucketId => this.bds.children(bucketId),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
-        {returnDocument: ReturnDocument.AFTER}
+        {returnDocument: ReturnDocument.AFTER},
+        this.encryptionSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!currentDocument) {
@@ -551,7 +575,9 @@ export class GraphqlController implements OnModuleInit {
           collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+        },
+        this.hashSecret,
+        this.encryptionSecret
       );
 
       if (this.hookChangeEmitter) {
@@ -594,7 +620,8 @@ export class GraphqlController implements OnModuleInit {
         {
           collection: schema => this.bds.children(schema),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+        },
+        this.encryptionSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!deletedDocument) {

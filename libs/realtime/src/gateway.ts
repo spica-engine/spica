@@ -1,5 +1,5 @@
 import {fromEvent, of} from "rxjs";
-import {catchError, takeUntil} from "rxjs/operators";
+import {catchError, map, takeUntil} from "rxjs/operators";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ResourceFilterFunction, IGuardService} from "@spica-server/interface/passport/guard";
 
@@ -10,7 +10,11 @@ export function getConnectionHandlers(
   buildErrorMessage: (error: any) => any,
   realtime: RealtimeDatabaseService,
   resourceFilterFunction?: ResourceFilterFunction,
-  authAction?: string
+  authAction?: string,
+  documentTransformFactory?: (
+    client: any,
+    req: any
+  ) => Promise<((data: any) => any) | undefined> | ((data: any) => any) | undefined
 ) {
   async function handleConnection(client: any, req: any) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
@@ -45,7 +49,17 @@ export function getConnectionHandlers(
     const collection = await getCollectionName(client, req);
     const options = await getFindOptions(client, req);
 
+    const documentTransform = documentTransformFactory
+      ? await documentTransformFactory(client, req)
+      : undefined;
+
     const stream = realtime.find(collection, options).pipe(
+      map(data => {
+        if (data !== null && documentTransform) {
+          return documentTransform(data);
+        }
+        return data;
+      }),
       catchError(error => {
         const errMsg = buildErrorMessage(error);
         client.send(JSON.stringify(errMsg));
