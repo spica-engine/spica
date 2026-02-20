@@ -132,14 +132,16 @@ describe("BucketDataController profiler", () => {
 
     it("should skip bucket1 profile entries", async () => {
       const [{body: allProfileEntries}, skippedRes] = await Promise.all([
-        req.get(`/bucket/${bucket1._id}/data/profile`),
-        req.get(`/bucket/${bucket1._id}/data/profile`, {skip: 1})
+        req.get(`/bucket/${bucket1._id}/data/profile`, {limit: 2, sort: JSON.stringify({_id: 1})}),
+        req.get(`/bucket/${bucket1._id}/data/profile`, {
+          skip: 1,
+          limit: 1,
+          sort: JSON.stringify({_id: 1})
+        })
       ]);
       expect(skippedRes.statusCode).toEqual(200);
-
-      const expectedLength = allProfileEntries.length - 1;
-      expect(Math.abs(skippedRes.body.length - expectedLength)).toBeLessThanOrEqual(1);
-
+      expect(skippedRes.body.length).toEqual(1);
+      expect(skippedRes.body[0]._id).toEqual(allProfileEntries[1]._id);
       expect(
         skippedRes.body.every(profileEntry => profileEntry.ns.endsWith(`.bucket_${bucket1._id}`))
       ).toEqual(true);
