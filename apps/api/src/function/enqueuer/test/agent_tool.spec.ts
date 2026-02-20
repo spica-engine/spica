@@ -50,7 +50,7 @@ describe("AgentToolEnqueuer", () => {
       enqueuer.subscribe(createTarget(), {
         name: "get_weather",
         description: "Get weather for a city",
-        parameters: {type: "object", properties: {city: {type: "string"}}}
+        inputSchema: {type: "object", properties: {city: {type: "string"}}}
       });
 
       const res = await req.post("/mcp", {jsonrpc: "2.0", method: "tools/list", id: 1});
@@ -64,7 +64,7 @@ describe("AgentToolEnqueuer", () => {
       enqueuer.subscribe(target, {
         name: "get_weather",
         description: "Get weather for a city",
-        parameters: {type: "object"}
+        inputSchema: {type: "object"}
       });
       enqueuer.unsubscribe(target);
 
@@ -76,8 +76,16 @@ describe("AgentToolEnqueuer", () => {
       const target1 = createTarget("/fn1", "a");
       const target2 = createTarget("/fn2", "b");
 
-      enqueuer.subscribe(target1, {name: "tool_a", description: "A", parameters: {type: "object"}});
-      enqueuer.subscribe(target2, {name: "tool_b", description: "B", parameters: {type: "object"}});
+      enqueuer.subscribe(target1, {
+        name: "tool_a",
+        description: "A",
+        inputSchema: {type: "object"}
+      });
+      enqueuer.subscribe(target2, {
+        name: "tool_b",
+        description: "B",
+        inputSchema: {type: "object"}
+      });
 
       enqueuer.unsubscribe(target1);
 
@@ -96,9 +104,9 @@ describe("AgentToolEnqueuer", () => {
       expect(res.body.id).toBe(1);
     });
 
-    it("should include inputSchema from parameters", async () => {
+    it("should include inputSchema in tools/list", async () => {
       const params = {type: "object", properties: {city: {type: "string"}}};
-      enqueuer.subscribe(createTarget(), {name: "t1", description: "desc", parameters: params});
+      enqueuer.subscribe(createTarget(), {name: "t1", description: "desc", inputSchema: params});
 
       const res = await req.post("/mcp", {jsonrpc: "2.0", method: "tools/list", id: 2});
       expect(res.body.result.tools[0].inputSchema).toEqual(params);
@@ -109,7 +117,7 @@ describe("AgentToolEnqueuer", () => {
       enqueuer.subscribe(createTarget(), {
         name: "t2",
         description: "desc",
-        parameters: {type: "object"},
+        inputSchema: {type: "object"},
         outputSchema: outSchema
       });
 
@@ -121,7 +129,7 @@ describe("AgentToolEnqueuer", () => {
       enqueuer.subscribe(createTarget(), {
         name: "t3",
         description: "desc",
-        parameters: {type: "object"}
+        inputSchema: {type: "object"}
       });
 
       const res = await req.post("/mcp", {jsonrpc: "2.0", method: "tools/list", id: 4});
@@ -132,12 +140,12 @@ describe("AgentToolEnqueuer", () => {
       enqueuer.subscribe(createTarget("/fn1", "a"), {
         name: "tool_a",
         description: "A",
-        parameters: {type: "object"}
+        inputSchema: {type: "object"}
       });
       enqueuer.subscribe(createTarget("/fn2", "b"), {
         name: "tool_b",
         description: "B",
-        parameters: {type: "object"}
+        inputSchema: {type: "object"}
       });
 
       const res = await req.post("/mcp", {jsonrpc: "2.0", method: "tools/list", id: 5});
@@ -175,7 +183,7 @@ describe("AgentToolEnqueuer", () => {
       enqueuer.subscribe(createTarget(), {
         name: "echo",
         description: "Echo tool",
-        parameters: {type: "object"}
+        inputSchema: {type: "object"}
       });
 
       eventQueue.enqueue.mockImplementation(() => {
@@ -206,7 +214,7 @@ describe("AgentToolEnqueuer", () => {
       enqueuer.subscribe(createTarget(), {
         name: "fail_tool",
         description: "Fails",
-        parameters: {type: "object"}
+        inputSchema: {type: "object"}
       });
 
       eventQueue.enqueue.mockImplementation(() => {});
@@ -232,12 +240,94 @@ describe("AgentToolEnqueuer", () => {
     });
   });
 
+  describe("input validation", () => {
+    it("should reject arguments that violate the inputSchema", async () => {
+      enqueuer.subscribe(createTarget(), {
+        name: "strict_tool",
+        description: "Strict input",
+        inputSchema: {
+          type: "object",
+          properties: {
+            city: {type: "string"},
+            count: {type: "integer"}
+          },
+          required: ["city"]
+        }
+      });
+
+      const res = await req.post("/mcp", {
+        jsonrpc: "2.0",
+        method: "tools/call",
+        params: {name: "strict_tool", arguments: {count: "not_a_number"}},
+        id: 1
+      });
+      expect(res.body.error.code).toBe(-32602);
+      expect(res.body.error.message).toContain("Invalid arguments");
+    });
+
+    it("should accept arguments that satisfy the inputSchema", async () => {
+      enqueuer.subscribe(createTarget(), {
+        name: "valid_tool",
+        description: "Valid input",
+        inputSchema: {
+          type: "object",
+          properties: {
+            city: {type: "string"}
+          },
+          required: ["city"]
+        }
+      });
+
+      eventQueue.enqueue.mockImplementation(() => {});
+
+      const callPromise = req.post("/mcp", {
+        jsonrpc: "2.0",
+        method: "tools/call",
+        params: {name: "valid_tool", arguments: {city: "Istanbul"}},
+        id: 2
+      });
+
+      await new Promise(r => setTimeout(r, 20));
+
+      const resolvers = (agentToolQueue as any).resolvers as Map<string, any>;
+      for (const [, resolver] of resolvers) {
+        resolver.resolve(Buffer.from("ok"));
+      }
+
+      const res = await callPromise;
+      expect(res.statusCode).toBe(200);
+      expect(res.body.error).toBeUndefined();
+      expect(res.body.result).toBeDefined();
+    });
+
+    it("should report missing required properties", async () => {
+      enqueuer.subscribe(createTarget(), {
+        name: "required_tool",
+        description: "Requires city",
+        inputSchema: {
+          type: "object",
+          properties: {city: {type: "string"}, limit: {type: "number"}},
+          required: ["city", "limit"]
+        }
+      });
+
+      const res = await req.post("/mcp", {
+        jsonrpc: "2.0",
+        method: "tools/call",
+        params: {name: "required_tool", arguments: {}},
+        id: 3
+      });
+      expect(res.body.error.code).toBe(-32602);
+      expect(res.body.error.message).toContain("city");
+    });
+  });
+
   describe("authentication", () => {
     beforeEach(() => {
       enqueuer.subscribe(createTarget("/auth", "handler"), {
         name: "secure_tool",
         description: "Requires auth",
-        parameters: {type: "object"},
+        inputSchema: {type: "object"},
         auth: {type: "apikey", key: "secret123"}
       });
     });
@@ -299,7 +389,7 @@ describe("AgentToolEnqueuer", () => {
       enqueuer.subscribe(createTarget("/bearer", "handler"), {
         name: "bearer_tool",
         description: "Bearer auth",
-        parameters: {type: "object"},
+        inputSchema: {type: "object"},
         auth: {type: "bearer", key: "tok3n"}
       });
 
@@ -332,7 +422,7 @@ describe("AgentToolEnqueuer", () => {
       enqueuer.subscribe(createTarget("/noauth", "handler"), {
         name: "open_tool",
         description: "No auth needed",
-        parameters: {type: "object"}
+        inputSchema: {type: "object"}
       });
 
       eventQueue.enqueue.mockImplementation(() => {});

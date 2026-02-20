@@ -2,6 +2,7 @@ import {EventQueue, AgentToolQueue} from "@spica-server/function/queue";
 import {Enqueuer} from "./enqueuer";
 import {Description, AgentToolOptions} from "@spica-server/interface/function/enqueuer";
 import {event, AgentTool} from "@spica-server/function/queue/proto";
+import {Schema, Validator} from "@spica-server/core/schema";
 import express from "express";
 import uniqid from "uniqid";
 
@@ -23,6 +24,7 @@ export class AgentToolEnqueuer extends Enqueuer<AgentToolOptions> {
 
   private registry = new Map<string, ToolRegistration>();
   private router = express.Router();
+  private validator = new Validator();
 
   constructor(
     private queue: EventQueue,
@@ -38,7 +40,7 @@ export class AgentToolEnqueuer extends Enqueuer<AgentToolOptions> {
     const stack = httpServer._router.stack;
     httpServer.use("/mcp", this.router);
     const expressInitIndex = stack.findIndex(l => l.name === "expressInit");
-    const layer = stack.splice(stack.length - 1, 1)[0];
+    const layer = stack.splice(-1, 1)[0];
     stack.splice(expressInitIndex + 1, 0, layer);
   }
 
@@ -101,7 +103,7 @@ export class AgentToolEnqueuer extends Enqueuer<AgentToolOptions> {
       const tool: any = {
         name: options.name,
         description: options.description,
-        inputSchema: options.parameters
+        inputSchema: options.inputSchema
       };
       if (options.outputSchema) {
         tool.outputSchema = options.outputSchema;
@@ -140,6 +142,18 @@ export class AgentToolEnqueuer extends Enqueuer<AgentToolOptions> {
       return res.status(200).json({
         jsonrpc: "2.0",
         error: {code: -32603, message: authError},
+        id: body.id ?? null
+      });
+    }
+
+    const validationError = await this.validateInput(
+      registration.options.inputSchema,
+      params.arguments
+    );
+    if (validationError) {
+      return res.status(200).json({
+        jsonrpc: "2.0",
+        error: {code: -32602, message: validationError},
         id: body.id ?? null
       });
     }
@@ -187,6 +201,22 @@ export class AgentToolEnqueuer extends Enqueuer<AgentToolOptions> {
         },
         id: body.id ?? null
       });
+    }
+  }
+
+  private async validateInput(inputSchema: object, args: unknown): Promise<string | null> {
+    if (!inputSchema || typeof inputSchema !== "object") {
+      return null;
+    }
+
+    const ValidatorMixin = Schema.validate(inputSchema);
+    const pipe: any = new ValidatorMixin(this.validator);
+
+    try {
+      await pipe.transform(args || {});
+      return null;
+    } catch (error) {
+      return `Invalid arguments: ${error.message || error}`;
     }
   }
 

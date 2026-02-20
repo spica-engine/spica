@@ -44,7 +44,7 @@ export interface EventOptions {
 export interface AgentToolOptions {
   name: string;
   description: string;
-  parameters: object;
+  inputSchema: object;
   outputSchema?: object;
   auth?: {
     type: "apikey" | "bearer";
