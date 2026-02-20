@@ -1,18 +1,8 @@
-import {decrypt, EncryptedData} from "@spica-server/core/schema";
+import {decrypt, isEncryptedData, BaseEncryptedData} from "@spica-server/core/encryption";
 import {Bucket} from "@spica-server/interface/bucket";
 import {RelationType} from "@spica-server/interface/bucket/common";
 
 type SchemaResolver = (bucketId: string) => Promise<Bucket> | Bucket;
-
-function isEncryptedData(value: unknown): value is EncryptedData {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "encrypted" in value &&
-    "iv" in value &&
-    "authTag" in value
-  );
-}
 
 function isRelation(propertySchema: any): boolean {
   return propertySchema?.type === "relation";
@@ -199,7 +189,7 @@ function decryptRelatedDocument(
 }
 
 function decryptWithErrorHandling(
-  encryptedData: EncryptedData,
+  encryptedData: BaseEncryptedData,
   secret: string,
   documentId: string
 ): string {

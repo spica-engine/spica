@@ -59,19 +59,13 @@ export class ProviderVerificationService {
     provider: string
   ): Promise<{message: string; provider: string; destination: string}> {
     const encryptedData = this.userService.encryptField(destination);
-    const hashedValue = this.userService.hashProviderValue(destination);
 
     await this.userService.updateOne(
       {_id: userId},
       {
         $set: {
-          [verifiedField]: {
-            encrypted: encryptedData.encrypted,
-            iv: encryptedData.iv,
-            authTag: encryptedData.authTag,
-            createdAt: new Date(),
-            hash: hashedValue
-          }
+          [verifiedField]: encryptedData,
+          [`${verifiedField}_verified_at`]: new Date()
         }
       }
     );

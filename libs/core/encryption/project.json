@@ -1,0 +1,5 @@
+{
+  "name": "core/encryption",
+  "sourceRoot": "libs/core/encryption/src",
+  "projectType": "library"
+}

@@ -6,13 +6,13 @@ import {
   UserOptions,
   DecryptedUser
 } from "@spica-server/interface/passport/user";
-import {Validator, hash as hashValue} from "@spica-server/core/schema";
+import {Validator} from "@spica-server/core/schema";
 import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 import {v4 as uuidv4} from "uuid";
-import {encrypt, decrypt} from "@spica-server/core/schema";
+import {encrypt, decrypt, hash as hashValue} from "@spica-server/core/encryption";
 
 @Injectable()
 export class UserService extends BaseCollection<User>("user") {
@@ -310,21 +310,12 @@ export class UserService extends BaseCollection<User>("user") {
     return result.join(" ");
   }
 
-  encryptField(value: string): {
-    encrypted: string;
-    iv: string;
-    authTag: string;
-  } {
+  encryptField(value: string) {
     if (!value) {
       throw new BadRequestException("Value to encrypt is required.");
     }
 
-    const secret = this.getProviderEncryptionSecret();
-    const encryptedData = encrypt(value, secret);
-
-    return {
-      ...encryptedData
-    };
+    return encrypt(value, this.getProviderEncryptionSecret(), this.getProviderHashSecret());
   }
 
   decryptField(encryptedField: {encrypted: string; iv: string; authTag: string}): string {
@@ -332,35 +323,20 @@ export class UserService extends BaseCollection<User>("user") {
       throw new BadRequestException("No encrypted data provided.");
     }
 
-    const secret = this.getProviderEncryptionSecret();
-    return decrypt(encryptedField, secret);
+    return decrypt(encryptedField, this.getProviderEncryptionSecret());
   }
 
-  decryptProviderFields(user: User): any {
-    if (!user) return user;
+  decryptProviderFields(user: User): DecryptedUser {
+    if (!user) return user as any;
 
-    const decryptedUser = {...user};
+    const decryptedUser: any = {...user};
 
-    if (user.email && "encrypted" in user.email) {
-      decryptedUser.email = {
-        value: this.decryptField({
-          encrypted: user.email.encrypted,
-          iv: user.email.iv,
-          authTag: user.email.authTag
-        }),
-        createdAt: user.email.createdAt
-      };
+    if (user.email) {
+      decryptedUser.email = decrypt(user.email, this.getProviderEncryptionSecret());
     }
 
-    if (user.phone && "encrypted" in user.phone) {
-      decryptedUser.phone = {
-        value: this.decryptField({
-          encrypted: user.phone.encrypted,
-          iv: user.phone.iv,
-          authTag: user.phone.authTag
-        }),
-        createdAt: user.phone.createdAt
-      };
+    if (user.phone) {
+      decryptedUser.phone = decrypt(user.phone, this.getProviderEncryptionSecret());
     }
 
     return decryptedUser;
