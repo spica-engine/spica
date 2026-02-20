@@ -414,7 +414,7 @@ describe("http enqueuer with authentication and authorization", () => {
       method: HttpMethod.Get,
       path: "/auth-test",
       preflight: false,
-      authenticate: ["identity"],
+      authenticate: ["IDENTITY"],
       authorize: false
     });
 
@@ -423,7 +423,7 @@ describe("http enqueuer with authentication and authorization", () => {
     expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
     expect(guardService.checkAuthorization).toHaveBeenCalledWith(
       expect.objectContaining({
-        allowedStrategies: ["identity"]
+        allowedStrategies: ["IDENTITY"]
       })
     );
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
@@ -440,7 +440,7 @@ describe("http enqueuer with authentication and authorization", () => {
       method: HttpMethod.Get,
       path: "/auth-fail",
       preflight: false,
-      authenticate: ["identity"],
+      authenticate: ["IDENTITY"],
       authorize: false
     });
 
@@ -461,7 +461,7 @@ describe("http enqueuer with authentication and authorization", () => {
       method: HttpMethod.Post,
       path: "/authz-test",
       preflight: false,
-      authenticate: ["apikey"],
+      authenticate: ["APIKEY"],
       authorize: true
     });
 
@@ -470,7 +470,7 @@ describe("http enqueuer with authentication and authorization", () => {
     expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
     expect(guardService.checkAuthorization).toHaveBeenCalledWith(
       expect.objectContaining({
-        allowedStrategies: ["apikey"]
+        allowedStrategies: ["APIKEY"]
       })
     );
 
@@ -504,7 +504,7 @@ describe("http enqueuer with authentication and authorization", () => {
       method: HttpMethod.Get,
       path: "/authz-params",
       preflight: false,
-      authenticate: ["identity"],
+      authenticate: ["IDENTITY"],
       authorize: true
     });
 
@@ -525,7 +525,7 @@ describe("http enqueuer with authentication and authorization", () => {
       method: HttpMethod.Get,
       path: "/authz-fail",
       preflight: false,
-      authenticate: ["apikey"],
+      authenticate: ["APIKEY"],
       authorize: true
     });
 
@@ -605,7 +605,7 @@ describe("http enqueuer with authentication and authorization", () => {
       method: HttpMethod.Get,
       path: "/multi-auth",
       preflight: false,
-      authenticate: ["identity", "apikey", "user"],
+      authenticate: ["IDENTITY", "APIKEY", "USER"],
       authorize: false
     });
 
@@ -613,7 +613,7 @@ describe("http enqueuer with authentication and authorization", () => {
 
     expect(guardService.checkAuthorization).toHaveBeenCalledWith(
       expect.objectContaining({
-        allowedStrategies: ["identity", "apikey", "user"]
+        allowedStrategies: ["IDENTITY", "APIKEY", "USER"]
       })
     );
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
@@ -631,7 +631,7 @@ describe("http enqueuer with authentication and authorization", () => {
       method: HttpMethod.Post,
       path: "/full-auth",
       preflight: false,
-      authenticate: ["identity"],
+      authenticate: ["IDENTITY"],
       authorize: true
     });
 
@@ -654,7 +654,7 @@ describe("http enqueuer with authentication and authorization", () => {
       method: HttpMethod.Get,
       path: "/auth-no-authz",
       preflight: false,
-      authenticate: ["identity"],
+      authenticate: ["IDENTITY"],
       authorize: false
     });
 

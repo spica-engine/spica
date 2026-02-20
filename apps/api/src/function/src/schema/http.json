@@ -27,7 +27,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["identity", "apikey", "user"]
+        "enum": ["IDENTITY", "APIKEY", "USER"]
       },
       "default": [],
       "uniqueItems": true
@@ -38,5 +38,22 @@
       "default": false
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "authorize": {"const": true}
+        },
+        "required": ["authorize"]
+      },
+      "then": {
+        "properties": {
+          "authenticate": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }
