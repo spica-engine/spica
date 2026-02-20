@@ -74,4 +74,26 @@ export class UserConfigService extends ConfigService {
       {upsert: true}
     );
   }
+
+  async getProviderVerificationConfig(): Promise<UserConfigSettings["providerVerificationConfig"]> {
+    const config = (await this.findOne({
+      module: this.MODULE_NAME
+    })) as BaseConfig<UserConfigSettings>;
+
+    return config?.options?.providerVerificationConfig;
+  }
+
+  async updateProviderVerificationConfig(
+    providerVerificationConfig: UserConfigSettings["providerVerificationConfig"]
+  ): Promise<void> {
+    await this.updateOne(
+      {module: this.MODULE_NAME},
+      {
+        $set: {
+          "options.providerVerificationConfig": providerVerificationConfig
+        }
+      },
+      {upsert: true}
+    );
+  }
 }
