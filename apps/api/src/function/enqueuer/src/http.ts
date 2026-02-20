@@ -113,7 +113,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
             await this.guardService.checkAction({
               request: req,
               response: res,
-              actions: "function:execute"
+              actions: "function:invoke"
             });
 
             req.params = originalParams;

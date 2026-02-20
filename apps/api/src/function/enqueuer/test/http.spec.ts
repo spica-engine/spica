@@ -477,7 +477,7 @@ describe("http enqueuer with authentication and authorization", () => {
     expect(guardService.checkAction).toHaveBeenCalledTimes(1);
     expect(guardService.checkAction).toHaveBeenCalledWith(
       expect.objectContaining({
-        actions: "function:execute"
+        actions: "function:invoke"
       })
     );
 

@@ -9,7 +9,7 @@ export default {
     ...FunctionReadOnlyAccess.statement,
     ...EnvVarFullAccess.statement,
     {
-      action: "function:execute",
+      action: "function:invoke",
       resource: {include: ["*/*"], exclude: []},
       module: "function"
     },
