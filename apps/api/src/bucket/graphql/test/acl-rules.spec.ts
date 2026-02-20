@@ -541,4 +541,94 @@ describe("GraphQL ACL Rules with Different Authentication Strategies", () => {
       });
     });
   });
+
+  describe("Field-level ACL Rules", () => {
+    describe("when property has acl ", () => {
+      let bucketId: string;
+      let bucketName: string;
+      let documentId: string;
+
+      beforeEach(async () => {
+        const bucket = {
+          title: "GraphQL Field ACL Bucket",
+          description: "Test bucket for GraphQL field-level ACL",
+          icon: "view_stream",
+          primary: "title",
+          acl: {
+            write: "true==true",
+            read: "true==true"
+          },
+          properties: {
+            title: {
+              type: "string",
+              title: "Title"
+            },
+            secret_info: {
+              type: "string",
+              title: "Secret Info",
+              options: {
+                position: "bottom"
+              },
+              acl: "auth.username=='oziko'"
+            }
+          }
+        };
+
+        const response = await req.post("/bucket", bucket, {
+          Authorization: `IDENTITY ${identityToken}`
+        });
+        bucketId = response.body._id;
+        bucketName = getBucketName(bucketId);
+
+        await stream.change.next();
+
+        const docResponse = await req.post(
+          `/bucket/${bucketId}/data`,
+          {title: "Test Document", secret_info: "Hidden Data"},
+          {Authorization: `IDENTITY ${identityToken}`}
+        );
+        documentId = docResponse.body._id;
+      });
+
+      it("should include field when field-level ACL allows access for USER token", async () => {
+        const params = {
+          query: `{
+            Find${bucketName}{
+              meta{ total }
+              data{ _id title secret_info }
+            }
+          }`
+        };
+
+        const response = await req.get("/graphql", params, {
+          Authorization: `USER ${userToken}`
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.data[`Find${bucketName}`].data.length).toBe(1);
+        expect(response.body.data[`Find${bucketName}`].data[0].title).toBe("Test Document");
+        expect(response.body.data[`Find${bucketName}`].data[0].secret_info).toBe("Hidden Data");
+      });
+
+      it("should exclude field when field-level ACL rejects access for USER token", async () => {
+        const params = {
+          query: `{
+            Find${bucketName}{
+              meta{ total }
+              data{ _id title secret_info }
+            }
+          }`
+        };
+
+        const response = await req.get("/graphql", params, {
+          Authorization: `USER ${aclRejectedUserToken}`
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.data[`Find${bucketName}`].data.length).toBe(1);
+        expect(response.body.data[`Find${bucketName}`].data[0].title).toBe("Test Document");
+        expect(response.body.data[`Find${bucketName}`].data[0].secret_info).toBeNull();
+      });
+    });
+  });
 });

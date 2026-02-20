@@ -598,4 +598,102 @@ describe("Realtime ACL Rules with Different Authentication Strategies", () => {
       });
     });
   });
+
+  describe("Field-level ACL Rules", () => {
+    describe("when property has acl", () => {
+      let bucketId: string;
+
+      beforeEach(async () => {
+        const bucket = {
+          title: "Realtime Field ACL Bucket",
+          description: "Test bucket for realtime field-level ACL",
+          icon: "view_stream",
+          primary: "title",
+          acl: {
+            write: "true==true",
+            read: "true==true"
+          },
+          properties: {
+            title: {
+              type: "string",
+              title: "Title"
+            },
+            secret_info: {
+              type: "string",
+              title: "Secret Info",
+              options: {
+                position: "bottom"
+              },
+              acl: "auth.username=='oziko'"
+            }
+          }
+        };
+
+        const response = await req.post("/bucket", bucket, {
+          Authorization: `IDENTITY ${identityToken}`
+        });
+        bucketId = response.body._id;
+
+        await req.post(
+          `/bucket/${bucketId}/data`,
+          {title: "Test Document", secret_info: "Hidden Data"},
+          {Authorization: `IDENTITY ${identityToken}`}
+        );
+      });
+
+      it("should include field when field-level ACL allows access for USER token", done => {
+        const messageSpy = jest.fn();
+        const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
+
+        const ws = wsc.get(`/bucket/${bucketId}/data`, {
+          headers: {Authorization: `USER ${userToken}`}
+        });
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            const messages = messageSpy.mock.calls.map(c => c[0]);
+            const initialDocs = messages.filter(m => m.kind === ChunkKind.Initial);
+
+            expect(initialDocs.length).toBe(1);
+            expect(initialDocs[0].document.title).toBe("Test Document");
+            expect(initialDocs[0].document.secret_info).toBe("Hidden Data");
+
+            await ws.close();
+            done();
+          }
+        };
+
+        ws.connect;
+      });
+
+      it("should exclude field when field-level ACL rejects access for USER token", done => {
+        const messageSpy = jest.fn();
+        const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
+
+        const ws = wsc.get(`/bucket/${bucketId}/data`, {
+          headers: {Authorization: `USER ${aclRejectedUserToken}`}
+        });
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            const messages = messageSpy.mock.calls.map(c => c[0]);
+            const initialDocs = messages.filter(m => m.kind === ChunkKind.Initial);
+
+            expect(initialDocs.length).toBe(1);
+            expect(initialDocs[0].document.title).toBe("Test Document");
+            expect(initialDocs[0].document.secret_info).toBeUndefined();
+
+            await ws.close();
+            done();
+          }
+        };
+
+        ws.connect;
+      });
+    });
+  });
 });

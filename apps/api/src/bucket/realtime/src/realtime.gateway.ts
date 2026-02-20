@@ -17,7 +17,8 @@ import {
   getDependents,
   authIdToString,
   filterReviver,
-  constructFilterValues
+  constructFilterValues,
+  applyFieldLevelAcl
 } from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
@@ -66,7 +67,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       }),
       this.realtime,
       resourceFilterFunction,
-      "bucket:data:stream"
+      "bucket:data:stream",
+      this.transformChunk.bind(this)
     );
   }
 
@@ -484,6 +486,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return client.close(1003);
     }
 
+    req.__schemaProperties = schema.properties;
+
     const options: any = {filter: {$and: []}};
 
     const policyMatch = req.resourceFilter || {$match: {}};
@@ -592,6 +596,17 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   private shouldApplyAcl(req: any): boolean {
     const strategyType = extractStrategyType(req);
     return strategyType === ReqAuthStrategy.USER;
+  }
+
+  private transformChunk(data: any, req: any): any {
+    if (!data || !data.document || !this.shouldApplyAcl(req) || !req.__schemaProperties) {
+      return data;
+    }
+
+    return {
+      ...data,
+      document: applyFieldLevelAcl(data.document, req.__schemaProperties, req.user)
+    };
   }
 }
 

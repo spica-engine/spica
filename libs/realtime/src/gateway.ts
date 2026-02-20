@@ -10,7 +10,8 @@ export function getConnectionHandlers(
   buildErrorMessage: (error: any) => any,
   realtime: RealtimeDatabaseService,
   resourceFilterFunction?: ResourceFilterFunction,
-  authAction?: string
+  authAction?: string,
+  transformChunk?: (data: any, req: any) => any
 ) {
   async function handleConnection(client: any, req: any) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
@@ -56,7 +57,8 @@ export function getConnectionHandlers(
 
     stream.pipe(takeUntil(fromEvent(client, "close"))).subscribe(data => {
       if (data !== null) {
-        client.send(JSON.stringify(data));
+        const chunk = transformChunk ? transformChunk(data, req) : data;
+        client.send(JSON.stringify(chunk));
       }
     });
   }
