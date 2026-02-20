@@ -47,8 +47,10 @@
         "required": ["authorize"]
       },
       "then": {
+        "required": ["authenticate"],
         "properties": {
           "authenticate": {
+            "type": "array",
             "minItems": 1
           }
         }
