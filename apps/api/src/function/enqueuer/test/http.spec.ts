@@ -484,7 +484,7 @@ describe("http enqueuer with authentication and authorization", () => {
     expect(guardService.checkAction).toHaveBeenCalledTimes(1);
     expect(guardService.checkAction).toHaveBeenCalledWith(
       expect.objectContaining({
-        actions: "function:invoke"
+        actions: ["function:invoke"]
       })
     );
 
@@ -517,7 +517,7 @@ describe("http enqueuer with authentication and authorization", () => {
 
     await req.get("/fn-execute/authz-params");
 
-    expect(capturedRoute).toEqual({path: "/function/:functionId/:handlerId"});
+    expect(capturedRoute).toEqual({path: "function/:functionId/invoke/:handlerId"});
     expect(capturedParams).toEqual({functionId: "abc123", handlerId: "myHandler"});
 
     httpEnqueuer.unsubscribe(target);
