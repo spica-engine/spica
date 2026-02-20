@@ -62,7 +62,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
     @Optional() private jobReducer: JobReducer,
     @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker,
-    @Optional() private guardService: GuardService
+    private guardService: GuardService
   ) {
     if (this.commander) {
       this.commander.register(this, [this.outdateWorkers], CommandType.SYNC);
@@ -107,8 +107,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.http.httpAdapter.getInstance(),
         this.options.corsOptions,
         schedulerUnsubscription,
-        this.attachStatusTracker,
-        this.guardService
+        this.guardService,
+        this.attachStatusTracker
       )
     );
 
