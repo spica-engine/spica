@@ -517,8 +517,8 @@ describe("http enqueuer with authentication and authorization", () => {
 
     await req.get("/fn-execute/authz-params");
 
-    expect(capturedRoute).toEqual({path: "/function/:functionId/:handler"});
-    expect(capturedParams).toEqual({functionId: "abc123", handler: "myHandler"});
+    expect(capturedRoute).toEqual({path: "/function/:functionId/:handlerId"});
+    expect(capturedParams).toEqual({functionId: "abc123", handlerId: "myHandler"});
 
     httpEnqueuer.unsubscribe(target);
   });
