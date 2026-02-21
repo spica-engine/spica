@@ -51,6 +51,7 @@ xdescribe("identity-settings", () => {
           failedAttemptLimit: 0
         },
         refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+        refreshTokenHashSecret: "refresh-token-hash-secret",
         passwordHistoryLimit: 0,
         identityRealtime: false
       }),

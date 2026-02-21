@@ -87,6 +87,7 @@ describe("Password Reset E2E with MailHog", () => {
             audience: "test-audience",
             secretOrKey: "test-secret",
             refreshTokenExpiresIn: 7200,
+            refreshTokenHashSecret: "refresh_token_hash_secret",
             blockingOptions: {
               blockDurationMinutes: 0,
               failedAttemptLimit: 0
@@ -104,6 +105,7 @@ describe("Password Reset E2E with MailHog", () => {
             maxExpiresIn: 7200,
             secretOrKey: "test-secret",
             refreshTokenExpiresIn: 7200,
+            refreshTokenHashSecret: "refresh_token_hash_secret",
             passwordHistoryLimit: 3,
             blockingOptions: {
               blockDurationMinutes: 0,

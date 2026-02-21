@@ -56,7 +56,8 @@ describe("User Realtime", () => {
             blockDurationMinutes: 0,
             failedAttemptLimit: 0
           },
-          userRealtime: true
+          userRealtime: true,
+          refreshTokenHashSecret: "refresh-token-hash-secret"
         }),
         PassportTestingModule.initialize({
           overriddenStrategyType: "JWT"

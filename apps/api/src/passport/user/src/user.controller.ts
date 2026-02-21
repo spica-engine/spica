@@ -47,6 +47,7 @@ import {ProviderVerificationService} from "./services/provider.verification.serv
 import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
 import {UserPipelineBuilder} from "./pipeline.builder";
+import {buildClientMeta} from "@spica-server/core";
 
 @Controller("passport/user")
 export class UserController {
@@ -561,9 +562,16 @@ export class UserController {
       username: string;
       code: string;
       provider: "email" | "phone";
-    }
+    },
+    @Req() req: any
   ) {
-    return this.passwordlessLoginService.verify(body.username, body.code, body.provider);
+    const clientMeta = buildClientMeta(req, this.options.refreshTokenHashSecret);
+    return this.passwordlessLoginService.verify(
+      body.username,
+      body.code,
+      body.provider,
+      clientMeta
+    );
   }
   @Post("forgot-password/start")
   async startForgotPassword(

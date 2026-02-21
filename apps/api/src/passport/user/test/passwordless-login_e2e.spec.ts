@@ -90,6 +90,7 @@ describe("Passwordless Login E2E with MailHog", () => {
             failedAttemptLimit: 0
           },
           refreshTokenExpiresIn: 604800,
+          refreshTokenHashSecret: "refresh_token_hash_secret",
           userRealtime: false,
           verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
           providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",

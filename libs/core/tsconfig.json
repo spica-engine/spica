@@ -1,5 +1,15 @@
 {
   "extends": "../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": [{"path": "../interface/core"}]
+  "references": [
+    {
+      "path": "../interface/core"
+    },
+    {
+      "path": "./schema"
+    },
+    {
+      "path": "../interface/passport/refresh_token"
+    }
+  ]
 }

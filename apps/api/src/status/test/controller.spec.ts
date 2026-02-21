@@ -142,6 +142,7 @@ describe("Status", () => {
               blockDurationMinutes: 0
             },
             refreshTokenExpiresIn: 1000,
+            refreshTokenHashSecret: "refresh-token-hash-secret",
             passwordHistoryLimit: 0,
             identityRealtime: false
           })
