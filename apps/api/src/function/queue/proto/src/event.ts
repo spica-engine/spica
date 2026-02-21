@@ -8,7 +8,8 @@ export namespace event {
     FIREHOSE = 4,
     SYSTEM = 5,
     BUCKET = 6,
-    RABBITMQ = 7
+    RABBITMQ = 7,
+    GRPC = 8
   }
   export class SchedulingContext extends pb_1.Message {
     constructor(

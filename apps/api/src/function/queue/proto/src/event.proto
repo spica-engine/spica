@@ -27,6 +27,7 @@ enum Type {
    SYSTEM = 5;
    BUCKET = 6;
    RABBITMQ = 7;
+   GRPC = 8;
 }
 
 message Event {

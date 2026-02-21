@@ -30,6 +30,7 @@ import ScheduleSchema from "./schema/schedule.json" with {type: "json"};
 import FirehoseSchema from "./schema/firehose.json" with {type: "json"};
 import SystemSchema from "./schema/system.json" with {type: "json"};
 import RabbitMQSchema from "./schema/rabbitmq.json" with {type: "json"};
+import GrpcSchema from "./schema/grpc.json" with {type: "json"};
 import * as CRUD from "./crud";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
@@ -43,7 +44,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     ["schedule", ScheduleSchema],
     ["firehose", FirehoseSchema],
     ["system", SystemSchema],
-    ["rabbitmq", RabbitMQSchema]
+    ["rabbitmq", RabbitMQSchema],
+    ["grpc", GrpcSchema]
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
   private cmdSubs: {unsubscribe: () => void};
