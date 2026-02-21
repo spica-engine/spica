@@ -36,24 +36,33 @@ export const getApplier = (
       let fn: Function;
       try {
         fn = YAML.parse(content);
+        return findFnByName(fn?.name);
       } catch (error) {
         console.error("YAML parsing error:", error);
         return Promise.resolve(null);
       }
-      return findFnByName(fn.name);
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
         const fn: Function = YAML.parse(change.resource_content);
 
+        const fillPrimaryFields = (change: ChangeLog, fn) => {
+          if (change.resource_id) {
+            fn._id = change.resource_id;
+          }
+
+          if (change.resource_slug) {
+            fn.name = change.resource_slug;
+          }
+        };
+
+        fillPrimaryFields(change, fn);
+
         switch (operationType) {
           case ChangeType.CREATE:
-            await CRUD.insertSchema(fs, engine, fn);
-            return {status: SyncStatuses.SUCCEEDED};
-
           case ChangeType.UPDATE:
-            await CRUD.replace(fs, engine, fn);
+            await CRUD.upsert(fs, engine, fn);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:

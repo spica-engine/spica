@@ -43,6 +43,19 @@ export async function replace(ps: PolicyService, policy: Policy) {
   return res;
 }
 
+export async function upsert(ps: PolicyService, policy: Policy) {
+  let existing;
+  if (policy._id) {
+    existing = await ps.findOne({_id: new ObjectId(policy._id)});
+  }
+
+  if (existing) {
+    return replace(ps, policy);
+  }
+
+  return insert(ps, policy);
+}
+
 export async function remove(
   ps: PolicyService,
   id: ObjectId,

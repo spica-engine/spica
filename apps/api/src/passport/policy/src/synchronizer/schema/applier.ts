@@ -36,25 +36,33 @@ export function getApplier(
 
       try {
         policy = YAML.parse(content);
+        return findPolicyByName(policy?.name);
       } catch (error) {
         console.error("YAML parsing error:", error);
         return Promise.resolve(null);
       }
-
-      return findPolicyByName(policy.name);
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
         const policy: Policy = YAML.parse(change.resource_content);
 
+        const fillPrimaryFields = (change: ChangeLog, policy) => {
+          if (change.resource_id) {
+            policy._id = change.resource_id;
+          }
+
+          if (change.resource_slug) {
+            policy.name = change.resource_slug;
+          }
+        };
+
+        fillPrimaryFields(change, policy);
+
         switch (operationType) {
           case ChangeType.CREATE:
-            await CRUD.insert(ps, policy);
-            return {status: SyncStatuses.SUCCEEDED};
-
           case ChangeType.UPDATE:
-            await CRUD.replace(ps, policy);
+            await CRUD.upsert(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:

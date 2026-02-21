@@ -36,25 +36,33 @@ export const getApplier = (
 
       try {
         bucket = YAML.parse(content);
+        return findBucketByTitle(bucket?.title);
       } catch (error) {
         console.error("YAML parsing error:", error);
         return Promise.resolve(null);
       }
-
-      return findBucketByTitle(bucket.title);
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
-        const bucket: Bucket = YAML.parse(change.resource_content);
+        const bucket = YAML.parse(change.resource_content);
+
+        const fillPrimaryFields = (change: ChangeLog, bucket) => {
+          if (change.resource_id) {
+            bucket._id = change.resource_id;
+          }
+
+          if (change.resource_slug) {
+            bucket.title = change.resource_slug;
+          }
+        };
+
+        fillPrimaryFields(change, bucket);
 
         switch (operationType) {
           case ChangeType.CREATE:
-            await CRUD.insert(bs, bucket);
-            return {status: SyncStatuses.SUCCEEDED};
-
           case ChangeType.UPDATE:
-            await CRUD.replace(bs, bds, history, bucket);
+            await CRUD.upsert(bs, bds, history, bucket);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:

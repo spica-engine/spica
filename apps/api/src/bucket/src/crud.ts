@@ -36,6 +36,24 @@ export async function insert(bs: BucketService, bucket: Bucket) {
   return bucket;
 }
 
+export async function upsert(
+  bs: BucketService,
+  bds: BucketDataService,
+  history: HistoryService,
+  bucket: Bucket
+) {
+  let existing;
+  if (bucket._id) {
+    existing = await bs.findOne({_id: new ObjectId(bucket._id)});
+  }
+
+  if (existing) {
+    return replace(bs, bds, history, bucket);
+  } else {
+    return insert(bs, bucket);
+  }
+}
+
 export async function replace(
   bs: BucketService,
   bds: BucketDataService,

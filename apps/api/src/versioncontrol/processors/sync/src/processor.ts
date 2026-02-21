@@ -44,6 +44,7 @@ export class SyncProcessor implements ISyncProcessor {
 
     return this.service.watch([], {fullDocument: "updateLookup"}).pipe(
       map(change => change["fullDocument"]),
+      filter(sync => Boolean(sync)),
       filter(statusFilter)
     );
   }

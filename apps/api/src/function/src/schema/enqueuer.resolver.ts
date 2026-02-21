@@ -47,7 +47,7 @@ export function generate({body}: {body: Function}) {
             minProperties: 1,
             description:
               "Allows defining which code part will be executed when which condition is met",
-            properties: Object.keys(body.triggers).reduce((props, key) => {
+            properties: Object.keys(body?.triggers || {}).reduce((props, key) => {
               props[key] = {
                 type: "object",
                 required: ["type", "options"],

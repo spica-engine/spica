@@ -32,24 +32,33 @@ export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
 
       try {
         envVar = YAML.parse(content);
+        return findEnvVarByKey(envVar?.key);
       } catch (error) {
         console.error("YAML parsing error:", error);
         return Promise.resolve(null);
       }
-
-      return findEnvVarByKey(envVar.key);
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const type = change.type;
         const envVar: EnvVar = YAML.parse(change.resource_content);
+
+        const fillPrimaryFields = (change: ChangeLog, envVar) => {
+          if (change.resource_id) {
+            envVar._id = change.resource_id;
+          }
+
+          if (change.resource_slug) {
+            envVar.key = change.resource_slug;
+          }
+        };
+
+        fillPrimaryFields(change, envVar);
+
         switch (type) {
           case ChangeType.CREATE:
-            await CRUD.insert(evs, envVar);
-            return {status: SyncStatuses.SUCCEEDED};
-
           case ChangeType.UPDATE:
-            await CRUD.replace(evs, envVar);
+            await CRUD.upsert(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:
