@@ -18,7 +18,7 @@
     "dockerode": "^4.0.4",
     "dotenv": "^16.4.7",
     "get-port": "^7.1.0",
-    "jsonpath": "^1.1.1",
+    "jsonpath": "^1.2.1",
     "open": "^10.1.0",
     "ora": "^8.2.0",
     "pretty-ms": "^9.2.0",
