@@ -30,6 +30,8 @@ export interface HttpOptions {
   method: HttpMethod;
   path: string;
   preflight: boolean;
+  authenticate?: string[];
+  authorize?: boolean;
 }
 
 export interface ScheduleOptions {

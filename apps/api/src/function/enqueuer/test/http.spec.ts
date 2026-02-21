@@ -5,6 +5,14 @@ import {HttpEnqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {HttpMethod} from "@spica-server/interface/function/enqueuer";
+import {IGuardService} from "@spica-server/interface/passport/guard";
+
+function createNoopGuardService(): IGuardService {
+  return {
+    checkAuthorization: jest.fn().mockResolvedValue(true),
+    checkAction: jest.fn().mockResolvedValue(true)
+  } as any;
+}
 
 /**
  * TODO: Provide some tests for req.query, req.headers and req.params
@@ -62,7 +70,8 @@ describe("http enqueuer", () => {
       httpQueue as any,
       app.getHttpAdapter().getInstance(),
       corsOptions,
-      schedulerUnsubscriptionSpy
+      schedulerUnsubscriptionSpy,
+      createNoopGuardService()
     );
   });
 
@@ -331,5 +340,337 @@ describe("http enqueuer", () => {
       httpEnqueuer.unsubscribe(noopTarget);
       done();
     });
+  });
+});
+
+describe("http enqueuer with authentication and authorization", () => {
+  let app: INestApplication;
+  let req: Request;
+  let httpEnqueuer: HttpEnqueuer;
+  let noopTarget: event.Target;
+
+  let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+  let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+
+  let schedulerUnsubscriptionSpy: jest.Mock;
+
+  let guardService: {
+    checkAuthorization: jest.Mock;
+    checkAction: jest.Mock;
+  };
+
+  let corsOptions = {
+    allowCredentials: true,
+    allowedHeaders: ["*"],
+    allowedMethods: ["*"],
+    allowedOrigins: ["*"]
+  };
+
+  function createTarget(cwd?: string, handler?: string) {
+    const target = new event.Target();
+    target.cwd = cwd || "/tmp/fn1";
+    target.handler = handler || "default";
+    target.id = "function_id_1";
+    return target;
+  }
+
+  beforeEach(async () => {
+    noopTarget = createTarget();
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
+
+    app = module.createNestApplication();
+    req = module.get(Request);
+
+    eventQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+    httpQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+
+    guardService = {
+      checkAuthorization: jest.fn().mockResolvedValue(true),
+      checkAction: jest.fn().mockResolvedValue(true)
+    };
+
+    await app.listen(req.socket);
+
+    schedulerUnsubscriptionSpy = jest.fn();
+    httpEnqueuer = new HttpEnqueuer(
+      eventQueue as any,
+      httpQueue as any,
+      app.getHttpAdapter().getInstance(),
+      corsOptions,
+      schedulerUnsubscriptionSpy,
+      guardService as any
+    );
+  });
+
+  afterEach(() => {
+    app.close();
+  });
+
+  it("should perform authentication when authenticate strategies are provided", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/auth-test",
+      preflight: false,
+      authenticate: ["IDENTITY"],
+      authorize: false
+    });
+
+    await req.get("/fn-execute/auth-test");
+
+    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthorization).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedStrategies: ["IDENTITY"]
+      })
+    );
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should return 401 when authentication fails", async () => {
+    const error = new Error("Unauthorized");
+    (error as any).status = 401;
+    guardService.checkAuthorization.mockRejectedValue(error);
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/auth-fail",
+      preflight: false,
+      authenticate: ["IDENTITY"],
+      authorize: false
+    });
+
+    const response = await req.get("/fn-execute/auth-fail");
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body).toEqual({message: "Unauthorized"});
+    expect(eventQueue.enqueue).not.toHaveBeenCalled();
+    expect(httpQueue.enqueue).not.toHaveBeenCalled();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should perform authorization when both authenticate and authorize are set", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/authz-test",
+      preflight: false,
+      authenticate: ["APIKEY"],
+      authorize: true
+    });
+
+    await req.post("/fn-execute/authz-test");
+
+    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthorization).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedStrategies: ["APIKEY"]
+      })
+    );
+
+    expect(guardService.checkAction).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actions: ["function:invoke"]
+      })
+    );
+
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should set correct route path and params for authorization check", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    let capturedRoute: any;
+    let capturedParams: any;
+    guardService.checkAction.mockImplementation(({request}) => {
+      capturedRoute = {...request.route};
+      capturedParams = {...request.params};
+      return Promise.resolve(true);
+    });
+
+    const target = createTarget("/tmp/fn1", "myHandler");
+    target.id = "abc123";
+
+    httpEnqueuer.subscribe(target, {
+      method: HttpMethod.Get,
+      path: "/authz-params",
+      preflight: false,
+      authenticate: ["IDENTITY"],
+      authorize: true
+    });
+
+    await req.get("/fn-execute/authz-params");
+
+    expect(capturedRoute).toEqual({path: "function/:functionId/invoke/:handlerId"});
+    expect(capturedParams).toEqual({functionId: "abc123", handlerId: "myHandler"});
+
+    httpEnqueuer.unsubscribe(target);
+  });
+
+  it("should return 403 when authorization fails", async () => {
+    const error = new Error("Forbidden");
+    (error as any).status = 403;
+    guardService.checkAction.mockRejectedValue(error);
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/authz-fail",
+      preflight: false,
+      authenticate: ["APIKEY"],
+      authorize: true
+    });
+
+    const response = await req.get("/fn-execute/authz-fail");
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body).toEqual({message: "Forbidden"});
+    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
+    expect(eventQueue.enqueue).not.toHaveBeenCalled();
+    expect(httpQueue.enqueue).not.toHaveBeenCalled();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should skip auth when authenticate is empty array", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/no-auth",
+      preflight: false,
+      authenticate: [],
+      authorize: false
+    });
+
+    await req.get("/fn-execute/no-auth");
+
+    expect(guardService.checkAuthorization).not.toHaveBeenCalled();
+    expect(guardService.checkAction).not.toHaveBeenCalled();
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should skip auth when authenticate is undefined", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/no-auth-undef",
+      preflight: false
+    });
+
+    await req.get("/fn-execute/no-auth-undef");
+
+    expect(guardService.checkAuthorization).not.toHaveBeenCalled();
+    expect(guardService.checkAction).not.toHaveBeenCalled();
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should ignore authorize when authenticate is empty", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/authz-no-authn",
+      preflight: false,
+      authenticate: [],
+      authorize: true
+    });
+
+    await req.get("/fn-execute/authz-no-authn");
+
+    expect(guardService.checkAuthorization).not.toHaveBeenCalled();
+    expect(guardService.checkAction).not.toHaveBeenCalled();
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should accept multiple authentication strategies", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/multi-auth",
+      preflight: false,
+      authenticate: ["IDENTITY", "APIKEY", "USER"],
+      authorize: false
+    });
+
+    await req.get("/fn-execute/multi-auth");
+
+    expect(guardService.checkAuthorization).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedStrategies: ["IDENTITY", "APIKEY", "USER"]
+      })
+    );
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should enqueue event after successful authentication and authorization", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => {
+      res.writeHead(200, undefined, {"Content-type": "application/json"});
+      res.end(JSON.stringify({success: true}));
+    });
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/full-auth",
+      preflight: false,
+      authenticate: ["IDENTITY"],
+      authorize: true
+    });
+
+    const response = await req.post("/fn-execute/full-auth");
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({success: true});
+    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAction).toHaveBeenCalledTimes(1);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+    expect(httpQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should not call checkAction when authorize is false even with authenticate set", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/auth-no-authz",
+      preflight: false,
+      authenticate: ["IDENTITY"],
+      authorize: false
+    });
+
+    await req.get("/fn-execute/auth-no-authz");
+
+    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAction).not.toHaveBeenCalled();
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
   });
 });

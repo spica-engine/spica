@@ -26,14 +26,16 @@ export class GuardService implements IGuardService {
     request,
     response,
     actions,
-    options
+    options,
+    format
   }: {
     request: any;
     response: any;
     actions: string | string[];
     options?: {resourceFilter: boolean};
+    format?: string;
   }): Promise<boolean> {
-    const guard = ActionGuard(actions, undefined, undefined, options);
+    const guard = ActionGuard(actions, format, undefined, options);
     return this.wrapResult(
       new guard(this.resolver).canActivate({
         switchToHttp: () => ({
