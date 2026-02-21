@@ -445,12 +445,6 @@ export class UserController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    // prevent to delete the last user
-    const userCount = await this.userService.estimatedDocumentCount();
-    if (userCount == 1) {
-      return;
-    }
-
     return this.userService.deleteOne({_id: id}).then(res => {
       if (!res) {
         throw new NotFoundException(`User with ID ${id} not found`);
