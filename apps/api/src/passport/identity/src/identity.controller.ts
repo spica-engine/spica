@@ -238,8 +238,15 @@ export class IdentityController {
       registerPolicyAttacher("IdentityReadOnlyAccess")
     )
   )
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.identityService.findOne({_id: id}, {projection: this.hideSecretsExpression()});
+  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    const identity = await this.identityService.findOne(
+      {_id: id},
+      {projection: this.hideSecretsExpression()}
+    );
+    if (!identity) {
+      throw new NotFoundException(`Identity with ID ${id} not found.`);
+    }
+    return identity;
   }
 
   @Post(":id/start-factor-verification")
