@@ -24,7 +24,7 @@ rs.initiate(
             host : "localhost:27019",
             priority : 0,
             secondaryDelaySecs: 5,
-            tags: { secondaryDelaySecs: "true" }
+            tags: { delayed: "true" }
          }
       ]
    }
