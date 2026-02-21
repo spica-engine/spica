@@ -102,57 +102,80 @@ describe("Storage Service", () => {
       });
   });
 
-  it("should revert storage insert if one of objects failed", async () => {
-    const storageObjects = [
-      {
-        _id: "successId",
-        name: "name1",
-        content: {
-          data: Buffer.from("abc1"),
-          type: "type1",
-          size: 10
+  describe("transaction rollback consistency", () => {
+    it("should revert storage insert if one of objects failed", async () => {
+      const storageObjects = [
+        {
+          _id: "successId",
+          name: "name1",
+          content: {
+            data: Buffer.from("abc1"),
+            type: "type1",
+            size: 10
+          }
+        },
+        {
+          _id: "failId",
+          name: "name2",
+          content: {
+            data: Buffer.from("abc2"),
+            type: "type2",
+            size: 20
+          }
+        },
+        {
+          _id: "thirdId",
+          name: "name3",
+          content: {
+            data: Buffer.from("abc3"),
+            type: "type3",
+            size: 30
+          }
         }
-      },
-      {
-        _id: "failId",
-        name: "name2",
-        content: {
-          data: Buffer.from("abc2"),
-          type: "type2",
-          size: 20
-        }
-      },
-      {
-        _id: "thirdId",
-        name: "name3",
-        content: {
-          data: Buffer.from("abc3"),
-          type: "type3",
-          size: 30
-        }
-      }
-    ];
+      ];
 
-    const originalWrite = strategyInstance.write.bind(strategyInstance);
-    jest.spyOn(strategyInstance, "write").mockImplementation((id: string, data: Buffer) => {
-      if (id === "name2") {
-        return Promise.reject("Upload failed for Item");
-      }
-      return originalWrite(id, data);
+      const originalWrite = strategyInstance.write.bind(strategyInstance);
+      jest.spyOn(strategyInstance, "write").mockImplementation((id: string, data: Buffer) => {
+        if (id === "name2") {
+          return Promise.reject("Upload failed for Item");
+        }
+        return originalWrite(id, data);
+      });
+
+      await expect(storageService.insert(storageObjects)).rejects.toThrow(
+        "Error: Failed to write object name2 to storage. Reason: Upload failed for Item"
+      );
+
+      const insertedObjects = await storageService.find();
+      expect(insertedObjects).toEqual([]);
+
+      const objectPromises = storageObjects.map(storageObject =>
+        strategyInstance.read(storageObject._id).catch(e => e.code)
+      );
+      const result = await Promise.all(objectPromises);
+      expect(result).toEqual(["ENOENT", "ENOENT", "ENOENT"]);
     });
 
-    await expect(storageService.insert(storageObjects)).rejects.toThrow(
-      "Error: Failed to write object name2 to storage. Reason: Upload failed for Item"
-    );
+    it("should revert updateMeta when MongoDB updateMany fails", async () => {
+      await storageService.insert([storageObject]);
+      const originalName = storageObject.name;
+      const newName = "renamed_object";
 
-    const insertedObjects = await storageService.find();
-    expect(insertedObjects).toEqual([]);
+      jest
+        .spyOn((storageService as any)._coll, "updateMany")
+        .mockRejectedValueOnce(new Error("MongoDB updateMany failed"));
 
-    const objectPromises = storageObjects.map(storageObject =>
-      strategyInstance.read(storageObject._id).catch(e => e.code)
-    );
-    const result = await Promise.all(objectPromises);
-    expect(result).toEqual(["ENOENT", "ENOENT", "ENOENT"]);
+      await expect(storageService.updateMeta(storageObjectId, newName)).rejects.toThrow(
+        "MongoDB updateMany failed"
+      );
+
+      const storedContent = await strategyInstance.read(originalName);
+      expect(storedContent).toEqual(Buffer.from("abc"));
+
+      // Reading the new name should fail (it was rolled back)
+      const errorCode = await strategyInstance.read(newName).catch(e => e.code);
+      expect(errorCode).toBe("ENOENT");
+    });
   });
 
   it("should update storage object", async () => {
