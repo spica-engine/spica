@@ -91,11 +91,11 @@ async function findPrimaryNode(nodes: string[]) {
   for (const node of nodes) {
     try {
       const {stdout} = await execMongo(
-        `admin --host "${node}" --eval "JSON.stringify(rs.isMaster())"`
+        `admin --host "${node}" --eval "JSON.stringify(db.hello())"`
       );
       debug(stdout);
       const result = JSON.parse(stdout);
-      if (result.ismaster === true) {
+      if (result.isWritablePrimary === true) {
         return node;
       }
     } catch (error) {
