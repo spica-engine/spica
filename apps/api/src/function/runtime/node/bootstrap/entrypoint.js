@@ -7,6 +7,7 @@ const {hooks: BucketHooks} = BucketHooksProto;
 import * as FnQueueNode from "@spica-server/function/queue/node";
 
 const {
+  AgentToolQueue: AgentToolNodeQueue,
   Change,
   DatabaseQueue,
   EventQueue,
@@ -23,7 +24,7 @@ const {
 } = FnQueueNode;
 
 import * as FnQueueProto from "@spica-server/function/queue/proto";
-const {Database, event, Firehose, Http, RabbitMQ} = FnQueueProto;
+const {AgentTool, Database, event, Firehose, Http, RabbitMQ} = FnQueueProto;
 
 import {createRequire} from "module";
 import * as path from "path";
@@ -205,6 +206,36 @@ async function _process(ev, queue) {
         })
       );
       callArguments[0] = new BucketChange(bucketChange);
+      break;
+    case event.Type.AGENT_TOOL:
+      const agentToolQueue = new AgentToolNodeQueue();
+      const agentToolPop = new AgentTool.Message.Pop({
+        id: ev.id
+      });
+
+      const agentToolMessage = await agentToolQueue.pop(agentToolPop);
+
+      callArguments[0] = {
+        name: agentToolMessage.tool_name,
+        arguments: agentToolMessage.arguments?.length
+          ? JSON.parse(Buffer.from(agentToolMessage.arguments).toString("utf-8"))
+          : {}
+      };
+
+      callback = async result => {
+        const respondMessage = new AgentTool.Message({id: ev.id});
+        try {
+          if (result instanceof Promise) {
+            result = await result;
+          }
+          const serialized = result != undefined ? JSON.stringify(result) : "{}";
+          respondMessage.result = new TextEncoder().encode(serialized);
+        } catch (e) {
+          const errText = e && typeof e === "object" && e.message ? e.message : String(e);
+          respondMessage.error = new TextEncoder().encode(errText);
+        }
+        await agentToolQueue.respond(respondMessage);
+      };
       break;
     case event.Type.RABBITMQ:
       const rabbitmq = new RabbitMQQueue();

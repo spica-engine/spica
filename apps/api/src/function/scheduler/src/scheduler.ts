@@ -11,7 +11,8 @@ import {
   HttpEnqueuer,
   ScheduleEnqueuer,
   SystemEnqueuer,
-  RabbitMQEnqueuer
+  RabbitMQEnqueuer,
+  AgentToolEnqueuer
 } from "@spica-server/function/enqueuer";
 import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
@@ -21,7 +22,8 @@ import {
   EventQueue,
   FirehoseQueue,
   HttpQueue,
-  RabbitMQQueue
+  RabbitMQQueue,
+  AgentToolQueue
 } from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
@@ -45,6 +47,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private databaseQueue: DatabaseQueue;
   private firehoseQueue: FirehoseQueue;
   private rabbitmqQueue: RabbitMQQueue;
+  private agentToolQueue: AgentToolQueue;
 
   readonly runtimes = new Map<string, Runtime>();
   readonly pkgmanagers = new Map<string, DelegatePkgManager>();
@@ -91,6 +94,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.rabbitmqQueue = new RabbitMQQueue();
     this.queue.addQueue(this.rabbitmqQueue);
+
+    this.agentToolQueue = new AgentToolQueue();
+    this.queue.addQueue(this.agentToolQueue);
   }
 
   async onModuleInit() {
@@ -142,6 +148,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         schedulerUnsubscription,
         this.jobReducer,
         this.commander
+      )
+    );
+
+    this.enqueuers.add(
+      new AgentToolEnqueuer(
+        this.queue,
+        this.agentToolQueue,
+        this.http.httpAdapter.getInstance(),
+        schedulerUnsubscription
       )
     );
 
