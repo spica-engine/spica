@@ -296,8 +296,8 @@ export class GraphqlController implements OnModuleInit {
     ): Promise<BucketDocument> => {
       await this.authenticate(
         context,
-        "/bucket/:bucketId/data/:documentId",
-        {bucketId: bucket._id, documentId: documentId},
+        "/bucket/:bucketId/data",
+        {bucketId: bucket._id},
         ["bucket:data:show"],
         {resourceFilter: false}
       );
@@ -420,8 +420,8 @@ export class GraphqlController implements OnModuleInit {
     ): Promise<BucketDocument> => {
       await this.authenticate(
         context,
-        "/bucket/:bucketId/data/:documentId",
-        {bucketId: bucket._id, documentId: documentId},
+        "/bucket/:bucketId/data",
+        {bucketId: bucket._id},
         ["bucket:data:update"],
         {resourceFilter: false}
       );
@@ -506,8 +506,8 @@ export class GraphqlController implements OnModuleInit {
     ) => {
       await this.authenticate(
         context,
-        "/bucket/:bucketId/data/:documentId",
-        {bucketId: bucket._id, documentId: documentId},
+        "/bucket/:bucketId/data",
+        {bucketId: bucket._id},
         ["bucket:data:update"],
         {resourceFilter: false}
       );
@@ -606,8 +606,8 @@ export class GraphqlController implements OnModuleInit {
       if (authentication) {
         await this.authenticate(
           context,
-          "/bucket/:bucketId/data/:documentId",
-          {bucketId: bucket._id, documentId: documentId},
+          "/bucket/:bucketId/data",
+          {bucketId: bucket._id},
           ["bucket:data:delete"],
           {resourceFilter: false}
         );
