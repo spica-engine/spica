@@ -9,15 +9,15 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  BadRequestException,
-  NotFoundException
+  HttpException
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {DashboardService} from "./dashboard.service";
 import {Dashboard} from "@spica-server/interface/dashboard";
 import {Schema} from "@spica-server/core/schema";
 import {ResourceFilter} from "@spica-server/passport/guard";
-import {OBJECT_ID, ObjectId, ReturnDocument} from "@spica-server/database";
+import {OBJECT_ID, ObjectId} from "@spica-server/database";
+import * as CRUD from "./crud";
 
 @Controller("dashboard")
 export class DashboardController {
@@ -26,20 +26,20 @@ export class DashboardController {
   @Get()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:index"))
   findAll(@ResourceFilter() resourceFilter: object) {
-    return this.dashboardService.aggregate([resourceFilter]).toArray();
+    return CRUD.find(this.dashboardService, resourceFilter);
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:show"))
   findById(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.dashboardService.findOne({_id: id});
+    return CRUD.findOne(this.dashboardService, id);
   }
 
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:create"))
   insert(@Body(Schema.validate("http://spica.internal/dashboard")) dashboard: Dashboard) {
-    return this.dashboardService.insertOne(dashboard).catch(e => {
-      throw new BadRequestException(e.message);
+    return CRUD.insert(this.dashboardService, dashboard).catch(e => {
+      throw new HttpException(e.message, e.status || 500);
     });
   }
 
@@ -50,22 +50,15 @@ export class DashboardController {
     @Body(Schema.validate("http://spica.internal/dashboard"))
     dashboard: Dashboard
   ) {
-    const res = await this.dashboardService.findOneAndReplace({_id: id}, dashboard, {
-      returnDocument: ReturnDocument.AFTER
+    return CRUD.replace(this.dashboardService, {...dashboard, _id: id}).catch(e => {
+      throw new HttpException(e.message, e.status || 500);
     });
-    if (!res) {
-      throw new NotFoundException(`Dashboard with ID ${id} not found`);
-    }
-    return res;
   }
 
   @Delete(":id")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param("id", OBJECT_ID) id: ObjectId) {
-    const deletedCount = await this.dashboardService.deleteOne({_id: id});
-    if (!deletedCount) {
-      throw new NotFoundException(`Dashboard with ID ${id} not found`);
-    }
+    return CRUD.remove(this.dashboardService, id);
   }
 }
