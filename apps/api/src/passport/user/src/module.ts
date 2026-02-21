@@ -1,5 +1,5 @@
 import {Module, Global, DynamicModule, Inject, Optional} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
+import {Validator, SchemaModule} from "@spica-server/core/schema";
 import {JwtModule} from "@nestjs/jwt";
 import {
   UserOptions,
@@ -37,6 +37,8 @@ import {UserConfigService} from "./config.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
 import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
+import {ConfigService} from "@spica-server/config";
+import {providePasswordPolicySchemaResolver} from "@spica-server/passport/src/password-policy.schema.resolver";
 
 @Global()
 @Module({})
@@ -129,6 +131,27 @@ export class UserModule {
           provide: POLICY_PROVIDER,
           useFactory: PolicyProviderFactory,
           inject: [PolicyService]
+        },
+        {
+          provide: "USER_PASSWORD_POLICY_RESOLVER",
+          useFactory: (validator: Validator, configService: ConfigService) => {
+            if (!configService) return null;
+            return providePasswordPolicySchemaResolver(validator, configService, {
+              "http://spica.internal/passport/user-create": {
+                baseSchema: userCreateSchema,
+                configKey: "user"
+              },
+              "http://spica.internal/passport/user-update": {
+                baseSchema: userUpdateSchema,
+                configKey: "user"
+              },
+              "http://spica.internal/passport/user-self-update": {
+                baseSchema: userSelfUpdateSchema,
+                configKey: "user"
+              }
+            });
+          },
+          inject: [Validator, {token: ConfigService, optional: true}]
         }
       ]
     };

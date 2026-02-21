@@ -22,6 +22,8 @@ import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 import {IdentityRealtimeModule} from "../realtime";
+import {ConfigService} from "@spica-server/config";
+import {providePasswordPolicySchemaResolver} from "@spica-server/passport/src/password-policy.schema.resolver";
 
 @Global()
 @Module({})
@@ -87,6 +89,23 @@ export class IdentityModule {
           provide: POLICY_PROVIDER,
           useFactory: PolicyProviderFactory,
           inject: [PolicyService]
+        },
+        {
+          provide: "IDENTITY_PASSWORD_POLICY_RESOLVER",
+          useFactory: (validator: Validator, configService: ConfigService) => {
+            if (!configService) return null;
+            return providePasswordPolicySchemaResolver(validator, configService, {
+              "http://spica.internal/passport/identity-create": {
+                baseSchema: IdentityCreateSchema,
+                configKey: "identity"
+              },
+              "http://spica.internal/passport/identity": {
+                baseSchema: IdentitySchema,
+                configKey: "identity"
+              }
+            });
+          },
+          inject: [Validator, {token: ConfigService, optional: true}]
         }
       ]
     };
