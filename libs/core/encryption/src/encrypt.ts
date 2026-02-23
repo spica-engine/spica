@@ -17,6 +17,13 @@ export function encrypt(
   encryptionSecret: string,
   hashSecret?: string
 ): EncryptedData<boolean> {
+  if (!value) {
+    throw new BadRequestException("Value to encrypt must not be empty.");
+  }
+
+  if (!encryptionSecret) {
+    throw new BadRequestException("Encryption secret must not be empty.");
+  }
   const key = deriveKey(encryptionSecret);
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
