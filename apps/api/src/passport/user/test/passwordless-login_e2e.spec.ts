@@ -93,6 +93,7 @@ describe("Passwordless Login E2E with MailHog", () => {
           userRealtime: false,
           verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
           providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
+          providerHashSecret: "3fe2e8060da06c70906096b43db6de11",
           verificationCodeExpiresIn: 300
         })
       ]
@@ -169,8 +170,8 @@ describe("Passwordless Login E2E with MailHog", () => {
         item.Raw && item.Raw.Data
           ? item.Raw.Data
           : item.Content && item.Content.Body
-          ? item.Content.Body
-          : "";
+            ? item.Content.Body
+            : "";
 
       const codeMatch = raw.match(/is: (\d{6})/);
       expect(codeMatch).toBeTruthy();
@@ -243,8 +244,8 @@ describe("Passwordless Login E2E with MailHog", () => {
         item.Raw && item.Raw.Data
           ? item.Raw.Data
           : item.Content && item.Content.Body
-          ? item.Content.Body
-          : "";
+            ? item.Content.Body
+            : "";
 
       const codeMatch = raw.match(/is: (\d{6})/);
       expect(codeMatch).toBeTruthy();

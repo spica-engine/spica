@@ -41,14 +41,13 @@ export const constructFilterValues = async (
   filter: object,
   bucket: Bucket,
   relationResolver: RelationResolver,
-  hashSecret?: string,
-  encryptionSecret?: string
+  hashSecret?: string
 ) => {
   const wrappedReplacers = [
     replaceFilterObjectIds,
     (filter: object) => replaceFilterDates(filter, bucket, relationResolver),
     (filter: object) => replaceFilterHash(filter, bucket, relationResolver, hashSecret),
-    (filter: object) => replaceFilterEncrypted(filter, bucket, relationResolver, encryptionSecret)
+    (filter: object) => replaceFilterEncrypted(filter, bucket, relationResolver, hashSecret)
   ];
 
   const manager = new FilterReplaceManager(wrappedReplacers);
@@ -118,9 +117,9 @@ export async function replaceFilterEncrypted(
   filter: object,
   bucket: Bucket,
   relationResolver: RelationResolver,
-  encryptionSecret?: string
+  hashSecret?: string
 ): Promise<object> {
-  if (!encryptionSecret) {
+  if (!hashSecret) {
     return filter;
   }
 
@@ -131,19 +130,19 @@ export async function replaceFilterEncrypted(
     relationResolver
   );
 
-  return replaceEncryptedKeysRecursive(filter, relationResolvedSchema.properties, encryptionSecret);
+  return replaceEncryptedKeysRecursive(filter, relationResolvedSchema.properties, hashSecret);
 }
 
 function replaceEncryptedKeysRecursive(
   filter: object,
   properties: object,
-  encryptionSecret: string
+  hashSecret: string
 ): object {
   for (const [key, value] of Object.entries(filter)) {
     if (["$or", "$and", "$nor"].includes(key)) {
       if (Array.isArray(value)) {
         filter[key] = value.map(expr =>
-          replaceEncryptedKeysRecursive(expr, properties, encryptionSecret)
+          replaceEncryptedKeysRecursive(expr, properties, hashSecret)
         );
       }
       continue;
@@ -155,7 +154,7 @@ function replaceEncryptedKeysRecursive(
       (property.type == "encrypted" ||
         (property.type == "array" && property.items && property.items.type == "encrypted"))
     ) {
-      const hashedValue = constructValue(value, v => EncryptedHashIfValid(v, encryptionSecret));
+      const hashedValue = constructValue(value, v => EncryptedHashIfValid(v, hashSecret));
       delete filter[key];
       filter[`${key}.hash`] = hashedValue;
     }
@@ -163,6 +162,6 @@ function replaceEncryptedKeysRecursive(
   return filter;
 }
 
-function EncryptedHashIfValid(val: any, encryptionSecret: string): any {
-  return typeof val === "string" ? hash(val, encryptionSecret) : val;
+function EncryptedHashIfValid(val: any, hashSecret: string): any {
+  return typeof val === "string" ? hash(val, hashSecret) : val;
 }
