@@ -21,9 +21,9 @@ export async function insert(ds: DashboardService, dashboard: Dashboard) {
 
 export async function replace(ds: DashboardService, dashboard: Dashboard) {
   const _id = new ObjectId(dashboard._id);
-  delete dashboard._id;
+  const {_id: _, ...dashboardWithoutId} = dashboard;
 
-  const currentDashboard = await ds.findOneAndReplace({_id}, dashboard, {
+  const currentDashboard = await ds.findOneAndReplace({_id}, dashboardWithoutId, {
     returnDocument: ReturnDocument.AFTER
   });
 
