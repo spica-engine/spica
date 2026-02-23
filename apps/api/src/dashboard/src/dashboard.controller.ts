@@ -59,7 +59,7 @@ export class DashboardController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param("id", OBJECT_ID) id: ObjectId) {
-    return CRUD.remove(this.dashboardService, id).catch(e => {
+    await CRUD.remove(this.dashboardService, id).catch(e => {
       throw new HttpException(e.message, e.status || 500);
     });
   }
