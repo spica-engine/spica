@@ -1,5 +1,4 @@
 import * as crypto from "node:crypto";
-import {BadRequestException} from "@nestjs/common";
 import {BaseEncryptedData, EncryptedData} from "./types";
 import {hash} from "./hash";
 
@@ -18,11 +17,11 @@ export function encrypt(
   hashSecret?: string
 ): EncryptedData<boolean> {
   if (!value) {
-    throw new BadRequestException("Value to encrypt is required.");
+    throw new Error("Value to encrypt is required.");
   }
 
   if (!encryptionSecret) {
-    throw new BadRequestException("Encryption secret is required.");
+    throw new Error("Encryption secret is required.");
   }
   const key = deriveKey(encryptionSecret);
   const iv = crypto.randomBytes(IV_LENGTH);

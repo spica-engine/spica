@@ -1,21 +1,20 @@
 import * as crypto from "node:crypto";
-import {BadRequestException} from "@nestjs/common";
 import {BaseEncryptedData} from "./types";
 
 const ALGORITHM = "aes-256-gcm";
 
 export function decrypt(encryptedData: BaseEncryptedData, secret: string): string {
   if (!encryptedData) {
-    throw new BadRequestException("Encrypted data is required.");
+    throw new Error("Encrypted data is required.");
   }
   if (!secret) {
-    throw new BadRequestException("Decryption secret is required.");
+    throw new Error("Decryption secret is required.");
   }
 
   const {encrypted, iv, authTag} = encryptedData;
 
   if (!encrypted || !iv || !authTag) {
-    throw new BadRequestException("Invalid encrypted data format.");
+    throw new Error("Invalid encrypted data format.");
   }
 
   const key = deriveKey(secret);
@@ -30,8 +29,5 @@ export function decrypt(encryptedData: BaseEncryptedData, secret: string): strin
 }
 
 function deriveKey(secret: string): Buffer {
-  return crypto
-    .createHash("sha256")
-    .update(secret, "utf8")
-    .digest();
+  return crypto.createHash("sha256").update(secret, "utf8").digest();
 }
