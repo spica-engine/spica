@@ -22,7 +22,7 @@ import {
   Headers
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
+import {ARRAY, DEFAULT, JSONP, WILDCARD} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
@@ -272,10 +272,13 @@ export class FunctionController {
    * @param name Name of the dependency to remove
    */
   @UseInterceptors(activity(createFunctionDependencyActivity))
-  @Delete(":id/dependencies/:name(*)")
+  @Delete(":id/dependencies/{*name}")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Param("name") name: string) {
+  async deleteDependency(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("name", WILDCARD) name: string
+  ) {
     const fn = await this.fs.findOne({_id: id});
 
     return CRUD.dependencies.uninstall(this.engine, fn, [name]).catch(error => {

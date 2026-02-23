@@ -1,7 +1,7 @@
 import {Test} from "@nestjs/testing";
 import {BucketCacheModule, BucketCacheService} from "@spica-server/bucket/cache";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {Cache} from "cache-manager";
+import {Cache} from "@nestjs/cache-manager";
 
 describe("Bucket Cache Service", () => {
   let service: BucketCacheService;
@@ -9,7 +9,7 @@ describe("Bucket Cache Service", () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [BucketCacheModule.register({ttl: null}), DatabaseTestingModule.standalone()],
+      imports: [BucketCacheModule.register({}), DatabaseTestingModule.standalone()],
       controllers: [],
       providers: []
     }).compile();
@@ -23,14 +23,13 @@ describe("Bucket Cache Service", () => {
   it("should clear bucket1 caches", async () => {
     await cacheManager.set("/bucket/bucket1/data", [{title: "test1"}]);
     await cacheManager.set("/bucket/bucket2/data", [{title: "test2"}]);
+    service.trackKey("/bucket/bucket1/data");
+    service.trackKey("/bucket/bucket2/data");
 
     await service.invalidate("bucket1");
 
-    const cacheKeys = await cacheManager.store.keys();
-    expect(cacheKeys).toEqual(["/bucket/bucket2/data"]);
-
-    const cacheResponses = await cacheManager.get(cacheKeys[0]);
-    expect(cacheResponses).toEqual([{title: "test2"}]);
+    expect(await cacheManager.get("/bucket/bucket1/data")).toBeNull();
+    expect(await cacheManager.get("/bucket/bucket2/data")).toEqual([{title: "test2"}]);
   });
 
   it("should clear the bucket2 caches when bucket1 caches deleted because of the relation", async () => {
@@ -62,14 +61,15 @@ describe("Bucket Cache Service", () => {
     await cacheManager.set(`/bucket/${bucket1}/data`, [{title: "test1"}]);
     await cacheManager.set(`/bucket/${bucket2}/data`, [{title: "test2"}]);
     await cacheManager.set(`/bucket/${bucket3}/data`, [{title: "test3"}]);
+    service.trackKey(`/bucket/${bucket1}/data`);
+    service.trackKey(`/bucket/${bucket2}/data`);
+    service.trackKey(`/bucket/${bucket3}/data`);
 
     await service.invalidate(bucket1.toHexString());
 
-    const cacheKeys = await cacheManager.store.keys();
-    expect(cacheKeys).toEqual([`/bucket/${bucket3}/data`]);
-
-    const cacheResponses = await cacheManager.get(cacheKeys[0]);
-    expect(cacheResponses).toEqual([{title: "test3"}]);
+    expect(await cacheManager.get(`/bucket/${bucket1}/data`)).toBeNull();
+    expect(await cacheManager.get(`/bucket/${bucket2}/data`)).toBeNull();
+    expect(await cacheManager.get(`/bucket/${bucket3}/data`)).toEqual([{title: "test3"}]);
   });
 
   //@TODO: cron job does not fire the onTick method.
@@ -82,8 +82,8 @@ describe("Bucket Cache Service", () => {
 
     jest.advanceTimersByTime(1000);
 
-    const cacheKeys = await cacheManager.store.keys();
-    expect(cacheKeys).toEqual([]);
+    expect(await cacheManager.get(`/bucket/bucket1/data`)).toBeNull();
+    expect(await cacheManager.get(`/bucket/bucket2/data`)).toBeNull();
 
     jest.useRealTimers();
   });

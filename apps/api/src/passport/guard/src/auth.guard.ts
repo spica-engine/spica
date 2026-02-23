@@ -8,10 +8,27 @@ import {
   Optional
 } from "@nestjs/common";
 import {AuthModuleOptions, Type} from "@nestjs/passport";
-import {defaultOptions} from "@nestjs/passport/dist/options.js";
 import passport from "passport";
-import {memoize} from "@nestjs/passport/dist/utils/memoize.util.js";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
+
+// Inlined from @nestjs/passport internals (not part of public API)
+const defaultOptions = {session: false, property: "user"};
+
+function memoize<T extends (...args: any[]) => any>(
+  fn: T
+): (...args: Parameters<T>) => ReturnType<T> {
+  const cache: Record<string, ReturnType<T>> = {};
+  return (...args: Parameters<T>): ReturnType<T> => {
+    const n = args[0] || "default";
+    if (n in cache) {
+      return cache[n];
+    } else {
+      const result = fn(n === "default" ? undefined : n);
+      cache[n] = result;
+      return result;
+    }
+  };
+}
 
 export function extractStrategyType(request: any): ReqAuthStrategy | undefined {
   const auth = request.headers?.["authorization"];

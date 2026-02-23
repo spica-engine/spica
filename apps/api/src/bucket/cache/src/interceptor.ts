@@ -10,16 +10,24 @@ import {
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {BucketCacheService} from "./service";
-import {CacheInterceptor, CACHE_MANAGER} from "@nestjs/cache-manager";
-import {Cache} from "cache-manager";
+import {CacheInterceptor, CACHE_MANAGER, Cache} from "@nestjs/cache-manager";
 import {Reflector} from "@nestjs/core";
 
 class BucketCacheInterceptor extends CacheInterceptor {
   constructor(
     @Optional() @Inject(CACHE_MANAGER) cacheManager: Cache,
-    @Optional() @Inject() reflector: Reflector
+    @Optional() @Inject() reflector: Reflector,
+    @Optional() private bucketCacheService: BucketCacheService
   ) {
     super(cacheManager, reflector);
+  }
+
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+    const key = this.trackBy(context);
+    if (key && this.bucketCacheService) {
+      this.bucketCacheService.trackKey(key);
+    }
+    return super.intercept(context, next);
   }
 
   trackBy(context: ExecutionContext): string | undefined {

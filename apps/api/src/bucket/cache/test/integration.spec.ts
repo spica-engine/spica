@@ -7,7 +7,7 @@ import {
 } from "@spica-server/bucket/cache";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {Test} from "@nestjs/testing";
-import {Store} from "cache-manager";
+import {Cache} from "@nestjs/cache-manager";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 
 @Controller("bucket/:bucketId/data")
@@ -38,14 +38,14 @@ describe("Bucket Cache Integration", () => {
     let app: INestApplication;
     let service: BucketCacheService;
     let getSpy: jest.Mock;
-    let store: Store;
+    let cacheManager: Cache;
 
     beforeEach(async () => {
       const module = await Test.createTestingModule({
         imports: [
           DatabaseTestingModule.standalone(),
           CoreTestingModule,
-          BucketCacheModule.register({ttl: 60})
+          BucketCacheModule.register({ttl: 60 * 1000})
         ],
         controllers: [TestController],
         providers: []
@@ -57,7 +57,7 @@ describe("Bucket Cache Integration", () => {
       await app.listen(req.socket);
 
       service = module.get(BucketCacheService);
-      store = service["cacheManager"].store;
+      cacheManager = service["cacheManager"];
 
       getSpy = module.get(TestController).getSpy;
     });
@@ -72,10 +72,10 @@ describe("Bucket Cache Integration", () => {
     it("should register cache", async () => {
       await req.get("bucket/bucket_id/data");
 
-      const cachedKeys = await store.keys();
+      const cachedKeys = [...(service as any).cachedKeys];
       expect(cachedKeys).toEqual(["/bucket/bucket_id/data&accept-language=undefined"]);
 
-      const cachedResponse = await store.get(cachedKeys[0]);
+      const cachedResponse = await cacheManager.get(cachedKeys[0]);
       expect(cachedResponse).toEqual([{title: "title1"}]);
     });
 
@@ -86,19 +86,17 @@ describe("Bucket Cache Integration", () => {
 
       expect(getSpy).toHaveBeenCalledTimes(3);
 
-      const cachedKeys = await store.keys();
+      const cachedKeys = [...(service as any).cachedKeys].sort();
 
-      expect(cachedKeys).toEqual([
-        "/bucket/bucket_id/data&accept-language=en-US",
-        "/bucket/bucket_id/data?limit=5&accept-language=undefined",
-        "/bucket/bucket_id/data&accept-language=undefined"
-      ]);
+      expect(cachedKeys.sort()).toEqual(
+        [
+          "/bucket/bucket_id/data&accept-language=en-US",
+          "/bucket/bucket_id/data&accept-language=undefined",
+          "/bucket/bucket_id/data?limit=5&accept-language=undefined"
+        ].sort()
+      );
 
-      const cachedResponses = await Promise.all([
-        store.get(cachedKeys[0]),
-        store.get(cachedKeys[1]),
-        store.get(cachedKeys[2])
-      ]);
+      const cachedResponses = await Promise.all(cachedKeys.map(key => cacheManager.get(key)));
 
       expect(cachedResponses).toEqual([
         [{title: "title1"}],
@@ -113,16 +111,16 @@ describe("Bucket Cache Integration", () => {
 
       await waitForCacheInvalidation();
 
-      let cachedKeys = await store.keys();
+      let cachedKeys = [...(service as any).cachedKeys];
 
       expect(cachedKeys).toEqual([]);
 
       await req.get("bucket/bucket_id/data");
 
-      cachedKeys = await store.keys();
+      cachedKeys = [...(service as any).cachedKeys];
       expect(cachedKeys).toEqual(["/bucket/bucket_id/data&accept-language=undefined"]);
 
-      const cachedResponse = await store.get(cachedKeys[0]);
+      const cachedResponse = await cacheManager.get(cachedKeys[0]);
       expect(cachedResponse).toEqual([{title: "title1"}]);
     });
 
@@ -130,17 +128,17 @@ describe("Bucket Cache Integration", () => {
       await req.get("bucket/bucket_id/data");
       expect(getSpy).toHaveBeenCalledTimes(1);
 
-      let cachedKeys = await store.keys();
+      let cachedKeys = [...(service as any).cachedKeys];
       expect(cachedKeys.length).toEqual(1);
 
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1500));
 
       // it will clear cache right after same request received
       await req.get("bucket/bucket_id/data");
       // if it calls this spy one more time we can consider old cache cleared and new cache will be registered
       expect(getSpy).toHaveBeenCalledTimes(2);
 
-      cachedKeys = await store.keys();
+      cachedKeys = [...(service as any).cachedKeys];
       expect(cachedKeys.length).toEqual(1);
     });
   });

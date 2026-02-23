@@ -844,6 +844,10 @@ NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false
 }).then(async app => {
+  // Express v5 defaults to a simple parser; use 'extended' for nested query objects (qs)
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set("query parser", "extended");
+
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
     Middlewares.Headers({

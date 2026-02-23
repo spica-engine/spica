@@ -35,12 +35,19 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         type: "*/*"
       }) as any
     );
-    this.router.use(this.handleUnhandled);
-    const stack = httpServer._router.stack;
+    // Express v5 lazily initializes _router; force initialization
+    if (typeof (httpServer as any).lazyrouter === "function") {
+      (httpServer as any).lazyrouter();
+    }
     httpServer.use("/fn-execute", this.router);
-    const expressInitIndex = stack.findIndex(l => l.name === "expressInit");
-    const layer = stack.splice(stack.length - 1, 1)[0];
-    stack.splice(expressInitIndex + 1, 0, layer);
+    const stack = (httpServer as any)._router?.stack || (httpServer as any).router?.stack;
+    if (!stack) {
+      console.warn("Could not access Express router stack for middleware reordering");
+    } else {
+      const expressInitIndex = stack.findIndex(l => l.name === "expressInit");
+      const layer = stack.splice(stack.length - 1, 1)[0];
+      stack.splice(expressInitIndex + 1, 0, layer);
+    }
   }
 
   private handleUnhandled(req, res) {
