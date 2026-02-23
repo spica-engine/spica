@@ -59,9 +59,8 @@
     },
     "publish": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build-image"],
       "options": {
-        "command": "docker push spicaengine/api:$VERSION"
+        "command": "docker buildx build --platform linux/amd64,linux/arm64 -f ./apps/api/Dockerfile -t spicaengine/api:$VERSION --push ."
       }
     }
   }
