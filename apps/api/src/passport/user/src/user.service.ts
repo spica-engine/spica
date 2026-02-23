@@ -311,24 +311,14 @@ export class UserService extends BaseCollection<User>("user") {
   }
 
   encryptField(value: string) {
-    if (!value) {
-      throw new BadRequestException("Value to encrypt is required.");
-    }
-
     return encrypt(value, this.getProviderEncryptionSecret(), this.getProviderHashSecret());
   }
 
   decryptField(encryptedField: {encrypted: string; iv: string; authTag: string}): string {
-    if (!encryptedField) {
-      throw new BadRequestException("No encrypted data provided.");
-    }
-
     return decrypt(encryptedField, this.getProviderEncryptionSecret());
   }
 
   decryptProviderFields(user: User): DecryptedUser {
-    if (!user) return user as any;
-
     const decryptedUser: any = {...user};
 
     if (user.email) {
@@ -368,7 +358,7 @@ export class UserService extends BaseCollection<User>("user") {
     }
     return this.userOptions.providerHashSecret;
   }
-  
+
   async handlePasswordUpdate(
     id: ObjectId,
     newPassword: string,
