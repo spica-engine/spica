@@ -36,7 +36,7 @@ import {
 } from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport/guard";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
 import {
@@ -103,11 +103,10 @@ export class BucketDataController {
    */
   @Get()
   @UseInterceptors(registerCache())
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", undefined, authIdToString))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", "bucket/:bucketId/data", authIdToString))
   async find(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @ResourceFilter() resourceFilter: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
@@ -133,7 +132,6 @@ export class BucketDataController {
     return findDocuments(
       schema,
       {
-        resourceFilter,
         relationPaths,
         language: acceptedLanguage,
         filter,
@@ -209,7 +207,7 @@ export class BucketDataController {
    */
   @Get(":documentId")
   @UseInterceptors(registerCache())
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show", undefined, authIdToString))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show", "bucket/:bucketId/data", authIdToString))
   async findOne(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Headers("accept-language") acceptedLanguage: string,
@@ -352,7 +350,7 @@ export class BucketDataController {
    */
   @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Put(":documentId")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update", "bucket/:bucketId/data"))
   async replace(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
@@ -428,7 +426,7 @@ export class BucketDataController {
    */
   @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Patch(":documentId")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update", "bucket/:bucketId/data"))
   async patch(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
@@ -503,7 +501,7 @@ export class BucketDataController {
   @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Delete(":documentId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete", "bucket/:bucketId/data"))
   async deleteOne(
     @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,

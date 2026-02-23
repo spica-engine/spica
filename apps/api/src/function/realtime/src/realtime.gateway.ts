@@ -1,7 +1,7 @@
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport/guard/services";
-import {getConnectionHandlers} from "@spica-server/realtime";
+import {getConnectionHandlers, RealtimeOptionsBuilder} from "@spica-server/realtime";
 import {ChunkKind} from "@spica-server/interface/realtime";
 
 @WebSocketGateway({
@@ -10,10 +10,7 @@ import {ChunkKind} from "@spica-server/interface/realtime";
 export class RealtimeFunctionService implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "function";
 
-  constructor(
-    private realtime: RealtimeDatabaseService,
-    private guardService: GuardService
-  ) {}
+  constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
 
   private handlers = getConnectionHandlers(
     this.guardService,
@@ -35,18 +32,7 @@ export class RealtimeFunctionService implements OnGatewayConnection, OnGatewayDi
     return this.handlers.handleDisconnect(client, client.upgradeReq);
   }
 
-  async prepareOptions(client, req) {
-    const options: any = {};
-
-    if (req.query.has("filter")) {
-      try {
-        options.filter = JSON.parse(req.query.get("filter"));
-      } catch (e) {
-        client.send(JSON.stringify({code: 400, message: "Invalid filter JSON: " + e.message}));
-        return client.close(1003);
-      }
-    }
-
-    return options;
+  async prepareOptions(_client, req) {
+    return RealtimeOptionsBuilder.fromQuery(req, {useFilter: true});
   }
 }

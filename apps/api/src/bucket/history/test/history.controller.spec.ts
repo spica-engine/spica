@@ -6,6 +6,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {POLICY_RESOLVER} from "@spica-server/interface/passport/guard";
 
 describe("History Acceptance", () => {
   let app: INestApplication;
@@ -242,5 +243,229 @@ describe("History Acceptance", () => {
     expect(histories).toEqual([
       {_id: thirdHistoryId.toHexString(), date: new Date(2018, 5, 12).toISOString(), changes: 0}
     ]);
+  });
+});
+
+describe("History Authorization", () => {
+  class MockPolicyResolverModule {}
+  let app: INestApplication;
+  let req: Request;
+  let module: TestingModule;
+  let policyResolver: (...args: any[]) => Promise<any[]>;
+  let db: DatabaseService;
+
+  const bucketId = new ObjectId();
+  const documentId = new ObjectId();
+
+  const firstHistoryId = new ObjectId(
+    Math.floor(new Date(2018, 5, 10).getTime() / 1000).toString(16) + "0000000000000000"
+  );
+  const secondHistoryId = new ObjectId(
+    Math.floor(new Date(2018, 5, 11).getTime() / 1000).toString(16) + "0000000000000000"
+  );
+
+  function policyResolverFor(...actions: string[]) {
+    return () =>
+      Promise.resolve([
+        {
+          name: "TestPolicy",
+          statement: actions.map(action => ({
+            action,
+            module: "bucket:data",
+            resource: {include: ["*"], exclude: []}
+          }))
+        }
+      ]);
+  }
+
+  beforeEach(async () => {
+    policyResolver = () => Promise.resolve([]);
+
+    module = await Test.createTestingModule({
+      imports: [
+        CoreTestingModule,
+        PassportTestingModule.initialize({skipActionCheck: false}),
+        DatabaseTestingModule.create(),
+        PreferenceTestingModule,
+        ServicesModule.initialize(undefined),
+        HistoryModule.register(),
+        {
+          module: MockPolicyResolverModule,
+          global: true,
+          providers: [
+            {
+              provide: POLICY_RESOLVER,
+              useValue: (...args: any[]) => policyResolver(...args)
+            }
+          ],
+          exports: [POLICY_RESOLVER]
+        }
+      ]
+    }).compile();
+    app = module.createNestApplication();
+    req = module.get(Request);
+    db = app.get(DatabaseService);
+    await app.listen(req.socket);
+  }, 120000);
+
+  afterEach(async () => {
+    await Promise.all([
+      db.collection("buckets").deleteMany({}),
+      db.collection(`bucket_${bucketId}`).deleteMany({}),
+      db.collection("history").deleteMany({})
+    ]);
+    await app.close();
+  });
+
+  describe("without policies", () => {
+    it("should reject listing histories without bucket:data:index permission", async () => {
+      const response = await req.get(`/bucket/${bucketId}/history/${documentId}`, {});
+      expect(response.statusCode).toEqual(403);
+    });
+
+    it("should reject reverting history without bucket:data:index permission", async () => {
+      const response = await req.get(
+        `/bucket/${bucketId}/history/${documentId}/${firstHistoryId}`,
+        {}
+      );
+      expect(response.statusCode).toEqual(403);
+    });
+
+    it("should reject clearing histories without bucket:data:delete permission", async () => {
+      const response = await req.delete(`/bucket/${bucketId}/history`);
+      expect(response.statusCode).toEqual(403);
+    });
+  });
+
+  describe("with bucket:data:index policy", () => {
+    beforeEach(async () => {
+      policyResolver = policyResolverFor("bucket:data:index");
+
+      db.collection("buckets").insertOne({
+        _id: bucketId,
+        title: "Test Bucket",
+        description: "A test bucket",
+        icon: "view_stream",
+        primary: "title",
+        readOnly: false,
+        properties: {
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row",
+            options: {position: "left"}
+          },
+          description: {
+            type: "string",
+            title: "description",
+            description: "Description of the row",
+            options: {position: "right"}
+          }
+        },
+        history: true
+      });
+
+      await db.collection(`bucket_${bucketId}`).insertOne({
+        _id: documentId,
+        title: "last updated title",
+        description: "last updated description"
+      });
+
+      await db.collection("history").insertMany([
+        {
+          _id: firstHistoryId,
+          bucket_id: bucketId,
+          document_id: documentId,
+          changes: [
+            {
+              kind: 1,
+              path: ["title"],
+              patches: [
+                {
+                  diffs: [
+                    [-1, "updated"],
+                    [1, "initial"],
+                    [0, " tit"]
+                  ],
+                  start1: 0,
+                  start2: 0,
+                  length1: 11,
+                  length2: 11
+                }
+              ]
+            }
+          ]
+        },
+        {
+          _id: secondHistoryId,
+          bucket_id: bucketId,
+          document_id: documentId,
+          changes: [
+            {
+              kind: 1,
+              path: ["title"],
+              patches: [
+                {
+                  diffs: [
+                    [-1, "last "],
+                    [0, "upda"]
+                  ],
+                  start1: 0,
+                  start2: 0,
+                  length1: 9,
+                  length2: 4
+                }
+              ]
+            }
+          ]
+        }
+      ]);
+    });
+
+    it("should allow listing histories with bucket:data:index permission", async () => {
+      const response = await req.get(`/bucket/${bucketId}/history/${documentId}`, {});
+      expect(response.statusCode).toEqual(200);
+      expect(response.body).toEqual([
+        {_id: secondHistoryId.toHexString(), date: new Date(2018, 5, 11).toISOString(), changes: 1},
+        {_id: firstHistoryId.toHexString(), date: new Date(2018, 5, 10).toISOString(), changes: 1}
+      ]);
+    });
+
+    it("should allow reverting history with bucket:data:index permission", async () => {
+      const response = await req.get(
+        `/bucket/${bucketId}/history/${documentId}/${secondHistoryId}`,
+        {}
+      );
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.title).toEqual("updated title");
+    });
+
+    it("should reject clearing histories without bucket:data:delete permission", async () => {
+      const response = await req.delete(`/bucket/${bucketId}/history`);
+      expect(response.statusCode).toEqual(403);
+    });
+  });
+
+  describe("with bucket:data:delete policy", () => {
+    beforeEach(async () => {
+      policyResolver = policyResolverFor("bucket:data:delete");
+
+      await db.collection("history").insertOne({
+        _id: firstHistoryId,
+        bucket_id: bucketId,
+        document_id: documentId,
+        changes: []
+      });
+    });
+
+    it("should allow clearing histories with bucket:data:delete permission", async () => {
+      const response = await req.delete(`/bucket/${bucketId}/history`);
+      expect(response.statusCode).toEqual(204);
+    });
+
+    it("should reject listing histories without bucket:data:index permission", async () => {
+      const response = await req.get(`/bucket/${bucketId}/history/${documentId}`, {});
+      expect(response.statusCode).toEqual(403);
+    });
   });
 });
