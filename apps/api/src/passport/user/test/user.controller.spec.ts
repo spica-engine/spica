@@ -307,6 +307,22 @@ describe("User Controller CRUD Operations", () => {
       expect(res.body.username).toBe("finduser");
     });
 
+    it("should reject USER token to find another user by ID", async () => {
+      const user2Id = await req
+        .post(
+          "/passport/user",
+          {username: "another", password: "test123"},
+          {Authorization: `IDENTITY ${adminToken}`}
+        )
+        .then(r => r.body._id);
+
+      const res = await req.get(`/passport/user/${user2Id}`, undefined, {
+        Authorization: `USER ${userToken}`
+      });
+
+      expect(res.statusCode).toBe(401);
+    });
+
     it("should reject finding user without authorization", async () => {
       const res = await req.get(`/passport/user/${userId}`);
 
