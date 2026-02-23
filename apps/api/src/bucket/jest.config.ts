@@ -11,13 +11,7 @@ export default {
   projects: [
     {
       ...commonConfig,
-      modulePathIgnorePatterns: ["<rootDir>/test/bucket-data/profile.controller.spec.ts"],
       testMatch: ["<rootDir>/test/**/*.spec.ts"]
-    },
-    {
-      ...commonConfig,
-      testMatch: ["<rootDir>/test/bucket-data/profile.controller.spec.ts"],
-      setupFilesAfterEnv: [path.join(workspaceRoot, "jest.flaky.setup.js")]
     }
   ]
 };

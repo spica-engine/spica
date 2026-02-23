@@ -85,9 +85,8 @@
     },
     "publish": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build-image"],
       "options": {
-        "command": "docker push spicaengine/migrate:$VERSION"
+        "command": "docker buildx build --platform linux/amd64,linux/arm64 -f ./apps/migrate/Dockerfile -t spicaengine/migrate:$VERSION --push ."
       }
     }
   }
