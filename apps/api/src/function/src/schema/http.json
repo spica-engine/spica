@@ -21,7 +21,41 @@
       "title": "Preflight (CORS)",
       "type": "boolean",
       "default": true
+    },
+    "authenticate": {
+      "title": "Authentication Strategies",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["IDENTITY", "APIKEY", "USER"]
+      },
+      "default": [],
+      "uniqueItems": true
+    },
+    "authorize": {
+      "title": "Authorization",
+      "type": "boolean",
+      "default": false
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "authorize": {"const": true}
+        },
+        "required": ["authorize"]
+      },
+      "then": {
+        "required": ["authenticate"],
+        "properties": {
+          "authenticate": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }
