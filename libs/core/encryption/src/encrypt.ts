@@ -18,11 +18,11 @@ export function encrypt(
   hashSecret?: string
 ): EncryptedData<boolean> {
   if (!value) {
-    throw new BadRequestException("Value to encrypt must not be empty.");
+    throw new BadRequestException("Value to encrypt is required.");
   }
 
   if (!encryptionSecret) {
-    throw new BadRequestException("Encryption secret must not be empty.");
+    throw new BadRequestException("Encryption secret is required.");
   }
   const key = deriveKey(encryptionSecret);
   const iv = crypto.randomBytes(IV_LENGTH);
@@ -47,8 +47,5 @@ export function encrypt(
 }
 
 function deriveKey(secret: string): Buffer {
-  return crypto
-    .createHash("sha256")
-    .update(secret, "utf8")
-    .digest();
+  return crypto.createHash("sha256").update(secret, "utf8").digest();
 }
