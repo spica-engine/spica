@@ -23,6 +23,7 @@ import {
   PaginatedStorageResponse
 } from "@spica-server/interface/storage";
 import {Strategy} from "./strategy/strategy";
+import {TransactionExecutor} from "@spica-server/transaction";
 
 import fs from "fs";
 
@@ -100,20 +101,23 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     skip: number = 0,
     sort?: any
   ): Promise<StorageResponse[]> {
-    const convertedResourceFilter = StoragePipelineBuilder.createResourceFilter(
-      resourceFilter as {include?: string[]; exclude?: string[]}
-    );
+    const convertedResourceFilter = StoragePipelineBuilder.createResourceFilter(resourceFilter as {
+      include?: string[];
+      exclude?: string[];
+    });
 
     const pathFilter = StoragePipelineBuilder.createPathFilter(path);
 
-    const pipelineBuilder = (
-      await new PipelineBuilder()
-        .filterResources(convertedResourceFilter)
-        .attachToPipeline(true, {$match: pathFilter})
-        .filterByUserRequest(filter)
-    ).result();
+    const pipelineBuilder = (await new PipelineBuilder()
+      .filterResources(convertedResourceFilter)
+      .attachToPipeline(true, {$match: pathFilter})
+      .filterByUserRequest(filter)).result();
 
-    const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
+    const seeking = new PipelineBuilder()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .result();
 
     return this._coll
       .aggregate<StorageResponse>([...pipelineBuilder, ...seeking])
@@ -141,11 +145,17 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);
 
-    const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
+    const seeking = new PipelineBuilder()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .result();
 
-    const pipeline = (
-      await pipelineBuilder.paginate(paginate, seeking, this.estimatedDocumentCount())
-    ).result();
+    const pipeline = (await pipelineBuilder.paginate(
+      paginate,
+      seeking,
+      this.estimatedDocumentCount()
+    )).result();
 
     if (paginate) {
       return this._coll
@@ -192,33 +202,43 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       throw new NotFoundException(`Storage object could not be found`);
     }
 
-    await this.service.delete(result.name);
+    // rollback will cost much, in fact api could crash, best-effort deletion is enough, so we do not use transaction here
+    try {
+      await this.service.delete(result.name);
+      const folderName = result.name;
 
-    const folderName = result.name;
+      const escapedName = this.escapeRegex(folderName);
 
-    const escapedName = this.escapeRegex(folderName);
-
-    await this._coll.deleteMany({
-      name: {$regex: new RegExp(`^${escapedName}`)}
-    });
+      await this._coll.deleteMany({
+        name: {$regex: new RegExp(`^${escapedName}`)}
+      });
+    } catch (error) {
+      console.error(`Failed to delete storage object ${result.name} from storage:`, error);
+    }
   }
+
   async deleteManyByIds(ids: ObjectId[]): Promise<void> {
     const objects = await this._coll.find({_id: {$in: ids}}).toArray();
     if (objects.length === 0) {
       return;
     }
 
-    const deletePromises = objects.map(object => this.service.delete(object.name));
-    await Promise.all(deletePromises);
+    // rollback will cost much, in fact api could crash, best-effort deletion is enough, so we do not use transaction here
+    try {
+      const deletePromises = objects.map(object => this.service.delete(object.name));
+      await Promise.all(deletePromises);
 
-    const folderDeletionPromises = objects.map(async object => {
-      const escapedName = this.escapeRegex(object.name);
-      await this._coll.deleteMany({
-        name: {$regex: new RegExp(`^${escapedName}`)}
+      const folderDeletionPromises = objects.map(async object => {
+        const escapedName = this.escapeRegex(object.name);
+        await this._coll.deleteMany({
+          name: {$regex: new RegExp(`^${escapedName}`)}
+        });
       });
-    });
 
-    await Promise.all(folderDeletionPromises);
+      await Promise.all(folderDeletionPromises);
+    } catch (error) {
+      console.error(`Failed to delete storage objects from storage:`, error);
+    }
   }
 
   async updateMeta(_id: ObjectId, name: string) {
@@ -230,33 +250,62 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     const oldName = existing.name;
 
     if (oldName !== name) {
-      await this.service.rename(oldName, name);
+      const tx = new TransactionExecutor();
 
-      const escapedOld = this.escapeRegex(oldName);
-      await this._coll.updateMany(
-        {
-          $or: [{name: oldName}, {name: {$regex: new RegExp(`^${escapedOld}`)}}]
+      tx.add({
+        execute: async () => {
+          await this.service.rename(oldName, name);
         },
-        [
+        rollback: async () => {
+          await this.service.rename(name, oldName);
+        }
+      });
+
+      const getUpdateFilterForRename = name => {
+        const escapedName = this.escapeRegex(name);
+        return {
+          $or: [{name: name}, {name: {$regex: new RegExp(`^${escapedName}`)}}]
+        };
+      };
+
+      const getUpdatePipelineForRename = (oldName, newName) => {
+        return [
           {
             $set: {
               name: {
                 $cond: [
                   {$eq: ["$name", oldName]},
-                  name,
+                  newName,
                   {
                     $replaceOne: {
                       input: "$name",
                       find: oldName,
-                      replacement: name
+                      replacement: newName
                     }
                   }
                 ]
               }
             }
           }
-        ]
-      );
+        ];
+      };
+
+      tx.add({
+        execute: async () => {
+          await this._coll.updateMany(
+            getUpdateFilterForRename(oldName),
+            getUpdatePipelineForRename(oldName, name)
+          );
+        },
+        rollback: async () => {
+          await this._coll.updateMany(
+            getUpdateFilterForRename(name),
+            getUpdatePipelineForRename(name, oldName)
+          );
+        }
+      });
+
+      await tx.execute();
     }
     existing.name = name;
     return existing;
@@ -276,20 +325,25 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     const oldName = existing.name;
     const newName = object.name;
 
-    if (object.content.data) {
-      if (oldName !== newName) {
-        this.service.delete(oldName);
+    try {
+      if (object.content.data) {
+        if (oldName !== newName) {
+          // rollback will cost much, in fact api could crash, best-effort deletion is enough, so we do not use transaction here
+          this.service.delete(oldName);
+        }
+        await this.write(newName, object.content.data, object.content.type);
       }
-      await this.write(newName, object.content.data, object.content.type);
+
+      delete object.content.data;
+      delete object._id;
+      object.updated_at = new Date();
+
+      return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
+        return {...object, _id: _id};
+      });
+    } catch (error) {
+      console.error(`Failed to update storage object ${existing.name} in storage:`, error);
     }
-
-    delete object.content.data;
-    delete object._id;
-    object.updated_at = new Date();
-
-    return this._coll.findOneAndUpdate({_id}, {$set: object}).then(() => {
-      return {...object, _id: _id};
-    });
   }
 
   async insert(objects: StorageObject<fs.ReadStream | Buffer>[]): Promise<StorageObjectMeta[]> {
@@ -306,35 +360,48 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
     let insertedObjects: StorageObjectMeta[];
 
-    try {
-      insertedObjects = await this._coll
-        .insertMany(schemas)
-        .then(result => schemas.map((s, i) => ({...s, _id: result.insertedIds[i]})));
-    } catch (exception) {
-      throw new BadRequestException(
-        exception.code === 11000 ? "An object with this name already exists." : exception.message
-      );
-    }
+    const tx = new TransactionExecutor();
 
-    for (const [i, object] of insertedObjects.entries()) {
-      try {
-        await this.write(object.name, datas[i], object.content.type);
-      } catch (error) {
-        const idsToDelete = insertedObjects.map(o => o._id);
-        await this._coll.deleteMany({_id: {$in: idsToDelete}});
-        const namesToDelete = insertedObjects.map(o => o.name);
-
-        const deletePromises = [];
-        namesToDelete.slice(0, i).forEach(name => {
-          deletePromises.push(this.service.delete(name));
-        });
-        await Promise.all(deletePromises);
-
-        throw new Error(
-          `Error: Failed to write object ${object.name} to storage. Reason: ${error}`
-        );
+    tx.add({
+      execute: async () => {
+        try {
+          insertedObjects = await this._coll
+            .insertMany(schemas)
+            .then(result => schemas.map((s, i) => ({...s, _id: result.insertedIds[i]})));
+        } catch (exception) {
+          throw new BadRequestException(
+            exception.code === 11000
+              ? "An object with this name already exists."
+              : exception.message
+          );
+        }
+      },
+      rollback: async () => {
+        if (insertedObjects) {
+          const idsToDelete = insertedObjects.map(o => o._id);
+          await this._coll.deleteMany({_id: {$in: idsToDelete}});
+        }
       }
+    });
+
+    for (let i = 0; i < objects.length; i++) {
+      tx.add({
+        execute: async () => {
+          try {
+            await this.write(insertedObjects[i].name, datas[i], insertedObjects[i].content.type);
+          } catch (error) {
+            throw new Error(
+              `Error: Failed to write object ${insertedObjects[i].name} to storage. Reason: ${error}`
+            );
+          }
+        },
+        rollback: async () => {
+          await this.service.delete(insertedObjects[i].name);
+        }
+      });
     }
+
+    await tx.execute();
 
     return insertedObjects;
   }

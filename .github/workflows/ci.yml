@@ -147,7 +147,7 @@ jobs:
         run: |
           docker run -d --rm --name mongodb \
             -p 27017:27017 \
-            mongo:7.0.14 \
+            mongo:8.0.4 \
             --replSet testset --bind_ip_all
 
           echo "Waiting for MongoDB to start..."
