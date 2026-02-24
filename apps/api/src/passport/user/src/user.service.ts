@@ -237,6 +237,7 @@ export class UserService extends BaseCollection<User>("user") {
   }
 
   isUserBlocked(user: User) {
+    user.failedAttempts = user.failedAttempts || [];
     const lastFailedAttempts = user.failedAttempts.filter(attempt => attempt > user.lastLogin);
 
     const isAttemptLimitReached =
