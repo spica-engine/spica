@@ -255,4 +255,65 @@ describe("Password Policy - Identity", () => {
       expect(res.statusCode).toEqual(201);
     });
   });
+
+  describe("when password policy config is updated at runtime", () => {
+    beforeAll(async () => {
+      await database.collection("config").deleteMany({module: "passport"});
+      await database.collection("config").insertOne({
+        module: "passport",
+        options: {
+          identity: {
+            password: {
+              minLength: 3
+            }
+          }
+        }
+      });
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    });
+
+    afterAll(async () => {
+      await database.collection("config").deleteMany({module: "passport"});
+      await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    });
+
+    it("should start validating passwords with the new policy without restart", async () => {
+      // Under the initial policy (minLength: 3), this should succeed.
+      const initialRes = await req.post(
+        "/passport/identity",
+        {identifier: "runtime_initial", password: "abc"},
+        {Authorization: `IDENTITY ${adminToken}`}
+      );
+      expect(initialRes.statusCode).toEqual(201);
+
+      // Update the password policy to a stricter minLength while the app is running.
+      await database.collection("config").updateOne(
+        {module: "passport"},
+        {
+          $set: {
+            "options.identity.password.minLength": 6
+          }
+        },
+        {upsert: true}
+      );
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // This password met the old policy but should now be rejected by the new one.
+      const resShort = await req.post(
+        "/passport/identity",
+        {identifier: "runtime_short", password: "abc"},
+        {Authorization: `IDENTITY ${adminToken}`}
+      );
+      expect(resShort.statusCode).toEqual(400);
+
+      // A password that meets the new policy should be accepted.
+      const resOk = await req.post(
+        "/passport/identity",
+        {identifier: "runtime_ok", password: "abcdef"},
+        {Authorization: `IDENTITY ${adminToken}`}
+      );
+      expect(resOk.statusCode).toEqual(201);
+    });
+  });
 });
