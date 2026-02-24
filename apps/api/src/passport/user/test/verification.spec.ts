@@ -14,6 +14,7 @@ import {_, SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {UserModule, UserService} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
+import {ConfigModule} from "@spica-server/config";
 
 describe("VerificationService", () => {
   let module: TestingModule;
@@ -64,6 +65,7 @@ describe("VerificationService", () => {
           }
         }),
         PolicyModule.forRoot({realtime: false}),
+        ConfigModule.forRoot(),
         UserModule.forRoot({
           expiresIn: 3600,
           issuer: "test",

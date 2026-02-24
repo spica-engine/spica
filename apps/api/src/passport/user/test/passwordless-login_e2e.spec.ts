@@ -14,6 +14,7 @@ import {UserModule} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
 import fetch from "node-fetch";
 import {GenericContainer} from "testcontainers";
+import {ConfigModule} from "@spica-server/config";
 
 describe("Passwordless Login E2E with MailHog", () => {
   let module: TestingModule;
@@ -78,6 +79,7 @@ describe("Passwordless Login E2E with MailHog", () => {
           }
         }),
         PolicyModule.forRoot({realtime: false}),
+        ConfigModule.forRoot(),
         UserModule.forRoot({
           expiresIn: 3600,
           issuer: "test",

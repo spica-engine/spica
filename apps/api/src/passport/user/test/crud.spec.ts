@@ -8,6 +8,7 @@ import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {UserService} from "../src/user.service";
 import {ObjectId} from "@spica-server/database";
+import {ConfigModule} from "@spica-server/config";
 
 describe("User Email Hashing and Encryption", () => {
   let module: TestingModule;
@@ -26,6 +27,7 @@ describe("User Email Hashing and Encryption", () => {
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         CoreTestingModule,
+        ConfigModule.forRoot(),
         PassportModule.forRoot({
           publicUrl: "http://localhost:3000",
           samlCertificateTTL: 604800,
