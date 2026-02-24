@@ -89,5 +89,115 @@ describe("@spica-devkit/auth", () => {
         }
       );
     });
+
+    it("should add email", () => {
+      Auth.addEmail("user_id", "test@test.com", "Otp");
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/user_id/start-provider-verification",
+        {value: "test@test.com", provider: "email", strategy: "Otp", purpose: "verification"},
+        {headers: undefined}
+      );
+    });
+
+    it("should add email with headers", () => {
+      Auth.addEmail("user_id", "test@test.com", "Otp", {Accept: "application/json"});
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/user_id/start-provider-verification",
+        {value: "test@test.com", provider: "email", strategy: "Otp", purpose: "verification"},
+        {headers: {Accept: "application/json"}}
+      );
+    });
+
+    it("should verify email", () => {
+      Auth.verifyEmail("user_id", "123456", "Otp");
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/user_id/verify-provider",
+        {code: "123456", provider: "email", strategy: "Otp", purpose: "verification"},
+        {headers: undefined}
+      );
+    });
+
+    it("should add phone number", () => {
+      Auth.addPhoneNumber("user_id", "+1234567890", "Otp");
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/user_id/start-provider-verification",
+        {value: "+1234567890", provider: "phone", strategy: "Otp", purpose: "verification"},
+        {headers: undefined}
+      );
+    });
+
+    it("should verify phone number", () => {
+      Auth.verifyPhoneNumber("user_id", "123456", "Otp");
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/user_id/verify-provider",
+        {code: "123456", provider: "phone", strategy: "Otp", purpose: "verification"},
+        {headers: undefined}
+      );
+    });
+
+    it("should request password reset", () => {
+      Auth.requestPasswordReset("testuser", "email");
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/forgot-password/start",
+        {username: "testuser", provider: "email"},
+        {headers: undefined}
+      );
+    });
+
+    it("should complete password reset", () => {
+      Auth.completePasswordReset("testuser", "123456", "newpass", "email");
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/forgot-password/verify",
+        {username: "testuser", code: "123456", newPassword: "newpass", provider: "email"},
+        {headers: undefined}
+      );
+    });
+
+    it("should start passwordless login", () => {
+      Auth.passwordlessLogin("testuser", "email");
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/passwordless-login/start",
+        {username: "testuser", provider: "email"},
+        {headers: undefined}
+      );
+    });
+
+    it("should complete passwordless login", () => {
+      Auth.completePasswordlessLogin("testuser", "123456", "email");
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/passwordless-login/verify",
+        {username: "testuser", code: "123456", provider: "email"},
+        {headers: undefined}
+      );
+    });
+
+    it("should complete passwordless login with headers", () => {
+      Auth.completePasswordlessLogin("testuser", "123456", "phone", {Accept: "application/json"});
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "passport/user/passwordless-login/verify",
+        {username: "testuser", code: "123456", provider: "phone"},
+        {headers: {Accept: "application/json"}}
+      );
+    });
   });
 });
