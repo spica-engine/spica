@@ -4,10 +4,9 @@ import {
   UserVerification,
   UserOptions,
   USER_OPTIONS,
-  EncryptedData,
   VerificationMessage
 } from "@spica-server/interface/passport/user";
-import {hash, encrypt, decrypt} from "@spica-server/core/schema";
+import {hash, encrypt, decrypt, BaseEncryptedData} from "@spica-server/core/encryption";
 import {randomInt} from "crypto";
 import {VerificationProviderRegistry} from "./providers";
 import {UserConfigService} from "./config.service";
@@ -303,7 +302,7 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
   private decryptMagicLinkToken(token: string): MagicLinkPayload {
     const secret = this.getEncryptionSecret();
 
-    let encryptedData: EncryptedData;
+    let encryptedData: BaseEncryptedData;
     try {
       const decoded = Buffer.from(token, "base64url").toString("utf-8");
       encryptedData = JSON.parse(decoded);

@@ -8,7 +8,8 @@ export {
   CodeKeywordDefinition,
   KeywordCxt
 } from "./src/validator";
-export {hash} from "./src/hash";
-export {encrypt, decrypt} from "./src/encrypt";
-export type {EncryptedData} from "./src/encrypt";
+/** @deprecated Import from @spica-server/core/encryption instead */
+export {hash, encrypt, decrypt, isEncryptedData} from "@spica-server/core/encryption";
+/** @deprecated Import from @spica-server/core/encryption instead */
+export type {EncryptedData, BaseEncryptedData} from "@spica-server/core/encryption";
 export {createEncryptedFormat} from "./src/formats";

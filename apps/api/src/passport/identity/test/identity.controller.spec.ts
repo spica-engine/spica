@@ -12,6 +12,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {PolicyModule} from "@spica-server/passport/policy";
+import {ConfigModule} from "@spica-server/config";
 
 describe("Identity Controller", () => {
   let module: TestingModule;
@@ -25,7 +26,7 @@ describe("Identity Controller", () => {
         SchemaModule.forRoot({
           formats: [OBJECT_ID]
         }),
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize(),
         PreferenceTestingModule,
         CoreTestingModule,
@@ -41,6 +42,7 @@ describe("Identity Controller", () => {
           },
           identityRealtime: false
         }),
+        ConfigModule.forRoot(),
         PolicyModule.forRoot({realtime: false})
       ]
     }).compile();

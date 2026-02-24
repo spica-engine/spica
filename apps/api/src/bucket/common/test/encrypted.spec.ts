@@ -39,7 +39,7 @@ describe("Encrypted Field", () => {
             OBJECTID_STRING,
             DATE_TIME,
             createHashFormat(HASH_SECRET),
-            createEncryptedFormat(ENCRYPTION_SECRET)
+            createEncryptedFormat(ENCRYPTION_SECRET, HASH_SECRET)
           ],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
