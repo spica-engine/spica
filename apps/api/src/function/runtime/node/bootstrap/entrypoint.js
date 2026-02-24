@@ -215,11 +215,25 @@ async function _process(ev, queue) {
 
       const agentToolMessage = await agentToolQueue.pop(agentToolPop);
 
+      let parsedArguments = {};
+      if (agentToolMessage.arguments?.length) {
+        try {
+          parsedArguments = JSON.parse(
+            Buffer.from(agentToolMessage.arguments).toString("utf-8")
+          );
+        } catch (e) {
+          const respondMessage = new AgentTool.Message({id: ev.id});
+          const errText =
+            e && typeof e === "object" && e.message ? e.message : "Invalid agent tool arguments payload";
+          respondMessage.error = new TextEncoder().encode(errText);
+          await agentToolQueue.respond(respondMessage);
+          return;
+        }
+      }
+
       callArguments[0] = {
         name: agentToolMessage.tool_name,
-        arguments: agentToolMessage.arguments?.length
-          ? JSON.parse(Buffer.from(agentToolMessage.arguments).toString("utf-8"))
-          : {}
+        arguments: parsedArguments
       };
 
       callback = async result => {
