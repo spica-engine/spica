@@ -703,7 +703,7 @@ const modules = [
       DATE_TIME,
       OBJECTID_STRING,
       createHashFormat(args["bucket-data-hash-secret"]),
-      createEncryptedFormat(args["bucket-data-encryption-secret"])
+      createEncryptedFormat(args["bucket-data-encryption-secret"], args["bucket-data-hash-secret"])
     ],
     defaults: [CREATED_AT, UPDATED_AT]
   }),

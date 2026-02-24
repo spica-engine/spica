@@ -186,8 +186,8 @@ describe("Provider Verification E2E with MailHog", () => {
         item.Raw && item.Raw.Data
           ? item.Raw.Data
           : item.Content && item.Content.Body
-            ? item.Content.Body
-            : "";
+          ? item.Content.Body
+          : "";
 
       const codeMatch = raw.match(/is: (\d{6})/);
       expect(codeMatch).toBeTruthy();
@@ -225,10 +225,8 @@ describe("Provider Verification E2E with MailHog", () => {
 
       const userResponse = await req.get(`/passport/user/${testUserId}`);
 
-      expect(userResponse.body.email).toEqual({
-        value: email,
-        createdAt: userResponse.body.email.createdAt
-      });
+      expect(userResponse.body.email).toBe(email);
+      expect(userResponse.body.email_verified_at).toBeDefined();
     });
 
     it("should fail verification when user enters wrong code", async () => {
@@ -420,8 +418,8 @@ describe("Provider Verification E2E with MailHog", () => {
         item.Raw && item.Raw.Data
           ? item.Raw.Data
           : item.Content && item.Content.Body
-            ? item.Content.Body
-            : "";
+          ? item.Content.Body
+          : "";
 
       const cleanedRaw = raw.replace(/=\r?\n/g, "").replace(/=3D/g, "=");
       const tokenMatch = cleanedRaw.match(/token=([A-Za-z0-9_-]+)/);
@@ -455,10 +453,8 @@ describe("Provider Verification E2E with MailHog", () => {
       expect(updatedVerification.is_used).toBe(true);
 
       const userResponse = await req.get(`/passport/user/${testUserId}`);
-      expect(userResponse.body.email).toEqual({
-        value: email,
-        createdAt: userResponse.body.email.createdAt
-      });
+      expect(userResponse.body.email).toBe(email);
+      expect(userResponse.body.email_verified_at).toBeDefined();
     });
 
     it("should fail magic link verification with tampered token", async () => {
@@ -500,8 +496,8 @@ describe("Provider Verification E2E with MailHog", () => {
         item.Raw && item.Raw.Data
           ? item.Raw.Data
           : item.Content && item.Content.Body
-            ? item.Content.Body
-            : "";
+          ? item.Content.Body
+          : "";
       const cleanedRaw = raw.replace(/=\r?\n/g, "").replace(/=3D/g, "=");
       const tokenMatch = cleanedRaw.match(/token=([A-Za-z0-9_-]+)/);
       const token = tokenMatch[1];

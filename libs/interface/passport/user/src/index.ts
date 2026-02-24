@@ -1,4 +1,5 @@
 import {ObjectId} from "@spica-server/database";
+import {EncryptedData} from "@spica-server/core/encryption";
 import {FactorMeta} from "@spica-server/interface/passport/authfactor";
 
 export interface User {
@@ -12,8 +13,10 @@ export interface User {
   lastLogin: Date;
   failedAttempts: Date[];
   bannedUntil?: Date;
-  email?: EncryptableField;
-  phone?: EncryptableField;
+  email?: EncryptedData<true>;
+  email_verified_at?: Date;
+  phone?: EncryptedData<true>;
+  phone_verified_at?: Date;
 }
 
 export interface LoginCredentials {
@@ -88,25 +91,11 @@ export interface PasswordlessLoginConfig {
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
 
-export type EncryptedData = {
-  encrypted: string;
-  iv: string;
-  authTag: string;
-};
-
-export type EncryptedDataWithHash = EncryptedData & {hash?: string};
-
-type DecryptedData = {
-  value: string;
-};
-
-type EncryptableField = {
-  createdAt: Date;
-} & (DecryptedData | EncryptedDataWithHash);
-
-export type DecryptedUser = User & {
-  email?: {value: string; createdAt: Date};
-  phone?: {value: string; createdAt: Date};
+export type DecryptedUser = Omit<User, "email" | "phone"> & {
+  email?: string;
+  email_verified_at?: Date;
+  phone?: string;
+  phone_verified_at?: Date;
 };
 
 export type UserSelfUpdate = Pick<User, "password">;
