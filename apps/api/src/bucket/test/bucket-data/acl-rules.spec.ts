@@ -1,6 +1,7 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
+import {ConfigModule} from "@spica-server/config";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
@@ -29,6 +30,7 @@ describe("ACL Rules with Different Authentication Strategies", () => {
         }),
         CoreTestingModule,
         DatabaseTestingModule.replicaSet(),
+        ConfigModule.forRoot(),
         PassportModule.forRoot({
           publicUrl: "http://localhost",
           defaultStrategy: "IDENTITY",

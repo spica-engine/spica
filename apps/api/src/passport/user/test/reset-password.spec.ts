@@ -14,6 +14,7 @@ import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {UserModule, UserService} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {compare} from "@spica-server/passport/identity/src/hash";
+import {ConfigModule} from "@spica-server/config";
 
 describe("PasswordResetService", () => {
   let module: TestingModule;
@@ -62,6 +63,7 @@ describe("PasswordResetService", () => {
           }
         }),
         PolicyModule.forRoot({realtime: false}),
+        ConfigModule.forRoot(),
         UserModule.forRoot({
           expiresIn: 3600,
           issuer: "test",
@@ -75,6 +77,7 @@ describe("PasswordResetService", () => {
           userRealtime: false,
           verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
           providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
+          providerHashSecret: "3fe2e8060da06c70906096b43db6de11",
           verificationCodeExpiresIn: 300
         })
       ]

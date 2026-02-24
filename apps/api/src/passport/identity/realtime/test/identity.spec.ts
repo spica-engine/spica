@@ -12,6 +12,7 @@ import {ChunkKind} from "@spica-server/interface/realtime";
 import {IdentityModule} from "@spica-server/passport/identity";
 import {Identity} from "@spica-server/interface/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
+import {ConfigModule} from "@spica-server/config/src/config.module";
 
 function url(query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL("/passport/identity", "ws://insteadof");
@@ -58,6 +59,7 @@ describe("Identity Realtime", () => {
           },
           identityRealtime: true
         }),
+        ConfigModule.forRoot(),
         PassportTestingModule.initialize({
           overriddenStrategyType: "JWT"
         })

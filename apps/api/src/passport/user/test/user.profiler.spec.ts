@@ -12,6 +12,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {PolicyModule} from "@spica-server/passport/policy";
+import {ConfigModule} from "@spica-server/config";
 
 describe("user Controller", () => {
   let module: TestingModule;
@@ -29,6 +30,7 @@ describe("user Controller", () => {
         PassportTestingModule.initialize(),
         PreferenceTestingModule,
         CoreTestingModule,
+        ConfigModule.forRoot(),
         UserModule.forRoot({
           expiresIn: 1000,
           issuer: "spica",

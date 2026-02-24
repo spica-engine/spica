@@ -14,6 +14,7 @@ import {UserModule} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
 import fetch from "node-fetch";
 import {GenericContainer} from "testcontainers";
+import {ConfigModule} from "@spica-server/config";
 
 describe("Passwordless Login E2E with MailHog", () => {
   let module: TestingModule;
@@ -78,6 +79,7 @@ describe("Passwordless Login E2E with MailHog", () => {
           }
         }),
         PolicyModule.forRoot({realtime: false}),
+        ConfigModule.forRoot(),
         UserModule.forRoot({
           expiresIn: 3600,
           issuer: "test",
@@ -93,6 +95,7 @@ describe("Passwordless Login E2E with MailHog", () => {
           userRealtime: false,
           verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
           providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
+          providerHashSecret: "3fe2e8060da06c70906096b43db6de11",
           verificationCodeExpiresIn: 300
         })
       ]
@@ -141,12 +144,8 @@ describe("Passwordless Login E2E with MailHog", () => {
       policies: [],
       lastPasswords: [],
       failedAttempts: [],
-      email: {
-        encrypted: encryptedEmail.encrypted,
-        iv: encryptedEmail.iv,
-        authTag: encryptedEmail.authTag,
-        createdAt: new Date()
-      }
+      email: encryptedEmail,
+      email_verified_at: new Date()
     } as any);
   });
 
