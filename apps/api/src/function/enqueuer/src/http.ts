@@ -8,6 +8,8 @@ import {CorsOptions} from "@spica-server/interface/core";
 import {AttachStatusTracker} from "@spica-server/interface/status";
 import {Description, HttpMethod, HttpOptions} from "@spica-server/interface/function/enqueuer";
 
+export type RouterMountFn = (path: string, router: express.Router) => void;
+
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   type = event.Type.HTTP;
 
@@ -23,7 +25,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   constructor(
     private queue: EventQueue,
     private http: HttpQueue,
-    httpServer: express.Application,
+    mountRouter: RouterMountFn,
     private corsOptions: CorsOptions,
     private schedulerUnsubscription: (targetId: string) => void,
     private attachStatusTracker?: AttachStatusTracker
@@ -35,19 +37,8 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         type: "*/*"
       }) as any
     );
-    // Express v5 lazily initializes _router; force initialization
-    if (typeof (httpServer as any).lazyrouter === "function") {
-      (httpServer as any).lazyrouter();
-    }
-    httpServer.use("/fn-execute", this.router);
-    const stack = (httpServer as any)._router?.stack || (httpServer as any).router?.stack;
-    if (!stack) {
-      console.warn("Could not access Express router stack for middleware reordering");
-    } else {
-      const expressInitIndex = stack.findIndex(l => l.name === "expressInit");
-      const layer = stack.splice(stack.length - 1, 1)[0];
-      stack.splice(expressInitIndex + 1, 0, layer);
-    }
+    this.router.use(this.handleUnhandled);
+    mountRouter("/fn-execute", this.router);
   }
 
   private handleUnhandled(req, res) {
@@ -133,7 +124,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       // Due to changes above on nodejs v14, we can not listen request 'close' anymore because it will be invoked after request 'end' as well.
       // After request body is read succesfully, request 'end' will be invoked for example.
       // But actual 'close' we want to listen is for request cancellations, aborts etc. So we should listen connection 'close' instead.
-      req.connection.once("close", () => {
+      req.socket.once("close", () => {
         if (!req.res.headersSent) {
           this.queue.dequeue(ev);
           this.http.dequeue(ev.id);

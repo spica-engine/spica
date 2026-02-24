@@ -11,7 +11,8 @@ import {
   HttpEnqueuer,
   ScheduleEnqueuer,
   SystemEnqueuer,
-  RabbitMQEnqueuer
+  RabbitMQEnqueuer,
+  RouterMountFn
 } from "@spica-server/function/enqueuer";
 import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
@@ -93,16 +94,24 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.queue.addQueue(this.rabbitmqQueue);
   }
 
+  private createRouterMountFn(): RouterMountFn {
+    return (path, router) => {
+      this.http.httpAdapter.use(path, router);
+    };
+  }
+
   async onModuleInit() {
     const schedulerUnsubscription = (targetId: string) => {
       this.outdateWorkers(targetId);
     };
 
+    const mountRouter = this.createRouterMountFn();
+
     this.enqueuers.add(
       new HttpEnqueuer(
         this.queue,
         this.httpQueue,
-        this.http.httpAdapter.getInstance(),
+        mountRouter,
         this.options.corsOptions,
         schedulerUnsubscription,
         this.attachStatusTracker

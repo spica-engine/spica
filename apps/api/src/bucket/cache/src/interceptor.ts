@@ -24,10 +24,20 @@ class BucketCacheInterceptor extends CacheInterceptor {
 
   async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
     const key = this.trackBy(context);
-    if (key && this.bucketCacheService) {
-      this.bucketCacheService.trackKey(key);
+
+    // Prune stale key if the cache entry expired via TTL
+    if (key && this.bucketCacheService?.hasKey(key)) {
+      const cached = await this.cacheManager.get(key);
+      if (cached === undefined) {
+        this.bucketCacheService.untrackKey(key);
+      }
     }
-    return super.intercept(context, next);
+
+    const result$ = await super.intercept(context, next);
+    if (key && this.bucketCacheService) {
+      return result$.pipe(tap(() => this.bucketCacheService.trackKey(key)));
+    }
+    return result$;
   }
 
   trackBy(context: ExecutionContext): string | undefined {

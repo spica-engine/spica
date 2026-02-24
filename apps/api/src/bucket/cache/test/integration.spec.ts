@@ -45,7 +45,7 @@ describe("Bucket Cache Integration", () => {
         imports: [
           DatabaseTestingModule.standalone(),
           CoreTestingModule,
-          BucketCacheModule.register({ttl: 60 * 1000})
+          BucketCacheModule.register({ttl: 1000})
         ],
         controllers: [TestController],
         providers: []

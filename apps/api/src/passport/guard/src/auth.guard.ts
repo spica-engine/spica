@@ -17,16 +17,18 @@ const defaultOptions = {session: false, property: "user"};
 function memoize<T extends (...args: any[]) => any>(
   fn: T
 ): (...args: Parameters<T>) => ReturnType<T> {
-  const cache: Record<string, ReturnType<T>> = {};
+  const cache = new Map<unknown, ReturnType<T>>();
+  const DEFAULT_KEY = Symbol("default");
   return (...args: Parameters<T>): ReturnType<T> => {
-    const n = args[0] || "default";
-    if (n in cache) {
-      return cache[n];
-    } else {
-      const result = fn(n === "default" ? undefined : n);
-      cache[n] = result;
-      return result;
+    const hasArg = args.length > 0;
+    const firstArg = hasArg ? args[0] : undefined;
+    const key = firstArg === undefined ? DEFAULT_KEY : firstArg;
+    if (cache.has(key)) {
+      return cache.get(key);
     }
+    const result = fn(firstArg);
+    cache.set(key, result);
+    return result;
   };
 }
 

@@ -30,6 +30,14 @@ export class BucketCacheService {
     this.cachedKeys.add(key);
   }
 
+  untrackKey(key: string) {
+    this.cachedKeys.delete(key);
+  }
+
+  hasKey(key: string): boolean {
+    return this.cachedKeys.has(key);
+  }
+
   private async getRelatedBucketIds(bucketId: string): Promise<string[]> {
     return this.db
       .collection("buckets")
@@ -53,7 +61,7 @@ export class BucketCacheService {
 
   async reset(): Promise<void> {
     this.cachedKeys.clear();
-    await this.cacheManager.clear();
+    await this.cacheManager.reset();
   }
 
   async invalidate(bucketId: string) {

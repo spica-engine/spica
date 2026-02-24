@@ -28,7 +28,7 @@ describe("Bucket Cache Service", () => {
 
     await service.invalidate("bucket1");
 
-    expect(await cacheManager.get("/bucket/bucket1/data")).toBeNull();
+    expect(await cacheManager.get("/bucket/bucket1/data")).toBeUndefined();
     expect(await cacheManager.get("/bucket/bucket2/data")).toEqual([{title: "test2"}]);
   });
 
@@ -67,8 +67,8 @@ describe("Bucket Cache Service", () => {
 
     await service.invalidate(bucket1.toHexString());
 
-    expect(await cacheManager.get(`/bucket/${bucket1}/data`)).toBeNull();
-    expect(await cacheManager.get(`/bucket/${bucket2}/data`)).toBeNull();
+    expect(await cacheManager.get(`/bucket/${bucket1}/data`)).toBeUndefined();
+    expect(await cacheManager.get(`/bucket/${bucket2}/data`)).toBeUndefined();
     expect(await cacheManager.get(`/bucket/${bucket3}/data`)).toEqual([{title: "test3"}]);
   });
 
@@ -82,8 +82,8 @@ describe("Bucket Cache Service", () => {
 
     jest.advanceTimersByTime(1000);
 
-    expect(await cacheManager.get(`/bucket/bucket1/data`)).toBeNull();
-    expect(await cacheManager.get(`/bucket/bucket2/data`)).toBeNull();
+    expect(await cacheManager.get(`/bucket/bucket1/data`)).toBeUndefined();
+    expect(await cacheManager.get(`/bucket/bucket2/data`)).toBeUndefined();
 
     jest.useRealTimers();
   });
