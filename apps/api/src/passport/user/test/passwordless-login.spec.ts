@@ -15,6 +15,7 @@ import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {UserModule} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {User} from "@spica-server/interface/passport/user";
+import {ConfigModule} from "@spica-server/config";
 
 describe("Passwordless Login", () => {
   let module: TestingModule;
@@ -63,6 +64,7 @@ describe("Passwordless Login", () => {
           }
         }),
         PolicyModule.forRoot({realtime: false}),
+        ConfigModule.forRoot(),
         UserModule.forRoot({
           expiresIn: 3600,
           issuer: "test",

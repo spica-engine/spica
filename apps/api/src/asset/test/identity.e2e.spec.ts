@@ -10,6 +10,7 @@ import os from "os";
 import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PreferenceModule} from "@spica-server/preference";
+import {ConfigModule} from "@spica-server/config";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
@@ -54,6 +55,7 @@ xdescribe("identity-settings", () => {
         passwordHistoryLimit: 0,
         identityRealtime: false
       }),
+      ConfigModule.forRoot(),
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
       AssetModule.forRoot({persistentPath: os.tmpdir()})

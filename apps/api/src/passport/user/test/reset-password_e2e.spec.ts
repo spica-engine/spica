@@ -12,6 +12,7 @@ import {PassportModule} from "@spica-server/passport";
 import fetch from "node-fetch";
 import {GenericContainer} from "testcontainers";
 import {UserConfigService} from "../src/config.service";
+import {ConfigModule} from "@spica-server/config";
 
 describe("Password Reset E2E with MailHog", () => {
   let module: TestingModule;
@@ -69,6 +70,7 @@ describe("Password Reset E2E with MailHog", () => {
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
         PreferenceTestingModule,
+        ConfigModule.forRoot(),
         MailerModule.forRoot({
           host: smtpHost,
           port: smtpPort,
