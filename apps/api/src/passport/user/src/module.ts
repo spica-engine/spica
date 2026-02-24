@@ -38,7 +38,7 @@ import {ProviderVerificationService} from "./services/provider.verification.serv
 import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
 import {ConfigService} from "@spica-server/config";
-import {providePasswordPolicySchemaResolver} from "@spica-server/passport/src/password-policy.schema.resolver";
+import {providePasswordPolicySchemaResolver} from "@spica-server/passport/password-policy";
 
 @Global()
 @Module({})
@@ -135,7 +135,6 @@ export class UserModule {
         {
           provide: "USER_PASSWORD_POLICY_RESOLVER",
           useFactory: (validator: Validator, configService: ConfigService) => {
-            if (!configService) return null;
             return providePasswordPolicySchemaResolver(validator, configService, {
               "http://spica.internal/passport/user-create": {
                 baseSchema: userCreateSchema,
@@ -151,7 +150,7 @@ export class UserModule {
               }
             });
           },
-          inject: [Validator, {token: ConfigService, optional: true}]
+          inject: [Validator, ConfigService]
         }
       ]
     };

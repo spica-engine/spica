@@ -34,6 +34,7 @@ import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import {ConfigModule} from "./config";
 
 const yargsInstance = yargs(process.argv.slice(2)) as any;
 
@@ -797,7 +798,8 @@ const modules = [
     logger: args["function-logger"],
     invocationLogs: args["function-invocation-logs"],
     realtime: true
-  })
+  }),
+  ConfigModule.forRoot()
 ];
 
 if (args["activity-stream"]) {

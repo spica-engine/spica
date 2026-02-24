@@ -1,4 +1,4 @@
-import {applyPasswordPolicy} from "@spica-server/passport/src/password-policy.schema.resolver";
+import {applyPasswordPolicy} from "@spica-server/passport/password-policy";
 
 describe("applyPasswordPolicy", () => {
   const baseSchema = {
