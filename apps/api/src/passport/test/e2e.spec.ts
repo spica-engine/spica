@@ -554,7 +554,7 @@ describe("E2E Tests", () => {
       expect(body.message).toEqual("Refresh token is disabled");
     });
 
-    it("should store refresh token as hashed in database", async () => {
+    it("should not return token in refresh token response", async () => {
       const parsedCookie = parseCookie(cookies[0]);
       const rawTokenFromCookie = parsedCookie.value;
 
@@ -567,10 +567,10 @@ describe("E2E Tests", () => {
           Authorization: `IDENTITY ${token}`
         }
       );
-      expect(refreshToken.token).toEqual(hash(rawTokenFromCookie, REFRESH_TOKEN_HASH_SECRET));
+      expect(refreshToken.token).toBeUndefined();
     });
 
-    it("should store client_meta alongside refresh token on login", async () => {
+    it("should return device information in refresh token response", async () => {
       const parsedCookie = parseCookie(cookies[0]);
 
       let {
@@ -582,11 +582,8 @@ describe("E2E Tests", () => {
           Authorization: `IDENTITY ${token}`
         }
       );
-
-      expect(refreshToken).toBeDefined();
-      expect(refreshToken.client_meta).toBeDefined();
-      expect(refreshToken.client_meta.fingerprint).toBeDefined();
-      expect(typeof refreshToken.client_meta.fingerprint).toEqual("string");
+      expect(refreshToken.token).toBeUndefined();
+      expect(refreshToken.client_meta.device_label).toBeDefined();
     });
   });
 
