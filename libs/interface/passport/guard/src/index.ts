@@ -23,12 +23,14 @@ export interface IGuardService {
     request,
     response,
     actions,
-    options
+    options,
+    format
   }: {
     request: any;
     response: any;
     actions: string | string[];
     options?: {resourceFilter: boolean};
+    format?: string;
   }): Promise<boolean>;
 
   checkAuthorization({

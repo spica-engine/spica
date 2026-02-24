@@ -25,6 +25,9 @@
     },
     {
       "path": "../../../../../libs/interface/function/scheduler"
+    },
+    {
+      "path": "../../passport/guard/services"
     }
   ]
 }
