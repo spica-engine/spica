@@ -15,6 +15,7 @@ import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {UserModule} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {User} from "@spica-server/interface/passport/user";
+import {ConfigModule} from "@spica-server/config";
 
 describe("Passwordless Login", () => {
   let module: TestingModule;
@@ -63,6 +64,7 @@ describe("Passwordless Login", () => {
           }
         }),
         PolicyModule.forRoot({realtime: false}),
+        ConfigModule.forRoot(),
         UserModule.forRoot({
           expiresIn: 3600,
           issuer: "test",
@@ -79,6 +81,7 @@ describe("Passwordless Login", () => {
           userRealtime: false,
           verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
           providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
+          providerHashSecret: "3fe2e8060da06c70906096b43db6de11",
           verificationCodeExpiresIn: 300
         })
       ]
@@ -116,18 +119,10 @@ describe("Passwordless Login", () => {
         policies: [],
         lastPasswords: [],
         failedAttempts: [],
-        email: {
-          encrypted: encryptedEmail.encrypted,
-          iv: encryptedEmail.iv,
-          authTag: encryptedEmail.authTag,
-          createdAt: new Date()
-        },
-        phone: {
-          encrypted: encryptedPhone.encrypted,
-          iv: encryptedPhone.iv,
-          authTag: encryptedPhone.authTag,
-          createdAt: new Date()
-        }
+        email: encryptedEmail,
+        email_verified_at: new Date(),
+        phone: encryptedPhone,
+        phone_verified_at: new Date()
       } as any);
 
       await userConfigService.updatePasswordlessLoginConfig({
@@ -242,18 +237,10 @@ describe("Passwordless Login", () => {
         policies: [],
         lastPasswords: [],
         failedAttempts: [],
-        email: {
-          encrypted: encryptedEmail.encrypted,
-          iv: encryptedEmail.iv,
-          authTag: encryptedEmail.authTag,
-          createdAt: new Date()
-        },
-        phone: {
-          encrypted: encryptedPhone.encrypted,
-          iv: encryptedPhone.iv,
-          authTag: encryptedPhone.authTag,
-          createdAt: new Date()
-        }
+        email: encryptedEmail,
+        email_verified_at: new Date(),
+        phone: encryptedPhone,
+        phone_verified_at: new Date()
       } as any);
 
       await userConfigService.updatePasswordlessLoginConfig({

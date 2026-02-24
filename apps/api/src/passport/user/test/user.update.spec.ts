@@ -6,6 +6,7 @@ import {INestApplication} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {ConfigModule} from "@spica-server/config";
 
 describe("User Update Endpoints", () => {
   let module: TestingModule;
@@ -26,6 +27,7 @@ describe("User Update Endpoints", () => {
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         CoreTestingModule,
+        ConfigModule.forRoot(),
         PassportModule.forRoot({
           publicUrl: "http://localhost:3000",
           samlCertificateTTL: 604800,

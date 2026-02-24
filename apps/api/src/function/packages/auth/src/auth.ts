@@ -1,5 +1,17 @@
-import {UserCreate, UserGet, TokenScheme, UserUpdate} from "./interface";
-import {initialize as _initialize, checkInitialized, Axios} from "@spica-devkit/internal_common";
+import {
+  UserCreate,
+  UserGet,
+  TokenScheme,
+  VerificationStrategy,
+  Provider,
+  VerificationStartResponse,
+  VerificationCompleteResponse,
+  PasswordResetStartResponse,
+  PasswordResetCompleteResponse,
+  PasswordlessLoginStartResponse,
+  PasswordlessLoginCompleteResponse
+} from "./interface";
+import {initialize as _initialize, checkInitialized} from "@spica-devkit/internal_common";
 import {
   ApikeyInitialization,
   HttpService,
@@ -237,4 +249,200 @@ export async function deactivateUserTokens(
   );
 
   return updatedUser;
+}
+
+/**
+ * Start email verification for a user.
+ * Sends a verification code or magic link to the specified email address.
+ *
+ * @param id - User ID to add email for
+ * @param value - Email address to verify
+ * @param strategy - Verification strategy ("Otp" or "MagicLink")
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to verification start response
+ */
+export function addEmail(
+  id: string,
+  value: string,
+  strategy: VerificationStrategy,
+  headers?: object
+): Promise<VerificationStartResponse> {
+  checkInitialized(authorization, service);
+
+  return service.post<VerificationStartResponse>(
+    `${userSegment}/${id}/start-provider-verification`,
+    {value, provider: "email", strategy, purpose: "verification"},
+    {headers}
+  );
+}
+
+/**
+ * Complete email verification for a user.
+ * Validates the verification code or magic link token.
+ *
+ * @param id - User ID to verify email for
+ * @param code - Verification code or magic link token
+ * @param strategy - Verification strategy ("Otp" or "MagicLink")
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to verification complete response
+ */
+export function verifyEmail(
+  id: string,
+  code: string,
+  strategy: VerificationStrategy,
+  headers?: object
+): Promise<VerificationCompleteResponse> {
+  checkInitialized(authorization, service);
+
+  return service.post<VerificationCompleteResponse>(
+    `${userSegment}/${id}/verify-provider`,
+    {code, provider: "email", strategy, purpose: "verification"},
+    {headers}
+  );
+}
+
+/**
+ * Start phone number verification for a user.
+ * Sends a verification code to the specified phone number.
+ *
+ * @param id - User ID to add phone number for
+ * @param value - Phone number to verify
+ * @param strategy - Verification strategy ("Otp" or "MagicLink")
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to verification start response
+ */
+export function addPhoneNumber(
+  id: string,
+  value: string,
+  strategy: VerificationStrategy,
+  headers?: object
+): Promise<VerificationStartResponse> {
+  checkInitialized(authorization, service);
+
+  return service.post<VerificationStartResponse>(
+    `${userSegment}/${id}/start-provider-verification`,
+    {value, provider: "phone", strategy, purpose: "verification"},
+    {headers}
+  );
+}
+
+/**
+ * Complete phone number verification for a user.
+ * Validates the verification code.
+ *
+ * @param id - User ID to verify phone number for
+ * @param code - Verification code
+ * @param strategy - Verification strategy ("Otp" or "MagicLink")
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to verification complete response
+ */
+export function verifyPhoneNumber(
+  id: string,
+  code: string,
+  strategy: VerificationStrategy,
+  headers?: object
+): Promise<VerificationCompleteResponse> {
+  checkInitialized(authorization, service);
+
+  return service.post<VerificationCompleteResponse>(
+    `${userSegment}/${id}/verify-provider`,
+    {code, provider: "phone", strategy, purpose: "verification"},
+    {headers}
+  );
+}
+
+/**
+ * Request a password reset.
+ * Sends a verification code to the user's verified email or phone.
+ *
+ * @param username - Username of the account to reset
+ * @param provider - Provider to send the code via ("email" or "phone")
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to password reset start response
+ */
+export function requestPasswordReset(
+  username: string,
+  provider: Provider,
+  headers?: object
+): Promise<PasswordResetStartResponse> {
+  checkInitialized(authorization, service, {skipAuthCheck: true});
+
+  return service.post<PasswordResetStartResponse>(
+    `${userSegment}/forgot-password/start`,
+    {username, provider},
+    {headers}
+  );
+}
+
+/**
+ * Complete a password reset with verification code and new password.
+ *
+ * @param username - Username of the account to reset
+ * @param code - Verification code received via email or phone
+ * @param newPassword - New password to set
+ * @param provider - Provider used for verification ("email" or "phone")
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to password reset complete response
+ */
+export function completePasswordReset(
+  username: string,
+  code: string,
+  newPassword: string,
+  provider: Provider,
+  headers?: object
+): Promise<PasswordResetCompleteResponse> {
+  checkInitialized(authorization, service, {skipAuthCheck: true});
+
+  return service.post<PasswordResetCompleteResponse>(
+    `${userSegment}/forgot-password/verify`,
+    {username, code, newPassword, provider},
+    {headers}
+  );
+}
+
+/**
+ * Start a passwordless login flow.
+ * Sends a verification code to the user's verified email or phone.
+ *
+ * @param username - Username of the account to log in
+ * @param provider - Provider to send the code via ("email" or "phone")
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to passwordless login start response
+ */
+export function passwordlessLogin(
+  username: string,
+  provider: Provider,
+  headers?: object
+): Promise<PasswordlessLoginStartResponse> {
+  checkInitialized(authorization, service, {skipAuthCheck: true});
+
+  return service.post<PasswordlessLoginStartResponse>(
+    `${userSegment}/passwordless-login/start`,
+    {username, provider},
+    {headers}
+  );
+}
+
+/**
+ * Complete a passwordless login with verification code.
+ *
+ * @param username - Username of the account to log in
+ * @param code - Verification code received via email or phone
+ * @param provider - Provider used for verification ("email" or "phone")
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to authentication tokens
+ */
+export function completePasswordlessLogin(
+  username: string,
+  code: string,
+  provider: Provider,
+  headers?: object
+): Promise<PasswordlessLoginCompleteResponse> {
+  checkInitialized(authorization, service, {skipAuthCheck: true});
+
+  return service.post<PasswordlessLoginCompleteResponse>(
+    `${userSegment}/passwordless-login/verify`,
+    {username, code, provider},
+    {headers}
+  );
 }

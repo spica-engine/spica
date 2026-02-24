@@ -8,6 +8,7 @@ import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {UserService} from "../src/user.service";
 import {ObjectId} from "@spica-server/database";
+import {ConfigModule} from "@spica-server/config";
 
 describe("User Email Hashing and Encryption", () => {
   let module: TestingModule;
@@ -26,6 +27,7 @@ describe("User Email Hashing and Encryption", () => {
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         CoreTestingModule,
+        ConfigModule.forRoot(),
         PassportModule.forRoot({
           publicUrl: "http://localhost:3000",
           samlCertificateTTL: 604800,
@@ -91,17 +93,13 @@ describe("User Email Hashing and Encryption", () => {
     testUserId = userId.toHexString();
     createdAt = new Date();
     const encryptedEmail = userService.encryptField("test@example.com");
-    const emailHash = userService.hashProviderValue("test@example.com");
 
     await userService.insertOne({
       _id: userId,
       username: "testuser",
       password: "password123",
-      email: {
-        ...encryptedEmail,
-        createdAt: createdAt,
-        hash: emailHash
-      },
+      email: encryptedEmail,
+      email_verified_at: createdAt,
       policies: [],
       lastLogin: null,
       failedAttempts: [],
@@ -122,17 +120,15 @@ describe("User Email Hashing and Encryption", () => {
     expect(getRes.body).toEqual({
       _id: testUserId,
       username: "testuser",
-      email: {
-        value: "test@example.com",
-        createdAt: createdAt.toISOString()
-      },
+      email: "test@example.com",
+      email_verified_at: createdAt.toISOString(),
       policies: [],
       lastLogin: null,
       failedAttempts: []
     });
   });
 
-  it("should find user by email without value property", async () => {
+  it("should find user by email", async () => {
     const listRes = await req.get(
       "/passport/user",
       {filter: JSON.stringify({email: "test@example.com"})},
@@ -145,33 +141,8 @@ describe("User Email Hashing and Encryption", () => {
     expect(listRes.body[0]).toEqual({
       _id: testUserId,
       username: "testuser",
-      email: {
-        value: "test@example.com",
-        createdAt: createdAt.toISOString()
-      },
-      policies: [],
-      lastLogin: null,
-      failedAttempts: []
-    });
-  });
-
-  it("should find user by email with value property", async () => {
-    const listRes = await req.get(
-      "/passport/user",
-      {filter: JSON.stringify({email: {value: "test@example.com"}})},
-      {
-        Authorization: `IDENTITY ${adminToken}`
-      }
-    );
-    expect(listRes.statusCode).toBe(200);
-    expect(listRes.body.length).toBe(1);
-    expect(listRes.body[0]).toEqual({
-      _id: testUserId,
-      username: "testuser",
-      email: {
-        value: "test@example.com",
-        createdAt: createdAt.toISOString()
-      },
+      email: "test@example.com",
+      email_verified_at: createdAt.toISOString(),
       policies: [],
       lastLogin: null,
       failedAttempts: []
@@ -209,10 +180,8 @@ describe("User Email Hashing and Encryption", () => {
     expect(listRes.body[0]).toEqual({
       _id: testUserId,
       username: "testuser",
-      email: {
-        value: "test@example.com",
-        createdAt: createdAt.toISOString()
-      },
+      email: "test@example.com",
+      email_verified_at: createdAt.toISOString(),
       policies: [],
       lastLogin: null,
       failedAttempts: []
@@ -240,10 +209,8 @@ describe("User Email Hashing and Encryption", () => {
     expect(listRes.body[0]).toEqual({
       _id: testUserId,
       username: "testuser",
-      email: {
-        value: "test@example.com",
-        createdAt: createdAt.toISOString()
-      },
+      email: "test@example.com",
+      email_verified_at: createdAt.toISOString(),
       policies: [],
       lastLogin: null,
       failedAttempts: []

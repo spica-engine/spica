@@ -15,5 +15,6 @@
     "0.16.0/add_date_values_to_storage_objects.js",
     "0.16.0/enable_changeStreamPreAndPostImages.js",
     "0.16.0/migrate_identity_attributes_to_bucket.js"
-  ]
+  ],
+  "0.17.0": ["0.17.0/set_mongodb_fcv_7.js"]
 }

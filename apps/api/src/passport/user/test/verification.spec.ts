@@ -14,6 +14,7 @@ import {_, SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {UserModule, UserService} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
+import {ConfigModule} from "@spica-server/config";
 
 describe("VerificationService", () => {
   let module: TestingModule;
@@ -64,6 +65,7 @@ describe("VerificationService", () => {
           }
         }),
         PolicyModule.forRoot({realtime: false}),
+        ConfigModule.forRoot(),
         UserModule.forRoot({
           expiresIn: 3600,
           issuer: "test",
@@ -766,7 +768,7 @@ describe("VerificationService", () => {
 
       const UserWithEmail = userService.decryptProviderFields(user);
 
-      expect(UserWithEmail.email.value).toBe(email);
+      expect(UserWithEmail.email).toBe(email);
     });
   });
 
@@ -1133,7 +1135,7 @@ describe("VerificationService", () => {
 
       const user = await userService.findOne({_id: userId});
       const decrypted = userService.decryptProviderFields(user);
-      expect(decrypted.email.value).toBe(email);
+      expect(decrypted.email).toBe(email);
     });
 
     it("should verify phone provider via magic link and update user document", async () => {
@@ -1169,7 +1171,7 @@ describe("VerificationService", () => {
 
       const user = await userService.findOne({_id: userId});
       const decrypted = userService.decryptProviderFields(user);
-      expect(decrypted.phone.value).toBe(phone);
+      expect(decrypted.phone).toBe(phone);
     });
   });
 });

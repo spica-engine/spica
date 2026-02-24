@@ -12,6 +12,7 @@ import {PassportModule} from "@spica-server/passport";
 import fetch from "node-fetch";
 import {GenericContainer} from "testcontainers";
 import {UserConfigService} from "../src/config.service";
+import {ConfigModule} from "@spica-server/config";
 
 describe("Password Reset E2E with MailHog", () => {
   let module: TestingModule;
@@ -69,6 +70,7 @@ describe("Password Reset E2E with MailHog", () => {
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
         PreferenceTestingModule,
+        ConfigModule.forRoot(),
         MailerModule.forRoot({
           host: smtpHost,
           port: smtpPort,
@@ -114,6 +116,7 @@ describe("Password Reset E2E with MailHog", () => {
             userRealtime: false,
             verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
             providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
+            providerHashSecret: "3fe2e8060da06c70906096b43db6de11",
             verificationCodeExpiresIn: 300
           },
           policyRealtime: false,
@@ -154,12 +157,8 @@ describe("Password Reset E2E with MailHog", () => {
       policies: [],
       lastPasswords: [],
       failedAttempts: [],
-      email: {
-        encrypted: encryptedEmail.encrypted,
-        iv: encryptedEmail.iv,
-        authTag: encryptedEmail.authTag,
-        createdAt: new Date()
-      }
+      email: encryptedEmail,
+      email_verified_at: new Date()
     } as any);
   }, 60000);
 

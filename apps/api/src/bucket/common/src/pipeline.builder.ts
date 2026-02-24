@@ -97,8 +97,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
           filterByUserRequest,
           this.schema,
           this.factories.schema,
-          this.hashSecret,
-          this.encryptionSecret
+          this.hashSecret
         );
 
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);

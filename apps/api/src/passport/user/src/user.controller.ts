@@ -36,7 +36,8 @@ import {
   UserOptions,
   PaginationResponse,
   POLICY_PROVIDER,
-  UserSelfUpdate
+  UserSelfUpdate,
+  DecryptedUser
 } from "@spica-server/interface/passport/user";
 import {registerPolicyAttacher} from "./utility";
 import {ClassCommander} from "@spica-server/replication";
@@ -173,12 +174,16 @@ export class UserController {
     ).result();
 
     if (paginate) {
-      const result = await this.userService.aggregate<PaginationResponse<User>>(pipeline).next();
-
-      if (!result.data.length) {
+      const {data, meta} = await this.userService
+        .aggregate<PaginationResponse<User>>(pipeline)
+        .next();
+      let result: PaginationResponse<DecryptedUser>;
+      if (!data.length) {
         result.meta = {total: 0};
+        result.data = [];
       } else {
-        result.data = result.data.map(user => {
+        result.meta = meta;
+        result.data = data.map(user => {
           return this.userService.decryptProviderFields(user);
         });
       }
@@ -250,9 +255,7 @@ export class UserController {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    user = this.userService.decryptProviderFields(user);
-
-    return user;
+    return this.userService.decryptProviderFields(user);
   }
 
   @Post(":id/start-factor-verification")

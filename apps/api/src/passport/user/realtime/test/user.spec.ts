@@ -12,6 +12,7 @@ import {ChunkKind} from "@spica-server/interface/realtime";
 import {UserModule} from "@spica-server/passport/user";
 import {User} from "@spica-server/interface/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
+import {ConfigModule} from "@spica-server/config/src/config.module";
 
 function url(query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL("/passport/user", "ws://insteadof");
@@ -46,6 +47,7 @@ describe("User Realtime", () => {
         CoreTestingModule,
         PolicyModule.forRoot({realtime: true}),
         PreferenceTestingModule,
+        ConfigModule.forRoot(),
         UserModule.forRoot({
           expiresIn: 1000,
           issuer: "spica",
