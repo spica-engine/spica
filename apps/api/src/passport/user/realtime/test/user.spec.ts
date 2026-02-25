@@ -103,13 +103,15 @@ describe("User Realtime", () => {
     beforeEach(() => {
       const guardService = app.get(GuardService);
       authGuardCheck = jest.spyOn(guardService, "checkAuthentication");
-      actionGuardCheck = jest.spyOn(guardService, "checkAuthorization").mockImplementation(({request}) => {
-        request.resourceFilter = {
-          include: [],
-          exclude: []
-        };
-        return Promise.resolve(true);
-      });
+      actionGuardCheck = jest
+        .spyOn(guardService, "checkAuthorization")
+        .mockImplementation(({request}) => {
+          request.resourceFilter = {
+            include: [],
+            exclude: []
+          };
+          return Promise.resolve(true);
+        });
     });
 
     it("should authorize and do the initial sync", done => {
