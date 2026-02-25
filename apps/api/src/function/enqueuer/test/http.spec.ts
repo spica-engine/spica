@@ -9,8 +9,8 @@ import {IGuardService} from "@spica-server/interface/passport/guard";
 
 function createNoopGuardService(): IGuardService {
   return {
-    checkAuthorization: jest.fn().mockResolvedValue(true),
-    checkAction: jest.fn().mockResolvedValue(true)
+    checkAuthentication: jest.fn().mockResolvedValue(true),
+    checkAuthorization: jest.fn().mockResolvedValue(true)
   } as any;
 }
 
@@ -355,8 +355,8 @@ describe("http enqueuer with authentication and authorization", () => {
   let schedulerUnsubscriptionSpy: jest.Mock;
 
   let guardService: {
+    checkAuthentication: jest.Mock;
     checkAuthorization: jest.Mock;
-    checkAction: jest.Mock;
   };
 
   let corsOptions = {
@@ -393,8 +393,8 @@ describe("http enqueuer with authentication and authorization", () => {
     };
 
     guardService = {
-      checkAuthorization: jest.fn().mockResolvedValue(true),
-      checkAction: jest.fn().mockResolvedValue(true)
+      checkAuthentication: jest.fn().mockResolvedValue(true),
+      checkAuthorization: jest.fn().mockResolvedValue(true)
     };
 
     await app.listen(req.socket);
@@ -427,8 +427,8 @@ describe("http enqueuer with authentication and authorization", () => {
 
     await req.get("/fn-execute/auth-test");
 
-    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
-    expect(guardService.checkAuthorization).toHaveBeenCalledWith(
+    expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthentication).toHaveBeenCalledWith(
       expect.objectContaining({
         allowedStrategies: ["IDENTITY"]
       })
@@ -441,7 +441,7 @@ describe("http enqueuer with authentication and authorization", () => {
   it("should return 401 when authentication fails", async () => {
     const error = new Error("Unauthorized");
     (error as any).status = 401;
-    guardService.checkAuthorization.mockRejectedValue(error);
+    guardService.checkAuthentication.mockRejectedValue(error);
 
     httpEnqueuer.subscribe(noopTarget, {
       method: HttpMethod.Get,
@@ -474,15 +474,15 @@ describe("http enqueuer with authentication and authorization", () => {
 
     await req.post("/fn-execute/authz-test");
 
-    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
-    expect(guardService.checkAuthorization).toHaveBeenCalledWith(
+    expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthentication).toHaveBeenCalledWith(
       expect.objectContaining({
         allowedStrategies: ["APIKEY"]
       })
     );
 
-    expect(guardService.checkAction).toHaveBeenCalledTimes(1);
-    expect(guardService.checkAction).toHaveBeenCalledWith(
+    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthorization).toHaveBeenCalledWith(
       expect.objectContaining({
         actions: ["function:invoke"]
       })
@@ -498,7 +498,7 @@ describe("http enqueuer with authentication and authorization", () => {
 
     let capturedRoute: any;
     let capturedParams: any;
-    guardService.checkAction.mockImplementation(({request}) => {
+    guardService.checkAuthorization.mockImplementation(({request}) => {
       capturedRoute = {...request.route};
       capturedParams = {...request.params};
       return Promise.resolve(true);
@@ -526,7 +526,7 @@ describe("http enqueuer with authentication and authorization", () => {
   it("should return 403 when authorization fails", async () => {
     const error = new Error("Forbidden");
     (error as any).status = 403;
-    guardService.checkAction.mockRejectedValue(error);
+    guardService.checkAuthorization.mockRejectedValue(error);
 
     httpEnqueuer.subscribe(noopTarget, {
       method: HttpMethod.Get,
@@ -540,7 +540,7 @@ describe("http enqueuer with authentication and authorization", () => {
 
     expect(response.statusCode).toBe(403);
     expect(response.body).toEqual({message: "Forbidden"});
-    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
     expect(eventQueue.enqueue).not.toHaveBeenCalled();
     expect(httpQueue.enqueue).not.toHaveBeenCalled();
 
@@ -560,8 +560,8 @@ describe("http enqueuer with authentication and authorization", () => {
 
     await req.get("/fn-execute/no-auth");
 
+    expect(guardService.checkAuthentication).not.toHaveBeenCalled();
     expect(guardService.checkAuthorization).not.toHaveBeenCalled();
-    expect(guardService.checkAction).not.toHaveBeenCalled();
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
 
     httpEnqueuer.unsubscribe(noopTarget);
@@ -578,8 +578,8 @@ describe("http enqueuer with authentication and authorization", () => {
 
     await req.get("/fn-execute/no-auth-undef");
 
+    expect(guardService.checkAuthentication).not.toHaveBeenCalled();
     expect(guardService.checkAuthorization).not.toHaveBeenCalled();
-    expect(guardService.checkAction).not.toHaveBeenCalled();
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
 
     httpEnqueuer.unsubscribe(noopTarget);
@@ -598,8 +598,8 @@ describe("http enqueuer with authentication and authorization", () => {
 
     await req.get("/fn-execute/authz-no-authn");
 
+    expect(guardService.checkAuthentication).not.toHaveBeenCalled();
     expect(guardService.checkAuthorization).not.toHaveBeenCalled();
-    expect(guardService.checkAction).not.toHaveBeenCalled();
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
 
     httpEnqueuer.unsubscribe(noopTarget);
@@ -618,7 +618,7 @@ describe("http enqueuer with authentication and authorization", () => {
 
     await req.get("/fn-execute/multi-auth");
 
-    expect(guardService.checkAuthorization).toHaveBeenCalledWith(
+    expect(guardService.checkAuthentication).toHaveBeenCalledWith(
       expect.objectContaining({
         allowedStrategies: ["IDENTITY", "APIKEY", "USER"]
       })
@@ -646,15 +646,15 @@ describe("http enqueuer with authentication and authorization", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual({success: true});
+    expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
     expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
-    expect(guardService.checkAction).toHaveBeenCalledTimes(1);
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(httpQueue.enqueue).toHaveBeenCalledTimes(1);
 
     httpEnqueuer.unsubscribe(noopTarget);
   });
 
-  it("should not call checkAction when authorize is false even with authenticate set", async () => {
+  it("should not call checkAuthorization when authorize is false even with authenticate set", async () => {
     httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
 
     httpEnqueuer.subscribe(noopTarget, {
@@ -667,8 +667,8 @@ describe("http enqueuer with authentication and authorization", () => {
 
     await req.get("/fn-execute/auth-no-authz");
 
-    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
-    expect(guardService.checkAction).not.toHaveBeenCalled();
+    expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthorization).not.toHaveBeenCalled();
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
 
     httpEnqueuer.unsubscribe(noopTarget);

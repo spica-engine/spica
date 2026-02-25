@@ -102,8 +102,8 @@ describe("User Realtime", () => {
 
     beforeEach(() => {
       const guardService = app.get(GuardService);
-      authGuardCheck = jest.spyOn(guardService, "checkAuthorization");
-      actionGuardCheck = jest.spyOn(guardService, "checkAction").mockImplementation(({request}) => {
+      authGuardCheck = jest.spyOn(guardService, "checkAuthentication");
+      actionGuardCheck = jest.spyOn(guardService, "checkAuthorization").mockImplementation(({request}) => {
         request.resourceFilter = {
           include: [],
           exclude: []

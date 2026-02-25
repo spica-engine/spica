@@ -79,8 +79,8 @@ describe("Dashboard Realtime", () => {
 
     beforeEach(() => {
       const guardService = app.get(GuardService);
-      authGuardCheck = jest.spyOn(guardService, "checkAuthorization");
-      actionGuardCheck = jest.spyOn(guardService, "checkAction").mockImplementation(({request}) => {
+      authGuardCheck = jest.spyOn(guardService, "checkAuthentication");
+      actionGuardCheck = jest.spyOn(guardService, "checkAuthorization").mockImplementation(({request}) => {
         request.resourceFilter = {
           include: [],
           exclude: []
@@ -122,8 +122,8 @@ describe("Dashboard Realtime", () => {
   describe("documents", () => {
     beforeEach(async () => {
       const guardService = app.get(GuardService);
-      jest.spyOn(guardService, "checkAuthorization").mockResolvedValue(true);
-      jest.spyOn(guardService, "checkAction").mockImplementation(({request}) => {
+      jest.spyOn(guardService, "checkAuthentication").mockResolvedValue(true);
+      jest.spyOn(guardService, "checkAuthorization").mockImplementation(({request}) => {
         request.resourceFilter = {include: [], exclude: []};
         return Promise.resolve(true);
       });
