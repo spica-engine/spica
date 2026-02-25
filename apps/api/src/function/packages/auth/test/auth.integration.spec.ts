@@ -19,6 +19,7 @@ import {ConfigModule} from "@spica-server/config/src/config.module";
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
 const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
+const REFRESH_TOKEN_HASH_SECRET = "refresh_token_hash_secret";
 
 const PORT = 3003;
 const PUBLIC_URL = `http://localhost:${PORT}`;
@@ -65,6 +66,7 @@ describe("auth", () => {
               failedAttemptLimit: 0
             },
             refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+            refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
             passwordHistoryLimit: 0,
             identityRealtime: false
           },
@@ -79,6 +81,7 @@ describe("auth", () => {
               failedAttemptLimit: 0
             },
             refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+            refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
             passwordHistoryLimit: 0,
             userRealtime: false
           }

@@ -5,11 +5,12 @@ import {
   IDENTITY_OPTIONS,
   IdentityOptions
 } from "@spica-server/interface/passport/identity";
-import {Validator} from "@spica-server/core/schema";
+import {Validator, hash as hashToken} from "@spica-server/core/schema";
 import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
+import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
 import {v4 as uuidv4} from "uuid";
 
 @Injectable()
@@ -64,21 +65,24 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return this.identityOptions.expiresIn;
   }
 
-  async signRefreshToken(identity: Identity) {
+  async signRefreshToken(identity: Identity, clientMeta?: ClientMeta) {
     const expiresIn = this.identityOptions.refreshTokenExpiresIn;
     const token = this.jwt.sign({identifier: identity.identifier, uuid: uuidv4()}, {expiresIn});
 
+    const hashedToken = this.hashRefreshToken(token);
+
     const tokenSchema = {
-      token,
+      token: hashedToken,
       identity: String(identity._id),
       created_at: new Date(),
       expired_at: new Date(Date.now() + expiresIn * 1000),
-      last_used_at: undefined
+      last_used_at: undefined,
+      client_meta: clientMeta
     };
 
     await this.refreshTokenService.insertOne(tokenSchema);
 
-    return tokenSchema;
+    return {...tokenSchema, token};
   }
 
   private extractAccessToken(authHeader: string) {
@@ -103,8 +107,13 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenCanBeUsed(accessToken: string, refreshToken: string) {
-    const refreshTokenData = await this.refreshTokenService.findOne({token: refreshToken});
+  private async verifyTokenCanBeUsed(
+    accessToken: string,
+    refreshToken: string,
+    clientMeta?: ClientMeta
+  ) {
+    const hashedToken = this.hashRefreshToken(refreshToken);
+    const refreshTokenData = await this.refreshTokenService.findOne({token: hashedToken});
     if (!refreshTokenData) {
       return Promise.reject("Refresh token not found");
     }
@@ -134,17 +143,25 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return identity;
   }
 
-  async refreshToken(accessToken: string, refreshToken: string) {
+  async refreshToken(accessToken: string, refreshToken: string, clientMeta?: ClientMeta) {
     accessToken = this.extractAccessToken(accessToken);
     await this.verifyTokenCanBeRefreshed(accessToken, refreshToken);
-    await this.verifyTokenCanBeUsed(accessToken, refreshToken);
+    await this.verifyTokenCanBeUsed(accessToken, refreshToken, clientMeta);
     await this.updateRefreshTokenLastUsedAt(refreshToken);
     const identity = await this.findIdentityOfToken(accessToken);
     return this.sign(identity);
   }
 
   updateRefreshTokenLastUsedAt(token: string) {
-    return this.refreshTokenService.updateOne({token}, {$set: {last_used_at: new Date()}});
+    const hashedToken = this.hashRefreshToken(token);
+    return this.refreshTokenService.updateOne(
+      {token: hashedToken},
+      {$set: {last_used_at: new Date()}}
+    );
+  }
+
+  private hashRefreshToken(token: string): string {
+    return hashToken(token, this.identityOptions.refreshTokenHashSecret);
   }
 
   getCookieOptions(path: string) {

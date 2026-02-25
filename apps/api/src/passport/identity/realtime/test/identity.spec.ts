@@ -57,7 +57,8 @@ describe("Identity Realtime", () => {
             blockDurationMinutes: 0,
             failedAttemptLimit: 0
           },
-          identityRealtime: true
+          identityRealtime: true,
+          refreshTokenHashSecret: "refresh-token-hash-secret"
         }),
         ConfigModule.forRoot(),
         PassportTestingModule.initialize({
