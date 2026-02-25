@@ -2,14 +2,15 @@ import {ObjectId} from "@spica-server/database";
 import * as Relation from "./relation";
 import {getPropertyByPath} from "./schema";
 import {
+  constructValue,
   extractFilterPropertyMap,
+  FilterReplaceManager,
   replaceFilter,
   replaceFilterObjectIds
 } from "@spica-server/filter";
-import {ValueConstructor} from "@spica-server/interface/filter";
-import {FilterReplacer, RelationResolver} from "@spica-server/interface/bucket/common";
+import {RelationResolver} from "@spica-server/interface/bucket/common";
 import {Bucket} from "@spica-server/interface/bucket";
-import {hash} from "@spica-server/core/schema";
+import {hash} from "@spica-server/core/encryption";
 // this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed
 export function filterReviver(k: string, v: string, hashSecret?: string) {
   const availableConstructors = {
@@ -42,15 +43,15 @@ export const constructFilterValues = async (
   relationResolver: RelationResolver,
   hashSecret?: string
 ) => {
-  const replacers: FilterReplacer[] = [
+  const wrappedReplacers = [
     replaceFilterObjectIds,
-    replaceFilterDates,
-    (filter, bucket, resolver) => replaceFilterHash(filter, bucket, resolver, hashSecret)
+    (filter: object) => replaceFilterDates(filter, bucket, relationResolver),
+    (filter: object) => replaceFilterHash(filter, bucket, relationResolver, hashSecret),
+    (filter: object) => replaceFilterEncrypted(filter, bucket, relationResolver, hashSecret)
   ];
-  for (let replacer of replacers) {
-    filter = await replacer(filter, bucket, relationResolver);
-  }
-  return filter;
+
+  const manager = new FilterReplaceManager(wrappedReplacers);
+  return manager.replace(filter);
 };
 
 export async function replaceFilterDates(
@@ -109,5 +110,58 @@ export async function replaceFilterHash(
 }
 
 function HashIfValid(val: any, hashSecret: string): string {
+  return typeof val === "string" ? hash(val, hashSecret) : val;
+}
+
+export async function replaceFilterEncrypted(
+  filter: object,
+  bucket: Bucket,
+  relationResolver: RelationResolver,
+  hashSecret?: string
+): Promise<object> {
+  if (!hashSecret) {
+    return filter;
+  }
+
+  const propertyMap = extractFilterPropertyMap(filter);
+  const relationResolvedSchema = await Relation.getRelationResolvedBucketSchema(
+    bucket,
+    propertyMap,
+    relationResolver
+  );
+
+  return replaceEncryptedKeysRecursive(filter, relationResolvedSchema.properties, hashSecret);
+}
+
+function replaceEncryptedKeysRecursive(
+  filter: object,
+  properties: object,
+  hashSecret: string
+): object {
+  for (const [key, value] of Object.entries(filter)) {
+    if (["$or", "$and", "$nor"].includes(key)) {
+      if (Array.isArray(value)) {
+        filter[key] = value.map(expr =>
+          replaceEncryptedKeysRecursive(expr, properties, hashSecret)
+        );
+      }
+      continue;
+    }
+
+    const property = getPropertyByPath(properties, key);
+    if (
+      property &&
+      (property.type == "encrypted" ||
+        (property.type == "array" && property.items && property.items.type == "encrypted"))
+    ) {
+      const hashedValue = constructValue(value, v => EncryptedHashIfValid(v, hashSecret));
+      delete filter[key];
+      filter[`${key}.hash`] = hashedValue;
+    }
+  }
+  return filter;
+}
+
+function EncryptedHashIfValid(val: any, hashSecret: string): any {
   return typeof val === "string" ? hash(val, hashSecret) : val;
 }

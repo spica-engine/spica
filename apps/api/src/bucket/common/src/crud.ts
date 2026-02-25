@@ -12,7 +12,6 @@ import {
   DatabaseException,
   ForbiddenException
 } from "./exception";
-import {IAuthResolver} from "@spica-server/interface/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {BucketPipelineBuilder} from "./pipeline.builder";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
@@ -24,37 +23,47 @@ import {
   RelationMap
 } from "@spica-server/interface/bucket/common";
 import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface/bucket";
+import {decryptDocumentFields} from "./decrypt";
 
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<false>,
   factories: CrudFactories<T>,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<T[]>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<true>,
   factories: CrudFactories<T>,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<CrudPagination<T>>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<boolean>,
   factories: CrudFactories<T>,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<T[] | CrudPagination<T>>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<boolean>,
   factories: CrudFactories<T>,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<unknown> {
   const collection = factories.collection(schema);
-  const pipelineBuilder = new BucketPipelineBuilder(schema, factories, hashSecret);
+  const pipelineBuilder = new BucketPipelineBuilder(
+    schema,
+    factories,
+    hashSecret,
+    encryptionSecret
+  );
   const seekingPipelineBuilder = new PipelineBuilder();
 
   let rulePropertyMap;
@@ -129,15 +138,31 @@ export async function findDocuments<T>(
       .catch(error => {
         throw new DatabaseException(error.message);
       });
-    return result.data.length ? result : {meta: {total: 0}, data: []};
+    if (!result.data.length) {
+      return {meta: {total: 0}, data: []};
+    }
+    if (encryptionSecret) {
+      result.data = result.data.map(doc =>
+        decryptDocumentFields(doc as any, schema, encryptionSecret, factories.schema)
+      ) as T[];
+    }
+    return result;
   }
 
-  return collection
+  const documents = await collection
     .aggregate<T>([...pipeline, ...seeking])
     .toArray()
     .catch(error => {
       throw new DatabaseException(error.message);
     });
+
+  if (encryptionSecret) {
+    return documents.map(doc =>
+      decryptDocumentFields(doc as any, schema, encryptionSecret, factories.schema)
+    ) as T[];
+  }
+
+  return documents;
 }
 function buildAclProjection(properties: Record<string, {acl?: string}>, user: any) {
   const result: Record<string, object | number> = {};
@@ -174,8 +199,8 @@ export async function insertDocument(
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
     deleteOne: (documentId: ObjectId) => Promise<void>;
-    authResolver: IAuthResolver;
-  }
+  },
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
@@ -187,8 +212,7 @@ export async function insertDocument(
       // unlike others, we have to run this pipeline against buckets in case the target
       // collection is empty.
       collection.collection("buckets"),
-      params.req.user,
-      factories.authResolver
+      params.req.user
     );
   }
   if (
@@ -205,7 +229,13 @@ export async function insertDocument(
     }
   }
 
-  return collection.insertOne(document).catch(handleWriteErrors);
+  const inserted = await collection.insertOne(document).catch(handleWriteErrors);
+
+  if (encryptionSecret && inserted) {
+    return decryptDocumentFields(inserted, schema, encryptionSecret, factories.schema);
+  }
+
+  return inserted;
 }
 
 export async function replaceDocument(
@@ -218,33 +248,32 @@ export async function replaceDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
-    authResolver: IAuthResolver;
   },
   options: {
     returnDocument: ReturnDocument;
-  } = {returnDocument: ReturnDocument.BEFORE}
+  } = {returnDocument: ReturnDocument.BEFORE},
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
   if (params.applyAcl) {
-    await executeWriteRule(
-      schema,
-      factories.schema,
-      document,
-      collection,
-      params.req.user,
-      factories.authResolver
-    );
+    await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
   }
 
   const documentId = document._id;
   delete document._id;
 
-  return collection
+  const replaced = await collection
     .findOneAndReplace({_id: documentId}, document, {
       returnDocument: options.returnDocument
     })
     .catch(handleWriteErrors);
+
+  if (encryptionSecret && replaced) {
+    return decryptDocumentFields(replaced, schema, encryptionSecret, factories.schema);
+  }
+
+  return replaced;
 }
 
 export async function patchDocument(
@@ -258,33 +287,32 @@ export async function patchDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
-    authResolver: IAuthResolver;
   },
   options: {
     returnDocument: ReturnDocument;
-  } = {returnDocument: ReturnDocument.BEFORE}
+  } = {returnDocument: ReturnDocument.BEFORE},
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
   if (params.applyAcl) {
-    await executeWriteRule(
-      schema,
-      factories.schema,
-      document,
-      collection,
-      params.req.user,
-      factories.authResolver
-    );
+    await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
   }
 
   delete patch._id;
 
   const updateQuery = getUpdateQueryForPatch(patch, document);
 
-  return collection
+  const patched = await collection
     .findOneAndUpdate({_id: document._id}, updateQuery, {
       returnDocument: options.returnDocument
     })
     .catch(handleWriteErrors);
+
+  if (encryptionSecret && patched) {
+    return decryptDocumentFields(patched, schema, encryptionSecret, factories.schema);
+  }
+
+  return patched;
 }
 
 export async function deleteDocument(
@@ -297,8 +325,8 @@ export async function deleteDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<BucketDocument>;
     schema: (schema: string | ObjectId) => Promise<Bucket>;
-    authResolver: IAuthResolver;
-  }
+  },
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
@@ -309,19 +337,15 @@ export async function deleteDocument(
   }
 
   if (params.applyAcl) {
-    await executeWriteRule(
-      schema,
-      factories.schema,
-      document,
-      collection,
-      params.req.user,
-      factories.authResolver
-    );
+    await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
   }
 
   const deletedCount = await collection.deleteOne({_id: document._id});
 
   if (deletedCount == 1) {
+    if (encryptionSecret) {
+      return decryptDocumentFields(document, schema, encryptionSecret, factories.schema);
+    }
     return document;
   }
 }
@@ -331,8 +355,7 @@ async function executeWriteRule(
   resolve: (id: string) => Promise<Bucket>,
   document: BucketDocument,
   collection: BaseCollection<unknown>,
-  auth: object,
-  authResolver: IAuthResolver
+  auth: object
 ) {
   let propertyMap = [];
 
@@ -342,15 +365,7 @@ async function executeWriteRule(
     throw new ACLSyntaxException(error.message);
   }
 
-  const {authPropertyMap, documentPropertyMap} = categorizePropertyMap(propertyMap);
-
-  const authRelationMap = await createRelationMap({
-    paths: authPropertyMap,
-    properties: authResolver.getProperties(),
-    resolve: resolve
-  });
-  const authRelationStage = getRelationPipeline(authRelationMap, undefined);
-  auth = await authResolver.resolveRelations(auth, authRelationStage);
+  const {documentPropertyMap} = categorizePropertyMap(propertyMap);
 
   const documentRelationMap = await createRelationMap({
     properties: schema.properties,

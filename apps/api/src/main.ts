@@ -9,7 +9,8 @@ import {
   DATE_TIME,
   OBJECTID_STRING,
   OBJECT_ID,
-  createHashFormat
+  createHashFormat,
+  createEncryptedFormat
 } from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
@@ -33,6 +34,7 @@ import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import {ConfigModule} from "./config";
 
 const yargsInstance = yargs(process.argv.slice(2)) as any;
 
@@ -78,13 +80,6 @@ const args = yargsInstance
   .demandOption("database-name")
   .demandOption("database-uri")
   /* Dashboard Options */
-  .options({
-    "dashboard-realtime": {
-      boolean: true,
-      description: "Enable/disable listening dashboards realtime. Default value is true",
-      default: true
-    }
-  })
   /* Feature Toggling: Bucket and Activity Stream */
   .options({
     "bucket-cache": {
@@ -112,11 +107,6 @@ const args = yargsInstance
       description: "Whether Bucket History feature is enabled.",
       default: true
     },
-    "experimental-bucket-realtime": {
-      boolean: true,
-      description: "Whether the experimental Bucket realtime feature is enabled.",
-      default: true
-    },
     "bucket-data-limit": {
       number: true,
       description: "Maximum document count in all bucket-data collections."
@@ -129,6 +119,10 @@ const args = yargsInstance
     "bucket-data-hash-secret": {
       string: true,
       description: "Secret to be used for hashing values in bucket data."
+    },
+    "bucket-data-encryption-secret": {
+      string: true,
+      description: "Secret to be used for encrypting/decrypting values in bucket data."
     }
   })
   /* Passport Options  */
@@ -218,26 +212,6 @@ const args = yargsInstance
       number: true,
       description: "Maximum number of identity that can be inserted."
     },
-    "refresh-token-realtime": {
-      boolean: true,
-      description: "Enable/disable realtime refresh token listening. Default value is true",
-      default: true
-    },
-    "apikey-realtime": {
-      boolean: true,
-      description: "Enable/disable listening apikey realtime. Default value is true",
-      default: true
-    },
-    "policy-realtime": {
-      boolean: true,
-      description: "Enable/disable listening policy realtime. Default value is true",
-      default: true
-    },
-    "identity-realtime": {
-      boolean: true,
-      description: "Enable/disable listening identity realtime. Default value is true",
-      default: true
-    },
     "passport-user-token-expires-in": {
       number: true,
       description: "Default lifespan of the issued JWT tokens for users. Unit: second",
@@ -268,47 +242,9 @@ const args = yargsInstance
       description: "Default lifespan of the issued refresh JWT tokens for users. Unit: second",
       default: 60 * 60 * 24 * 3
     },
-    "passport-default-user-username": {
-      string: true,
-      description: "Username of the default user.",
-      default: "spica"
-    },
-    "passport-default-user-password": {
-      string: true,
-      description: "Password of the default user account.",
-      default: "spica"
-    },
-    "passport-default-user-policies": {
-      array: true,
-      description: "Policies to attach to the default user.",
-      default: [
-        "ActivityFullAccess",
-        "ApiKeyFullAccess",
-        "AssetFullAccess",
-        "BucketFullAccess",
-        "DashboardFullAccess",
-        "EnvVarFullAccess",
-        "FunctionFullAccess",
-        "PassportFullAccess",
-        "PolicyFullAccess",
-        "PreferenceFullAccess",
-        "RefreshTokenFullAccess",
-        "StatusFullAccess",
-        "StorageFullAccess",
-        "StrategyFullAccess",
-        "VersionControlFullAccess",
-        "WebhookFullAccess",
-        "UserFullAccess"
-      ]
-    },
     "passport-user-limit": {
       number: true,
       description: "Maximum number of users that can be inserted."
-    },
-    "user-realtime": {
-      boolean: true,
-      description: "Enable/disable listening user realtime. Default value is true",
-      default: true
     },
     "user-verification-hash-secret": {
       string: true,
@@ -317,6 +253,10 @@ const args = yargsInstance
     "user-provider-encryption-secret": {
       string: true,
       description: "Encryption secret used for user provider encryption operations."
+    },
+    "user-provider-hash-secret": {
+      string: true,
+      description: "Hash secret used for user provider hash operations."
     },
     "passport-user-verification-code-expires-in": {
       number: true,
@@ -356,16 +296,6 @@ const args = yargsInstance
       boolean: true,
       description: "Enable/disable function workers debugging mode. Default value is true",
       default: false
-    },
-    "function-realtime": {
-      boolean: true,
-      description: "Enable/disable tracking functions realtime. Default value is true.",
-      default: true
-    },
-    "function-realtime-logs": {
-      boolean: true,
-      description: "Enable/disable tracking function logs realtime. Default value is true.",
-      default: true
     },
     "function-logger": {
       boolean: true,
@@ -587,12 +517,6 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     description: "Regex to filter access logs by status code",
     default: ".*"
   })
-  /* Environment Variable Options */
-  .option("env-var-realtime", {
-    boolean: true,
-    description: "Enable/disable realtime updates for environment variables.",
-    default: true
-  })
   .option("versioncontrol-sync-realtime", {
     boolean: true,
     description: "Enable/disable listening to version control sync realtime. Default value is true",
@@ -621,6 +545,11 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["bucket-data-hash-secret"] = bucketDataHashSecret;
     }
 
+    const bucketDataEncryptionSecret = process.env.BUCKET_DATA_ENCRYPTION_SECRET;
+    if (bucketDataEncryptionSecret) {
+      args["bucket-data-encryption-secret"] = bucketDataEncryptionSecret;
+    }
+
     const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
     if (twilioAccountSid) {
       args["twilio-sms-service-account-sid"] = twilioAccountSid;
@@ -644,6 +573,11 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     const userProviderEncryptionSecret = process.env.USER_PROVIDER_ENCRYPTION_SECRET;
     if (userProviderEncryptionSecret) {
       args["user-provider-encryption-secret"] = userProviderEncryptionSecret;
+    }
+
+    const userProviderHashSecret = process.env.USER_PROVIDER_HASH_SECRET;
+    if (userProviderHashSecret) {
+      args["user-provider-hash-secret"] = userProviderHashSecret;
     }
   })
   .check(args => {
@@ -731,7 +665,7 @@ const modules = [
   BatchModule.forRoot({
     port: args["port"]
   }),
-  DashboardModule.forRoot({realtime: args["dashboard-realtime"]}),
+  DashboardModule.forRoot({realtime: true}),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {
@@ -742,7 +676,7 @@ const modules = [
     readPreference: args["database-read-preference"]
   }),
   EnvVarModule.forRoot({
-    realtime: args["env-var-realtime"]
+    realtime: true
   }),
   MailerModule.forRoot({
     host: args["mailer-host"],
@@ -769,19 +703,21 @@ const modules = [
       OBJECT_ID,
       DATE_TIME,
       OBJECTID_STRING,
-      createHashFormat(args["bucket-data-hash-secret"])
+      createHashFormat(args["bucket-data-hash-secret"]),
+      createEncryptedFormat(args["bucket-data-encryption-secret"], args["bucket-data-hash-secret"])
     ],
     defaults: [CREATED_AT, UPDATED_AT]
   }),
   BucketModule.forRoot({
     hooks: args["bucket-hooks"],
     history: args["bucket-history"],
-    realtime: args["experimental-bucket-realtime"],
+    realtime: true,
     cache: args["bucket-cache"],
     cacheTtl: args["bucket-cache-ttl"],
     bucketDataLimit: args["bucket-data-limit"],
     graphql: args["bucket-graphql"],
-    hashSecret: args["bucket-data-hash-secret"]
+    hashSecret: args["bucket-data-hash-secret"],
+    encryptionSecret: args["bucket-data-encryption-secret"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",
@@ -799,9 +735,9 @@ const modules = [
     publicUrl: args["public-url"],
     defaultStrategy: args["passport-default-strategy"],
     samlCertificateTTL: args["passport-saml-certificate-ttl"],
-    apikeyRealtime: args["apikey-realtime"],
-    refreshTokenRealtime: args["refresh-token-realtime"],
-    policyRealtime: args["policy-realtime"],
+    apikeyRealtime: true,
+    refreshTokenRealtime: true,
+    policyRealtime: true,
     identityOptions: {
       expiresIn: args["passport-identity-token-expires-in"],
       maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
@@ -818,7 +754,7 @@ const modules = [
         failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
         blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
       },
-      identityRealtime: args["identity-realtime"]
+      identityRealtime: true
     },
     userOptions: {
       expiresIn: args["passport-user-token-expires-in"],
@@ -827,18 +763,16 @@ const modules = [
       refreshTokenExpiresIn: args["passport-user-refresh-token-expires-in"],
       secretOrKey: args["passport-secret"],
       audience: "spica.io",
-      defaultUserUsername: args["passport-default-user-username"],
-      defaultUserPassword: args["passport-default-user-password"],
-      defaultUserPolicies: args["passport-default-user-policies"],
       entryLimit: args["passport-user-limit"],
       passwordHistoryLimit: args["passport-user-password-history-limit"],
       blockingOptions: {
         failedAttemptLimit: args["passport-user-failed-login-attempt-limit"],
         blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
       },
-      userRealtime: args["user-realtime"],
+      userRealtime: true,
       verificationHashSecret: args["user-verification-hash-secret"],
       providerEncryptionSecret: args["user-provider-encryption-secret"],
+      providerHashSecret: args["user-provider-hash-secret"],
       verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
     }
   }),
@@ -860,11 +794,12 @@ const modules = [
     },
     debug: args["function-debug"],
     maxConcurrency: args["function-worker-concurrency"],
-    realtimeLogs: args["function-realtime-logs"],
+    realtimeLogs: true,
     logger: args["function-logger"],
     invocationLogs: args["function-invocation-logs"],
-    realtime: args["function-realtime"]
-  })
+    realtime: true
+  }),
+  ConfigModule.forRoot()
 ];
 
 if (args["activity-stream"]) {

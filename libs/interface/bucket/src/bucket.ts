@@ -72,4 +72,5 @@ export interface BucketOptions {
   bucketDataLimit?: number;
   graphql: boolean;
   hashSecret?: string;
+  encryptionSecret?: string;
 }

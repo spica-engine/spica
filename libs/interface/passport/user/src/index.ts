@@ -1,15 +1,6 @@
 import {ObjectId} from "@spica-server/database";
+import {EncryptedData} from "@spica-server/core/encryption";
 import {FactorMeta} from "@spica-server/interface/passport/authfactor";
-
-export interface UserSettingsContents {
-  schema: UserSchema;
-}
-
-export interface UserSchema {
-  attributes: {
-    [key: string]: any;
-  };
-}
 
 export interface User {
   _id?: ObjectId;
@@ -17,16 +8,15 @@ export interface User {
   password: string;
   deactivateJwtsBefore?: number;
   policies: string[];
-  attributes?: {
-    [key: string]: any;
-  };
   authFactor?: FactorMeta;
   lastPasswords: string[];
   lastLogin: Date;
   failedAttempts: Date[];
   bannedUntil?: Date;
-  email?: EncryptableField;
-  phone?: EncryptableField;
+  email?: EncryptedData<true>;
+  email_verified_at?: Date;
+  phone?: EncryptedData<true>;
+  phone_verified_at?: Date;
 }
 
 export interface LoginCredentials {
@@ -54,9 +44,6 @@ export interface UserOptions {
   issuer: string;
   audience?: string;
   secretOrKey: string;
-  defaultUserUsername?: string;
-  defaultUserPassword?: string;
-  defaultUserPolicies?: string[];
   entryLimit?: number;
   blockingOptions: {
     failedAttemptLimit: number;
@@ -68,6 +55,8 @@ export interface UserOptions {
   userRealtime: boolean;
   verificationHashSecret?: string;
   providerEncryptionSecret?: string;
+  providerHashSecret?: string;
+  publicUrl?: string;
 }
 
 export interface UserVerification {
@@ -83,25 +72,30 @@ export interface UserVerification {
 
 export interface UserConfigSettings {
   verificationProcessMaxAttempt: number;
+  passwordlessLogin?: PasswordlessLoginConfig;
+  resetPasswordProvider?: Array<{
+    provider: "email" | "phone";
+    strategy: string;
+  }>;
+  providerVerificationConfig?: Array<{
+    provider: "email" | "phone";
+    strategy: "Otp" | "MagicLink";
+  }>;
+}
+export interface PasswordlessLoginConfig {
+  passwordlessLoginProvider: Array<{
+    provider: "email" | "phone";
+    strategy: string;
+  }>;
 }
 export const USER_OPTIONS = Symbol.for("USER_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
 
-export type EncryptedData = {
-  encrypted: string;
-  iv: string;
-  authTag: string;
+export type DecryptedUser = Omit<User, "email" | "phone"> & {
+  email?: string;
+  email_verified_at?: Date;
+  phone?: string;
+  phone_verified_at?: Date;
 };
 
-type DecryptedData = {
-  value: string;
-};
-
-type EncryptableField = {
-  createdAt: Date;
-} & (DecryptedData | EncryptedData);
-
-export type DecryptedUser = User & {
-  email?: {value: string; createdAt: Date};
-  phone?: {value: string; createdAt: Date};
-};
+export type UserSelfUpdate = Pick<User, "password">;

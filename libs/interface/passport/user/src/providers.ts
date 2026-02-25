@@ -1,7 +1,8 @@
 export interface VerificationMessage {
   destination: string;
-  code: string;
+  code?: string;
   provider: string;
+  magicLinkUrl?: string;
   metadata?: Record<string, any>;
 }
 

@@ -20,17 +20,17 @@ export default {
     },
     {
       action: "bucket:data:stream",
-      resource: {include: ["*/*"], exclude: []},
+      resource: {include: ["*"], exclude: []},
       module: "bucket:data"
     },
     {
       action: "bucket:data:index",
-      resource: {include: ["*/*"], exclude: []},
+      resource: {include: ["*"], exclude: []},
       module: "bucket:data"
     },
     {
       action: "bucket:data:show",
-      resource: {include: ["*/*"], exclude: []},
+      resource: {include: ["*"], exclude: []},
       module: "bucket:data"
     },
     {

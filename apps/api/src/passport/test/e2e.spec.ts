@@ -15,6 +15,7 @@ import samlp from "samlp";
 
 import cookieParser from "cookie-parser";
 import {jwtDecode} from "jwt-decode";
+import {ConfigModule} from "@spica-server/config";
 
 const EXPIRES_IN = 60_000;
 
@@ -216,7 +217,8 @@ describe("E2E Tests", () => {
     controllers: [SAMLController, OAuthController],
     imports: [
       SchemaModule.forRoot(),
-      DatabaseTestingModule.standalone(),
+      DatabaseTestingModule.replicaSet(),
+      ConfigModule.forRoot(),
       PassportModule.forRoot({
         publicUrl: publicUrl,
         samlCertificateTTL: EXPIRES_IN,
@@ -811,10 +813,6 @@ describe("E2E Tests", () => {
                 {authorization: res.body.token}
               );
               expect(body.username).toEqual("testuser@testuser.com");
-              expect(body.attributes).toEqual({
-                email: "testuser@testuser.com",
-                picture: "url"
-              });
               done();
             });
 

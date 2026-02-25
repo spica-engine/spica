@@ -14,10 +14,16 @@ export class EmailVerificationProvider implements VerificationProvider {
 
   async send(message: VerificationMessage): Promise<VerificationResult> {
     try {
+      const subject = message.metadata?.subject || "Spica verification code";
+      const text = message.magicLinkUrl
+        ? message.metadata?.text ||
+          `Verify your email by clicking this link: ${message.magicLinkUrl}`
+        : message.metadata?.text || `Your verification code is: ${message.code}`;
+
       const result = await this.mailerService.sendMail({
         to: message.destination,
-        subject: message.metadata?.subject || "Spica verification code",
-        text: message.metadata?.text || `Your verification code is: ${message.code}`
+        subject,
+        text
       });
 
       const success =

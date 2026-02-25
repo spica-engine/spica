@@ -9,6 +9,7 @@ import * as Identity from "@spica-devkit/identity";
 import Axios from "axios";
 import {jwtDecode} from "jwt-decode";
 import {BatchModule} from "@spica-server/batch";
+import {ConfigModule} from "@spica-server/config";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
@@ -25,7 +26,8 @@ describe("Identity", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot(),
-        DatabaseTestingModule.standalone(),
+        DatabaseTestingModule.replicaSet(),
+        ConfigModule.forRoot(),
         PassportModule.forRoot({
           publicUrl: PUBLIC_URL,
           samlCertificateTTL: EXPIRES_IN,
@@ -56,10 +58,7 @@ describe("Identity", () => {
             maxExpiresIn: MAX_EXPIRES_IN,
             refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
             secretOrKey: "spica",
-            defaultUserUsername: "spica",
-            defaultUserPassword: "spica",
             audience: "spica",
-            defaultUserPolicies: ["PassportFullAccess"],
             blockingOptions: {
               blockDurationMinutes: 0,
               failedAttemptLimit: 0

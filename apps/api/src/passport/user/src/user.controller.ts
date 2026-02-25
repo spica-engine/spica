@@ -35,7 +35,9 @@ import {
   USER_OPTIONS,
   UserOptions,
   PaginationResponse,
-  POLICY_PROVIDER
+  POLICY_PROVIDER,
+  UserSelfUpdate,
+  DecryptedUser
 } from "@spica-server/interface/passport/user";
 import {registerPolicyAttacher} from "./utility";
 import {ClassCommander} from "@spica-server/replication";
@@ -43,6 +45,9 @@ import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {VerificationService} from "./verification.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
+import {PasswordlessLoginService} from "./services/passwordless-login.service";
+import {PasswordResetService} from "./services/password-reset.service";
+import {UserPipelineBuilder} from "./pipeline.builder";
 
 @Controller("passport/user")
 export class UserController {
@@ -68,6 +73,8 @@ export class UserController {
     private userService: UserService,
     private verificationService: VerificationService,
     private providerVerificationService: ProviderVerificationService,
+    private passwordlessLoginService: PasswordlessLoginService,
+    private passwordResetService: PasswordResetService,
     @Inject(USER_OPTIONS) private options: UserOptions,
     private authFactor: AuthFactor,
     @Optional() private commander: ClassCommander
@@ -146,7 +153,7 @@ export class UserController {
     @Query("filter", JSONP) filter: object,
     @ResourceFilter() resourceFilter: object
   ) {
-    const pipelineBuilder = await new PipelineBuilder()
+    const pipelineBuilder = await new UserPipelineBuilder(this.userService)
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);
 
@@ -166,12 +173,16 @@ export class UserController {
     ).result();
 
     if (paginate) {
-      const result = await this.userService.aggregate<PaginationResponse<User>>(pipeline).next();
-
-      if (!result.data.length) {
+      const {data, meta} = await this.userService
+        .aggregate<PaginationResponse<User>>(pipeline)
+        .next();
+      let result: PaginationResponse<DecryptedUser>;
+      if (!data.length) {
         result.meta = {total: 0};
+        result.data = [];
       } else {
-        result.data = result.data.map(user => {
+        result.meta = meta;
+        result.data = data.map(user => {
           return this.userService.decryptProviderFields(user);
         });
       }
@@ -192,6 +203,14 @@ export class UserController {
   @UseGuards(AuthGuard())
   getFactors() {
     return this.authFactor.getSchemas();
+  }
+
+  @Get("verify-magic-link")
+  async verifyMagicLink(@Query("token") token: string) {
+    if (!token) {
+      throw new BadRequestException("Token query parameter is required.");
+    }
+    return this.providerVerificationService.validateCredentialsVerification(token, "MagicLink");
   }
 
   @Delete(":id/factors")
@@ -221,10 +240,15 @@ export class UserController {
     ActionGuard("passport:user:show", undefined, registerPolicyAttacher("UserReadOnlyAccess"))
   )
   async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const user = await this.userService.findOne(
-      {_id: id},
-      {projection: this.hideSecretsExpression()}
-    );
+    const pipelineBuilder = new UserPipelineBuilder(this.userService)
+      .findOneIfRequested(id)
+      .setVisibilityOfFields(this.hideSecretsExpression());
+
+    const pipeline = await pipelineBuilder.result();
+    let user = await this.userService
+      .aggregate<User>(pipeline)
+      .toArray()
+      .then(users => users[0]);
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -325,7 +349,7 @@ export class UserController {
   @Post()
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:create"))
   async insertOne(
-    @Body(Schema.validate("http://spica.internal/passport/create-user-with-attributes"))
+    @Body(Schema.validate("http://spica.internal/passport/user-create"))
     user: User
   ) {
     user.password = await hash(user.password);
@@ -368,14 +392,12 @@ export class UserController {
   async updateSelf(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/user-self-update"))
-    user: Partial<User>
+    user: UserSelfUpdate
   ) {
     if (user.password) {
-      const passwordUpdates = await this.handlePasswordUpdate(id, user.password);
+      const passwordUpdates = await this.userService.handlePasswordUpdate(id, user.password);
       Object.assign(user, passwordUpdates);
     }
-
-    delete user.authFactor;
 
     return this.userService
       .findOneAndUpdate({_id: id}, {$set: user}, {returnDocument: ReturnDocument.AFTER})
@@ -399,14 +421,12 @@ export class UserController {
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/user-update"))
-    user: Partial<User>
+    user: Pick<User, "username" | "password" | "bannedUntil" | "deactivateJwtsBefore">
   ) {
     if (user.password) {
-      const passwordUpdates = await this.handlePasswordUpdate(id, user.password);
+      const passwordUpdates = await this.userService.handlePasswordUpdate(id, user.password);
       Object.assign(user, passwordUpdates);
     }
-
-    delete user.authFactor;
 
     return this.userService
       .findOneAndUpdate({_id: id}, {$set: user}, {returnDocument: ReturnDocument.AFTER})
@@ -496,7 +516,7 @@ export class UserController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("value") value: string,
     @Body("provider") provider: string,
-    @Body("strategy") strategy: "Otp",
+    @Body("strategy") strategy: "Otp" | "MagicLink",
     @Body("purpose") purpose: string
   ) {
     return this.providerVerificationService.startCredentialsVerification(
@@ -518,48 +538,62 @@ export class UserController {
     @Body("purpose") purpose: string
   ) {
     return this.providerVerificationService.validateCredentialsVerification(
-      id,
       code,
       strategy,
+      id,
       provider,
       purpose
     );
   }
 
-  private async handlePasswordUpdate(
-    id: ObjectId,
-    newPassword: string
-  ): Promise<{password: string; deactivateJwtsBefore?: number; lastPasswords?: string[]}> {
-    const {password: currentPassword, lastPasswords} = await this.userService.findOne({_id: id});
-
-    const isEqual = await compare(newPassword, currentPassword);
-    const updates: any = {};
-
-    if (!isEqual) {
-      updates.deactivateJwtsBefore = Date.now() / 1000;
+  @Post("passwordless-login/start")
+  startPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-start"))
+    body: {
+      username: string;
+      provider: "email" | "phone";
     }
+  ) {
+    return this.passwordlessLoginService.start(body.username, body.provider);
+  }
 
-    if (this.options.passwordHistoryLimit > 0) {
-      updates.lastPasswords = lastPasswords || [];
-      updates.lastPasswords.push(currentPassword);
-
-      if (updates.lastPasswords.length === this.options.passwordHistoryLimit + 1) {
-        updates.lastPasswords.shift();
-      }
-
-      const isOneOfLastPasswords = (
-        await Promise.all(updates.lastPasswords.map(oldPw => compare(newPassword, oldPw)))
-      ).includes(true);
-
-      if (isOneOfLastPasswords) {
-        throw new BadRequestException(
-          `New password can't be the one of last ${this.options.passwordHistoryLimit} passwords.`
-        );
-      }
+  @Post("passwordless-login/verify")
+  verifyPasswordlessLogin(
+    @Body(Schema.validate("http://spica.internal/passport/passwordless-login-verify"))
+    body: {
+      username: string;
+      code: string;
+      provider: "email" | "phone";
     }
+  ) {
+    return this.passwordlessLoginService.verify(body.username, body.code, body.provider);
+  }
+  @Post("forgot-password/start")
+  async startForgotPassword(
+    @Body(Schema.validate("http://spica.internal/passport/forgot-password-start"))
+    body: {
+      username: string;
+      provider: "email" | "phone";
+    }
+  ) {
+    return this.passwordResetService.startForgotPasswordProcess(body.username, body.provider);
+  }
 
-    updates.password = await hash(newPassword);
-
-    return updates;
+  @Post("forgot-password/verify")
+  async verifyForgotPassword(
+    @Body(Schema.validate("http://spica.internal/passport/forgot-password-verify"))
+    body: {
+      username: string;
+      code: string;
+      newPassword: string;
+      provider: "email" | "phone";
+    }
+  ) {
+    return this.passwordResetService.verifyAndResetPassword(
+      body.username,
+      body.code,
+      body.newPassword,
+      body.provider
+    );
   }
 }

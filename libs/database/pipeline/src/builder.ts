@@ -1,10 +1,22 @@
 import {ObjectId} from "@spica-server/database";
 import {IPipelineBuilder} from "@spica-server/interface/database";
-import {FilterReplaceManager} from "@spica-server/filter";
+import {
+  FilterReplaceManager,
+  FilterReplacer,
+  replaceFilterDates,
+  replaceFilterObjectIds
+} from "@spica-server/filter";
 
 export class PipelineBuilder implements IPipelineBuilder {
   protected pipeline: object[] = [];
   protected isFilterApplied = false;
+
+  constructor(
+    private readonly filterReplacers: FilterReplacer[] = [
+      replaceFilterObjectIds,
+      replaceFilterDates
+    ]
+  ) {}
 
   attachToPipeline(condition: unknown, ...attachedObject: object[]) {
     if (!!condition) {
@@ -27,7 +39,7 @@ export class PipelineBuilder implements IPipelineBuilder {
     this.isFilterApplied = this.isValidObject(filter);
 
     if (this.isFilterApplied) {
-      const filterReplacer = new FilterReplaceManager();
+      const filterReplacer = new FilterReplaceManager(this.filterReplacers);
       filter = await filterReplacer.replace(filter);
     }
 

@@ -15,15 +15,22 @@ export class BucketPipelineBuilder extends PipelineBuilder {
   private usedRelationPaths: string[] = [];
   private locale: Locale;
   private hashSecret?: string;
+  private encryptionSecret?: string;
 
   private defaultRule = "true==true";
   private isRuleFilteringDocuments: boolean;
 
-  constructor(schema: Bucket, factories: CrudFactories<any>, hashSecret?: string) {
+  constructor(
+    schema: Bucket,
+    factories: CrudFactories<any>,
+    hashSecret?: string,
+    encryptionSecret?: string
+  ) {
     super();
     this.schema = schema;
     this.factories = factories;
     this.hashSecret = hashSecret;
+    this.encryptionSecret = encryptionSecret;
   }
 
   private buildRelationMap(propertyMap: string[][]): Promise<RelationMap[]> {
@@ -61,15 +68,7 @@ export class BucketPipelineBuilder extends PipelineBuilder {
     this.isRuleFilteringDocuments = !this.areRulesSame(this.schema.acl.read, this.defaultRule);
 
     const propertyMap = expression.extractPropertyMap(this.schema.acl.read);
-    const {documentPropertyMap, authPropertyMap} = categorizePropertyMap(propertyMap);
-
-    const authRelationMap = await createRelationMap({
-      paths: authPropertyMap,
-      properties: this.factories.authResolver.getProperties(),
-      resolve: this.factories.schema
-    });
-    const authRelationStage = getRelationPipeline(authRelationMap, undefined);
-    user = await this.factories.authResolver.resolveRelations(user, authRelationStage);
+    const {documentPropertyMap} = categorizePropertyMap(propertyMap);
 
     const documentRelationMap = await this.buildRelationMap(documentPropertyMap);
     const documentRelationStage = getRelationPipeline(documentRelationMap, this.locale);

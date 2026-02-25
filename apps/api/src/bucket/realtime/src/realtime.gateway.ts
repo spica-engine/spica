@@ -17,7 +17,8 @@ import {
   getDependents,
   authIdToString,
   filterReviver,
-  constructFilterValues
+  constructFilterValues,
+  decryptDocumentFields
 } from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
@@ -36,9 +37,8 @@ import {ChunkKind} from "@spica-server/interface/realtime";
 import {GuardService} from "@spica-server/passport/guard/services";
 import {resourceFilterFunction, extractStrategyType} from "@spica-server/passport/guard";
 import {Action} from "@spica-server/interface/activity";
-import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {MessageKind} from "@spica-server/interface/bucket/realtime";
-import {BucketDocument} from "@spica-server/interface/bucket";
+import {BucketDocument, BUCKET_DATA_ENCRYPTION_SECRET} from "@spica-server/interface/bucket";
 import {getConnectionHandlers} from "@spica-server/realtime";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 @WebSocketGateway({
@@ -51,11 +51,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private bucketService: BucketService,
     private bucketDataService: BucketDataService,
     private validator: Validator,
-    @Inject(AUTH_RESOLVER) private authResolver: IAuthResolver,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
     @Optional() private hookEmitter: ChangeEmitter,
-    @Optional() private bucketCacheService: BucketCacheService
+    @Optional() private bucketCacheService: BucketCacheService,
+    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
   ) {
     this.handlers = getConnectionHandlers(
       this.guardService,
@@ -68,7 +68,27 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       }),
       this.realtime,
       resourceFilterFunction,
-      "bucket:data:stream"
+      "bucket:data:stream",
+      this.encryptionSecret
+        ? async (_client: any, req: any) => {
+            const bucketId = req.params.id;
+            const schema = await this.bucketService.findOne({_id: new ObjectId(bucketId)});
+            if (!schema) return undefined;
+            return (chunk: any) => {
+              if (!chunk || !chunk.document) return chunk;
+              return {
+                ...chunk,
+                document: decryptDocumentFields(
+                  chunk.document,
+                  schema,
+                  this.encryptionSecret,
+                  this.getBucketResolver(),
+                  chunk.document._id
+                )
+              };
+            };
+          }
+        : undefined
     );
   }
 
@@ -146,9 +166,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         {
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver(),
-          deleteOne: id => this.delete(client, {_id: id}),
-          authResolver: this.authResolver
-        }
+          deleteOne: id => this.delete(client, {_id: id})
+        },
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -217,9 +237,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         },
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver(),
-          authResolver: this.authResolver
-        }
+          schema: this.getBucketResolver()
+        },
+        undefined,
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -320,10 +341,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         },
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver(),
-          authResolver: this.authResolver
+          schema: this.getBucketResolver()
         },
-        {returnDocument: ReturnDocument.AFTER}
+        {returnDocument: ReturnDocument.AFTER},
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -397,9 +418,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         },
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver(),
-          authResolver: this.authResolver
-        }
+          schema: this.getBucketResolver()
+        },
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, 500, error.message);

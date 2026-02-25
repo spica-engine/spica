@@ -6,6 +6,8 @@ import {INestApplication} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID, DATE_TIME} from "@spica-server/core/schema/formats";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {Config} from "twilio/lib/twiml/VoiceResponse";
+import {ConfigModule} from "@spica-server/config/src/config.module";
 
 describe("User Ban Logic", () => {
   let module: TestingModule;
@@ -34,6 +36,7 @@ describe("User Ban Logic", () => {
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         CoreTestingModule,
+        ConfigModule.forRoot(),
         PassportModule.forRoot({
           publicUrl: "http://localhost:3000",
           samlCertificateTTL: 604800,
@@ -71,9 +74,6 @@ describe("User Ban Logic", () => {
             issuer: "spica",
             secretOrKey: "spica",
             audience: "spica",
-            defaultUserUsername: "testuser",
-            defaultUserPassword: "password123",
-            defaultUserPolicies: [],
             blockingOptions: {
               failedAttemptLimit: 3,
               blockDurationMinutes: 10
@@ -99,16 +99,17 @@ describe("User Ban Logic", () => {
     });
     identityToken = identityLoginRes.body.token;
 
-    const userListRes = await req.get(
+    const userListRes = await req.post(
       `/passport/user`,
       {
-        username: "testuser"
+        username: "testuser",
+        password: "password123"
       },
       {
         Authorization: `IDENTITY ${identityToken}`
       }
     );
-    testUserId = userListRes.body[0]._id;
+    testUserId = userListRes.body._id;
   });
 
   afterEach(() => app.close());

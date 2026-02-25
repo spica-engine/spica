@@ -1,5 +1,5 @@
 import {Injectable, Inject, UnauthorizedException, BadRequestException} from "@nestjs/common";
-import {BaseCollection, DatabaseService} from "@spica-server/database";
+import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {
   User,
   USER_OPTIONS,
@@ -12,7 +12,7 @@ import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 import {v4 as uuidv4} from "uuid";
-import {encrypt, decrypt} from "@spica-server/core/schema";
+import {encrypt, decrypt, hash as hashValue} from "@spica-server/core/encryption";
 
 @Injectable()
 export class UserService extends BaseCollection<User>("user") {
@@ -27,6 +27,15 @@ export class UserService extends BaseCollection<User>("user") {
       entryLimit: userOptions.entryLimit,
       afterInit: () => {
         this._coll.createIndex({username: 1}, {unique: true});
+        this._coll.createIndex(
+          {"email.hash": 1},
+          {unique: true, partialFilterExpression: {"email.hash": {$exists: true}}}
+        );
+
+        this._coll.createIndex(
+          {"phone.hash": 1},
+          {unique: true, partialFilterExpression: {"phone.hash": {$exists: true}}}
+        );
       }
     });
   }
@@ -228,6 +237,7 @@ export class UserService extends BaseCollection<User>("user") {
   }
 
   isUserBlocked(user: User) {
+    user.failedAttempts = user.failedAttempts || [];
     const lastFailedAttempts = user.failedAttempts.filter(attempt => attempt > user.lastLogin);
 
     const isAttemptLimitReached =
@@ -301,68 +311,113 @@ export class UserService extends BaseCollection<User>("user") {
     return result.join(" ");
   }
 
-  encryptField(value: string): {
-    encrypted: string;
-    iv: string;
-    authTag: string;
-  } {
-    if (!value) {
-      throw new BadRequestException("Value to encrypt is required.");
-    }
-
-    const secret = this.getProviderEncryptionSecret();
-    const encryptedData = encrypt(value, secret);
-
-    return {
-      ...encryptedData
-    };
+  encryptField(value: string) {
+    return encrypt(value, this.getProviderEncryptionSecret(), this.getProviderHashSecret());
   }
 
   decryptField(encryptedField: {encrypted: string; iv: string; authTag: string}): string {
-    if (!encryptedField) {
-      throw new BadRequestException("No encrypted data provided.");
-    }
-
-    const secret = this.getProviderEncryptionSecret();
-    return decrypt(encryptedField, secret);
+    return decrypt(encryptedField, this.getProviderEncryptionSecret());
   }
 
-  decryptProviderFields(user: User): any {
-    if (!user) return user;
+  decryptProviderFields(user: User): DecryptedUser {
+    const decryptedUser: any = {...user};
 
-    const decryptedUser = {...user};
-
-    if (user.email && "encrypted" in user.email) {
-      decryptedUser.email = {
-        value: this.decryptField({
-          encrypted: user.email.encrypted,
-          iv: user.email.iv,
-          authTag: user.email.authTag
-        }),
-        createdAt: user.email.createdAt
-      };
+    if (user.email) {
+      decryptedUser.email = decrypt(user.email, this.getProviderEncryptionSecret());
     }
 
-    if (user.phone && "encrypted" in user.phone) {
-      decryptedUser.phone = {
-        value: this.decryptField({
-          encrypted: user.phone.encrypted,
-          iv: user.phone.iv,
-          authTag: user.phone.authTag
-        }),
-        createdAt: user.phone.createdAt
-      };
+    if (user.phone) {
+      decryptedUser.phone = decrypt(user.phone, this.getProviderEncryptionSecret());
     }
 
     return decryptedUser;
   }
 
+  hashProviderValue(value: string): string {
+    if (!value) {
+      throw new BadRequestException("Value to hash is required.");
+    }
+
+    const secret = this.getProviderHashSecret();
+    return hashValue(value, secret);
+  }
+
   private getProviderEncryptionSecret(): string {
     if (!this.userOptions.providerEncryptionSecret) {
       throw new BadRequestException(
-        "User hash secret is not configured. Please set USER_PROVIDER_HASH_SECRET"
+        "User encryption secret is not configured. Please set USER_PROVIDER_ENCRYPTION_SECRET"
       );
     }
     return this.userOptions.providerEncryptionSecret;
+  }
+
+  private getProviderHashSecret(): string {
+    if (!this.userOptions.providerHashSecret) {
+      throw new BadRequestException(
+        "Provider hash secret is not configured. Please set USER_PROVIDER_HASH_SECRET"
+      );
+    }
+    return this.userOptions.providerHashSecret;
+  }
+
+  async handlePasswordUpdate(
+    id: ObjectId,
+    newPassword: string,
+    skipCurrentPasswordCheck: boolean = false
+  ): Promise<{password: string; deactivateJwtsBefore?: number; lastPasswords?: string[]}> {
+    const user = await this.findOne({_id: id});
+
+    if (!user) {
+      throw new BadRequestException("User not found");
+    }
+
+    const {password: currentPassword, lastPasswords} = user;
+    const updates: any = {};
+
+    if (!skipCurrentPasswordCheck) {
+      const isEqual = await compare(newPassword, currentPassword);
+      if (!isEqual) {
+        updates.deactivateJwtsBefore = Date.now() / 1000;
+      }
+    } else {
+      updates.deactivateJwtsBefore = Date.now() / 1000;
+    }
+
+    if (this.userOptions.passwordHistoryLimit > 0) {
+      updates.lastPasswords = lastPasswords || [];
+      updates.lastPasswords.push(currentPassword);
+
+      if (updates.lastPasswords.length === this.userOptions.passwordHistoryLimit + 1) {
+        updates.lastPasswords.shift();
+      }
+
+      const isOneOfLastPasswords = (
+        await Promise.all(updates.lastPasswords.map(oldPw => compare(newPassword, oldPw)))
+      ).includes(true);
+
+      if (isOneOfLastPasswords) {
+        throw new BadRequestException(
+          `New password can't be the one of last ${this.userOptions.passwordHistoryLimit} passwords.`
+        );
+      }
+    }
+
+    updates.password = await hash(newPassword);
+
+    return updates;
+  }
+
+  async isUserVerifiedProvider(user: User, provider: string): Promise<boolean> {
+    const providerField = user[provider];
+
+    if (!providerField) {
+      return Promise.reject(`User does not have a ${provider} field.`);
+    }
+
+    if (!("encrypted" in providerField)) {
+      return Promise.reject(`User ${provider} field is not properly configured.`);
+    }
+
+    return Promise.resolve(true);
   }
 }

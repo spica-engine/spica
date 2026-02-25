@@ -56,7 +56,7 @@ export class PassportModule {
         }),
         PassportCoreModule.initialize(options),
         IdentityModule.forRoot(options.identityOptions),
-        UserModule.forRoot(options.userOptions),
+        UserModule.forRoot({...options.userOptions, publicUrl: options.publicUrl}),
         PolicyModule.forRoot({realtime: options.policyRealtime}),
         ApiKeyModule.forRoot({realtime: options.apikeyRealtime}),
         RefreshTokenModule.forRoot({

@@ -17,7 +17,7 @@ export class ProviderVerificationService {
     provider: string,
     purpose: string
   ): Promise<{message: string; value: string; metadata: Record<string, any>}> {
-    return await this.verificationService.startVerificationProcess(
+    return this.verificationService.startVerificationProcess(
       id,
       value,
       strategy,
@@ -27,40 +27,53 @@ export class ProviderVerificationService {
   }
 
   async validateCredentialsVerification(
-    id: ObjectId,
     code: string,
     strategy: string,
-    provider: string,
-    purpose: string
+    id?: ObjectId,
+    provider?: string,
+    purpose?: string
   ): Promise<{message: string; provider: string; destination: string}> {
-    const response = await this.verificationService.confirmVerificationProcess(
-      id,
-      code,
-      strategy,
-      provider,
-      purpose
-    );
+    const response =
+      strategy === "MagicLink"
+        ? await this.verificationService.confirmMagicLinkVerification(code)
+        : await this.verificationService.confirmVerificationProcess(
+            id,
+            code,
+            strategy,
+            provider,
+            purpose
+          );
 
-    const encryptedData = this.userService.encryptField(response.destination);
+    return this.persistVerifiedProvider(
+      response.userId,
+      response.destination,
+      response.verifiedField,
+      response.provider
+    );
+  }
+
+  private async persistVerifiedProvider(
+    userId: ObjectId,
+    destination: string,
+    verifiedField: string,
+    provider: string
+  ): Promise<{message: string; provider: string; destination: string}> {
+    const encryptedData = this.userService.encryptField(destination);
 
     await this.userService.updateOne(
-      {_id: response.userId},
+      {_id: userId},
       {
         $set: {
-          [response.verifiedField]: {
-            encrypted: encryptedData.encrypted,
-            iv: encryptedData.iv,
-            authTag: encryptedData.authTag,
-            createdAt: new Date()
-          }
+          [verifiedField]: encryptedData,
+          [`${verifiedField}_verified_at`]: new Date()
         }
       }
     );
 
     return {
       message: "Verification completed successfully",
-      provider: response.provider,
-      destination: response.destination
+      provider,
+      destination
     };
   }
 }

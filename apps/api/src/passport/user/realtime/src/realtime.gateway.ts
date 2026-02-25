@@ -1,7 +1,7 @@
 import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestjs/websockets";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport/guard/services";
-import {getConnectionHandlers} from "@spica-server/realtime";
+import {getConnectionHandlers, RealtimeOptionsBuilder} from "@spica-server/realtime";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {resourceFilterFunction} from "@spica-server/passport/guard";
 
@@ -11,10 +11,7 @@ import {resourceFilterFunction} from "@spica-server/passport/guard";
 export class UserRealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "user";
 
-  constructor(
-    private realtime: RealtimeDatabaseService,
-    private guardService: GuardService
-  ) {}
+  constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
 
   private handlers = getConnectionHandlers(
     this.guardService,
@@ -38,34 +35,7 @@ export class UserRealtimeGateway implements OnGatewayConnection, OnGatewayDiscon
     return this.handlers.handleDisconnect(client, client.upgradeReq);
   }
 
-  async prepareOptions(client, req) {
-    const options: any = {filter: {$and: []}};
-
-    const policyMatch = req.resourceFilter || {$match: {}};
-    options.filter.$and.push(policyMatch.$match);
-
-    if (req.query.has("filter")) {
-      const parsedFilter = JSON.parse(req.query.get("filter"));
-      options.filter.$and.push(parsedFilter);
-    }
-
-    if (req.query.has("sort")) {
-      try {
-        options.sort = JSON.parse(req.query.get("sort"));
-      } catch (e) {
-        client.send(JSON.stringify({code: 400, message: e.message}));
-        return client.close(1003);
-      }
-    }
-
-    if (req.query.has("limit")) {
-      options.limit = Number(req.query.get("limit"));
-    }
-
-    if (req.query.has("skip")) {
-      options.skip = Number(req.query.get("skip"));
-    }
-
-    return options;
+  async prepareOptions(_client, req) {
+    return RealtimeOptionsBuilder.fromQuery(req, {useResourceFilter: true, useFilter: true});
   }
 }
