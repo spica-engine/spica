@@ -16,7 +16,8 @@
         "preference",
         "mailer",
         "env_var",
-        "status"
+        "status",
+        "versioncontrol"
       ],
       "description": "Name of the module this configuration belongs to."
     },
