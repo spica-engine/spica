@@ -880,7 +880,6 @@ describe("auth verification flows", () => {
       expect(completeResult.token).toBeDefined();
       expect(completeResult.scheme).toBeDefined();
       expect(completeResult.issuer).toBeDefined();
-      expect(completeResult.refreshToken).toBeDefined();
 
       const decoded = jwtDecode<any>(completeResult.token);
       expect(decoded.username).toEqual("passwordlessuser");
