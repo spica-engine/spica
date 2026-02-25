@@ -651,6 +651,7 @@ describe("auth verification flows", () => {
           formats: [OBJECT_ID, DATE_TIME]
         }),
         DatabaseTestingModule.replicaSet(),
+        ConfigModule.forRoot(),
         PassportModule.forRoot({
           publicUrl: VERIFICATION_PUBLIC_URL,
           defaultStrategy: "IDENTITY",

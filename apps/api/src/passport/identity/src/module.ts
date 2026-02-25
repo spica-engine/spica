@@ -74,6 +74,7 @@ export class IdentityModule {
         })
       ],
       providers: [
+        ConfigService,
         IdentityService,
         IdentityStrategy,
         {
