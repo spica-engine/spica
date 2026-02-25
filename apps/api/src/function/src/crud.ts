@@ -109,19 +109,6 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
   return fn;
 }
 
-export async function upsert(fs: FunctionService, engine: FunctionEngine, fn: Function) {
-  let existing;
-  if (fn._id) {
-    existing = await fs.findOne({_id: new ObjectId(fn._id)});
-  }
-
-  if (existing) {
-    return replace(fs, engine, fn);
-  }
-
-  return insert(fs, engine, fn);
-}
-
 export async function replace(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   const _id = new ObjectId(fn._id);
 

@@ -61,8 +61,11 @@ export const getApplier = (
 
         switch (operationType) {
           case ChangeType.CREATE:
+            await CRUD.insert(bs, bucket);
+            return {status: SyncStatuses.SUCCEEDED};
+
           case ChangeType.UPDATE:
-            await CRUD.upsert(bs, bds, history, bucket);
+            await CRUD.replace(bs, bds, history, bucket);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:

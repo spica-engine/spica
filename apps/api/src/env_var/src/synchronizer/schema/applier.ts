@@ -57,8 +57,10 @@ export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
 
         switch (type) {
           case ChangeType.CREATE:
+            await CRUD.insert(evs, envVar);
+            return {status: SyncStatuses.SUCCEEDED};
           case ChangeType.UPDATE:
-            await CRUD.upsert(evs, envVar);
+            await CRUD.replace(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:
