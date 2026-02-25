@@ -94,7 +94,6 @@ export class UserModule {
         VerificationProviderRegistry,
         ProviderVerificationService,
         PasswordResetService,
-        UserConfigService,
         {
           provide: USER_OPTIONS,
           useValue: options

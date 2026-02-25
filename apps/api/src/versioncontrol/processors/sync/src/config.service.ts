@@ -14,16 +14,14 @@ const DEFAULT_AUTO_APPROVE_SYNC: AutoApproveSyncConfig = {
 const MODULE_NAME = "versioncontrol";
 
 @Injectable()
-export class VCConfigService extends ConfigService implements OnModuleInit, OnModuleDestroy {
+export class VCConfigService extends ConfigService implements OnModuleDestroy {
   private readonly logger = new Logger(VCConfigService.name);
   private autoApproveSyncConfig$: ReplaySubject<AutoApproveSyncConfig>;
   private onDestroySubject = new Subject<void>();
 
   constructor(db: DatabaseService) {
     super(db);
-  }
 
-  onModuleInit() {
     const initial$ = defer(() =>
       this.findOne({module: MODULE_NAME}).then(config => {
         const settings = config?.options as VCConfigSettings;
