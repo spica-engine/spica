@@ -3,8 +3,8 @@ import {ConfigService} from "@spica-server/config";
 import {DatabaseService} from "@spica-server/database";
 import {BaseConfig} from "@spica-server/interface/config";
 import {AutoApproveSyncConfig, VCConfigSettings} from "@spica-server/interface/versioncontrol";
-import {Observable, Subject, defer, firstValueFrom, merge, of} from "rxjs";
-import {map, shareReplay, takeUntil, timeout} from "rxjs/operators";
+import {Observable, ReplaySubject, Subject, defer, firstValueFrom, merge, of} from "rxjs";
+import {filter, map, takeUntil, timeout} from "rxjs/operators";
 
 const DEFAULT_AUTO_APPROVE_SYNC: AutoApproveSyncConfig = {
   document: false,
@@ -16,7 +16,7 @@ const MODULE_NAME = "versioncontrol";
 @Injectable()
 export class VCConfigService extends ConfigService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(VCConfigService.name);
-  private autoApproveSyncConfig$: Observable<AutoApproveSyncConfig>;
+  private autoApproveSyncConfig$: ReplaySubject<AutoApproveSyncConfig>;
   private onDestroySubject = new Subject<void>();
 
   constructor(db: DatabaseService) {
@@ -31,19 +31,21 @@ export class VCConfigService extends ConfigService implements OnModuleInit, OnMo
       })
     );
 
-    const changes$ = this.watch([{$match: {"fullDocument.module": MODULE_NAME}}], {
+    const changes$ = this.watch([], {
       fullDocument: "updateLookup"
     }).pipe(
+      filter(change => (change as any).fullDocument?.module === MODULE_NAME),
       map(change => {
         const settings = (change as any).fullDocument?.options as VCConfigSettings;
         return settings?.autoApproveSync || DEFAULT_AUTO_APPROVE_SYNC;
       })
     );
 
-    this.autoApproveSyncConfig$ = merge(initial$, changes$).pipe(
-      takeUntil(this.onDestroySubject),
-      shareReplay(1)
-    );
+    this.autoApproveSyncConfig$ = new ReplaySubject<AutoApproveSyncConfig>(1);
+
+    merge(initial$, changes$)
+      .pipe(takeUntil(this.onDestroySubject))
+      .subscribe(this.autoApproveSyncConfig$);
   }
 
   onModuleDestroy() {

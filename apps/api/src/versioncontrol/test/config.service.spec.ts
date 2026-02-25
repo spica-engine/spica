@@ -1,6 +1,28 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {VCConfigService} from "@spica-server/versioncontrol/processors/sync";
+import {AutoApproveSyncConfig} from "@spica-server/interface/versioncontrol";
+
+async function waitForAutoApproveSync(
+  service: VCConfigService,
+  expected: AutoApproveSyncConfig,
+  timeoutMs = 5000,
+  intervalMs = 100
+): Promise<AutoApproveSyncConfig> {
+  const start = Date.now();
+  let config: AutoApproveSyncConfig;
+  while (Date.now() - start < timeoutMs) {
+    config = await service.getAutoApproveSyncConfig();
+    if (
+      config.document === expected.document &&
+      config.representative === expected.representative
+    ) {
+      return config;
+    }
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
+  return config;
+}
 
 describe("VCConfigService", () => {
   let service: VCConfigService;
@@ -41,10 +63,7 @@ describe("VCConfigService", () => {
       autoApproveSync: {document: true, representative: true}
     });
 
-    // Wait briefly for the change stream to propagate
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const config = await service.getAutoApproveSyncConfig();
+    const config = await waitForAutoApproveSync(service, {document: true, representative: true});
     expect(config).toEqual({document: true, representative: true});
   });
 
@@ -52,31 +71,26 @@ describe("VCConfigService", () => {
     await service.set({
       autoApproveSync: {document: true, representative: false}
     });
-    await new Promise(resolve => setTimeout(resolve, 500));
 
-    let config = await service.getAutoApproveSyncConfig();
+    let config = await waitForAutoApproveSync(service, {document: true, representative: false});
     expect(config).toEqual({document: true, representative: false});
 
     await service.set({
       autoApproveSync: {document: false, representative: true}
     });
-    await new Promise(resolve => setTimeout(resolve, 500));
 
-    config = await service.getAutoApproveSyncConfig();
+    config = await waitForAutoApproveSync(service, {document: false, representative: true});
     expect(config).toEqual({document: false, representative: true});
   });
 
   it("should default missing autoApproveSync in stored config", async () => {
-    // Manually insert a config without autoApproveSync
     await service.updateOne(
       {module: "versioncontrol"},
       {$set: {module: "versioncontrol", options: {}}},
       {upsert: true}
     );
 
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const config = await service.getAutoApproveSyncConfig();
+    const config = await waitForAutoApproveSync(service, {document: false, representative: false});
     expect(config).toEqual({document: false, representative: false});
   });
 });

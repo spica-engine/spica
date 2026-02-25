@@ -2,8 +2,8 @@ import {Injectable, OnModuleDestroy} from "@nestjs/common";
 import {ConfigService} from "@spica-server/config";
 import {Validator} from "@spica-server/core/schema";
 import {PasswordPolicy, PassportPasswordConfigOptions} from "@spica-server/interface/config";
-import {Observable, Subject, merge, of, defer} from "rxjs";
-import {map, shareReplay, takeUntil} from "rxjs/operators";
+import {Observable, ReplaySubject, Subject, merge, defer} from "rxjs";
+import {filter, map, takeUntil} from "rxjs/operators";
 
 export function applyPasswordPolicy(baseSchema: object, policy?: PasswordPolicy): object {
   const schema = JSON.parse(JSON.stringify(baseSchema));
@@ -45,7 +45,7 @@ export function applyPasswordPolicy(baseSchema: object, policy?: PasswordPolicy)
 
 @Injectable()
 export class PasswordPolicySchemaResolver implements OnModuleDestroy {
-  private configWatcher: Observable<PassportPasswordConfigOptions>;
+  private configWatcher: ReplaySubject<PassportPasswordConfigOptions>;
   private onDestroySubject = new Subject<void>();
   private schemaMap: Map<string, {baseSchema: object; configKey: "identity" | "user"}>;
 
@@ -61,18 +61,14 @@ export class PasswordPolicySchemaResolver implements OnModuleDestroy {
       })
     );
 
-    const changes$ = this.configService
-      .watch([{$match: {"fullDocument.module": "passport"}}], {fullDocument: "updateLookup"})
-      .pipe(
-        map(
-          change => ((change as any).fullDocument?.options as PassportPasswordConfigOptions) || {}
-        )
-      );
-
-    this.configWatcher = merge(initial$, changes$).pipe(
-      takeUntil(this.onDestroySubject),
-      shareReplay(1)
+    const changes$ = this.configService.watch([], {fullDocument: "updateLookup"}).pipe(
+      filter(change => (change as any).fullDocument?.module === "passport"),
+      map(change => ((change as any).fullDocument?.options as PassportPasswordConfigOptions) || {})
     );
+
+    this.configWatcher = new ReplaySubject<PassportPasswordConfigOptions>(1);
+
+    merge(initial$, changes$).pipe(takeUntil(this.onDestroySubject)).subscribe(this.configWatcher);
   }
 
   onModuleDestroy() {
