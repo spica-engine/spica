@@ -223,3 +223,25 @@ export {
 } from '../../hooks/useStorageData';
 
 export { default as useStorageService } from '../../hooks/useStorage';
+
+export {
+  versionControlApi,
+  versionControlApiReducerPath,
+  versionControlApiMiddleware,
+  useGetCommandsQuery,
+  useGetDiffMutation,
+  useCommitMutation,
+  useBranchMutation,
+  useRemoteMutation,
+  usePushMutation,
+  useLogQuery,
+  useExecuteCommandMutation,
+} from './versionControlApi';
+
+export type {
+  CommandsResponse,
+  CommandArgs,
+  ExecuteCommandArgs,
+  LogCommit,
+  LogResponse,
+} from './versionControlApi';
