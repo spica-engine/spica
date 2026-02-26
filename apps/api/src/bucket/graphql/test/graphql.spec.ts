@@ -4,12 +4,7 @@ import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {
-  DATE_TIME,
-  OBJECTID_STRING,
-  OBJECT_ID,
-  createHashFormat
-} from "@spica-server/core/schema/formats";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
@@ -29,7 +24,7 @@ describe("GraphQLController", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING, createHashFormat(HASH_SECRET)],
+          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
