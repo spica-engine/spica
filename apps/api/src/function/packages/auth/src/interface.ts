@@ -46,5 +46,4 @@ export interface PasswordlessLoginCompleteResponse {
   token: string;
   scheme: string;
   issuer: string;
-  refreshToken: string;
 }

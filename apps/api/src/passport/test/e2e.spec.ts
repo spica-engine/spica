@@ -351,7 +351,7 @@ describe("E2E Tests", () => {
       expect(value).toBeDefined();
       expect(attributes).toEqual({
         "max-age": String(REFRESH_TOKEN_EXPIRES_IN),
-        path: "passport/session/refresh",
+        path: "passport/identity/session/refresh",
         expires: new Date(now.getTime() + REFRESH_TOKEN_EXPIRES_IN * 1000).toUTCString(),
         httponly: true,
         secure: true,
