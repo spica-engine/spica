@@ -65,10 +65,8 @@ export class PasswordlessLoginService {
       const accessToken = this.userService.sign(user);
 
       return {
-        token: accessToken.token,
-        scheme: accessToken.scheme,
-        issuer: accessToken.issuer,
-        refreshToken: refreshToken.token
+        accessToken,
+        refreshToken
       };
     } catch (error) {
       console.error("Error verifying passwordless login", error);
