@@ -109,12 +109,6 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
   return fn;
 }
 
-export async function insertSchema(fs: FunctionService, engine: FunctionEngine, fn: Function) {
-  await insertWithChanges(fs, engine, fn);
-  await engine.createSchema(fn);
-  return fn;
-}
-
 export async function replace(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   const _id = new ObjectId(fn._id);
 
