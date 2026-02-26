@@ -34,7 +34,8 @@ import {
   createFunctionActivity,
   createFunctionIndexActivity,
   createFunctionDependencyActivity,
-  createFunctionEnvVarActivity
+  createFunctionEnvVarActivity,
+  createFunctionSecretActivity
 } from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "@spica-server/function/services";
@@ -312,5 +313,36 @@ export class FunctionController {
     @Param("envVarId", OBJECT_ID) envVarId: ObjectId
   ) {
     return CRUD.environment.eject(this.fs, id, this.engine, envVarId);
+  }
+
+  /**
+   * Inject the secret to function.
+   * @param id identifier of the function.
+   * @param secretId identifier of the secret.
+   */
+  @UseInterceptors(activity(createFunctionSecretActivity))
+  @Put(":id/secret/:secretId")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:secret:inject"))
+  async injectSecret(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("secretId", OBJECT_ID) secretId: ObjectId
+  ) {
+    return CRUD.secret.inject(this.fs, id, this.engine, secretId);
+  }
+
+  /**
+   * Eject the secret from function.
+   * @param id identifier of the function.
+   * @param secretId identifier of the secret.
+   */
+  @UseInterceptors(activity(createFunctionSecretActivity))
+  @Delete(":id/secret/:secretId")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:secret:eject"))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async ejectSecret(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Param("secretId", OBJECT_ID) secretId: ObjectId
+  ) {
+    return CRUD.secret.eject(this.fs, id, this.engine, secretId);
   }
 }

@@ -58,7 +58,7 @@ describe("Function Index Synchronizer", () => {
 
     database = module.get(DatabaseService);
     evs = new EnvVarService(database);
-    functionService = new FunctionService(database, evs, {entryLimit: 100} as any);
+    functionService = new FunctionService(database, evs, undefined, {entryLimit: 100} as any);
     scheduler = module.get(Scheduler);
 
     engine = new FunctionEngine(
@@ -71,6 +71,7 @@ describe("Function Index Synchronizer", () => {
         timeout: 60,
         outDir: ".build"
       },
+      undefined,
       undefined,
       undefined
     );

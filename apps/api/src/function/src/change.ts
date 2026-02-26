@@ -1,5 +1,6 @@
 import {diff} from "@spica-server/core/differ";
 import {EnvVar} from "@spica-server/interface/env_var";
+import {Secret, SecretDecryptor} from "@spica-server/interface/secret";
 import {
   Triggers,
   Function,
@@ -10,7 +11,8 @@ import {
 
 export function changesFromTriggers(
   previousFn: Function<EnvRelation.Resolved | EnvRelation.NotResolved>,
-  currentFn: Function<EnvRelation.Resolved>
+  currentFn: Function<EnvRelation.Resolved>,
+  secretDecryptor?: SecretDecryptor
 ) {
   const targetChanges: TargetChange[] = [];
 
@@ -39,21 +41,24 @@ export function changesFromTriggers(
 
   const insertChanges = createTargetChanges(
     {...currentFn, triggers: insertedTriggers},
-    ChangeKind.Added
+    ChangeKind.Added,
+    secretDecryptor
   );
   const updateChanges = createTargetChanges(
     {
       ...currentFn,
       triggers: updatedTriggers
     },
-    ChangeKind.Updated
+    ChangeKind.Updated,
+    secretDecryptor
   );
   const removeChanges = createTargetChanges(
     {
       ...currentFn,
       triggers: removedTriggers
     },
-    ChangeKind.Removed
+    ChangeKind.Removed,
+    secretDecryptor
   );
 
   targetChanges.push(...insertChanges);
@@ -69,6 +74,7 @@ export function hasContextChange(
 ) {
   return (
     diff(previousFn.env_vars, currentFn.env_vars).length > 0 ||
+    diff(previousFn.secrets, currentFn.secrets).length > 0 ||
     previousFn.timeout != currentFn.timeout
   );
 }
@@ -79,7 +85,8 @@ export function createTargetChanges<CK extends ChangeKind>(
       ? EnvRelation.Resolved | EnvRelation.NotResolved
       : EnvRelation.Resolved
   >,
-  changeKind: CK
+  changeKind: CK,
+  secretDecryptor?: SecretDecryptor
 ): TargetChange[] {
   const changes: TargetChange[] = [];
   for (const [handler, trigger] of Object.entries(fn.triggers)) {
@@ -96,7 +103,10 @@ export function createTargetChanges<CK extends ChangeKind>(
 
     if (changeKind != ChangeKind.Removed) {
       change.target.context = {
-        env: normalizeEnvVars(fn.env_vars as EnvVar[]),
+        env: {
+          ...normalizeEnvVars(fn.env_vars as EnvVar[]),
+          ...normalizeSecrets(fn.secrets as Secret[], secretDecryptor)
+        },
         timeout: fn.timeout
       };
     }
@@ -109,6 +119,15 @@ export function createTargetChanges<CK extends ChangeKind>(
 function normalizeEnvVars(envVars: EnvVar[]) {
   return (envVars || []).reduce((acc, curr) => {
     acc[curr.key] = curr.value;
+    return acc;
+  }, {});
+}
+
+function normalizeSecrets(secrets: Secret[], decryptor?: SecretDecryptor) {
+  if (!secrets || !decryptor) return {};
+  return secrets.reduce((acc, curr) => {
+    const decrypted = decryptor.decrypt(curr);
+    acc[decrypted.key] = decrypted.value;
     return acc;
   }, {});
 }

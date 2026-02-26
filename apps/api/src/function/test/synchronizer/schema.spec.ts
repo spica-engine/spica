@@ -59,7 +59,7 @@ describe("Function Synchronizer", () => {
     const evs = new EnvVarService(database);
     const scheduler = module.get(Scheduler);
 
-    fs = new FunctionService(database, evs, {entryLimit: 20} as any);
+    fs = new FunctionService(database, evs, undefined, {entryLimit: 20} as any);
     logs = new LogService(database, {expireAfterSeconds: 60 * 60 * 24 * 7, realtime: false});
 
     engine = new FunctionEngine(
@@ -72,6 +72,7 @@ describe("Function Synchronizer", () => {
         timeout: 60,
         outDir: ".build"
       },
+      undefined,
       undefined,
       undefined
     );

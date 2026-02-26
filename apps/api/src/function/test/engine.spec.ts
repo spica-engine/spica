@@ -56,7 +56,7 @@ describe("Engine", () => {
     database = module.get(DatabaseService);
 
     evs = new EnvVarService(database);
-    fs = new FunctionService(database, evs, {} as any);
+    fs = new FunctionService(database, evs, undefined, {} as any);
     engine = new FunctionEngine(
       fs,
       database,
@@ -67,6 +67,7 @@ describe("Engine", () => {
         timeout: 1,
         outDir: ".build"
       },
+      undefined,
       undefined,
       undefined
     );

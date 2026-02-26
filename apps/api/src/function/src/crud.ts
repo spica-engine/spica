@@ -23,7 +23,7 @@ async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn
   let insertedFn;
   try {
     const r = await fs.insertOne(fn);
-    insertedFn = await findOne(fs, r._id, {resolveEnvRelations: EnvRelation.Resolved});
+    insertedFn = await findOneForRuntime(fs, r._id);
   } catch (error: any) {
     if (error && error.code === 11000) {
       throw new BadRequestException(
@@ -34,7 +34,7 @@ async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn
     throw new InternalServerErrorException(error?.message || error);
   }
 
-  const changes = createTargetChanges(insertedFn, ChangeKind.Added);
+  const changes = createTargetChanges(insertedFn, ChangeKind.Added, engine.secretDecryptor);
   engine.categorizeChanges(changes);
 }
 
@@ -55,6 +55,8 @@ export async function find<ER extends EnvRelation = EnvRelation.NotResolved>(
     .filterResources(options?.filter?.resources)
     .filterByEnvVars(options?.filter?.envVars)
     .resolveEnvRelation(options?.resolveEnvRelations)
+    .resolveSecretRelation(options?.resolveEnvRelations)
+    .hideSecrets()
     .filterByLanguage(options?.filter?.language)
     .result();
   let fns = await fs.aggregate<Function<ER>>(pipeline).toArray();
@@ -75,6 +77,8 @@ export async function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
   const pipeline = new FunctionPipelineBuilder()
     .findOneIfRequested(id)
     .resolveEnvRelation(options.resolveEnvRelations)
+    .resolveSecretRelation(options.resolveEnvRelations)
+    .hideSecrets()
     .result();
 
   const res = await fs.aggregate<Function<ER>>(pipeline).next();
@@ -122,15 +126,15 @@ export async function replace(fs: FunctionService, engine: FunctionEngine, fn: F
   }
 
   fn._id = _id;
-  const currFnEnvResolved = await findOne(fs, _id, {resolveEnvRelations: EnvRelation.Resolved});
+  const currFnEnvResolved = await findOneForRuntime(fs, _id);
 
   let changes;
 
   if (hasContextChange(preFn, fn)) {
     // mark all triggers updated
-    changes = createTargetChanges(currFnEnvResolved, ChangeKind.Updated);
+    changes = createTargetChanges(currFnEnvResolved, ChangeKind.Updated, engine.secretDecryptor);
   } else {
-    changes = changesFromTriggers(preFn, currFnEnvResolved);
+    changes = changesFromTriggers(preFn, currFnEnvResolved, engine.secretDecryptor);
   }
 
   engine.categorizeChanges(changes);
@@ -189,9 +193,9 @@ export namespace index {
 
     await engine.update(fn, index);
 
-    const envResolvedFn = await findOne(fs, id, {resolveEnvRelations: EnvRelation.Resolved});
+    const envResolvedFn = await findOneForRuntime(fs, id);
 
-    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated);
+    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated, engine.secretDecryptor);
     engine.categorizeChanges(changes);
 
     return engine.compile(fn);
@@ -386,10 +390,87 @@ export namespace environment {
   }
 
   export async function reload(fs: FunctionService, fnId: ObjectId, engine: FunctionEngine) {
-    const envResolvedFn = await findOne(fs, fnId, {
-      resolveEnvRelations: EnvRelation.Resolved
-    });
-    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated);
+    const envResolvedFn = await findOneForRuntime(fs, fnId);
+    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated, engine.secretDecryptor);
     return engine.categorizeChanges(changes);
   }
+}
+
+export namespace secret {
+  export async function inject(
+    fs: FunctionService,
+    fnId: ObjectId,
+    engine: FunctionEngine,
+    secretId: ObjectId
+  ) {
+    const res = await fs.findOneAndUpdate(
+      {
+        _id: fnId
+      },
+      {
+        $addToSet: {secrets: secretId}
+      }
+    );
+    if (!res) {
+      throw new NotFoundException(`Function with ID ${fnId} not found`);
+    }
+
+    return reload(fs, fnId, engine);
+  }
+
+  export async function eject(
+    fs: FunctionService,
+    fnId: ObjectId,
+    engine: FunctionEngine,
+    secretId: ObjectId
+  ) {
+    const res = await fs.findOneAndUpdate(
+      {
+        _id: fnId
+      },
+      {
+        $pull: {secrets: secretId}
+      }
+    );
+    if (!res) {
+      throw new NotFoundException(`Function with ID ${fnId} not found`);
+    }
+
+    return reload(fs, fnId, engine);
+  }
+
+  export async function reload(fs: FunctionService, fnId: ObjectId, engine: FunctionEngine) {
+    const fn = await findOneForRuntime(fs, fnId);
+    const changes = createTargetChanges(fn, ChangeKind.Updated, engine.secretDecryptor);
+    return engine.categorizeChanges(changes);
+  }
+}
+
+export async function findOneForRuntime(
+  fs: FunctionService,
+  id: ObjectId
+): Promise<Function<EnvRelation.Resolved>> {
+  const pipeline = new FunctionPipelineBuilder()
+    .findOneIfRequested(id)
+    .resolveEnvRelation(EnvRelation.Resolved)
+    .resolveSecretRelation(EnvRelation.Resolved)
+    .result();
+
+  const res = await fs.aggregate<Function<EnvRelation.Resolved>>(pipeline).next();
+  if (!res) {
+    throw new NotFoundException(`Couldn't find the function with id ${id}`);
+  }
+
+  return res;
+}
+
+export async function findForRuntime(
+  fs: FunctionService
+): Promise<Function<EnvRelation.Resolved>[]> {
+  const pipeline = new FunctionPipelineBuilder()
+    .resolveEnvRelation(EnvRelation.Resolved)
+    .resolveSecretRelation(EnvRelation.Resolved)
+    .result();
+
+  return fs.aggregate<Function<EnvRelation.Resolved>>(pipeline).toArray();
 }

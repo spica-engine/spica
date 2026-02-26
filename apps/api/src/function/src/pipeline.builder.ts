@@ -15,6 +15,27 @@ export class FunctionPipelineBuilder extends PipelineBuilder {
     return this.attachToPipeline(shouldResolve == EnvRelation.Resolved, aggregation);
   }
 
+  resolveSecretRelation(shouldResolve: EnvRelation) {
+    const aggregation = {
+      $lookup: {
+        from: "secret",
+        localField: "secrets",
+        foreignField: "_id",
+        as: "secrets"
+      }
+    };
+    return this.attachToPipeline(shouldResolve == EnvRelation.Resolved, aggregation);
+  }
+
+  hideSecrets(): this {
+    this.pipeline.push({
+      $project: {
+        "secrets.value": 0
+      }
+    });
+    return this;
+  }
+
   filterByEnvVars(envVars: ObjectId[]) {
     const filter = {
       $match: {

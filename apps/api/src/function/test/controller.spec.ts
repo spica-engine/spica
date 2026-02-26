@@ -99,7 +99,7 @@ describe("Function Controller", () => {
       const foundFns = await request
         .get("/function", {filter: JSON.stringify({index: "findMe\\("})})
         .then(r => r.body);
-      expect(foundFns).toEqual([{...fn1, env_vars: []}]);
+      expect(foundFns).toEqual([{...fn1, env_vars: [], secrets: []}]);
     });
 
     it("should throw bad request exception if filter is mistaken", async () => {
@@ -139,7 +139,7 @@ describe("Function Controller", () => {
     it("should return a function by id", async () => {
       const inserted = await request.post("/function", fnSchema).then(r => r.body);
       const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
-      expect(found).toEqual({...inserted, env_vars: []});
+      expect(found).toEqual({...inserted, env_vars: [], secrets: []});
     });
 
     it("should delete a function and return 204", async () => {

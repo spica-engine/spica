@@ -1,6 +1,7 @@
 import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";
 import {EnvVar} from "@spica-server/interface/env_var";
+import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface/secret";
 import {ObjectId} from "@spica-server/database";
 
 export enum EnvRelation {
@@ -13,6 +14,7 @@ export interface Function<ER extends EnvRelation = EnvRelation.NotResolved> {
   name: string;
   description?: string;
   env_vars?: ER extends EnvRelation.Resolved ? EnvVar[] : ObjectId[];
+  secrets?: ER extends EnvRelation.Resolved ? Secret[] : ObjectId[];
   triggers: Triggers;
   timeout: number;
   language: string;

@@ -16,6 +16,9 @@ import DashboardReadOnlyAccess from "./dashboard.readonly";
 import EnvVarFullAccess from "./env.var.fullaccess";
 import EnvVarReadOnlyAccess from "./env.var.readonly";
 
+import SecretFullAccess from "./secret.fullaccess";
+import SecretReadOnlyAccess from "./secret.readonly";
+
 import FunctionFullAccess from "./function.fullaccess";
 import FunctionReadOnlyAccess from "./function.readonly";
 
@@ -71,6 +74,9 @@ export default [
 
   EnvVarFullAccess,
   EnvVarReadOnlyAccess,
+
+  SecretFullAccess,
+  SecretReadOnlyAccess,
 
   FunctionFullAccess,
   FunctionReadOnlyAccess,
