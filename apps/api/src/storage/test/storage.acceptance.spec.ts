@@ -932,14 +932,14 @@ describe("Storage Acceptance", () => {
       const unauthorizedId = new ObjectId().toString();
       const idsToDelete = [objects[0]._id.toString(), unauthorizedId];
 
-      const originalCheckAction = guardService.checkAction;
-      jest.spyOn(guardService, "checkAction").mockImplementation((args: any) => {
+      const originalCheckAuthorization = guardService.checkAuthorization;
+      jest.spyOn(guardService, "checkAuthorization").mockImplementation((args: any) => {
         if (args.request?.params?.id === unauthorizedId) {
           throw new ForbiddenException(
             `You don't have permission to delete storage object: ${unauthorizedId}`
           );
         }
-        return originalCheckAction.call(guardService, args);
+        return originalCheckAuthorization.call(guardService, args);
       });
 
       const response = await req.delete("/storage", idsToDelete);
@@ -963,14 +963,14 @@ describe("Storage Acceptance", () => {
       const unauthorizedName = objects[1].name;
       const namesToDelete = [objects[0].name, unauthorizedName];
 
-      const originalCheckAction = guardService.checkAction;
-      jest.spyOn(guardService, "checkAction").mockImplementation((args: any) => {
+      const originalCheckAuthorization = guardService.checkAuthorization;
+      jest.spyOn(guardService, "checkAuthorization").mockImplementation((args: any) => {
         if (args.request?.params?.id === objects[1]._id.toString()) {
           throw new ForbiddenException(
             `You don't have permission to delete storage object: ${unauthorizedName}`
           );
         }
-        return originalCheckAction.call(guardService, args);
+        return originalCheckAuthorization.call(guardService, args);
       });
 
       const response = await req.delete("/storage", namesToDelete);

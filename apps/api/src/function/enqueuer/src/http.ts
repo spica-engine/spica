@@ -89,7 +89,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
 
       if (shouldAuthenticate) {
         try {
-          await this.guardService.checkAuthorization({
+          await this.guardService.checkAuthentication({
             request: req,
             response: res,
             allowedStrategies: options.authenticate
@@ -110,7 +110,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
             const originalParams = req.params;
             req.params = {functionId: target.id, handlerId: target.handler};
 
-            await this.guardService.checkAction({
+            await this.guardService.checkAuthorization({
               request: req,
               response: res,
               actions: ["function:invoke"],
