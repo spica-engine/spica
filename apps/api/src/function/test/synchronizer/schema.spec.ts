@@ -17,6 +17,9 @@ import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
 import {skip, firstValueFrom} from "rxjs";
 import {rimraf} from "rimraf";
+import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import FunctionSchema from "../../src/schema/function.json" with {type: "json"};
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -28,11 +31,13 @@ describe("Function Synchronizer", () => {
   let engine: FunctionEngine;
   let logs: LogService;
   let database: DatabaseService;
+  let validator: Validator;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.replicaSet(),
+        SchemaModule.forChild({schemas: [FunctionSchema], formats: [OBJECT_ID]}),
         SchedulerModule.forRoot({
           invocationLogs: false,
           databaseName: undefined,
@@ -58,6 +63,7 @@ describe("Function Synchronizer", () => {
     database = module.get(DatabaseService);
     const evs = new EnvVarService(database);
     const scheduler = module.get(Scheduler);
+    validator = module.get(Validator);
 
     fs = new FunctionService(database, evs, {entryLimit: 20} as any);
     logs = new LogService(database, {expireAfterSeconds: 60 * 60 * 24 * 7, realtime: false});
@@ -302,7 +308,7 @@ describe("Function Synchronizer", () => {
     let funcApplier;
 
     beforeEach(() => {
-      funcApplier = getApplier(fs, engine, logs);
+      funcApplier = getApplier(fs, engine, logs, validator);
     });
 
     it("should return Change Applier with correct metadata", () => {
@@ -563,6 +569,98 @@ describe("Function Synchronizer", () => {
         status: SyncStatuses.FAILED
       });
       expect(result.reason).toBeDefined();
+    });
+
+    it("should reject function missing required name field", async () => {
+      const invalidFunction = {
+        timeout: 60,
+        language: "javascript",
+        triggers: {
+          default: {type: "http", active: true, options: {method: "Get", path: "/test"}}
+        }
+      };
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: "123",
+        resource_slug: "invalid",
+        resource_content: YAML.stringify(invalidFunction),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should reject function on update with invalid language", async () => {
+      const invalidFunction = {
+        name: "my_function",
+        timeout: 60,
+        language: "python",
+        triggers: {
+          default: {type: "http", active: true, options: {method: "Get", path: "/test"}}
+        }
+      };
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.UPDATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: new ObjectId().toString(),
+        resource_slug: "my_function",
+        resource_content: YAML.stringify(invalidFunction),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should allow function with custom trigger types", async () => {
+      const validFunction: any = {
+        _id: new ObjectId(),
+        name: "custom_function",
+        description: "A function with custom triggers",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {method: "Get", path: "/custom"}
+          }
+        },
+        timeout: 60,
+        language: "javascript"
+      };
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: validFunction._id.toString(),
+        resource_slug: "custom_function",
+        resource_content: YAML.stringify(validFunction),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
     });
   });
 });

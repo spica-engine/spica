@@ -10,15 +10,23 @@ import {
   SyncStatuses,
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
+import {Schema, Validator} from "@spica-server/core/schema";
 
 const module = "bucket";
 const subModule = "schema";
 const fileExtension = "yaml";
 
+function validate(bucket: Bucket, validator: Validator): Promise<void> {
+  const validatorMixin = Schema.validate("http://spica.internal/bucket/schema");
+  const pipe: any = new validatorMixin(validator);
+  return pipe.transform(bucket);
+}
+
 export const getApplier = (
   bs: BucketService,
   bds: BucketDataService,
-  history: HistoryService
+  history: HistoryService,
+  validator: Validator
 ): DocumentChangeApplier => {
   const findBucketByTitle = async (title: string) => {
     const bucket = await bs.findOne({title});
@@ -60,11 +68,13 @@ export const getApplier = (
         switch (operationType) {
           case ChangeType.CREATE:
             overwritePrimaries(change, bucket);
+            await validate(bucket, validator);
             await CRUD.insert(bs, bucket);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.UPDATE:
             overwritePrimaries(change, bucket);
+            await validate(bucket, validator);
             await CRUD.replace(bs, bds, history, bucket);
             return {status: SyncStatuses.SUCCEEDED};
 

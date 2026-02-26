@@ -12,18 +12,23 @@ import {
 import YAML from "yaml";
 import {EnvVar} from "@spica-server/interface/env_var";
 import {firstValueFrom} from "rxjs";
+import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import EnvVarSchema from "../../src/schema.json" with {type: "json"};
 
 describe("EnvVar Synchronizer", () => {
   let module: TestingModule;
   let evs: EnvVarService;
+  let validator: Validator;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet()],
+      imports: [DatabaseTestingModule.replicaSet(), SchemaModule.forChild({schemas: [EnvVarSchema], formats: [OBJECT_ID]})],
       providers: [EnvVarService]
     }).compile();
 
     evs = module.get(EnvVarService);
+    validator = module.get(Validator);
   });
 
   afterEach(async () => {
@@ -178,7 +183,7 @@ describe("EnvVar Synchronizer", () => {
     let envVarApplier;
 
     beforeEach(() => {
-      envVarApplier = getApplier(evs);
+      envVarApplier = getApplier(evs, validator);
     });
 
     it("should return Change Applier with correct metadata", () => {
@@ -345,6 +350,75 @@ describe("EnvVar Synchronizer", () => {
         status: SyncStatuses.FAILED
       });
       expect(result.reason).toBeDefined();
+    });
+
+    it("should reject env var missing required key field", async () => {
+      const invalidEnvVar = {value: "some-value"};
+
+      const changeLog: ChangeLog = {
+        module: "env-var",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: "123",
+        resource_slug: "invalid",
+        resource_content: YAML.stringify(invalidEnvVar),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await envVarApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should reject env var on update with missing required value field", async () => {
+      const invalidEnvVar = {key: "SOME_KEY"};
+
+      const changeLog: ChangeLog = {
+        module: "env-var",
+        sub_module: "schema",
+        type: ChangeType.UPDATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: new ObjectId().toString(),
+        resource_slug: "SOME_KEY",
+        resource_content: YAML.stringify(invalidEnvVar),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await envVarApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should allow env var with valid key and value", async () => {
+      const validEnvVar: EnvVar = {
+        _id: new ObjectId(),
+        key: "VALID_KEY",
+        value: "valid-value"
+      };
+
+      const changeLog: ChangeLog = {
+        module: "env-var",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: validEnvVar._id.toString(),
+        resource_slug: "VALID_KEY",
+        resource_content: YAML.stringify(validEnvVar),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await envVarApplier.apply(changeLog);
+
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
     });
   });
 });

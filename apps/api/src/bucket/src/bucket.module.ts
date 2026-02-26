@@ -132,7 +132,7 @@ export class BucketModule {
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
     if (registerVCChangeHandler) {
-      registerVCChangeHandler(getSupplier(bs), getApplier(bs, bds, this.history));
+      registerVCChangeHandler(getSupplier(bs), getApplier(bs, bds, this.history, validator));
     }
 
     preference.default({

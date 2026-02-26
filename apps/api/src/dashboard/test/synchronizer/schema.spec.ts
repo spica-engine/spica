@@ -12,18 +12,23 @@ import {
 import YAML from "yaml";
 import {Dashboard} from "@spica-server/interface/dashboard";
 import {firstValueFrom} from "rxjs";
+import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import DashboardSchema from "../../src/schema/dashboard.json" with {type: "json"};
 
 describe("Dashboard Synchronizer", () => {
   let module: TestingModule;
   let ds: DashboardService;
+  let validator: Validator;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet()],
+      imports: [DatabaseTestingModule.replicaSet(), SchemaModule.forChild({schemas: [DashboardSchema], formats: [OBJECT_ID]})],
       providers: [DashboardService]
     }).compile();
 
     ds = module.get(DashboardService);
+    validator = module.get(Validator);
   });
 
   afterEach(async () => {
@@ -181,7 +186,7 @@ describe("Dashboard Synchronizer", () => {
     let dashboardApplier;
 
     beforeEach(() => {
-      dashboardApplier = getApplier(ds);
+      dashboardApplier = getApplier(ds, validator);
     });
 
     it("should return Change Applier with correct metadata", () => {
@@ -354,6 +359,76 @@ describe("Dashboard Synchronizer", () => {
         status: SyncStatuses.FAILED
       });
       expect(result.reason).toBeDefined();
+    });
+
+    it("should reject dashboard missing required name field", async () => {
+      const invalidDashboard = {icon: "test-icon", components: []};
+
+      const changeLog: ChangeLog = {
+        module: "dashboard",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: "123",
+        resource_slug: "invalid",
+        resource_content: YAML.stringify(invalidDashboard),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await dashboardApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should reject dashboard on update with missing required name field", async () => {
+      const invalidDashboard = {icon: "test-icon", components: []};
+
+      const changeLog: ChangeLog = {
+        module: "dashboard",
+        sub_module: "schema",
+        type: ChangeType.UPDATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: new ObjectId().toString(),
+        resource_slug: "invalid",
+        resource_content: YAML.stringify(invalidDashboard),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await dashboardApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should allow dashboard with custom icon field", async () => {
+      const validDashboard: Dashboard = {
+        _id: new ObjectId(),
+        name: "Custom Dashboard",
+        icon: "custom_icon",
+        components: []
+      };
+
+      const changeLog: ChangeLog = {
+        module: "dashboard",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: validDashboard._id.toString(),
+        resource_slug: "Custom Dashboard",
+        resource_content: YAML.stringify(validDashboard),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await dashboardApplier.apply(changeLog);
+
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
     });
   });
 });

@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Inject, Module, Optional} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/interface/passport/guard";
 import {
   Policy,
@@ -57,10 +57,14 @@ export class PolicyModule {
     @Inject(REGISTER_VC_CHANGE_HANDLER)
     registerVCChangeHandler: RegisterVCChangeHandler,
     @Optional() @Inject(APIKEY_POLICY_FINALIZER) apikeyFinalizer: changeFactory,
-    @Optional() @Inject(IDENTITY_POLICY_FINALIZER) identityFinalizer: changeFactory
+    @Optional() @Inject(IDENTITY_POLICY_FINALIZER) identityFinalizer: changeFactory,
+    validator: Validator
   ) {
     if (registerVCChangeHandler) {
-      registerVCChangeHandler(getSupplier(ps), getApplier(ps, apikeyFinalizer, identityFinalizer));
+      registerVCChangeHandler(
+        getSupplier(ps),
+        getApplier(ps, apikeyFinalizer, identityFinalizer, validator)
+      );
     }
   }
 }

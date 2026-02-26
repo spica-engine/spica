@@ -10,15 +10,23 @@ import {
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {ObjectId} from "bson";
+import {Schema, Validator} from "@spica-server/core/schema";
 
 const module = "policy";
 const subModule = "schema";
 const fileExtension = "yaml";
 
+function validate(policy: Policy, validator: Validator): Promise<void> {
+  const validatorMixin = Schema.validate("http://spica.internal/passport/policy");
+  const pipe: any = new validatorMixin(validator);
+  return pipe.transform(policy);
+}
+
 export function getApplier(
   ps: PolicyService,
   apikeyFinalizer: changeFactory,
-  identityFinalizer: changeFactory
+  identityFinalizer: changeFactory,
+  validator?: Validator
 ): DocumentChangeApplier {
   const findPolicyByName = async (name: string) => {
     const policy = await ps.findOne({name});
@@ -60,11 +68,13 @@ export function getApplier(
         switch (operationType) {
           case ChangeType.CREATE:
             overwritePrimaries(change, policy);
+            if (validator) await validate(policy, validator);
             await CRUD.insert(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.UPDATE:
             overwritePrimaries(change, policy);
+            if (validator) await validate(policy, validator);
             await CRUD.replace(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
 
