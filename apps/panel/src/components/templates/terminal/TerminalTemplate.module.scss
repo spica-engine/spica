@@ -1,0 +1,26 @@
+.container {
+  height: 100%;
+  flex: 1 !important;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.terminalHeader {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 0.05em;
+}
+
+.terminalBody {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  flex-wrap: nowrap !important;
+  padding: 0 !important;
+  overflow: hidden;
+  min-height: 0;
+}
