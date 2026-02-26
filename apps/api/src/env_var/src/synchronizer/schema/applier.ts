@@ -43,7 +43,7 @@ export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
         const type = change.type;
         const envVar: EnvVar = YAML.parse(change.resource_content);
 
-        const fillPrimaryFields = (change: ChangeLog, envVar) => {
+        const overwritePrimaries = (change: ChangeLog, envVar) => {
           if (change.resource_id) {
             envVar._id = change.resource_id;
           }
@@ -53,13 +53,13 @@ export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
           }
         };
 
-        fillPrimaryFields(change, envVar);
-
         switch (type) {
           case ChangeType.CREATE:
+            overwritePrimaries(change, envVar);
             await CRUD.insert(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
           case ChangeType.UPDATE:
+            overwritePrimaries(change, envVar);
             await CRUD.replace(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
 

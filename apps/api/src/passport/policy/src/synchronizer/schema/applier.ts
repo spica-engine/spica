@@ -47,7 +47,7 @@ export function getApplier(
         const operationType = change.type;
         const policy: Policy = YAML.parse(change.resource_content);
 
-        const fillPrimaryFields = (change: ChangeLog, policy) => {
+        const overwritePrimaries = (change: ChangeLog, policy) => {
           if (change.resource_id) {
             policy._id = change.resource_id;
           }
@@ -57,14 +57,14 @@ export function getApplier(
           }
         };
 
-        fillPrimaryFields(change, policy);
-
         switch (operationType) {
           case ChangeType.CREATE:
+            overwritePrimaries(change, policy);
             await CRUD.insert(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.UPDATE:
+            overwritePrimaries(change, policy);
             await CRUD.replace(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
 
