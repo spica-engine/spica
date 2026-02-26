@@ -1,6 +1,6 @@
 import {Controller, Put, Param, Body, Get, UseGuards, NotFoundException} from "@nestjs/common";
 import {ConfigService} from "./config.service";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {ReturnDocument} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
 import {BaseConfig} from "@spica-server/interface/config";
@@ -14,9 +14,9 @@ export class ConfigController {
    * @returns List of configurations
    */
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("config:index"))
-  async getAllConfigs() {
-    return this.configService.find({});
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("config:index"))
+  async getAllConfigs(@ResourceFilter() resourceFilter: object) {
+    return this.configService.aggregate([resourceFilter]).toArray();
   }
 
   /**
@@ -25,7 +25,7 @@ export class ConfigController {
    * @returns Configuration document
    */
   @Get(":module")
-  @UseGuards(AuthGuard(), ActionGuard("config:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("config:show"))
   async getConfig(
     @Param("module", Schema.validate("http://spica.internal/config#/properties/module"))
     module: string
@@ -44,13 +44,14 @@ export class ConfigController {
    * @returns Updated document
    */
   @Put(":module")
-  @UseGuards(AuthGuard(), ActionGuard("config:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("config:update"))
   async update(
     @Param("module") module: string,
     @Body(Schema.validate("http://spica.internal/config")) data: BaseConfig
   ) {
     const updatedConfig = await this.configService.findOneAndReplace({module}, data, {
-      returnDocument: ReturnDocument.AFTER
+      returnDocument: ReturnDocument.AFTER,
+      upsert: true
     });
     if (!updatedConfig) {
       throw new NotFoundException(`Configuration with module ${module} does not exist.`);

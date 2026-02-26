@@ -195,7 +195,7 @@ describe("ConfigController", () => {
       expect(response.body.message).toContain("must be equal to one of the allowed values");
     });
 
-    it("should return not found when updating not created config", async () => {
+    it("should return upsert config", async () => {
       const newConfig = {
         module: "bucket",
         options: {
@@ -205,8 +205,17 @@ describe("ConfigController", () => {
 
       const response = await request.put("/config/bucket", newConfig);
 
-      expect([response.statusCode, response.statusText]).toEqual([404, "Not Found"]);
-      expect(response.body.message).toContain("Configuration with module bucket does not exist");
+      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
+      expect(response.body).toEqual({
+        _id: expect.any(String),
+        module: "bucket",
+        options: {
+          someSetting: true
+        }
+      });
+
+      const getResponse = await request.get("/config/bucket");
+      expect(getResponse.body.options.someSetting).toBe(true);
     });
   });
 });
