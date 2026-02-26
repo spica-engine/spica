@@ -116,12 +116,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   async authorize(req, client) {
-    await this.guardService.checkAuthorization({
+    await this.guardService.checkAuthentication({
       request: req,
       response: client
     });
 
-    await this.guardService.checkAction({
+    await this.guardService.checkAuthorization({
       request: req,
       response: client,
       actions: "bucket:data:stream",

@@ -19,7 +19,7 @@ export interface PrepareUser {
 }
 
 export interface IGuardService {
-  checkAction({
+  checkAuthorization({
     request,
     response,
     actions,
@@ -33,7 +33,7 @@ export interface IGuardService {
     format?: string;
   }): Promise<boolean>;
 
-  checkAuthorization({
+  checkAuthentication({
     request,
     response,
     allowedStrategies
