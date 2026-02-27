@@ -17,6 +17,7 @@ import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
 import {skip, firstValueFrom} from "rxjs";
 import {rimraf} from "rimraf";
+import {SecretService} from "@spica-server/secret/services";
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -57,9 +58,11 @@ describe("Function Synchronizer", () => {
 
     database = module.get(DatabaseService);
     const evs = new EnvVarService(database);
+    const ss = new SecretService(database, "test-encryption-secret");
+
     const scheduler = module.get(Scheduler);
 
-    fs = new FunctionService(database, evs, {entryLimit: 20} as any);
+    fs = new FunctionService(database, evs, ss, {entryLimit: 20} as any);
     logs = new LogService(database, {expireAfterSeconds: 60 * 60 * 24 * 7, realtime: false});
 
     engine = new FunctionEngine(
@@ -73,7 +76,8 @@ describe("Function Synchronizer", () => {
         outDir: ".build"
       },
       undefined,
-      undefined
+      undefined,
+      val => val as any
     );
   });
 

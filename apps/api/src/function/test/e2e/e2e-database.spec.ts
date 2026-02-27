@@ -16,6 +16,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {event} from "@spica-server/function/queue/proto";
 import {JobReducer, ReplicationModule} from "@spica-server/replication";
+import {SecretModule} from "@spica-server/secret/src/module";
 
 function sleep(ms: number) {
   return new Promise((resolve, _) => setTimeout(resolve, ms));
@@ -53,6 +54,7 @@ function getModuleBuilder(connectionUri?: string, dbName?: string) {
       PreferenceTestingModule,
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID]}),
+      SecretModule.forRoot({realtime: false, encryptionSecret: "test-encryption-secret-32chars!!"}),
       FunctionModule.forRoot({
         invocationLogs: false,
         path: os.tmpdir(),

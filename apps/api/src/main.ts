@@ -19,6 +19,7 @@ import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
 import {EnvVarModule} from "@spica-server/env_var";
+import {SecretModule} from "@spica-server/secret";
 import {MailerModule} from "@spica-server/mailer";
 import {SmsModule} from "@spica-server/sms";
 
@@ -117,6 +118,10 @@ const args = yargsInstance
     "bucket-data-encryption-secret": {
       string: true,
       description: "Secret to be used for encrypting/decrypting values in bucket data."
+    },
+    "secret-module-encryption-secret": {
+      string: true,
+      description: "Secret to be used for encrypting/decrypting secret values."
     }
   })
   /* Passport Options  */
@@ -187,6 +192,7 @@ const args = yargsInstance
         "BucketFullAccess",
         "DashboardFullAccess",
         "EnvVarFullAccess",
+        "SecretFullAccess",
         "FunctionFullAccess",
         "IdentityFullAccess",
         "PassportFullAccess",
@@ -544,6 +550,11 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["bucket-data-encryption-secret"] = bucketDataEncryptionSecret;
     }
 
+    const secretModuleEncryptionSecret = process.env.SECRET_MODULE_ENCRYPTION_SECRET;
+    if (secretModuleEncryptionSecret) {
+      args["secret-module-encryption-secret"] = secretModuleEncryptionSecret;
+    }
+
     const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
     if (twilioAccountSid) {
       args["twilio-sms-service-account-sid"] = twilioAccountSid;
@@ -671,6 +682,10 @@ const modules = [
   }),
   EnvVarModule.forRoot({
     realtime: true
+  }),
+  SecretModule.forRoot({
+    realtime: true,
+    encryptionSecret: args["secret-module-encryption-secret"]
   }),
   MailerModule.forRoot({
     host: args["mailer-host"],

@@ -9,6 +9,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import os from "os";
 import {PreferenceModule} from "@spica-server/preference";
+import {SecretModule} from "@spica-server/secret";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45670";
 
@@ -40,6 +41,7 @@ describe("function", () => {
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
       AssetModule.forRoot({persistentPath: os.tmpdir()}),
+      SecretModule.forRoot({realtime: false, encryptionSecret: "test-encryption-secret-32chars!!"}),
       FunctionModule.forRoot({
         invocationLogs: false,
         path: os.tmpdir(),
@@ -119,7 +121,7 @@ describe("function", () => {
       },
       memoryLimit: 100
     };
-    fnv1Created = {...fnv1, env_vars: []};
+    fnv1Created = {...fnv1, env_vars: [], secrets: []};
 
     fnv1Resource = {
       _id: fnId,
@@ -134,7 +136,7 @@ describe("function", () => {
     };
 
     fnv2 = {...fnv1, timeout: 60};
-    fnv2Created = {...fnv2, env_vars: []};
+    fnv2Created = {...fnv2, env_vars: [], secrets: []};
 
     fnv2Resource = {
       ...fnv1Resource,

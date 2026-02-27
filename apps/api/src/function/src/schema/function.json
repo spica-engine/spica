@@ -24,6 +24,11 @@
       "description": "Environment variables that will be accesible globally in the function",
       "items": {"type": "string"}
     },
+    "secrets": {
+      "type": "array",
+      "description": "Secrets that will be accessible in the function",
+      "items": {"type": "string"}
+    },
     "memoryLimit": {
       "type": "number",
       "default": 100,

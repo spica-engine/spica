@@ -20,8 +20,10 @@ import {
   SCHEMA,
   SchemaWithName,
   EnvRelation,
-  FunctionWithContent
+  FunctionWithContent,
+  SecretRelation
 } from "@spica-server/interface/function";
+import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface/secret";
 
 import {createTargetChanges} from "./change";
 
@@ -48,6 +50,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   readonly runSchemas = new Map<string, JSONSchema7>();
   private cmdSubs: {unsubscribe: () => void};
   private watchEnvSubs: {unsubscribe: () => void};
+  private watchSecretSubs: {unsubscribe: () => void};
 
   constructor(
     private fs: FunctionService,
@@ -56,7 +59,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Optional() private commander: ClassCommander,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
-    @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
+    @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug,
+    @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -74,6 +78,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       error: err =>
         console.error(
           `Error received on listening functions for environment variable changes. Reason: ${JSON.stringify(err)}`
+        )
+    });
+
+    this.watchSecretSubs = this.fs.watchFunctionsForSecretChanges().subscribe({
+      next: ({fns, secretId, operationType}) =>
+        fns.map(fn =>
+          operationType == "delete"
+            ? CRUD.secret.eject(this.fs, fn._id, this, secretId)
+            : CRUD.secret.reload(this.fs, fn._id, this)
+        ),
+      error: err =>
+        console.error(
+          `Error received on listening functions for secret changes. Reason: ${JSON.stringify(err)}`
         )
     });
   }
@@ -96,10 +113,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private updateTriggers(kind: ChangeKind) {
-    return CRUD.find(this.fs, this, {resolveEnvRelations: EnvRelation.Resolved}).then(fns => {
+    return CRUD.findForRuntime(this.fs).then(fns => {
       const targetChanges: TargetChange[] = [];
       for (const fn of fns) {
-        targetChanges.push(...createTargetChanges(fn, kind));
+        targetChanges.push(...createTargetChanges(fn, kind, this.secretDecryptor));
       }
       this.categorizeChanges(targetChanges);
     });
@@ -110,6 +127,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       this.cmdSubs.unsubscribe();
     }
     this.watchEnvSubs.unsubscribe();
+    if (this.watchSecretSubs) {
+      this.watchSecretSubs.unsubscribe();
+    }
     return this.unregisterTriggers();
   }
 
@@ -292,7 +312,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
         await Promise.all([
           CRUD.findByName(this.fs, dirName, {
-            resolveEnvRelations: EnvRelation.NotResolved
+            resolveEnvRelations: EnvRelation.NotResolved,
+            resolveSecretRelations: SecretRelation.NotResolved
           }).then(r => (fn = r)),
           contentPromise.then(c => (content = c))
         ]);

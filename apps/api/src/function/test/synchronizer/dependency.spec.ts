@@ -16,6 +16,7 @@ import {
 import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {SecretService} from "@spica-server/secret/services";
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -26,6 +27,7 @@ describe("Function Dependency Synchronizer", () => {
   let engine: FunctionEngine;
   let database: DatabaseService;
   let evs: EnvVarService;
+  let ss: SecretService;
   let scheduler: Scheduler;
   let module;
 
@@ -57,7 +59,8 @@ describe("Function Dependency Synchronizer", () => {
 
     database = module.get(DatabaseService);
     evs = new EnvVarService(database);
-    functionService = new FunctionService(database, evs, {entryLimit: 100} as any);
+    ss = new SecretService(database, "test-encryption-secret");
+    functionService = new FunctionService(database, evs, ss, {entryLimit: 100} as any);
     scheduler = module.get(Scheduler);
 
     engine = new FunctionEngine(
@@ -71,7 +74,8 @@ describe("Function Dependency Synchronizer", () => {
         outDir: ".build"
       },
       undefined,
-      undefined
+      undefined,
+      val => val as any
     );
   });
 
