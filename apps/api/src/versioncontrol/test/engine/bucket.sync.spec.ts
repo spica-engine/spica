@@ -27,6 +27,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
+import {Validator} from "@spica-server/core/schema/src/validator";
 
 xdescribe("SyncEngine Integration - Bucket", () => {
   let module: TestingModule;
@@ -60,8 +61,12 @@ xdescribe("SyncEngine Integration - Bucket", () => {
     bs = module.get(BucketService);
     bds = module.get(BucketDataService);
     hs = module.get(HistoryService);
+    const validator = module.get(Validator);
 
-    syncEngine.registerChangeHandler(getBucketSupplier(bs), getBucketApplier(bs, bds, hs));
+    syncEngine.registerChangeHandler(
+      getBucketSupplier(bs),
+      getBucketApplier(bs, bds, hs, validator)
+    );
   });
 
   afterEach(async () => {

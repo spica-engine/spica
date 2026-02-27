@@ -13,6 +13,9 @@ import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
 import {getApplier, getSupplier} from "../../src/synchronizer/schema";
 import {firstValueFrom} from "rxjs";
+import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import PolicySchema from "../../src/schemas/policy.json" with {type: "json"};
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -21,14 +24,19 @@ function sleep(ms: number) {
 describe("Policy Synchronizer", () => {
   let module: TestingModule;
   let ps: PolicyService;
+  let validator: Validator;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet()],
+      imports: [
+        DatabaseTestingModule.replicaSet(),
+        SchemaModule.forChild({schemas: [PolicySchema], formats: [OBJECT_ID]})
+      ],
       providers: [PolicyService]
     }).compile();
 
     ps = module.get(PolicyService);
+    validator = module.get(Validator);
   });
 
   afterEach(async () => {
@@ -243,7 +251,7 @@ describe("Policy Synchronizer", () => {
     let policyApplier;
 
     beforeEach(() => {
-      policyApplier = getApplier(ps, undefined, undefined);
+      policyApplier = getApplier(ps, undefined, undefined, validator);
     });
 
     it("should return Change Applier with correct metadata", () => {
@@ -484,6 +492,64 @@ describe("Policy Synchronizer", () => {
         status: SyncStatuses.FAILED
       });
       expect(result.reason).toBeDefined();
+    });
+
+    it("should reject policy missing required statement field", async () => {
+      const invalidPolicy = {
+        _id: new ObjectId(),
+        name: "Custom Policy",
+        description: "An invalid policy"
+      };
+
+      const changeLog: ChangeLog = {
+        module: "policy",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: invalidPolicy._id.toString(),
+        resource_slug: "Invalid Policy",
+        resource_content: YAML.stringify(invalidPolicy),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await policyApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should allow policy with custom resource statements", async () => {
+      const validPolicy: any = {
+        _id: new ObjectId(),
+        name: "Custom Policy",
+        description: "A valid policy",
+        statement: [
+          {
+            action: "bucket:index",
+            resource: {include: ["*"], exclude: []},
+            module: "bucket"
+          }
+        ]
+      };
+
+      const changeLog: ChangeLog = {
+        module: "policy",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: validPolicy._id.toString(),
+        resource_slug: "Custom Policy",
+        resource_content: YAML.stringify(validPolicy),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL
+      };
+
+      const result = await policyApplier.apply(changeLog);
+
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
     });
   });
 });

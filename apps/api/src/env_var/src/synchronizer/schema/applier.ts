@@ -9,12 +9,19 @@ import {
   SyncStatuses,
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
+import {Schema, Validator} from "@spica-server/core/schema";
 
 const module = "env-var";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
+function validate(envVar: EnvVar, validator: Validator): Promise<void> {
+  const validatorMixin = Schema.validate("http://spica.internal/env_var");
+  const pipe: any = new validatorMixin(validator);
+  return pipe.transform(envVar);
+}
+
+export const getApplier = (evs: EnvVarService, validator: Validator): DocumentChangeApplier => {
   const findEnvVarByKey = async (key: string) => {
     const envVar = await evs.findOne({key});
     return envVar?._id?.toString();
@@ -56,10 +63,12 @@ export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
         switch (type) {
           case ChangeType.CREATE:
             overwritePrimaries(change, envVar);
+            await validate(envVar, validator);
             await CRUD.insert(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
           case ChangeType.UPDATE:
             overwritePrimaries(change, envVar);
+            await validate(envVar, validator);
             await CRUD.replace(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
 

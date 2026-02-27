@@ -11,15 +11,39 @@ import {
   SyncStatuses,
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
+import {Schema, Validator} from "@spica-server/core/schema";
+import {generate} from "../../schema/enqueuer.resolver";
 
 const module = "function";
 const subModule = "schema";
 const fileExtension = "yaml";
 
+function validate(fn: Function, validator: Validator): Promise<void> {
+  const schema = generate({body: fn});
+  deleteEnqueuerValidation(schema);
+  const validatorMixin = Schema.validate(schema);
+  const pipe: any = new validatorMixin(validator);
+  return pipe.transform(fn);
+}
+
+function deleteEnqueuerValidation(schema: any) {
+  schema.allOf = schema.allOf.map(subSchema => {
+    if (!subSchema.properties || !subSchema.properties.triggers) {
+      return subSchema;
+    }
+    Object.keys(subSchema.properties.triggers.properties).forEach(trigger => {
+      subSchema.properties.triggers.properties[trigger].properties.options = true;
+    });
+    return subSchema;
+  });
+  return schema;
+}
+
 export const getApplier = (
   fs: FunctionService,
   engine: FunctionEngine,
-  logs: LogService
+  logs: LogService,
+  validator: Validator
 ): DocumentChangeApplier => {
   const findFnByName = async (name: string) => {
     const fn = await fs.findOne({name});
@@ -60,10 +84,12 @@ export const getApplier = (
         switch (operationType) {
           case ChangeType.CREATE:
             overwritePrimaries(change, fn);
+            await validate(fn, validator);
             await CRUD.insert(fs, engine, fn);
             return {status: SyncStatuses.SUCCEEDED};
           case ChangeType.UPDATE:
             overwritePrimaries(change, fn);
+            await validate(fn, validator);
             await CRUD.replace(fs, engine, fn);
             return {status: SyncStatuses.SUCCEEDED};
 
