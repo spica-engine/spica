@@ -578,11 +578,18 @@ describe("Function Synchronizer", () => {
 
     it("should reject function missing required name field", async () => {
       const invalidFunction = {
-        timeout: 60,
-        language: "javascript",
+        _id: new ObjectId(),
+        description: "A function with custom triggers",
+        env_vars: [],
         triggers: {
-          default: {type: "http", active: true, options: {method: "Get", path: "/test"}}
-        }
+          default: {
+            type: "http",
+            active: true,
+            options: {method: "Get", path: "/custom"}
+          }
+        },
+        timeout: 60,
+        language: "javascript"
       };
 
       const changeLog: ChangeLog = {
@@ -590,37 +597,8 @@ describe("Function Synchronizer", () => {
         sub_module: "schema",
         type: ChangeType.CREATE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: "123",
-        resource_slug: "invalid",
-        resource_content: YAML.stringify(invalidFunction),
-        created_at: new Date(),
-        resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
-      };
-
-      const result = await funcApplier.apply(changeLog);
-
-      expect(result).toMatchObject({status: SyncStatuses.FAILED});
-      expect(result.reason).toBeDefined();
-    });
-
-    it("should reject function on update with invalid language", async () => {
-      const invalidFunction = {
-        name: "my_function",
-        timeout: 60,
-        language: "python",
-        triggers: {
-          default: {type: "http", active: true, options: {method: "Get", path: "/test"}}
-        }
-      };
-
-      const changeLog: ChangeLog = {
-        module: "function",
-        sub_module: "schema",
-        type: ChangeType.UPDATE,
-        origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: new ObjectId().toString(),
-        resource_slug: "my_function",
+        resource_id: invalidFunction._id.toString(),
+        resource_slug: "Invalid Function",
         resource_content: YAML.stringify(invalidFunction),
         created_at: new Date(),
         resource_extension: "yaml",

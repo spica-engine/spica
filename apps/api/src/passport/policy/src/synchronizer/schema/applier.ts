@@ -26,7 +26,7 @@ export function getApplier(
   ps: PolicyService,
   apikeyFinalizer: changeFactory,
   identityFinalizer: changeFactory,
-  validator?: Validator
+  validator: Validator
 ): DocumentChangeApplier {
   const findPolicyByName = async (name: string) => {
     const policy = await ps.findOne({name});
@@ -68,13 +68,13 @@ export function getApplier(
         switch (operationType) {
           case ChangeType.CREATE:
             overwritePrimaries(change, policy);
-            if (validator) await validate(policy, validator);
+            await validate(policy, validator);
             await CRUD.insert(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.UPDATE:
             overwritePrimaries(change, policy);
-            if (validator) await validate(policy, validator);
+            await validate(policy, validator);
             await CRUD.replace(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
 

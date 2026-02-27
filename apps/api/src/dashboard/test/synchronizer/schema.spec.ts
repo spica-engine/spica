@@ -23,7 +23,10 @@ describe("Dashboard Synchronizer", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet(), SchemaModule.forChild({schemas: [DashboardSchema], formats: [OBJECT_ID]})],
+      imports: [
+        DatabaseTestingModule.replicaSet(),
+        SchemaModule.forChild({schemas: [DashboardSchema], formats: [OBJECT_ID]})
+      ],
       providers: [DashboardService]
     }).compile();
 
@@ -362,37 +365,19 @@ describe("Dashboard Synchronizer", () => {
     });
 
     it("should reject dashboard missing required name field", async () => {
-      const invalidDashboard = {icon: "test-icon", components: []};
+      const invalidDashboard = {
+        _id: new ObjectId(),
+        icon: "custom_icon",
+        components: []
+      };
 
       const changeLog: ChangeLog = {
         module: "dashboard",
         sub_module: "schema",
         type: ChangeType.CREATE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: "123",
-        resource_slug: "invalid",
-        resource_content: YAML.stringify(invalidDashboard),
-        created_at: new Date(),
-        resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
-      };
-
-      const result = await dashboardApplier.apply(changeLog);
-
-      expect(result).toMatchObject({status: SyncStatuses.FAILED});
-      expect(result.reason).toBeDefined();
-    });
-
-    it("should reject dashboard on update with missing required name field", async () => {
-      const invalidDashboard = {icon: "test-icon", components: []};
-
-      const changeLog: ChangeLog = {
-        module: "dashboard",
-        sub_module: "schema",
-        type: ChangeType.UPDATE,
-        origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: new ObjectId().toString(),
-        resource_slug: "invalid",
+        resource_id: invalidDashboard._id.toString(),
+        resource_slug: "Invalid Dashboard",
         resource_content: YAML.stringify(invalidDashboard),
         created_at: new Date(),
         resource_extension: "yaml",

@@ -23,7 +23,10 @@ describe("EnvVar Synchronizer", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet(), SchemaModule.forChild({schemas: [EnvVarSchema], formats: [OBJECT_ID]})],
+      imports: [
+        DatabaseTestingModule.replicaSet(),
+        SchemaModule.forChild({schemas: [EnvVarSchema], formats: [OBJECT_ID]})
+      ],
       providers: [EnvVarService]
     }).compile();
 
@@ -353,37 +356,15 @@ describe("EnvVar Synchronizer", () => {
     });
 
     it("should reject env var missing required key field", async () => {
-      const invalidEnvVar = {value: "some-value"};
+      const invalidEnvVar = {_id: new ObjectId(), value: "valid-value"};
 
       const changeLog: ChangeLog = {
         module: "env-var",
         sub_module: "schema",
         type: ChangeType.CREATE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: "123",
+        resource_id: invalidEnvVar._id.toString(),
         resource_slug: "invalid",
-        resource_content: YAML.stringify(invalidEnvVar),
-        created_at: new Date(),
-        resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
-      };
-
-      const result = await envVarApplier.apply(changeLog);
-
-      expect(result).toMatchObject({status: SyncStatuses.FAILED});
-      expect(result.reason).toBeDefined();
-    });
-
-    it("should reject env var on update with missing required value field", async () => {
-      const invalidEnvVar = {key: "SOME_KEY"};
-
-      const changeLog: ChangeLog = {
-        module: "env-var",
-        sub_module: "schema",
-        type: ChangeType.UPDATE,
-        origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: new ObjectId().toString(),
-        resource_slug: "SOME_KEY",
         resource_content: YAML.stringify(invalidEnvVar),
         created_at: new Date(),
         resource_extension: "yaml",

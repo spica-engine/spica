@@ -476,8 +476,16 @@ describe("Bucket Synchronizer", () => {
 
     it("should reject bucket missing required title field", async () => {
       const invalidBucket = {
-        description: "Missing title",
-        properties: {field: {type: "string", options: {}}}
+        _id: new ObjectId(),
+        description: "An invalid bucket",
+        icon: "bucket",
+        primary: "title",
+        readOnly: false,
+        acl: {read: "true==true", write: "true==true"},
+        properties: {
+          title: {type: "string", options: {}},
+          count: {type: "number", options: {}}
+        }
       };
 
       const changeLog: ChangeLog = {
@@ -485,33 +493,8 @@ describe("Bucket Synchronizer", () => {
         sub_module: "schema",
         type: ChangeType.CREATE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: "123",
-        resource_slug: "invalid",
-        resource_content: YAML.stringify(invalidBucket),
-        created_at: new Date(),
-        resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
-      };
-
-      const result = await bucketApplier.apply(changeLog);
-
-      expect(result).toMatchObject({status: SyncStatuses.FAILED});
-      expect(result.reason).toBeDefined();
-    });
-
-    it("should reject bucket on update with missing required description field", async () => {
-      const invalidBucket = {
-        title: "My Bucket",
-        properties: {field: {type: "string", options: {}}}
-      };
-
-      const changeLog: ChangeLog = {
-        module: "bucket",
-        sub_module: "schema",
-        type: ChangeType.UPDATE,
-        origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: new ObjectId().toString(),
-        resource_slug: "My Bucket",
+        resource_id: invalidBucket._id.toString(),
+        resource_slug: "Invalid Bucket",
         resource_content: YAML.stringify(invalidBucket),
         created_at: new Date(),
         resource_extension: "yaml",

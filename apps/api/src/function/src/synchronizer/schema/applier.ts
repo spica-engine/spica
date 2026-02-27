@@ -43,7 +43,7 @@ export const getApplier = (
   fs: FunctionService,
   engine: FunctionEngine,
   logs: LogService,
-  validator?: Validator
+  validator: Validator
 ): DocumentChangeApplier => {
   const findFnByName = async (name: string) => {
     const fn = await fs.findOne({name});
@@ -84,12 +84,12 @@ export const getApplier = (
         switch (operationType) {
           case ChangeType.CREATE:
             overwritePrimaries(change, fn);
-            if (validator) await validate(fn, validator);
+            await validate(fn, validator);
             await CRUD.insert(fs, engine, fn);
             return {status: SyncStatuses.SUCCEEDED};
           case ChangeType.UPDATE:
             overwritePrimaries(change, fn);
-            if (validator) await validate(fn, validator);
+            await validate(fn, validator);
             await CRUD.replace(fs, engine, fn);
             return {status: SyncStatuses.SUCCEEDED};
 

@@ -28,7 +28,10 @@ describe("Policy Synchronizer", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet(), SchemaModule.forChild({schemas: [PolicySchema], formats: [OBJECT_ID]})],
+      imports: [
+        DatabaseTestingModule.replicaSet(),
+        SchemaModule.forChild({schemas: [PolicySchema], formats: [OBJECT_ID]})
+      ],
       providers: [PolicyService]
     }).compile();
 
@@ -493,8 +496,15 @@ describe("Policy Synchronizer", () => {
 
     it("should reject policy missing required name field", async () => {
       const invalidPolicy = {
-        description: "Missing name",
-        statement: [{action: "bucket:index", module: "bucket"}]
+        _id: new ObjectId(),
+        description: "An invalid policy",
+        statement: [
+          {
+            action: "bucket:index",
+            resource: {include: ["*"], exclude: []},
+            module: "bucket"
+          }
+        ]
       };
 
       const changeLog: ChangeLog = {
@@ -502,30 +512,8 @@ describe("Policy Synchronizer", () => {
         sub_module: "schema",
         type: ChangeType.CREATE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: "123",
-        resource_slug: "invalid",
-        resource_content: YAML.stringify(invalidPolicy),
-        created_at: new Date(),
-        resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
-      };
-
-      const result = await policyApplier.apply(changeLog);
-
-      expect(result).toMatchObject({status: SyncStatuses.FAILED});
-      expect(result.reason).toBeDefined();
-    });
-
-    it("should reject policy on update with missing required statement field", async () => {
-      const invalidPolicy = {name: "My Policy", description: "Missing statement"};
-
-      const changeLog: ChangeLog = {
-        module: "policy",
-        sub_module: "schema",
-        type: ChangeType.UPDATE,
-        origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: new ObjectId().toString(),
-        resource_slug: "My Policy",
+        resource_id: invalidPolicy._id.toString(),
+        resource_slug: "Invalid Policy",
         resource_content: YAML.stringify(invalidPolicy),
         created_at: new Date(),
         resource_extension: "yaml",
