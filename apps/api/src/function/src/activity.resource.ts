@@ -87,3 +87,28 @@ export function createFunctionEnvVarActivity(
 
   return activities;
 }
+
+export function createFunctionSecretActivity(
+  preActivity: PreActivity,
+  req: any,
+  res: any
+): ModuleActivity[] {
+  let activities: ModuleActivity[] = [];
+
+  switch (preActivity.action) {
+    case Action.PUT:
+      activities.push({
+        ...preActivity,
+        resource: ["function", req.params.id, "secret", req.params.secretId]
+      });
+      break;
+    case Action.DELETE:
+      activities.push({
+        ...preActivity,
+        resource: ["function", req.params.id, "secret", req.params.secretId]
+      });
+      break;
+  }
+
+  return activities;
+}

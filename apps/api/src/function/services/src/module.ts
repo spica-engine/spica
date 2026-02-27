@@ -5,6 +5,7 @@ import {
   EnvVarService,
   ServicesModule as EnvVarServicesModule
 } from "@spica-server/env_var/services";
+import {SecretService} from "@spica-server/secret/services";
 
 @Module({})
 export class ServicesModule {
