@@ -8,6 +8,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {SecretModule} from "@spica-server/secret/src/module";
 
 describe("Function Controller", () => {
   let app: INestApplication;
@@ -39,6 +40,10 @@ describe("Function Controller", () => {
         PreferenceTestingModule,
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
+        SecretModule.forRoot({
+          realtime: false,
+          encryptionSecret: "test-encryption-secret-32chars!!"
+        }),
         FunctionModule.forRoot({
           invocationLogs: false,
           path: os.tmpdir(),

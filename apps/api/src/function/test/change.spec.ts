@@ -1,4 +1,4 @@
-import {EnvRelation, Function, ChangeKind} from "@spica-server/interface/function";
+import {EnvRelation, Function, ChangeKind, SecretRelation} from "@spica-server/interface/function";
 import {ObjectId} from "@spica-devkit/database";
 import {EnvVar} from "@spica-server/interface/env_var";
 import {deepCopy} from "@spica-server/core/patch";
@@ -7,10 +7,12 @@ import {
   changesFromTriggers,
   hasContextChange
 } from "@spica-server/function/src/change";
+import {Secret} from "@spica-server/interface/secret";
 
 describe("Change", () => {
-  let fn: Function<EnvRelation.Resolved>;
+  let fn: Function<EnvRelation.Resolved, SecretRelation.Resolved>;
   const envVarIds = [new ObjectId(), new ObjectId()];
+
   let envVars: EnvVar[] = [
     {
       _id: envVarIds[0],
@@ -29,6 +31,7 @@ describe("Change", () => {
       _id: "fn_id",
       name: "my_fn",
       env_vars: envVars,
+      secrets: [],
       language: "javascript",
       timeout: 50,
       triggers: {}
@@ -53,7 +56,7 @@ describe("Change", () => {
       }
     };
 
-    const changes = createTargetChanges(fn, ChangeKind.Added);
+    const changes = createTargetChanges(fn, ChangeKind.Added, val => val as any);
     expect(changes).toEqual([
       {
         kind: ChangeKind.Added,
@@ -185,7 +188,7 @@ describe("Change", () => {
     currentFn.triggers.deactivated.active = false;
 
     //for making more readable
-    const changes = changesFromTriggers(previousFn, currentFn);
+    const changes = changesFromTriggers(previousFn, currentFn, val => val as any);
 
     const insertedHandlers = changes
       .filter(change => change.kind == ChangeKind.Added)

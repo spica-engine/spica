@@ -17,6 +17,7 @@ import fs from "fs";
 import {execSync} from "child_process";
 import path from "path";
 import {v4 as uuidv4} from "uuid";
+import {SecretModule} from "@spica-server/secret/src/module";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50050";
 
@@ -46,6 +47,10 @@ xdescribe("Versioning e2e", () => {
           realtime: false,
           cache: false,
           graphql: false
+        }),
+        SecretModule.forRoot({
+          realtime: false,
+          encryptionSecret: "test-encryption-secret-32chars!!"
         }),
         FunctionModule.forRoot({
           invocationLogs: false,
