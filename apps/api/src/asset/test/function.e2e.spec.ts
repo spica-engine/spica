@@ -121,7 +121,7 @@ describe("function", () => {
       },
       memoryLimit: 100
     };
-    fnv1Created = {...fnv1, env_vars: []};
+    fnv1Created = {...fnv1, env_vars: [], secrets: []};
 
     fnv1Resource = {
       _id: fnId,
@@ -136,7 +136,7 @@ describe("function", () => {
     };
 
     fnv2 = {...fnv1, timeout: 60};
-    fnv2Created = {...fnv2, env_vars: []};
+    fnv2Created = {...fnv2, env_vars: [], secrets: []};
 
     fnv2Resource = {
       ...fnv1Resource,
