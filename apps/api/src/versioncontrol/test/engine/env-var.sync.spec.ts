@@ -22,6 +22,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
+import {Validator} from "@spica-server/core/schema";
 
 xdescribe("SyncEngine Integration - EnvVar", () => {
   let module: TestingModule;
@@ -50,10 +51,11 @@ xdescribe("SyncEngine Integration - EnvVar", () => {
     repManager = module.get(VC_REPRESENTATIVE_MANAGER);
 
     envVarService = module.get(EnvVarService);
+    const validator = module.get(Validator);
 
     syncEngine.registerChangeHandler(
       getEnvVarSupplier(envVarService),
-      getEnvVarApplier(envVarService)
+      getEnvVarApplier(envVarService, validator)
     );
   });
 

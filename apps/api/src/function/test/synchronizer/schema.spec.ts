@@ -340,6 +340,7 @@ describe("Function Synchronizer", () => {
           }
         },
         timeout: 60,
+        memoryLimit: 100,
         language: "javascript"
       };
 
@@ -379,6 +380,7 @@ describe("Function Synchronizer", () => {
           }
         },
         timeout: 60,
+        memoryLimit: 100,
         language: "javascript"
       });
     });
@@ -401,7 +403,8 @@ describe("Function Synchronizer", () => {
           }
         },
         timeout: 60,
-        language: "javascript"
+        language: "javascript",
+        memoryLimit: 100
       };
 
       await fs.insertOne(existingFunction);
@@ -430,7 +433,8 @@ describe("Function Synchronizer", () => {
           }
         },
         timeout: 120,
-        language: "javascript"
+        language: "javascript",
+        memoryLimit: 100
       };
 
       const changeLog: ChangeLog = {
@@ -477,7 +481,8 @@ describe("Function Synchronizer", () => {
         },
         timeout: 120,
         language: "javascript",
-        env_vars: []
+        env_vars: [],
+        memoryLimit: 100
       });
     });
 

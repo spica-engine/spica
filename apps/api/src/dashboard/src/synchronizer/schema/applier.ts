@@ -50,6 +50,16 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
       try {
         const type = change.type;
         const dashboard: Dashboard = YAML.parse(change.resource_content);
+        const overwritePrimaries = (change: ChangeLog, dashboard) => {
+          if (change.resource_id) {
+            dashboard._id = change.resource_id;
+          }
+
+          if (change.resource_slug) {
+            dashboard.name = change.resource_slug;
+          }
+        };
+        overwritePrimaries(change, dashboard);
         switch (type) {
           case ChangeType.CREATE:
             await validate(dashboard, validator);
