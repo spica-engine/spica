@@ -53,19 +53,19 @@ describe("BucketDataController", () => {
         name: {
           type: "string",
           title: "Name of the person",
-          options: {position: "left"},
+          options: {},
           maxLength: 20,
           minLength: 3
         },
         age: {
           type: "number",
           title: "Age of the person",
-          options: {position: "right"}
+          options: {}
         },
         created_at: {
           type: "date",
           title: "Creation Timestamp",
-          options: {position: "bottom"}
+          options: {}
         }
       }
     };
@@ -457,13 +457,13 @@ describe("BucketDataController", () => {
                 type: "string",
                 title: "title",
                 description: "Title of the row",
-                options: {position: "left", translate: true}
+                options: {translate: true}
               },
               description: {
                 type: "textarea",
                 title: "description",
                 description: "Description of the row",
-                options: {position: "right"}
+                options: {}
               }
             }
           })
@@ -667,13 +667,13 @@ describe("BucketDataController", () => {
             properties: {
               achievement: {
                 type: "relation",
-                options: {position: "left"},
+                options: {},
                 bucketId: achievementsBucket._id,
                 relationType: "onetoone"
               },
               user: {
                 type: "relation",
-                options: {position: "right"},
+                options: {},
                 bucketId: usersBucket._id,
                 relationType: "onetoone"
               }

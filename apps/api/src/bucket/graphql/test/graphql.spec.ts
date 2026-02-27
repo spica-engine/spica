@@ -88,12 +88,12 @@ describe("GraphQLController", () => {
               name: {
                 type: "string",
                 title: "Name of the person",
-                options: {position: "left"}
+                options: {}
               },
               age: {
                 type: "number",
                 title: "Age of the person",
-                options: {position: "right"}
+                options: {}
               }
             }
           })
@@ -532,13 +532,13 @@ describe("GraphQLController", () => {
                   type: "string",
                   title: "title",
                   description: "Title of the row",
-                  options: {position: "left", translate: true}
+                  options: {translate: true}
                 },
                 description: {
                   type: "textarea",
                   title: "description",
                   description: "Description of the row",
-                  options: {position: "right"}
+                  options: {}
                 }
               }
             })
@@ -1401,13 +1401,13 @@ describe("GraphQLController", () => {
               name: {
                 type: "string",
                 title: "Name of the person",
-                options: {position: "left"},
+                options: {},
                 enum: ["James", "John"]
               },
               age: {
                 type: "number",
                 title: "Age of the person",
-                options: {position: "right"}
+                options: {}
               }
             },
             required: ["age"]
