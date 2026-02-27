@@ -20,7 +20,8 @@ import {
   SCHEMA,
   SchemaWithName,
   EnvRelation,
-  FunctionWithContent
+  FunctionWithContent,
+  SecretRelation
 } from "@spica-server/interface/function";
 import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface/secret";
 
@@ -59,7 +60,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug,
-    @Optional() @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor
+    @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -80,20 +81,18 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         )
     });
 
-    if (this.secretDecryptor) {
-      this.watchSecretSubs = this.fs.watchFunctionsForSecretChanges().subscribe({
-        next: ({fns, secretId, operationType}) =>
-          fns.map(fn =>
-            operationType == "delete"
-              ? CRUD.secret.eject(this.fs, fn._id, this, secretId)
-              : CRUD.secret.reload(this.fs, fn._id, this)
-          ),
-        error: err =>
-          console.error(
-            `Error received on listening functions for secret changes. Reason: ${JSON.stringify(err)}`
-          )
-      });
-    }
+    this.watchSecretSubs = this.fs.watchFunctionsForSecretChanges().subscribe({
+      next: ({fns, secretId, operationType}) =>
+        fns.map(fn =>
+          operationType == "delete"
+            ? CRUD.secret.eject(this.fs, fn._id, this, secretId)
+            : CRUD.secret.reload(this.fs, fn._id, this)
+        ),
+      error: err =>
+        console.error(
+          `Error received on listening functions for secret changes. Reason: ${JSON.stringify(err)}`
+        )
+    });
   }
 
   onModuleInit() {
@@ -313,7 +312,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
         await Promise.all([
           CRUD.findByName(this.fs, dirName, {
-            resolveEnvRelations: EnvRelation.NotResolved
+            resolveEnvRelations: EnvRelation.NotResolved,
+            resolveSecretRelations: SecretRelation.NotResolved
           }).then(r => (fn = r)),
           contentPromise.then(c => (content = c))
         ]);

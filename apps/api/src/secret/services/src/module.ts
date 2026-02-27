@@ -1,13 +1,7 @@
 import {Global, Module} from "@nestjs/common";
 import {SecretService, SECRET_ENCRYPTION_SECRET} from "./service";
 import {decrypt} from "@spica-server/core/encryption";
-import {
-  Secret,
-  DecryptedSecret,
-  HiddenSecret,
-  SECRET_DECRYPTOR,
-  SecretDecryptor
-} from "@spica-server/interface/secret";
+import {Secret, DecryptedSecret, SECRET_DECRYPTOR} from "@spica-server/interface/secret";
 
 @Global()
 @Module({})
@@ -23,21 +17,12 @@ export class ServicesModule {
         },
         {
           provide: SECRET_DECRYPTOR,
-          useFactory: (): SecretDecryptor => ({
-            decrypt(secret: Secret): DecryptedSecret {
-              return {
-                _id: secret._id,
-                key: secret.key,
-                value: decrypt(secret.value, options.encryptionSecret)
-              };
-            },
-            hideValue(secret: Secret): HiddenSecret {
-              return {
-                _id: secret._id,
-                key: secret.key
-              };
-            }
-          })
+          useFactory: (secret: Secret): DecryptedSecret => {
+            return {
+              ...secret,
+              value: decrypt(secret.value, options.encryptionSecret)
+            };
+          }
         }
       ],
       exports: [SecretService, SECRET_DECRYPTOR]

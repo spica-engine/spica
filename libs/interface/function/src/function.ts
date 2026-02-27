@@ -9,12 +9,20 @@ export enum EnvRelation {
   NotResolved
 }
 
-export interface Function<ER extends EnvRelation = EnvRelation.NotResolved> {
+export enum SecretRelation {
+  Resolved,
+  NotResolved
+}
+
+export interface Function<
+  ER extends EnvRelation = EnvRelation.NotResolved,
+  SR extends SecretRelation = SecretRelation.NotResolved
+> {
   _id?: any;
   name: string;
   description?: string;
   env_vars?: ER extends EnvRelation.Resolved ? EnvVar[] : ObjectId[];
-  secrets?: ER extends EnvRelation.Resolved ? Secret[] : ObjectId[];
+  secrets?: SR extends SecretRelation.Resolved ? Secret[] : ObjectId[];
   triggers: Triggers;
   timeout: number;
   language: string;

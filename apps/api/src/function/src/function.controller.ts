@@ -39,7 +39,13 @@ import {
 } from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "@spica-server/function/services";
-import {Options, FUNCTION_OPTIONS, EnvRelation, Function} from "@spica-server/interface/function";
+import {
+  Options,
+  FUNCTION_OPTIONS,
+  EnvRelation,
+  Function,
+  SecretRelation
+} from "@spica-server/interface/function";
 import {LogService} from "@spica-server/function/log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver";
 import {applyPatch} from "@spica-server/core/patch";
@@ -98,7 +104,8 @@ export class FunctionController {
         resources: resourceFilter,
         index: filter.index
       },
-      resolveEnvRelations: EnvRelation.Resolved
+      resolveEnvRelations: EnvRelation.Resolved,
+      resolveSecretRelations: SecretRelation.Resolved
     }).catch(e => {
       throw new BadRequestException(e);
     });
@@ -112,7 +119,8 @@ export class FunctionController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("function:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return CRUD.findOne(this.fs, id, {
-      resolveEnvRelations: EnvRelation.Resolved
+      resolveEnvRelations: EnvRelation.Resolved,
+      resolveSecretRelations: SecretRelation.Resolved
     }).catch(error => {
       throw new HttpException(error.message, error.status || 500);
     });

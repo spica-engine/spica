@@ -20,7 +20,7 @@ export async function find(
   const {resourceFilter, limit, skip, sort, paginate, filter} = options;
   let pipelineBuilder = new SecretPipelineBuilder().filterResources(resourceFilter);
 
-  pipelineBuilder = (await pipelineBuilder.filterByUserRequest(filter)) as SecretPipelineBuilder;
+  pipelineBuilder = await pipelineBuilder.filterByUserRequest(filter);
 
   const seekingPipeline = new SecretPipelineBuilder()
     .sort(sort)
@@ -60,16 +60,15 @@ export async function findOne(ss: SecretService, id: ObjectId): Promise<HiddenSe
 
 export async function insert(
   ss: SecretService,
-  body: {key: string; value: string}
+  body: {_id?: string; key: string; value: string}
 ): Promise<HiddenSecret> {
   const secret: Secret = {
-    _id: undefined,
     key: body.key,
     value: encrypt(body.value, ss.encryptionSecret)
   };
 
-  if ((body as any)._id) {
-    secret._id = new ObjectId((body as any)._id);
+  if (body._id) {
+    secret._id = new ObjectId(body._id);
   }
 
   await ss.insertOne(secret);

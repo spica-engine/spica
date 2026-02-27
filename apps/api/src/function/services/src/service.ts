@@ -21,7 +21,7 @@ export class FunctionService extends BaseCollection<Function>(collectionName) {
   constructor(
     database: DatabaseService,
     private evs: EnvVarService,
-    @Optional() private ss: SecretService,
+    private ss: SecretService,
     @Inject(FUNCTION_OPTIONS) options: FunctionOptions
   ) {
     super(database, {
@@ -110,10 +110,6 @@ export class FunctionService extends BaseCollection<Function>(collectionName) {
           operationType
         };
       });
-
-    if (!this.ss) {
-      return new Observable(subscriber => {});
-    }
 
     return this.ss
       .watch(watchPipeline)

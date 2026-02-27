@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {EnvRelation} from "@spica-server/interface/function";
+import {EnvRelation, SecretRelation} from "@spica-server/interface/function";
 
 export class FunctionPipelineBuilder extends PipelineBuilder {
   resolveEnvRelation(shouldResolve: EnvRelation) {
@@ -15,7 +15,7 @@ export class FunctionPipelineBuilder extends PipelineBuilder {
     return this.attachToPipeline(shouldResolve == EnvRelation.Resolved, aggregation);
   }
 
-  resolveSecretRelation(shouldResolve: EnvRelation) {
+  resolveSecretRelation(shouldResolve: SecretRelation) {
     const aggregation = {
       $lookup: {
         from: "secret",
@@ -24,7 +24,7 @@ export class FunctionPipelineBuilder extends PipelineBuilder {
         as: "secrets"
       }
     };
-    return this.attachToPipeline(shouldResolve == EnvRelation.Resolved, aggregation);
+    return this.attachToPipeline(shouldResolve == SecretRelation.Resolved, aggregation);
   }
 
   hideSecrets(): this {

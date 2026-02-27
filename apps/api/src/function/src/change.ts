@@ -6,13 +6,17 @@ import {
   Function,
   ChangeKind,
   TargetChange,
-  EnvRelation
+  EnvRelation,
+  SecretRelation
 } from "@spica-server/interface/function";
 
 export function changesFromTriggers(
-  previousFn: Function<EnvRelation.Resolved | EnvRelation.NotResolved>,
-  currentFn: Function<EnvRelation.Resolved>,
-  secretDecryptor?: SecretDecryptor
+  previousFn: Function<
+    EnvRelation.Resolved | EnvRelation.NotResolved,
+    SecretRelation.Resolved | SecretRelation.NotResolved
+  >,
+  currentFn: Function<EnvRelation.Resolved, SecretRelation.Resolved>,
+  secretDecryptor: SecretDecryptor
 ) {
   const targetChanges: TargetChange[] = [];
 
@@ -69,8 +73,8 @@ export function changesFromTriggers(
 }
 
 export function hasContextChange(
-  previousFn: Function<EnvRelation.NotResolved>,
-  currentFn: Function<EnvRelation.NotResolved>
+  previousFn: Function<EnvRelation.NotResolved, SecretRelation.NotResolved>,
+  currentFn: Function<EnvRelation.NotResolved, SecretRelation.NotResolved>
 ) {
   return (
     diff(previousFn.env_vars, currentFn.env_vars).length > 0 ||
@@ -83,10 +87,13 @@ export function createTargetChanges<CK extends ChangeKind>(
   fn: Function<
     CK extends ChangeKind.Removed
       ? EnvRelation.Resolved | EnvRelation.NotResolved
-      : EnvRelation.Resolved
+      : EnvRelation.Resolved,
+    CK extends ChangeKind.Removed
+      ? SecretRelation.Resolved | SecretRelation.NotResolved
+      : SecretRelation.Resolved
   >,
   changeKind: CK,
-  secretDecryptor?: SecretDecryptor
+  secretDecryptor: SecretDecryptor
 ): TargetChange[] {
   const changes: TargetChange[] = [];
   for (const [handler, trigger] of Object.entries(fn.triggers)) {
@@ -123,10 +130,9 @@ function normalizeEnvVars(envVars: EnvVar[]) {
   }, {});
 }
 
-function normalizeSecrets(secrets: Secret[], decryptor?: SecretDecryptor) {
-  if (!secrets || !decryptor) return {};
-  return secrets.reduce((acc, curr) => {
-    const decrypted = decryptor.decrypt(curr);
+function normalizeSecrets(secrets: Secret[], decryptor: SecretDecryptor) {
+  return (secrets || []).reduce((acc, curr) => {
+    const decrypted = decryptor(curr);
     acc[decrypted.key] = decrypted.value;
     return acc;
   }, {});
