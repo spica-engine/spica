@@ -27,7 +27,13 @@ export class SecretRealtimeGateway implements OnGatewayConnection, OnGatewayDisc
     }),
     this.realtime,
     resourceFilterFunction,
-    "secret:stream"
+    "secret:stream",
+    async () => (chunk: any) => {
+      if (chunk.document) {
+        delete chunk.document.value;
+      }
+      return chunk;
+    }
   );
 
   async handleConnection(client: WebSocket, req: any) {

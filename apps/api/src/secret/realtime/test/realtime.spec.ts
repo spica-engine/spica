@@ -192,6 +192,11 @@ describe("Secret Realtime", () => {
                 {kind: ChunkKind.EndOfInitial}
               ]);
 
+              const docs = calls.filter(c => c.document).map(c => c.document);
+              for (const doc of docs) {
+                expect(doc).not.toHaveProperty("value");
+              }
+
               await ws.close();
               done();
             }
@@ -234,6 +239,12 @@ describe("Secret Realtime", () => {
                   {kind: ChunkKind.EndOfInitial},
                   {kind: ChunkKind.Insert, document: expect.objectContaining({key: "SECRET_KEY_3"})}
                 ]);
+
+                const docs = calls.filter(c => c.document).map(c => c.document);
+                for (const doc of docs) {
+                  expect(doc).not.toHaveProperty("value");
+                }
+
                 await ws.close();
                 done();
               }
@@ -265,6 +276,11 @@ describe("Secret Realtime", () => {
           {kind: ChunkKind.Initial, document: {key: "key2"}},
           {kind: ChunkKind.EndOfInitial}
         ]);
+
+        const docs = messages.filter(m => m.document).map(m => m.document);
+        for (const doc of docs) {
+          expect(doc).not.toHaveProperty("value");
+        }
       });
 
       it("should perform 'skip' action", async () => {
@@ -282,6 +298,11 @@ describe("Secret Realtime", () => {
           {kind: ChunkKind.Initial, document: {key: "key3"}},
           {kind: ChunkKind.EndOfInitial}
         ]);
+
+        const docs = messages.filter(m => m.document).map(m => m.document);
+        for (const doc of docs) {
+          expect(doc).not.toHaveProperty("value");
+        }
       });
 
       it("should perform 'sort' action", async () => {
@@ -299,6 +320,11 @@ describe("Secret Realtime", () => {
           {kind: ChunkKind.Initial, document: {key: "c-key"}},
           {kind: ChunkKind.EndOfInitial}
         ]);
+
+        const docs = messages.filter(m => m.document).map(m => m.document);
+        for (const doc of docs) {
+          expect(doc).not.toHaveProperty("value");
+        }
       });
     });
   });
