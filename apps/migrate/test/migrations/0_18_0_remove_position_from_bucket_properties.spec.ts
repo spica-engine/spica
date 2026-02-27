@@ -180,8 +180,9 @@ describe("Remove position from bucket properties", () => {
     expect(buckets[0].properties.field1.options).toEqual({translate: true});
     expect(buckets[0].properties.field2.options).toEqual({});
 
-    expect(buckets[1].properties.fieldA.options).toEqual({});
+    // Alphabetical sort: Bucket One < Bucket Three < Bucket Two
+    expect(buckets[1].properties.fieldX.options).toEqual({translate: true});
 
-    expect(buckets[2].properties.fieldX.options).toEqual({translate: true});
+    expect(buckets[2].properties.fieldA.options).toEqual({});
   });
 });
