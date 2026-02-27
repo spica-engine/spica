@@ -22,6 +22,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
+import {Validator} from "@spica-server/core/schema";
 
 xdescribe("SyncEngine Integration - Policy", () => {
   let module: TestingModule;
@@ -53,10 +54,11 @@ xdescribe("SyncEngine Integration - Policy", () => {
     repManager = module.get(VC_REPRESENTATIVE_MANAGER);
 
     policyService = module.get(PolicyService);
+    const validator = module.get(Validator);
 
     syncEngine.registerChangeHandler(
       getPolicySupplier(policyService),
-      getPolicyApplier(policyService, mockApikeyFinalizer, mockIdentityFinalizer)
+      getPolicyApplier(policyService, mockApikeyFinalizer, mockIdentityFinalizer, validator)
     );
   });
 
