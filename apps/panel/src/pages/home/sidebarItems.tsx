@@ -5,6 +5,8 @@ export type SideBarItem = {
   id: string;
   name: string;
   icon: IconName;
+  position?: "bottom";
+  route?: string;
 };
 
 export const sideBarItems: SideBarItem[]=  [
@@ -38,6 +40,13 @@ export const sideBarItems: SideBarItem[]=  [
     id: "webhook",
     name: "Webhook",
     icon: "webhook",
+  },
+  {
+    id: "versionControl",
+    name: "Version Control",
+    icon: "forkRight",
+    position: "bottom",
+    route: "/version-control",
   },
 ]
 

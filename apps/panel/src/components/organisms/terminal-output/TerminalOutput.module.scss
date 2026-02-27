@@ -1,0 +1,9 @@
+.container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--padding-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
