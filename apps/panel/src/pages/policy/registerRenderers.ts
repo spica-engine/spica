@@ -351,11 +351,11 @@ const MODULE_CONFIGS: ModuleConfig[] = [
     dataProvider: AuthenticationStrategyModuleDataProvider
   },
   {
-        name: "storage",
-        renderer: new StorageModuleRenderer(),
-        contextTransformer: createContextTransformer<Storage[]>("storages"),
-        dataProvider: StorageModuleDataProvider
-      },
+    name: "storage",
+    renderer: new StorageModuleRenderer(),
+    contextTransformer: createContextTransformer<Storage[]>("storages"),
+    dataProvider: StorageModuleDataProvider
+  },
   {
     name: "passport:apikey:policy",
     renderer: new ApiKeyPolicyModuleRenderer(),

@@ -12,6 +12,7 @@ import Storage from "./storage-navigation/Storage";
 import Bucket from "./bucket-navigation/Bucket";
 import AccessManagement from "./access-management/AccessManagement";
 import WebHook from "./webhook/WebHook";
+import FunctionNavigation from "./function/FunctionNavigation";
 import VersionControl from "./version-control/VersionControl";
 
 export type NavigationPrefabProps = {
@@ -26,6 +27,8 @@ export const navigationRegistry: Record<string, NavigationComponent> = {
   bucket: Bucket,
   accessManagement: AccessManagement,
   webhook: WebHook,
+  function: FunctionNavigation,
+  // Add more navigation prefabs here as they are created
   versionControl: VersionControl,
 };
 

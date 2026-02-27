@@ -51,3 +51,12 @@
 .webhookDrawerContent{
   padding: var(--padding-md);
 }
+
+.addFunctionButtonContainer{
+  width: 100%;
+  padding: var(--padding-md);
+
+  .addFunctionButton{
+    border-radius: var(--border-radius-md) !important;
+  }
+}
