@@ -15,6 +15,7 @@ import {
 import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {SecretService} from "@spica-server/secret/services/src/service";
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -70,7 +71,8 @@ describe("Function tsconfig Synchronizer", () => {
 
     database = module.get(DatabaseService);
     evs = new EnvVarService(database);
-    functionService = new FunctionService(database, evs, undefined, {entryLimit: 100} as any);
+    const ss = new SecretService(database, "test-encryption-secret-32chars!!");
+    functionService = new FunctionService(database, evs, ss, {entryLimit: 100} as any);
     scheduler = module.get(Scheduler);
 
     engine = new FunctionEngine(

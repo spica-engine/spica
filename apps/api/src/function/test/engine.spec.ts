@@ -7,6 +7,7 @@ import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {TargetChange, ChangeKind} from "@spica-server/interface/function";
+import {SecretService} from "@spica-server/secret/services";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
@@ -18,6 +19,7 @@ describe("Engine", () => {
   let database: DatabaseService;
   let fs: FunctionService;
   let evs: EnvVarService;
+  let ss: SecretService;
 
   let module: TestingModule;
   let app: INestApplication;
@@ -56,7 +58,9 @@ describe("Engine", () => {
     database = module.get(DatabaseService);
 
     evs = new EnvVarService(database);
-    fs = new FunctionService(database, evs, undefined, {} as any);
+    ss = new SecretService(database, "test-encryption-secret");
+
+    fs = new FunctionService(database, evs, ss, {} as any);
     engine = new FunctionEngine(
       fs,
       database,
