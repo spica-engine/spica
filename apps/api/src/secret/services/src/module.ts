@@ -17,7 +17,7 @@ export class ServicesModule {
         },
         {
           provide: SECRET_DECRYPTOR,
-          useFactory: (secret: Secret): DecryptedSecret => {
+          useValue: (secret: Secret): DecryptedSecret => {
             return {
               ...secret,
               value: decrypt(secret.value, options.encryptionSecret)
