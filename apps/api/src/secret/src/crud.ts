@@ -1,6 +1,6 @@
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {SecretService} from "../services";
-import {HiddenSecret, Secret} from "@spica-server/interface/secret";
+import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface/secret";
 import {encrypt} from "@spica-server/core/encryption";
 import {SecretPipelineBuilder} from "./pipeline.builder";
 import {NotFoundException} from "@nestjs/common";
@@ -58,10 +58,7 @@ export async function findOne(ss: SecretService, id: ObjectId): Promise<HiddenSe
   return res;
 }
 
-export async function insert(
-  ss: SecretService,
-  body: {_id?: string; key: string; value: string}
-): Promise<HiddenSecret> {
+export async function insert(ss: SecretService, body: DecryptedSecret): Promise<HiddenSecret> {
   const secret: Secret = {
     key: body.key,
     value: encrypt(body.value, ss.encryptionSecret)
@@ -71,15 +68,15 @@ export async function insert(
     secret._id = new ObjectId(body._id);
   }
 
-  await ss.insertOne(secret);
-
-  return {_id: secret._id, key: secret.key};
+  const insertedSecret = await ss.insertOne(secret);
+  delete insertedSecret.value;
+  return insertedSecret as HiddenSecret;
 }
 
 export async function replace(
   ss: SecretService,
   id: ObjectId,
-  body: {key: string; value: string}
+  body: DecryptedSecret
 ): Promise<HiddenSecret> {
   const encrypted = encrypt(body.value, ss.encryptionSecret);
 
@@ -93,7 +90,8 @@ export async function replace(
     throw new NotFoundException(`Secret with ID ${id} not found`);
   }
 
-  return {_id: result._id, key: result.key};
+  delete result.value;
+  return result;
 }
 
 export async function remove(ss: SecretService, id: string | ObjectId) {
