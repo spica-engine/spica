@@ -364,11 +364,13 @@ describe("Dashboard Synchronizer", () => {
       expect(result.reason).toBeDefined();
     });
 
-    it("should reject dashboard missing required name field", async () => {
+    it("should reject dashboard if it includes additional fields", async () => {
       const invalidDashboard = {
         _id: new ObjectId(),
+        name: "Custom Dashboard",
         icon: "custom_icon",
-        components: []
+        components: [],
+        something_extra: "not allowed"
       };
 
       const changeLog: ChangeLog = {

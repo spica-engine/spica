@@ -474,18 +474,15 @@ describe("Bucket Synchronizer", () => {
       expect(result.reason).toBeDefined();
     });
 
-    it("should reject bucket missing required title field", async () => {
+    it("should reject bucket if no properties are defined", async () => {
       const invalidBucket = {
         _id: new ObjectId(),
+        title: "An Invalid Bucket",
         description: "An invalid bucket",
         icon: "bucket",
         primary: "title",
         readOnly: false,
-        acl: {read: "true==true", write: "true==true"},
-        properties: {
-          title: {type: "string", options: {}},
-          count: {type: "number", options: {}}
-        }
+        acl: {read: "true==true", write: "true==true"}
       };
 
       const changeLog: ChangeLog = {

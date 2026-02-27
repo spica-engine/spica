@@ -355,8 +355,8 @@ describe("EnvVar Synchronizer", () => {
       expect(result.reason).toBeDefined();
     });
 
-    it("should reject env var missing required key field", async () => {
-      const invalidEnvVar = {_id: new ObjectId(), value: "valid-value"};
+    it("should reject env var missing required value field", async () => {
+      const invalidEnvVar = {_id: new ObjectId(), key: "hello"};
 
       const changeLog: ChangeLog = {
         module: "env-var",

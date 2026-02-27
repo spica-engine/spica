@@ -494,17 +494,11 @@ describe("Policy Synchronizer", () => {
       expect(result.reason).toBeDefined();
     });
 
-    it("should reject policy missing required name field", async () => {
+    it("should reject policy missing required statement field", async () => {
       const invalidPolicy = {
         _id: new ObjectId(),
-        description: "An invalid policy",
-        statement: [
-          {
-            action: "bucket:index",
-            resource: {include: ["*"], exclude: []},
-            module: "bucket"
-          }
-        ]
+        name: "Custom Policy",
+        description: "An invalid policy"
       };
 
       const changeLog: ChangeLog = {

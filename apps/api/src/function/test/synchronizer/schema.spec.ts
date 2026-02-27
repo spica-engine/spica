@@ -576,9 +576,10 @@ describe("Function Synchronizer", () => {
       expect(result.reason).toBeDefined();
     });
 
-    it("should reject function missing required name field", async () => {
+    it("should reject function if it's language is invalid", async () => {
       const invalidFunction = {
         _id: new ObjectId(),
+        name: "custom_function",
         description: "A function with custom triggers",
         env_vars: [],
         triggers: {
@@ -589,7 +590,7 @@ describe("Function Synchronizer", () => {
           }
         },
         timeout: 60,
-        language: "javascript"
+        language: "python"
       };
 
       const changeLog: ChangeLog = {
