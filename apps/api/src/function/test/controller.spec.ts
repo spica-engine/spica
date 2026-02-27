@@ -218,6 +218,31 @@ describe("Function Controller", () => {
       const ej = await request.delete(`/function/${inserted._id}/env-var/${envVarId}`);
       expect([ej.statusCode, ej.statusText]).toEqual([204, "No Content"]);
     });
+
+    it("should inject and eject secret", async () => {
+      const inserted = await request.post("/function", fnSchema).then(r => r.body);
+      const secretId = new ObjectId().toHexString();
+
+      const inj = await request.put(`/function/${inserted._id}/secret/${secretId}`);
+      expect(inj.statusCode).toEqual(200);
+
+      const ej = await request.delete(`/function/${inserted._id}/secret/${secretId}`);
+      expect([ej.statusCode, ej.statusText]).toEqual([204, "No Content"]);
+    });
+
+    it("should not return secret value when getting function with injected secret", async () => {
+      const secret = await request
+        .post("/secret", {key: "MY_SECRET", value: "super-secret-value"})
+        .then(r => r.body);
+
+      const inserted = await request.post("/function", fnSchema).then(r => r.body);
+
+      await request.put(`/function/${inserted._id}/secret/${secret._id}`);
+
+      const found = await request.get(`/function/${inserted._id}`).then(r => r.body);
+      expect(found.secrets).toEqual([{_id: secret._id, key: "MY_SECRET"}]);
+      expect(found.secrets[0].value).toBeUndefined();
+    });
   });
 
   describe("name operations", () => {
