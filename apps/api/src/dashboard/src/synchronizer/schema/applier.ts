@@ -49,8 +49,7 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const type = change.type;
-        const dashboard: Dashboard = YAML.parse(change.resource_content);
-        const overwritePrimaries = (change: ChangeLog, dashboard) => {
+        const overwritePrimaries = (change: ChangeLog, dashboard: any) => {
           if (change.resource_id) {
             dashboard._id = change.resource_id;
           }
@@ -59,17 +58,22 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
             dashboard.name = change.resource_slug;
           }
         };
-        overwritePrimaries(change, dashboard);
+
         switch (type) {
           case ChangeType.CREATE:
-            await validate(dashboard, validator);
-            await CRUD.insert(ds, dashboard);
-            return {status: SyncStatuses.SUCCEEDED};
+          case ChangeType.UPDATE: {
+            const dashboard: Dashboard = YAML.parse(change.resource_content);
+            overwritePrimaries(change, dashboard);
 
-          case ChangeType.UPDATE:
             await validate(dashboard, validator);
-            await CRUD.replace(ds, dashboard);
+
+            if (type === ChangeType.CREATE) {
+              await CRUD.insert(ds, dashboard);
+            } else {
+              await CRUD.replace(ds, dashboard);
+            }
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
           case ChangeType.DELETE:
             await CRUD.remove(ds, change.resource_id);
