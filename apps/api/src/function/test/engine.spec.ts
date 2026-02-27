@@ -73,7 +73,7 @@ describe("Engine", () => {
       },
       undefined,
       undefined,
-      undefined
+      val => val as any
     );
 
     await app.init();

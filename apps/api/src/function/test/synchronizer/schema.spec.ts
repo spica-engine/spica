@@ -77,7 +77,7 @@ describe("Function Synchronizer", () => {
       },
       undefined,
       undefined,
-      undefined
+      val => val as any
     );
   });
 

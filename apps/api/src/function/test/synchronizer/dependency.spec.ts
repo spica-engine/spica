@@ -75,7 +75,7 @@ describe("Function Dependency Synchronizer", () => {
       },
       undefined,
       undefined,
-      undefined
+      val => val as any
     );
   });
 

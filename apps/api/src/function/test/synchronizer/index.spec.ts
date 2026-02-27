@@ -78,7 +78,7 @@ describe("Function Index Synchronizer", () => {
       },
       undefined,
       undefined,
-      undefined
+      val => val as any
     );
   });
 
