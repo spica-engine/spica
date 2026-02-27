@@ -31,10 +31,10 @@ import {useNavigate} from "react-router-dom";
 import {useGetBucketsQuery} from "../../../../store/api";
 import {useUpdateBucketOrderMutation, type BucketType} from "../../../../store/api/bucketApi";
 import {useDrag, useDrop} from "react-dnd";
-import type {Identifier, XYCoord} from "dnd-core";
+import type {Identifier} from "dnd-core";
 import AddBucketPopup from "../../../molecules/add-bucket-popup/AddBucketPopup";
-
 import BucketNavigatorPopup from "../../../molecules/bucket-navigator-popup/BucketNavigatorPopup";
+import SortableNavigationItem, {shouldPreventHover} from "../SortableNavigationItem";
 
 const BUCKET_ITEM_TYPE = "BUCKET_NAVIGATION_ITEM";
 const CATEGORY_ITEM_TYPE = "BUCKET_NAVIGATION_CATEGORY";
@@ -47,13 +47,6 @@ type BucketNavigationItemData = {
   order?: number;
   category?: string;
   [key: string]: unknown;
-};
-
-type DragItem = {
-  id: string;
-  index: number;
-  groupKey: string;
-  type: typeof BUCKET_ITEM_TYPE;
 };
 
 type CategoryDragItem = {
@@ -74,41 +67,6 @@ type CategoryGroup = {
 
 const arraysEqual = (a: string[], b: string[]) =>
   a.length === b.length && a.every((item, index) => item === b[index]);
-
-const shouldPreventHover = (
-  containerRef: React.RefObject<HTMLElement | null>,
-  dragIndex: number,
-  hoverIndex: number,
-  monitor: {getClientOffset: () => XYCoord | null}
-): boolean => {
-  if (dragIndex === hoverIndex) {
-    return true;
-  }
-
-  if (!containerRef.current) {
-    return true;
-  }
-
-  const hoverBoundingRect = containerRef.current.getBoundingClientRect();
-  const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-  const clientOffset = monitor.getClientOffset();
-  if (!clientOffset) {
-    return true;
-  }
-
-  const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-
-  if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-    return true;
-  }
-
-  if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-    return true;
-  }
-
-  return false;
-};
 
 const safeReadCategoryOrder = (): string[] => {
   if (typeof globalThis === "undefined") {
@@ -167,150 +125,6 @@ const groupBucketsByCategory = (items: BucketNavigationItemData[]) => {
   };
 };
 
-
-type SortableBucketItemProps = {
-  bucket: BucketNavigationItemData;
-  index: number;
-  groupKey: string;
-  moveBucket: (from: number, to: number) => void;
-  onNavigate: (id: string) => void;
-  onDragStart: (index: number) => void;
-  onDrop: (id: string, index: number) => void;
-  isPopupOpen: boolean;
-  onPopupStateChange: (state: SetStateAction<boolean>) => void;
-};
-
-const SortableBucketItem: FC<SortableBucketItemProps> = ({
-  bucket,
-  index,
-  groupKey,
-  moveBucket,
-  onNavigate,
-  onDragStart,
-  onDrop,
-  isPopupOpen,
-  onPopupStateChange
-}) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  const [{handlerId}, drop] = useDrop<DragItem, void, {handlerId: Identifier | null}>({
-    accept: BUCKET_ITEM_TYPE,
-    collect: monitor => ({
-      handlerId: monitor.getHandlerId()
-    }),
-    hover: (item, monitor) => {
-      if (item.groupKey !== groupKey) {
-        return;
-      }
-
-      const dragIndex = item.index;
-      const hoverIndex = index;
-
-      if (shouldPreventHover(containerRef, dragIndex, hoverIndex, monitor)) {
-        return;
-      }
-
-      moveBucket(dragIndex, hoverIndex);
-      item.index = hoverIndex;
-    }
-  });
-
-  const [{isDragging}, drag, dragPreview] = useDrag(() => ({
-    type: BUCKET_ITEM_TYPE,
-    item: () => {
-      onDragStart(index);
-      return {id: bucket._id, index, groupKey, type: BUCKET_ITEM_TYPE};
-    },
-    end: draggedItem => {
-      if (!draggedItem) {
-        return;
-      }
-
-      onDrop(draggedItem.id, draggedItem.index);
-    },
-    collect: monitor => ({
-      isDragging: monitor.isDragging()
-    })
-  }));
-
-  const setContainerRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      containerRef.current = node;
-      if (node) {
-        drop(node);
-        dragPreview(node);
-      }
-    },
-    [drop, dragPreview]
-  );
-
-  const setDragHandleRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (node) {
-        drag(node);
-      }
-    },
-    [drag]
-  );
-
-  const handleClick = useCallback(() => {
-    onNavigate(bucket._id);
-  }, [bucket._id, onNavigate]);
-
-  return (
-    <div
-      ref={setContainerRef}
-      data-handler-id={handlerId ?? undefined}
-      style={{opacity: isDragging ? 0.4 : 1}}
-      className={bucketNavigationStyles.bucketItem}
-    >
-      <FluidContainer
-        onClick={handleClick}
-        dimensionX={"fill"}
-        dimensionY={36}
-        mode="fill"
-        prefix={{
-          children: <Icon name="bucket" size="md" />
-        }}
-        root={{
-          children: (
-            <Text
-              size="medium"
-              dimensionX={"fill"}
-              className={bucketNavigationStyles.bucketTitle}
-            >
-              {bucket.title}
-            </Text>
-          ),
-          alignment: "leftCenter",
-        }}
-
-        suffix={{
-          children: (
-            <FlexElement gap={10}>
-              <div ref={setDragHandleRef}>
-                <Button
-                  variant="icon"
-                  color="transparent"
-                  className={bucketNavigationStyles.itemButton}
-                >
-                  <Icon name="dragHorizontalVariant" size="sm" />
-                </Button>
-              </div>
-              <BucketNavigatorPopup
-                className={bucketNavigationStyles.itemButton}
-                isOpen={isPopupOpen}
-                setIsOpen={onPopupStateChange}
-                bucket={bucket as BucketType}
-              />
-            </FlexElement>
-          ),
-          className: bucketNavigationStyles.actionButtons
-        }}
-      />
-    </div>
-  );
-};
 
 type SortableCategoryItemProps = {
   categoryKey: string;
@@ -569,17 +383,40 @@ const Bucket = () => {
 
   const renderBucketItem = useCallback(
     (bucket: BucketNavigationItemData, index: number, groupKey: string) => (
-      <SortableBucketItem
+      <SortableNavigationItem
         key={bucket._id ?? index}
-        bucket={bucket}
+        id={bucket._id}
+        title={bucket.title}
         index={index}
         groupKey={groupKey}
-        moveBucket={moveBucket}
+        dndType={BUCKET_ITEM_TYPE}
+        iconName="bucket"
+        moveItem={moveBucket}
         onNavigate={handleNavigateToBucket}
         onDragStart={handleDragStart}
         onDrop={handleDropBucket}
-        isPopupOpen={openBucketId === bucket._id}
-        onPopupStateChange={state => handleSetBucketPopupOpen(bucket._id, state)}
+        itemClassName={bucketNavigationStyles.bucketItem}
+        titleClassName={bucketNavigationStyles.bucketTitle}
+        suffixClassName={bucketNavigationStyles.actionButtons}
+        renderSuffix={dragHandleRef => (
+          <FlexElement gap={10}>
+            <div ref={dragHandleRef}>
+              <Button
+                variant="icon"
+                color="transparent"
+                className={bucketNavigationStyles.itemButton}
+              >
+                <Icon name="dragHorizontalVariant" size="sm" />
+              </Button>
+            </div>
+            <BucketNavigatorPopup
+              className={bucketNavigationStyles.itemButton}
+              isOpen={openBucketId === bucket._id}
+              setIsOpen={state => handleSetBucketPopupOpen(bucket._id, state)}
+              bucket={bucket as BucketType}
+            />
+          </FlexElement>
+        )}
       />
     ),
     [

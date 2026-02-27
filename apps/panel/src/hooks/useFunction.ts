@@ -261,4 +261,11 @@ export {
   useUpdateFunctionTriggersMutation,
   useGetFunctionEnvQuery,
   useUpdateFunctionEnvMutation,
+  useGetFunctionIndexQuery,
+  useUpdateFunctionIndexMutation,
+  useGetFunctionInformationQuery,
+  useAddFunctionDependencyMutation,
+  useDeleteFunctionDependencyMutation,
+  useGetFunctionLogsQuery,
+  useClearFunctionLogsMutation,
 } from '../store/api/functionApi';

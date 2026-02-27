@@ -115,6 +115,16 @@ export {
   useUpdateFunctionTriggersMutation,
   useGetFunctionEnvQuery,
   useUpdateFunctionEnvMutation,
+  useUpdateFunctionOrderMutation,
+  useChangeFunctionCategoryMutation,
+  useRenameFunctionMutation,
+  useGetFunctionIndexQuery,
+  useUpdateFunctionIndexMutation,
+  useGetFunctionInformationQuery,
+  useAddFunctionDependencyMutation,
+  useDeleteFunctionDependencyMutation,
+  useGetFunctionLogsQuery,
+  useClearFunctionLogsMutation,
 } from './functionApi';
 
 export type {
@@ -126,6 +136,12 @@ export type {
   CreateFunctionRequest,
   UpdateFunctionRequest,
   ExecuteFunctionRequest,
+  FunctionLog,
+  Enqueuer,
+  EnqueuerDescription,
+  Runtime,
+  FunctionInformation,
+  Dependency,
 } from './functionApi';
 
 export {

@@ -14,6 +14,7 @@ import Policy from "./pages/policy/Policy";
 import Webhook from "./pages/webhook/Webhook";
 import Strategy from "./pages/strategy/Strategy";
 import Activities from "./pages/activities/Activities";
+import FunctionPage from "./pages/function/FunctionPage";
 
 const router = createBrowserRouter([
   {
@@ -66,6 +67,10 @@ const router = createBrowserRouter([
       {
         path: "storage",
         element: <Storage />
+      },
+      {
+        path: "function/:functionId",
+        element: <FunctionPage />
       },
       {
         path: "webhook/:webhookId",
