@@ -19,7 +19,6 @@ interface PropertyOptions {
   options: {
     translate?: boolean;
     history?: boolean;
-    position: "left" | "right" | "bottom";
   };
 }
 

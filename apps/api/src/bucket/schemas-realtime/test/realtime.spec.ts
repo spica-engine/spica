@@ -165,9 +165,7 @@ describe("Realtime", () => {
           properties: {
             name: {
               type: "string",
-              options: {
-                position: "bottom"
-              }
+              options: {}
             }
           },
           primary: "name",
@@ -179,9 +177,7 @@ describe("Realtime", () => {
           properties: {
             prop: {
               type: "string",
-              options: {
-                position: "bottom"
-              }
+              options: {}
             }
           },
           primary: "prop",
@@ -264,9 +260,7 @@ describe("Realtime", () => {
             properties: {
               name: {
                 type: "string",
-                options: {
-                  position: "bottom"
-                }
+                options: {}
               }
             },
             primary: "name",
@@ -278,9 +272,7 @@ describe("Realtime", () => {
             properties: {
               name: {
                 type: "string",
-                options: {
-                  position: "bottom"
-                }
+                options: {}
               }
             },
             primary: "name",
@@ -353,9 +345,7 @@ describe("Realtime", () => {
               properties: {
                 name: {
                   type: "string",
-                  options: {
-                    position: "bottom"
-                  }
+                  options: {}
                 }
               },
               primary: "name",
