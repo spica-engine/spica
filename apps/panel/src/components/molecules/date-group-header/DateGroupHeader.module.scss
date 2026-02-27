@@ -1,0 +1,13 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+  padding-left: 4px;
+  margin-bottom: var(--gap-sm);
+}
+
+.label {
+  font-weight: 700;
+  font-size: var(--font-size-md) !important;
+  color: var(--color-font-primary) !important;
+}
