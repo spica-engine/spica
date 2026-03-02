@@ -93,9 +93,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
       properties: {
         name: {
           type: "string",
-          options: {
-            position: "left"
-          }
+          options: {}
         }
       }
     };
@@ -140,9 +138,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
       properties: {
         name: {
           type: "string",
-          options: {
-            position: "left"
-          }
+          options: {}
         }
       }
     };
@@ -163,9 +159,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
         properties: {
           name: {
             type: "string",
-            options: {
-              position: "left"
-            }
+            options: {}
           }
         }
       });
@@ -198,9 +192,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
       properties: {
         name: {
           type: "string",
-          options: {
-            position: "left"
-          }
+          options: {}
         }
       }
     };
@@ -247,9 +239,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
       properties: {
         name: {
           type: "string",
-          options: {
-            position: "left"
-          }
+          options: {}
         }
       }
     };
@@ -274,9 +264,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
         properties: {
           name: {
             type: "string",
-            options: {
-              position: "left"
-            }
+            options: {}
           }
         }
       });

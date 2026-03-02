@@ -107,8 +107,7 @@ xdescribe("Versioning e2e", () => {
       icon: "view_stream",
       properties: {
         title: {
-          type: "string",
-          options: {position: "bottom"}
+          type: "string"
         }
       },
       acl: {read: "true==true", write: "true==true"},
