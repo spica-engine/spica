@@ -34,4 +34,5 @@ _.orig
 # Helm unit tests
 
 tests/
-tests/**snapshot**/
+tests/__snapshot__/
+
