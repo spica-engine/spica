@@ -3,6 +3,20 @@ import {Injectable} from "@nestjs/common";
 import simpleGit, {SimpleGit} from "simple-git";
 import {JobReducer} from "@spica-server/replication";
 
+// Flags that enable arbitrary command execution or override git internals
+const DANGEROUS_ARG_PATTERNS: RegExp[] = [
+  /^--upload-pack(=|$)/i,
+  /^--receive-pack(=|$)/i,
+  /^--exec(=|$)/i,
+  /^-c$/i,
+  /^--config(=|$)/i,
+  /^--git-dir(=|$)/i,
+  /^--work-tree(=|$)/i,
+  /^--output(=|$)/i
+];
+
+const CONTROL_CHAR_PATTERN = /[\x00-\x08\x0b\x0c\x0e-\x1f]/;
+
 @Injectable()
 export class Git implements VersionManager {
   private git: SimpleGit;
@@ -44,7 +58,41 @@ export class Git implements VersionManager {
       return Promise.reject(`Unknown command ${name}`);
     }
 
+    try {
+      options = {...options, args: this.sanitizeArgs(options?.args)};
+    } catch (e) {
+      return Promise.reject(e);
+    }
+
     return map.exec(options);
+  }
+
+  private sanitizeArgs(args: unknown): string[] {
+    if (args === undefined || args === null) {
+      return [];
+    }
+
+    if (!Array.isArray(args)) {
+      throw new Error("Arguments must be an array");
+    }
+
+    return args.map((arg, i) => {
+      if (typeof arg !== "string") {
+        throw new Error(`Argument at index ${i} must be a string`);
+      }
+
+      if (CONTROL_CHAR_PATTERN.test(arg)) {
+        throw new Error(`Argument at index ${i} contains disallowed control characters`);
+      }
+
+      for (const pattern of DANGEROUS_ARG_PATTERNS) {
+        if (pattern.test(arg)) {
+          throw new Error(`Argument "${arg}" is not allowed`);
+        }
+      }
+
+      return arg;
+    });
   }
 
   constructor(
