@@ -89,7 +89,10 @@ export class SAMLController {
 
   @Get("login")
   async login(@Req() req, @Res() res) {
-    req.query["SAMLRequest"] = decodeURIComponent(req.query["SAMLRequest"]);
+    // Express v5: req.query is a getter that returns a new object each time, so direct mutation is lost.
+    // Override the getter with a plain value property containing the decoded SAMLRequest.
+    const decodedQuery = {...req.query, SAMLRequest: decodeURIComponent(req.query["SAMLRequest"])};
+    Object.defineProperty(req, "query", {value: decodedQuery, writable: true, configurable: true});
 
     const authorization = req.headers["authorization"] || "";
 

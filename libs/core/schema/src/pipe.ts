@@ -7,6 +7,12 @@ abstract class MixinValidator implements PipeTransform {
   constructor(@Optional() public validator: Validator) {}
 
   transform(value: any) {
+    // Express v5 body-parser no longer initializes req.body to {} for
+    // requests without a body. Normalize to {} so schema defaults apply.
+    if (value === undefined || value === null) {
+      value = {};
+    }
+
     let schema: object | string = this.uriSchemaOrResolver;
 
     return this.validator

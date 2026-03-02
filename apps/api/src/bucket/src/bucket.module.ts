@@ -67,7 +67,7 @@ export class BucketModule {
     let BucketCache;
 
     if (options.cache) {
-      BucketCache = BucketCacheModule.register({ttl: options.cacheTtl || 60});
+      BucketCache = BucketCacheModule.register({ttl: (options.cacheTtl || 60) * 1000});
       imports.push(BucketCache);
     }
 

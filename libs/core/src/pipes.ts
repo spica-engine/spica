@@ -1,6 +1,19 @@
 import {HttpException, PipeTransform} from "@nestjs/common";
 
 /**
+ * Express v5 wildcard route params ({*param}) return arrays instead of strings.
+ * This pipe joins the array segments back into a path string.
+ */
+export const WILDCARD: PipeTransform = {
+  transform: value => {
+    if (Array.isArray(value)) {
+      return value.join("/");
+    }
+    return value;
+  }
+};
+
+/**
  * An pipe converts string to number
  * If the value is falsy 0 will be returned as default.
  */

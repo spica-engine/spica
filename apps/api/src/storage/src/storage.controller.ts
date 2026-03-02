@@ -21,7 +21,7 @@ import {
   Req
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {BOOLEAN, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
+import {BOOLEAN, JSONP, NUMBER, DEFAULT, ARRAY, WILDCARD} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {
@@ -262,11 +262,11 @@ export class StorageController {
    * @param id Identifier of the object
    * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
    */
-  @Get(":id(*)/view")
+  @Get("{*id}/view")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
   async view(
     @Res() res,
-    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
+    @Param("id", WILDCARD, OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
     @Headers("if-none-match") ifNoneMatch?: string
   ) {
     let object;
@@ -292,9 +292,11 @@ export class StorageController {
    * Returns metadata of the object size, content-type and url.
    * @param id Identifier of the object
    */
-  @Get(":id(*)")
+  @Get("{*id}")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
-  async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
+  async findOne(
+    @Param("id", WILDCARD, OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string
+  ) {
     let object;
     if (idOrName instanceof ObjectId) {
       object = await this.storage.get(idOrName);

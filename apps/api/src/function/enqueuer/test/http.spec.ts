@@ -62,17 +62,17 @@ describe("http enqueuer", () => {
       dequeue: jest.fn()
     };
 
-    await app.listen(req.socket);
-
     schedulerUnsubscriptionSpy = jest.fn();
     httpEnqueuer = new HttpEnqueuer(
       eventQueue as any,
       httpQueue as any,
-      app.getHttpAdapter().getInstance(),
+      (path, router) => app.getHttpAdapter().getInstance().use(path, router),
       corsOptions,
       schedulerUnsubscriptionSpy,
       createNoopGuardService()
     );
+
+    await app.listen(req.socket);
   });
 
   afterEach(() => {
@@ -327,7 +327,7 @@ describe("http enqueuer", () => {
 
   it("should dequeue when connection is closed", done => {
     httpQueue.enqueue.mockImplementation((id, req, res) => {
-      res.connection.destroy();
+      res.socket.destroy();
     });
     httpEnqueuer.subscribe(noopTarget, {
       method: HttpMethod.Get,

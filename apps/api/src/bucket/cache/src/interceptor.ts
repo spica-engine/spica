@@ -10,16 +10,34 @@ import {
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {BucketCacheService} from "./service";
-import {CacheInterceptor, CACHE_MANAGER} from "@nestjs/cache-manager";
-import {Cache} from "cache-manager";
+import {CacheInterceptor, CACHE_MANAGER, Cache} from "@nestjs/cache-manager";
 import {Reflector} from "@nestjs/core";
 
 class BucketCacheInterceptor extends CacheInterceptor {
   constructor(
     @Optional() @Inject(CACHE_MANAGER) cacheManager: Cache,
-    @Optional() @Inject() reflector: Reflector
+    @Optional() @Inject() reflector: Reflector,
+    @Optional() private bucketCacheService: BucketCacheService
   ) {
     super(cacheManager, reflector);
+  }
+
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+    const key = this.trackBy(context);
+
+    // Prune stale key if the cache entry expired via TTL
+    if (key && this.bucketCacheService?.hasKey(key)) {
+      const cached = await this.cacheManager.get(key);
+      if (cached === undefined) {
+        this.bucketCacheService.untrackKey(key);
+      }
+    }
+
+    const result$ = await super.intercept(context, next);
+    if (key && this.bucketCacheService) {
+      return result$.pipe(tap(() => this.bucketCacheService.trackKey(key)));
+    }
+    return result$;
   }
 
   trackBy(context: ExecutionContext): string | undefined {

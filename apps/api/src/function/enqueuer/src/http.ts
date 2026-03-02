@@ -9,6 +9,8 @@ import {AttachStatusTracker} from "@spica-server/interface/status";
 import {Description, HttpMethod, HttpOptions} from "@spica-server/interface/function/enqueuer";
 import {IGuardService} from "@spica-server/interface/passport/guard";
 
+export type RouterMountFn = (path: string, router: express.Router) => void;
+
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   type = event.Type.HTTP;
 
@@ -24,7 +26,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   constructor(
     private queue: EventQueue,
     private http: HttpQueue,
-    httpServer: express.Application,
+    mountRouter: RouterMountFn,
     private corsOptions: CorsOptions,
     private schedulerUnsubscription: (targetId: string) => void,
     private guardService: IGuardService,
@@ -38,11 +40,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       }) as any
     );
     this.router.use(this.handleUnhandled);
-    const stack = httpServer._router.stack;
-    httpServer.use("/fn-execute", this.router);
-    const expressInitIndex = stack.findIndex(l => l.name === "expressInit");
-    const layer = stack.splice(stack.length - 1, 1)[0];
-    stack.splice(expressInitIndex + 1, 0, layer);
+    mountRouter("/fn-execute", this.router);
   }
 
   private handleUnhandled(req, res) {
@@ -176,7 +174,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       // Due to changes above on nodejs v14, we can not listen request 'close' anymore because it will be invoked after request 'end' as well.
       // After request body is read succesfully, request 'end' will be invoked for example.
       // But actual 'close' we want to listen is for request cancellations, aborts etc. So we should listen connection 'close' instead.
-      req.connection.once("close", () => {
+      req.socket.once("close", () => {
         if (!req.res.headersSent) {
           this.queue.dequeue(ev);
           this.http.dequeue(ev.id);
