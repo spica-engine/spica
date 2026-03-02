@@ -1,0 +1,3987 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Spica Backend Engine API",
+    "version": "1.0.0",
+    "description": "Complete OpenAPI 3.1 specification for the Spica open-source backend development engine.",
+    "license": {
+      "name": "AGPL-3.0",
+      "url": "https://www.gnu.org/licenses/agpl-3.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Spica API base path"
+    }
+  ],
+  "security": [
+    {
+      "IdentityAuth": []
+    },
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    {"name": "PassportIdentity", "description": "Identity-based authentication"},
+    {"name": "PassportUser", "description": "User-based authentication"},
+    {"name": "Strategy", "description": "Authentication strategies (SAML, OAuth)"},
+    {"name": "ApiKey", "description": "API key management"},
+    {"name": "Policy", "description": "Access policy management"},
+    {"name": "Identity", "description": "Identity CRUD and factor auth"},
+    {"name": "User", "description": "User CRUD, factor auth, passwordless login"},
+    {"name": "Bucket", "description": "Bucket schema management"},
+    {"name": "BucketData", "description": "Bucket document CRUD"},
+    {"name": "BucketHistory", "description": "Bucket data history"},
+    {"name": "Function", "description": "Cloud function management"},
+    {"name": "FunctionLog", "description": "Function execution logs"},
+    {"name": "Webhook", "description": "Database webhook management"},
+    {"name": "WebhookLog", "description": "Webhook execution logs"},
+    {"name": "Activity", "description": "Activity stream"},
+    {"name": "Dashboard", "description": "Dashboard management"},
+    {"name": "Config", "description": "Module configuration"},
+    {"name": "Preference", "description": "User/system preferences"},
+    {"name": "Storage", "description": "File/object storage"},
+    {"name": "Asset", "description": "Asset/package management"},
+    {"name": "EnvVar", "description": "Environment variable management"},
+    {"name": "Secret", "description": "Secret management"},
+    {"name": "Status", "description": "System status"},
+    {"name": "VersionControl", "description": "Version control commands"},
+    {"name": "Sync", "description": "Version control sync records"}
+  ],
+  "paths": {
+    "/passport/identify": {
+      "get": {
+        "operationId": "identityIdentifyGet",
+        "summary": "Login with identifier and password (deprecated)",
+        "deprecated": true,
+        "tags": ["PassportIdentity"],
+        "security": [],
+        "parameters": [
+          {"name": "identifier", "in": "query", "schema": {"type": "string"}},
+          {"name": "password", "in": "query", "schema": {"type": "string"}},
+          {"name": "state", "in": "query", "schema": {"type": "string"}},
+          {"name": "expires", "in": "query", "schema": {"type": "number"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "JWT token response",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      },
+      "post": {
+        "operationId": "identityIdentifyPost",
+        "summary": "Login with identifier and password",
+        "tags": ["PassportIdentity"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/LoginCredentials"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT token response",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/passport/identify/{id}/factor-authentication": {
+      "post": {
+        "operationId": "identityFactorAuthentication",
+        "summary": "Complete two-factor authentication for identity login",
+        "tags": ["PassportIdentity"],
+        "security": [],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["answer"],
+                "properties": {"answer": {"type": "string"}}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT token response",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/passport/identity/session/refresh": {
+      "post": {
+        "operationId": "identitySessionRefresh",
+        "summary": "Refresh identity session token",
+        "tags": ["PassportIdentity"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Refreshed JWT token",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/passport/identity/strategies": {
+      "get": {
+        "operationId": "identityListStrategies",
+        "summary": "List available SAML login strategies",
+        "tags": ["PassportIdentity"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "List of SAML strategies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/StrategyListItem"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/passport/identity/strategy/{id}/url": {
+      "get": {
+        "operationId": "identityGetStrategyUrl",
+        "summary": "Get SAML login URL for a strategy",
+        "tags": ["PassportIdentity"],
+        "security": [],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Login URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {"url": {"type": "string", "format": "uri"}}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/passport/identity/strategy/{name}/metadata": {
+      "get": {
+        "operationId": "identityGetStrategyMetadata",
+        "summary": "Get SAML SP metadata XML",
+        "tags": ["PassportIdentity"],
+        "security": [],
+        "parameters": [
+          {"name": "name", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "SAML metadata XML",
+            "content": {"application/xml": {"schema": {"type": "string"}}}
+          }
+        }
+      }
+    },
+    "/passport/identity/strategy/{id}/complete": {
+      "post": {
+        "operationId": "identityCompleteStrategy",
+        "summary": "SAML assertion consumer callback",
+        "tags": ["PassportIdentity"],
+        "security": [],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Strategy callback completed"}
+        }
+      }
+    },
+    "/passport/login": {
+      "get": {
+        "operationId": "userLoginGet",
+        "summary": "Login with username and password (deprecated)",
+        "deprecated": true,
+        "tags": ["PassportUser"],
+        "security": [],
+        "parameters": [
+          {"name": "username", "in": "query", "schema": {"type": "string"}},
+          {"name": "password", "in": "query", "schema": {"type": "string"}},
+          {"name": "state", "in": "query", "schema": {"type": "string"}},
+          {"name": "expires", "in": "query", "schema": {"type": "number"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "JWT token response",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      },
+      "post": {
+        "operationId": "userLoginPost",
+        "summary": "Login with username and password",
+        "tags": ["PassportUser"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/UserLoginCredentials"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT token response",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/passport/login/{id}/factor-authentication": {
+      "post": {
+        "operationId": "userLoginFactorAuthentication",
+        "summary": "Complete two-factor authentication for user login",
+        "tags": ["PassportUser"],
+        "security": [],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["answer"],
+                "properties": {"answer": {"type": "string"}}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT token response",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/passport/user/session/refresh": {
+      "post": {
+        "operationId": "userSessionRefresh",
+        "summary": "Refresh user session token",
+        "tags": ["PassportUser"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Refreshed JWT token",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/passport/user/strategies": {
+      "get": {
+        "operationId": "userListStrategies",
+        "summary": "List available OAuth login strategies",
+        "tags": ["PassportUser"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "List of OAuth strategies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/StrategyListItem"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/passport/user/strategy/{id}/url": {
+      "get": {
+        "operationId": "userGetStrategyUrl",
+        "summary": "Get OAuth login URL for a strategy",
+        "tags": ["PassportUser"],
+        "security": [],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Login URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {"url": {"type": "string", "format": "uri"}}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/passport/user/strategy/{id}/complete": {
+      "post": {
+        "operationId": "userCompleteStrategy",
+        "summary": "OAuth callback",
+        "tags": ["PassportUser"],
+        "security": [],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Strategy callback completed"}
+        }
+      }
+    },
+    "/passport/strategy": {
+      "get": {
+        "operationId": "listStrategies",
+        "summary": "List all authentication strategies",
+        "tags": ["Strategy"],
+        "responses": {
+          "200": {
+            "description": "Array of strategies",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Strategy"}}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createStrategy",
+        "summary": "Create a new authentication strategy",
+        "tags": ["Strategy"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/StrategyInput"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created strategy",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Strategy"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/passport/strategy/{id}": {
+      "get": {
+        "operationId": "getStrategy",
+        "summary": "Get a strategy by ID",
+        "tags": ["Strategy"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Strategy object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Strategy"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updateStrategy",
+        "summary": "Update a strategy",
+        "tags": ["Strategy"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/StrategyInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated strategy",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Strategy"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteStrategy",
+        "summary": "Delete a strategy",
+        "tags": ["Strategy"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Strategy deleted"}
+        }
+      }
+    },
+    "/passport/apikey": {
+      "get": {
+        "operationId": "listApiKeys",
+        "summary": "List API keys with pagination",
+        "tags": ["ApiKey"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {"$ref": "#/components/parameters/Sort"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of API keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedApiKeyResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createApiKey",
+        "summary": "Create a new API key",
+        "tags": ["ApiKey"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/ApiKeyInput"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created API key",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ApiKey"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/passport/apikey/{id}": {
+      "get": {
+        "operationId": "getApiKey",
+        "summary": "Get an API key by ID",
+        "tags": ["ApiKey"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "API key object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ApiKey"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updateApiKey",
+        "summary": "Update an API key",
+        "tags": ["ApiKey"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/ApiKeyInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated API key",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ApiKey"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteApiKey",
+        "summary": "Delete an API key",
+        "tags": ["ApiKey"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "API key deleted"}
+        }
+      }
+    },
+    "/passport/apikey/{id}/policy/{policyId}": {
+      "put": {
+        "operationId": "addPolicyToApiKey",
+        "summary": "Attach a policy to an API key",
+        "tags": ["ApiKey"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "policyId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Policy attached",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ApiKey"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "removePolicyFromApiKey",
+        "summary": "Detach a policy from an API key",
+        "tags": ["ApiKey"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "policyId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Policy detached"}
+        }
+      }
+    },
+    "/passport/policy": {
+      "get": {
+        "operationId": "listPolicies",
+        "summary": "List access policies",
+        "tags": ["Policy"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {"type": "string"},
+            "description": "JSON filter object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of policies",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Policy"}}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createPolicy",
+        "summary": "Create a new policy",
+        "tags": ["Policy"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/PolicyInput"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created policy",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Policy"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/passport/policy/{id}": {
+      "get": {
+        "operationId": "getPolicy",
+        "summary": "Get a policy by ID",
+        "tags": ["Policy"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Policy object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Policy"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updatePolicy",
+        "summary": "Update a policy",
+        "tags": ["Policy"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/PolicyInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated policy",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Policy"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deletePolicy",
+        "summary": "Delete a policy",
+        "tags": ["Policy"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Policy deleted"}
+        }
+      }
+    },
+    "/passport/identity/verify": {
+      "get": {
+        "operationId": "verifyIdentityToken",
+        "summary": "Verify a JWT token for identity",
+        "tags": ["Identity"],
+        "parameters": [{"name": "token", "in": "query", "schema": {"type": "string"}}],
+        "responses": {
+          "200": {
+            "description": "Token payload",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/passport/identity/statements": {
+      "get": {
+        "operationId": "getIdentityStatements",
+        "summary": "Get policy statements for the authenticated identity",
+        "tags": ["Identity"],
+        "responses": {
+          "200": {
+            "description": "Array of policy statements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/PolicyStatement"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/passport/identity/profile": {
+      "get": {
+        "operationId": "getIdentityProfile",
+        "summary": "Get profiler entries for identity queries",
+        "tags": ["Identity"],
+        "responses": {
+          "200": {
+            "description": "Profiler entries",
+            "content": {
+              "application/json": {"schema": {"type": "array", "items": {"type": "object"}}}
+            }
+          }
+        }
+      }
+    },
+    "/passport/identity": {
+      "get": {
+        "operationId": "listIdentities",
+        "summary": "List identities with optional pagination and filter",
+        "tags": ["Identity"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {"$ref": "#/components/parameters/Sort"},
+          {"$ref": "#/components/parameters/Paginate"},
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {"type": "string"},
+            "description": "JSON filter object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated identity list or plain array",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {"$ref": "#/components/schemas/PaginatedIdentityResponse"},
+                    {"type": "array", "items": {"$ref": "#/components/schemas/Identity"}}
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createIdentity",
+        "summary": "Create a new identity",
+        "tags": ["Identity"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/IdentityCreate"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created identity",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Identity"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/passport/identity/predefs": {
+      "get": {
+        "operationId": "getIdentityPredefs",
+        "summary": "Get predefined default values for identities",
+        "tags": ["Identity"],
+        "responses": {
+          "200": {
+            "description": "Predefined defaults object",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/passport/identity/factors": {
+      "get": {
+        "operationId": "getIdentityFactorSchemas",
+        "summary": "Get available authentication factor schemas",
+        "tags": ["Identity"],
+        "responses": {
+          "200": {
+            "description": "Array of factor schemas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/AuthFactorSchema"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/passport/identity/{id}": {
+      "get": {
+        "operationId": "getIdentity",
+        "summary": "Get an identity by ID",
+        "tags": ["Identity"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Identity object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Identity"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updateIdentity",
+        "summary": "Update an identity",
+        "tags": ["Identity"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/IdentityUpdate"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated identity",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Identity"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteIdentity",
+        "summary": "Delete an identity",
+        "tags": ["Identity"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Identity deleted"}
+        }
+      }
+    },
+    "/passport/identity/{id}/policy/{policyId}": {
+      "put": {
+        "operationId": "addPolicyToIdentity",
+        "summary": "Attach a policy to an identity",
+        "tags": ["Identity"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "policyId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Policy attached"}
+        }
+      },
+      "delete": {
+        "operationId": "removePolicyFromIdentity",
+        "summary": "Detach a policy from an identity",
+        "tags": ["Identity"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "policyId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Policy detached"}
+        }
+      }
+    },
+    "/passport/identity/{id}/start-factor-verification": {
+      "post": {
+        "operationId": "startIdentityFactorVerification",
+        "summary": "Start two-factor authentication setup for an identity",
+        "tags": ["Identity"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/AuthFactorInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Factor verification started",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/passport/identity/{id}/complete-factor-verification": {
+      "post": {
+        "operationId": "completeIdentityFactorVerification",
+        "summary": "Complete two-factor authentication setup for an identity",
+        "tags": ["Identity"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["answer"],
+                "properties": {"answer": {"type": "string"}}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Factor verification completed",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/passport/identity/{id}/factors": {
+      "delete": {
+        "operationId": "deleteIdentityFactors",
+        "summary": "Remove authentication factor from an identity",
+        "tags": ["Identity"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Factor removed"}
+        }
+      }
+    },
+    "/passport/user/verify": {
+      "get": {
+        "operationId": "verifyUserToken",
+        "summary": "Verify a JWT token for user",
+        "tags": ["User"],
+        "parameters": [{"name": "token", "in": "query", "schema": {"type": "string"}}],
+        "responses": {
+          "200": {
+            "description": "Token payload",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/passport/user/profile": {
+      "get": {
+        "operationId": "getUserProfile",
+        "summary": "Get profiler entries for user queries",
+        "tags": ["User"],
+        "responses": {
+          "200": {
+            "description": "Profiler entries",
+            "content": {
+              "application/json": {"schema": {"type": "array", "items": {"type": "object"}}}
+            }
+          }
+        }
+      }
+    },
+    "/passport/user": {
+      "get": {
+        "operationId": "listUsers",
+        "summary": "List users with optional pagination and filter",
+        "tags": ["User"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {"$ref": "#/components/parameters/Sort"},
+          {"$ref": "#/components/parameters/Paginate"},
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {"type": "string"},
+            "description": "JSON filter object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated user list or plain array",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {"$ref": "#/components/schemas/PaginatedUserResponse"},
+                    {"type": "array", "items": {"$ref": "#/components/schemas/User"}}
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createUser",
+        "summary": "Create a new user",
+        "tags": ["User"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/UserCreate"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created user",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/passport/user/factors": {
+      "get": {
+        "operationId": "getUserFactorSchemas",
+        "summary": "Get available authentication factor schemas for users",
+        "tags": ["User"],
+        "responses": {
+          "200": {
+            "description": "Array of factor schemas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/AuthFactorSchema"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/passport/user/verify-magic-link": {
+      "get": {
+        "operationId": "verifyMagicLink",
+        "summary": "Verify a magic link token",
+        "tags": ["User"],
+        "security": [],
+        "parameters": [
+          {"name": "token", "in": "query", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "JWT token response",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/passport/user/{id}": {
+      "get": {
+        "operationId": "getUser",
+        "summary": "Get a user by ID",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "User object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updateUser",
+        "summary": "Update a user",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/UserUpdate"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteUser",
+        "summary": "Delete a user",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "User deleted"}
+        }
+      }
+    },
+    "/passport/user/{id}/self": {
+      "put": {
+        "operationId": "updateUserSelf",
+        "summary": "Self-update user (limited fields)",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/UserSelfUpdate"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}}
+          }
+        }
+      }
+    },
+    "/passport/user/{id}/policy/{policyId}": {
+      "put": {
+        "operationId": "addPolicyToUser",
+        "summary": "Attach a policy to a user",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "policyId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Policy attached"}
+        }
+      },
+      "delete": {
+        "operationId": "removePolicyFromUser",
+        "summary": "Detach a policy from a user",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "policyId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Policy detached"}
+        }
+      }
+    },
+    "/passport/user/{id}/start-factor-verification": {
+      "post": {
+        "operationId": "startUserFactorVerification",
+        "summary": "Start two-factor authentication setup for a user",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/AuthFactorInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Factor verification started",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/passport/user/{id}/complete-factor-verification": {
+      "post": {
+        "operationId": "completeUserFactorVerification",
+        "summary": "Complete two-factor authentication setup for a user",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["answer"],
+                "properties": {"answer": {"type": "string"}}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Factor verification completed",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/passport/user/{id}/factors": {
+      "delete": {
+        "operationId": "deleteUserFactors",
+        "summary": "Remove authentication factor from a user",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Factor removed"}
+        }
+      }
+    },
+    "/passport/user/{id}/start-provider-verification": {
+      "post": {
+        "operationId": "startUserProviderVerification",
+        "summary": "Start provider verification for a user",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {
+          "200": {
+            "description": "Provider verification started",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/passport/user/{id}/verify-provider": {
+      "post": {
+        "operationId": "verifyUserProvider",
+        "summary": "Verify a provider for a user",
+        "tags": ["User"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {
+          "200": {
+            "description": "Provider verified",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/passport/user/passwordless-login/start": {
+      "post": {
+        "operationId": "startPasswordlessLogin",
+        "summary": "Start passwordless login flow",
+        "tags": ["User"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/PasswordlessLoginStart"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Passwordless login initiated",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/passport/user/passwordless-login/verify": {
+      "post": {
+        "operationId": "verifyPasswordlessLogin",
+        "summary": "Verify passwordless login code",
+        "tags": ["User"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/PasswordlessLoginVerify"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT token response",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}
+            }
+          }
+        }
+      }
+    },
+    "/passport/user/forgot-password/start": {
+      "post": {
+        "operationId": "startForgotPassword",
+        "summary": "Start forgot password flow",
+        "tags": ["User"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/ForgotPasswordStart"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset code sent",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/passport/user/forgot-password/verify": {
+      "post": {
+        "operationId": "verifyForgotPassword",
+        "summary": "Verify forgot password code and set new password",
+        "tags": ["User"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/ForgotPasswordVerify"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/bucket/predefineddefaults": {
+      "get": {
+        "operationId": "getBucketPredefinedDefaults",
+        "summary": "Get predefined default values for bucket schema fields",
+        "tags": ["Bucket"],
+        "responses": {
+          "200": {
+            "description": "Predefined defaults",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/bucket": {
+      "get": {
+        "operationId": "listBuckets",
+        "summary": "List all bucket schemas",
+        "tags": ["Bucket"],
+        "responses": {
+          "200": {
+            "description": "Array of bucket schemas",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Bucket"}}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createBucket",
+        "summary": "Create a new bucket schema",
+        "tags": ["Bucket"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/BucketInput"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created bucket",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Bucket"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/bucket/{id}": {
+      "get": {
+        "operationId": "getBucket",
+        "summary": "Get a bucket schema by ID",
+        "tags": ["Bucket"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Bucket schema",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Bucket"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "replaceBucket",
+        "summary": "Replace a bucket schema",
+        "tags": ["Bucket"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/BucketInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Replaced bucket",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Bucket"}}}
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patchBucket",
+        "summary": "Partially update a bucket schema (category, order)",
+        "tags": ["Bucket"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "category": {"type": "string"},
+                  "order": {"type": "number"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patched bucket",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Bucket"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteBucket",
+        "summary": "Delete a bucket schema and its data",
+        "tags": ["Bucket"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Bucket deleted"}
+        }
+      }
+    },
+    "/bucket/cache": {
+      "delete": {
+        "operationId": "clearBucketCache",
+        "summary": "Clear all bucket schema caches",
+        "tags": ["Bucket"],
+        "responses": {
+          "204": {"description": "Cache cleared"}
+        }
+      }
+    },
+    "/bucket/{bucketId}/data": {
+      "get": {
+        "operationId": "listBucketData",
+        "summary": "List bucket documents with filtering and pagination",
+        "tags": ["BucketData"],
+        "parameters": [
+          {"name": "bucketId", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {"$ref": "#/components/parameters/Sort"},
+          {"$ref": "#/components/parameters/Paginate"},
+          {
+            "name": "relation",
+            "in": "query",
+            "schema": {"type": "boolean", "default": false},
+            "description": "Resolve relation fields"
+          },
+          {
+            "name": "localize",
+            "in": "query",
+            "schema": {"type": "boolean", "default": false},
+            "description": "Localize translatable fields"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {"type": "string"},
+            "description": "JSON filter expression"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated documents or plain array",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {"$ref": "#/components/schemas/PaginatedBucketDataResponse"},
+                    {"type": "array", "items": {"type": "object"}}
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "insertBucketData",
+        "summary": "Insert a new document into a bucket",
+        "tags": ["BucketData"],
+        "parameters": [
+          {"name": "bucketId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Document matching the bucket schema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Inserted document",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/bucket/{bucketId}/data/profile": {
+      "get": {
+        "operationId": "getBucketDataProfile",
+        "summary": "Get profiler entries for bucket data queries",
+        "tags": ["BucketData"],
+        "parameters": [
+          {"name": "bucketId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Profiler entries",
+            "content": {
+              "application/json": {"schema": {"type": "array", "items": {"type": "object"}}}
+            }
+          }
+        }
+      }
+    },
+    "/bucket/{bucketId}/data/{documentId}": {
+      "get": {
+        "operationId": "getBucketDocument",
+        "summary": "Get a single bucket document",
+        "tags": ["BucketData"],
+        "parameters": [
+          {"name": "bucketId", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "documentId", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "relation", "in": "query", "schema": {"type": "boolean", "default": false}},
+          {"name": "localize", "in": "query", "schema": {"type": "boolean", "default": false}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Document object",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "replaceBucketDocument",
+        "summary": "Replace a bucket document",
+        "tags": ["BucketData"],
+        "parameters": [
+          {"name": "bucketId", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "documentId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"type": "object"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Replaced document",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patchBucketDocument",
+        "summary": "Partially update a bucket document",
+        "tags": ["BucketData"],
+        "parameters": [
+          {"name": "bucketId", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "documentId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/merge-patch+json": {"schema": {"type": "object"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patched document",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteBucketDocument",
+        "summary": "Delete a bucket document",
+        "tags": ["BucketData"],
+        "parameters": [
+          {"name": "bucketId", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "documentId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Document deleted"}
+        }
+      }
+    },
+    "/bucket/{bucketId}/history/{documentId}": {
+      "get": {
+        "operationId": "listBucketDataHistory",
+        "summary": "List history entries for a bucket document",
+        "tags": ["BucketHistory"],
+        "parameters": [
+          {"name": "bucketId", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "documentId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of history entries",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/HistoryEntry"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bucket/{bucketId}/history/{documentId}/{historyId}": {
+      "get": {
+        "operationId": "revertBucketDataHistory",
+        "summary": "Revert a bucket document to a previous history state",
+        "tags": ["BucketHistory"],
+        "parameters": [
+          {"name": "bucketId", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "documentId", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "historyId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Reverted document",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/bucket/{bucketId}/history": {
+      "delete": {
+        "operationId": "clearBucketDataHistory",
+        "summary": "Clear all history entries for a bucket",
+        "tags": ["BucketHistory"],
+        "parameters": [
+          {"name": "bucketId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "History cleared"}
+        }
+      }
+    },
+    "/function/information": {
+      "get": {
+        "operationId": "getFunctionInformation",
+        "summary": "Get available enqueuers, runtimes, and timeout info",
+        "tags": ["Function"],
+        "responses": {
+          "200": {
+            "description": "Function runtime information",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/FunctionInformation"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/function": {
+      "get": {
+        "operationId": "listFunctions",
+        "summary": "List all functions",
+        "tags": ["Function"],
+        "responses": {
+          "200": {
+            "description": "Array of functions",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Function"}}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createFunction",
+        "summary": "Create a new function",
+        "tags": ["Function"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/FunctionInput"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created function",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Function"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/function/{id}": {
+      "get": {
+        "operationId": "getFunction",
+        "summary": "Get a function by ID",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Function object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Function"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "replaceFunction",
+        "summary": "Replace a function",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/FunctionInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Replaced function",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Function"}}}
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patchFunction",
+        "summary": "Partially update function (category, order)",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "category": {"type": "string"},
+                  "order": {"type": "number"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patched function",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Function"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteFunction",
+        "summary": "Delete a function",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Function deleted"}
+        }
+      }
+    },
+    "/function/{id}/index": {
+      "get": {
+        "operationId": "getFunctionIndex",
+        "summary": "Get a function's source code",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Function source code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {"index": {"type": "string"}}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "updateFunctionIndex",
+        "summary": "Update a function's source code",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["index"],
+                "properties": {"index": {"type": "string"}}
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {"description": "Source code updated"}
+        }
+      }
+    },
+    "/function/{id}/dependencies": {
+      "get": {
+        "operationId": "getFunctionDependencies",
+        "summary": "Get a function's installed dependencies",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Dependencies object",
+            "content": {
+              "application/json": {
+                "schema": {"type": "object", "additionalProperties": {"type": "string"}}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "addFunctionDependencies",
+        "summary": "Install dependencies for a function",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {"type": "array", "items": {"type": "string"}}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated dependencies",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/function/{id}/dependencies/{name}": {
+      "delete": {
+        "operationId": "removeFunctionDependency",
+        "summary": "Remove a dependency from a function",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "name", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Dependency removed"}
+        }
+      }
+    },
+    "/function/{id}/env-var/{envVarId}": {
+      "put": {
+        "operationId": "injectEnvVarToFunction",
+        "summary": "Inject an environment variable into a function",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "envVarId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Environment variable injected",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Function"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "ejectEnvVarFromFunction",
+        "summary": "Eject an environment variable from a function",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "envVarId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Environment variable ejected"}
+        }
+      }
+    },
+    "/function/{id}/secret/{secretId}": {
+      "put": {
+        "operationId": "injectSecretToFunction",
+        "summary": "Inject a secret into a function",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "secretId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Secret injected",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Function"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "ejectSecretFromFunction",
+        "summary": "Eject a secret from a function",
+        "tags": ["Function"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "secretId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Secret ejected"}
+        }
+      }
+    },
+    "/function-logs": {
+      "get": {
+        "operationId": "listFunctionLogs",
+        "summary": "List function execution logs with filters",
+        "tags": ["FunctionLog"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {
+            "name": "begin",
+            "in": "query",
+            "schema": {"type": "string", "format": "date-time"},
+            "description": "Start date filter"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "schema": {"type": "string", "format": "date-time"},
+            "description": "End date filter"
+          },
+          {
+            "name": "functions",
+            "in": "query",
+            "schema": {"type": "array", "items": {"type": "string"}},
+            "description": "Filter by function IDs"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {"type": "string"},
+            "description": "Filter by channel"
+          },
+          {
+            "name": "levels",
+            "in": "query",
+            "schema": {"type": "array", "items": {"type": "string"}},
+            "description": "Filter by log levels"
+          },
+          {
+            "name": "content",
+            "in": "query",
+            "schema": {"type": "string"},
+            "description": "Text search in log content"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of log entries",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/FunctionLog"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/function-logs/{id}": {
+      "delete": {
+        "operationId": "clearFunctionLogs",
+        "summary": "Clear logs for a specific function",
+        "tags": ["FunctionLog"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Logs cleared"}
+        }
+      }
+    },
+    "/webhook/collections": {
+      "get": {
+        "operationId": "listWebhookCollections",
+        "summary": "List available database collections for webhooks",
+        "tags": ["Webhook"],
+        "responses": {
+          "200": {
+            "description": "Array of collection names",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhook": {
+      "get": {
+        "operationId": "listWebhooks",
+        "summary": "List webhooks with pagination",
+        "tags": ["Webhook"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated webhook list",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/PaginatedWebhookResponse"}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createWebhook",
+        "summary": "Create a new webhook",
+        "tags": ["Webhook"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/WebhookInput"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created webhook",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Webhook"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/webhook/{id}": {
+      "get": {
+        "operationId": "getWebhook",
+        "summary": "Get a webhook by ID",
+        "tags": ["Webhook"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Webhook"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "replaceWebhook",
+        "summary": "Replace a webhook",
+        "tags": ["Webhook"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/WebhookInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Replaced webhook",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Webhook"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteWebhook",
+        "summary": "Delete a webhook",
+        "tags": ["Webhook"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Webhook deleted"}
+        }
+      }
+    },
+    "/webhook/logs": {
+      "get": {
+        "operationId": "listWebhookLogs",
+        "summary": "List webhook execution logs",
+        "tags": ["WebhookLog"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {
+            "name": "webhook",
+            "in": "query",
+            "schema": {"type": "array", "items": {"type": "string"}},
+            "description": "Filter by webhook IDs"
+          },
+          {"name": "begin", "in": "query", "schema": {"type": "string", "format": "date-time"}},
+          {"name": "end", "in": "query", "schema": {"type": "string", "format": "date-time"}},
+          {
+            "name": "succeed",
+            "in": "query",
+            "schema": {"type": "boolean"},
+            "description": "Filter by success status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of webhook logs",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/WebhookLog"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhook/logs/{id}": {
+      "delete": {
+        "operationId": "deleteWebhookLog",
+        "summary": "Delete a webhook log entry",
+        "tags": ["WebhookLog"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Log deleted"}
+        }
+      }
+    },
+    "/activity": {
+      "get": {
+        "operationId": "listActivities",
+        "summary": "List activity stream entries",
+        "tags": ["Activity"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {
+            "name": "identifier",
+            "in": "query",
+            "schema": {"type": "string"},
+            "description": "Filter by identity/user identifier"
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {"type": "array", "items": {"type": "integer"}},
+            "description": "Filter by action codes"
+          },
+          {
+            "name": "resource",
+            "in": "query",
+            "schema": {"type": "array", "items": {"type": "string"}},
+            "description": "Filter by resource modules"
+          },
+          {"name": "begin", "in": "query", "schema": {"type": "string", "format": "date-time"}},
+          {"name": "end", "in": "query", "schema": {"type": "string", "format": "date-time"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of activities",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Activity"}}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteActivities",
+        "summary": "Delete multiple activities by IDs",
+        "tags": ["Activity"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
+        "responses": {
+          "204": {"description": "Activities deleted"}
+        }
+      }
+    },
+    "/activity/{id}": {
+      "delete": {
+        "operationId": "deleteActivity",
+        "summary": "Delete a single activity",
+        "tags": ["Activity"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Activity deleted"}
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "operationId": "listDashboards",
+        "summary": "List all dashboards",
+        "tags": ["Dashboard"],
+        "responses": {
+          "200": {
+            "description": "Array of dashboards",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Dashboard"}}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createDashboard",
+        "summary": "Create a new dashboard",
+        "tags": ["Dashboard"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/DashboardInput"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created dashboard",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Dashboard"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/dashboard/{id}": {
+      "get": {
+        "operationId": "getDashboard",
+        "summary": "Get a dashboard by ID",
+        "tags": ["Dashboard"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Dashboard"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updateDashboard",
+        "summary": "Update a dashboard",
+        "tags": ["Dashboard"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/DashboardInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated dashboard",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Dashboard"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteDashboard",
+        "summary": "Delete a dashboard",
+        "tags": ["Dashboard"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Dashboard deleted"}
+        }
+      }
+    },
+    "/config": {
+      "get": {
+        "operationId": "listConfigs",
+        "summary": "List all module configurations",
+        "tags": ["Config"],
+        "responses": {
+          "200": {
+            "description": "Array of configs",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Config"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config/{module}": {
+      "get": {
+        "operationId": "getConfig",
+        "summary": "Get configuration for a specific module",
+        "tags": ["Config"],
+        "parameters": [
+          {
+            "name": "module",
+            "in": "path",
+            "required": true,
+            "schema": {"$ref": "#/components/schemas/ConfigModule"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Config object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Config"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updateConfig",
+        "summary": "Update configuration for a module",
+        "tags": ["Config"],
+        "parameters": [
+          {
+            "name": "module",
+            "in": "path",
+            "required": true,
+            "schema": {"$ref": "#/components/schemas/ConfigModule"}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/ConfigInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated config",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Config"}}}
+          }
+        }
+      }
+    },
+    "/preference/{scope}": {
+      "get": {
+        "operationId": "getPreference",
+        "summary": "Get a preference by scope",
+        "tags": ["Preference"],
+        "parameters": [
+          {"name": "scope", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Preference object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Preference"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updatePreference",
+        "summary": "Update a preference",
+        "tags": ["Preference"],
+        "parameters": [
+          {"name": "scope", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/Preference"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated preference",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Preference"}}}
+          }
+        }
+      }
+    },
+    "/storage": {
+      "get": {
+        "operationId": "listStorageObjects",
+        "summary": "List storage objects with pagination",
+        "tags": ["Storage"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {"$ref": "#/components/parameters/Sort"},
+          {"$ref": "#/components/parameters/Paginate"},
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {"type": "string"},
+            "description": "JSON filter expression"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated storage objects or plain array",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {"$ref": "#/components/schemas/PaginatedStorageResponse"},
+                    {"type": "array", "items": {"$ref": "#/components/schemas/StorageObject"}}
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "insertStorageObjects",
+        "summary": "Upload one or more storage objects",
+        "tags": ["Storage"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "array",
+                    "items": {"type": "string", "format": "binary"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Inserted storage objects",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/StorageObject"}}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteStorageObjects",
+        "summary": "Delete multiple storage objects by IDs",
+        "tags": ["Storage"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
+        "responses": {
+          "204": {"description": "Objects deleted"}
+        }
+      }
+    },
+    "/storage/browse": {
+      "get": {
+        "operationId": "browseStorage",
+        "summary": "Browse storage objects by path",
+        "tags": ["Storage"],
+        "parameters": [
+          {"name": "path", "in": "query", "schema": {"type": "string"}},
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {"$ref": "#/components/parameters/Sort"},
+          {"name": "filter", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of storage objects",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/StorageObject"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/storage/resumable": {
+      "post": {
+        "operationId": "createResumableUpload",
+        "summary": "Create a resumable upload session",
+        "tags": ["Storage"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {"type": "string"},
+                  "content": {
+                    "type": "object",
+                    "properties": {
+                      "type": {"type": "string"},
+                      "size": {"type": "integer"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resumable upload session info",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/storage/resumable/{id}": {
+      "put": {
+        "operationId": "handleResumableUpload",
+        "summary": "Upload a chunk for a resumable upload session",
+        "tags": ["Storage"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {"type": "string", "format": "binary"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upload complete or progress",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/storage/{id}": {
+      "get": {
+        "operationId": "getStorageObject",
+        "summary": "Get storage object metadata",
+        "tags": ["Storage"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Storage object metadata",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/StorageObject"}}
+            }
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updateStorageObject",
+        "summary": "Update a storage object's content",
+        "tags": ["Storage"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {"type": "string", "format": "binary"}
+                }
+              }
+            },
+            "application/json": {"schema": {"type": "object"}},
+            "application/bson": {"schema": {"type": "object"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated storage object",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/StorageObject"}}
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patchStorageObject",
+        "summary": "Update storage object name",
+        "tags": ["Storage"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {"name": {"type": "string"}}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patched storage object",
+            "content": {
+              "application/json": {"schema": {"$ref": "#/components/schemas/StorageObject"}}
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteStorageObject",
+        "summary": "Delete a storage object by ID or name",
+        "tags": ["Storage"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"},
+            "description": "Object ID or name"
+          }
+        ],
+        "responses": {
+          "204": {"description": "Object deleted"}
+        }
+      }
+    },
+    "/storage/{id}/view": {
+      "get": {
+        "operationId": "viewStorageObject",
+        "summary": "View/download storage object content",
+        "tags": ["Storage"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "schema": {"type": "string"},
+            "description": "ETag for conditional requests"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Object content",
+            "headers": {
+              "ETag": {"schema": {"type": "string"}},
+              "Content-Type": {"schema": {"type": "string"}}
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {"type": "string", "format": "binary"}
+              }
+            }
+          },
+          "304": {"description": "Not modified"},
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      }
+    },
+    "/asset": {
+      "get": {
+        "operationId": "listAssets",
+        "summary": "List all assets",
+        "tags": ["Asset"],
+        "responses": {
+          "200": {
+            "description": "Array of assets",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Asset"}}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "downloadAsset",
+        "summary": "Download/create an asset from URL",
+        "tags": ["Asset"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/AssetInput"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Downloaded asset",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Asset"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/asset/export": {
+      "post": {
+        "operationId": "exportAssets",
+        "summary": "Export selected assets as a zip archive",
+        "tags": ["Asset"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {"type": "array", "items": {"type": "string"}}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Zip archive of assets",
+            "content": {
+              "application/zip": {
+                "schema": {"type": "string", "format": "binary"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/asset/{id}": {
+      "get": {
+        "operationId": "getAsset",
+        "summary": "Get an asset by ID",
+        "tags": ["Asset"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Asset object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Asset"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "post": {
+        "operationId": "installAsset",
+        "summary": "Install an asset with configuration",
+        "tags": ["Asset"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "configs": {"type": "object"},
+                  "preview": {"type": "boolean"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Installed asset result",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAsset",
+        "summary": "Delete an asset (soft or hard)",
+        "tags": ["Asset"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {"type": "string", "enum": ["soft", "hard"], "default": "soft"}
+          }
+        ],
+        "responses": {
+          "204": {"description": "Asset deleted"}
+        }
+      }
+    },
+    "/env-var": {
+      "get": {
+        "operationId": "listEnvVars",
+        "summary": "List environment variables with pagination",
+        "tags": ["EnvVar"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {"$ref": "#/components/parameters/Sort"},
+          {"$ref": "#/components/parameters/Paginate"},
+          {"name": "filter", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated env vars or plain array",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {"$ref": "#/components/schemas/PaginatedEnvVarResponse"},
+                    {"type": "array", "items": {"$ref": "#/components/schemas/EnvVar"}}
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createEnvVar",
+        "summary": "Create a new environment variable",
+        "tags": ["EnvVar"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/EnvVarInput"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created env var",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EnvVar"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/env-var/{id}": {
+      "get": {
+        "operationId": "getEnvVar",
+        "summary": "Get an environment variable by ID",
+        "tags": ["EnvVar"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Env var object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EnvVar"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updateEnvVar",
+        "summary": "Update an environment variable",
+        "tags": ["EnvVar"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/EnvVarInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated env var",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EnvVar"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteEnvVar",
+        "summary": "Delete an environment variable",
+        "tags": ["EnvVar"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Env var deleted"}
+        }
+      }
+    },
+    "/secret": {
+      "get": {
+        "operationId": "listSecrets",
+        "summary": "List secrets with pagination",
+        "tags": ["Secret"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {"$ref": "#/components/parameters/Sort"},
+          {"$ref": "#/components/parameters/Paginate"},
+          {"name": "filter", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated secrets or plain array",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {"$ref": "#/components/schemas/PaginatedSecretResponse"},
+                    {"type": "array", "items": {"$ref": "#/components/schemas/Secret"}}
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createSecret",
+        "summary": "Create a new secret",
+        "tags": ["Secret"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/SecretInput"}}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created secret",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Secret"}}}
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
+        }
+      }
+    },
+    "/secret/{id}": {
+      "get": {
+        "operationId": "getSecret",
+        "summary": "Get a secret by ID",
+        "tags": ["Secret"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Secret object",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Secret"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "put": {
+        "operationId": "updateSecret",
+        "summary": "Update a secret",
+        "tags": ["Secret"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {"schema": {"$ref": "#/components/schemas/SecretInput"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated secret",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Secret"}}}
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSecret",
+        "summary": "Delete a secret",
+        "tags": ["Secret"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "204": {"description": "Secret deleted"}
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "operationId": "listStatusProviders",
+        "summary": "List all status provider modules",
+        "tags": ["Status"],
+        "responses": {
+          "200": {
+            "description": "Array of status providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/StatusProvider"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status/{module}": {
+      "get": {
+        "operationId": "getModuleStatus",
+        "summary": "Get status for a specific module",
+        "tags": ["Status"],
+        "parameters": [
+          {"name": "module", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "begin", "in": "query", "schema": {"type": "string", "format": "date-time"}},
+          {"name": "end", "in": "query", "schema": {"type": "string", "format": "date-time"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Module status data",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/versioncontrol/commands": {
+      "get": {
+        "operationId": "listVersionControlCommands",
+        "summary": "List available version control commands",
+        "tags": ["VersionControl"],
+        "responses": {
+          "200": {
+            "description": "Array of available commands",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/versioncontrol/commands/{cmd}": {
+      "post": {
+        "operationId": "executeVersionControlCommand",
+        "summary": "Execute a version control command",
+        "tags": ["VersionControl"],
+        "parameters": [
+          {"name": "cmd", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {"schema": {"type": "object"}}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Command result",
+            "content": {"application/json": {"schema": {"type": "object"}}}
+          }
+        }
+      }
+    },
+    "/versioncontrol/sync": {
+      "get": {
+        "operationId": "listSyncRecords",
+        "summary": "List version control sync records",
+        "tags": ["Sync"],
+        "parameters": [
+          {"$ref": "#/components/parameters/Limit"},
+          {"$ref": "#/components/parameters/Skip"},
+          {"$ref": "#/components/parameters/Sort"},
+          {"name": "filter", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of sync records",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/SyncRecord"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/versioncontrol/sync/{id}": {
+      "put": {
+        "operationId": "updateSyncStatus",
+        "summary": "Approve or reject a sync record",
+        "tags": ["Sync"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {"type": "string", "enum": ["APPROVED", "REJECTED"]}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated sync record",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SyncRecord"}}}
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "IdentityAuth": {
+        "type": "http",
+        "scheme": "identity",
+        "description": "Pass a JWT token prefixed with IDENTITY in the Authorization header: Authorization: IDENTITY <token>"
+      },
+      "ApiKeyAuth": {
+        "type": "http",
+        "scheme": "apikey",
+        "description": "Pass an API key prefixed with APIKEY in the Authorization header: Authorization: APIKEY <key>"
+      }
+    },
+    "parameters": {
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {"type": "integer", "minimum": 1, "default": 25},
+        "description": "Maximum number of items to return"
+      },
+      "Skip": {
+        "name": "skip",
+        "in": "query",
+        "schema": {"type": "integer", "minimum": 0, "default": 0},
+        "description": "Number of items to skip"
+      },
+      "Sort": {
+        "name": "sort",
+        "in": "query",
+        "schema": {"type": "object", "additionalProperties": {"type": "integer", "enum": [1, -1]}},
+        "style": "deepObject",
+        "explode": true,
+        "description": "Sort fields. Keys are field names, values are 1 (asc) or -1 (desc)"
+      },
+      "Paginate": {
+        "name": "paginate",
+        "in": "query",
+        "schema": {"type": "boolean", "default": false},
+        "description": "When true, return paginated {meta, data} response"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Validation or input error",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Authentication required or failed",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Insufficient permissions",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["statusCode", "message"],
+        "properties": {
+          "statusCode": {"type": "integer"},
+          "message": {"type": "string"},
+          "error": {"type": "string"}
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "total": {"type": "integer"}
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": {"type": "string"},
+          "issuer": {"type": "string"},
+          "schema": {"type": "string"}
+        }
+      },
+      "LoginCredentials": {
+        "type": "object",
+        "properties": {
+          "identifier": {"type": "string"},
+          "password": {"type": "string"},
+          "state": {"type": "string"},
+          "expires": {"type": "number", "description": "Token lifetime in seconds"}
+        }
+      },
+      "UserLoginCredentials": {
+        "type": "object",
+        "properties": {
+          "username": {"type": "string"},
+          "password": {"type": "string"},
+          "state": {"type": "string"},
+          "expires": {"type": "number", "description": "Token lifetime in seconds"}
+        }
+      },
+      "StrategyListItem": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "icon": {"type": "string"},
+          "name": {"type": "string"},
+          "title": {"type": "string"},
+          "type": {"type": "string", "enum": ["saml", "oauth"]}
+        }
+      },
+      "Strategy": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "icon": {"type": "string"},
+          "name": {"type": "string"},
+          "title": {"type": "string"},
+          "type": {"type": "string", "enum": ["saml", "oauth"]},
+          "options": {"type": "object"}
+        }
+      },
+      "StrategyInput": {
+        "type": "object",
+        "properties": {
+          "icon": {"type": "string"},
+          "name": {"type": "string"},
+          "title": {"type": "string"},
+          "type": {"type": "string", "enum": ["saml", "oauth"]},
+          "options": {
+            "type": "object",
+            "description": "Strategy-specific options. SAML: {sp, ip}. OAuth: {code, access_token, identifier, password, idp}."
+          }
+        }
+      },
+      "ApiKey": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "key": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "active": {"type": "boolean"},
+          "policies": {"type": "array", "items": {"type": "string"}}
+        }
+      },
+      "ApiKeyInput": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "active": {"type": "boolean"}
+        }
+      },
+      "PaginatedApiKeyResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {"$ref": "#/components/schemas/PaginationMeta"},
+          "data": {"type": "array", "items": {"$ref": "#/components/schemas/ApiKey"}}
+        }
+      },
+      "PolicyStatement": {
+        "type": "object",
+        "required": ["action", "module"],
+        "properties": {
+          "action": {"type": "string"},
+          "module": {"type": "string"},
+          "resource": {
+            "type": "object",
+            "properties": {
+              "include": {"type": "array", "items": {"type": "string"}},
+              "exclude": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        }
+      },
+      "Policy": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "statement": {"type": "array", "items": {"$ref": "#/components/schemas/PolicyStatement"}}
+        }
+      },
+      "PolicyInput": {
+        "type": "object",
+        "required": ["name", "description", "statement"],
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "statement": {"type": "array", "items": {"$ref": "#/components/schemas/PolicyStatement"}}
+        }
+      },
+      "AuthFactorSchema": {
+        "type": "object",
+        "properties": {
+          "type": {"type": "string"},
+          "title": {"type": "string"},
+          "config": {"type": "object"}
+        }
+      },
+      "AuthFactorInput": {
+        "type": "object",
+        "required": ["type", "config"],
+        "properties": {
+          "type": {"type": "string"},
+          "config": {"type": "object"}
+        }
+      },
+      "Identity": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "identifier": {"type": "string"},
+          "policies": {"type": "array", "items": {"type": "string"}},
+          "attributes": {"type": "object"},
+          "authFactor": {"$ref": "#/components/schemas/AuthFactorInput"}
+        }
+      },
+      "IdentityCreate": {
+        "type": "object",
+        "required": ["identifier", "password"],
+        "properties": {
+          "identifier": {"type": "string"},
+          "password": {"type": "string"},
+          "policies": {"type": "array", "items": {"type": "string"}},
+          "attributes": {"type": "object"}
+        }
+      },
+      "IdentityUpdate": {
+        "type": "object",
+        "required": ["identifier"],
+        "properties": {
+          "identifier": {"type": "string"},
+          "password": {"type": "string"},
+          "deactivateJwtsBefore": {"type": "string", "format": "date-time"},
+          "authFactor": {"$ref": "#/components/schemas/AuthFactorInput"}
+        }
+      },
+      "PaginatedIdentityResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {"$ref": "#/components/schemas/PaginationMeta"},
+          "data": {"type": "array", "items": {"$ref": "#/components/schemas/Identity"}}
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "username": {"type": "string"},
+          "policies": {"type": "array", "items": {"type": "string"}},
+          "attributes": {"type": "object"},
+          "authFactor": {"$ref": "#/components/schemas/AuthFactorInput"},
+          "bannedUntil": {"type": "string", "format": "date-time"}
+        }
+      },
+      "UserCreate": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": {"type": "string"},
+          "password": {"type": "string"},
+          "policies": {"type": "array", "items": {"type": "string"}},
+          "attributes": {"type": "object"}
+        }
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "username": {"type": "string"},
+          "password": {"type": "string"},
+          "deactivateJwtsBefore": {"type": "string", "format": "date-time"},
+          "bannedUntil": {"type": "string", "format": "date-time"}
+        }
+      },
+      "UserSelfUpdate": {
+        "type": "object",
+        "properties": {
+          "password": {"type": "string"}
+        }
+      },
+      "PaginatedUserResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {"$ref": "#/components/schemas/PaginationMeta"},
+          "data": {"type": "array", "items": {"$ref": "#/components/schemas/User"}}
+        }
+      },
+      "PasswordlessLoginStart": {
+        "type": "object",
+        "required": ["username", "provider"],
+        "properties": {
+          "username": {"type": "string"},
+          "provider": {"type": "string", "enum": ["email", "phone"]}
+        }
+      },
+      "PasswordlessLoginVerify": {
+        "type": "object",
+        "required": ["username", "code", "provider"],
+        "properties": {
+          "username": {"type": "string"},
+          "code": {"type": "string"},
+          "provider": {"type": "string", "enum": ["email", "phone"]}
+        }
+      },
+      "ForgotPasswordStart": {
+        "type": "object",
+        "required": ["username", "provider"],
+        "properties": {
+          "username": {"type": "string"},
+          "provider": {"type": "string", "enum": ["email", "phone"]}
+        }
+      },
+      "ForgotPasswordVerify": {
+        "type": "object",
+        "required": ["username", "code", "newPassword", "provider"],
+        "properties": {
+          "username": {"type": "string"},
+          "code": {"type": "string"},
+          "newPassword": {"type": "string"},
+          "provider": {"type": "string", "enum": ["email", "phone"]}
+        }
+      },
+      "Bucket": {
+        "type": "object",
+        "required": ["title", "description", "properties"],
+        "properties": {
+          "_id": {"type": "string"},
+          "title": {"type": "string", "minLength": 4, "maxLength": 100},
+          "description": {"type": "string", "minLength": 5, "maxLength": 250},
+          "icon": {"type": "string", "default": "view_stream"},
+          "primary": {"type": "string"},
+          "order": {"type": "number"},
+          "category": {"type": "string"},
+          "readOnly": {"type": "boolean"},
+          "history": {"type": "boolean", "default": false},
+          "required": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "acl": {"$ref": "#/components/schemas/BucketAcl"},
+          "indexes": {"type": "array", "items": {"$ref": "#/components/schemas/BucketIndex"}},
+          "documentSettings": {"$ref": "#/components/schemas/BucketDocumentSettings"},
+          "properties": {
+            "type": "object",
+            "additionalProperties": {"$ref": "#/components/schemas/BucketProperty"}
+          }
+        }
+      },
+      "BucketInput": {
+        "type": "object",
+        "required": ["title", "description", "properties"],
+        "properties": {
+          "title": {"type": "string", "minLength": 4, "maxLength": 100},
+          "description": {"type": "string", "minLength": 5, "maxLength": 250},
+          "icon": {"type": "string"},
+          "primary": {"type": "string"},
+          "order": {"type": "number"},
+          "category": {"type": "string"},
+          "readOnly": {"type": "boolean"},
+          "history": {"type": "boolean"},
+          "required": {"type": "array", "items": {"type": "string"}},
+          "acl": {"$ref": "#/components/schemas/BucketAcl"},
+          "indexes": {"type": "array", "items": {"$ref": "#/components/schemas/BucketIndex"}},
+          "documentSettings": {"$ref": "#/components/schemas/BucketDocumentSettings"},
+          "properties": {
+            "type": "object",
+            "additionalProperties": {"$ref": "#/components/schemas/BucketProperty"}
+          }
+        }
+      },
+      "BucketAcl": {
+        "type": "object",
+        "required": ["write", "read"],
+        "properties": {
+          "write": {"type": "string", "description": "ACL rule for write operations"},
+          "read": {"type": "string", "description": "ACL rule for read operations"}
+        },
+        "default": {"write": "true==true", "read": "true==true"}
+      },
+      "BucketIndex": {
+        "type": "object",
+        "required": ["definition"],
+        "properties": {
+          "definition": {
+            "type": "object",
+            "additionalProperties": {"oneOf": [{"type": "integer"}, {"type": "string"}]}
+          },
+          "options": {"type": "object", "additionalProperties": true}
+        }
+      },
+      "BucketDocumentSettings": {
+        "type": "object",
+        "properties": {
+          "countLimit": {"type": "number", "minimum": 1},
+          "limitExceedBehaviour": {"type": "string", "enum": ["prevent", "remove"]}
+        }
+      },
+      "BucketProperty": {
+        "type": "object",
+        "properties": {
+          "title": {"type": "string"},
+          "description": {"type": "string"},
+          "type": {
+            "type": "string",
+            "enum": [
+              "array",
+              "multiselect",
+              "boolean",
+              "number",
+              "object",
+              "string",
+              "storage",
+              "richtext",
+              "date",
+              "textarea",
+              "color",
+              "relation",
+              "location",
+              "json",
+              "hash",
+              "encrypted"
+            ]
+          },
+          "default": {},
+          "readOnly": {"type": "boolean"},
+          "enum": {"type": "array"},
+          "pattern": {"type": "string"},
+          "minimum": {"type": "number"},
+          "maximum": {"type": "number"},
+          "minLength": {"type": "integer", "minimum": 0},
+          "maxLength": {"type": "integer", "minimum": 0},
+          "items": {"$ref": "#/components/schemas/BucketProperty"},
+          "properties": {
+            "type": "object",
+            "additionalProperties": {"$ref": "#/components/schemas/BucketProperty"}
+          },
+          "required": {"type": "array", "items": {"type": "string"}},
+          "bucketId": {"type": "string", "description": "Referenced bucket ID (for relation type)"},
+          "relationType": {"type": "string", "enum": ["onetoone", "onetomany"]},
+          "dependent": {"type": "boolean", "default": false},
+          "locationType": {"type": "string", "enum": ["Point"], "default": "Point"},
+          "options": {
+            "type": "object",
+            "properties": {
+              "translate": {"type": "boolean"},
+              "history": {"type": "boolean"}
+            }
+          }
+        }
+      },
+      "PaginatedBucketDataResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {"$ref": "#/components/schemas/PaginationMeta"},
+          "data": {"type": "array", "items": {"type": "object"}}
+        }
+      },
+      "HistoryEntry": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "bucket_id": {"type": "string"},
+          "document_id": {"type": "string"},
+          "changes": {"type": "array", "items": {"type": "object"}},
+          "date": {"type": "string", "format": "date-time"}
+        }
+      },
+      "Function": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "language": {"type": "string", "enum": ["typescript", "javascript"]},
+          "timeout": {"type": "integer"},
+          "triggers": {
+            "type": "object",
+            "additionalProperties": {"$ref": "#/components/schemas/FunctionTrigger"}
+          },
+          "env_vars": {"type": "array", "items": {"type": "string"}},
+          "secrets": {"type": "array", "items": {"type": "string"}},
+          "category": {"type": "string"},
+          "order": {"type": "number"}
+        }
+      },
+      "FunctionInput": {
+        "type": "object",
+        "required": ["name", "triggers", "timeout", "language"],
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "language": {"type": "string", "enum": ["typescript", "javascript"]},
+          "timeout": {"type": "integer"},
+          "triggers": {
+            "type": "object",
+            "additionalProperties": {"$ref": "#/components/schemas/FunctionTrigger"}
+          },
+          "category": {"type": "string"},
+          "order": {"type": "number"}
+        }
+      },
+      "FunctionTrigger": {
+        "type": "object",
+        "properties": {
+          "type": {"type": "string"},
+          "active": {"type": "boolean"},
+          "options": {"type": "object"}
+        }
+      },
+      "FunctionInformation": {
+        "type": "object",
+        "properties": {
+          "enqueuers": {"type": "array", "items": {"type": "object"}},
+          "runtimes": {"type": "object"},
+          "timeout": {"type": "object"}
+        }
+      },
+      "FunctionLog": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "function": {"type": "string"},
+          "event_id": {"type": "string"},
+          "channel": {"type": "string"},
+          "content": {"type": "string"},
+          "created_at": {"type": "string", "format": "date-time"},
+          "level": {"type": "integer"}
+        }
+      },
+      "Webhook": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "title": {"type": "string"},
+          "url": {"type": "string", "format": "uri"},
+          "body": {"type": "string"},
+          "trigger": {"$ref": "#/components/schemas/WebhookTrigger"}
+        }
+      },
+      "WebhookInput": {
+        "type": "object",
+        "required": ["title", "url", "body", "trigger"],
+        "properties": {
+          "title": {"type": "string"},
+          "url": {"type": "string", "format": "uri"},
+          "body": {"type": "string"},
+          "trigger": {"$ref": "#/components/schemas/WebhookTrigger"}
+        }
+      },
+      "WebhookTrigger": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "active": {"type": "boolean"},
+          "options": {
+            "type": "object",
+            "properties": {
+              "collection": {"type": "string"},
+              "type": {"type": "string", "enum": ["INSERT", "UPDATE", "REPLACE", "DELETE"]}
+            }
+          }
+        }
+      },
+      "PaginatedWebhookResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {"$ref": "#/components/schemas/PaginationMeta"},
+          "data": {"type": "array", "items": {"$ref": "#/components/schemas/Webhook"}}
+        }
+      },
+      "WebhookLog": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "webhook": {"type": "string"},
+          "succeed": {"type": "boolean"},
+          "content": {"type": "object"},
+          "created_at": {"type": "string", "format": "date-time"}
+        }
+      },
+      "Activity": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "identifier": {"type": "string"},
+          "action": {"type": "integer"},
+          "resource": {"type": "array", "items": {"type": "string"}},
+          "document_id": {"type": "array", "items": {"type": "string"}},
+          "created_at": {"type": "string", "format": "date-time"}
+        }
+      },
+      "Dashboard": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "name": {"type": "string"},
+          "icon": {"type": "string"},
+          "components": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/DashboardComponent"}
+          }
+        }
+      },
+      "DashboardInput": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {"type": "string"},
+          "icon": {"type": "string"},
+          "components": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/DashboardComponent"}
+          }
+        }
+      },
+      "DashboardComponent": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "url": {"type": "string"},
+          "type": {"type": "string"},
+          "inputs": {"type": "object"}
+        }
+      },
+      "Config": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "module": {"$ref": "#/components/schemas/ConfigModule"},
+          "options": {"type": "object"}
+        }
+      },
+      "ConfigInput": {
+        "type": "object",
+        "required": ["module", "options"],
+        "properties": {
+          "module": {"$ref": "#/components/schemas/ConfigModule"},
+          "options": {"type": "object"}
+        }
+      },
+      "ConfigModule": {
+        "type": "string",
+        "enum": ["bucket", "function", "storage", "passport", "status", "dashboard"]
+      },
+      "Preference": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "scope": {"type": "string"},
+          "property": {"type": "object"}
+        }
+      },
+      "StorageObject": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "name": {"type": "string"},
+          "url": {"type": "string"},
+          "content": {
+            "type": "object",
+            "properties": {
+              "type": {"type": "string"},
+              "size": {"type": "integer"},
+              "hash": {"type": "string"}
+            }
+          }
+        }
+      },
+      "PaginatedStorageResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {"$ref": "#/components/schemas/PaginationMeta"},
+          "data": {"type": "array", "items": {"$ref": "#/components/schemas/StorageObject"}}
+        }
+      },
+      "Asset": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "url": {"type": "string", "format": "uri"},
+          "icon": {"type": "string"},
+          "resources": {"type": "array", "items": {"type": "object"}},
+          "configs": {"type": "array", "items": {"type": "object"}},
+          "status": {"type": "string"}
+        }
+      },
+      "AssetInput": {
+        "type": "object",
+        "required": ["name", "resources", "url"],
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "url": {"type": "string", "format": "uri"},
+          "icon": {"type": "string"},
+          "resources": {"type": "array", "items": {"type": "object"}},
+          "configs": {"type": "array", "items": {"type": "object"}}
+        }
+      },
+      "EnvVar": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "key": {"type": "string"},
+          "value": {"type": "string"}
+        }
+      },
+      "EnvVarInput": {
+        "type": "object",
+        "required": ["key", "value"],
+        "properties": {
+          "key": {"type": "string"},
+          "value": {"type": "string"}
+        }
+      },
+      "PaginatedEnvVarResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {"$ref": "#/components/schemas/PaginationMeta"},
+          "data": {"type": "array", "items": {"$ref": "#/components/schemas/EnvVar"}}
+        }
+      },
+      "Secret": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "key": {"type": "string"},
+          "value": {"type": "string"}
+        }
+      },
+      "SecretInput": {
+        "type": "object",
+        "required": ["key", "value"],
+        "properties": {
+          "key": {"type": "string"},
+          "value": {"type": "string"}
+        }
+      },
+      "PaginatedSecretResponse": {
+        "type": "object",
+        "properties": {
+          "meta": {"$ref": "#/components/schemas/PaginationMeta"},
+          "data": {"type": "array", "items": {"$ref": "#/components/schemas/Secret"}}
+        }
+      },
+      "StatusProvider": {
+        "type": "object",
+        "properties": {
+          "module": {"type": "string"},
+          "name": {"type": "string"},
+          "icon": {"type": "string"}
+        }
+      },
+      "SyncRecord": {
+        "type": "object",
+        "properties": {
+          "_id": {"type": "string"},
+          "module": {"type": "string"},
+          "resource_id": {"type": "string"},
+          "status": {"type": "string", "enum": ["PENDING", "APPROVED", "REJECTED"]},
+          "changes": {"type": "object"},
+          "created_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  }
+}
