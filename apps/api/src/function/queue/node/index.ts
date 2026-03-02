@@ -1,3 +1,4 @@
+export * from "./src/agent_tool";
 export * from "./src/database";
 export * from "./src/event";
 export * from "./src/http";

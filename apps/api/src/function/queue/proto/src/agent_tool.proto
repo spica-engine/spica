@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package AgentTool;
+
+message Message {
+    string id = 1;
+    string tool_name = 2;
+    bytes arguments = 3;
+    bytes result = 4;
+    bytes error = 5;
+
+    message Pop {
+        string id = 1;
+    }
+
+    message Result {}
+}
+
+service Queue {
+    rpc pop(Message.Pop) returns (Message);
+    rpc respond(Message) returns (Message.Result);
+}
