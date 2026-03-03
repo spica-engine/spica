@@ -311,7 +311,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   logInvocations(ev: event.Event) {
     const log = `fn-invocation-log: ${ev.id} ${ev.target.id} ${ev.target.handler} ${event.Type[ev.type]}`;
-    this.logger.log(log);
+    console.log(log);
   }
 
   enqueue(event: event.Event) {

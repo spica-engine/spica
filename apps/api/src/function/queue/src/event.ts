@@ -3,11 +3,8 @@ import {event} from "@spica-server/function/queue/proto";
 import uniqid from "uniqid";
 import util from "util";
 import {Queue} from "./queue";
-import {Logger} from "@nestjs/common";
 
 export class EventQueue {
-  private readonly logger = new Logger(EventQueue.name);
-
   private server: grpc.Server;
 
   constructor(
@@ -81,7 +78,7 @@ export class EventQueue {
     try {
       this.server.addService(queue.TYPE, queue.create() as any);
     } catch (e) {
-      this.logger.log(e);
+      console.log(e);
     }
   }
 }
