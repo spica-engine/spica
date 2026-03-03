@@ -1,5 +1,7 @@
 import {BadRequestException, Injectable} from "@nestjs/common";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Validator} from "@spica-server/core/schema";
+
+const COMPOSITE_SCHEMA_ID = "http://spica.internal/config/composite";
 
 @Injectable()
 export class ConfigSchemaRegistry {
@@ -11,6 +13,7 @@ export class ConfigSchemaRegistry {
   register(module: string, optionsSchema: object): void {
     this.schemas.set(module, optionsSchema);
     this.cachedCompositeSchema = null;
+    this.validator.removeSchema(COMPOSITE_SCHEMA_ID);
   }
 
   hasModule(module: string): boolean {
@@ -34,6 +37,7 @@ export class ConfigSchemaRegistry {
       }));
 
       this.cachedCompositeSchema = {
+        $id: COMPOSITE_SCHEMA_ID,
         anyOf: branches.length > 0 ? branches : [{not: {}}]
       };
     }
@@ -42,9 +46,11 @@ export class ConfigSchemaRegistry {
 
   async validate(data: unknown): Promise<void> {
     const schema = this.buildCompositeSchema();
-    const validatorMixin = Schema.validate(schema);
-    const pipe: any = new validatorMixin(this.validator);
-    return pipe.transform(data);
+    await this.validator.validate(schema, data).catch(error => {
+      throw new BadRequestException(
+        error.errors ? error.errors.map((e: any) => e.message).join("\n") : error.message
+      );
+    });
   }
 
   validateModule(module: string): void {
