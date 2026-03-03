@@ -128,12 +128,12 @@ describe("ConfigSchemaRegistry", () => {
     });
 
     it("should reject data missing required fields", async () => {
-      await expect(registry.validate({module: "bucket"})).rejects.toThrow();
+      await expect(registry.validate({module: "bucket"} as any)).rejects.toThrow();
     });
 
     it("should reject data with additional properties", async () => {
       await expect(
-        registry.validate({module: "bucket", options: {}, extra: "field"})
+        registry.validate({module: "bucket", options: {}, extra: "field"} as any)
       ).rejects.toThrow();
     });
 

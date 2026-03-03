@@ -31,12 +31,20 @@ export class ConfigController {
 
   @Put(":module")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("config:update"))
-  async update(@Param("module") module: string, @Body() data: BaseConfig) {
-    await this.configSchemaRegistry.validate(data);
-    const updatedConfig = await this.configService.findOneAndReplace({module}, data, {
-      returnDocument: ReturnDocument.AFTER,
-      upsert: true
-    });
+  async update(@Param("module") module: string, @Body() data: object) {
+    const configData: BaseConfig = {
+      module,
+      options: data
+    };
+    await this.configSchemaRegistry.validate(configData);
+    const updatedConfig = await this.configService.findOneAndReplace(
+      {module: configData.module},
+      configData,
+      {
+        returnDocument: ReturnDocument.AFTER,
+        upsert: true
+      }
+    );
     if (!updatedConfig) {
       throw new NotFoundException(`Configuration with module ${module} does not exist.`);
     }
