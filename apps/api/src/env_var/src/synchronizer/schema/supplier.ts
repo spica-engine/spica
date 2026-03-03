@@ -9,6 +9,9 @@ import {
   ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {EnvVar} from "@spica-server/interface/env_var";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("EnvVarSyncSupplier");
 
 const module = "env-var";
 const subModule = "schema";
@@ -53,7 +56,7 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
             });
           })
           .catch(error => {
-            console.error("Error propagating existing buckets:", error);
+            logger.error("Error propagating existing buckets:", error);
           });
 
         const subs = evs
@@ -82,7 +85,7 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
                   documentData = change["fullDocumentBeforeChange"];
                   break;
                 default:
-                  console.warn("Unknown operation type:", change.operationType);
+                  logger.warn("Unknown operation type:", change.operationType);
                   return;
               }
               const changeLog = getChangeLogForSchema(

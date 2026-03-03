@@ -1,10 +1,11 @@
 import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {Inject, Injectable} from "@nestjs/common";
+import {Inject, Injectable, Logger} from "@nestjs/common";
 import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "@spica-server/interface/status";
 import {ObjectId} from "@spica-server/database";
 
 @Injectable()
 export class StatusService extends BaseCollection<ApiStatus>("status") {
+  private readonly logger = new Logger(StatusService.name);
   moduleOptions: StatusOptions;
   constructor(db: DatabaseService, @Inject(STATUS_OPTIONS) _moduleOptions: StatusOptions) {
     super(db, {afterInit: () => this.createIndexes(_moduleOptions)});
@@ -44,7 +45,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
         if (error?.code === 11000 && attempt < MAX_RETRIES) {
           continue;
         }
-        console.error(`Error inserting status`, error);
+        this.logger.error(`Error inserting status`, error);
         return;
       }
     }

@@ -1,8 +1,9 @@
 import {SmsSender, SmsStrategy, SmsSendResult, TwilioConfig} from "@spica-server/interface/sms";
-import {InternalServerErrorException} from "@nestjs/common";
+import {InternalServerErrorException, Logger} from "@nestjs/common";
 import twilio from "twilio";
 
 export class TwilioStrategy extends SmsStrategy {
+  private readonly logger = new Logger(TwilioStrategy.name);
   private config: TwilioConfig;
   private client: twilio.Twilio;
 
@@ -35,7 +36,7 @@ export class TwilioStrategy extends SmsStrategy {
         messageId: message.sid
       };
     } catch (error) {
-      console.error("Error sending SMS via Twilio:", error);
+      this.logger.error("Error sending SMS via Twilio:", error);
       throw new InternalServerErrorException("Failed to send SMS via Twilio");
     }
   }

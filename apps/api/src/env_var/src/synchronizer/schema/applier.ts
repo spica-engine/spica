@@ -10,6 +10,9 @@ import {
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {Schema, Validator} from "@spica-server/core/schema";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("EnvVarSyncApplier");
 
 const module = "env-var";
 const subModule = "schema";
@@ -41,7 +44,7 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
         envVar = YAML.parse(content);
         return findEnvVarByKey(envVar?.key);
       } catch (error) {
-        console.error("YAML parsing error:", error);
+        logger.error("YAML parsing error:", error);
         return Promise.resolve(null);
       }
     },
@@ -83,7 +86,7 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
             };
         }
       } catch (error: any) {
-        console.warn("Error applying env_var change:", error);
+        logger.warn("Error applying env_var change:", error);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

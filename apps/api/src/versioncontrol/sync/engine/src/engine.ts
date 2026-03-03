@@ -15,10 +15,11 @@ import {getApplier} from "./applier";
 import {ChangeLogProcessor} from "@spica-server/versioncontrol/processors/changelog";
 import {SyncProcessor} from "@spica-server/versioncontrol/processors/sync";
 import {JobReducer} from "@spica-server/replication";
-import {Inject, Optional} from "@nestjs/common";
+import {Inject, Logger, Optional} from "@nestjs/common";
 
 export class SyncEngine {
   private readonly changeHandlers: ChangeHandler[] = [];
+  private readonly logger = new Logger(SyncEngine.name);
 
   constructor(
     @Inject()
@@ -48,7 +49,7 @@ export class SyncEngine {
       if (this.jobReducer) {
         const jobId = `${changeLog.module}-${changeLog.sub_module}-${changeLog.origin}-${changeLog.resource_id}`;
         this.jobReducer.do({...changeLog, _id: jobId}, job).catch(error => {
-          console.error("SyncEngine Change Handler Job reducer failed:", error);
+          this.logger.error("SyncEngine Change Handler Job reducer failed:", error);
         });
       } else {
         job();
@@ -79,7 +80,7 @@ export class SyncEngine {
 
       if (this.jobReducer) {
         this.jobReducer.do({...sync, _id: sync._id.toString()}, job).catch(error => {
-          console.error("SyncEngine SyncProcessor Job reducer failed:", error);
+          this.logger.error("SyncEngine SyncProcessor Job reducer failed:", error);
         });
       } else {
         job();
@@ -98,7 +99,7 @@ export class SyncEngine {
 
       if (this.jobReducer) {
         this.jobReducer.do({...sync, _id: changeLog._id.toString()}, job).catch(error => {
-          console.error("SyncEngine ChangeLogProcessor Job reducer failed:", error);
+          this.logger.error("SyncEngine ChangeLogProcessor Job reducer failed:", error);
         });
       } else {
         job();

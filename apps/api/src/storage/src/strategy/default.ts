@@ -1,8 +1,11 @@
 import fs from "fs";
 import {FileStore} from "@tus/file-store";
 import {BaseStrategy} from "./base-strategy";
+import {Logger} from "@nestjs/common";
 
 export class Default extends BaseStrategy {
+  private readonly logger = new Logger(Default.name);
+
   constructor(
     private path: string,
     private publicUrl: string,
@@ -35,7 +38,7 @@ export class Default extends BaseStrategy {
       const writeStream = fs.createWriteStream(objectPath);
 
       writeStream.on("error", err => {
-        console.error(err);
+        this.logger.error(err);
         return reject(err);
       });
 
@@ -102,7 +105,7 @@ export class Default extends BaseStrategy {
     try {
       await fs.promises.rename(oldPath, newPath);
     } catch (err) {
-      console.error(`Error renaming file from ${oldName} to ${newName}:`, err);
+      this.logger.error(`Error renaming file from ${oldName} to ${newName}:`, err);
       throw err;
     }
   }

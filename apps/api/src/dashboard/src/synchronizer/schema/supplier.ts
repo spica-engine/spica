@@ -9,6 +9,9 @@ import {
   ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {Dashboard} from "@spica-server/interface/dashboard";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("DashboardSyncSupplier");
 
 const module = "dashboard";
 const subModule = "schema";
@@ -53,7 +56,7 @@ export const getSupplier = (ds: DashboardService): DocumentChangeSupplier => {
             });
           })
           .catch(error => {
-            console.error("Error propagating existing dashboards:", error);
+            logger.error("Error propagating existing dashboards:", error);
           });
 
         const subs = ds
@@ -82,7 +85,7 @@ export const getSupplier = (ds: DashboardService): DocumentChangeSupplier => {
                   documentData = change["fullDocumentBeforeChange"];
                   break;
                 default:
-                  console.warn("Unknown operation type:", change.operationType);
+                  logger.warn("Unknown operation type:", change.operationType);
                   return;
               }
               const changeLog = getChangeLogForSchema(

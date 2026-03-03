@@ -9,6 +9,9 @@ import {
   ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {Policy} from "@spica-server/interface/passport/policy";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("PolicySyncSupplier");
 
 const module = "policy";
 const subModule = "schema";
@@ -53,7 +56,7 @@ export function getSupplier(ps: PolicyService): DocumentChangeSupplier {
             });
           })
           .catch(error => {
-            console.error("Error propagating existing policies:", error);
+            logger.error("Error propagating existing policies:", error);
           });
         const subs = ps
           .watch([], {
@@ -81,7 +84,7 @@ export function getSupplier(ps: PolicyService): DocumentChangeSupplier {
                   documentData = change["fullDocumentBeforeChange"];
                   break;
                 default:
-                  console.warn("Unknown operation type:", change.operationType);
+                  logger.warn("Unknown operation type:", change.operationType);
                   return;
               }
 

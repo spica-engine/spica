@@ -11,6 +11,9 @@ import {
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {Schema, Validator} from "@spica-server/core/schema";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("BucketSyncApplier");
 
 const module = "bucket";
 const subModule = "schema";
@@ -46,7 +49,7 @@ export const getApplier = (
         bucket = YAML.parse(content);
         return findBucketByTitle(bucket?.title);
       } catch (error) {
-        console.error("YAML parsing error:", error);
+        logger.error("YAML parsing error:", error);
         return Promise.resolve(null);
       }
     },
@@ -83,14 +86,14 @@ export const getApplier = (
             return {status: SyncStatuses.SUCCEEDED};
 
           default:
-            console.warn("Unknown operation type:", operationType);
+            logger.warn("Unknown operation type:", operationType);
             return {
               status: SyncStatuses.FAILED,
               reason: `Unknown operation type: ${operationType}`
             };
         }
       } catch (error) {
-        console.warn("Error applying bucket change:", error);
+        logger.warn("Error applying bucket change:", error);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

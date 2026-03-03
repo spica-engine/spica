@@ -2,8 +2,10 @@ import {ReadStream} from "fs";
 import {Storage, Bucket} from "@google-cloud/storage";
 import {GCSStore} from "@tus/gcs-store";
 import {BaseStrategy} from "./base-strategy";
+import {Logger} from "@nestjs/common";
 
 export class GCloud extends BaseStrategy {
+  private readonly logger = new Logger(GCloud.name);
   private storage: Storage;
   private bucket: Bucket;
 
@@ -40,7 +42,7 @@ export class GCloud extends BaseStrategy {
       });
 
       writeStream.on("error", err => {
-        console.error(err);
+        this.logger.error(err);
         return reject(err);
       });
 
