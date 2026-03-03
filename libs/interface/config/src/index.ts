@@ -11,9 +11,4 @@ export interface PasswordPolicy {
   minSpecialCharacter?: number;
 }
 
-export interface PassportPasswordConfigOptions {
-  identity?: {password?: PasswordPolicy};
-  user?: {password?: PasswordPolicy};
-}
-
 export const BASE_CONFIG_SERVICE = "BASE_CONFIG_SERVICE";

@@ -1,9 +1,10 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
-import {ConfigService} from "@spica-server/config";
 import {Validator} from "@spica-server/core/schema";
-import {PasswordPolicy, PassportPasswordConfigOptions} from "@spica-server/interface/config";
+import {PasswordPolicy} from "@spica-server/interface/config";
+import {UserConfigSettings} from "@spica-server/interface/passport/user";
 import {Observable, ReplaySubject, Subject, merge, defer} from "rxjs";
-import {filter, map, takeUntil} from "rxjs/operators";
+import {map, takeUntil} from "rxjs/operators";
+import {UserConfigService} from "./config.service";
 
 export function applyPasswordPolicy(baseSchema: object, policy?: PasswordPolicy): object {
   const schema = JSON.parse(JSON.stringify(baseSchema));
@@ -44,29 +45,26 @@ export function applyPasswordPolicy(baseSchema: object, policy?: PasswordPolicy)
 }
 
 @Injectable()
-export class PasswordPolicySchemaResolver implements OnModuleDestroy {
-  private configWatcher: ReplaySubject<PassportPasswordConfigOptions>;
+export class UserPasswordPolicySchemaResolver implements OnModuleDestroy {
+  private configWatcher: ReplaySubject<UserConfigSettings>;
   private onDestroySubject = new Subject<void>();
-  private schemaMap: Map<string, {baseSchema: object; configKey: "identity" | "user"}>;
+  private schemaMap: Map<string, object>;
 
   constructor(
-    private configService: ConfigService,
-    schemas: Map<string, {baseSchema: object; configKey: "identity" | "user"}>
+    private configService: UserConfigService,
+    schemas: Map<string, object>
   ) {
     this.schemaMap = schemas;
 
     const initial$ = defer(() =>
-      this.configService.findOne({module: "passport"}).then(config => {
-        return (config?.options as PassportPasswordConfigOptions) || {};
+      this.configService.get().then(config => {
+        return (config?.options as UserConfigSettings) || {};
       })
     );
 
-    const changes$ = this.configService.watch([], {fullDocument: "updateLookup"}).pipe(
-      filter(change => (change as any).fullDocument?.module === "passport"),
-      map(change => ((change as any).fullDocument?.options as PassportPasswordConfigOptions) || {})
-    );
+    const changes$ = this.configService.watchConfig();
 
-    this.configWatcher = new ReplaySubject<PassportPasswordConfigOptions>(1);
+    this.configWatcher = new ReplaySubject<UserConfigSettings>(1);
 
     merge(initial$, changes$).pipe(takeUntil(this.onDestroySubject)).subscribe(this.configWatcher);
   }
@@ -77,33 +75,33 @@ export class PasswordPolicySchemaResolver implements OnModuleDestroy {
   }
 
   resolve(uri: string): Observable<object> | undefined {
-    const entry = this.schemaMap.get(uri);
-    if (!entry) {
+    const baseSchema = this.schemaMap.get(uri);
+    if (!baseSchema) {
       return undefined;
     }
 
     return this.configWatcher.pipe(
       map(config => {
-        const policy = config?.[entry.configKey]?.password;
-        return applyPasswordPolicy(entry.baseSchema, policy);
+        const policy = config?.password;
+        return applyPasswordPolicy(baseSchema, policy);
       })
     );
   }
 }
 
-export function providePasswordPolicySchemaResolver(
+export function provideUserPasswordPolicySchemaResolver(
   validator: Validator,
-  configService: ConfigService,
-  schemas: {[uri: string]: {baseSchema: object; configKey: "identity" | "user"}}
-): PasswordPolicySchemaResolver {
-  const schemaMap = new Map<string, {baseSchema: object; configKey: "identity" | "user"}>();
+  configService: UserConfigService,
+  schemas: {[uri: string]: object}
+): UserPasswordPolicySchemaResolver {
+  const schemaMap = new Map<string, object>();
 
-  for (const [uri, entry] of Object.entries(schemas)) {
-    schemaMap.set(uri, entry);
+  for (const [uri, baseSchema] of Object.entries(schemas)) {
+    schemaMap.set(uri, baseSchema);
     validator.removeSchema(uri);
   }
 
-  const resolver = new PasswordPolicySchemaResolver(configService, schemaMap);
+  const resolver = new UserPasswordPolicySchemaResolver(configService, schemaMap);
   validator.registerUriResolver(uri => resolver.resolve(uri));
 
   return resolver;

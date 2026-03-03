@@ -72,6 +72,7 @@ export interface UserVerification {
 
 export interface UserConfigSettings {
   verificationProcessMaxAttempt: number;
+  password?: import("@spica-server/interface/config").PasswordPolicy;
   passwordlessLogin?: PasswordlessLoginConfig;
   resetPasswordProvider?: Array<{
     provider: "email" | "phone";
