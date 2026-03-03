@@ -2,6 +2,7 @@ name: Spica Master Deployment
 
 env:
   VERSION: master
+  NX_FORCE_NO_DAEMON: true
 
 on:
   push:

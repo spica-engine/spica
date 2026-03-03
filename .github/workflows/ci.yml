@@ -6,6 +6,7 @@ env:
   MONGODB_URL: "mongodb://172.17.0.1:27017"
   MAILER_URL: "smtp://172.17.0.1:1025,api://172.17.0.1:8025"
   RABBITMQ_URL: "amqp://172.17.0.1:5672"
+  NX_FORCE_NO_DAEMON: true
 
 on:
   pull_request:
