@@ -59,9 +59,9 @@ describe("UserSession", () => {
   });
 
   afterEach(() => {
-    getSpy.mockClear();
-    postSpy.mockClear();
-    putSpy.mockClear();
+    getSpy.mockRestore();
+    postSpy.mockRestore();
+    putSpy.mockRestore();
   });
 
   describe("signIn returning UserSession", () => {
