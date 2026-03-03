@@ -58,7 +58,9 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
             };
         }
       } catch (error) {
-        logger.warn(`Error applying function index change: ${(error as any).stack || String(error)}`);
+        logger.warn(
+          `Error applying function index change: ${(error as any).stack || String(error)}`
+        );
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

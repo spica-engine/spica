@@ -34,7 +34,9 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
       try {
         name = JSON.parse(content).name;
       } catch (error) {
-        logger.warn(`Error parsing function package content: ${(error as any).stack || String(error)}`);
+        logger.warn(
+          `Error parsing function package content: ${(error as any).stack || String(error)}`
+        );
         return Promise.resolve(null);
       }
       return findFnByName(name);
@@ -71,7 +73,9 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
             };
         }
       } catch (error) {
-        logger.warn(`Error applying function dependency change: ${(error as any).stack || String(error)}`);
+        logger.warn(
+          `Error applying function dependency change: ${(error as any).stack || String(error)}`
+        );
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }
