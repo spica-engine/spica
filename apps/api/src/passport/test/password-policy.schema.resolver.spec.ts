@@ -1,4 +1,4 @@
-import {applyPasswordPolicy} from "../identity/src/password-policy.schema.resolver";
+import {applyPasswordPolicy} from "../src/password-policy.utils";
 
 describe("applyPasswordPolicy", () => {
   const baseSchema = {
