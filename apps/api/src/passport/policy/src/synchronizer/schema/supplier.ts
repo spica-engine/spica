@@ -56,7 +56,10 @@ export function getSupplier(ps: PolicyService): DocumentChangeSupplier {
             });
           })
           .catch(error => {
-            logger.error("Error propagating existing policies:", error);
+            logger.error(
+              "Error propagating existing policies:",
+              error instanceof Error ? error.stack : String(error)
+            );
           });
         const subs = ps
           .watch([], {

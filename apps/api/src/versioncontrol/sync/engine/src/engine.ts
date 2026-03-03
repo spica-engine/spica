@@ -49,7 +49,10 @@ export class SyncEngine {
       if (this.jobReducer) {
         const jobId = `${changeLog.module}-${changeLog.sub_module}-${changeLog.origin}-${changeLog.resource_id}`;
         this.jobReducer.do({...changeLog, _id: jobId}, job).catch(error => {
-          this.logger.error("SyncEngine Change Handler Job reducer failed:", error);
+          this.logger.error(
+            "SyncEngine Change Handler Job reducer failed:",
+            error instanceof Error ? error.stack : String(error)
+          );
         });
       } else {
         job();
@@ -80,7 +83,10 @@ export class SyncEngine {
 
       if (this.jobReducer) {
         this.jobReducer.do({...sync, _id: sync._id.toString()}, job).catch(error => {
-          this.logger.error("SyncEngine SyncProcessor Job reducer failed:", error);
+          this.logger.error(
+            "SyncEngine SyncProcessor Job reducer failed:",
+            error instanceof Error ? error.stack : String(error)
+          );
         });
       } else {
         job();
@@ -99,7 +105,10 @@ export class SyncEngine {
 
       if (this.jobReducer) {
         this.jobReducer.do({...sync, _id: changeLog._id.toString()}, job).catch(error => {
-          this.logger.error("SyncEngine ChangeLogProcessor Job reducer failed:", error);
+          this.logger.error(
+            "SyncEngine ChangeLogProcessor Job reducer failed:",
+            error instanceof Error ? error.stack : String(error)
+          );
         });
       } else {
         job();

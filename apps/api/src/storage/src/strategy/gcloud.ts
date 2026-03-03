@@ -42,7 +42,10 @@ export class GCloud extends BaseStrategy {
       });
 
       writeStream.on("error", err => {
-        this.logger.error(err);
+        this.logger.error(
+          err instanceof Error ? err.message : String(err),
+          err instanceof Error ? err.stack : ""
+        );
         return reject(err);
       });
 

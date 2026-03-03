@@ -52,7 +52,10 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
             });
           })
           .catch(error => {
-            logger.error("Error propagating existing functions:", error);
+            logger.error(
+              "Error propagating existing functions:",
+              error instanceof Error ? error.stack : String(error)
+            );
           });
 
         const subs = fs

@@ -56,7 +56,10 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
             });
           })
           .catch(error => {
-            logger.error("Error propagating existing environment variables:", error);
+            logger.error(
+              "Error propagating existing environment variables:",
+              error instanceof Error ? error.stack : String(error)
+            );
           });
 
         const subs = evs

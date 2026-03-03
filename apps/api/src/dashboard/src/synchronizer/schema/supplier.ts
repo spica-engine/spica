@@ -56,7 +56,10 @@ export const getSupplier = (ds: DashboardService): DocumentChangeSupplier => {
             });
           })
           .catch(error => {
-            logger.error("Error propagating existing dashboards:", error);
+            logger.error(
+              "Error propagating existing dashboards:",
+              error instanceof Error ? error.stack : String(error)
+            );
           });
 
         const subs = ds

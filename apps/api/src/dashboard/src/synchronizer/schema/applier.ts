@@ -43,7 +43,7 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
       try {
         dashboard = YAML.parse(content);
       } catch (error) {
-        logger.error("YAML parsing error:", error);
+        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
         return Promise.resolve(null);
       }
 

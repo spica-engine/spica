@@ -49,7 +49,7 @@ export const getApplier = (
         bucket = YAML.parse(content);
         return findBucketByTitle(bucket?.title);
       } catch (error) {
-        logger.error("YAML parsing error:", error);
+        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
         return Promise.resolve(null);
       }
     },

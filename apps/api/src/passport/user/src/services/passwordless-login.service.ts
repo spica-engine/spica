@@ -38,7 +38,7 @@ export class PasswordlessLoginService {
     } catch (error) {
       this.logger.error(
         `Error starting passwordless verification via ${providerConfig.provider}:`,
-        error
+        error instanceof Error ? error.stack : String(error)
       );
       throw new BadRequestException("Failed to send verification code");
     }
@@ -71,7 +71,10 @@ export class PasswordlessLoginService {
         refreshToken
       };
     } catch (error) {
-      this.logger.error("Error verifying passwordless login", error);
+      this.logger.error(
+        "Error verifying passwordless login",
+        error instanceof Error ? error.stack : String(error)
+      );
       throw new BadRequestException("Failed to complete passwordless login. Please try again.");
     }
   }

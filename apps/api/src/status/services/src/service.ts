@@ -45,7 +45,10 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
         if (error?.code === 11000 && attempt < MAX_RETRIES) {
           continue;
         }
-        this.logger.error(`Error inserting status`, error);
+        this.logger.error(
+          `Error inserting status`,
+          error instanceof Error ? error.stack : String(error)
+        );
         return;
       }
     }

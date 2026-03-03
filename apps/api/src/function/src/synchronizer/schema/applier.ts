@@ -65,7 +65,7 @@ export const getApplier = (
         fn = YAML.parse(content);
         return findFnByName(fn?.name);
       } catch (error) {
-        logger.error("YAML parsing error:", error);
+        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
         return Promise.resolve(null);
       }
     },

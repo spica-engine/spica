@@ -125,7 +125,10 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
         provider
       };
     } catch (error) {
-      this.logger.error("Error during verification process:", error);
+      this.logger.error(
+        "Error during verification process:",
+        error instanceof Error ? error.stack : String(error)
+      );
       throw new Error("Error during verification process");
     }
   }
@@ -266,7 +269,10 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
         metadata: sendResult.metadata
       };
     } catch (error) {
-      this.logger.error(`Error sending verification via ${provider}:`, error);
+      this.logger.error(
+        `Error sending verification via ${provider}:`,
+        error instanceof Error ? error.stack : String(error)
+      );
       await this.findOneAndDelete({_id: recordId});
       throw new BadRequestException(error.message || `Failed to send verification via ${provider}`);
     }

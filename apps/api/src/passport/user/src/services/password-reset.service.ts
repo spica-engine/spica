@@ -67,7 +67,10 @@ export class PasswordResetService {
       );
       await this.userService.findOneAndUpdate({_id: response.userId}, {$set: passwordUpdates});
     } catch (error) {
-      this.logger.error("Error during password reset:", error);
+      this.logger.error(
+        "Error during password reset:",
+        error instanceof Error ? error.stack : String(error)
+      );
       throw new BadRequestException("Failed to reset password.");
     }
 

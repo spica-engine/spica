@@ -51,7 +51,12 @@ export function attachStatusTrackerFactory(service: StatusService): AttachStatus
             size: resSize
           }
         })
-        .catch(e => logger.error(e));
+        .catch(e =>
+          logger.error(
+            e instanceof Error ? e.message : String(e),
+            e instanceof Error ? e.stack : ""
+          )
+        );
     };
 
     interceptMethod(res, "write", payload => (resSize += calculatePayloadSize(payload)));

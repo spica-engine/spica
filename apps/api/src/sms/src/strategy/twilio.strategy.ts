@@ -36,7 +36,10 @@ export class TwilioStrategy extends SmsStrategy {
         messageId: message.sid
       };
     } catch (error) {
-      this.logger.error("Error sending SMS via Twilio:", error);
+      this.logger.error(
+        "Error sending SMS via Twilio:",
+        error instanceof Error ? error.stack : String(error)
+      );
       throw new InternalServerErrorException("Failed to send SMS via Twilio");
     }
   }

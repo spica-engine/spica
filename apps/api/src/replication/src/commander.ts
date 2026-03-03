@@ -55,7 +55,10 @@ abstract class Commander implements ICommander {
       this.logger.error(
         `Replica ${this.cmdMessenger.replicaId} has failed to execute command ${cmd.class}.${cmd.handler}(${cmd.args})`
       );
-      return this.logger.error(error);
+      return this.logger.error(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.stack : ""
+      );
     }
   }
 }

@@ -44,7 +44,7 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
         envVar = YAML.parse(content);
         return findEnvVarByKey(envVar?.key);
       } catch (error) {
-        logger.error("YAML parsing error:", error);
+        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
         return Promise.resolve(null);
       }
     },

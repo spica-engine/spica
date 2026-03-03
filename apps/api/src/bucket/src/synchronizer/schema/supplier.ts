@@ -56,7 +56,10 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
             });
           })
           .catch(error => {
-            logger.error("Error propagating existing buckets:", error);
+            logger.error(
+              "Error propagating existing buckets:",
+              error instanceof Error ? error.stack : String(error)
+            );
           });
 
         const subs = bs

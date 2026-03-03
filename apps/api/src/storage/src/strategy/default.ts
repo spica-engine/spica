@@ -38,7 +38,10 @@ export class Default extends BaseStrategy {
       const writeStream = fs.createWriteStream(objectPath);
 
       writeStream.on("error", err => {
-        this.logger.error(err);
+        this.logger.error(
+          err instanceof Error ? err.message : String(err),
+          err instanceof Error ? err.stack : ""
+        );
         return reject(err);
       });
 
@@ -105,7 +108,10 @@ export class Default extends BaseStrategy {
     try {
       await fs.promises.rename(oldPath, newPath);
     } catch (err) {
-      this.logger.error(`Error renaming file from ${oldName} to ${newName}:`, err);
+      this.logger.error(
+        `Error renaming file from ${oldName} to ${newName}:`,
+        err instanceof Error ? err.stack : String(err)
+      );
       throw err;
     }
   }
