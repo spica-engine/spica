@@ -6,6 +6,9 @@ import {
   SyncStatuses,
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("FunctionTsconfigSyncApplier");
 
 const module = "function";
 const subModule = "tsconfig";
@@ -35,7 +38,9 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
           reason: `tsconfig is read-only and changes cannot be applied.`
         };
       } catch (error) {
-        console.warn("Error applying function tsconfig change:", error);
+        logger.warn(
+          `Error applying function tsconfig change: ${(error as any).stack || String(error)}`
+        );
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

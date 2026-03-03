@@ -9,6 +9,9 @@ import {
   ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {Function} from "@spica-server/interface/function";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("FunctionSyncSupplier");
 
 const module = "function";
 const subModule = "schema";
@@ -49,7 +52,10 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
             });
           })
           .catch(error => {
-            console.error("Error propagating existing functions:", error);
+            logger.error(
+              "Error propagating existing functions:",
+              error instanceof Error ? error.stack : String(error)
+            );
           });
 
         const subs = fs
@@ -78,7 +84,7 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
                   documentData = change["fullDocumentBeforeChange"];
                   break;
                 default:
-                  console.warn("Unknown operation type:", change.operationType);
+                  logger.warn(`Unknown operation type: ${change.operationType}`);
                   return;
               }
 

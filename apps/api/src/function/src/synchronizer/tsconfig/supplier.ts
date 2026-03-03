@@ -10,6 +10,9 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../../../src/crud";
 import {Function} from "@spica-server/interface/function";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("FunctionTsconfigSyncSupplier");
 
 const module = "function";
 const subModule = "tsconfig";
@@ -76,7 +79,7 @@ export const getSupplier = (
             const type = changeMap[change.type];
 
             if (!Object.values(ChangeType).includes(type)) {
-              console.warn("Unknown change type:", change.type);
+              logger.warn(`Unknown change type: ${change.type}`);
               return;
             }
 

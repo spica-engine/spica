@@ -10,6 +10,9 @@ import {
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {Schema, Validator} from "@spica-server/core/schema";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("DashboardSyncApplier");
 
 const module = "dashboard";
 const subModule = "schema";
@@ -40,7 +43,7 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
       try {
         dashboard = YAML.parse(content);
       } catch (error) {
-        console.error("YAML parsing error:", error);
+        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
         return Promise.resolve(null);
       }
 
@@ -85,7 +88,7 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
             };
         }
       } catch (error: any) {
-        console.warn("Error applying dashboard change:", error);
+        logger.warn(`Error applying dashboard change: ${error.stack || String(error)}`);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

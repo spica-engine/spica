@@ -6,9 +6,11 @@ import amqp from "amqplib";
 import uniqid from "uniqid";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
+import {Logger} from "@nestjs/common";
 
 export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
   type = event.Type.RABBITMQ;
+  private readonly logger = new Logger(RabbitMQEnqueuer.name);
 
   description: Description = {
     title: "RabbitMQ",
@@ -155,10 +157,10 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
       const getErrorMessage = (item: string, error) =>
         `Error on closing ${item} of the ${target.cwd}:${target.handler}, reason: ${JSON.stringify(error)}`;
 
-      subscription.channel?.close().catch(err => console.error(getErrorMessage("channel", err)));
+      subscription.channel?.close().catch(err => this.logger.error(getErrorMessage("channel", err)));
       subscription.connection
         ?.close()
-        .catch(err => console.error(getErrorMessage("connection", err)));
+        .catch(err => this.logger.error(getErrorMessage("connection", err)));
 
       indexesToRemove.push(index);
     });
@@ -178,7 +180,7 @@ export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {
     for (const event of events) {
       const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
         if (!job) {
-          console.error(`Job with event id ${event.id} does not exist!`);
+          this.logger.error(`Job with event id ${event.id} does not exist!`);
           return;
         }
 

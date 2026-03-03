@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException
 } from "@nestjs/common";
 import {
@@ -29,6 +30,8 @@ import fs from "fs";
 
 @Injectable()
 export class StorageService extends BaseCollection<StorageObjectMeta>("storage") {
+  private readonly logger = new Logger(StorageService.name);
+
   constructor(
     database: DatabaseService,
     private service: Strategy,
@@ -101,23 +104,23 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     skip: number = 0,
     sort?: any
   ): Promise<StorageResponse[]> {
-    const convertedResourceFilter = StoragePipelineBuilder.createResourceFilter(resourceFilter as {
-      include?: string[];
-      exclude?: string[];
-    });
+    const convertedResourceFilter = StoragePipelineBuilder.createResourceFilter(
+      resourceFilter as {
+        include?: string[];
+        exclude?: string[];
+      }
+    );
 
     const pathFilter = StoragePipelineBuilder.createPathFilter(path);
 
-    const pipelineBuilder = (await new PipelineBuilder()
-      .filterResources(convertedResourceFilter)
-      .attachToPipeline(true, {$match: pathFilter})
-      .filterByUserRequest(filter)).result();
+    const pipelineBuilder = (
+      await new PipelineBuilder()
+        .filterResources(convertedResourceFilter)
+        .attachToPipeline(true, {$match: pathFilter})
+        .filterByUserRequest(filter)
+    ).result();
 
-    const seeking = new PipelineBuilder()
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .result();
+    const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
 
     return this._coll
       .aggregate<StorageResponse>([...pipelineBuilder, ...seeking])
@@ -145,17 +148,11 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
       .filterResources(resourceFilter)
       .filterByUserRequest(filter);
 
-    const seeking = new PipelineBuilder()
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .result();
+    const seeking = new PipelineBuilder().sort(sort).skip(skip).limit(limit).result();
 
-    const pipeline = (await pipelineBuilder.paginate(
-      paginate,
-      seeking,
-      this.estimatedDocumentCount()
-    )).result();
+    const pipeline = (
+      await pipelineBuilder.paginate(paginate, seeking, this.estimatedDocumentCount())
+    ).result();
 
     if (paginate) {
       return this._coll
@@ -213,7 +210,10 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
         name: {$regex: new RegExp(`^${escapedName}`)}
       });
     } catch (error) {
-      console.error(`Failed to delete storage object ${result.name} from storage:`, error);
+      this.logger.error(
+        `Failed to delete storage object ${result.name} from storage:`,
+        error instanceof Error ? error.stack : String(error)
+      );
     }
   }
 
@@ -237,7 +237,10 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
 
       await Promise.all(folderDeletionPromises);
     } catch (error) {
-      console.error(`Failed to delete storage objects from storage:`, error);
+      this.logger.error(
+        `Failed to delete storage objects from storage:`,
+        error instanceof Error ? error.stack : String(error)
+      );
     }
   }
 
@@ -342,7 +345,10 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
         return {...object, _id: _id};
       });
     } catch (error) {
-      console.error(`Failed to update storage object ${existing.name} in storage:`, error);
+      this.logger.error(
+        `Failed to update storage object ${existing.name} in storage:`,
+        error instanceof Error ? error.stack : String(error)
+      );
     }
   }
 

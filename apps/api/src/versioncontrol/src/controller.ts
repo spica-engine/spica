@@ -1,9 +1,20 @@
-import {BadRequestException, Body, Controller, Get, Post, UseGuards, Param} from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Post,
+  UseGuards,
+  Param
+} from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {VersionManager} from "./interface";
 
 @Controller("versioncontrol")
 export class VersionControlController {
+  private readonly logger = new Logger(VersionControlController.name);
+
   constructor(private vers: VersionManager) {}
 
   @Get("commands")
@@ -29,7 +40,10 @@ export class VersionControlController {
     const cmdResult = await this.vers
       .exec(cmd, body)
       .catch(e => {
-        console.error(`Error executing command ${cmd}:`, e);
+        this.logger.error(
+          `Error executing command ${cmd}:`,
+          e instanceof Error ? e.stack : String(e)
+        );
         throw new BadRequestException("Command execution failed");
       })
       .then(res => (typeof res == "string" ? {message: res} : res));
