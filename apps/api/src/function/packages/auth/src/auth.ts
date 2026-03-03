@@ -2,6 +2,7 @@ import {
   UserCreate,
   UserGet,
   TokenScheme,
+  VerifiedToken,
   VerificationStrategy,
   Provider,
   VerificationStartResponse,
@@ -11,6 +12,7 @@ import {
   PasswordlessLoginStartResponse,
   PasswordlessLoginCompleteResponse
 } from "./interface";
+import {UserSession} from "./user-session";
 import {initialize as _initialize, checkInitialized} from "@spica-devkit/internal_common";
 import {
   ApikeyInitialization,
@@ -64,20 +66,21 @@ export function verifyToken(token: string, headers: object = {}) {
 
 /**
  * Sign in with username and password.
- * Requires prior initialization call.
+ * Returns a UserSession instance that provides self-referencing methods for
+ * the authenticated user. Access the raw token via `session.token`.
  *
  * @param username - User's username
  * @param password - User's password
  * @param tokenLifeSpan - Optional token lifetime in seconds
  * @param headers - Optional headers to include in the request
- * @returns Promise resolving to authentication token
+ * @returns Promise resolving to a UserSession with the authenticated user's context
  */
 export async function signIn(
   username: string,
   password: string,
   tokenLifeSpan?: number,
   headers?: object
-): Promise<string> {
+): Promise<UserSession> {
   checkInitialized(authorization, service, {skipAuthCheck: true});
   const response = await service.post<TokenScheme>(
     "/passport/login",
@@ -89,7 +92,16 @@ export async function signIn(
     {headers}
   );
 
-  return response.token;
+  const verified = await service.get<VerifiedToken>(`${userSegment}/verify`, {
+    headers: {Authorization: response.token, ...(headers || {})}
+  });
+
+  return new UserSession({
+    token: response.token,
+    userId: verified._id,
+    username: verified.username,
+    service
+  });
 }
 
 /**
@@ -425,24 +437,40 @@ export function passwordlessLogin(
 
 /**
  * Complete a passwordless login with verification code.
+ * Returns a UserSession instance that provides self-referencing methods for
+ * the authenticated user. Access the raw token via `session.token`.
  *
  * @param username - Username of the account to log in
  * @param code - Verification code received via email or phone
  * @param provider - Provider used for verification ("email" or "phone")
  * @param headers - Optional headers to include in the request
- * @returns Promise resolving to authentication tokens
+ * @returns Promise resolving to a UserSession with the authenticated user's context
  */
-export function completePasswordlessLogin(
+export async function completePasswordlessLogin(
   username: string,
   code: string,
   provider: Provider,
   headers?: object
-): Promise<PasswordlessLoginCompleteResponse> {
+): Promise<UserSession> {
   checkInitialized(authorization, service, {skipAuthCheck: true});
 
-  return service.post<PasswordlessLoginCompleteResponse>(
+  const response = await service.post<PasswordlessLoginCompleteResponse>(
     `${userSegment}/passwordless-login/verify`,
     {username, code, provider},
     {headers}
   );
+
+  const verified = await service.get<VerifiedToken>(`${userSegment}/verify`, {
+    headers: {
+      ...(headers || {}),
+      Authorization: response.token
+    }
+  });
+
+  return new UserSession({
+    token: response.token,
+    userId: verified._id,
+    username: verified.username,
+    service
+  });
 }
