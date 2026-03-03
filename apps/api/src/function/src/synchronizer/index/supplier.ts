@@ -72,7 +72,7 @@ export const getSupplier = (engine: FunctionEngine, fs: FunctionService): Change
             const type = changeMap[change.type];
 
             if (!Object.values(ChangeType).includes(type)) {
-              logger.warn("Unknown change type:", change.type);
+              logger.warn(`Unknown change type: ${change.type}`);
               return;
             }
 

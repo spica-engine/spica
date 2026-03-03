@@ -88,7 +88,7 @@ export const getSupplier = (ds: DashboardService): DocumentChangeSupplier => {
                   documentData = change["fullDocumentBeforeChange"];
                   break;
                 default:
-                  logger.warn("Unknown operation type:", change.operationType);
+                  logger.warn(`Unknown operation type: ${change.operationType}`);
                   return;
               }
               const changeLog = getChangeLogForSchema(

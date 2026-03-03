@@ -84,7 +84,7 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
                   documentData = change["fullDocumentBeforeChange"];
                   break;
                 default:
-                  logger.warn("Unknown operation type:", change.operationType);
+                  logger.warn(`Unknown operation type: ${change.operationType}`);
                   return;
               }
 

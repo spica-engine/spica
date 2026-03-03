@@ -86,7 +86,7 @@ export const getApplier = (
             return {status: SyncStatuses.SUCCEEDED};
 
           default:
-            logger.warn("Unknown operation type:", operationType);
+            logger.warn(`Unknown operation type: ${operationType}`);
             return {
               status: SyncStatuses.FAILED,
               reason: `Unknown operation type: ${operationType}`
