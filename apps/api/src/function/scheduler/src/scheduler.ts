@@ -1,4 +1,4 @@
-import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
+import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
 import {Language} from "@spica-server/function/compiler";
@@ -41,6 +41,8 @@ import {ENQUEUER, EnqueuerFactory, WorkerState} from "@spica-server/interface/fu
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(Scheduler.name);
+
   private queue: EventQueue;
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
@@ -309,7 +311,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   logInvocations(ev: event.Event) {
     const log = `fn-invocation-log: ${ev.id} ${ev.target.id} ${ev.target.handler} ${event.Type[ev.type]}`;
-    console.log(log);
+    this.logger.log(log);
   }
 
   enqueue(event: event.Event) {
@@ -408,7 +410,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   private print(message: string) {
     if (this.options.debug) {
-      console.debug(message);
+      this.logger.debug(message);
     }
   }
 }

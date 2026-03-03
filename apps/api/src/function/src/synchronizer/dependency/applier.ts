@@ -9,6 +9,9 @@ import {
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {ObjectId} from "bson";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("FunctionDepSyncApplier");
 
 const module = "function";
 const subModule = "package";
@@ -31,7 +34,7 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
       try {
         name = JSON.parse(content).name;
       } catch (error) {
-        console.warn("Error parsing function package content:", error);
+        logger.warn("Error parsing function package content:", error);
         return Promise.resolve(null);
       }
       return findFnByName(name);
@@ -61,14 +64,14 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
             return {status: SyncStatuses.SUCCEEDED};
 
           default:
-            console.warn("Unknown operation type:", operationType);
+            logger.warn("Unknown operation type:", operationType);
             return {
               status: SyncStatuses.FAILED,
               reason: `Unknown operation type: ${operationType}`
             };
         }
       } catch (error) {
-        console.warn("Error applying function dependency change:", error);
+        logger.warn("Error applying function dependency change:", error);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }
