@@ -89,7 +89,7 @@ describe("ConfigSchemaRegistry", () => {
 
     it("should return a schema that rejects everything when no modules registered", () => {
       const schema = registry.buildCompositeSchema() as any;
-      expect(schema.anyOf).toBeDefined();
+      expect(schema.anyOf).toEqual([{not: {}}]);
     });
   });
 
@@ -190,7 +190,8 @@ describe("ConfigController", () => {
       properties: {
         maxLimit: {type: "number"},
         enableCache: {type: "boolean"}
-      }
+      },
+      additionalProperties: false
     });
     registry.register("function", {
       type: "object",
@@ -259,7 +260,7 @@ describe("ConfigController", () => {
 
   describe("PUT /config/:module", () => {
     it("should upsert a new config with valid data", async () => {
-      const newConfig = {module: "bucket", options: {maxLimit: 100, enableCache: true}};
+      const newConfig = {maxLimit: 100, enableCache: true};
       const response = await request.put("/config/bucket", newConfig);
       expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
       expect(response.body.module).toBe("bucket");
@@ -271,7 +272,7 @@ describe("ConfigController", () => {
         module: "bucket",
         options: {maxLimit: 100, enableCache: true}
       });
-      const updatedConfig = {module: "bucket", options: {maxLimit: 200, enableCache: false}};
+      const updatedConfig = {maxLimit: 200, enableCache: false};
       const response = await request.put("/config/bucket", updatedConfig);
       expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
       expect(response.body.options.maxLimit).toBe(200);
@@ -283,7 +284,7 @@ describe("ConfigController", () => {
         module: "bucket",
         options: {maxLimit: 100, enableCache: true}
       });
-      const partialUpdate = {module: "bucket", options: {maxLimit: 150}};
+      const partialUpdate = {maxLimit: 150};
       const response = await request.put("/config/bucket", partialUpdate);
       expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
       expect(response.body.options).toEqual({maxLimit: 150});
@@ -293,20 +294,20 @@ describe("ConfigController", () => {
     });
 
     it("should return 400 for unregistered module", async () => {
-      const newConfig = {module: "nonexistent", options: {someSetting: true}};
+      const newConfig = {someSetting: true};
       const response = await request.put("/config/nonexistent", newConfig);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
     });
 
     it("should return 400 when options violate module schema", async () => {
-      const invalidConfig = {module: "bucket", options: {maxLimit: "not-a-number"}};
+      const invalidConfig = {maxLimit: "not-a-number"};
       const response = await request.put("/config/bucket", invalidConfig);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
     });
 
     it("should accept valid data matching different module schemas via anyOf", async () => {
-      const bucketConfig = {module: "bucket", options: {maxLimit: 200}};
-      const functionConfig = {module: "function", options: {timeout: 5000}};
+      const bucketConfig = {maxLimit: 200};
+      const functionConfig = {timeout: 5000};
 
       const bucketResponse = await request.put("/config/bucket", bucketConfig);
       expect([bucketResponse.statusCode, bucketResponse.statusText]).toEqual([200, "OK"]);
@@ -318,13 +319,13 @@ describe("ConfigController", () => {
     });
 
     it("should reject data with additional top-level properties", async () => {
-      const invalidConfig = {module: "bucket", options: {maxLimit: 100}, extra: "field"};
+      const invalidConfig = {maxLimit: 100, extra: "field"};
       const response = await request.put("/config/bucket", invalidConfig);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
     });
 
     it("should allow dynamically registered modules", async () => {
-      const newConfig = {module: "storage", options: {maxSize: 1024}};
+      const newConfig = {maxSize: 1024};
       const response1 = await request.put("/config/storage", newConfig);
       expect(response1.statusCode).toBe(400);
 
