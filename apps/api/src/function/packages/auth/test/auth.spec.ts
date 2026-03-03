@@ -8,10 +8,22 @@ describe("@spica-devkit/auth", () => {
   let deleteSpy: jest.Mocked<any>;
 
   beforeEach(() => {
-    getSpy = jest.spyOn(Axios.prototype, "get").mockReturnValue(Promise.resolve());
-    postSpy = jest
-      .spyOn(Axios.prototype, "post")
-      .mockReturnValue(Promise.resolve({_id: "user_id", username: "test"}));
+    getSpy = jest.spyOn(Axios.prototype, "get").mockImplementation((url: string) => {
+      if (url && url.includes("/verify")) {
+        return Promise.resolve({_id: "user_id", username: "test"});
+      }
+      return Promise.resolve();
+    });
+    postSpy = jest.spyOn(Axios.prototype, "post").mockImplementation((url: string) => {
+      if (url && url.includes("/passwordless-login/verify")) {
+        return Promise.resolve({
+          token: "passwordless_token",
+          scheme: "USER",
+          issuer: "passport/user"
+        });
+      }
+      return Promise.resolve({_id: "user_id", username: "test"});
+    });
     putSpy = jest.spyOn(Axios.prototype, "put").mockReturnValue(Promise.resolve());
     deleteSpy = jest.spyOn(Axios.prototype, "delete").mockReturnValue(Promise.resolve());
 
@@ -178,8 +190,8 @@ describe("@spica-devkit/auth", () => {
       );
     });
 
-    it("should complete passwordless login", () => {
-      Auth.completePasswordlessLogin("testuser", "123456", "email");
+    it("should complete passwordless login", async () => {
+      await Auth.completePasswordlessLogin("testuser", "123456", "email");
 
       expect(postSpy).toHaveBeenCalledTimes(1);
       expect(postSpy).toHaveBeenCalledWith(
@@ -187,10 +199,17 @@ describe("@spica-devkit/auth", () => {
         {username: "testuser", code: "123456", provider: "email"},
         {headers: undefined}
       );
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("passport/user/verify", {
+        headers: {Authorization: "passwordless_token"}
+      });
     });
 
-    it("should complete passwordless login with headers", () => {
-      Auth.completePasswordlessLogin("testuser", "123456", "phone", {Accept: "application/json"});
+    it("should complete passwordless login with headers", async () => {
+      await Auth.completePasswordlessLogin("testuser", "123456", "phone", {
+        Accept: "application/json"
+      });
 
       expect(postSpy).toHaveBeenCalledTimes(1);
       expect(postSpy).toHaveBeenCalledWith(
