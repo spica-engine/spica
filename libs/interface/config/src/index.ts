@@ -17,3 +17,6 @@ export interface PassportPasswordConfigOptions {
 }
 
 export const BASE_CONFIG_SERVICE = "BASE_CONFIG_SERVICE";
+
+export type RegisterConfigSchema = (module: string, optionsSchema: object) => void;
+export const REGISTER_CONFIG_SCHEMA = Symbol.for("REGISTER_CONFIG_SCHEMA");
