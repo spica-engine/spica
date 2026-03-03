@@ -98,7 +98,7 @@ export function getApplier(
             };
         }
       } catch (error) {
-        logger.warn("Error applying policy change:", error);
+        logger.warn(`Error applying policy change: ${(error as any).stack || String(error)}`);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

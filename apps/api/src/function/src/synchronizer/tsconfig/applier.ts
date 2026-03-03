@@ -38,7 +38,7 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
           reason: `tsconfig is read-only and changes cannot be applied.`
         };
       } catch (error) {
-        logger.warn("Error applying function tsconfig change:", error);
+        logger.warn(`Error applying function tsconfig change: ${(error as any).stack || String(error)}`);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

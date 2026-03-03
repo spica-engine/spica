@@ -88,7 +88,7 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
             };
         }
       } catch (error: any) {
-        logger.warn("Error applying dashboard change:", error);
+        logger.warn(`Error applying dashboard change: ${error.stack || String(error)}`);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

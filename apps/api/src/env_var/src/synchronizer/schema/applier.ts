@@ -86,7 +86,7 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
             };
         }
       } catch (error: any) {
-        logger.warn("Error applying env_var change:", error);
+        logger.warn(`Error applying env_var change: ${error.stack || String(error)}`);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

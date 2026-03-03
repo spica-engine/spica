@@ -93,7 +93,7 @@ export const getApplier = (
             };
         }
       } catch (error) {
-        logger.warn("Error applying bucket change:", error);
+        logger.warn(`Error applying bucket change: ${(error as any).stack || String(error)}`);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }
