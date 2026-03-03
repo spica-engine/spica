@@ -93,7 +93,7 @@ export async function signIn(
   );
 
   const verified = await service.get<VerifiedToken>(`${userSegment}/verify`, {
-    headers: {Authorization: response.token}
+    headers: {Authorization: response.token, ...(headers || {})}
   });
 
   return new UserSession({
