@@ -56,7 +56,7 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
             });
           })
           .catch(error => {
-            logger.error("Error propagating existing buckets:", error);
+            logger.error("Error propagating existing environment variables:", error);
           });
 
         const subs = evs
