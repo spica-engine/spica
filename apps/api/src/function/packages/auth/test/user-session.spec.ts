@@ -1,7 +1,6 @@
 import * as Auth from "@spica-devkit/auth";
 import {UserSession} from "@spica-devkit/auth";
 import {Axios} from "@spica-devkit/internal_common";
-import e from "express";
 
 describe("UserSession", () => {
   let getSpy: jest.SpyInstance;
