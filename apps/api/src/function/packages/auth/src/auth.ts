@@ -461,7 +461,10 @@ export async function completePasswordlessLogin(
   );
 
   const verified = await service.get<VerifiedToken>(`${userSegment}/verify`, {
-    headers: {Authorization: response.token}
+    headers: {
+      ...(headers || {}),
+      Authorization: response.token
+    }
   });
 
   return new UserSession({
