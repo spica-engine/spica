@@ -1,4 +1,4 @@
-import {Global, Module} from "@nestjs/common";
+import {Global, Module, Inject, Optional} from "@nestjs/common";
 import {VersionControlController} from "./controller";
 import {VersionManager} from "./interface";
 import {
@@ -9,6 +9,7 @@ import {
   DocumentChangeSupplier,
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
+import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
 import fs from "fs";
@@ -19,6 +20,27 @@ import {SyncEngine, SyncEngineModule} from "@spica-server/versioncontrol/sync/en
 @Global()
 @Module({})
 export class VersionControlModule {
+  constructor(
+    @Optional()
+    @Inject(REGISTER_CONFIG_SCHEMA)
+    registerConfigSchema: RegisterConfigSchema
+  ) {
+    if (registerConfigSchema) {
+      registerConfigSchema("versioncontrol", {
+        type: "object",
+        properties: {
+          autoApproveSync: {
+            type: "object",
+            properties: {
+              document: {type: "boolean"},
+              representative: {type: "boolean"}
+            }
+          }
+        }
+      });
+    }
+  }
+
   static forRoot(options: VersionControlOptions) {
     const versionManagerProvider = {
       provide: VersionManager,

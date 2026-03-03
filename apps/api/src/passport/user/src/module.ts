@@ -39,15 +39,62 @@ import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
 import {ConfigService} from "@spica-server/config";
 import {providePasswordPolicySchemaResolver} from "@spica-server/passport/password-policy";
+import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
 
 @Global()
 @Module({})
 export class UserModule {
   constructor(
     @Inject(USER_OPTIONS) options: UserOptions,
-    private userService: UserService
+    private userService: UserService,
+    @Optional()
+    @Inject(REGISTER_CONFIG_SCHEMA)
+    registerConfigSchema: RegisterConfigSchema
   ) {
     registerStatusProvider(userService);
+    if (registerConfigSchema) {
+      registerConfigSchema("user", {
+        type: "object",
+        properties: {
+          verificationProcessMaxAttempt: {type: "number"},
+          passwordlessLogin: {
+            type: "object",
+            properties: {
+              passwordlessLoginProvider: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    provider: {type: "string", enum: ["email", "phone"]},
+                    strategy: {type: "string"}
+                  }
+                }
+              }
+            }
+          },
+          resetPasswordProvider: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                provider: {type: "string", enum: ["email", "phone"]},
+                strategy: {type: "string"}
+              }
+            }
+          },
+          providerVerificationConfig: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                provider: {type: "string", enum: ["email", "phone"]},
+                strategy: {type: "string", enum: ["Otp", "MagicLink"]}
+              }
+            }
+          }
+        }
+      });
+    }
   }
 
   static forRoot(options: UserOptions): DynamicModule {
