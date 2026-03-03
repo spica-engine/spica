@@ -13,6 +13,9 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {generate} from "../../schema/enqueuer.resolver";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("FunctionSyncApplier");
 
 const module = "function";
 const subModule = "schema";
@@ -62,7 +65,7 @@ export const getApplier = (
         fn = YAML.parse(content);
         return findFnByName(fn?.name);
       } catch (error) {
-        console.error("YAML parsing error:", error);
+        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
         return Promise.resolve(null);
       }
     },
@@ -98,14 +101,14 @@ export const getApplier = (
             return {status: SyncStatuses.SUCCEEDED};
 
           default:
-            console.warn("Unknown operation type:", operationType);
+            logger.warn(`Unknown operation type: ${operationType}`);
             return {
               status: SyncStatuses.FAILED,
               reason: `Unknown operation type: ${operationType}`
             };
         }
       } catch (error) {
-        console.warn("Error applying function change:", error);
+        logger.warn(`Error applying function change: ${(error as any).stack || String(error)}`);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

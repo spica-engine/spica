@@ -9,6 +9,7 @@ import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {ChangeOptions} from "@spica-server/interface/bucket/hooks";
 import {Description} from "@spica-server/interface/function/enqueuer";
+import {Logger} from "@nestjs/common";
 
 function getChangeType(type: string): hooks.Change.Kind {
   switch (type) {
@@ -25,6 +26,7 @@ function getChangeType(type: string): hooks.Change.Kind {
 
 export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
   type = event.Type.BUCKET;
+  private readonly logger = new Logger(ChangeEnqueuer.name);
 
   description: Description = {
     icon: "view_agenda",
@@ -117,7 +119,7 @@ export class ChangeEnqueuer extends Enqueuer<ChangeOptions> {
     for (const event of events) {
       const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
         if (!job) {
-          console.error(`Job ${event.id} does not exist!`);
+          this.logger.error(`Job ${event.id} does not exist!`);
           return;
         }
         const newChange = {...job, _id: {_data: job._id}};

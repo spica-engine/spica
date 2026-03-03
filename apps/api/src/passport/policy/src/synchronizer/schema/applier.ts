@@ -10,7 +10,10 @@ import {
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {ObjectId} from "bson";
+import {Logger} from "@nestjs/common";
 import {Schema, Validator} from "@spica-server/core/schema";
+
+const logger = new Logger("PolicySyncApplier");
 
 const module = "policy";
 const subModule = "schema";
@@ -46,7 +49,7 @@ export function getApplier(
         policy = YAML.parse(content);
         return findPolicyByName(policy?.name);
       } catch (error) {
-        console.error("YAML parsing error:", error);
+        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
         return Promise.resolve(null);
       }
     },
@@ -88,14 +91,14 @@ export function getApplier(
             return {status: SyncStatuses.SUCCEEDED};
 
           default:
-            console.warn("Unknown operation type:", operationType);
+            logger.warn(`Unknown operation type: ${operationType}`);
             return {
               status: SyncStatuses.FAILED,
               reason: `Unknown operation type: ${operationType}`
             };
         }
       } catch (error) {
-        console.warn("Error applying policy change:", error);
+        logger.warn(`Error applying policy change: ${(error as any).stack || String(error)}`);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

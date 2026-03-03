@@ -1,4 +1,4 @@
-import {Module} from "@nestjs/common";
+import {Logger, Module} from "@nestjs/common";
 import {NestFactory} from "@nestjs/core";
 import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
@@ -889,5 +889,5 @@ NestFactory.create(RootModule, {
 
   const {port} = await args;
   await app.listen(port);
-  console.log(`: APIs are ready on port ${port}`);
+  new Logger("Bootstrap").log(`: APIs are ready on port ${port}`);
 });

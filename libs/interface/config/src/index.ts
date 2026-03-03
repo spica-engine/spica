@@ -1,3 +1,5 @@
+import {JSONSchema7} from "json-schema";
+
 export interface BaseConfig<T = unknown> {
   module: string;
   options: T;
@@ -12,3 +14,6 @@ export interface PasswordPolicy {
 }
 
 export const BASE_CONFIG_SERVICE = "BASE_CONFIG_SERVICE";
+
+export type RegisterConfigSchema = (module: string, optionsSchema: JSONSchema7) => void;
+export const REGISTER_CONFIG_SCHEMA = Symbol.for("REGISTER_CONFIG_SCHEMA");

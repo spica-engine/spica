@@ -1,4 +1,4 @@
-import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
+import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
@@ -40,6 +40,8 @@ import chokidar from "chokidar";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(FunctionEngine.name);
+
   readonly schemas = new Map<string, unknown>([
     ["http", HttpSchema],
     ["schedule", ScheduleSchema],
@@ -76,7 +78,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
             : CRUD.environment.reload(this.fs, fn._id, this)
         ),
       error: err =>
-        console.error(
+        this.logger.error(
           `Error received on listening functions for environment variable changes. Reason: ${JSON.stringify(err)}`
         )
     });
@@ -89,7 +91,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
             : CRUD.secret.reload(this.fs, fn._id, this)
         ),
       error: err =>
-        console.error(
+        this.logger.error(
           `Error received on listening functions for secret changes. Reason: ${JSON.stringify(err)}`
         )
     });
@@ -372,7 +374,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
       enqueuer.subscribe(target, change.options);
     } else {
-      console.warn(`Couldn't find enqueuer ${change.type}.`);
+      this.logger.warn(`Couldn't find enqueuer ${change.type}.`);
     }
   }
 

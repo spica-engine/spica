@@ -1,10 +1,12 @@
-import {Injectable, BadRequestException, NotFoundException} from "@nestjs/common";
+import {Injectable, BadRequestException, Logger, NotFoundException} from "@nestjs/common";
 import {UserService} from "../user.service";
 import {VerificationService} from "../verification.service";
 import {UserConfigService} from "../config.service";
 
 @Injectable()
 export class PasswordResetService {
+  private readonly logger = new Logger(PasswordResetService.name);
+
   constructor(
     private readonly userService: UserService,
     private readonly userConfigService: UserConfigService,
@@ -65,7 +67,10 @@ export class PasswordResetService {
       );
       await this.userService.findOneAndUpdate({_id: response.userId}, {$set: passwordUpdates});
     } catch (error) {
-      console.error("Error during password reset:", error);
+      this.logger.error(
+        "Error during password reset:",
+        error instanceof Error ? error.stack : String(error)
+      );
       throw new BadRequestException("Failed to reset password.");
     }
 

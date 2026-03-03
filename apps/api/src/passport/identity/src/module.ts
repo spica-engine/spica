@@ -23,7 +23,9 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 import {IdentityRealtimeModule} from "../realtime";
 import {IdentityConfigService} from "./config.service";
-import {provideIdentityPasswordPolicySchemaResolver} from "./password-policy.schema.resolver";
+import {ConfigService} from "@spica-server/config";
+import {providePasswordPolicySchemaResolver} from "@spica-server/passport/password-policy";
+import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
 
 @Global()
 @Module({})
@@ -32,7 +34,10 @@ export class IdentityModule {
     @Inject(IDENTITY_OPTIONS) options: IdentityOptions,
     private identityService: IdentityService,
     private prefService: PreferenceService,
-    @Optional() @Inject(ASSET_REP_MANAGER) private repManager: IRepresentativeManager
+    @Optional() @Inject(ASSET_REP_MANAGER) private repManager: IRepresentativeManager,
+    @Optional()
+    @Inject(REGISTER_CONFIG_SCHEMA)
+    registerConfigSchema: RegisterConfigSchema
   ) {
     if (options.defaultIdentityIdentifier) {
       identityService.default({
@@ -46,6 +51,11 @@ export class IdentityModule {
     }
     registerStatusProvider(identityService);
     registerAssetHandlers(prefService, repManager);
+    if (registerConfigSchema) {
+      registerConfigSchema("identity", {
+        type: "object"
+      });
+    }
   }
 
   static forRoot(options: IdentityOptions): DynamicModule {

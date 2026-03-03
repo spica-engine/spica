@@ -6,9 +6,11 @@ import cron from "cron";
 import {Enqueuer} from "./enqueuer";
 import uniqid from "uniqid";
 import {Description, ScheduleOptions} from "@spica-server/interface/function/enqueuer";
+import {Logger} from "@nestjs/common";
 
 export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   type = event.Type.SCHEDULE;
+  private readonly logger = new Logger(ScheduleEnqueuer.name);
 
   private jobs = new Set<cron.CronJob>();
 
@@ -97,7 +99,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     for (const event of events) {
       const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
         if (!job) {
-          console.error(`Job with event id ${event.id} does not exist!`);
+          this.logger.error(`Job with event id ${event.id} does not exist!`);
           return;
         }
         return this.shift(

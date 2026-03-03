@@ -9,6 +9,9 @@ import {
   ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {Bucket} from "@spica-server/interface/bucket";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("BucketSyncSupplier");
 
 const module = "bucket";
 const subModule = "schema";
@@ -53,7 +56,10 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
             });
           })
           .catch(error => {
-            console.error("Error propagating existing buckets:", error);
+            logger.error(
+              "Error propagating existing buckets:",
+              error instanceof Error ? error.stack : String(error)
+            );
           });
 
         const subs = bs
@@ -83,7 +89,7 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
                   documentData = change["fullDocumentBeforeChange"];
                   break;
                 default:
-                  console.warn("Unknown operation type:", change.operationType);
+                  logger.warn(`Unknown operation type: ${change.operationType}`);
                   return;
               }
 
