@@ -9,7 +9,7 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json yarn.lock ./
 COPY apps/api/package.json ./apps/api/package.json
-RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile --network-timeout 600000
 
 # install app production deps to nodejs image
 FROM base AS deps-production
