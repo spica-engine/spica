@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: database init scripts configmap
+templates:
+  - templates/initdb.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.bucketDataHashSecret: test-hash
+  application.bucketDataEncryptionSecret: test-enc
+  application.userVerificationHashSecret: test-verify
+  application.userProviderEncryptionSecret: test-prov-enc
+  application.userProviderHashSecret: test-prov-hash
+  application.publicHost: https://test.example.com
+
+tests:
+  - it: should render a single ConfigMap
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+
+  - it: should be named after the release
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-database
+
+  - it: should contain the init-users.sh script
+    asserts:
+      - isNotEmpty:
+          path: data["init-users.sh"]
+
+  - it: should contain the init-replica.sh script
+    asserts:
+      - isNotEmpty:
+          path: data["init-replica.sh"]
+
+  - it: should contain the set-profiling-level.sh script
+    asserts:
+      - isNotEmpty:
+          path: data["set-profiling-level.sh"]
+
+  - it: init-users.sh should reference mongosh to create users
+    asserts:
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: mongosh
+
+  - it: init-replica.sh should reference rs.reconfig
+    asserts:
+      - matchRegex:
+          path: data["init-replica.sh"]
+          pattern: rs\.reconfig
+
+  - it: set-profiling-level.sh should reference setProfilingLevel
+    asserts:
+      - matchRegex:
+          path: data["set-profiling-level.sh"]
+          pattern: setProfilingLevel
