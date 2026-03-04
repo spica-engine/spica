@@ -240,18 +240,20 @@ export function createEncryptedReplacer(properties: object, hashSecret: string):
       const sides = getFieldSideAndValueSide(node);
       sides.valueSide.value = hash(sides.valueSide.value, hashSecret);
 
-      // Append ".hash" to the field path in the AST select chain
-      const fieldNode = getSelectPath(node.left) ? node.left : node.right;
-      const originalRight = fieldNode.right;
-      fieldNode.right = {
+      // Wrap the field node in a new select to append ".hash"
+      const fieldSide = getSelectPath(node.left) ? "left" : "right";
+      const fieldNode = node[fieldSide];
+      const newSelect = {
         kind: "operator",
         type: "select",
         category: "binary",
-        left: originalRight,
-        right: {kind: "identifier", name: "hash"},
-        parent: fieldNode
+        left: fieldNode,
+        right: {kind: "identifier", name: "hash", parent: undefined as any},
+        parent: node
       };
-      originalRight.parent = fieldNode.right;
+      newSelect.right.parent = newSelect;
+      fieldNode.parent = newSelect;
+      node[fieldSide] = newSelect;
     }
   };
 }

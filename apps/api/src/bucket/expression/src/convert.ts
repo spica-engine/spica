@@ -321,7 +321,7 @@ export function convertWithReplacers(node, mode: Mode, customReplacers: Replacer
   return visit(node, mode);
 }
 
-function applyReplacersToAst(node, replacers: Replacer[]) {
+export function applyReplacersToAst(node, replacers: Replacer[]) {
   if (!node || typeof node !== "object") {
     return;
   }

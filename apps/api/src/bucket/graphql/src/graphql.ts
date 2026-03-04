@@ -358,7 +358,8 @@ export class GraphqlController implements OnModuleInit {
             await deleteFn(root, {_id: documentId}, context, info);
           }
         },
-        this.encryptionSecret
+        this.encryptionSecret,
+        this.hashSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
       if (!insertedDocument) {
         return;
@@ -437,7 +438,8 @@ export class GraphqlController implements OnModuleInit {
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
         undefined,
-        this.encryptionSecret
+        this.encryptionSecret,
+        this.hashSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!previousDocument) {
@@ -538,7 +540,8 @@ export class GraphqlController implements OnModuleInit {
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
         {returnDocument: ReturnDocument.AFTER},
-        this.encryptionSecret
+        this.encryptionSecret,
+        this.hashSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!currentDocument) {
@@ -621,7 +624,8 @@ export class GraphqlController implements OnModuleInit {
           collection: schema => this.bds.children(schema),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
-        this.encryptionSecret
+        this.encryptionSecret,
+        this.hashSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!deletedDocument) {

@@ -24,6 +24,7 @@ import {
 } from "@spica-server/interface/bucket/common";
 import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface/bucket";
 import {decryptDocumentFields} from "./decrypt";
+import {buildExpressionReplacers} from "./filter";
 
 export async function findDocuments<T>(
   schema: Bucket,
@@ -115,7 +116,12 @@ export async function findDocuments<T>(
   );
 
   if (params.applyAcl) {
-    const aclProjection = buildAclProjection(schema.properties, params.req.user);
+    const aclProjection = await buildAclProjection(
+      schema,
+      params.req.user,
+      factories.schema,
+      hashSecret
+    );
     seekingPipelineBuilder.attachToPipeline(true, {$project: aclProjection});
   }
   // for graphql responses
@@ -164,14 +170,34 @@ export async function findDocuments<T>(
 
   return documents;
 }
-function buildAclProjection(properties: Record<string, {acl?: string}>, user: any) {
+async function buildAclProjection(
+  schema: Bucket,
+  user: any,
+  schemaResolver: (id: string | ObjectId) => Promise<Bucket>,
+  hashSecret?: string
+) {
+  const properties = schema.properties as Record<string, {acl?: string}>;
   const result: Record<string, object | number> = {};
+
+  const allPropertyMaps: string[][] = [];
+  for (const key in properties) {
+    const acl = properties[key].acl;
+    if (acl) {
+      const propMap = expression.extractPropertyMap(acl);
+      const {documentPropertyMap} = categorizePropertyMap(propMap);
+      allPropertyMaps.push(...documentPropertyMap);
+    }
+  }
+
+  const replacers = allPropertyMaps.length
+    ? await buildExpressionReplacers(schema, allPropertyMaps, schemaResolver, hashSecret)
+    : [];
 
   for (const key in properties) {
     const acl = properties[key].acl;
 
     if (acl) {
-      const condition = expression.aggregate(acl, {auth: user}, "project");
+      const condition = expression.aggregateWithReplacers(acl, {auth: user}, "project", replacers);
 
       result[key] = {
         $cond: {
@@ -200,7 +226,8 @@ export async function insertDocument(
     schema: (id: string | ObjectId) => Promise<Bucket>;
     deleteOne: (documentId: ObjectId) => Promise<void>;
   },
-  encryptionSecret?: string
+  encryptionSecret?: string,
+  hashSecret?: string
 ) {
   const collection = factories.collection(schema);
 
@@ -212,7 +239,8 @@ export async function insertDocument(
       // unlike others, we have to run this pipeline against buckets in case the target
       // collection is empty.
       collection.collection("buckets"),
-      params.req.user
+      params.req.user,
+      hashSecret
     );
   }
   if (
@@ -252,12 +280,20 @@ export async function replaceDocument(
   options: {
     returnDocument: ReturnDocument;
   } = {returnDocument: ReturnDocument.BEFORE},
-  encryptionSecret?: string
+  encryptionSecret?: string,
+  hashSecret?: string
 ) {
   const collection = factories.collection(schema);
 
   if (params.applyAcl) {
-    await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      collection,
+      params.req.user,
+      hashSecret
+    );
   }
 
   const documentId = document._id;
@@ -291,11 +327,19 @@ export async function patchDocument(
   options: {
     returnDocument: ReturnDocument;
   } = {returnDocument: ReturnDocument.BEFORE},
-  encryptionSecret?: string
+  encryptionSecret?: string,
+  hashSecret?: string
 ) {
   const collection = factories.collection(schema);
   if (params.applyAcl) {
-    await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      collection,
+      params.req.user,
+      hashSecret
+    );
   }
 
   delete patch._id;
@@ -326,7 +370,8 @@ export async function deleteDocument(
     collection: (schema: Bucket) => BaseCollection<BucketDocument>;
     schema: (schema: string | ObjectId) => Promise<Bucket>;
   },
-  encryptionSecret?: string
+  encryptionSecret?: string,
+  hashSecret?: string
 ) {
   const collection = factories.collection(schema);
 
@@ -337,7 +382,14 @@ export async function deleteDocument(
   }
 
   if (params.applyAcl) {
-    await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      collection,
+      params.req.user,
+      hashSecret
+    );
   }
 
   const deletedCount = await collection.deleteOne({_id: document._id});
@@ -355,7 +407,8 @@ async function executeWriteRule(
   resolve: (id: string) => Promise<Bucket>,
   document: BucketDocument,
   collection: BaseCollection<unknown>,
-  auth: object
+  auth: object,
+  hashSecret?: string
 ) {
   let propertyMap = [];
 
@@ -390,16 +443,24 @@ async function executeWriteRule(
       throw new DatabaseException(error.message);
     });
 
+  const replacers = await buildExpressionReplacers(
+    schema,
+    documentPropertyMap,
+    resolve,
+    hashSecret
+  );
+
   let aclResult;
 
   try {
-    aclResult = expression.run(
+    aclResult = expression.runWithReplacers(
       schema.acl.write,
       {
         auth,
         document: fullDocument
       },
-      "match"
+      "match",
+      replacers
     );
   } catch (error) {
     throw new ACLSyntaxException(error.message);

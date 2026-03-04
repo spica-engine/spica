@@ -72,7 +72,19 @@ export class BucketPipelineBuilder extends PipelineBuilder {
 
     const documentRelationMap = await this.buildRelationMap(documentPropertyMap);
     const documentRelationStage = getRelationPipeline(documentRelationMap, this.locale);
-    const ruleExpression = expression.aggregate(this.schema.acl.read, {auth: user}, "match");
+
+    const expressionReplacers = await buildExpressionReplacers(
+      this.schema,
+      documentPropertyMap,
+      this.factories.schema,
+      this.hashSecret
+    );
+    const ruleExpression = expression.aggregateWithReplacers(
+      this.schema.acl.read,
+      {auth: user},
+      "match",
+      expressionReplacers
+    );
 
     this.attachToPipeline(true, ...documentRelationStage);
     this.attachToPipeline(true, {$match: ruleExpression});

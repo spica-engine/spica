@@ -1,6 +1,6 @@
 import {parser} from "./parser";
 import {compile} from "./compile";
-import {convert, convertWithReplacers} from "./convert";
+import {convert, convertWithReplacers, applyReplacersToAst} from "./convert";
 import {extract} from "./property_map";
 import * as func from "./func";
 import * as builtin from "./builtin_funcs";
@@ -10,6 +10,18 @@ export {isSelectOperator, isStringLiteral, getSelectPath} from "./convert";
 
 export function run(expression: string, context: unknown, mode: Mode) {
   const tree = parser.parse(expression);
+  const rule = compile(tree, mode);
+  return rule(context);
+}
+
+export function runWithReplacers(
+  expression: string,
+  context: unknown,
+  mode: Mode,
+  customReplacers: Replacer[]
+) {
+  const tree = parser.parse(expression);
+  applyReplacersToAst(tree, customReplacers);
   const rule = compile(tree, mode);
   return rule(context);
 }
