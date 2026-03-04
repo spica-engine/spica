@@ -22,9 +22,9 @@ import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 import {IdentityRealtimeModule} from "../realtime";
-import {ConfigService} from "@spica-server/config";
-import {providePasswordPolicySchemaResolver} from "@spica-server/passport/password-policy";
+import {IdentityConfigService} from "./config.service";
 import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
+import {provideIdentityPasswordPolicySchemaResolver} from "./password-policy.schema.resolver";
 
 @Global()
 @Module({})
@@ -83,7 +83,7 @@ export class IdentityModule {
         })
       ],
       providers: [
-        ConfigService,
+        IdentityConfigService,
         IdentityService,
         IdentityStrategy,
         {
@@ -102,19 +102,13 @@ export class IdentityModule {
         },
         {
           provide: "IDENTITY_PASSWORD_POLICY_RESOLVER",
-          useFactory: (validator: Validator, configService: ConfigService) => {
-            return providePasswordPolicySchemaResolver(validator, configService, {
-              "http://spica.internal/passport/identity-create": {
-                baseSchema: IdentityCreateSchema,
-                configKey: "identity"
-              },
-              "http://spica.internal/passport/identity": {
-                baseSchema: IdentitySchema,
-                configKey: "identity"
-              }
+          useFactory: (validator: Validator, configService: IdentityConfigService) => {
+            return provideIdentityPasswordPolicySchemaResolver(validator, configService, {
+              "http://spica.internal/passport/identity-create": IdentityCreateSchema,
+              "http://spica.internal/passport/identity": IdentitySchema
             });
           },
-          inject: [Validator, ConfigService]
+          inject: [Validator, IdentityConfigService]
         }
       ]
     };

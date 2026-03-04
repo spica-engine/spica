@@ -3,20 +3,21 @@ import {ConfigService} from "@spica-server/config";
 import {DatabaseService} from "@spica-server/database";
 import {BaseConfig} from "@spica-server/interface/config";
 import {UserConfigSettings} from "@spica-server/interface/passport/user";
+import {filter, map} from "rxjs/operators";
 
 @Injectable()
 export class UserConfigService extends ConfigService {
-  private readonly MODULE_NAME = "User";
+  private readonly MODULE_NAME = "user";
   constructor(db: DatabaseService) {
     super(db);
   }
 
   async set(config: UserConfigSettings): Promise<void> {
     await this.updateOne(
-      {module: "User"},
+      {module: this.MODULE_NAME},
       {
         $set: {
-          module: "User",
+          module: this.MODULE_NAME,
           options: {
             ...config
           }
@@ -27,7 +28,7 @@ export class UserConfigService extends ConfigService {
   }
   get() {
     return this.findOne({
-      module: "User"
+      module: this.MODULE_NAME
     });
   }
 
@@ -94,6 +95,13 @@ export class UserConfigService extends ConfigService {
         }
       },
       {upsert: true}
+    );
+  }
+
+  watchConfig() {
+    return this.watch([], {fullDocument: "updateLookup"}).pipe(
+      filter(change => (change as any).fullDocument?.module === this.MODULE_NAME),
+      map(change => ((change as any).fullDocument?.options as UserConfigSettings) || {})
     );
   }
 }
