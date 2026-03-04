@@ -2,7 +2,7 @@ import * as expression from "@spica-server/bucket/expression";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale";
 import {deepCopy} from "@spica-server/core/patch";
 import {compareAndUpdateRelations, createRelationMap, getRelationPipeline} from "./relation";
-import {constructFilterValues} from "@spica-server/bucket/common";
+import {buildExpressionReplacers, constructFilterValues} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {extractFilterPropertyMap} from "@spica-server/filter";
@@ -103,8 +103,23 @@ export class BucketPipelineBuilder extends PipelineBuilder {
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {
-        filterPropertyMap = expression.extractPropertyMap(filterByUserRequest);
-        filterExpression = expression.aggregate(filterByUserRequest, {}, "match");
+        const rawPropertyMap = expression.extractPropertyMap(filterByUserRequest);
+        const {documentPropertyMap} = categorizePropertyMap(rawPropertyMap);
+        filterPropertyMap = documentPropertyMap;
+
+        const expressionReplacers = await buildExpressionReplacers(
+          this.schema,
+          filterPropertyMap,
+          this.factories.schema,
+          this.hashSecret
+        );
+
+        filterExpression = expression.aggregateWithReplacers(
+          filterByUserRequest,
+          {},
+          "match",
+          expressionReplacers
+        );
       }
 
       filterRelationMap = await this.buildRelationMap(filterPropertyMap);

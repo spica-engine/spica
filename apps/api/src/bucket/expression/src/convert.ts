@@ -25,7 +25,7 @@ function visit(node, mode: Mode) {
     return ctx => visitArgFns(fns, ctx);
   }
 
-  replacers.forEach(replacer => {
+  activeReplacers.forEach(replacer => {
     if (replacer.condition(node)) {
       replacer.replace(node);
     }
@@ -312,6 +312,42 @@ function visitBinaryOperatorSubtract(node, mode: Mode) {
 
 export const convert = visit;
 
+export function convertWithReplacers(node, mode: Mode, customReplacers: Replacer[]) {
+  // Pre-apply custom replacers to the entire AST eagerly because visit()
+  // returns lazy closures — child nodes in compound expressions (&&, ||, etc.)
+  // are visited inside closures AFTER this function returns, so module-level
+  // activeReplacers would already be restored by then.
+  applyReplacersToAst(node, customReplacers);
+  return visit(node, mode);
+}
+
+function applyReplacersToAst(node, replacers: Replacer[]) {
+  if (!node || typeof node !== "object") {
+    return;
+  }
+
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      applyReplacersToAst(child, replacers);
+    }
+    return;
+  }
+
+  for (const replacer of replacers) {
+    if (replacer.condition(node)) {
+      replacer.replace(node);
+    }
+  }
+
+  if (node.left) applyReplacersToAst(node.left, replacers);
+  if (node.right) applyReplacersToAst(node.right, replacers);
+  if (node.member) applyReplacersToAst(node.member, replacers);
+  if (node.test) applyReplacersToAst(node.test, replacers);
+  if (node.consequent) applyReplacersToAst(node.consequent, replacers);
+  if (node.alternative) applyReplacersToAst(node.alternative, replacers);
+  if (node.arguments) applyReplacersToAst(node.arguments, replacers);
+}
+
 // REPLACEMENTS
 
 // ObjectId
@@ -343,9 +379,39 @@ function isIdIdentifier(node) {
   return node && node.kind == "identifier" && node.name == "_id";
 }
 
+export function isSelectOperator(node) {
+  return node && node.kind == "operator" && node.type == "select";
+}
+
+export function isStringLiteral(node) {
+  return node && node.kind == "literal" && node.type == "string";
+}
+
+export function getSelectPath(node): string | undefined {
+  if (!node || !isSelectOperator(node)) {
+    return undefined;
+  }
+
+  const parts: string[] = [];
+  let current = node;
+
+  while (current && isSelectOperator(current)) {
+    if (current.right && current.right.kind == "identifier") {
+      parts.unshift(current.right.name);
+    }
+    current = current.left;
+  }
+
+  if (current && current.kind == "identifier" && current.name == "document") {
+    return parts.join(".");
+  }
+
+  return undefined;
+}
+
 function isValueSide(node) {
   return node && node.kind == "literal" && node.type == "string";
 }
 
-// define and add custom replacers here
-const replacers = [ObjectIdReplacer];
+const defaultReplacers: Replacer[] = [ObjectIdReplacer];
+let activeReplacers: Replacer[] = defaultReplacers;
