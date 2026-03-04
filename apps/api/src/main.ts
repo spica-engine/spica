@@ -270,7 +270,7 @@ const args = yargsInstance
     "function-api-url": {
       string: true,
       description:
-        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
+        "URL of the server api to be injected into function workers environment variables. Devkit packages in functions will use this value to connect the server api if not present. Default value is http://127.0.0.1:<port> to support loopback connections to improve performance."
     },
     "function-timeout": {
       number: true,
@@ -621,7 +621,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     }
 
     if (!args["function-api-url"]) {
-      args["function-api-url"] = args["public-url"];
+      args["function-api-url"] = `http://127.0.0.1:${args["port"]}`;
     }
 
     if (args["function-worker-concurrency"] < 1) {
