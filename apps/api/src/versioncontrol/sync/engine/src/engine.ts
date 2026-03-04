@@ -61,7 +61,7 @@ export class SyncEngine {
 
     const errorHandlerFactory = (handlerType: string) => (error: unknown) => {
       this.logger.error(
-        `SyncEngine ${handlerType} Change Handler supplier failed for module: ${repHandler.moduleMeta.module}, subModule: ${repHandler.moduleMeta.subModule}`,
+        `SyncEngine ${handlerType} Change supplier failed for module: ${repHandler.moduleMeta.module}, subModule: ${repHandler.moduleMeta.subModule}`,
         error instanceof Error ? error.stack : String(error)
       );
     };

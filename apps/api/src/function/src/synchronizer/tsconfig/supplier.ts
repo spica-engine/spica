@@ -63,7 +63,7 @@ export const getSupplier = (
               );
               observer.next(changelog);
             } catch (error) {
-              observer.error(error);
+              observer.error(`Error on fn ${fn._id} tsconfig read: ${error}`);
               return;
             }
           });
