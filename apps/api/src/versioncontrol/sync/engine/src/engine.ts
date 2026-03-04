@@ -59,9 +59,19 @@ export class SyncEngine {
       }
     };
 
-    repHandler.supplier.listen().subscribe(onChange);
+    const errorHandlerFactory = (handlerType: string) => (error: unknown) => {
+      this.logger.error(
+        `SyncEngine ${handlerType} Change Handler supplier failed for module: ${repHandler.moduleMeta.module}, subModule: ${repHandler.moduleMeta.subModule}`,
+        error instanceof Error ? error.stack : String(error)
+      );
+    };
 
-    docHandler.supplier.listen().subscribe(onChange);
+    repHandler.supplier
+      .listen()
+      .subscribe({next: onChange, error: errorHandlerFactory("Representative")});
+    docHandler.supplier
+      .listen()
+      .subscribe({next: onChange, error: errorHandlerFactory("Document")});
   }
 
   private registerSyncProcessor() {
