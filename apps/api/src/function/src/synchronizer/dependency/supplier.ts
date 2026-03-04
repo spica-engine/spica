@@ -48,8 +48,8 @@ export const getSupplier = (
     listen(): Observable<ChangeLog> {
       return new Observable(observer => {
         CRUD.find(fs, engine, {}).then(functions => {
-          try {
-            functions.map(async fn => {
+          functions.forEach(async fn => {
+            try {
               const content = await engine.read(fn, "dependency");
               const changelog = getChangeLogForDeps(
                 ChangeType.CREATE,
@@ -58,11 +58,11 @@ export const getSupplier = (
                 ChangeInitiator.INTERNAL
               );
               observer.next(changelog);
-            });
-          } catch (error) {
-            observer.error(error);
-            return;
-          }
+            } catch (error) {
+              observer.error(`Error on fn ${fn._id} dependency read: ${error}`);
+              return;
+            }
+          });
         });
 
         const subscription = engine.watch("dependency").subscribe({

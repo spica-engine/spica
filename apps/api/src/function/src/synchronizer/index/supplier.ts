@@ -45,8 +45,8 @@ export const getSupplier = (engine: FunctionEngine, fs: FunctionService): Change
     listen(): Observable<ChangeLog> {
       return new Observable(observer => {
         CRUD.find(fs, engine, {}).then(functions => {
-          try {
-            functions.map(async fn => {
+          functions.forEach(async fn => {
+            try {
               const content = await engine.read(fn, "index");
               const changelog = getChangeLogForIndex(
                 ChangeType.CREATE,
@@ -55,11 +55,10 @@ export const getSupplier = (engine: FunctionEngine, fs: FunctionService): Change
                 ChangeInitiator.INTERNAL
               );
               observer.next(changelog);
-            });
-          } catch (error) {
-            observer.error(error);
-            return;
-          }
+            } catch (error) {
+              observer.error(`Error on fn ${fn._id} index read: ${error}`);
+            }
+          });
         });
 
         const subscription = engine.watch("index").subscribe({
