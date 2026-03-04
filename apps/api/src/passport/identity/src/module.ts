@@ -23,9 +23,8 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
 import {IdentityRealtimeModule} from "../realtime";
 import {IdentityConfigService} from "./config.service";
-import {ConfigService} from "@spica-server/config";
-import {providePasswordPolicySchemaResolver} from "@spica-server/passport/password-policy";
 import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
+import {provideIdentityPasswordPolicySchemaResolver} from "./password-policy.schema.resolver";
 
 @Global()
 @Module({})

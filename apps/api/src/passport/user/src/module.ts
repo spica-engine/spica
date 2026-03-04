@@ -37,9 +37,8 @@ import {UserConfigService} from "./config.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
 import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
-import {ConfigService} from "@spica-server/config";
-import {providePasswordPolicySchemaResolver} from "@spica-server/passport/password-policy";
 import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
+import {provideUserPasswordPolicySchemaResolver} from "./password-policy.schema.resolver";
 
 @Global()
 @Module({})
