@@ -52,8 +52,8 @@ export const getSupplier = (
             language: "typescript"
           }
         }).then(functions => {
-          try {
-            functions.map(async fn => {
+          functions.forEach(async fn => {
+            try {
               const content = await engine.read(fn, "tsconfig");
               const changelog = getChangeLogForTsconfig(
                 ChangeType.CREATE,
@@ -62,11 +62,11 @@ export const getSupplier = (
                 ChangeInitiator.INTERNAL
               );
               observer.next(changelog);
-            });
-          } catch (error) {
-            observer.error(error);
-            return;
-          }
+            } catch (error) {
+              observer.error(error);
+              return;
+            }
+          });
         });
 
         const subscription = engine.watch("tsconfig").subscribe({
