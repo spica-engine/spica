@@ -19,8 +19,7 @@ import {JobReducer, ReplicationModule} from "@spica-server/replication";
 import {BucketModule} from "@spica-server/bucket";
 import {SecretModule} from "@spica-server/secret/src/module";
 
-// Each test boots two full NestJS apps + MongoDB replica sets via Docker.
-// Give hooks and individual tests plenty of room to breathe on CI.
+// Tests spin up two full NestJS apps + MongoDB replica sets; give them plenty of room on CI.
 const TEST_TIMEOUT_MS = 120_000;
 
 function sleep(ms: number) {
@@ -28,10 +27,9 @@ function sleep(ms: number) {
 }
 
 /**
- * Returns a promise that resolves with the first event matching the supplied
- * criteria. The original `enqueue` is still called so the scheduler keeps
- * functioning normally. The listener is removed after the first match to
- * avoid resolving again on subsequent events.
+ * Returns a promise that resolves with the first event that matches the supplied
+ * criteria and is passed to `scheduler.enqueue`.  The original `enqueue` is still
+ * called so the scheduler continues to operate normally.
  */
 function onEventEnqueued(
   scheduler: Scheduler,
@@ -42,10 +40,12 @@ function onEventEnqueued(
     const originalEnqueue = scheduler.enqueue;
     scheduler.enqueue = (...args) => {
       originalEnqueue.bind(scheduler)(...args);
+
       const typeMatches = eventType != null && args[0].type == eventType;
       const idMatches = eventId != null && args[0].id == eventId;
+
       if (eventType == null || (typeMatches && eventId == null) || (typeMatches && idMatches)) {
-        // Restore original so we don't re-resolve on subsequent events.
+        // Restore original to avoid re-resolving on subsequent calls.
         scheduler.enqueue = originalEnqueue;
         resolve(args[0]);
       }
@@ -137,6 +137,8 @@ async function startApp(
   const connectionUri = getConnectionUri();
   const module2 = await getModuleBuilder(connectionUri, db.databaseName, options).compile();
 
+  // Introduce a tiny delay in the second replica's job reducer to ensure the
+  // first replica has had time to register the shift before the second picks it up.
   const secondRepReducer = module2.get(JobReducer);
   const copyDo = secondRepReducer.do;
   secondRepReducer.do = async (...args) => {
@@ -159,17 +161,13 @@ async function startApp(
   const req = module.get(Request);
   await app.listen(req.socket);
 
-  let bucket;
+  let bucket: any;
   if (options?.createBucket) {
     bucket = await req
       .post("/bucket", {
         title: "Bucket1",
         description: "Bucket1",
-        properties: {
-          title: {
-            type: "string"
-          }
-        }
+        properties: {title: {type: "string"}}
       })
       .then(r => r.body);
 
@@ -193,6 +191,10 @@ async function startApp(
 }
 
 // ─── HTTP Queue Shifting ────────────────────────────────────────────────────────
+//
+// HTTP events are tied to an open connection and cannot be shifted to another
+// replica when the owning app shuts down.  Events that are still queued (worker
+// was busy) must respond with 503.
 
 describe("Queue shifting - HTTP", () => {
   let app: INestApplication;
@@ -220,7 +222,7 @@ describe("Queue shifting - HTTP", () => {
     app2 = res.app2;
     req = res.req;
     scheduler = res.scheduler;
-  }, TEST_TIMEOUT_MS);
+  });
 
   afterEach(async () => {
     try {
@@ -228,40 +230,42 @@ describe("Queue shifting - HTTP", () => {
     } catch (error) {
       console.error(error);
     }
-  }, TEST_TIMEOUT_MS);
+  });
 
   it(
     "should return 503 for events still in queue when app closes (HTTP events cannot be shifted)",
     async () => {
-      // First request occupies the single worker for ~5 s.
+      // Send the first request — this keeps the single worker busy for ~5 s.
       const firstResponsePromise = req.get("/fn-execute/test");
 
-      // Wait until the worker has actually picked up the first request.
+      // Wait until the worker has actually picked it up.
       await onEventEnqueued(scheduler, event.Type.HTTP);
 
-      // Second request arrives while worker is occupied — it is queued.
+      // Send the second request — it will be queued because the worker is occupied.
       const secondResponsePromise = req.get("/fn-execute/test");
 
-      // Confirm the second event is sitting in the queue.
+      // Wait until the second event is confirmed in the queue.
       await onEventEnqueued(scheduler, event.Type.HTTP);
 
-      // Close app1. HTTP events cannot be shifted to app2; the queued one
-      // must end with a 503 error response.
+      // Close app1.  The queued HTTP event cannot be shifted to app2 because an
+      // HTTP trigger is bound to the originating connection.  It must get 503.
       await app.close();
 
+      // Both promises must settle now that the server is closed.
       const [firstResponse, secondResponse] = await Promise.all([
         firstResponsePromise,
         secondResponsePromise
       ]);
 
-      // The queued second event was never executed — must be 503.
+      // The queued (second) event was never executed — it must be 503.
       expect([secondResponse.statusCode, secondResponse.statusText]).toEqual([
         503,
         "Service Unavailable"
       ]);
 
-      // The in-flight first event either completed gracefully (200) or was
-      // aborted during shutdown (503). Either is valid; no shift to app2 occurred.
+      // The in-flight (first) event either completed before close (200) or was
+      // aborted during shutdown (503).  Either is acceptable; what matters is
+      // that no event was silently dropped and no shift to app2 occurred.
       expect([200, 503]).toContain(firstResponse.statusCode);
     },
     TEST_TIMEOUT_MS
@@ -276,7 +280,7 @@ describe("Queue shifting - Schedule", () => {
   let req: Request;
   let scheduler: Scheduler;
   let scheduler2: Scheduler;
-  let fn;
+  let fn: any;
 
   beforeEach(async () => {
     const res = await startApp(
@@ -309,9 +313,9 @@ describe("Queue shifting - Schedule", () => {
     scheduler2 = res.scheduler2;
     fn = res.fn;
 
-    // Await to guarantee the trigger is active before the test body starts.
+    // Must be awaited — the test depends on the trigger being active before it starts.
     await updateSchedulerTrigger(true);
-  }, TEST_TIMEOUT_MS);
+  });
 
   afterEach(async () => {
     try {
@@ -319,7 +323,7 @@ describe("Queue shifting - Schedule", () => {
     } catch (error) {
       console.error(error);
     }
-  }, TEST_TIMEOUT_MS);
+  });
 
   function updateSchedulerTrigger(active: boolean) {
     fn = JSON.parse(JSON.stringify(fn));
@@ -330,23 +334,23 @@ describe("Queue shifting - Schedule", () => {
   it(
     "should shift the event to the second replica when app closes",
     async () => {
-      // Keep the worker busy so the schedule event is queued rather than executed.
+      // Keep the worker busy so the next schedule event is queued rather than processed.
       req.get("/fn-execute/test");
       await onEventEnqueued(scheduler, event.Type.HTTP);
 
-      // Wait for the scheduler to fire while worker is occupied.
+      // Wait for the schedule trigger to fire while worker is occupied.
       const shiftedEvent = await onEventEnqueued(scheduler, event.Type.SCHEDULE);
 
-      // Disable the trigger to avoid extra events firing during shutdown.
+      // Disable the trigger immediately to prevent extra events from firing.
       await updateSchedulerTrigger(false);
 
-      // Register the app2 listener BEFORE closing app1 so we cannot miss the shift.
+      // Register the app2 listener BEFORE closing app1 so we don't miss the shift.
       const event2Promise = onEventEnqueued(scheduler2, event.Type.SCHEDULE, shiftedEvent.id);
 
-      // Closing app1 triggers the replication shift mechanism.
+      // Closing app1 triggers the replication shift to app2.
       await app.close();
 
-      // The event received by app2 must be identical to the one queued on app1.
+      // The shifted event must be identical when received by app2.
       const event2 = await event2Promise;
       expect(shiftedEvent).toEqual(event2);
     },
@@ -395,7 +399,7 @@ describe("Queue shifting - Database", () => {
     scheduler = res.scheduler;
     scheduler2 = res.scheduler2;
     db = res.db;
-  }, TEST_TIMEOUT_MS);
+  });
 
   afterEach(async () => {
     try {
@@ -403,7 +407,7 @@ describe("Queue shifting - Database", () => {
     } catch (error) {
       console.error(error);
     }
-  }, TEST_TIMEOUT_MS);
+  });
 
   async function triggerDatabaseEvent() {
     return new Promise((resolve, reject) => {
@@ -416,21 +420,21 @@ describe("Queue shifting - Database", () => {
   it(
     "should shift the event to the second replica when app closes",
     async () => {
-      // Keep the worker busy so the database event is queued.
+      // Keep the worker busy so the database event ends up in the queue.
       req.get("/fn-execute/test");
       await onEventEnqueued(scheduler, event.Type.HTTP);
 
-      // Trigger a DB change; the event has no free worker and is queued.
+      // Trigger a database change; the event will be queued behind the HTTP event.
       triggerDatabaseEvent();
       const shiftedEvent = await onEventEnqueued(scheduler, event.Type.DATABASE);
 
-      // Register the app2 listener BEFORE closing app1 so we cannot miss the shift.
+      // Register the app2 listener BEFORE closing app1 so we don't miss the shift.
       const event2Promise = onEventEnqueued(scheduler2, event.Type.DATABASE, shiftedEvent.id);
 
-      // Closing app1 triggers the replication shift mechanism.
+      // Closing app1 triggers the replication shift to app2.
       await app.close();
 
-      // The event received by app2 must be identical to the one queued on app1.
+      // The shifted event must be identical when received by app2.
       const event2 = await event2Promise;
       expect(shiftedEvent).toEqual(event2);
     },
@@ -480,7 +484,7 @@ describe("Queue shifting - Bucket", () => {
     scheduler = res.scheduler;
     scheduler2 = res.scheduler2;
     bucket = res.bucket;
-  }, TEST_TIMEOUT_MS);
+  });
 
   afterEach(async () => {
     try {
@@ -488,7 +492,7 @@ describe("Queue shifting - Bucket", () => {
     } catch (error) {
       console.error(error);
     }
-  }, TEST_TIMEOUT_MS);
+  });
 
   function triggerBucketDataEvent() {
     return req.post(`/bucket/${bucket._id}/data`, {title: "me"});
@@ -497,21 +501,21 @@ describe("Queue shifting - Bucket", () => {
   it(
     "should shift the event to the second replica when app closes",
     async () => {
-      // Keep the worker busy so the bucket event is queued.
+      // Keep the worker busy so the bucket event ends up in the queue.
       req.get("/fn-execute/test");
       await onEventEnqueued(scheduler, event.Type.HTTP);
 
-      // Insert a bucket document; the hook event has no free worker and is queued.
+      // Insert a bucket document; the hook event will be queued.
       triggerBucketDataEvent();
       const shiftedEvent = await onEventEnqueued(scheduler, event.Type.BUCKET);
 
-      // Register the app2 listener BEFORE closing app1 so we cannot miss the shift.
+      // Register the app2 listener BEFORE closing app1 so we don't miss the shift.
       const event2Promise = onEventEnqueued(scheduler2, event.Type.BUCKET, shiftedEvent.id);
 
-      // Closing app1 triggers the replication shift mechanism.
+      // Closing app1 triggers the replication shift to app2.
       await app.close();
 
-      // The event received by app2 must be identical to the one queued on app1.
+      // The shifted event must be identical when received by app2.
       const event2 = await event2Promise;
       expect(shiftedEvent).toEqual(event2);
     },
