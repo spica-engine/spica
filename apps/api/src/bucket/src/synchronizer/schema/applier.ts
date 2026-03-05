@@ -56,7 +56,6 @@ export const getApplier = (
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
-        const bucket = YAML.parse(change.resource_content);
 
         const overwritePrimaries = (change: ChangeLog, bucket) => {
           if (change.resource_id) {
@@ -69,17 +68,21 @@ export const getApplier = (
         };
 
         switch (operationType) {
-          case ChangeType.CREATE:
+          case ChangeType.CREATE: {
+            const bucket = YAML.parse(change.resource_content);
             overwritePrimaries(change, bucket);
             await validate(bucket, validator);
             await CRUD.insert(bs, bucket);
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
-          case ChangeType.UPDATE:
+          case ChangeType.UPDATE: {
+            const bucket = YAML.parse(change.resource_content);
             overwritePrimaries(change, bucket);
             await validate(bucket, validator);
             await CRUD.replace(bs, bds, history, bucket);
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
           case ChangeType.DELETE:
             await CRUD.remove(bs, bds, history, change.resource_id);
