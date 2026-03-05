@@ -6,7 +6,12 @@ import * as func from "./func";
 import * as builtin from "./builtin_funcs";
 import {Mode, Replacer} from "@spica-server/interface/bucket/expression";
 
-export {isSelectOperator, isStringLiteral, getSelectPath} from "./convert";
+export {
+  isSelectOperator,
+  isStringLiteral,
+  getSelectPath,
+  getFieldSideAndValueSide
+} from "./convert";
 
 export function run(expression: string, context: unknown, mode: Mode) {
   const tree = parser.parse(expression);

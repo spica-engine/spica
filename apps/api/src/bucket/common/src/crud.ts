@@ -24,7 +24,7 @@ import {
 } from "@spica-server/interface/bucket/common";
 import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface/bucket";
 import {decryptDocumentFields} from "./decrypt";
-import {buildExpressionReplacers} from "./filter";
+import {buildExpressionReplacers} from "./expression.filter";
 
 export async function findDocuments<T>(
   schema: Bucket,
@@ -226,8 +226,8 @@ export async function insertDocument(
     schema: (id: string | ObjectId) => Promise<Bucket>;
     deleteOne: (documentId: ObjectId) => Promise<void>;
   },
-  encryptionSecret?: string,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
@@ -280,8 +280,8 @@ export async function replaceDocument(
   options: {
     returnDocument: ReturnDocument;
   } = {returnDocument: ReturnDocument.BEFORE},
-  encryptionSecret?: string,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
@@ -327,8 +327,8 @@ export async function patchDocument(
   options: {
     returnDocument: ReturnDocument;
   } = {returnDocument: ReturnDocument.BEFORE},
-  encryptionSecret?: string,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
   if (params.applyAcl) {
@@ -370,8 +370,8 @@ export async function deleteDocument(
     collection: (schema: Bucket) => BaseCollection<BucketDocument>;
     schema: (schema: string | ObjectId) => Promise<Bucket>;
   },
-  encryptionSecret?: string,
-  hashSecret?: string
+  hashSecret?: string,
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 

@@ -38,7 +38,11 @@ import {GuardService} from "@spica-server/passport/guard/services";
 import {resourceFilterFunction, extractStrategyType} from "@spica-server/passport/guard";
 import {Action} from "@spica-server/interface/activity";
 import {MessageKind} from "@spica-server/interface/bucket/realtime";
-import {BucketDocument, BUCKET_DATA_ENCRYPTION_SECRET} from "@spica-server/interface/bucket";
+import {
+  BucketDocument,
+  BUCKET_DATA_ENCRYPTION_SECRET,
+  BUCKET_DATA_HASH_SECRET
+} from "@spica-server/interface/bucket";
 import {getConnectionHandlers} from "@spica-server/realtime";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 @WebSocketGateway({
@@ -55,6 +59,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @Optional() private history: HistoryService,
     @Optional() private hookEmitter: ChangeEmitter,
     @Optional() private bucketCacheService: BucketCacheService,
+    @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
     @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
   ) {
     this.handlers = getConnectionHandlers(
@@ -168,6 +173,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           schema: this.getBucketResolver(),
           deleteOne: id => this.delete(client, {_id: id})
         },
+        this.hashSecret,
         this.encryptionSecret
       );
     } catch (error) {
@@ -240,6 +246,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           schema: this.getBucketResolver()
         },
         undefined,
+        this.hashSecret,
         this.encryptionSecret
       );
     } catch (error) {
@@ -344,6 +351,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           schema: this.getBucketResolver()
         },
         {returnDocument: ReturnDocument.AFTER},
+        this.hashSecret,
         this.encryptionSecret
       );
     } catch (error) {
@@ -420,6 +428,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver()
         },
+        this.hashSecret,
         this.encryptionSecret
       );
     } catch (error) {

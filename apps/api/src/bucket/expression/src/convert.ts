@@ -25,7 +25,7 @@ function visit(node, mode: Mode) {
     return ctx => visitArgFns(fns, ctx);
   }
 
-  activeReplacers.forEach(replacer => {
+  globalReplacers.forEach(replacer => {
     if (replacer.condition(node)) {
       replacer.replace(node);
     }
@@ -312,12 +312,12 @@ function visitBinaryOperatorSubtract(node, mode: Mode) {
 
 export const convert = visit;
 
-export function convertWithReplacers(node, mode: Mode, customReplacers: Replacer[]) {
+export function convertWithReplacers(node, mode: Mode, schemaAwareReplacers: Replacer[]) {
   // Pre-apply custom replacers to the entire AST eagerly because visit()
   // returns lazy closures — child nodes in compound expressions (&&, ||, etc.)
   // are visited inside closures AFTER this function returns, so module-level
-  // activeReplacers would already be restored by then.
-  applyReplacersToAst(node, customReplacers);
+  // globalReplacers would already be restored by then.
+  applyReplacersToAst(node, schemaAwareReplacers);
   return visit(node, mode);
 }
 
@@ -413,5 +413,19 @@ function isValueSide(node) {
   return node && node.kind == "literal" && node.type == "string";
 }
 
-const defaultReplacers: Replacer[] = [ObjectIdReplacer];
-let activeReplacers: Replacer[] = defaultReplacers;
+export function getFieldSideAndValueSide(
+  node: any
+): {fieldPath: string; valueSide: any} | undefined {
+  const leftPath = getSelectPath(node.left);
+  const rightPath = getSelectPath(node.right);
+
+  if (leftPath && isStringLiteral(node.right)) {
+    return {fieldPath: leftPath, valueSide: node.right};
+  }
+  if (rightPath && isStringLiteral(node.left)) {
+    return {fieldPath: rightPath, valueSide: node.left};
+  }
+  return undefined;
+}
+
+let globalReplacers: Replacer[] = [ObjectIdReplacer];
