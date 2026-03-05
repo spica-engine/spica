@@ -167,7 +167,7 @@ async function startApp(grpcaddresses: string[]) {
   };
 }
 
-xdescribe("Queue shifting - Schedule", () => {
+describe("Queue shifting - Schedule", () => {
   let app: INestApplication;
   let app2: INestApplication;
   let req: Request;
@@ -206,15 +206,18 @@ xdescribe("Queue shifting - Schedule", () => {
     let event1;
     let event2;
 
+    // to prevent next event from being processed.
     onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
+      // event will be enqueued by stay in the queue because previous operation keep worker busy.
       onEventEnqueued(scheduler, event.Type.SCHEDULE).then(shiftedEvent => {
+        // it runs every second, so disable the trigger immediately when we see the event is enqueued
         updateSchedulerTrigger(false);
-
         event1 = shiftedEvent;
+        // expect the enqueued event on the app1 is shifted and enqueued on the app2
         onEventEnqueued(scheduler2, event.Type.SCHEDULE, shiftedEvent.id).then(enqueuedEvent => {
           event2 = enqueuedEvent;
         });
-
+        // close the app, so event in the queue should be shifted to second app
         app.close().then(() => {
           expect(event1).toEqual(event2);
           done();

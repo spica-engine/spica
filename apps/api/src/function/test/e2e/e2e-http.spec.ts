@@ -155,7 +155,7 @@ async function startApp(grpcaddresses: string[]) {
   };
 }
 
-xdescribe("Queue shifting - HTTP", () => {
+describe("Queue shifting - HTTP", () => {
   let app: INestApplication;
   let app2: INestApplication;
   let req: Request;
@@ -181,8 +181,12 @@ xdescribe("Queue shifting - HTTP", () => {
     let firstResponse;
     let secondResponse;
 
+    // to prevent next event from being processed.
     onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
+      // event will be enqueued by stay in the queue because previous operation keep worker busy.
       onEventEnqueued(scheduler, event.Type.HTTP).then(() => {
+        // http trigger can't be shifted due to the nature of http request
+        // we expect to see 503
         app.close().then(() => {
           expect([firstResponse.statusCode, firstResponse.statusText]).toEqual([200, "OK"]);
           expect([secondResponse.statusCode, secondResponse.statusText]).toEqual([
