@@ -10,14 +10,25 @@ describe("Git VersionManager", () => {
   beforeEach(async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "git-test-"));
     git = new Git(tmpDir);
-    // Wait for git init to complete
+    // Wait until git init AND the local user.name/email config have been
+    // written.  The Git constructor fires gitInit() without await; polling
+    // only for .git/ is not enough because addConfig runs after init and an
+    // unhandled rejection from it leaks into subsequent tests.
     await new Promise<void>(resolve => {
       const check = () => {
-        if (fs.existsSync(path.join(tmpDir, ".git"))) {
-          resolve();
-        } else {
-          setTimeout(check, 100);
+        const configPath = path.join(tmpDir, ".git", "config");
+        if (fs.existsSync(configPath)) {
+          try {
+            const content = fs.readFileSync(configPath, "utf-8");
+            if (content.includes("name = Spica") && content.includes("email = Spica")) {
+              resolve();
+              return;
+            }
+          } catch {
+            // file may be partially written – retry
+          }
         }
+        setTimeout(check, 50);
       };
       check();
     });

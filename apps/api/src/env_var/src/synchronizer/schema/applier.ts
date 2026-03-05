@@ -51,7 +51,6 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const type = change.type;
-        const envVar: EnvVar = YAML.parse(change.resource_content);
 
         const overwritePrimaries = (change: ChangeLog, envVar) => {
           if (change.resource_id) {
@@ -64,16 +63,20 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
         };
 
         switch (type) {
-          case ChangeType.CREATE:
+          case ChangeType.CREATE: {
+            const envVar: EnvVar = YAML.parse(change.resource_content);
             overwritePrimaries(change, envVar);
             await validate(envVar, validator);
             await CRUD.insert(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
-          case ChangeType.UPDATE:
+          }
+          case ChangeType.UPDATE: {
+            const envVar: EnvVar = YAML.parse(change.resource_content);
             overwritePrimaries(change, envVar);
             await validate(envVar, validator);
             await CRUD.replace(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
           case ChangeType.DELETE:
             await CRUD.remove(evs, change.resource_id);

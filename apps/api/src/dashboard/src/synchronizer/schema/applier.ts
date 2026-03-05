@@ -52,7 +52,6 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const type = change.type;
-        const dashboard: Dashboard = YAML.parse(change.resource_content);
 
         const overwritePrimaries = (change: ChangeLog, dashboard: any) => {
           if (change.resource_id) {
@@ -65,17 +64,21 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
         };
 
         switch (type) {
-          case ChangeType.CREATE:
+          case ChangeType.CREATE: {
+            const dashboard: Dashboard = YAML.parse(change.resource_content);
             overwritePrimaries(change, dashboard);
             await validate(dashboard, validator);
             await CRUD.insert(ds, dashboard);
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
-          case ChangeType.UPDATE:
+          case ChangeType.UPDATE: {
+            const dashboard: Dashboard = YAML.parse(change.resource_content);
             overwritePrimaries(change, dashboard);
             await validate(dashboard, validator);
             await CRUD.replace(ds, dashboard);
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
           case ChangeType.DELETE:
             await CRUD.remove(ds, change.resource_id);
