@@ -92,7 +92,8 @@ describe("Bucket Synchronizer", () => {
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockBucket),
         created_at: expect.any(Date),
-        initiator: ChangeInitiator.INTERNAL
+        initiator: ChangeInitiator.INTERNAL,
+        change_event_id: expect.any(String)
       });
     });
 
@@ -126,7 +127,8 @@ describe("Bucket Synchronizer", () => {
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockBucket),
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          change_event_id: expect.any(String)
         });
 
         done();
@@ -185,7 +187,8 @@ describe("Bucket Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(expectedUpdatedBucket),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            change_event_id: expect.any(String)
           });
           done();
         }
@@ -226,7 +229,8 @@ describe("Bucket Synchronizer", () => {
             resource_extension: "yaml",
             resource_slug: "Bucket To Delete",
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            change_event_id: expect.any(String)
           });
           done();
         }

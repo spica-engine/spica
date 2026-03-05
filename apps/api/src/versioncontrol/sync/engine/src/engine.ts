@@ -47,7 +47,7 @@ export class SyncEngine {
       const job = () => this.changeLogProcessor.push(changeLog);
 
       if (this.jobReducer) {
-        const jobId = `${changeLog.module}-${changeLog.sub_module}-${changeLog.origin}-${changeLog.resource_id}`;
+        const jobId = `${changeLog.module}-${changeLog.sub_module}-${changeLog.origin}-${changeLog.resource_id}-${changeLog.type}-${changeLog.change_event_id || ""}`;
         this.jobReducer.do({...changeLog, _id: jobId}, job).catch(error => {
           this.logger.error(
             "SyncEngine Change Handler Job reducer failed:",

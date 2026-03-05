@@ -26,7 +26,7 @@ export const getSupplier = (
       return repManager.watch(applier.module, fileNames).pipe(
         mergeMap(attachIdFromSlug),
         mergeMap(attachIdFromContent),
-        map(({_id, slug, content, type, extension}) => {
+        map(({_id, slug, content, type, extension, change_event_id}) => {
           return {
             module,
             sub_module: subModule,
@@ -37,7 +37,8 @@ export const getSupplier = (
             resource_id: _id,
             resource_extension: extension,
             type,
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            change_event_id
           };
         })
       );

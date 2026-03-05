@@ -2,7 +2,7 @@ import {EventQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
-import cron from "cron";
+import schedule from "node-schedule";
 import {Enqueuer} from "./enqueuer";
 import uniqid from "uniqid";
 import {Description, ScheduleOptions} from "@spica-server/interface/function/enqueuer";
@@ -12,7 +12,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   type = event.Type.SCHEDULE;
   private readonly logger = new Logger(ScheduleEnqueuer.name);
 
-  private jobs = new Set<cron.CronJob>();
+  private jobs = new Set<schedule.Job>();
 
   description: Description = {
     icon: "schedule",
@@ -34,12 +34,14 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   }
 
   subscribe(target: event.Target, options: ScheduleOptions): void {
-    const job = cron.CronJob.from({
-      cronTime: options.frequency,
-      onTick: () => this.onTickHandler(target, options),
-      start: true,
-      timeZone: options.timezone
-    });
+    // node-schedule passes the exact scheduled fireDate as the first argument,
+    // ensuring all replicas derive the same deterministic timestamp for the same tick
+    const job = schedule.scheduleJob(
+      {rule: options.frequency, tz: options.timezone},
+      (fireDate: Date) => {
+        this.onTickHandler(target, options, fireDate.getTime());
+      }
+    );
 
     Object.defineProperty(job, "target", {writable: false, value: target});
     this.jobs.add(job);
@@ -55,14 +57,19 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
           job["target"].cwd == target.cwd &&
           job["target"].handler == target.handler)
       ) {
-        job.stop();
+        job.cancel();
         this.jobs.delete(job);
       }
     }
   }
 
-  onTickHandler(target: event.Target, options: ScheduleOptions, eventId?: string) {
-    const now = new Date(new Date().setMilliseconds(0)).getTime();
+  onTickHandler(
+    target: event.Target,
+    options: ScheduleOptions,
+    firedAt?: number,
+    eventId?: string
+  ) {
+    const fireTime = firedAt || new Date(new Date().setMilliseconds(0)).getTime();
 
     const ev = new event.Event({
       id: eventId || uniqid(),
@@ -75,7 +82,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     };
 
     const meta = {
-      _id: `${target.cwd}-${target.handler}-${options.frequency}-${options.timezone}-${now}`,
+      _id: `${target.cwd}-${target.handler}-${options.frequency}-${options.timezone}-${fireTime}`,
       cwd: target.cwd,
       handler: target.handler,
       frequency: options.frequency,
@@ -152,6 +159,6 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
       })
     });
 
-    return this.onTickHandler(newTarget, options, eventId);
+    return this.onTickHandler(newTarget, options, undefined, eventId);
   }
 }

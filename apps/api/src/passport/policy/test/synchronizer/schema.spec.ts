@@ -88,7 +88,8 @@ describe("Policy Synchronizer", () => {
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockPolicy),
         created_at: expect.any(Date),
-        initiator: ChangeInitiator.INTERNAL
+        initiator: ChangeInitiator.INTERNAL,
+        change_event_id: expect.any(String)
       });
     });
 
@@ -122,7 +123,8 @@ describe("Policy Synchronizer", () => {
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockPolicy),
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          change_event_id: expect.any(String)
         });
 
         done();
@@ -190,7 +192,8 @@ describe("Policy Synchronizer", () => {
             resource_slug: "Updated Policy",
             resource_content: YAML.stringify(expectedUpdatedPolicy),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            change_event_id: expect.any(String)
           });
           done();
         }
@@ -234,7 +237,8 @@ describe("Policy Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(policyToDelete),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            change_event_id: expect.any(String)
           });
           done();
         }

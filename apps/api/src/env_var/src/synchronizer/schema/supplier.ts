@@ -20,7 +20,8 @@ const fileExtension = "yaml";
 const getChangeLogForSchema = (
   envVar: EnvVar,
   type: ChangeType,
-  initiator: ChangeInitiator
+  initiator: ChangeInitiator,
+  changeEventId?: string
 ): ChangeLog => {
   return {
     module,
@@ -32,7 +33,8 @@ const getChangeLogForSchema = (
     resource_content: YAML.stringify(envVar),
     resource_extension: fileExtension,
     created_at: new Date(),
-    initiator
+    initiator,
+    change_event_id: changeEventId
   };
 };
 
@@ -50,7 +52,8 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
               const changeLog = getChangeLogForSchema(
                 envVar,
                 ChangeType.CREATE,
-                ChangeInitiator.INTERNAL
+                ChangeInitiator.INTERNAL,
+                envVar._id.toString()
               );
               observer.next(changeLog);
             });
@@ -94,7 +97,8 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
               const changeLog = getChangeLogForSchema(
                 documentData,
                 changeType,
-                ChangeInitiator.EXTERNAL
+                ChangeInitiator.EXTERNAL,
+                JSON.stringify(change._id)
               );
               observer.next(changeLog);
             },

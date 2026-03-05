@@ -74,7 +74,8 @@ describe("EnvVar Synchronizer", () => {
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockEnvVar),
         created_at: expect.any(Date),
-        initiator: ChangeInitiator.INTERNAL
+        initiator: ChangeInitiator.INTERNAL,
+        change_event_id: expect.any(String)
       });
     });
 
@@ -98,7 +99,8 @@ describe("EnvVar Synchronizer", () => {
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockEnvVar),
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          change_event_id: expect.any(String)
         });
 
         done();
@@ -135,7 +137,8 @@ describe("EnvVar Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(updatedEnvVar),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            change_event_id: expect.any(String)
           });
           done();
         }
@@ -169,7 +172,8 @@ describe("EnvVar Synchronizer", () => {
             resource_extension: "yaml",
             resource_slug: "TEMP_SECRET",
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            change_event_id: expect.any(String)
           });
           done();
         }

@@ -20,7 +20,8 @@ const fileExtension = "yaml";
 const getChangeForSchema = (
   fn: Function,
   type: ChangeType,
-  initiator: ChangeInitiator
+  initiator: ChangeInitiator,
+  changeEventId?: string
 ): ChangeLog => {
   return {
     module,
@@ -32,7 +33,8 @@ const getChangeForSchema = (
     resource_content: YAML.stringify(fn),
     resource_extension: fileExtension,
     created_at: new Date(),
-    initiator
+    initiator,
+    change_event_id: changeEventId
   };
 };
 
@@ -47,7 +49,7 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
           .toArray()
           .then(functions => {
             functions.forEach(fn => {
-              const changeLog = getChangeForSchema(fn, ChangeType.CREATE, ChangeInitiator.INTERNAL);
+              const changeLog = getChangeForSchema(fn, ChangeType.CREATE, ChangeInitiator.INTERNAL, fn._id.toString());
               observer.next(changeLog);
             });
           })
@@ -91,7 +93,8 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
               const changeLog = getChangeForSchema(
                 documentData,
                 changeType,
-                ChangeInitiator.EXTERNAL
+                ChangeInitiator.EXTERNAL,
+                JSON.stringify(change._id)
               );
               observer.next(changeLog);
             },
