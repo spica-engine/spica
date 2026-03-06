@@ -139,7 +139,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_extension: "json",
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.INTERNAL
+            initiator: ChangeInitiator.INTERNAL,
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();
@@ -192,7 +193,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_extension: "json",
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();
@@ -252,7 +254,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_content: changeLog.resource_content,
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();
@@ -299,7 +302,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_extension: "json",
             resource_content: null,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();
@@ -368,7 +372,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_content: packageContent,
         created_at: new Date(),
         resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -425,7 +430,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_content: updatedPackage,
         created_at: new Date(),
         resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -476,7 +482,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_content: null,
         created_at: new Date(),
         resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -508,7 +515,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_content: JSON.stringify({name: "test", version: "1.0.0"}),
         created_at: new Date(),
         resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dependencyApplier.apply(changeLog);

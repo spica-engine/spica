@@ -74,7 +74,8 @@ describe("EnvVar Synchronizer", () => {
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockEnvVar),
         created_at: expect.any(Date),
-        initiator: ChangeInitiator.INTERNAL
+        initiator: ChangeInitiator.INTERNAL,
+        event_id: expect.any(String)
       });
     });
 
@@ -98,7 +99,8 @@ describe("EnvVar Synchronizer", () => {
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockEnvVar),
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
 
         done();
@@ -135,7 +137,8 @@ describe("EnvVar Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(updatedEnvVar),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           done();
         }
@@ -169,7 +172,8 @@ describe("EnvVar Synchronizer", () => {
             resource_extension: "yaml",
             resource_slug: "TEMP_SECRET",
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           done();
         }
@@ -218,7 +222,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: YAML.stringify(mockEnvVar),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -261,7 +266,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: YAML.stringify(updatedEnvVar),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -298,7 +304,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -322,7 +329,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -344,7 +352,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -368,7 +377,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: YAML.stringify(invalidEnvVar),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -394,7 +404,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: YAML.stringify(validEnvVar),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);

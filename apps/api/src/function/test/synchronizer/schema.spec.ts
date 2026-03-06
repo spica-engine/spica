@@ -146,7 +146,8 @@ describe("Function Synchronizer", () => {
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockFunction),
         created_at: expect.any(Date),
-        initiator: ChangeInitiator.INTERNAL
+        initiator: ChangeInitiator.INTERNAL,
+        event_id: expect.any(String)
       });
     });
 
@@ -181,7 +182,8 @@ describe("Function Synchronizer", () => {
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockFunction),
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
 
         subs.unsubscribe();
@@ -246,7 +248,8 @@ describe("Function Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(expectedUpdatedFunction),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();
@@ -294,7 +297,8 @@ describe("Function Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(functionToDelete),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();
@@ -358,7 +362,8 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(mockFunction),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -451,7 +456,8 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(updatedFunction),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -523,7 +529,8 @@ describe("Function Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -547,7 +554,8 @@ describe("Function Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -569,7 +577,8 @@ describe("Function Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -607,7 +616,8 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(invalidFunction),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -643,7 +653,8 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(validFunction),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);

@@ -88,7 +88,8 @@ describe("Policy Synchronizer", () => {
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockPolicy),
         created_at: expect.any(Date),
-        initiator: ChangeInitiator.INTERNAL
+        initiator: ChangeInitiator.INTERNAL,
+        event_id: expect.any(String)
       });
     });
 
@@ -122,7 +123,8 @@ describe("Policy Synchronizer", () => {
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockPolicy),
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
 
         done();
@@ -190,7 +192,8 @@ describe("Policy Synchronizer", () => {
             resource_slug: "Updated Policy",
             resource_content: YAML.stringify(expectedUpdatedPolicy),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           done();
         }
@@ -234,7 +237,8 @@ describe("Policy Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(policyToDelete),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           done();
         }
@@ -293,7 +297,8 @@ describe("Policy Synchronizer", () => {
         resource_content: YAML.stringify(mockPolicy),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -373,7 +378,8 @@ describe("Policy Synchronizer", () => {
         resource_content: YAML.stringify(updatedPolicy),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -437,7 +443,8 @@ describe("Policy Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -461,7 +468,8 @@ describe("Policy Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -483,7 +491,8 @@ describe("Policy Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -511,7 +520,8 @@ describe("Policy Synchronizer", () => {
         resource_content: YAML.stringify(invalidPolicy),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -544,7 +554,8 @@ describe("Policy Synchronizer", () => {
         resource_content: YAML.stringify(validPolicy),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);

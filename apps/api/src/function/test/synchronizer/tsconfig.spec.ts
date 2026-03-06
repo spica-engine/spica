@@ -153,7 +153,8 @@ describe("Function tsconfig Synchronizer", () => {
             resource_content: changeLog.resource_content,
             resource_extension: "json",
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.INTERNAL
+            initiator: ChangeInitiator.INTERNAL,
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();
@@ -194,7 +195,8 @@ describe("Function tsconfig Synchronizer", () => {
           resource_content: changeLog.resource_content,
           resource_extension: "json",
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
         subs.unsubscribe();
         done();
@@ -250,7 +252,8 @@ describe("Function tsconfig Synchronizer", () => {
               resource_extension: "json",
               resource_slug: mockFunction.name,
               created_at: expect.any(Date),
-              initiator: ChangeInitiator.EXTERNAL
+              initiator: ChangeInitiator.EXTERNAL,
+              event_id: expect.any(String)
             });
 
             subs.unsubscribe();
@@ -328,7 +331,8 @@ describe("Function tsconfig Synchronizer", () => {
         }),
         resource_extension: "json",
         created_at: new Date(),
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await tsconfigApplier.apply(changeLog);

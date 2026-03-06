@@ -92,7 +92,8 @@ describe("Bucket Synchronizer", () => {
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockBucket),
         created_at: expect.any(Date),
-        initiator: ChangeInitiator.INTERNAL
+        initiator: ChangeInitiator.INTERNAL,
+        event_id: expect.any(String)
       });
     });
 
@@ -126,7 +127,8 @@ describe("Bucket Synchronizer", () => {
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockBucket),
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
 
         done();
@@ -185,7 +187,8 @@ describe("Bucket Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(expectedUpdatedBucket),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           done();
         }
@@ -226,7 +229,8 @@ describe("Bucket Synchronizer", () => {
             resource_extension: "yaml",
             resource_slug: "Bucket To Delete",
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           done();
         }
@@ -284,7 +288,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: YAML.stringify(mockBucket),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -358,7 +363,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: YAML.stringify(updatedBucket),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -417,7 +423,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -441,7 +448,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -463,7 +471,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -495,7 +504,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: YAML.stringify(invalidBucket),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -529,7 +539,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: YAML.stringify(validBucket),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);

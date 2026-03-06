@@ -266,9 +266,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.rm(filePath);
   }
 
-  watch(
-    scope: "index" | "dependency" | "tsconfig"
-  ): Observable<{fn: FunctionWithContent; type: "create" | "update" | "delete"}> {
+  watch(scope: "index" | "dependency" | "tsconfig"): Observable<{
+    fn: FunctionWithContent;
+    type: "create" | "update" | "delete";
+    event_id: string;
+  }> {
     let files = [];
 
     switch (scope) {
@@ -293,8 +295,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         awaitWriteFinish: true
       });
 
-      const handleFileEvent = async (path: string, type: "create" | "update" | "delete") => {
-        const relativePath = path.slice(moduleDir.length + 1);
+      const handleFileEvent = async (filePath: string, type: "create" | "update" | "delete") => {
+        const relativePath = filePath.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
 
         const isCorrectDepth = parts.length == 2;
@@ -303,13 +305,26 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
         const dirName = parts[0];
 
+        let eventId: string;
+        const now = new Date(new Date().setMilliseconds(0)).getTime();
+        if (type === "delete") {
+          eventId = `unlink-${now}`;
+        } else {
+          try {
+            const stats = await fs.promises.stat(filePath);
+            eventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
+          } catch {
+            eventId = `stat-err-${now}`;
+          }
+        }
+
         let contentPromise: Promise<string> | null;
         let content: string | null;
         let fn: Function | null;
         if (type == "delete") {
           contentPromise = Promise.resolve(null);
         } else {
-          contentPromise = fs.promises.readFile(path).then(b => b.toString());
+          contentPromise = fs.promises.readFile(filePath).then(b => b.toString());
         }
 
         await Promise.all([
@@ -322,7 +337,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
         if (!fn) return;
 
-        observer.next({fn: {...fn, content}, type});
+        observer.next({fn: {...fn, content}, type, event_id: eventId});
       };
 
       watcher.on("change", path => handleFileEvent(path, "update"));

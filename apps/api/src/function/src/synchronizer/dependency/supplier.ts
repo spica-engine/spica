@@ -22,7 +22,8 @@ const getChangeLogForDeps = (
   type: ChangeType,
   fn: Function,
   content: string,
-  initiator: ChangeInitiator
+  initiator: ChangeInitiator,
+  eventId: string
 ): ChangeLog => {
   return {
     module,
@@ -34,7 +35,8 @@ const getChangeLogForDeps = (
     resource_content: content,
     resource_extension: fileExtension,
     created_at: new Date(),
-    initiator
+    initiator,
+    event_id: eventId
   };
 };
 
@@ -55,7 +57,8 @@ export const getSupplier = (
                 ChangeType.CREATE,
                 fn,
                 content,
-                ChangeInitiator.INTERNAL
+                ChangeInitiator.INTERNAL,
+                fn._id.toString()
               );
               observer.next(changelog);
             } catch (error) {
@@ -83,7 +86,8 @@ export const getSupplier = (
               type,
               change.fn,
               change.fn.content,
-              ChangeInitiator.EXTERNAL
+              ChangeInitiator.EXTERNAL,
+              change.event_id
             );
             observer.next(changeLog);
           },

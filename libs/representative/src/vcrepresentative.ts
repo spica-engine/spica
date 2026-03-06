@@ -95,11 +95,11 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         awaitWriteFinish: true
       });
 
-      watcher.on("all", async (event, path) => {
+      watcher.on("all", async (event, filePath) => {
         const isTrackedEvent = events.includes(event);
         if (!isTrackedEvent) return;
 
-        const relativePath = path.slice(moduleDir.length + 1);
+        const relativePath = filePath.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
 
         const isCorrectDepth = parts.length == 2;
@@ -107,6 +107,19 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         if (!isCorrectDepth || !isTrackedFile) return;
 
         const extension = parts[1].split(".").at(-1);
+
+        let eventId: string;
+        const now = new Date(new Date().setMilliseconds(0)).getTime();
+        if (event === "unlink") {
+          eventId = `unlink-${now}`;
+        } else {
+          try {
+            const stats = await fs.promises.stat(filePath);
+            eventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
+          } catch {
+            eventId = `stat-err-${now}`;
+          }
+        }
 
         let repFileEvent: RepresentativeFileEvent;
 
@@ -116,7 +129,8 @@ export class VCRepresentativeManager implements IRepresentativeManager {
               content: await this.read(module, parts[0], parts[1]),
               slug: parts[0],
               extension,
-              type: ChangeType.CREATE
+              type: ChangeType.CREATE,
+              event_id: eventId
             };
             break;
 
@@ -125,7 +139,8 @@ export class VCRepresentativeManager implements IRepresentativeManager {
               content: await this.read(module, parts[0], parts[1]),
               slug: parts[0],
               extension,
-              type: ChangeType.UPDATE
+              type: ChangeType.UPDATE,
+              event_id: eventId
             };
             break;
 
@@ -134,7 +149,8 @@ export class VCRepresentativeManager implements IRepresentativeManager {
               content: null,
               slug: parts[0],
               extension,
-              type: ChangeType.DELETE
+              type: ChangeType.DELETE,
+              event_id: eventId
             };
             break;
 

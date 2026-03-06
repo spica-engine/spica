@@ -48,7 +48,8 @@ describe("Sync Realtime", () => {
         resource_id: `resource-${idSuffix}`,
         resource_slug: `slug-${idSuffix}`,
         resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: `event-${idSuffix}`
       },
       created_at: new Date(),
       status: status,

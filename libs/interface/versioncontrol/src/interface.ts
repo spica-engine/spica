@@ -29,6 +29,7 @@ export interface ChangeLog {
   resource_extension: string;
   created_at: Date;
   initiator: ChangeInitiator;
+  event_id: string;
 }
 
 export interface ChangeHandler {

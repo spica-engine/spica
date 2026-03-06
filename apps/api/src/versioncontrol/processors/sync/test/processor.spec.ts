@@ -33,6 +33,7 @@ function getMockSync(
       resource_slug: "slug",
       resource_extension: "",
       initiator: ChangeInitiator.EXTERNAL,
+      event_id: "event-id",
       ...overrides
     },
     created_at: new Date(),

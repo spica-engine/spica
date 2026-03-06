@@ -22,7 +22,8 @@ const getChangeLogForIndex = (
   type: ChangeType,
   fn: Function,
   content: string,
-  initiator: ChangeInitiator
+  initiator: ChangeInitiator,
+  eventId: string
 ): ChangeLog => {
   return {
     module,
@@ -34,7 +35,8 @@ const getChangeLogForIndex = (
     resource_content: content,
     resource_extension: fileExtension,
     created_at: new Date(),
-    initiator
+    initiator,
+    event_id: eventId
   };
 };
 
@@ -52,7 +54,8 @@ export const getSupplier = (engine: FunctionEngine, fs: FunctionService): Change
                 ChangeType.CREATE,
                 fn,
                 content,
-                ChangeInitiator.INTERNAL
+                ChangeInitiator.INTERNAL,
+                fn._id.toString()
               );
               observer.next(changelog);
             } catch (error) {
@@ -79,7 +82,8 @@ export const getSupplier = (engine: FunctionEngine, fs: FunctionService): Change
               type,
               change.fn,
               change.fn.content,
-              ChangeInitiator.EXTERNAL
+              ChangeInitiator.EXTERNAL,
+              change.event_id
             );
             observer.next(changeLog);
           },

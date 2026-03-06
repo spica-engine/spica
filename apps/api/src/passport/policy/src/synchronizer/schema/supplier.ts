@@ -20,7 +20,8 @@ const fileExtension = "yaml";
 const getChangeForSchema = (
   policy: Policy,
   changeType: ChangeType,
-  initiator: ChangeInitiator
+  initiator: ChangeInitiator,
+  eventId: string
 ): ChangeLog => {
   return {
     module,
@@ -32,7 +33,8 @@ const getChangeForSchema = (
     resource_content: YAML.stringify(policy),
     resource_extension: fileExtension,
     created_at: new Date(),
-    initiator
+    initiator,
+    event_id: eventId
   };
 };
 
@@ -50,7 +52,8 @@ export function getSupplier(ps: PolicyService): DocumentChangeSupplier {
               const changeLog = getChangeForSchema(
                 policy,
                 ChangeType.CREATE,
-                ChangeInitiator.INTERNAL
+                ChangeInitiator.INTERNAL,
+                policy._id.toString()
               );
               observer.next(changeLog);
             });
@@ -94,7 +97,8 @@ export function getSupplier(ps: PolicyService): DocumentChangeSupplier {
               const changeLog = getChangeForSchema(
                 documentData,
                 changeType,
-                ChangeInitiator.EXTERNAL
+                ChangeInitiator.EXTERNAL,
+                JSON.stringify(change._id)
               );
               observer.next(changeLog);
             },

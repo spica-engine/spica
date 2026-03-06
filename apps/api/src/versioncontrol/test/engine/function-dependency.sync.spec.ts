@@ -166,7 +166,8 @@ xdescribe("SyncEngine Integration - Function Dependency", () => {
           resource_content: JSON.stringify(packageJsonContent, null, 2),
           resource_extension: "json",
           created_at: sync.change_log.created_at,
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
         done();
       });
@@ -240,7 +241,8 @@ xdescribe("SyncEngine Integration - Function Dependency", () => {
           resource_content: packageContent,
           resource_extension: fileExtension,
           created_at: sync.change_log.created_at,
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         },
         created_at: sync.created_at,
         updated_at: sync.updated_at

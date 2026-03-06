@@ -20,7 +20,8 @@ const fileExtension = "yaml";
 const getChangeLogForSchema = (
   dashboard: Dashboard,
   type: ChangeType,
-  initiator: ChangeInitiator
+  initiator: ChangeInitiator,
+  eventId: string
 ): ChangeLog => {
   return {
     module,
@@ -32,7 +33,8 @@ const getChangeLogForSchema = (
     resource_content: YAML.stringify(dashboard),
     resource_extension: fileExtension,
     created_at: new Date(),
-    initiator
+    initiator,
+    event_id: eventId
   };
 };
 
@@ -50,7 +52,8 @@ export const getSupplier = (ds: DashboardService): DocumentChangeSupplier => {
               const changeLog = getChangeLogForSchema(
                 dashboard,
                 ChangeType.CREATE,
-                ChangeInitiator.INTERNAL
+                ChangeInitiator.INTERNAL,
+                dashboard._id.toString()
               );
               observer.next(changeLog);
             });
@@ -94,7 +97,8 @@ export const getSupplier = (ds: DashboardService): DocumentChangeSupplier => {
               const changeLog = getChangeLogForSchema(
                 documentData,
                 changeType,
-                ChangeInitiator.EXTERNAL
+                ChangeInitiator.EXTERNAL,
+                JSON.stringify(change._id)
               );
               observer.next(changeLog);
             },

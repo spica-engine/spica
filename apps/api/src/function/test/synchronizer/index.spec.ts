@@ -145,7 +145,8 @@ describe("Function Index Synchronizer", () => {
             resource_slug: mockFunction.name,
             resource_content: indexContent,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.INTERNAL
+            initiator: ChangeInitiator.INTERNAL,
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();
@@ -201,7 +202,8 @@ describe("Function Index Synchronizer", () => {
             resource_extension: changeLog.resource_extension,
             resource_content: updatedContent,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();
@@ -254,7 +256,8 @@ describe("Function Index Synchronizer", () => {
             resource_slug: mockFunction.name,
             resource_content: null,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();
@@ -319,7 +322,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: indexContent,
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -374,7 +378,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: updatedIndex,
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -426,7 +431,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: null,
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -458,7 +464,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: "some content",
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -480,7 +487,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: "export default function() {}",
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -502,7 +510,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: "export default function() {}",
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);

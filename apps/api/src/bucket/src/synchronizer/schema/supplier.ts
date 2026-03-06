@@ -20,7 +20,8 @@ const fileExtension = "yaml";
 const getChangeLogFromBucket = (
   bucket: Bucket,
   type: ChangeType,
-  initiator: ChangeInitiator
+  initiator: ChangeInitiator,
+  eventId: string
 ): ChangeLog => {
   return {
     module,
@@ -32,7 +33,8 @@ const getChangeLogFromBucket = (
     resource_content: YAML.stringify(bucket),
     resource_extension: fileExtension,
     created_at: new Date(),
-    initiator
+    initiator,
+    event_id: eventId
   };
 };
 
@@ -50,7 +52,8 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
               const changeLog = getChangeLogFromBucket(
                 bucket,
                 ChangeType.CREATE,
-                ChangeInitiator.INTERNAL
+                ChangeInitiator.INTERNAL,
+                bucket._id.toString()
               );
               observer.next(changeLog);
             });
@@ -96,7 +99,8 @@ export const getSupplier = (bs: BucketService): DocumentChangeSupplier => {
               const changeLog = getChangeLogFromBucket(
                 documentData,
                 changeType,
-                ChangeInitiator.EXTERNAL
+                ChangeInitiator.EXTERNAL,
+                JSON.stringify(change._id)
               );
               observer.next(changeLog);
             },
