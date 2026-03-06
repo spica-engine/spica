@@ -362,7 +362,8 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(mockFunction),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -455,7 +456,8 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(updatedFunction),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -527,7 +529,8 @@ describe("Function Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -551,7 +554,8 @@ describe("Function Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -573,7 +577,8 @@ describe("Function Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -611,7 +616,8 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(invalidFunction),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -647,7 +653,8 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(validFunction),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);

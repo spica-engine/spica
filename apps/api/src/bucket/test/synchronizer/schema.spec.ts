@@ -288,7 +288,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: YAML.stringify(mockBucket),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -362,7 +363,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: YAML.stringify(updatedBucket),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -421,7 +423,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -445,7 +448,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -467,7 +471,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -499,7 +504,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: YAML.stringify(invalidBucket),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -533,7 +539,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: YAML.stringify(validBucket),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);

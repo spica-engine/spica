@@ -331,7 +331,8 @@ describe("Function tsconfig Synchronizer", () => {
         }),
         resource_extension: "json",
         created_at: new Date(),
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await tsconfigApplier.apply(changeLog);

@@ -322,7 +322,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: indexContent,
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -377,7 +378,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: updatedIndex,
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -429,7 +431,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: null,
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -461,7 +464,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: "some content",
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -483,7 +487,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: "export default function() {}",
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
@@ -505,7 +510,8 @@ describe("Function Index Synchronizer", () => {
         resource_content: "export default function() {}",
         created_at: new Date(),
         resource_extension: "js",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);

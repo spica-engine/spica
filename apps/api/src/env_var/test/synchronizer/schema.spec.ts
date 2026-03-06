@@ -222,7 +222,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: YAML.stringify(mockEnvVar),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -265,7 +266,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: YAML.stringify(updatedEnvVar),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -302,7 +304,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -326,7 +329,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -348,7 +352,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -372,7 +377,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: YAML.stringify(invalidEnvVar),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);
@@ -398,7 +404,8 @@ describe("EnvVar Synchronizer", () => {
         resource_content: YAML.stringify(validEnvVar),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await envVarApplier.apply(changeLog);

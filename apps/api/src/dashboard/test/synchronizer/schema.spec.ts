@@ -226,7 +226,8 @@ describe("Dashboard Synchronizer", () => {
         resource_content: YAML.stringify(mockDashboard),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dashboardApplier.apply(changeLog);
@@ -272,7 +273,8 @@ describe("Dashboard Synchronizer", () => {
         resource_content: YAML.stringify(updatedDashboard),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dashboardApplier.apply(changeLog);
@@ -311,7 +313,8 @@ describe("Dashboard Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dashboardApplier.apply(changeLog);
@@ -335,7 +338,8 @@ describe("Dashboard Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dashboardApplier.apply(changeLog);
@@ -357,7 +361,8 @@ describe("Dashboard Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dashboardApplier.apply(changeLog);
@@ -387,7 +392,8 @@ describe("Dashboard Synchronizer", () => {
         resource_content: YAML.stringify(invalidDashboard),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dashboardApplier.apply(changeLog);
@@ -414,7 +420,8 @@ describe("Dashboard Synchronizer", () => {
         resource_content: YAML.stringify(validDashboard),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dashboardApplier.apply(changeLog);

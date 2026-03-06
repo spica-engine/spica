@@ -297,7 +297,8 @@ describe("Policy Synchronizer", () => {
         resource_content: YAML.stringify(mockPolicy),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -377,7 +378,8 @@ describe("Policy Synchronizer", () => {
         resource_content: YAML.stringify(updatedPolicy),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -441,7 +443,8 @@ describe("Policy Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -465,7 +468,8 @@ describe("Policy Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -487,7 +491,8 @@ describe("Policy Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -515,7 +520,8 @@ describe("Policy Synchronizer", () => {
         resource_content: YAML.stringify(invalidPolicy),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
@@ -548,7 +554,8 @@ describe("Policy Synchronizer", () => {
         resource_content: YAML.stringify(validPolicy),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await policyApplier.apply(changeLog);
