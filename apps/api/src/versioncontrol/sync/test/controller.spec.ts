@@ -63,7 +63,8 @@ describe("Sync Controller", () => {
             resource_content: "content1",
             resource_extension: ".yaml",
             created_at: new Date(now.getTime() - 2000),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: "event-id-1"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 2000),
@@ -80,7 +81,8 @@ describe("Sync Controller", () => {
             resource_content: "content2",
             resource_extension: ".yaml",
             created_at: new Date(now.getTime() - 1000),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: "event-id-2"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 1000),
@@ -105,7 +107,8 @@ describe("Sync Controller", () => {
           resource_id: "resource1",
           resource_slug: "test-slug-1",
           resource_content: "content1",
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: "event-id-1"
         },
         status: SyncStatuses.PENDING
       });
@@ -118,7 +121,8 @@ describe("Sync Controller", () => {
           resource_id: "resource2",
           resource_slug: "test-slug-2",
           resource_content: "content2",
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: "event-id-2"
         },
         status: SyncStatuses.PENDING
       });
@@ -142,7 +146,8 @@ describe("Sync Controller", () => {
             resource_content: "content1",
             resource_extension: ".yaml",
             created_at: olderDate,
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: "event-id-1"
           },
           status: SyncStatuses.PENDING,
           created_at: olderDate,
@@ -159,7 +164,8 @@ describe("Sync Controller", () => {
             resource_content: "content2",
             resource_extension: ".yaml",
             initiator: ChangeInitiator.EXTERNAL,
-            created_at: newerDate
+            created_at: newerDate,
+            event_id: "event-id-2"
           },
           status: SyncStatuses.PENDING,
           created_at: newerDate,
@@ -188,7 +194,8 @@ describe("Sync Controller", () => {
           resource_id: "resource2",
           resource_slug: "slug-2",
           resource_content: "content2",
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: "event-id-2"
         },
         status: SyncStatuses.PENDING
       });
@@ -207,7 +214,8 @@ describe("Sync Controller", () => {
           resource_extension: ".yaml",
           initiator: ChangeInitiator.EXTERNAL,
           resource_content: "content",
-          created_at: new Date(now.getTime() - 2000)
+          created_at: new Date(now.getTime() - 2000),
+          event_id: "event-id-1"
         },
         status: SyncStatuses.PENDING,
         created_at: new Date(now.getTime() - 2000),
@@ -225,7 +233,8 @@ describe("Sync Controller", () => {
           resource_content: "content2",
           resource_extension: ".yaml",
           initiator: ChangeInitiator.EXTERNAL,
-          created_at: new Date(now.getTime() - 1000)
+          created_at: new Date(now.getTime() - 1000),
+          event_id: "event-id-2"
         },
         status: SyncStatuses.APPROVED,
         created_at: new Date(now.getTime() - 1000),
@@ -249,7 +258,8 @@ describe("Sync Controller", () => {
           resource_id: "resource1",
           resource_slug: "test-slug",
           resource_content: "content",
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: "event-id-1"
         },
         status: SyncStatuses.PENDING
       });
@@ -269,7 +279,8 @@ describe("Sync Controller", () => {
             resource_content: "content1",
             resource_extension: ".yaml",
             initiator: ChangeInitiator.EXTERNAL,
-            created_at: new Date(now.getTime() - 2000)
+            created_at: new Date(now.getTime() - 2000),
+            event_id: "event-id-1"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 2000),
@@ -286,7 +297,8 @@ describe("Sync Controller", () => {
             resource_content: "content2",
             resource_extension: ".yaml",
             initiator: ChangeInitiator.EXTERNAL,
-            created_at: new Date(now.getTime() - 1000)
+            created_at: new Date(now.getTime() - 1000),
+            event_id: "event-id-2"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 1000),
@@ -313,7 +325,8 @@ describe("Sync Controller", () => {
           resource_slug: "slug-2",
           resource_content: "content2",
           resource_extension: ".yaml",
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: "event-id-2"
         },
         status: SyncStatuses.PENDING
       });
@@ -333,7 +346,8 @@ describe("Sync Controller", () => {
             resource_content: "content1",
             resource_extension: ".yaml",
             created_at: new Date(now.getTime() - 3000),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: "event-id-1"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 3000),
@@ -350,7 +364,8 @@ describe("Sync Controller", () => {
             resource_content: "content2",
             resource_extension: ".yaml",
             created_at: new Date(now.getTime() - 2000),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: "event-id-2"
           },
           status: SyncStatuses.APPROVED,
           created_at: new Date(now.getTime() - 2000),
@@ -367,7 +382,8 @@ describe("Sync Controller", () => {
             resource_content: "content3",
             resource_extension: ".yaml",
             initiator: ChangeInitiator.EXTERNAL,
-            created_at: new Date(now.getTime() - 1000)
+            created_at: new Date(now.getTime() - 1000),
+            event_id: "event-id-3"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 1000),
@@ -395,7 +411,8 @@ describe("Sync Controller", () => {
           resource_slug: "slug-2",
           resource_content: "content2",
           resource_extension: ".yaml",
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: "event-id-2"
         },
         status: SyncStatuses.APPROVED
       });
@@ -415,7 +432,8 @@ describe("Sync Controller", () => {
             resource_content: "content1",
             created_at: new Date(now.getTime() - 2000),
             resource_extension: ".yaml",
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: "event-id-1"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 2000),
@@ -432,7 +450,8 @@ describe("Sync Controller", () => {
             resource_content: "content2",
             resource_extension: ".yaml",
             initiator: ChangeInitiator.EXTERNAL,
-            created_at: new Date(now.getTime() - 1000)
+            created_at: new Date(now.getTime() - 1000),
+            event_id: "event-id-2"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 1000),
@@ -458,7 +477,8 @@ describe("Sync Controller", () => {
           resource_slug: "slug-2",
           resource_content: "content2",
           resource_extension: ".yaml",
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: "event-id-2"
         },
         status: SyncStatuses.PENDING
       });
@@ -471,7 +491,8 @@ describe("Sync Controller", () => {
           resource_id: "resource1",
           resource_slug: "slug-1",
           resource_content: "content1",
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: "event-id-1"
         },
         status: SyncStatuses.PENDING
       });
@@ -491,7 +512,8 @@ describe("Sync Controller", () => {
             resource_content: "content1",
             resource_extension: ".yaml",
             initiator: ChangeInitiator.EXTERNAL,
-            created_at: new Date(now.getTime() - 2000)
+            created_at: new Date(now.getTime() - 2000),
+            event_id: "event-id-1"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 2000),
@@ -508,7 +530,8 @@ describe("Sync Controller", () => {
             resource_content: "content2",
             resource_extension: ".yaml",
             initiator: ChangeInitiator.EXTERNAL,
-            created_at: new Date(now.getTime() - 1000)
+            created_at: new Date(now.getTime() - 1000),
+            event_id: "event-id-2"
           },
           status: SyncStatuses.PENDING,
           created_at: new Date(now.getTime() - 1000),
@@ -535,7 +558,8 @@ describe("Sync Controller", () => {
           resource_slug: "slug-1",
           resource_content: "content1",
           resource_extension: ".yaml",
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: "event-id-1"
         },
         status: SyncStatuses.PENDING
       });
@@ -554,7 +578,8 @@ describe("Sync Controller", () => {
           resource_content: "external-content",
           resource_extension: ".yaml",
           initiator: ChangeInitiator.EXTERNAL,
-          created_at: new Date(now.getTime() - 2000)
+          created_at: new Date(now.getTime() - 2000),
+          event_id: "event-id-1"
         },
         status: SyncStatuses.PENDING,
         created_at: new Date(now.getTime() - 2000),
@@ -573,7 +598,8 @@ describe("Sync Controller", () => {
           resource_content: "internal-content",
           resource_extension: ".yaml",
           initiator: ChangeInitiator.INTERNAL,
-          created_at: internalSyncCreatedAt
+          created_at: internalSyncCreatedAt,
+          event_id: "event-id-2"
         },
         status: SyncStatuses.PENDING,
         created_at: internalSyncCreatedAt,
@@ -598,7 +624,8 @@ describe("Sync Controller", () => {
           resource_content: "external-content",
           resource_extension: ".yaml",
           initiator: ChangeInitiator.EXTERNAL,
-          created_at: expect.any(String)
+          created_at: expect.any(String),
+          event_id: "event-id-1"
         },
         status: SyncStatuses.PENDING,
         created_at: expect.any(String),
@@ -626,7 +653,8 @@ describe("Sync Controller", () => {
           resource_content: "internal-content",
           resource_extension: ".yaml",
           initiator: ChangeInitiator.INTERNAL,
-          created_at: expect.any(String)
+          created_at: expect.any(String),
+          event_id: "event-id-2"
         },
         status: SyncStatuses.PENDING,
         created_at: expect.any(String),
@@ -656,7 +684,8 @@ describe("Sync Controller", () => {
           resource_content: "external-content",
           resource_extension: ".yaml",
           initiator: ChangeInitiator.EXTERNAL,
-          created_at: expect.any(String)
+          created_at: expect.any(String),
+          event_id: "event-id-1"
         },
         status: SyncStatuses.PENDING,
         created_at: expect.any(String),
@@ -674,7 +703,8 @@ describe("Sync Controller", () => {
           resource_content: "internal-content",
           resource_extension: ".yaml",
           initiator: ChangeInitiator.INTERNAL,
-          created_at: expect.any(String)
+          created_at: expect.any(String),
+          event_id: "event-id-2"
         },
         status: SyncStatuses.PENDING,
         created_at: expect.any(String),
@@ -698,7 +728,8 @@ describe("Sync Controller", () => {
           resource_content: "content",
           resource_extension: ".yaml",
           initiator: ChangeInitiator.EXTERNAL,
-          created_at: new Date()
+          created_at: new Date(),
+          event_id: "event-id"
         },
         status: SyncStatuses.PENDING,
         created_at: new Date(),
