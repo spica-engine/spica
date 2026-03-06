@@ -103,8 +103,8 @@ export class Git implements VersionManager {
 
     const gitInit = async () => {
       await this.git.init();
-      await this.git.addConfig("user.name", "Spica");
-      await this.git.addConfig("user.email", "Spica");
+      await this.git.raw(["config", "--replace-all", "user.name", "Spica"]);
+      await this.git.raw(["config", "--replace-all", "user.email", "Spica"]);
     };
 
     if (jobReducer) {
