@@ -21,7 +21,7 @@ const getChangeLogForSchema = (
   envVar: EnvVar,
   type: ChangeType,
   initiator: ChangeInitiator,
-  changeEventId?: string
+  changeEventId: string
 ): ChangeLog => {
   return {
     module,

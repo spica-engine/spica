@@ -266,12 +266,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.rm(filePath);
   }
 
-  watch(
-    scope: "index" | "dependency" | "tsconfig"
-  ): Observable<{
+  watch(scope: "index" | "dependency" | "tsconfig"): Observable<{
     fn: FunctionWithContent;
     type: "create" | "update" | "delete";
-    change_event_id?: string;
+    change_event_id: string;
   }> {
     let files = [];
 
@@ -308,14 +306,15 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         const dirName = parts[0];
 
         let changeEventId: string;
+        const now = new Date(new Date().setMilliseconds(0)).getTime();
         if (type === "delete") {
-          changeEventId = `unlink-${Date.now()}`;
+          changeEventId = `unlink-${now}`;
         } else {
           try {
             const stats = await fs.promises.stat(filePath);
             changeEventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
           } catch {
-            changeEventId = `stat-err-${Date.now()}`;
+            changeEventId = `stat-err-${now}`;
           }
         }
 

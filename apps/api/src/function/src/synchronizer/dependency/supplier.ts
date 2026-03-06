@@ -23,7 +23,7 @@ const getChangeLogForDeps = (
   fn: Function,
   content: string,
   initiator: ChangeInitiator,
-  changeEventId?: string
+  changeEventId: string
 ): ChangeLog => {
   return {
     module,

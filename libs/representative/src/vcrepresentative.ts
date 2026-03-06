@@ -109,14 +109,15 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         const extension = parts[1].split(".").at(-1);
 
         let changeEventId: string;
+        const now = new Date(new Date().setMilliseconds(0)).getTime();
         if (event === "unlink") {
-          changeEventId = `unlink-${Date.now()}`;
+          changeEventId = `unlink-${now}`;
         } else {
           try {
             const stats = await fs.promises.stat(filePath);
             changeEventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
           } catch {
-            changeEventId = `stat-err-${Date.now()}`;
+            changeEventId = `stat-err-${now}`;
           }
         }
 

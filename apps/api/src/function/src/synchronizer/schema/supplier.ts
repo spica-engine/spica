@@ -21,7 +21,7 @@ const getChangeForSchema = (
   fn: Function,
   type: ChangeType,
   initiator: ChangeInitiator,
-  changeEventId?: string
+  changeEventId: string
 ): ChangeLog => {
   return {
     module,
@@ -49,7 +49,12 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
           .toArray()
           .then(functions => {
             functions.forEach(fn => {
-              const changeLog = getChangeForSchema(fn, ChangeType.CREATE, ChangeInitiator.INTERNAL, fn._id.toString());
+              const changeLog = getChangeForSchema(
+                fn,
+                ChangeType.CREATE,
+                ChangeInitiator.INTERNAL,
+                fn._id.toString()
+              );
               observer.next(changeLog);
             });
           })

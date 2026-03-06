@@ -21,7 +21,7 @@ const getChangeForSchema = (
   policy: Policy,
   changeType: ChangeType,
   initiator: ChangeInitiator,
-  changeEventId?: string
+  changeEventId: string
 ): ChangeLog => {
   return {
     module,

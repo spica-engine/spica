@@ -103,10 +103,6 @@ export class Git implements VersionManager {
 
     const gitInit = async () => {
       await this.git.init();
-      // Use local scope (the default) so the config works in every repository
-      // without requiring extensions.worktreeConfig = true.  Using the
-      // "worktree" scope in a repo that has not enabled that extension causes a
-      // fatal git error which, when left unhandled, leaks into subsequent tests.
       await this.git.addConfig("user.name", "Spica");
       await this.git.addConfig("user.email", "Spica");
     };
