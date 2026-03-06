@@ -21,7 +21,7 @@ const getChangeLogForSchema = (
   envVar: EnvVar,
   type: ChangeType,
   initiator: ChangeInitiator,
-  changeEventId: string
+  eventId: string
 ): ChangeLog => {
   return {
     module,
@@ -34,7 +34,7 @@ const getChangeLogForSchema = (
     resource_extension: fileExtension,
     created_at: new Date(),
     initiator,
-    change_event_id: changeEventId
+    event_id: eventId
   };
 };
 

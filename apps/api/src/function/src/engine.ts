@@ -269,7 +269,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   watch(scope: "index" | "dependency" | "tsconfig"): Observable<{
     fn: FunctionWithContent;
     type: "create" | "update" | "delete";
-    change_event_id: string;
+    event_id: string;
   }> {
     let files = [];
 
@@ -305,16 +305,16 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
         const dirName = parts[0];
 
-        let changeEventId: string;
+        let eventId: string;
         const now = new Date(new Date().setMilliseconds(0)).getTime();
         if (type === "delete") {
-          changeEventId = `unlink-${now}`;
+          eventId = `unlink-${now}`;
         } else {
           try {
             const stats = await fs.promises.stat(filePath);
-            changeEventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
+            eventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
           } catch {
-            changeEventId = `stat-err-${now}`;
+            eventId = `stat-err-${now}`;
           }
         }
 
@@ -337,7 +337,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
         if (!fn) return;
 
-        observer.next({fn: {...fn, content}, type, change_event_id: changeEventId});
+        observer.next({fn: {...fn, content}, type, event_id: eventId});
       };
 
       watcher.on("change", path => handleFileEvent(path, "update"));

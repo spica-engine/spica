@@ -34,8 +34,6 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   }
 
   subscribe(target: event.Target, options: ScheduleOptions): void {
-    // node-schedule passes the exact scheduled fireDate as the first argument,
-    // ensuring all replicas derive the same deterministic timestamp for the same tick
     const job = schedule.scheduleJob(
       {rule: options.frequency, tz: options.timezone},
       (fireDate: Date) => {
@@ -63,14 +61,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     }
   }
 
-  onTickHandler(
-    target: event.Target,
-    options: ScheduleOptions,
-    firedAt?: number,
-    eventId?: string
-  ) {
-    const fireTime = firedAt || new Date(new Date().setMilliseconds(0)).getTime();
-
+  onTickHandler(target: event.Target, options: ScheduleOptions, firedAt: number, eventId?: string) {
     const ev = new event.Event({
       id: eventId || uniqid(),
       target,
@@ -82,7 +73,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     };
 
     const meta = {
-      _id: `${target.cwd}-${target.handler}-${options.frequency}-${options.timezone}-${fireTime}`,
+      _id: `${target.cwd}-${target.handler}-${options.frequency}-${options.timezone}-${firedAt}`,
       cwd: target.cwd,
       handler: target.handler,
       frequency: options.frequency,
@@ -158,7 +149,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
         timeout: target.context.timeout
       })
     });
-
-    return this.onTickHandler(newTarget, options, undefined, eventId);
+    const now = new Date(new Date().setMilliseconds(0)).getTime();
+    return this.onTickHandler(newTarget, options, now, eventId);
   }
 }

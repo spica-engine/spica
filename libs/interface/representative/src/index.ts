@@ -23,5 +23,5 @@ export interface RepresentativeFileEvent {
   content: string;
   extension: string;
   type: ChangeType;
-  change_event_id: string;
+  event_id: string;
 }

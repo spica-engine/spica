@@ -175,7 +175,7 @@ xdescribe("SyncEngine Integration - Function Tsconfig", () => {
         resource_extension: "json",
         created_at: sync.change_log.created_at,
         initiator: ChangeInitiator.EXTERNAL,
-        change_event_id: expect.any(String)
+        event_id: expect.any(String)
       });
       done();
     });
@@ -261,7 +261,7 @@ xdescribe("SyncEngine Integration - Function Tsconfig", () => {
           resource_id: null,
           resource_extension: fileExtension,
           initiator: ChangeInitiator.EXTERNAL,
-          change_event_id: expect.any(String)
+          event_id: expect.any(String)
         }
       });
       done();
@@ -312,7 +312,7 @@ xdescribe("SyncEngine Integration - Function Tsconfig", () => {
           resource_id: null,
           resource_extension: fileExtension,
           initiator: ChangeInitiator.EXTERNAL,
-          change_event_id: expect.any(String)
+          event_id: expect.any(String)
         }
       });
       done();

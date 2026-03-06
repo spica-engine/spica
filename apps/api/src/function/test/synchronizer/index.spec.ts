@@ -146,7 +146,7 @@ describe("Function Index Synchronizer", () => {
             resource_content: indexContent,
             created_at: expect.any(Date),
             initiator: ChangeInitiator.INTERNAL,
-            change_event_id: expect.any(String)
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();
@@ -203,7 +203,7 @@ describe("Function Index Synchronizer", () => {
             resource_content: updatedContent,
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL,
-            change_event_id: expect.any(String)
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();
@@ -257,7 +257,7 @@ describe("Function Index Synchronizer", () => {
             resource_content: null,
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL,
-            change_event_id: expect.any(String)
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();

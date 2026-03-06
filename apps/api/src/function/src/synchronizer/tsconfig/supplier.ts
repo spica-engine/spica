@@ -23,7 +23,7 @@ const getChangeLogForTsconfig = (
   fn: Function,
   content: string,
   initiator: ChangeInitiator,
-  changeEventId: string
+  eventId: string
 ): ChangeLog => {
   return {
     module,
@@ -36,7 +36,7 @@ const getChangeLogForTsconfig = (
     resource_extension: fileExtension,
     created_at: new Date(),
     initiator,
-    change_event_id: changeEventId
+    event_id: eventId
   };
 };
 
@@ -91,7 +91,7 @@ export const getSupplier = (
               change.fn,
               change.fn.content,
               ChangeInitiator.EXTERNAL,
-              change.change_event_id
+              change.event_id
             );
             observer.next(changeLog);
           },

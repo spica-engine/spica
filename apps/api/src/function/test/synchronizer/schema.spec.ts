@@ -147,7 +147,7 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(mockFunction),
         created_at: expect.any(Date),
         initiator: ChangeInitiator.INTERNAL,
-        change_event_id: expect.any(String)
+        event_id: expect.any(String)
       });
     });
 
@@ -183,7 +183,7 @@ describe("Function Synchronizer", () => {
           resource_content: YAML.stringify(mockFunction),
           created_at: expect.any(Date),
           initiator: ChangeInitiator.EXTERNAL,
-          change_event_id: expect.any(String)
+          event_id: expect.any(String)
         });
 
         subs.unsubscribe();
@@ -249,7 +249,7 @@ describe("Function Synchronizer", () => {
             resource_content: YAML.stringify(expectedUpdatedFunction),
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL,
-            change_event_id: expect.any(String)
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();
@@ -298,7 +298,7 @@ describe("Function Synchronizer", () => {
             resource_content: YAML.stringify(functionToDelete),
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL,
-            change_event_id: expect.any(String)
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();

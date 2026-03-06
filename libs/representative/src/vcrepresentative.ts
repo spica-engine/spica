@@ -108,16 +108,16 @@ export class VCRepresentativeManager implements IRepresentativeManager {
 
         const extension = parts[1].split(".").at(-1);
 
-        let changeEventId: string;
+        let eventId: string;
         const now = new Date(new Date().setMilliseconds(0)).getTime();
         if (event === "unlink") {
-          changeEventId = `unlink-${now}`;
+          eventId = `unlink-${now}`;
         } else {
           try {
             const stats = await fs.promises.stat(filePath);
-            changeEventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
+            eventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
           } catch {
-            changeEventId = `stat-err-${now}`;
+            eventId = `stat-err-${now}`;
           }
         }
 
@@ -130,7 +130,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
               slug: parts[0],
               extension,
               type: ChangeType.CREATE,
-              change_event_id: changeEventId
+              event_id: eventId
             };
             break;
 
@@ -140,7 +140,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
               slug: parts[0],
               extension,
               type: ChangeType.UPDATE,
-              change_event_id: changeEventId
+              event_id: eventId
             };
             break;
 
@@ -150,7 +150,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
               slug: parts[0],
               extension,
               type: ChangeType.DELETE,
-              change_event_id: changeEventId
+              event_id: eventId
             };
             break;
 

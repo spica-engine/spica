@@ -155,7 +155,7 @@ xdescribe("SyncEngine Integration - Function", () => {
         resource_extension: "yaml",
         created_at: sync.change_log.created_at,
         initiator: ChangeInitiator.EXTERNAL,
-        change_event_id: expect.any(String)
+        event_id: expect.any(String)
       });
       subs.unsubscribe();
       done();
@@ -260,7 +260,7 @@ xdescribe("SyncEngine Integration - Function", () => {
         resource_extension: fileExtension,
         created_at: sync.change_log.created_at,
         initiator: ChangeInitiator.EXTERNAL,
-        change_event_id: expect.any(String)
+        event_id: expect.any(String)
       });
       expect(sync.status).toBe(SyncStatuses.PENDING);
       syncSub.unsubscribe();
