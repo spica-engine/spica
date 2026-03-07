@@ -172,9 +172,9 @@ export class GraphqlController implements OnModuleInit {
     app.use(
       "/graphql",
       graphqlHTTP(async (request, response, gqlParams) => {
-        await this.authorize(request, response);
+        await this.authenticate(request, response);
 
-        await this.authenticate(request, "/bucket", {}, ["bucket:index"], {
+        await this.authorize(request, "/bucket", {}, ["bucket:index"], {
           resourceFilter: true
         });
 
@@ -241,7 +241,7 @@ export class GraphqlController implements OnModuleInit {
       context: any,
       info: GraphQLResolveInfo
     ): Promise<FindResponse> => {
-      const resourceFilter = await this.authenticate(
+      const resourceFilter = await this.authorize(
         context,
         "/bucket/:bucketId/data",
         {bucketId: bucket._id},
@@ -294,7 +294,7 @@ export class GraphqlController implements OnModuleInit {
       context: any,
       info: GraphQLResolveInfo
     ): Promise<BucketDocument> => {
-      await this.authenticate(
+      await this.authorize(
         context,
         "/bucket/:bucketId/data",
         {bucketId: bucket._id},
@@ -336,7 +336,7 @@ export class GraphqlController implements OnModuleInit {
       context: any,
       info: GraphQLResolveInfo
     ): Promise<BucketDocument> => {
-      await this.authenticate(
+      await this.authorize(
         context,
         "/bucket/:bucketId/data",
         {bucketId: bucket._id},
@@ -358,6 +358,7 @@ export class GraphqlController implements OnModuleInit {
             await deleteFn(root, {_id: documentId}, context, info);
           }
         },
+        this.hashSecret,
         this.encryptionSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
       if (!insertedDocument) {
@@ -418,7 +419,7 @@ export class GraphqlController implements OnModuleInit {
       context: any,
       info: GraphQLResolveInfo
     ): Promise<BucketDocument> => {
-      await this.authenticate(
+      await this.authorize(
         context,
         "/bucket/:bucketId/data",
         {bucketId: bucket._id},
@@ -437,6 +438,7 @@ export class GraphqlController implements OnModuleInit {
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
         undefined,
+        this.hashSecret,
         this.encryptionSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
@@ -504,7 +506,7 @@ export class GraphqlController implements OnModuleInit {
       context: any,
       info: GraphQLResolveInfo
     ) => {
-      await this.authenticate(
+      await this.authorize(
         context,
         "/bucket/:bucketId/data",
         {bucketId: bucket._id},
@@ -538,6 +540,7 @@ export class GraphqlController implements OnModuleInit {
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
         {returnDocument: ReturnDocument.AFTER},
+        this.hashSecret,
         this.encryptionSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
@@ -604,7 +607,7 @@ export class GraphqlController implements OnModuleInit {
       info: GraphQLResolveInfo
     ): Promise<string> => {
       if (authentication) {
-        await this.authenticate(
+        await this.authorize(
           context,
           "/bucket/:bucketId/data",
           {bucketId: bucket._id},
@@ -621,6 +624,7 @@ export class GraphqlController implements OnModuleInit {
           collection: schema => this.bds.children(schema),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
+        this.hashSecret,
         this.encryptionSecret
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
@@ -694,9 +698,9 @@ export class GraphqlController implements OnModuleInit {
     return pipe.transform(input);
   }
 
-  async authorize(req: any, res: any) {
+  async authenticate(req: any, res: any) {
     await this.guardService
-      .checkAuthorization({
+      .checkAuthentication({
         request: req,
         response: res
       })
@@ -705,7 +709,7 @@ export class GraphqlController implements OnModuleInit {
       });
   }
 
-  async authenticate(
+  async authorize(
     req: any,
     path: string,
     params: object,
@@ -717,7 +721,7 @@ export class GraphqlController implements OnModuleInit {
     };
     req.params = params;
     await this.guardService
-      .checkAction({
+      .checkAuthorization({
         request: req,
         response: {},
         actions: actions,

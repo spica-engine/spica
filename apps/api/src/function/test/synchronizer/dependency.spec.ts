@@ -16,6 +16,7 @@ import {
 import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {SecretService} from "@spica-server/secret/services";
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -26,6 +27,7 @@ describe("Function Dependency Synchronizer", () => {
   let engine: FunctionEngine;
   let database: DatabaseService;
   let evs: EnvVarService;
+  let ss: SecretService;
   let scheduler: Scheduler;
   let module;
 
@@ -57,7 +59,8 @@ describe("Function Dependency Synchronizer", () => {
 
     database = module.get(DatabaseService);
     evs = new EnvVarService(database);
-    functionService = new FunctionService(database, evs, {entryLimit: 100} as any);
+    ss = new SecretService(database, "test-encryption-secret");
+    functionService = new FunctionService(database, evs, ss, {entryLimit: 100} as any);
     scheduler = module.get(Scheduler);
 
     engine = new FunctionEngine(
@@ -71,7 +74,8 @@ describe("Function Dependency Synchronizer", () => {
         outDir: ".build"
       },
       undefined,
-      undefined
+      undefined,
+      val => val as any
     );
   });
 
@@ -135,7 +139,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_extension: "json",
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.INTERNAL
+            initiator: ChangeInitiator.INTERNAL,
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();
@@ -188,7 +193,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_extension: "json",
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();
@@ -248,7 +254,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_content: changeLog.resource_content,
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();
@@ -295,7 +302,8 @@ describe("Function Dependency Synchronizer", () => {
             resource_extension: "json",
             resource_content: null,
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();
@@ -364,7 +372,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_content: packageContent,
         created_at: new Date(),
         resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -421,7 +430,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_content: updatedPackage,
         created_at: new Date(),
         resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -472,7 +482,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_content: null,
         created_at: new Date(),
         resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dependencyApplier.apply(changeLog);
@@ -504,7 +515,8 @@ describe("Function Dependency Synchronizer", () => {
         resource_content: JSON.stringify({name: "test", version: "1.0.0"}),
         created_at: new Date(),
         resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await dependencyApplier.apply(changeLog);

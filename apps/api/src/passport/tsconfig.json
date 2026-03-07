@@ -9,6 +9,6 @@
     {"path": "./refresh_token"},
     {"path": "../../../../libs/interface/passport"},
     {"path": "./user"},
-    {"path": "./password-policy"}
+    {"path": "./policy"}
   ]
 }

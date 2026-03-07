@@ -1,10 +1,12 @@
-import {Injectable, NotFoundException, BadRequestException} from "@nestjs/common";
+import {Injectable, NotFoundException, BadRequestException, Logger} from "@nestjs/common";
 import {UserService} from "../user.service";
 import {VerificationService} from "../verification.service";
 import {UserConfigService} from "../config.service";
 
 @Injectable()
 export class PasswordlessLoginService {
+  private readonly logger = new Logger(PasswordlessLoginService.name);
+
   constructor(
     private readonly verificationService: VerificationService,
     private readonly userConfigService: UserConfigService,
@@ -34,9 +36,9 @@ export class PasswordlessLoginService {
         metadata: sendResult.metadata
       };
     } catch (error) {
-      console.error(
+      this.logger.error(
         `Error starting passwordless verification via ${providerConfig.provider}:`,
-        error
+        error instanceof Error ? error.stack : String(error)
       );
       throw new BadRequestException("Failed to send verification code");
     }
@@ -65,13 +67,14 @@ export class PasswordlessLoginService {
       const accessToken = this.userService.sign(user);
 
       return {
-        token: accessToken.token,
-        scheme: accessToken.scheme,
-        issuer: accessToken.issuer,
-        refreshToken: refreshToken.token
+        accessToken,
+        refreshToken
       };
     } catch (error) {
-      console.error("Error verifying passwordless login", error);
+      this.logger.error(
+        "Error verifying passwordless login",
+        error instanceof Error ? error.stack : String(error)
+      );
       throw new BadRequestException("Failed to complete passwordless login. Please try again.");
     }
   }

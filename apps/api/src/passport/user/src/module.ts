@@ -37,17 +37,63 @@ import {UserConfigService} from "./config.service";
 import {ProviderVerificationService} from "./services/provider.verification.service";
 import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
-import {ConfigService} from "@spica-server/config";
-import {providePasswordPolicySchemaResolver} from "@spica-server/passport/password-policy";
+import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
+import {provideUserPasswordPolicySchemaResolver} from "./password-policy.schema.resolver";
 
 @Global()
 @Module({})
 export class UserModule {
   constructor(
     @Inject(USER_OPTIONS) options: UserOptions,
-    private userService: UserService
+    private userService: UserService,
+    @Optional()
+    @Inject(REGISTER_CONFIG_SCHEMA)
+    registerConfigSchema: RegisterConfigSchema
   ) {
     registerStatusProvider(userService);
+    if (registerConfigSchema) {
+      registerConfigSchema("user", {
+        type: "object",
+        properties: {
+          verificationProcessMaxAttempt: {type: "number"},
+          passwordlessLogin: {
+            type: "object",
+            properties: {
+              passwordlessLoginProvider: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    provider: {type: "string", enum: ["email", "phone"]},
+                    strategy: {type: "string"}
+                  }
+                }
+              }
+            }
+          },
+          resetPasswordProvider: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                provider: {type: "string", enum: ["email", "phone"]},
+                strategy: {type: "string"}
+              }
+            }
+          },
+          providerVerificationConfig: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                provider: {type: "string", enum: ["email", "phone"]},
+                strategy: {type: "string", enum: ["Otp", "MagicLink"]}
+              }
+            }
+          }
+        }
+      });
+    }
   }
 
   static forRoot(options: UserOptions): DynamicModule {
@@ -94,7 +140,6 @@ export class UserModule {
         VerificationProviderRegistry,
         ProviderVerificationService,
         PasswordResetService,
-        UserConfigService,
         {
           provide: USER_OPTIONS,
           useValue: options
@@ -134,23 +179,14 @@ export class UserModule {
         },
         {
           provide: "USER_PASSWORD_POLICY_RESOLVER",
-          useFactory: (validator: Validator, configService: ConfigService) => {
-            return providePasswordPolicySchemaResolver(validator, configService, {
-              "http://spica.internal/passport/user-create": {
-                baseSchema: userCreateSchema,
-                configKey: "user"
-              },
-              "http://spica.internal/passport/user-update": {
-                baseSchema: userUpdateSchema,
-                configKey: "user"
-              },
-              "http://spica.internal/passport/user-self-update": {
-                baseSchema: userSelfUpdateSchema,
-                configKey: "user"
-              }
+          useFactory: (validator: Validator, configService: UserConfigService) => {
+            return provideUserPasswordPolicySchemaResolver(validator, configService, {
+              "http://spica.internal/passport/user-create": userCreateSchema,
+              "http://spica.internal/passport/user-update": userUpdateSchema,
+              "http://spica.internal/passport/user-self-update": userSelfUpdateSchema
             });
           },
-          inject: [Validator, ConfigService]
+          inject: [Validator, UserConfigService]
         }
       ]
     };

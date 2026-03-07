@@ -9,6 +9,7 @@ import {
   Put,
   Query,
   Req,
+  Res,
   UseGuards,
   UseInterceptors,
   HttpStatus,
@@ -552,15 +553,24 @@ export class UserController {
   }
 
   @Post("passwordless-login/verify")
-  verifyPasswordlessLogin(
+  async verifyPasswordlessLogin(
     @Body(Schema.validate("http://spica.internal/passport/passwordless-login-verify"))
     body: {
       username: string;
       code: string;
       provider: "email" | "phone";
-    }
+    },
+    @Res() res: any
   ) {
-    return this.passwordlessLoginService.verify(body.username, body.code, body.provider);
+    const {accessToken, refreshToken} = await this.passwordlessLoginService.verify(
+      body.username,
+      body.code,
+      body.provider
+    );
+
+    const cookiePath = "passport/user/session/refresh";
+    res.cookie("refreshToken", refreshToken.token, this.userService.getCookieOptions(cookiePath));
+    return res.status(HttpStatus.CREATED).json(accessToken);
   }
   @Post("forgot-password/start")
   async startForgotPassword(

@@ -7,6 +7,8 @@ import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {TargetChange, ChangeKind} from "@spica-server/interface/function";
+import {SecretService} from "@spica-server/secret/services";
+import {encrypt} from "@spica-server/core/encryption";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
@@ -18,6 +20,7 @@ describe("Engine", () => {
   let database: DatabaseService;
   let fs: FunctionService;
   let evs: EnvVarService;
+  let ss: SecretService;
 
   let module: TestingModule;
   let app: INestApplication;
@@ -56,7 +59,9 @@ describe("Engine", () => {
     database = module.get(DatabaseService);
 
     evs = new EnvVarService(database);
-    fs = new FunctionService(database, evs, {} as any);
+    ss = new SecretService(database, "test-encryption-secret");
+
+    fs = new FunctionService(database, evs, ss, {} as any);
     engine = new FunctionEngine(
       fs,
       database,
@@ -68,7 +73,8 @@ describe("Engine", () => {
         outDir: ".build"
       },
       undefined,
-      undefined
+      undefined,
+      val => val as any
     );
 
     await app.init();
@@ -317,6 +323,87 @@ describe("Engine", () => {
 
     const fn = await fs.findOne({_id: fnId});
     expect(fn.env_vars).toEqual([]);
+  });
+
+  it("should reload function secrets when secret changed", async () => {
+    const encryptionSecret = "test-encryption-secret";
+    const encryptedValue = encrypt("secret_value", encryptionSecret);
+    const secret = await ss.insertOne({
+      _id: undefined,
+      key: "DB_PASSWORD",
+      value: encryptedValue
+    });
+    const fnId = new ObjectId(hexString);
+    await fs.insertOne({
+      _id: fnId,
+      env_vars: [],
+      secrets: [secret._id],
+      language: "js",
+      timeout: 10,
+      name: "my_fn",
+      triggers: {test_handler: {active: true, options: {}, type: "http"}}
+    });
+
+    const newEncryptedValue = encrypt("new_secret_value", encryptionSecret);
+    await ss.findOneAndUpdate({_id: secret._id}, {$set: {value: newEncryptedValue}});
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
+    expect(subscribeSpy).toHaveBeenCalledTimes(1);
+
+    const subscribedChange = subscribeSpy.mock.calls[0][0];
+    expect(subscribedChange.kind).toBe(ChangeKind.Updated);
+    expect(subscribedChange.target.id).toBe(hexString);
+    expect(subscribedChange.target.handler).toBe("test_handler");
+    expect(subscribedChange.target.context.env).toHaveProperty("DB_PASSWORD");
+  });
+
+  it("should reload function secrets and clear relation when secret removed", async () => {
+    const encryptionSecret = "test-encryption-secret";
+    const encryptedValue = encrypt("secret_value", encryptionSecret);
+    const secret = await ss.insertOne({
+      _id: undefined,
+      key: "REMOVED_SECRET",
+      value: encryptedValue
+    });
+    const fnId = new ObjectId(hexString);
+    await fs.insertOne({
+      _id: fnId,
+      env_vars: [],
+      secrets: [secret._id],
+      language: "js",
+      timeout: 10,
+      name: "my_fn",
+      triggers: {test_handler: {active: true, options: {}, type: "http"}}
+    });
+
+    await ss.findOneAndDelete({_id: secret._id});
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const change = {
+      kind: ChangeKind.Updated,
+      target: {
+        id: hexString,
+        handler: "test_handler",
+        name: "my_fn",
+        context: {
+          env: {},
+          timeout: 10
+        }
+      },
+      options: {},
+      type: "http"
+    };
+    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
+    expect(unsubscribeSpy).toHaveBeenCalledWith(change);
+
+    expect(subscribeSpy).toHaveBeenCalledTimes(1);
+    expect(subscribeSpy).toHaveBeenCalledWith(change);
+
+    const fn = await fs.findOne({_id: fnId});
+    expect(fn.secrets).toEqual([]);
   });
 
   it("should get initial schema for database trigger", async () => {

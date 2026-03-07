@@ -54,19 +54,19 @@ describe("BucketDataController", () => {
         name: {
           type: "string",
           title: "Name of the person",
-          options: {position: "left"},
+          options: {},
           maxLength: 20,
           minLength: 3
         },
         age: {
           type: "number",
           title: "Age of the person",
-          options: {position: "right"}
+          options: {}
         },
         created_at: {
           type: "date",
           title: "Creation Timestamp",
-          options: {position: "bottom"}
+          options: {}
         }
       }
     };

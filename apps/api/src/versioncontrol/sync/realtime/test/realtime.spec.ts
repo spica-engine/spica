@@ -48,7 +48,8 @@ describe("Sync Realtime", () => {
         resource_id: `resource-${idSuffix}`,
         resource_slug: `slug-${idSuffix}`,
         resource_extension: "json",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: `event-${idSuffix}`
       },
       created_at: new Date(),
       status: status,
@@ -124,9 +125,9 @@ describe("Sync Realtime", () => {
 
     beforeEach(() => {
       const guardService = app.get(GuardService);
-      authGuardCheck = jest.spyOn(guardService, "checkAuthorization");
+      authGuardCheck = jest.spyOn(guardService, "checkAuthentication");
       actionGuardCheck = jest
-        .spyOn(guardService, "checkAction")
+        .spyOn(guardService, "checkAuthorization")
         .mockImplementation(({request}: {request: any}) => {
           request.resourceFilter = {include: [], exclude: []};
           return Promise.resolve(true);

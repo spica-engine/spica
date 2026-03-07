@@ -22,6 +22,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
+import {Validator} from "@spica-server/core/schema";
 
 xdescribe("SyncEngine Integration - EnvVar", () => {
   let module: TestingModule;
@@ -50,10 +51,11 @@ xdescribe("SyncEngine Integration - EnvVar", () => {
     repManager = module.get(VC_REPRESENTATIVE_MANAGER);
 
     envVarService = module.get(EnvVarService);
+    const validator = module.get(Validator);
 
     syncEngine.registerChangeHandler(
       getEnvVarSupplier(envVarService),
-      getEnvVarApplier(envVarService)
+      getEnvVarApplier(envVarService, validator)
     );
   });
 
@@ -90,7 +92,8 @@ xdescribe("SyncEngine Integration - EnvVar", () => {
         resource_content: YAML.stringify(testEnvVar),
         resource_extension: "yaml",
         created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: expect.any(String)
       });
       subs.unsubscribe();
       done();
@@ -155,7 +158,8 @@ xdescribe("SyncEngine Integration - EnvVar", () => {
         resource_content: envVarYaml,
         resource_extension: fileExtension,
         created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: expect.any(String)
       });
       expect(sync.status).toBe(SyncStatuses.PENDING);
       syncSub.unsubscribe();

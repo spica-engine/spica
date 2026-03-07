@@ -15,6 +15,7 @@ import {
 import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {SecretService} from "@spica-server/secret/services/src/service";
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -70,7 +71,8 @@ describe("Function tsconfig Synchronizer", () => {
 
     database = module.get(DatabaseService);
     evs = new EnvVarService(database);
-    functionService = new FunctionService(database, evs, {entryLimit: 100} as any);
+    const ss = new SecretService(database, "test-encryption-secret-32chars!!");
+    functionService = new FunctionService(database, evs, ss, {entryLimit: 100} as any);
     scheduler = module.get(Scheduler);
 
     engine = new FunctionEngine(
@@ -84,7 +86,8 @@ describe("Function tsconfig Synchronizer", () => {
         outDir: ".build"
       },
       undefined,
-      undefined
+      undefined,
+      val => val as any
     );
   });
 
@@ -150,7 +153,8 @@ describe("Function tsconfig Synchronizer", () => {
             resource_content: changeLog.resource_content,
             resource_extension: "json",
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.INTERNAL
+            initiator: ChangeInitiator.INTERNAL,
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();
@@ -191,7 +195,8 @@ describe("Function tsconfig Synchronizer", () => {
           resource_content: changeLog.resource_content,
           resource_extension: "json",
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
         subs.unsubscribe();
         done();
@@ -247,7 +252,8 @@ describe("Function tsconfig Synchronizer", () => {
               resource_extension: "json",
               resource_slug: mockFunction.name,
               created_at: expect.any(Date),
-              initiator: ChangeInitiator.EXTERNAL
+              initiator: ChangeInitiator.EXTERNAL,
+              event_id: expect.any(String)
             });
 
             subs.unsubscribe();
@@ -325,7 +331,8 @@ describe("Function tsconfig Synchronizer", () => {
         }),
         resource_extension: "json",
         created_at: new Date(),
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await tsconfigApplier.apply(changeLog);

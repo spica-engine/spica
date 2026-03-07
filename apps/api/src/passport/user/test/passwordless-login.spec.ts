@@ -283,14 +283,18 @@ describe("Passwordless Login", () => {
       const result = await passwordlessService.verify(username, verificationCode, "email");
 
       expect(result).toMatchObject({
-        token: expect.any(String),
-        scheme: "USER",
-        issuer: "passport/user",
-        refreshToken: expect.any(String)
+        accessToken: {
+          token: expect.any(String),
+          scheme: "USER",
+          issuer: "passport/user"
+        },
+        refreshToken: {
+          token: expect.any(String)
+        }
       });
 
-      expect(result.token).toBeTruthy();
-      expect(result.refreshToken).toBeTruthy();
+      expect(result.accessToken.token).toBeTruthy();
+      expect(result.refreshToken.token).toBeTruthy();
     });
 
     it("should throw error for invalid verification code", async () => {
@@ -374,10 +378,14 @@ describe("Passwordless Login", () => {
       const result = await passwordlessService.verify(username, verificationCode, "phone");
 
       expect(result).toMatchObject({
-        token: expect.any(String),
-        scheme: "USER",
-        issuer: "passport/user",
-        refreshToken: expect.any(String)
+        accessToken: {
+          token: expect.any(String),
+          scheme: "USER",
+          issuer: "passport/user"
+        },
+        refreshToken: {
+          token: expect.any(String)
+        }
       });
     });
   });

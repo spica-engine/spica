@@ -24,6 +24,9 @@
       "path": "./src/env_var"
     },
     {
+      "path": "./src/secret"
+    },
+    {
       "path": "./src/preference"
     },
     {

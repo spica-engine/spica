@@ -4,6 +4,7 @@ export * from "./src/relation";
 export * from "./src/exception";
 export * from "./src/locale";
 export * from "./src/activity.resource";
-export * from "./src/filter";
+export * from "./src/json.filter";
+export * from "./src/expression.filter";
 export * from "./src/schema";
 export * from "./src/decrypt";

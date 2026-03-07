@@ -9,6 +9,9 @@ import {
   ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {Function} from "@spica-server/interface/function";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("FunctionSyncSupplier");
 
 const module = "function";
 const subModule = "schema";
@@ -17,7 +20,8 @@ const fileExtension = "yaml";
 const getChangeForSchema = (
   fn: Function,
   type: ChangeType,
-  initiator: ChangeInitiator
+  initiator: ChangeInitiator,
+  eventId: string
 ): ChangeLog => {
   return {
     module,
@@ -29,7 +33,8 @@ const getChangeForSchema = (
     resource_content: YAML.stringify(fn),
     resource_extension: fileExtension,
     created_at: new Date(),
-    initiator
+    initiator,
+    event_id: eventId
   };
 };
 
@@ -44,12 +49,20 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
           .toArray()
           .then(functions => {
             functions.forEach(fn => {
-              const changeLog = getChangeForSchema(fn, ChangeType.CREATE, ChangeInitiator.INTERNAL);
+              const changeLog = getChangeForSchema(
+                fn,
+                ChangeType.CREATE,
+                ChangeInitiator.INTERNAL,
+                fn._id.toString()
+              );
               observer.next(changeLog);
             });
           })
           .catch(error => {
-            console.error("Error propagating existing functions:", error);
+            logger.error(
+              "Error propagating existing functions:",
+              error instanceof Error ? error.stack : String(error)
+            );
           });
 
         const subs = fs
@@ -78,14 +91,15 @@ export const getSupplier = (fs: FunctionService): DocumentChangeSupplier => {
                   documentData = change["fullDocumentBeforeChange"];
                   break;
                 default:
-                  console.warn("Unknown operation type:", change.operationType);
+                  logger.warn(`Unknown operation type: ${change.operationType}`);
                   return;
               }
 
               const changeLog = getChangeForSchema(
                 documentData,
                 changeType,
-                ChangeInitiator.EXTERNAL
+                ChangeInitiator.EXTERNAL,
+                JSON.stringify(change._id)
               );
               observer.next(changeLog);
             },

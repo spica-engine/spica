@@ -27,9 +27,7 @@ describe("BucketDataController profiler", () => {
     properties: {
       name: {
         type: "string",
-        options: {
-          position: "right"
-        }
+        options: {}
       }
     }
   };
@@ -41,9 +39,7 @@ describe("BucketDataController profiler", () => {
     properties: {
       name: {
         type: "string",
-        options: {
-          position: "right"
-        }
+        options: {}
       }
     }
   };

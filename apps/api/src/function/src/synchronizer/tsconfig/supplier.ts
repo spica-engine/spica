@@ -10,6 +10,9 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../../../src/crud";
 import {Function} from "@spica-server/interface/function";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("FunctionTsconfigSyncSupplier");
 
 const module = "function";
 const subModule = "tsconfig";
@@ -19,7 +22,8 @@ const getChangeLogForTsconfig = (
   type: ChangeType,
   fn: Function,
   content: string,
-  initiator: ChangeInitiator
+  initiator: ChangeInitiator,
+  eventId: string
 ): ChangeLog => {
   return {
     module,
@@ -31,7 +35,8 @@ const getChangeLogForTsconfig = (
     resource_content: content,
     resource_extension: fileExtension,
     created_at: new Date(),
-    initiator
+    initiator,
+    event_id: eventId
   };
 };
 
@@ -49,21 +54,22 @@ export const getSupplier = (
             language: "typescript"
           }
         }).then(functions => {
-          try {
-            functions.map(async fn => {
+          functions.forEach(async fn => {
+            try {
               const content = await engine.read(fn, "tsconfig");
               const changelog = getChangeLogForTsconfig(
                 ChangeType.CREATE,
                 fn,
                 content,
-                ChangeInitiator.INTERNAL
+                ChangeInitiator.INTERNAL,
+                fn._id.toString()
               );
               observer.next(changelog);
-            });
-          } catch (error) {
-            observer.error(error);
-            return;
-          }
+            } catch (error) {
+              observer.error(`Error on fn ${fn._id} tsconfig read: ${error}`);
+              return;
+            }
+          });
         });
 
         const subscription = engine.watch("tsconfig").subscribe({
@@ -76,7 +82,7 @@ export const getSupplier = (
             const type = changeMap[change.type];
 
             if (!Object.values(ChangeType).includes(type)) {
-              console.warn("Unknown change type:", change.type);
+              logger.warn(`Unknown change type: ${change.type}`);
               return;
             }
 
@@ -84,7 +90,8 @@ export const getSupplier = (
               type,
               change.fn,
               change.fn.content,
-              ChangeInitiator.EXTERNAL
+              ChangeInitiator.EXTERNAL,
+              change.event_id
             );
             observer.next(changeLog);
           },

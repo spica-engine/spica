@@ -3,7 +3,8 @@ import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {OBJECT_ID, OBJECTID_STRING} from "@spica-server/core/schema/formats";
 import {getApplier, getSupplier} from "../../src/synchronizer/schema/index";
 import {
   ChangeInitiator,
@@ -17,19 +18,21 @@ import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
 import {skip} from "rxjs/operators";
 import {firstValueFrom} from "rxjs";
+import BucketSchema from "../../src/schemas/bucket.schema.json" with {type: "json"};
 
 describe("Bucket Synchronizer", () => {
   let module: TestingModule;
   let bs: BucketService;
   let bds: BucketDataService;
   let history: HistoryService;
+  let validator: Validator;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
-        SchemaModule.forChild()
+        SchemaModule.forChild({schemas: [BucketSchema], formats: [OBJECT_ID, OBJECTID_STRING]})
       ],
       providers: [BucketService, BucketDataService, HistoryService]
     }).compile();
@@ -37,6 +40,7 @@ describe("Bucket Synchronizer", () => {
     bs = module.get(BucketService);
     bds = module.get(BucketDataService);
     history = module.get(HistoryService);
+    validator = module.get(Validator);
   });
 
   afterEach(async () => {
@@ -88,7 +92,8 @@ describe("Bucket Synchronizer", () => {
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockBucket),
         created_at: expect.any(Date),
-        initiator: ChangeInitiator.INTERNAL
+        initiator: ChangeInitiator.INTERNAL,
+        event_id: expect.any(String)
       });
     });
 
@@ -122,7 +127,8 @@ describe("Bucket Synchronizer", () => {
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockBucket),
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
 
         done();
@@ -181,7 +187,8 @@ describe("Bucket Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(expectedUpdatedBucket),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           done();
         }
@@ -222,7 +229,8 @@ describe("Bucket Synchronizer", () => {
             resource_extension: "yaml",
             resource_slug: "Bucket To Delete",
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           done();
         }
@@ -238,7 +246,7 @@ describe("Bucket Synchronizer", () => {
     let bucketApplier;
 
     beforeEach(() => {
-      bucketApplier = getApplier(bs, bds, history);
+      bucketApplier = getApplier(bs, bds, history, validator);
     });
 
     it("should return Change Applier with correct metadata", () => {
@@ -280,7 +288,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: YAML.stringify(mockBucket),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -297,6 +306,8 @@ describe("Bucket Synchronizer", () => {
         icon: "new-icon",
         primary: "title",
         readOnly: false,
+        history: false,
+        indexes: [],
         acl: {
           read: "true==true",
           write: "true==true"
@@ -352,7 +363,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: YAML.stringify(updatedBucket),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -369,6 +381,8 @@ describe("Bucket Synchronizer", () => {
         icon: "updated-icon",
         primary: "title",
         readOnly: false,
+        history: false,
+        indexes: [],
         acl: {
           read: "true==true",
           write: "true==true"
@@ -409,7 +423,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -433,7 +448,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -455,7 +471,8 @@ describe("Bucket Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await bucketApplier.apply(changeLog);
@@ -464,6 +481,71 @@ describe("Bucket Synchronizer", () => {
         status: SyncStatuses.FAILED
       });
       expect(result.reason).toBeDefined();
+    });
+
+    it("should reject bucket if no properties are defined", async () => {
+      const invalidBucket = {
+        _id: new ObjectId(),
+        title: "An Invalid Bucket",
+        description: "An invalid bucket",
+        icon: "bucket",
+        primary: "title",
+        readOnly: false,
+        acl: {read: "true==true", write: "true==true"}
+      };
+
+      const changeLog: ChangeLog = {
+        module: "bucket",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: invalidBucket._id.toString(),
+        resource_slug: "Invalid Bucket",
+        resource_content: YAML.stringify(invalidBucket),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await bucketApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should allow bucket with custom property types", async () => {
+      const validBucket: any = {
+        _id: new ObjectId(),
+        title: "Valid Bucket",
+        description: "A valid bucket",
+        icon: "bucket",
+        primary: "title",
+        readOnly: false,
+        acl: {read: "true==true", write: "true==true"},
+        properties: {
+          title: {type: "string", options: {}},
+          count: {type: "number", options: {}}
+        }
+      };
+
+      const changeLog: ChangeLog = {
+        module: "bucket",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: validBucket._id.toString(),
+        resource_slug: "Valid Bucket",
+        resource_content: YAML.stringify(validBucket),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await bucketApplier.apply(changeLog);
+
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
     });
   });
 });

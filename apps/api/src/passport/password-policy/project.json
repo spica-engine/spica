@@ -1,5 +1,0 @@
-{
-  "name": "api/passport/password-policy",
-  "sourceRoot": "apps/api/src/passport/password-policy",
-  "projectType": "application"
-}

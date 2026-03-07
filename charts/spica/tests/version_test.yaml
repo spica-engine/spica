@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: version configmap
+templates:
+  - templates/version.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.bucketDataHashSecret: test-hash
+  application.bucketDataEncryptionSecret: test-enc
+  application.userVerificationHashSecret: test-verify
+  application.userProviderEncryptionSecret: test-prov-enc
+  application.userProviderHashSecret: test-prov-hash
+  application.publicHost: https://test.example.com
+
+tests:
+  - it: should render a single ConfigMap
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+
+  - it: should be named after the release
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-version
+
+  - it: should have a VERSION key in data
+    asserts:
+      - isNotEmpty:
+          path: data.VERSION
+
+  - it: should carry standard Kubernetes labels
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: release-name
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: helm
