@@ -11,6 +11,7 @@ export function getConnectionHandlers(
   realtime: RealtimeDatabaseService,
   resourceFilterFunction?: ResourceFilterFunction,
   authAction?: string,
+  transformChunk?: (data: any, req: any) => any,
   documentTransformFactory?: (
     client: any,
     req: any
@@ -77,7 +78,8 @@ export function getConnectionHandlers(
 
     stream.pipe(takeUntil(fromEvent(client, "close"))).subscribe(data => {
       if (data !== null) {
-        client.send(JSON.stringify(data));
+        const chunk = transformChunk ? transformChunk(data, req) : data;
+        client.send(JSON.stringify(chunk));
       }
     });
   }
