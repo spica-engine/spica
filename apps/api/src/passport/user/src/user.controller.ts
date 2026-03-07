@@ -174,10 +174,10 @@ export class UserController {
     ).result();
 
     if (paginate) {
-      const r = await this.userService.aggregate<PaginationResponse<User>>(pipeline).next();
+      const paginatedResult = await this.userService.aggregate<PaginationResponse<User>>(pipeline).next();
       return {
-        meta: r.data.length ? r.meta : {total: 0},
-        data: r.data.map(user => this.userService.decryptProviderFields(user))
+        meta: paginatedResult.data.length ? paginatedResult.meta : {total: 0},
+        data: paginatedResult.data.map(user => this.userService.decryptProviderFields(user))
       };
     }
 
