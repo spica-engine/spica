@@ -158,7 +158,8 @@ xdescribe("SyncEngine Integration - Function Index", () => {
           resource_content: indexContent,
           resource_extension: "js",
           created_at: sync.change_log.created_at,
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
         done();
       });
@@ -213,7 +214,8 @@ xdescribe("SyncEngine Integration - Function Index", () => {
           resource_content: indexContent,
           resource_extension: "mjs",
           created_at: sync.change_log.created_at,
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
         syncSub.unsubscribe();
         done();

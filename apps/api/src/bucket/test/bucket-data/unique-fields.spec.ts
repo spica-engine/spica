@@ -51,15 +51,11 @@ describe("BucketDataController", () => {
         properties: {
           title: {
             type: "string",
-            options: {
-              position: "right"
-            }
+            options: {}
           },
           description: {
             type: "string",
-            options: {
-              position: "right"
-            }
+            options: {}
           }
         },
         indexes: [

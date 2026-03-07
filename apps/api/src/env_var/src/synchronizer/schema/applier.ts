@@ -9,12 +9,22 @@ import {
   SyncStatuses,
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
+import {Schema, Validator} from "@spica-server/core/schema";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("EnvVarSyncApplier");
 
 const module = "env-var";
 const subModule = "schema";
 const fileExtension = "yaml";
 
-export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
+function validate(envVar: EnvVar, validator: Validator): Promise<void> {
+  const validatorMixin = Schema.validate("http://spica.internal/env_var");
+  const pipe: any = new validatorMixin(validator);
+  return pipe.transform(envVar);
+}
+
+export const getApplier = (evs: EnvVarService, validator: Validator): DocumentChangeApplier => {
   const findEnvVarByKey = async (key: string) => {
     const envVar = await evs.findOne({key});
     return envVar?._id?.toString();
@@ -32,25 +42,41 @@ export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
 
       try {
         envVar = YAML.parse(content);
+        return findEnvVarByKey(envVar?.key);
       } catch (error) {
-        console.error("YAML parsing error:", error);
+        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
         return Promise.resolve(null);
       }
-
-      return findEnvVarByKey(envVar.key);
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const type = change.type;
-        const envVar: EnvVar = YAML.parse(change.resource_content);
+
+        const overwritePrimaries = (change: ChangeLog, envVar) => {
+          if (change.resource_id) {
+            envVar._id = change.resource_id;
+          }
+
+          if (change.resource_slug) {
+            envVar.key = change.resource_slug;
+          }
+        };
+
         switch (type) {
-          case ChangeType.CREATE:
+          case ChangeType.CREATE: {
+            const envVar: EnvVar = YAML.parse(change.resource_content);
+            overwritePrimaries(change, envVar);
+            await validate(envVar, validator);
             await CRUD.insert(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
-
-          case ChangeType.UPDATE:
+          }
+          case ChangeType.UPDATE: {
+            const envVar: EnvVar = YAML.parse(change.resource_content);
+            overwritePrimaries(change, envVar);
+            await validate(envVar, validator);
             await CRUD.replace(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
           case ChangeType.DELETE:
             await CRUD.remove(evs, change.resource_id);
@@ -63,7 +89,7 @@ export const getApplier = (evs: EnvVarService): DocumentChangeApplier => {
             };
         }
       } catch (error: any) {
-        console.warn("Error applying env_var change:", error);
+        logger.warn(`Error applying env_var change: ${error.stack || String(error)}`);
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

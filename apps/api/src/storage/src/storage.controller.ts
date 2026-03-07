@@ -321,7 +321,7 @@ export class StorageController {
         user: req.user
       };
 
-      const promise = this.guardService.checkAction({
+      const promise = this.guardService.checkAuthorization({
         request: preparedRequest,
         response: {},
         actions: ["storage:delete"],

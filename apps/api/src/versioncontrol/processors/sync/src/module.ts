@@ -1,6 +1,7 @@
 import {Module} from "@nestjs/common";
 import {SyncProcessor} from "./processor";
 import {ServicesModule, SyncService} from "@spica-server/versioncontrol/services/sync";
+import {VCConfigService} from "./config.service";
 
 @Module({})
 export class SyncProcessorsModule {
@@ -9,15 +10,16 @@ export class SyncProcessorsModule {
       module: SyncProcessorsModule,
       imports: [ServicesModule.forRoot()],
       providers: [
+        VCConfigService,
         {
           provide: SyncProcessor,
-          useFactory: (service: SyncService) => {
-            return new SyncProcessor(service);
+          useFactory: (service: SyncService, vcConfigService: VCConfigService) => {
+            return new SyncProcessor(service, vcConfigService);
           },
-          inject: [SyncService]
+          inject: [SyncService, VCConfigService]
         }
       ],
-      exports: [SyncProcessor]
+      exports: [SyncProcessor, VCConfigService]
     };
   }
 }

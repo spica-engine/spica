@@ -9,6 +9,7 @@ import {
   Put,
   Query,
   Req,
+  Res,
   UseGuards,
   UseInterceptors,
   HttpStatus,
@@ -173,21 +174,11 @@ export class UserController {
     ).result();
 
     if (paginate) {
-      const {data, meta} = await this.userService
-        .aggregate<PaginationResponse<User>>(pipeline)
-        .next();
-      let result: PaginationResponse<DecryptedUser>;
-      if (!data.length) {
-        result.meta = {total: 0};
-        result.data = [];
-      } else {
-        result.meta = meta;
-        result.data = data.map(user => {
-          return this.userService.decryptProviderFields(user);
-        });
-      }
-
-      return result;
+      const paginatedResult = await this.userService.aggregate<PaginationResponse<User>>(pipeline).next();
+      return {
+        meta: paginatedResult.data.length ? paginatedResult.meta : {total: 0},
+        data: paginatedResult.data.map(user => this.userService.decryptProviderFields(user))
+      };
     }
 
     const users = await this.userService
@@ -448,12 +439,6 @@ export class UserController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    // prevent to delete the last user
-    const userCount = await this.userService.estimatedDocumentCount();
-    if (userCount == 1) {
-      return;
-    }
-
     return this.userService.deleteOne({_id: id}).then(res => {
       if (!res) {
         throw new NotFoundException(`User with ID ${id} not found`);
@@ -558,15 +543,24 @@ export class UserController {
   }
 
   @Post("passwordless-login/verify")
-  verifyPasswordlessLogin(
+  async verifyPasswordlessLogin(
     @Body(Schema.validate("http://spica.internal/passport/passwordless-login-verify"))
     body: {
       username: string;
       code: string;
       provider: "email" | "phone";
-    }
+    },
+    @Res() res: any
   ) {
-    return this.passwordlessLoginService.verify(body.username, body.code, body.provider);
+    const {accessToken, refreshToken} = await this.passwordlessLoginService.verify(
+      body.username,
+      body.code,
+      body.provider
+    );
+
+    const cookiePath = "passport/user/session/refresh";
+    res.cookie("refreshToken", refreshToken.token, this.userService.getCookieOptions(cookiePath));
+    return res.status(HttpStatus.CREATED).json(accessToken);
   }
   @Post("forgot-password/start")
   async startForgotPassword(

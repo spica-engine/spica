@@ -5,6 +5,7 @@ import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {SchemasRealtimeModule} from "@spica-server/bucket/schemas-realtime";
 import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {createHashFormat, createEncryptedFormat} from "@spica-server/core/schema/formats";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BUCKET_LANGUAGE_FINALIZER} from "@spica-server/interface/preference";
 import {BucketCacheModule} from "@spica-server/bucket/cache";
@@ -33,8 +34,16 @@ import {getSupplier, getApplier} from "./synchronizer/schema";
 @Module({})
 export class BucketModule {
   static forRoot(options: BucketOptions): DynamicModule {
+    const formats = [
+      ...(options.hashSecret ? [createHashFormat(options.hashSecret)] : []),
+      ...(options.hashSecret && options.encryptionSecret
+        ? [createEncryptedFormat(options.encryptionSecret, options.hashSecret)]
+        : [])
+    ];
+
     const schemaModule = SchemaModule.forChild({
       schemas: [BucketSchema, BucketsSchema],
+      formats,
       keywords: [bucketSpecificDefault],
       customFields: [
         // common,
@@ -123,7 +132,7 @@ export class BucketModule {
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
     if (registerVCChangeHandler) {
-      registerVCChangeHandler(getSupplier(bs), getApplier(bs, bds, this.history));
+      registerVCChangeHandler(getSupplier(bs), getApplier(bs, bds, this.history, validator));
     }
 
     preference.default({

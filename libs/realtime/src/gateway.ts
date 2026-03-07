@@ -21,13 +21,13 @@ export function getConnectionHandlers(
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
 
     try {
-      await guardService.checkAuthorization({
+      await guardService.checkAuthentication({
         request: req,
         response: client
       });
 
       if (authAction) {
-        await guardService.checkAction({
+        await guardService.checkAuthorization({
           request: req,
           response: client,
           actions: authAction,

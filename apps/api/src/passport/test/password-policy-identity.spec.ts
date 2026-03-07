@@ -102,16 +102,14 @@ describe("Password Policy - Identity", () => {
   describe("with password policy config", () => {
     beforeAll(async () => {
       await database.collection("config").insertOne({
-        module: "passport",
+        module: "identity",
         options: {
-          identity: {
-            password: {
-              minLength: 8,
-              minLowercase: 1,
-              minUppercase: 1,
-              minNumber: 1,
-              minSpecialCharacter: 1
-            }
+          password: {
+            minLength: 8,
+            minLowercase: 1,
+            minUppercase: 1,
+            minNumber: 1,
+            minSpecialCharacter: 1
           }
         }
       });
@@ -121,7 +119,7 @@ describe("Password Policy - Identity", () => {
     });
 
     afterAll(async () => {
-      await database.collection("config").deleteMany({module: "passport"});
+      await database.collection("config").deleteMany({module: "identity"});
       await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
       await new Promise(resolve => setTimeout(resolve, 1000));
     });
@@ -217,14 +215,12 @@ describe("Password Policy - Identity", () => {
 
   describe("with partial password policy (only minLength)", () => {
     beforeAll(async () => {
-      await database.collection("config").deleteMany({module: "passport"});
+      await database.collection("config").deleteMany({module: "identity"});
       await database.collection("config").insertOne({
-        module: "passport",
+        module: "identity",
         options: {
-          identity: {
-            password: {
-              minLength: 6
-            }
+          password: {
+            minLength: 6
           }
         }
       });
@@ -232,7 +228,7 @@ describe("Password Policy - Identity", () => {
     });
 
     afterAll(async () => {
-      await database.collection("config").deleteMany({module: "passport"});
+      await database.collection("config").deleteMany({module: "identity"});
       await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
       await new Promise(resolve => setTimeout(resolve, 1000));
     });
@@ -258,14 +254,12 @@ describe("Password Policy - Identity", () => {
 
   describe("when password policy config is updated at runtime", () => {
     beforeAll(async () => {
-      await database.collection("config").deleteMany({module: "passport"});
+      await database.collection("config").deleteMany({module: "identity"});
       await database.collection("config").insertOne({
-        module: "passport",
+        module: "identity",
         options: {
-          identity: {
-            password: {
-              minLength: 3
-            }
+          password: {
+            minLength: 3
           }
         }
       });
@@ -273,7 +267,7 @@ describe("Password Policy - Identity", () => {
     });
 
     afterAll(async () => {
-      await database.collection("config").deleteMany({module: "passport"});
+      await database.collection("config").deleteMany({module: "identity"});
       await database.collection("identity").deleteMany({identifier: {$ne: "spica"}});
       await new Promise(resolve => setTimeout(resolve, 1000));
     });
@@ -289,10 +283,10 @@ describe("Password Policy - Identity", () => {
 
       // Update the password policy to a stricter minLength while the app is running.
       await database.collection("config").updateOne(
-        {module: "passport"},
+        {module: "identity"},
         {
           $set: {
-            "options.identity.password.minLength": 6
+            "options.password.minLength": 6
           }
         },
         {upsert: true}

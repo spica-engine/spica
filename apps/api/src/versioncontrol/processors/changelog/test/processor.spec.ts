@@ -33,7 +33,8 @@ describe("ChangeLogProcessor", () => {
       resource_id: "id",
       resource_slug: "slug",
       resource_extension: "",
-      initiator: ChangeInitiator.EXTERNAL
+      initiator: ChangeInitiator.EXTERNAL,
+      event_id: "test-event-id"
     };
     processor.watch().subscribe({
       next: received => {
@@ -48,7 +49,8 @@ describe("ChangeLogProcessor", () => {
           resource_id: change.resource_id,
           resource_slug: change.resource_slug,
           resource_extension: change.resource_extension,
-          initiator: change.initiator
+          initiator: change.initiator,
+          event_id: change.event_id
         });
         done();
       },
@@ -68,7 +70,8 @@ describe("ChangeLogProcessor", () => {
       resource_id: "id1",
       resource_slug: "slug2",
       resource_extension: "",
-      initiator: ChangeInitiator.EXTERNAL
+      initiator: ChangeInitiator.EXTERNAL,
+      event_id: "test-event-id"
     };
 
     const deleteChange: ChangeLog = {
@@ -81,7 +84,8 @@ describe("ChangeLogProcessor", () => {
       resource_id: "id1",
       resource_slug: "slug2",
       resource_extension: "",
-      initiator: ChangeInitiator.EXTERNAL
+      initiator: ChangeInitiator.EXTERNAL,
+      event_id: "test-event-id"
     };
 
     const unrelatedChange: ChangeLog = {
@@ -94,7 +98,8 @@ describe("ChangeLogProcessor", () => {
       resource_id: "id2",
       resource_slug: "slug",
       resource_extension: "",
-      initiator: ChangeInitiator.EXTERNAL
+      initiator: ChangeInitiator.EXTERNAL,
+      event_id: "test-event-id"
     };
 
     processor
@@ -118,6 +123,7 @@ describe("ChangeLogProcessor", () => {
             resource_id: updateChange.resource_id,
             resource_slug: updateChange.resource_slug,
             resource_extension: updateChange.resource_extension,
+            event_id: updateChange.event_id,
             // notice here
             type: ChangeType.UPDATE,
             initiator: updateChange.initiator
@@ -139,7 +145,8 @@ describe("ChangeLogProcessor", () => {
             resource_slug: unrelatedChange.resource_slug,
             resource_extension: unrelatedChange.resource_extension,
             type: unrelatedChange.type,
-            initiator: unrelatedChange.initiator
+            initiator: unrelatedChange.initiator,
+            event_id: unrelatedChange.event_id
           });
           done();
         },
@@ -161,7 +168,8 @@ describe("ChangeLogProcessor", () => {
       resource_id: "123",
       resource_slug: "slug",
       resource_extension: "",
-      initiator: ChangeInitiator.EXTERNAL
+      initiator: ChangeInitiator.EXTERNAL,
+      event_id: "test-event-id"
     };
 
     const reflectedChange: ChangeLog = {
@@ -174,7 +182,8 @@ describe("ChangeLogProcessor", () => {
       resource_id: "123",
       resource_slug: "slug",
       resource_extension: "",
-      initiator: ChangeInitiator.EXTERNAL
+      initiator: ChangeInitiator.EXTERNAL,
+      event_id: "test-event-id"
     };
 
     const secondChange: ChangeLog = {
@@ -187,7 +196,8 @@ describe("ChangeLogProcessor", () => {
       resource_id: "123",
       resource_slug: "slug",
       resource_extension: "",
-      initiator: ChangeInitiator.EXTERNAL
+      initiator: ChangeInitiator.EXTERNAL,
+      event_id: "test-event-id"
     };
 
     const firstPush = await processor.push(firstChange);

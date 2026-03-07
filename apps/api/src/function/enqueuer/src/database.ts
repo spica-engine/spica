@@ -7,9 +7,11 @@ import {Enqueuer} from "./enqueuer";
 import {ClassCommander} from "@spica-server/replication";
 import uniqid from "uniqid";
 import {DatabaseOptions, Description} from "@spica-server/interface/function/enqueuer";
+import {Logger} from "@nestjs/common";
 
 export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   type = event.Type.DATABASE;
+  private readonly logger = new Logger(DatabaseEnqueuer.name);
 
   description: Description = {
     title: "Database",
@@ -112,7 +114,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     for (const event of events) {
       const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
         if (!job) {
-          console.error(`Job ${event.id} does not exist!`);
+          this.logger.error(`Job ${event.id} does not exist!`);
           return;
         }
         const newChange = {...job, _id: {_data: job._id}};

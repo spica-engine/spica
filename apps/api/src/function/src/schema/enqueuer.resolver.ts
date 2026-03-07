@@ -1,10 +1,12 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, Logger} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
 import {FunctionEngine} from "../engine";
 import {Function} from "@spica-server/interface/function";
 
 @Injectable()
 export class EnqueuerSchemaResolver {
+  private readonly logger = new Logger(EnqueuerSchemaResolver.name);
+
   enqueuerPrefix = "http://spica.internal/function/enqueuer";
 
   constructor(
@@ -22,7 +24,7 @@ export class EnqueuerSchemaResolver {
         return schema;
       });
     } else {
-      console.warn(`Couldn't find the enqueuer with name ${match[1]}`);
+      this.logger.warn(`Couldn't find the enqueuer with name ${match[1]}`);
     }
   }
 }
@@ -47,7 +49,7 @@ export function generate({body}: {body: Function}) {
             minProperties: 1,
             description:
               "Allows defining which code part will be executed when which condition is met",
-            properties: Object.keys(body.triggers || {}).reduce((props, key) => {
+            properties: Object.keys(body?.triggers || {}).reduce((props, key) => {
               props[key] = {
                 type: "object",
                 required: ["type", "options"],

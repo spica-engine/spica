@@ -9,6 +9,9 @@ import {
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {ObjectId} from "bson";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("FunctionIdxSyncApplier");
 
 const module = "function";
 const subModule = "index";
@@ -48,14 +51,16 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
             };
 
           default:
-            console.warn("Unknown operation type:", operationType);
+            logger.warn(`Unknown operation type: ${operationType}`);
             return {
               status: SyncStatuses.FAILED,
               reason: `Unknown operation type: ${operationType}`
             };
         }
       } catch (error) {
-        console.warn("Error applying function index change:", error);
+        logger.warn(
+          `Error applying function index change: ${(error as any).stack || String(error)}`
+        );
         return {status: SyncStatuses.FAILED, reason: error.message};
       }
     }

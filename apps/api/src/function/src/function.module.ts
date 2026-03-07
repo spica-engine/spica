@@ -51,7 +51,7 @@ export class FunctionModule {
     validator: Validator
   ) {
     if (registerVCChangeHandler) {
-      registerVCChangeHandler(getSchemaSupplier(fs), getSchemaApplier(fs, fe, logs));
+      registerVCChangeHandler(getSchemaSupplier(fs), getSchemaApplier(fs, fe, logs, validator));
       registerVCChangeHandler(getIndexSupplier(fe, fs), getIndexApplier(fs, fe));
       registerVCChangeHandler(getDependencySupplier(fe, fs), getDependencyApplier(fs, fe));
     }

@@ -22,7 +22,7 @@ export class GuardService implements IGuardService {
     return from(result).toPromise();
   }
 
-  checkAction({
+  checkAuthorization({
     request,
     response,
     actions,
@@ -54,7 +54,7 @@ export class GuardService implements IGuardService {
     );
   }
 
-  checkAuthorization({
+  checkAuthentication({
     request,
     response,
     allowedStrategies

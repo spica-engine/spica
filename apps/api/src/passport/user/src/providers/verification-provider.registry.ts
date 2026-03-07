@@ -1,13 +1,14 @@
-import {Injectable, BadRequestException} from "@nestjs/common";
+import {Injectable, BadRequestException, Logger} from "@nestjs/common";
 import {VerificationProvider} from "@spica-server/interface/passport/user";
 
 @Injectable()
 export class VerificationProviderRegistry {
+  private readonly logger = new Logger(VerificationProviderRegistry.name);
   private providers = new Map<string, VerificationProvider>();
 
   register(provider: VerificationProvider | null): void {
     if (!provider) {
-      console.warn("Attempted to register a null provider. Skipping registration.");
+      this.logger.warn("Attempted to register a null provider. Skipping registration.");
       return;
     }
     if (this.providers.has(provider.name)) {

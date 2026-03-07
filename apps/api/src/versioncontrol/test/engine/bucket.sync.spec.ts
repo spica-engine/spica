@@ -27,6 +27,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
+import {Validator} from "@spica-server/core/schema/src/validator";
 
 xdescribe("SyncEngine Integration - Bucket", () => {
   let module: TestingModule;
@@ -60,8 +61,12 @@ xdescribe("SyncEngine Integration - Bucket", () => {
     bs = module.get(BucketService);
     bds = module.get(BucketDataService);
     hs = module.get(HistoryService);
+    const validator = module.get(Validator);
 
-    syncEngine.registerChangeHandler(getBucketSupplier(bs), getBucketApplier(bs, bds, hs));
+    syncEngine.registerChangeHandler(
+      getBucketSupplier(bs),
+      getBucketApplier(bs, bds, hs, validator)
+    );
   });
 
   afterEach(async () => {
@@ -88,9 +93,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
       properties: {
         name: {
           type: "string",
-          options: {
-            position: "left"
-          }
+          options: {}
         }
       }
     };
@@ -110,7 +113,8 @@ xdescribe("SyncEngine Integration - Bucket", () => {
         resource_content: YAML.stringify(bucket),
         resource_extension: "yaml",
         created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: expect.any(String)
       });
       subs.unsubscribe();
       done();
@@ -135,9 +139,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
       properties: {
         name: {
           type: "string",
-          options: {
-            position: "left"
-          }
+          options: {}
         }
       }
     };
@@ -158,9 +160,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
         properties: {
           name: {
             type: "string",
-            options: {
-              position: "left"
-            }
+            options: {}
           }
         }
       });
@@ -193,9 +193,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
       properties: {
         name: {
           type: "string",
-          options: {
-            position: "left"
-          }
+          options: {}
         }
       }
     };
@@ -214,7 +212,8 @@ xdescribe("SyncEngine Integration - Bucket", () => {
         resource_content: bucketYaml,
         resource_extension: fileExtension,
         created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: expect.any(String)
       });
       expect(sync.status).toBe(SyncStatuses.PENDING);
       syncSub.unsubscribe();
@@ -242,9 +241,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
       properties: {
         name: {
           type: "string",
-          options: {
-            position: "left"
-          }
+          options: {}
         }
       }
     };
@@ -269,9 +266,7 @@ xdescribe("SyncEngine Integration - Bucket", () => {
         properties: {
           name: {
             type: "string",
-            options: {
-              position: "left"
-            }
+            options: {}
           }
         }
       });

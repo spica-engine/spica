@@ -85,7 +85,6 @@ export class BucketController {
    *          "type": "string",
    *          "default": "Basket",
    *          "options": {
-   *              "position": "left",
    *              "translate": true
    *          }
    *      }
@@ -117,7 +116,6 @@ export class BucketController {
    *          "type": "string",
    *          "default": "Basket",
    *          "options": {
-   *              "position": "left",
    *              "translate": true
    *          }
    *      }

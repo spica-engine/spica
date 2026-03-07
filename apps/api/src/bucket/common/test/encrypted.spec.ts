@@ -4,13 +4,7 @@ import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {
-  OBJECTID_STRING,
-  OBJECT_ID,
-  DATE_TIME,
-  createHashFormat,
-  createEncryptedFormat
-} from "@spica-server/core/schema/formats";
+import {OBJECTID_STRING, OBJECT_ID, DATE_TIME} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId, DatabaseService} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
@@ -34,13 +28,7 @@ describe("Encrypted Field", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [
-            OBJECT_ID,
-            OBJECTID_STRING,
-            DATE_TIME,
-            createHashFormat(HASH_SECRET),
-            createEncryptedFormat(ENCRYPTION_SECRET, HASH_SECRET)
-          ],
+          formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,

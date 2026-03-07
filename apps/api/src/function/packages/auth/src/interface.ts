@@ -46,5 +46,10 @@ export interface PasswordlessLoginCompleteResponse {
   token: string;
   scheme: string;
   issuer: string;
-  refreshToken: string;
+}
+
+export interface VerifiedToken {
+  _id: string;
+  username: string;
+  [key: string]: any;
 }

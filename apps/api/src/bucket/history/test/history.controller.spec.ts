@@ -60,13 +60,13 @@ describe("History Acceptance", () => {
             type: "string",
             title: "title",
             description: "Title of the row",
-            options: {position: "left"}
+            options: {}
           },
           description: {
             type: "string",
             title: "description",
             description: "Description of the row",
-            options: {position: "right"}
+            options: {}
           }
         },
         history: true
@@ -353,13 +353,13 @@ describe("History Authorization", () => {
             type: "string",
             title: "title",
             description: "Title of the row",
-            options: {position: "left"}
+            options: {}
           },
           description: {
             type: "string",
             title: "description",
             description: "Description of the row",
-            options: {position: "right"}
+            options: {}
           }
         },
         history: true

@@ -1,5 +1,6 @@
 export {Schema} from "./src/pipe";
 export {SchemaModule} from "./src/module";
+export {applyPasswordPolicy} from "./src/password-policy.utils";
 export {
   ValidationError,
   Validator,

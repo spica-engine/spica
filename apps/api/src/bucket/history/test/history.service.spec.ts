@@ -441,15 +441,11 @@ describe("History Service", () => {
             properties: {
               name: {
                 type: "string",
-                options: {
-                  position: "left"
-                }
+                options: {}
               },
               age: {
                 type: "number",
-                options: {
-                  position: "left"
-                }
+                options: {}
               }
             }
           },
@@ -460,9 +456,7 @@ describe("History Service", () => {
             properties: {
               name: {
                 type: "string",
-                options: {
-                  position: "left"
-                }
+                options: {}
               }
             }
           }

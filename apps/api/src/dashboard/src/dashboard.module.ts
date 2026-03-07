@@ -24,7 +24,7 @@ export class DashboardModule {
     registerVCChangeHandler: RegisterVCChangeHandler
   ) {
     if (registerVCChangeHandler) {
-      registerVCChangeHandler(getSupplier(ds), getApplier(ds));
+      registerVCChangeHandler(getSupplier(ds), getApplier(ds, validator));
     }
     registerAssetHandlers(ds, validator, assetRepManager);
   }

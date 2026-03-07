@@ -2,15 +2,17 @@ import {EventQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
-import cron from "cron";
+import schedule from "node-schedule";
 import {Enqueuer} from "./enqueuer";
 import uniqid from "uniqid";
 import {Description, ScheduleOptions} from "@spica-server/interface/function/enqueuer";
+import {Logger} from "@nestjs/common";
 
 export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   type = event.Type.SCHEDULE;
+  private readonly logger = new Logger(ScheduleEnqueuer.name);
 
-  private jobs = new Set<cron.CronJob>();
+  private jobs = new Set<schedule.Job>();
 
   description: Description = {
     icon: "schedule",
@@ -32,12 +34,12 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
   }
 
   subscribe(target: event.Target, options: ScheduleOptions): void {
-    const job = cron.CronJob.from({
-      cronTime: options.frequency,
-      onTick: () => this.onTickHandler(target, options),
-      start: true,
-      timeZone: options.timezone
-    });
+    const job = schedule.scheduleJob(
+      {rule: options.frequency, tz: options.timezone},
+      (fireDate: Date) => {
+        this.onTickHandler(target, options, fireDate.getTime());
+      }
+    );
 
     Object.defineProperty(job, "target", {writable: false, value: target});
     this.jobs.add(job);
@@ -53,15 +55,13 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
           job["target"].cwd == target.cwd &&
           job["target"].handler == target.handler)
       ) {
-        job.stop();
+        job.cancel();
         this.jobs.delete(job);
       }
     }
   }
 
-  onTickHandler(target: event.Target, options: ScheduleOptions, eventId?: string) {
-    const now = new Date(new Date().setMilliseconds(0)).getTime();
-
+  onTickHandler(target: event.Target, options: ScheduleOptions, firedAt: number, eventId?: string) {
     const ev = new event.Event({
       id: eventId || uniqid(),
       target,
@@ -73,7 +73,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     };
 
     const meta = {
-      _id: `${target.cwd}-${target.handler}-${options.frequency}-${options.timezone}-${now}`,
+      _id: `${target.cwd}-${target.handler}-${options.frequency}-${options.timezone}-${firedAt}`,
       cwd: target.cwd,
       handler: target.handler,
       frequency: options.frequency,
@@ -97,7 +97,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     for (const event of events) {
       const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
         if (!job) {
-          console.error(`Job with event id ${event.id} does not exist!`);
+          this.logger.error(`Job with event id ${event.id} does not exist!`);
           return;
         }
         return this.shift(
@@ -149,7 +149,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
         timeout: target.context.timeout
       })
     });
-
-    return this.onTickHandler(newTarget, options, eventId);
+    const now = new Date(new Date().setMilliseconds(0)).getTime();
+    return this.onTickHandler(newTarget, options, now, eventId);
   }
 }

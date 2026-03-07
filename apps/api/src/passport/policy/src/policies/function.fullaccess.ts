@@ -1,5 +1,6 @@
 import FunctionReadOnlyAccess from "./function.readonly";
 import EnvVarFullAccess from "./env.var.fullaccess";
+import SecretFullAccess from "./secret.fullaccess";
 
 export default {
   _id: "FunctionFullAccess",
@@ -8,6 +9,7 @@ export default {
   statement: [
     ...FunctionReadOnlyAccess.statement,
     ...EnvVarFullAccess.statement,
+    ...SecretFullAccess.statement,
     {
       action: "function:invoke",
       resource: {include: ["*/*"], exclude: []},

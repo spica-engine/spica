@@ -29,6 +29,7 @@ export interface ChangeLog {
   resource_extension: string;
   created_at: Date;
   initiator: ChangeInitiator;
+  event_id: string;
 }
 
 export interface ChangeHandler {
@@ -108,3 +109,12 @@ export type RegisterVCChangeHandler = (
 export const REGISTER_VC_CHANGE_HANDLER = Symbol.for("REGISTER_VC_CHANGE_HANDLER");
 
 export const VC_REPRESENTATIVE_MANAGER = Symbol.for("VC_REPRESENTATIVE_MANAGER");
+
+export interface AutoApproveSyncConfig {
+  document: boolean;
+  representative: boolean;
+}
+
+export interface VCConfigSettings {
+  autoApproveSync: AutoApproveSyncConfig;
+}

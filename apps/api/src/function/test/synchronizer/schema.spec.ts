@@ -17,6 +17,10 @@ import YAML from "yaml";
 import {deepCopy} from "@spica-server/core/patch";
 import {skip, firstValueFrom} from "rxjs";
 import {rimraf} from "rimraf";
+import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import FunctionSchema from "../../src/schema/function.json" with {type: "json"};
+import {SecretService} from "@spica-server/secret/services";
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -28,11 +32,13 @@ describe("Function Synchronizer", () => {
   let engine: FunctionEngine;
   let logs: LogService;
   let database: DatabaseService;
+  let validator: Validator;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.replicaSet(),
+        SchemaModule.forChild({schemas: [FunctionSchema], formats: [OBJECT_ID]}),
         SchedulerModule.forRoot({
           invocationLogs: false,
           databaseName: undefined,
@@ -57,9 +63,12 @@ describe("Function Synchronizer", () => {
 
     database = module.get(DatabaseService);
     const evs = new EnvVarService(database);
-    const scheduler = module.get(Scheduler);
+    const ss = new SecretService(database, "test-encryption-secret");
 
-    fs = new FunctionService(database, evs, {entryLimit: 20} as any);
+    const scheduler = module.get(Scheduler);
+    validator = module.get(Validator);
+
+    fs = new FunctionService(database, evs, ss, {entryLimit: 20} as any);
     logs = new LogService(database, {expireAfterSeconds: 60 * 60 * 24 * 7, realtime: false});
 
     engine = new FunctionEngine(
@@ -73,7 +82,8 @@ describe("Function Synchronizer", () => {
         outDir: ".build"
       },
       undefined,
-      undefined
+      undefined,
+      val => val as any
     );
   });
 
@@ -136,7 +146,8 @@ describe("Function Synchronizer", () => {
         resource_extension: "yaml",
         resource_content: YAML.stringify(mockFunction),
         created_at: expect.any(Date),
-        initiator: ChangeInitiator.INTERNAL
+        initiator: ChangeInitiator.INTERNAL,
+        event_id: expect.any(String)
       });
     });
 
@@ -171,7 +182,8 @@ describe("Function Synchronizer", () => {
           resource_extension: "yaml",
           resource_content: YAML.stringify(mockFunction),
           created_at: expect.any(Date),
-          initiator: ChangeInitiator.EXTERNAL
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
         });
 
         subs.unsubscribe();
@@ -236,7 +248,8 @@ describe("Function Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(expectedUpdatedFunction),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
 
           subs.unsubscribe();
@@ -284,7 +297,8 @@ describe("Function Synchronizer", () => {
             resource_extension: "yaml",
             resource_content: YAML.stringify(functionToDelete),
             created_at: expect.any(Date),
-            initiator: ChangeInitiator.EXTERNAL
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
           });
           subs.unsubscribe();
           done();
@@ -302,7 +316,7 @@ describe("Function Synchronizer", () => {
     let funcApplier;
 
     beforeEach(() => {
-      funcApplier = getApplier(fs, engine, logs);
+      funcApplier = getApplier(fs, engine, logs, validator);
     });
 
     it("should return Change Applier with correct metadata", () => {
@@ -334,6 +348,7 @@ describe("Function Synchronizer", () => {
           }
         },
         timeout: 60,
+        memoryLimit: 100,
         language: "javascript"
       };
 
@@ -347,7 +362,8 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(mockFunction),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -373,6 +389,7 @@ describe("Function Synchronizer", () => {
           }
         },
         timeout: 60,
+        memoryLimit: 100,
         language: "javascript"
       });
     });
@@ -395,7 +412,8 @@ describe("Function Synchronizer", () => {
           }
         },
         timeout: 60,
-        language: "javascript"
+        language: "javascript",
+        memoryLimit: 100
       };
 
       await fs.insertOne(existingFunction);
@@ -424,7 +442,8 @@ describe("Function Synchronizer", () => {
           }
         },
         timeout: 120,
-        language: "javascript"
+        language: "javascript",
+        memoryLimit: 100
       };
 
       const changeLog: ChangeLog = {
@@ -437,7 +456,8 @@ describe("Function Synchronizer", () => {
         resource_content: YAML.stringify(updatedFunction),
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -471,7 +491,8 @@ describe("Function Synchronizer", () => {
         },
         timeout: 120,
         language: "javascript",
-        env_vars: []
+        env_vars: [],
+        memoryLimit: 100
       });
     });
 
@@ -508,7 +529,8 @@ describe("Function Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -532,7 +554,8 @@ describe("Function Synchronizer", () => {
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -554,7 +577,8 @@ describe("Function Synchronizer", () => {
         resource_content: "invalid: yaml: content:",
         created_at: new Date(),
         resource_extension: "yaml",
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
       };
 
       const result = await funcApplier.apply(changeLog);
@@ -563,6 +587,79 @@ describe("Function Synchronizer", () => {
         status: SyncStatuses.FAILED
       });
       expect(result.reason).toBeDefined();
+    });
+
+    it("should reject function if it's language is invalid", async () => {
+      const invalidFunction = {
+        _id: new ObjectId(),
+        name: "custom_function",
+        description: "A function with custom triggers",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {method: "Get", path: "/custom"}
+          }
+        },
+        timeout: 60,
+        language: "python"
+      };
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: invalidFunction._id.toString(),
+        resource_slug: "Invalid Function",
+        resource_content: YAML.stringify(invalidFunction),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should allow function with custom trigger types", async () => {
+      const validFunction: any = {
+        _id: new ObjectId(),
+        name: "custom_function",
+        description: "A function with custom triggers",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {method: "Get", path: "/custom"}
+          }
+        },
+        timeout: 60,
+        language: "javascript"
+      };
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_id: validFunction._id.toString(),
+        resource_slug: "custom_function",
+        resource_content: YAML.stringify(validFunction),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
     });
   });
 });
