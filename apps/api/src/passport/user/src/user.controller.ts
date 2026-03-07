@@ -174,21 +174,11 @@ export class UserController {
     ).result();
 
     if (paginate) {
-      const {data, meta} = await this.userService
-        .aggregate<PaginationResponse<User>>(pipeline)
-        .next();
-      let result: PaginationResponse<DecryptedUser>;
-      if (!data.length) {
-        result.meta = {total: 0};
-        result.data = [];
-      } else {
-        result.meta = meta;
-        result.data = data.map(user => {
-          return this.userService.decryptProviderFields(user);
-        });
-      }
-
-      return result;
+      const r = await this.userService.aggregate<PaginationResponse<User>>(pipeline).next();
+      return {
+        meta: r.data.length ? r.meta : {total: 0},
+        data: r.data.map(user => this.userService.decryptProviderFields(user))
+      };
     }
 
     const users = await this.userService

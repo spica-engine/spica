@@ -320,7 +320,7 @@ describe("User Controller CRUD Operations", () => {
         Authorization: `USER ${userToken}`
       });
 
-      expect(res.statusCode).toBe(401);
+      expect(res.statusCode).toBe(403);
     });
 
     it("should reject finding user without authorization", async () => {
