@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["service", "method"],
+  "properties": {
+    "service": {
+      "type": "string",
+      "title": "Service Name",
+      "description": "The gRPC service name (e.g., 'UserService', 'OrderService')",
+      "minLength": 1,
+      "examples": ["UserService", "OrderService", "ProductService"]
+    },
+    "method": {
+      "type": "string",
+      "title": "Method Name",
+      "description": "The gRPC method/RPC name (e.g., 'GetUser', 'CreateOrder')",
+      "minLength": 1,
+      "examples": ["GetUser", "CreateOrder", "ListProducts"]
+    }
+  },
+  "additionalProperties": false
+}
