@@ -621,9 +621,6 @@ describe("Realtime ACL Rules with Different Authentication Strategies", () => {
             secret_info: {
               type: "string",
               title: "Secret Info",
-              options: {
-                position: "bottom"
-              },
               acl: "auth.username=='oziko'"
             }
           }

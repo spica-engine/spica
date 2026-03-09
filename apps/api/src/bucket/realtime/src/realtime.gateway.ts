@@ -487,25 +487,33 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const schemaId = req.params.id;
 
     if (!ObjectId.isValid(schemaId)) {
-      this.send(client, ChunkKind.Error, 400, `${schemaId} is not a valid object id.`);
-      return client.close(1003);
+      const message = `${schemaId} is not a valid object id.`;
+      this.send(client, ChunkKind.Error, 400, message);
+      client.close(1003);
+      throw new Error(message);
     }
 
     const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
 
     if (!schema) {
-      this.send(client, ChunkKind.Error, 400, `Could not find the schema with id ${schemaId}.`);
-      return client.close(1003);
+      const message = `Could not find the schema with id ${schemaId}.`;
+      this.send(client, ChunkKind.Error, 400, message);
+      client.close(1003);
+      throw new Error(message);
     }
 
     req.__schemaProperties = schema.properties;
 
-    const options: any = {filter: {$and: []}};
+    const options: any = {filter: {}};
+    const pushToFilter = filter => {
+      options.filter.$and = options.filter.$and || [];
+      options.filter.$and.push(filter);
+    };
 
     req = authIdToString(req);
     if (this.shouldApplyAcl(req)) {
       const ruleMatch = expression.aggregate(schema.acl.read, {auth: req.user}, "match");
-      options.filter.$and.push(ruleMatch);
+      pushToFilter(ruleMatch);
     }
 
     let filter = req.query.get("filter");
@@ -520,25 +528,25 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       }
 
       if (!parsedFilter) {
-        this.send(
-          client,
-          ChunkKind.Error,
-          400,
-          "Error occured while parsing the filter. Please ensure that filter is a valid JSON or expression."
-        );
+        const message =
+          "Error occured while parsing the filter. Please ensure that filter is a valid JSON or expression.";
+        this.send(client, ChunkKind.Error, 400, message);
 
-        return client.close(1003);
+        client.close(1003);
+        throw new Error(message);
       }
 
-      options.filter.$and.push(parsedFilter);
+      pushToFilter(parsedFilter);
     }
 
     if (req.query.has("sort")) {
       try {
         options.sort = JSON.parse(req.query.get("sort"));
       } catch (e) {
-        this.send(client, ChunkKind.Error, e.status, e.message);
-        return client.close(1003);
+        const message = `Error occured while parsing the sort parameter: ${e.message}`;
+        this.send(client, ChunkKind.Error, 400, message);
+        client.close(1003);
+        throw new Error(message);
       }
     }
 

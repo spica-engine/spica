@@ -46,17 +46,17 @@ export function getConnectionHandlers(
       return;
     }
 
-    const collection = await getCollectionName(client, req);
-
+    let collection;
     let options;
     try {
+      collection = await getCollectionName(client, req);
       options = await getFindOptions(client, req);
     } catch (error) {
       closeGracefully(client, error);
       return;
     }
 
-    if (!options) {
+    if (!options || !collection) {
       return;
     }
 
