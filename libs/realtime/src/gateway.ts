@@ -30,14 +30,16 @@ export function getConnectionHandlers(
           request: req,
           response: client,
           actions: authAction,
-          options: {resourceFilter: true}
+          options: {resourceFilter: !!resourceFilterFunction}
         });
 
-        req.resourceFilter = resourceFilterFunction({}, {
-          switchToHttp: () => ({
-            getRequest: () => req
-          })
-        } as any);
+        if (resourceFilterFunction) {
+          req.resourceFilter = resourceFilterFunction({}, {
+            switchToHttp: () => ({
+              getRequest: () => req
+            })
+          } as any);
+        }
       }
     } catch (error) {
       closeGracefully(client, error);

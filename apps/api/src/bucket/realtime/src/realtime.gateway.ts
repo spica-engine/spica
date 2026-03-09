@@ -73,7 +73,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         message: error.message || "Unexpected error"
       }),
       this.realtime,
-      resourceFilterFunction,
+      // no resource filter
+      undefined,
       "bucket:data:stream",
       [
         async (_client: any, req: any) => (data: any) => this.applyAcl(data, req),
@@ -115,16 +116,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       request: req,
       response: client,
       actions: "bucket:data:stream",
-      options: {resourceFilter: true}
+      options: {resourceFilter: false}
     });
-
-    req.resourceFilter = resourceFilterFunction({}, {
-      switchToHttp: () => {
-        return {
-          getRequest: () => req
-        };
-      }
-    } as any);
   }
 
   @SubscribeMessage(MessageKind.INSERT)
@@ -509,9 +502,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     const options: any = {filter: {$and: []}};
 
-    const policyMatch = req.resourceFilter || {$match: {}};
-    options.filter.$and.push(policyMatch.$match);
-
     req = authIdToString(req);
     if (this.shouldApplyAcl(req)) {
       const ruleMatch = expression.aggregate(schema.acl.read, {auth: req.user}, "match");
@@ -622,7 +612,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       return document;
     }
 
-    return applyFieldLevelAcl(document.document, req.__schemaProperties, req.user);
+    return applyFieldLevelAcl(document, req.__schemaProperties, req.user);
   }
 
   private async decryptDocuments(_client: any, req: any) {
