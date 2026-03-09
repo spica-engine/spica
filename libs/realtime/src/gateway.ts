@@ -11,11 +11,10 @@ export function getConnectionHandlers(
   realtime: RealtimeDatabaseService,
   resourceFilterFunction?: ResourceFilterFunction,
   authAction?: string,
-  transformChunk?: (data: any, req: any) => any,
-  documentTransformFactory?: (
+  documentTransformFactories?: ((
     client: any,
     req: any
-  ) => Promise<((data: any) => any) | undefined> | ((data: any) => any) | undefined
+  ) => Promise<((data: any) => any) | undefined> | ((data: any) => any) | undefined)[]
 ) {
   async function handleConnection(client: any, req: any) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
@@ -59,16 +58,19 @@ export function getConnectionHandlers(
       return;
     }
 
-    const documentTransform = documentTransformFactory
-      ? await documentTransformFactory(client, req)
-      : undefined;
+    const documentTransforms = documentTransformFactories
+      ? await Promise.all(
+          documentTransformFactories.map(factory => Promise.resolve(factory(client, req)))
+        )
+      : [];
 
     const stream = realtime.find(collection, options).pipe(
       map(data => {
-        if (data !== null && documentTransform) {
-          return documentTransform(data);
-        }
-        return data;
+        if (data === null) return data;
+        return documentTransforms.reduce((acc: any, transform) => {
+          if (transform) return transform(acc);
+          return acc;
+        }, data);
       }),
       catchError(error => {
         closeGracefully(client, error);
@@ -78,8 +80,7 @@ export function getConnectionHandlers(
 
     stream.pipe(takeUntil(fromEvent(client, "close"))).subscribe(data => {
       if (data !== null) {
-        const chunk = transformChunk ? transformChunk(data, req) : data;
-        client.send(JSON.stringify(chunk));
+        client.send(JSON.stringify(data));
       }
     });
   }

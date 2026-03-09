@@ -75,27 +75,31 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       this.realtime,
       resourceFilterFunction,
       "bucket:data:stream",
-      this.transformChunk.bind(this),
-      this.encryptionSecret
-        ? async (_client: any, req: any) => {
-            const bucketId = req.params.id;
-            const schema = await this.bucketService.findOne({_id: new ObjectId(bucketId)});
-            if (!schema) return undefined;
-            return (chunk: any) => {
-              if (!chunk || !chunk.document) return chunk;
-              return {
-                ...chunk,
-                document: decryptDocumentFields(
-                  chunk.document,
-                  schema,
-                  this.encryptionSecret,
-                  this.getBucketResolver(),
-                  chunk.document._id
-                )
-              };
-            };
-          }
-        : undefined
+      [
+        async (_client: any, req: any) => (data: any) => this.transformChunk(data, req),
+        ...(this.encryptionSecret
+          ? [
+              async (_client: any, req: any) => {
+                const bucketId = req.params.id;
+                const schema = await this.bucketService.findOne({_id: new ObjectId(bucketId)});
+                if (!schema) return undefined;
+                return (chunk: any) => {
+                  if (!chunk || !chunk.document) return chunk;
+                  return {
+                    ...chunk,
+                    document: decryptDocumentFields(
+                      chunk.document,
+                      schema,
+                      this.encryptionSecret,
+                      this.getBucketResolver(),
+                      chunk.document._id
+                    )
+                  };
+                };
+              }
+            ]
+          : [])
+      ]
     );
   }
 
@@ -634,15 +638,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return strategyType === ReqAuthStrategy.USER;
   }
 
-  private transformChunk(data: any, req: any): any {
-    if (!data || !data.document || !this.shouldApplyAcl(req) || !req.__schemaProperties) {
-      return data;
+  private transformChunk(document: any, req: any): any {
+    if (!document || !this.shouldApplyAcl(req) || !req.__schemaProperties) {
+      return document;
     }
 
-    return {
-      ...data,
-      document: applyFieldLevelAcl(data.document, req.__schemaProperties, req.user)
-    };
+    return applyFieldLevelAcl(document.document, req.__schemaProperties, req.user);
   }
 }
 
