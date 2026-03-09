@@ -342,9 +342,9 @@ export class UserController {
   @UseInterceptors(activity(createUserActivity))
   @Post()
   @UseGuards(
-    RateLimitGuard("createUser"),
     AuthGuard(["IDENTITY", "APIKEY"]),
-    ActionGuard("passport:user:create")
+    ActionGuard("passport:user:create"),
+    RateLimitGuard("createUser")
   )
   async insertOne(
     @Body(Schema.validate("http://spica.internal/passport/user-create"))
