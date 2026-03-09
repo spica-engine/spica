@@ -63,7 +63,7 @@ export class RateLimitService implements OnModuleInit, OnModuleDestroy {
     let entry = this.tracker.get(key);
 
     if (!entry || entry.resetAt <= now) {
-      entry = {count: 1, resetAt: now + ttl * 1000};
+      entry = {count: 1, resetAt: now + ttl};
       this.tracker.set(key, entry);
       return {allowed: true, limit, remaining: limit - 1, resetAt: entry.resetAt};
     }

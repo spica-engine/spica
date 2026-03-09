@@ -98,40 +98,40 @@ export class UserModule {
               login: {
                 type: "object",
                 properties: {
-                  limit: {type: "number", minimum: 1},
-                  ttl: {type: "number", minimum: 1}
+                  limit: {type: "number", minimum: 60_000},
+                  ttl: {type: "number", minimum: 60_000}
                 },
                 required: ["limit", "ttl"]
               },
               providerVerification: {
                 type: "object",
                 properties: {
-                  limit: {type: "number", minimum: 1},
-                  ttl: {type: "number", minimum: 1}
+                  limit: {type: "number", minimum: 60_000},
+                  ttl: {type: "number", minimum: 60_000}
                 },
                 required: ["limit", "ttl"]
               },
               forgotPassword: {
                 type: "object",
                 properties: {
-                  limit: {type: "number", minimum: 1},
-                  ttl: {type: "number", minimum: 1}
+                  limit: {type: "number", minimum: 60_000},
+                  ttl: {type: "number", minimum: 60_000}
                 },
                 required: ["limit", "ttl"]
               },
               refreshToken: {
                 type: "object",
                 properties: {
-                  limit: {type: "number", minimum: 1},
-                  ttl: {type: "number", minimum: 1}
+                  limit: {type: "number", minimum: 60_000},
+                  ttl: {type: "number", minimum: 60_000}
                 },
                 required: ["limit", "ttl"]
               },
               createUser: {
                 type: "object",
                 properties: {
-                  limit: {type: "number", minimum: 1},
-                  ttl: {type: "number", minimum: 1}
+                  limit: {type: "number", minimum: 60_000},
+                  ttl: {type: "number", minimum: 60_000}
                 },
                 required: ["limit", "ttl"]
               }

@@ -95,7 +95,7 @@ describe("Rate Limit E2E", () => {
     beforeEach(async () => {
       rateLimitService.resetTracker();
       rateLimitService.setConfigCache({
-        login: {limit: 3, ttl: 60}
+        login: {limit: 3, ttl: 60_000}
       });
     });
 
@@ -119,9 +119,9 @@ describe("Rate Limit E2E", () => {
       expect(blockedRes.headers["x-ratelimit-remaining"]).toBe("0");
     });
 
-    it("should reset rate limit after TTL window expires", async () => {
+    it("should allow requests again after tracker is reset", async () => {
       rateLimitService.setConfigCache({
-        login: {limit: 2, ttl: 2}
+        login: {limit: 2, ttl: 60_000}
       });
       rateLimitService.resetTracker();
 
@@ -140,7 +140,7 @@ describe("Rate Limit E2E", () => {
       });
       expect(blockedRes.statusCode).toBe(429);
 
-      await new Promise(resolve => setTimeout(resolve, 2100));
+      rateLimitService.resetTracker();
 
       const allowedRes = await req.post("/passport/login", {
         username: "nonexistent",
@@ -166,7 +166,7 @@ describe("Rate Limit E2E", () => {
       await userConfigService.set({
         verificationProcessMaxAttempt: 5,
         rateLimits: {
-          login: {limit: 2, ttl: 60}
+          login: {limit: 2, ttl: 60_000}
         }
       });
 
@@ -191,7 +191,7 @@ describe("Rate Limit E2E", () => {
 
     it("should remove rate limiting when config is cleared", async () => {
       rateLimitService.setConfigCache({
-        login: {limit: 1, ttl: 60}
+        login: {limit: 1, ttl: 60_000}
       });
 
       await req.post("/passport/login", {
@@ -220,7 +220,7 @@ describe("Rate Limit E2E", () => {
     beforeEach(async () => {
       rateLimitService.resetTracker();
       rateLimitService.setConfigCache({
-        createUser: {limit: 2, ttl: 60}
+        createUser: {limit: 2, ttl: 60_000}
       });
     });
 
@@ -249,7 +249,7 @@ describe("Rate Limit E2E", () => {
     beforeEach(async () => {
       rateLimitService.resetTracker();
       rateLimitService.setConfigCache({
-        refreshToken: {limit: 2, ttl: 60}
+        refreshToken: {limit: 2, ttl: 60_000}
       });
     });
 

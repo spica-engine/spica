@@ -88,7 +88,7 @@ describe("RateLimitService", () => {
   describe("when rate limit config is set via setConfigCache", () => {
     beforeEach(() => {
       rateLimitService.setConfigCache({
-        login: {limit: 3, ttl: 60}
+        login: {limit: 3, ttl: 60_000}
       });
     });
 
@@ -130,8 +130,8 @@ describe("RateLimitService", () => {
 
     it("should track different groups independently", () => {
       rateLimitService.setConfigCache({
-        login: {limit: 2, ttl: 60},
-        forgotPassword: {limit: 5, ttl: 60}
+        login: {limit: 2, ttl: 60_000},
+        forgotPassword: {limit: 5, ttl: 60_000}
       });
 
       rateLimitService.checkLimit("login", "192.168.1.1");
@@ -151,8 +151,9 @@ describe("RateLimitService", () => {
     });
 
     it("should reset counter after TTL window expires", () => {
+      jest.useFakeTimers();
       rateLimitService.setConfigCache({
-        login: {limit: 2, ttl: 1}
+        login: {limit: 2, ttl: 60_000 * 5}
       });
 
       rateLimitService.checkLimit("login", "192.168.1.1");
@@ -160,23 +161,23 @@ describe("RateLimitService", () => {
       const blocked = rateLimitService.checkLimit("login", "192.168.1.1");
       expect(blocked.allowed).toBe(false);
 
-      return new Promise<void>(resolve => {
-        setTimeout(() => {
-          const afterReset = rateLimitService.checkLimit("login", "192.168.1.1");
-          expect(afterReset.allowed).toBe(true);
-          expect(afterReset.remaining).toBe(1);
-          resolve();
-        }, 1100);
-      });
+      jest.advanceTimersByTime(5 * 60_000);
+
+      const afterReset = rateLimitService.checkLimit("login", "192.168.1.1");
+      expect(afterReset.allowed).toBe(true);
+      expect(afterReset.remaining).toBe(1);
+      jest.useRealTimers();
     });
 
     it("should return correct resetAt timestamp", () => {
-      const before = Date.now();
-      const result = rateLimitService.checkLimit("login", "192.168.1.1");
-      const after = Date.now();
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date("2026-01-01T00:00:00Z"));
+      const now = Date.now();
 
-      expect(result.resetAt).toBeGreaterThanOrEqual(before + 60000);
-      expect(result.resetAt).toBeLessThanOrEqual(after + 60000);
+      const result = rateLimitService.checkLimit("login", "192.168.1.1");
+
+      expect(result.resetAt).toBe(now + 1 * 60_000);
+      jest.useRealTimers();
     });
   });
 
@@ -187,12 +188,12 @@ describe("RateLimitService", () => {
     });
 
     it("should return group config when set", () => {
-      rateLimitService.setConfigCache({login: {limit: 10, ttl: 60}});
-      expect(rateLimitService.getGroupConfig("login")).toEqual({limit: 10, ttl: 60});
+      rateLimitService.setConfigCache({login: {limit: 10, ttl: 60_000}});
+      expect(rateLimitService.getGroupConfig("login")).toEqual({limit: 10, ttl: 60_000});
     });
 
     it("should return undefined for unconfigured group", () => {
-      rateLimitService.setConfigCache({login: {limit: 10, ttl: 60}});
+      rateLimitService.setConfigCache({login: {limit: 10, ttl: 60_000}});
       expect(rateLimitService.getGroupConfig("refreshToken")).toBeUndefined();
     });
   });
@@ -202,13 +203,13 @@ describe("RateLimitService", () => {
       await userConfigService.set({
         verificationProcessMaxAttempt: 5,
         rateLimits: {
-          login: {limit: 10, ttl: 120}
+          login: {limit: 10, ttl: 60_000 * 2}
         }
       });
 
       await rateLimitService.onModuleInit();
 
-      expect(rateLimitService.getGroupConfig("login")).toEqual({limit: 10, ttl: 120});
+      expect(rateLimitService.getGroupConfig("login")).toEqual({limit: 10, ttl: 60_000 * 2});
     });
 
     it("should update config cache when config changes via change stream", async () => {
@@ -218,19 +219,19 @@ describe("RateLimitService", () => {
       await userConfigService.set({
         verificationProcessMaxAttempt: 5,
         rateLimits: {
-          login: {limit: 5, ttl: 30}
+          login: {limit: 5, ttl: 60_000}
         }
       });
 
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      expect(rateLimitService.getGroupConfig("login")).toEqual({limit: 5, ttl: 30});
+      expect(rateLimitService.getGroupConfig("login")).toEqual({limit: 5, ttl: 60_000});
     });
   });
 
   describe("resetTracker", () => {
     it("should clear all tracking data", () => {
-      rateLimitService.setConfigCache({login: {limit: 2, ttl: 60}});
+      rateLimitService.setConfigCache({login: {limit: 2, ttl: 60_000}});
       rateLimitService.checkLimit("login", "1.1.1.1");
       rateLimitService.checkLimit("login", "1.1.1.1");
 
@@ -279,7 +280,7 @@ describe("RateLimitGuard", () => {
   });
 
   it("should allow request when under limit and set headers", () => {
-    rateLimitService.setConfigCache({login: {limit: 5, ttl: 60}});
+    rateLimitService.setConfigCache({login: {limit: 5, ttl: 60_000}});
     const GuardClass = RateLimitGuard("login");
     const guard = new GuardClass(rateLimitService);
     const context = createMockContext();
@@ -291,7 +292,7 @@ describe("RateLimitGuard", () => {
   });
 
   it("should throw 429 when limit exceeded", () => {
-    rateLimitService.setConfigCache({login: {limit: 2, ttl: 60}});
+    rateLimitService.setConfigCache({login: {limit: 2, ttl: 60_000}});
     const GuardClass = RateLimitGuard("login");
     const guard = new GuardClass(rateLimitService);
     const context = createMockContext();
@@ -310,7 +311,7 @@ describe("RateLimitGuard", () => {
   });
 
   it("should set Retry-After header on 429 response", () => {
-    rateLimitService.setConfigCache({login: {limit: 1, ttl: 60}});
+    rateLimitService.setConfigCache({login: {limit: 1, ttl: 60_000}});
     const GuardClass = RateLimitGuard("login");
     const guard = new GuardClass(rateLimitService);
     const context = createMockContext();
@@ -325,7 +326,7 @@ describe("RateLimitGuard", () => {
   });
 
   it("should use ips[0] when proxy headers are present", () => {
-    rateLimitService.setConfigCache({login: {limit: 2, ttl: 60}});
+    rateLimitService.setConfigCache({login: {limit: 2, ttl: 60_000}});
     mockRequest.ips = ["10.0.0.1", "192.168.1.1"];
     mockRequest.ip = "192.168.1.1";
 
@@ -343,7 +344,7 @@ describe("RateLimitGuard", () => {
   });
 
   it("should use req.ip when no proxy headers", () => {
-    rateLimitService.setConfigCache({login: {limit: 1, ttl: 60}});
+    rateLimitService.setConfigCache({login: {limit: 1, ttl: 60_000}});
     mockRequest.ips = [];
     mockRequest.ip = "127.0.0.1";
 
@@ -358,8 +359,8 @@ describe("RateLimitGuard", () => {
 
   it("should handle different groups independently", () => {
     rateLimitService.setConfigCache({
-      login: {limit: 1, ttl: 60},
-      forgotPassword: {limit: 1, ttl: 60}
+      login: {limit: 1, ttl: 60_000},
+      forgotPassword: {limit: 1, ttl: 60_000}
     });
 
     const LoginGuard = RateLimitGuard("login");
