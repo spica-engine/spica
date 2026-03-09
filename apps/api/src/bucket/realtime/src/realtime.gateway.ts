@@ -76,29 +76,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       resourceFilterFunction,
       "bucket:data:stream",
       [
-        async (_client: any, req: any) => (data: any) => this.transformChunk(data, req),
-        ...(this.encryptionSecret
-          ? [
-              async (_client: any, req: any) => {
-                const bucketId = req.params.id;
-                const schema = await this.bucketService.findOne({_id: new ObjectId(bucketId)});
-                if (!schema) return undefined;
-                return (chunk: any) => {
-                  if (!chunk || !chunk.document) return chunk;
-                  return {
-                    ...chunk,
-                    document: decryptDocumentFields(
-                      chunk.document,
-                      schema,
-                      this.encryptionSecret,
-                      this.getBucketResolver(),
-                      chunk.document._id
-                    )
-                  };
-                };
-              }
-            ]
-          : [])
+        async (_client: any, req: any) => (data: any) => this.applyAcl(data, req),
+        ...(this.encryptionSecret ? [this.decryptDocuments.bind(this)] : [])
       ]
     );
   }
@@ -638,12 +617,28 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return strategyType === ReqAuthStrategy.USER;
   }
 
-  private transformChunk(document: any, req: any): any {
+  private applyAcl(document: any, req: any): any {
     if (!document || !this.shouldApplyAcl(req) || !req.__schemaProperties) {
       return document;
     }
 
     return applyFieldLevelAcl(document.document, req.__schemaProperties, req.user);
+  }
+
+  private async decryptDocuments(_client: any, req: any) {
+    const bucketId = req.params.id;
+    const schema = await this.bucketService.findOne({_id: new ObjectId(bucketId)});
+    if (!schema) return undefined;
+    return (document: any) => {
+      if (!document) return document;
+      return decryptDocumentFields(
+        document,
+        schema,
+        this.encryptionSecret,
+        this.getBucketResolver(),
+        document._id
+      );
+    };
   }
 }
 

@@ -67,10 +67,11 @@ export function getConnectionHandlers(
     const stream = realtime.find(collection, options).pipe(
       map(data => {
         if (data === null) return data;
-        return documentTransforms.reduce((acc: any, transform) => {
+        data.document = documentTransforms.reduce((acc: any, transform) => {
           if (transform) return transform(acc);
           return acc;
-        }, data);
+        }, data.document);
+        return data;
       }),
       catchError(error => {
         closeGracefully(client, error);
