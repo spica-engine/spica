@@ -39,6 +39,7 @@ import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
 import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
 import {provideUserPasswordPolicySchemaResolver} from "./password-policy.schema.resolver";
+import {RateLimitService} from "./rate-limit.service";
 
 @Global()
 @Module({})
@@ -90,6 +91,51 @@ export class UserModule {
                 strategy: {type: "string", enum: ["Otp", "MagicLink"]}
               }
             }
+          },
+          rateLimits: {
+            type: "object",
+            properties: {
+              login: {
+                type: "object",
+                properties: {
+                  limit: {type: "number", minimum: 1},
+                  ttl: {type: "number", minimum: 1}
+                },
+                required: ["limit", "ttl"]
+              },
+              providerVerification: {
+                type: "object",
+                properties: {
+                  limit: {type: "number", minimum: 1},
+                  ttl: {type: "number", minimum: 1}
+                },
+                required: ["limit", "ttl"]
+              },
+              forgotPassword: {
+                type: "object",
+                properties: {
+                  limit: {type: "number", minimum: 1},
+                  ttl: {type: "number", minimum: 1}
+                },
+                required: ["limit", "ttl"]
+              },
+              refreshToken: {
+                type: "object",
+                properties: {
+                  limit: {type: "number", minimum: 1},
+                  ttl: {type: "number", minimum: 1}
+                },
+                required: ["limit", "ttl"]
+              },
+              createUser: {
+                type: "object",
+                properties: {
+                  limit: {type: "number", minimum: 1},
+                  ttl: {type: "number", minimum: 1}
+                },
+                required: ["limit", "ttl"]
+              }
+            }
           }
         }
       });
@@ -100,7 +146,7 @@ export class UserModule {
     const module: DynamicModule = {
       module: UserModule,
       controllers: [UserController],
-      exports: [UserService, UserStrategy, USER_POLICY_FINALIZER],
+      exports: [UserService, UserStrategy, USER_POLICY_FINALIZER, RateLimitService],
       imports: [
         RefreshTokenServicesModule,
         JwtModule.register({
@@ -140,6 +186,7 @@ export class UserModule {
         VerificationProviderRegistry,
         ProviderVerificationService,
         PasswordResetService,
+        RateLimitService,
         {
           provide: USER_OPTIONS,
           useValue: options

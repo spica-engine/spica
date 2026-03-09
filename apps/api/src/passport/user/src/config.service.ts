@@ -2,7 +2,7 @@ import {Injectable} from "@nestjs/common";
 import {ConfigService} from "@spica-server/config";
 import {DatabaseService} from "@spica-server/database";
 import {BaseConfig} from "@spica-server/interface/config";
-import {UserConfigSettings} from "@spica-server/interface/passport/user";
+import {UserConfigSettings, RateLimitConfig} from "@spica-server/interface/passport/user";
 import {filter, map} from "rxjs/operators";
 
 @Injectable()
@@ -98,10 +98,22 @@ export class UserConfigService extends ConfigService {
     );
   }
 
+  async getRateLimitConfig(): Promise<RateLimitConfig | undefined> {
+    const config = (await this.findOne({
+      module: this.MODULE_NAME
+    })) as BaseConfig<UserConfigSettings>;
+
+    return config?.options?.rateLimits;
+  }
+
   watchConfig() {
     return this.watch([], {fullDocument: "updateLookup"}).pipe(
       filter(change => (change as any).fullDocument?.module === this.MODULE_NAME),
-      map(change => ((change as any).fullDocument?.options as UserConfigSettings) || {})
+      map(
+        change =>
+          ((change as any).fullDocument?.options as UserConfigSettings) ||
+          ({} as Partial<UserConfigSettings>)
+      )
     );
   }
 }
