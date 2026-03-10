@@ -1,5 +1,5 @@
 import {fromEvent, of} from "rxjs";
-import {catchError, map, takeUntil} from "rxjs/operators";
+import {catchError, concatMap, takeUntil} from "rxjs/operators";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ResourceFilterFunction, IGuardService} from "@spica-server/interface/passport/guard";
 
@@ -67,12 +67,15 @@ export function getConnectionHandlers(
       : [];
 
     const stream = realtime.find(collection, options).pipe(
-      map(data => {
+      concatMap(async data => {
         if (data === null) return data;
-        data.document = documentTransforms.reduce((acc: any, transform) => {
-          if (transform) return transform(acc);
-          return acc;
-        }, data.document);
+        let document = data.document;
+        for (const transform of documentTransforms) {
+          if (transform) {
+            document = await transform(document);
+          }
+        }
+        data.document = document;
         return data;
       }),
       catchError(error => {
