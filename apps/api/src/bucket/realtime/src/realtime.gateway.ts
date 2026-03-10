@@ -74,8 +74,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       undefined,
       "bucket:data:stream",
       [
-        async (_client: any, req: any) => (data: any) => this.applyAcl(data, req),
-        ...(this.encryptionSecret ? [this.decryptDocuments.bind(this)] : [])
+        (_client: any, req: any) => (data: any) => this.applyAcl(data, req),
+        ...(this.encryptionSecret
+          ? [(_client: any, req: any) => (data: any) => this.decryptDocuments(data, req)]
+          : [])
       ]
     );
   }
@@ -103,8 +105,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (!schema) {
       throw new Error(`Could not find the schema with id ${schemaId}.`);
     }
-
-    req.__schemaProperties = schema.properties;
 
     return BucketDataOptionsBuilder.fromBucketQuery(
       req,
@@ -560,12 +560,17 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return strategyType === ReqAuthStrategy.USER;
   }
 
-  private applyAcl(document: any, req: any): any {
-    if (!document || !this.shouldApplyAcl(req) || !req.__schemaProperties) {
+  private async applyAcl(document: any, req: any) {
+    if (!document || !this.shouldApplyAcl(req)) {
       return document;
     }
 
-    return applyFieldLevelAcl(document, req.__schemaProperties, req.user);
+    const schema = await this.bucketService.findOne({_id: new ObjectId(req.params.id)});
+    if (!schema?.properties) {
+      return document;
+    }
+
+    return applyFieldLevelAcl(document, schema.properties, req.user);
   }
 
   private async decryptDocuments(_client: any, req: any) {
