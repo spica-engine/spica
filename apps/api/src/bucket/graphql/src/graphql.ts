@@ -241,12 +241,12 @@ export class GraphqlController implements OnModuleInit {
       context: any,
       info: GraphQLResolveInfo
     ): Promise<FindResponse> => {
-      const resourceFilter = await this.authorize(
+      await this.authorize(
         context,
         "/bucket/:bucketId/data",
         {bucketId: bucket._id},
         ["bucket:data:index"],
-        {resourceFilter: true}
+        {resourceFilter: false}
       );
 
       let matchExpression = {};
@@ -269,7 +269,6 @@ export class GraphqlController implements OnModuleInit {
           limit,
           skip,
           sort,
-          resourceFilter,
           relationPaths: [...expressionFields, ...responseFields],
           filter: matchExpression,
           projectMap: responseFields,

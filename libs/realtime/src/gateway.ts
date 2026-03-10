@@ -1,5 +1,5 @@
 import {fromEvent, of} from "rxjs";
-import {catchError, map, takeUntil} from "rxjs/operators";
+import {catchError, concatMap, takeUntil} from "rxjs/operators";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ResourceFilterFunction, IGuardService} from "@spica-server/interface/passport/guard";
 
@@ -11,10 +11,10 @@ export function getConnectionHandlers(
   realtime: RealtimeDatabaseService,
   resourceFilterFunction?: ResourceFilterFunction,
   authAction?: string,
-  documentTransformFactory?: (
+  documentTransformFactories?: ((
     client: any,
     req: any
-  ) => Promise<((data: any) => any) | undefined> | ((data: any) => any) | undefined
+  ) => Promise<((data: any) => any) | undefined> | ((data: any) => any) | undefined)[]
 ) {
   async function handleConnection(client: any, req: any) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
@@ -30,43 +30,52 @@ export function getConnectionHandlers(
           request: req,
           response: client,
           actions: authAction,
-          options: {resourceFilter: true}
+          options: {resourceFilter: !!resourceFilterFunction}
         });
 
-        req.resourceFilter = resourceFilterFunction({}, {
-          switchToHttp: () => ({
-            getRequest: () => req
-          })
-        } as any);
+        if (resourceFilterFunction) {
+          req.resourceFilter = resourceFilterFunction({}, {
+            switchToHttp: () => ({
+              getRequest: () => req
+            })
+          } as any);
+        }
       }
     } catch (error) {
       closeGracefully(client, error);
       return;
     }
 
-    const collection = await getCollectionName(client, req);
-
+    let collection;
     let options;
     try {
+      collection = await getCollectionName(client, req);
       options = await getFindOptions(client, req);
     } catch (error) {
       closeGracefully(client, error);
       return;
     }
 
-    if (!options) {
+    if (!options || !collection) {
       return;
     }
 
-    const documentTransform = documentTransformFactory
-      ? await documentTransformFactory(client, req)
-      : undefined;
+    const documentTransforms = documentTransformFactories
+      ? await Promise.all(
+          documentTransformFactories.map(factory => Promise.resolve(factory(client, req)))
+        )
+      : [];
 
     const stream = realtime.find(collection, options).pipe(
-      map(data => {
-        if (data !== null && documentTransform) {
-          return documentTransform(data);
+      concatMap(async data => {
+        if (data === null) return data;
+        let document = data.document;
+        for (const transform of documentTransforms) {
+          if (transform) {
+            document = await transform(document);
+          }
         }
+        data.document = document;
         return data;
       }),
       catchError(error => {
