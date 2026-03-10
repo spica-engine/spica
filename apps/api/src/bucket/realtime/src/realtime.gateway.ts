@@ -496,7 +496,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       );
     }
 
-    await clearRelations(this.bucketService, schema._id, document._id);
+    clearRelations(this.bucketService, schema._id, document._id);
 
     const dependents = getDependents(schema, deletedDocument);
 
