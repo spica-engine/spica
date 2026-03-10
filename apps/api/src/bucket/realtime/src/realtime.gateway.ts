@@ -75,9 +75,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       "bucket:data:stream",
       [
         (_client: any, req: any) => (data: any) => this.applyAcl(data, req),
-        ...(this.encryptionSecret
-          ? [(_client: any, req: any) => (data: any) => this.decryptDocuments(data, req)]
-          : [])
+        ...(this.encryptionSecret ? [this.decryptDocuments.bind(this)] : [])
       ]
     );
   }
