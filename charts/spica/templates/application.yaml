@@ -99,31 +99,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
                   key: secret
-            - name: BUCKET_DATA_HASH_SECRET
+            - name: MASTER_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
-                  key: bucketDataHashSecret
-            - name: BUCKET_DATA_ENCRYPTION_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-application-secrets
-                  key: bucketDataEncryptionSecret
-            - name: USER_VERIFICATION_HASH_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-application-secrets
-                  key: userVerificationHashSecret
-            - name: USER_PROVIDER_ENCRYPTION_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-application-secrets
-                  key: userProviderEncryptionSecret
-            - name: USER_PROVIDER_HASH_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-application-secrets
-                  key: userProviderHashSecret
+                  key: masterKey
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:

@@ -28,14 +28,10 @@ images:
 application:
   replicas: 1
   secret:
-  bucketDataHashSecret:
-  bucketDataEncryptionSecret:
+  masterKey:
   twilioAccountSid:
   twilioAuthToken:
   twilioFromNumber:
-  userVerificationHashSecret:
-  userProviderEncryptionSecret:
-  userProviderHashSecret:
   defaultPassword: spica
   webBaseUrl: /spica/
   apiBaseUrl: /api/
