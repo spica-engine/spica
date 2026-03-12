@@ -805,7 +805,7 @@ const modules = [
   ConfigModule.forRoot(),
   StatusModule.forRoot({
     expireAfterSeconds: args["common-log-lifespan"],
-    httpStatusTracking: args["status-tracking"]
+    httpStatusTracking: args["http-status-tracking"]
   })
 ];
 
