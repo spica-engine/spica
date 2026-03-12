@@ -46,7 +46,8 @@ describe("Password Policy - User", () => {
             },
             refreshTokenExpiresIn: 60000,
             passwordHistoryLimit: 0,
-            identityRealtime: false
+            identityRealtime: false,
+            refreshTokenHashSecret: "refresh-token-hash-secret"
           },
           userOptions: {
             expiresIn: 60000,
@@ -60,7 +61,8 @@ describe("Password Policy - User", () => {
             },
             refreshTokenExpiresIn: 60000,
             passwordHistoryLimit: 0,
-            userRealtime: false
+            userRealtime: false,
+            refreshTokenHashSecret: "refresh-token-hash-secret"
           }
         })
       ]

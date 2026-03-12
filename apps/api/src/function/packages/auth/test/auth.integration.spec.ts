@@ -677,7 +677,8 @@ describe("auth verification flows", () => {
             },
             refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
             passwordHistoryLimit: 0,
-            identityRealtime: false
+            identityRealtime: false,
+            refreshTokenHashSecret: "refresh-token-hash-secret"
           },
           userOptions: {
             expiresIn: EXPIRES_IN,
@@ -695,7 +696,8 @@ describe("auth verification flows", () => {
             verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
             providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
             providerHashSecret: "3fe2e8060da06c70906096b43db6de11",
-            verificationCodeExpiresIn: 300
+            verificationCodeExpiresIn: 300,
+            refreshTokenHashSecret: "refresh-token-hash-secret"
           }
         }),
         MailerModule.forRoot({

@@ -61,7 +61,6 @@ describe("ACL Rules with Different Authentication Strategies", () => {
             },
             refreshTokenExpiresIn: 60 * 60 * 24 * 3,
             refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
-
             passwordHistoryLimit: 2,
             identityRealtime: false
           },
@@ -77,7 +76,6 @@ describe("ACL Rules with Different Authentication Strategies", () => {
             },
             refreshTokenExpiresIn: 60 * 60 * 24 * 3,
             refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
-
             passwordHistoryLimit: 2,
             userRealtime: false
           }
