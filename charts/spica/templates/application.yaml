@@ -83,7 +83,6 @@ spec:
             periodSeconds: {{ .Values.application.apiLivenessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.application.apiLivenessProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.application.apiLivenessProbeFailureThreshold }}
-            successThreshold: {{ .Values.application.apiLivenessProbeSuccessThreshold }}
           readinessProbe:
             httpGet:
               path: /status/ready
@@ -92,7 +91,6 @@ spec:
             periodSeconds: {{ .Values.application.apiReadinessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.application.apiReadinessProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.application.apiReadinessProbeFailureThreshold }}
-            successThreshold: {{ .Values.application.apiReadinessProbeSuccessThreshold }}
           args: [
 {{if len .Values.application.args}}
 {{- range .Values.application.args }}
