@@ -97,11 +97,10 @@ spec:
                 - admin
                 - --eval
                 - "db.adminCommand('ping')"
-            initialDelaySeconds: 15   # mongod needs a moment to start with auth + keyFile
-            periodSeconds: 5
-            timeoutSeconds: 5
-            failureThreshold: 20      # 15 + (20 × 5) = 115 seconds accounts for postStart init-replica.sh
-
+            initialDelaySeconds: {{ .Values.database.startupProbeInitialDelaySeconds }}
+            periodSeconds: {{ .Values.database.startupProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.startupProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.startupProbeFailureThreshold }}
           livenessProbe:
             exec:
               command:
@@ -114,9 +113,10 @@ spec:
                 - admin
                 - --eval
                 - "db.adminCommand('ping')"
-            periodSeconds: 30         # mongosh spawn has process overhead; don't fire too often
-            timeoutSeconds: 10
-            failureThreshold: 3       # 90s before restart — MongoDB is deliberately slow on some operations
+            periodSeconds: {{ .Values.database.livenessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.livenessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.livenessProbeFailureThreshold }}
+            successThreshold: {{ .Values.database.livenessProbeSuccessThreshold }}
           readinessProbe:
             exec:
               command:
@@ -129,9 +129,10 @@ spec:
                 - admin
                 - --eval
                 - "db.adminCommand('ping')"
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3       # 30s before removing from LB
+            periodSeconds: {{ .Values.database.readinessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.readinessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.readinessProbeFailureThreshold }}
+            successThreshold: {{ .Values.database.readinessProbeSuccessThreshold }}
           lifecycle:
             postStart:
               exec:

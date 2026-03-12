@@ -20,19 +20,20 @@ database:
   profilingSlowms: 100
   # probes
   # startup
-  startupProbeInitialDelaySeconds: 
-  startupProbePeriodSeconds: 
-  startupProbeTimeoutSeconds: 
+  startupProbeInitialDelaySeconds: 15
+  startupProbePeriodSeconds: 5
+  startupProbeTimeoutSeconds: 5
+  startupProbeFailureThreshold: 20
   # liveness
-  livenessProbePeriodSeconds: 
-  livenessProbeTimeoutSeconds: 
-  livenessProbeFailureThreshold: 
-  livenessProbeSuccessThreshold: 
+  livenessProbePeriodSeconds: 30
+  livenessProbeTimeoutSeconds: 10
+  livenessProbeFailureThreshold: 3
+  livenessProbeSuccessThreshold: 1
   # readiness
-  readinessProbePeriodSeconds: 
-  readinessProbeTimeoutSeconds: 
-  readinessProbeFailureThreshold: 
-  readinessProbeSuccessThreshold: 
+  readinessProbePeriodSeconds: 10
+  readinessProbeTimeoutSeconds: 5
+  readinessProbeFailureThreshold: 3
+  readinessProbeSuccessThreshold: 1
 
 images:
   api: spicaengine/api
@@ -64,19 +65,20 @@ application:
   serviceAccountName: default
   # probes
   # startup
-  apiStartupProbeInitialDelaySeconds: 
-  apiStartupProbePeriodSeconds: 
-  apiStartupProbeTimeoutSeconds: 
+  apiStartupProbeInitialDelaySeconds: 10
+  apiStartupProbePeriodSeconds: 5
+  apiStartupProbeTimeoutSeconds: 3
+  apiStartupProbeFailureThreshold: 24
   # liveness
-  apiLivenessProbePeriodSeconds: 
-  apiLivenessProbeTimeoutSeconds: 
-  apiLivenessProbeFailureThreshold: 
-  apiLivenessProbeSuccessThreshold: 
+  apiLivenessProbePeriodSeconds: 15
+  apiLivenessProbeTimeoutSeconds: 5
+  apiLivenessProbeFailureThreshold: 3
+  apiLivenessProbeSuccessThreshold: 1
   # readiness
-  apiReadinessProbePeriodSeconds: 
-  apiReadinessProbeTimeoutSeconds: 
-  apiReadinessProbeFailureThreshold: 
-  apiReadinessProbeSuccessThreshold: 
+  apiReadinessProbePeriodSeconds: 5
+  apiReadinessProbeTimeoutSeconds: 5
+  apiReadinessProbeFailureThreshold: 6
+  apiReadinessProbeSuccessThreshold: 1
 ingress:
   hosts: []
   tls: []

@@ -71,28 +71,28 @@ spec:
               path: /status/live
               port: 4300
               scheme: HTTP
-            initialDelaySeconds: 10  
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 24      # 10 + (24 × 5) = 130 seconds max boot window
-
+            initialDelaySeconds: {{ .Values.application.apiStartupProbeInitialDelaySeconds }}
+            periodSeconds: {{ .Values.application.apiStartupProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.application.apiStartupProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.application.apiStartupProbeFailureThreshold }}
           livenessProbe:
             httpGet:
-              path: /status/live    
+              path: /status/live
               port: 4300
               scheme: HTTP
-            periodSeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 3    # 3 strikes with 15s interval = 45 seconds max downtime before restart
-
+            periodSeconds: {{ .Values.application.apiLivenessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.application.apiLivenessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.application.apiLivenessProbeFailureThreshold }}
+            successThreshold: {{ .Values.application.apiLivenessProbeSuccessThreshold }}
           readinessProbe:
             httpGet:
-              path: /status/ready    
+              path: /status/ready
               port: 4300
               scheme: HTTP
-            periodSeconds: 5
-            timeoutSeconds: 5
-            failureThreshold: 6      # 6 strikes with 5s interval = 30 seconds max downtime before removing from service(no restart yet, but traffic won't be sent to the pod)
+            periodSeconds: {{ .Values.application.apiReadinessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.application.apiReadinessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.application.apiReadinessProbeFailureThreshold }}
+            successThreshold: {{ .Values.application.apiReadinessProbeSuccessThreshold }}
           args: [
 {{if len .Values.application.args}}
 {{- range .Values.application.args }}
