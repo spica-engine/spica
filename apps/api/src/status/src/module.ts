@@ -16,16 +16,18 @@ export class StatusModule {
   }
 
   static forRoot(options: StatusOptions): DynamicModule {
+    const providers = [];
+    if (options.httpStatusTracking) {
+      providers.push({
+        provide: APP_INTERCEPTOR,
+        useClass: StatusInterceptor
+      });
+    }
     return {
       module: StatusModule,
       controllers: [StatusController],
       imports: [CoreStatusServiceModule.forRoot(options)],
-      providers: [
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: StatusInterceptor
-        }
-      ]
+      providers
     };
   }
 }

@@ -3,6 +3,7 @@ import {ObjectId} from "@spica-server/database";
 
 export interface StatusOptions {
   expireAfterSeconds: number;
+  httpStatusTracking?: boolean;
 }
 
 export type AttachStatusTracker = (req: Request, res: Response) => void;
