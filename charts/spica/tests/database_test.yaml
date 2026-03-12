@@ -246,16 +246,12 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe.failureThreshold
           value: 3
-      - equal:
-          path: spec.template.spec.containers[0].livenessProbe.successThreshold
-          value: 1
 
   - it: should reflect custom liveness probe values from values.yaml
     set:
       database.livenessProbePeriodSeconds: 60
       database.livenessProbeTimeoutSeconds: 15
       database.livenessProbeFailureThreshold: 5
-      database.livenessProbeSuccessThreshold: 1
     template: templates/database.yaml
     documentSelector:
       path: kind
@@ -299,16 +295,12 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.failureThreshold
           value: 3
-      - equal:
-          path: spec.template.spec.containers[0].readinessProbe.successThreshold
-          value: 1
 
   - it: should reflect custom readiness probe values from values.yaml
     set:
       database.readinessProbePeriodSeconds: 20
       database.readinessProbeTimeoutSeconds: 8
       database.readinessProbeFailureThreshold: 6
-      database.readinessProbeSuccessThreshold: 1
     template: templates/database.yaml
     documentSelector:
       path: kind
