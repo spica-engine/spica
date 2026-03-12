@@ -41,7 +41,7 @@ describe("Health Check Endpoints", () => {
     expect(res.body).toEqual({status: "ok"});
   });
 
-  it("GET /status/ready should server unavailable expection if database is not ready", async () => {
+  it("GET /status/ready should return Service Unavailable when database is not ready", async () => {
     // mock database ping command to throw an error
     jest.spyOn(db, "command").mockRejectedValueOnce(new Error("Database is not ready"));
     const res = await req.get("/status/ready");
