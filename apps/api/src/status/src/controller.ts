@@ -13,13 +13,13 @@ import {
 import {DATE} from "@spica-server/core";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {StatusProvider} from "@spica-server/interface/status";
-import {MongoClient} from "@spica-server/database";
+import {DatabaseService} from "@spica-server/database";
 
 export const providers = new Set<StatusProvider>();
 
 @Controller("status")
 export class StatusController {
-  constructor(@Inject(MongoClient) private readonly mongoClient: MongoClient) {}
+  constructor(@Inject(DatabaseService) private readonly db: DatabaseService) {}
 
   private get providers() {
     return Array.from(providers);
@@ -35,7 +35,7 @@ export class StatusController {
   @HttpCode(HttpStatus.OK)
   async readiness() {
     try {
-      await this.mongoClient.db().command({ping: 1});
+      await this.db.command({ping: 1});
       return {status: "ok"};
     } catch {
       throw new ServiceUnavailableException("Database is not ready");
