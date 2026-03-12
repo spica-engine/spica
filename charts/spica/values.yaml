@@ -28,12 +28,10 @@ database:
   livenessProbePeriodSeconds: 30
   livenessProbeTimeoutSeconds: 10
   livenessProbeFailureThreshold: 3
-  livenessProbeSuccessThreshold: 1
   # readiness
   readinessProbePeriodSeconds: 10
   readinessProbeTimeoutSeconds: 5
   readinessProbeFailureThreshold: 3
-  readinessProbeSuccessThreshold: 1
 
 images:
   api: spicaengine/api
@@ -73,12 +71,10 @@ application:
   apiLivenessProbePeriodSeconds: 15
   apiLivenessProbeTimeoutSeconds: 5
   apiLivenessProbeFailureThreshold: 3
-  apiLivenessProbeSuccessThreshold: 1
   # readiness
   apiReadinessProbePeriodSeconds: 5
   apiReadinessProbeTimeoutSeconds: 5
   apiReadinessProbeFailureThreshold: 6
-  apiReadinessProbeSuccessThreshold: 1
 ingress:
   hosts: []
   tls: []
