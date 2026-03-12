@@ -66,15 +66,31 @@ spec:
 {{ toYaml .Values.application.apiResources | indent 12 }}
           ports:
             - containerPort: 4300
-          readinessProbe:
+          startupProbe:
             httpGet:
-              path: /passport/strategies
+              path: /status/live
               port: 4300
               scheme: HTTP
-            initialDelaySeconds: 15
-            periodSeconds: 5
-            timeoutSeconds: 5
-            failureThreshold: 6
+            initialDelaySeconds: {{ .Values.application.apiStartupProbeInitialDelaySeconds }}
+            periodSeconds: {{ .Values.application.apiStartupProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.application.apiStartupProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.application.apiStartupProbeFailureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /status/live
+              port: 4300
+              scheme: HTTP
+            periodSeconds: {{ .Values.application.apiLivenessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.application.apiLivenessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.application.apiLivenessProbeFailureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /status/ready
+              port: 4300
+              scheme: HTTP
+            periodSeconds: {{ .Values.application.apiReadinessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.application.apiReadinessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.application.apiReadinessProbeFailureThreshold }}
           args: [
 {{if len .Values.application.args}}
 {{- range .Values.application.args }}
