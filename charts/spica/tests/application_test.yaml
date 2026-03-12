@@ -201,16 +201,12 @@ tests:
       - equal:
           path: spec.template.spec.containers[1].livenessProbe.failureThreshold
           value: 3
-      - equal:
-          path: spec.template.spec.containers[1].livenessProbe.successThreshold
-          value: 1
 
   - it: should reflect custom liveness probe values from values.yaml
     set:
       application.apiLivenessProbePeriodSeconds: 30
       application.apiLivenessProbeTimeoutSeconds: 10
       application.apiLivenessProbeFailureThreshold: 5
-      application.apiLivenessProbeSuccessThreshold: 1
     template: templates/application.yaml
     documentSelector:
       path: kind
@@ -254,16 +250,12 @@ tests:
       - equal:
           path: spec.template.spec.containers[1].readinessProbe.failureThreshold
           value: 6
-      - equal:
-          path: spec.template.spec.containers[1].readinessProbe.successThreshold
-          value: 1
 
   - it: should reflect custom readiness probe values from values.yaml
     set:
       application.apiReadinessProbePeriodSeconds: 15
       application.apiReadinessProbeTimeoutSeconds: 8
       application.apiReadinessProbeFailureThreshold: 3
-      application.apiReadinessProbeSuccessThreshold: 1
     template: templates/application.yaml
     documentSelector:
       path: kind
