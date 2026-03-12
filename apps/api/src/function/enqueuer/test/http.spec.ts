@@ -674,3 +674,201 @@ describe("http enqueuer with authentication and authorization", () => {
     httpEnqueuer.unsubscribe(noopTarget);
   });
 });
+
+describe("http enqueuer with rate limiting", () => {
+  let app: INestApplication;
+  let req: Request;
+  let httpEnqueuer: HttpEnqueuer;
+  let noopTarget: event.Target;
+
+  let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+  let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+
+  let schedulerUnsubscriptionSpy: jest.Mock;
+
+  let guardService: {
+    checkAuthentication: jest.Mock;
+    checkAuthorization: jest.Mock;
+  };
+
+  let corsOptions = {
+    allowCredentials: true,
+    allowedHeaders: ["*"],
+    allowedMethods: ["*"],
+    allowedOrigins: ["*"]
+  };
+
+  function createTarget(cwd?: string, handler?: string) {
+    const target = new event.Target();
+    target.cwd = cwd || "/tmp/fn1";
+    target.handler = handler || "default";
+    target.id = "function_id_1";
+    return target;
+  }
+
+  beforeEach(async () => {
+    noopTarget = createTarget();
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
+
+    app = module.createNestApplication();
+    req = module.get(Request);
+
+    eventQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+    httpQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+
+    guardService = {
+      checkAuthentication: jest.fn().mockResolvedValue(true),
+      checkAuthorization: jest.fn().mockResolvedValue(true)
+    };
+
+    await app.listen(req.socket);
+
+    schedulerUnsubscriptionSpy = jest.fn();
+    httpEnqueuer = new HttpEnqueuer(
+      eventQueue as any,
+      httpQueue as any,
+      app.getHttpAdapter().getInstance(),
+      corsOptions,
+      schedulerUnsubscriptionSpy,
+      guardService as any
+    );
+  });
+
+  afterEach(() => {
+    app.close();
+  });
+
+  it("should enqueue event when no rateLimit is configured", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/no-limit",
+      preflight: false
+    });
+
+    const response = await req.get("/fn-execute/no-limit");
+
+    expect(response.statusCode).toBe(200);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+    expect(response.headers["x-ratelimit-limit"]).toBeUndefined();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should enqueue event when within rate limit", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-ok",
+      preflight: false,
+      rateLimit: {limit: 3, ttl: 60_000}
+    });
+
+    const response = await req.get("/fn-execute/rate-ok");
+
+    expect(response.statusCode).toBe(200);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+    expect(response.headers["x-ratelimit-limit"]).toBe("3");
+    expect(response.headers["x-ratelimit-remaining"]).toBe("2");
+    expect(response.headers["x-ratelimit-reset"]).toBeDefined();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should enqueue event when rate limiting is removed", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-ok",
+      preflight: false,
+      rateLimit: {limit: 1, ttl: 60_000}
+    });
+
+    const response = await req.get("/fn-execute/rate-ok");
+    expect(response.statusCode).toBe(429);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(0);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+
+    const response2 = await req.get("/fn-execute/rate-ok");
+    expect(response.statusCode).toBe(200);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should return 429 when rate limit is exceeded", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-exceed",
+      preflight: false,
+      rateLimit: {limit: 2, ttl: 60_000}
+    });
+
+    await req.get("/fn-execute/rate-exceed");
+    await req.get("/fn-execute/rate-exceed");
+
+    eventQueue.enqueue.mockClear();
+    httpQueue.enqueue.mockClear();
+
+    const response = await req.get("/fn-execute/rate-exceed");
+
+    expect(response.statusCode).toBe(429);
+    expect(response.body).toEqual({
+      statusCode: 429,
+      message: "Too many requests. Please try again later.",
+      error: "Too Many Requests"
+    });
+    expect(response.headers["x-ratelimit-limit"]).toBe("2");
+    expect(response.headers["x-ratelimit-remaining"]).toBe("0");
+    expect(response.headers["retry-after"]).toBeDefined();
+    expect(eventQueue.enqueue).not.toHaveBeenCalled();
+    expect(httpQueue.enqueue).not.toHaveBeenCalled();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should use new config when trigger is re-added with different rate limit", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-reconfig",
+      preflight: false,
+      rateLimit: {limit: 1, ttl: 60_000}
+    });
+
+    await req.get("/fn-execute/rate-reconfig");
+    const blocked = await req.get("/fn-execute/rate-reconfig");
+    expect(blocked.statusCode).toBe(429);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-reconfig",
+      preflight: false,
+      rateLimit: {limit: 5, ttl: 60_000}
+    });
+
+    const response = await req.get("/fn-execute/rate-reconfig");
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["x-ratelimit-limit"]).toBe("5");
+    expect(response.headers["x-ratelimit-remaining"]).toBe("4");
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+});

@@ -32,6 +32,7 @@ export interface HttpOptions {
   preflight: boolean;
   authenticate?: string[];
   authorize?: boolean;
+  rateLimit?: {limit: number; ttl: number};
 }
 
 export interface ScheduleOptions {
