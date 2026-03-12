@@ -18,6 +18,21 @@ database:
   logLevel: 0
   profilingLevel: 1
   profilingSlowms: 100
+  # probes
+  # startup
+  startupProbeInitialDelaySeconds: 
+  startupProbePeriodSeconds: 
+  startupProbeTimeoutSeconds: 
+  # liveness
+  livenessProbePeriodSeconds: 
+  livenessProbeTimeoutSeconds: 
+  livenessProbeFailureThreshold: 
+  livenessProbeSuccessThreshold: 
+  # readiness
+  readinessProbePeriodSeconds: 
+  readinessProbeTimeoutSeconds: 
+  readinessProbeFailureThreshold: 
+  readinessProbeSuccessThreshold: 
 
 images:
   api: spicaengine/api
@@ -47,6 +62,21 @@ application:
   args: []
   diskAccessMode: ReadWriteOnce
   serviceAccountName: default
+  # probes
+  # startup
+  apiStartupProbeInitialDelaySeconds: 
+  apiStartupProbePeriodSeconds: 
+  apiStartupProbeTimeoutSeconds: 
+  # liveness
+  apiLivenessProbePeriodSeconds: 
+  apiLivenessProbeTimeoutSeconds: 
+  apiLivenessProbeFailureThreshold: 
+  apiLivenessProbeSuccessThreshold: 
+  # readiness
+  apiReadinessProbePeriodSeconds: 
+  apiReadinessProbeTimeoutSeconds: 
+  apiReadinessProbeFailureThreshold: 
+  apiReadinessProbeSuccessThreshold: 
 ingress:
   hosts: []
   tls: []

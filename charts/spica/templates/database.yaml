@@ -85,6 +85,38 @@ spec:
               mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replicaAuthKey  --setParameter logLevel={{ .Values.database.logLevel }}
           ports:
             - containerPort: 27017
+          startupProbe:
+            exec:
+              command:
+                - mongosh
+                - --username
+                - $(ROOT_USERNAME)
+                - --password
+                - $(ROOT_PASSWORD)
+                - --authenticationDatabase
+                - admin
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 15   # mongod needs a moment to start with auth + keyFile
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 20      # 15 + (20 × 5) = 115 seconds accounts for postStart init-replica.sh
+
+          livenessProbe:
+            exec:
+              command:
+                - mongosh
+                - --username
+                - $(ROOT_USERNAME)
+                - --password
+                - $(ROOT_PASSWORD)
+                - --authenticationDatabase
+                - admin
+                - --eval
+                - "db.adminCommand('ping')"
+            periodSeconds: 30         # mongosh spawn has process overhead; don't fire too often
+            timeoutSeconds: 10
+            failureThreshold: 3       # 90s before restart — MongoDB is deliberately slow on some operations
           readinessProbe:
             exec:
               command:
@@ -96,11 +128,10 @@ spec:
                 - --authenticationDatabase
                 - admin
                 - --eval
-                - db.adminCommand('ping')
-            initialDelaySeconds: 10
-            periodSeconds: 5
+                - "db.adminCommand('ping')"
+            periodSeconds: 10
             timeoutSeconds: 5
-            failureThreshold: 6
+            failureThreshold: 3       # 30s before removing from LB
           lifecycle:
             postStart:
               exec:

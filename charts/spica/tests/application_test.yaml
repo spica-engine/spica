@@ -116,6 +116,19 @@ tests:
       - equal:
           path: spec.template.spec.containers[1].name
           value: api
+  
+  - it: should configure startup probe on the api container
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.httpGet.path
+          value: /status/startup
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.httpGet.port
+          value: 4300
 
   - it: should configure liveness probe on the api container
     template: templates/application.yaml

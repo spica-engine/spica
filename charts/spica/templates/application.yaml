@@ -66,24 +66,33 @@ spec:
 {{ toYaml .Values.application.apiResources | indent 12 }}
           ports:
             - containerPort: 4300
-          livenessProbe:
+          startupProbe:
             httpGet:
               path: /status/live
               port: 4300
               scheme: HTTP
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
+            initialDelaySeconds: 10  
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 24      # 10 + (24 × 5) = 130 seconds max boot window
+
+          livenessProbe:
             httpGet:
-              path: /status/ready
+              path: /status/live    
               port: 4300
               scheme: HTTP
-            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3    # 3 strikes with 15s interval = 45 seconds max downtime before restart
+
+          readinessProbe:
+            httpGet:
+              path: /status/ready    
+              port: 4300
+              scheme: HTTP
             periodSeconds: 5
             timeoutSeconds: 5
-            failureThreshold: 6
+            failureThreshold: 6      # 6 strikes with 5s interval = 30 seconds max downtime before removing from service(no restart yet, but traffic won't be sent to the pod)
           args: [
 {{if len .Values.application.args}}
 {{- range .Values.application.args }}

@@ -162,6 +162,32 @@ tests:
             name: RS_MEMBERS
           any: true
 
+  - it: should configure the startup probe with mongosh ping
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].startupProbe.exec.command
+          content: mongosh
+      - contains:
+          path: spec.template.spec.containers[0].startupProbe.exec.command
+          content: "db.adminCommand('ping')"
+
+  - it: should configure the liveness probe with mongosh ping
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command
+          content: mongosh
+      - contains:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command
+          content: "db.adminCommand('ping')"
+
   - it: should configure the readiness probe with mongosh ping
     template: templates/database.yaml
     documentSelector:
