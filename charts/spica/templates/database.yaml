@@ -116,7 +116,6 @@ spec:
             periodSeconds: {{ .Values.database.livenessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.database.livenessProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.database.livenessProbeFailureThreshold }}
-            successThreshold: {{ .Values.database.livenessProbeSuccessThreshold }}
           readinessProbe:
             exec:
               command:
@@ -132,7 +131,6 @@ spec:
             periodSeconds: {{ .Values.database.readinessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.database.readinessProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.database.readinessProbeFailureThreshold }}
-            successThreshold: {{ .Values.database.readinessProbeSuccessThreshold }}
           lifecycle:
             postStart:
               exec:
