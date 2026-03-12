@@ -11,7 +11,6 @@ import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
-import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
 import {v4 as uuidv4} from "uuid";
 import {
   encrypt,
@@ -83,7 +82,7 @@ export class UserService extends BaseCollection<User>("user") {
     return this.userOptions.expiresIn;
   }
 
-  async signRefreshToken(user: User, clientMeta?: ClientMeta) {
+  async signRefreshToken(user: User) {
     const expiresIn = this.userOptions.refreshTokenExpiresIn;
     const token = this.jwt.sign({username: user.username, uuid: uuidv4()}, {expiresIn});
 
@@ -94,8 +93,7 @@ export class UserService extends BaseCollection<User>("user") {
       user: String(user._id),
       created_at: new Date(),
       expired_at: new Date(Date.now() + expiresIn * 1000),
-      last_used_at: undefined,
-      client_meta: clientMeta
+      last_used_at: undefined
     };
 
     await this.refreshTokenService.insertOne(tokenSchema);
@@ -127,8 +125,7 @@ export class UserService extends BaseCollection<User>("user") {
 
   private async verifyTokenCanBeUsed(
     accessToken: string,
-    refreshToken: string,
-    clientMeta?: ClientMeta
+    refreshToken: string
   ) {
     const hashedToken = this.hashRefreshToken(refreshToken);
     const refreshTokenData = await this.refreshTokenService.findOne({token: hashedToken});
@@ -161,10 +158,10 @@ export class UserService extends BaseCollection<User>("user") {
     return user;
   }
 
-  async refreshToken(accessToken: string, refreshToken: string, clientMeta?: ClientMeta) {
+  async refreshToken(accessToken: string, refreshToken: string) {
     accessToken = this.extractAccessToken(accessToken);
     await this.verifyTokenCanBeRefreshed(accessToken, refreshToken);
-    await this.verifyTokenCanBeUsed(accessToken, refreshToken, clientMeta);
+    await this.verifyTokenCanBeUsed(accessToken, refreshToken);
     await this.updateRefreshTokenLastUsedAt(refreshToken);
     const user = await this.findUserOfToken(accessToken);
     return this.sign(user);

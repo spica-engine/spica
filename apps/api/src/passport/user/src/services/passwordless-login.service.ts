@@ -2,7 +2,6 @@ import {Injectable, NotFoundException, BadRequestException, Logger} from "@nestj
 import {UserService} from "../user.service";
 import {VerificationService} from "../verification.service";
 import {UserConfigService} from "../config.service";
-import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
 
 @Injectable()
 export class PasswordlessLoginService {
@@ -48,8 +47,7 @@ export class PasswordlessLoginService {
   async verify(
     username: string,
     code: string,
-    provider: "email" | "phone",
-    clientMeta?: ClientMeta
+    provider: "email" | "phone"
   ) {
     const {providerConfig, user} = await this.validateAndGetUser(username, provider);
 
@@ -66,7 +64,7 @@ export class PasswordlessLoginService {
       );
 
       const [refreshToken] = await Promise.all([
-        this.userService.signRefreshToken(user, clientMeta),
+        this.userService.signRefreshToken(user),
         this.userService.updateOne({_id: user._id}, {$set: {lastLogin: new Date()}})
       ]);
 

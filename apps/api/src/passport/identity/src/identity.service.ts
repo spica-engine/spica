@@ -10,7 +10,6 @@ import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
-import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
 import {v4 as uuidv4} from "uuid";
 
 @Injectable()
@@ -65,7 +64,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return this.identityOptions.expiresIn;
   }
 
-  async signRefreshToken(identity: Identity, clientMeta?: ClientMeta) {
+  async signRefreshToken(identity: Identity) {
     const expiresIn = this.identityOptions.refreshTokenExpiresIn;
     const token = this.jwt.sign({identifier: identity.identifier, uuid: uuidv4()}, {expiresIn});
 
@@ -76,8 +75,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
       identity: String(identity._id),
       created_at: new Date(),
       expired_at: new Date(Date.now() + expiresIn * 1000),
-      last_used_at: undefined,
-      client_meta: clientMeta
+      last_used_at: undefined
     };
 
     await this.refreshTokenService.insertOne(tokenSchema);
@@ -109,8 +107,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
 
   private async verifyTokenCanBeUsed(
     accessToken: string,
-    refreshToken: string,
-    clientMeta?: ClientMeta
+    refreshToken: string
   ) {
     const hashedToken = this.hashRefreshToken(refreshToken);
     const refreshTokenData = await this.refreshTokenService.findOne({token: hashedToken});
@@ -143,10 +140,10 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return identity;
   }
 
-  async refreshToken(accessToken: string, refreshToken: string, clientMeta?: ClientMeta) {
+  async refreshToken(accessToken: string, refreshToken: string) {
     accessToken = this.extractAccessToken(accessToken);
     await this.verifyTokenCanBeRefreshed(accessToken, refreshToken);
-    await this.verifyTokenCanBeUsed(accessToken, refreshToken, clientMeta);
+    await this.verifyTokenCanBeUsed(accessToken, refreshToken);
     await this.updateRefreshTokenLastUsedAt(refreshToken);
     const identity = await this.findIdentityOfToken(accessToken);
     return this.sign(identity);
