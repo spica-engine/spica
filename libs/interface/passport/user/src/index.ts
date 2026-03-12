@@ -71,8 +71,22 @@ export interface UserVerification {
   requestCount?: number;
 }
 
+export interface RateLimitGroupConfig {
+  limit: number;
+  ttl: number;
+}
+
+export interface RateLimitConfig {
+  login?: RateLimitGroupConfig;
+  providerVerification?: RateLimitGroupConfig;
+  forgotPassword?: RateLimitGroupConfig;
+  refreshToken?: RateLimitGroupConfig;
+  createUser?: RateLimitGroupConfig;
+}
+
 export interface UserConfigSettings {
   verificationProcessMaxAttempt: number;
+  password?: import("@spica-server/interface/config").PasswordPolicy;
   passwordlessLogin?: PasswordlessLoginConfig;
   resetPasswordProvider?: Array<{
     provider: "email" | "phone";
@@ -82,6 +96,7 @@ export interface UserConfigSettings {
     provider: "email" | "phone";
     strategy: "Otp" | "MagicLink";
   }>;
+  rateLimits?: RateLimitConfig;
 }
 export interface PasswordlessLoginConfig {
   passwordlessLoginProvider: Array<{

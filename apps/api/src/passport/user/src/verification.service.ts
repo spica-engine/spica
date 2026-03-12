@@ -1,4 +1,4 @@
-import {Injectable, NotFoundException, Inject, BadRequestException} from "@nestjs/common";
+import {Injectable, NotFoundException, Inject, BadRequestException, Logger} from "@nestjs/common";
 import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 import {
   UserVerification,
@@ -27,6 +27,7 @@ interface VerificationStrategyHandler {
 
 @Injectable()
 export class VerificationService extends BaseCollection<UserVerification>("verification") {
+  private readonly logger = new Logger(VerificationService.name);
   private readonly TTL_INDEX_EXPIRES_IN = 300;
   constructor(
     db: DatabaseService,
@@ -124,7 +125,10 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
         provider
       };
     } catch (error) {
-      console.error("Error during verification process:", error);
+      this.logger.error(
+        "Error during verification process:",
+        error instanceof Error ? error.stack : String(error)
+      );
       throw new Error("Error during verification process");
     }
   }
@@ -265,7 +269,10 @@ export class VerificationService extends BaseCollection<UserVerification>("verif
         metadata: sendResult.metadata
       };
     } catch (error) {
-      console.error(`Error sending verification via ${provider}:`, error);
+      this.logger.error(
+        `Error sending verification via ${provider}:`,
+        error instanceof Error ? error.stack : String(error)
+      );
       await this.findOneAndDelete({_id: recordId});
       throw new BadRequestException(error.message || `Failed to send verification via ${provider}`);
     }

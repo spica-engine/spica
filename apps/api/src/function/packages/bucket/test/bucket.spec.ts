@@ -45,12 +45,12 @@ describe("@spica-devkit/bucket", () => {
         name: {
           type: "string",
           title: "name",
-          options: {position: "left"}
+          options: {}
         },
         surname: {
           type: "string",
           title: "surname",
-          options: {position: "right"}
+          options: {}
         }
       }
     };
@@ -63,12 +63,12 @@ describe("@spica-devkit/bucket", () => {
         street: {
           type: "string",
           title: "street",
-          options: {position: "left"}
+          options: {}
         },
         city: {
           type: "string",
           title: "city",
-          options: {position: "right"}
+          options: {}
         }
       }
     };

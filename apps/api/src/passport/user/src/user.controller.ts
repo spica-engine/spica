@@ -9,6 +9,7 @@ import {
   Put,
   Query,
   Req,
+  Res,
   UseGuards,
   UseInterceptors,
   HttpStatus,
@@ -49,6 +50,7 @@ import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
 import {UserPipelineBuilder} from "./pipeline.builder";
 import {buildClientMeta} from "@spica-server/core";
+import {RateLimitGuard} from "./rate-limit.guard";
 
 @Controller("passport/user")
 export class UserController {
@@ -174,21 +176,13 @@ export class UserController {
     ).result();
 
     if (paginate) {
-      const {data, meta} = await this.userService
+      const paginatedResult = await this.userService
         .aggregate<PaginationResponse<User>>(pipeline)
         .next();
-      let result: PaginationResponse<DecryptedUser>;
-      if (!data.length) {
-        result.meta = {total: 0};
-        result.data = [];
-      } else {
-        result.meta = meta;
-        result.data = data.map(user => {
-          return this.userService.decryptProviderFields(user);
-        });
-      }
-
-      return result;
+      return {
+        meta: paginatedResult.data.length ? paginatedResult.meta : {total: 0},
+        data: paginatedResult.data.map(user => this.userService.decryptProviderFields(user))
+      };
     }
 
     const users = await this.userService
@@ -348,7 +342,11 @@ export class UserController {
 
   @UseInterceptors(activity(createUserActivity))
   @Post()
-  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:create"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("passport:user:create"),
+    RateLimitGuard("createUser")
+  )
   async insertOne(
     @Body(Schema.validate("http://spica.internal/passport/user-create"))
     user: User
@@ -449,12 +447,6 @@ export class UserController {
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:user:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    // prevent to delete the last user
-    const userCount = await this.userService.estimatedDocumentCount();
-    if (userCount == 1) {
-      return;
-    }
-
     return this.userService.deleteOne({_id: id}).then(res => {
       if (!res) {
         throw new NotFoundException(`User with ID ${id} not found`);
@@ -512,7 +504,11 @@ export class UserController {
   }
 
   @Post(":id/start-provider-verification")
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
+  @UseGuards(
+    RateLimitGuard("providerVerification"),
+    AuthGuard(),
+    ActionGuard("passport:user:update", "passport/user/:id")
+  )
   startAuthProviderVerification(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("value") value: string,
@@ -530,7 +526,11 @@ export class UserController {
   }
 
   @Post(":id/verify-provider")
-  @UseGuards(AuthGuard(), ActionGuard("passport:user:update", "passport/user/:id"))
+  @UseGuards(
+    RateLimitGuard("providerVerification"),
+    AuthGuard(),
+    ActionGuard("passport:user:update", "passport/user/:id")
+  )
   async verifyProvider(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("code") code: string,
@@ -548,6 +548,7 @@ export class UserController {
   }
 
   @Post("passwordless-login/start")
+  @UseGuards(RateLimitGuard("login"))
   startPasswordlessLogin(
     @Body(Schema.validate("http://spica.internal/passport/passwordless-login-start"))
     body: {
@@ -559,24 +560,30 @@ export class UserController {
   }
 
   @Post("passwordless-login/verify")
-  verifyPasswordlessLogin(
+  @UseGuards(RateLimitGuard("login"))
+  async verifyPasswordlessLogin(
     @Body(Schema.validate("http://spica.internal/passport/passwordless-login-verify"))
     body: {
       username: string;
       code: string;
       provider: "email" | "phone";
     },
-    @Req() req: any
+    @Req() req: any,
+    @Res() res: any
   ) {
     const clientMeta = buildClientMeta(req, this.options.refreshTokenHashSecret);
-    return this.passwordlessLoginService.verify(
+    const {accessToken, refreshToken} = await this.passwordlessLoginService.verify(
       body.username,
       body.code,
       body.provider,
       clientMeta
     );
+    const cookiePath = "passport/user/session/refresh";
+    res.cookie("refreshToken", refreshToken.token, this.userService.getCookieOptions(cookiePath));
+    return res.status(HttpStatus.CREATED).json(accessToken);
   }
   @Post("forgot-password/start")
+  @UseGuards(RateLimitGuard("forgotPassword"))
   async startForgotPassword(
     @Body(Schema.validate("http://spica.internal/passport/forgot-password-start"))
     body: {
@@ -588,6 +595,7 @@ export class UserController {
   }
 
   @Post("forgot-password/verify")
+  @UseGuards(RateLimitGuard("forgotPassword"))
   async verifyForgotPassword(
     @Body(Schema.validate("http://spica.internal/passport/forgot-password-verify"))
     body: {

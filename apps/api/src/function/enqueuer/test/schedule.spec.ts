@@ -67,13 +67,13 @@ describe("ScheduleEnqueuer", () => {
     });
 
     let jobs: any = Array.from(enqueuer["jobs"]);
-    const stopSpies = jobs.map(j => jest.spyOn(j, "stop"));
+    const cancelSpies = jobs.map(j => jest.spyOn(j, "cancel"));
 
     enqueuer.unsubscribe(target1);
 
-    expect(stopSpies[0]).toHaveBeenCalledTimes(1);
-    expect(stopSpies[1]).toHaveBeenCalledTimes(0);
-    expect(stopSpies[2]).toHaveBeenCalledTimes(0);
+    expect(cancelSpies[0]).toHaveBeenCalledTimes(1);
+    expect(cancelSpies[1]).toHaveBeenCalledTimes(0);
+    expect(cancelSpies[2]).toHaveBeenCalledTimes(0);
 
     jobs = Array.from(enqueuer["jobs"]);
 

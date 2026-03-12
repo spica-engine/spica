@@ -1,17 +1,11 @@
-import {Module} from "@nestjs/common";
+import {Logger, Module} from "@nestjs/common";
 import {NestFactory} from "@nestjs/core";
 import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {
-  DATE_TIME,
-  OBJECTID_STRING,
-  OBJECT_ID,
-  createHashFormat,
-  createEncryptedFormat
-} from "@spica-server/core/schema/formats";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
@@ -25,6 +19,7 @@ import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
 import {EnvVarModule} from "@spica-server/env_var";
+import {SecretModule} from "@spica-server/secret";
 import {MailerModule} from "@spica-server/mailer";
 import {SmsModule} from "@spica-server/sms";
 
@@ -123,6 +118,10 @@ const args = yargsInstance
     "bucket-data-encryption-secret": {
       string: true,
       description: "Secret to be used for encrypting/decrypting values in bucket data."
+    },
+    "secret-module-encryption-secret": {
+      string: true,
+      description: "Secret to be used for encrypting/decrypting secret values."
     }
   })
   /* Passport Options  */
@@ -197,6 +196,7 @@ const args = yargsInstance
         "BucketFullAccess",
         "DashboardFullAccess",
         "EnvVarFullAccess",
+        "SecretFullAccess",
         "FunctionFullAccess",
         "IdentityFullAccess",
         "PassportFullAccess",
@@ -274,7 +274,7 @@ const args = yargsInstance
     "function-api-url": {
       string: true,
       description:
-        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
+        "URL of the server api to be injected into function workers environment variables. Devkit packages in functions will use this value to connect the server api if not present. Default value is http://127.0.0.1:<port> to support loopback connections to improve performance."
     },
     "function-timeout": {
       number: true,
@@ -554,6 +554,11 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["bucket-data-encryption-secret"] = bucketDataEncryptionSecret;
     }
 
+    const secretModuleEncryptionSecret = process.env.SECRET_MODULE_ENCRYPTION_SECRET;
+    if (secretModuleEncryptionSecret) {
+      args["secret-module-encryption-secret"] = secretModuleEncryptionSecret;
+    }
+
     const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
     if (twilioAccountSid) {
       args["twilio-sms-service-account-sid"] = twilioAccountSid;
@@ -625,7 +630,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     }
 
     if (!args["function-api-url"]) {
-      args["function-api-url"] = args["public-url"];
+      args["function-api-url"] = `http://127.0.0.1:${args["port"]}`;
     }
 
     if (args["function-worker-concurrency"] < 1) {
@@ -687,6 +692,10 @@ const modules = [
   EnvVarModule.forRoot({
     realtime: true
   }),
+  SecretModule.forRoot({
+    realtime: true,
+    encryptionSecret: args["secret-module-encryption-secret"]
+  }),
   MailerModule.forRoot({
     host: args["mailer-host"],
     port: args["mailer-port"],
@@ -708,13 +717,7 @@ const modules = [
     }
   }),
   SchemaModule.forRoot({
-    formats: [
-      OBJECT_ID,
-      DATE_TIME,
-      OBJECTID_STRING,
-      createHashFormat(args["bucket-data-hash-secret"]),
-      createEncryptedFormat(args["bucket-data-encryption-secret"], args["bucket-data-hash-secret"])
-    ],
+    formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
     defaults: [CREATED_AT, UPDATED_AT]
   }),
   BucketModule.forRoot({
@@ -898,5 +901,5 @@ NestFactory.create(RootModule, {
 
   const {port} = await args;
   await app.listen(port);
-  console.log(`: APIs are ready on port ${port}`);
+  new Logger("Bootstrap").log(`: APIs are ready on port ${port}`);
 });

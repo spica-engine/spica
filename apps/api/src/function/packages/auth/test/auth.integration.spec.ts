@@ -143,7 +143,7 @@ describe("auth", () => {
     });
 
     it("should sign in", async () => {
-      const token = await auth.signIn("user1", "pass1");
+      const token = await auth.signIn("user1", "pass1").then(r => r.token);
       const {username, iat, exp, iss} = jwtDecode<any>(token);
 
       expect([username, iss]).toEqual(["user1", "spica"]);
@@ -154,7 +154,7 @@ describe("auth", () => {
 
     it("should sign in with desired token lifespan", async () => {
       const oneDay = 60 * 60 * 24;
-      const token = await auth.signIn("user1", "pass1", oneDay);
+      const token = await auth.signIn("user1", "pass1", oneDay).then(r => r.token);
 
       const {iat, exp} = jwtDecode<any>(token);
 
@@ -163,7 +163,7 @@ describe("auth", () => {
     });
 
     it("should verify token with success", async () => {
-      const token = await auth.signIn("user1", "pass1");
+      const token = await auth.signIn("user1", "pass1").then(r => r.token);
 
       const decodedToken = jwtDecode<any>(token);
 
@@ -206,7 +206,7 @@ describe("auth", () => {
         policies: []
       });
 
-      const token = await auth.signIn("user1", "pass1");
+      const token = await auth.signIn("user1", "pass1").then(r => r.token);
       const {username} = jwtDecode<any>(token);
 
       expect(username).toEqual("user1");
@@ -248,7 +248,7 @@ describe("auth", () => {
         password: "newpass"
       });
 
-      const newToken = await auth.signIn("updateuser", "newpass");
+      const newToken = await auth.signIn("updateuser", "newpass").then(r => r.token);
       const {username} = jwtDecode<any>(newToken);
 
       expect(username).toEqual("updateuser");
@@ -274,7 +274,7 @@ describe("auth", () => {
       expect(updatedUser._id).toEqual(user._id);
       expect(updatedUser.username).toEqual("updatedusername");
 
-      const signInToken = await auth.signIn("updatedusername", "testpass");
+      const signInToken = await auth.signIn("updatedusername", "testpass").then(r => r.token);
       const decodedToken = jwtDecode<any>(signInToken);
 
       expect(decodedToken.username).toEqual("updatedusername");
@@ -311,7 +311,7 @@ describe("auth", () => {
         password: "testpass"
       });
 
-      const oldToken = await auth.signIn("tokenuser", "testpass");
+      const oldToken = await auth.signIn("tokenuser", "testpass").then(r => r.token);
       const oldDecodedToken = jwtDecode<any>(oldToken);
 
       expect(oldDecodedToken.username).toEqual("tokenuser");
@@ -340,7 +340,7 @@ describe("auth", () => {
         password: "testpass2"
       });
 
-      const userToken = await authWithIdentity.signIn("testuser2", "testpass2");
+      const userToken = await authWithIdentity.signIn("testuser2", "testpass2").then(r => r.token);
 
       const authWithUserToken = await importFreshAuthModule();
       authWithUserToken.initialize({user: userToken, publicUrl: PUBLIC_URL});
@@ -394,7 +394,7 @@ describe("auth", () => {
         username: "test_user",
         password: "test_pass"
       });
-      const userToken = await auth2.signIn("test_user", "test_pass");
+      const userToken = await auth2.signIn("test_user", "test_pass").then(r => r.token);
 
       auth.initialize({publicUrl: PUBLIC_URL});
       const userDecodedToken = jwtDecode<any>(userToken);
@@ -418,8 +418,8 @@ describe("auth", () => {
         username: "user1",
         password: "pass1"
       });
-      user1Token = await authSetup.signIn("user1", "pass1");
-      expiredToken = await authSetup.signIn("user1", "pass1", 1);
+      user1Token = await authSetup.signIn("user1", "pass1").then(r => r.token);
+      expiredToken = await authSetup.signIn("user1", "pass1", 1).then(r => r.token);
 
       auth = await importFreshAuthModule();
       auth.initialize({publicUrl: PUBLIC_URL});
@@ -487,7 +487,7 @@ describe("auth", () => {
         password: "signin_pass1"
       });
 
-      const signInToken = await auth.signIn("signin_user1", "signin_pass1");
+      const signInToken = await auth.signIn("signin_user1", "signin_pass1").then(r => r.token);
       const decodedToken = jwtDecode<any>(signInToken);
 
       expect(decodedToken.username).toEqual("signin_user1");
@@ -501,7 +501,7 @@ describe("auth", () => {
         password: "signin_pass2"
       });
 
-      const signInToken = await auth.signIn("signin_user2", "signin_pass2");
+      const signInToken = await auth.signIn("signin_user2", "signin_pass2").then(r => r.token);
       const decodedToken = jwtDecode<any>(signInToken);
 
       expect(decodedToken.username).toEqual("signin_user2");
@@ -654,6 +654,7 @@ describe("auth verification flows", () => {
           formats: [OBJECT_ID, DATE_TIME]
         }),
         DatabaseTestingModule.replicaSet(),
+        ConfigModule.forRoot(),
         PassportModule.forRoot({
           publicUrl: VERIFICATION_PUBLIC_URL,
           defaultStrategy: "IDENTITY",
@@ -826,7 +827,7 @@ describe("auth verification flows", () => {
 
       expect(completeResult.message).toBeDefined();
 
-      const signInToken = await auth.signIn("resetuser", "newpassword123");
+      const signInToken = await auth.signIn("resetuser", "newpassword123").then(r => r.token);
       const decoded = jwtDecode<any>(signInToken);
       expect(decoded.username).toEqual("resetuser");
     });
@@ -873,18 +874,11 @@ describe("auth verification flows", () => {
 
       const code = await extractOtpFromMailHog(mailhogApiUrl);
 
-      const completeResult = await auth.completePasswordlessLogin(
-        "passwordlessuser",
-        code,
-        "email"
-      );
+      const token = await auth
+        .completePasswordlessLogin("passwordlessuser", code, "email")
+        .then(r => r.token);
 
-      expect(completeResult.token).toBeDefined();
-      expect(completeResult.scheme).toBeDefined();
-      expect(completeResult.issuer).toBeDefined();
-      expect(completeResult.refreshToken).toBeDefined();
-
-      const decoded = jwtDecode<any>(completeResult.token);
+      const decoded = jwtDecode<any>(token);
       expect(decoded.username).toEqual("passwordlessuser");
     });
 

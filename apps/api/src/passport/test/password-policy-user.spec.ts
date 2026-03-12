@@ -102,16 +102,14 @@ describe("Password Policy - User", () => {
   describe("with user password policy config", () => {
     beforeAll(async () => {
       await database.collection("config").insertOne({
-        module: "passport",
+        module: "user",
         options: {
-          user: {
-            password: {
-              minLength: 8,
-              minLowercase: 1,
-              minUppercase: 1,
-              minNumber: 1,
-              minSpecialCharacter: 1
-            }
+          password: {
+            minLength: 8,
+            minLowercase: 1,
+            minUppercase: 1,
+            minNumber: 1,
+            minSpecialCharacter: 1
           }
         }
       });
@@ -119,7 +117,7 @@ describe("Password Policy - User", () => {
     });
 
     afterAll(async () => {
-      await database.collection("config").deleteMany({module: "passport"});
+      await database.collection("config").deleteMany({module: "user"});
       await database.collection("user").deleteMany({});
       await new Promise(resolve => setTimeout(resolve, 1000));
     });
@@ -261,20 +259,22 @@ describe("Password Policy - User", () => {
 
   describe("user policy independent from identity policy", () => {
     beforeAll(async () => {
-      await database.collection("config").deleteMany({module: "passport"});
+      await database.collection("config").deleteMany({module: "identity"});
+      await database.collection("config").deleteMany({module: "user"});
       await database.collection("config").insertOne({
-        module: "passport",
+        module: "identity",
         options: {
-          identity: {
-            password: {
-              minLength: 12,
-              minUppercase: 3
-            }
-          },
-          user: {
-            password: {
-              minLength: 6
-            }
+          password: {
+            minLength: 12,
+            minUppercase: 3
+          }
+        }
+      });
+      await database.collection("config").insertOne({
+        module: "user",
+        options: {
+          password: {
+            minLength: 6
           }
         }
       });
@@ -282,7 +282,8 @@ describe("Password Policy - User", () => {
     });
 
     afterAll(async () => {
-      await database.collection("config").deleteMany({module: "passport"});
+      await database.collection("config").deleteMany({module: "identity"});
+      await database.collection("config").deleteMany({module: "user"});
       await database.collection("user").deleteMany({});
       await new Promise(resolve => setTimeout(resolve, 1000));
     });

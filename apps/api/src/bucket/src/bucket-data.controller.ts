@@ -307,6 +307,7 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId)
       },
+      this.hashSecret,
       this.encryptionSecret
     ).catch(this.errorHandler);
 
@@ -374,6 +375,7 @@ export class BucketDataController {
         schema: schemaResolver
       },
       undefined,
+      this.hashSecret,
       this.encryptionSecret
     ).catch(this.errorHandler);
 
@@ -462,6 +464,7 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
       {returnDocument: ReturnDocument.AFTER},
+      this.hashSecret,
       this.encryptionSecret
     ).catch(this.errorHandler);
 
@@ -522,6 +525,7 @@ export class BucketDataController {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
+      this.hashSecret,
       this.encryptionSecret
     ).catch(this.errorHandler);
 

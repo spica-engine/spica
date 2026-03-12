@@ -12,6 +12,7 @@ import {
   Post,
   Query,
   UnauthorizedException,
+  UseGuards,
   UseInterceptors,
   Req,
   All,
@@ -21,7 +22,7 @@ import {
   Optional,
   Headers
 } from "@nestjs/common";
-import {UserService} from "@spica-server/passport/user";
+import {UserService, RateLimitGuard} from "@spica-server/passport/user";
 import {User, LoginCredentials} from "@spica-server/interface/passport/user";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
@@ -76,7 +77,7 @@ export class PassportUserController {
   }
 
   setRefreshTokenCookie(res: any, token: string) {
-    const path = "passport/session/refresh";
+    const path = "passport/user/session/refresh";
     res.cookie("refreshToken", token, this.userService.getCookieOptions(path));
   }
 
@@ -274,6 +275,7 @@ export class PassportUserController {
   }
 
   @Get("login")
+  @UseGuards(RateLimitGuard("login"))
   async login(
     @Query("username") username: string,
     @Query("password") password: string,
@@ -290,6 +292,7 @@ export class PassportUserController {
   }
 
   @Post("login")
+  @UseGuards(RateLimitGuard("login"))
   async loginWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
     {username, password, expires, state}: LoginCredentials,
@@ -334,6 +337,7 @@ export class PassportUserController {
   }
 
   @Post("user/session/refresh")
+  @UseGuards(RateLimitGuard("refreshToken"))
   async refreshToken(
     @Headers("authorization") accessToken: string,
     @Req() req: any,

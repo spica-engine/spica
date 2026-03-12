@@ -33,8 +33,7 @@ describe("Commander", () => {
   });
 
   it("should not reduce jobs if they are not identical", async () => {
-    await reducer.do(meta, job);
-    await reducer.do({...meta, _id: "2"}, job);
+    await Promise.all([reducer.do(meta, job), reducer.do({...meta, _id: "2"}, job)]);
 
     expect(job).toHaveBeenCalledTimes(2);
   });

@@ -42,7 +42,7 @@
       "path": "../../config"
     },
     {
-      "path": "../password-policy"
+      "path": "../../../../../libs/interface/config"
     }
   ]
 }

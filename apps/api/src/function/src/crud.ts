@@ -4,7 +4,8 @@ import {
   EnvRelation,
   Function,
   FunctionWithDependencies,
-  ChangeKind
+  ChangeKind,
+  SecretRelation
 } from "@spica-server/interface/function";
 import {changesFromTriggers, createTargetChanges, hasContextChange} from "./change";
 import {ObjectId} from "@spica-server/database";
@@ -23,7 +24,7 @@ async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn
   let insertedFn;
   try {
     const r = await fs.insertOne(fn);
-    insertedFn = await findOne(fs, r._id, {resolveEnvRelations: EnvRelation.Resolved});
+    insertedFn = await findOneForRuntime(fs, r._id);
   } catch (error: any) {
     if (error && error.code === 11000) {
       throw new BadRequestException(
@@ -34,11 +35,14 @@ async function insertWithChanges(fs: FunctionService, engine: FunctionEngine, fn
     throw new InternalServerErrorException(error?.message || error);
   }
 
-  const changes = createTargetChanges(insertedFn, ChangeKind.Added);
+  const changes = createTargetChanges(insertedFn, ChangeKind.Added, engine.secretDecryptor);
   engine.categorizeChanges(changes);
 }
 
-export async function find<ER extends EnvRelation = EnvRelation.NotResolved>(
+export async function find<
+  ER extends EnvRelation = EnvRelation.NotResolved,
+  SR extends SecretRelation = SecretRelation.NotResolved
+>(
   fs: FunctionService,
   engine: FunctionEngine,
   options?: {
@@ -49,15 +53,18 @@ export async function find<ER extends EnvRelation = EnvRelation.NotResolved>(
       language?: string;
     };
     resolveEnvRelations?: ER;
+    resolveSecretRelations?: SR;
   }
-): Promise<Function<ER>[]> {
+): Promise<Function<ER, SR>[]> {
   const pipeline = new FunctionPipelineBuilder()
     .filterResources(options?.filter?.resources)
     .filterByEnvVars(options?.filter?.envVars)
     .resolveEnvRelation(options?.resolveEnvRelations)
+    .resolveSecretRelation(options?.resolveSecretRelations)
+    .hideSecrets()
     .filterByLanguage(options?.filter?.language)
     .result();
-  let fns = await fs.aggregate<Function<ER>>(pipeline).toArray();
+  let fns = await fs.aggregate<Function<ER, SR>>(pipeline).toArray();
 
   if (options?.filter?.index) {
     fns = await index.filter(fns, options.filter.index, engine);
@@ -65,19 +72,25 @@ export async function find<ER extends EnvRelation = EnvRelation.NotResolved>(
   return fns;
 }
 
-export async function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
+export async function findOne<
+  ER extends EnvRelation = EnvRelation.NotResolved,
+  SR extends SecretRelation = SecretRelation.NotResolved
+>(
   fs: FunctionService,
   id: ObjectId,
   options: {
     resolveEnvRelations?: ER;
+    resolveSecretRelations?: SR;
   }
-): Promise<Function<ER>> {
+): Promise<Function<ER, SR>> {
   const pipeline = new FunctionPipelineBuilder()
     .findOneIfRequested(id)
     .resolveEnvRelation(options.resolveEnvRelations)
+    .resolveSecretRelation(options.resolveSecretRelations)
+    .hideSecrets()
     .result();
 
-  const res = await fs.aggregate<Function<ER>>(pipeline).next();
+  const res = await fs.aggregate<Function<ER, SR>>(pipeline).next();
   if (!res) {
     throw new NotFoundException(`Couldn't find the function with id ${id}`);
   }
@@ -85,33 +98,31 @@ export async function findOne<ER extends EnvRelation = EnvRelation.NotResolved>(
   return res;
 }
 
-export async function findByName<ER extends EnvRelation = EnvRelation.NotResolved>(
+export async function findByName<
+  ER extends EnvRelation = EnvRelation.NotResolved,
+  SR extends SecretRelation = SecretRelation.NotResolved
+>(
   fs: FunctionService,
   name: string,
-  options?: {resolveEnvRelations?: ER}
-): Promise<Function<ER> | null> {
+  options?: {resolveEnvRelations?: ER; resolveSecretRelations?: SR}
+): Promise<Function<ER, SR> | null> {
   if (typeof name != "string" || name.trim() == "") {
     throw new BadRequestException("Function name must be a non-empty string.");
   }
   const fn = await fs.findOne({name});
   if (!fn) return null;
-  if (options?.resolveEnvRelations) {
+  if (options?.resolveEnvRelations || options?.resolveSecretRelations) {
     return findOne(fs, new ObjectId(fn._id), {
-      resolveEnvRelations: options.resolveEnvRelations
-    }) as Promise<Function<ER>>;
+      resolveEnvRelations: options?.resolveEnvRelations,
+      resolveSecretRelations: options?.resolveSecretRelations
+    }) as Promise<Function<ER, SR>>;
   }
-  return fn as Function<ER>;
+  return fn as Function<ER, SR>;
 }
 
 export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   await insertWithChanges(fs, engine, fn);
   await engine.createFunction(fn);
-  return fn;
-}
-
-export async function insertSchema(fs: FunctionService, engine: FunctionEngine, fn: Function) {
-  await insertWithChanges(fs, engine, fn);
-  await engine.createSchema(fn);
   return fn;
 }
 
@@ -128,15 +139,15 @@ export async function replace(fs: FunctionService, engine: FunctionEngine, fn: F
   }
 
   fn._id = _id;
-  const currFnEnvResolved = await findOne(fs, _id, {resolveEnvRelations: EnvRelation.Resolved});
+  const currFnEnvResolved = await findOneForRuntime(fs, _id);
 
   let changes;
 
   if (hasContextChange(preFn, fn)) {
     // mark all triggers updated
-    changes = createTargetChanges(currFnEnvResolved, ChangeKind.Updated);
+    changes = createTargetChanges(currFnEnvResolved, ChangeKind.Updated, engine.secretDecryptor);
   } else {
-    changes = changesFromTriggers(preFn, currFnEnvResolved);
+    changes = changesFromTriggers(preFn, currFnEnvResolved, engine.secretDecryptor);
   }
 
   engine.categorizeChanges(changes);
@@ -158,7 +169,7 @@ export async function remove(
 
   logs.deleteMany({function: fn._id.toString()});
 
-  const changes = createTargetChanges(fn, ChangeKind.Removed);
+  const changes = createTargetChanges(fn, ChangeKind.Removed, engine.secretDecryptor);
   engine.categorizeChanges(changes);
 
   await engine.deleteFunction(fn);
@@ -195,19 +206,19 @@ export namespace index {
 
     await engine.update(fn, index);
 
-    const envResolvedFn = await findOne(fs, id, {resolveEnvRelations: EnvRelation.Resolved});
+    const envResolvedFn = await findOneForRuntime(fs, id);
 
-    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated);
+    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated, engine.secretDecryptor);
     engine.categorizeChanges(changes);
 
     return engine.compile(fn);
   }
 
   export async function filter(
-    fns: Function<EnvRelation>[],
+    fns: Function<EnvRelation, SecretRelation>[],
     text: string,
     engine: FunctionEngine
-  ): Promise<Function<EnvRelation>[]> {
+  ): Promise<Function<EnvRelation, SecretRelation>[]> {
     const foundFns = [];
     const promises = fns.map(fn => {
       const entrypoint = engine.getFunctionBuildEntrypoint(fn);
@@ -392,10 +403,89 @@ export namespace environment {
   }
 
   export async function reload(fs: FunctionService, fnId: ObjectId, engine: FunctionEngine) {
-    const envResolvedFn = await findOne(fs, fnId, {
-      resolveEnvRelations: EnvRelation.Resolved
-    });
-    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated);
+    const envResolvedFn = await findOneForRuntime(fs, fnId);
+    const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated, engine.secretDecryptor);
     return engine.categorizeChanges(changes);
   }
+}
+
+export namespace secret {
+  export async function inject(
+    fs: FunctionService,
+    fnId: ObjectId,
+    engine: FunctionEngine,
+    secretId: ObjectId
+  ) {
+    const res = await fs.findOneAndUpdate(
+      {
+        _id: fnId
+      },
+      {
+        $addToSet: {secrets: secretId}
+      }
+    );
+    if (!res) {
+      throw new NotFoundException(`Function with ID ${fnId} not found`);
+    }
+
+    return reload(fs, fnId, engine);
+  }
+
+  export async function eject(
+    fs: FunctionService,
+    fnId: ObjectId,
+    engine: FunctionEngine,
+    secretId: ObjectId
+  ) {
+    const res = await fs.findOneAndUpdate(
+      {
+        _id: fnId
+      },
+      {
+        $pull: {secrets: secretId}
+      }
+    );
+    if (!res) {
+      throw new NotFoundException(`Function with ID ${fnId} not found`);
+    }
+
+    return reload(fs, fnId, engine);
+  }
+
+  export async function reload(fs: FunctionService, fnId: ObjectId, engine: FunctionEngine) {
+    const fn = await findOneForRuntime(fs, fnId);
+    const changes = createTargetChanges(fn, ChangeKind.Updated, engine.secretDecryptor);
+    return engine.categorizeChanges(changes);
+  }
+}
+
+export async function findOneForRuntime(
+  fs: FunctionService,
+  id: ObjectId
+): Promise<Function<EnvRelation.Resolved, SecretRelation.Resolved>> {
+  const pipeline = new FunctionPipelineBuilder()
+    .findOneIfRequested(id)
+    .resolveEnvRelation(EnvRelation.Resolved)
+    .resolveSecretRelation(SecretRelation.Resolved)
+    .result();
+
+  const res = await fs
+    .aggregate<Function<EnvRelation.Resolved, SecretRelation.Resolved>>(pipeline)
+    .next();
+  if (!res) {
+    throw new NotFoundException(`Couldn't find the function with id ${id}`);
+  }
+
+  return res;
+}
+
+export async function findForRuntime(
+  fs: FunctionService
+): Promise<Function<EnvRelation.Resolved, SecretRelation.Resolved>[]> {
+  const pipeline = new FunctionPipelineBuilder()
+    .resolveEnvRelation(EnvRelation.Resolved)
+    .resolveSecretRelation(SecretRelation.Resolved)
+    .result();
+
+  return fs.aggregate<Function<EnvRelation.Resolved, SecretRelation.Resolved>>(pipeline).toArray();
 }

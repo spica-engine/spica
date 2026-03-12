@@ -1,0 +1,257 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: database statefulset
+# databasesecrets.yaml and initdb.yaml are included because database.yaml computes
+# checksum annotations against them via include+sha256sum.
+templates:
+  - templates/database.yaml
+  - templates/databasesecrets.yaml
+  - templates/initdb.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.bucketDataHashSecret: test-hash
+  application.bucketDataEncryptionSecret: test-enc
+  application.userVerificationHashSecret: test-verify
+  application.userProviderEncryptionSecret: test-prov-enc
+  application.userProviderHashSecret: test-prov-hash
+  application.publicHost: https://test.example.com
+
+tests:
+  - it: should render a StatefulSet
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - isKind:
+          of: StatefulSet
+
+  - it: should be named after the release
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-database
+
+  - it: should have Parallel pod management policy
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.podManagementPolicy
+          value: Parallel
+
+  - it: should default to 1 replica
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+
+  - it: should reflect the configured replica count
+    set:
+      database.replicas: 3
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should include init-users init container
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: init-users
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].image
+          pattern: "^mongo:"
+
+  - it: should use the configured MongoDB version for the main container
+    set:
+      database.version: "7.0.0"
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "mongo:7.0.0"
+
+  - it: should mount the init-db ConfigMap as a volume
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: init-db
+            configMap:
+              name: release-name-database
+              defaultMode: 493
+
+  - it: should mount the replica auth key Secret as a volume
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: db-replica-auth-key
+            secret:
+              secretName: release-name-database-replica-auth-key
+              defaultMode: 256
+
+  - it: should configure mongod with replica set and auth flags
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: "--replSet rs0"
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: "--auth"
+
+  - it: should include RS_MEMBERS env var when replicas equals 1
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: RS_MEMBERS
+          any: true
+
+  - it: should not include RS_MEMBERS env var when replicas is greater than 1
+    set:
+      database.replicas: 3
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: RS_MEMBERS
+          any: true
+
+  - it: should configure the readiness probe with mongosh ping
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].readinessProbe.exec.command
+          content: mongosh
+      - contains:
+          path: spec.template.spec.containers[0].readinessProbe.exec.command
+          content: "db.adminCommand('ping')"
+
+  - it: should configure PROFILING_LEVEL and PROFILING_SLOWMS env vars
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PROFILING_LEVEL
+            value: "1"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PROFILING_SLOWMS
+            value: "100"
+
+  - it: should apply nodeSelector when set
+    set:
+      database.nodeSelector:
+        disktype: ssd
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+
+  - it: should apply tolerations when set
+    set:
+      database.tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "mongodb"
+          effect: "NoSchedule"
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: dedicated
+
+  - it: should include volumeClaimTemplates with ReadWriteOnce
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - isNotEmpty:
+          path: spec.volumeClaimTemplates
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: ReadWriteOnce
+
+  - it: should use the configured storage size for volumeClaimTemplates
+    set:
+      database.storageSize: 10Gi
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 10Gi
+
+  - it: should include checksum annotations on the pod template
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - isNotEmpty:
+          path: spec.template.metadata.annotations["checksum/secret"]
+      - isNotEmpty:
+          path: spec.template.metadata.annotations["checksum/initdb"]

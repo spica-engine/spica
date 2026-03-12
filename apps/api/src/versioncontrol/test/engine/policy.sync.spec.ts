@@ -22,6 +22,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
+import {Validator} from "@spica-server/core/schema";
 
 xdescribe("SyncEngine Integration - Policy", () => {
   let module: TestingModule;
@@ -53,10 +54,11 @@ xdescribe("SyncEngine Integration - Policy", () => {
     repManager = module.get(VC_REPRESENTATIVE_MANAGER);
 
     policyService = module.get(PolicyService);
+    const validator = module.get(Validator);
 
     syncEngine.registerChangeHandler(
       getPolicySupplier(policyService),
-      getPolicyApplier(policyService, mockApikeyFinalizer, mockIdentityFinalizer)
+      getPolicyApplier(policyService, mockApikeyFinalizer, mockIdentityFinalizer, validator)
     );
   });
 
@@ -101,7 +103,8 @@ xdescribe("SyncEngine Integration - Policy", () => {
         resource_content: YAML.stringify(testPolicy),
         resource_extension: "yaml",
         created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: expect.any(String)
       });
       subs.unsubscribe();
       done();
@@ -187,7 +190,8 @@ xdescribe("SyncEngine Integration - Policy", () => {
         resource_content: policyYaml,
         resource_extension: fileExtension,
         created_at: sync.change_log.created_at,
-        initiator: ChangeInitiator.EXTERNAL
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: expect.any(String)
       });
       expect(sync.status).toBe(SyncStatuses.PENDING);
       syncSub.unsubscribe();

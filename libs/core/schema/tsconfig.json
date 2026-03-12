@@ -16,6 +16,10 @@
 
     {
       "path": "../encryption"
+    },
+
+    {
+      "path": "../../interface/config"
     }
   ]
 }

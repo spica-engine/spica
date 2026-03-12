@@ -76,7 +76,7 @@ export class PassportIdentityController {
   }
 
   setRefreshTokenCookie(res: any, token: string) {
-    const path = "passport/session/refresh";
+    const path = "passport/identity/session/refresh";
     res.cookie("refreshToken", token, this.identityService.getCookieOptions(path));
   }
 

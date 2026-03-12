@@ -190,12 +190,18 @@ describe("Passwordless Login E2E with MailHog", () => {
       expect(verifyResponse.body).toMatchObject({
         token: expect.any(String),
         scheme: "USER",
-        issuer: "passport/user",
-        refreshToken: expect.any(String)
+        issuer: "passport/user"
       });
+      expect(verifyResponse.body.refreshToken).toBeUndefined();
+
+      const cookies = verifyResponse.headers["set-cookie"] as unknown as string[];
+      expect(cookies).toBeDefined();
+      const refreshTokenCookie = cookies.find((c: string) => c.startsWith("refreshToken="));
+      expect(refreshTokenCookie).toBeDefined();
+      expect(refreshTokenCookie).toContain("HttpOnly");
+      expect(refreshTokenCookie).toContain("Secure");
 
       expect(verifyResponse.body.token).toBeTruthy();
-      expect(verifyResponse.body.refreshToken).toBeTruthy();
     });
 
     it("should fail verification with wrong code", async () => {
@@ -264,9 +270,14 @@ describe("Passwordless Login E2E with MailHog", () => {
       expect(firstVerifyResponse.body).toMatchObject({
         token: expect.any(String),
         scheme: "USER",
-        issuer: "passport/user",
-        refreshToken: expect.any(String)
+        issuer: "passport/user"
       });
+      expect(firstVerifyResponse.body.refreshToken).toBeUndefined();
+
+      const cookies = firstVerifyResponse.headers["set-cookie"] as unknown as string[];
+      expect(cookies).toBeDefined();
+      const refreshTokenCookie = cookies.find((c: string) => c.startsWith("refreshToken="));
+      expect(refreshTokenCookie).toBeDefined();
 
       const secondVerifyResponse = await req.post("/passport/user/passwordless-login/verify", {
         username: testUsername,

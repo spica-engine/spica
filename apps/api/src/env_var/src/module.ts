@@ -45,7 +45,7 @@ export class EnvVarModule {
     validator: Validator
   ) {
     if (registerVCChangeHandler) {
-      registerVCChangeHandler(getSupplier(evs), getApplier(evs));
+      registerVCChangeHandler(getSupplier(evs), getApplier(evs, validator));
     }
     registerAssetHandlers(evs, validator, this.assetRepManager);
   }

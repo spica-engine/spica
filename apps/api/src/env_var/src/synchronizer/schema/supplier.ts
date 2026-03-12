@@ -9,6 +9,9 @@ import {
   ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {EnvVar} from "@spica-server/interface/env_var";
+import {Logger} from "@nestjs/common";
+
+const logger = new Logger("EnvVarSyncSupplier");
 
 const module = "env-var";
 const subModule = "schema";
@@ -17,7 +20,8 @@ const fileExtension = "yaml";
 const getChangeLogForSchema = (
   envVar: EnvVar,
   type: ChangeType,
-  initiator: ChangeInitiator
+  initiator: ChangeInitiator,
+  eventId: string
 ): ChangeLog => {
   return {
     module,
@@ -29,7 +33,8 @@ const getChangeLogForSchema = (
     resource_content: YAML.stringify(envVar),
     resource_extension: fileExtension,
     created_at: new Date(),
-    initiator
+    initiator,
+    event_id: eventId
   };
 };
 
@@ -47,13 +52,17 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
               const changeLog = getChangeLogForSchema(
                 envVar,
                 ChangeType.CREATE,
-                ChangeInitiator.INTERNAL
+                ChangeInitiator.INTERNAL,
+                envVar._id.toString()
               );
               observer.next(changeLog);
             });
           })
           .catch(error => {
-            console.error("Error propagating existing buckets:", error);
+            logger.error(
+              "Error propagating existing environment variables:",
+              error instanceof Error ? error.stack : String(error)
+            );
           });
 
         const subs = evs
@@ -82,13 +91,14 @@ export const getSupplier = (evs: EnvVarService): DocumentChangeSupplier => {
                   documentData = change["fullDocumentBeforeChange"];
                   break;
                 default:
-                  console.warn("Unknown operation type:", change.operationType);
+                  logger.warn(`Unknown operation type: ${change.operationType}`);
                   return;
               }
               const changeLog = getChangeLogForSchema(
                 documentData,
                 changeType,
-                ChangeInitiator.EXTERNAL
+                ChangeInitiator.EXTERNAL,
+                JSON.stringify(change._id)
               );
               observer.next(changeLog);
             },

@@ -1,6 +1,8 @@
 import {JSONSchema7, JSONSchema7Definition} from "json-schema";
-import {BadRequestException} from "@nestjs/common";
+import {BadRequestException, Logger} from "@nestjs/common";
 import {Bucket, BucketPreferences, ExtendedJSONSchema7Type} from "@spica-server/interface/bucket";
+
+const logger = new Logger("BucketSchema");
 
 function addIdField(bucket) {
   bucket.properties._id = {
@@ -18,7 +20,7 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
         if (typeof spec == "object") {
           schema.properties[key] = map(spec);
         } else {
-          console.debug(`ignoring boolean property at ${key}`);
+          logger.debug(`ignoring boolean property at ${key}`);
         }
       }
     } else if (schema.items) {

@@ -27,7 +27,7 @@ describe("Realtime Authorization", () => {
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
     await app.listen(wsc.socket);
-    authGuardCheck = jest.spyOn(module.get(GuardService), "checkAuthorization");
+    authGuardCheck = jest.spyOn(module.get(GuardService), "checkAuthentication");
   });
 
   afterAll(() => app.close());

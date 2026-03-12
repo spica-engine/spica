@@ -62,5 +62,9 @@ export interface IdentityOptions {
   identityRealtime: boolean;
 }
 
+export interface IdentityConfigSettings {
+  password?: import("@spica-server/interface/config").PasswordPolicy;
+}
+
 export const IDENTITY_OPTIONS = Symbol.for("IDENTITY_OPTIONS");
 export const POLICY_PROVIDER = Symbol.for("POLICY_PROVIDER");
