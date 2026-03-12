@@ -117,6 +117,19 @@ tests:
           path: spec.template.spec.containers[1].name
           value: api
 
+  - it: should configure liveness probe on the api container
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.httpGet.path
+          value: /status/live
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.httpGet.port
+          value: 4300
+
   - it: should configure readiness probe on the api container
     template: templates/application.yaml
     documentSelector:
@@ -125,7 +138,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[1].readinessProbe.httpGet.path
-          value: /passport/strategies
+          value: /status/ready
       - equal:
           path: spec.template.spec.containers[1].readinessProbe.httpGet.port
           value: 4300
