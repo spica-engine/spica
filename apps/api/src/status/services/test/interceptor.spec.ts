@@ -40,7 +40,7 @@ describe("Status Interceptor", () => {
         imports: [
           DatabaseTestingModule.standalone(),
           CoreTestingModule,
-          StatusModule.forRoot({expireAfterSeconds: 60 * 60}),
+          StatusModule.forRoot({expireAfterSeconds: 60 * 60, httpStatusTracking: true}),
           PassportTestingModule.initialize()
         ],
         controllers: [TestController]

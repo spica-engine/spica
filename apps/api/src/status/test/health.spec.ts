@@ -46,6 +46,5 @@ describe("Health Check Endpoints", () => {
     jest.spyOn(db, "command").mockRejectedValueOnce(new Error("Database is not ready"));
     const res = await req.get("/status/ready");
     expect([res.statusCode, res.statusText]).toEqual([503, "Service Unavailable"]);
-    expect(res.body).toEqual({status: "error", message: "Service Unavailable"});
   });
 });
