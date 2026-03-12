@@ -98,40 +98,40 @@ export class UserModule {
               login: {
                 type: "object",
                 properties: {
-                  limit: {type: "number", minimum: 0},
-                  ttl: {type: "number", minimum: 0}
+                  limit: {type: "number", minimum: 1},
+                  ttl: {type: "number", minimum: 1}
                 },
                 required: ["limit", "ttl"]
               },
               providerVerification: {
                 type: "object",
                 properties: {
-                  limit: {type: "number", minimum: 0},
-                  ttl: {type: "number", minimum: 0}
+                  limit: {type: "number", minimum: 1},
+                  ttl: {type: "number", minimum: 1}
                 },
                 required: ["limit", "ttl"]
               },
               forgotPassword: {
                 type: "object",
                 properties: {
-                  limit: {type: "number", minimum: 0},
-                  ttl: {type: "number", minimum: 0}
+                  limit: {type: "number", minimum: 1},
+                  ttl: {type: "number", minimum: 1}
                 },
                 required: ["limit", "ttl"]
               },
               refreshToken: {
                 type: "object",
                 properties: {
-                  limit: {type: "number", minimum: 0},
-                  ttl: {type: "number", minimum: 0}
+                  limit: {type: "number", minimum: 1},
+                  ttl: {type: "number", minimum: 1}
                 },
                 required: ["limit", "ttl"]
               },
               createUser: {
                 type: "object",
                 properties: {
-                  limit: {type: "number", minimum: 0},
-                  ttl: {type: "number", minimum: 0}
+                  limit: {type: "number", minimum: 1},
+                  ttl: {type: "number", minimum: 1}
                 },
                 required: ["limit", "ttl"]
               }
