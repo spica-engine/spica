@@ -8,7 +8,6 @@ import {
   Post,
   Put,
   Query,
-  Req,
   Res,
   UseGuards,
   UseInterceptors,
@@ -49,7 +48,6 @@ import {ProviderVerificationService} from "./services/provider.verification.serv
 import {PasswordlessLoginService} from "./services/passwordless-login.service";
 import {PasswordResetService} from "./services/password-reset.service";
 import {UserPipelineBuilder} from "./pipeline.builder";
-import {buildClientMeta} from "@spica-server/core";
 import {RateLimitGuard} from "./rate-limit.guard";
 
 @Controller("passport/user")
@@ -568,15 +566,12 @@ export class UserController {
       code: string;
       provider: "email" | "phone";
     },
-    @Req() req: any,
     @Res() res: any
   ) {
-    const clientMeta = buildClientMeta(req, this.options.refreshTokenHashSecret);
     const {accessToken, refreshToken} = await this.passwordlessLoginService.verify(
       body.username,
       body.code,
-      body.provider,
-      clientMeta
+      body.provider
     );
     const cookiePath = "passport/user/session/refresh";
     res.cookie("refreshToken", refreshToken.token, this.userService.getCookieOptions(cookiePath));

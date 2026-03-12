@@ -571,22 +571,6 @@ describe("E2E Tests", () => {
       );
       expect(refreshToken.token).toBeUndefined();
     });
-
-    it("should return device information in refresh token response", async () => {
-      const parsedCookie = parseCookie(cookies[0]);
-
-      let {
-        body: [refreshToken]
-      } = await req.get(
-        "passport/refresh-token",
-        {filter: JSON.stringify({token: parsedCookie.value})},
-        {
-          Authorization: `IDENTITY ${token}`
-        }
-      );
-      expect(refreshToken.token).toBeUndefined();
-      expect(refreshToken.client_meta.device_label).toBeDefined();
-    });
   });
 
   describe("SSO", () => {

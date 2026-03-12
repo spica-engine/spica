@@ -34,9 +34,6 @@ import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface/passport
 import {AuthFactor} from "@spica-server/passport/authfactor";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
-import {ClientMeta} from "@spica-server/interface/passport/refresh_token";
-import {IDENTITY_OPTIONS, IdentityOptions} from "@spica-server/interface/passport/identity";
-import {buildClientMeta} from "@spica-server/core";
 
 /**
  * @name passport
@@ -81,26 +78,12 @@ export class PassportIdentityController {
   }
 
   stateReqs = new Map<string, any>();
-  clientMetaMap = new Map<string, ClientMeta>();
-
-  setClientMeta(id: string, clientMeta: ClientMeta) {
-    this.clientMetaMap.set(id, clientMeta);
-  }
-
-  deleteClientMeta(id: string) {
-    this.clientMetaMap.delete(id);
-  }
-
-  private extractClientMeta(req: any): ClientMeta {
-    return buildClientMeta(req, this.identityOptions.refreshTokenHashSecret);
-  }
 
   constructor(
     private identityService: IdentityService,
     private strategyService: StrategyService,
     private authFactor: AuthFactor,
     @Inject(STRATEGIES) private strategyTypes: StrategyTypeServices,
-    @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions,
     @Optional() private commander: ClassCommander
   ) {
     if (this.commander) {
@@ -114,9 +97,7 @@ export class PassportIdentityController {
           this.setRefreshToken,
           this.deleteRefreshToken,
           this.setAssertObservers,
-          this.deleteAssertObservers,
-          this.setClientMeta,
-          this.deleteClientMeta
+          this.deleteAssertObservers
         ],
         CommandType.SYNC
       );
@@ -178,16 +159,13 @@ export class PassportIdentityController {
       });
     }
 
-    const clientMeta = this.clientMetaMap.get(state);
-    this.deleteClientMeta(state);
-    this.completeIdentifyWithState(state, identity, expires, clientMeta);
+    this.completeIdentifyWithState(state, identity, expires);
   }
 
   async completeIdentifyWithState(
     state: string,
     identity: Identity,
-    expires: number,
-    clientMeta?: ClientMeta
+    expires: number
   ) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
@@ -197,16 +175,15 @@ export class PassportIdentityController {
 
     const {tokenSchema, refreshTokenSchema} = await this.signIdentity(
       identity,
-      expires,
-      clientMeta
+      expires
     );
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
     res.status(200).json(tokenSchema);
   }
 
-  async signIdentity(identity: Identity, expiresIn: number, clientMeta?: ClientMeta) {
+  async signIdentity(identity: Identity, expiresIn: number) {
     const tokenSchema = this.identityService.sign(identity, expiresIn);
-    const refreshTokenSchema = await this.identityService.signRefreshToken(identity, clientMeta);
+    const refreshTokenSchema = await this.identityService.signRefreshToken(identity);
 
     const id = identity._id.toHexString();
     if (this.authFactor.hasFactor(id)) {
@@ -234,8 +211,7 @@ export class PassportIdentityController {
     password: string,
     state: string,
     expires: number,
-    res,
-    clientMeta?: ClientMeta
+    res
   ) {
     const catchError = e => {
       if (!res.headerSent) {
@@ -246,10 +222,6 @@ export class PassportIdentityController {
     if (state) {
       this.stateReqs.set(state, res);
       setTimeout(() => this.stateReqs.delete(state), this.SESSION_TIMEOUT_MS);
-      if (clientMeta) {
-        this.setClientMeta(state, clientMeta);
-        setTimeout(() => this.deleteClientMeta(state), this.SESSION_TIMEOUT_MS);
-      }
 
       this.startIdentifyWithState(state, expires).catch(catchError);
 
@@ -261,7 +233,7 @@ export class PassportIdentityController {
       return;
     }
 
-    const identifyResult = await this.signIdentity(identity, expires, clientMeta).catch(catchError);
+    const identifyResult = await this.signIdentity(identity, expires).catch(catchError);
     if (!identifyResult) {
       return;
     }
@@ -288,7 +260,7 @@ export class PassportIdentityController {
       "Warning",
       `299 "Identify with 'GET' method has been deprecated. Use 'POST' instead."`
     );
-    this._identify(identifier, password, state, expires, req.res, this.extractClientMeta(req));
+    this._identify(identifier, password, state, expires, req.res);
   }
 
   @Post("identify")
@@ -299,7 +271,7 @@ export class PassportIdentityController {
     @Res() res: any,
     @Next() next
   ) {
-    this._identify(identifier, password, state, expires, res, this.extractClientMeta(req));
+    this._identify(identifier, password, state, expires, res);
   }
 
   @Post("identify/:id/factor-authentication")
@@ -347,11 +319,9 @@ export class PassportIdentityController {
       throw new UnauthorizedException("Refresh token does not exist.");
     }
 
-    const clientMeta = this.extractClientMeta(req);
-
     let tokenSchema;
     try {
-      tokenSchema = await this.identityService.refreshToken(accessToken, refreshToken, clientMeta);
+      tokenSchema = await this.identityService.refreshToken(accessToken, refreshToken);
     } catch (error) {
       throw new BadRequestException(error);
     }

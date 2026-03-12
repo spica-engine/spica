@@ -24,7 +24,7 @@ import {RefreshTokenPipelineBuilder} from "./pipeline.builder";
 
 @Controller("passport/refresh-token")
 export class RefreshTokenController {
-  private readonly HIDDEN_FIELDS = {token: 0, "client_meta.fingerprint": 0} as const;
+  private readonly HIDDEN_FIELDS = {token: 0} as const;
 
   constructor(
     private service: RefreshTokenService,

@@ -590,18 +590,13 @@ describe("RefreshToken with hash secret", () => {
   it("should hash filter token value before querying", async () => {
     const rawToken = "my_raw_refresh_token";
     const hashedToken = hash(rawToken, HASH_SECRET);
-    const clientMeta = {
-      fingerprint: "abc123fingerprintHash",
-      device_label: "Chrome 120 / macOS 14"
-    };
     await service.insertOne({
       _id: new ObjectId("aaa00000000000000000000a"),
       identity: "user1",
       token: hashedToken,
       created_at: new Date("2000-01-01T00:00:00.000Z"),
       expired_at: new Date("2099-01-01T00:00:00.000Z"),
-      last_used_at: new Date("2000-01-01T00:00:00.000Z"),
-      client_meta: clientMeta
+      last_used_at: new Date("2000-01-01T00:00:00.000Z")
     });
 
     const res = await req.get("/passport/refresh-token", {
@@ -614,10 +609,7 @@ describe("RefreshToken with hash secret", () => {
       identity: "user1",
       created_at: "2000-01-01T00:00:00.000Z",
       expired_at: "2099-01-01T00:00:00.000Z",
-      last_used_at: "2000-01-01T00:00:00.000Z",
-      client_meta: {
-        device_label: "Chrome 120 / macOS 14"
-      }
+      last_used_at: "2000-01-01T00:00:00.000Z"
     });
   });
 
