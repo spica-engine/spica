@@ -22,8 +22,8 @@ export class HttpRateLimitService {
 
   constructor(cleanupIntervalMs: number = 60_000) {
     this.cleanupInterval = setInterval(() => this.cleanup(), cleanupIntervalMs);
-    // Allow the process to exit even if this interval is still active
-    this.cleanupInterval.unref();
+    // Allow the process to exit even if this interval is still active (when supported by the timer implementation)
+    (this.cleanupInterval as any).unref?.();
   }
 
   destroy(): void {
