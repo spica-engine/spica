@@ -549,6 +549,9 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     const userProviderHashSecret = process.env.USER_PROVIDER_HASH_SECRET;
     if (userProviderHashSecret) args["user-provider-hash-secret"] = userProviderHashSecret;
 
+    const refreshTokenHashSecret = process.env.REFRESH_TOKEN_HASH_SECRET;
+    if (refreshTokenHashSecret) args["refresh-token-hash-secret"] = refreshTokenHashSecret;
+
     const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
     if (twilioAccountSid) {
       args["twilio-sms-service-account-sid"] = twilioAccountSid;
@@ -645,7 +648,8 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       "secret-module-encryption-secret",
       "user-verification-hash-secret",
       "user-provider-encryption-secret",
-      "user-provider-hash-secret"
+      "user-provider-hash-secret",
+      "refresh-token-hash-secret"
     ];
 
     if (!masterKey) {
