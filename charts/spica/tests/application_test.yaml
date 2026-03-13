@@ -303,7 +303,19 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[1].env[0].name
-          value: PASSPORT_SECRET
+          value: MASTER_KEY
       - equal:
           path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.name
           value: release-name-application-secrets
+      - equal:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.key
+          value: masterKey
+      - equal:
+          path: spec.template.spec.containers[1].env[1].name
+          value: PASSPORT_SECRET
+      - equal:
+          path: spec.template.spec.containers[1].env[1].valueFrom.secretKeyRef.name
+          value: release-name-application-secrets
+      - equal:
+          path: spec.template.spec.containers[1].env[1].valueFrom.secretKeyRef.key
+          value: secret

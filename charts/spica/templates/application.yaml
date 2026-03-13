@@ -95,10 +95,10 @@ spec:
               mountPath: /data
           env:
             - name: MASTER_KEY
-                valueFrom:
-                  secretKeyRef:
-                    name: {{ .Release.Name }}-application-secrets
-                    key: masterKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: masterKey
             - name: PASSPORT_SECRET
               valueFrom:
                 secretKeyRef:
