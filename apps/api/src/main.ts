@@ -114,7 +114,8 @@ const args = yargsInstance
     },
     "master-key": {
       string: true,
-      description: "Master key used to derive all module-specific secrets (hash, encryption, etc)."
+      description:
+        "Master key used to derive all module-specific secrets (hash, encryption, etc) except secrets specifically provided."
     }
   })
   /* Passport Options  */
@@ -516,15 +517,33 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["database-uri"] = uri.toString();
     }
 
-    const passportSecret = process.env.PASSPORT_SECRET;
-    if (passportSecret) {
-      args["passport-secret"] = passportSecret;
-    }
-
     const masterKey = process.env.MASTER_KEY;
-    if (masterKey) {
-      args["master-key"] = masterKey;
-    }
+    if (masterKey) args["master-key"] = masterKey;
+
+    const passportSecret = process.env.PASSPORT_SECRET || process.env.SECRET;
+    if (passportSecret) args["passport-secret"] = passportSecret;
+
+    const bucketDataHashSecret = process.env.BUCKET_DATA_HASH_SECRET;
+    if (bucketDataHashSecret) args["bucket-data-hash-secret"] = bucketDataHashSecret;
+
+    const bucketDataEncryptionSecret = process.env.BUCKET_DATA_ENCRYPTION_SECRET;
+    if (bucketDataEncryptionSecret)
+      args["bucket-data-encryption-secret"] = bucketDataEncryptionSecret;
+
+    const secretModuleEncryptionSecret = process.env.SECRET_MODULE_ENCRYPTION_SECRET;
+    if (secretModuleEncryptionSecret)
+      args["secret-module-encryption-secret"] = secretModuleEncryptionSecret;
+
+    const userVerificationHashSecret = process.env.USER_VERIFICATION_HASH_SECRET;
+    if (userVerificationHashSecret)
+      args["user-verification-hash-secret"] = userVerificationHashSecret;
+
+    const userProviderEncryptionSecret = process.env.USER_PROVIDER_ENCRYPTION_SECRET;
+    if (userProviderEncryptionSecret)
+      args["user-provider-encryption-secret"] = userProviderEncryptionSecret;
+
+    const userProviderHashSecret = process.env.USER_PROVIDER_HASH_SECRET;
+    if (userProviderHashSecret) args["user-provider-hash-secret"] = userProviderHashSecret;
 
     const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
     if (twilioAccountSid) {
@@ -550,31 +569,6 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     if (!args["passport-user-token-expiration-seconds-limit"]) {
       args["passport-user-token-expiration-seconds-limit"] = args["passport-user-token-expires-in"];
     }
-
-    if (!args["master-key"]) {
-      throw new TypeError("--master-key is required.");
-    }
-
-    if (!args["passport-secret"]) {
-      args["passport-secret"] = deriveKey(`${args["master-key"]}:passport-secret`);
-    }
-
-    args["bucket-data-hash-secret"] = deriveKey(`${args["master-key"]}:bucket-data-hash-secret`);
-    args["bucket-data-encryption-secret"] = deriveKey(
-      `${args["master-key"]}:bucket-data-encryption-secret`
-    );
-    args["secret-module-encryption-secret"] = deriveKey(
-      `${args["master-key"]}:secret-module-encryption-secret`
-    );
-    args["user-verification-hash-secret"] = deriveKey(
-      `${args["master-key"]}:user-verification-hash-secret`
-    );
-    args["user-provider-encryption-secret"] = deriveKey(
-      `${args["master-key"]}:user-provider-encryption-secret`
-    );
-    args["user-provider-hash-secret"] = deriveKey(
-      `${args["master-key"]}:user-provider-hash-secret`
-    );
 
     if (args["bucket-cache"] && args["bucket-cache-ttl"] < 1) {
       throw new TypeError("--bucket-cache-ttl must be a positive number");
@@ -636,6 +630,31 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 
       if (path.isAbsolute(args["default-storage-path"])) {
         throw new TypeError("--default-storage-path must be relative.");
+      }
+    }
+
+    const masterKey = args["master-key"];
+    const derivableSecretsKeys = [
+      "passport-secret",
+      "bucket-data-hash-secret",
+      "bucket-data-encryption-secret",
+      "secret-module-encryption-secret",
+      "user-verification-hash-secret",
+      "user-provider-encryption-secret",
+      "user-provider-hash-secret"
+    ];
+
+    if (!masterKey) {
+      for (const key of derivableSecretsKeys) {
+        if (!args[key]) {
+          throw new TypeError(`${key} is required when the master-key is not provided`);
+        }
+      }
+    } else {
+      for (const key of derivableSecretsKeys) {
+        if (!args[key]) {
+          args[key] = deriveKey(`${masterKey}:${key}`);
+        }
       }
     }
 

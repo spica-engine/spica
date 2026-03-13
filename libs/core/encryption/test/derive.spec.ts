@@ -1,5 +1,4 @@
-import {deriveKey} from "../src/derive";
-import {deriveKeyBuffer} from "../src/derive";
+import {deriveKey, deriveKeyBuffer} from "../src/derive";
 
 describe("deriveKey", () => {
   it("should return a 64-character hex string", () => {
