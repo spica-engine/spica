@@ -17,6 +17,8 @@ import {
   useGetFunctionInformationQuery,
 } from "../../store/api/functionApi";
 import type {FunctionTrigger} from "../../store/api/functionApi";
+import {useGetFunctionLogsQuery} from "../../store/api/functionApi";
+import type {FunctionLog} from "../../store/api/functionApi";
 import {useAppDispatch} from "../../store/hook";
 import Loader from "../../components/atoms/loader/Loader";
 import Confirmation from "../../components/molecules/confirmation/Confirmation";
@@ -25,9 +27,17 @@ import ImportedFunctionPanel from "./components/ImportedFunctionPanel";
 import TriggerPanel from "./components/TriggerPanel";
 import DependencyPanel from "./components/DependencyPanel";
 import EnvironmentPanel from "./components/EnvironmentPanel";
-import FunctionLogView from "./components/FunctionLogView";
+import FunctionLogList from "../function-log/FunctionLogList";
 import ConfigurationDialog from "./components/ConfigurationDialog";
 import styles from "./FunctionPage.module.scss";
+
+const LEVEL_LABELS: Record<number, string> = {
+  0: "Debug",
+  1: "Log",
+  2: "Info",
+  3: "Warning",
+  4: "Error",
+};
 
 const IMPORT_REGEX = /^import\s+\*\s+as\s+(\w+)\s+from\s+["']\.\.\/\.\.\/([^/]+)\/\.build["'];?\s*$/gm;
 
@@ -59,8 +69,66 @@ const FunctionPage = () => {
   const [localTriggers, setLocalTriggers] = useState<FunctionTrigger[]>([]);
   const [localEnv, setLocalEnv] = useState<Record<string, string>>({});
   const [isSidebarSaving, setIsSidebarSaving] = useState(false);
+  const [logSearchQuery, setLogSearchQuery] = useState("");
 
   const isResizingRef = useRef(false);
+
+  const logDateRange = useMemo(() => {
+    const d = new Date();
+    return {
+      begin: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).toISOString(),
+      end: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).toISOString(),
+    };
+  }, []);
+
+  const {data: fnLogs = []} = useGetFunctionLogsQuery(
+    {
+      functions: [functionId],
+      begin: logDateRange.begin,
+      end: logDateRange.end,
+      limit: 100,
+      sort: {_id: -1},
+    },
+    {skip: !functionId || !showLogs}
+  );
+
+  const logFunctionNames = useMemo<Record<string, string>>(
+    () => (fn ? {[functionId]: fn.name} : {}),
+    [fn, functionId]
+  );
+
+  const logHandlerNames = useMemo<Record<string, string>>(() => {
+    if (!fn) return {};
+    const triggers = fn.triggers;
+    let handler = "default";
+    if (Array.isArray(triggers) && triggers.length > 0) {
+      handler = triggers[0].handler ?? "default";
+    } else if (triggers && typeof triggers === "object") {
+      const firstKey = Object.keys(triggers)[0];
+      if (firstKey) handler = firstKey;
+    }
+    return {[functionId]: handler};
+  }, [fn, functionId]);
+
+  const filteredLogs = useMemo<FunctionLog[]>(() => {
+    if (!logSearchQuery.trim()) return fnLogs;
+    const q = logSearchQuery.toLowerCase();
+    return fnLogs.filter(log => {
+      const fnName = (logFunctionNames[log.function] ?? log.function).toLowerCase();
+      const handler = (logHandlerNames[log.function] ?? "default").toLowerCase();
+      const content = log.content.toLowerCase();
+      const severity = (LEVEL_LABELS[log.level] ?? "").toLowerCase();
+      const ts = Number.parseInt(log._id.substring(0, 8), 16) * 1000;
+      const timestamp = new Date(ts).toLocaleString().toLowerCase();
+      return (
+        fnName.includes(q) ||
+        handler.includes(q) ||
+        content.includes(q) ||
+        severity.includes(q) ||
+        timestamp.includes(q)
+      );
+    });
+  }, [fnLogs, logSearchQuery, logFunctionNames, logHandlerNames]);
 
   const serverTriggers = useMemo<FunctionTrigger[]>(() => {
     if (!fn) return [];
@@ -291,7 +359,17 @@ const FunctionPage = () => {
             <Icon name="chevronDown" size="sm" />
             Logs
           </button>
-          {showLogs && <FunctionLogView functionId={functionId} />}
+          {showLogs && (
+            <div className={styles.footerLogWrapper}>
+              <FunctionLogList
+                logs={filteredLogs}
+                searchQuery={logSearchQuery}
+                onSearchChange={setLogSearchQuery}
+                functionNames={logFunctionNames}
+                handlerNames={logHandlerNames}
+              />
+            </div>
+          )}
         </div>
       </div>
 
