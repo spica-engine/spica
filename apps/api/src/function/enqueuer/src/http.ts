@@ -142,7 +142,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
           }
           return ip.split(",")[0].trim();
         };
-        const ip = req.ip;
+        const ip = getFirstIp(req.headers['x-forwarded-for']) || req.ip;
 
         if (!ip) {
           console.warn(
