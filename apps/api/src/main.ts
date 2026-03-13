@@ -45,6 +45,27 @@ const args = yargsInstance
       description: "Path to the client server TLS key file."
     }
   })
+  /* Proxy options */
+  .options({
+    "trust-proxy": {
+      string: true,
+      default: "false",
+      description:
+        "Whether to trust the X-Forwarded-* headers set by the proxy. Possible values are true, false, a number representing the number of hops to trust, or a comma-separated list of IPs to trust."
+    }
+  })
+  .coerce("trust-proxy", (arg: any) => {
+    if (arg === "true") return true;
+    if (arg === "false") return false;
+    const num = Number(arg);
+    if (!isNaN(num)) return num;
+
+    if (arg.includes(",")) {
+      return arg.split(",").map(v => v.trim());
+    }
+
+    return arg;
+  })
   /* Database Options */
   .options({
     "database-uri": {
@@ -849,7 +870,7 @@ NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false
 }).then(async app => {
-  app.getHttpAdapter().getInstance().set("trust proxy", true);
+  app.getHttpAdapter().getInstance().set("trust proxy", args["trust-proxy"]);
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
     Middlewares.Headers({
