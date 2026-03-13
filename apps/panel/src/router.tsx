@@ -15,6 +15,7 @@ import Webhook from "./pages/webhook/Webhook";
 import Strategy from "./pages/strategy/Strategy";
 import Activities from "./pages/activities/Activities";
 import FunctionPage from "./pages/function/FunctionPage";
+import FunctionLogPage from "./pages/function-log/FunctionLogPage";
 import VersionControl from "./pages/version-control/VersionControl";
 
 const router = createBrowserRouter([
@@ -72,6 +73,10 @@ const router = createBrowserRouter([
       {
         path: "function/:functionId",
         element: <FunctionPage />
+      },
+      {
+        path: "function-logs",
+        element: <FunctionLogPage />
       },
       {
         path: "webhook/:webhookId",

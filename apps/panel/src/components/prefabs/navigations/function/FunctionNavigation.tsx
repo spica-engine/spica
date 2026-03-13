@@ -156,6 +156,10 @@ const FunctionNavigation = () => {
     [orderedFunctions, updateFunctionOrder]
   );
 
+  const handleNavigateToLogs = useCallback(() => {
+    navigate("/function-logs");
+  }, [navigate]);
+
   return (
     <div className={styles.container}>
       <FluidContainer
@@ -167,6 +171,13 @@ const FunctionNavigation = () => {
             <Text dimensionX="fill" size="large">
               Functions
             </Text>
+          )
+        }}
+        suffix={{
+          children: (
+            <Button variant="icon" color="transparent" className={styles.button} onClick={handleNavigateToLogs}>
+              <Icon name="cog" size="sm" />
+            </Button>
           )
         }}
       />
