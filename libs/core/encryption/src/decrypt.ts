@@ -1,5 +1,6 @@
 import * as crypto from "node:crypto";
 import {BaseEncryptedData} from "./types";
+import {deriveKeyBuffer} from "./derive";
 
 const ALGORITHM = "aes-256-gcm";
 
@@ -17,7 +18,7 @@ export function decrypt(encryptedData: BaseEncryptedData, secret: string): strin
     throw new Error("Invalid encrypted data format.");
   }
 
-  const key = deriveKey(secret);
+  const key = deriveKeyBuffer(secret);
   const decipher = crypto.createDecipheriv(ALGORITHM, key, Buffer.from(iv, "hex"));
 
   decipher.setAuthTag(Buffer.from(authTag, "hex"));
@@ -26,8 +27,4 @@ export function decrypt(encryptedData: BaseEncryptedData, secret: string): strin
   decrypted += decipher.final("utf8");
 
   return decrypted;
-}
-
-function deriveKey(secret: string): Buffer {
-  return crypto.createHash("sha256").update(secret, "utf8").digest();
 }

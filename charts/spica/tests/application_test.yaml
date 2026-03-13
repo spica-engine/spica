@@ -10,11 +10,7 @@ release:
   namespace: default
 set:
   application.secret: test-secret
-  application.bucketDataHashSecret: test-hash
-  application.bucketDataEncryptionSecret: test-enc
-  application.userVerificationHashSecret: test-verify
-  application.userProviderEncryptionSecret: test-prov-enc
-  application.userProviderHashSecret: test-prov-hash
+  application.masterKey: test-master-key
   application.publicHost: https://test.example.com
 
 tests:
@@ -116,6 +112,111 @@ tests:
       - equal:
           path: spec.template.spec.containers[1].name
           value: api
+  
+  - it: should configure startup probe on the api container
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.httpGet.path
+          value: /status/live
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.httpGet.port
+          value: 4300
+
+  - it: should use default startup probe timing values
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.initialDelaySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.periodSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.timeoutSeconds
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.failureThreshold
+          value: 24
+
+  - it: should reflect custom startup probe values from values.yaml
+    set:
+      application.apiStartupProbeInitialDelaySeconds: 20
+      application.apiStartupProbePeriodSeconds: 10
+      application.apiStartupProbeTimeoutSeconds: 6
+      application.apiStartupProbeFailureThreshold: 12
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.initialDelaySeconds
+          value: 20
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.periodSeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.timeoutSeconds
+          value: 6
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.failureThreshold
+          value: 12
+
+  - it: should configure liveness probe on the api container
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.httpGet.path
+          value: /status/live
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.httpGet.port
+          value: 4300
+
+  - it: should use default liveness probe timing values
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.periodSeconds
+          value: 15
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.failureThreshold
+          value: 3
+
+  - it: should reflect custom liveness probe values from values.yaml
+    set:
+      application.apiLivenessProbePeriodSeconds: 30
+      application.apiLivenessProbeTimeoutSeconds: 10
+      application.apiLivenessProbeFailureThreshold: 5
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.periodSeconds
+          value: 30
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.timeoutSeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.failureThreshold
+          value: 5
 
   - it: should configure readiness probe on the api container
     template: templates/application.yaml
@@ -125,10 +226,46 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[1].readinessProbe.httpGet.path
-          value: /passport/strategies
+          value: /status/ready
       - equal:
           path: spec.template.spec.containers[1].readinessProbe.httpGet.port
           value: 4300
+
+  - it: should use default readiness probe timing values
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.periodSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.failureThreshold
+          value: 6
+
+  - it: should reflect custom readiness probe values from values.yaml
+    set:
+      application.apiReadinessProbePeriodSeconds: 15
+      application.apiReadinessProbeTimeoutSeconds: 8
+      application.apiReadinessProbeFailureThreshold: 3
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.periodSeconds
+          value: 15
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.timeoutSeconds
+          value: 8
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.failureThreshold
+          value: 3
 
   - it: should include --public-url in the api container args
     template: templates/application.yaml
@@ -307,7 +444,19 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[1].env[0].name
-          value: PASSPORT_SECRET
+          value: MASTER_KEY
       - equal:
           path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.name
           value: release-name-application-secrets
+      - equal:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.key
+          value: masterKey
+      - equal:
+          path: spec.template.spec.containers[1].env[1].name
+          value: PASSPORT_SECRET
+      - equal:
+          path: spec.template.spec.containers[1].env[1].valueFrom.secretKeyRef.name
+          value: release-name-application-secrets
+      - equal:
+          path: spec.template.spec.containers[1].env[1].valueFrom.secretKeyRef.key
+          value: secret
