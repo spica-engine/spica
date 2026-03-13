@@ -17,14 +17,10 @@ export function RateLimitGuard(group: string): Type<CanActivate> {
       const request = context.switchToHttp().getRequest();
       const response = context.switchToHttp().getResponse();
 
-      const ip = request.ip;
-
-      if (!ip) {
-        console.warn(
-          "Could not determine client IP address for rate limiting. Allowing request by default."
-        );
-        return true;
-      }
+      const ip =
+        request.ips?.length > 0
+          ? request.ips[0]
+          : request.ip || request.socket?.remoteAddress || "unknown";
 
       const result = this.rateLimitService.checkLimit(group, ip);
 
