@@ -1,0 +1,97 @@
+.drawerContent {
+  padding: var(--padding-xl);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.drawerTitle {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-font-tertiary);
+  margin-bottom: var(--gap-lg);
+}
+
+.form {
+  flex: 1;
+}
+
+.fieldLabel {
+  color: var(--color-font-tertiary);
+  font-weight: 500;
+}
+
+.inputContainer {
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--padding-md);
+  border-radius: var(--border-radius-md);
+  border: var(--border-default);
+  background-color: var(--color-input-background);
+}
+
+.input {
+  height: 44px;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+}
+
+.sectionHeader {
+  margin-top: var(--gap-md);
+  padding-bottom: var(--padding-sm);
+  border-bottom: var(--border-default);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sectionTitle {
+  font-weight: 600;
+  color: var(--color-black);
+  font-size: var(--font-size-md);
+}
+
+.helpIcon {
+  color: var(--color-font-tertiary);
+  cursor: pointer;
+}
+
+.codeBlock {
+  width: 100%;
+  max-height: 200px;
+  overflow: auto;
+  padding: var(--padding-md);
+  background-color: var(--color-input-background);
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: var(--font-size-sm);
+  color: var(--color-font-primary);
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+
+.chartPreview {
+  width: 100%;
+  height: 240px;
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-menu-background);
+  padding: var(--padding-md);
+  position: relative;
+}
+
+.chart {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.footer {
+  padding-top: var(--padding-lg);
+  border-top: var(--border-default);
+  margin-top: auto;
+}
+
+.saveButtonText {
+  color: var(--color-font-secondary);
+}
