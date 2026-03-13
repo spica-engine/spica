@@ -7,11 +7,7 @@ release:
   namespace: default
 set:
   application.secret: test-secret
-  application.bucketDataHashSecret: test-hash
-  application.bucketDataEncryptionSecret: test-enc
-  application.userVerificationHashSecret: test-verify
-  application.userProviderEncryptionSecret: test-prov-enc
-  application.userProviderHashSecret: test-prov-hash
+  application.masterKey: test-master-key
   application.publicHost: https://test.example.com
   ingress.hosts:
     - name: test.example.com

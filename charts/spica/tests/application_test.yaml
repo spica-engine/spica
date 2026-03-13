@@ -10,11 +10,7 @@ release:
   namespace: default
 set:
   application.secret: test-secret
-  application.bucketDataHashSecret: test-hash
-  application.bucketDataEncryptionSecret: test-enc
-  application.userVerificationHashSecret: test-verify
-  application.userProviderEncryptionSecret: test-prov-enc
-  application.userProviderHashSecret: test-prov-hash
+  application.masterKey: test-master-key
   application.publicHost: https://test.example.com
 
 tests:
@@ -448,7 +444,19 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[1].env[0].name
-          value: PASSPORT_SECRET
+          value: MASTER_KEY
       - equal:
           path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.name
           value: release-name-application-secrets
+      - equal:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.key
+          value: masterKey
+      - equal:
+          path: spec.template.spec.containers[1].env[1].name
+          value: PASSPORT_SECRET
+      - equal:
+          path: spec.template.spec.containers[1].env[1].valueFrom.secretKeyRef.name
+          value: release-name-application-secrets
+      - equal:
+          path: spec.template.spec.containers[1].env[1].valueFrom.secretKeyRef.key
+          value: secret

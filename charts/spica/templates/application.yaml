@@ -110,6 +110,11 @@ spec:
             - name: {{ .Release.Name }}-data
               mountPath: /data
           env:
+            - name: MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: masterKey
             - name: PASSPORT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -125,6 +130,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
                   key: bucketDataEncryptionSecret
+            - name: SECRET_MODULE_ENCRYPTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: secretModuleEncryptionSecret
             - name: USER_VERIFICATION_HASH_SECRET
               valueFrom:
                 secretKeyRef:
