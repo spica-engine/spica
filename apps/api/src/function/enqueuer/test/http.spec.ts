@@ -755,7 +755,9 @@ describe("http enqueuer with rate limiting", () => {
       preflight: false
     });
 
-    const response = await req.get("/fn-execute/no-limit");
+    const response = await req.get("/fn-execute/no-limit", undefined, {
+      "X-Forwarded-For": "1.2.3.4"
+    });
 
     expect(response.statusCode).toBe(200);
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
@@ -774,7 +776,9 @@ describe("http enqueuer with rate limiting", () => {
       rateLimit: {limit: 3, ttl: 60_000}
     });
 
-    const response = await req.get("/fn-execute/rate-ok");
+    const response = await req.get("/fn-execute/rate-ok", undefined, {
+      "X-Forwarded-For": "1.2.3.4"
+    });
 
     expect(response.statusCode).toBe(200);
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
@@ -790,20 +794,36 @@ describe("http enqueuer with rate limiting", () => {
 
     httpEnqueuer.subscribe(noopTarget, {
       method: HttpMethod.Get,
-      path: "/rate-ok",
+      path: "/rate-toggle",
       preflight: false,
       rateLimit: {limit: 1, ttl: 60_000}
     });
 
-    const response = await req.get("/fn-execute/rate-ok");
-    expect(response.statusCode).toBe(429);
-    expect(eventQueue.enqueue).toHaveBeenCalledTimes(0);
+    const ip = {"X-Forwarded-For": "1.2.3.4"};
 
-    httpEnqueuer.unsubscribe(noopTarget);
-
-    const response2 = await req.get("/fn-execute/rate-ok");
-    expect(response.statusCode).toBe(200);
+    // First request passes (within limit)
+    const response1 = await req.get("/fn-execute/rate-toggle", undefined, ip);
+    expect(response1.statusCode).toBe(200);
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    // Second request is blocked (exceeds limit)
+    const response2 = await req.get("/fn-execute/rate-toggle", undefined, ip);
+    expect(response2.statusCode).toBe(429);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    // Re-subscribe without rate limit
+    httpEnqueuer.unsubscribe(noopTarget);
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-toggle",
+      preflight: false
+    });
+
+    // Third request passes with no rate limit headers
+    const response3 = await req.get("/fn-execute/rate-toggle", undefined, ip);
+    expect(response3.statusCode).toBe(200);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(2);
+    expect(response3.headers["x-ratelimit-limit"]).toBeUndefined();
 
     httpEnqueuer.unsubscribe(noopTarget);
   });
@@ -818,13 +838,14 @@ describe("http enqueuer with rate limiting", () => {
       rateLimit: {limit: 2, ttl: 60_000}
     });
 
-    await req.get("/fn-execute/rate-exceed");
-    await req.get("/fn-execute/rate-exceed");
+    const ip = {"X-Forwarded-For": "1.2.3.4"};
+    await req.get("/fn-execute/rate-exceed", undefined, ip);
+    await req.get("/fn-execute/rate-exceed", undefined, ip);
 
     eventQueue.enqueue.mockClear();
     httpQueue.enqueue.mockClear();
 
-    const response = await req.get("/fn-execute/rate-exceed");
+    const response = await req.get("/fn-execute/rate-exceed", undefined, ip);
 
     expect(response.statusCode).toBe(429);
     expect(response.body).toEqual({
@@ -851,8 +872,9 @@ describe("http enqueuer with rate limiting", () => {
       rateLimit: {limit: 1, ttl: 60_000}
     });
 
-    await req.get("/fn-execute/rate-reconfig");
-    const blocked = await req.get("/fn-execute/rate-reconfig");
+    const ip = {"X-Forwarded-For": "1.2.3.4"};
+    await req.get("/fn-execute/rate-reconfig", undefined, ip);
+    const blocked = await req.get("/fn-execute/rate-reconfig", undefined, ip);
     expect(blocked.statusCode).toBe(429);
 
     httpEnqueuer.unsubscribe(noopTarget);
@@ -864,7 +886,7 @@ describe("http enqueuer with rate limiting", () => {
       rateLimit: {limit: 5, ttl: 60_000}
     });
 
-    const response = await req.get("/fn-execute/rate-reconfig");
+    const response = await req.get("/fn-execute/rate-reconfig", undefined, ip);
     expect(response.statusCode).toBe(200);
     expect(response.headers["x-ratelimit-limit"]).toBe("5");
     expect(response.headers["x-ratelimit-remaining"]).toBe("4");

@@ -152,56 +152,25 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
           console.warn(
             "Could not determine client IP address for rate limiting. Allowing request by default."
           );
-          return true;
-        }
+        } else {
+          const groupKey = `${target.cwd}:${target.handler}`;
+          const rateLimitResult = this.rateLimitService.checkLimit(groupKey, ip);
 
-        // detect also whether ip address is public or private, and log it. Because if it's private, it means user is probably behind a proxy but proxy is not setting x-forwarded-for header, so we are treating all requests from that user as same single user which can cause unexpected rate limit blocks.
-        // verify the following code
-        const isPrivateIp = (ip: string) => {
-          return (
-            ip.startsWith("10.") ||
-            ip.startsWith("192.168.") ||
-            ip.startsWith("172.16.") ||
-            ip.startsWith("172.17.") ||
-            ip.startsWith("172.18.") ||
-            ip.startsWith("172.19.") ||
-            ip.startsWith("172.20.") ||
-            ip.startsWith("172.21.") ||
-            ip.startsWith("172.22.") ||
-            ip.startsWith("172.23.") ||
-            ip.startsWith("172.24.") ||
-            ip.startsWith("172.25.") ||
-            ip.startsWith("172.26.") ||
-            ip.startsWith("172.27.") ||
-            ip.startsWith("172.28.") ||
-            ip.startsWith("172.29.") ||
-            ip.startsWith("172.30.") ||
-            ip.startsWith("172.31.")
-          );
-        };
-        if (isPrivateIp(ip)) {
-          console.warn(
-            `Request from private IP address ${ip}. This may indicate a user behind a proxy.`
-          );
-        }
+          if (rateLimitResult.limit > 0) {
+            res.setHeader("X-RateLimit-Limit", rateLimitResult.limit);
+            res.setHeader("X-RateLimit-Remaining", rateLimitResult.remaining);
+            res.setHeader("X-RateLimit-Reset", Math.ceil(rateLimitResult.resetAt / 1000));
 
-        const groupKey = `${target.cwd}:${target.handler}`;
-        const rateLimitResult = this.rateLimitService.checkLimit(groupKey, ip);
-
-        if (rateLimitResult.limit > 0) {
-          res.setHeader("X-RateLimit-Limit", rateLimitResult.limit);
-          res.setHeader("X-RateLimit-Remaining", rateLimitResult.remaining);
-          res.setHeader("X-RateLimit-Reset", Math.ceil(rateLimitResult.resetAt / 1000));
-
-          if (!rateLimitResult.allowed) {
-            const retryAfter = Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000);
-            res.setHeader("Retry-After", retryAfter);
-            res.status(429).json({
-              statusCode: 429,
-              message: "Too many requests. Please try again later.",
-              error: "Too Many Requests"
-            });
-            return;
+            if (!rateLimitResult.allowed) {
+              const retryAfter = Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000);
+              res.setHeader("Retry-After", retryAfter);
+              res.status(429).json({
+                statusCode: 429,
+                message: "Too many requests. Please try again later.",
+                error: "Too Many Requests"
+              });
+              return;
+            }
           }
         }
       }
