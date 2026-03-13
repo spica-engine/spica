@@ -30,6 +30,7 @@ import yargs from "yargs/yargs";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import {ConfigModule} from "./config";
+import {deriveKey} from "@spica-server/core/encryption";
 
 const yargsInstance = yargs(process.argv.slice(2)) as any;
 
@@ -111,17 +112,10 @@ const args = yargsInstance
       description: "Whether Bucket GraphQL feature is enabled.",
       default: false
     },
-    "bucket-data-hash-secret": {
+    "master-key": {
       string: true,
-      description: "Secret to be used for hashing values in bucket data."
-    },
-    "bucket-data-encryption-secret": {
-      string: true,
-      description: "Secret to be used for encrypting/decrypting values in bucket data."
-    },
-    "secret-module-encryption-secret": {
-      string: true,
-      description: "Secret to be used for encrypting/decrypting secret values."
+      description:
+        "Master key used to derive all module-specific secrets (hash, encryption, etc) except secrets specifically provided."
     }
   })
   /* Passport Options  */
@@ -250,25 +244,13 @@ const args = yargsInstance
       number: true,
       description: "Maximum number of users that can be inserted."
     },
-    "user-verification-hash-secret": {
-      string: true,
-      description: "Hash secret used for user verification related operations."
-    },
-    "user-provider-encryption-secret": {
-      string: true,
-      description: "Encryption secret used for user provider encryption operations."
-    },
-    "user-provider-hash-secret": {
-      string: true,
-      description: "Hash secret used for user provider hash operations."
-    },
     "passport-user-verification-code-expires-in": {
       number: true,
       description: "Default lifespan of the issued verification codes for users. Unit: second",
       default: 60 * 5
     }
   })
-  .demandOption("passport-secret")
+
   /* Function Options */
   .options({
     "function-api-url": {
@@ -539,25 +521,33 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["database-uri"] = uri.toString();
     }
 
-    const passportSecret = process.env.PASSPORT_SECRET;
-    if (passportSecret) {
-      args["passport-secret"] = passportSecret;
-    }
+    const masterKey = process.env.MASTER_KEY;
+    if (masterKey) args["master-key"] = masterKey;
+
+    const passportSecret = process.env.PASSPORT_SECRET || process.env.SECRET;
+    if (passportSecret) args["passport-secret"] = passportSecret;
 
     const bucketDataHashSecret = process.env.BUCKET_DATA_HASH_SECRET;
-    if (bucketDataHashSecret) {
-      args["bucket-data-hash-secret"] = bucketDataHashSecret;
-    }
+    if (bucketDataHashSecret) args["bucket-data-hash-secret"] = bucketDataHashSecret;
 
     const bucketDataEncryptionSecret = process.env.BUCKET_DATA_ENCRYPTION_SECRET;
-    if (bucketDataEncryptionSecret) {
+    if (bucketDataEncryptionSecret)
       args["bucket-data-encryption-secret"] = bucketDataEncryptionSecret;
-    }
 
     const secretModuleEncryptionSecret = process.env.SECRET_MODULE_ENCRYPTION_SECRET;
-    if (secretModuleEncryptionSecret) {
+    if (secretModuleEncryptionSecret)
       args["secret-module-encryption-secret"] = secretModuleEncryptionSecret;
-    }
+
+    const userVerificationHashSecret = process.env.USER_VERIFICATION_HASH_SECRET;
+    if (userVerificationHashSecret)
+      args["user-verification-hash-secret"] = userVerificationHashSecret;
+
+    const userProviderEncryptionSecret = process.env.USER_PROVIDER_ENCRYPTION_SECRET;
+    if (userProviderEncryptionSecret)
+      args["user-provider-encryption-secret"] = userProviderEncryptionSecret;
+
+    const userProviderHashSecret = process.env.USER_PROVIDER_HASH_SECRET;
+    if (userProviderHashSecret) args["user-provider-hash-secret"] = userProviderHashSecret;
 
     const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
     if (twilioAccountSid) {
@@ -572,26 +562,6 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     const twilioFromNumber = process.env.TWILIO_FROM_NUMBER;
     if (twilioFromNumber) {
       args["twilio-sms-service-from-number"] = twilioFromNumber;
-    }
-
-    const userVerificationHashSecret = process.env.USER_VERIFICATION_HASH_SECRET;
-    if (userVerificationHashSecret) {
-      args["user-verification-hash-secret"] = userVerificationHashSecret;
-    }
-
-    const userProviderEncryptionSecret = process.env.USER_PROVIDER_ENCRYPTION_SECRET;
-    if (userProviderEncryptionSecret) {
-      args["user-provider-encryption-secret"] = userProviderEncryptionSecret;
-    }
-
-    const userProviderHashSecret = process.env.USER_PROVIDER_HASH_SECRET;
-    if (userProviderHashSecret) {
-      args["user-provider-hash-secret"] = userProviderHashSecret;
-    }
-
-    const refreshTokenHashSecret = process.env.REFRESH_TOKEN_HASH_SECRET;
-    if (refreshTokenHashSecret) {
-      args["refresh-token-hash-secret"] = refreshTokenHashSecret;
     }
   })
   .check(args => {
@@ -664,6 +634,31 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 
       if (path.isAbsolute(args["default-storage-path"])) {
         throw new TypeError("--default-storage-path must be relative.");
+      }
+    }
+
+    const masterKey = args["master-key"];
+    const derivableSecretsKeys = [
+      "passport-secret",
+      "bucket-data-hash-secret",
+      "bucket-data-encryption-secret",
+      "secret-module-encryption-secret",
+      "user-verification-hash-secret",
+      "user-provider-encryption-secret",
+      "user-provider-hash-secret"
+    ];
+
+    if (!masterKey) {
+      for (const key of derivableSecretsKeys) {
+        if (!args[key]) {
+          throw new TypeError(`${key} is required when the master-key is not provided`);
+        }
+      }
+    } else {
+      for (const key of derivableSecretsKeys) {
+        if (!args[key]) {
+          args[key] = deriveKey(`${masterKey}:${key}`);
+        }
       }
     }
 

@@ -41,16 +41,26 @@ images:
 
 application:
   replicas: 1
+  # Master key used to derive all module-specific secrets (hash, encryption, etc) except secrets specifically provided
+  masterKey:
+  # each secret will override the masterKey derived secret
+  # optional if masterKey is provided, all required if not
+  # passport secret for signing JWT tokens
   secret:
+  # bucket data encryption/hash secret for encrypting/hashing data stored in buckets
   bucketDataHashSecret:
   bucketDataEncryptionSecret:
+  # secret to encrypt secrets stored in secret module(especially function secrets)
+  secretModuleEncryptionSecret:
+  # user verification hash secret for hashing user verification tokens
+  userVerificationHashSecret:
+  # user provider encryption/hash secret for encrypting/hashing user email/phone number etc.
+  userProviderEncryptionSecret:
+  userProviderHashSecret:
+  # sms provider configuration
   twilioAccountSid:
   twilioAuthToken:
   twilioFromNumber:
-  userVerificationHashSecret:
-  userProviderEncryptionSecret:
-  userProviderHashSecret:
-  refreshTokenHashSecret:
   defaultPassword: spica
   webBaseUrl: /spica/
   apiBaseUrl: /api/

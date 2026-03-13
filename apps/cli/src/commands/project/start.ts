@@ -76,7 +76,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
     `--public-url=${apiUrl}`,
     `--function-api-url=${functionApiUrl}`,
-    `--passport-secret=${name}`,
+    `--master-key=${name}`,
     `--persistent-path=${persistentPath}`
   ];
 

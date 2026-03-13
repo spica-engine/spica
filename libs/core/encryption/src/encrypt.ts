@@ -1,6 +1,7 @@
 import * as crypto from "node:crypto";
 import {BaseEncryptedData, EncryptedData} from "./types";
 import {hash} from "./hash";
+import {deriveKeyBuffer} from "./derive";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
@@ -23,7 +24,7 @@ export function encrypt(
   if (!encryptionSecret) {
     throw new Error("Encryption secret is required.");
   }
-  const key = deriveKey(encryptionSecret);
+  const key = deriveKeyBuffer(encryptionSecret);
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
@@ -43,8 +44,4 @@ export function encrypt(
   }
 
   return base;
-}
-
-function deriveKey(secret: string): Buffer {
-  return crypto.createHash("sha256").update(secret, "utf8").digest();
 }
