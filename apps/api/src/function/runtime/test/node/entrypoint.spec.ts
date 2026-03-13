@@ -1,5 +1,11 @@
-import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
-import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
+import {
+  AgentToolQueue,
+  DatabaseQueue,
+  EventQueue,
+  FirehoseQueue,
+  HttpQueue
+} from "@spica-server/function/queue";
+import {AgentTool, Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
 import {Language} from "@spica-server/function/compiler";
 import {Compilation} from "@spica-server/interface/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
@@ -866,6 +872,164 @@ describe("Entrypoint", () => {
         };
         firehoseQueue.enqueue(ev.id, msg2);
         firehoseQueue.setSocket(msg2, secondSocket as unknown as WebSocket);
+
+        spawn();
+      });
+    });
+  });
+
+  describe("agent_tool", () => {
+    let agentToolQueue: AgentToolQueue;
+
+    beforeEach(() => {
+      queue.drain();
+      agentToolQueue = new AgentToolQueue();
+      queue.addQueue(agentToolQueue);
+      queue.listen();
+    });
+
+    it("should pop from the queue", done => {
+      initializeFn(`export default function() {}`).then(() => {
+        const ev = new event.Event({
+          type: event.Type.AGENT_TOOL,
+          target: new event.Target({
+            cwd: compilation.cwd,
+            handler: "default",
+            context: new event.SchedulingContext({
+              env: [],
+              timeout: 60
+            })
+          })
+        });
+
+        queue["_complete"] = () => {
+          expect(agentToolQueue.size).toBe(0);
+          done();
+        };
+
+        queue.enqueue(ev);
+
+        const message = new AgentTool.Message({
+          id: ev.id,
+          tool_name: "test_tool",
+          arguments: new TextEncoder().encode(JSON.stringify({city: "Istanbul"}))
+        });
+        agentToolQueue.enqueue(
+          ev.id,
+          message,
+          () => {},
+          () => {}
+        );
+
+        expect(agentToolQueue.size).toBe(1);
+
+        spawn();
+      });
+    });
+
+    it("should pass tool name and arguments to fn", async () => {
+      await initializeFn(`
+      export default function(tool) {
+        if (tool.name == 'get_weather' && tool.arguments.city == 'Istanbul') {
+          process.exit(4);
+        }
+      }`);
+
+      const ev = new event.Event({
+        type: event.Type.AGENT_TOOL,
+        target: new event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
+      queue.enqueue(ev);
+
+      const message = new AgentTool.Message({
+        id: ev.id,
+        tool_name: "get_weather",
+        arguments: new TextEncoder().encode(JSON.stringify({city: "Istanbul"}))
+      });
+      agentToolQueue.enqueue(
+        ev.id,
+        message,
+        () => {},
+        () => {}
+      );
+
+      const exitCode = await spawn().catch(e => e);
+      expect(exitCode).toBe(4);
+    });
+
+    it("should send result back via respond", done => {
+      initializeFn(`
+      export default function(tool) {
+        return { temperature: 25, unit: 'celsius' };
+      }`).then(() => {
+        const ev = new event.Event({
+          type: event.Type.AGENT_TOOL,
+          target: new event.Target({
+            cwd: compilation.cwd,
+            handler: "default",
+            context: new event.SchedulingContext({
+              env: [],
+              timeout: 60
+            })
+          })
+        });
+
+        const resolveSpy = jest.fn(result => {
+          const parsed = JSON.parse(Buffer.from(result).toString("utf-8"));
+          expect(parsed).toEqual({temperature: 25, unit: "celsius"});
+          done();
+        });
+
+        queue.enqueue(ev);
+
+        const message = new AgentTool.Message({
+          id: ev.id,
+          tool_name: "get_weather",
+          arguments: new TextEncoder().encode("{}")
+        });
+        agentToolQueue.enqueue(ev.id, message, resolveSpy, jest.fn());
+
+        spawn();
+      });
+    });
+
+    it("should send error back via respond when fn throws", done => {
+      initializeFn(`
+      export default function(tool) {
+        throw new Error('City not found');
+      }`).then(() => {
+        const ev = new event.Event({
+          type: event.Type.AGENT_TOOL,
+          target: new event.Target({
+            cwd: compilation.cwd,
+            handler: "default",
+            context: new event.SchedulingContext({
+              env: [],
+              timeout: 60
+            })
+          })
+        });
+
+        const rejectSpy = jest.fn(error => {
+          expect(error.message).toContain("City not found");
+          done();
+        });
+
+        queue.enqueue(ev);
+
+        const message = new AgentTool.Message({
+          id: ev.id,
+          tool_name: "get_weather",
+          arguments: new TextEncoder().encode("{}")
+        });
+        agentToolQueue.enqueue(ev.id, message, jest.fn(), rejectSpy);
 
         spawn();
       });

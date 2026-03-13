@@ -27,6 +27,7 @@ enum Type {
    SYSTEM = 5;
    BUCKET = 6;
    RABBITMQ = 7;
+   AGENT_TOOL = 8;
 }
 
 message Event {
