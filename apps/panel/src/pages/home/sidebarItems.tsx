@@ -76,7 +76,8 @@ export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[]
     icon: "dashboard",
     header: {
       name: "Dashboards"
-    }
+    },
+    addNewButtonText: "New Dashboard"
   },
   {
     id: "storage",
@@ -123,10 +124,6 @@ export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[]
 export const menuItems: TypeMenuItems[] = getMenuItems();
 
 export const navigatorItems: {[key: string]: TypeNavigatorItem[]} = {
-  dashboard: [
-    {_id: "1", title: "Overview", icon: "dashboard", section: "dashboard"},
-    {_id: "2", title: "Analytics", icon: "dashboard", section: "dashboard"}
-  ],
   bucket: [
     {_id: "3", title: "Profile", icon: "bucket", section: "bucket"},
     {_id: "4", title: "Security", icon: "lock", section: "bucket"}

@@ -16,6 +16,7 @@ import Strategy from "./pages/strategy/Strategy";
 import Activities from "./pages/activities/Activities";
 import FunctionPage from "./pages/function/FunctionPage";
 import VersionControl from "./pages/version-control/VersionControl";
+import DashboardView from "./pages/dashboard/DashboardView";
 
 const router = createBrowserRouter([
   {
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
       {
         path: "app",
         element: <App />
+      },
+      {
+        path: "dashboard/:dashboardId",
+        element: <DashboardView />
       },
       {
         path: "dashboard",
