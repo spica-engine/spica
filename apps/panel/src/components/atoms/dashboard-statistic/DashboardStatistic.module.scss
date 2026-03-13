@@ -1,0 +1,35 @@
+.statisticCard {
+  padding: var(--padding-xl);
+  background-color: var(--color-menu-background);
+  border-radius: var(--border-radius-md);
+  height: 100%;
+
+  .iconCircle {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--border-radius-circle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-black);
+    line-height: 1.2;
+  }
+
+  .titleText {
+    font-size: var(--font-size-md);
+    color: var(--color-font-tertiary);
+  }
+
+  .positive {
+    color: var(--color-success-dark);
+  }
+
+  .negative {
+    color: var(--color-danger);
+  }
+}

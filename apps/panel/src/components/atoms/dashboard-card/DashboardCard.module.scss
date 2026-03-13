@@ -1,0 +1,44 @@
+.dashboardCard {
+  height: 100%;
+  width: 100%;
+  background-color: var(--color-menu-background);
+
+  .header {
+    padding: var(--padding-xl);
+    color: var(--font-color);
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .content {
+    flex: 1;
+    padding: var(--padding-md);
+    overflow: auto;
+  }
+
+  .label {
+    color: var(--color-font-tertiary);
+    font-weight: 500;
+  }
+
+  .input {
+    width: 100%;
+    height: 36px;
+    padding: 0 var(--padding-md);
+    border: var(--border-default);
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-input-background);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-md);
+    outline: none;
+
+    &:focus {
+      border-color: var(--color-primary);
+    }
+  }
+}
