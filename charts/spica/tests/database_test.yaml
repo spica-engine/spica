@@ -158,6 +158,111 @@ tests:
             name: RS_MEMBERS
           any: true
 
+  - it: should configure the startup probe with mongosh ping
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].startupProbe.exec.command
+          content: mongosh
+      - contains:
+          path: spec.template.spec.containers[0].startupProbe.exec.command
+          content: "db.adminCommand('ping')"
+
+  - it: should use default startup probe timing values
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.initialDelaySeconds
+          value: 15
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.periodSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 20
+
+  - it: should reflect custom startup probe values from values.yaml
+    set:
+      database.startupProbeInitialDelaySeconds: 30
+      database.startupProbePeriodSeconds: 10
+      database.startupProbeTimeoutSeconds: 8
+      database.startupProbeFailureThreshold: 10
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.initialDelaySeconds
+          value: 30
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.periodSeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.timeoutSeconds
+          value: 8
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 10
+
+  - it: should configure the liveness probe with mongosh ping
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command
+          content: mongosh
+      - contains:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command
+          content: "db.adminCommand('ping')"
+
+  - it: should use default liveness probe timing values
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.periodSeconds
+          value: 30
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.failureThreshold
+          value: 3
+
+  - it: should reflect custom liveness probe values from values.yaml
+    set:
+      database.livenessProbePeriodSeconds: 60
+      database.livenessProbeTimeoutSeconds: 15
+      database.livenessProbeFailureThreshold: 5
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.periodSeconds
+          value: 60
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
+          value: 15
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.failureThreshold
+          value: 5
+
   - it: should configure the readiness probe with mongosh ping
     template: templates/database.yaml
     documentSelector:
@@ -170,6 +275,42 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].readinessProbe.exec.command
           content: "db.adminCommand('ping')"
+
+  - it: should use default readiness probe timing values
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.periodSeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.failureThreshold
+          value: 3
+
+  - it: should reflect custom readiness probe values from values.yaml
+    set:
+      database.readinessProbePeriodSeconds: 20
+      database.readinessProbeTimeoutSeconds: 8
+      database.readinessProbeFailureThreshold: 6
+    template: templates/database.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.periodSeconds
+          value: 20
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.timeoutSeconds
+          value: 8
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.failureThreshold
+          value: 6
 
   - it: should configure PROFILING_LEVEL and PROFILING_SLOWMS env vars
     template: templates/database.yaml

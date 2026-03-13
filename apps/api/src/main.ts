@@ -392,10 +392,10 @@ const args = yargsInstance
   })
   /* Status Options */
   .options({
-    "status-tracking": {
+    "http-status-tracking": {
       boolean: true,
       description:
-        "When enabled, server will be able to show the stats of core modules and track the request-response stats too.",
+        "When enabled, server will track the request-response stats like request count, request size, and response size.",
       default: true
     }
   })
@@ -802,19 +802,15 @@ const modules = [
     invocationLogs: args["function-invocation-logs"],
     realtime: true
   }),
-  ConfigModule.forRoot()
+  ConfigModule.forRoot(),
+  StatusModule.forRoot({
+    expireAfterSeconds: args["common-log-lifespan"],
+    httpStatusTracking: args["http-status-tracking"]
+  })
 ];
 
 if (args["activity-stream"]) {
   modules.push(ActivityModule.forRoot({expireAfterSeconds: args["common-log-lifespan"]}));
-}
-
-if (args["status-tracking"]) {
-  modules.push(
-    StatusModule.forRoot({
-      expireAfterSeconds: args["common-log-lifespan"]
-    })
-  );
 }
 
 if (args["version-control"]) {
