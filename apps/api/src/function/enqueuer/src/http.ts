@@ -8,6 +8,7 @@ import {CorsOptions} from "@spica-server/interface/core";
 import {AttachStatusTracker} from "@spica-server/interface/status";
 import {Description, HttpMethod, HttpOptions} from "@spica-server/interface/function/enqueuer";
 import {IGuardService} from "@spica-server/interface/passport/guard";
+import {HttpRateLimitService} from "./http-rate-limit.service";
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   type = event.Type.HTTP;
@@ -20,6 +21,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   };
 
   private router = express.Router({mergeParams: true});
+  private rateLimitService = new HttpRateLimitService();
 
   constructor(
     private queue: EventQueue,
@@ -132,6 +134,36 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         }
       }
 
+      if (options.rateLimit) {
+        const ip = req.ip;
+
+        if (!ip) {
+          console.warn(
+            "Could not determine client IP address for rate limiting. Allowing request by default."
+          );
+        } else {
+          const groupKey = `${target.cwd}:${target.handler}`;
+          const rateLimitResult = this.rateLimitService.checkLimit(groupKey, ip);
+
+          if (rateLimitResult.limit > 0) {
+            res.setHeader("X-RateLimit-Limit", rateLimitResult.limit);
+            res.setHeader("X-RateLimit-Remaining", rateLimitResult.remaining);
+            res.setHeader("X-RateLimit-Reset", Math.ceil(rateLimitResult.resetAt / 1000));
+
+            if (!rateLimitResult.allowed) {
+              const retryAfter = Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000);
+              res.setHeader("Retry-After", retryAfter);
+              res.status(429).json({
+                statusCode: 429,
+                message: "Too many requests. Please try again later.",
+                error: "Too Many Requests"
+              });
+              return;
+            }
+          }
+        }
+      }
+
       const ev = new event.Event({
         target,
         type: event.Type.HTTP
@@ -186,6 +218,11 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
 
     Object.defineProperty(fn, "target", {writable: false, value: target});
 
+    if (options.rateLimit) {
+      const groupKey = `${target.cwd}:${target.handler}`;
+      this.rateLimitService.addLimit(groupKey, options.rateLimit);
+    }
+
     this.router[method](path, fn);
 
     this.reorderUnhandledHandle();
@@ -193,6 +230,9 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
 
   unsubscribe(target: event.Target): void {
     this.schedulerUnsubscription(target.id);
+
+    const groupKey = `${target.cwd}:${target.handler}`;
+    this.rateLimitService.removeLimit(groupKey);
 
     this.router.stack = this.router.stack.filter(layer => {
       if (layer.route) {
