@@ -1,4 +1,4 @@
-import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
+import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
 import {Language} from "@spica-server/function/compiler";
@@ -30,6 +30,7 @@ import {generateLog} from "@spica-server/function/runtime/logger";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/interface/status";
+import {GuardService} from "@spica-server/passport/guard/services";
 import uniqid from "uniqid";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "@spica-server/interface/function/scheduler";
 import {Subject} from "rxjs";
@@ -40,6 +41,8 @@ import {ENQUEUER, EnqueuerFactory, WorkerState} from "@spica-server/interface/fu
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(Scheduler.name);
+
   private queue: EventQueue;
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
@@ -60,7 +63,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
     @Optional() private jobReducer: JobReducer,
-    @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker
+    @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker,
+    private guardService: GuardService
   ) {
     if (this.commander) {
       this.commander.register(this, [this.outdateWorkers], CommandType.SYNC);
@@ -105,6 +109,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.http.httpAdapter.getInstance(),
         this.options.corsOptions,
         schedulerUnsubscription,
+        this.guardService,
         this.attachStatusTracker
       )
     );
@@ -405,7 +410,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   private print(message: string) {
     if (this.options.debug) {
-      console.debug(message);
+      this.logger.debug(message);
     }
   }
 }

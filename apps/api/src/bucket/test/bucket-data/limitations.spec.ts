@@ -58,13 +58,13 @@ describe("BucketDataController", () => {
               type: "string",
               title: "title",
               description: "Title of the row",
-              options: {position: "left"}
+              options: {}
             },
             description: {
               type: "textarea",
               title: "description",
               description: "Description of the row",
-              options: {position: "right"}
+              options: {}
             }
           },
           documentSettings: {
@@ -144,13 +144,13 @@ describe("BucketDataController", () => {
               type: "string",
               title: "title",
               description: "Title of the row",
-              options: {position: "left"}
+              options: {}
             },
             description: {
               type: "textarea",
               title: "description",
               description: "Description of the row",
-              options: {position: "right"}
+              options: {}
             }
           },
           documentSettings: {

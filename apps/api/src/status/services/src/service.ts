@@ -1,18 +1,57 @@
 import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {Inject, Injectable} from "@nestjs/common";
+import {Inject, Injectable, Logger} from "@nestjs/common";
 import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "@spica-server/interface/status";
 import {ObjectId} from "@spica-server/database";
 
 @Injectable()
 export class StatusService extends BaseCollection<ApiStatus>("status") {
+  private readonly logger = new Logger(StatusService.name);
   moduleOptions: StatusOptions;
   constructor(db: DatabaseService, @Inject(STATUS_OPTIONS) _moduleOptions: StatusOptions) {
-    super(db, {afterInit: () => this.upsertTTLIndex(_moduleOptions.expireAfterSeconds)});
+    super(db, {afterInit: () => this.createIndexes(_moduleOptions)});
     this.moduleOptions = _moduleOptions;
+  }
+
+  private async createIndexes(options: StatusOptions) {
+    await this.upsertTTLIndex(options.expireAfterSeconds);
   }
 
   private byteToMb(bytes: number) {
     return parseFloat((bytes * Math.pow(10, -6)).toFixed(2));
+  }
+
+  async insertOne(status: Omit<ApiStatus, "_id" | "count">): Promise<any> {
+    const currentMinuteObjectId = this.getCurrentMinuteObjectId();
+    const MAX_RETRIES = 3;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        return this._coll.updateOne(
+          {_id: currentMinuteObjectId},
+          {
+            $inc: {
+              count: 1,
+              "request.size": status.request.size,
+              "response.size": status.response.size
+            },
+            $setOnInsert: {
+              _id: currentMinuteObjectId
+            }
+          },
+          {upsert: true}
+        );
+      } catch (error: any) {
+        // Try again ONLY for duplicate key errors
+        if (error?.code === 11000 && attempt < MAX_RETRIES) {
+          continue;
+        }
+        this.logger.error(
+          `Error inserting status`,
+          error instanceof Error ? error.stack : String(error)
+        );
+        return;
+      }
+    }
   }
 
   async _getStatus(begin: Date, end: Date) {
@@ -20,7 +59,7 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
       {
         $group: {
           _id: null,
-          request: {$sum: 1},
+          request: {$sum: "$count"},
           uploaded: {$sum: "$request.size"},
           downloaded: {$sum: "$response.size"}
         }
@@ -28,11 +67,13 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
     ];
 
     if (this.isValidDate(begin) && this.isValidDate(end)) {
+      const beginObjectId = this.objectIdFromDate(begin);
+      const endObjectId = this.objectIdFromDate(end);
       pipeline.unshift({
         $match: {
           _id: {
-            $gte: ObjectId.createFromTime(begin.getTime() / 1000),
-            $lt: ObjectId.createFromTime(end.getTime() / 1000)
+            $gte: beginObjectId,
+            $lt: endObjectId
           }
         }
       });
@@ -62,5 +103,20 @@ export class StatusService extends BaseCollection<ApiStatus>("status") {
 
   private isValidDate(date) {
     return date instanceof Date && !isNaN(date.getTime());
+  }
+
+  getCurrentMinuteObjectId(): ObjectId {
+    const seconds = Math.floor(Date.now() / 1000);
+    const minuteSeconds = Math.floor(seconds / 60) * 60;
+
+    const hexTimestamp = minuteSeconds.toString(16).padStart(8, "0");
+
+    return new ObjectId(hexTimestamp + "0000000000000000");
+  }
+
+  objectIdFromDate(date: Date): ObjectId {
+    const seconds = Math.floor(date.getTime() / 1000);
+    const hex = seconds.toString(16).padStart(8, "0");
+    return new ObjectId(hex + "0000000000000000");
   }
 }

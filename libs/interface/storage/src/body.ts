@@ -4,6 +4,8 @@ export interface StorageObject<DataType> {
   _id?: string | ObjectId;
   name: string;
   url?: string;
+  created_at?: Date;
+  updated_at?: Date;
   content: StorageObjectContent<DataType>;
 }
 

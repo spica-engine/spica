@@ -17,9 +17,6 @@ export interface Identity {
   password: string;
   deactivateJwtsBefore?: number;
   policies: string[];
-  attributes?: {
-    [key: string]: any;
-  };
   authFactor?: FactorMeta;
   lastPasswords: string[];
   lastLogin: Date;
@@ -62,6 +59,10 @@ export interface IdentityOptions {
   refreshTokenExpiresIn?: number;
   passwordHistoryLimit: number;
   identityRealtime: boolean;
+}
+
+export interface IdentityConfigSettings {
+  password?: import("@spica-server/interface/config").PasswordPolicy;
 }
 
 export const IDENTITY_OPTIONS = Symbol.for("IDENTITY_OPTIONS");

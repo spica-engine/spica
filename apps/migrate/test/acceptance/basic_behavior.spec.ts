@@ -23,7 +23,7 @@ describe("Basic behavior", () => {
         "2.0.0": [process.env.TESTONLY_MIGRATION_LOOKUP_DIR + "/migrations/add_description"]
       })
     );
-    const connection = await start("replset");
+    const connection = await start("standalone");
     args = ["--database-uri", await getConnectionUri(), "--database-name", getDatabaseName()];
     db = connection.db(args[3]);
     await db.createCollection("_test_");

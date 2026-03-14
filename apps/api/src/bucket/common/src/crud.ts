@@ -12,7 +12,6 @@ import {
   DatabaseException,
   ForbiddenException
 } from "./exception";
-import {IAuthResolver} from "@spica-server/interface/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {BucketPipelineBuilder} from "./pipeline.builder";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
@@ -24,37 +23,53 @@ import {
   RelationMap
 } from "@spica-server/interface/bucket/common";
 import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface/bucket";
+import {decryptDocumentFields} from "./decrypt";
+import {buildExpressionReplacers} from "./expression.filter";
 
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<false>,
-  factories: CrudFactories<T>
+  factories: CrudFactories<T>,
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<T[]>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<true>,
-  factories: CrudFactories<T>
+  factories: CrudFactories<T>,
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<CrudPagination<T>>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<boolean>,
-  factories: CrudFactories<T>
+  factories: CrudFactories<T>,
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<T[] | CrudPagination<T>>;
 export async function findDocuments<T>(
   schema: Bucket,
   params: CrudParams,
   options: CrudOptions<boolean>,
-  factories: CrudFactories<T>
+  factories: CrudFactories<T>,
+  hashSecret?: string,
+  encryptionSecret?: string
 ): Promise<unknown> {
   const collection = factories.collection(schema);
-  const pipelineBuilder = new BucketPipelineBuilder(schema, factories);
+  const pipelineBuilder = new BucketPipelineBuilder(
+    schema,
+    factories,
+    hashSecret,
+    encryptionSecret
+  );
   const seekingPipelineBuilder = new PipelineBuilder();
 
   let rulePropertyMap;
   let ruleRelationMap: RelationMap[];
+  let filtersAppliedPipeline;
 
   let basePipeline = await pipelineBuilder
     .findOneIfRequested(params.documentId)
@@ -64,24 +79,27 @@ export async function findDocuments<T>(
     params.req.res.header("Content-language", locale.best || locale.fallback);
   });
 
-  const rulesAppliedPipeline = await basePipeline
-    .rules(params.req.user, (propertyMap, relationMap) => {
-      rulePropertyMap = propertyMap;
-      ruleRelationMap = relationMap;
-    })
-    .catch(error => {
-      throw new ACLSyntaxException(error.message);
-    });
+  if (params.applyAcl) {
+    const rulesAppliedPipeline = await basePipeline
+      .rules(params.req.user, (propertyMap, relationMap) => {
+        rulePropertyMap = propertyMap;
+        ruleRelationMap = relationMap;
+      })
+      .catch(error => {
+        throw new ACLSyntaxException(error.message);
+      });
 
-  const ruleResetStage = resetNonOverlappingPathsInRelationMap({
-    left: [],
-    right: rulePropertyMap,
-    map: ruleRelationMap
-  });
-  // Reset those relations which have been requested by acl rules.
-  const filtersAppliedPipeline = await rulesAppliedPipeline
-    .attachToPipeline(!!ruleResetStage, ruleResetStage)
-    .filterByUserRequest(params.filter);
+    const ruleResetStage = resetNonOverlappingPathsInRelationMap({
+      left: [],
+      right: rulePropertyMap,
+      map: ruleRelationMap
+    });
+    filtersAppliedPipeline = await rulesAppliedPipeline
+      .attachToPipeline(!!ruleResetStage, ruleResetStage)
+      .filterByUserRequest(params.filter);
+  } else {
+    filtersAppliedPipeline = await basePipeline.filterByUserRequest(params.filter);
+  }
 
   const seekingPipeline = seekingPipelineBuilder
     .sort(params.sort)
@@ -97,9 +115,15 @@ export async function findDocuments<T>(
     }
   );
 
-  const aclProjection = buildAclProjection(schema.properties, params.req.user);
-  seekingPipelineBuilder.attachToPipeline(true, {$project: aclProjection});
-
+  if (params.applyAcl) {
+    const aclProjection = await buildAclProjection(
+      schema,
+      params.req.user,
+      factories.schema,
+      hashSecret
+    );
+    seekingPipelineBuilder.attachToPipeline(true, {$project: aclProjection});
+  }
   // for graphql responses
   seekingPipeline.setVisibilityOfFields(getVisibilityOfFields(params.projectMap));
 
@@ -120,25 +144,60 @@ export async function findDocuments<T>(
       .catch(error => {
         throw new DatabaseException(error.message);
       });
-    return result.data.length ? result : {meta: {total: 0}, data: []};
+    if (!result.data.length) {
+      return {meta: {total: 0}, data: []};
+    }
+    if (encryptionSecret) {
+      result.data = result.data.map(doc =>
+        decryptDocumentFields(doc as any, schema, encryptionSecret, factories.schema)
+      ) as T[];
+    }
+    return result;
   }
 
-  return collection
+  const documents = await collection
     .aggregate<T>([...pipeline, ...seeking])
     .toArray()
     .catch(error => {
       throw new DatabaseException(error.message);
     });
-}
 
-function buildAclProjection(properties: Record<string, {acl?: string}>, user: any) {
+  if (encryptionSecret) {
+    return documents.map(doc =>
+      decryptDocumentFields(doc as any, schema, encryptionSecret, factories.schema)
+    ) as T[];
+  }
+
+  return documents;
+}
+async function buildAclProjection(
+  schema: Bucket,
+  user: any,
+  schemaResolver: (id: string | ObjectId) => Promise<Bucket>,
+  hashSecret?: string
+) {
+  const properties = schema.properties as Record<string, {acl?: string}>;
   const result: Record<string, object | number> = {};
+
+  const allPropertyMaps: string[][] = [];
+  for (const key in properties) {
+    const acl = properties[key].acl;
+    if (acl) {
+      const propMap = expression.extractPropertyMap(acl);
+      const {documentPropertyMap} = categorizePropertyMap(propMap);
+      allPropertyMaps.push(...documentPropertyMap);
+    }
+  }
+
+  const replacers = allPropertyMaps.length
+    ? await buildExpressionReplacers(schema, allPropertyMaps, schemaResolver, hashSecret)
+    : [];
 
   for (const key in properties) {
     const acl = properties[key].acl;
 
     if (acl) {
-      const condition = expression.aggregate(acl, {auth: user}, "project");
+      const condition = expression.aggregateWithReplacers(acl, {auth: user}, "project", replacers);
 
       result[key] = {
         $cond: {
@@ -160,26 +219,30 @@ export async function insertDocument(
   document: BucketDocument,
   params: {
     req: any;
+    applyAcl?: boolean;
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
     deleteOne: (documentId: ObjectId) => Promise<void>;
-    authResolver: IAuthResolver;
-  }
+  },
+  hashSecret?: string,
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
-  await executeWriteRule(
-    schema,
-    factories.schema,
-    document,
-    // unlike others, we have to run this pipeline against buckets in case the target
-    // collection is empty.
-    collection.collection("buckets"),
-    params.req.user,
-    factories.authResolver
-  );
 
+  if (params.applyAcl) {
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      // unlike others, we have to run this pipeline against buckets in case the target
+      // collection is empty.
+      collection.collection("buckets"),
+      params.req.user,
+      hashSecret
+    );
+  }
   if (
     schema.documentSettings &&
     schema.documentSettings.limitExceedBehaviour == LimitExceedBehaviours.REMOVE
@@ -194,7 +257,13 @@ export async function insertDocument(
     }
   }
 
-  return collection.insertOne(document).catch(handleWriteErrors);
+  const inserted = await collection.insertOne(document).catch(handleWriteErrors);
+
+  if (encryptionSecret && inserted) {
+    return decryptDocumentFields(inserted, schema, encryptionSecret, factories.schema);
+  }
+
+  return inserted;
 }
 
 export async function replaceDocument(
@@ -202,35 +271,45 @@ export async function replaceDocument(
   document: BucketDocument,
   params: {
     req: any;
+    applyAcl?: boolean;
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
-    authResolver: IAuthResolver;
   },
   options: {
     returnDocument: ReturnDocument;
-  } = {returnDocument: ReturnDocument.BEFORE}
+  } = {returnDocument: ReturnDocument.BEFORE},
+  hashSecret?: string,
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
-  await executeWriteRule(
-    schema,
-    factories.schema,
-    document,
-    collection,
-    params.req.user,
-    factories.authResolver
-  );
+  if (params.applyAcl) {
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      collection,
+      params.req.user,
+      hashSecret
+    );
+  }
 
   const documentId = document._id;
   delete document._id;
 
-  return collection
+  const replaced = await collection
     .findOneAndReplace({_id: documentId}, document, {
       returnDocument: options.returnDocument
     })
     .catch(handleWriteErrors);
+
+  if (encryptionSecret && replaced) {
+    return decryptDocumentFields(replaced, schema, encryptionSecret, factories.schema);
+  }
+
+  return replaced;
 }
 
 export async function patchDocument(
@@ -239,36 +318,45 @@ export async function patchDocument(
   patch: any,
   params: {
     req: any;
+    applyAcl?: boolean;
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
-    authResolver: IAuthResolver;
   },
   options: {
     returnDocument: ReturnDocument;
-  } = {returnDocument: ReturnDocument.BEFORE}
+  } = {returnDocument: ReturnDocument.BEFORE},
+  hashSecret?: string,
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
-
-  await executeWriteRule(
-    schema,
-    factories.schema,
-    document,
-    collection,
-    params.req.user,
-    factories.authResolver
-  );
+  if (params.applyAcl) {
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      collection,
+      params.req.user,
+      hashSecret
+    );
+  }
 
   delete patch._id;
 
   const updateQuery = getUpdateQueryForPatch(patch, document);
 
-  return collection
+  const patched = await collection
     .findOneAndUpdate({_id: document._id}, updateQuery, {
       returnDocument: options.returnDocument
     })
     .catch(handleWriteErrors);
+
+  if (encryptionSecret && patched) {
+    return decryptDocumentFields(patched, schema, encryptionSecret, factories.schema);
+  }
+
+  return patched;
 }
 
 export async function deleteDocument(
@@ -276,12 +364,14 @@ export async function deleteDocument(
   documentId: string | ObjectId,
   params: {
     req: any;
+    applyAcl?: boolean;
   },
   factories: {
     collection: (schema: Bucket) => BaseCollection<BucketDocument>;
     schema: (schema: string | ObjectId) => Promise<Bucket>;
-    authResolver: IAuthResolver;
-  }
+  },
+  hashSecret?: string,
+  encryptionSecret?: string
 ) {
   const collection = factories.collection(schema);
 
@@ -291,18 +381,23 @@ export async function deleteDocument(
     return;
   }
 
-  await executeWriteRule(
-    schema,
-    factories.schema,
-    document,
-    collection,
-    params.req.user,
-    factories.authResolver
-  );
+  if (params.applyAcl) {
+    await executeWriteRule(
+      schema,
+      factories.schema,
+      document,
+      collection,
+      params.req.user,
+      hashSecret
+    );
+  }
 
   const deletedCount = await collection.deleteOne({_id: document._id});
 
   if (deletedCount == 1) {
+    if (encryptionSecret) {
+      return decryptDocumentFields(document, schema, encryptionSecret, factories.schema);
+    }
     return document;
   }
 }
@@ -313,7 +408,7 @@ async function executeWriteRule(
   document: BucketDocument,
   collection: BaseCollection<unknown>,
   auth: object,
-  authResolver: IAuthResolver
+  hashSecret?: string
 ) {
   let propertyMap = [];
 
@@ -323,15 +418,7 @@ async function executeWriteRule(
     throw new ACLSyntaxException(error.message);
   }
 
-  const {authPropertyMap, documentPropertyMap} = categorizePropertyMap(propertyMap);
-
-  const authRelationMap = await createRelationMap({
-    paths: authPropertyMap,
-    properties: authResolver.getProperties(),
-    resolve: resolve
-  });
-  const authRelationStage = getRelationPipeline(authRelationMap, undefined);
-  auth = await authResolver.resolveRelations(auth, authRelationStage);
+  const {documentPropertyMap} = categorizePropertyMap(propertyMap);
 
   const documentRelationMap = await createRelationMap({
     properties: schema.properties,
@@ -356,16 +443,24 @@ async function executeWriteRule(
       throw new DatabaseException(error.message);
     });
 
+  const replacers = await buildExpressionReplacers(
+    schema,
+    documentPropertyMap,
+    resolve,
+    hashSecret
+  );
+
   let aclResult;
 
   try {
-    aclResult = expression.run(
+    aclResult = expression.runWithReplacers(
       schema.acl.write,
       {
         auth,
         document: fullDocument
       },
-      "match"
+      "match",
+      replacers
     );
   } catch (error) {
     throw new ACLSyntaxException(error.message);
@@ -392,6 +487,32 @@ function handleWriteErrors(error: any) {
   }
 
   throw new DatabaseException(error.message);
+}
+
+export function applyFieldLevelAcl(
+  document: any,
+  properties: Record<string, {acl?: string}>,
+  user: any
+): any {
+  if (!document || !properties) {
+    return document;
+  }
+
+  const result = {...document};
+
+  for (const key in properties) {
+    const acl = properties[key].acl;
+
+    if (acl) {
+      const allowed = expression.run(acl, {auth: user}, "match");
+
+      if (!allowed) {
+        delete result[key];
+      }
+    }
+  }
+
+  return result;
 }
 
 export function authIdToString(req: any) {

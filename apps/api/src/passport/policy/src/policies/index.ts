@@ -16,6 +16,9 @@ import DashboardReadOnlyAccess from "./dashboard.readonly";
 import EnvVarFullAccess from "./env.var.fullaccess";
 import EnvVarReadOnlyAccess from "./env.var.readonly";
 
+import SecretFullAccess from "./secret.fullaccess";
+import SecretReadOnlyAccess from "./secret.readonly";
+
 import FunctionFullAccess from "./function.fullaccess";
 import FunctionReadOnlyAccess from "./function.readonly";
 
@@ -47,6 +50,12 @@ import VersionControlFullAccess from "./version.fullaccess";
 import WebhookFullAccess from "./webhook.fullaccess";
 import WebhookReadOnlyAccess from "./webhook.readonly";
 
+import UserFullAccess from "./user.fullaccess";
+import UserReadOnlyAccess from "./user.readonly";
+
+import ConfigFullAccess from "./config.fullaccess";
+import ConfigReadOnlyAccess from "./config.readonly";
+
 export default [
   ActivityFullAccess,
   ActivityReadOnlyAccess,
@@ -65,6 +74,9 @@ export default [
 
   EnvVarFullAccess,
   EnvVarReadOnlyAccess,
+
+  SecretFullAccess,
+  SecretReadOnlyAccess,
 
   FunctionFullAccess,
   FunctionReadOnlyAccess,
@@ -95,5 +107,11 @@ export default [
   VersionControlFullAccess,
 
   WebhookFullAccess,
-  WebhookReadOnlyAccess
+  WebhookReadOnlyAccess,
+
+  UserFullAccess,
+  UserReadOnlyAccess,
+
+  ConfigFullAccess,
+  ConfigReadOnlyAccess
 ];

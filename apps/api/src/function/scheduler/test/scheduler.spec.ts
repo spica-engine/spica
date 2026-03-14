@@ -88,7 +88,7 @@ describe("Scheduler", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet(), SchedulerModule.forRoot(schedulerOptions)]
+      imports: [DatabaseTestingModule.standalone(), SchedulerModule.forRoot(schedulerOptions)]
     }).compile();
     module.enableShutdownHooks();
 
@@ -119,7 +119,6 @@ describe("Scheduler", () => {
 
   afterEach(async () => {
     scheduler.kill();
-    await app.close();
     jest.useRealTimers();
     spawnSpy.mockReset();
   });

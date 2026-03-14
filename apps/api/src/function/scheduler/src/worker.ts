@@ -7,7 +7,7 @@ import {Schedule, WorkerState} from "@spica-server/interface/function/scheduler"
 export class Node extends Runtime {
   description: Description = {
     name: "node",
-    title: "Node.js 12",
+    title: "Node.js 22",
     description: "Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine."
   };
 

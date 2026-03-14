@@ -9,6 +9,7 @@ import * as Identity from "@spica-devkit/identity";
 import Axios from "axios";
 import {jwtDecode} from "jwt-decode";
 import {BatchModule} from "@spica-server/batch";
+import {ConfigModule} from "@spica-server/config";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
@@ -26,28 +27,45 @@ describe("Identity", () => {
       imports: [
         SchemaModule.forRoot(),
         DatabaseTestingModule.replicaSet(),
+        ConfigModule.forRoot(),
         PassportModule.forRoot({
-          expiresIn: EXPIRES_IN,
-          issuer: "spica",
-          maxExpiresIn: MAX_EXPIRES_IN,
           publicUrl: PUBLIC_URL,
           samlCertificateTTL: EXPIRES_IN,
-          refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
-          secretOrKey: "spica",
-          defaultStrategy: "IDENTITY",
-          defaultIdentityIdentifier: "spica",
-          defaultIdentityPassword: "spica",
-          audience: "spica",
-          defaultIdentityPolicies: ["PassportFullAccess"],
-          blockingOptions: {
-            blockDurationMinutes: 0,
-            failedAttemptLimit: 0
-          },
-          passwordHistoryLimit: 0,
           apikeyRealtime: false,
-          identityRealtime: false,
           refreshTokenRealtime: false,
-          policyRealtime: false
+          policyRealtime: false,
+          defaultStrategy: "IDENTITY",
+          identityOptions: {
+            expiresIn: EXPIRES_IN,
+            issuer: "spica",
+            maxExpiresIn: MAX_EXPIRES_IN,
+            refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+            secretOrKey: "spica",
+            defaultIdentityIdentifier: "spica",
+            defaultIdentityPassword: "spica",
+            audience: "spica",
+            defaultIdentityPolicies: ["PassportFullAccess"],
+            blockingOptions: {
+              blockDurationMinutes: 0,
+              failedAttemptLimit: 0
+            },
+            passwordHistoryLimit: 0,
+            identityRealtime: false
+          },
+          userOptions: {
+            expiresIn: EXPIRES_IN,
+            issuer: "spica",
+            maxExpiresIn: MAX_EXPIRES_IN,
+            refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+            secretOrKey: "spica",
+            audience: "spica",
+            blockingOptions: {
+              blockDurationMinutes: 0,
+              failedAttemptLimit: 0
+            },
+            passwordHistoryLimit: 0,
+            userRealtime: false
+          }
         }),
         PreferenceTestingModule,
         CoreTestingModule,

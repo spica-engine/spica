@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Inject,
+  Logger,
   mixin,
   Type
 } from "@nestjs/common";
@@ -72,6 +73,7 @@ class __BaseBody {
 // minimize copy-paste code
 abstract class __MultipartFormDataBody extends __BaseBody {
   isArray: boolean;
+  private readonly logger = new Logger("MultipartFormDataBody");
 
   constructor(@Inject(STORAGE_OPTIONS) public options: StorageOptions) {
     super(options);
@@ -90,7 +92,7 @@ abstract class __MultipartFormDataBody extends __BaseBody {
           fs.promises
             .unlink(file.path)
             .catch(e =>
-              console.error(
+              this.logger.error(
                 `Storage can't remove the tmp file ${file.filename}, reason: ${e.message}`
               )
             )

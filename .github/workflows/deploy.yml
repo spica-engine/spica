@@ -2,6 +2,7 @@ name: Spica Master Deployment
 
 env:
   VERSION: master
+  NX_FORCE_NO_DAEMON: true
 
 on:
   push:
@@ -41,7 +42,7 @@ jobs:
             ${{ runner.os }}-node-modules-
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --network-timeout 600000
 
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV

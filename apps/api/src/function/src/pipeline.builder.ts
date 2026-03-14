@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {EnvRelation} from "@spica-server/interface/function";
+import {EnvRelation, SecretRelation} from "@spica-server/interface/function";
 
 export class FunctionPipelineBuilder extends PipelineBuilder {
   resolveEnvRelation(shouldResolve: EnvRelation) {
@@ -15,6 +15,27 @@ export class FunctionPipelineBuilder extends PipelineBuilder {
     return this.attachToPipeline(shouldResolve == EnvRelation.Resolved, aggregation);
   }
 
+  resolveSecretRelation(shouldResolve: SecretRelation) {
+    const aggregation = {
+      $lookup: {
+        from: "secret",
+        localField: "secrets",
+        foreignField: "_id",
+        as: "secrets"
+      }
+    };
+    return this.attachToPipeline(shouldResolve == SecretRelation.Resolved, aggregation);
+  }
+
+  hideSecrets(): this {
+    this.pipeline.push({
+      $project: {
+        "secrets.value": 0
+      }
+    });
+    return this;
+  }
+
   filterByEnvVars(envVars: ObjectId[]) {
     const filter = {
       $match: {
@@ -24,5 +45,14 @@ export class FunctionPipelineBuilder extends PipelineBuilder {
       }
     };
     return this.attachToPipeline(envVars && envVars.length, filter);
+  }
+
+  filterByLanguage(language: string) {
+    const filter = {
+      $match: {
+        language: language
+      }
+    };
+    return this.attachToPipeline(language, filter);
   }
 }

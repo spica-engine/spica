@@ -23,7 +23,7 @@ describe("Entrypoint", () => {
   let compilation: Compilation = {
     cwd: undefined,
     entrypoints: {build: undefined, runtime: undefined},
-    outDir: ".build"
+    outDir: "../.build/testbed-fn"
   };
   let id = 0;
 

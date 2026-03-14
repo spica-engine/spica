@@ -305,54 +305,67 @@ export function buildRelationAggregation(
   additionalPipeline?: object[]
 ): object[] {
   assertRelationType(type);
-  const pipeline = [];
-
-  let _let;
+  const aggregations = [];
+  const beforeLookup = [];
+  const afterLookup = [];
 
   if (type == RelationType.One) {
-    _let = {
-      documentId: {
-        $toObjectId: `$${property}`
+    beforeLookup.push({
+      $addFields: {
+        [`${property}`]: {
+          $toObjectId: `$${property}`
+        }
       }
-    };
-    pipeline.push({$match: {$expr: {$eq: ["$_id", "$$documentId"]}}});
+    });
+    afterLookup.push({$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}});
   } else if (type == RelationType.Many) {
-    _let = {
-      documentIds: {
-        $ifNull: [
-          {
-            $map: {
-              input: `$${property}`,
-              in: {$toObjectId: "$$this"}
-            }
-          },
-          []
-        ]
+    beforeLookup.push({
+      $addFields: {
+        [`${property}`]: {
+          $ifNull: [
+            {
+              $map: {
+                input: `$${property}`,
+                in: {$toObjectId: "$$this"}
+              }
+            },
+            []
+          ]
+        }
       }
-    };
-    pipeline.push({$match: {$expr: {$in: ["$_id", "$$documentIds"]}}});
+    });
   }
 
-  if (additionalPipeline) {
-    pipeline.push(...additionalPipeline);
-  }
-
-  if (locale) {
-    pipeline.push({$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)});
-  }
-
-  const lookup = {
+  const lookup: any = {
     $lookup: {
       from: getBucketDataCollection(bucketId),
-      as: property,
-      let: _let,
-      pipeline
+      localField: property,
+      foreignField: "_id",
+      as: property
     }
   };
 
-  return type == RelationType.One
-    ? [lookup, {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}]
-    : [lookup];
+  const lookupPipeline = [];
+
+  if (additionalPipeline) {
+    lookupPipeline.push(...additionalPipeline);
+  }
+
+  if (locale) {
+    lookupPipeline.push({
+      $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+    });
+  }
+
+  if (lookupPipeline.length) {
+    lookup.$lookup.pipeline = lookupPipeline;
+  }
+
+  aggregations.push(...beforeLookup);
+  aggregations.push(lookup);
+  aggregations.push(...afterLookup);
+
+  return aggregations;
 }
 
 export async function clearRelations(

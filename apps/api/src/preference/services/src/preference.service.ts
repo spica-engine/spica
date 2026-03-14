@@ -20,7 +20,7 @@ export class PreferenceService extends BaseCollection("preferences") {
     super(db, {afterInit: () => {}});
   }
 
-  watch<T extends Preference>(
+  watchPreference<T extends Preference>(
     scope: string,
     {propagateOnStart}: {propagateOnStart: boolean} = {propagateOnStart: false}
   ): Observable<T> {
@@ -55,7 +55,7 @@ export class PreferenceService extends BaseCollection("preferences") {
   get<T extends Preference>(scope: string) {
     return this._coll
       .findOne<T>({scope})
-      .then(preference => preference || deepCopy(this._defaults.get(scope) as T));
+      .then(preference => preference || deepCopy((this._defaults.get(scope) as T) || {}));
   }
 
   replace<T extends Preference>(

@@ -95,14 +95,16 @@ describe("Realtime", () => {
 
     beforeEach(() => {
       const guardService = app.get(GuardService);
-      authGuardCheck = jest.spyOn(guardService, "checkAuthorization");
-      actionGuardCheck = jest.spyOn(guardService, "checkAction").mockImplementation(({request}) => {
-        request.resourceFilter = {
-          include: [],
-          exclude: []
-        };
-        return Promise.resolve(true);
-      });
+      authGuardCheck = jest.spyOn(guardService, "checkAuthentication");
+      actionGuardCheck = jest
+        .spyOn(guardService, "checkAuthorization")
+        .mockImplementation(({request}) => {
+          request.resourceFilter = {
+            include: [],
+            exclude: []
+          };
+          return Promise.resolve(true);
+        });
     });
 
     it("should authorize and do the initial sync", done => {
@@ -163,9 +165,7 @@ describe("Realtime", () => {
           properties: {
             name: {
               type: "string",
-              options: {
-                position: "bottom"
-              }
+              options: {}
             }
           },
           primary: "name",
@@ -177,9 +177,7 @@ describe("Realtime", () => {
           properties: {
             prop: {
               type: "string",
-              options: {
-                position: "bottom"
-              }
+              options: {}
             }
           },
           primary: "prop",
@@ -262,9 +260,7 @@ describe("Realtime", () => {
             properties: {
               name: {
                 type: "string",
-                options: {
-                  position: "bottom"
-                }
+                options: {}
               }
             },
             primary: "name",
@@ -276,9 +272,7 @@ describe("Realtime", () => {
             properties: {
               name: {
                 type: "string",
-                options: {
-                  position: "bottom"
-                }
+                options: {}
               }
             },
             primary: "name",
@@ -351,9 +345,7 @@ describe("Realtime", () => {
               properties: {
                 name: {
                   type: "string",
-                  options: {
-                    position: "bottom"
-                  }
+                  options: {}
                 }
               },
               primary: "name",

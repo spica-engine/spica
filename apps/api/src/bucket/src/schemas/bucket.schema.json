@@ -35,7 +35,9 @@
         "color",
         "relation",
         "location",
-        "json"
+        "json",
+        "hash",
+        "encrypted"
       ]
     },
     "stringArray": {
@@ -305,11 +307,6 @@
                     "history": {
                       "type": "boolean",
                       "description": "Allows keeping history for each bucket-data"
-                    },
-                    "position": {
-                      "type": "string",
-                      "enum": ["left", "right", "bottom"],
-                      "description": "Set where will be placed of the field on the bucket-data page"
                     }
                   },
                   "additionalProperties": false

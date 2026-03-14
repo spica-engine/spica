@@ -1,6 +1,5 @@
 import {ObjectId, BaseCollection} from "@spica-server/database";
 import {Bucket, BucketPreferences} from "@spica-server/interface/bucket";
-import {IAuthResolver} from "./auth";
 
 export interface CrudOptions<Paginate> {
   localize?: boolean;
@@ -18,13 +17,13 @@ export interface CrudParams {
   skip?: number;
   limit?: number;
   projectMap: string[][];
+  applyAcl?: boolean;
 }
 
 export interface CrudFactories<T> {
   collection: (schema: Bucket) => BaseCollection<T>;
   preference: () => Promise<BucketPreferences>;
   schema: (id: string | ObjectId) => Promise<Bucket>;
-  authResolver: IAuthResolver;
 }
 
 export interface CrudPagination<T> {

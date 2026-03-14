@@ -192,11 +192,25 @@ function visitBinaryOperatorLessOrEqual(node, mode: Mode) {
 }
 
 function visitBinaryOperatorEqual(node, mode: Mode) {
-  return ctx => visit(node.left, mode)(ctx) == visit(node.right, mode)(ctx);
+  return ctx => {
+    const left = visit(node.left, mode)(ctx);
+    const right = visit(node.right, mode)(ctx);
+    if (left instanceof Date && right instanceof Date) {
+      return left.getTime() == right.getTime();
+    }
+    return left == right;
+  };
 }
 
 function visitBinaryOperatorNotEqual(node, mode: Mode) {
-  return ctx => visit(node.left, mode)(ctx) != visit(node.right, mode)(ctx);
+  return ctx => {
+    const left = visit(node.left, mode)(ctx);
+    const right = visit(node.right, mode)(ctx);
+    if (left instanceof Date && right instanceof Date) {
+      return left.getTime() != right.getTime();
+    }
+    return left != right;
+  };
 }
 
 function visitBinaryOperatorRemainder(node, mode: Mode) {

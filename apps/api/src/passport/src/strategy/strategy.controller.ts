@@ -29,13 +29,13 @@ export class StrategyController {
   ) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:index"))
   find(@ResourceFilter() resourceFilter: object) {
     return this.strategy.aggregate([resourceFilter]).toArray();
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.strategy.findOne({_id: id}).then(strategy => {
       strategy["callbackUrl"] =
@@ -45,14 +45,14 @@ export class StrategyController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.strategy.deleteOne({_id: id});
   }
 
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:insert"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:insert"))
   async insertOne(@Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy) {
     delete strategy._id;
 
@@ -76,7 +76,7 @@ export class StrategyController {
   }
 
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:strategy:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:strategy:update"))
   async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy

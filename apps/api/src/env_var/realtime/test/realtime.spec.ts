@@ -56,8 +56,8 @@ describe("EnvVar Realtime", () => {
     const messages: any[] = [];
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        socket.onclose = () => resolve(messages);
         socket.close();
-        resolve(messages);
       }, 500);
 
       socket.onmessage = e => {
@@ -102,9 +102,9 @@ describe("EnvVar Realtime", () => {
 
     beforeEach(() => {
       const guardService = app.get(GuardService);
-      authGuardCheck = jest.spyOn(guardService, "checkAuthorization");
+      authGuardCheck = jest.spyOn(guardService, "checkAuthentication");
       actionGuardCheck = jest
-        .spyOn(guardService, "checkAction")
+        .spyOn(guardService, "checkAuthorization")
         .mockImplementation(({request}: {request: any}) => {
           request.resourceFilter = {include: [], exclude: []};
           return Promise.resolve(true);

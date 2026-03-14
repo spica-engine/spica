@@ -1,0 +1,5 @@
+{
+  "name": "interface/mailer",
+  "sourceRoot": "libs/interface/mailer/src",
+  "projectType": "library"
+}
