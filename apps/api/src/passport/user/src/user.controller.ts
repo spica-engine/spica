@@ -8,7 +8,6 @@ import {
   Post,
   Put,
   Query,
-  Req,
   Res,
   UseGuards,
   UseInterceptors,
@@ -569,15 +568,14 @@ export class UserController {
     },
     @Res() res: any
   ) {
-    const {accessToken, refreshToken} = await this.passwordlessLoginService.verify(
+    const result = await this.passwordlessLoginService.verify(
       body.username,
       body.code,
       body.provider
     );
-
     const cookiePath = "passport/user/session/refresh";
-    res.cookie("refreshToken", refreshToken.token, this.userService.getCookieOptions(cookiePath));
-    return res.status(HttpStatus.CREATED).json(accessToken);
+    res.cookie("refreshToken", result.refreshToken.token, this.userService.getCookieOptions(cookiePath));
+    return res.status(201).json(result.accessToken);
   }
   @Post("forgot-password/start")
   @UseGuards(RateLimitGuard("forgotPassword"))

@@ -1,6 +1,6 @@
 import {Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule, hash} from "@spica-server/core/schema";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportModule} from "@spica-server/passport";
@@ -22,6 +22,8 @@ const EXPIRES_IN = 60_000;
 const TOTP_TIMEOUT = 1000 * 30;
 
 const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
+
+const REFRESH_TOKEN_HASH_SECRET = "test_e2e_refresh_token_hash_secret";
 
 const CERTIFICATE = `-----BEGIN CERTIFICATE-----
 MIIDVjCCAj4CCQCIeeA38VX/wjANBgkqhkiG9w0BAQUFADBtMQswCQYDVQQGEwJU
@@ -232,6 +234,7 @@ describe("E2E Tests", () => {
           issuer: "spica",
           audience: "spica",
           refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+          refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
           secretOrKey: "spica",
           blockingOptions: {
             failedAttemptLimit: 3,
@@ -254,6 +257,7 @@ describe("E2E Tests", () => {
             blockDurationMinutes: 10
           },
           refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+          refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
           passwordHistoryLimit: 2,
           identityRealtime: false
         }
@@ -551,6 +555,22 @@ describe("E2E Tests", () => {
       expect(statusCode).toEqual(400);
       expect(body.message).toEqual("Refresh token is disabled");
     });
+
+    it("should not return token in refresh token response", async () => {
+      const parsedCookie = parseCookie(cookies[0]);
+      const rawTokenFromCookie = parsedCookie.value;
+
+      let {
+        body: [refreshToken]
+      } = await req.get(
+        "passport/refresh-token",
+        {filter: JSON.stringify({token: rawTokenFromCookie})},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+      expect(refreshToken.token).toBeUndefined();
+    });
   });
 
   describe("SSO", () => {
@@ -665,7 +685,7 @@ describe("E2E Tests", () => {
           req
             .get(`/passport/identity/strategy/${strategies[0]._id}/url`)
             .then(({body: strategy}) => {
-              req.get("/passport/identify", {state: strategy.state}).then(async res => {
+              req.post("/passport/identify", {state: strategy.state}).then(async res => {
                 expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
                 expect(res.body.scheme).toEqual("IDENTITY");
                 expect(res.body.issuer).toEqual("passport/identity");

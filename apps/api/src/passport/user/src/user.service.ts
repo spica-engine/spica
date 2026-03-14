@@ -12,7 +12,12 @@ import {hash, compare} from "./hash";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 import {v4 as uuidv4} from "uuid";
-import {encrypt, decrypt, hash as hashValue} from "@spica-server/core/encryption";
+import {
+  encrypt,
+  decrypt,
+  hash as hashValue,
+  hash as hashToken
+} from "@spica-server/core/encryption";
 
 @Injectable()
 export class UserService extends BaseCollection<User>("user") {
@@ -81,8 +86,10 @@ export class UserService extends BaseCollection<User>("user") {
     const expiresIn = this.userOptions.refreshTokenExpiresIn;
     const token = this.jwt.sign({username: user.username, uuid: uuidv4()}, {expiresIn});
 
+    const hashedToken = this.hashRefreshToken(token);
+
     const tokenSchema = {
-      token,
+      token: hashedToken,
       user: String(user._id),
       created_at: new Date(),
       expired_at: new Date(Date.now() + expiresIn * 1000),
@@ -91,7 +98,7 @@ export class UserService extends BaseCollection<User>("user") {
 
     await this.refreshTokenService.insertOne(tokenSchema);
 
-    return tokenSchema;
+    return {...tokenSchema, token};
   }
 
   private extractAccessToken(authHeader: string) {
@@ -116,8 +123,12 @@ export class UserService extends BaseCollection<User>("user") {
     await this.verify(refreshToken);
   }
 
-  private async verifyTokenCanBeUsed(accessToken: string, refreshToken: string) {
-    const refreshTokenData = await this.refreshTokenService.findOne({token: refreshToken});
+  private async verifyTokenCanBeUsed(
+    accessToken: string,
+    refreshToken: string
+  ) {
+    const hashedToken = this.hashRefreshToken(refreshToken);
+    const refreshTokenData = await this.refreshTokenService.findOne({token: hashedToken});
     if (!refreshTokenData) {
       return Promise.reject("Refresh token not found");
     }
@@ -157,7 +168,15 @@ export class UserService extends BaseCollection<User>("user") {
   }
 
   updateRefreshTokenLastUsedAt(token: string) {
-    return this.refreshTokenService.updateOne({token}, {$set: {last_used_at: new Date()}});
+    const hashedToken = this.hashRefreshToken(token);
+    return this.refreshTokenService.updateOne(
+      {token: hashedToken},
+      {$set: {last_used_at: new Date()}}
+    );
+  }
+
+  private hashRefreshToken(token: string): string {
+    return hashToken(token, this.userOptions.refreshTokenHashSecret);
   }
 
   getCookieOptions(path: string) {
