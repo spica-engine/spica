@@ -54,18 +54,19 @@ describe("BucketController", () => {
       readOnly: false,
       history: true,
       acl: {write: "true==true", read: "true==true"},
+      indexes: [],
       properties: {
         title: {
           type: "string",
           title: "title",
           description: "Title of the row",
-          options: {position: "left"}
+          options: {}
         },
         description: {
           type: "textarea",
           title: "description",
           description: "Description of the row",
-          options: {position: "right"}
+          options: {}
         }
       }
     };
@@ -78,13 +79,13 @@ describe("BucketController", () => {
           type: "string",
           title: "title",
           description: "Title of the row",
-          options: {position: "left"}
+          options: {}
         },
         age: {
           type: "number",
           title: "Age",
           description: "Age of the row",
-          options: {position: "right"}
+          options: {}
         }
       }
     };
@@ -157,13 +158,13 @@ describe("BucketController", () => {
             type: "string",
             title: "firstname",
             description: "Firstname",
-            options: {position: "left"}
+            options: {}
           },
           lastname: {
             type: "string",
             title: "lastname",
             description: "Lastname",
-            options: {position: "left"}
+            options: {}
           }
         }
       };
@@ -268,13 +269,13 @@ describe("BucketController", () => {
             type: "string",
             title: "title",
             description: "Title of the row",
-            options: {position: "left"}
+            options: {}
           },
           description: {
             type: "textarea",
             title: "description",
             description: "Description of the row",
-            options: {position: "right"}
+            options: {}
           }
         }
       };
@@ -482,26 +483,6 @@ describe("BucketController", () => {
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties.title.options.history must be boolean",
-          "validation failed"
-        ]);
-      });
-
-      it("should show error about title position type", async () => {
-        bucket.properties.title.options.position = ["bottom,left"];
-        const response = await req.post("/bucket", bucket);
-        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.message, response.body.error]).toEqual([
-          ".properties.title.options.position must be string",
-          "validation failed"
-        ]);
-      });
-
-      it("should show error about title position value which isn't available", async () => {
-        bucket.properties.title.options.position = "top";
-        const response = await req.post("/bucket", bucket);
-        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.message, response.body.error]).toEqual([
-          ".properties.title.options.position must be equal to one of the allowed values",
           "validation failed"
         ]);
       });

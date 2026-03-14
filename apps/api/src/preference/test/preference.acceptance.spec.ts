@@ -18,7 +18,7 @@ describe("PreferenceController", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         PassportTestingModule.initialize(),
         PreferenceModule.forRoot(),
         CoreTestingModule

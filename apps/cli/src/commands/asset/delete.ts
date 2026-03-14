@@ -2,11 +2,14 @@ import {Action, ActionParameters, Command, CreateCommandParameters, Program} fro
 import {httpService} from "../../http";
 import fs from "fs";
 import YAML from "yaml";
+import path from "path";
 
 async function _delete({options}: ActionParameters) {
   const type = options.type as string;
   const folderPath = (options.path as string) || process.cwd();
-  const rawDocument = fs.readFileSync(folderPath).toString();
+  const filename = path.join(folderPath, "asset.yaml");
+
+  const rawDocument = fs.readFileSync(filename).toString();
   const assetMeta = YAML.parseDocument(rawDocument).toJSON();
 
   const client = await httpService.createFromCurrentCtx();
@@ -21,6 +24,7 @@ async function _delete({options}: ActionParameters) {
 
   if (!asset) {
     console.error(`Asset ${assetMeta.name} does not exist`);
+    return;
   }
 
   await client.delete(`/asset/${asset._id}`, {params: {type}});

@@ -1,31 +1,41 @@
 import {DynamicModule, Inject, Module, Optional} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {Scheduler, SchedulerModule, SchedulingOptions} from "@spica-server/function/scheduler";
+import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {SchedulingOptions} from "@spica-server/interface/function/scheduler";
 import {WebhookModule} from "@spica-server/function/webhook";
 import path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {LogModule, LogService} from "@spica-server/function/log";
-import {
-  FunctionOptions,
-  FUNCTION_OPTIONS,
-  FunctionService,
-  ServicesModule
-} from "@spica-server/function/services";
+import {FunctionService, ServicesModule} from "@spica-server/function/services";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 import {Http} from "./services/interface";
 import {Axios} from "./services/axios";
 import {registerStatusProvider} from "./status";
 import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {
-  RegisterSyncProvider,
-  REGISTER_VC_SYNC_PROVIDER,
-  VC_REP_MANAGER
-} from "@spica-server/versioncontrol";
-import {getSyncProviders} from "./versioncontrol";
+  REGISTER_VC_CHANGE_HANDLER,
+  RegisterVCChangeHandler
+} from "@spica-server/interface/versioncontrol";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
+import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
+import {
+  Function,
+  FunctionOptions,
+  FUNCTION_OPTIONS,
+  FunctionWithContent
+} from "@spica-server/interface/function";
+import {
+  getSupplier as getSchemaSupplier,
+  getApplier as getSchemaApplier
+} from "./synchronizer/schema";
+import {getSupplier as getIndexSupplier, getApplier as getIndexApplier} from "./synchronizer/index";
+import {
+  getSupplier as getDependencySupplier,
+  getApplier as getDependencyApplier
+} from "./synchronizer/dependency";
+import {FunctionRealtimeModule} from "@spica-server/function/realtime";
 
 @Module({})
 export class FunctionModule {
@@ -33,23 +43,26 @@ export class FunctionModule {
     fs: FunctionService,
     fe: FunctionEngine,
     scheduler: Scheduler,
-    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
-    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
+    @Optional()
+    @Inject(REGISTER_VC_CHANGE_HANDLER)
+    registerVCChangeHandler: RegisterVCChangeHandler,
     logs: LogService,
     validator: Validator
   ) {
-    if (registerSync) {
-      getSyncProviders(fs, this.vcRepManager, fe, logs).forEach(provider => registerSync(provider));
+    if (registerVCChangeHandler) {
+      registerVCChangeHandler(getSchemaSupplier(fs), getSchemaApplier(fs, fe, logs, validator));
+      registerVCChangeHandler(getIndexSupplier(fe, fs), getIndexApplier(fs, fe));
+      registerVCChangeHandler(getDependencySupplier(fe, fs), getDependencyApplier(fs, fe));
     }
 
     registerStatusProvider(fs, scheduler);
-
-    registerAssetHandlers(fs, fe, logs, validator, assetRepManager);
+    registerAssetHandlers(fs, fe, logs, validator, this.assetRepManager);
   }
-
-  static forRoot(options: SchedulingOptions & FunctionOptions): DynamicModule {
-    return {
+  static forRoot(
+    options: SchedulingOptions & FunctionOptions & {realtime: boolean}
+  ): DynamicModule {
+    const module: DynamicModule = {
       module: FunctionModule,
       imports: [
         LogModule.forRoot({
@@ -106,5 +119,9 @@ export class FunctionModule {
         }
       ]
     };
+    if (options.realtime) {
+      module.imports.push(FunctionRealtimeModule.register());
+    }
+    return module;
   }
 }

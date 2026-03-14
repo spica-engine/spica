@@ -2,26 +2,14 @@
   "extends": "../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
-    {
-      "path": "../runtime/node"
-    },
-    {
-      "path": "../runtime/io"
-    },
-    {
-      "path": "../pkgmanager/node"
-    },
-    {
-      "path": "../pkgmanager/local"
-    },
-    {
-      "path": "../compiler/javascript"
-    },
-    {
-      "path": "../compiler/typescript"
-    },
-    {
-      "path": "../enqueuer"
-    }
+    {"path": "../runtime/node"},
+    {"path": "../runtime/io"},
+    {"path": "../compiler/javascript"},
+    {"path": "../compiler/typescript"},
+    {"path": "../enqueuer"},
+    {"path": "../pkgmanager/node"},
+    {"path": "../pkgmanager/local"},
+    {"path": "../../../../../libs/interface/function/scheduler"},
+    {"path": "../../passport/guard/services"}
   ]
 }

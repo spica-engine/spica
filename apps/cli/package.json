@@ -22,7 +22,8 @@
     "open": "^10.1.0",
     "ora": "^8.2.0",
     "pretty-ms": "^9.2.0",
-    "semver": "^7.7.1"
+    "semver": "^7.7.1",
+    "yaml": "^2.7.1"
   },
   "devDependencies": {
     "@types/dockerode": "^3.3.34",

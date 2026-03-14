@@ -1,6 +1,7 @@
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
-import {Compilation, Language} from "@spica-server/function/compiler";
+import {Language} from "@spica-server/function/compiler";
+import {Compilation} from "@spica-server/interface/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
 import {Typescript} from "@spica-server/function/compiler/typescript";
 import {Node} from "@spica-server/function/scheduler";
@@ -22,7 +23,7 @@ describe("Entrypoint", () => {
   let compilation: Compilation = {
     cwd: undefined,
     entrypoints: {build: undefined, runtime: undefined},
-    outDir: ".build"
+    outDir: "../.build/testbed-fn"
   };
   let id = 0;
 
@@ -126,10 +127,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             handler: "default",
             cwd: compilation.cwd,
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         })
       );
@@ -163,10 +161,7 @@ describe("Entrypoint", () => {
       target: new event.Target({
         cwd: compilation.cwd,
         handler: "shouldhaveexisted",
-        context: new event.SchedulingContext({
-          env: [],
-          timeout: 60
-        })
+        context: new event.SchedulingContext({env: [], timeout: 60})
       })
     });
     queue.enqueue(ev);
@@ -185,10 +180,7 @@ describe("Entrypoint", () => {
       target: new event.Target({
         cwd: compilation.cwd,
         handler: "notafunction",
-        context: new event.SchedulingContext({
-          env: [],
-          timeout: 60
-        })
+        context: new event.SchedulingContext({env: [], timeout: 60})
       })
     });
     queue.enqueue(ev);
@@ -221,10 +213,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             cwd: compilation.cwd,
             handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         })
       );
@@ -262,10 +251,7 @@ describe("Entrypoint", () => {
         target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new event.SchedulingContext({
-            env: [],
-            timeout: 60
-          })
+          context: new event.SchedulingContext({env: [], timeout: 60})
         })
       });
       queue.enqueue(ev);
@@ -321,10 +307,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             handler: "default",
             cwd: compilation.cwd,
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         })
       );
@@ -344,10 +327,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             handler: "test",
             cwd: compilation.cwd,
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         })
       );
@@ -373,10 +353,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             cwd: compilation.cwd,
             handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         });
         queue.enqueue(ev);
@@ -411,10 +388,7 @@ describe("Entrypoint", () => {
         target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new event.SchedulingContext({
-            env: [],
-            timeout: 60
-          })
+          context: new event.SchedulingContext({env: [], timeout: 60})
         })
       });
 
@@ -442,10 +416,7 @@ describe("Entrypoint", () => {
         target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new event.SchedulingContext({
-            env: [],
-            timeout: 60
-          })
+          context: new event.SchedulingContext({env: [], timeout: 60})
         })
       });
       queue.enqueue(ev);
@@ -467,10 +438,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             cwd: compilation.cwd,
             handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         });
 
@@ -499,10 +467,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             cwd: compilation.cwd,
             handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         });
 
@@ -531,10 +496,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             cwd: compilation.cwd,
             handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         });
 
@@ -567,10 +529,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             cwd: compilation.cwd,
             handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         });
 
@@ -610,10 +569,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             cwd: compilation.cwd,
             handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         });
 
@@ -645,18 +601,12 @@ describe("Entrypoint", () => {
         target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new event.SchedulingContext({
-            env: [],
-            timeout: 60
-          })
+          context: new event.SchedulingContext({env: [], timeout: 60})
         })
       });
       queue.enqueue(ev);
 
-      const change = new Database.Change({
-        kind: Database.Change.Kind.INSERT,
-        collection: "test"
-      });
+      const change = new Database.Change({kind: Database.Change.Kind.INSERT, collection: "test"});
       databaseQueue.enqueue(ev.id, change);
 
       const exitCode = await spawn().catch(e => e);
@@ -694,10 +644,7 @@ describe("Entrypoint", () => {
         target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new event.SchedulingContext({
-            env: [],
-            timeout: 60
-          })
+          context: new event.SchedulingContext({env: [], timeout: 60})
         })
       });
       queue.enqueue(ev);
@@ -705,14 +652,10 @@ describe("Entrypoint", () => {
       firehoseQueue.enqueue(
         ev.id,
         new Firehose.Message.Incoming({
-          client: new Firehose.ClientDescription({
-            id: "1",
-            remoteAddress: "[::1]"
-          }),
+          client: new Firehose.ClientDescription({id: "1", remoteAddress: "[::1]"}),
           message: new Firehose.Message({name: "test", data: JSON.stringify("test")}),
           pool: new Firehose.PoolDescription({size: 21})
-        }),
-        undefined
+        })
       );
 
       const exitCode = await spawn().catch(r => r);
@@ -728,10 +671,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             cwd: compilation.cwd,
             handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         });
 
@@ -743,23 +683,16 @@ describe("Entrypoint", () => {
 
         queue.enqueue(ev);
 
-        const socketSpy = {
-          send: jest.fn(),
-          readyState: 1
-        };
+        const socketSpy = {send: jest.fn(), readyState: 1};
 
-        firehoseQueue.enqueue(
-          ev.id,
-          new Firehose.Message.Incoming({
-            client: new Firehose.ClientDescription({
-              id: "1",
-              remoteAddress: "[::1]"
-            }),
-            message: new Firehose.Message({name: "connection"}),
-            pool: new Firehose.PoolDescription({size: 21})
-          }),
-          socketSpy as unknown as WebSocket
-        );
+        const msg = new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({id: "1", remoteAddress: "[::1]"}),
+          message: new Firehose.Message({name: "connection"}),
+          pool: new Firehose.PoolDescription({size: 21})
+        });
+
+        firehoseQueue.enqueue(ev.id, msg);
+        firehoseQueue.setSocket(msg, socketSpy as unknown as WebSocket);
 
         spawn();
       });
@@ -774,10 +707,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             cwd: compilation.cwd,
             handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         });
 
@@ -788,23 +718,15 @@ describe("Entrypoint", () => {
 
         queue.enqueue(ev);
 
-        const socketSpy = {
-          close: jest.fn(),
-          readyState: 1
-        };
+        const socketSpy = {close: jest.fn(), readyState: 1};
 
-        firehoseQueue.enqueue(
-          ev.id,
-          new Firehose.Message.Incoming({
-            client: new Firehose.ClientDescription({
-              id: "1",
-              remoteAddress: "[::1]"
-            }),
-            message: new Firehose.Message({name: "connection"}),
-            pool: new Firehose.PoolDescription({size: 21})
-          }),
-          socketSpy as unknown as WebSocket
-        );
+        const msg = new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({id: "1", remoteAddress: "[::1]"}),
+          message: new Firehose.Message({name: "connection"}),
+          pool: new Firehose.PoolDescription({size: 21})
+        });
+        firehoseQueue.enqueue(ev.id, msg);
+        firehoseQueue.setSocket(msg, socketSpy as unknown as WebSocket);
 
         spawn();
       });
@@ -819,10 +741,7 @@ describe("Entrypoint", () => {
           target: new event.Target({
             cwd: compilation.cwd,
             handler: "default",
-            context: new event.SchedulingContext({
-              env: [],
-              timeout: 60
-            })
+            context: new event.SchedulingContext({env: [], timeout: 60})
           })
         });
 
@@ -839,41 +758,24 @@ describe("Entrypoint", () => {
         const pool = new Firehose.PoolDescription({size: 21}),
           message = new Firehose.Message({name: "connection"});
 
-        const firstSocket = {
-          send: jest.fn(),
-          readyState: 1 /* OPEN */
-        };
+        const msg1 = new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({id: "1", remoteAddress: "[::1]"}),
+          message,
+          pool
+        });
 
-        firehoseQueue.enqueue(
-          ev.id,
-          new Firehose.Message.Incoming({
-            client: new Firehose.ClientDescription({
-              id: "1",
-              remoteAddress: "[::1]"
-            }),
-            message,
-            pool
-          }),
-          firstSocket as unknown as WebSocket
-        );
+        const firstSocket = {send: jest.fn(), readyState: 1};
+        firehoseQueue.enqueue(ev.id, msg1);
+        firehoseQueue.setSocket(msg1, firstSocket as unknown as WebSocket);
 
-        const secondSocket = {
-          send: jest.fn(),
-          readyState: 1 /* OPEN */
-        };
-
-        firehoseQueue.enqueue(
-          ev.id,
-          new Firehose.Message.Incoming({
-            client: new Firehose.ClientDescription({
-              id: "2",
-              remoteAddress: "[::1]"
-            }),
-            message,
-            pool
-          }),
-          secondSocket as unknown as WebSocket
-        );
+        const msg2 = new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({id: "2", remoteAddress: "[::1]"}),
+          message,
+          pool
+        });
+        const secondSocket = {send: jest.fn(), readyState: 1};
+        firehoseQueue.enqueue(ev.id, msg2);
+        firehoseQueue.setSocket(msg2, secondSocket as unknown as WebSocket);
 
         spawn();
       });

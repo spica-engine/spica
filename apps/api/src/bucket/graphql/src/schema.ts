@@ -1,23 +1,9 @@
-import {Bucket} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {GraphQLResolveInfo} from "graphql";
+import {Prefix, Suffix, SchemaWarning} from "@spica-server/interface/bucket/graphql";
+import {Bucket} from "@spica-server/interface/bucket";
 
 const locationTypes = ["Point"];
-
-enum Prefix {
-  Type = "type",
-  Input = "input"
-}
-
-enum Suffix {
-  Type = "",
-  Input = "Input"
-}
-
-export interface SchemaWarning {
-  target: string;
-  reason: string;
-}
 
 export function validateBuckets(buckets: Bucket[]) {
   const warnings: SchemaWarning[] = [];
@@ -32,12 +18,34 @@ export function validateBuckets(buckets: Bucket[]) {
   return {warnings, buckets};
 }
 
+function fixBucketProperties(bucket: Bucket, baseName: string, errors: SchemaWarning[]) {
+  if (bucket.properties) return bucket;
+
+  bucket.properties = {
+    default: {
+      type: "string",
+      title: "default",
+      description: "This field was created automatically because there was no other.",
+      options: {}
+    }
+  };
+
+  errors.push({
+    target: baseName,
+    reason: "Should have at least one property"
+  });
+
+  return bucket;
+}
+
 function validateProperties(
   bucket: Bucket,
   baseName: string,
   bucketIds: string[],
   errors: SchemaWarning[]
 ) {
+  bucket = fixBucketProperties(bucket, baseName, errors);
+
   for (const [key, definition] of Object.entries(bucket.properties)) {
     if (!validateName(key)) {
       errors.push({

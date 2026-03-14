@@ -26,6 +26,7 @@ enum Type {
    FIREHOSE = 4;
    SYSTEM = 5;
    BUCKET = 6;
+   RABBITMQ = 7;
 }
 
 message Event {

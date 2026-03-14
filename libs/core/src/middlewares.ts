@@ -1,5 +1,5 @@
 import {isMatch} from "matcher";
-import {CorsOptions} from "./interfaces";
+import {CorsOptions} from "@spica-server/interface/core";
 import pkg from "body-parser";
 const {json} = pkg;
 import typeis from "type-is";
@@ -35,6 +35,19 @@ export namespace Middlewares {
       limit = limit * 1024 * 1024;
     }
     return (req, res, next) => json({type: "application/merge-patch+json", limit})(req, res, next);
+  }
+
+  export function Headers(options: object) {
+    return (req, res, next) => {
+      Object.entries(options).forEach(([key, value]) => {
+        const headerSet = res.headers && res.headers[key];
+        const isNullish = value == null;
+        if (!headerSet && !isNullish) {
+          res.set(key, value);
+        }
+      });
+      next();
+    };
   }
 
   export function Preflight(options: CorsOptions) {

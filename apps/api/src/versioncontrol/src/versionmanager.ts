@@ -3,6 +3,20 @@ import {Injectable} from "@nestjs/common";
 import simpleGit, {SimpleGit} from "simple-git";
 import {JobReducer} from "@spica-server/replication";
 
+// Flags that enable arbitrary command execution or override git internals
+const DANGEROUS_ARG_PATTERNS: RegExp[] = [
+  /^--upload-pack(=|$)/i,
+  /^--receive-pack(=|$)/i,
+  /^--exec(=|$)/i,
+  /^-c$/i,
+  /^--config(=|$)/i,
+  /^--git-dir(=|$)/i,
+  /^--work-tree(=|$)/i,
+  /^--output(=|$)/i
+];
+
+const CONTROL_CHAR_PATTERN = /[\x00-\x08\x0b\x0c\x0e-\x1f]/;
+
 @Injectable()
 export class Git implements VersionManager {
   private git: SimpleGit;
@@ -11,14 +25,8 @@ export class Git implements VersionManager {
     name: string;
     exec: Function;
   }[] = [
-    {
-      name: "add",
-      exec: ops => this.add(ops)
-    },
-    {
-      name: "commit",
-      exec: ops => this.commit(ops)
-    },
+    {name: "add", exec: ops => this.add(ops)},
+    {name: "commit", exec: ops => this.commit(ops)},
     {name: "reset", exec: ops => this.reset(ops)},
     {name: "tag", exec: ops => this.tag(ops)},
     {name: "stash", exec: ops => this.stash(ops)},
@@ -36,7 +44,8 @@ export class Git implements VersionManager {
 
     {name: "diff", exec: ops => this.diff(ops)},
     {name: "log", exec: ops => this.log(ops)},
-    {name: "clean", exec: ops => this.clean(ops)}
+    {name: "clean", exec: ops => this.clean(ops)},
+    {name: "rm", exec: ops => this.rm(ops)}
   ];
 
   availables() {
@@ -49,7 +58,41 @@ export class Git implements VersionManager {
       return Promise.reject(`Unknown command ${name}`);
     }
 
+    try {
+      options = {...options, args: this.sanitizeArgs(options?.args)};
+    } catch (e) {
+      return Promise.reject(e);
+    }
+
     return map.exec(options);
+  }
+
+  private sanitizeArgs(args: unknown): string[] {
+    if (args === undefined || args === null) {
+      return [];
+    }
+
+    if (!Array.isArray(args)) {
+      throw new Error("Arguments must be an array");
+    }
+
+    return args.map((arg, i) => {
+      if (typeof arg !== "string") {
+        throw new Error(`Argument at index ${i} must be a string`);
+      }
+
+      if (CONTROL_CHAR_PATTERN.test(arg)) {
+        throw new Error(`Argument at index ${i} contains disallowed control characters`);
+      }
+
+      for (const pattern of DANGEROUS_ARG_PATTERNS) {
+        if (pattern.test(arg)) {
+          throw new Error(`Argument "${arg}" is not allowed`);
+        }
+      }
+
+      return arg;
+    });
   }
 
   constructor(
@@ -58,11 +101,10 @@ export class Git implements VersionManager {
   ) {
     this.git = simpleGit({baseDir: this.cwd, binary: "git", maxConcurrentProcesses: 6});
 
-    const gitInit = () => {
-      this.git.init().then(() => {
-        this.git.addConfig("user.name", "Spica", false, "worktree");
-        this.git.addConfig("user.email", "Spica", false, "worktree");
-      });
+    const gitInit = async () => {
+      await this.git.init();
+      await this.git.raw(["config", "--replace-all", "user.name", "Spica"]);
+      await this.git.raw(["config", "--replace-all", "user.email", "Spica"]);
     };
 
     if (jobReducer) {
@@ -95,7 +137,7 @@ export class Git implements VersionManager {
     const messageIndex = args.findIndex(
       arg => arg.startsWith("`") || arg.startsWith("'") || arg.startsWith('"')
     );
-    const message = args[messageIndex];
+    const message = args[messageIndex]?.replace(/['"`]/g, "");
     args = args.slice(messageIndex + 1);
 
     return this.git.commit(message, args);
@@ -149,5 +191,9 @@ export class Git implements VersionManager {
 
   pull({args}) {
     return this.git.pull(args);
+  }
+
+  rm({args}) {
+    return this.git.rm(args);
   }
 }

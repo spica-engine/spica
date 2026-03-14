@@ -2,12 +2,9 @@ import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
 import {event, Firehose} from "@spica-server/function/queue/proto";
 import url from "url";
 import ws, {WebSocketServer} from "ws";
-import {Description, Enqueuer} from "./enqueuer";
+import {Enqueuer} from "./enqueuer";
 import express from "express";
-
-interface FirehoseOptions {
-  event: "*" | "**" | "connection" | "close" | string;
-}
+import {Description, FirehoseOptions} from "@spica-server/interface/function/enqueuer";
 
 export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
   type = event.Type.FIREHOSE;
@@ -106,6 +103,28 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
   }
 
   private invoke(ws: ws, cl: Firehose.ClientDescription, name: string, data?: any) {
+    const message = new Firehose.Message({name});
+
+    if (data) {
+      message.data = JSON.stringify(data);
+    }
+
+    const incomingMessage = new Firehose.Message.Incoming({
+      client: cl,
+      message,
+      pool: new Firehose.PoolDescription({
+        size: this.wss.clients.size
+      })
+    });
+
+    if (name == "connection") {
+      this.firehoseQueue.setSocket(incomingMessage, ws);
+    }
+
+    if (name == "close") {
+      this.firehoseQueue.removeSocket(incomingMessage);
+    }
+
     for (const pair of this.eventTargetPairs) {
       if (
         pair.name == name ||
@@ -117,22 +136,7 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
           type: event.Type.FIREHOSE
         });
         this.queue.enqueue(ev);
-
-        const incomingMessage = new Firehose.Message.Incoming({
-          client: cl,
-          message: new Firehose.Message({
-            name
-          }),
-          pool: new Firehose.PoolDescription({
-            size: this.wss.clients.size
-          })
-        });
-
-        if (data) {
-          incomingMessage.message.data = JSON.stringify(data);
-        }
-
-        this.firehoseQueue.enqueue(ev.id, incomingMessage, ws);
+        this.firehoseQueue.enqueue(ev.id, incomingMessage);
       }
     }
   }

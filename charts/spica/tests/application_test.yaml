@@ -1,0 +1,462 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: application workload
+# applicationsecrets.yaml is included because application.yaml uses include+sha256sum
+# against it to compute the checksum annotation. Without it the render fails.
+templates:
+  - templates/application.yaml
+  - templates/applicationsecrets.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.masterKey: test-master-key
+  application.publicHost: https://test.example.com
+
+tests:
+  # ── Document count ──────────────────────────────────────────────────────────
+
+  - it: should render 1 document from application.yaml by default (StatefulSet)
+    template: templates/application.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should render 1 document from applicationsecrets.yaml (Secret)
+    template: templates/applicationsecrets.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should render 2 documents from application.yaml for ReadWriteMany (PVC + Deployment)
+    template: templates/application.yaml
+    set:
+      application.diskAccessMode: ReadWriteMany
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  # ── Default (ReadWriteOnce) StatefulSet ─────────────────────────────────────
+
+  - it: should render a StatefulSet by default (ReadWriteOnce)
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: metadata.name
+          value: release-name-application
+      - equal:
+          path: spec.serviceName
+          value: release-name-application
+      - equal:
+          path: spec.replicas
+          value: 1
+
+  - it: should render a PVC for ReadWriteMany
+    set:
+      application.diskAccessMode: ReadWriteMany
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: PersistentVolumeClaim
+    asserts:
+      - isKind:
+          of: PersistentVolumeClaim
+      - equal:
+          path: metadata.name
+          value: release-name-data
+      - equal:
+          path: spec.accessModes[0]
+          value: ReadWriteMany
+
+  - it: should render a Deployment for ReadWriteMany
+    set:
+      application.diskAccessMode: ReadWriteMany
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: release-name-application
+
+  - it: should set the correct image for the web container
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^spicaengine/spica:"
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: web
+
+  - it: should set the correct image for the api container
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[1].image
+          pattern: "^spicaengine/api:"
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: api
+  
+  - it: should configure startup probe on the api container
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.httpGet.path
+          value: /status/live
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.httpGet.port
+          value: 4300
+
+  - it: should use default startup probe timing values
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.initialDelaySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.periodSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.timeoutSeconds
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.failureThreshold
+          value: 24
+
+  - it: should reflect custom startup probe values from values.yaml
+    set:
+      application.apiStartupProbeInitialDelaySeconds: 20
+      application.apiStartupProbePeriodSeconds: 10
+      application.apiStartupProbeTimeoutSeconds: 6
+      application.apiStartupProbeFailureThreshold: 12
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.initialDelaySeconds
+          value: 20
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.periodSeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.timeoutSeconds
+          value: 6
+      - equal:
+          path: spec.template.spec.containers[1].startupProbe.failureThreshold
+          value: 12
+
+  - it: should configure liveness probe on the api container
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.httpGet.path
+          value: /status/live
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.httpGet.port
+          value: 4300
+
+  - it: should use default liveness probe timing values
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.periodSeconds
+          value: 15
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.failureThreshold
+          value: 3
+
+  - it: should reflect custom liveness probe values from values.yaml
+    set:
+      application.apiLivenessProbePeriodSeconds: 30
+      application.apiLivenessProbeTimeoutSeconds: 10
+      application.apiLivenessProbeFailureThreshold: 5
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.periodSeconds
+          value: 30
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.timeoutSeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.failureThreshold
+          value: 5
+
+  - it: should configure readiness probe on the api container
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.httpGet.path
+          value: /status/ready
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.httpGet.port
+          value: 4300
+
+  - it: should use default readiness probe timing values
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.periodSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.failureThreshold
+          value: 6
+
+  - it: should reflect custom readiness probe values from values.yaml
+    set:
+      application.apiReadinessProbePeriodSeconds: 15
+      application.apiReadinessProbeTimeoutSeconds: 8
+      application.apiReadinessProbeFailureThreshold: 3
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.periodSeconds
+          value: 15
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.timeoutSeconds
+          value: 8
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.failureThreshold
+          value: 3
+
+  - it: should include --public-url in the api container args
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--public-url"
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "https://test.example.com/api"
+
+  - it: should include --database-uri in the api container args
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--database-uri"
+
+  - it: should set --replication to false when application.replicas is 1
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--replication"
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "false"
+
+  - it: should set --replication to true when application.replicas is greater than 1
+    set:
+      application.replicas: 3
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "true"
+
+  - it: should prepend extra args when application.args is set
+    set:
+      application.args:
+        - "--custom-flag"
+        - "custom-value"
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].args[0]
+          value: "--custom-flag"
+      - equal:
+          path: spec.template.spec.containers[1].args[1]
+          value: "custom-value"
+
+  - it: should include checksum annotation on Pod template
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - isNotEmpty:
+          path: spec.template.metadata.annotations["checksum/application-secrets"]
+
+  - it: should use the default serviceAccountName
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: default
+
+  - it: should use custom serviceAccountName when set
+    set:
+      application.serviceAccountName: my-sa
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: my-sa
+
+  - it: should apply nodeSelector when set
+    set:
+      application.nodeSelector:
+        disktype: ssd
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+
+  - it: should apply tolerations when set
+    set:
+      application.tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "gpu"
+          effect: "NoSchedule"
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: dedicated
+      - equal:
+          path: spec.template.spec.tolerations[0].effect
+          value: NoSchedule
+
+  - it: should expose api on port 4300 and web on port 80
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 80
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].containerPort
+          value: 4300
+
+  - it: should carry required app labels on the pod template
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/component"]
+          value: application
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/managed-by"]
+          value: helm
+
+  - it: should include volumeClaimTemplates for ReadWriteOnce StatefulSet
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - isNotEmpty:
+          path: spec.volumeClaimTemplates
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: ReadWriteOnce
+
+  - it: should reference application secrets for PASSPORT_SECRET env var
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].env[0].name
+          value: MASTER_KEY
+      - equal:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.name
+          value: release-name-application-secrets
+      - equal:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.key
+          value: masterKey
+      - equal:
+          path: spec.template.spec.containers[1].env[1].name
+          value: PASSPORT_SECRET
+      - equal:
+          path: spec.template.spec.containers[1].env[1].valueFrom.secretKeyRef.name
+          value: release-name-application-secrets
+      - equal:
+          path: spec.template.spec.containers[1].env[1].valueFrom.secretKeyRef.key
+          value: secret

@@ -1,6 +1,6 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
-import {StorageOptions, STORAGE_OPTIONS} from "./options";
+import {StorageOptions, STORAGE_OPTIONS} from "@spica-server/interface/storage";
 import {StorageController} from "./storage.controller";
 import {StorageService} from "./storage.service";
 import {Default} from "./strategy/default";
@@ -44,11 +44,23 @@ export class StorageModule {
           useFactory: (options: StorageOptions) => {
             switch (options.strategy) {
               case "awss3":
-                return new AWSS3(options.awss3CredentialsPath, options.awss3BucketName);
+                return new AWSS3(
+                  options.awss3CredentialsPath,
+                  options.awss3BucketName,
+                  options.resumableUploadExpiresIn
+                );
               case "gcloud":
-                return new GCloud(options.gcloudServiceAccountPath, options.gcloudBucketName);
+                return new GCloud(
+                  options.gcloudServiceAccountPath,
+                  options.gcloudBucketName,
+                  options.resumableUploadExpiresIn
+                );
               case "default":
-                return new Default(options.defaultPath, options.defaultPublicUrl);
+                return new Default(
+                  options.defaultPath,
+                  options.defaultPublicUrl,
+                  options.resumableUploadExpiresIn
+                );
               default:
                 throw new Error(`Unknown strategy ${options.strategy}`);
             }

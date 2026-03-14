@@ -1,10 +1,26 @@
-import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
+import {schemaDiff} from "@spica-server/core/differ";
+import {ChangeKind} from "@spica-server/interface/core";
 import {findRelations} from "@spica-server/bucket/common";
-import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {HistoryService} from "@spica-server/bucket/history";
 import * as expression from "@spica-server/bucket/expression";
-import {BadRequestException} from "@nestjs/common";
+import {BadRequestException, NotFoundException} from "@nestjs/common";
+import {Bucket} from "@spica-server/interface/bucket";
+
+export async function find(
+  bs: BucketService,
+  options: {
+    resourceFilter: object;
+    sort: object;
+  }
+): Promise<Bucket[]> {
+  return bs.aggregate<Bucket>([options.resourceFilter, {$sort: options.sort}]).toArray();
+}
+
+export function findOne(bs: BucketService, id: ObjectId): Promise<Bucket> {
+  return bs.findOne({_id: id});
+}
 
 export async function insert(bs: BucketService, bucket: Bucket) {
   ruleValidation(bucket);
@@ -33,6 +49,9 @@ export async function replace(
   delete bucket._id;
 
   const previousSchema = await bs.findOne({_id});
+  if (!previousSchema) {
+    throw new NotFoundException(`Bucket with ID ${_id} does not exist.`);
+  }
 
   const currentSchema = await bs.findOneAndReplace({_id}, bucket, {
     returnDocument: ReturnDocument.AFTER
@@ -75,25 +94,33 @@ export async function remove(
 function ruleValidation(schema: Bucket) {
   try {
     expression.extractPropertyMap(schema.acl.read);
-    expression.aggregate(schema.acl.read, {
-      auth: {
-        identifier: "",
-        policies: []
+    expression.aggregate(
+      schema.acl.read,
+      {
+        auth: {
+          identifier: "",
+          policies: []
+        },
+        document: {}
       },
-      document: {}
-    });
+      "match"
+    );
   } catch (error) {
     throw new BadRequestException("Error occurred while parsing read rule\n" + error.message);
   }
 
   try {
-    expression.run(schema.acl.write, {
-      auth: {
-        identifier: "",
-        policies: []
+    expression.run(
+      schema.acl.write,
+      {
+        auth: {
+          identifier: "",
+          policies: []
+        },
+        document: {}
       },
-      document: {}
-    });
+      "match"
+    );
   } catch (error) {
     throw new BadRequestException("Error occurred while parsing write rule\n" + error.message);
   }

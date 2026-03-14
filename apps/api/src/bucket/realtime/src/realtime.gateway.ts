@@ -5,7 +5,7 @@ import {
   SubscribeMessage,
   WebSocketGateway
 } from "@nestjs/websockets";
-import {Action, ActivityService} from "@spica-server/activity/services";
+import {ActivityService} from "@spica-server/activity/services";
 import {BucketCacheService} from "@spica-server/bucket/cache";
 import {
   insertDocument,
@@ -15,32 +15,34 @@ import {
   deleteDocument,
   clearRelations,
   getDependents,
-  authIdToString,
-  AUTH_RESOLVER,
-  IAuthResolver,
-  filterReviver,
-  constructFilterValues
+  applyFieldLevelAcl,
+  decryptDocumentFields
 } from "@spica-server/bucket/common";
-import * as expression from "@spica-server/bucket/expression";
-import {aggregate} from "@spica-server/bucket/expression";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {
   BucketService,
   getBucketDataCollection,
-  BucketDataService,
-  BucketDocument
+  BucketDataService
 } from "@spica-server/bucket/services";
 import {applyPatch, deepCopy} from "@spica-server/core/patch";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {FindOptions, RealtimeDatabaseService} from "@spica-server/database/realtime";
+import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ChunkKind} from "@spica-server/interface/realtime";
-import {GuardService} from "@spica-server/passport";
-import {resourceFilterFunction} from "@spica-server/passport/guard";
-import {fromEvent, of} from "rxjs";
-import {takeUntil, catchError} from "rxjs/operators";
-import {MessageKind} from "./interface";
+import {GuardService} from "@spica-server/passport/guard/services";
+import {extractStrategyType} from "@spica-server/passport/guard";
+import {Action} from "@spica-server/interface/activity";
+import {MessageKind} from "@spica-server/interface/bucket/realtime";
+import {
+  Bucket,
+  BucketDocument,
+  BUCKET_DATA_ENCRYPTION_SECRET,
+  BUCKET_DATA_HASH_SECRET
+} from "@spica-server/interface/bucket";
+import {getConnectionHandlers} from "@spica-server/realtime";
+import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
+import {BucketDataOptionsBuilder} from "./bucket-data-options.builder";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"
@@ -52,87 +54,100 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private bucketService: BucketService,
     private bucketDataService: BucketDataService,
     private validator: Validator,
-    @Inject(AUTH_RESOLVER) private authResolver: IAuthResolver,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService,
     @Optional() private hookEmitter: ChangeEmitter,
-    @Optional() private bucketCacheService: BucketCacheService
-  ) {}
-
-  async handleDisconnect(client: any) {
-    const schemaIdAndOptions = await this.prepareClient(client, client.upgradeReq);
-
-    if (!schemaIdAndOptions) {
-      return;
-    }
-
-    const {schemaId, options} = schemaIdAndOptions;
-    const collection = getBucketDataCollection(schemaId);
-    if (this.realtime.doesEmitterExist(collection, options)) {
-      this.realtime.removeEmitter(collection, options);
-    }
+    @Optional() private bucketCacheService: BucketCacheService,
+    @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
+    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
+  ) {
+    this.handlers = getConnectionHandlers(
+      this.guardService,
+      this.getCollectionName.bind(this),
+      this.getFindOptions.bind(this),
+      error => ({
+        kind: ChunkKind.Error,
+        status: error.status || 500,
+        message: error.message || "Unexpected error"
+      }),
+      this.realtime,
+      undefined,
+      "bucket:data:stream",
+      [
+        (_client: any, req: any) => (data: any) => this.applyAcl(data, req),
+        ...(this.encryptionSecret ? [this.decryptDocuments.bind(this)] : [])
+      ]
+    );
   }
 
-  async authorize(req, client) {
-    await this.guardService.checkAuthorization({
+  private handlers: {
+    handleConnection: (client: any, req: any) => Promise<void>;
+    handleDisconnect: (client: any, req: any) => Promise<void>;
+  };
+
+  private async getCollectionName(_client, req): Promise<string> {
+    const schemaId = req.params.id;
+
+    if (!ObjectId.isValid(schemaId)) {
+      throw new Error(`${schemaId} is not a valid object id.`);
+    }
+
+    return getBucketDataCollection(schemaId);
+  }
+
+  private async getFindOptions(_client, req): Promise<any> {
+    const schemaId = req.params.id;
+
+    const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
+
+    if (!schema) {
+      throw new Error(`Could not find the schema with id ${schemaId}.`);
+    }
+
+    return BucketDataOptionsBuilder.fromBucketQuery(
+      req,
+      schema,
+      this.getBucketResolver(),
+      this.shouldApplyAcl(req)
+    );
+  }
+
+  async handleConnection(client: any, req: any) {
+    return this.handlers.handleConnection(client, req);
+  }
+
+  async handleDisconnect(client: any) {
+    return this.handlers.handleDisconnect(client, client.upgradeReq);
+  }
+
+  private async authorizeAction(req: any, client: any, action: string): Promise<void> {
+    await this.guardService.checkAuthentication({
       request: req,
       response: client
     });
 
-    await this.guardService.checkAction({
+    await this.guardService.checkAuthorization({
       request: req,
       response: client,
-      actions: "bucket:data:stream",
-      options: {resourceFilter: true}
+      actions: action,
+      options: {resourceFilter: false}
     });
-
-    req.resourceFilter = resourceFilterFunction({}, {
-      switchToHttp: () => {
-        return {
-          getRequest: () => req
-        };
-      }
-    } as any);
-  }
-
-  async handleConnection(client: any, req) {
-    req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
-
-    try {
-      await this.authorize(req, client);
-    } catch (error) {
-      this.send(client, ChunkKind.Error, error.status, error.message);
-      return client.close(1003);
-    }
-
-    const schemaIdAndOptions = await this.prepareClient(client, req);
-
-    if (!schemaIdAndOptions) {
-      return;
-    }
-
-    const {schemaId, options} = schemaIdAndOptions;
-    const stream = this.realtime.find(getBucketDataCollection(schemaId), options).pipe(
-      catchError(error => {
-        this.send(client, ChunkKind.Error, 500, error.toString());
-        client.close(1003);
-        return of(null);
-      })
-    );
-
-    stream
-      .pipe(takeUntil(fromEvent(client, "close")))
-      .subscribe(data => client.send(JSON.stringify(data)));
   }
 
   @SubscribeMessage(MessageKind.INSERT)
   async insert(client: any, document: any) {
-    let schema;
+    let schema: Bucket;
 
     try {
-      schema = await this.extractSchema(client);
+      schema = await this.getSchema(client);
     } catch (error) {
-      return;
+      return this.send(client, ChunkKind.Response, error.status || 400, error.message);
+    }
+
+    try {
+      await this.authorizeAction(client.upgradeReq, client, "bucket:data:create");
+    } catch (error) {
+      return this.send(client, ChunkKind.Response, error.status || 403, error.message);
     }
 
     try {
@@ -147,13 +162,17 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       insertedDoc = await insertDocument(
         schema,
         document,
-        {req: client.upgradeReq},
+        {
+          req: client.upgradeReq,
+          applyAcl: this.shouldApplyAcl(client.upgradeReq)
+        },
         {
           collection: schema => this.bucketDataService.children(schema),
           schema: this.getBucketResolver(),
-          deleteOne: id => this.delete(client, {_id: id}),
-          authResolver: this.authResolver
-        }
+          deleteOne: id => this.delete(client, {_id: id})
+        },
+        this.hashSecret,
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -190,12 +209,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @SubscribeMessage(MessageKind.REPLACE)
   async replace(client: any, document: BucketDocument) {
-    let schema;
+    let schema: Bucket;
 
     try {
-      schema = await this.extractSchema(client);
+      schema = await this.getSchema(client);
     } catch (error) {
-      return;
+      return this.send(client, ChunkKind.Response, error.status || 400, error.message);
+    }
+
+    try {
+      await this.authorizeAction(client.upgradeReq, client, "bucket:data:update");
+    } catch (error) {
+      return this.send(client, ChunkKind.Response, error.status || 403, error.message);
     }
 
     if (!ObjectId.isValid(document._id)) {
@@ -216,12 +241,17 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       previousDocument = await replaceDocument(
         schema,
         {...document, _id: documentId},
-        {req: client.upgradeReq},
+        {
+          req: client.upgradeReq,
+          applyAcl: this.shouldApplyAcl(client.upgradeReq)
+        },
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver(),
-          authResolver: this.authResolver
-        }
+          schema: this.getBucketResolver()
+        },
+        undefined,
+        this.hashSecret,
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -274,12 +304,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @SubscribeMessage(MessageKind.PATCH)
   async patch(client: any, document: any) {
-    let schema;
+    let schema: Bucket;
 
     try {
-      schema = await this.extractSchema(client);
+      schema = await this.getSchema(client);
     } catch (error) {
-      return;
+      return this.send(client, ChunkKind.Response, error.status || 400, error.message);
+    }
+
+    try {
+      await this.authorizeAction(client.upgradeReq, client, "bucket:data:update");
+    } catch (error) {
+      return this.send(client, ChunkKind.Response, error.status || 403, error.message);
     }
 
     if (!ObjectId.isValid(document._id)) {
@@ -316,13 +352,17 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         schema,
         {...patchedDocument, _id: documentId},
         document,
-        {req: client.upgradeReq},
+        {
+          req: client.upgradeReq,
+          applyAcl: this.shouldApplyAcl(client.upgradeReq)
+        },
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver(),
-          authResolver: this.authResolver
+          schema: this.getBucketResolver()
         },
-        {returnDocument: ReturnDocument.AFTER}
+        {returnDocument: ReturnDocument.AFTER},
+        this.hashSecret,
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
@@ -372,12 +412,20 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @SubscribeMessage(MessageKind.DELETE)
   async delete(client: any, document: any) {
-    let schema;
+    let schema: Bucket;
 
     try {
-      schema = await this.extractSchema(client);
+      schema = await this.getSchema(client);
     } catch (error) {
-      return;
+      return this.send(client, ChunkKind.Response, error.status || 400, error.message);
+    }
+
+    if (!client.__mock_client__) {
+      try {
+        await this.authorizeAction(client.upgradeReq, client, "bucket:data:delete");
+      } catch (error) {
+        return this.send(client, ChunkKind.Response, error.status || 403, error.message);
+      }
     }
 
     if (!ObjectId.isValid(document._id)) {
@@ -390,12 +438,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       deletedDocument = await deleteDocument(
         schema,
         document._id,
-        {req: client.upgradeReq},
+        {
+          req: client.upgradeReq,
+          applyAcl: this.shouldApplyAcl(client.upgradeReq)
+        },
         {
           collection: schema => this.bucketDataService.children(schema),
-          schema: this.getBucketResolver(),
-          authResolver: this.authResolver
-        }
+          schema: this.getBucketResolver()
+        },
+        this.hashSecret,
+        this.encryptionSecret
       );
     } catch (error) {
       return this.send(client, ChunkKind.Response, 500, error.message);
@@ -441,26 +493,28 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         this.activity
       );
     }
+
     clearRelations(this.bucketService, schema._id, document._id);
 
     const dependents = getDependents(schema, deletedDocument);
 
     for (const [targetBucketId, targetDocIds] of dependents.entries()) {
       for (const targetDocId of targetDocIds) {
-        const targetClient = deepCopy(client);
-        targetClient.__mock_client__ = true;
+        try {
+          const targetClient = deepCopy(client);
+          targetClient.__mock_client__ = true;
 
-        const targetReq = deepCopy(client.upgradeReq);
+          const targetReq = deepCopy(client.upgradeReq);
+          targetReq.params.id = targetBucketId;
+          targetClient.upgradeReq = targetReq;
 
-        targetReq.params.id = targetBucketId;
-
-        const targetDoc = {
-          _id: targetDocId
-        };
-
-        this.delete(targetClient, targetDoc);
+          await this.delete(targetClient, {_id: targetDocId});
+        } catch (error) {
+          // Cascade failure should not crash the main delete operation
+        }
       }
     }
+
     return this.send(client, ChunkKind.Response, 204, "No Content");
   }
 
@@ -471,114 +525,24 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return validationPipe.transform(document);
   }
 
-  async prepareClient(client, req): Promise<{schemaId: string; options: any}> {
-    const schemaId = req.params.id;
+  private async getSchema(client: any): Promise<Bucket> {
+    const schemaId = client.upgradeReq.params.id;
 
     if (!ObjectId.isValid(schemaId)) {
-      this.send(client, ChunkKind.Error, 400, `${schemaId} is not a valid object id.`);
-      return client.close(1003);
+      const error: any = new Error(`${schemaId} is an invalid object id.`);
+      error.status = 400;
+      throw error;
     }
 
     const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
 
     if (!schema) {
-      this.send(client, ChunkKind.Error, 400, `Could not find the schema with id ${schemaId}.`);
-      return client.close(1003);
+      const error: any = new Error(`Could not find the schema with id ${schemaId}`);
+      error.status = 404;
+      throw error;
     }
 
-    const options: any = {filter: {$and: []}};
-
-    const policyMatch = req.resourceFilter || {$match: {}};
-    options.filter.$and.push(policyMatch.$match);
-
-    req = authIdToString(req);
-    const ruleMatch = expression.aggregate(schema.acl.read, {auth: req.user});
-    options.filter.$and.push(ruleMatch);
-
-    let filter = req.query.get("filter");
-
-    if (filter) {
-      let parsedFilter = parseFilter((value: string) => JSON.parse(value, filterReviver), filter);
-
-      if (parsedFilter) {
-        parsedFilter = await constructFilterValues(parsedFilter, schema, this.getBucketResolver());
-      } else if (!parsedFilter) {
-        parsedFilter = parseFilter(aggregate, filter, {});
-      }
-
-      if (!parsedFilter) {
-        this.send(
-          client,
-          ChunkKind.Error,
-          400,
-          "Error occured while parsing the filter. Please ensure that filter is a valid JSON or expression."
-        );
-
-        return client.close(1003);
-      }
-
-      options.filter.$and.push(parsedFilter);
-    }
-
-    if (req.query.has("sort")) {
-      try {
-        options.sort = JSON.parse(req.query.get("sort"));
-      } catch (e) {
-        this.send(client, ChunkKind.Error, e.status, e.message);
-        return client.close(1003);
-      }
-    }
-
-    if (req.query.has("limit")) {
-      options.limit = Number(req.query.get("limit"));
-    }
-
-    if (req.query.has("skip")) {
-      options.skip = Number(req.query.get("skip"));
-    }
-
-    return {options, schemaId};
-  }
-
-  extractSchema(client: any): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-      await this.prepareClient(client, client.upgradeReq);
-
-      try {
-        await this.authorize(client.upgradeReq, client);
-      } catch (error) {
-        this.send(client, ChunkKind.Error, error.status, error.message);
-        client.close(1003);
-        reject();
-      }
-
-      if (!ObjectId.isValid(client.upgradeReq.params.id)) {
-        this.send(
-          client,
-          ChunkKind.Error,
-          400,
-          `${client.upgradeReq.params.id} is an invalid object id.`
-        );
-        client.close(1003);
-      }
-
-      const schemaId = new ObjectId(client.upgradeReq.params.id);
-
-      const schema = await this.bucketService.findOne({_id: schemaId});
-
-      if (!schema) {
-        this.send(
-          client,
-          ChunkKind.Error,
-          400,
-          `Could not find the schema with id ${schemaId.toString()}`
-        );
-        client.close(1003);
-        reject();
-      }
-
-      resolve(schema);
-    });
+    return schema;
   }
 
   getBucketResolver() {
@@ -588,12 +552,38 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   send(client, kind: ChunkKind, status: number, message: string) {
     client.send(JSON.stringify({kind, status, message}));
   }
-}
 
-export function parseFilter(method: (...params: any) => any, ...params: any) {
-  try {
-    return method(...params);
-  } catch (e) {
-    return false;
+  private shouldApplyAcl(req: any): boolean {
+    const strategyType = extractStrategyType(req);
+    return strategyType === ReqAuthStrategy.USER;
+  }
+
+  private async applyAcl(document: any, req: any) {
+    if (!document || !this.shouldApplyAcl(req)) {
+      return document;
+    }
+
+    const schema = await this.bucketService.findOne({_id: new ObjectId(req.params.id)});
+    if (!schema?.properties) {
+      return document;
+    }
+
+    return applyFieldLevelAcl(document, schema.properties, req.user);
+  }
+
+  private async decryptDocuments(_client: any, req: any) {
+    const bucketId = req.params.id;
+    const schema = await this.bucketService.findOne({_id: new ObjectId(bucketId)});
+    if (!schema) return undefined;
+    return (document: any) => {
+      if (!document) return document;
+      return decryptDocumentFields(
+        document,
+        schema,
+        this.encryptionSecret,
+        this.getBucketResolver(),
+        document._id
+      );
+    };
   }
 }

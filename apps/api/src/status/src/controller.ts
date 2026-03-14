@@ -1,18 +1,49 @@
-import {BadRequestException, Controller, Get, Param, Query, UseGuards} from "@nestjs/common";
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Param,
+  Query,
+  ServiceUnavailableException,
+  UseGuards
+} from "@nestjs/common";
 import {DATE} from "@spica-server/core";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {StatusProvider} from "./interface";
+import {StatusProvider} from "@spica-server/interface/status";
+import {DatabaseService} from "@spica-server/database";
 
 export const providers = new Set<StatusProvider>();
 
 @Controller("status")
 export class StatusController {
+  constructor(@Inject(DatabaseService) private readonly db: DatabaseService) {}
+
   private get providers() {
     return Array.from(providers);
   }
 
+  @Get("live")
+  @HttpCode(HttpStatus.OK)
+  liveness() {
+    return {status: "ok"};
+  }
+
+  @Get("ready")
+  @HttpCode(HttpStatus.OK)
+  async readiness() {
+    try {
+      await this.db.command({ping: 1});
+      return {status: "ok"};
+    } catch {
+      throw new ServiceUnavailableException("Database is not ready");
+    }
+  }
+
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("status:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("status:index"))
   findAll(
     @ResourceFilter({pure: true})
     resourceFilter = {
@@ -35,7 +66,7 @@ export class StatusController {
   }
 
   @Get(":module")
-  @UseGuards(AuthGuard(), ActionGuard("status:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("status:show"))
   find(
     @Param("module") module: string,
     @Query("begin", DATE) begin: Date,

@@ -1,0 +1,5 @@
+{
+  "name": "api/function/enqueuer/test",
+  "sourceRoot": "apps/api/src/function/enqueuer/test",
+  "projectType": "application"
+}

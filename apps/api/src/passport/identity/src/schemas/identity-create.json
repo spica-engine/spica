@@ -18,9 +18,6 @@
     "deactivateJwtsBefore": {
       "type": "number",
       "title": "Unix timestamp (in seconds). All JWTs issued before this timestamp will be considered invalid"
-    },
-    "attributes": {
-      "type": "object"
     }
   },
   "additionalProperties": false

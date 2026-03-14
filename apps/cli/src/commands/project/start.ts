@@ -7,7 +7,7 @@ import getport from "get-port";
 import open from "open";
 import {Stream} from "stream";
 import {spin} from "../../console";
-import {projectName} from "../../validator";
+import {projectLocalResourceFolder, projectName} from "../../validator";
 import path from "path";
 import fs from "fs";
 import {DockerMachine} from "../../project";
@@ -29,6 +29,7 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
 
 async function create({args: cmdArgs, options}: ActionParameters) {
   const {name}: {name?: string} = cmdArgs;
+  const {localResourceFolder}: {localResourceFolder?: string} = options;
 
   const machine = new DockerMachine();
 
@@ -64,6 +65,8 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     }
   }
 
+  const persistentPath = "/var/data";
+
   args = [
     ...args,
     // If user defines some of these values in the apiOptions file, they will be overwriten.
@@ -73,8 +76,8 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
     `--public-url=${apiUrl}`,
     `--function-api-url=${functionApiUrl}`,
-    `--passport-secret=${name}`,
-    `--persistent-path=/var/data`
+    `--master-key=${name}`,
+    `--persistent-path=${persistentPath}`
   ];
 
   const foundNetworks = await machine.listNetworks({
@@ -136,7 +139,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
         },
         {
           image: "mongo",
-          tag: "4.2"
+          tag: options.mongoVersion.toString()
         },
         {
           image: "nginx",
@@ -178,7 +181,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
   async function createMongoDB(instanceIndex: number) {
     const container = await machine.createContainer({
-      Image: "mongo:4.2",
+      Image: `mongo:${options.mongoVersion.toString()}`,
       name: `${databaseName}-${instanceIndex}`,
       Cmd: ["--replSet", name, "--bind_ip_all"],
       Labels: {namespace: name},
@@ -209,6 +212,22 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
   const databaseReplicas = Number(options.databaseReplicas);
 
+  // shell to use inside DB containers (will be detected at runtime)
+  let shell = "mongo";
+
+  // Detect available mongo shell inside a container (prefer mongosh, fallback to mongo)
+  async function detectShell(container: any): Promise<string> {
+    const probe = await container.exec({
+      Cmd: ["sh", "-c", "command -v mongosh || command -v mongo || true"],
+      AttachStdout: true,
+      AttachStderr: true
+    });
+    const res = await probe.start({});
+    const out = (await streamToBuffer(res)).toString().trim();
+    if (!out) throw new Error("no mongo shell available in container");
+    return out.split("/").pop() as string;
+  }
+
   await spin({
     text: `Creating database containers (1/${databaseReplicas})`,
     op: async spinner => {
@@ -231,11 +250,15 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
       const firstContainer = machine.getContainer(`${databaseName}-0`);
 
+      // detect available shell once on the container
+      const detected = await detectShell(firstContainer);
+      if (detected) shell = detected;
+
       const initiateReplication = async (reconfig = false) => {
         spinner.text = "Initiating replication between database containers.";
         const exec = await firstContainer.exec({
           Cmd: [
-            "mongo",
+            shell,
             "admin",
             "--eval",
             reconfig
@@ -283,7 +306,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
       for (let i = 0; i < 15; i++) {
         const exec = await firstContainer.exec({
-          Cmd: ["mongo", "admin", "--eval", "rs.status()"],
+          Cmd: [shell, "admin", "--eval", "rs.status()"],
           AttachStderr: true,
           AttachStdout: true
         });
@@ -303,6 +326,12 @@ async function create({args: cmdArgs, options}: ActionParameters) {
       return Promise.reject("Replica Set did not become ready in 30 seconds.");
     }
   });
+
+  let binds = [];
+  if (localResourceFolder) {
+    fs.mkdirSync(localResourceFolder, {recursive: true});
+    binds = [`${localResourceFolder}:${persistentPath}/representatives`];
+  }
 
   await spin({
     text: `Creating spica containers (0/2)`,
@@ -335,7 +364,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
           },
           Mounts: [
             {
-              Target: "/var/data",
+              Target: persistentPath,
               Source: `${name}-api`,
               Type: "volume",
               VolumeOptions: {
@@ -347,7 +376,8 @@ async function create({args: cmdArgs, options}: ActionParameters) {
                 }
               }
             }
-          ]
+          ],
+          Binds: binds
         }
       });
       await network.connect({Container: api.id});
@@ -449,6 +479,10 @@ export default function (program: Program): Command {
       default: "latest",
       validator: CaporalValidator.STRING
     })
+    .option("--mongo-version", "Version of the MongoDB image to run.", {
+      default: "8.0",
+      validator: CaporalValidator.STRING
+    })
     .option("-o, --open", "Open project authorization page after creation.", {
       validator: CaporalValidator.BOOLEAN
     })
@@ -480,6 +514,16 @@ export default function (program: Program): Command {
       "Absolute file path that contains api key options as key value in JSON format.",
       {
         validator: CaporalValidator.STRING
+      }
+    )
+    .option(
+      "--local-resource-folder",
+      `Absolute local folder path to sync resources from and to Spica. 
+      WARNING: During container startup, the initial synchronization from Spica to the local folder will remove local files (bucket, function, etc.) and insert Spica ones.
+      Files that aren't managed by Spica will remain(.git, .gitignore etc.).
+      Backup or commit necessary files before starting.`,
+      {
+        validator: projectLocalResourceFolder
       }
     )
     .action(create as unknown as Action);

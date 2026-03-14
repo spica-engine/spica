@@ -46,6 +46,8 @@ spec:
         app.kubernetes.io/version: {{ .Chart.AppVersion }}
         app.kubernetes.io/part-of: {{ .Chart.Name }}
         app.kubernetes.io/managed-by: helm
+      annotations:
+        checksum/application-secrets: {{ include (print $.Template.BasePath "/applicationsecrets.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ .Values.application.serviceAccountName }}
       containers:
@@ -64,6 +66,31 @@ spec:
 {{ toYaml .Values.application.apiResources | indent 12 }}
           ports:
             - containerPort: 4300
+          startupProbe:
+            httpGet:
+              path: /status/live
+              port: 4300
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.application.apiStartupProbeInitialDelaySeconds }}
+            periodSeconds: {{ .Values.application.apiStartupProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.application.apiStartupProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.application.apiStartupProbeFailureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /status/live
+              port: 4300
+              scheme: HTTP
+            periodSeconds: {{ .Values.application.apiLivenessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.application.apiLivenessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.application.apiLivenessProbeFailureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /status/ready
+              port: 4300
+              scheme: HTTP
+            periodSeconds: {{ .Values.application.apiReadinessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.application.apiReadinessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.application.apiReadinessProbeFailureThreshold }}
           args: [
 {{if len .Values.application.args}}
 {{- range .Values.application.args }}
@@ -74,16 +101,55 @@ spec:
             --database-uri, {{ template "database.connection-uri" . }},
             --database-replica-set,  {{ .Values.database.replicaSetName }},
             --database-name,  {{ .Values.database.name }},
-            --passport-secret, {{ required "A valid .Values.application.secret is required!" .Values.application.secret }},
             --passport-password,  {{ .Values.application.defaultPassword }},
             --public-url, {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}},
             --persistent-path, /data,
-            --replication, {{ ternary "true" "false" (gt (int .Values.application.replicas) 1) }}
+            --replication, "{{ ternary true false (gt (int .Values.application.replicas) 1) }}"
           ]
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /data
           env:
+            - name: MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: masterKey
+            - name: PASSPORT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: secret
+            - name: BUCKET_DATA_HASH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: bucketDataHashSecret
+            - name: BUCKET_DATA_ENCRYPTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: bucketDataEncryptionSecret
+            - name: SECRET_MODULE_ENCRYPTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: secretModuleEncryptionSecret
+            - name: USER_VERIFICATION_HASH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: userVerificationHashSecret
+            - name: USER_PROVIDER_ENCRYPTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: userProviderEncryptionSecret
+            - name: USER_PROVIDER_HASH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: userProviderHashSecret
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -94,6 +160,21 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-database-spica-credentials
                   key: spicaPassword
+            - name: TWILIO_ACCOUNT_SID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: twilioAccountSid
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: twilioAuthToken
+            - name: TWILIO_FROM_NUMBER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: twilioFromNumber
       {{- if .Values.application.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.application.nodeSelector | indent 8 }}

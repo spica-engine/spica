@@ -1,24 +1,11 @@
 import {JSONSchema7, JSONSchema7Definition} from "json-schema";
-import {Bucket, BucketPreferences} from "./bucket";
-import {BadRequestException} from "@nestjs/common";
+import {BadRequestException, Logger} from "@nestjs/common";
+import {Bucket, BucketPreferences, ExtendedJSONSchema7Type} from "@spica-server/interface/bucket";
 
-type ExtendedJSONSchema7Type =
-  | JSONSchema7["type"]
-  | "objectid"
-  | "storage"
-  | "richtext"
-  | "textarea"
-  | "color"
-  | "multiselect"
-  | "relation"
-  | "date"
-  | "location"
-  | "json";
+const logger = new Logger("BucketSchema");
 
 function addIdField(bucket) {
-  bucket.properties._id = {
-    type: "objectid"
-  };
+  bucket.properties._id = {type: "objectid"};
   return bucket;
 }
 
@@ -31,7 +18,7 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
         if (typeof spec == "object") {
           schema.properties[key] = map(spec);
         } else {
-          console.debug(`ignoring boolean property at ${key}`);
+          logger.debug(`ignoring boolean property at ${key}`);
         }
       }
     } else if (schema.items) {
@@ -50,6 +37,16 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
         schema.type = "string";
         break;
 
+      case "hash":
+        schema.type = "string";
+        schema.format = "hash";
+        break;
+
+      case "encrypted":
+        schema.type = "string";
+        schema.format = "encrypted";
+        break;
+
       case "color":
         schema.type = "string";
         break;
@@ -62,10 +59,7 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
       case "relation":
         if (schema["relationType"] == "onetomany") {
           schema.type = "array";
-          schema.items = {
-            format: "objectid-string",
-            type: "string"
-          };
+          schema.items = {format: "objectid-string", type: "string"};
         } else {
           schema.type = "string";
           schema.format = "objectid-string";
@@ -81,18 +75,8 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
         const point: JSONSchema7Definition = {
           type: "array",
           items: [
-            {
-              title: "Longitude",
-              type: "number",
-              minimum: -180,
-              maximum: 180
-            },
-            {
-              title: "Latitude",
-              type: "number",
-              minimum: -90,
-              maximum: 90
-            }
+            {title: "Longitude", type: "number", minimum: -180, maximum: 180},
+            {title: "Latitude", type: "number", minimum: -90, maximum: 90}
           ],
           minItems: 2,
           additionalItems: false
@@ -101,11 +85,7 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
         schema.type = "object";
         schema.required = ["coordinates"];
         schema.properties = {
-          type: {
-            type: "string",
-            const: schema["locationType"],
-            default: schema["locationType"]
-          },
+          type: {type: "string", const: schema["locationType"], default: schema["locationType"]},
           coordinates: {}
         };
 

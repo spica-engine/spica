@@ -1,6 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
-import {Preference, PreferenceService} from "@spica-server/preference/services";
+import {PreferenceService} from "@spica-server/preference/services";
+import {Preference} from "@spica-server/interface/preference";
 import {Observable} from "rxjs";
 import {take} from "rxjs/operators";
 
@@ -81,13 +82,13 @@ describe("Preference Service", () => {
 
   describe("watch requests", () => {
     it("should return observable when called with propageOnStart is false", () => {
-      const obs = preferenceService.watch("bucket");
+      const obs = preferenceService.watchPreference("bucket");
       expect(obs instanceof Observable).toBe(true);
     });
 
     it("should return pref when called with propageOnStart is true", done => {
       preferenceService
-        .watch("bucket", {propagateOnStart: true})
+        .watchPreference("bucket", {propagateOnStart: true})
         .pipe(take(1))
         .subscribe(next => {
           expect(next.scope).toBe("bucket");
@@ -98,7 +99,7 @@ describe("Preference Service", () => {
 
     it("should return updated pref when pref value updated on db", done => {
       preferenceService
-        .watch("bucket")
+        .watchPreference("bucket")
         .pipe(take(1))
         .subscribe(next => {
           expect(next.scope).toBe("bucket");

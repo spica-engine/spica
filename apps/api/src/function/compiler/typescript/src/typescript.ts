@@ -1,12 +1,16 @@
-import {Compilation, Description, Language} from "@spica-server/function/compiler";
+import {Language} from "@spica-server/function/compiler";
+import {Compilation, Description} from "@spica-server/interface/function/compiler";
 import fs from "fs";
 import {fromEvent, Observable, of, throwError} from "rxjs";
 import {filter, switchMap, take, tap} from "rxjs/operators";
 import worker_threads from "worker_threads";
 import path from "path";
 import {fileURLToPath} from "url";
+import {Logger} from "@nestjs/common";
 
 export class Typescript extends Language {
+  private readonly logger = new Logger(Typescript.name);
+
   description: Description = {
     entrypoints: {
       build: "index.ts",
@@ -31,7 +35,7 @@ export class Typescript extends Language {
       this.worker.once("exit", exitCode => {
         this.worker = undefined;
         if (exitCode != 0) {
-          console.log("Compiler worker has quit with non-zero exit code.");
+          this.logger.log("Compiler worker has quit with non-zero exit code.");
         }
       });
       this.message$ = fromEvent<any>(this.worker, "message");

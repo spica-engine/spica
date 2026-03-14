@@ -1,10 +1,9 @@
 import {Global, Module} from "@nestjs/common";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {DatabaseService, ObjectId} from "@spica-server/database";
-import {SCHEMA} from "@spica-server/function";
-import {COLL_SLUG} from "@spica-server/function/services";
+import {SCHEMA, COLL_SLUG} from "@spica-server/interface/function";
 import {EventQueue} from "@spica-server/function/queue";
-import {ENQUEUER} from "@spica-server/function/scheduler";
+import {ENQUEUER} from "@spica-server/interface/function/scheduler";
 import {JSONSchema7} from "json-schema";
 import {ChangeEmitter} from "./emitter";
 import {ChangeEnqueuer} from "./enqueuer";

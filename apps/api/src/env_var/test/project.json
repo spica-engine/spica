@@ -1,0 +1,5 @@
+{
+  "name": "api/env_var/test",
+  "sourceRoot": "apps/api/src/env_var/test",
+  "projectType": "application"
+}
