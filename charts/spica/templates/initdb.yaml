@@ -84,37 +84,6 @@ data:
 
     echo "Initializing has been completed successfully."
 
-  init-replica.sh: | 
-    #!/bin/bash
-    
-    echo "Defining retry command.."
-    retry_command() {
-      local retries=0
-      local max_retries=10
-
-      while true; do
-        "$@" && break  # Break the loop if the command succeeds
-        retries=$((retries+1))
-        if [ $retries -ge $max_retries ]; then
-          echo "Max retries reached. Exiting script."
-          exit 1
-        fi
-        
-        delay=$((2**retries))
-        echo "Command failed. Retrying in $delay seconds..."
-        sleep $delay
-        
-      done
-    }
-    echo "Defined retry command!"
-
-    # retry until mongodb process is ready
-    echo "Trying to ping.."
-    retry_command mongosh --quiet --eval "db.runCommand({ ping: 1 })"
-    echo "Ping succeeded!"
-
-    mongosh --authenticationDatabase "admin" -u "$ROOT_USERNAME" -p "$ROOT_PASSWORD" --eval "rs.reconfig({ _id: 'rs0', members: $RS_MEMBERS },{force: true})"
-
   set-profiling-level.sh: | 
     #!/bin/bash
     
