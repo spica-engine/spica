@@ -40,6 +40,26 @@ const args = yargsInstance
     "cert-file": {string: true, description: "Path to the client server TLS cert file."},
     "key-file": {string: true, description: "Path to the client server TLS key file."}
   })
+  /* Proxy options */
+  .options({
+    "trust-proxy": {
+      default: true,
+      description:
+        "Whether to trust the X-Forwarded-* headers set by the proxy. Possible values are true, false, a number representing the number of hops to trust, or a comma-separated list of IPs to trust."
+    }
+  })
+  .coerce("trust-proxy", (arg: any) => {
+    if (arg === true || arg === "true") return true;
+    if (arg === false || arg === "false") return false;
+    const num = Number(arg);
+    if (!isNaN(num)) return num;
+
+    if (arg.includes(",")) {
+      return arg.split(",").map(v => v.trim());
+    }
+
+    return arg;
+  })
   /* Database Options */
   .options({
     "database-uri": {string: true, description: "MongoDB connection url."},
@@ -328,6 +348,34 @@ const args = yargsInstance
       description: "Storage period for unloaded files in milliseconds, default is 2 days",
       default: 1000 * 60 * 60 * 24 * 2 // 2 days
     }
+  })
+  /* Sms Sender Options */
+  .options({
+    "sms-sender-strategy": {
+      string: true,
+      description: "SMS service provider strategy. Default is twilio.",
+      default: "twilio",
+      choices: ["twilio"]
+    },
+    "twilio-sms-service-account-sid": {
+      string: true,
+      description: "Twilio SMS service Account SID."
+    },
+    "twilio-sms-service-auth-token": {string: true, description: "Twilio SMS service Auth Token."},
+    "twilio-sms-service-from-number": {string: true, description: "Twilio SMS service From Number."}
+  })
+  /* Mailer Options */
+  .options({
+    "mailer-host": {string: true, description: "SMTP server host (e.g. smtp.example.com)"},
+    "mailer-port": {number: true, description: "SMTP server port (e.g. 587)"},
+    "mailer-secure": {
+      boolean: true,
+      description: "Use secure connection (TLS/SSL)",
+      default: false
+    },
+    "mailer-user": {string: true, description: "SMTP auth user"},
+    "mailer-pass": {string: true, description: "SMTP auth password"},
+    "mailer-from": {string: true, description: "Default From address for outgoing mails"}
   })
   /* Sms Sender Options */
   .options({
@@ -779,7 +827,8 @@ if (args["cert-file"] && args["key-file"]) {
 }
 
 NestFactory.create(RootModule, {httpsOptions, bodyParser: false}).then(async app => {
-  app.getHttpAdapter().getInstance().set("trust proxy", true);
+  app.getHttpAdapter().getInstance().set("trust proxy", args["trust-proxy"]);
+  console.log("PROXY at main.ts", app.getHttpAdapter().getInstance().get("trust proxy"));
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
     Middlewares.Headers({

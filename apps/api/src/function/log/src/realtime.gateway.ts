@@ -8,10 +8,22 @@ import {LogOptionsBuilder} from "./log-options.builder";
 export class LogGateway implements OnGatewayConnection, OnGatewayDisconnect {
   readonly COLLECTION = "function_logs";
 
-  constructor(
-    private realtime: RealtimeDatabaseService,
-    private guardService: GuardService
-  ) {}
+  constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
+
+  private handlers = getConnectionHandlers(
+    this.guardService,
+    async () => this.COLLECTION,
+    this.prepareOptions.bind(this),
+    error => ({
+      code: error.status || 500,
+      message: error.message || "Unexpected error"
+    }),
+    this.realtime
+  );
+
+  async handleConnection(client: WebSocket, req: any) {
+    return this.handlers.handleConnection(client, req);
+  }
 
   private handlers = getConnectionHandlers(
     this.guardService,
