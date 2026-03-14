@@ -9,10 +9,11 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {UserConfigService} from "../src/config.service";
 import {RateLimitService} from "../src/rate-limit.service";
 import {ConfigModule} from "@spica-server/config";
+import {NestExpressApplication} from "@nestjs/platform-express";
 
 describe("Rate Limit E2E", () => {
   let module: TestingModule;
-  let app: INestApplication;
+  let app: NestExpressApplication;
   let req: Request;
   let userConfigService: UserConfigService;
   let rateLimitService: RateLimitService;
@@ -71,7 +72,8 @@ describe("Rate Limit E2E", () => {
       ]
     }).compile();
 
-    app = module.createNestApplication();
+    app = module.createNestApplication<NestExpressApplication>();
+    app.getHttpAdapter().getInstance().set("trust proxy", true);
     req = module.get(Request);
     userConfigService = module.get(UserConfigService);
     rateLimitService = module.get(RateLimitService);

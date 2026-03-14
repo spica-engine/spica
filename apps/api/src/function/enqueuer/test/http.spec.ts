@@ -1,4 +1,5 @@
 import {INestApplication} from "@nestjs/common";
+import {NestExpressApplication} from "@nestjs/platform-express";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {HttpEnqueuer} from "@spica-server/function/enqueuer";
@@ -712,7 +713,8 @@ describe("http enqueuer with rate limiting", () => {
       imports: [CoreTestingModule]
     }).compile();
 
-    app = module.createNestApplication();
+    app = module.createNestApplication<NestExpressApplication>();
+    app.getHttpAdapter().getInstance().set("trust proxy", true);
     req = module.get(Request);
 
     eventQueue = {
