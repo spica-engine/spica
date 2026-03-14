@@ -49,15 +49,14 @@ const args = yargsInstance
   /* Proxy options */
   .options({
     "trust-proxy": {
-      string: true,
-      default: "false",
+      default: true,
       description:
         "Whether to trust the X-Forwarded-* headers set by the proxy. Possible values are true, false, a number representing the number of hops to trust, or a comma-separated list of IPs to trust."
     }
   })
   .coerce("trust-proxy", (arg: any) => {
-    if (arg === "true") return true;
-    if (arg === "false") return false;
+    if (arg === true || arg === "true") return true;
+    if (arg === false || arg === "false") return false;
     const num = Number(arg);
     if (!isNaN(num)) return num;
 
@@ -867,6 +866,7 @@ NestFactory.create(RootModule, {
   bodyParser: false
 }).then(async app => {
   app.getHttpAdapter().getInstance().set("trust proxy", args["trust-proxy"]);
+  console.log("PROXY at main.ts", app.getHttpAdapter().getInstance().get("trust proxy"));
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
     Middlewares.Headers({
