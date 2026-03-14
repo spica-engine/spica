@@ -238,6 +238,93 @@ describe("ApiKey", () => {
     });
   });
 
+  describe("update", () => {
+    it("should disable token", async () => {
+      const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
+        disabled: true
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toEqual({
+        _id: "68399c4c347570ceac5d4806",
+        identity: "user1",
+        token: "token1",
+        created_at: "2000-01-01T00:00:00.000Z",
+        expired_at: "2000-01-02T00:00:00.000Z",
+        last_used_at: "2000-01-01T00:00:00.000Z",
+        disabled: true
+      });
+    });
+
+    it("should enable token", async () => {
+      const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
+        disabled: false
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toEqual({
+        _id: "68399c4c347570ceac5d4806",
+        identity: "user1",
+        token: "token1",
+        created_at: "2000-01-01T00:00:00.000Z",
+        expired_at: "2000-01-02T00:00:00.000Z",
+        last_used_at: "2000-01-01T00:00:00.000Z",
+        disabled: false
+      });
+    });
+
+    it("should throw not found exception if token does not exist", async () => {
+      const res = await req.put("/passport/refresh-token/000000000000000000000000", {
+        disabled: false
+      });
+      expect(res.statusCode).toEqual(404);
+      expect(res.body).toEqual({
+        statusCode: 404,
+        message: "Not Found"
+      });
+    });
+
+    it("should ignore updates for fields other than disabled", async () => {
+      const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
+        user: "random_user",
+        created_at: "2004-10-08T21:00:00.000Z",
+        disabled: true
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toEqual({
+        _id: "68399c4c347570ceac5d4806",
+        identity: "user1",
+        token: "token1",
+        created_at: "2000-01-01T00:00:00.000Z",
+        expired_at: "2000-01-02T00:00:00.000Z",
+        last_used_at: "2000-01-01T00:00:00.000Z",
+        disabled: true
+      });
+    });
+
+    it("should throw error if disabled is not boolean", async () => {
+      const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
+        disabled: "true"
+      });
+      expect(res.statusCode).toEqual(400);
+      expect(res.body).toEqual({
+        statusCode: 400,
+        error: "Bad Request",
+        message: "Only disabled field can be updated and it must be a boolean"
+      });
+    });
+
+    it("should throw error if some fields are trying to be updated rather then disabled", async () => {
+      const res = await req.put("/passport/refresh-token/68399c4c347570ceac5d4806", {
+        user: "user_someone"
+      });
+      expect(res.statusCode).toEqual(400);
+      expect(res.body).toEqual({
+        statusCode: 400,
+        error: "Bad Request",
+        message: "Only disabled field can be updated and it must be a boolean"
+      });
+    });
+  });
+
   //     it("should not return empty index", async () => {
   //       const {body: apiKey} = await req.post("/passport/apikey", {
   //         name: "test",

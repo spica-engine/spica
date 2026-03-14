@@ -1,12 +1,16 @@
 import {Request, Response} from "express";
+import {ObjectId} from "@spica-server/database";
 
 export interface StatusOptions {
   expireAfterSeconds: number;
+  httpStatusTracking?: boolean;
 }
 
 export type AttachStatusTracker = (req: Request, res: Response) => void;
 
 export interface ApiStatus {
+  _id?: ObjectId;
+  count: number;
   request: {
     size: number;
   };

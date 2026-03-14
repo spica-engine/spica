@@ -15,8 +15,7 @@ import {PreferenceService} from "@spica-server/preference/services";
 import {
   Preference,
   BUCKET_LANGUAGE_FINALIZER,
-  changeFactory,
-  IDENTITY_SETTINGS_FINALIZER
+  changeFactory
 } from "@spica-server/interface/preference";
 import {createPreferenceActivity} from "./activity.resource";
 import {ReturnDocument} from "@spica-server/database";
@@ -27,30 +26,23 @@ export class PreferenceController {
     private preference: PreferenceService,
     @Optional()
     @Inject(BUCKET_LANGUAGE_FINALIZER)
-    private bucketFactory: changeFactory,
-    @Optional()
-    @Inject(IDENTITY_SETTINGS_FINALIZER)
-    private identityFactory: changeFactory
+    private bucketFactory: changeFactory
   ) {}
 
   @Get(":scope")
-  @UseGuards(AuthGuard(), ActionGuard("preference:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("preference:show"))
   find(@Param("scope") scope: string) {
     return this.preference.get(scope);
   }
 
   @UseInterceptors(activity(createPreferenceActivity))
   @Put(":scope")
-  @UseGuards(AuthGuard(), ActionGuard("preference:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("preference:update"))
   async replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {
     if (scope == "bucket" && this.bucketFactory) {
       const previousPrefs = await this.preference.get("bucket");
 
       await this.bucketFactory(previousPrefs, preference);
-    } else if (scope == "passport" && this.identityFactory) {
-      const previousPrefs = await this.preference.get("passport");
-
-      await this.identityFactory(previousPrefs, preference);
     }
 
     delete preference._id;

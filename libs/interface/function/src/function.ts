@@ -1,6 +1,7 @@
 import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";
 import {EnvVar} from "@spica-server/interface/env_var";
+import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface/secret";
 import {ObjectId} from "@spica-server/database";
 
 export enum EnvRelation {
@@ -8,11 +9,20 @@ export enum EnvRelation {
   NotResolved
 }
 
-export interface Function<ER extends EnvRelation = EnvRelation.NotResolved> {
+export enum SecretRelation {
+  Resolved,
+  NotResolved
+}
+
+export interface Function<
+  ER extends EnvRelation = EnvRelation.NotResolved,
+  SR extends SecretRelation = SecretRelation.NotResolved
+> {
   _id?: any;
   name: string;
   description?: string;
   env_vars?: ER extends EnvRelation.Resolved ? EnvVar[] : ObjectId[];
+  secrets?: SR extends SecretRelation.Resolved ? Secret[] : ObjectId[];
   triggers: Triggers;
   timeout: number;
   language: string;
@@ -78,9 +88,10 @@ export interface TargetChange {
     id: string;
     handler?: string;
     context?: Context;
+    name?: string;
   };
 }
 
-export type FunctionWithContent = Function & {content?: string};
+export type FunctionWithContent = Function & {content?: string; type?: string};
 
 export const SCHEMA = Symbol.for("FUNCTION_ENQUEUER_SCHEMA");

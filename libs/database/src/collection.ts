@@ -15,10 +15,14 @@ import {
   Document,
   AggregateOptions,
   IndexSpecification,
-  CreateIndexesOptions
+  CreateIndexesOptions,
+  ChangeStream,
+  ChangeStreamOptions,
+  ChangeStreamDocument
 } from "mongodb";
 import {DatabaseService} from "./database.service";
 import {InitializeOptions, OptionalId, ProfilerEntry} from "@spica-server/interface/database";
+import {Observable} from "rxjs";
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;
@@ -34,8 +38,10 @@ export class _MixinCollection<T> {
 
     this.options = this._options;
 
-    if (this.options.afterInit) {
-      this.initCollection().then(() => this.options.afterInit!());
+    if (this.options.collectionOptions || this.options.afterInit) {
+      this.initCollection().then(() => {
+        if (this.options.afterInit) this.options.afterInit();
+      });
     }
   }
 
@@ -186,6 +192,22 @@ export class _MixinCollection<T> {
 
   collection(collection: string, options?: InitializeOptions) {
     return new _MixinCollection(this.db, collection, options);
+  }
+
+  watch(pipeline?: object[], options?: ChangeStreamOptions): Observable<ChangeStreamDocument<T>> {
+    return new Observable(observer => {
+      let stream: ChangeStream<T>;
+
+      stream = this._coll.watch(pipeline, options);
+      stream.on("change", change => observer.next(change));
+      stream.on("error", error => observer.error(error));
+
+      return () => {
+        if (!stream.closed) {
+          stream.close();
+        }
+      };
+    });
   }
 }
 

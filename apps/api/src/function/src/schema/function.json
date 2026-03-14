@@ -12,7 +12,8 @@
     },
     "name": {
       "type": "string",
-      "description": "Name of the function"
+      "description": "Name of the function",
+      "pattern": "^[\\w-]+$"
     },
     "description": {
       "type": "string",
@@ -21,6 +22,11 @@
     "env_vars": {
       "type": "array",
       "description": "Environment variables that will be accesible globally in the function",
+      "items": {"type": "string"}
+    },
+    "secrets": {
+      "type": "array",
+      "description": "Secrets that will be accessible in the function",
       "items": {"type": "string"}
     },
     "memoryLimit": {

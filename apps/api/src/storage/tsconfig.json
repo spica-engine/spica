@@ -19,6 +19,15 @@
     },
     {
       "path": "../../../../libs/interface/storage"
+    },
+    {
+      "path": "../../../../libs/filter"
+    },
+    {
+      "path": "../../../../libs/transaction"
+    },
+    {
+      "path": "../passport/guard/services"
     }
   ]
 }

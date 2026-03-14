@@ -17,7 +17,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
-          image: mongo:7.0.16
+          image: mongo:8.0.4
           command:
             - mongod
             - "--replSet"
@@ -114,7 +114,7 @@ spec:
             - "200"
             - --database-replica-set
             - rs0
-            - --passport-secret
+            - --master-key
             - $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
             - --passport-password
             - spica

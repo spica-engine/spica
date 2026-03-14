@@ -52,15 +52,11 @@ describe("BucketDataController json field", () => {
         properties: {
           name: {
             type: "string",
-            options: {
-              position: "right"
-            }
+            options: {}
           },
           characteristics: {
             type: "json",
-            options: {
-              position: "right"
-            }
+            options: {}
           }
         }
       };

@@ -12,6 +12,7 @@ import {ChunkKind} from "@spica-server/interface/realtime";
 import {IdentityModule} from "@spica-server/passport/identity";
 import {Identity} from "@spica-server/interface/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
+import {ConfigModule} from "@spica-server/config/src/config.module";
 
 function url(query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL("/passport/identity", "ws://insteadof");
@@ -58,6 +59,7 @@ describe("Identity Realtime", () => {
           },
           identityRealtime: true
         }),
+        ConfigModule.forRoot(),
         PassportTestingModule.initialize({
           overriddenStrategyType: "JWT"
         })
@@ -100,14 +102,16 @@ describe("Identity Realtime", () => {
 
     beforeEach(() => {
       const guardService = app.get(GuardService);
-      authGuardCheck = jest.spyOn(guardService, "checkAuthorization");
-      actionGuardCheck = jest.spyOn(guardService, "checkAction").mockImplementation(({request}) => {
-        request.resourceFilter = {
-          include: [],
-          exclude: []
-        };
-        return Promise.resolve(true);
-      });
+      authGuardCheck = jest.spyOn(guardService, "checkAuthentication");
+      actionGuardCheck = jest
+        .spyOn(guardService, "checkAuthorization")
+        .mockImplementation(({request}) => {
+          request.resourceFilter = {
+            include: [],
+            exclude: []
+          };
+          return Promise.resolve(true);
+        });
     });
 
     it("should authorize and do the initial sync", done => {

@@ -3,9 +3,11 @@ import fs from "fs";
 import path from "path";
 import YAML from "yaml";
 import dotenv from "dotenv";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {
+  IRepresentativeManager,
+  RepresentativeFileEvent
+} from "@spica-server/interface/representative";
 import {Observable} from "rxjs";
-import {RepChange, RepresentativeManagerResource} from "@spica-server/interface/versioncontrol";
 
 @Injectable()
 export class RepresentativeManager implements IRepresentativeManager {
@@ -44,6 +46,14 @@ export class RepresentativeManager implements IRepresentativeManager {
     });
   }
 
+  watch(module: string, file: string[], events?: string[]): Observable<RepresentativeFileEvent> {
+    throw new Error("Method not implemented.");
+  }
+
+  read(module: string, file: string): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+
   private getModuleDir(module: string) {
     return path.join(this.cwd, module);
   }
@@ -66,7 +76,14 @@ export class RepresentativeManager implements IRepresentativeManager {
     return parser(content);
   }
 
-  write(module: string, id: string, fileName: string, content: any, extension: string) {
+  write(
+    module: string,
+    id: string,
+    fileName: string,
+    content: any,
+    extension: string,
+    accessMode: "readwrite" | "readonly" = "readwrite"
+  ) {
     const resourcesDirectory = path.join(this.cwd, module, id);
     if (!fs.existsSync(resourcesDirectory)) {
       fs.mkdirSync(resourcesDirectory, {recursive: true});
@@ -118,37 +135,6 @@ export class RepresentativeManager implements IRepresentativeManager {
     });
   }
 
-  read(module: string, resNameValidator: (name: string) => boolean, fileNameFilter = []) {
-    const moduleDir = this.getModuleDir(module);
-
-    let ids;
-
-    if (!fs.existsSync(moduleDir)) {
-      ids = [];
-    } else {
-      ids = fs.readdirSync(moduleDir);
-    }
-
-    const promises = [];
-    const results = [];
-
-    for (const id of ids) {
-      if (!resNameValidator(id)) {
-        continue;
-      }
-
-      const promise = this.readResource(module, id, fileNameFilter).then(resource => {
-        if (resource.contents && Object.keys(resource.contents).length) {
-          results.push(resource);
-        }
-      });
-
-      promises.push(promise);
-    }
-
-    return Promise.all(promises).then(() => results);
-  }
-
   rm(module?: string, id?: string) {
     let dir = this.cwd;
 
@@ -161,10 +147,5 @@ export class RepresentativeManager implements IRepresentativeManager {
     }
 
     return fs.promises.rm(dir, {recursive: true});
-  }
-
-  // delete later
-  watch() {
-    return new Observable<RepChange<RepresentativeManagerResource>>(observer => {});
   }
 }

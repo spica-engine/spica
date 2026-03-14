@@ -31,6 +31,12 @@
     },
     {
       "path": "./realtime"
+    },
+    {
+      "path": "../../config"
+    },
+    {
+      "path": "../../../../../libs/interface/config"
     }
   ]
 }

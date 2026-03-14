@@ -40,30 +40,31 @@ export class ShiftController {
   }
 }
 describe("Commander", () => {
+  function getModuleBuilder(controller, connectionUri?: string, dbName?: string) {
+    return Test.createTestingModule({
+      imports: [
+        connectionUri
+          ? DatabaseTestingModule.connect(connectionUri, dbName)
+          : DatabaseTestingModule.replicaSet(),
+        ReplicationModule.forRoot()
+      ],
+      controllers: [controller]
+    });
+  }
+
   describe("Sync", () => {
     let module1: TestingModule;
     let module2: TestingModule;
     let ctrl1: SyncController;
     let ctrl2: SyncController;
 
-    function getModuleBuilder(connectionUri?: string) {
-      return Test.createTestingModule({
-        imports: [
-          connectionUri
-            ? DatabaseTestingModule.connect(connectionUri)
-            : DatabaseTestingModule.replicaSet(),
-          ReplicationModule.forRoot()
-        ],
-        controllers: [SyncController]
-      });
-    }
     beforeEach(async () => {
-      module1 = await getModuleBuilder().compile();
+      module1 = await getModuleBuilder(SyncController).compile();
       ctrl1 = module1.get(SyncController);
+      const db = module1.get(DatabaseService);
 
       const connectionUri = getConnectionUri();
-      module2 = await getModuleBuilder(connectionUri).compile();
-
+      module2 = await getModuleBuilder(SyncController, connectionUri, db.databaseName).compile();
       ctrl2 = module2.get(SyncController);
       await wait(5000);
     });
@@ -108,23 +109,13 @@ describe("Commander", () => {
     let ctrl1: ShiftController;
     let ctrl2: ShiftController;
 
-    function getModuleBuilder(connectionUri?: string) {
-      return Test.createTestingModule({
-        imports: [
-          connectionUri
-            ? DatabaseTestingModule.connect(connectionUri)
-            : DatabaseTestingModule.replicaSet(),
-          ReplicationModule.forRoot()
-        ],
-        controllers: [ShiftController]
-      });
-    }
     beforeEach(async () => {
-      module1 = await getModuleBuilder().compile();
+      module1 = await getModuleBuilder(ShiftController).compile();
       ctrl1 = module1.get(ShiftController);
+      const db = module1.get(DatabaseService);
 
       const connectionUri = getConnectionUri();
-      module2 = await getModuleBuilder(connectionUri).compile();
+      module2 = await getModuleBuilder(ShiftController, connectionUri, db.databaseName).compile();
 
       ctrl2 = module2.get(ShiftController);
       await wait(5000);

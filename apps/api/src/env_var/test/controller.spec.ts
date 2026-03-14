@@ -71,18 +71,18 @@ describe("Environment Variable", () => {
         req.post("/env-var", envVar3)
       ]);
 
-      const res = await req.get(`/env-var`, {paginate: true});
+      const res = await req.get(`/env-var`, {paginate: true, sort: JSON.stringify({_id: -1})});
       const bodyWithoutIds = {...res.body, data: res.body.data.map(({_id, ...rest}) => rest)};
       expect(bodyWithoutIds).toEqual({
         meta: {total: 3},
-        data: [envVar1, envVar2, envVar3]
+        data: [envVar3, envVar2, envVar1]
       });
     });
 
     it("should filter", async () => {
       const envVar1 = {key: "ENV_KEY_1", value: "val_1"};
       const envVar2 = {key: "ENV_KEY_2", value: "val_2"};
-      const envVar3 = {key: "ENV_KEY_2", value: "val_3"};
+      const envVar3 = {key: "ENV_KEY_3", value: "val_3"};
 
       await Promise.all([
         req.post("/env-var", envVar1),
@@ -90,9 +90,10 @@ describe("Environment Variable", () => {
         req.post("/env-var", envVar3)
       ]);
 
-      const res = await req.get(`/env-var`, {filter: JSON.stringify({key: "ENV_KEY_2"})});
+      const res = await req.get(`/env-var`, {filter: JSON.stringify({key: "ENV_KEY_3"})});
       const bodyWithoutIds = res.body.map(({_id, ...rest}) => rest);
-      expect(bodyWithoutIds).toEqual([envVar2, envVar3]);
+      expect(bodyWithoutIds.length).toBe(1);
+      expect(bodyWithoutIds).toEqual([envVar3]);
 
       const res2 = await req.get(`/env-var`, {filter: JSON.stringify({value: "val_2"})});
       const bodyWithoutIds2 = res2.body.map(({_id, ...rest}) => rest);

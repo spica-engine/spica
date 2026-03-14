@@ -2,8 +2,10 @@ import {ReadStream} from "fs";
 import {Storage, Bucket} from "@google-cloud/storage";
 import {GCSStore} from "@tus/gcs-store";
 import {BaseStrategy} from "./base-strategy";
+import {Logger} from "@nestjs/common";
 
 export class GCloud extends BaseStrategy {
+  private readonly logger = new Logger(GCloud.name);
   private storage: Storage;
   private bucket: Bucket;
 
@@ -40,7 +42,10 @@ export class GCloud extends BaseStrategy {
       });
 
       writeStream.on("error", err => {
-        console.error(err);
+        this.logger.error(
+          err instanceof Error ? err.message : String(err),
+          err instanceof Error ? err.stack : ""
+        );
         return reject(err);
       });
 
@@ -55,8 +60,8 @@ export class GCloud extends BaseStrategy {
       .then(([res]) => Buffer.from(res.buffer));
   }
 
-  delete(id: string) {
-    this.bucket.file(id).delete();
+  async delete(id: string) {
+    await this.bucket.deleteFiles({prefix: id});
   }
 
   async getMetadata(id: string) {
@@ -73,8 +78,14 @@ export class GCloud extends BaseStrategy {
   }
 
   async rename(oldName: string, newName: string): Promise<void> {
-    const file = this.bucket.file(oldName);
-    await file.move(newName);
+    const [files] = await this.bucket.getFiles({prefix: oldName});
+
+    await Promise.all(
+      files.map(async file => {
+        const newDir = file.name.replace(oldName, newName);
+        await file.move(newDir);
+      })
+    );
   }
 
   async getAllFilesMetadataPaginated(pageToken?: string): Promise<{

@@ -55,8 +55,8 @@ describe("Bucket", () => {
       description: "Description of the bucket",
       primary: "title",
       properties: {
-        title: {type: "string", options: {position: "left"}},
-        description: {type: "string", options: {position: "right"}}
+        title: {type: "string", options: {}},
+        description: {type: "string", options: {}}
       },
       indexes: [],
       history: false,
@@ -69,8 +69,8 @@ describe("Bucket", () => {
       description: "Description of the another bucket",
       primary: "title",
       properties: {
-        name: {type: "string", options: {position: "left"}},
-        surname: {type: "string", options: {position: "right"}}
+        name: {type: "string", options: {}},
+        surname: {type: "string", options: {}}
       },
       indexes: [],
       history: false,
@@ -612,8 +612,8 @@ describe("Bucket", () => {
             description: "Headphones bucket",
             primary: "model",
             properties: {
-              model: {title: "model", type: "string", options: {position: "left"}},
-              price: {title: "price", type: "number", options: {position: "right"}}
+              model: {title: "model", type: "string", options: {}},
+              price: {title: "price", type: "number", options: {}}
             },
             history: false,
             acl: {write: "true==true", read: "true==true"},
@@ -625,15 +625,15 @@ describe("Bucket", () => {
             description: "Users bucket",
             primary: "name",
             properties: {
-              name: {title: "name", type: "string", options: {position: "left"}},
-              age: {title: "age", type: "number", options: {position: "right"}},
+              name: {title: "name", type: "string", options: {}},
+              age: {title: "age", type: "number", options: {}},
               headphone: {
                 title: "headphone",
                 bucketId: "",
                 dependent: false,
                 type: "relation",
                 relationType: "onetoone",
-                options: {position: "right"}
+                options: {}
               }
             },
             history: false,

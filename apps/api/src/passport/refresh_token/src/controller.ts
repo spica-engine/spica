@@ -6,8 +6,11 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  Put,
   Query,
-  UseGuards
+  UseGuards,
+  Body,
+  BadRequestException
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
@@ -21,7 +24,7 @@ export class RefreshTokenController {
   constructor(private service: RefreshTokenService) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("passport:refresh-token:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:index"))
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
@@ -60,7 +63,7 @@ export class RefreshTokenController {
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:refresh-token:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.service.findOne({_id: id}).then(r => {
       if (!r) {
@@ -70,8 +73,30 @@ export class RefreshTokenController {
     });
   }
 
+  @Put(":id")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:update"))
+  async update(@Param("id", OBJECT_ID) id: ObjectId, @Body() body: Partial<RefreshToken>) {
+    const disabled = body?.disabled;
+
+    if (typeof disabled !== "boolean") {
+      throw new BadRequestException("Only disabled field can be updated and it must be a boolean");
+    }
+
+    const updatedToken = await this.service.findOneAndUpdate(
+      {_id: id},
+      {$set: {disabled}},
+      {returnDocument: "after"}
+    );
+
+    if (!updatedToken) {
+      throw new NotFoundException();
+    }
+
+    return updatedToken;
+  }
+
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:refresh-token:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.service.deleteOne({_id: id}).then(r => {

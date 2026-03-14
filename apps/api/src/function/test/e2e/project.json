@@ -1,0 +1,5 @@
+{
+  "name": "api/function/test/e2e",
+  "sourceRoot": "apps/api/src/function/test/e2e",
+  "projectType": "application"
+}

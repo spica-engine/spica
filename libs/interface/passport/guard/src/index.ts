@@ -1,5 +1,10 @@
 import {ExecutionContext} from "@nestjs/common";
 
+export enum ReqAuthStrategy {
+  APIKEY = "APIKEY",
+  IDENTITY = "IDENTITY",
+  USER = "USER"
+}
 export interface Statement {
   action: string;
   resource: {
@@ -14,19 +19,29 @@ export interface PrepareUser {
 }
 
 export interface IGuardService {
-  checkAction({
+  checkAuthorization({
     request,
     response,
     actions,
-    options
+    options,
+    format
   }: {
     request: any;
     response: any;
     actions: string | string[];
     options?: {resourceFilter: boolean};
+    format?: string;
   }): Promise<boolean>;
 
-  checkAuthorization({request, response, type}: {request: any; response: any; type?: string});
+  checkAuthentication({
+    request,
+    response,
+    allowedStrategies
+  }: {
+    request: any;
+    response: any;
+    allowedStrategies?: string[];
+  });
 }
 
 // Since we can not depend on since

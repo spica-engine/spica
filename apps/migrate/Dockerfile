@@ -4,7 +4,7 @@ FROM node:22-slim AS base
 FROM base AS deps
 WORKDIR /app
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile --network-timeout 600000
 
 # build app to nodejs image
 FROM base AS build 
@@ -25,6 +25,8 @@ COPY jest.flaky.setup.js jest.preset.js jest.setup.js ./
 COPY libs/database ./libs/database
 COPY libs/interface/database ./libs/interface/database
 COPY *.env ./
+ARG MONGODB_URL=""
+ENV MONGODB_URL=$MONGODB_URL
 RUN yarn run test:migrate
 
 # copy deps and build

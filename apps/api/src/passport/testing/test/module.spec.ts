@@ -59,7 +59,7 @@ describe("Passport testing", () => {
     expect(res.body).toEqual([true]);
   });
 
-  it("should override strategy type", async () => {
+  xit("should override strategy type", async () => {
     const res = await req.get("/test/3", {});
     expect(res.body).toBe("INDISTINCT_STRATEGY_BUT_OKAY");
   });

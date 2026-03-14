@@ -76,7 +76,7 @@ export const resourceFilterFunction: ResourceFilterFunction = (
 export const ResourceFilter = (data = {pure: false}) => {
   return createParamDecorator<{pure: boolean}>(resourceFilterFunction, [
     (target, key, index) => {
-      Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor);
+      Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor, key);
     }
   ])(data);
 };
@@ -144,10 +144,13 @@ function createActionGuard(
       if (options) {
         hasResourceFilter = options.resourceFilter;
       } else {
-        // hasResourceFilter is true for just index endpoints
-        const resourceFilterMetadata =
-          Reflect.getMetadata("resourceFilter", context.getClass()) || {};
-        hasResourceFilter = resourceFilterMetadata.key == context.getHandler().name;
+        const resourceFilterMetadata = Reflect.getMetadata(
+          "resourceFilter",
+          context.getClass(),
+          context.getHandler().name
+        );
+
+        hasResourceFilter = !!resourceFilterMetadata;
       }
 
       actions = wrapArray(actions);

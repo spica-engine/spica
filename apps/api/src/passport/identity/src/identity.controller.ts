@@ -100,7 +100,7 @@ export class IdentityController {
   }
 
   @Get("statements")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   async statements(@Req() req) {
     req.user.policies = req.user.policies || [];
 
@@ -126,7 +126,10 @@ export class IdentityController {
   }
 
   @Get("profile")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:profile", "passport/identity"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("passport:identity:profile", "passport/identity")
+  )
   async findProfileEntries(
     @Query("filter", JSONP) filter?: object,
     @Query("limit", NUMBER) limit?: number,
@@ -151,7 +154,7 @@ export class IdentityController {
   }
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:index"))
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
@@ -194,13 +197,13 @@ export class IdentityController {
     return this.identityService.aggregate<Identity[]>([...pipeline, ...seekingPipeline]).toArray();
   }
   @Get("predefs")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   getPredefinedDefaults() {
     return this.identityService.getPredefinedDefaults();
   }
 
   @Get("factors")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   getFactors() {
     return this.authFactor.getSchemas();
   }
@@ -208,7 +211,7 @@ export class IdentityController {
   @Delete(":id/factors")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(
-    AuthGuard(),
+    AuthGuard(["IDENTITY", "APIKEY"]),
     ActionGuard(
       "passport:identity:update",
       "passport/identity/:id",
@@ -228,20 +231,27 @@ export class IdentityController {
 
   @Get(":id")
   @UseGuards(
-    AuthGuard(),
+    AuthGuard(["IDENTITY", "APIKEY"]),
     ActionGuard(
       "passport:identity:show",
       undefined,
       registerPolicyAttacher("IdentityReadOnlyAccess")
     )
   )
-  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.identityService.findOne({_id: id}, {projection: this.hideSecretsExpression()});
+  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    const identity = await this.identityService.findOne(
+      {_id: id},
+      {projection: this.hideSecretsExpression()}
+    );
+    if (!identity) {
+      throw new NotFoundException(`Identity with ID ${id} not found.`);
+    }
+    return identity;
   }
 
   @Post(":id/start-factor-verification")
   @UseGuards(
-    AuthGuard(),
+    AuthGuard(["IDENTITY", "APIKEY"]),
     ActionGuard(
       "passport:identity:update",
       "passport/identity/:id",
@@ -273,7 +283,7 @@ export class IdentityController {
 
   @Post(":id/complete-factor-verification")
   @UseGuards(
-    AuthGuard(),
+    AuthGuard(["IDENTITY", "APIKEY"]),
     ActionGuard(
       "passport:identity:update",
       "passport/identity/:id",
@@ -329,9 +339,9 @@ export class IdentityController {
 
   @UseInterceptors(activity(createIdentityActivity))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:create"))
   async insertOne(
-    @Body(Schema.validate("http://spica.internal/passport/create-identity-with-attributes"))
+    @Body(Schema.validate("http://spica.internal/passport/identity-create"))
     identity: Identity
   ) {
     identity.password = await hash(identity.password);
@@ -364,12 +374,12 @@ export class IdentityController {
   @UseInterceptors(activity(createIdentityActivity))
   @Put(":id")
   @UseGuards(
-    AuthGuard(),
+    AuthGuard(["IDENTITY", "APIKEY"]),
     ActionGuard("passport:identity:update", undefined, registerPolicyAttacher("IdentityFullAccess"))
   )
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
+    @Body(Schema.validate("http://spica.internal/passport/identity"))
     identity: Partial<Identity>
   ) {
     if (identity.password) {
@@ -424,7 +434,7 @@ export class IdentityController {
 
   @UseInterceptors(activity(createIdentityActivity))
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     // prevent to delete the last user
@@ -445,7 +455,7 @@ export class IdentityController {
 
   @UseInterceptors(activity(createIdentityActivity))
   @Put(":id/policy/:policyId")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:add"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:policy:add"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     const res = await this.identityService.findOneAndUpdate(
@@ -468,7 +478,7 @@ export class IdentityController {
 
   @UseInterceptors(activity(createIdentityActivity))
   @Delete(":id/policy/:policyId")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:remove"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:identity:policy:remove"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     const res = await this.identityService.findOneAndUpdate(

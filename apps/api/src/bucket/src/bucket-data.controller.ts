@@ -36,7 +36,8 @@ import {
 } from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport/guard";
+import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
 import {
   deleteDocument,
@@ -46,7 +47,8 @@ import {
   replaceDocument,
   authIdToString,
   isJSONFilter,
-  filterReviver
+  filterReviver,
+  decryptDocumentFields
 } from "@spica-server/bucket/common";
 import {expressionFilterParser} from "./filter";
 import {
@@ -56,8 +58,11 @@ import {
   createBucketDataActivity
 } from "@spica-server/bucket/common";
 import {applyPatch} from "@spica-server/core/patch";
-import {IAuthResolver, AUTH_RESOLVER} from "@spica-server/interface/bucket/common";
 import {BucketDocument} from "@spica-server/interface/bucket";
+import {
+  BUCKET_DATA_HASH_SECRET,
+  BUCKET_DATA_ENCRYPTION_SECRET
+} from "@spica-server/interface/bucket";
 
 /**
  * All APIs related to bucket documents.
@@ -69,16 +74,22 @@ export class BucketDataController {
     private bs: BucketService,
     private bds: BucketDataService,
     private validator: Validator,
-    @Inject(AUTH_RESOLVER) private authResolver: IAuthResolver,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
-    @Optional() @Inject() private activityService: ActivityService
+    @Optional() @Inject() private activityService: ActivityService,
+    @Optional() @Inject(BUCKET_DATA_HASH_SECRET) private hashSecret?: string,
+    @Optional() @Inject(BUCKET_DATA_ENCRYPTION_SECRET) private encryptionSecret?: string
   ) {}
 
   /**
    * Returns documents in the bucket.
    * If the documents have translations, `accept-language` header will be taken into account.
    * See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
+   *
+   * **ACL Behavior**:
+   * - USER strategy: ACL rules are applied based on bucket configuration
+   * - IDENTITY/APIKEY strategy: ACL rules are bypassed
+   *
    * @param bucketId Identifier of the bucket.
    * @param acceptedLanguage Documents that have translations are present in this language.
    * @param relation When true, relations in the documents will be replaced with the related document in the response.
@@ -92,10 +103,10 @@ export class BucketDataController {
    */
   @Get()
   @UseInterceptors(registerCache())
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", undefined, authIdToString))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", "bucket/:bucketId/data", authIdToString))
   async find(
+    @StrategyType() strategyType: ReqAuthStrategy,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @ResourceFilter() resourceFilter: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
@@ -121,7 +132,6 @@ export class BucketDataController {
     return findDocuments(
       schema,
       {
-        resourceFilter,
         relationPaths,
         language: acceptedLanguage,
         filter,
@@ -129,7 +139,8 @@ export class BucketDataController {
         skip,
         sort,
         req,
-        projectMap: []
+        projectMap: [],
+        applyAcl: strategyType === ReqAuthStrategy.USER
       },
       {
         localize,
@@ -138,14 +149,18 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        authResolver: this.authResolver
-      }
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+      },
+      this.hashSecret,
+      this.encryptionSecret
     ).catch(this.errorHandler);
   }
 
   @Get("profile")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:profile", "bucket/:bucketId/data"))
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("bucket:data:profile", "bucket/:bucketId/data")
+  )
   async findProfileEntries(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Query("filter", JSONPR(filterReviver)) filter?: object,
@@ -179,6 +194,11 @@ export class BucketDataController {
    * Return the document.
    * If the document has translations, `accept-language` header will be taken into account.
    * See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
+   *
+   * **ACL Behavior**:
+   * - USER strategy: ACL rules are applied based on bucket configuration
+   * - IDENTITY/APIKEY strategy: ACL rules are bypassed
+   *
    * @param bucketId Identifier of the bucket.
    * @param documentId Identifier of the document in the bucket.
    * @param acceptedLanguage Documents that have translations are present in this language.
@@ -187,8 +207,9 @@ export class BucketDataController {
    */
   @Get(":documentId")
   @UseInterceptors(registerCache())
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show", undefined, authIdToString))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show", "bucket/:bucketId/data", authIdToString))
   async findOne(
+    @StrategyType() strategyType: ReqAuthStrategy,
     @Headers("accept-language") acceptedLanguage: string,
     @Req() req: any,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -215,7 +236,8 @@ export class BucketDataController {
         limit: 1,
         documentId: documentId,
         req,
-        projectMap: []
+        projectMap: [],
+        applyAcl: strategyType === ReqAuthStrategy.USER
       },
       {
         localize
@@ -223,9 +245,10 @@ export class BucketDataController {
       {
         collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        authResolver: this.authResolver
-      }
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+      },
+      this.hashSecret,
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     return document;
@@ -233,6 +256,11 @@ export class BucketDataController {
 
   /**
    * Adds a new document into the bucket. Keep in mind that the document in the body has to match schema of the bucket.
+   *
+   * **ACL Behavior**:
+   * - USER strategy: ACL write rules are applied based on bucket configuration
+   * - IDENTITY/APIKEY strategy: ACL rules are bypassed
+   *
    * @param bucketId Identifier of the bucket.
    * @body
    * ##### When the bucket has no translated property body looks like below
@@ -259,6 +287,7 @@ export class BucketDataController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:create"))
   async insertOne(
+    @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Body(Schema.validate(req => req.params.bucketId)) rawDocument: BucketDocument
@@ -272,13 +301,14 @@ export class BucketDataController {
     const document = await insertDocument(
       schema,
       rawDocument,
-      {req: req},
+      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        deleteOne: documentId => this.deleteOne(req, bucketId, documentId),
-        authResolver: this.authResolver
-      }
+        deleteOne: documentId => this.deleteOne(strategyType, req, bucketId, documentId)
+      },
+      this.hashSecret,
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!document) {
@@ -302,6 +332,11 @@ export class BucketDataController {
 
   /**
    * Replaces a document in the bucket.
+   *
+   * **ACL Behavior**:
+   * - USER strategy: ACL write rules are applied based on bucket configuration
+   * - IDENTITY/APIKEY strategy: ACL rules are bypassed
+   *
    * @param bucketId Identifier of the bucket.
    * @param documentId Identifier of the document.
    * @body
@@ -316,8 +351,9 @@ export class BucketDataController {
    */
   @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Put(":documentId")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update", "bucket/:bucketId/data"))
   async replace(
+    @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
@@ -329,15 +365,18 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
+    const schemaResolver = (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)});
     const previousDocument = await replaceDocument(
       schema,
       {...document, _id: documentId},
-      {req: req},
+      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        authResolver: this.authResolver
-      }
+        schema: schemaResolver
+      },
+      undefined,
+      this.hashSecret,
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!previousDocument) {
@@ -362,12 +401,21 @@ export class BucketDataController {
       );
     }
 
+    if (this.encryptionSecret) {
+      return decryptDocumentFields(currentDocument, schema, this.encryptionSecret, schemaResolver);
+    }
+
     return currentDocument;
   }
 
   /**
    * Update a document in the bucket.
    * Body should be in format of JSON merge patch.
+   *
+   * **ACL Behavior**:
+   * - USER strategy: ACL write rules are applied based on bucket configuration
+   * - IDENTITY/APIKEY strategy: ACL rules are bypassed
+   *
    * @param bucketId Identifier of the bucket.
    * @param documentId Identifier of the document.
    * @body
@@ -380,8 +428,9 @@ export class BucketDataController {
    */
   @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Patch(":documentId")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update", "bucket/:bucketId/data"))
   async patch(
+    @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
@@ -409,13 +458,14 @@ export class BucketDataController {
       schema,
       {...patchedDocument, _id: documentId},
       patch,
-      {req: req},
+      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        authResolver: this.authResolver
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
-      {returnDocument: ReturnDocument.AFTER}
+      {returnDocument: ReturnDocument.AFTER},
+      this.hashSecret,
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!currentDocument) {
@@ -443,14 +493,20 @@ export class BucketDataController {
 
   /**
    * Removes a document from the bucket.
+   *
+   * **ACL Behavior**:
+   * - USER strategy: ACL write rules are applied based on bucket configuration
+   * - IDENTITY/APIKEY strategy: ACL rules are bypassed
+   *
    * @param bucketId Identifier of the bucket.
    * @param documentId Identifier of the document.
    */
   @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Delete(":documentId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete", "bucket/:bucketId/data"))
   async deleteOne(
+    @StrategyType() strategyType: ReqAuthStrategy,
     @Req() req,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
@@ -464,12 +520,13 @@ export class BucketDataController {
     const deletedDocument = await deleteDocument(
       schema,
       documentId,
-      {req: req},
+      {req: req, applyAcl: strategyType === ReqAuthStrategy.USER},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
-        authResolver: this.authResolver
-      }
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+      },
+      this.hashSecret,
+      this.encryptionSecret
     ).catch(this.errorHandler);
 
     if (!deletedDocument) {
@@ -500,7 +557,12 @@ export class BucketDataController {
 
     for (const [targetBucketId, targetDocIds] of dependents.entries()) {
       for (const targetDocId of targetDocIds) {
-        await this.deleteOne(req, new ObjectId(targetBucketId), new ObjectId(targetDocId));
+        await this.deleteOne(
+          strategyType,
+          req,
+          new ObjectId(targetBucketId),
+          new ObjectId(targetDocId)
+        );
 
         if (this.activityService) {
           const activities = createActivity(req, {body: []}, createBucketDataActivity);

@@ -21,7 +21,7 @@ import {
   Req
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
+import {BOOLEAN, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {
@@ -42,13 +42,17 @@ import {
 } from "./body";
 import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface/storage";
 import {StorageService} from "./storage.service";
+import {GuardService} from "@spica-server/passport/guard/services";
 
 /**
  * @name storage
  */
 @Controller("storage")
 export class StorageController {
-  constructor(private storage: StorageService) {}
+  constructor(
+    private storage: StorageService,
+    private guardService: GuardService
+  ) {}
 
   /**
    * @param limit The maximum amount documents that can be present in the response.
@@ -58,7 +62,7 @@ export class StorageController {
    Ascending `{"content.size": 1}`
    */
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("storage:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:index"))
   async find(
     @ResourceFilter() resourceFilter: object,
     @Query("filter", JSONP) filter?: object,
@@ -70,9 +74,12 @@ export class StorageController {
     return this.storage.getAll(resourceFilter, filter, paginate, limit, skip, sort);
   }
   @Get("browse")
-  @UseGuards(AuthGuard(), SimpleActionGuard("storage:browse"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), SimpleActionGuard("storage:browse", "storage"))
   async browse(
-    @ResourceFilter() resourceFilter: object,
+    @ResourceFilter({
+      pure: true
+    })
+    resourceFilter: object,
     @Query("path") path: string,
     @Query("filter", JSONP) filter?: object,
     @Query("limit", NUMBER) limit?: number,
@@ -82,65 +89,9 @@ export class StorageController {
     return this.storage.browse(resourceFilter, path, filter, limit, skip, sort);
   }
 
-  /**
-   * Returns content of the object along with http caching headers.
-   * When `if-none-match` header is present and matches the objects checksum, it will end the response with status code 304
-   * for futher information check: https://en.wikipedia.org/wiki/HTTP_ETag
-   * @param id Identifier of the object
-   * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
-   */
-  @Get(":id/view")
-  @UseGuards(AuthGuard(), ActionGuard("storage:show", "storage/:id"))
-  async view(
-    @Res() res,
-    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
-    @Headers("if-none-match") ifNoneMatch?: string
-  ) {
-    let object;
-    if (idOrName instanceof ObjectId) {
-      object = await this.storage.get(idOrName);
-    } else {
-      object = await this.storage.getByName(idOrName);
-    }
-    if (!object) {
-      throw new NotFoundException("Could not find the object.");
-    }
-    const eTag = etag(object.content.data);
-    if (eTag === ifNoneMatch) {
-      return res.status(HttpStatus.NOT_MODIFIED).end();
-    }
-    res.header("Content-type", object.content.type);
-    res.header("ETag", eTag);
-    res.header("Cache-control", "public, max-age=3600, must-revalidate");
-    res.end(object.content.data);
-  }
-
-  /**
-   * Returns metadata of the object size, content-type and url.
-   * @param id Identifier of the object
-   */
-  @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("storage:show"))
-  async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
-    let object;
-    if (idOrName instanceof ObjectId) {
-      object = await this.storage.get(idOrName);
-    } else {
-      object = await this.storage.getByName(idOrName);
-    }
-    if (!object) {
-      throw new NotFoundException("Could not find the object.");
-    }
-
-    object.url = await this.storage.getUrl(object.name);
-
-    delete object.content.data;
-    return object;
-  }
-
   @UseInterceptors(activity(createStorageActivity))
   @Patch(":id")
-  @UseGuards(AuthGuard(), ActionGuard("storage:update", "storage/:id"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update", "storage/:id"))
   async patch(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(
@@ -181,7 +132,7 @@ export class StorageController {
     activity(createStorageActivity)
   )
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("storage:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:update"))
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/storage/body/single"))
@@ -221,7 +172,7 @@ export class StorageController {
     activity(createStorageActivity)
   )
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:create"))
   async insertMany(@Body(Schema.validate("http://spica.internal/storage/body")) body: MixedBody) {
     const converter = getPostBodyConverter(body);
     const objects = converter.convert(body);
@@ -237,21 +188,60 @@ export class StorageController {
 
   /**
    * Removes the object from the storage along with its metadata
-   * @param id Identifier of the object
+   * Can delete by object ID or by object name
+   * @param idOrName Identifier (ObjectId) or name of the object to delete
    */
   @UseInterceptors(activity(createStorageActivity))
-  @Delete(":id")
+  @Delete(":idOrName")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
-  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.storage.delete(id);
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:delete"))
+  async deleteOne(
+    @Param("idOrName", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string
+  ) {
+    return this.storage.delete(idOrName);
+  }
+
+  /**
+   * Removes multiple storage objects in a single operation.
+   * Accepts both ObjectIds and object names as elements.
+   * Validates user has delete permissions for ALL objects before deleting any.
+   * If user lacks permission for even one object, the entire operation is cancelled.
+   * @body Array of object IDs (ObjectId) or names (strings) to delete
+   * @example
+   * // Delete by IDs
+   * ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+   * // Delete by names
+   * ["file1.txt", "file2.pdf"]
+   * // Mixed
+   * ["507f1f77bcf86cd799439011", "file2.pdf"]
+   */
+  @UseInterceptors(JsonBodyParser(), activity(createStorageActivity))
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  async deleteMany(
+    @Body(
+      DEFAULT([]),
+      ARRAY((value: string) => OR(v => ObjectId.isValid(v), OBJECT_ID).transform(value, undefined))
+    )
+    elements: (ObjectId | string)[],
+    @Req() req
+  ) {
+    const resolvedIds = await this.resolveIdsFromElements(elements);
+
+    await this.validateDeletePermissions(
+      resolvedIds.map(id => id.toString()),
+      req
+    );
+
+    await this.storage.deleteManyByIds(resolvedIds);
   }
 
   /**
    * Creates and returns new upload resource
    */
   @Post("resumable")
-  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:create"))
   async getUploadUrl(@Req() req, @Res() res) {
     await this.storage.handleResumableUpload(req, res);
   }
@@ -260,8 +250,116 @@ export class StorageController {
    * Accepts all resumable uploads
    */
   @All("resumable/:id")
-  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:create"))
   async handleUpload(@Req() req, @Res() res) {
     await this.storage.handleResumableUpload(req, res);
+  }
+
+  /**
+   * Returns content of the object along with http caching headers.
+   * When `if-none-match` header is present and matches the objects checksum, it will end the response with status code 304
+   * for futher information check: https://en.wikipedia.org/wiki/HTTP_ETag
+   * @param id Identifier of the object
+   * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
+   */
+  @Get(":id(*)/view")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
+  async view(
+    @Res() res,
+    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
+    @Headers("if-none-match") ifNoneMatch?: string
+  ) {
+    let object;
+    if (idOrName instanceof ObjectId) {
+      object = await this.storage.get(idOrName);
+    } else {
+      object = await this.storage.getByName(idOrName);
+    }
+    if (!object) {
+      throw new NotFoundException("Could not find the object.");
+    }
+    const eTag = etag(object.content.data);
+    if (eTag === ifNoneMatch) {
+      return res.status(HttpStatus.NOT_MODIFIED).end();
+    }
+    res.header("Content-type", object.content.type);
+    res.header("ETag", eTag);
+    res.header("Cache-control", "public, max-age=3600, must-revalidate");
+    res.end(object.content.data);
+  }
+
+  /**
+   * Returns metadata of the object size, content-type and url.
+   * @param id Identifier of the object
+   */
+  @Get(":id(*)")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
+  async findOne(@Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string) {
+    let object;
+    if (idOrName instanceof ObjectId) {
+      object = await this.storage.get(idOrName);
+    } else {
+      object = await this.storage.getByName(idOrName);
+    }
+    if (!object) {
+      throw new NotFoundException("Could not find the object.");
+    }
+
+    object.url = await this.storage.getUrl(object.name);
+
+    delete object.content.data;
+    return object;
+  }
+
+  private async validateDeletePermissions(ids: string[], req: any): Promise<void> {
+    let promises = [];
+    for (const id of ids) {
+      const preparedRequest = {
+        ...req,
+        route: {path: "/storage/:id"},
+        params: {id},
+        user: req.user
+      };
+
+      const promise = this.guardService.checkAuthorization({
+        request: preparedRequest,
+        response: {},
+        actions: ["storage:delete"],
+        options: {resourceFilter: false}
+      });
+      promises.push(promise);
+    }
+    await Promise.all(promises);
+  }
+
+  private async resolveIdsFromElements(elements: (ObjectId | string)[]): Promise<ObjectId[]> {
+    const names: string[] = [];
+    for (const element of elements) {
+      if (!(element instanceof ObjectId)) {
+        names.push(element as string);
+      }
+    }
+
+    if (names.length === 0) {
+      return elements as ObjectId[];
+    }
+
+    const objects = await this.storage.find({name: {$in: names}});
+    const nameToIdMap = new Map<string, ObjectId>();
+
+    for (const object of objects) {
+      nameToIdMap.set(object.name, object._id as ObjectId);
+    }
+
+    return elements.map(element => {
+      if (element instanceof ObjectId) {
+        return element;
+      }
+      const id = nameToIdMap.get(element as string);
+      if (!id) {
+        throw new NotFoundException(`Storage object "${element}" could not be found`);
+      }
+      return id;
+    });
   }
 }

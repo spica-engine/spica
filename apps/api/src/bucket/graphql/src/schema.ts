@@ -26,7 +26,7 @@ function fixBucketProperties(bucket: Bucket, baseName: string, errors: SchemaWar
       type: "string",
       title: "default",
       description: "This field was created automatically because there was no other.",
-      options: {position: "bottom"}
+      options: {}
     }
   };
 

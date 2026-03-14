@@ -11,4 +11,6 @@ export type ExtendedJSONSchema7Type =
   | "relation"
   | "date"
   | "location"
-  | "json";
+  | "json"
+  | "hash"
+  | "encrypted";

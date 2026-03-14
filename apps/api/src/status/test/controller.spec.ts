@@ -15,6 +15,8 @@ import {StorageModule} from "@spica-server/storage";
 import os from "os";
 import {Binary} from "bson";
 import {WsAdapter} from "@spica-server/core/websocket";
+import {ConfigModule} from "@spica-server/config/src/config.module";
+import {SecretModule} from "@spica-server/secret/src/module";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50051";
 
@@ -125,7 +127,7 @@ describe("Status", () => {
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [
-          DatabaseTestingModule.standalone(),
+          DatabaseTestingModule.replicaSet(),
           PolicyModule.forRoot({realtime: false}),
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
@@ -144,7 +146,8 @@ describe("Status", () => {
             refreshTokenExpiresIn: 1000,
             passwordHistoryLimit: 0,
             identityRealtime: false
-          })
+          }),
+          ConfigModule.forRoot()
         ]
       }).compile();
       app = module.createNestApplication();
@@ -194,6 +197,10 @@ describe("Status", () => {
           CoreTestingModule,
           PassportTestingModule.initialize(),
           SchemaModule.forRoot({formats: [OBJECT_ID]}),
+          SecretModule.forRoot({
+            realtime: false,
+            encryptionSecret: "test-encryption-secret-32chars!!"
+          }),
           FunctionModule.forRoot({
             invocationLogs: false,
             path: os.tmpdir(),
@@ -310,7 +317,7 @@ describe("Status", () => {
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [
-          DatabaseTestingModule.standalone(),
+          DatabaseTestingModule.replicaSet(),
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),

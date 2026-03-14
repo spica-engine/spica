@@ -1,9 +1,22 @@
 import {ObjectId} from "@spica-server/database";
 import {IPipelineBuilder} from "@spica-server/interface/database";
+import {
+  FilterReplaceManager,
+  FilterReplacer,
+  replaceFilterDates,
+  replaceFilterObjectIds
+} from "@spica-server/filter";
 
 export class PipelineBuilder implements IPipelineBuilder {
   protected pipeline: object[] = [];
   protected isFilterApplied = false;
+
+  constructor(
+    private readonly filterReplacers: FilterReplacer[] = [
+      replaceFilterObjectIds,
+      replaceFilterDates
+    ]
+  ) {}
 
   attachToPipeline(condition: unknown, ...attachedObject: object[]) {
     if (!!condition) {
@@ -24,6 +37,12 @@ export class PipelineBuilder implements IPipelineBuilder {
 
   async filterByUserRequest(filter: object) {
     this.isFilterApplied = this.isValidObject(filter);
+
+    if (this.isFilterApplied) {
+      const filterReplacer = new FilterReplaceManager(this.filterReplacers);
+      filter = await filterReplacer.replace(filter);
+    }
+
     this.attachToPipeline(this.isFilterApplied, {$match: filter});
     return Promise.resolve(this);
   }
@@ -33,7 +52,7 @@ export class PipelineBuilder implements IPipelineBuilder {
     return this;
   }
 
-  private isValidObject(obj) {
+  protected isValidObject(obj) {
     return typeof obj == "object" && !Array.isArray(obj) && !!Object.keys(obj).length;
   }
 

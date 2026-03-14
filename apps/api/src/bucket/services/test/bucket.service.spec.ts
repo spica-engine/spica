@@ -23,7 +23,11 @@ describe("Bucket Service", () => {
       bs = module.get(BucketService);
       bds = module.get(BucketDataService);
 
-      await bs.db.createCollection("buckets");
+      await bs.db
+        .createCollection("buckets", {
+          changeStreamPreAndPostImages: {enabled: true}
+        })
+        .catch(console.warn);
     });
 
     afterEach(async () => {

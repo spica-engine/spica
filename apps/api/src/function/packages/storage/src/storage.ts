@@ -37,7 +37,7 @@ export async function insert(
   onUploadProgress?: (progress: ProgressEvent) => void,
   headers: object = {}
 ) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
   const postBody = await preparePostBody([object]);
 
   return service
@@ -53,7 +53,7 @@ export async function insertMany(
   onUploadProgress?: (progress: ProgressEvent) => void,
   headers: object = {}
 ): Promise<StorageObject[]> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   const postBody = await preparePostBody(objects);
 
@@ -84,7 +84,7 @@ export function insertResumable(
 }
 
 export function get(id: string, headers?: object) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.get<StorageObject>(`storage/${id}`, {headers});
 }
@@ -99,7 +99,7 @@ export function download(
     onDownloadProgress?: (progress: ProgressEvent) => void;
   } = {}
 ) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.get(`storage/${id}/view`, {
     headers: options.headers,
@@ -138,7 +138,7 @@ export function getAll(
   },
   headers?: object
 ): Promise<IndexResult<StorageObject> | StorageObject[]> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.get<IndexResult<StorageObject> | StorageObject[]>(`storage`, {
     params: queryParams,
@@ -152,7 +152,7 @@ export async function update(
   onUploadProgress?: (progress: ProgressEvent) => void,
   headers: object = {}
 ) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   const putBody = await preparePutBody(object);
 
@@ -163,7 +163,7 @@ export async function update(
 }
 
 export async function updateMeta(id: string, meta: {name: string}, headers: object = {}) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.patch<StorageObject>(`storage/${id}`, meta, {
     headers: {
@@ -174,13 +174,13 @@ export async function updateMeta(id: string, meta: {name: string}, headers: obje
 }
 
 export function remove(id: string, headers?: object) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.delete(`storage/${id}`, {headers});
 }
 
 export function removeMany(ids: string[], headers?: object) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   const batchReqs = Batch.prepareRemoveRequest(ids, "storage", service.getAuthorization(), headers);
 

@@ -301,12 +301,37 @@ export class Emitter<T extends {_id: ObjectId}> {
   }
 
   private fetchMoreItemToFillTheCursor() {
+    const pipeline = [];
+
+    if (this.options.filter) {
+      pipeline.push({
+        $match: this.options.filter
+      });
+    }
+
+    if (this.options.sort) {
+      pipeline.push({
+        $sort: this.options.sort
+      });
+    }
+
+    const skipCount = (this.options.skip || 0) + this.ids.size;
+    pipeline.push({
+      $skip: skipCount
+    });
+
+    pipeline.push({
+      $limit: this.options.limit - this.ids.size
+    });
+
     this.collection
-      .find<T>(this.options.filter)
-      .skip(this.options.skip ? this.options.skip + this.ids.size : this.ids.size)
-      .limit(this.options.limit - this.ids.size)
+      .aggregate<T>(pipeline)
       .next()
-      .then(data => this.next({kind: ChunkKind.Initial, document: data}))
+      .then(data => {
+        if (data) {
+          this.next({kind: ChunkKind.Initial, document: data});
+        }
+      })
       .catch(e => this.error(e));
   }
 

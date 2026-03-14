@@ -6,9 +6,7 @@ import {jest} from "@jest/globals";
 class PartialPreferenceService {
   private defaults = new Map<string, any>();
 
-  constructor() {
-    this.defaults.set("passport", {identity: {attributes: {}}});
-  }
+  constructor() {}
 
   default = jest.fn<typeof PreferenceService.prototype.default>((preference: any) => {
     this.defaults.set(preference.scope, preference);
@@ -17,7 +15,7 @@ class PartialPreferenceService {
     return Promise.resolve(this.defaults.get(scope));
   });
   update = jest.fn();
-  watch = jest.fn(
+  watchPreference = jest.fn(
     (
       scope: string,
       {propagateOnStart}: {propagateOnStart: boolean} = {propagateOnStart: false}

@@ -39,7 +39,6 @@ interface PropertyOptions {
   options: {
     translate?: boolean;
     history?: boolean;
-    position: "left" | "right" | "bottom";
   };
   acl?: string;
 }
@@ -71,4 +70,6 @@ export interface BucketOptions {
   cacheTtl?: number;
   bucketDataLimit?: number;
   graphql: boolean;
+  hashSecret?: string;
+  encryptionSecret?: string;
 }

@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: application service
+templates:
+  - templates/applicationsrv.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.masterKey: test-master-key
+  application.publicHost: https://test.example.com
+
+tests:
+  - it: should render a single Service
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+
+  - it: should be named after the release
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-application
+
+  - it: should be of type NodePort
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+
+  - it: should expose port 80 for the web container
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: web
+            port: 80
+            targetPort: 80
+
+  - it: should expose port 4300 for the api container
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: api
+            port: 4300
+            targetPort: 4300
+
+  - it: should select the correct application pods via labels
+    asserts:
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: release-name-spica
+      - equal:
+          path: spec.selector["app.kubernetes.io/component"]
+          value: application
+
+  - it: should carry standard Kubernetes labels
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: service
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: helm

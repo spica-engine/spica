@@ -23,8 +23,8 @@ rs.initiate(
             _id: 2, 
             host : "localhost:27019",
             priority : 0,
-            slaveDelay: 5,
-            tags: { slaveDelay: "true" }
+            secondaryDelaySecs: 5,
+            tags: { delayed: "true" }
          }
       ]
    }

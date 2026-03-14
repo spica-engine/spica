@@ -1,8 +1,9 @@
 import {ObjectId} from "@spica-server/database";
 
 export interface PreActivity {
-  identifier: string | ObjectId;
   action: Action;
+  identifier?: string | ObjectId;
+  username?: string | ObjectId;
 }
 
 export interface ModuleActivity extends PreActivity {

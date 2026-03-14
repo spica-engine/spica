@@ -1,4 +1,4 @@
-import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
+import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
@@ -20,8 +20,10 @@ import {
   SCHEMA,
   SchemaWithName,
   EnvRelation,
-  FunctionWithContent
+  FunctionWithContent,
+  SecretRelation
 } from "@spica-server/interface/function";
+import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface/secret";
 
 import {createTargetChanges} from "./change";
 
@@ -38,6 +40,8 @@ import chokidar from "chokidar";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(FunctionEngine.name);
+
   readonly schemas = new Map<string, unknown>([
     ["http", HttpSchema],
     ["schedule", ScheduleSchema],
@@ -48,6 +52,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   readonly runSchemas = new Map<string, JSONSchema7>();
   private cmdSubs: {unsubscribe: () => void};
   private watchEnvSubs: {unsubscribe: () => void};
+  private watchSecretSubs: {unsubscribe: () => void};
 
   constructor(
     private fs: FunctionService,
@@ -56,7 +61,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Optional() private commander: ClassCommander,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
-    @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
+    @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug,
+    @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -72,8 +78,21 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
             : CRUD.environment.reload(this.fs, fn._id, this)
         ),
       error: err =>
-        console.error(
+        this.logger.error(
           `Error received on listening functions for environment variable changes. Reason: ${JSON.stringify(err)}`
+        )
+    });
+
+    this.watchSecretSubs = this.fs.watchFunctionsForSecretChanges().subscribe({
+      next: ({fns, secretId, operationType}) =>
+        fns.map(fn =>
+          operationType == "delete"
+            ? CRUD.secret.eject(this.fs, fn._id, this, secretId)
+            : CRUD.secret.reload(this.fs, fn._id, this)
+        ),
+      error: err =>
+        this.logger.error(
+          `Error received on listening functions for secret changes. Reason: ${JSON.stringify(err)}`
         )
     });
   }
@@ -96,10 +115,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private updateTriggers(kind: ChangeKind) {
-    return CRUD.find(this.fs, this, {resolveEnvRelations: EnvRelation.Resolved}).then(fns => {
+    return CRUD.findForRuntime(this.fs).then(fns => {
       const targetChanges: TargetChange[] = [];
       for (const fn of fns) {
-        targetChanges.push(...createTargetChanges(fn, kind));
+        targetChanges.push(...createTargetChanges(fn, kind, this.secretDecryptor));
       }
       this.categorizeChanges(targetChanges);
     });
@@ -110,6 +129,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       this.cmdSubs.unsubscribe();
     }
     this.watchEnvSubs.unsubscribe();
+    if (this.watchSecretSubs) {
+      this.watchSecretSubs.unsubscribe();
+    }
     return this.unregisterTriggers();
   }
 
@@ -134,7 +156,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private getFunctionRoot(fn: Function) {
-    return path.join(this.options.root, fn._id.toString());
+    return path.join(this.options.root, fn.name);
   }
 
   getPackages(fn: Function): Promise<Package[]> {
@@ -155,13 +177,18 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
-      name: fn.name.replace(" ", "-").toLowerCase(),
+      name: fn.name,
       description: fn.description || "No description.",
       version: "0.0.1",
       private: true,
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED",
-      main: path.join(".", this.options.outDir, functionLanguage.description.entrypoints.runtime)
+      main: path.join(
+        ".",
+        this.options.outDir,
+        fn.name,
+        functionLanguage.description.entrypoints.runtime
+      )
     };
 
     return fs.promises.writeFile(
@@ -170,15 +197,31 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  createSchema(fn: Function) {
+    const functionRoot = this.getFunctionRoot(fn);
+    return fs.promises.mkdir(functionRoot, {recursive: true});
+  }
+
+  createDependency(fn: Function, packageJson) {
+    const functionRoot = this.getFunctionRoot(fn);
+    return fs.promises.writeFile(
+      path.join(functionRoot, "package.json"),
+      JSON.stringify(packageJson, null, 2)
+    );
+  }
+
   deleteFunction(fn: Function) {
-    return rimraf(this.getFunctionRoot(fn));
+    const functionRoot = this.getFunctionRoot(fn);
+    const buildDir = path.join(this.options.root, this.options.outDir, fn.name);
+    return Promise.all([rimraf(functionRoot), rimraf(buildDir)]);
   }
 
   compile(fn: Function) {
     const language = this.getFunctionLanguage(fn);
+    const outDirRelative = path.join("..", this.options.outDir, fn.name);
     return language.compile({
       cwd: this.getFunctionRoot(fn),
-      outDir: this.options.outDir,
+      outDir: outDirRelative,
       entrypoints: language.description.entrypoints
     });
   }
@@ -189,9 +232,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.writeFile(filePath, index);
   }
 
-  read(fn: Function): Promise<string> {
-    const filePath = this.getFunctionBuildEntrypoint(fn);
+  private getFilePath(fn: Function, scope: "index" | "dependency" | "tsconfig"): string {
+    switch (scope) {
+      case "dependency":
+        return path.join(this.getFunctionRoot(fn), "package.json");
+      case "tsconfig":
+        return path.join(this.getFunctionRoot(fn), "tsconfig.json");
+      case "index":
+        return this.getFunctionBuildEntrypoint(fn);
+    }
+  }
 
+  read(fn: Function, scope: "index" | "dependency" | "tsconfig"): Promise<string> {
+    let filePath = this.getFilePath(fn, scope);
     return fs.promises
       .readFile(filePath)
       .then(b => b.toString())
@@ -203,7 +256,21 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
   }
 
-  watch(scope: "index" | "dependency"): Observable<FunctionWithContent> {
+  deleteIndex(fn: Function): Promise<void> {
+    const filePath = this.getFunctionBuildEntrypoint(fn);
+    return fs.promises.rm(filePath);
+  }
+
+  deleteDependency(fn: Function): Promise<void> {
+    const filePath = path.join(this.getFunctionRoot(fn), "package.json");
+    return fs.promises.rm(filePath);
+  }
+
+  watch(scope: "index" | "dependency" | "tsconfig"): Observable<{
+    fn: FunctionWithContent;
+    type: "create" | "update" | "delete";
+    event_id: string;
+  }> {
     let files = [];
 
     switch (scope) {
@@ -213,40 +280,69 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       case "dependency":
         files = ["package.json"];
         break;
+      case "tsconfig":
+        files = ["tsconfig.json"];
+        break;
     }
-
     const moduleDir = this.options.root;
     fs.mkdirSync(moduleDir, {recursive: true});
 
-    return new Observable<FunctionWithContent>(observer => {
+    return new Observable(observer => {
       const watcher = chokidar.watch(moduleDir, {
         ignored: /(^|[/\\])\../,
         persistent: true,
-        depth: 2
+        depth: 2,
+        awaitWriteFinish: true
       });
 
-      const handleFileEvent = async (path: string) => {
-        const relativePath = path.slice(moduleDir.length + 1);
+      const handleFileEvent = async (filePath: string, type: "create" | "update" | "delete") => {
+        const relativePath = filePath.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
 
         const isCorrectDepth = parts.length == 2;
         const isTrackedFile = files.some(file => parts[1] == file);
         if (!isCorrectDepth || !isTrackedFile) return;
 
-        const _id = parts[0];
+        const dirName = parts[0];
 
-        const fn = await CRUD.findOne(this.fs, new ObjectId(_id), {
-          resolveEnvRelations: EnvRelation.NotResolved
-        });
+        let eventId: string;
+        const now = new Date(new Date().setMilliseconds(0)).getTime();
+        if (type === "delete") {
+          eventId = `unlink-${now}`;
+        } else {
+          try {
+            const stats = await fs.promises.stat(filePath);
+            eventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
+          } catch {
+            eventId = `stat-err-${now}`;
+          }
+        }
+
+        let contentPromise: Promise<string> | null;
+        let content: string | null;
+        let fn: Function | null;
+        if (type == "delete") {
+          contentPromise = Promise.resolve(null);
+        } else {
+          contentPromise = fs.promises.readFile(filePath).then(b => b.toString());
+        }
+
+        await Promise.all([
+          CRUD.findByName(this.fs, dirName, {
+            resolveEnvRelations: EnvRelation.NotResolved,
+            resolveSecretRelations: SecretRelation.NotResolved
+          }).then(r => (fn = r)),
+          contentPromise.then(c => (content = c))
+        ]);
+
         if (!fn) return;
 
-        const content = await fs.promises.readFile(path).then(b => b.toString());
-
-        observer.next({...fn, content});
+        observer.next({fn: {...fn, content}, type, event_id: eventId});
       };
 
-      watcher.on("change", path => handleFileEvent(path));
-      watcher.on("add", path => handleFileEvent(path));
+      watcher.on("change", path => handleFileEvent(path, "update"));
+      watcher.on("unlink", path => handleFileEvent(path, "delete"));
+      watcher.on("add", path => handleFileEvent(path, "create"));
 
       watcher.on("error", err => observer.error(err));
 
@@ -276,7 +372,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     if (enqueuer) {
       const target = new event.Target({
         id: change.target.id,
-        cwd: path.join(this.options.root, change.target.id),
+        cwd: path.join(this.options.root, change.target.name),
         handler: change.target.handler,
         context: new event.SchedulingContext({
           env: Object.keys(change.target.context.env).reduce((envs, key) => {
@@ -293,7 +389,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
       enqueuer.subscribe(target, change.options);
     } else {
-      console.warn(`Couldn't find enqueuer ${change.type}.`);
+      this.logger.warn(`Couldn't find enqueuer ${change.type}.`);
     }
   }
 
@@ -306,7 +402,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     for (const enqueuer of this.scheduler.enqueuers) {
       const target = new event.Target({
         id: change.target.id,
-        cwd: path.join(this.options.root, change.target.id),
+        cwd: path.join(this.options.root, change.target.name),
         handler: change.target.handler
       });
       enqueuer.unsubscribe(target);
@@ -319,7 +415,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   getFunctionBuildEntrypoint(fn: Function) {
     const language = this.getFunctionLanguage(fn);
-    return path.join(this.getFunctionRoot(fn), language.description.entrypoints.build);
+    return path.join(this.options.root, fn.name, language.description.entrypoints.build);
   }
 }
 

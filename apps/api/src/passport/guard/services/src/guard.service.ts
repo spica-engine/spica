@@ -22,18 +22,20 @@ export class GuardService implements IGuardService {
     return from(result).toPromise();
   }
 
-  checkAction({
+  checkAuthorization({
     request,
     response,
     actions,
-    options
+    options,
+    format
   }: {
     request: any;
     response: any;
     actions: string | string[];
     options?: {resourceFilter: boolean};
+    format?: string;
   }): Promise<boolean> {
-    const guard = ActionGuard(actions, undefined, undefined, options);
+    const guard = ActionGuard(actions, format, undefined, options);
     return this.wrapResult(
       new guard(this.resolver).canActivate({
         switchToHttp: () => ({
@@ -52,8 +54,16 @@ export class GuardService implements IGuardService {
     );
   }
 
-  checkAuthorization({request, response, type}: {request: any; response: any; type?: string}) {
-    const guard = AuthGuard(type);
+  checkAuthentication({
+    request,
+    response,
+    allowedStrategies
+  }: {
+    request: any;
+    response: any;
+    allowedStrategies?: string[];
+  }) {
+    const guard = AuthGuard(allowedStrategies);
     return this.wrapResult(
       new guard(this.options).canActivate({
         switchToHttp: () => ({

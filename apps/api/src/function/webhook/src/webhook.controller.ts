@@ -34,7 +34,7 @@ export class WebhookController {
   ) {}
 
   @Get("collections")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
   collections() {
     return this.database.collections().then(collections => {
       const definitions: {id: string; slug: string}[] = [];
@@ -61,7 +61,7 @@ export class WebhookController {
   }
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("webhook:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:index"))
   find(
     @ResourceFilter() resourceFilter: object,
     @Query("limit", DEFAULT(10), NUMBER) limit: number,
@@ -86,13 +86,13 @@ export class WebhookController {
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("webhook:show"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.webhookService.findOne({_id: id});
   }
 
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("webhook:create"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:create"))
   insertOne(@Body(Schema.validate("http://spica.internal/webhook")) hook: Webhook) {
     try {
       this.invoker.preCompile(hook.body);
@@ -103,7 +103,7 @@ export class WebhookController {
   }
 
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("webhook:update"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:update"))
   async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/webhook")) hook: Webhook
@@ -123,7 +123,7 @@ export class WebhookController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("webhook:delete"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("webhook:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     const deletedCount = await this.webhookService.deleteOne({_id: id});
