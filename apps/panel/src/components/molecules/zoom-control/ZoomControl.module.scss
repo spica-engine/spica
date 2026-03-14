@@ -1,0 +1,38 @@
+.controls {
+  position: fixed;
+  top: 8%;
+  right: 2%;
+  background: var(--color-default);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--box-shadow);
+  display: flex;
+  align-items: center;
+  gap: var(--padding-sm-plus);
+  padding: var(--padding-sm-plus) var(--padding-md);
+  z-index: 1000;
+  pointer-events: auto;
+  max-width: calc(100% - 2 * var(--padding-xl));
+
+  .controlBtn {
+    border: none;
+    border-radius: var(--border-radius-sm);
+    padding: var(--padding-sm) var(--padding-md);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    min-width: 35px;
+    white-space: nowrap;
+    pointer-events: auto;
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .zoomLevel {
+    display: inline-block;
+    font-weight: bold;
+    min-width: 50px;
+  }
+}

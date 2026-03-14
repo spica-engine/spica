@@ -1,0 +1,15 @@
+.quickLinks {
+  padding: var(--padding-lg);
+  background-color: var(--color-menu-background);
+  border-radius: var(--border-radius-md);
+  .title {
+    font-size: var(--font-size-lg);
+    font-weight: 400;
+    margin: 0;
+  }
+  .links {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    cursor: pointer;
+  }
+}

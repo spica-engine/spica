@@ -37,14 +37,8 @@ const yargsInstance = yargs(process.argv.slice(2)) as any;
 const args = yargsInstance
   /* TLS Options */
   .options({
-    "cert-file": {
-      string: true,
-      description: "Path to the client server TLS cert file."
-    },
-    "key-file": {
-      string: true,
-      description: "Path to the client server TLS key file."
-    }
+    "cert-file": {string: true, description: "Path to the client server TLS cert file."},
+    "key-file": {string: true, description: "Path to the client server TLS key file."}
   })
   /* Proxy options */
   .options({
@@ -68,14 +62,8 @@ const args = yargsInstance
   })
   /* Database Options */
   .options({
-    "database-uri": {
-      string: true,
-      description: "MongoDB connection url."
-    },
-    "database-name": {
-      string: true,
-      description: "Name of the database."
-    },
+    "database-uri": {string: true, description: "MongoDB connection url."},
+    "database-name": {string: true, description: "Name of the database."},
     "database-replica-set": {
       string: true,
       alias: ["replica-set"],
@@ -373,42 +361,49 @@ const args = yargsInstance
       string: true,
       description: "Twilio SMS service Account SID."
     },
-    "twilio-sms-service-auth-token": {
-      string: true,
-      description: "Twilio SMS service Auth Token."
-    },
-    "twilio-sms-service-from-number": {
-      string: true,
-      description: "Twilio SMS service From Number."
-    }
+    "twilio-sms-service-auth-token": {string: true, description: "Twilio SMS service Auth Token."},
+    "twilio-sms-service-from-number": {string: true, description: "Twilio SMS service From Number."}
   })
   /* Mailer Options */
   .options({
-    "mailer-host": {
-      string: true,
-      description: "SMTP server host (e.g. smtp.example.com)"
-    },
-    "mailer-port": {
-      number: true,
-      description: "SMTP server port (e.g. 587)"
-    },
+    "mailer-host": {string: true, description: "SMTP server host (e.g. smtp.example.com)"},
+    "mailer-port": {number: true, description: "SMTP server port (e.g. 587)"},
     "mailer-secure": {
       boolean: true,
       description: "Use secure connection (TLS/SSL)",
       default: false
     },
-    "mailer-user": {
+    "mailer-user": {string: true, description: "SMTP auth user"},
+    "mailer-pass": {string: true, description: "SMTP auth password"},
+    "mailer-from": {string: true, description: "Default From address for outgoing mails"}
+  })
+  /* Sms Sender Options */
+  .options({
+    "sms-sender-strategy": {
       string: true,
-      description: "SMTP auth user"
+      description: "SMS service provider strategy. Default is twilio.",
+      default: "twilio",
+      choices: ["twilio"]
     },
-    "mailer-pass": {
+    "twilio-sms-service-account-sid": {
       string: true,
-      description: "SMTP auth password"
+      description: "Twilio SMS service Account SID."
     },
-    "mailer-from": {
-      string: true,
-      description: "Default From address for outgoing mails"
-    }
+    "twilio-sms-service-auth-token": {string: true, description: "Twilio SMS service Auth Token."},
+    "twilio-sms-service-from-number": {string: true, description: "Twilio SMS service From Number."}
+  })
+  /* Mailer Options */
+  .options({
+    "mailer-host": {string: true, description: "SMTP server host (e.g. smtp.example.com)"},
+    "mailer-port": {number: true, description: "SMTP server port (e.g. 587)"},
+    "mailer-secure": {
+      boolean: true,
+      description: "Use secure connection (TLS/SSL)",
+      default: false
+    },
+    "mailer-user": {string: true, description: "SMTP auth user"},
+    "mailer-pass": {string: true, description: "SMTP auth password"},
+    "mailer-from": {string: true, description: "Default From address for outgoing mails"}
   })
   /* Status Options */
   .options({
@@ -461,14 +456,8 @@ const args = yargsInstance
   })
   /* Additional Header Options */
   .option({
-    "cache-control-header": {
-      string: true,
-      description: "Cache-Control"
-    },
-    "x-frame-options-header": {
-      string: true,
-      description: "X-Frame-Option"
-    }
+    "cache-control-header": {string: true, description: "Cache-Control"},
+    "x-frame-options-header": {string: true, description: "X-Frame-Option"}
   })
   /* Common Options */
   .option("payload-size-limit", {
@@ -481,12 +470,7 @@ const args = yargsInstance
     description: "Seconds that need to be passed to expire logs. Default value is one month.",
     default: 30 * 24 * 60 * 60
   })
-  .option("port", {
-    number: true,
-    alias: ["p"],
-    default: 80,
-    description: "A port to listen on."
-  })
+  .option("port", {number: true, alias: ["p"], default: 80, description: "A port to listen on."})
   .option("persistent-path", {
     string: true,
     default: "/tmp",
@@ -680,16 +664,12 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 
     return true;
   })
-  .parserConfiguration({
-    "duplicate-arguments-array": false
-  })
+  .parserConfiguration({"duplicate-arguments-array": false})
   .env()
   .parse() as any;
 
 const modules = [
-  BatchModule.forRoot({
-    port: args["port"]
-  }),
+  BatchModule.forRoot({port: args["port"]}),
   DashboardModule.forRoot({realtime: true}),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),
@@ -700,24 +680,14 @@ const modules = [
     appName: "spica",
     readPreference: args["database-read-preference"]
   }),
-  EnvVarModule.forRoot({
-    realtime: true
-  }),
-  SecretModule.forRoot({
-    realtime: true,
-    encryptionSecret: args["secret-module-encryption-secret"]
-  }),
+  EnvVarModule.forRoot({realtime: true}),
+  SecretModule.forRoot({realtime: true, encryptionSecret: args["secret-module-encryption-secret"]}),
   MailerModule.forRoot({
     host: args["mailer-host"],
     port: args["mailer-port"],
     secure: args["mailer-secure"],
-    auth: {
-      user: args["mailer-user"],
-      pass: args["mailer-pass"]
-    },
-    defaults: {
-      from: args["mailer-from"]
-    }
+    auth: {user: args["mailer-user"], pass: args["mailer-pass"]},
+    defaults: {from: args["mailer-from"]}
   }),
   SmsModule.forRoot({
     strategy: args["sms-sender-strategy"] as "twilio",
@@ -847,24 +817,16 @@ if (args["replication"]) {
   modules.push(ReplicationModule.forRoot());
 }
 
-@Module({
-  imports: modules
-})
+@Module({imports: modules})
 class RootModule {}
 
 let httpsOptions: https.ServerOptions;
 
 if (args["cert-file"] && args["key-file"]) {
-  httpsOptions = {
-    key: fs.readFileSync(args["cert-file"]),
-    cert: fs.readFileSync(args["key-file"])
-  };
+  httpsOptions = {key: fs.readFileSync(args["cert-file"]), cert: fs.readFileSync(args["key-file"])};
 }
 
-NestFactory.create(RootModule, {
-  httpsOptions,
-  bodyParser: false
-}).then(async app => {
+NestFactory.create(RootModule, {httpsOptions, bodyParser: false}).then(async app => {
   app.getHttpAdapter().getInstance().set("trust proxy", args["trust-proxy"]);
   console.log("PROXY at main.ts", app.getHttpAdapter().getInstance().get("trust proxy"));
   app.useWebSocketAdapter(new WsAdapter(app));
@@ -879,10 +841,7 @@ NestFactory.create(RootModule, {
       allowedHeaders: args["cors-allowed-headers"],
       allowCredentials: args["cors-allow-credentials"]
     }),
-    Middlewares.JsonBodyParser({
-      limit: args["payload-size-limit"],
-      ignoreUrls: [/$\/storage/]
-    }),
+    Middlewares.JsonBodyParser({limit: args["payload-size-limit"], ignoreUrls: [/$\/storage/]}),
     Middlewares.MergePatchJsonParser(args["payload-size-limit"])
   );
   app.enableShutdownHooks();

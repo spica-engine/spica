@@ -1,0 +1,15 @@
+.modal {
+  padding: var(--padding-xl) !important;
+  min-height: 0 !important;
+  .header {
+    border-bottom: var(--border-default);
+    padding: var(--padding-lg) 0px;
+    .title {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+    }
+  }
+  .footer {
+    padding: 0;
+  }
+}

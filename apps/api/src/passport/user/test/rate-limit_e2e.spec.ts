@@ -24,9 +24,7 @@ describe("Rate Limit E2E", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        SchemaModule.forRoot({
-          formats: [OBJECT_ID, DATE_TIME]
-        }),
+        SchemaModule.forRoot({formats: [OBJECT_ID, DATE_TIME]}),
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         CoreTestingModule,
@@ -84,10 +82,7 @@ describe("Rate Limit E2E", () => {
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     adminToken = await req
-      .post("/passport/identify", {
-        identifier: "spica",
-        password: "spica"
-      })
+      .post("/passport/identify", {identifier: "spica", password: "spica"})
       .then(res => res.body.token);
   });
 
@@ -98,19 +93,14 @@ describe("Rate Limit E2E", () => {
   describe("login rate limiting", () => {
     beforeEach(async () => {
       rateLimitService.resetTracker();
-      rateLimitService.setConfigCache({
-        login: {limit: 3, ttl: 60_000}
-      });
+      rateLimitService.setConfigCache({login: {limit: 3, ttl: 60_000}});
     });
 
     it("should reject login request after exceeding configured rate limit", async () => {
       for (let i = 0; i < 3; i++) {
         const res = await req.post(
           "/passport/login",
-          {
-            username: "nonexistent",
-            password: "wrongpassword"
-          },
+          {username: "nonexistent", password: "wrongpassword"},
           ip1
         );
         expect(res.headers["x-ratelimit-limit"]).toBe("3");
@@ -118,10 +108,7 @@ describe("Rate Limit E2E", () => {
 
       const blockedRes = await req.post(
         "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
+        {username: "nonexistent", password: "wrongpassword"},
         ip1
       );
 
@@ -132,34 +119,15 @@ describe("Rate Limit E2E", () => {
     });
 
     it("should allow requests again after tracker is reset", async () => {
-      rateLimitService.setConfigCache({
-        login: {limit: 2, ttl: 60_000}
-      });
+      rateLimitService.setConfigCache({login: {limit: 2, ttl: 60_000}});
       rateLimitService.resetTracker();
 
-      await req.post(
-        "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
-        ip1
-      );
-      await req.post(
-        "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
-        ip1
-      );
+      await req.post("/passport/login", {username: "nonexistent", password: "wrongpassword"}, ip1);
+      await req.post("/passport/login", {username: "nonexistent", password: "wrongpassword"}, ip1);
 
       const blockedRes = await req.post(
         "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
+        {username: "nonexistent", password: "wrongpassword"},
         ip1
       );
       expect(blockedRes.statusCode).toBe(429);
@@ -168,10 +136,7 @@ describe("Rate Limit E2E", () => {
 
       const allowedRes = await req.post(
         "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
+        {username: "nonexistent", password: "wrongpassword"},
         ip1
       );
       expect(allowedRes.statusCode).not.toBe(429);
@@ -187,72 +152,38 @@ describe("Rate Limit E2E", () => {
     it("should apply rate limit changes from config", async () => {
       const noLimitRes = await req.post(
         "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
+        {username: "nonexistent", password: "wrongpassword"},
         ip1
       );
       expect(noLimitRes.headers["x-ratelimit-limit"]).toBeUndefined();
 
       await userConfigService.set({
         verificationProcessMaxAttempt: 5,
-        rateLimits: {
-          login: {limit: 2, ttl: 60_000}
-        }
+        rateLimits: {login: {limit: 2, ttl: 60_000}}
       });
 
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       rateLimitService.resetTracker();
-      await req.post(
-        "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
-        ip1
-      );
-      await req.post(
-        "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
-        ip1
-      );
+      await req.post("/passport/login", {username: "nonexistent", password: "wrongpassword"}, ip1);
+      await req.post("/passport/login", {username: "nonexistent", password: "wrongpassword"}, ip1);
 
       const blockedRes = await req.post(
         "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
+        {username: "nonexistent", password: "wrongpassword"},
         ip1
       );
       expect(blockedRes.statusCode).toBe(429);
     });
 
     it("should remove rate limiting when config is cleared", async () => {
-      rateLimitService.setConfigCache({
-        login: {limit: 1, ttl: 60_000}
-      });
+      rateLimitService.setConfigCache({login: {limit: 1, ttl: 60_000}});
 
-      await req.post(
-        "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
-        ip1
-      );
+      await req.post("/passport/login", {username: "nonexistent", password: "wrongpassword"}, ip1);
 
       const blockedRes = await req.post(
         "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
+        {username: "nonexistent", password: "wrongpassword"},
         ip1
       );
       expect(blockedRes.statusCode).toBe(429);
@@ -262,10 +193,7 @@ describe("Rate Limit E2E", () => {
 
       const allowedRes = await req.post(
         "/passport/login",
-        {
-          username: "nonexistent",
-          password: "wrongpassword"
-        },
+        {username: "nonexistent", password: "wrongpassword"},
         ip1
       );
       expect(allowedRes.statusCode).not.toBe(429);
@@ -275,9 +203,7 @@ describe("Rate Limit E2E", () => {
   describe("create user rate limiting", () => {
     beforeEach(async () => {
       rateLimitService.resetTracker();
-      rateLimitService.setConfigCache({
-        createUser: {limit: 2, ttl: 60_000}
-      });
+      rateLimitService.setConfigCache({createUser: {limit: 2, ttl: 60_000}});
     });
 
     it("should reject create user after exceeding rate limit", async () => {
@@ -304,9 +230,7 @@ describe("Rate Limit E2E", () => {
   describe("refresh token rate limiting", () => {
     beforeEach(async () => {
       rateLimitService.resetTracker();
-      rateLimitService.setConfigCache({
-        refreshToken: {limit: 2, ttl: 60_000}
-      });
+      rateLimitService.setConfigCache({refreshToken: {limit: 2, ttl: 60_000}});
     });
 
     it("should reject refresh token after exceeding rate limit", async () => {

@@ -11,16 +11,14 @@
     "type": "git",
     "url": "https://github.com/spica-engine/spica.git"
   },
-  "workspaces": [
-    "libs/*",
-    "apps/*"
-  ],
   "scripts": {
     "format:check": "yarn nx format:check",
     "format": "yarn nx format:write",
     "build:*": "yarn nx run-many -t build",
     "build:api": "yarn nx compile api",
+    "build:panel": "yarn nx build panel",
     "serve:api": "yarn nx serve api",
+    "serve:panel": "yarn nx serve panel",
     "serve:watch:api": "yarn nx serve:watch api",
     "build:cli": "yarn nx build cli",
     "build:migrate": "yarn nx compile migrate",
@@ -31,6 +29,7 @@
     "build:devkit:storage": "yarn nx build api/function/packages/storage",
     "build:devkit:*": "yarn nx run-many -t build --projects=api/function/packages/**",
     "build-image:*": "yarn nx run-many -t build-image",
+    "build-image:panel": "yarn nx build-image panel",
     "build-image:api": "yarn nx build-image api",
     "build-image:migrate": "yarn nx build-image migrate",
     "build-image:mongoreplicationcontroller": "yarn nx build-image mongoreplicationcontroller",
@@ -51,6 +50,7 @@
     "test-image:filter": "yarn nx test-image api --build-arg PROJECTS=filter/**",
     "test-image:migrate": "yarn nx test-image migrate",
     "publish:api": "yarn nx publish api",
+    "publish:panel": "yarn nx publish panel",
     "publish:migrate": "yarn nx publish migrate",
     "publish:mongoreplicationcontroller": "yarn nx publish mongoreplicationcontroller",
     "publish:devkit:bucket": "yarn nx nx-release-publish api/function/packages/bucket",
@@ -62,10 +62,13 @@
     "publish:charts": "./scripts/sync_charts.sh"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "@nestjs/common": "^10.4.15",
     "@nestjs/core": "^10.4.15",
     "@nestjs/platform-express": "^10.4.15",
     "@nestjs/platform-ws": "^10.4.15",
+    "@projectstorm/react-canvas-core": "^7.0.3",
+    "@projectstorm/react-diagrams": "^7.0.4",
     "@types/node-schedule": "^2.1.8",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",

@@ -1,0 +1,35 @@
+.scrollableContainer {
+   max-height: 250px;
+   overflow-y: auto;
+   width: 100%;
+   
+   .item{
+      border-bottom: var(--border-default);
+      padding: var(--padding-md);
+      font-size: var(--font-size-md);
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      &:first-child{
+        border-top: var(--border-default);
+      }
+
+      &:hover {
+        background-color: var(--background-hover, rgba(0, 0, 0, 0.04));
+      }
+
+      &:active {
+        background-color: var(--background-active, rgba(0, 0, 0, 0.08));
+      }
+
+      &:focus {
+        outline: 2px solid var(--focus-color, #4285f4);
+        outline-offset: -2px;
+      }
+   }
+}
+
+.loader, .endMessage {
+   padding: var(--padding-md);
+   text-align: center;
+}

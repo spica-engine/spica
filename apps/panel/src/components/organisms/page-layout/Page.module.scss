@@ -1,0 +1,19 @@
+.container {
+  padding: var(--padding-md);
+}
+
+.pageContentBox {
+  background-color: var(--color-soft-light);
+}
+
+.pageContentHeader {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  border-bottom: var(--border-default);
+  padding: var(--padding-xl);
+}
+
+.pageContentBody {
+  padding: var(--padding-xl);
+  flex-wrap: wrap;
+}

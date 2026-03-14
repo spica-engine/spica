@@ -1,0 +1,29 @@
+
+.storageItem {
+  cursor: pointer;
+  max-width: 100%;
+  width: 100% !important;
+  height: 28px !important;
+  padding: var(--padding-sm) var(--padding-xl);
+  justify-content: flex-start !important;
+
+  &:hover {
+    background-color: var(--color-hover);
+  }
+}
+
+.activeStorageItem {
+  background-color: var(--color-hover);
+}
+
+.storageItemText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block !important;
+  max-width: 100%;
+}
+
+.storageItemIcon {
+  color: var(--color-font-primary);
+}

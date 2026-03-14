@@ -1,0 +1,25 @@
+.container {
+  .settingButton {
+    width: 35px;
+    height: 35px;
+  }
+
+  .header {
+    border-bottom: var(--border-default);
+  }
+
+  .header,
+  .chartContainer {
+    padding: var(--padding-xl);
+  }
+
+  .chartContainer {
+    height: 100%;
+    width: 100%;
+  }
+
+  .chart {
+    height: 100% !important;
+    width: 100% !important;
+  }
+}

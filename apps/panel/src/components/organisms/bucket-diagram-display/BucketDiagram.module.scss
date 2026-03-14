@@ -1,0 +1,24 @@
+.topContainer {
+  background-color: var(--color-primary);
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  padding: var(--padding-lg);
+}
+.bottomContainer {
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  background-color: var(--color-default) !important;
+  padding: var(--padding-lg);
+}
+.topButton {
+  padding: 0;
+}
+.text,
+.cogButton {
+  color: var(--color-default) !important;
+}
+
+.bucketSchema {
+  padding: 0;
+}
+.newFieldButton {
+  background-color: var(--color-soft) !important;
+}

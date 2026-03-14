@@ -1,0 +1,17 @@
+.footer {
+  width: 100% !important;
+  justify-content: flex-end !important;
+  flex-direction: column;
+  gap: 12px;
+
+  .errorText {
+    font-size: var(--font-size-xs) !important;
+    color: var(--color-danger);
+    width: 100%;
+  }
+
+  .saveButton {
+    height: 38px;
+  }
+}
+

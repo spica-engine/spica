@@ -1,0 +1,16 @@
+.trigger {
+  cursor: pointer;
+
+}
+
+
+.clearButton {
+   padding: 0 !important;
+   min-width: unset !important;
+}
+
+.rootLabel {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}

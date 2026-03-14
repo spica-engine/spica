@@ -98,10 +98,7 @@ describe("Versioning e2e", () => {
 
     // Configure autoApproveSync once – the setting persists for the entire suite.
     await req.put("config/versioncontrol", {
-      autoApproveSync: {
-        document: true,
-        representative: true
-      }
+      autoApproveSync: {document: true, representative: true}
     });
     // Allow the sync engine to read the new config and finish git initialisation.
     await sleep(5000);
@@ -125,10 +122,7 @@ describe("Versioning e2e", () => {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
       try {
-        const status = execSync("git status --porcelain", {
-          cwd: representativesDir,
-          stdio: "pipe"
-        })
+        const status = execSync("git status --porcelain", {cwd: representativesDir, stdio: "pipe"})
           .toString()
           .trim();
         if (status.length > 0) return;
@@ -239,11 +233,7 @@ describe("Versioning e2e", () => {
       description: "Description of bucket1",
       history: false,
       icon: "view_stream",
-      properties: {
-        title: {
-          type: "string"
-        }
-      },
+      properties: {title: {type: "string"}},
       acl: {read: "true==true", write: "true==true"},
       primary: "title"
     };
@@ -422,9 +412,7 @@ describe("Versioning e2e", () => {
         await waitForGitChanges();
 
         await req.post("/versioncontrol/commands/add", {args: ["."]});
-        await req.post("/versioncontrol/commands/commit", {
-          args: ["-m", "'first commit'"]
-        });
+        await req.post("/versioncontrol/commands/commit", {args: ["-m", "'first commit'"]});
 
         const res = await req.post("/versioncontrol/commands/log", {args: []});
         expect(res.body.latest.message).toEqual("first commit");

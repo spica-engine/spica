@@ -1,0 +1,180 @@
+
+.storageCell {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+}
+
+.inputCell {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+}
+
+.objectCell{
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+.dateCellContainer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+
+.textAreaRoot{
+
+    >textarea{
+        border-radius: var(--border-radius-sm) !important;
+        padding: var(--padding-sm) !important;
+    }
+}
+
+.textAreaContent{
+    padding: 0 !important;
+}
+
+
+.textareaInput {
+    padding: var(--padding-sm) !important;
+ }
+.textAreaClearButton{
+
+    > button{
+        padding: 0 !important;
+        width: unset !important;
+    }
+}
+
+.textareaCellContainer {
+    width: 100%;
+}
+
+
+
+// Display cells
+.valueCell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.defaultValueCell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #666;
+    font-style: italic;
+}
+
+.locationInput {
+    background: transparent !important;
+}
+
+.defaultTypeLabel {
+    font-size: 11px;
+}
+
+
+.baseCellRenderer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    text-align: left;
+}
+
+.booleanCheckbox {
+   width: unset !important;
+
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   position: relative;
+
+   .booleanInput{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    z-index: 1;
+
+   }
+
+   .active{
+    opacity: 1;
+   }
+
+   .disabled{
+    opacity: 0;
+   }
+}
+
+// Multiple selection cell
+.multiSelectCell {
+    width: 100%;
+    overflow: hidden;
+}
+
+.multiSelectCellWrapper {
+    width: 100%;
+    
+    .multiSelectInput{
+        background-color: transparent !important;
+    }
+}
+
+.multiSelectTrigger {
+    width: 100%;
+    cursor: pointer;
+}
+
+.multiSelectDisplay {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}
+
+.emptyValue {
+    color: #999;
+    font-style: italic;
+}
+
+.multiSelectPopover {
+    min-width: 250px;
+    max-width: 400px;
+    padding: 8px;
+}
+
+.locationCellContainer{
+    padding: 0 !important;
+    background: transparent !important;
+
+}
+
+.monacoEditorWrapper {
+    width: 100%;
+    height: 100%;
+    border: var(--border-default);
+    border-radius: var(--border-radius-sm);
+    
+    .monaco-editor {
+        border-radius: var(--border-radius-sm);
+    }
+}
+.colorCellContainer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}

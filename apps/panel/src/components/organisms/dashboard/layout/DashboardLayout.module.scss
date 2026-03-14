@@ -1,0 +1,24 @@
+@use "styles/mixins";
+
+.layoutContainer {
+  width: 100%;
+  height: 100%;
+
+  .addNewComponent {
+    width: 100%;
+    height: 100%;
+    .plusIcon {
+      width: 100px;
+      height: 100px;
+
+      color: var(--color-font-primary);
+    }
+  }
+}
+
+.gridItem {
+  display: flex;
+  background-color: var(--color-menu-background);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}

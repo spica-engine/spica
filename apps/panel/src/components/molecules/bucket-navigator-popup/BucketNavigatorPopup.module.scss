@@ -1,0 +1,47 @@
+.container {
+  > div {
+    width: var(--icon-size-sm) !important;
+    height: var(--icon-size-sm) !important;
+  }
+  svg {
+    color: var(--color-font-primary);
+  }
+}
+
+.popoverContainer {
+  padding: 0 !important;
+  z-index: 3;
+  .popoverContent {
+    padding: var(--padding-md) 0;
+    gap: 0 !important;
+
+    .buttons {
+      padding: var(--padding-xs) var(--padding-md);
+      width: 100%;
+      border: none !important;
+      border-radius: 0;
+      align-items: center;
+      justify-content: center;
+      line-height: unset;
+      > div > div {
+        gap: var(--gap-md) !important;
+      }
+    }
+
+    .buttons:hover {
+      background-color: var(--color-hover);
+    }
+
+    .deleteIcon {
+      color: var(--color-danger);
+    }
+  }
+}
+
+.confirmText {
+  margin-top: 0;
+}
+
+[class^="Portal-module_container__"] {
+  z-index: 4;
+}

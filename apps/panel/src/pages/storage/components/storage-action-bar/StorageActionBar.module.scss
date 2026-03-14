@@ -1,0 +1,17 @@
+
+.actionBar {
+  justify-content: space-between !important;
+  padding: 0 0 var(--padding-lg) !important;
+  width: 100% !important;
+}
+
+.actionBarButton {
+  height: 32px !important;
+  width: min-content !important;
+  min-width: unset !important;
+  font-size: var(--font-size-md);
+  align-items: center !important;
+  display: flex;
+  color: var(--color-font-primary) !important;
+  background-color: var(--color-soft-light) !important;
+}

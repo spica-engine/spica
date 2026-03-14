@@ -1,0 +1,51 @@
+.fieldLabel {
+  color: var(--color-font-secondary);
+  font-weight: 500;
+}
+
+.addButton {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.deleteAction {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+    color: var(--color-danger, #ef4444);
+  }
+}
+
+.triggerMethodAccordion{
+  padding: 0 !important;
+  border-bottom: var(--border-default) !important;
+  &:last-child {
+    border-bottom: none !important;
+  }
+}
+.triggerMethodAccordionContent{
+  padding: var(--padding-md) 0 !important;
+}
+
+.inputContainer {
+  width: 100% !important;
+  height: 44px;
+  padding: 0 var(--confirm-modal-gap);
+  border-radius: var(--border-radius-md);
+  border: var(--border-default);
+  background-color: var(--color-input-background);
+}
+.input {
+  width: 100% !important;
+  height: 44px;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+}
