@@ -575,7 +575,7 @@ export class UserController {
     );
     const cookiePath = "passport/user/session/refresh";
     res.cookie("refreshToken", result.refreshToken.token, this.userService.getCookieOptions(cookiePath));
-    return {result};
+    return res.status(201).json(result.accessToken);
   }
   @Post("forgot-password/start")
   @UseGuards(RateLimitGuard("forgotPassword"))
