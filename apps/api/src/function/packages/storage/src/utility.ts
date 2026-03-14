@@ -1,6 +1,7 @@
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
-import {BufferWithMeta} from "./interface";
+import {BufferWithMeta, ResumableUploadOptions} from "./interface";
 import form from "form-data";
+import tus from "tus-js-client";
 
 export function fileToBuffer(file: File): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -67,4 +68,33 @@ function getHeaders(form) {
     return form.getHeaders();
   }
   return {};
+}
+
+export function startResumableUpload(options: ResumableUploadOptions) {
+  const {publicUrl, authorization, object, headers, onError, onProgress, onSuccess} = options;
+
+  const isInstanceOfBufferWithMeta = instanceOfBufferWithMeta(object);
+
+  const filename = object.name;
+  const filetype = isInstanceOfBufferWithMeta ? object.contentType : object.type;
+  const fileSize = isInstanceOfBufferWithMeta ? object.data.length : object.size;
+  const fileData = isInstanceOfBufferWithMeta ? object.data : object;
+
+  const upload = new tus.Upload(fileData, {
+    endpoint: `${publicUrl}/storage/resumable`,
+    headers: {authorization: authorization, ...headers},
+    metadata: {filename, filetype},
+    uploadSize: isPlatformBrowser() ? undefined : fileSize,
+    urlStorage: isPlatformBrowser() ? undefined : new tus["FileUrlStorage"]("./tus-urls.json"),
+    onError: onError || (() => {}),
+    onProgress: onProgress || (() => {}),
+    onSuccess: onSuccess || (() => {})
+  });
+
+  upload.findPreviousUploads().then(previousUploads => {
+    if (previousUploads.length) {
+      upload.resumeFromPreviousUpload(previousUploads[0]);
+    }
+    upload.start();
+  });
 }
