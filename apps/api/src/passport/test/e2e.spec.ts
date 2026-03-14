@@ -685,7 +685,7 @@ describe("E2E Tests", () => {
           req
             .get(`/passport/identity/strategy/${strategies[0]._id}/url`)
             .then(({body: strategy}) => {
-              req.get("/passport/identify", {state: strategy.state}).then(async res => {
+              req.post("/passport/identify", {state: strategy.state}).then(async res => {
                 expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
                 expect(res.body.scheme).toEqual("IDENTITY");
                 expect(res.body.issuer).toEqual("passport/identity");
