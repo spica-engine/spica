@@ -1,10 +1,14 @@
 {
   "extends": "../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
+  "exclude": ["test/**/*.ts", "**/*.spec.ts"],
   "references": [
     {"path": "../passport/guard"},
     {"path": "../replication"},
     {"path": "../../../../libs/representative"},
-    {"path": "../../../../libs/core/differ"}
+    {"path": "../../../../libs/core/differ"},
+    {"path": "../../../../libs/interface/versioncontrol"},
+    {"path": "./sync"},
+    {"path": "./sync/engine"}
   ]
 }

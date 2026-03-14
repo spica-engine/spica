@@ -1,4 +1,21 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"]
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../../../../libs/interface/passport/testing"
+    },
+    {
+      "path": "../guard/services"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
+      "path": "../../preference/services"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket/common"
+    }
+  ]
 }

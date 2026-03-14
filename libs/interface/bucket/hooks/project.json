@@ -1,0 +1,5 @@
+{
+  "name": "interface/bucket/hooks",
+  "sourceRoot": "libs/interface/bucket/hooks/src",
+  "projectType": "library"
+}

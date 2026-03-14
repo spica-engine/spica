@@ -15,6 +15,8 @@ import {StorageModule} from "@spica-server/storage";
 import os from "os";
 import {Binary} from "bson";
 import {WsAdapter} from "@spica-server/core/websocket";
+import {ConfigModule} from "@spica-server/config/src/config.module";
+import {SecretModule} from "@spica-server/secret/src/module";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50051";
 
@@ -125,8 +127,8 @@ describe("Status", () => {
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [
-          DatabaseTestingModule.standalone(),
-          PolicyModule.forRoot(),
+          DatabaseTestingModule.replicaSet(),
+          PolicyModule.forRoot({realtime: false}),
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
@@ -136,8 +138,16 @@ describe("Status", () => {
             issuer: "spica",
             maxExpiresIn: 1000,
             secretOrKey: "spica",
-            entryLimit: 20
-          })
+            entryLimit: 20,
+            blockingOptions: {
+              failedAttemptLimit: 0,
+              blockDurationMinutes: 0
+            },
+            refreshTokenExpiresIn: 1000,
+            passwordHistoryLimit: 0,
+            identityRealtime: false
+          }),
+          ConfigModule.forRoot()
         ]
       }).compile();
       app = module.createNestApplication();
@@ -187,6 +197,10 @@ describe("Status", () => {
           CoreTestingModule,
           PassportTestingModule.initialize(),
           SchemaModule.forRoot({formats: [OBJECT_ID]}),
+          SecretModule.forRoot({
+            realtime: false,
+            encryptionSecret: "test-encryption-secret-32chars!!"
+          }),
           FunctionModule.forRoot({
             invocationLogs: false,
             path: os.tmpdir(),
@@ -208,7 +222,8 @@ describe("Status", () => {
             realtimeLogs: false,
             logger: false,
             spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
-            tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
+            tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH,
+            realtime: false
           })
         ]
       }).compile();
@@ -237,7 +252,6 @@ describe("Status", () => {
               active: true
             }
           },
-          env: {},
           memoryLimit: 100
         })
         .then(res => res.body);
@@ -273,6 +287,8 @@ describe("Status", () => {
 
       await req.get("/fn-execute/test");
 
+      await sleep(1000);
+
       res = await req.get("/status/function");
       expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
       expect(res.body).toEqual({
@@ -301,7 +317,7 @@ describe("Status", () => {
     beforeEach(async () => {
       module = await Test.createTestingModule({
         imports: [
-          DatabaseTestingModule.standalone(),
+          DatabaseTestingModule.replicaSet(),
           StatusModule.forRoot({expireAfterSeconds: 60}),
           CoreTestingModule,
           PassportTestingModule.initialize(),
@@ -309,7 +325,8 @@ describe("Status", () => {
             objectSizeLimit: 10,
             strategy: "default",
             totalSizeLimit: 10,
-            defaultPath: process.env.TEST_TMPDIR
+            defaultPath: process.env.TEST_TMPDIR,
+            resumableUploadExpiresIn: 0
           })
         ]
       }).compile();

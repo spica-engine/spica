@@ -2,9 +2,12 @@ import {DynamicModule, Global, Inject, Module, Optional, Type} from "@nestjs/com
 import {HistoryModule, HistoryService} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
+import {SchemasRealtimeModule} from "@spica-server/bucket/schemas-realtime";
 import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {BUCKET_LANGUAGE_FINALIZER, PreferenceService} from "@spica-server/preference/services";
+import {createHashFormat, createEncryptedFormat} from "@spica-server/core/schema/formats";
+import {PreferenceService} from "@spica-server/preference/services";
+import {BUCKET_LANGUAGE_FINALIZER} from "@spica-server/interface/preference";
 import {BucketCacheModule} from "@spica-server/bucket/cache";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketController} from "./bucket.controller";
@@ -19,20 +22,28 @@ import {registerStatusProvider} from "./status";
 import BucketSchema from "./schemas/bucket.schema.json" with {type: "json"};
 import BucketsSchema from "./schemas/buckets.schema.json" with {type: "json"};
 import {
-  RegisterSyncProvider,
-  REGISTER_VC_SYNC_PROVIDER,
-  VC_REP_MANAGER
-} from "@spica-server/versioncontrol";
-import {getSyncProvider} from "./versioncontrol/schema";
+  REGISTER_VC_CHANGE_HANDLER,
+  RegisterVCChangeHandler
+} from "@spica-server/interface/versioncontrol";
 import {registerAssetHandlers} from "./asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {ASSET_REP_MANAGER} from "@spica-server/asset/src/interface";
+import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
+import {BucketOptions} from "@spica-server/interface/bucket";
+import {getSupplier, getApplier} from "./synchronizer/schema";
 
 @Module({})
 export class BucketModule {
   static forRoot(options: BucketOptions): DynamicModule {
+    const formats = [
+      ...(options.hashSecret ? [createHashFormat(options.hashSecret)] : []),
+      ...(options.hashSecret && options.encryptionSecret
+        ? [createEncryptedFormat(options.encryptionSecret, options.hashSecret)]
+        : [])
+    ];
+
     const schemaModule = SchemaModule.forChild({
       schemas: [BucketSchema, BucketsSchema],
+      formats,
       keywords: [bucketSpecificDefault],
       customFields: [
         // common,
@@ -43,7 +54,8 @@ export class BucketModule {
         "relationType",
         "dependent",
         // location
-        "locationType"
+        "locationType",
+        "acl"
       ]
     });
     const imports: (Type<any> | DynamicModule)[] = [
@@ -84,6 +96,7 @@ export class BucketModule {
       realtime.imports.push(schemaModule as any);
 
       imports.push(realtime);
+      imports.push(SchemasRealtimeModule.register());
     }
 
     if (options.graphql) {
@@ -113,13 +126,13 @@ export class BucketModule {
     bds: BucketDataService,
     validator: Validator,
     @Optional() private history: HistoryService,
-    @Optional() @Inject(VC_REP_MANAGER) private vcRepManager: IRepresentativeManager,
-    @Optional() @Inject(REGISTER_VC_SYNC_PROVIDER) registerSync: RegisterSyncProvider,
+    @Optional()
+    @Inject(REGISTER_VC_CHANGE_HANDLER)
+    registerVCChangeHandler: RegisterVCChangeHandler,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
-    if (registerSync) {
-      const provider = getSyncProvider(bs, bds, this.history, this.vcRepManager);
-      registerSync(provider);
+    if (registerVCChangeHandler) {
+      registerVCChangeHandler(getSupplier(bs), getApplier(bs, bds, this.history, validator));
     }
 
     preference.default({
@@ -144,7 +157,13 @@ export class BucketCoreModule {
   static initialize(options: BucketOptions) {
     return {
       module: BucketCoreModule,
-      imports: [ServicesModule.initialize(options.bucketDataLimit)],
+      imports: [
+        ServicesModule.initialize(
+          options.bucketDataLimit,
+          options.hashSecret,
+          options.encryptionSecret
+        )
+      ],
       providers: [
         {
           provide: BUCKET_LANGUAGE_FINALIZER,
@@ -155,14 +174,4 @@ export class BucketCoreModule {
       exports: [BUCKET_LANGUAGE_FINALIZER]
     };
   }
-}
-
-export interface BucketOptions {
-  hooks: boolean;
-  history: boolean;
-  realtime: boolean;
-  cache: boolean;
-  cacheTtl?: number;
-  bucketDataLimit?: number;
-  graphql: boolean;
 }

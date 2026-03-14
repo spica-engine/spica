@@ -1,9 +1,6 @@
 import {
   IdentityCreate,
   IdentityGet,
-  IdentityInitialization,
-  ApikeyInitialization,
-  IndexResult,
   LoginWithStrategyResponse,
   TokenScheme,
   ChallengeRes,
@@ -15,12 +12,19 @@ import {
 import {
   initialize as _initialize,
   checkInitialized,
-  HttpService,
-  Axios
+  Axios,
+  Batch
 } from "@spica-devkit/internal_common";
 import {Strategy} from "./interface";
 import {Observable} from "rxjs";
 import {deepCopyJSON} from "@spica-server/core/copy";
+import {
+  ApikeyInitialization,
+  IdentityInitialization,
+  IndexResult,
+  HttpService
+} from "@spica-server/interface/function/packages";
+import {BatchResponse} from "@spica-server/interface/batch";
 
 let authorization;
 
@@ -57,7 +61,7 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   });
 }
 
-export function verifyToken(token: string, baseUrl?: string) {
+export function verifyToken(token: string, baseUrl?: string, headers: object = {}) {
   const _baseUrl = baseUrl ? baseUrl : service ? service.baseUrl : undefined;
 
   if (!_baseUrl) {
@@ -66,32 +70,39 @@ export function verifyToken(token: string, baseUrl?: string) {
 
   const req = new Axios({baseURL: _baseUrl});
 
-  return req.get(`${identitySegment}/verify`, {headers: {Authorization: token}});
+  return req.get(`${identitySegment}/verify`, {headers: {Authorization: token, ...headers}});
 }
 
 export async function login<TFA extends false>(
   identifier: string,
   password: string,
-  tokenLifeSpan?: number
+  tokenLifeSpan?: number,
+  headers?: object
 ): Promise<string>;
 export async function login<TFA extends true>(
   identifier: string,
   password: string,
-  tokenLifeSpan?: number
+  tokenLifeSpan?: number,
+  headers?: object
 ): Promise<Challenge>;
 export async function login(
   identifier: string,
   password: string,
-  tokenLifeSpan?: number
+  tokenLifeSpan?: number,
+  headers?: object
 ): Promise<string | Challenge> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service
-    .post<TokenScheme | ChallengeRes>("/passport/identify", {
-      identifier,
-      password,
-      expires: tokenLifeSpan
-    })
+    .post<TokenScheme | ChallengeRes>(
+      "/passport/identify",
+      {
+        identifier,
+        password,
+        expires: tokenLifeSpan
+      },
+      {headers}
+    )
     .then(r => {
       if (isTokenScheme(r)) {
         return r.token;
@@ -112,7 +123,7 @@ export function isChallenge(tokenOrChallenge: any): tokenOrChallenge is Challeng
 }
 
 export async function loginWithStrategy(id: string): Promise<LoginWithStrategyResponse> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   const {url, state} = await service.get<{url: string; state: string}>(
     `/passport/strategy/${id}/url`
@@ -142,49 +153,60 @@ export async function loginWithStrategy(id: string): Promise<LoginWithStrategyRe
 }
 
 export namespace authfactor {
-  export function list(): Promise<FactorSchema[]> {
-    return service.get<FactorSchema[]>("passport/identity/factors");
+  export function list(headers?: object): Promise<FactorSchema[]> {
+    return service.get<FactorSchema[]>("passport/identity/factors", {headers});
   }
 
-  export async function register(identityId: string, factor: FactorMeta): Promise<Challenge> {
+  export async function register(
+    identityId: string,
+    factor: FactorMeta,
+    headers?: object
+  ): Promise<Challenge> {
     const response = await service.post<ChallengeRes>(
       `passport/identity/${identityId}/start-factor-verification`,
-      factor
+      factor,
+      {headers}
     );
 
     const challenge = new _Challenge(response, response => response.message);
     return challenge;
   }
 
-  export function unregister(identityId: string) {
-    return service.delete(`passport/identity/${identityId}/factors`);
+  export function unregister(identityId: string, headers?: object) {
+    return service.delete(`passport/identity/${identityId}/factors`, {headers});
   }
 }
 
-export function getStrategies() {
-  return service.get<Strategy[]>("/passport/strategies");
+export function getStrategies(headers?: object) {
+  return service.get<Strategy[]>("/passport/strategies", {headers});
 }
 
-export function get(id: string): Promise<IdentityGet> {
-  checkInitialized(authorization);
+export function get(id: string, headers?: object): Promise<IdentityGet> {
+  checkInitialized(authorization, service);
 
-  return service.get<IdentityGet>(`${identitySegment}/${id}`);
+  return service.get<IdentityGet>(`${identitySegment}/${id}`, {headers});
 }
 
-export function getAll(queryParams?: {
-  paginate?: false;
-  limit?: number;
-  skip?: number;
-  filter?: object;
-  sort?: object;
-}): Promise<IdentityGet[]>;
-export function getAll(queryParams?: {
-  paginate?: true;
-  limit?: number;
-  skip?: number;
-  filter?: object;
-  sort?: object;
-}): Promise<IndexResult<IdentityGet>>;
+export function getAll(
+  queryParams?: {
+    paginate?: false;
+    limit?: number;
+    skip?: number;
+    filter?: object;
+    sort?: object;
+  },
+  headers?: object
+): Promise<IdentityGet[]>;
+export function getAll(
+  queryParams?: {
+    paginate?: true;
+    limit?: number;
+    skip?: number;
+    filter?: object;
+    sort?: object;
+  },
+  headers?: object
+): Promise<IndexResult<IdentityGet>>;
 export function getAll(
   queryParams: {
     paginate?: boolean;
@@ -192,23 +214,25 @@ export function getAll(
     skip?: number;
     filter?: object;
     sort?: object;
-  } = {}
+  } = {},
+  headers?: object
 ): Promise<IdentityGet[] | IndexResult<IdentityGet>> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.get<IdentityGet[] | IndexResult<IdentityGet>>(identitySegment, {
-    params: queryParams
+    params: queryParams,
+    headers
   });
 }
 
-export async function insert(identity: IdentityCreate): Promise<IdentityGet> {
-  checkInitialized(authorization);
+export async function insert(identity: IdentityCreate, headers?: object): Promise<IdentityGet> {
+  checkInitialized(authorization, service);
 
   identity = deepCopyJSON(identity);
   const desiredPolicies = identity.policies;
   delete identity.policies;
 
-  const insertedIdentity = await service.post<IdentityGet>(identitySegment, identity);
+  const insertedIdentity = await service.post<IdentityGet>(identitySegment, identity, {headers});
 
   return policy.attach(insertedIdentity._id, desiredPolicies).then(policies => {
     insertedIdentity.policies = policies;
@@ -216,8 +240,12 @@ export async function insert(identity: IdentityCreate): Promise<IdentityGet> {
   });
 }
 
-export async function update(id: string, identity: IdentityUpdate): Promise<IdentityGet> {
-  checkInitialized(authorization);
+export async function update(
+  id: string,
+  identity: IdentityUpdate,
+  headers?: object
+): Promise<IdentityGet> {
+  checkInitialized(authorization, service);
 
   const existingIdentity = await service.get<IdentityGet>(`${identitySegment}/${id}`);
 
@@ -230,7 +258,9 @@ export async function update(id: string, identity: IdentityUpdate): Promise<Iden
     desiredPolicies
   );
 
-  const updatedIdentity = await service.put<IdentityGet>(`${identitySegment}/${id}`, identity);
+  const updatedIdentity = await service.put<IdentityGet>(`${identitySegment}/${id}`, identity, {
+    headers
+  });
   updatedIdentity.policies = desiredPolicies;
 
   await policy.attach(id, policiesForAttach);
@@ -239,23 +269,42 @@ export async function update(id: string, identity: IdentityUpdate): Promise<Iden
   return updatedIdentity;
 }
 
-export function remove(id: string): Promise<any> {
-  checkInitialized(authorization);
+export function remove(id: string, headers?: object): Promise<any> {
+  checkInitialized(authorization, service);
 
-  return service.delete(`${identitySegment}/${id}`);
+  return service.delete(`${identitySegment}/${id}`, {headers});
+}
+
+export function removeMany(ids: string[], headers?: object) {
+  checkInitialized(authorization, service);
+
+  const batchReqs = Batch.prepareRemoveRequest(
+    ids,
+    identitySegment,
+    service.getAuthorization(),
+    headers
+  );
+
+  return service
+    .post<BatchResponse<string>>("batch", batchReqs, {headers})
+    .then(response => Batch.handleBatchResponse<string>(batchReqs, response));
 }
 
 // policy attach detach
 export namespace policy {
-  export function attach(identityId: string, policyIds: string[] = []): Promise<string[]> {
-    checkInitialized(authorization);
+  export function attach(
+    identityId: string,
+    policyIds: string[] = [],
+    headers?: object
+  ): Promise<string[]> {
+    checkInitialized(authorization, service);
 
     const promises: Promise<IdentityGet>[] = [];
     const attachedPolicies = new Set<string>();
 
     for (const policyId of policyIds) {
       const promise = service
-        .put<any>(`${identitySegment}/${identityId}/policy/${policyId}`, {})
+        .put<any>(`${identitySegment}/${identityId}/policy/${policyId}`, {}, {headers})
         .then(() => attachedPolicies.add(policyId))
         .catch(e => {
           console.error(`Failed to attach policy with id ${policyId}: `, e);
@@ -267,15 +316,19 @@ export namespace policy {
     return Promise.all(promises).then(() => Array.from(attachedPolicies));
   }
 
-  export function detach(identityId: string, policyIds: string[] = []): Promise<string[]> {
-    checkInitialized(authorization);
+  export function detach(
+    identityId: string,
+    policyIds: string[] = [],
+    headers?: object
+  ): Promise<string[]> {
+    checkInitialized(authorization, service);
 
     const promises: Promise<IdentityGet>[] = [];
     const detachedPolicies = new Set<string>();
 
     for (const policyId of policyIds) {
       const promise = service
-        .delete(`${identitySegment}/${identityId}/policy/${policyId}`)
+        .delete(`${identitySegment}/${identityId}/policy/${policyId}`, {headers})
         .then(() => detachedPolicies.add(policyId))
         .catch(e => {
           console.error(`Failed to detach policy with id ${policyId}: `, e);

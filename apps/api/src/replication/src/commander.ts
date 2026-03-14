@@ -1,16 +1,18 @@
-import {Injectable, Scope} from "@nestjs/common";
+import {Injectable, Logger, Scope} from "@nestjs/common";
 import {CommandMessenger} from "./messenger";
 import {
+  ICommander,
   CommandMessage,
   CommandMessageFilter,
   CommandSource,
   CommandTarget,
   Command,
   CommandType
-} from "./interface";
+} from "@spica-server/interface/replication";
 
-abstract class Commander {
+abstract class Commander implements ICommander {
   protected filters: CommandMessageFilter[] = [];
+  protected readonly logger = new Logger(Commander.name);
 
   public readonly replicaId: string;
   constructor(private cmdMessenger: CommandMessenger) {
@@ -42,7 +44,7 @@ abstract class Commander {
 
   private executeCommand(ctx: Object, cmd: Command) {
     if (!ctx[cmd.handler]) {
-      return console.error(
+      return this.logger.error(
         `Replica ${this.cmdMessenger.replicaId} has no method named ${cmd.handler} on ${cmd.class}`
       );
     }
@@ -50,10 +52,13 @@ abstract class Commander {
     try {
       ctx[cmd.handler](...cmd.args);
     } catch (error) {
-      console.error(
+      this.logger.error(
         `Replica ${this.cmdMessenger.replicaId} has failed to execute command ${cmd.class}.${cmd.handler}(${cmd.args})`
       );
-      return console.error(error);
+      return this.logger.error(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.stack : ""
+      );
     }
   }
 }
@@ -113,7 +118,7 @@ export class ClassCommander extends Commander {
       const original = ctx[`copy_${handler}`];
 
       if (!original) {
-        return console.error(`Can't unregister ${handler} because it's not registered before.`);
+        return this.logger.error(`Can't unregister ${handler} because it's not registered before.`);
       }
 
       ctx[handler] = original;

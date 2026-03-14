@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/test",
+  "sourceRoot": "apps/api/src/bucket/test",
+  "projectType": "application"
+}

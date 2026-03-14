@@ -1,4 +1,4 @@
-import {Action, ModuleActivity, PreActivity} from "@spica-server/activity/services";
+import {Action, ModuleActivity, PreActivity} from "@spica-server/interface/activity";
 
 export function createApikeyActivity(
   preActivity: PreActivity,

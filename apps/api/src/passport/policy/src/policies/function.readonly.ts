@@ -1,8 +1,11 @@
+import EnvVarReadOnlyAccess from "./env.var.readonly";
+
 export default {
   _id: "FunctionReadOnlyAccess",
   name: "Function Read Only Access",
   description: "Read only access to function service.",
   statement: [
+    ...EnvVarReadOnlyAccess.statement,
     {
       action: "function:index",
       resource: {include: ["*"], exclude: []},
@@ -16,6 +19,11 @@ export default {
     {
       action: "function:logs:index",
       module: "function:logs"
+    },
+    {
+      action: "function:stream",
+      resource: {include: ["*"], exclude: []},
+      module: "function"
     }
   ]
 };

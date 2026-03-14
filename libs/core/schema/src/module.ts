@@ -1,6 +1,7 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
-import {GLOBAL_SCHEMA_MODULE_OPTIONS, ModuleOptions, SCHEMA_MODULE_OPTIONS} from "./interface";
+import {ModuleOptions} from "@spica-server/interface/core";
 import {Validator} from "./validator";
+import {GLOBAL_SCHEMA_MODULE_OPTIONS, SCHEMA_MODULE_OPTIONS} from "./consts";
 
 @Global()
 @Module({})

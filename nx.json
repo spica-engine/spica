@@ -15,7 +15,7 @@
   },
   "pluginsConfig": {
     "@nx/js": {
-      "analyzeSourceFiles": false
+      "analyzeSourceFiles": true
     }
   },
   "plugins": [
@@ -67,7 +67,8 @@
           "silent": true
         },
         "local": {
-          "forceExit": true
+          "forceExit": true,
+          "silent": false
         }
       },
       "defaultConfiguration": "ci-cd"

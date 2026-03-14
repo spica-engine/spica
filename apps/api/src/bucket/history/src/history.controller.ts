@@ -1,7 +1,16 @@
-import {Controller, Get, Param, UseGuards, Delete, HttpCode, HttpStatus} from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Param,
+  UseGuards,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  NotFoundException
+} from "@nestjs/common";
 import {BucketService, compile} from "@spica-server/bucket/services";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
 import {applyPatch} from "./differ";
 import {HistoryService} from "./history.service";
 
@@ -13,7 +22,10 @@ export class HistoryController {
   ) {}
 
   @Get(":documentId")
-  @UseGuards(AuthGuard())
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("bucket:data:index", "bucket/:bucketId/data")
+  )
   getHistories(
     @Param("bucketId", OBJECT_ID) bucket_id: ObjectId,
     @Param("documentId", OBJECT_ID) document_id: ObjectId
@@ -22,7 +34,10 @@ export class HistoryController {
   }
 
   @Get(":documentId/:historyId")
-  @UseGuards(AuthGuard())
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("bucket:data:index", "bucket/:bucketId/data")
+  )
   async revertTo(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
@@ -40,9 +55,15 @@ export class HistoryController {
   }
 
   @Delete()
-  @UseGuards(AuthGuard())
+  @UseGuards(
+    AuthGuard(["IDENTITY", "APIKEY"]),
+    ActionGuard("bucket:data:delete", "bucket/:bucketId/data")
+  )
   @HttpCode(HttpStatus.NO_CONTENT)
-  clearHistories(@Param("bucketId", OBJECT_ID) bucketId: ObjectId) {
-    return this.historyService.deleteMany({bucket_id: bucketId});
+  async clearHistories(@Param("bucketId", OBJECT_ID) bucketId: ObjectId) {
+    const res = await this.historyService.deleteMany({bucket_id: bucketId});
+    if (!res.deletedCount) {
+      throw new NotFoundException("No bucket history found with the provided IDs");
+    }
   }
 }

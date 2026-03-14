@@ -1,0 +1,5 @@
+{
+  "name": "realtime",
+  "sourceRoot": "libs/realtime/src",
+  "projectType": "library"
+}

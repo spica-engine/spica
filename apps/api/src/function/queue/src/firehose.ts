@@ -28,16 +28,16 @@ export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
     super();
   }
 
-  enqueue(id: string, message: Firehose.Message.Incoming, socket: Websocket) {
+  enqueue(id: string, message: Firehose.Message.Incoming) {
     this.queue.set(id, message);
+  }
 
-    if (message.message && message.message.name == "connection") {
-      this.sockets.set(message.client.id, socket);
-    }
+  setSocket(message: Firehose.Message.Incoming, socket: Websocket) {
+    this.sockets.set(message.client.id, socket);
+  }
 
-    if (message.message && message.message.name == "close") {
-      this.sockets.delete(message.client.id);
-    }
+  removeSocket(message: Firehose.Message.Incoming) {
+    this.sockets.delete(message.client.id);
   }
 
   pop(

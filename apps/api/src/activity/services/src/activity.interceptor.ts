@@ -1,6 +1,7 @@
 import {
   CallHandler,
   ExecutionContext,
+  Logger,
   mixin,
   NestInterceptor,
   Optional,
@@ -9,10 +10,12 @@ import {
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {ActivityService} from "./activity.service";
-import {Predict} from "./interface";
 import {createActivity} from "./activity";
+import {Predict} from "@spica-server/interface/activity";
 
 export abstract class ActivityInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(ActivityInterceptor.name);
+
   constructor(
     private service: ActivityService,
     private predict: Predict
@@ -23,7 +26,7 @@ export abstract class ActivityInterceptor implements NestInterceptor {
       const isTestEnv = process.env.NODE_ENV === "test";
 
       !isTestEnv &&
-        console.log(
+        this.logger.log(
           `In order to use "Activity", please, ensure to import ActivityModule in each place where activity() is being used. Otherwise, activity won't work correctly.`
         );
       return next.handle();

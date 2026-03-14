@@ -1,4 +1,7 @@
-import {Predict, Action} from "./interface";
+import {Logger} from "@nestjs/common";
+import {Predict, Action} from "@spica-server/interface/activity";
+
+const logger = new Logger("Activity");
 
 export function getAction(action: string): Action {
   return Action[action];
@@ -12,7 +15,7 @@ export function createActivity(req: any, res: any, predict: Predict) {
   const identifier = getUser(req.user);
 
   if (!identifier) {
-    console.log(`Identifier was not sent.`);
+    logger.log(`Identifier was not sent.`);
     return [];
   }
 

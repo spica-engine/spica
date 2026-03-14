@@ -1,7 +1,7 @@
-import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import fs from "fs";
 import path from "path";
 import fastGlob from "fast-glob";
+import {Package, PackageManager} from "@spica-server/interface/function/pkgmanager";
 
 export abstract class NodePackageManager extends PackageManager {
   private readonly MAX_DEP_TYPE_SIZE_MB = 5;
@@ -47,9 +47,7 @@ export abstract class NodePackageManager extends PackageManager {
     for (const file of typeFiles) {
       promises.push(
         fs.promises.readFile(path.join(cwd, file)).then(b => {
-          return {
-            [file]: b.toString()
-          };
+          return {[file]: b.toString()};
         })
       );
     }

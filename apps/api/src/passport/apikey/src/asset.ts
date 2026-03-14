@@ -1,12 +1,13 @@
 import {Validator, Schema} from "@spica-server/core/schema";
-import {ApiKeyService} from "@spica-server/passport/apikey/src/apikey.service";
-import {ApiKey} from "@spica-server/passport/apikey/src/interface";
+// @TODO: create separate apikey services module and update this import
+import {ApiKeyService} from "./apikey.service";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {Resource} from "@spica-server/interface/asset";
 import {registrar} from "@spica-server/asset";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import uniqid from "uniqid";
 import ApiKeySchema from "./schemas/apikey.json" with {type: "json"};
+import {ApikeyAsset} from "@spica-server/interface/passport/apikey";
 
 const _module = "apikey";
 
@@ -68,10 +69,6 @@ export function registerAssetHandlers(
         };
       });
     });
-}
-
-export interface ApikeyAsset {
-  schema: ApiKey;
 }
 
 function validateApikey(apikey: any, validator: Validator): Promise<void> {

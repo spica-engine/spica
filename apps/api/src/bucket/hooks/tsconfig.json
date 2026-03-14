@@ -7,6 +7,12 @@
     },
     {
       "path": "./proto"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket/hooks"
+    },
+    {
+      "path": "../services"
     }
   ]
 }

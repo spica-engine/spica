@@ -1,11 +1,13 @@
 import {Middlewares} from "@spica-server/core";
 import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {event, Http} from "@spica-server/function/queue/proto";
-import {Description, Enqueuer} from "./enqueuer";
+import {Enqueuer} from "./enqueuer";
 import express from "express";
 import bodyParser from "body-parser";
-import {CorsOptions} from "@spica-server/core";
-import {AttachStatusTracker} from "@spica-server/status/services";
+import {CorsOptions} from "@spica-server/interface/core";
+import {AttachStatusTracker} from "@spica-server/interface/status";
+import {Description, HttpMethod, HttpOptions} from "@spica-server/interface/function/enqueuer";
+import {IGuardService} from "@spica-server/interface/passport/guard";
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   type = event.Type.HTTP;
@@ -25,6 +27,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     httpServer: express.Application,
     private corsOptions: CorsOptions,
     private schedulerUnsubscription: (targetId: string) => void,
+    private guardService: IGuardService,
     private attachStatusTracker?: AttachStatusTracker
   ) {
     super();
@@ -80,7 +83,55 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       this.router[method](path, fn);
     }
 
-    const fn = (req: express.Request, res: express.Response) => {
+    const fn = async (req: express.Request, res: express.Response) => {
+      const shouldAuthenticate =
+        Array.isArray(options.authenticate) && options.authenticate.length > 0;
+
+      if (shouldAuthenticate) {
+        try {
+          await this.guardService.checkAuthentication({
+            request: req,
+            response: res,
+            allowedStrategies: options.authenticate
+          });
+        } catch (e) {
+          const status = e.status || 401;
+          if (!res.headersSent) {
+            res.status(status).json({message: e.message || "Unauthorized"});
+          }
+          return;
+        }
+
+        if (options.authorize) {
+          try {
+            const originalRoute = req.route;
+            req.route = {path: "function/:functionId/invoke/:handlerId"} as any;
+
+            const originalParams = req.params;
+            req.params = {functionId: target.id, handlerId: target.handler};
+
+            await this.guardService.checkAuthorization({
+              request: req,
+              response: res,
+              actions: ["function:invoke"],
+              options: {
+                resourceFilter: false
+              },
+              format: "function/:functionId/invoke/:handlerId"
+            });
+
+            req.params = originalParams;
+            req.route = originalRoute;
+          } catch (e) {
+            const status = e.status || 403;
+            if (!res.headersSent) {
+              res.status(status).json({message: e.message || "Forbidden"});
+            }
+            return;
+          }
+        }
+      }
+
       const ev = new event.Event({
         target,
         type: event.Type.HTTP
@@ -169,22 +220,4 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
 
     return Promise.resolve();
   }
-}
-
-// We can't use integer enum because we show these values on the UI.
-export enum HttpMethod {
-  All = "All",
-  Get = "Get",
-  Post = "Post",
-  Put = "Put",
-  Delete = "Delete",
-  Options = "Options",
-  Patch = "Patch",
-  Head = "Head"
-}
-
-export interface HttpOptions {
-  method: HttpMethod;
-  path: string;
-  preflight: boolean;
 }

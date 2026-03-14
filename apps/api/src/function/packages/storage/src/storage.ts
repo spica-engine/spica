@@ -2,16 +2,17 @@ import {
   initialize as _initialize,
   checkInitialized,
   isPlatformBrowser,
-  HttpService
+  Batch
 } from "@spica-devkit/internal_common";
-import {
-  StorageObject,
-  BufferWithMeta,
-  IndexResult,
-  ApikeyInitialization,
-  IdentityInitialization
-} from "./interface";
+import {StorageObject, BufferWithMeta} from "./interface";
 import {preparePostBody, preparePutBody} from "./utility";
+import {
+  ApikeyInitialization,
+  IdentityInitialization,
+  IndexResult,
+  HttpService
+} from "@spica-server/interface/function/packages";
+import {BatchResponse} from "@spica-server/interface/batch";
 
 let authorization;
 
@@ -27,37 +28,39 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
 
 export async function insert(
   object: File | BufferWithMeta,
-  onUploadProgress?: (progress: ProgressEvent) => void
+  onUploadProgress?: (progress: ProgressEvent) => void,
+  headers: object = {}
 ) {
-  checkInitialized(authorization);
-  const {body, headers} = await preparePostBody([object]);
+  checkInitialized(authorization, service);
+  const postBody = await preparePostBody([object]);
 
   return service
-    .post<StorageObject[]>("storage", body, {
+    .post<StorageObject[]>("storage", postBody.body, {
       onUploadProgress,
-      headers
+      headers: {...postBody.headers, ...headers}
     })
     .then(([r]) => r);
 }
 
 export async function insertMany(
   objects: FileList | (File | BufferWithMeta)[],
-  onUploadProgress?: (progress: ProgressEvent) => void
+  onUploadProgress?: (progress: ProgressEvent) => void,
+  headers: object = {}
 ): Promise<StorageObject[]> {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
-  const {body, headers} = await preparePostBody(objects);
+  const postBody = await preparePostBody(objects);
 
-  return service.post<StorageObject[]>("storage", body, {
+  return service.post<StorageObject[]>("storage", postBody.body, {
     onUploadProgress,
-    headers
+    headers: {...postBody.headers, ...headers}
   });
 }
 
-export function get(id: string) {
-  checkInitialized(authorization);
+export function get(id: string, headers?: object) {
+  checkInitialized(authorization, service);
 
-  return service.get<StorageObject>(`storage/${id}`);
+  return service.get<StorageObject>(`storage/${id}`, {headers});
 }
 
 /**
@@ -70,7 +73,7 @@ export function download(
     onDownloadProgress?: (progress: ProgressEvent) => void;
   } = {}
 ) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
   return service.get(`storage/${id}/view`, {
     headers: options.headers,
@@ -79,61 +82,83 @@ export function download(
   });
 }
 
-export function getAll(queryParams?: {
-  filter?: object;
-  paginate?: false;
-  limit?: number;
-  skip?: number;
-  sort?: object;
-}): Promise<StorageObject[]>;
-export function getAll(queryParams?: {
-  filter?: object;
-  paginate?: true;
-  limit?: number;
-  skip?: number;
-  sort?: object;
-}): Promise<IndexResult<StorageObject>>;
-export function getAll(queryParams?: {
-  filter?: object;
-  paginate?: boolean;
-  limit?: number;
-  skip?: number;
-  sort?: object;
-}): Promise<IndexResult<StorageObject> | StorageObject[]> {
-  checkInitialized(authorization);
+export function getAll(
+  queryParams?: {
+    filter?: object;
+    paginate?: false;
+    limit?: number;
+    skip?: number;
+    sort?: object;
+  },
+  headers?: object
+): Promise<StorageObject[]>;
+export function getAll(
+  queryParams?: {
+    filter?: object;
+    paginate?: true;
+    limit?: number;
+    skip?: number;
+    sort?: object;
+  },
+  headers?: object
+): Promise<IndexResult<StorageObject>>;
+export function getAll(
+  queryParams?: {
+    filter?: object;
+    paginate?: boolean;
+    limit?: number;
+    skip?: number;
+    sort?: object;
+  },
+  headers?: object
+): Promise<IndexResult<StorageObject> | StorageObject[]> {
+  checkInitialized(authorization, service);
 
   return service.get<IndexResult<StorageObject> | StorageObject[]>(`storage`, {
-    params: queryParams
+    params: queryParams,
+    headers
   });
 }
 
 export async function update(
   id: string,
   object: File | BufferWithMeta,
-  onUploadProgress?: (progress: ProgressEvent) => void
+  onUploadProgress?: (progress: ProgressEvent) => void,
+  headers: object = {}
 ) {
-  checkInitialized(authorization);
+  checkInitialized(authorization, service);
 
-  const {body, headers} = await preparePutBody(object);
+  const putBody = await preparePutBody(object);
 
-  return service.put<StorageObject>(`storage/${id}`, body, {
+  return service.put<StorageObject>(`storage/${id}`, putBody.body, {
     onUploadProgress,
-    headers
+    headers: {...putBody.headers, ...headers}
   });
 }
 
-export async function updateMeta(id: string, meta: {name: string}) {
-  checkInitialized(authorization);
+export async function updateMeta(id: string, meta: {name: string}, headers: object = {}) {
+  checkInitialized(authorization, service);
 
   return service.patch<StorageObject>(`storage/${id}`, meta, {
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      ...headers
     }
   });
 }
 
-export function remove(id: string) {
-  checkInitialized(authorization);
+export function remove(id: string, headers?: object) {
+  checkInitialized(authorization, service);
 
-  return service.delete(`storage/${id}`);
+  return service.delete(`storage/${id}`, {headers});
+}
+
+export function removeMany(ids: string[], headers?: object) {
+  checkInitialized(authorization, service);
+
+  const batchReqs = Batch.prepareRemoveRequest(ids, "storage", service.getAuthorization(), headers);
+
+  return service
+    .post<BatchResponse<string>>("batch", batchReqs, {headers})
+    .then(response => Batch.handleBatchResponse<string>(batchReqs, response));
 }

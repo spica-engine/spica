@@ -23,20 +23,20 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              memory: "10Mi"
-              cpu: "10m"
+              memory: "64Mi"
+              cpu: "100m"
             limits:
-              memory: "50Mi"
-              cpu: "50m"
+              memory: "128Mi"
+              cpu: "200m"
           args: [
             "--from-srv",
             "false",
             "--nodes",
             {{ template "database.nodes" . }},
             "--username",
-            "$(USERNAME)",
+            "$(ROOT_USERNAME)",
             "--password",
-            "$(PASSWORD)"
+            "$(ROOT_PASSWORD)"
           ]
           env:
             - name: ROOT_USERNAME

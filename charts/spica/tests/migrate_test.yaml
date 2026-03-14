@@ -1,0 +1,113 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: migration job
+templates:
+  - templates/migrate.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.masterKey: test-master-key
+  application.publicHost: https://test.example.com
+
+tests:
+  - it: should render nothing on a fresh install (IsUpgrade false)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render a Job on upgrade
+    release:
+      upgrade: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Job
+
+  - it: should be named after the release on upgrade
+    release:
+      upgrade: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-migrate
+
+  - it: should carry the pre-upgrade hook annotation
+    release:
+      upgrade: true
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: pre-upgrade
+
+  - it: should have backoffLimit of 5
+    release:
+      upgrade: true
+    asserts:
+      - equal:
+          path: spec.backoffLimit
+          value: 5
+
+  - it: should include --from arg reading from the version ConfigMap
+    release:
+      upgrade: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--from"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "$(FROM)"
+
+  - it: should include --database-uri and --database-name args
+    release:
+      upgrade: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--database-uri"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--database-name"
+
+  - it: should include --continue-if-versions-are-equal flag
+    release:
+      upgrade: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--continue-if-versions-are-equal"
+
+  - it: should read FROM env var from the version ConfigMap
+    release:
+      upgrade: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: FROM
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef.name
+          value: release-name-version
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.configMapKeyRef.key
+          value: VERSION
+
+  - it: should use OnFailure restart policy
+    release:
+      upgrade: true
+    asserts:
+      - equal:
+          path: spec.template.spec.restartPolicy
+          value: OnFailure
+
+  - it: should apply database nodeSelector to the migrate job when set
+    release:
+      upgrade: true
+    set:
+      database.nodeSelector:
+        region: eu-west
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.region
+          value: eu-west

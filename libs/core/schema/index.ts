@@ -1,5 +1,6 @@
 export {Schema} from "./src/pipe";
 export {SchemaModule} from "./src/module";
+export {applyPasswordPolicy} from "./src/password-policy.utils";
 export {
   ValidationError,
   Validator,
@@ -8,4 +9,8 @@ export {
   CodeKeywordDefinition,
   KeywordCxt
 } from "./src/validator";
-export {Default, Format, Keyword} from "./src/interface";
+/** @deprecated Import from @spica-server/core/encryption instead */
+export {hash, encrypt, decrypt, isEncryptedData} from "@spica-server/core/encryption";
+/** @deprecated Import from @spica-server/core/encryption instead */
+export type {EncryptedData, BaseEncryptedData} from "@spica-server/core/encryption";
+export {createEncryptedFormat} from "./src/formats";

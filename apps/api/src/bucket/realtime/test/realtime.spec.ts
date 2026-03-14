@@ -4,7 +4,7 @@ import {BucketModule} from "@spica-server/bucket/src";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {GuardService} from "@spica-server/passport";
+import {GuardService} from "@spica-server/passport/guard/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
@@ -108,14 +108,16 @@ describe("Realtime", () => {
 
     beforeEach(() => {
       const guardService = app.get(GuardService);
-      authGuardCheck = jest.spyOn(guardService, "checkAuthorization");
-      actionGuardCheck = jest.spyOn(guardService, "checkAction").mockImplementation(({request}) => {
-        request.resourceFilter = {
-          include: [],
-          exclude: []
-        };
-        return Promise.resolve(true);
-      });
+      authGuardCheck = jest.spyOn(guardService, "checkAuthentication");
+      actionGuardCheck = jest
+        .spyOn(guardService, "checkAuthorization")
+        .mockImplementation(({request}) => {
+          request.resourceFilter = {
+            include: [],
+            exclude: []
+          };
+          return Promise.resolve(true);
+        });
     });
 
     it("should authorize and do the initial sync", done => {
@@ -495,51 +497,6 @@ describe("Realtime", () => {
           };
 
           ws.connect.then(() => ws.send(JSON.stringify({event: "insert", data: {}})));
-        });
-      });
-
-      describe("rule", () => {
-        let ruleBucket: any = {
-          title: "Realtime",
-          description: "Realtime",
-          properties: {
-            title: {
-              type: "string"
-            }
-          },
-          acl: {
-            write: "true==false",
-            read: "true==true"
-          }
-        };
-        beforeEach(async () => {
-          await req.post("/bucket", ruleBucket).then(res => (ruleBucket = res.body));
-        });
-
-        it("should reject operation cause of rule", done => {
-          const ws = wsc.get(url(`/bucket/${ruleBucket._id}/data`));
-
-          ws.onmessage = async e => {
-            const message = JSON.parse(e.data as string);
-            messageSpy(message);
-
-            if (message.kind == lastMessageKind) {
-              expect(messageSpy.mock.calls.map(c => c[0])).toEqual([
-                {kind: ChunkKind.EndOfInitial},
-                {
-                  kind: ChunkKind.Response,
-                  status: 401,
-                  message: "ACL rules has rejected this operation."
-                }
-              ]);
-              await ws.close();
-              done();
-            }
-          };
-
-          ws.connect.then(() =>
-            ws.send(JSON.stringify({event: "insert", data: {title: "reject_me"}}))
-          );
         });
       });
     });

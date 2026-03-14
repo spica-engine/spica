@@ -1,0 +1,5 @@
+{
+  "name": "api/batch",
+  "sourceRoot": "apps/api/src/batch",
+  "projectType": "application"
+}

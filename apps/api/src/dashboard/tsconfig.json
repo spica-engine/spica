@@ -10,6 +10,13 @@
     },
     {
       "path": "../asset"
-    }
+    },
+    {
+      "path": "../../../../libs/interface/dashboard"
+    },
+    {
+      "path": "./realtime"
+    },
+    {"path": "../../../../libs/interface/versioncontrol"}
   ]
 }
