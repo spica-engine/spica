@@ -19,6 +19,8 @@ describe("Rate Limit E2E", () => {
   let rateLimitService: RateLimitService;
   let adminToken: string;
 
+  const ip1 = {"X-Forwarded-For": "1.2.3.4"};
+
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -103,17 +105,27 @@ describe("Rate Limit E2E", () => {
 
     it("should reject login request after exceeding configured rate limit", async () => {
       for (let i = 0; i < 3; i++) {
-        const res = await req.post("/passport/login", {
-          username: "nonexistent",
-          password: "wrongpassword"
-        });
+        const res = await req.post(
+          "/passport/login",
+          {
+            username: "nonexistent",
+            password: "wrongpassword"
+          },
+          undefined,
+          ip1
+        );
         expect(res.headers["x-ratelimit-limit"]).toBe("3");
       }
 
-      const blockedRes = await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
+      const blockedRes = await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
 
       expect(blockedRes.statusCode).toBe(429);
       expect(blockedRes.body.message).toBe("Too many requests. Please try again later.");
@@ -127,27 +139,47 @@ describe("Rate Limit E2E", () => {
       });
       rateLimitService.resetTracker();
 
-      await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
-      await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
+      await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
+      await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
 
-      const blockedRes = await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
+      const blockedRes = await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
       expect(blockedRes.statusCode).toBe(429);
 
       rateLimitService.resetTracker();
 
-      const allowedRes = await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
+      const allowedRes = await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
       expect(allowedRes.statusCode).not.toBe(429);
     });
   });
@@ -175,19 +207,34 @@ describe("Rate Limit E2E", () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       rateLimitService.resetTracker();
-      await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
-      await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
+      await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
+      await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
 
-      const blockedRes = await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
+      const blockedRes = await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
       expect(blockedRes.statusCode).toBe(429);
     });
 
@@ -196,24 +243,39 @@ describe("Rate Limit E2E", () => {
         login: {limit: 1, ttl: 60_000}
       });
 
-      await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
+      await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
 
-      const blockedRes = await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
+      const blockedRes = await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
       expect(blockedRes.statusCode).toBe(429);
 
       rateLimitService.setConfigCache(undefined);
       rateLimitService.resetTracker();
 
-      const allowedRes = await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
+      const allowedRes = await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        undefined,
+        ip1
+      );
       expect(allowedRes.statusCode).not.toBe(429);
     });
   });
@@ -230,18 +292,18 @@ describe("Rate Limit E2E", () => {
       await req.post(
         "/passport/user",
         {username: "user1", password: "Pass1234!"},
-        {Authorization: `IDENTITY ${adminToken}`}
+        {Authorization: `IDENTITY ${adminToken}`, ...ip1}
       );
       await req.post(
         "/passport/user",
         {username: "user2", password: "Pass1234!"},
-        {Authorization: `IDENTITY ${adminToken}`}
+        {Authorization: `IDENTITY ${adminToken}`, ...ip1}
       );
 
       const blockedRes = await req.post(
         "/passport/user",
         {username: "user3", password: "Pass1234!"},
-        {Authorization: `IDENTITY ${adminToken}`}
+        {Authorization: `IDENTITY ${adminToken}`, ...ip1}
       );
       expect(blockedRes.statusCode).toBe(429);
     });
@@ -256,10 +318,10 @@ describe("Rate Limit E2E", () => {
     });
 
     it("should reject refresh token after exceeding rate limit", async () => {
-      await req.post("/passport/user/session/refresh");
-      await req.post("/passport/user/session/refresh");
+      await req.post("/passport/user/session/refresh", undefined, ip1);
+      await req.post("/passport/user/session/refresh", undefined, ip1);
 
-      const blockedRes = await req.post("/passport/user/session/refresh");
+      const blockedRes = await req.post("/passport/user/session/refresh", undefined, ip1);
       expect(blockedRes.statusCode).toBe(429);
     });
   });

@@ -255,8 +255,7 @@ describe("RateLimitGuard", () => {
       setHeader: jest.fn()
     };
     mockRequest = {
-      ip: "127.0.0.1",
-      ips: []
+      ip: "127.0.0.1"
     };
   });
 
@@ -323,38 +322,6 @@ describe("RateLimitGuard", () => {
     } catch (e) {
       expect(mockResponse.setHeader).toHaveBeenCalledWith("Retry-After", expect.any(Number));
     }
-  });
-
-  it("should use ips[0] when proxy headers are present", () => {
-    rateLimitService.setConfigCache({login: {limit: 2, ttl: 60_000}});
-    mockRequest.ips = ["10.0.0.1", "192.168.1.1"];
-    mockRequest.ip = "192.168.1.1";
-
-    const GuardClass = RateLimitGuard("login");
-    const guard = new GuardClass(rateLimitService);
-    const context = createMockContext();
-
-    guard.canActivate(context);
-    guard.canActivate(context);
-
-    mockRequest.ips = [];
-    mockRequest.ip = "192.168.1.1";
-    const result = guard.canActivate(context);
-    expect(result).toBe(true);
-  });
-
-  it("should use req.ip when no proxy headers", () => {
-    rateLimitService.setConfigCache({login: {limit: 1, ttl: 60_000}});
-    mockRequest.ips = [];
-    mockRequest.ip = "127.0.0.1";
-
-    const GuardClass = RateLimitGuard("login");
-    const guard = new GuardClass(rateLimitService);
-    const context = createMockContext();
-
-    guard.canActivate(context);
-
-    expect(() => guard.canActivate(context)).toThrow(HttpException);
   });
 
   it("should handle different groups independently", () => {
