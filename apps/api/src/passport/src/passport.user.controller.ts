@@ -165,11 +165,7 @@ export class PassportUserController {
     this.completeLoginWithState(state, user, expires);
   }
 
-  async completeLoginWithState(
-    state: string,
-    user: User,
-    expires: number
-  ) {
+  async completeLoginWithState(state: string, user: User, expires: number) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
     if (!res || res.headerSent) {
@@ -206,13 +202,7 @@ export class PassportUserController {
     }
   }
 
-  async _login(
-    username: string,
-    password: string,
-    state: string,
-    expires: number,
-    res
-  ) {
+  async _login(username: string, password: string, state: string, expires: number, res) {
     const catchError = e => {
       if (!res.headerSent) {
         res.status(e.status || 500).json(e.response || e);
@@ -254,7 +244,6 @@ export class PassportUserController {
     @Query("password") password: string,
     @Query("state") state: string,
     @Req() req: any,
-    @Next() next,
     @Query("expires", NUMBER) expires?: number
   ) {
     req.res.append(
@@ -269,9 +258,7 @@ export class PassportUserController {
   async loginWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
     {username, password, expires, state}: LoginCredentials,
-    @Req() req: any,
-    @Res() res: any,
-    @Next() next
+    @Res() res: any
   ) {
     this._login(username, password, state, expires, res);
   }

@@ -162,21 +162,14 @@ export class PassportIdentityController {
     this.completeIdentifyWithState(state, identity, expires);
   }
 
-  async completeIdentifyWithState(
-    state: string,
-    identity: Identity,
-    expires: number
-  ) {
+  async completeIdentifyWithState(state: string, identity: Identity, expires: number) {
     const res = this.stateReqs.get(state);
     this.stateReqs.delete(state);
     if (!res || res.headerSent) {
       return;
     }
 
-    const {tokenSchema, refreshTokenSchema} = await this.signIdentity(
-      identity,
-      expires
-    );
+    const {tokenSchema, refreshTokenSchema} = await this.signIdentity(identity, expires);
     this.setRefreshTokenCookie(res, refreshTokenSchema.token);
     res.status(200).json(tokenSchema);
   }
@@ -206,13 +199,7 @@ export class PassportIdentityController {
     }
   }
 
-  async _identify(
-    identifier: string,
-    password: string,
-    state: string,
-    expires: number,
-    res
-  ) {
+  async _identify(identifier: string, password: string, state: string, expires: number, res) {
     const catchError = e => {
       if (!res.headerSent) {
         res.status(e.status || 500).json(e.response || e);
@@ -253,7 +240,6 @@ export class PassportIdentityController {
     @Query("password") password: string,
     @Query("state") state: string,
     @Req() req: any,
-    @Next() next,
     @Query("expires", NUMBER) expires?: number
   ) {
     req.res.append(
@@ -267,9 +253,7 @@ export class PassportIdentityController {
   async identifyWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
     {identifier, password, expires, state}: LoginCredentials,
-    @Req() req: any,
-    @Res() res: any,
-    @Next() next
+    @Res() res: any
   ) {
     this._identify(identifier, password, state, expires, res);
   }
