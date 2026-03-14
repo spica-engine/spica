@@ -260,7 +260,7 @@ export class PassportUserController {
     @Body(Schema.validate("http://spica.internal/login"))
     {username, password, expires, state}: LoginCredentials,
     @Res() res: any,
-    @Next() next,
+    @Next() next
   ) {
     this._login(username, password, state, expires, res);
   }
