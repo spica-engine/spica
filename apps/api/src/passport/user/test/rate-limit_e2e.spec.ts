@@ -111,7 +111,6 @@ describe("Rate Limit E2E", () => {
             username: "nonexistent",
             password: "wrongpassword"
           },
-          undefined,
           ip1
         );
         expect(res.headers["x-ratelimit-limit"]).toBe("3");
@@ -123,7 +122,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
 
@@ -145,7 +143,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
       await req.post(
@@ -154,7 +151,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
 
@@ -164,7 +160,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
       expect(blockedRes.statusCode).toBe(429);
@@ -177,7 +172,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
       expect(allowedRes.statusCode).not.toBe(429);
@@ -191,10 +185,14 @@ describe("Rate Limit E2E", () => {
     });
 
     it("should apply rate limit changes from config", async () => {
-      const noLimitRes = await req.post("/passport/login", {
-        username: "nonexistent",
-        password: "wrongpassword"
-      });
+      const noLimitRes = await req.post(
+        "/passport/login",
+        {
+          username: "nonexistent",
+          password: "wrongpassword"
+        },
+        ip1
+      );
       expect(noLimitRes.headers["x-ratelimit-limit"]).toBeUndefined();
 
       await userConfigService.set({
@@ -213,7 +211,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
       await req.post(
@@ -222,7 +219,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
 
@@ -232,7 +228,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
       expect(blockedRes.statusCode).toBe(429);
@@ -249,7 +244,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
 
@@ -259,7 +253,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
       expect(blockedRes.statusCode).toBe(429);
@@ -273,7 +266,6 @@ describe("Rate Limit E2E", () => {
           username: "nonexistent",
           password: "wrongpassword"
         },
-        undefined,
         ip1
       );
       expect(allowedRes.statusCode).not.toBe(429);
