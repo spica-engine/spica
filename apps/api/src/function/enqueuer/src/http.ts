@@ -135,13 +135,6 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       }
 
       if (options.rateLimit) {
-        const getFirstIp = (ip: string | string[] | undefined) => {
-          if (!ip) return "";
-          if (Array.isArray(ip)) {
-            return ip[0];
-          }
-          return ip.split(",")[0].trim();
-        };
         const ip = req.ip;
 
         if (!ip) {
