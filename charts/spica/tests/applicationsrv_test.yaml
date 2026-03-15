@@ -57,6 +57,15 @@ tests:
           path: spec.selector["app.kubernetes.io/component"]
           value: application
 
+  - it: should expose port 50051 for gRPC
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: grpc
+            port: 50051
+            targetPort: 50051
+
   - it: should carry standard Kubernetes labels
     asserts:
       - equal:
