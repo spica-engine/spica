@@ -11,7 +11,8 @@ import {
   HttpEnqueuer,
   ScheduleEnqueuer,
   SystemEnqueuer,
-  RabbitMQEnqueuer
+  RabbitMQEnqueuer,
+  GrpcEnqueuer
 } from "@spica-server/function/enqueuer";
 import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
@@ -156,7 +157,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     );
 
     this.enqueuers.add(
-      new GrpcEnqueuer(this.queue, this.grpcQueue, schedulerUnsubscription, this.options.grpcPort)
+      new GrpcEnqueuer(
+        this.queue,
+        this.grpcQueue,
+        schedulerUnsubscription,
+        this.options.grpcPort
+      )
     );
 
     if (typeof this.enqueuerFactory == "function") {
