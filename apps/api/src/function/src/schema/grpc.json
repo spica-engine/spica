@@ -25,9 +25,9 @@
             "enum": ["string", "int32", "int64", "float", "double", "bool", "bytes"]
           }
         },
-        "additionalProperties": false
-      },
-      "default": []
+        "additionalProperties": false,
+        "minItems": 1
+      }
     },
     "responseParams": {
       "title": "Response Parameters",
@@ -51,7 +51,7 @@
         },
         "additionalProperties": false
       },
-      "default": []
+      "minItems": 1
     }
   },
   "additionalProperties": false
