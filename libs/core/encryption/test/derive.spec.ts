@@ -8,9 +8,9 @@ describe("deriveKey", () => {
   });
 
   it("should be deterministic — same input always produces same output", () => {
-    const result1 = deriveKey("my-master-key:bucket-data-hash-secret");
-    const result2 = deriveKey("my-master-key:bucket-data-hash-secret");
-    const result3 = deriveKey("my-master-key:bucket-data-hash-secret");
+    const result1 = deriveKey("my-master-key", "bucket-data-hash-secret");
+    const result2 = deriveKey("my-master-key", "bucket-data-hash-secret");
+    const result3 = deriveKey("my-master-key", "bucket-data-hash-secret");
 
     expect(result1).toBe(result2);
     expect(result2).toBe(result3);
@@ -18,10 +18,10 @@ describe("deriveKey", () => {
 
   it("should produce different outputs for different inputs", () => {
     const masterKey = "my-master-key";
-    const derived1 = deriveKey(`${masterKey}:bucket-data-hash-secret`);
-    const derived2 = deriveKey(`${masterKey}:bucket-data-encryption-secret`);
-    const derived3 = deriveKey(`${masterKey}:user-verification-hash-secret`);
-    const derived4 = deriveKey(`${masterKey}:passport-secret`);
+    const derived1 = deriveKey(masterKey, "bucket-data-hash-secret");
+    const derived2 = deriveKey(masterKey, "bucket-data-encryption-secret");
+    const derived3 = deriveKey(masterKey, "user-verification-hash-secret");
+    const derived4 = deriveKey(masterKey, "passport-secret");
 
     const allDerived = [derived1, derived2, derived3, derived4];
     const uniqueDerived = new Set(allDerived);
@@ -29,13 +29,13 @@ describe("deriveKey", () => {
   });
 
   it("should produce different outputs for different master keys", () => {
-    const result1 = deriveKey("master-key-1:bucket-data-hash-secret");
-    const result2 = deriveKey("master-key-2:bucket-data-hash-secret");
+    const result1 = deriveKey("master-key-1", "bucket-data-hash-secret");
+    const result2 = deriveKey("master-key-2", "bucket-data-hash-secret");
 
     expect(result1).not.toBe(result2);
   });
 
-  it("should work with composite key format used for secret derivation", () => {
+  it("should derive unique 32-byte keys per-purpose from the same master key", () => {
     const masterKey = "super-secret-master-key-12345";
     const keyNames = [
       "bucket-data-hash-secret",
@@ -47,7 +47,7 @@ describe("deriveKey", () => {
       "passport-secret"
     ];
 
-    const derived = keyNames.map(name => deriveKey(`${masterKey}:${name}`));
+    const derived = keyNames.map(name => deriveKey(masterKey, name));
     const uniqueDerived = new Set(derived);
 
     expect(uniqueDerived.size).toBe(keyNames.length);
@@ -66,9 +66,8 @@ describe("deriveKeyBuffer", () => {
   });
 
   it("should be consistent with deriveKey hex output", () => {
-    const input = "my-master-key:bucket-data-hash-secret";
-    const hexResult = deriveKey(input);
-    const bufferResult = deriveKeyBuffer(input);
+    const hexResult = deriveKey("my-master-key", "bucket-data-hash-secret");
+    const bufferResult = deriveKeyBuffer("my-master-key", "bucket-data-hash-secret");
 
     expect(bufferResult.toString("hex")).toBe(hexResult);
   });
