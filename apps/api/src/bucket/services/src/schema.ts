@@ -5,7 +5,9 @@ import {Bucket, BucketPreferences, ExtendedJSONSchema7Type} from "@spica-server/
 const logger = new Logger("BucketSchema");
 
 function addIdField(bucket) {
-  bucket.properties._id = {type: "objectid"};
+  bucket.properties._id = {
+    type: "objectid"
+  };
   return bucket;
 }
 
@@ -59,7 +61,10 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
       case "relation":
         if (schema["relationType"] == "onetomany") {
           schema.type = "array";
-          schema.items = {format: "objectid-string", type: "string"};
+          schema.items = {
+            format: "objectid-string",
+            type: "string"
+          };
         } else {
           schema.type = "string";
           schema.format = "objectid-string";
@@ -75,8 +80,18 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
         const point: JSONSchema7Definition = {
           type: "array",
           items: [
-            {title: "Longitude", type: "number", minimum: -180, maximum: 180},
-            {title: "Latitude", type: "number", minimum: -90, maximum: 90}
+            {
+              title: "Longitude",
+              type: "number",
+              minimum: -180,
+              maximum: 180
+            },
+            {
+              title: "Latitude",
+              type: "number",
+              minimum: -90,
+              maximum: 90
+            }
           ],
           minItems: 2,
           additionalItems: false
@@ -85,7 +100,11 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
         schema.type = "object";
         schema.required = ["coordinates"];
         schema.properties = {
-          type: {type: "string", const: schema["locationType"], default: schema["locationType"]},
+          type: {
+            type: "string",
+            const: schema["locationType"],
+            default: schema["locationType"]
+          },
           coordinates: {}
         };
 

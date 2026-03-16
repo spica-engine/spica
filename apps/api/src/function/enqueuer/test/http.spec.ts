@@ -47,13 +47,21 @@ describe("http enqueuer", () => {
 
   beforeEach(async () => {
     noopTarget = createTarget();
-    const module = await Test.createTestingModule({imports: [CoreTestingModule]}).compile();
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
 
     app = module.createNestApplication();
     req = module.get(Request);
 
-    eventQueue = {enqueue: jest.fn(), dequeue: jest.fn()};
-    httpQueue = {enqueue: jest.fn(), dequeue: jest.fn()};
+    eventQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+    httpQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
 
     await app.listen(req.socket);
 
@@ -149,7 +157,11 @@ describe("http enqueuer", () => {
       res.end(JSON.stringify({response: "back"}));
     });
 
-    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Post, path: "/test", preflight: false});
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/test",
+      preflight: false
+    });
 
     const response = await req.options("/fn-execute/test");
     expect(response.statusCode).toBe(404);
@@ -161,7 +173,11 @@ describe("http enqueuer", () => {
   });
 
   it("should not handle preflight requests for head method", async () => {
-    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Head, path: "/test2", preflight: true});
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Head,
+      path: "/test2",
+      preflight: true
+    });
     let response = await req.options("/fn-execute/test2");
     expect(response.statusCode).toBe(404);
     httpEnqueuer.unsubscribe(noopTarget);
@@ -172,7 +188,11 @@ describe("http enqueuer", () => {
       res.writeHead(200, undefined, {"Content-type": "application/json"});
       res.end(JSON.stringify({}));
     });
-    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Post, path: "/test1", preflight: true});
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/test1",
+      preflight: true
+    });
     const response = await req.post("/fn-execute/test1", {}, {Origin: "test"});
     expect(response.headers["access-control-allow-origin"]).toBe("test");
     expect(response.body).toEqual({});
@@ -294,7 +314,11 @@ describe("http enqueuer", () => {
     // End the request immediately.
     httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
 
-    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Post, path: "/test", preflight: false});
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/test",
+      preflight: false
+    });
     await req.post("/fn-execute/test", {test: 1}, {"Content-type": "application/json"});
     expect(httpQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(
@@ -306,7 +330,11 @@ describe("http enqueuer", () => {
     httpQueue.enqueue.mockImplementation((id, req, res) => {
       res.connection.destroy();
     });
-    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Get, path: "/test", preflight: false});
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/test",
+      preflight: false
+    });
     expect(httpQueue.dequeue).not.toHaveBeenCalled();
     req.get("/fn-execute/test", {}).catch(() => {
       expect(httpQueue.dequeue).toHaveBeenCalled();
@@ -327,7 +355,10 @@ describe("http enqueuer with authentication and authorization", () => {
 
   let schedulerUnsubscriptionSpy: jest.Mock;
 
-  let guardService: {checkAuthentication: jest.Mock; checkAuthorization: jest.Mock};
+  let guardService: {
+    checkAuthentication: jest.Mock;
+    checkAuthorization: jest.Mock;
+  };
 
   let corsOptions = {
     allowCredentials: true,
@@ -346,13 +377,21 @@ describe("http enqueuer with authentication and authorization", () => {
 
   beforeEach(async () => {
     noopTarget = createTarget();
-    const module = await Test.createTestingModule({imports: [CoreTestingModule]}).compile();
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
 
     app = module.createNestApplication();
     req = module.get(Request);
 
-    eventQueue = {enqueue: jest.fn(), dequeue: jest.fn()};
-    httpQueue = {enqueue: jest.fn(), dequeue: jest.fn()};
+    eventQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+    httpQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
 
     guardService = {
       checkAuthentication: jest.fn().mockResolvedValue(true),
@@ -391,7 +430,9 @@ describe("http enqueuer with authentication and authorization", () => {
 
     expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
     expect(guardService.checkAuthentication).toHaveBeenCalledWith(
-      expect.objectContaining({allowedStrategies: ["IDENTITY"]})
+      expect.objectContaining({
+        allowedStrategies: ["IDENTITY"]
+      })
     );
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
 
@@ -436,12 +477,16 @@ describe("http enqueuer with authentication and authorization", () => {
 
     expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
     expect(guardService.checkAuthentication).toHaveBeenCalledWith(
-      expect.objectContaining({allowedStrategies: ["APIKEY"]})
+      expect.objectContaining({
+        allowedStrategies: ["APIKEY"]
+      })
     );
 
     expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
     expect(guardService.checkAuthorization).toHaveBeenCalledWith(
-      expect.objectContaining({actions: ["function:invoke"]})
+      expect.objectContaining({
+        actions: ["function:invoke"]
+      })
     );
 
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
@@ -575,7 +620,9 @@ describe("http enqueuer with authentication and authorization", () => {
     await req.get("/fn-execute/multi-auth");
 
     expect(guardService.checkAuthentication).toHaveBeenCalledWith(
-      expect.objectContaining({allowedStrategies: ["IDENTITY", "APIKEY", "USER"]})
+      expect.objectContaining({
+        allowedStrategies: ["IDENTITY", "APIKEY", "USER"]
+      })
     );
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
 
@@ -640,7 +687,10 @@ describe("http enqueuer with rate limiting", () => {
 
   let schedulerUnsubscriptionSpy: jest.Mock;
 
-  let guardService: {checkAuthentication: jest.Mock; checkAuthorization: jest.Mock};
+  let guardService: {
+    checkAuthentication: jest.Mock;
+    checkAuthorization: jest.Mock;
+  };
 
   let corsOptions = {
     allowCredentials: true,
@@ -659,14 +709,22 @@ describe("http enqueuer with rate limiting", () => {
 
   beforeEach(async () => {
     noopTarget = createTarget();
-    const module = await Test.createTestingModule({imports: [CoreTestingModule]}).compile();
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
 
     app = module.createNestApplication<NestExpressApplication>();
     app.getHttpAdapter().getInstance().set("trust proxy", true);
     req = module.get(Request);
 
-    eventQueue = {enqueue: jest.fn(), dequeue: jest.fn()};
-    httpQueue = {enqueue: jest.fn(), dequeue: jest.fn()};
+    eventQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+    httpQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
 
     guardService = {
       checkAuthentication: jest.fn().mockResolvedValue(true),

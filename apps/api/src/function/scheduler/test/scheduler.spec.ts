@@ -55,7 +55,10 @@ describe("Scheduler", () => {
 
   const compilation = {
     cwd: undefined,
-    entrypoints: {build: "index.mjs", runtime: "index.mjs"},
+    entrypoints: {
+      build: "index.mjs",
+      runtime: "index.mjs"
+    },
     outDir: ".build"
   };
 

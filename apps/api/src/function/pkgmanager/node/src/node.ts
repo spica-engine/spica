@@ -47,7 +47,9 @@ export abstract class NodePackageManager extends PackageManager {
     for (const file of typeFiles) {
       promises.push(
         fs.promises.readFile(path.join(cwd, file)).then(b => {
-          return {[file]: b.toString()};
+          return {
+            [file]: b.toString()
+          };
         })
       );
     }

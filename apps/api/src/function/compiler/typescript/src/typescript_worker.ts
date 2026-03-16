@@ -45,7 +45,10 @@ function build(compilation: Compilation) {
   fs.writeFileSync(
     tsconfigPath,
     JSON.stringify(
-      {compilerOptions: compilerOptionsJson, include: [compilation.entrypoints.build]},
+      {
+        compilerOptions: compilerOptionsJson,
+        include: [compilation.entrypoints.build]
+      },
       null,
       2
     )
@@ -79,8 +82,14 @@ function postCompilation(baseUrl: string, outDir: string, diagnostics: ts.Diagno
           code: diagnostic.code,
           category: diagnostic.category,
           text: ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine),
-          start: {line: start.line + 1, column: start.character + 1},
-          end: {line: end.line + 1, column: end.character + 1}
+          start: {
+            line: start.line + 1,
+            column: start.character + 1
+          },
+          end: {
+            line: end.line + 1,
+            column: end.character + 1
+          }
         };
       })
   });

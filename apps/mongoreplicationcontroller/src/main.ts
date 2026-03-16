@@ -35,16 +35,30 @@ const options = yargs(process.argv.slice(2))
     describe:
       "When true, the unready nodes will be added to replication by bypassing the mongodb quorum check."
   })
-  .option("hostname", {type: "string", default: os.hostname(), demand: true})
-  .option("nodes", {type: "array", describe: "Addresses of available nodes"})
-  .option("max-retry-connection", {type: "number", default: 5, demand: true})
+  .option("hostname", {
+    type: "string",
+    default: os.hostname(),
+    demand: true
+  })
+  .option("nodes", {
+    type: "array",
+    describe: "Addresses of available nodes"
+  })
+  .option("max-retry-connection", {
+    type: "number",
+    default: 5,
+    demand: true
+  })
   .option("wait-before-retry", {
     type: "number",
     describe: "Amount of time in seconds that should be awaited before retrying the connection",
     default: 3,
     demand: true
   })
-  .option("debug", {type: "boolean", default: false})
+  .option("debug", {
+    type: "boolean",
+    default: false
+  })
   .parse();
 
 const exec = util.promisify(cp.exec);

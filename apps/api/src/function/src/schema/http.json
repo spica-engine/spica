@@ -17,15 +17,26 @@
       "examples": ["/v1/books", "/v2/books", "/v2beta1/books", "/v1/authorize", "/v2/authorize"],
       "default": "/"
     },
-    "preflight": {"title": "Preflight (CORS)", "type": "boolean", "default": true},
+    "preflight": {
+      "title": "Preflight (CORS)",
+      "type": "boolean",
+      "default": true
+    },
     "authenticate": {
       "title": "Authentication Strategies",
       "type": "array",
-      "items": {"type": "string", "enum": ["IDENTITY", "APIKEY", "USER"]},
+      "items": {
+        "type": "string",
+        "enum": ["IDENTITY", "APIKEY", "USER"]
+      },
       "default": [],
       "uniqueItems": true
     },
-    "authorize": {"title": "Authorization", "type": "boolean", "default": false},
+    "authorize": {
+      "title": "Authorization",
+      "type": "boolean",
+      "default": false
+    },
     "rateLimit": {
       "title": "Rate Limit",
       "description": "Limit the number of requests per IP within a time window",
@@ -50,10 +61,20 @@
   },
   "allOf": [
     {
-      "if": {"properties": {"authorize": {"const": true}}, "required": ["authorize"]},
+      "if": {
+        "properties": {
+          "authorize": {"const": true}
+        },
+        "required": ["authorize"]
+      },
       "then": {
         "required": ["authenticate"],
-        "properties": {"authenticate": {"type": "array", "minItems": 1}}
+        "properties": {
+          "authenticate": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
       }
     }
   ],

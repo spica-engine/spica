@@ -33,7 +33,12 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     private attachStatusTracker?: AttachStatusTracker
   ) {
     super();
-    this.router.use(bodyParser.raw({limit: "10mb", type: "*/*"}) as any);
+    this.router.use(
+      bodyParser.raw({
+        limit: "10mb",
+        type: "*/*"
+      }) as any
+    );
     this.router.use(this.handleUnhandled);
     const stack = httpServer._router.stack;
     httpServer.use("/fn-execute", this.router);
@@ -46,14 +51,12 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     // By default express sends a default response if the OPTIONS route is unhandled
     // https://github.com/expressjs/express/blob/3ed5090ca91f6a387e66370d57ead94d886275e1/lib/router/index.js#L640
     if (!req.route) {
-      res
-        .status(404)
-        .send({
-          message: "Invalid route",
-          url: req.originalUrl,
-          method: req.method,
-          engine: "Function"
-        });
+      res.status(404).send({
+        message: "Invalid route",
+        url: req.originalUrl,
+        method: req.method,
+        engine: "Function"
+      });
     }
   }
 
@@ -113,7 +116,9 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
               request: req,
               response: res,
               actions: ["function:invoke"],
-              options: {resourceFilter: false},
+              options: {
+                resourceFilter: false
+              },
               format: "function/:functionId/invoke/:handlerId"
             });
 
@@ -148,20 +153,21 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
             if (!rateLimitResult.allowed) {
               const retryAfter = Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000);
               res.setHeader("Retry-After", retryAfter);
-              res
-                .status(429)
-                .json({
-                  statusCode: 429,
-                  message: "Too many requests. Please try again later.",
-                  error: "Too Many Requests"
-                });
+              res.status(429).json({
+                statusCode: 429,
+                message: "Too many requests. Please try again later.",
+                error: "Too Many Requests"
+              });
               return;
             }
           }
         }
       }
 
-      const ev = new event.Event({target, type: event.Type.HTTP});
+      const ev = new event.Event({
+        target,
+        type: event.Type.HTTP
+      });
       this.queue.enqueue(ev);
       const request = new Http.Request({
         method: req.method,

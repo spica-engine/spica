@@ -72,35 +72,31 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
     this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
 
-    this.watchEnvSubs = this.fs
-      .watchFunctionsForEnvChanges()
-      .subscribe({
-        next: ({fns, envVarId, operationType}) =>
-          fns.map(fn =>
-            operationType == "delete"
-              ? CRUD.environment.eject(this.fs, fn._id, this, envVarId)
-              : CRUD.environment.reload(this.fs, fn._id, this)
-          ),
-        error: err =>
-          this.logger.error(
-            `Error received on listening functions for environment variable changes. Reason: ${JSON.stringify(err)}`
-          )
-      });
+    this.watchEnvSubs = this.fs.watchFunctionsForEnvChanges().subscribe({
+      next: ({fns, envVarId, operationType}) =>
+        fns.map(fn =>
+          operationType == "delete"
+            ? CRUD.environment.eject(this.fs, fn._id, this, envVarId)
+            : CRUD.environment.reload(this.fs, fn._id, this)
+        ),
+      error: err =>
+        this.logger.error(
+          `Error received on listening functions for environment variable changes. Reason: ${JSON.stringify(err)}`
+        )
+    });
 
-    this.watchSecretSubs = this.fs
-      .watchFunctionsForSecretChanges()
-      .subscribe({
-        next: ({fns, secretId, operationType}) =>
-          fns.map(fn =>
-            operationType == "delete"
-              ? CRUD.secret.eject(this.fs, fn._id, this, secretId)
-              : CRUD.secret.reload(this.fs, fn._id, this)
-          ),
-        error: err =>
-          this.logger.error(
-            `Error received on listening functions for secret changes. Reason: ${JSON.stringify(err)}`
-          )
-      });
+    this.watchSecretSubs = this.fs.watchFunctionsForSecretChanges().subscribe({
+      next: ({fns, secretId, operationType}) =>
+        fns.map(fn =>
+          operationType == "delete"
+            ? CRUD.secret.eject(this.fs, fn._id, this, secretId)
+            : CRUD.secret.reload(this.fs, fn._id, this)
+        ),
+      error: err =>
+        this.logger.error(
+          `Error received on listening functions for secret changes. Reason: ${JSON.stringify(err)}`
+        )
+    });
   }
 
   onModuleInit() {
@@ -272,9 +268,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.rm(filePath);
   }
 
-  watch(
-    scope: "index" | "dependency" | "tsconfig"
-  ): Observable<{fn: FunctionWithContent; type: "create" | "update" | "delete"; event_id: string}> {
+  watch(scope: "index" | "dependency" | "tsconfig"): Observable<{
+    fn: FunctionWithContent;
+    type: "create" | "update" | "delete";
+    event_id: string;
+  }> {
     let files = [];
 
     switch (scope) {
@@ -381,7 +379,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         context: new event.SchedulingContext({
           env: Object.keys(change.target.context.env).reduce((envs, key) => {
             envs.push(
-              new event.SchedulingContext.Env({key, value: change.target.context.env[key]})
+              new event.SchedulingContext.Env({
+                key,
+                value: change.target.context.env[key]
+              })
             );
             return envs;
           }, []),

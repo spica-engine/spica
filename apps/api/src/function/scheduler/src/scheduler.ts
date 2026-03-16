@@ -11,8 +11,7 @@ import {
   HttpEnqueuer,
   ScheduleEnqueuer,
   SystemEnqueuer,
-  RabbitMQEnqueuer,
-  GrpcEnqueuer
+  RabbitMQEnqueuer
 } from "@spica-server/function/enqueuer";
 import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
@@ -157,12 +156,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     );
 
     this.enqueuers.add(
-      new GrpcEnqueuer(
-        this.queue,
-        this.grpcQueue,
-        schedulerUnsubscription,
-        this.options.grpcPort
-      )
+      new GrpcEnqueuer(this.queue, this.grpcQueue, schedulerUnsubscription, this.options.grpcPort)
     );
 
     if (typeof this.enqueuerFactory == "function") {
@@ -242,7 +236,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     const fresh = workers.filter(w => w.state == WorkerState.Fresh).length;
     const activated = workers.length - initial - fresh;
 
-    return {activated: activated, fresh: fresh, unit: "count"};
+    return {
+      activated: activated,
+      fresh: fresh,
+      unit: "count"
+    };
   }
 
   takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} {
@@ -278,7 +276,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       const {id: workerId, worker} = workerMeta;
 
-      const [stdout, stderr] = this.output.create({eventId: event.id, functionId: event.target.id});
+      const [stdout, stderr] = this.output.create({
+        eventId: event.id,
+        functionId: event.target.id
+      });
       worker.attach(stdout, stderr);
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;

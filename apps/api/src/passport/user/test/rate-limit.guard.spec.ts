@@ -36,7 +36,11 @@ describe("RateLimitService", () => {
         }),
         SmsModule.forRoot({
           strategy: "twilio",
-          twilio: {accountSid: "ACtest", authToken: "test", fromNumber: "+1234567890"}
+          twilio: {
+            accountSid: "ACtest",
+            authToken: "test",
+            fromNumber: "+1234567890"
+          }
         }),
         PolicyModule.forRoot({realtime: false}),
         ConfigModule.forRoot(),
@@ -84,7 +88,9 @@ describe("RateLimitService", () => {
 
   describe("when rate limit config is set via setConfigCache", () => {
     beforeEach(() => {
-      rateLimitService.setConfigCache({login: {limit: 3, ttl: 60_000}});
+      rateLimitService.setConfigCache({
+        login: {limit: 3, ttl: 60_000}
+      });
     });
 
     it("should allow requests within the limit", () => {
@@ -147,7 +153,9 @@ describe("RateLimitService", () => {
 
     it("should reset counter after TTL window expires", () => {
       jest.useFakeTimers();
-      rateLimitService.setConfigCache({login: {limit: 2, ttl: 60_000 * 5}});
+      rateLimitService.setConfigCache({
+        login: {limit: 2, ttl: 60_000 * 5}
+      });
 
       rateLimitService.checkLimit("login", "192.168.1.1");
       rateLimitService.checkLimit("login", "192.168.1.1");
@@ -195,7 +203,9 @@ describe("RateLimitService", () => {
     it("should load config from database on init", async () => {
       await userConfigService.set({
         verificationProcessMaxAttempt: 5,
-        rateLimits: {login: {limit: 10, ttl: 60_000 * 2}}
+        rateLimits: {
+          login: {limit: 10, ttl: 60_000 * 2}
+        }
       });
 
       await rateLimitService.onModuleInit();
@@ -209,7 +219,9 @@ describe("RateLimitService", () => {
 
       await userConfigService.set({
         verificationProcessMaxAttempt: 5,
-        rateLimits: {login: {limit: 5, ttl: 60_000}}
+        rateLimits: {
+          login: {limit: 5, ttl: 60_000}
+        }
       });
 
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -240,13 +252,20 @@ describe("RateLimitGuard", () => {
 
   beforeEach(() => {
     rateLimitService = new RateLimitService({} as any);
-    mockResponse = {setHeader: jest.fn()};
-    mockRequest = {ip: "127.0.0.1"};
+    mockResponse = {
+      setHeader: jest.fn()
+    };
+    mockRequest = {
+      ip: "127.0.0.1"
+    };
   });
 
   function createMockContext(): ExecutionContext {
     return {
-      switchToHttp: () => ({getRequest: () => mockRequest, getResponse: () => mockResponse})
+      switchToHttp: () => ({
+        getRequest: () => mockRequest,
+        getResponse: () => mockResponse
+      })
     } as unknown as ExecutionContext;
   }
 
