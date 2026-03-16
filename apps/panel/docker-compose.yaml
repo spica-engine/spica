@@ -28,16 +28,13 @@ services:
     restart: "no"
     networks:
       - spica
-
   spica-web:
     build:
       context: ../../
       dockerfile: apps/panel/Dockerfile
       args:
         BASE_URL: /spica/
-        # Overrides VITE_BASE_URL from apps/panel/.env at build time
         VITE_BASE_URL: http://localhost:4300
-    image: spica-panel-local
     container_name: spica-web
     environment:
       - BASE_URL=/spica/
