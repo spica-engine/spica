@@ -182,6 +182,79 @@ describe("grpc enqueuer", () => {
       expect(grpcEnqueuer["sanitizeIdentifier"]("my.func")).toEqual("my_func");
       expect(grpcEnqueuer["sanitizeIdentifier"]("myFunc123")).toEqual("myFunc123");
     });
+
+    it("should dequeue event and grpcQueue entry on client cancellation", () => {
+      const responseCallback = jest.fn();
+      const cancelListeners: Array<() => void> = [];
+
+      // Stub enqueue so we capture the response callback and can verify dequeue
+      jest.spyOn(grpcQueue, "enqueue").mockImplementation((id, _req, cb) => {
+        responseCallback.mockImplementation(cb);
+      });
+      jest.spyOn(grpcQueue, "dequeue");
+      jest.spyOn(eventQueue, "dequeue");
+
+      const handler = grpcEnqueuer["createHandler"]({
+        target: noopTarget,
+        options: {requestParams: [], responseParams: []}
+      });
+
+      const fakeCall: any = {
+        request: {},
+        on: (evt: string, listener: () => void) => {
+          if (evt === "cancelled") cancelListeners.push(listener);
+        }
+      };
+      const fakeCallback = jest.fn();
+
+      // Invoke handler — this enqueues the event and registers the cancel listener
+      handler(fakeCall, fakeCallback);
+
+      // Simulate client cancellation
+      cancelListeners.forEach(l => l());
+
+      expect(eventQueue.dequeue).toHaveBeenCalled();
+      expect(grpcQueue.dequeue).toHaveBeenCalled();
+
+      // Response arriving after cancellation must be silently dropped
+      responseCallback();
+      expect(fakeCallback).not.toHaveBeenCalled();
+    });
+
+    it("should ignore a late cancellation after the response has already been sent", () => {
+      const cancelListeners: Array<() => void> = [];
+      let capturedResponseCb: (r: Grpc.Response) => void;
+
+      jest.spyOn(grpcQueue, "enqueue").mockImplementation((id, _req, cb) => {
+        capturedResponseCb = cb;
+      });
+      jest.spyOn(grpcQueue, "dequeue");
+      jest.spyOn(eventQueue, "dequeue");
+
+      const handler = grpcEnqueuer["createHandler"]({
+        target: noopTarget,
+        options: {requestParams: [], responseParams: []}
+      });
+
+      const fakeCall: any = {
+        request: {},
+        on: (evt: string, listener: () => void) => {
+          if (evt === "cancelled") cancelListeners.push(listener);
+        }
+      };
+      const fakeCallback = jest.fn();
+
+      handler(fakeCall, fakeCallback);
+
+      // Worker responds first
+      capturedResponseCb(new Grpc.Response({body: JSON.stringify({ok: true})}));
+      expect(fakeCallback).toHaveBeenCalledTimes(1);
+
+      // Late cancellation must not dequeue or call callback again
+      cancelListeners.forEach(l => l());
+      expect(grpcQueue.dequeue).not.toHaveBeenCalled();
+      expect(fakeCallback).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("integration (with server binding)", () => {

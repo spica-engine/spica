@@ -165,6 +165,8 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
 
   private createHandler(reg: GrpcRegistration): grpc.handleUnaryCall<any, any> {
     return (call, callback) => {
+      let settled = false;
+
       const ev = new event.Event({
         target: reg.target,
         type: event.Type.GRPC
@@ -176,7 +178,21 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
         body: requestBody
       });
 
+      // Clean up when the client cancels or the deadline is exceeded.
+      // The gRPC framework automatically sends CANCELLED to the client, so no
+      // callback call is needed here — just release the queued entries to
+      // prevent memory leaks and avoid executing the function unnecessarily.
+      call.on("cancelled", () => {
+        if (settled) return;
+        settled = true;
+        this.queue.dequeue(ev);
+        this.grpcQueue.dequeue(ev.id);
+      });
+
       this.grpcQueue.enqueue(ev.id, request, (response: Grpc.Response) => {
+        if (settled) return;
+        settled = true;
+
         if (response.error) {
           callback({
             code: response.statusCode || grpc.status.INTERNAL,
