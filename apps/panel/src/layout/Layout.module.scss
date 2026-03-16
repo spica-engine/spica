@@ -1,0 +1,34 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  background-color: var(--color-layout-background);
+
+  .sidebar {
+    transition: width var(--transition-duration);
+    overflow: hidden;
+
+    &.navigatorOpen {
+      width: var(--sidebar-with-navigator-width);
+    }
+
+    &.navigatorClosed {
+      width: var(--sidebar-width);
+    }
+
+    @media (max-width: 1280px) {
+      display: none;
+    }
+  }
+
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    .content {
+      flex: 1;
+      overflow: auto;
+    }
+  }
+}

@@ -1,0 +1,12 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+}
+
+.commitList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  padding-left: 24px;
+}

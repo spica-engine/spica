@@ -1,0 +1,18 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-sm);
+
+  .spinner{
+    width: 14px !important; 
+    height: 14px !important;
+  }
+}
+.icon {
+  color: var(--color-font-primary);
+}
+
+.input {
+  border: 0;
+}

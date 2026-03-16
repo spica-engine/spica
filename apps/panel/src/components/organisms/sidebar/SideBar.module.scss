@@ -1,0 +1,69 @@
+@use "../../../styles/mixins";
+
+.container {
+  background-color: var(--color-background);
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  display: flex;
+  padding: var(--padding-md) 0;
+
+  .menuContainer {
+    height: 100%;
+    width: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 var(--padding-lg);
+  }
+
+  .menu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: 100%;
+    .menuItem {
+      width: 55px;
+      height: 70px;
+      @include mixins.flexCenter;
+      border-top-left-radius: var(--border-radius-md);
+      border-bottom-left-radius: var(--border-radius-md);
+      cursor: pointer;
+      outline: none;
+      border: none;
+
+    }
+
+    .active {
+      background-color: var(--color-menu-background);
+    }
+  }
+
+  .versionControl {
+    cursor: pointer;
+  }
+  .navigatorContainer {
+    width: var(--navigator-width);
+    transition: width var(--transition-duration) ease-in;
+    overflow: hidden;
+
+    &.closed {
+      width: 0;
+
+      > * {
+        opacity: 0;
+        transition: opacity var(--transition-duration) ease-out;
+      }
+    }
+  }
+
+  .activeMenuIcon {
+    color: var(--color-font-primary)
+  }
+
+  .deactiveMenuIcon {
+    color: var(--color-font-tertiary)
+  }
+}

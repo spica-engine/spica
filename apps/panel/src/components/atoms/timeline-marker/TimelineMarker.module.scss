@@ -1,0 +1,8 @@
+.marker {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-soft-light);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}

@@ -1,0 +1,30 @@
+.popoverContainer {
+  padding: 0 !important;
+
+  .settingsContainer {
+    padding: 0 !important;
+
+    .settings {
+      @extend .menuItem;
+      justify-content: flex-start !important;
+      cursor: pointer;
+    }
+  }
+
+  .themeContainer {
+    @extend .menuItem;
+    .theme {
+      min-width: 35px;
+    }
+  }
+}
+
+.menuItem {
+  padding: var(--padding-md) !important;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  width: 100%;
+  &:hover {
+    background-color: var(--color-input-background);
+  }
+}

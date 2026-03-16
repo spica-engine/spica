@@ -1,0 +1,62 @@
+.container {
+  width: var(--navigator-width);
+  background: var(--color-menu-background);
+  border-radius: var(--border-radius-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+
+  .header {
+    padding: 0 var(--padding-md);
+    font-weight: 600;
+    font-size: var(--font-size-lg);
+    height: 50px !important;
+    display: flex;
+    align-items: center;
+  }
+
+  .rootItem {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    padding: var(--padding-sm) var(--padding-xl);
+    color: var(--color-font-primary);
+    background-color: var(--color-hover);
+    cursor: pointer;
+    outline: none;
+    border: none;
+  }
+  .defaultNavigationItem {
+    padding: 0 var(--padding-sm) 0 var(--padding-md);
+    color: var(--color-font-primary);
+    cursor: pointer;
+    outline: none;
+    border: none;
+    transition: opacity 0.2s ease-in-out;
+
+    &:hover {
+      background-color: var(--color-hover);
+    }
+  }
+}
+.button {
+  padding: 0 !important;
+  min-width: unset !important;
+}
+.icon {
+  width: 16px;
+  height: 16px;
+}
+
+.webhookDrawerContent{
+  padding: var(--padding-md);
+}
+
+.addFunctionButtonContainer{
+  width: 100%;
+  padding: var(--padding-md);
+
+  .addFunctionButton{
+    border-radius: var(--border-radius-md) !important;
+  }
+}

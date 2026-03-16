@@ -1,0 +1,24 @@
+@use "../../../styles/mixins";
+.container {
+  width: 100%;
+  @include mixins.flexAlignCenterJustifyBetween;
+}
+
+.actionBar button {
+  height: 32px !important;
+}
+
+.refreshButton, .columnButton {
+  color: var(--color-font-primary);
+}
+
+.columnsPopoverContent {
+  z-index: 4;
+  > div {
+    max-height: 415px;
+    overflow-y: auto;
+    width: 100%;
+    @include mixins.hideScrollbar;
+  }
+  min-width: 200px;
+}
