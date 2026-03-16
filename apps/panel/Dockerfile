@@ -16,7 +16,9 @@ COPY nx.json ./
 COPY package.json ./
 COPY yarn.lock ./
 ARG BASE_URL=""
-RUN BASE_URL=$BASE_URL yarn run build:panel
+# VITE_BASE_URL overrides the value in .env at build time; falls back to .env if not provided
+ARG VITE_BASE_URL=""
+RUN BASE_URL=$BASE_URL VITE_BASE_URL=$VITE_BASE_URL yarn run build:panel
 
 # start app
 FROM nginx:alpine as prod

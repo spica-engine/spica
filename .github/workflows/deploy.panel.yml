@@ -3,6 +3,7 @@ name: Spica Panel Deployment
 env:
   VERSION: latest
   BASE_URL: spica
+  VITE_BASE_URL: http://localhost:4300
 
 on:
   push:
