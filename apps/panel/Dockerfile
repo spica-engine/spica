@@ -23,6 +23,5 @@ RUN BASE_URL=$BASE_URL VITE_BASE_URL=$VITE_BASE_URL yarn run build:panel
 FROM nginx:alpine as prod
 COPY --from=build /app/dist/panel /usr/share/nginx/html
 COPY ./apps/panel/nginx.conf /etc/nginx/nginx.conf
-COPY ./apps/panel/default.conf.template /etc/nginx/templates/default.conf.template
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

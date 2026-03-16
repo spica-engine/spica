@@ -36,13 +36,10 @@ services:
         BASE_URL: /spica/
         VITE_BASE_URL: http://localhost:4300
     container_name: spica-web
-    environment:
-      - BASE_URL=/spica/
     ports:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./default.conf.template:/etc/nginx/templates/default.conf.template:ro
     networks:
       - spica
 
