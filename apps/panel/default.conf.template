@@ -15,7 +15,9 @@ server {
         try_files $uri $uri/ ${BASE_URL}index.html;
     }
 
+    # Redirect everything else (including /, /spica without trailing slash, etc.)
+    # to the app base URL so React Router always starts at the correct basename.
     location / {
-        try_files $uri $uri/ ${BASE_URL}index.html;
+        return 301 ${BASE_URL};
     }
 }
