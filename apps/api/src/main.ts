@@ -686,7 +686,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     } else {
       for (const key of derivableSecretsKeys) {
         if (!args[key]) {
-          args[key] = deriveKey(`${masterKey}:${key}`);
+          args[key] = deriveKey(masterKey, key);
         }
       }
     }
