@@ -8,6 +8,10 @@ export class GrpcQueue extends Queue<typeof Grpc.UnimplementedQueueService.defin
   private queue = new Map<string, Grpc.Request>();
   private responseCallbacks = new Map<string, (response: Grpc.Response) => void>();
 
+  get(id: string) {
+    return {request: this.queue.get(id), response: this.responseCallbacks.get(id)};
+  }
+
   get size(): number {
     return this.queue.size;
   }

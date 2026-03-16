@@ -70,7 +70,7 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
 
   async onEventsAreDrained(events: event.Event[]): Promise<any> {
     for (const ev of events) {
-      const responseCallback = this.grpcQueue["responseCallbacks"].get(ev.id);
+      const responseCallback = this.grpcQueue.get(ev.id)?.response;
       if (responseCallback) {
         const errorResponse = new Grpc.Response({
           id: ev.id,
@@ -103,7 +103,6 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
 
     this.server = new grpc.Server();
 
-    // Group registrations by function (cwd) to create one service per function
     const functionGroups = new Map<string, GrpcRegistration[]>();
     for (const reg of this.registrations.values()) {
       const fnName = this.sanitizeIdentifier(path.basename(reg.target.cwd));
@@ -166,20 +165,18 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
 
   private createHandler(reg: GrpcRegistration): grpc.handleUnaryCall<any, any> {
     return (call, callback) => {
-      const id = uniqid();
-
       const ev = new event.Event({
         target: reg.target,
         type: event.Type.GRPC
       });
+      this.queue.enqueue(ev);
 
       const requestBody = JSON.stringify(call.request);
       const request = new Grpc.Request({
-        id,
         body: requestBody
       });
 
-      this.grpcQueue.enqueue(id, request, (response: Grpc.Response) => {
+      this.grpcQueue.enqueue(ev.id, request, (response: Grpc.Response) => {
         if (response.error) {
           callback({
             code: response.statusCode || grpc.status.INTERNAL,
@@ -194,8 +191,6 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
           }
         }
       });
-
-      this.queue.enqueue(ev);
     };
   }
 
