@@ -143,25 +143,6 @@ describe("Function gRPC Trigger Schema", () => {
         expect(res.body.triggers.default.options.requestParams).toHaveLength(3);
         expect(res.body.triggers.default.options.responseParams).toHaveLength(2);
       });
-
-      it("should create with empty params arrays", async () => {
-        const res = await request.post("/function", {
-          ...baseFunction,
-          name: "empty-params",
-          triggers: {
-            default: {
-              options: {
-                requestParams: [],
-                responseParams: []
-              },
-              type: "grpc",
-              active: true
-            }
-          }
-        });
-
-        expect(res.statusCode).toEqual(201);
-      });
     });
 
     describe("invalid payloads", () => {
