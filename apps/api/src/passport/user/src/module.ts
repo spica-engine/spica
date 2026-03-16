@@ -146,7 +146,7 @@ export class UserModule {
     const module: DynamicModule = {
       module: UserModule,
       controllers: [UserController],
-      exports: [UserService, UserStrategy, USER_POLICY_FINALIZER, RateLimitService],
+      exports: [UserService, UserStrategy, USER_POLICY_FINALIZER, USER_OPTIONS, RateLimitService],
       imports: [
         RefreshTokenServicesModule,
         JwtModule.register({

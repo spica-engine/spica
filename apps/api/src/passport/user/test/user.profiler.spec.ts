@@ -41,7 +41,8 @@ describe("user Controller", () => {
             blockDurationMinutes: 0,
             failedAttemptLimit: 0
           },
-          userRealtime: false
+          userRealtime: false,
+          refreshTokenHashSecret: "refresh_token_hash_secret"
         }),
         PolicyModule.forRoot({realtime: false})
       ]

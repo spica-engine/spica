@@ -1,9 +1,17 @@
 import * as crypto from "node:crypto";
 
-export function deriveKeyBuffer(input: string): Buffer {
-  return crypto.createHash("sha256").update(input, "utf8").digest();
+export function deriveKeyBuffer(ikm: string, info: string = ""): Buffer {
+  return Buffer.from(
+    crypto.hkdfSync(
+      "sha256",
+      Buffer.from(ikm, "utf8"),
+      Buffer.alloc(0),
+      Buffer.from(info, "utf8"),
+      32
+    )
+  );
 }
 
-export function deriveKey(input: string): string {
-  return deriveKeyBuffer(input).toString("hex");
+export function deriveKey(ikm: string, info: string = ""): string {
+  return deriveKeyBuffer(ikm, info).toString("hex");
 }

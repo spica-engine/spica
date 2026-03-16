@@ -44,7 +44,11 @@ export class PasswordlessLoginService {
     }
   }
 
-  async verify(username: string, code: string, provider: "email" | "phone") {
+  async verify(
+    username: string,
+    code: string,
+    provider: "email" | "phone"
+  ) {
     const {providerConfig, user} = await this.validateAndGetUser(username, provider);
 
     this.userService.checkUserIsBlocked(user);

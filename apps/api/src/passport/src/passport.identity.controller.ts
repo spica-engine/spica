@@ -240,7 +240,6 @@ export class PassportIdentityController {
     @Query("password") password: string,
     @Query("state") state: string,
     @Req() req: any,
-    @Next() next,
     @Query("expires", NUMBER) expires?: number
   ) {
     req.res.append(
@@ -254,8 +253,7 @@ export class PassportIdentityController {
   async identifyWithPost(
     @Body(Schema.validate("http://spica.internal/login"))
     {identifier, password, expires, state}: LoginCredentials,
-    @Res() res: any,
-    @Next() next
+    @Res() res: any
   ) {
     this._identify(identifier, password, state, expires, res);
   }

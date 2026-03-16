@@ -11,7 +11,8 @@ import {
   HttpEnqueuer,
   ScheduleEnqueuer,
   SystemEnqueuer,
-  RabbitMQEnqueuer
+  RabbitMQEnqueuer,
+  GrpcEnqueuer
 } from "@spica-server/function/enqueuer";
 import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
@@ -21,7 +22,8 @@ import {
   EventQueue,
   FirehoseQueue,
   HttpQueue,
-  RabbitMQQueue
+  RabbitMQQueue,
+  GrpcQueue
 } from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
@@ -48,6 +50,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private databaseQueue: DatabaseQueue;
   private firehoseQueue: FirehoseQueue;
   private rabbitmqQueue: RabbitMQQueue;
+  private grpcQueue: GrpcQueue;
 
   readonly runtimes = new Map<string, Runtime>();
   readonly pkgmanagers = new Map<string, DelegatePkgManager>();
@@ -95,6 +98,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.rabbitmqQueue = new RabbitMQQueue();
     this.queue.addQueue(this.rabbitmqQueue);
+
+    this.grpcQueue = new GrpcQueue();
+    this.queue.addQueue(this.grpcQueue);
   }
 
   async onModuleInit() {
@@ -147,6 +153,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         schedulerUnsubscription,
         this.jobReducer,
         this.commander
+      )
+    );
+
+    this.enqueuers.add(
+      new GrpcEnqueuer(
+        this.queue,
+        this.grpcQueue,
+        schedulerUnsubscription,
+        this.options.grpcPort
       )
     );
 

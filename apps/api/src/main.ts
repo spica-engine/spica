@@ -168,6 +168,10 @@ const args = yargsInstance
       description: "Default lifespan of the issued refresh JWT tokens. Unit: second",
       default: 60 * 60 * 24 * 3
     },
+    "refresh-token-hash-secret": {
+      string: true,
+      description: "Secret used for hashing refresh tokens before storing in the database"
+    },
     "passport-default-identity-identifier": {
       string: true,
       description: "Identifier of the default identity.",
@@ -175,7 +179,7 @@ const args = yargsInstance
     },
     "passport-default-strategy": {
       string: true,
-      description: "The default startegy to authenticate identities.",
+      description: "The default strategy to authenticate identities.",
       default: "IDENTITY",
       choices: ["IDENTITY", "APIKEY"]
     },
@@ -291,6 +295,11 @@ const args = yargsInstance
       boolean: true,
       description: "Allows keeping logs with their levels like DEBUG, INFO, WARN, ERROR etc.",
       default: true
+    },
+    "grpc-function-port": {
+      number: true,
+      description: "Port for the gRPC trigger server. Default is 50051.",
+      default: 50051
     },
     "function-invocation-logs": {
       boolean: true,
@@ -549,6 +558,9 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     const userProviderHashSecret = process.env.USER_PROVIDER_HASH_SECRET;
     if (userProviderHashSecret) args["user-provider-hash-secret"] = userProviderHashSecret;
 
+    const refreshTokenHashSecret = process.env.REFRESH_TOKEN_HASH_SECRET;
+    if (refreshTokenHashSecret) args["refresh-token-hash-secret"] = refreshTokenHashSecret;
+
     const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
     if (twilioAccountSid) {
       args["twilio-sms-service-account-sid"] = twilioAccountSid;
@@ -645,7 +657,8 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       "secret-module-encryption-secret",
       "user-verification-hash-secret",
       "user-provider-encryption-secret",
-      "user-provider-hash-secret"
+      "user-provider-hash-secret",
+      "refresh-token-hash-secret"
     ];
 
     if (!masterKey) {
@@ -657,7 +670,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     } else {
       for (const key of derivableSecretsKeys) {
         if (!args[key]) {
-          args[key] = deriveKey(`${masterKey}:${key}`);
+          args[key] = deriveKey(masterKey, key);
         }
       }
     }
@@ -736,6 +749,7 @@ const modules = [
       maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
       issuer: args["public-url"],
       refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
+      refreshTokenHashSecret: args["refresh-token-hash-secret"],
       secretOrKey: args["passport-secret"],
       audience: "spica.io",
       defaultIdentityIdentifier: args["passport-default-identity-identifier"],
@@ -754,6 +768,7 @@ const modules = [
       maxExpiresIn: args["passport-user-token-expiration-seconds-limit"],
       issuer: args["public-url"],
       refreshTokenExpiresIn: args["passport-user-refresh-token-expires-in"],
+      refreshTokenHashSecret: args["refresh-token-hash-secret"],
       secretOrKey: args["passport-secret"],
       audience: "spica.io",
       entryLimit: args["passport-user-limit"],
@@ -790,7 +805,8 @@ const modules = [
     realtimeLogs: true,
     logger: args["function-logger"],
     invocationLogs: args["function-invocation-logs"],
-    realtime: true
+    realtime: true,
+    grpcPort: args["grpc-function-port"]
   }),
   ConfigModule.forRoot(),
   StatusModule.forRoot({

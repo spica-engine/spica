@@ -45,7 +45,8 @@ describe("User Controller CRUD Operations", () => {
             },
             refreshTokenExpiresIn: 60000,
             passwordHistoryLimit: 0,
-            identityRealtime: false
+            identityRealtime: false,
+            refreshTokenHashSecret: "9fe2e8060da06c70906096b43db6de88"
           },
           userOptions: {
             expiresIn: 60000,
@@ -59,7 +60,8 @@ describe("User Controller CRUD Operations", () => {
             },
             refreshTokenExpiresIn: 60000,
             passwordHistoryLimit: 0,
-            userRealtime: false
+            userRealtime: false,
+            refreshTokenHashSecret: "9fe2e8060da06c70906096b43db6de88"
           }
         })
       ]

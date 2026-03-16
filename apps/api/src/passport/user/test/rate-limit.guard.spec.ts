@@ -53,7 +53,8 @@ describe("RateLimitService", () => {
           verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
           providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
           providerHashSecret: "3fe2e8060da06c70906096b43db6de11",
-          verificationCodeExpiresIn: 300
+          verificationCodeExpiresIn: 300,
+          refreshTokenHashSecret: "9fe2e8060da06c70906096b43db6de88"
         })
       ]
     })

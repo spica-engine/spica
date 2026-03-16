@@ -53,7 +53,8 @@ describe("Rate Limit E2E", () => {
             blockingOptions: {blockDurationMinutes: 0, failedAttemptLimit: 0},
             refreshTokenExpiresIn: 60000,
             passwordHistoryLimit: 0,
-            identityRealtime: false
+            identityRealtime: false,
+            refreshTokenHashSecret: "9fe2e8060da06c70906096b43db6de88"
           },
           userOptions: {
             expiresIn: 60000,
@@ -66,7 +67,8 @@ describe("Rate Limit E2E", () => {
             passwordHistoryLimit: 0,
             userRealtime: false,
             providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
-            providerHashSecret: "8fe2e8060da06c70906096b43db6de99"
+            providerHashSecret: "8fe2e8060da06c70906096b43db6de99",
+            refreshTokenHashSecret: "9fe2e8060da06c70906096b43db6de88"
           }
         })
       ]

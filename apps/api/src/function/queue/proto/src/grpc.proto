@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package Grpc;
+
+message Request {
+    string id = 1;
+    string body = 2;
+
+    message Pop {
+        string id = 1;
+    }
+}
+
+message Response {
+    string id = 1;
+    string body = 2;
+    int32 statusCode = 3;
+    string error = 4;
+
+    message Result {}
+}
+
+service Queue {
+    rpc pop(Request.Pop) returns (Request);
+    rpc respond(Response) returns (Response.Result);
+}

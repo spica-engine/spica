@@ -43,3 +43,13 @@ export interface ScheduleOptions {
 export interface EventOptions {
   name: "READY";
 }
+
+export interface GrpcParam {
+  name: string;
+  type: "string" | "int32" | "int64" | "float" | "double" | "bool" | "bytes";
+}
+
+export interface GrpcOptions {
+  requestParams: GrpcParam[];
+  responseParams: GrpcParam[];
+}
