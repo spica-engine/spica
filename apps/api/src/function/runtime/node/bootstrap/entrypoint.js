@@ -19,11 +19,12 @@ const {
   Response,
   RabbitMQQueue,
   RabbitMQMessage,
-  RabbitMQChannel
+  RabbitMQChannel,
+  GrpcQueue: GrpcQueueNode
 } = FnQueueNode;
 
 import * as FnQueueProto from "@spica-server/function/queue/proto";
-const {Database, event, Firehose, Http, RabbitMQ} = FnQueueProto;
+const {Database, event, Firehose, Http, RabbitMQ, Grpc: GrpcProto} = FnQueueProto;
 
 import {createRequire} from "module";
 import * as path from "path";
@@ -238,6 +239,39 @@ async function _process(ev, queue) {
         }
       );
       callArguments[1] = channel;
+      break;
+    case event.Type.GRPC:
+      const grpcQueue = new GrpcQueueNode();
+      const grpcPop = new GrpcProto.Request.Pop({
+        id: ev.id
+      });
+
+      const grpcRequest = await grpcQueue.pop(grpcPop);
+      let grpcRequestBody = {};
+      try {
+        grpcRequestBody = JSON.parse(grpcRequest.body);
+      } catch {
+        // empty body
+      }
+
+      callArguments[0] = grpcRequestBody;
+
+      callback = async result => {
+        const response = new GrpcProto.Response({
+          id: ev.id
+        });
+        try {
+          if (result instanceof Promise) {
+            result = await result;
+          }
+          response.body = JSON.stringify(result || {});
+          response.statusCode = 0;
+        } catch (e) {
+          response.error = e ? e.toString() : "Internal error";
+          response.statusCode = 13;
+        }
+        await grpcQueue.respond(response);
+      };
       break;
     default:
       exitAbnormally(`Invalid event type received. (${ev.type})`);

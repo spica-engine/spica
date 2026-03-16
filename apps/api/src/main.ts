@@ -308,6 +308,11 @@ const args = yargsInstance
       description: "Allows keeping logs with their levels like DEBUG, INFO, WARN, ERROR etc.",
       default: true
     },
+    "grpc-function-port": {
+      number: true,
+      description: "Port for the gRPC trigger server. Default is 50051.",
+      default: 50051
+    },
     "function-invocation-logs": {
       boolean: true,
       description: "Log function invocations to the stdout.",
@@ -830,7 +835,8 @@ const modules = [
     realtimeLogs: true,
     logger: args["function-logger"],
     invocationLogs: args["function-invocation-logs"],
-    realtime: true
+    realtime: true,
+    grpcPort: args["grpc-function-port"]
   }),
   ConfigModule.forRoot(),
   StatusModule.forRoot({

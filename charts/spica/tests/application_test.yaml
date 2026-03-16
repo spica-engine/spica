@@ -411,6 +411,17 @@ tests:
           path: spec.template.spec.containers[1].ports[0].containerPort
           value: 4300
 
+  - it: should expose gRPC on port 50051 for api container
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].ports
+          content:
+            containerPort: 50051
+
   - it: should carry required app labels on the pod template
     template: templates/application.yaml
     documentSelector:

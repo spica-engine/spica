@@ -66,6 +66,7 @@ spec:
 {{ toYaml .Values.application.apiResources | indent 12 }}
           ports:
             - containerPort: 4300
+            - containerPort: 50051
           startupProbe:
             httpGet:
               path: /status/live
