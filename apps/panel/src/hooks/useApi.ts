@@ -1,7 +1,7 @@
-import axios, { type AxiosRequestHeaders } from "axios";
-import { useCallback, useMemo, useRef, useState } from "react";
+import axios, {type AxiosRequestHeaders} from "axios";
+import {useCallback, useMemo, useRef, useState} from "react";
 import useLocalStorage from "./useLocalStorage";
-import { useSelector } from "react-redux";
+import {useSelector} from "react-redux";
 
 type ApiRequestOptions = {
   endpoint: string;
@@ -18,7 +18,7 @@ type AbortInfo = {
 
 function resolveEndpoint(endpoint: string) {
   if (endpoint.startsWith("http")) return endpoint;
-  return `${import.meta.env.VITE_BASE_URL}${endpoint}`;
+  return `${import.meta.env.VITE_BASE_URL || "/api"}${endpoint}`;
 }
 
 function useApi<T>({
@@ -42,7 +42,7 @@ function useApi<T>({
       body,
       headers,
       endpoint
-    }: { body?: any; headers?: AxiosRequestHeaders; endpoint?: string } = {}) => {
+    }: {body?: any; headers?: AxiosRequestHeaders; endpoint?: string} = {}) => {
       if (deduplicateRequests && abortInfoRef.current) {
         abortInfoRef.current.isDeduplicationAbort = true; // mark deduplication abort
         abortInfoRef.current.controller.abort();
@@ -51,7 +51,7 @@ function useApi<T>({
       const controller = new AbortController();
       abortInfoRef.current = {
         controller,
-        isDeduplicationAbort: false,
+        isDeduplicationAbort: false
       };
 
       const makeRequest = async () => {
@@ -91,7 +91,7 @@ function useApi<T>({
               return message;
             }
           }
-          const message = err.response?.data?.message ?? err.message ?? "Something went wrong"
+          const message = err.response?.data?.message ?? err.message ?? "Something went wrong";
           setError(message);
           onError?.();
           return message;
@@ -117,7 +117,7 @@ function useApi<T>({
     }),
     [data, error, loading, request]
   );
-  return result
+  return result;
 }
 
 export default useApi;
