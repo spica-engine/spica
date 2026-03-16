@@ -1,0 +1,21 @@
+server {
+    listen       80;
+    listen  [::]:80;
+    server_name  localhost;
+
+    root   /usr/share/nginx/html;
+    index  index.html index.htm;
+
+    # ${BASE_URL} is substituted at container start by the nginx entrypoint (envsubst).
+    # This maps requests under the base URL to the html root without requiring a
+    # matching subdirectory on disk. nginx variables ($uri etc.) use bare $ syntax
+    # and are intentionally left untouched by envsubst.
+    location ${BASE_URL} {
+        alias /usr/share/nginx/html/;
+        try_files $uri $uri/ ${BASE_URL}index.html;
+    }
+
+    location / {
+        try_files $uri $uri/ ${BASE_URL}index.html;
+    }
+}
