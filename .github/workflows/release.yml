@@ -4,10 +4,6 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: read
-  id-token: write
-
 jobs:
   release:
     name: Release new version
@@ -42,6 +38,7 @@ jobs:
           node-version: 22.x
           cache: yarn
           cache-dependency-path: yarn.lock
+          registry-url: https://registry.npmjs.org/
 
       - name: Restore Node Modules Cache
         uses: actions/cache@v4
@@ -80,5 +77,10 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set Yarn registry explicitly
+        run: yarn config set registry https://registry.npmjs.org
+
       - name: Release Applications
         run: yarn run publish:${{ matrix.targets }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
