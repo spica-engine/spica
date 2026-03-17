@@ -276,7 +276,7 @@ describe("UserSession", () => {
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("passport/user/user_id_123", {
-        headers: {Authorization: "USERrefreshed_token_456"}
+        headers: {Authorization: "USER refreshed_token_456"}
       });
     });
 
