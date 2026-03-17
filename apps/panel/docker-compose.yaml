@@ -35,7 +35,7 @@ services:
   #     context: ../../
   #     dockerfile: apps/panel/Dockerfile
   #     args:
-  #       BASE_URL: /spica/
+  #       BASE_URL: /
   #       VITE_BASE_URL: http://localhost:4300
   #   # image: spicaengine/panel:latest
   #   container_name: spica-web
