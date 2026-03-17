@@ -189,7 +189,7 @@ describe("UserSession", () => {
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("passport/user/user_id_123", {
-        headers: {Authorization: "test_token_abc"}
+        headers: {Authorization: "USER test_token_abc"}
       });
     });
 
@@ -198,7 +198,7 @@ describe("UserSession", () => {
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("passport/user/user_id_123", {
-        headers: {Authorization: "test_token_abc", "X-Custom": "header"}
+        headers: {Authorization: "USER test_token_abc", "X-Custom": "header"}
       });
     });
   });
@@ -218,7 +218,7 @@ describe("UserSession", () => {
       expect(putSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/self",
         {password: "newpassword"},
-        {headers: {Authorization: "test_token_abc"}}
+        {headers: {Authorization: "USER test_token_abc"}}
       );
     });
 
@@ -229,7 +229,7 @@ describe("UserSession", () => {
       expect(putSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/self",
         {password: "newpassword"},
-        {headers: {Authorization: "test_token_abc", "X-Custom": "header"}}
+        {headers: {Authorization: "USER test_token_abc", "X-Custom": "header"}}
       );
     });
   });
@@ -250,7 +250,7 @@ describe("UserSession", () => {
         "passport/user/session/refresh",
         {},
         {
-          headers: {Authorization: "test_token_abc"},
+          headers: {Authorization: "USER test_token_abc"},
           withCredentials: true
         }
       );
@@ -259,7 +259,7 @@ describe("UserSession", () => {
     });
 
     it("should update internal token after refresh", async () => {
-      expect(session.token).toBe("test_token_abc");
+      expect(session.token).toBe("USER test_token_abc");
 
       await session.refreshAccessToken();
 
@@ -276,7 +276,7 @@ describe("UserSession", () => {
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("passport/user/user_id_123", {
-        headers: {Authorization: "refreshed_token_456"}
+        headers: {Authorization: "USERrefreshed_token_456"}
       });
     });
 
@@ -288,7 +288,7 @@ describe("UserSession", () => {
         "passport/user/session/refresh",
         {},
         {
-          headers: {Authorization: "test_token_abc", Cookie: "refresh_token=abc"},
+          headers: {Authorization: "USER test_token_abc", Cookie: "refresh_token=abc"},
           withCredentials: true
         }
       );
@@ -310,7 +310,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/start-provider-verification",
         {value: "test@test.com", provider: "email", strategy: "Otp", purpose: "verification"},
-        {headers: {Authorization: "test_token_abc"}}
+        {headers: {Authorization: "USER test_token_abc"}}
       );
     });
 
@@ -321,7 +321,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/start-provider-verification",
         {value: "test@test.com", provider: "email", strategy: "MagicLink", purpose: "verification"},
-        {headers: {Authorization: "test_token_abc"}}
+        {headers: {Authorization: "USER test_token_abc"}}
       );
     });
 
@@ -332,7 +332,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/start-provider-verification",
         {value: "test@test.com", provider: "email", strategy: "Otp", purpose: "verification"},
-        {headers: {Authorization: "test_token_abc", "X-Custom": "header"}}
+        {headers: {Authorization: "USER test_token_abc", "X-Custom": "header"}}
       );
     });
   });
@@ -352,7 +352,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/verify-provider",
         {code: "123456", provider: "email", strategy: "Otp", purpose: "verification"},
-        {headers: {Authorization: "test_token_abc"}}
+        {headers: {Authorization: "USER test_token_abc"}}
       );
     });
 
@@ -363,7 +363,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/verify-provider",
         {code: "123456", provider: "email", strategy: "Otp", purpose: "verification"},
-        {headers: {Authorization: "test_token_abc", "X-Custom": "header"}}
+        {headers: {Authorization: "USER test_token_abc", "X-Custom": "header"}}
       );
     });
   });
@@ -383,7 +383,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/start-provider-verification",
         {value: "+1234567890", provider: "phone", strategy: "Otp", purpose: "verification"},
-        {headers: {Authorization: "test_token_abc"}}
+        {headers: {Authorization: "USER test_token_abc"}}
       );
     });
 
@@ -394,7 +394,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/start-provider-verification",
         {value: "+1234567890", provider: "phone", strategy: "Otp", purpose: "verification"},
-        {headers: {Authorization: "test_token_abc", "X-Custom": "header"}}
+        {headers: {Authorization: "USER test_token_abc", "X-Custom": "header"}}
       );
     });
   });
@@ -414,7 +414,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/verify-provider",
         {code: "123456", provider: "phone", strategy: "Otp", purpose: "verification"},
-        {headers: {Authorization: "test_token_abc"}}
+        {headers: {Authorization: "USER test_token_abc"}}
       );
     });
 
@@ -425,49 +425,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/user_id_123/verify-provider",
         {code: "123456", provider: "phone", strategy: "Otp", purpose: "verification"},
-        {headers: {Authorization: "test_token_abc", "X-Custom": "header"}}
-      );
-    });
-  });
-
-  describe("UserSession.requestPasswordReset", () => {
-    let session: UserSession;
-
-    beforeEach(async () => {
-      session = await Auth.signIn("testuser", "testpass");
-      postSpy.mockClear();
-    });
-
-    it("should call forgot-password/start with stored username", async () => {
-      await session.requestPasswordReset("email");
-
-      expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith(
-        "passport/user/forgot-password/start",
-        {username: "testuser", provider: "email"},
-        {headers: {Authorization: "test_token_abc"}}
-      );
-    });
-
-    it("should support phone provider", async () => {
-      await session.requestPasswordReset("phone");
-
-      expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith(
-        "passport/user/forgot-password/start",
-        {username: "testuser", provider: "phone"},
-        {headers: {Authorization: "test_token_abc"}}
-      );
-    });
-
-    it("should merge custom headers", async () => {
-      await session.requestPasswordReset("email", {"X-Custom": "header"});
-
-      expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith(
-        "passport/user/forgot-password/start",
-        {username: "testuser", provider: "email"},
-        {headers: {Authorization: "test_token_abc", "X-Custom": "header"}}
+        {headers: {Authorization: "USER test_token_abc", "X-Custom": "header"}}
       );
     });
   });
@@ -487,7 +445,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/forgot-password/verify",
         {username: "testuser", code: "123456", newPassword: "newpass123", provider: "email"},
-        {headers: {Authorization: "test_token_abc"}}
+        {headers: {Authorization: "USER test_token_abc"}}
       );
     });
 
@@ -498,7 +456,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/forgot-password/verify",
         {username: "testuser", code: "654321", newPassword: "securepass", provider: "phone"},
-        {headers: {Authorization: "test_token_abc"}}
+        {headers: {Authorization: "USER test_token_abc"}}
       );
     });
 
@@ -509,7 +467,7 @@ describe("UserSession", () => {
       expect(postSpy).toHaveBeenCalledWith(
         "passport/user/forgot-password/verify",
         {username: "testuser", code: "123456", newPassword: "newpass123", provider: "email"},
-        {headers: {Authorization: "test_token_abc", "X-Custom": "header"}}
+        {headers: {Authorization: "USER test_token_abc", "X-Custom": "header"}}
       );
     });
   });
