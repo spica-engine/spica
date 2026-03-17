@@ -42,7 +42,6 @@ jobs:
           node-version: 22.x
           cache: yarn
           cache-dependency-path: yarn.lock
-          registry-url: https://registry.npmjs.org/
 
       - name: Restore Node Modules Cache
         uses: actions/cache@v4
