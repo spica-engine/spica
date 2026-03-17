@@ -86,5 +86,3 @@ jobs:
 
       - name: Release Applications
         run: yarn run publish:${{ matrix.targets }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
