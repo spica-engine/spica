@@ -110,7 +110,7 @@ export const storageApi = baseApi.injectEndpoints({
             headers.Authorization = `IDENTITY ${token}`;
           }
 
-          const baseUrl = import.meta.env.VITE_BASE_URL || '';
+          const baseUrl = import.meta.env.VITE_BASE_URL || "/api";
           const url = baseUrl.endsWith('/') ? `${baseUrl}storage` : `${baseUrl}/storage`;
 
           const result = await axios({

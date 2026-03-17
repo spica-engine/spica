@@ -4,7 +4,7 @@ services:
   mongo:
     image: mongo:7.0.16
     container_name: mongo
-    command: ["--replSet","rs0","--bind_ip_all"]
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27017:27017"
     volumes:
@@ -24,20 +24,25 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
-    command: ["--from-srv","false","--nodes","mongo","--debug", "true"]
+    command: ["--from-srv", "false", "--nodes", "mongo", "--debug", "true"]
     restart: "no"
     networks:
       - spica
-
+  # use below if you want to serve panel locally via docker containers
   # spica-web:
-  #   image: spicaengine/spica:master
+  #   # use below if you want to build image locally
+  #   build:
+  #     context: ../../
+  #     dockerfile: apps/panel/Dockerfile
+  #     args:
+  #       BASE_URL: /spica/
+  #       VITE_BASE_URL: http://localhost:4300
+  #   # image: spicaengine/panel:latest
   #   container_name: spica-web
-  #   environment:
-  #     - BASE_URL=/spica/
   #   ports:
-  #     - "80:80"        
-  #   depends_on:
-  #     - repl-init
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
   #   networks:
   #     - spica
 
@@ -56,7 +61,7 @@ services:
       - "200"
       - --database-replica-set
       - rs0
-      - --passport-secret
+      - --master-key
       - $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
       - --passport-password
       - spica
@@ -70,13 +75,10 @@ services:
       - "4300:4300"
     volumes:
       - spica-data:/data
-    # depends_on:
-    #   - repl-init
     networks:
       - spica
 
-
-  # /spica -> spica-web:80, /api -> spica-api:4300
+  # /spica -> spica-web:80, /api -> spica-api:4300
   # nginx:
   #   image: nginx:alpine
   #   container_name: spica-gateway
@@ -84,9 +86,9 @@ services:
   #     - spica-web
   #     - spica-api
   #   ports:
-  #     - "8080:80"      
+  #     - "8080:80"
   #   volumes:
-  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  #     - ./gateway.conf:/etc/nginx/nginx.conf:ro
   #   networks:
   #     - spica
 
