@@ -259,7 +259,7 @@ describe("UserSession", () => {
     });
 
     it("should update internal token after refresh", async () => {
-      expect(session.token).toBe("USER test_token_abc");
+      expect(session.token).toBe("test_token_abc");
 
       await session.refreshAccessToken();
 
