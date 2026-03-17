@@ -68,8 +68,9 @@
     },
     "nx-release-publish": {
       "dependsOn": ["set-version"],
+      "executor": "nx:run-commands",
       "options": {
-        "packageRoot": "dist/{projectRoot}"
+        "command": "npm publish dist/{projectRoot} --provenance --access public"
       }
     }
   },
