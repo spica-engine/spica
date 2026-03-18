@@ -1,4 +1,5 @@
 FROM node:22-slim AS base
+ENV NX_FORCE_NO_DAEMON=true
 
 # install necessary tools
 FROM base AS tools
