@@ -14,6 +14,7 @@ import AccessManagement from "./access-management/AccessManagement";
 import WebHook from "./webhook/WebHook";
 import FunctionNavigation from "./function/FunctionNavigation";
 import VersionControl from "./version-control/VersionControl";
+import DashboardNavigation from "./dashboard-navigation/DashboardNavigation";
 
 export type NavigationPrefabProps = {
   menuItem?: TypeMenuItems;
@@ -28,6 +29,7 @@ export const navigationRegistry: Record<string, NavigationComponent> = {
   accessManagement: AccessManagement,
   webhook: WebHook,
   function: FunctionNavigation,
+  dashboard: DashboardNavigation,
   // Add more navigation prefabs here as they are created
   versionControl: VersionControl,
 };
