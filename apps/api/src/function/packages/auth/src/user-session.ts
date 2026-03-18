@@ -46,7 +46,7 @@ export class UserSession {
 
   private getAuthHeaders(headers?: object): object {
     return {
-      Authorization: this._token,
+      Authorization: `USER ${this._token}`,
       ...headers
     };
   }
@@ -145,18 +145,6 @@ export class UserSession {
     return this._service.post<VerificationCompleteResponse>(
       `${userSegment}/${this._userId}/verify-provider`,
       {code, provider: "phone", strategy, purpose: "verification"},
-      {headers: this.getAuthHeaders(headers)}
-    );
-  }
-
-  /**
-   * Request a password reset for the current user.
-   * Sends a verification code to the user's verified email or phone.
-   */
-  requestPasswordReset(provider: Provider, headers?: object): Promise<PasswordResetStartResponse> {
-    return this._service.post<PasswordResetStartResponse>(
-      `${userSegment}/forgot-password/start`,
-      {username: this._username, provider},
       {headers: this.getAuthHeaders(headers)}
     );
   }
