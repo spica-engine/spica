@@ -11,10 +11,15 @@
     "type": "git",
     "url": "https://github.com/spica-engine/spica.git"
   },
-  "workspaces": [
-    "libs/*",
-    "apps/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "libs/*",
+      "apps/*"
+    ],
+    "nohoist": [
+      "@spica/cli/**"
+    ]
+  },
   "scripts": {
     "format:check": "yarn nx format:check",
     "format": "yarn nx format:write",
