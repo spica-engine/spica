@@ -69,7 +69,7 @@
       "cache": true
     },
     "test-image": {
-      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/migrate/Dockerfile",
+      "command": "docker buildx build --target test --platform=${PLATFORM:-linux/amd64} --load . -f ./apps/migrate/Dockerfile",
       "cache": true
     },
     "build-image": {
@@ -80,14 +80,13 @@
         "{projectRoot}/project.json",
         "{projectRoot}/Dockerfile"
       ],
-      "command": "docker build --platform=linux/amd64 . -f ./apps/migrate/Dockerfile -t spicaengine/migrate:$VERSION",
+      "command": "docker buildx build --platform=${PLATFORM:-linux/amd64} --load . -f ./apps/migrate/Dockerfile -t spicaengine/migrate:$VERSION",
       "cache": true
     },
     "publish": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build-image"],
       "options": {
-        "command": "docker push spicaengine/migrate:$VERSION"
+        "command": "docker buildx build --platform=${PLATFORMS:-linux/amd64,linux/arm64} --push . -f ./apps/migrate/Dockerfile -t spicaengine/migrate:$VERSION"
       }
     }
   }

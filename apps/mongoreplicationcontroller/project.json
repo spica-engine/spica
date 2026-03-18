@@ -35,14 +35,13 @@
         "{projectRoot}/project.json",
         "{projectRoot}/Dockerfile"
       ],
-      "command": "docker build --platform=linux/amd64 . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:$VERSION",
+      "command": "docker buildx build --platform=${PLATFORM:-linux/amd64} --load . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:$VERSION",
       "cache": true
     },
     "publish": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build-image"],
       "options": {
-        "command": "docker push spicaengine/mongoreplicationcontroller:$VERSION"
+        "command": "docker buildx build --platform=${PLATFORMS:-linux/amd64,linux/arm64} --push . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:$VERSION"
       }
     }
   }
