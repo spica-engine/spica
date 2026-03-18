@@ -29,6 +29,10 @@ export interface LogResponse {
   latest: LogCommit | null;
 }
 
+export interface DiffResponse {
+  message: string;
+}
+
 const VERSION_CONTROL_TAG = 'VersionControl' as const;
 
 export const versionControlApi = baseApi.injectEndpoints({
@@ -38,12 +42,13 @@ export const versionControlApi = baseApi.injectEndpoints({
       providesTags: [VERSION_CONTROL_TAG],
     }),
 
-    getDiff: builder.mutation<unknown, CommandArgs>({
+    getDiff: builder.query<DiffResponse, CommandArgs>({
       query: (body) => ({
         url: 'versioncontrol/commands/diff',
         method: 'POST',
         body,
       }),
+      providesTags: [VERSION_CONTROL_TAG],
     }),
 
     commit: builder.mutation<unknown, CommandArgs>({
@@ -105,7 +110,7 @@ export const versionControlApi = baseApi.injectEndpoints({
 
 export const {
   useGetCommandsQuery,
-  useGetDiffMutation,
+  useGetDiffQuery,
   useCommitMutation,
   useBranchMutation,
   useRemoteMutation,
