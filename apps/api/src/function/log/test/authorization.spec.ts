@@ -4,7 +4,7 @@ import {LogModule} from "@spica-server/function/log";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {GuardService} from "@spica-server/passport";
+import {GuardService} from "@spica-server/passport/guard/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Realtime Authorization", () => {
@@ -27,7 +27,7 @@ describe("Realtime Authorization", () => {
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
     await app.listen(wsc.socket);
-    authGuardCheck = jest.spyOn(module.get(GuardService), "checkAuthorization");
+    authGuardCheck = jest.spyOn(module.get(GuardService), "checkAuthentication");
   });
 
   afterAll(() => app.close());

@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/history/test",
+  "sourceRoot": "apps/api/src/bucket/history/test",
+  "projectType": "application"
+}

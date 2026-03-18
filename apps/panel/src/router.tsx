@@ -91,7 +91,8 @@ const router = createBrowserRouter([
   {
     path: "storage-view/:storageId",
     element: <StorageItem />
-  }
+  },
+  {basename: import.meta.env.BASE_URL}
 ]);
 
 export default function AppRouter() {

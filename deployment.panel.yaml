@@ -114,7 +114,7 @@ spec:
             - "200"
             - --database-replica-set
             - rs0
-            - --passport-secret
+            - --master-key
             - $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
             - --passport-password
             - spica

@@ -9,6 +9,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import os from "os";
 import {PreferenceModule} from "@spica-server/preference";
+import {SecretModule} from "@spica-server/secret";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:45670";
 
@@ -40,6 +41,7 @@ describe("function", () => {
       PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
       SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
       AssetModule.forRoot({persistentPath: os.tmpdir()}),
+      SecretModule.forRoot({realtime: false, encryptionSecret: "test-encryption-secret-32chars!!"}),
       FunctionModule.forRoot({
         invocationLogs: false,
         path: os.tmpdir(),
@@ -61,7 +63,8 @@ describe("function", () => {
         realtimeLogs: false,
         logger: false,
         spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
-        tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
+        tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH,
+        realtime: false
       })
     ]
   };
@@ -87,16 +90,14 @@ describe("function", () => {
     return req.get(`function/${id}`).then(r => r.body);
   }
 
-  function getFnIndex(id) {
-    return req.get(`function/${id}/index`).then(r => r.body);
-  }
-
   let fnv1Resource;
   let fnv1;
   const fnId = new ObjectId().toString();
+  let fnv1Created;
 
   let fnv2Resource;
   let fnv2;
+  let fnv2Created;
 
   let assetv1;
   let assetv2;
@@ -105,9 +106,6 @@ describe("function", () => {
     fnv1 = {
       _id: fnId,
       name: "function",
-      env: {
-        test: "123"
-      },
       timeout: 120,
       language: "javascript",
       triggers: {
@@ -123,15 +121,13 @@ describe("function", () => {
       },
       memoryLimit: 100
     };
+    fnv1Created = {...fnv1, env_vars: [], secrets: []};
 
     fnv1Resource = {
       _id: fnId,
       module: "function",
       contents: {
         schema: fnv1,
-        env: {
-          test: "987"
-        },
         index: "console.log('Hi')",
         package: {
           dependencies: {}
@@ -140,12 +136,12 @@ describe("function", () => {
     };
 
     fnv2 = {...fnv1, timeout: 60};
+    fnv2Created = {...fnv2, env_vars: [], secrets: []};
 
     fnv2Resource = {
       ...fnv1Resource,
       contents: {
         schema: fnv2,
-        env: {asd: "qwe"},
         index: "console.log('Hi v2')",
         package: {
           dependencies: {}
@@ -184,7 +180,7 @@ describe("function", () => {
     await installAsset(assetv1._id);
 
     fns = await getFns();
-    expect(fns).toEqual([fnv1]);
+    expect(fns).toEqual([fnv1Created]);
 
     let fn = await getFn(fnId);
     expect(fn).toEqual(fn);
@@ -201,7 +197,7 @@ describe("function", () => {
     expect(assetv2.status).toEqual("downloaded");
 
     fns = await getFns();
-    expect(fns).toEqual([fnv1]);
+    expect(fns).toEqual([fnv1Created]);
 
     // UPDATE
     const res = await installAsset(assetv2._id);
@@ -213,7 +209,7 @@ describe("function", () => {
     expect(assetv2.status).toEqual("installed");
 
     fns = await getFns();
-    expect(fns).toEqual([fnv2]);
+    expect(fns).toEqual([fnv2Created]);
 
     // DELETE PREVIEW
     let assetv3 = {...assetv2, resources: []};
@@ -239,7 +235,7 @@ describe("function", () => {
     expect(assetv3.status).toEqual("downloaded");
 
     fns = await getFns();
-    expect(fns).toEqual([fnv2]);
+    expect(fns).toEqual([fnv2Created]);
 
     // DELETE
     await installAsset(assetv3._id);

@@ -9,6 +9,9 @@
       "path": "../../../../libs/core"
     },
     {
+      "path": "../../../../libs/database/pipeline"
+    },
+    {
       "path": "./services"
     }
   ]

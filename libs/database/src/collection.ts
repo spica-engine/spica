@@ -1,31 +1,28 @@
 import {
   AggregationCursor,
   Collection,
-  CollectionOptions,
   Filter,
   FindOptions,
   FindOneAndDeleteOptions,
   FindOneAndReplaceOptions,
   FindOneAndUpdateOptions,
   InsertOneResult,
-  InsertManyResult,
   ObjectId,
   UpdateFilter,
   UpdateOptions,
   OptionalUnlessRequiredId,
   WithId,
   Document,
-  AggregateOptions
+  AggregateOptions,
+  IndexSpecification,
+  CreateIndexesOptions,
+  ChangeStream,
+  ChangeStreamOptions,
+  ChangeStreamDocument
 } from "mongodb";
 import {DatabaseService} from "./database.service";
-
-export interface InitializeOptions {
-  entryLimit?: number;
-  collectionOptions?: CollectionOptions;
-  afterInit?: (...args: any[]) => any;
-}
-
-export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
+import {InitializeOptions, OptionalId, ProfilerEntry} from "@spica-server/interface/database";
+import {Observable} from "rxjs";
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;
@@ -41,8 +38,10 @@ export class _MixinCollection<T> {
 
     this.options = this._options;
 
-    if (this.options.afterInit) {
-      this.initCollection().then(() => this.options.afterInit!());
+    if (this.options.collectionOptions || this.options.afterInit) {
+      this.initCollection().then(() => {
+        if (this.options.afterInit) this.options.afterInit();
+      });
     }
   }
 
@@ -181,8 +180,34 @@ export class _MixinCollection<T> {
       });
   }
 
+  createIndex(indexSpec: IndexSpecification, options?: CreateIndexesOptions) {
+    this._coll.createIndex(indexSpec, options);
+  }
+
+  // profiler
+  findOnProfiler(filter: Filter<Omit<ProfilerEntry, "ns">> = {}) {
+    (filter as Filter<ProfilerEntry>).ns = this._coll.namespace;
+    return this.db.collection<ProfilerEntry>("system.profile").find(filter);
+  }
+
   collection(collection: string, options?: InitializeOptions) {
     return new _MixinCollection(this.db, collection, options);
+  }
+
+  watch(pipeline?: object[], options?: ChangeStreamOptions): Observable<ChangeStreamDocument<T>> {
+    return new Observable(observer => {
+      let stream: ChangeStream<T>;
+
+      stream = this._coll.watch(pipeline, options);
+      stream.on("change", change => observer.next(change));
+      stream.on("error", error => observer.error(error));
+
+      return () => {
+        if (!stream.closed) {
+          stream.close();
+        }
+      };
+    });
   }
 }
 

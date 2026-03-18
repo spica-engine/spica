@@ -14,7 +14,7 @@ describe("Bucket Schema Resolver", () => {
     constructor() {}
     findOne() {}
     getPreferences() {}
-    watch(bucketId: string, propagateOnStart: boolean) {
+    watchBucket(bucketId: string, propagateOnStart: boolean) {
       return new Observable(observer => {
         if (propagateOnStart) {
           Promise.resolve(observer.next(bucket));
@@ -50,19 +50,19 @@ describe("Bucket Schema Resolver", () => {
         type: "string",
         title: "title",
         description: "Title of the row",
-        options: {position: "left"}
+        options: {}
       },
       description: {
         type: "textarea",
         title: "description",
         description: "Description of the row",
-        options: {position: "right"}
+        options: {}
       },
       text: {
         type: "string",
         title: "translatable text",
         description: "Text of the row",
-        options: {position: "left", translate: true}
+        options: {translate: true}
       }
     }
   };

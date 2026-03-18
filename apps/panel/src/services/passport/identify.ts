@@ -5,7 +5,7 @@ export type IdentifyParams = {
   password: string;
 };
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+const BASE_URL = import.meta.env.VITE_BASE_URL || "/api";
 
 const apiClient = axios.create({
   baseURL: BASE_URL

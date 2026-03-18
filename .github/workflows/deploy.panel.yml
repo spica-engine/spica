@@ -2,7 +2,8 @@ name: Spica Panel Deployment
 
 env:
   VERSION: latest
-  BASE_URL: spica
+  BASE_URL: /spica/
+  VITE_BASE_URL: https://panel.spicaengine.com/api
 
 on:
   push:
@@ -45,7 +46,7 @@ jobs:
             ${{ runner.os }}-node-modules-
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --network-timeout 600000
 
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV

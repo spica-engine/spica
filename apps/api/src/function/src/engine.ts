@@ -1,42 +1,60 @@
-import {Inject, Injectable, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
-import {DatabaseService, MongoClient} from "@spica-server/database";
+import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
+import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
-import {DelegatePkgManager, Package, PackageManager} from "@spica-server/function/pkgmanager";
+import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
 import {rimraf} from "rimraf";
 import {Observable} from "rxjs";
+import {FunctionService} from "@spica-server/function/services";
 import {
-  FunctionService,
-  FUNCTION_OPTIONS,
+  CollectionSlug,
   Options,
+  FUNCTION_OPTIONS,
   COLL_SLUG,
-  CollectionSlug
-} from "@spica-server/function/services";
-import {Function} from "@spica-server/interface/function";
+  Function,
+  ChangeKind,
+  TargetChange,
+  SCHEMA,
+  SchemaWithName,
+  EnvRelation,
+  FunctionWithContent,
+  SecretRelation
+} from "@spica-server/interface/function";
+import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface/secret";
 
-import {ChangeKind, TargetChange} from "./change";
-import {SCHEMA, SchemaWithName} from "./schema/schema";
 import {createTargetChanges} from "./change";
 
 import HttpSchema from "./schema/http.json" with {type: "json"};
 import ScheduleSchema from "./schema/schedule.json" with {type: "json"};
 import FirehoseSchema from "./schema/firehose.json" with {type: "json"};
 import SystemSchema from "./schema/system.json" with {type: "json"};
-import {ClassCommander, CommandType} from "@spica-server/replication";
+import RabbitMQSchema from "./schema/rabbitmq.json" with {type: "json"};
+import GrpcSchema from "./schema/grpc.json" with {type: "json"};
+import * as CRUD from "./crud";
+import {ClassCommander} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
+import {Package} from "@spica-server/interface/function/pkgmanager";
+import chokidar from "chokidar";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(FunctionEngine.name);
+
   readonly schemas = new Map<string, unknown>([
     ["http", HttpSchema],
     ["schedule", ScheduleSchema],
     ["firehose", FirehoseSchema],
-    ["system", SystemSchema]
+    ["system", SystemSchema],
+    ["rabbitmq", RabbitMQSchema],
+    ["grpc", GrpcSchema]
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
   private cmdSubs: {unsubscribe: () => void};
+  private watchEnvSubs: {unsubscribe: () => void};
+  private watchSecretSubs: {unsubscribe: () => void};
 
   constructor(
     private fs: FunctionService,
@@ -45,13 +63,40 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Optional() private commander: ClassCommander,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
-    @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug
+    @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug,
+    @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
     }
 
     this.schemas.set("database", () => getDatabaseSchema(this.db, collSlug));
+
+    this.watchEnvSubs = this.fs.watchFunctionsForEnvChanges().subscribe({
+      next: ({fns, envVarId, operationType}) =>
+        fns.map(fn =>
+          operationType == "delete"
+            ? CRUD.environment.eject(this.fs, fn._id, this, envVarId)
+            : CRUD.environment.reload(this.fs, fn._id, this)
+        ),
+      error: err =>
+        this.logger.error(
+          `Error received on listening functions for environment variable changes. Reason: ${JSON.stringify(err)}`
+        )
+    });
+
+    this.watchSecretSubs = this.fs.watchFunctionsForSecretChanges().subscribe({
+      next: ({fns, secretId, operationType}) =>
+        fns.map(fn =>
+          operationType == "delete"
+            ? CRUD.secret.eject(this.fs, fn._id, this, secretId)
+            : CRUD.secret.reload(this.fs, fn._id, this)
+        ),
+      error: err =>
+        this.logger.error(
+          `Error received on listening functions for secret changes. Reason: ${JSON.stringify(err)}`
+        )
+    });
   }
 
   onModuleInit() {
@@ -72,10 +117,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private updateTriggers(kind: ChangeKind) {
-    return this.fs.find().then(fns => {
+    return CRUD.findForRuntime(this.fs).then(fns => {
       const targetChanges: TargetChange[] = [];
       for (const fn of fns) {
-        targetChanges.push(...createTargetChanges(fn, kind));
+        targetChanges.push(...createTargetChanges(fn, kind, this.secretDecryptor));
       }
       this.categorizeChanges(targetChanges);
     });
@@ -84,6 +129,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   onModuleDestroy() {
     if (this.commander) {
       this.cmdSubs.unsubscribe();
+    }
+    this.watchEnvSubs.unsubscribe();
+    if (this.watchSecretSubs) {
+      this.watchSecretSubs.unsubscribe();
     }
     return this.unregisterTriggers();
   }
@@ -109,7 +158,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private getFunctionRoot(fn: Function) {
-    return path.join(this.options.root, fn._id.toString());
+    return path.join(this.options.root, fn.name);
   }
 
   getPackages(fn: Function): Promise<Package[]> {
@@ -130,13 +179,18 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
-      name: fn.name.replace(" ", "-").toLowerCase(),
+      name: fn.name,
       description: fn.description || "No description.",
       version: "0.0.1",
       private: true,
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED",
-      main: path.join(".", this.options.outDir, functionLanguage.description.entrypoints.runtime)
+      main: path.join(
+        ".",
+        this.options.outDir,
+        fn.name,
+        functionLanguage.description.entrypoints.runtime
+      )
     };
 
     return fs.promises.writeFile(
@@ -145,32 +199,56 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  createSchema(fn: Function) {
+    const functionRoot = this.getFunctionRoot(fn);
+    return fs.promises.mkdir(functionRoot, {recursive: true});
+  }
+
+  createDependency(fn: Function, packageJson) {
+    const functionRoot = this.getFunctionRoot(fn);
+    return fs.promises.writeFile(
+      path.join(functionRoot, "package.json"),
+      JSON.stringify(packageJson, null, 2)
+    );
+  }
+
   deleteFunction(fn: Function) {
-    return rimraf(this.getFunctionRoot(fn));
+    const functionRoot = this.getFunctionRoot(fn);
+    const buildDir = path.join(this.options.root, this.options.outDir, fn.name);
+    return Promise.all([rimraf(functionRoot), rimraf(buildDir)]);
   }
 
   compile(fn: Function) {
     const language = this.getFunctionLanguage(fn);
+    const outDirRelative = path.join("..", this.options.outDir, fn.name);
     return language.compile({
       cwd: this.getFunctionRoot(fn),
-      outDir: this.options.outDir,
+      outDir: outDirRelative,
       entrypoints: language.description.entrypoints
     });
   }
 
   update(fn: Function, index: string): Promise<void> {
-    const language = this.getFunctionLanguage(fn);
-    return fs.promises.writeFile(
-      path.join(this.getFunctionRoot(fn), language.description.entrypoints.build),
-      index
-    );
+    const filePath = this.getFunctionBuildEntrypoint(fn);
+
+    return fs.promises.writeFile(filePath, index);
   }
 
-  read(fn: Function): Promise<string> {
-    const language = this.getFunctionLanguage(fn);
+  private getFilePath(fn: Function, scope: "index" | "dependency" | "tsconfig"): string {
+    switch (scope) {
+      case "dependency":
+        return path.join(this.getFunctionRoot(fn), "package.json");
+      case "tsconfig":
+        return path.join(this.getFunctionRoot(fn), "tsconfig.json");
+      case "index":
+        return this.getFunctionBuildEntrypoint(fn);
+    }
+  }
 
+  read(fn: Function, scope: "index" | "dependency" | "tsconfig"): Promise<string> {
+    let filePath = this.getFilePath(fn, scope);
     return fs.promises
-      .readFile(path.join(this.getFunctionRoot(fn), language.description.entrypoints.build))
+      .readFile(filePath)
       .then(b => b.toString())
       .catch(e => {
         if (e.code == "ENOENT") {
@@ -178,6 +256,100 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         }
         throw Error(e);
       });
+  }
+
+  deleteIndex(fn: Function): Promise<void> {
+    const filePath = this.getFunctionBuildEntrypoint(fn);
+    return fs.promises.rm(filePath);
+  }
+
+  deleteDependency(fn: Function): Promise<void> {
+    const filePath = path.join(this.getFunctionRoot(fn), "package.json");
+    return fs.promises.rm(filePath);
+  }
+
+  watch(scope: "index" | "dependency" | "tsconfig"): Observable<{
+    fn: FunctionWithContent;
+    type: "create" | "update" | "delete";
+    event_id: string;
+  }> {
+    let files = [];
+
+    switch (scope) {
+      case "index":
+        files = ["index.mjs", "index.ts"];
+        break;
+      case "dependency":
+        files = ["package.json"];
+        break;
+      case "tsconfig":
+        files = ["tsconfig.json"];
+        break;
+    }
+    const moduleDir = this.options.root;
+    fs.mkdirSync(moduleDir, {recursive: true});
+
+    return new Observable(observer => {
+      const watcher = chokidar.watch(moduleDir, {
+        ignored: /(^|[/\\])\../,
+        persistent: true,
+        depth: 2,
+        awaitWriteFinish: true
+      });
+
+      const handleFileEvent = async (filePath: string, type: "create" | "update" | "delete") => {
+        const relativePath = filePath.slice(moduleDir.length + 1);
+        const parts = relativePath.split(/[/\\]/);
+
+        const isCorrectDepth = parts.length == 2;
+        const isTrackedFile = files.some(file => parts[1] == file);
+        if (!isCorrectDepth || !isTrackedFile) return;
+
+        const dirName = parts[0];
+
+        let eventId: string;
+        const now = new Date(new Date().setMilliseconds(0)).getTime();
+        if (type === "delete") {
+          eventId = `unlink-${now}`;
+        } else {
+          try {
+            const stats = await fs.promises.stat(filePath);
+            eventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
+          } catch {
+            eventId = `stat-err-${now}`;
+          }
+        }
+
+        let contentPromise: Promise<string> | null;
+        let content: string | null;
+        let fn: Function | null;
+        if (type == "delete") {
+          contentPromise = Promise.resolve(null);
+        } else {
+          contentPromise = fs.promises.readFile(filePath).then(b => b.toString());
+        }
+
+        await Promise.all([
+          CRUD.findByName(this.fs, dirName, {
+            resolveEnvRelations: EnvRelation.NotResolved,
+            resolveSecretRelations: SecretRelation.NotResolved
+          }).then(r => (fn = r)),
+          contentPromise.then(c => (content = c))
+        ]);
+
+        if (!fn) return;
+
+        observer.next({fn: {...fn, content}, type, event_id: eventId});
+      };
+
+      watcher.on("change", path => handleFileEvent(path, "update"));
+      watcher.on("unlink", path => handleFileEvent(path, "delete"));
+      watcher.on("add", path => handleFileEvent(path, "create"));
+
+      watcher.on("error", err => observer.error(err));
+
+      return () => watcher.close();
+    });
   }
 
   getSchema(name: string): Promise<JSONSchema7 | null> {
@@ -202,7 +374,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     if (enqueuer) {
       const target = new event.Target({
         id: change.target.id,
-        cwd: path.join(this.options.root, change.target.id),
+        cwd: path.join(this.options.root, change.target.name),
         handler: change.target.handler,
         context: new event.SchedulingContext({
           env: Object.keys(change.target.context.env).reduce((envs, key) => {
@@ -219,7 +391,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       });
       enqueuer.subscribe(target, change.options);
     } else {
-      console.warn(`Couldn't find enqueuer ${change.type}.`);
+      this.logger.warn(`Couldn't find enqueuer ${change.type}.`);
     }
   }
 
@@ -232,7 +404,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     for (const enqueuer of this.scheduler.enqueuers) {
       const target = new event.Target({
         id: change.target.id,
-        cwd: path.join(this.options.root, change.target.id),
+        cwd: path.join(this.options.root, change.target.name),
         handler: change.target.handler
       });
       enqueuer.unsubscribe(target);
@@ -241,6 +413,11 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   private getFunctionLanguage(fn: Function) {
     return this.scheduler.languages.get(fn.language);
+  }
+
+  getFunctionBuildEntrypoint(fn: Function) {
+    const language = this.getFunctionLanguage(fn);
+    return path.join(this.options.root, fn.name, language.description.entrypoints.build);
   }
 }
 

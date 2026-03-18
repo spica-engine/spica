@@ -4,8 +4,18 @@
   "0.7.2": ["0.7.2/remove_phase_from_bucket_triggers.js"],
   "0.8.2": ["0.8.2/update_location_bucket_bucket-data.js"],
   "0.9.30": ["0.9.30/add_index_for_duplicate_storage_objects.js"],
-  "0.10.0": ["0.10.0/set_mongodb_fcv_4_4.js"],
-  "0.11.0": ["0.11.0/set_mongodb_fcv_5.js"],
-  "0.12.0": ["0.12.0/set_mongodb_fcv_6.js"],
-  "0.13.0": ["0.13.0/set_mongodb_fcv_7.js"]
+  "0.11.0": ["0.11.0/set_mongodb_fcv_4_4.js"],
+  "0.12.0": ["0.12.0/set_mongodb_fcv_5.js"],
+  "0.13.0": ["0.13.0/set_mongodb_fcv_6.js"],
+  "0.13.1": ["0.13.1/add_idp_for_oauth_strategies.js"],
+  "0.16.0": [
+    "0.16.0/replace_env_vars.js",
+    "0.16.0/update_old_index_usage_to_new.js",
+    "0.16.0/ensure_unique_function_name.js",
+    "0.16.0/add_date_values_to_storage_objects.js",
+    "0.16.0/enable_changeStreamPreAndPostImages.js",
+    "0.16.0/migrate_identity_attributes_to_bucket.js"
+  ],
+  "0.17.0": ["0.17.0/set_mongodb_fcv_7.js"],
+  "0.18.0": ["0.18.0/remove_position_from_bucket_properties.js"]
 }

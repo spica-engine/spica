@@ -19,37 +19,12 @@ interface PropertyOptions {
   options: {
     translate?: boolean;
     history?: boolean;
-    position: "left" | "right" | "bottom";
   };
 }
 
 export interface BucketDocument {
   _id?: string;
   [key: string]: any | undefined;
-}
-
-interface InitializeOptions {
-  publicUrl?: string;
-}
-
-export interface ApikeyInitialization extends InitializeOptions {
-  apikey: string;
-}
-
-export interface IdentityInitialization extends InitializeOptions {
-  identity: string;
-}
-
-export interface InitializationResult {
-  authorization: string;
-  publicUrl: string;
-}
-
-export interface IndexResult<T> {
-  meta: {
-    total: number;
-  };
-  data: T[];
 }
 
 export type RealtimeConnection<T> = Observable<T> & {

@@ -1,11 +1,12 @@
 import {registrar} from "@spica-server/asset";
 import {Resource} from "@spica-server/interface/asset";
 import {HistoryService} from "@spica-server/bucket/history";
-import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import * as CRUD from "./crud";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ObjectId} from "@spica-server/database";
+import {BucketAsset} from "@spica-server/interface/bucket";
 
 const _module = "bucket";
 
@@ -54,8 +55,4 @@ function validateBucket(bucket: any, validator: Validator): Promise<void> {
 
   const pipe: any = new validatorMixin(validator);
   return pipe.transform(bucket);
-}
-
-export interface BucketAsset {
-  schema: Bucket;
 }

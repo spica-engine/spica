@@ -245,7 +245,7 @@ export {
   versionControlApiReducerPath,
   versionControlApiMiddleware,
   useGetCommandsQuery,
-  useGetDiffMutation,
+  useGetDiffQuery,
   useCommitMutation,
   useBranchMutation,
   useRemoteMutation,

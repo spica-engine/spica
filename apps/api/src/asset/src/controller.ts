@@ -17,18 +17,21 @@ import {
 } from "@nestjs/common";
 import {AssetService} from "./service";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {Asset, Config, ExportMeta, Resource} from "@spica-server/interface/asset";
+import {
+  Asset,
+  Config,
+  ExportMeta,
+  Resource,
+  ASSET_REP_MANAGER,
+  IInstallationStrategy,
+  InstallationChanges,
+  INSTALLATION_STRATEGIES
+} from "@spica-server/interface/asset";
 import {exporters, operators, validators} from "./registration";
 import {putConfiguration} from "./helpers";
 import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
-import {
-  ASSET_REP_MANAGER,
-  IInstallationStrategy,
-  InstallationChanges,
-  INSTALLATION_STRATEGIES
-} from "./interface";
 import {AssetRepManager} from "./representative";
 import {createReadStream} from "fs";
 import {OptionalId} from "@spica-server/database";
@@ -42,13 +45,13 @@ export class AssetController {
   ) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("asset:index"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:index"))
   find(@Query("filter", DEFAULT({}), JSONP) filter: object) {
     return this.service.find(filter);
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("asset:show", "asset"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:show", "asset"))
   async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.service.findOne({_id: id}).then(r => {
       if (!r) {
@@ -59,14 +62,14 @@ export class AssetController {
   }
 
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("asset:download"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:download"))
   async insert(@Body(Schema.validate("http://spica.internal/asset")) asset: Asset) {
     asset.status = "downloaded";
     return this.service.insertOne(asset);
   }
 
   @Post("export")
-  @UseGuards(AuthGuard(), ActionGuard("asset:export", "asset"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:export", "asset"))
   async export(
     @Body(Schema.validate("http://spica.internal/asset/export")) exportMeta: ExportMeta,
     @Res({passthrough: true}) res
@@ -107,7 +110,7 @@ export class AssetController {
   }
 
   @Post(":id")
-  @UseGuards(AuthGuard(), ActionGuard("asset:install", "asset"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:install", "asset"))
   async install(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(
@@ -168,13 +171,17 @@ export class AssetController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("asset:delete", "asset"))
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("asset:delete", "asset"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Query("type") type: "soft" | "hard" = "soft"
   ) {
     const asset = await this.service.findOne({_id: id});
+
+    if (!asset) {
+      throw new NotFoundException(`Asset with ID ${id} not found`);
+    }
 
     if (asset.status != "downloaded") {
       await this.operate(

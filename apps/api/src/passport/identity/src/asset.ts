@@ -1,8 +1,8 @@
 import {registrar} from "@spica-server/asset";
 import {Resource} from "@spica-server/interface/asset";
-import {Schema, Validator} from "@spica-server/core/schema";
 import {PreferenceService} from "@spica-server/preference/services";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IdentitySettingsContents} from "@spica-server/interface/passport/identity";
 
 /**
  * Preference has 2 sub modules named bucket(not yet) and identity
@@ -10,16 +10,6 @@ import {IRepresentativeManager} from "@spica-server/interface/representative";
  * It's a bit different than the other modules
  */
 const _module = "preference";
-
-interface IdentitySettingsContents {
-  schema: IdentitySchema;
-}
-
-interface IdentitySchema {
-  attributes: {
-    [key: string]: any;
-  };
-}
 
 function isIdentityPreference(resourceOrId: Resource<IdentitySettingsContents> | string) {
   return typeof resourceOrId == "string"
@@ -37,23 +27,20 @@ export function registerAssetHandlers(
 
   registrar.validator(_module, validator);
 
-  const upsert = (resource: Resource<IdentitySettingsContents>) => {
+  const upsert = async (resource: Resource<IdentitySettingsContents>) => {
     if (!isIdentityPreference(resource)) {
       return;
     }
 
-    return prefService.updateOne(
-      {scope: "passport"},
-      {$set: {identity: resource.contents.schema}},
-      {upsert: true}
-    );
+    return Promise.resolve();
   };
 
-  const remove = resource => {
+  const remove = async resource => {
     if (!isIdentityPreference(resource)) {
       return;
     }
-    return prefService.updateOne({scope: "passport"}, {$set: {identity: {attributes: {}}}});
+
+    return Promise.resolve();
   };
 
   const operator = {
@@ -69,9 +56,7 @@ export function registerAssetHandlers(
       return;
     }
 
-    const schema = await prefService.get("passport").then(s => {
-      return s.identity;
-    });
+    const schema = {};
 
     return manager.write(_module, "identity", "schema", schema, "yaml");
   };

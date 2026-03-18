@@ -4,6 +4,22 @@
   "references": [
     {
       "path": "../../database"
+    },
+
+    {
+      "path": "../../interface/core"
+    },
+
+    {
+      "path": "../../interface/passport/user"
+    },
+
+    {
+      "path": "../encryption"
+    },
+
+    {
+      "path": "../../interface/config"
     }
   ]
 }

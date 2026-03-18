@@ -1,3 +1,7 @@
-export {ActionGuard, ResourceFilter, resourceFilterFunction} from "./action.guard";
-export {AuthGuard, StrategyType} from "./auth.guard";
-export {POLICY_RESOLVER, PolicyResolver} from "./action.resolver";
+export {
+  ActionGuard,
+  SimpleActionGuard,
+  ResourceFilter,
+  resourceFilterFunction
+} from "./action.guard";
+export {AuthGuard, StrategyType, extractStrategyType} from "./auth.guard";

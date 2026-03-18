@@ -10,6 +10,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as Bucket from "@spica-devkit/bucket";
 import {bufferCount, take} from "rxjs/operators";
 import {WsAdapter} from "@spica-server/core/websocket";
+import {BatchModule} from "@spica-server/batch";
 
 const PORT = 3002;
 const PUBLIC_URL = `http://localhost:${PORT}`;
@@ -20,6 +21,7 @@ describe("Bucket", () => {
   let app: INestApplication;
 
   let bucket;
+  let bucket2;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -38,7 +40,8 @@ describe("Bucket", () => {
           realtime: true,
           bucketDataLimit: 100,
           graphql: false
-        })
+        }),
+        BatchModule.forRoot({port: PORT.toString()})
       ]
     }).compile();
 
@@ -52,9 +55,24 @@ describe("Bucket", () => {
       description: "Description of the bucket",
       primary: "title",
       properties: {
-        title: {type: "string", options: {position: "left"}},
-        description: {type: "string", options: {position: "right"}}
+        title: {type: "string", options: {}},
+        description: {type: "string", options: {}}
       },
+      indexes: [],
+      history: false,
+      acl: {write: "true==true", read: "true==true"},
+      icon: "view_stream"
+    };
+
+    bucket2 = {
+      title: "Another Bucket",
+      description: "Description of the another bucket",
+      primary: "title",
+      properties: {
+        name: {type: "string", options: {}},
+        surname: {type: "string", options: {}}
+      },
+      indexes: [],
       history: false,
       acl: {write: "true==true", read: "true==true"},
       icon: "view_stream"
@@ -70,6 +88,36 @@ describe("Bucket", () => {
       const insertedBucket = await Bucket.insert(bucket);
       expect(ObjectId.isValid(insertedBucket._id)).toEqual(true);
       expect(insertedBucket).toEqual({...bucket, _id: insertedBucket._id});
+    });
+
+    it("should create multiple buckets", async () => {
+      const failedBucket = {};
+      const response = await Bucket.insertMany([bucket, bucket2, failedBucket]);
+
+      expect(response.failures.length).toEqual(1);
+      expect(response.failures[0].request).toEqual({});
+      expect(response.failures[0]).toEqual({
+        request: {},
+        response: {
+          error: "validation failed",
+          message: " must have required property 'title'"
+        }
+      });
+
+      expect(response.successes.length).toEqual(2);
+      expect(response.successes[0].request).toEqual(bucket);
+      expect(response.successes[1].request).toEqual(bucket2);
+
+      const bucket1id = response.successes[0].response._id;
+      const bucket2id = response.successes[1].response._id;
+
+      expect(ObjectId.isValid(bucket1id)).toEqual(true);
+      expect(ObjectId.isValid(bucket2id)).toEqual(true);
+
+      const insertedBuckets = await Bucket.getAll();
+      expect(insertedBuckets.length).toEqual(2);
+      expect(insertedBuckets.find(b => b._id == bucket1id)).toEqual({...bucket, _id: bucket1id});
+      expect(insertedBuckets.find(b => b._id == bucket2id)).toEqual({...bucket2, _id: bucket2id});
     });
 
     it("should update bucket", async () => {
@@ -88,6 +136,40 @@ describe("Bucket", () => {
 
       const existingBuckets = await Bucket.getAll();
       expect(existingBuckets).toEqual([]);
+    });
+
+    it("should delete multiple buckets", async () => {
+      const {
+        successes: [
+          {
+            response: {_id: bucket1id}
+          },
+          {
+            response: {_id: bucket2id}
+          }
+        ]
+      } = await Bucket.insertMany([bucket, bucket2]);
+
+      const response = await Bucket.removeMany([bucket1id, bucket2id, "123"]);
+
+      expect(response).toEqual({
+        successes: [
+          {request: `bucket/${bucket1id}`, response: ""},
+          {request: `bucket/${bucket2id}`, response: ""}
+        ],
+        failures: [
+          {
+            request: "bucket/123",
+            response: {
+              error: undefined,
+              message: "Invalid id."
+            }
+          }
+        ]
+      });
+
+      const buckets = await Bucket.getAll();
+      expect(buckets).toEqual([]);
     });
 
     it("should get bucket", async () => {
@@ -136,6 +218,60 @@ describe("Bucket", () => {
       expect(existingData).toEqual([expectedData]);
     });
 
+    it("should insertmany", async () => {
+      const expectedData = {_id: undefined, title: "hello", description: "hi"};
+      const expectedData2 = {_id: undefined, title: "bye", description: "see you"};
+
+      const response = await Bucket.data.insertMany<any>(bucketid, [
+        {
+          title: "hello",
+          description: "hi"
+        },
+        {
+          title: "bye",
+          description: "see you"
+        },
+        {
+          title: -1
+        }
+      ]);
+
+      expect(response.failures.length).toEqual(1);
+      expect(response.failures[0]).toEqual({
+        request: {
+          title: -1
+        },
+        response: {
+          error: "validation failed",
+          message: ".title must be string"
+        }
+      });
+
+      expect(response.successes.length).toEqual(2);
+
+      expect(response.successes[0].request).toEqual({
+        title: "hello",
+        description: "hi"
+      });
+      expect(response.successes[1].request).toEqual({
+        title: "bye",
+        description: "see you"
+      });
+
+      const data1Id = response.successes[0].response._id;
+      const data2Id = response.successes[1].response._id;
+
+      expect(ObjectId.isValid(data1Id)).toEqual(true);
+      expect(ObjectId.isValid(data2Id)).toEqual(true);
+
+      expectedData._id = data1Id;
+      expectedData2._id = data2Id;
+
+      const existingData = await Bucket.data.getAll<any>(bucketid);
+      expect(existingData.find(d => d._id == data1Id)).toEqual(expectedData);
+      expect(existingData.find(d => d._id == data2Id)).toEqual(expectedData2);
+    });
+
     it("should update", async () => {
       const insertedData = await Bucket.data.insert<any>(bucketid, {
         title: "hello",
@@ -177,6 +313,54 @@ describe("Bucket", () => {
         description: "hi"
       });
       await Bucket.data.remove(bucketid, insertedData._id);
+
+      const existingData = await Bucket.data.getAll(bucketid);
+      expect(existingData).toEqual([]);
+    });
+
+    it("should deleteMany", async () => {
+      const {
+        successes: [
+          {
+            response: {_id: data1Id}
+          },
+          {
+            response: {_id: data2Id}
+          }
+        ]
+      } = await Bucket.data.insertMany<any>(bucketid, [
+        {
+          title: "hello",
+          description: "hi"
+        },
+        {
+          title: "bye",
+          description: "see you"
+        }
+      ]);
+
+      const response = await Bucket.data.removeMany(bucketid, [data1Id, data2Id, "123"]);
+      expect(response).toEqual({
+        successes: [
+          {
+            request: `bucket/${bucketid}/data/${data1Id}`,
+            response: ""
+          },
+          {
+            request: `bucket/${bucketid}/data/${data2Id}`,
+            response: ""
+          }
+        ],
+        failures: [
+          {
+            request: `bucket/${bucketid}/data/123`,
+            response: {
+              error: undefined,
+              message: "Invalid id."
+            }
+          }
+        ]
+      });
 
       const existingData = await Bucket.data.getAll(bucketid);
       expect(existingData).toEqual([]);
@@ -413,6 +597,138 @@ describe("Bucket", () => {
           setTimeout(() => {
             subject.remove({_id: bucketDataid});
           }, 1000);
+        });
+      });
+
+      describe("relation", () => {
+        let users;
+        let headphones;
+        let usersBucketId;
+        let headphonesBucketId;
+
+        beforeEach(async () => {
+          headphones = {
+            title: "Headphones",
+            description: "Headphones bucket",
+            primary: "model",
+            properties: {
+              model: {title: "model", type: "string", options: {}},
+              price: {title: "price", type: "number", options: {}}
+            },
+            history: false,
+            acl: {write: "true==true", read: "true==true"},
+            icon: "view_stream"
+          };
+
+          users = {
+            title: "Users",
+            description: "Users bucket",
+            primary: "name",
+            properties: {
+              name: {title: "name", type: "string", options: {}},
+              age: {title: "age", type: "number", options: {}},
+              headphone: {
+                title: "headphone",
+                bucketId: "",
+                dependent: false,
+                type: "relation",
+                relationType: "onetoone",
+                options: {}
+              }
+            },
+            history: false,
+            acl: {write: "true==true", read: "true==true"},
+            icon: "view_stream"
+          };
+
+          const insertedHeadphonesBucket = await Bucket.insert(headphones);
+          headphonesBucketId = insertedHeadphonesBucket._id;
+
+          users.properties.headphone.bucketId = headphonesBucketId;
+
+          const insertedUsersBucket = await Bucket.insert(users);
+          usersBucketId = insertedUsersBucket._id;
+        });
+
+        it("should get all changes in realtime with resolved relations", done => {
+          let insertedUserId;
+          let insertedHeadphoneId;
+
+          const subject = Bucket.data.realtime.getAll(usersBucketId, {relation: true});
+
+          subject.pipe(bufferCount(2), take(1)).subscribe({
+            next: messages => {
+              expect(messages).toEqual([
+                // initial docs
+                [],
+                // docs after changes
+                [
+                  {
+                    _id: insertedUserId,
+                    name: "Joe",
+                    age: 34,
+                    headphone: {_id: insertedHeadphoneId, model: "QBC", price: 400}
+                  }
+                ]
+              ]);
+              done();
+            }
+          });
+
+          setTimeout(async () => {
+            const insertedHeadphone = await Bucket.data.insert<any>(headphonesBucketId, {
+              model: "QBC",
+              price: 400
+            });
+            insertedHeadphoneId = insertedHeadphone._id;
+
+            const insertedUser = await Bucket.data.insert<any>(usersBucketId, {
+              name: "Joe",
+              age: 34,
+              headphone: insertedHeadphone._id
+            });
+            insertedUserId = insertedUser._id;
+          }, 1000);
+        });
+
+        it("should get changes in realtime with resolved relations", done => {
+          let insertedHeadphoneId;
+
+          Bucket.data.insert<any>(usersBucketId, {name: "Joe", age: 34}).then(insertedUser => {
+            const insertedUserId = insertedUser._id;
+
+            const subject = Bucket.data.realtime.get(usersBucketId, insertedUserId, undefined, {
+              relation: true
+            });
+            subject.pipe(bufferCount(2), take(1)).subscribe({
+              next: messages => {
+                expect(messages).toEqual([
+                  // initial docs
+                  {_id: insertedUserId, name: "Joe", age: 34},
+                  // docs after changes
+                  {
+                    _id: insertedUserId,
+                    name: "Joe",
+                    age: 34,
+                    headphone: {_id: insertedHeadphoneId, model: "QBC", price: 400}
+                  }
+                ]);
+                done();
+              }
+            });
+
+            setTimeout(async () => {
+              const insertedHeadphone = await Bucket.data.insert<any>(headphonesBucketId, {
+                model: "QBC",
+                price: 400
+              });
+              insertedHeadphoneId = insertedHeadphone._id;
+
+              Bucket.data.patch(usersBucketId, insertedUserId, {
+                headphone: insertedHeadphone._id
+              });
+            }, 1000);
+          });
         });
       });
     });

@@ -1,32 +1,36 @@
 import * as expression from "@spica-server/bucket/expression";
-import {Bucket} from "@spica-server/bucket/services";
-import {CrudFactories} from "./crud";
-import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
+import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale";
 import {deepCopy} from "@spica-server/core/patch";
-import {
-  compareAndUpdateRelations,
-  createRelationMap,
-  getRelationPipeline,
-  RelationMap
-} from "./relation";
-import {constructFilterValues} from "@spica-server/bucket/common";
+import {compareAndUpdateRelations, createRelationMap, getRelationPipeline} from "./relation";
+import {buildExpressionReplacers, constructFilterValues} from "@spica-server/bucket/common";
 import {categorizePropertyMap} from "./helpers";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {extractFilterPropertyMap} from "@spica-server/filter";
+import {CrudFactories, Locale, RelationMap} from "@spica-server/interface/bucket/common";
+import {Bucket} from "@spica-server/interface/bucket";
 
 export class BucketPipelineBuilder extends PipelineBuilder {
   private schema: Bucket;
   private factories: CrudFactories<any>;
   private usedRelationPaths: string[] = [];
   private locale: Locale;
+  private hashSecret?: string;
+  private encryptionSecret?: string;
 
   private defaultRule = "true==true";
   private isRuleFilteringDocuments: boolean;
 
-  constructor(schema: Bucket, factories: CrudFactories<any>) {
+  constructor(
+    schema: Bucket,
+    factories: CrudFactories<any>,
+    hashSecret?: string,
+    encryptionSecret?: string
+  ) {
     super();
     this.schema = schema;
     this.factories = factories;
+    this.hashSecret = hashSecret;
+    this.encryptionSecret = encryptionSecret;
   }
 
   private buildRelationMap(propertyMap: string[][]): Promise<RelationMap[]> {
@@ -64,19 +68,23 @@ export class BucketPipelineBuilder extends PipelineBuilder {
     this.isRuleFilteringDocuments = !this.areRulesSame(this.schema.acl.read, this.defaultRule);
 
     const propertyMap = expression.extractPropertyMap(this.schema.acl.read);
-    const {documentPropertyMap, authPropertyMap} = categorizePropertyMap(propertyMap);
-
-    const authRelationMap = await createRelationMap({
-      paths: authPropertyMap,
-      properties: this.factories.authResolver.getProperties(),
-      resolve: this.factories.schema
-    });
-    const authRelationStage = getRelationPipeline(authRelationMap, undefined);
-    user = await this.factories.authResolver.resolveRelations(user, authRelationStage);
+    const {documentPropertyMap} = categorizePropertyMap(propertyMap);
 
     const documentRelationMap = await this.buildRelationMap(documentPropertyMap);
     const documentRelationStage = getRelationPipeline(documentRelationMap, this.locale);
-    const ruleExpression = expression.aggregate(this.schema.acl.read, {auth: user});
+
+    const expressionReplacers = await buildExpressionReplacers(
+      this.schema,
+      documentPropertyMap,
+      this.factories.schema,
+      this.hashSecret
+    );
+    const ruleExpression = expression.aggregateWithReplacers(
+      this.schema.acl.read,
+      {auth: user},
+      "match",
+      expressionReplacers
+    );
 
     this.attachToPipeline(true, ...documentRelationStage);
     this.attachToPipeline(true, {$match: ruleExpression});
@@ -100,14 +108,30 @@ export class BucketPipelineBuilder extends PipelineBuilder {
         filterByUserRequest = await constructFilterValues(
           filterByUserRequest,
           this.schema,
-          this.factories.schema
+          this.factories.schema,
+          this.hashSecret
         );
 
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {
-        filterPropertyMap = expression.extractPropertyMap(filterByUserRequest);
-        filterExpression = expression.aggregate(filterByUserRequest, {});
+        const rawPropertyMap = expression.extractPropertyMap(filterByUserRequest);
+        const {documentPropertyMap} = categorizePropertyMap(rawPropertyMap);
+        filterPropertyMap = documentPropertyMap;
+
+        const expressionReplacers = await buildExpressionReplacers(
+          this.schema,
+          filterPropertyMap,
+          this.factories.schema,
+          this.hashSecret
+        );
+
+        filterExpression = expression.aggregateWithReplacers(
+          filterByUserRequest,
+          {},
+          "match",
+          expressionReplacers
+        );
       }
 
       filterRelationMap = await this.buildRelationMap(filterPropertyMap);

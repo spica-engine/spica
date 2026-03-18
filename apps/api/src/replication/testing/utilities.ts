@@ -5,7 +5,7 @@ import {
   CommandMessage,
   IJobReducer,
   JobMeta
-} from "@spica-server/replication";
+} from "@spica-server/interface/replication";
 import {EventEmitter} from "events";
 import {PartialObserver} from "rxjs";
 

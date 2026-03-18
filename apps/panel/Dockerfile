@@ -5,7 +5,7 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json yarn.lock ./
 COPY apps/panel/package.json ./apps/panel/package.json
-RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile --network-timeout 600000
 
 # build app
 FROM base AS build 
@@ -16,7 +16,8 @@ COPY nx.json ./
 COPY package.json ./
 COPY yarn.lock ./
 ARG BASE_URL=""
-RUN BASE_URL=$BASE_URL yarn run build:panel
+ARG VITE_BASE_URL=""
+RUN BASE_URL=$BASE_URL VITE_BASE_URL=$VITE_BASE_URL yarn run build:panel
 
 # start app
 FROM nginx:alpine as prod

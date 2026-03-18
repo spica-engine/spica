@@ -9,10 +9,19 @@
       "path": "../../../../../libs/core"
     },
     {
+      "path": "../../../../../libs/interface/core"
+    },
+    {
       "path": "../../replication"
     },
     {
       "path": "../queue"
+    },
+    {
+      "path": "../../../../../libs/interface/function/enqueuer"
+    },
+    {
+      "path": "../../../../../libs/interface/passport/guard"
     }
   ]
 }

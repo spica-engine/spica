@@ -1,36 +1,26 @@
-import {Inject, Injectable, Optional} from "@nestjs/common";
-import {Default, Validator} from "@spica-server/core/schema";
+import {Inject, Injectable, NotFoundException, Optional} from "@nestjs/common";
+import {Validator} from "@spica-server/core/schema";
+import {Default} from "@spica-server/interface/core";
 import {
   BaseCollection,
   Collection,
   DatabaseService,
   Filter,
   FindOneAndReplaceOptions,
-  CreateIndexesOptions,
   ObjectId,
   WithId
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
-import {Bucket, BucketPreferences} from "./bucket";
 import {getBucketDataCollection} from "./";
-import {BUCKET_DATA_LIMIT} from "./options";
-
-export interface IndexDefinition {
-  definition: {
-    [key: string]: any;
-  };
-  options?: CreateIndexesOptions;
-}
-
-interface ExistingIndex {
-  v: number;
-  key: {
-    [key: string]: any;
-  };
-  name: string;
-  [key: string]: any;
-}
+import {
+  IndexDefinition,
+  ExistingIndex,
+  Bucket,
+  BucketPreferences,
+  BUCKET_DATA_LIMIT
+} from "@spica-server/interface/bucket";
+import * as crypto from "crypto";
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {
@@ -42,7 +32,9 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     private validator: Validator,
     @Optional() @Inject(BUCKET_DATA_LIMIT) private bucketDataLimit
   ) {
-    super(db);
+    super(db, {
+      collectionOptions: {changeStreamPreAndPostImages: {enabled: true}}
+    });
   }
 
   getPreferences() {
@@ -106,38 +98,16 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
       .then(r => this.updateIndexes({...doc, _id: filter._id as ObjectId}).then(() => r));
   }
 
-  async updateIndexes(bucket: Bucket): Promise<void> {
-    const bucketDataCollection = this.db.collection(getBucketDataCollection(bucket._id));
-
-    const indexDefinitions = this.createIndexDefinitions(bucket);
-    const indexesWillBeDropped = [];
-
-    const errors = [];
-
-    const indexes = await this.getIndexesWillBeDropped(bucketDataCollection);
-    for (const index of indexes) {
-      indexesWillBeDropped.push(bucketDataCollection.dropIndex(index).catch(e => errors.push(e)));
-    }
-
-    await Promise.all(indexesWillBeDropped);
-    await Promise.all(
-      indexDefinitions.map(index =>
-        bucketDataCollection.createIndex(index.definition, index.options).catch(e => errors.push(e))
-      )
-    );
-
-    if (errors.length) {
-      throw Error(errors.map(e => e.message).join(""));
-    }
-  }
-
   async drop(id: string | ObjectId) {
     const schema = await super.findOneAndDelete({_id: new ObjectId(id)});
+    if (!schema) {
+      throw new NotFoundException(`Bucket with ID ${id} does not exist.`);
+    }
     await this.db.dropCollection(getBucketDataCollection(id));
     return schema;
   }
 
-  watch(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
+  watchBucket(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
     return new Observable(observer => {
       if (propagateOnStart) {
         super.findOne({_id: new ObjectId(bucketId)}).then(bucket => observer.next(bucket));
@@ -166,61 +136,98 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   }
 
   watchPreferences(propagateOnStart: boolean): Observable<BucketPreferences> {
-    return this.pref.watch("bucket", {propagateOnStart});
+    return this.pref.watchPreference("bucket", {propagateOnStart});
   }
 
   getPredefinedDefaults(): Default[] {
     return this.validator.defaults;
   }
 
-  createIndexDefinitions(
-    bucket: Bucket,
-    definitions: IndexDefinition[] = [],
-    prefix: string = ""
-  ): IndexDefinition[] {
-    const keyGenerator = (prefix, name) => {
-      return prefix ? `${prefix}.${name}` : name;
-    };
-    for (const [name, spec] of Object.entries(bucket.properties)) {
-      if (spec.options && (spec.options.index || spec.options.unique)) {
-        const key = keyGenerator(prefix, name);
-        definitions.push({
-          // direction of index is unimportant for single field indexes
-          definition: {[key]: 1},
-          options: {unique: !!spec.options.unique}
-        });
-      }
-
-      if (spec.type == "object") {
-        const key = keyGenerator(prefix, name);
-
-        this.createIndexDefinitions(spec as any, definitions, key);
-      } else if (spec.type == "array") {
-        const key = keyGenerator(prefix, name);
-
-        const schema = {
-          properties: {
-            [key]: spec.items
-          }
-        };
-        this.createIndexDefinitions(schema as any, definitions, "");
-      }
+  generateIndexName(definition: Record<string, number>, options: Record<string, any>): string {
+    const defsParts = [];
+    for (const key of Object.keys(definition)) {
+      defsParts.push(`${key}_${definition[key]}`);
     }
+    const defs = defsParts.join("_");
 
-    return definitions;
+    const sortedOptions: Record<string, any> = {};
+    Object.keys(options)
+      .sort()
+      .forEach(k => {
+        sortedOptions[k] = options[k];
+      });
+
+    const optionsStr = JSON.stringify(sortedOptions);
+
+    const hash = crypto.createHash("sha1").update(optionsStr).digest("hex").slice(0, 8);
+
+    return `${defs}-${hash}`;
   }
 
-  async getIndexesWillBeDropped(collection: Collection<any>): Promise<string[]> {
-    const existings: ExistingIndex[] = await collection.listIndexes().toArray();
-    return existings
-      .filter(existing => this.isExistingSingleFieldIndex(existing))
-      .map(existing => existing.name);
+  async updateIndexes(bucket: Bucket): Promise<void> {
+    const collection = this.db.collection(getBucketDataCollection(bucket._id));
+
+    const existingIndexes = await collection.listIndexes().toArray();
+
+    const existingNames = new Set(existingIndexes.map(index => index.name));
+
+    const {indexesToDrop, indexesToCreate} = this.calculateIndexChanges(
+      Array.from(existingNames),
+      bucket
+    );
+
+    const errors = [];
+
+    await this.dropIndexes(collection, indexesToDrop, errors);
+    await this.createIndexes(collection, indexesToCreate, errors);
+
+    if (errors.length) {
+      throw new Error(errors.map(e => e.message).join("; "));
+    }
   }
 
-  isExistingSingleFieldIndex(index: ExistingIndex) {
-    const keys = Object.keys(index.key);
-    // we can not remove _id index since it's default index of mongodb
-    return keys.length == 1 && keys[0] != "_id";
+  calculateIndexChanges(
+    existingIndexNames: string[],
+    bucket: Bucket
+  ): {
+    indexesToDrop: string[];
+    indexesToCreate: IndexDefinition[];
+  } {
+    const newIndexes = (bucket.indexes || []).map(idx => {
+      const name = this.generateIndexName(idx.definition, idx.options || {});
+      return {...idx, name};
+    });
+
+    const desiredNames = new Set(newIndexes.map(idx => idx.name));
+
+    // _id is default index for MondoDB collections, we cant drop it
+    // _id_ is internal name for _id index in MongoDB so we are filtering out
+    const existingNames = new Set(existingIndexNames.filter(name => name !== "_id_"));
+
+    const indexesToDrop = Array.from(existingNames).filter(name => !desiredNames.has(name));
+    const indexesToCreate = newIndexes.filter(idx => !existingNames.has(idx.name));
+
+    return {indexesToDrop, indexesToCreate};
+  }
+
+  async dropIndexes(collection: Collection, indexNames: string[], errors: Error[]): Promise<void> {
+    await Promise.all(
+      indexNames.map(name => collection.dropIndex(name).catch(err => errors.push(err)))
+    );
+  }
+
+  async createIndexes(
+    collection: Collection,
+    indexes: IndexDefinition[],
+    errors: Error[]
+  ): Promise<void> {
+    await Promise.all(
+      indexes.map(idx =>
+        collection
+          .createIndex(idx.definition, {...idx.options, name: idx.name})
+          .catch(err => errors.push(err))
+      )
+    );
   }
 
   collNameToId(collName: string) {

@@ -1,13 +1,13 @@
 import {event} from "@spica-server/function/queue/proto";
-import {Description, Runtime, SpawnOptions} from "@spica-server/function/runtime";
+import {Runtime} from "@spica-server/function/runtime";
 import {NodeWorker} from "@spica-server/function/runtime/node";
-
-export type Schedule = (event: event.Event) => void;
+import {Description, SpawnOptions} from "@spica-server/interface/function/runtime";
+import {Schedule, WorkerState} from "@spica-server/interface/function/scheduler";
 
 export class Node extends Runtime {
   description: Description = {
     name: "node",
-    title: "Node.js 12",
+    title: "Node.js 22",
     description: "Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine."
   };
 
@@ -16,16 +16,8 @@ export class Node extends Runtime {
   }
 }
 
-export enum WorkerState {
-  "Fresh",
-  "Targeted",
-  "Busy",
-  "Timeouted",
-  "Outdated"
-}
-
 export class ScheduleWorker extends NodeWorker {
-  private _state: WorkerState = WorkerState.Fresh;
+  private _state: WorkerState = WorkerState.Initial;
   public get state(): WorkerState {
     return this._state;
   }
@@ -37,6 +29,7 @@ export class ScheduleWorker extends NodeWorker {
   private schedule: Schedule;
 
   private transitionMap = {
+    [WorkerState.Initial]: [WorkerState.Fresh],
     [WorkerState.Fresh]: [WorkerState.Busy],
     [WorkerState.Targeted]: [WorkerState.Busy, WorkerState.Timeouted, WorkerState.Outdated],
     [WorkerState.Busy]: [WorkerState.Targeted, WorkerState.Timeouted, WorkerState.Outdated],
@@ -53,6 +46,8 @@ export class ScheduleWorker extends NodeWorker {
   public markAsAvailable(schedule: Schedule) {
     if (this.state == WorkerState.Busy) {
       this.transitionTo(WorkerState.Targeted);
+    } else if (this.state == WorkerState.Initial) {
+      this.transitionTo(WorkerState.Fresh);
     }
     this.schedule = schedule;
   }

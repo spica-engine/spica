@@ -1,18 +1,5 @@
+import {HttpService} from "@spica-server/interface/function/packages";
 import axios, {AxiosRequestConfig, AxiosInstance, AxiosResponse} from "axios";
-
-export interface HttpService {
-  baseUrl: string;
-  setBaseUrl(url: string): void;
-  setAuthorization(authorization: string): void;
-  setWriteDefaults(writeDefaults: {headers: {[key: string]: string}}): void;
-
-  get<T>(url: string, options?: any): Promise<T>;
-  post<T>(url: string, body: any, options?: any): Promise<T>;
-  put<T>(url: string, body: any, options?: any): Promise<T>;
-  patch<T>(url: string, body: any, options?: any): Promise<T>;
-  delete(url: string, options?: any);
-  request<T>(options: any): Promise<T>;
-}
 
 export function logWarning(response: any) {
   const warning = response.headers["warning"];
@@ -76,6 +63,7 @@ export class Axios implements HttpService {
 
   setBaseUrl(url: string) {
     this.instance.defaults.baseURL = url;
+    this.baseUrl = url;
   }
 
   setWriteDefaults(writeDefaults: {headers: {[key: string]: string}}) {
@@ -87,6 +75,10 @@ export class Axios implements HttpService {
 
   setAuthorization(authorization: string) {
     this.instance.defaults.headers["Authorization"] = authorization;
+  }
+
+  getAuthorization() {
+    return this.instance.defaults.headers["Authorization"].toString();
   }
 
   get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
