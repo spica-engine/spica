@@ -1,3 +1,10 @@
+# Selects between two build strategies:
+#   inside   (default) - TypeScript is compiled inside Docker; useful for local builds.
+#   prebuilt (CI)      - dist/ is pre-built on the host by `yarn run build:api` before
+#                        docker build runs. Docker just packages the output. Much faster.
+# Must be declared before the first FROM to be usable in later FROM instructions.
+ARG BUILD_STRATEGY=inside
+
 FROM node:22-slim AS base
 ENV NX_FORCE_NO_DAEMON=true
 
@@ -19,14 +26,23 @@ COPY package.json yarn.lock ./
 COPY apps/api/package.json ./apps/api/package.json
 RUN yarn install --frozen-lockfile --production --network-timeout 600000
 
-# build app to nodejs image
-FROM base AS build 
+# Strategy: inside — compile TypeScript inside Docker (default, local use)
+FROM base AS build-inside
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
 COPY libs ./libs
 COPY nx.json package.json tsconfig.json yarn.lock ./
+RUN node -e "const fs=require('fs'),c=JSON.parse(fs.readFileSync('tsconfig.json','utf-8'));c.compilerOptions.sourceMap=false;fs.writeFileSync('tsconfig.json',JSON.stringify(c,null,2));"
 RUN yarn run build:api
+
+# Strategy: prebuilt — accept dist/ compiled by the CI runner before docker build.
+# Requires `yarn run build:api` to have run on the host before invoking docker build.
+FROM scratch AS build-prebuilt
+COPY dist /app/dist
+
+# Unify: the runner always copies from this stage regardless of strategy
+FROM build-${BUILD_STRATEGY} AS build
 
 # test app
 FROM tools AS test

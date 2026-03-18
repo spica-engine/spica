@@ -60,7 +60,7 @@
     "publish": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker buildx build --platform=${PLATFORMS:-linux/amd64,linux/arm64} --push . -f ./apps/api/Dockerfile -t spicaengine/api:$VERSION"
+        "command": "docker buildx build --build-arg BUILD_STRATEGY=prebuilt --platform=${PLATFORMS:-linux/amd64,linux/arm64} --push . -f ./apps/api/Dockerfile -t spicaengine/api:$VERSION"
       }
     }
   }

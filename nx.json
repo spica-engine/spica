@@ -11,7 +11,7 @@
       "!{projectRoot}/src/test-setup.[jt]s",
       "!{projectRoot}/test-setup.[jt]s"
     ],
-    "sharedGlobals": []
+    "sharedGlobals": ["{workspaceRoot}/tsconfig.json", "{workspaceRoot}/nx.json"]
   },
   "pluginsConfig": {
     "@nx/js": {
@@ -42,7 +42,8 @@
   "nxCloudId": "66fba1edf5b0be5c19ad179e",
   "targetDefaults": {
     "build": {
-      "cache": false
+      "cache": true,
+      "inputs": ["production", "^production"]
     },
     "test": {
       "cache": true,

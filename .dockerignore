@@ -1,0 +1,16 @@
+node_modules
+.nx
+coverage
+tmp
+.git
+.github
+apps/spica
+apps/cli
+apps/migrate
+apps/mongoreplicationcontroller
+apps/panel
+charts
+stacks
+patches
+db
+output.json

@@ -55,6 +55,23 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile --network-timeout 600000
 
+      - name: Restore Nx Cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-cache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            nx-cache-${{ runner.os }}-
+
+      - name: Disable source maps for CI
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+          const cfg = JSON.parse(fs.readFileSync('tsconfig.json', 'utf-8'));
+          cfg.compilerOptions.sourceMap = false;
+          fs.writeFileSync('tsconfig.json', JSON.stringify(cfg, null, 2));
+          EOF
+
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
@@ -85,6 +102,10 @@ jobs:
 
       - name: Set Yarn registry explicitly
         run: yarn config set registry https://registry.npmjs.org
+
+      - name: Build API for Docker packaging
+        if: matrix.targets == 'api'
+        run: yarn run build:api
 
       - name: Release Applications
         run: yarn run publish:${{ matrix.targets }}

@@ -91,10 +91,25 @@ jobs:
             ${{ runner.os }}-node-modules-
       - name: Install dependencies
         run: yarn install --frozen-lockfile --network-timeout 600000
+      - name: Restore Nx Cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-cache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            nx-cache-${{ runner.os }}-
       - name: Fetch base branch
         run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+      - name: Disable source maps for CI
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+          const cfg = JSON.parse(fs.readFileSync('tsconfig.json', 'utf-8'));
+          cfg.compilerOptions.sourceMap = false;
+          fs.writeFileSync('tsconfig.json', JSON.stringify(cfg, null, 2));
+          EOF
       - name: Build Affected
         run: yarn nx affected -t build
 
@@ -223,10 +238,25 @@ jobs:
           done
       - name: Install dependencies
         run: yarn install --frozen-lockfile --network-timeout 600000
+      - name: Restore Nx Cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-cache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            nx-cache-${{ runner.os }}-
       - name: Fetch base branch
         run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+      - name: Disable source maps for CI
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+          const cfg = JSON.parse(fs.readFileSync('tsconfig.json', 'utf-8'));
+          cfg.compilerOptions.sourceMap = false;
+          fs.writeFileSync('tsconfig.json', JSON.stringify(cfg, null, 2));
+          EOF
 
       - name: Run Tests
         run: MONGODB_URL=$MONGODB_URL MAILER_URL=$MAILER_URL RABBITMQ_URL=$RABBITMQ_URL yarn nx test ${{ matrix.project }}
