@@ -2,7 +2,6 @@ import React, {type ReactNode, memo, useMemo} from "react";
 import styles from "./DashboardItem.module.scss";
 import {Button, Icon, Text, Chart, type TypeChartComponentProps, FlexElement, FluidContainer} from "oziko-ui-kit";
 import {type ChartType} from "chart.js";
-import Section from "../../organisms/section/Section";
 
 type TypeDashboardItem = {
   headerProps?: {
