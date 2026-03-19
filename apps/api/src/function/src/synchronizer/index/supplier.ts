@@ -16,7 +16,7 @@ const logger = new Logger("FunctionIdxSyncSupplier");
 
 const module = "function";
 const subModule = "index";
-const findExtenstion = fn => {
+const findExtension = fn => {
   if (fn.language === "javascript") return "mjs";
   if (fn.language === "typescript") return "ts";
   console.warn(
@@ -40,7 +40,7 @@ const getChangeLogForIndex = (
     resource_id: fn._id.toString(),
     resource_slug: fn.name,
     resource_content: content,
-    resource_extension: findExtenstion(fn),
+    resource_extension: findExtension(fn),
     created_at: new Date(),
     initiator,
     event_id: eventId
