@@ -51,6 +51,30 @@ tests:
           path: data["init-replica.sh"]
           pattern: rs\.reconfig
 
+  - it: init-replica.sh should use force option for reconfiguration
+    asserts:
+      - matchRegex:
+          path: data["init-replica.sh"]
+          pattern: "force.*true"
+
+  - it: init-replica.sh should reference rs.conf to get current configuration
+    asserts:
+      - matchRegex:
+          path: data["init-replica.sh"]
+          pattern: rs\.conf
+
+  - it: init-replica.sh should include FQDN of primary database pod
+    asserts:
+      - matchRegex:
+          path: data["init-replica.sh"]
+          pattern: "release-name-database-0\\.release-name-database\\.default\\.svc\\.cluster\\.local"
+
+  - it: init-replica.sh should use authentication flags
+    asserts:
+      - matchRegex:
+          path: data["init-replica.sh"]
+          pattern: "--authenticationDatabase admin"
+
   - it: set-profiling-level.sh should reference setProfilingLevel
     asserts:
       - matchRegex:

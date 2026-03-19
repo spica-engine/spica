@@ -97,3 +97,56 @@ tests:
       - equal:
           path: spec.template.spec.nodeSelector.disktype
           value: ssd
+
+  - it: should render a Job when database.replicas is exactly 2
+    set:
+      database.replicas: 2
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Job
+
+  - it: should apply database tolerations to the replication job when set
+    set:
+      database.replicas: 3
+      database.tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "mongodb"
+          effect: "NoSchedule"
+    asserts:
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: dedicated
+      - equal:
+          path: spec.template.spec.tolerations[0].effect
+          value: NoSchedule
+
+  - it: should not render a Job when database.replicas is not set (defaults to 1)
+    set:
+      database.replicas: 1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should reference ROOT_USERNAME and ROOT_PASSWORD env vars
+    set:
+      database.replicas: 3
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ROOT_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-root-credentials
+                key: rootUsername
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-root-credentials
+                key: rootPassword
