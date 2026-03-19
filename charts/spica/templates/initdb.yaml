@@ -140,6 +140,7 @@ data:
         fi
 
         delay=$((2**retries))
+        delay=$((delay > 60 ? 60 : delay))
         echo "Command failed. Retrying in $delay seconds..."
         sleep $delay
 
@@ -152,7 +153,10 @@ data:
     retry_command mongosh --quiet --username "$ROOT_USERNAME" --password "$ROOT_PASSWORD" --authenticationDatabase admin --eval "db.adminCommand('ping')"
     echo "MongoDB is ready!"
 
-    # Reconfigure replica set to include all members
+    # Reconfigure replica set to include all members.
+    # force:true is required when a secondary was down long enough that its oplog
+    # fell behind the primary's oplog window and can no longer sync normally.
+    # Without force, rs.reconfig would be rejected if members are unreachable.
     echo "Reconfiguring replica set.."
     mongosh --quiet --username "$ROOT_USERNAME" --password "$ROOT_PASSWORD" --authenticationDatabase admin --eval "
       var cfg = rs.conf();
