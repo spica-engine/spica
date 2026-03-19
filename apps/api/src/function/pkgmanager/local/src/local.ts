@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import {Observable, throwError} from "rxjs";
 import {
   Package,
@@ -6,10 +8,6 @@ import {
 } from "@spica-server/interface/function/pkgmanager";
 
 export class LocalPackageManager extends DelegatePkgManager {
-  private LOCAL_PACKAGE_NAME_REGEX = /^[a-fA-F0-9]{24}$/;
-  private LOCAL_PACKAGE_VERSION_REGEX = /file:.*([a-fA-F0-9]{24}).*/;
-  private LOCAL_PACKAGE_NAME_REGEX_REPLACER = /([a-fA-F0-9]{24}$)/;
-
   constructor(pkgManager: PackageManager) {
     super(pkgManager);
   }
@@ -33,10 +31,10 @@ export class LocalPackageManager extends DelegatePkgManager {
   }
 
   private transformLocalPackageName(cwd: string, name: string) {
-    if (!this.isLocalPackage(name)) {
+    if (!this.isLocalPackage(cwd, name)) {
       return name;
     }
-    const localPackageName = cwd.replace(this.LOCAL_PACKAGE_NAME_REGEX_REPLACER, name);
+    const localPackageName = path.join(path.dirname(cwd), name);
 
     const areTheySame = localPackageName == cwd;
     if (areTheySame) {
@@ -47,16 +45,17 @@ export class LocalPackageManager extends DelegatePkgManager {
   }
 
   private maskLocalPackage(pkg: Package) {
-    const isLocalPackage = this.LOCAL_PACKAGE_VERSION_REGEX.test(pkg.version);
-    if (!isLocalPackage) {
+    if (!pkg.version.startsWith("file:")) {
       return pkg;
     }
 
-    pkg.version = this.LOCAL_PACKAGE_VERSION_REGEX.exec(pkg.version)[1];
+    pkg.version = path.basename(pkg.version);
     return pkg;
   }
 
-  private isLocalPackage(name: string): boolean {
-    return this.LOCAL_PACKAGE_NAME_REGEX.test(name);
+  private isLocalPackage(cwd: string, name: string): boolean {
+    const parentDir = path.dirname(cwd);
+    const siblings = fs.readdirSync(parentDir, {withFileTypes: true});
+    return siblings.some(entry => entry.isDirectory() && entry.name === name);
   }
 }
