@@ -71,11 +71,7 @@ describe("Function Index Synchronizer", () => {
       database,
       scheduler,
       undefined,
-      {
-        root: "index_test",
-        timeout: 60,
-        outDir: ".build"
-      },
+      {root: "index_test", timeout: 60, outDir: ".build"},
       undefined,
       undefined,
       val => val as any
@@ -118,11 +114,7 @@ describe("Function Index Synchronizer", () => {
           default: {
             type: "http",
             active: true,
-            options: {
-              method: "get",
-              path: "/existing",
-              preflight: true
-            }
+            options: {method: "get", path: "/existing", preflight: true}
           }
         }
       };
@@ -141,7 +133,7 @@ describe("Function Index Synchronizer", () => {
             type: ChangeType.CREATE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
-            resource_extension: changeLog.resource_extension,
+            resource_extension: "mjs",
             resource_slug: mockFunction.name,
             resource_content: indexContent,
             created_at: expect.any(Date),
@@ -166,11 +158,7 @@ describe("Function Index Synchronizer", () => {
           default: {
             type: "http",
             active: true,
-            options: {
-              method: "get",
-              path: "/test-js",
-              preflight: true
-            }
+            options: {method: "get", path: "/test-js", preflight: true}
           }
         }
       };
@@ -199,7 +187,7 @@ describe("Function Index Synchronizer", () => {
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
             resource_slug: mockFunction.name,
-            resource_extension: changeLog.resource_extension,
+            resource_extension: "mjs",
             resource_content: updatedContent,
             created_at: expect.any(Date),
             initiator: ChangeInitiator.EXTERNAL,
@@ -224,11 +212,7 @@ describe("Function Index Synchronizer", () => {
           default: {
             type: "http",
             active: true,
-            options: {
-              method: "delete",
-              path: "/test-delete",
-              preflight: true
-            }
+            options: {method: "delete", path: "/test-delete", preflight: true}
           }
         }
       };
@@ -252,7 +236,7 @@ describe("Function Index Synchronizer", () => {
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
             resource_id: mockFunction._id.toString(),
-            resource_extension: changeLog.resource_extension,
+            resource_extension: "mjs",
             resource_slug: mockFunction.name,
             resource_content: null,
             created_at: expect.any(Date),
@@ -260,6 +244,38 @@ describe("Function Index Synchronizer", () => {
             event_id: expect.any(String)
           });
 
+          subs.unsubscribe();
+          done();
+        });
+      });
+    });
+
+    it("should set 'ts' extension for typescript language functions", done => {
+      const mockFunction: Function = {
+        _id: new ObjectId(),
+        name: "typescript_function",
+        description: "TypeScript function",
+        language: "typescript",
+        timeout: 60,
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {method: "get", path: "/ts", preflight: true}
+          }
+        }
+      };
+
+      const indexContent = `export default function(req, res) {
+        res.send("Hello from TypeScript");
+        }`;
+
+      CRUD.insert(functionService, engine, mockFunction).then(async fn => {
+        await engine.update(fn, indexContent);
+        await sleep(1000);
+        const subs = indexSupplier.listen().subscribe((changeLog: ChangeLog) => {
+          expect(changeLog.resource_extension).toBe("ts");
           subs.unsubscribe();
           done();
         });
@@ -297,11 +313,7 @@ describe("Function Index Synchronizer", () => {
           default: {
             type: "http",
             active: true,
-            options: {
-              method: "post",
-              path: "/new",
-              preflight: true
-            }
+            options: {method: "post", path: "/new", preflight: true}
           }
         }
       };
@@ -321,16 +333,14 @@ describe("Function Index Synchronizer", () => {
         resource_slug: mockFunction.name,
         resource_content: indexContent,
         created_at: new Date(),
-        resource_extension: "js",
+        resource_extension: "mjs",
         initiator: ChangeInitiator.EXTERNAL,
         event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
 
-      expect(result).toEqual({
-        status: SyncStatuses.SUCCEEDED
-      });
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
       const savedIndex = await engine.read(mockFunction, "index");
       expect(savedIndex).toContain("Created");
     });
@@ -347,11 +357,7 @@ describe("Function Index Synchronizer", () => {
           default: {
             type: "http",
             active: true,
-            options: {
-              method: "get",
-              path: "/update",
-              preflight: true
-            }
+            options: {method: "get", path: "/update", preflight: true}
           }
         }
       };
@@ -377,16 +383,14 @@ describe("Function Index Synchronizer", () => {
         resource_slug: mockFunction.name,
         resource_content: updatedIndex,
         created_at: new Date(),
-        resource_extension: "js",
+        resource_extension: "mjs",
         initiator: ChangeInitiator.EXTERNAL,
         event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
 
-      expect(result).toEqual({
-        status: SyncStatuses.SUCCEEDED
-      });
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
 
       const savedIndex = await engine.read(mockFunction, "index");
       expect(savedIndex).toContain("Updated");
@@ -405,11 +409,7 @@ describe("Function Index Synchronizer", () => {
           default: {
             type: "http",
             active: true,
-            options: {
-              method: "post",
-              path: "/delete",
-              preflight: true
-            }
+            options: {method: "post", path: "/delete", preflight: true}
           }
         }
       };
@@ -430,16 +430,14 @@ describe("Function Index Synchronizer", () => {
         resource_slug: mockFunction.name,
         resource_content: null,
         created_at: new Date(),
-        resource_extension: "js",
+        resource_extension: "mjs",
         initiator: ChangeInitiator.EXTERNAL,
         event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
 
-      expect(result).toEqual({
-        status: SyncStatuses.SUCCEEDED
-      });
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
       let savedIndex;
       try {
         savedIndex = await engine.read(mockFunction, "index");
@@ -463,7 +461,7 @@ describe("Function Index Synchronizer", () => {
         resource_slug: "test",
         resource_content: "some content",
         created_at: new Date(),
-        resource_extension: "js",
+        resource_extension: "mjs",
         initiator: ChangeInitiator.EXTERNAL,
         event_id: "test-event-id"
       };
@@ -486,16 +484,14 @@ describe("Function Index Synchronizer", () => {
         resource_slug: "nonexistent_function",
         resource_content: "export default function() {}",
         created_at: new Date(),
-        resource_extension: "js",
+        resource_extension: "mjs",
         initiator: ChangeInitiator.EXTERNAL,
         event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
-        status: SyncStatuses.FAILED
-      });
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
       expect(result.reason).toBeDefined();
     });
 
@@ -509,16 +505,14 @@ describe("Function Index Synchronizer", () => {
         resource_slug: "test_function",
         resource_content: "export default function() {}",
         created_at: new Date(),
-        resource_extension: "js",
+        resource_extension: "mjs",
         initiator: ChangeInitiator.EXTERNAL,
         event_id: "test-event-id"
       };
 
       const result = await indexApplier.apply(changeLog);
 
-      expect(result).toMatchObject({
-        status: SyncStatuses.FAILED
-      });
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
       expect(result.reason).toBeDefined();
     });
   });
