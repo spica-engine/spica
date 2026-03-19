@@ -57,6 +57,7 @@ application:
   # user provider encryption/hash secret for encrypting/hashing user email/phone number etc.
   userProviderEncryptionSecret:
   userProviderHashSecret:
+  refreshTokenHashSecret:
   # sms provider configuration
   twilioAccountSid:
   twilioAuthToken:

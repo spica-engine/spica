@@ -14,6 +14,7 @@ import {ConfigModule} from "@spica-server/config";
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;
 const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
+const REFRESH_TOKEN_HASH_SECRET = "refresh_token_hash_secret";
 
 const PORT = 3000;
 const PUBLIC_URL = `http://localhost:${PORT}`;
@@ -40,6 +41,7 @@ describe("Identity", () => {
             issuer: "spica",
             maxExpiresIn: MAX_EXPIRES_IN,
             refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+            refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
             secretOrKey: "spica",
             defaultIdentityIdentifier: "spica",
             defaultIdentityPassword: "spica",
@@ -57,6 +59,7 @@ describe("Identity", () => {
             issuer: "spica",
             maxExpiresIn: MAX_EXPIRES_IN,
             refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+            refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
             secretOrKey: "spica",
             audience: "spica",
             blockingOptions: {

@@ -50,6 +50,7 @@ export interface UserOptions {
     blockDurationMinutes: number;
   };
   refreshTokenExpiresIn?: number;
+  refreshTokenHashSecret: string;
   verificationCodeExpiresIn?: number;
   passwordHistoryLimit: number;
   userRealtime: boolean;

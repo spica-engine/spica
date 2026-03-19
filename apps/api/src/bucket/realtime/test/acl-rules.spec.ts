@@ -61,7 +61,8 @@ describe("Realtime ACL Rules with Different Authentication Strategies", () => {
             },
             refreshTokenExpiresIn: 60 * 60 * 24 * 3,
             passwordHistoryLimit: 2,
-            identityRealtime: false
+            identityRealtime: false,
+            refreshTokenHashSecret: "refresh-token-hash-secret"
           },
           userOptions: {
             expiresIn: EXPIRES_IN,
@@ -75,7 +76,8 @@ describe("Realtime ACL Rules with Different Authentication Strategies", () => {
             },
             refreshTokenExpiresIn: 60 * 60 * 24 * 3,
             passwordHistoryLimit: 2,
-            userRealtime: false
+            userRealtime: false,
+            refreshTokenHashSecret: "refresh-token-hash-secret"
           }
         }),
         PreferenceTestingModule,

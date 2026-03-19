@@ -66,6 +66,7 @@ spec:
 {{ toYaml .Values.application.apiResources | indent 12 }}
           ports:
             - containerPort: 4300
+            - containerPort: 50051
           startupProbe:
             httpGet:
               path: /status/live
@@ -150,6 +151,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-application-secrets
                   key: userProviderHashSecret
+            - name: REFRESH_TOKEN_HASH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-application-secrets
+                  key: refreshTokenHashSecret
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:

@@ -40,7 +40,8 @@ describe("Identity Controller", () => {
             blockDurationMinutes: 0,
             failedAttemptLimit: 0
           },
-          identityRealtime: false
+          identityRealtime: false,
+          refreshTokenHashSecret: "refresh_token_hash_secret"
         }),
         ConfigModule.forRoot(),
         PolicyModule.forRoot({realtime: false})

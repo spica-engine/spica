@@ -19,6 +19,9 @@ spec:
     - name: api
       port: 4300
       targetPort: 4300
+    - name: grpc
+      port: 50051
+      targetPort: 50051
   selector:
     app.kubernetes.io/name: {{ .Release.Name }}-spica
     app.kubernetes.io/component: application

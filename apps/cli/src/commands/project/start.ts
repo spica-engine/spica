@@ -280,7 +280,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
 
       while (retry < maxRetries) {
         retry++;
-        if (output.indexOf("Connection refused")) {
+        if (output.indexOf("ECONNREFUSED") != -1) {
           output = await initiateReplication();
         } else {
           break;
@@ -289,11 +289,11 @@ async function create({args: cmdArgs, options}: ActionParameters) {
         spinner.text = `Initiating replication between database containers. Retrying ${retry}`;
       }
 
-      if (output.indexOf('"already initialized"') != -1) {
+      if (output.indexOf("already initialized") != -1) {
         output = await initiateReplication(true);
       }
 
-      if (output.indexOf('"ok" : 1') == -1) {
+      if (output.indexOf("ok: 1") == -1) {
         return Promise.reject(output);
       }
     }
@@ -314,8 +314,8 @@ async function create({args: cmdArgs, options}: ActionParameters) {
         const response = await streamToBuffer(output);
         const responseText = response.toString("utf-8");
         if (
-          responseText.indexOf('"ok" : 1') > -1 &&
-          responseText.indexOf('"stateStr" : "PRIMARY"') > -1
+          responseText.indexOf("ok: 1") > -1 &&
+          responseText.indexOf("stateStr: 'PRIMARY'") > -1
         ) {
           return Promise.resolve();
         }
