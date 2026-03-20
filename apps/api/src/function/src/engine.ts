@@ -185,12 +185,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       private: true,
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED",
-      main: path.join(
-        ".",
-        this.options.outDir,
-        fn.name,
-        functionLanguage.description.entrypoints.runtime
-      )
+      main: path.join(".", this.options.outDir, functionLanguage.description.entrypoints.runtime)
     };
 
     return fs.promises.writeFile(
@@ -214,13 +209,12 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   deleteFunction(fn: Function) {
     const functionRoot = this.getFunctionRoot(fn);
-    const buildDir = path.join(this.options.root, this.options.outDir, fn.name);
-    return Promise.all([rimraf(functionRoot), rimraf(buildDir)]);
+    return rimraf(functionRoot);
   }
 
   compile(fn: Function) {
     const language = this.getFunctionLanguage(fn);
-    const outDirRelative = path.join("..", this.options.outDir, fn.name);
+    const outDirRelative = path.join(".", this.options.outDir);
     return language.compile({
       cwd: this.getFunctionRoot(fn),
       outDir: outDirRelative,
