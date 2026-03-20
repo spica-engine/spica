@@ -29,11 +29,6 @@ tests:
       - isNotEmpty:
           path: data["init-users.sh"]
 
-  - it: should contain the init-replica.sh script
-    asserts:
-      - isNotEmpty:
-          path: data["init-replica.sh"]
-
   - it: should contain the set-profiling-level.sh script
     asserts:
       - isNotEmpty:
@@ -45,14 +40,26 @@ tests:
           path: data["init-users.sh"]
           pattern: mongosh
 
-  - it: init-replica.sh should reference rs.reconfig
+  - it: init-users.sh should initiate the replica set
     asserts:
       - matchRegex:
-          path: data["init-replica.sh"]
-          pattern: rs\.reconfig
+          path: data["init-users.sh"]
+          pattern: rs\.initiate
 
   - it: set-profiling-level.sh should reference setProfilingLevel
     asserts:
       - matchRegex:
           path: data["set-profiling-level.sh"]
           pattern: setProfilingLevel
+
+  - it: init-users.sh should create the root user
+    asserts:
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: createUser
+
+  - it: init-users.sh should create the spica user
+    asserts:
+      - matchRegex:
+          path: data["init-users.sh"]
+          pattern: SPICA_USERNAME

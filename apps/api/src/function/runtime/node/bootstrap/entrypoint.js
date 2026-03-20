@@ -281,9 +281,7 @@ async function _process(ev, queue) {
   globalThis.require = createRequire(path.join(process.cwd(), "node_modules"));
 
   let module = await import(
-    path.join(process.cwd(), "..", ".build", path.basename(process.cwd()), process.env.ENTRYPOINT) +
-      "?event=" +
-      ev.id
+    path.join(process.cwd(), ".build", process.env.ENTRYPOINT) + "?event=" + ev.id
   );
 
   if ("default" in module && module.default.__esModule) {

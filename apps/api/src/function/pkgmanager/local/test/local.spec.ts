@@ -6,8 +6,8 @@ import {of} from "rxjs";
 import {Package, PackageManager} from "@spica-server/interface/function/pkgmanager";
 
 describe("local package manager", () => {
-  let fn1Id = "67c6ef1bdf7bf58fad82ba4f";
-  let fn2Id = "67c6f0a2ccfe6f143d4b77c5";
+  let fn1Name = "my-first-function";
+  let fn2Name = "my-second-function";
 
   describe("unit tests", () => {
     let localPkgManager: LocalPackageManager;
@@ -39,7 +39,7 @@ describe("local package manager", () => {
 
       localPkgManager = new LocalPackageManager(mockPackageManager);
       rootPath = path.join(process.env.TEST_TMPDIR, "__test__");
-      cwd = path.join(rootPath, fn1Id);
+      cwd = path.join(rootPath, fn1Name);
       fs.mkdirSync(cwd, {recursive: true});
       fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({name: "__test__"}));
     });
@@ -49,18 +49,19 @@ describe("local package manager", () => {
     });
 
     it("should transform local package names, skip others", async () => {
-      await localPkgManager.install(cwd, ["test@4.1.1", fn2Id]).toPromise();
-      const transformedPkgName = localPkgManager["transformLocalPackageName"](cwd, fn2Id);
+      const prefixedFn2 = `@spica-fn/${fn2Name}`;
+      await localPkgManager.install(cwd, ["test@4.1.1", prefixedFn2]).toPromise();
+      const transformedPkgName = localPkgManager["transformLocalPackageName"](cwd, prefixedFn2);
       expect(mockPackageManager.install).toHaveBeenCalledWith(cwd, [
         "test@4.1.1",
         transformedPkgName
       ]);
-      expect(transformedPkgName).toEqual(path.join(rootPath, fn2Id));
+      expect(transformedPkgName).toEqual(`@spica-fn/${fn2Name}@file:../${fn2Name}`);
     });
 
     it("should uninstall local packages", async () => {
-      await localPkgManager.uninstall(cwd, "fn2");
-      expect(mockPackageManager.uninstall).toHaveBeenCalledWith(cwd, "fn2");
+      await localPkgManager.uninstall(cwd, `@spica-fn/${fn2Name}`);
+      expect(mockPackageManager.uninstall).toHaveBeenCalledWith(cwd, `@spica-fn/${fn2Name}`);
     });
 
     it("should uninstall other packages", async () => {
@@ -71,7 +72,7 @@ describe("local package manager", () => {
     it("should prevent installing itself as package", async () => {
       let errMsg;
       try {
-        await localPkgManager.install(cwd, fn1Id).toPromise();
+        await localPkgManager.install(cwd, `@spica-fn/${fn1Name}`).toPromise();
       } catch (error) {
         errMsg = error.message;
       }
@@ -86,32 +87,35 @@ describe("local package manager", () => {
 
       beforeEach(() => {
         localPackageManager = new LocalPackageManager(new Npm());
-        cwd = path.join(process.env.TEST_TMPDIR, "__test__", fn1Id);
+        cwd = path.join(process.env.TEST_TMPDIR, "__test__", fn1Name);
         fs.mkdirSync(cwd, {recursive: true});
         fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({name: "fn1"}));
 
-        const fn2Dir = path.join(process.env.TEST_TMPDIR, "__test__", fn2Id);
+        const fn2Dir = path.join(process.env.TEST_TMPDIR, "__test__", fn2Name);
         fs.mkdirSync(fn2Dir, {recursive: true});
-        fs.writeFileSync(path.join(fn2Dir, "package.json"), JSON.stringify({name: "fn2"}));
+        fs.writeFileSync(
+          path.join(fn2Dir, "package.json"),
+          JSON.stringify({name: `@spica-fn/${fn2Name}`})
+        );
       });
 
       it("should install, uninstall packages", async () => {
-        await localPackageManager.install(cwd, ["debug@4.1.1", fn2Id]).toPromise();
+        await localPackageManager.install(cwd, ["debug@4.1.1", `@spica-fn/${fn2Name}`]).toPromise();
         let packages = await localPackageManager.ls(cwd);
         expect(packages).toEqual([
+          {
+            name: `@spica-fn/${fn2Name}`,
+            version: "internal",
+            types: {}
+          },
           {
             name: "debug",
             version: "^4.1.1",
             types: {}
-          },
-          {
-            name: "fn2",
-            version: fn2Id,
-            types: {}
           }
         ]);
 
-        await localPackageManager.uninstall(cwd, "fn2");
+        await localPackageManager.uninstall(cwd, `@spica-fn/${fn2Name}`);
         packages = await localPackageManager.ls(cwd);
         expect(packages).toEqual([
           {

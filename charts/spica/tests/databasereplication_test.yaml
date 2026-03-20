@@ -11,10 +11,12 @@ set:
   application.publicHost: https://test.example.com
 
 tests:
-  - it: should render nothing when database.replicas is 1 (default)
+  - it: should render a Job even when database.replicas is 1 (default)
     asserts:
       - hasDocuments:
-          count: 0
+          count: 1
+      - isKind:
+          of: Job
 
   - it: should render a Job when database.replicas is greater than 1
     set:
@@ -26,45 +28,28 @@ tests:
           of: Job
 
   - it: should be named after the release
-    set:
-      database.replicas: 3
     asserts:
       - equal:
           path: metadata.name
           value: release-name-replication-controller
 
   - it: should carry post-install and post-upgrade hook annotations
-    set:
-      database.replicas: 3
     asserts:
       - equal:
           path: metadata.annotations["helm.sh/hook"]
           value: post-install,post-upgrade
 
   - it: should have backoffLimit of 3
-    set:
-      database.replicas: 3
     asserts:
       - equal:
           path: spec.backoffLimit
           value: 3
 
-  - it: should set fixed resource requests and limits on the container
-    set:
-      database.replicas: 3
+  - it: should include single-node FQDN in container args when database.replicas is 1
     asserts:
-      - equal:
-          path: spec.template.spec.containers[0].resources.requests.memory
-          value: 64Mi
-      - equal:
-          path: spec.template.spec.containers[0].resources.requests.cpu
-          value: 100m
-      - equal:
-          path: spec.template.spec.containers[0].resources.limits.memory
-          value: 128Mi
-      - equal:
-          path: spec.template.spec.containers[0].resources.limits.cpu
-          value: 200m
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "release-name-database-0.release-name-database.default.svc.cluster.local"
 
   - it: should include node FQDNs for all replicas in the container args
     set:
@@ -81,8 +66,6 @@ tests:
           content: "release-name-database-2.release-name-database.default.svc.cluster.local"
 
   - it: should use OnFailure restart policy
-    set:
-      database.replicas: 3
     asserts:
       - equal:
           path: spec.template.spec.restartPolicy
@@ -90,10 +73,67 @@ tests:
 
   - it: should apply database nodeSelector to the replication job when set
     set:
-      database.replicas: 3
       database.nodeSelector:
         disktype: ssd
     asserts:
       - equal:
           path: spec.template.spec.nodeSelector.disktype
           value: ssd
+
+  - it: should pass --from-srv false in container args
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--from-srv"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "false"
+
+  - it: should pass --nodes flag in container args
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--nodes"
+
+  - it: should pass --username and --password flags in container args
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--username"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--password"
+
+  - it: should read ROOT_USERNAME from database root credentials secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ROOT_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-root-credentials
+                key: rootUsername
+
+  - it: should read ROOT_PASSWORD from database root credentials secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: release-name-database-root-credentials
+                key: rootPassword
+
+  - it: should apply database tolerations to the replication job when set
+    set:
+      database.tolerations:
+        - key: dedicated
+          operator: Equal
+          value: mongodb
+          effect: NoSchedule
+    asserts:
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: dedicated
