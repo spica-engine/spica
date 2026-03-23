@@ -18,82 +18,84 @@ import FunctionPage from "./pages/function/FunctionPage";
 import VersionControl from "./pages/version-control/VersionControl";
 import DashboardView from "./pages/dashboard/DashboardView";
 
-const router = createBrowserRouter([
-  {
-    path: "/passport/identify",
-    element: <Login />
-  },
-  {
-    element: (
-      <ProtectedRoute>
-        <Layout />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        element: <Navigate to="dashboard" replace />
-      },
-      {
-        path: "app",
-        element: <App />
-      },
-      {
-        path: "dashboard/:dashboardId",
-        element: <DashboardView />
-      },
-      {
-        path: "dashboard",
-        element: <Home />
-      },
-      {
-        path: "bucket/:bucketId",
-        element: <Bucket />
-      },
-      {
-        path: "passport/identity",
-        element: <Identity />
-      },
-      {
-        path: "passport/policy",
-        element: <Policy />
-      },
-      {
-        path: "passport/strategy",
-        element: <Strategy />
-      },
-      {
-        path: "activity",
-        element: <Activities />
-      },
-      {
-        path: "diagram",
-        element: <Diagram />
-      },
-      {
-        path: "storage",
-        element: <Storage />
-      },
-      {
-        path: "function/:functionId",
-        element: <FunctionPage />
-      },
-      {
-        path: "webhook/:webhookId",
-        element: <Webhook />
-      },
-      {
-        path: "version-control",
-        element: <VersionControl />
-      }
-    ]
-  },
-  {
-    path: "storage-view/:storageId",
-    element: <StorageItem />
-  },
+const router = createBrowserRouter(
+  [
+    {
+      path: "/passport/identify",
+      element: <Login />
+    },
+    {
+      element: (
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          index: true,
+          element: <Navigate to="dashboard" replace />
+        },
+        {
+          path: "app",
+          element: <App />
+        },
+        {
+          path: "dashboard/:dashboardId",
+          element: <DashboardView />
+        },
+        {
+          path: "dashboard",
+          element: <Home />
+        },
+        {
+          path: "bucket/:bucketId",
+          element: <Bucket />
+        },
+        {
+          path: "passport/identity",
+          element: <Identity />
+        },
+        {
+          path: "passport/policy",
+          element: <Policy />
+        },
+        {
+          path: "passport/strategy",
+          element: <Strategy />
+        },
+        {
+          path: "activity",
+          element: <Activities />
+        },
+        {
+          path: "diagram",
+          element: <Diagram />
+        },
+        {
+          path: "storage",
+          element: <Storage />
+        },
+        {
+          path: "function/:functionId",
+          element: <FunctionPage />
+        },
+        {
+          path: "webhook/:webhookId",
+          element: <Webhook />
+        },
+        {
+          path: "version-control",
+          element: <VersionControl />
+        }
+      ]
+    },
+    {
+      path: "storage-view/:storageId",
+      element: <StorageItem />
+    }
+  ],
   {basename: import.meta.env.BASE_URL}
-]);
+);
 
 export default function AppRouter() {
   return <RouterProvider router={router} />;
