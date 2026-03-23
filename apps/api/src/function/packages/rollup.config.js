@@ -13,7 +13,7 @@ export function cleanUp(path) {
   }
 }
 
-const sharedExternals = ["mongodb", "axios", "ws", "rxjs", "rxjs/operators", "json-schema"];
+const sharedExternals = ["mongodb", "axios", "ws", "rxjs", "rxjs/operators", "rxjs/webSocket", "json-schema"];
 
 export default function getConfig(project, additionalCopyPaths = []) {
   const base = path.join("apps/api/src/function/packages", project);
