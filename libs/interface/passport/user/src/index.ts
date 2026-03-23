@@ -114,4 +114,4 @@ export type DecryptedUser = Omit<User, "email" | "phone"> & {
   phone_verified_at?: Date;
 };
 
-export type UserSelfUpdate = Pick<User, "password">;
+export type UserSelfUpdate = {password: string};
