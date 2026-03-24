@@ -61,7 +61,7 @@ jobs:
           push: true
           tags: ${{ matrix.image }}:${{ env.VERSION }}
           target: runner
-          platforms: linux/amd64
+          platforms: linux/amd64, linux/arm64
           cache-from: type=gha,scope=${{ matrix.target }}
           cache-to: type=gha,scope=${{ matrix.target }},mode=max
 
