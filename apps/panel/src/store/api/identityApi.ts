@@ -1,13 +1,21 @@
 import { baseApi } from './baseApi';
 
+export interface AuthFactorMeta {
+  type: string;
+  config: Record<string, any>;
+  title?: string;
+  description?: string;
+}
+
 export interface Identity {
   _id?: string;
   identifier: string;
   password?: string;
   policies?: string[];
-  attributes?: Record<string, any>;
-  created_at?: Date;
-  updated_at?: Date;
+  authFactor?: AuthFactorMeta;
+  deactivateJwtsBefore?: number;
+  lastLogin?: string;
+  failedAttempts?: string[];
 }
 
 export interface IdentityListResponse {
@@ -20,15 +28,14 @@ export interface IdentityListResponse {
 export interface CreateIdentityRequest {
   identifier: string;
   password: string;
-  policies?: string[];
-  attributes?: Record<string, any>;
+  deactivateJwtsBefore?: number;
 }
 
 export interface UpdateIdentityRequest {
   identifier?: string;
   password?: string;
-  policies?: string[];
-  attributes?: Record<string, any>;
+  deactivateJwtsBefore?: number;
+  authFactor?: AuthFactorMeta;
 }
 
 export const identityApi = baseApi.injectEndpoints({
@@ -38,11 +45,18 @@ export const identityApi = baseApi.injectEndpoints({
       skip?: number; 
       sort?: Record<string, 1 | -1>;
       filter?: Record<string, any>;
+      paginate?: boolean;
     } | void>({
       query: (params) => ({
         url: 'passport/identity',
         params: params || {},
       }),
+      transformResponse: (response: IdentityListResponse | Identity[]) => {
+        if (Array.isArray(response)) {
+          return { data: response, meta: { total: response.length } };
+        }
+        return response;
+      },
       providesTags: ['Identity'],
     }),
 
@@ -69,7 +83,7 @@ export const identityApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: 'Identity', id }, 'Identity'],
     }),
 
-    deleteIdentity: builder.mutation<{ message: string }, string>({
+    deleteIdentity: builder.mutation<void, string>({
       query: (id) => ({
         url: `passport/identity/${id}`,
         method: 'DELETE',
@@ -91,16 +105,18 @@ export const identityApi = baseApi.injectEndpoints({
       providesTags: ['Auth'],
     }),
 
-    getIdentityPolicies: builder.query<string[], string>({
-      query: (id) => `passport/identity/${id}/policies`,
-      providesTags: (result, error, id) => [{ type: 'Identity', id }],
+    addIdentityPolicy: builder.mutation<Identity, { id: string; policyId: string }>({
+      query: ({ id, policyId }) => ({
+        url: `passport/identity/${id}/policy/${policyId}`,
+        method: 'PUT',
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Identity', id }, 'Identity'],
     }),
 
-    updateIdentityPolicies: builder.mutation<Identity, { id: string; policies: string[] }>({
-      query: ({ id, policies }) => ({
-        url: `passport/identity/${id}/policies`,
-        method: 'PUT',
-        body: { policies },
+    removeIdentityPolicy: builder.mutation<Identity, { id: string; policyId: string }>({
+      query: ({ id, policyId }) => ({
+        url: `passport/identity/${id}/policy/${policyId}`,
+        method: 'DELETE',
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Identity', id }, 'Identity'],
     }),
@@ -116,8 +132,8 @@ export const {
   useDeleteIdentityMutation,
   useAuthenticateIdentityMutation,
   useVerifyIdentityQuery,
-  useGetIdentityPoliciesQuery,
-  useUpdateIdentityPoliciesMutation,
+  useAddIdentityPolicyMutation,
+  useRemoveIdentityPolicyMutation,
 } = identityApi;
 
 export const identityApiReducerPath = identityApi.reducerPath;
