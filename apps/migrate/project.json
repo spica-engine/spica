@@ -80,7 +80,7 @@
         "{projectRoot}/project.json",
         "{projectRoot}/Dockerfile"
       ],
-      "command": "docker build --platform=linux/amd64 . -f ./apps/migrate/Dockerfile -t spicaengine/migrate:$VERSION",
+      "command": "docker buildx build --platform=linux/amd64 --load --target runner --cache-from type=gha,scope=migrate --cache-to type=gha,scope=migrate,mode=max -f ./apps/migrate/Dockerfile -t spicaengine/migrate:$VERSION .",
       "cache": true
     },
     "publish": {

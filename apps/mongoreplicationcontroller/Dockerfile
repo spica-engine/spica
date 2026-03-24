@@ -1,17 +1,24 @@
+# syntax=docker/dockerfile:1
 FROM node:22-slim AS base
 
 # install tools to nodejs image
 FROM base AS tools
-RUN apt-get update && apt-get install gnupg curl -y
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install gnupg curl -y
 RUN curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
 RUN echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] http://repo.mongodb.org/apt/debian bookworm/mongodb-org/8.0 main" | tee /etc/apt/sources.list.d/mongodb-org-8.0.list
-RUN apt-get update && apt-get install -y mongodb-org
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y mongodb-org
 
 # install app deps to nodejs image
 FROM base AS deps
 WORKDIR /app
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --network-timeout 600000
+RUN --mount=type=cache,target=/root/.yarn-cache \
+    YARN_CACHE_FOLDER=/root/.yarn-cache \
+    yarn install --frozen-lockfile --network-timeout 600000
 
 # build app to nodejs image
 FROM base AS build 

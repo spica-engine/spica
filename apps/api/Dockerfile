@@ -1,22 +1,29 @@
+# syntax=docker/dockerfile:1
 FROM node:22-slim AS base
 
 # install necessary tools
 FROM base AS tools
-RUN apt-get update && apt-get install git -y
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install git -y
 
 # install app deps to nodejs image
 FROM base AS deps
 WORKDIR /app
 COPY package.json yarn.lock ./
 COPY apps/api/package.json ./apps/api/package.json
-RUN yarn install --frozen-lockfile --network-timeout 600000
+RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps \
+    YARN_CACHE_FOLDER=/root/.yarn-cache \
+    yarn install --frozen-lockfile --network-timeout 600000
 
 # install app production deps to nodejs image
 FROM base AS deps-production
 WORKDIR /app
 COPY package.json yarn.lock ./
 COPY apps/api/package.json ./apps/api/package.json
-RUN yarn install --frozen-lockfile --production --network-timeout 600000
+RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod \
+    YARN_CACHE_FOLDER=/root/.yarn-cache \
+    yarn install --frozen-lockfile --production --network-timeout 600000
 
 # build app to nodejs image
 FROM base AS build 
