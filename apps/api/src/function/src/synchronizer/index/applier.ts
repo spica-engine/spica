@@ -37,14 +37,26 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
       try {
         const operationType = change.type;
 
+        let resourceId = change.resource_id;
+        if (!resourceId && change.resource_slug) {
+          resourceId = await findFnByName(change.resource_slug);
+        }
+
+        if (!resourceId) {
+          return {
+            status: SyncStatuses.FAILED,
+            reason: `Cannot resolve function for slug: ${change.resource_slug}`
+          };
+        }
+
         switch (operationType) {
           case ChangeType.CREATE:
           case ChangeType.UPDATE:
-            await CRUD.index.write(fs, engine, change.resource_id, change.resource_content);
+            await CRUD.index.write(fs, engine, resourceId, change.resource_content);
             return {status: SyncStatuses.SUCCEEDED};
 
           case ChangeType.DELETE:
-            const fn = await CRUD.findOne(fs, new ObjectId(change.resource_id), {});
+            const fn = await CRUD.findOne(fs, new ObjectId(resourceId), {});
             await engine.deleteIndex(fn);
             return {
               status: SyncStatuses.SUCCEEDED

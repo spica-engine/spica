@@ -45,7 +45,20 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
-        const fn = await CRUD.findOne(fs, new ObjectId(change.resource_id), {});
+
+        let resourceId = change.resource_id;
+        if (!resourceId && change.resource_slug) {
+          resourceId = await findFnByName(change.resource_slug);
+        }
+
+        if (!resourceId) {
+          return {
+            status: SyncStatuses.FAILED,
+            reason: `Cannot resolve function for slug: ${change.resource_slug}`
+          };
+        }
+
+        const fn = await CRUD.findOne(fs, new ObjectId(resourceId), {});
         const packageJson = JSON.parse(change.resource_content);
 
         switch (operationType) {
