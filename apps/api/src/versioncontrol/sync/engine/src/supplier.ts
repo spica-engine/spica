@@ -7,7 +7,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {Observable, from, map, mergeMap, of, switchMap, timer} from "rxjs";
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5;
 const INITIAL_DELAY_SECONDS = 2;
 
 const extractIdWithRetry = (
