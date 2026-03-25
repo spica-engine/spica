@@ -18,12 +18,12 @@ const extractIdWithRetry = (
 ): Observable<string | null> =>
   from(extractId(slug, content)).pipe(
     mergeMap(id => {
-      if (id !== null || retryIndex >= MAX_RETRIES) {
+      if (!!id || retryIndex >= MAX_RETRIES) {
         return of(id);
       }
       const delayMs = Math.pow(INITIAL_DELAY_SECONDS, retryIndex + 1) * 1000;
       return timer(delayMs).pipe(
-        switchMap(() => extractIdWithRetry(extractId, content, slug, retryIndex + 1))
+        switchMap(() => extractIdWithRetry(extractId, slug, content, retryIndex + 1))
       );
     })
   );
