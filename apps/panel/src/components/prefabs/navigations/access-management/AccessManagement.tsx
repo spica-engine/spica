@@ -51,6 +51,20 @@ const AccessManagement = () => {
       }
     },
     {
+      title: "Refresh Tokens",
+      icon: "key",
+      onClick: () => {
+        navigate("/passport/refresh-token");
+      }
+    },
+    {
+      title: "Secrets and Variables",
+      icon: "lock" as IconName,
+      onClick: () => {
+        navigate("/passport/secrets-and-variables");
+      }
+    },
+    {
       title: "User Activities",
       icon: <img src={accountDetails} alt="activity" className={styles.icon}/>,
       onClick: () => {

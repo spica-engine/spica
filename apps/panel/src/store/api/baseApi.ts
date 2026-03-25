@@ -48,6 +48,9 @@ export const baseApi = createApi({
     'Activity',
     'Webhook',
     'VersionControl',
+    'RefreshToken',
+    'Secret',
+    'EnvVar',
   ],
   endpoints: () => ({}),
 });
