@@ -56,18 +56,24 @@ export const getApplier = (
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findFnByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
+    extractId: async (content: string, slug?: string): Promise<string | null> => {
+      if (slug) {
+        const id = await findFnByName(slug);
+        if (id) return id;
+      }
+
       let fn: Function;
       try {
         fn = YAML.parse(content);
-        return findFnByName(fn?.name);
       } catch (error) {
         logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return Promise.resolve(null);
+        return null;
       }
+
+      const idFromSlug = await findFnByName(fn?.name);
+      if (idFromSlug) return idFromSlug;
+
+      return fn?._id ? String(fn._id) : null;
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {

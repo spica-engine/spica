@@ -57,8 +57,7 @@ export interface ChangeApplier extends ChangeModuleMeta {
 }
 
 export interface DocumentChangeApplier extends ChangeApplier {
-  findIdBySlug(slug: string): Promise<string | null>;
-  findIdByContent(content: string): Promise<string | null>;
+  extractId(content: string, slug?: string): Promise<string | null>;
   fileExtensions: string[];
 }
 

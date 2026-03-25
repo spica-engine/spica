@@ -26,12 +26,12 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     module,
     subModule,
     fileExtensions,
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findFnByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      // no way to find fn by index content
-      return Promise.resolve(null);
+    extractId: async (content: string, slug?: string): Promise<string | null> => {
+      if (slug) {
+        const id = await findFnByName(slug);
+        if (id) return id;
+      }
+      return null;
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {

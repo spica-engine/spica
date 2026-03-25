@@ -5,27 +5,46 @@ import {
   DocumentChangeApplier,
   RepresentativeChangeSupplier
 } from "@spica-server/interface/versioncontrol";
-import {from, map, mergeMap, of} from "rxjs";
+import {Observable, from, map, mergeMap, of, switchMap, timer} from "rxjs";
+
+const MAX_RETRIES = 3;
+const INITIAL_DELAY_MS = 2000;
+
+const extractIdWithRetry = (
+  extractId: (content: string, slug?: string) => Promise<string | null>,
+  content: string,
+  slug: string | undefined,
+  retryIndex = 0
+): Observable<string | null> =>
+  from(extractId(content, slug)).pipe(
+    mergeMap(id => {
+      if (id !== null || retryIndex >= MAX_RETRIES) {
+        return of(id);
+      }
+      const delayMs = Math.pow(INITIAL_DELAY_MS, retryIndex + 1) * 1000;
+      return timer(delayMs).pipe(
+        switchMap(() => extractIdWithRetry(extractId, content, slug, retryIndex + 1))
+      );
+    })
+  );
 
 export const getSupplier = (
   repManager: IRepresentativeManager,
   applier: DocumentChangeApplier
 ): RepresentativeChangeSupplier => {
-  const {module, subModule, findIdBySlug, findIdByContent, fileExtensions} = applier;
+  const {module, subModule, extractId, fileExtensions} = applier;
   return {
     module,
     subModule,
     listen: () => {
       const fileNames = fileExtensions.map(ext => `${subModule}.${ext}`);
 
-      const mergeId = event => map(id => ({...event, _id: id}));
-      const attachIdFromSlug = event => from(findIdBySlug(event.slug)).pipe(mergeId(event));
-      const attachIdFromContent = event =>
-        event._id ? of(event) : from(findIdByContent(event.content)).pipe(mergeId(event));
-
       return repManager.watch(applier.module, fileNames).pipe(
-        mergeMap(attachIdFromSlug),
-        mergeMap(attachIdFromContent),
+        mergeMap(event =>
+          extractIdWithRetry(extractId, event.content, event.slug).pipe(
+            map(id => ({...event, _id: id}))
+          )
+        ),
         map(({_id, slug, content, type, extension, event_id}) => {
           return {
             module,

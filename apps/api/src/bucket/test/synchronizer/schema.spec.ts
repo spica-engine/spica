@@ -254,8 +254,7 @@ describe("Bucket Synchronizer", () => {
         module: "bucket",
         subModule: "schema",
         fileExtensions: ["yaml"],
-        findIdBySlug: expect.any(Function),
-        findIdByContent: expect.any(Function),
+        extractId: expect.any(Function),
         apply: expect.any(Function)
       });
     });

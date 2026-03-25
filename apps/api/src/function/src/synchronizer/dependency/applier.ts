@@ -26,20 +26,26 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findFnByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let name;
+    extractId: async (content: string, slug?: string): Promise<string | null> => {
+      if (slug) {
+        const id = await findFnByName(slug);
+        if (id) return id;
+      }
+
+      let parsed;
       try {
-        name = JSON.parse(content).name;
+        parsed = JSON.parse(content);
       } catch (error) {
         logger.warn(
           `Error parsing function package content: ${(error as any).stack || String(error)}`
         );
-        return Promise.resolve(null);
+        return null;
       }
-      return findFnByName(name);
+
+      const idFromSlug = await findFnByName(parsed?.name);
+      if (idFromSlug) return idFromSlug;
+
+      return parsed?._id ? String(parsed._id) : null;
     },
 
     apply: async (change: ChangeLog): Promise<ApplyResult> => {

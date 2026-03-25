@@ -34,19 +34,24 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findEnvVarByKey(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let envVar: EnvVar;
+    extractId: async (content: string, slug?: string): Promise<string | null> => {
+      if (slug) {
+        const id = await findEnvVarByKey(slug);
+        if (id) return id;
+      }
 
+      let envVar: EnvVar;
       try {
         envVar = YAML.parse(content);
-        return findEnvVarByKey(envVar?.key);
       } catch (error) {
         logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return Promise.resolve(null);
+        return null;
       }
+
+      const idFromSlug = await findEnvVarByKey(envVar?.key);
+      if (idFromSlug) return idFromSlug;
+
+      return envVar?._id ? String(envVar._id) : null;
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {

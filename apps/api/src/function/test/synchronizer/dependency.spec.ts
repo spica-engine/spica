@@ -325,8 +325,7 @@ describe("Function Dependency Synchronizer", () => {
         module: "function",
         subModule: "package",
         fileExtensions: ["json"],
-        findIdBySlug: expect.any(Function),
-        findIdByContent: expect.any(Function),
+        extractId: expect.any(Function),
         apply: expect.any(Function)
       });
     });

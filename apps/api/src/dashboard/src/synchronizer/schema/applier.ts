@@ -34,20 +34,24 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findDashboardByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let dashboard: Dashboard;
+    extractId: async (content: string, slug?: string): Promise<string | null> => {
+      if (slug) {
+        const id = await findDashboardByName(slug);
+        if (id) return id;
+      }
 
+      let dashboard: Dashboard;
       try {
         dashboard = YAML.parse(content);
       } catch (error) {
         logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return Promise.resolve(null);
+        return null;
       }
 
-      return findDashboardByName(dashboard.name);
+      const idFromSlug = await findDashboardByName(dashboard?.name);
+      if (idFromSlug) return idFromSlug;
+
+      return dashboard?._id ? String(dashboard._id) : null;
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
