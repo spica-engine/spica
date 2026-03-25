@@ -25,7 +25,7 @@ function validate(dashboard: Dashboard, validator: Validator): Promise<void> {
 }
 
 export const getApplier = (ds: DashboardService, validator: Validator): DocumentChangeApplier => {
-  const findDashboardByName = async (name: string) => {
+  const findIdByName = async (name: string) => {
     const dashboard = await ds.findOne({name});
     return dashboard?._id?.toString();
   };
@@ -36,7 +36,7 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
     fileExtensions: [fileExtension],
     extractId: async (content: string, slug?: string): Promise<string | null> => {
       if (slug) {
-        const id = await findDashboardByName(slug);
+        const id = await findIdByName(slug);
         if (id) return id;
       }
 
@@ -48,7 +48,7 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
         return null;
       }
 
-      const idFromSlug = await findDashboardByName(dashboard?.name);
+      const idFromSlug = await findIdByName(dashboard?.name);
       if (idFromSlug) return idFromSlug;
 
       return dashboard?._id ? String(dashboard._id) : null;

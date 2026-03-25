@@ -31,7 +31,7 @@ export function getApplier(
   identityFinalizer: changeFactory,
   validator: Validator
 ): DocumentChangeApplier {
-  const findPolicyByName = async (name: string) => {
+  const findIdByName = async (name: string) => {
     const policy = await ps.findOne({name});
     return policy?._id?.toString();
   };
@@ -41,7 +41,7 @@ export function getApplier(
     fileExtensions: [fileExtension],
     extractId: async (content: string, slug?: string): Promise<string | null> => {
       if (slug) {
-        const id = await findPolicyByName(slug);
+        const id = await findIdByName(slug);
         if (id) return id;
       }
 
@@ -53,7 +53,7 @@ export function getApplier(
         return null;
       }
 
-      const idFromSlug = await findPolicyByName(policy?.name);
+      const idFromSlug = await findIdByName(policy?.name);
       if (idFromSlug) return idFromSlug;
 
       return policy?._id ? String(policy._id) : null;

@@ -25,7 +25,7 @@ function validate(envVar: EnvVar, validator: Validator): Promise<void> {
 }
 
 export const getApplier = (evs: EnvVarService, validator: Validator): DocumentChangeApplier => {
-  const findEnvVarByKey = async (key: string) => {
+  const findIdByKey = async (key: string) => {
     const envVar = await evs.findOne({key});
     return envVar?._id?.toString();
   };
@@ -36,7 +36,7 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
     fileExtensions: [fileExtension],
     extractId: async (content: string, slug?: string): Promise<string | null> => {
       if (slug) {
-        const id = await findEnvVarByKey(slug);
+        const id = await findIdByKey(slug);
         if (id) return id;
       }
 
@@ -48,7 +48,7 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
         return null;
       }
 
-      const idFromSlug = await findEnvVarByKey(envVar?.key);
+      const idFromSlug = await findIdByKey(envVar?.key);
       if (idFromSlug) return idFromSlug;
 
       return envVar?._id ? String(envVar._id) : null;

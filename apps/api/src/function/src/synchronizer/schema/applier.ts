@@ -48,7 +48,7 @@ export const getApplier = (
   logs: LogService,
   validator: Validator
 ): DocumentChangeApplier => {
-  const findFnByName = async (name: string) => {
+  const findIdByName = async (name: string) => {
     const fn = await fs.findOne({name});
     return fn?._id?.toString();
   };
@@ -58,7 +58,7 @@ export const getApplier = (
     fileExtensions: [fileExtension],
     extractId: async (content: string, slug?: string): Promise<string | null> => {
       if (slug) {
-        const id = await findFnByName(slug);
+        const id = await findIdByName(slug);
         if (id) return id;
       }
 
@@ -70,7 +70,7 @@ export const getApplier = (
         return null;
       }
 
-      const idFromSlug = await findFnByName(fn?.name);
+      const idFromSlug = await findIdByName(fn?.name);
       if (idFromSlug) return idFromSlug;
 
       return fn?._id ? String(fn._id) : null;

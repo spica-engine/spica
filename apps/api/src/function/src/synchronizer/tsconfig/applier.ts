@@ -15,7 +15,7 @@ const subModule = "tsconfig";
 const fileExtension = "json";
 
 export const getApplier = (fs: FunctionService, engine: FunctionEngine): DocumentChangeApplier => {
-  const findFnByName = async (name: string) => {
+  const findIdByName = async (name: string) => {
     const fn = await fs.findOne({name});
     return fn?._id?.toString();
   };
@@ -25,7 +25,7 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     fileExtensions: [fileExtension],
     extractId: async (content: string, slug?: string): Promise<string | null> => {
       if (slug) {
-        const id = await findFnByName(slug);
+        const id = await findIdByName(slug);
         if (id) return id;
       }
       return null;

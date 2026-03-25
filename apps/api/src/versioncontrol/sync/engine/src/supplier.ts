@@ -8,7 +8,7 @@ import {
 import {Observable, from, map, mergeMap, of, switchMap, timer} from "rxjs";
 
 const MAX_RETRIES = 3;
-const INITIAL_DELAY_MS = 2000;
+const INITIAL_DELAY_SECONDS = 2;
 
 const extractIdWithRetry = (
   extractId: (content: string, slug?: string) => Promise<string | null>,
@@ -21,7 +21,7 @@ const extractIdWithRetry = (
       if (id !== null || retryIndex >= MAX_RETRIES) {
         return of(id);
       }
-      const delayMs = Math.pow(INITIAL_DELAY_MS, retryIndex + 1) * 1000;
+      const delayMs = Math.pow(INITIAL_DELAY_SECONDS, retryIndex + 1) * 1000;
       return timer(delayMs).pipe(
         switchMap(() => extractIdWithRetry(extractId, content, slug, retryIndex + 1))
       );

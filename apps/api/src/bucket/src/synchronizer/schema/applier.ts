@@ -31,7 +31,7 @@ export const getApplier = (
   history: HistoryService,
   validator: Validator
 ): DocumentChangeApplier => {
-  const findBucketByTitle = async (title: string) => {
+  const findIdByTitle = async (title: string) => {
     const bucket = await bs.findOne({title});
     return bucket?._id?.toString();
   };
@@ -41,7 +41,7 @@ export const getApplier = (
     fileExtensions: [fileExtension],
     extractId: async (content: string, slug?: string): Promise<string | null> => {
       if (slug) {
-        const id = await findBucketByTitle(slug);
+        const id = await findIdByTitle(slug);
         if (id) return id;
       }
 
@@ -53,7 +53,7 @@ export const getApplier = (
         return null;
       }
 
-      const idFromSlug = await findBucketByTitle(bucket?.title);
+      const idFromSlug = await findIdByTitle(bucket?.title);
       if (idFromSlug) return idFromSlug;
 
       return bucket?._id ? String(bucket._id) : null;
