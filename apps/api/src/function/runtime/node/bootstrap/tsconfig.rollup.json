@@ -27,6 +27,5 @@
     "../../../runtime/logger/*.ts",
     "../../../runtime/logger/index.ts"
   ],
-  "exclude": [],
-  "references": []
+  "exclude": []
 }

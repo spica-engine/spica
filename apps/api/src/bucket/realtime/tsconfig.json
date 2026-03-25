@@ -3,19 +3,37 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../../../libs/interface/passport/guard"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket/realtime"
+    },
+    {
+      "path": "../../../../../libs/interface/activity"
+    },
+    {
+      "path": "../../passport/guard"
+    },
+    {
       "path": "../../passport/guard/services"
     },
     {
+      "path": "../../../../../libs/interface/realtime"
+    },
+    {
+      "path": "../../../../../libs/database/realtime"
+    },
+    {
+      "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../../../../../libs/core/schema"
+    },
+    {
+      "path": "../../../../../libs/core/patch"
+    },
+    {
       "path": "../services"
-    },
-    {
-      "path": "../cache"
-    },
-    {
-      "path": "../common"
-    },
-    {
-      "path": "../expression"
     },
     {
       "path": "../hooks"
@@ -24,7 +42,19 @@
       "path": "../history"
     },
     {
-      "path": "../../../../../libs/interface/bucket/realtime"
+      "path": "../cache"
+    },
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket"
+    },
+    {
+      "path": "../common"
+    },
+    {
+      "path": "../expression"
     },
     {
       "path": "../../../../../libs/realtime"

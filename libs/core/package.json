@@ -1,0 +1,20 @@
+{
+  "name": "@spica-server/core",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./schema": "./schema/index.ts",
+    "./schema/formats": "./schema/formats.ts",
+    "./schema/defaults": "./schema/defaults.ts",
+    "./schema/src/validator": "./schema/src/validator.ts",
+    "./encryption": "./encryption/index.ts",
+    "./testing": "./testing/index.ts",
+    "./websocket": "./websocket/index.ts",
+    "./differ": "./differ/index.ts",
+    "./patch": "./patch/index.ts",
+    "./copy": "./copy/index.ts",
+    "./src/middlewares": "./src/middlewares.ts",
+    "./src/pipes": "./src/pipes.ts"
+  }
+}

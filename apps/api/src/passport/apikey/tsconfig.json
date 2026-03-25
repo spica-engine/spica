@@ -3,40 +3,40 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../activity/services"
+      "path": "realtime"
+    },
+    {
+      "path": "../../../../../libs/interface/passport/policy"
     },
     {
       "path": "../../asset"
     },
     {
-      "path": "../../../../../libs/database"
-    },
-    {
-      "path": "../../../../../libs/core"
-    },
-    {
-      "path": "../../../../../libs/core/schema"
+      "path": "../../../../../libs/interface/asset"
     },
     {
       "path": "../../../../../libs/interface/representative"
     },
     {
-      "path": "../../../../../libs/interface/asset"
+      "path": "../../../../../libs/interface/passport/apikey"
     },
     {
       "path": "../guard"
     },
     {
-      "path": "../policy"
+      "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../../../../../libs/core/schema"
+    },
+    {
+      "path": "../../../../../libs/core"
+    },
+    {
+      "path": "../../activity/services"
     },
     {
       "path": "../../../../../libs/interface/activity"
-    },
-    {
-      "path": "../../../../../libs/interface/passport/apikey"
-    },
-    {
-      "path": "./realtime"
     }
   ]
 }
