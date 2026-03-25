@@ -6,7 +6,7 @@
   "definitions": {
     "propertyNames": {
       "type": "string",
-      "pattern": "^(?!_id$)[a-zA-Z0-9_]+$"
+      "pattern": "^(?!_id$)[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "schemaArray": {
       "type": "array",
