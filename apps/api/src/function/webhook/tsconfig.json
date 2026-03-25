@@ -3,22 +3,22 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../../../libs/core/schema"
+      "path": "../../../../../libs/interface/function"
     },
     {
-      "path": "../../../../../libs/core"
+      "path": "../../../../../libs/core/schema"
     },
     {
       "path": "../../passport/guard"
     },
     {
-      "path": "../services"
-    },
-    {
-      "path": "../../../../../libs/interface/function"
+      "path": "../../../../../libs/core"
     },
     {
       "path": "../../../../../libs/interface/function/webhook"
+    },
+    {
+      "path": "../../../../../libs/database"
     }
   ]
 }

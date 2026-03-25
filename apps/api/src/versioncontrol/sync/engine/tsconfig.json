@@ -3,22 +3,19 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../../../../libs/interface/versioncontrol"
-    },
-    {
-      "path": "../../../../../../libs/interface/representative"
-    },
-    {
-      "path": "../../../../../../libs/database"
-    },
-    {
-      "path": "../../processors/changelog"
+      "path": "../../../replication"
     },
     {
       "path": "../../processors/sync"
     },
     {
-      "path": "../../../replication"
+      "path": "../../processors/changelog"
+    },
+    {
+      "path": "../../../../../../libs/interface/versioncontrol"
+    },
+    {
+      "path": "../../../../../../libs/interface/representative"
     }
   ]
 }

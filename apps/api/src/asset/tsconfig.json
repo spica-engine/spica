@@ -3,28 +3,25 @@
   "include": ["src/**/*.ts", "schema/*.json", "index.ts"],
   "references": [
     {
-      "path": "../../../../libs/database"
-    },
-    {
-      "path": "../../../../libs/interface/asset"
-    },
-    {
-      "path": "../../../../libs/interface/representative"
-    },
-    {
       "path": "../../../../libs/core/differ"
-    },
-    {
-      "path": "../../../../libs/core"
-    },
-    {
-      "path": "../../../../libs/core/schema"
     },
     {
       "path": "../../../../libs/representative"
     },
     {
-      "path": "../../src/passport/guard"
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../../../libs/core/schema"
+    },
+    {
+      "path": "../../../../libs/core"
+    },
+    {
+      "path": "../../../../libs/interface/asset"
+    },
+    {
+      "path": "../../../../libs/database"
     }
   ]
 }

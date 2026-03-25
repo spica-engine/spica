@@ -1,0 +1,9 @@
+{
+  "name": "@spica-server/config",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./src/config.module": "./src/config.module.ts"
+  }
+}

@@ -6,16 +6,16 @@
       "path": "../../passport/guard"
     },
     {
-      "path": "../../passport/guard/services"
-    },
-    {
-      "path": "../../../../../libs/interface/bucket/realtime"
-    },
-    {
-      "path": "../../../../../libs/interface/bucket/common"
+      "path": "../../../../../libs/interface/realtime"
     },
     {
       "path": "../../../../../libs/realtime"
+    },
+    {
+      "path": "../../passport/guard/services"
+    },
+    {
+      "path": "../../../../../libs/database/realtime"
     }
   ]
 }
