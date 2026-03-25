@@ -45,7 +45,7 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
       const idFromSlug = await findFnByName(parsed?.name);
       if (idFromSlug) return idFromSlug;
 
-      return parsed?._id ? String(parsed._id) : null;
+      return null;
     },
 
     apply: async (change: ChangeLog): Promise<ApplyResult> => {

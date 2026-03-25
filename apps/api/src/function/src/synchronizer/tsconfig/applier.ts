@@ -32,17 +32,10 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     },
 
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
-      try {
-        return {
-          status: SyncStatuses.FAILED,
-          reason: `tsconfig is read-only and changes cannot be applied.`
-        };
-      } catch (error) {
-        logger.warn(
-          `Error applying function tsconfig change: ${(error as any).stack || String(error)}`
-        );
-        return {status: SyncStatuses.FAILED, reason: error.message};
-      }
+      return {
+        status: SyncStatuses.FAILED,
+        reason: `tsconfig is read-only and changes cannot be applied.`
+      };
     }
   };
 };
