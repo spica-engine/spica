@@ -18,7 +18,7 @@ const subModule = "index";
 const fileExtensions = ["mjs", "ts"];
 
 export const getApplier = (fs: FunctionService, engine: FunctionEngine): DocumentChangeApplier => {
-  const findFnByName = async (name: string) => {
+  const findIdByName = async (name: string) => {
     const fn = await fs.findOne({name});
     return fn?._id?.toString();
   };
@@ -26,12 +26,8 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     module,
     subModule,
     fileExtensions,
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findFnByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      // no way to find fn by index content
-      return Promise.resolve(null);
+    extractId: async (slug: string, content?: string): Promise<string | null> => {
+      return findIdByName(slug);
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {

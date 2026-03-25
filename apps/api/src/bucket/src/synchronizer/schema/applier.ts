@@ -31,7 +31,7 @@ export const getApplier = (
   history: HistoryService,
   validator: Validator
 ): DocumentChangeApplier => {
-  const findBucketByTitle = async (title: string) => {
+  const findIdByTitle = async (title: string) => {
     const bucket = await bs.findOne({title});
     return bucket?._id?.toString();
   };
@@ -39,19 +39,22 @@ export const getApplier = (
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findBucketByTitle(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let bucket: Bucket;
+    extractId: async (slug: string, content?: string): Promise<string | null> => {
+      const id = await findIdByTitle(slug);
+      if (id) return id;
 
-      try {
-        bucket = YAML.parse(content);
-        return findBucketByTitle(bucket?.title);
-      } catch (error) {
-        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return Promise.resolve(null);
+      if (content) {
+        let bucket: Bucket;
+        try {
+          bucket = YAML.parse(content);
+        } catch (error) {
+          logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
+          return null;
+        }
+        return bucket?._id ? String(bucket._id) : null;
       }
+
+      return null;
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
