@@ -278,7 +278,7 @@ export namespace dependencies {
 
     if (!Array.isArray(deps)) {
       deps = Object.entries(deps).map(([name, version]) => {
-        return `${name}@${(version as string).slice(1)}`;
+        return `${name}@${version}`;
       });
     }
 
