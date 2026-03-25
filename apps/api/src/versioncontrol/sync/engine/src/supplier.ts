@@ -11,12 +11,12 @@ const MAX_RETRIES = 3;
 const INITIAL_DELAY_SECONDS = 2;
 
 const extractIdWithRetry = (
-  extractId: (content: string, slug?: string) => Promise<string | null>,
-  content: string,
-  slug: string | undefined,
+  extractId: (slug: string, content?: string) => Promise<string | null>,
+  slug: string,
+  content: string | undefined,
   retryIndex = 0
 ): Observable<string | null> =>
-  from(extractId(content, slug)).pipe(
+  from(extractId(slug, content)).pipe(
     mergeMap(id => {
       if (id !== null || retryIndex >= MAX_RETRIES) {
         return of(id);
@@ -41,7 +41,7 @@ export const getSupplier = (
 
       return repManager.watch(applier.module, fileNames).pipe(
         mergeMap(event =>
-          extractIdWithRetry(extractId, event.content, event.slug).pipe(
+          extractIdWithRetry(extractId, event.slug, event.content).pipe(
             map(id => ({...event, _id: id}))
           )
         ),

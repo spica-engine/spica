@@ -23,12 +23,8 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     module,
     subModule,
     fileExtensions: [fileExtension],
-    extractId: async (content: string, slug?: string): Promise<string | null> => {
-      if (slug) {
-        const id = await findIdByName(slug);
-        if (id) return id;
-      }
-      return null;
+    extractId: async (slug: string, content?: string): Promise<string | null> => {
+      return findIdByName(slug);
     },
 
     apply: async (change: ChangeLog): Promise<ApplyResult> => {

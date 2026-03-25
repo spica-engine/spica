@@ -39,24 +39,22 @@ export function getApplier(
     module,
     subModule,
     fileExtensions: [fileExtension],
-    extractId: async (content: string, slug?: string): Promise<string | null> => {
-      if (slug) {
-        const id = await findIdByName(slug);
-        if (id) return id;
+    extractId: async (slug: string, content?: string): Promise<string | null> => {
+      const id = await findIdByName(slug);
+      if (id) return id;
+
+      if (content) {
+        let policy: Policy;
+        try {
+          policy = YAML.parse(content);
+        } catch (error) {
+          logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
+          return null;
+        }
+        return policy?._id ? String(policy._id) : null;
       }
 
-      let policy: Policy;
-      try {
-        policy = YAML.parse(content);
-      } catch (error) {
-        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return null;
-      }
-
-      const idFromSlug = await findIdByName(policy?.name);
-      if (idFromSlug) return idFromSlug;
-
-      return policy?._id ? String(policy._id) : null;
+      return null;
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
