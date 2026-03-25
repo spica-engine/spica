@@ -261,3 +261,18 @@ export type {
   LogCommit,
   LogResponse,
 } from './versionControlApi';
+
+export {
+  configApi,
+  configApiReducerPath,
+  configApiMiddleware,
+  useGetConfigsQuery,
+  useGetConfigQuery,
+  useLazyGetConfigQuery,
+  useUpdateConfigMutation,
+} from './configApi';
+
+export type {
+  ConfigItem,
+  UpdateConfigRequest,
+} from './configApi';

@@ -56,6 +56,13 @@ const AccessManagement = () => {
       onClick: () => {
         navigate("/activity");
       }
+    },
+    {
+      title: "Config",
+      icon: "cog",
+      onClick: () => {
+        navigate("/config");
+      }
     }
   ];
 
