@@ -102,7 +102,7 @@ describe("Default", () => {
     });
 
     it("should throw when renaming a non-existent file", async () => {
-      await expect(service.rename("nonexistent", "target")).rejects.toThrow();
+      await expect(service.rename("nonexistent", "target")).rejects.toMatchObject({code: "ENOENT"});
     });
   });
 
