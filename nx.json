@@ -41,6 +41,10 @@
   ],
   "nxCloudId": "66fba1edf5b0be5c19ad179e",
   "targetDefaults": {
+    "typecheck": {
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"]
+    },
     "build": {
       "cache": true,
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"]
