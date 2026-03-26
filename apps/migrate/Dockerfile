@@ -15,7 +15,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/migrate ./apps/migrate
 COPY nx.json package.json tsconfig.json yarn.lock ./
-RUN yarn run build:migrate
+RUN --mount=type=cache,target=/app/.nx/cache,id=migrate-nx \
+    yarn run build:migrate
 
 FROM base AS test
 WORKDIR /app

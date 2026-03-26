@@ -29,7 +29,8 @@ COPY nx.json ./
 COPY package.json ./
 COPY tsconfig.json ./
 COPY yarn.lock ./
-RUN yarn run build:mongoreplicationcontroller
+RUN --mount=type=cache,target=/app/.nx/cache,id=mongorepl-nx \
+    yarn run build:mongoreplicationcontroller
 
 # start app from tools, because app executes many mongodb commands
 # copy deps and build

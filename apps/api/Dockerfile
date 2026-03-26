@@ -43,7 +43,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
 COPY libs ./libs
 COPY nx.json package.json tsconfig.json yarn.lock ./
-RUN yarn run build:api
+RUN --mount=type=cache,target=/app/.nx/cache,id=api-nx \
+    yarn run build:api
 
 # test app
 FROM tools AS test
