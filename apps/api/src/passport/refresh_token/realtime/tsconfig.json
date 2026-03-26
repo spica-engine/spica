@@ -3,13 +3,19 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../guard"
+    },
+    {
+      "path": "../../../../../../libs/interface/realtime"
+    },
+    {
       "path": "../../../../../../libs/realtime"
     },
     {
-      "path": "../../../../../../libs/database/realtime"
+      "path": "../../guard/services"
     },
     {
-      "path": "../../guard/services"
+      "path": "../../../../../../libs/database/realtime"
     }
   ]
 }

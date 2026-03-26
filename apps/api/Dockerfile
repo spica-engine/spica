@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM node:22-slim AS base
 
 # install necessary tools
@@ -7,15 +8,31 @@ RUN apt-get update && apt-get install git -y
 # install app deps to nodejs image
 FROM base AS deps
 WORKDIR /app
-COPY package.json yarn.lock ./
-COPY apps/api/package.json ./apps/api/package.json
+# COPY --parents preserves directory structure when using wildcards.
+# Requires the latest stable Dockerfile frontend (# syntax=docker/dockerfile:1).
+# Patterns cover all workspace package.json files:
+#   libs/*/            → core, database, filter, realtime, representative, transaction, interface
+#   apps/api/src/*/    → activity, asset, batch, bucket, config, dashboard, env_var, function,
+#                         mailer, passport, preference, replication, secret, sms, status, storage, versioncontrol
+#                         (only directories containing a package.json are matched)
+#   function/packages/ → auth, bucket, database, identity, storage devkit packages
+COPY --parents package.json yarn.lock \
+     libs/*/package.json \
+     apps/api/package.json \
+     apps/api/src/*/package.json \
+     apps/api/src/function/packages/*/package.json \
+     ./
 RUN yarn install --frozen-lockfile --network-timeout 600000
 
 # install app production deps to nodejs image
 FROM base AS deps-production
 WORKDIR /app
-COPY package.json yarn.lock ./
-COPY apps/api/package.json ./apps/api/package.json
+COPY --parents package.json yarn.lock \
+     libs/*/package.json \
+     apps/api/package.json \
+     apps/api/src/*/package.json \
+     apps/api/src/function/packages/*/package.json \
+     ./
 RUN yarn install --frozen-lockfile --production --network-timeout 600000
 
 # build app to nodejs image

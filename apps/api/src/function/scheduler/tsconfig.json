@@ -6,28 +6,61 @@
       "path": "../runtime/node"
     },
     {
+      "path": "../../../../../libs/interface/function/runtime"
+    },
+    {
+      "path": "../../../../../libs/interface/status"
+    },
+    {
+      "path": "../../../../../libs/interface/replication"
+    },
+    {
+      "path": "../../replication"
+    },
+    {
+      "path": "../runtime/logger"
+    },
+    {
       "path": "../runtime/io"
     },
     {
-      "path": "../compiler/javascript"
+      "path": "../runtime"
     },
     {
-      "path": "../compiler/typescript"
+      "path": "../queue/proto"
     },
     {
-      "path": "../enqueuer"
-    },
-    {
-      "path": "../pkgmanager/node"
+      "path": "../queue"
     },
     {
       "path": "../pkgmanager/local"
     },
     {
-      "path": "../../../../../libs/interface/function/scheduler"
+      "path": "../pkgmanager/node"
+    },
+    {
+      "path": "../../../../../libs/interface/function/pkgmanager"
+    },
+    {
+      "path": "../enqueuer"
+    },
+    {
+      "path": "../compiler/typescript"
+    },
+    {
+      "path": "../compiler/javascript"
+    },
+    {
+      "path": "../compiler"
+    },
+    {
+      "path": "../../../../../libs/database"
     },
     {
       "path": "../../passport/guard/services"
+    },
+    {
+      "path": "../../../../../libs/interface/function/scheduler"
     }
   ]
 }

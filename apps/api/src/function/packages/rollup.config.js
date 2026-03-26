@@ -13,13 +13,23 @@ export function cleanUp(path) {
   }
 }
 
-const sharedExternals = ["mongodb", "axios", "ws", "rxjs", "rxjs/operators", "rxjs/webSocket", "json-schema"];
+const sharedExternals = [
+  "mongodb",
+  "axios",
+  "ws",
+  "rxjs",
+  "rxjs/operators",
+  "rxjs/webSocket",
+  "json-schema"
+];
 
 export default function getConfig(project, additionalCopyPaths = []) {
   const base = path.join("apps/api/src/function/packages", project);
   const dist = path.join("dist", base);
 
   cleanUp(dist);
+
+  const tsConfigPath = path.join(base, "tsconfig.rollup.json");
 
   const copyTargets = [
     {
@@ -62,7 +72,7 @@ export default function getConfig(project, additionalCopyPaths = []) {
       commonjs(),
       json(),
       typescript({
-        tsconfig: path.join(base, "tsconfig.json"),
+        tsconfig: tsConfigPath,
         outDir: path.join(dist, "dist"),
         declaration: false,
         declarationDir: undefined
@@ -82,7 +92,7 @@ export default function getConfig(project, additionalCopyPaths = []) {
     },
     plugins: [
       dts({
-        tsconfig: path.join(base, "tsconfig.json")
+        tsconfig: tsConfigPath
       })
     ],
     external: sharedExternals

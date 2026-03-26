@@ -3,16 +3,40 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../function"
+      "path": "../../../../../libs/interface/function/scheduler"
     },
     {
-      "path": "./proto"
+      "path": "../../../../../libs/interface/function"
+    },
+    {
+      "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../../../../../libs/interface/function/enqueuer"
     },
     {
       "path": "../../../../../libs/interface/bucket/hooks"
     },
     {
-      "path": "../services"
+      "path": "../../../../../libs/interface/replication"
+    },
+    {
+      "path": "../../replication"
+    },
+    {
+      "path": "proto"
+    },
+    {
+      "path": "../../function/queue/proto"
+    },
+    {
+      "path": "../../function/queue"
+    },
+    {
+      "path": "../../function/enqueuer"
     }
   ]
 }

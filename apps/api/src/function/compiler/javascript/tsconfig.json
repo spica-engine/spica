@@ -3,10 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../"
+      "path": "../../../../../../libs/interface/function/compiler"
     },
     {
-      "path": "../../../../../../libs/interface/function/compiler"
+      "path": ".."
     }
   ]
 }

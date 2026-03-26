@@ -3,10 +3,13 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../env_var"
+      "path": "../../database"
     },
     {
       "path": "../secret"
+    },
+    {
+      "path": "../env_var"
     }
   ]
 }

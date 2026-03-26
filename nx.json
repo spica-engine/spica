@@ -41,8 +41,13 @@
   ],
   "nxCloudId": "66fba1edf5b0be5c19ad179e",
   "targetDefaults": {
+    "typecheck": {
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"]
+    },
     "build": {
-      "cache": false
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"]
     },
     "test": {
       "cache": true,
@@ -74,7 +79,7 @@
     }
   },
   "sync": {
-    "applyChanges": false,
-    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+    "applyChanges": true,
+    "disabledTaskSyncGenerators": []
   }
 }

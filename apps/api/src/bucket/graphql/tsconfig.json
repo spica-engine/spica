@@ -3,6 +3,39 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../../../libs/interface/activity"
+    },
+    {
+      "path": "../../../../../libs/core/patch"
+    },
+    {
+      "path": "../../../../../libs/interface/passport/guard"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket/graphql"
+    },
+    {
+      "path": "../common"
+    },
+    {
+      "path": "../../passport/guard"
+    },
+    {
+      "path": "../../passport/guard/services"
+    },
+    {
+      "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../../../../../libs/core/schema"
+    },
+    {
+      "path": "../services"
+    },
+    {
       "path": "../hooks"
     },
     {
@@ -10,15 +43,6 @@
     },
     {
       "path": "../../activity/services"
-    },
-    {
-      "path": "../../../../../libs/interface/bucket/graphql"
-    },
-    {
-      "path": "../../passport/guard/services"
-    },
-    {
-      "path": "../common"
     }
   ]
 }

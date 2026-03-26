@@ -1,4 +1,18 @@
 {
   "extends": "../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"]
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../../../../../libs/interface/realtime"
+    },
+    {
+      "path": "../../../../../../libs/interface/batch"
+    },
+    {
+      "path": "../../../../../../libs/interface/function/packages"
+    },
+    {
+      "path": "../.."
+    }
+  ]
 }
