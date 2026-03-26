@@ -201,8 +201,7 @@ describe("Dashboard Synchronizer", () => {
         module: "dashboard",
         subModule: "schema",
         fileExtensions: ["yaml"],
-        findIdBySlug: expect.any(Function),
-        findIdByContent: expect.any(Function),
+        extractId: expect.any(Function),
         apply: expect.any(Function)
       });
     });
