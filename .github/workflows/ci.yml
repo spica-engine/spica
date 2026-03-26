@@ -95,6 +95,8 @@ jobs:
         run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+      - name: Verify TypeScript project references in sync
+        run: yarn nx sync:check
       - name: Build Affected
         run: yarn nx affected -t build
 
