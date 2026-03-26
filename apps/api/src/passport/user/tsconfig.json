@@ -3,46 +3,76 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../activity/services"
+      "path": "../../../../../libs/core/encryption"
     },
     {
-      "path": "../../asset"
+      "path": "../../../../../libs/interface/core"
     },
     {
-      "path": "../../preference/services"
+      "path": "../../../../../libs/interface/replication"
     },
     {
-      "path": "../policy"
+      "path": "../../replication"
     },
     {
-      "path": "../refresh_token/services"
+      "path": "../../../../../libs/interface/passport/authfactor"
     },
     {
       "path": "../authfactor"
     },
     {
-      "path": "../../bucket/common"
+      "path": "../guard"
+    },
+    {
+      "path": "../../../../../libs/core"
+    },
+    {
+      "path": "../../activity/services"
     },
     {
       "path": "../../status"
     },
     {
-      "path": "../../../../../libs/interface/passport/user"
-    },
-    {
-      "path": "./realtime"
-    },
-    {
-      "path": "../../mailer"
+      "path": "../../../../../libs/database/pipeline"
     },
     {
       "path": "../../sms"
     },
     {
-      "path": "../../config"
+      "path": "../../mailer"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../refresh_token/services"
+    },
+    {
+      "path": "../../../../../libs/interface/passport/policy"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "../../../../../libs/core/schema"
+    },
+    {
+      "path": "../../../../../libs/filter"
+    },
+    {
+      "path": "../../../../../libs/interface/passport/user"
     },
     {
       "path": "../../../../../libs/interface/config"
+    },
+    {
+      "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../../config"
+    },
+    {
+      "path": "../../../../../libs/interface/activity"
     }
   ]
 }

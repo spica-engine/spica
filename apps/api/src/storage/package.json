@@ -1,0 +1,13 @@
+{
+  "name": "@spica-server/storage",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./src/activity.resource": "./src/activity.resource.ts",
+    "./src/strategy/strategy": "./src/strategy/strategy.ts",
+    "./src/strategy/default": "./src/strategy/default.ts",
+    "./src/strategy/gcloud": "./src/strategy/gcloud.ts",
+    "./src/strategy/aws.s3": "./src/strategy/aws.s3.ts"
+  }
+}

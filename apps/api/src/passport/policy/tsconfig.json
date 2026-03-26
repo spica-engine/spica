@@ -9,22 +9,28 @@
       "path": "../../../../../libs/core"
     },
     {
-      "path": "../../../../../libs/core/schema"
-    },
-    {
       "path": "../../activity/services"
     },
     {
-      "path": "../../../../../libs/interface/activity"
-    },
-    {
-      "path": "../../../../../libs/interface/passport/policy"
+      "path": "realtime"
     },
     {
       "path": "../../../../../libs/interface/versioncontrol"
     },
     {
-      "path": "./realtime"
+      "path": "../../../../../libs/interface/passport/guard"
+    },
+    {
+      "path": "../../../../../libs/core/schema"
+    },
+    {
+      "path": "../../../../../libs/interface/passport/policy"
+    },
+    {
+      "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../../../../../libs/interface/activity"
     }
   ]
 }

@@ -295,8 +295,7 @@ describe("Function Index Synchronizer", () => {
         module: "function",
         subModule: "index",
         fileExtensions: ["mjs", "ts"],
-        findIdBySlug: expect.any(Function),
-        findIdByContent: expect.any(Function),
+        extractId: expect.any(Function),
         apply: expect.any(Function)
       });
     });

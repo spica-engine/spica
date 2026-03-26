@@ -3,25 +3,34 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../status/services"
+      "path": "../../../../../libs/interface/passport/guard"
     },
     {
-      "path": "../../../../../libs/core"
+      "path": "../../../../../libs/interface/status"
     },
     {
       "path": "../../../../../libs/interface/core"
     },
     {
-      "path": "../../replication"
-    },
-    {
-      "path": "../queue"
+      "path": "../../../../../libs/core"
     },
     {
       "path": "../../../../../libs/interface/function/enqueuer"
     },
     {
-      "path": "../../../../../libs/interface/passport/guard"
+      "path": "../../../../../libs/interface/replication"
+    },
+    {
+      "path": "../../replication"
+    },
+    {
+      "path": "../queue/proto"
+    },
+    {
+      "path": "../queue"
+    },
+    {
+      "path": "../../../../../libs/database"
     }
   ]
 }

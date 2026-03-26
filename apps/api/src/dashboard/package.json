@@ -1,0 +1,9 @@
+{
+  "name": "@spica-server/dashboard",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./realtime": "./realtime/index.ts"
+  }
+}

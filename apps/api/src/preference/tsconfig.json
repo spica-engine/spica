@@ -3,22 +3,22 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../activity/services"
+      "path": "../../../../libs/database"
     },
     {
-      "path": "../../../../libs/interface/passport/identity"
+      "path": "../../../../libs/interface/preference"
     },
     {
-      "path": "../../../../libs/interface/representative"
-    },
-    {
-      "path": "../preference/services"
-    },
-    {
-      "path": "../versioncontrol"
+      "path": "services"
     },
     {
       "path": "../passport/guard"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../../../libs/interface/activity"
     }
   ]
 }

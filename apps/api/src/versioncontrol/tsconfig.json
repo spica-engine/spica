@@ -3,12 +3,26 @@
   "include": ["src/**/*.ts", "index.ts"],
   "exclude": ["test/**/*.ts", "**/*.spec.ts"],
   "references": [
-    {"path": "../passport/guard"},
-    {"path": "../replication"},
-    {"path": "../../../../libs/representative"},
-    {"path": "../../../../libs/core/differ"},
-    {"path": "../../../../libs/interface/versioncontrol"},
-    {"path": "./sync"},
-    {"path": "./sync/engine"}
+    {
+      "path": "sync/engine"
+    },
+    {
+      "path": "sync"
+    },
+    {
+      "path": "../replication"
+    },
+    {
+      "path": "../../../../libs/representative"
+    },
+    {
+      "path": "../../../../libs/interface/config"
+    },
+    {
+      "path": "../../../../libs/interface/versioncontrol"
+    },
+    {
+      "path": "../passport/guard"
+    }
   ]
 }

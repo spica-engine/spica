@@ -4,12 +4,6 @@
   "references": [
     {
       "path": "../interface/core"
-    },
-    {
-      "path": "./schema"
-    },
-    {
-      "path": "../interface/passport/refresh_token"
     }
   ]
 }
