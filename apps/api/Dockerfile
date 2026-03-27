@@ -3,6 +3,8 @@ FROM node:22-slim AS base
 
 ENV NX_DAEMON=false
 ENV NX_NO_CLOUD=true
+ENV NX_CACHE_DIRECTORY=/app/.nx/cache
+ENV NX_WORKSPACE_DATA_DIRECTORY=/app/.nx/workspace-data
 
 # install necessary tools
 FROM base AS tools
@@ -45,11 +47,13 @@ RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod-${TARGETPLATFOR
 # build app to nodejs image
 FROM base AS build 
 WORKDIR /app
+ARG TARGETPLATFORM
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
 COPY libs ./libs
 COPY nx.json package.json tsconfig.json yarn.lock ./
-RUN --mount=type=cache,target=/app/.nx/cache,id=api-nx \
+RUN --mount=type=cache,target=/app/.nx/cache,id=nx-cache-${TARGETPLATFORM},sharing=locked \
+    --mount=type=cache,target=/app/.nx/workspace-data,id=nx-workspace-${TARGETPLATFORM},sharing=locked \
     yarn nx compile api --skip-sync
 
 # test app
