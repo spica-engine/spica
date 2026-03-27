@@ -30,6 +30,13 @@ const AccessManagement = () => {
       }
     },
     {
+      title: "Users",
+      icon: "person",
+      onClick: () => {
+        navigate("/passport/user");
+      }
+    },
+    {
       title: "Policies",
       icon: "layers",
       onClick: () => {

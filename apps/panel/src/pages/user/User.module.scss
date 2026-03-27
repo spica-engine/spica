@@ -1,0 +1,37 @@
+.userContainer {
+  padding: var(--padding-md);
+}
+
+.actionButton {
+  padding: 0;
+  width: unset !important;
+}
+
+.drawerContainer {
+  background-color: var(--color-background);
+  border-top-left-radius: var(--border-radius-xl);
+  border-bottom-left-radius: var(--border-radius-xl);
+}
+
+.drawerContent {
+  padding: var(--padding-xl);
+}
+
+.drawerFooter {
+  border-top: 1px solid var(--color-border);
+  padding: var(--padding-md) var(--padding-xl);
+}
+
+.policiesCell {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280px;
+}
+
+.scrollContainer {
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+}
