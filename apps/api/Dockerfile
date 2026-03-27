@@ -10,6 +10,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # install app deps to nodejs image
 FROM base AS deps
 WORKDIR /app
+ARG TARGETPLATFORM
 
 COPY --parents package.json yarn.lock \
      libs/*/package.json \
@@ -17,7 +18,7 @@ COPY --parents package.json yarn.lock \
      apps/api/src/*/package.json \
      apps/api/src/function/packages/*/package.json \
      ./
-RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps \
+RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-${TARGETPLATFORM} \
     YARN_CACHE_FOLDER=/root/.yarn-cache \
     yarn install --frozen-lockfile --network-timeout 600000
 
@@ -25,13 +26,15 @@ RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps \
 # install app production deps to nodejs image
 FROM base AS deps-production
 WORKDIR /app
+ARG TARGETPLATFORM
+
 COPY --parents package.json yarn.lock \
      libs/*/package.json \
      apps/api/package.json \
      apps/api/src/*/package.json \
      apps/api/src/function/packages/*/package.json \
      ./
-RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod \
+RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod-${TARGETPLATFORM} \
     YARN_CACHE_FOLDER=/root/.yarn-cache \
     yarn install --frozen-lockfile --production --network-timeout 600000
 

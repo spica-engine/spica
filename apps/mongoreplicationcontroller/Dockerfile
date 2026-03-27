@@ -15,8 +15,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # install app deps to nodejs image
 FROM base AS deps
 WORKDIR /app
+ARG TARGETPLATFORM
 COPY package.json yarn.lock ./
-RUN --mount=type=cache,target=/root/.yarn-cache \
+RUN --mount=type=cache,target=/root/.yarn-cache,id=mongorepl-yarn-${TARGETPLATFORM} \
     YARN_CACHE_FOLDER=/root/.yarn-cache \
     yarn install --frozen-lockfile --network-timeout 600000
 
