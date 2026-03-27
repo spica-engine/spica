@@ -47,7 +47,7 @@ COPY apps/api ./apps/api
 COPY libs ./libs
 COPY nx.json package.json tsconfig.json yarn.lock ./
 RUN --mount=type=cache,target=/app/.nx/cache,id=api-nx \
-    yarn run build:api
+    yarn nx compile api --skip-sync
 
 # test app
 FROM tools AS test
