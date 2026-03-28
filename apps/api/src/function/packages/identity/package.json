@@ -14,7 +14,7 @@
   "typings": "dist/index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "axios": "^1.7.9",
+    "axios": "^1.13.5",
     "rxjs": "^7.8.1"
   }
 }
