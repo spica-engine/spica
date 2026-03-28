@@ -146,7 +146,7 @@ jobs:
       - name: Set the VERSION
         run: |
           VERSION=$(git describe --tags --abbrev=0)
-          echo "VERSION=0.18.11-pre1" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install Helm
         uses: azure/setup-helm@v4.2.0
