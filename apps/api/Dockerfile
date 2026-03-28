@@ -1,48 +1,60 @@
 # syntax=docker/dockerfile:1
 FROM node:22-slim AS base
 
+ENV NX_DAEMON=false
+ENV NX_NO_CLOUD=true
+ENV NX_CACHE_DIRECTORY=/app/.nx/cache
+ENV NX_WORKSPACE_DATA_DIRECTORY=/app/.nx/workspace-data
+
 # install necessary tools
 FROM base AS tools
-RUN apt-get update && apt-get install git -y
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install git -y
 
 # install app deps to nodejs image
 FROM base AS deps
 WORKDIR /app
-# COPY --parents preserves directory structure when using wildcards.
-# Requires the latest stable Dockerfile frontend (# syntax=docker/dockerfile:1).
-# Patterns cover all workspace package.json files:
-#   libs/*/            → core, database, filter, realtime, representative, transaction, interface
-#   apps/api/src/*/    → activity, asset, batch, bucket, config, dashboard, env_var, function,
-#                         mailer, passport, preference, replication, secret, sms, status, storage, versioncontrol
-#                         (only directories containing a package.json are matched)
-#   function/packages/ → auth, bucket, database, identity, storage devkit packages
+ARG TARGETPLATFORM
+
 COPY --parents package.json yarn.lock \
      libs/*/package.json \
      apps/api/package.json \
      apps/api/src/*/package.json \
      apps/api/src/function/packages/*/package.json \
      ./
-RUN yarn install --frozen-lockfile --network-timeout 600000
+RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-${TARGETPLATFORM} \
+    YARN_CACHE_FOLDER=/root/.yarn-cache \
+    yarn install --frozen-lockfile --network-timeout 600000
+
 
 # install app production deps to nodejs image
 FROM base AS deps-production
 WORKDIR /app
+ARG TARGETPLATFORM
+
 COPY --parents package.json yarn.lock \
      libs/*/package.json \
      apps/api/package.json \
      apps/api/src/*/package.json \
      apps/api/src/function/packages/*/package.json \
      ./
-RUN yarn install --frozen-lockfile --production --network-timeout 600000
+RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod-${TARGETPLATFORM} \
+    YARN_CACHE_FOLDER=/root/.yarn-cache \
+    yarn install --frozen-lockfile --production --network-timeout 600000
+
 
 # build app to nodejs image
 FROM base AS build 
 WORKDIR /app
+ARG TARGETPLATFORM
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
 COPY libs ./libs
 COPY nx.json package.json tsconfig.json yarn.lock ./
-RUN yarn run build:api
+RUN --mount=type=cache,target=/app/.nx/cache,id=nx-cache-${TARGETPLATFORM},sharing=locked \
+    --mount=type=cache,target=/app/.nx/workspace-data,id=nx-workspace-${TARGETPLATFORM},sharing=locked \
+    yarn nx compile api --skip-sync
 
 # test app
 FROM tools AS test

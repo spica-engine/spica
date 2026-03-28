@@ -35,7 +35,7 @@
         "{projectRoot}/project.json",
         "{projectRoot}/Dockerfile"
       ],
-      "command": "docker build --platform=linux/amd64 . -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:$VERSION",
+      "command": "docker buildx build --platform=linux/amd64 --load --target runner --cache-from type=gha,scope=mongoreplicationcontroller --cache-to type=gha,scope=mongoreplicationcontroller,mode=max -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:$VERSION .",
       "cache": true
     },
     "publish": {

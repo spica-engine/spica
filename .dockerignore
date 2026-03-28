@@ -1,0 +1,61 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# CI/CD and GitHub
+.github
+
+# Build outputs
+dist
+coverage
+.nx
+tmp
+
+# Dependencies (installed inside Docker)
+node_modules
+
+# Frontend (not needed for backend images)
+apps/spica
+apps/panel
+
+# CLI (separate npm publish, not Docker)
+apps/cli
+
+# Helm charts
+charts
+stacks
+
+# Database seeds
+db
+
+# Scripts and patches
+scripts
+patches
+
+# Documentation
+*.md
+!apps/api/package.json
+!apps/migrate/package.json
+!apps/mongoreplicationcontroller/package.json
+LICENSE.md
+
+# IDE and editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+*.snap
+*.env
+
+# Docker docs (not needed in context)
+buildkit.md
+docker-cache.md
+github-actions-cache.md

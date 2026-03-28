@@ -54,7 +54,7 @@
         "{projectRoot}/project.json",
         "{projectRoot}/Dockerfile"
       ],
-      "command": "docker build --platform=linux/amd64 . -f ./apps/api/Dockerfile -t spicaengine/api:$VERSION",
+      "command": "docker buildx build --platform=linux/amd64 --load --target runner --cache-from type=gha,scope=api --cache-to type=gha,scope=api,mode=max -f ./apps/api/Dockerfile -t spicaengine/api:$VERSION .",
       "cache": true
     },
     "publish": {
