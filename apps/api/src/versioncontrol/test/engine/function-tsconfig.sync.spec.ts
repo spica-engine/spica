@@ -169,7 +169,6 @@ xdescribe("SyncEngine Integration - Function Tsconfig", () => {
         sub_module: "tsconfig",
         origin: ChangeOrigin.DOCUMENT,
         type: ChangeType.CREATE,
-        resource_id: _id.toString(),
         resource_slug: name,
         resource_content: JSON.stringify(expectedTsconfig, null, 2),
         resource_extension: "json",
@@ -258,7 +257,6 @@ xdescribe("SyncEngine Integration - Function Tsconfig", () => {
           created_at: sync.change_log.created_at,
           resource_content: tsconfigContent,
           resource_slug: name,
-          resource_id: null,
           resource_extension: fileExtension,
           initiator: ChangeInitiator.EXTERNAL,
           event_id: expect.any(String)
@@ -309,7 +307,6 @@ xdescribe("SyncEngine Integration - Function Tsconfig", () => {
           created_at: sync.change_log.created_at,
           resource_content: tsconfigContent,
           resource_slug: name,
-          resource_id: null,
           resource_extension: fileExtension,
           initiator: ChangeInitiator.EXTERNAL,
           event_id: expect.any(String)

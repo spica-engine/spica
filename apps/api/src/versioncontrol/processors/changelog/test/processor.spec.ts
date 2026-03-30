@@ -30,7 +30,6 @@ describe("ChangeLogProcessor", () => {
       origin: ChangeOrigin.DOCUMENT,
       type: ChangeType.CREATE,
       resource_content: "",
-      resource_id: "id",
       resource_slug: "slug",
       resource_extension: "",
       initiator: ChangeInitiator.EXTERNAL,
@@ -46,7 +45,6 @@ describe("ChangeLogProcessor", () => {
           origin: change.origin,
           type: change.type,
           resource_content: change.resource_content,
-          resource_id: change.resource_id,
           resource_slug: change.resource_slug,
           resource_extension: change.resource_extension,
           initiator: change.initiator,
@@ -67,7 +65,6 @@ describe("ChangeLogProcessor", () => {
       origin: ChangeOrigin.REPRESENTATIVE,
       type: ChangeType.CREATE,
       resource_content: "",
-      resource_id: "id1",
       resource_slug: "slug2",
       resource_extension: "",
       initiator: ChangeInitiator.EXTERNAL,
@@ -81,7 +78,6 @@ describe("ChangeLogProcessor", () => {
       origin: ChangeOrigin.REPRESENTATIVE,
       type: ChangeType.DELETE,
       resource_content: "",
-      resource_id: "id1",
       resource_slug: "slug2",
       resource_extension: "",
       initiator: ChangeInitiator.EXTERNAL,
@@ -95,7 +91,6 @@ describe("ChangeLogProcessor", () => {
       origin: ChangeOrigin.REPRESENTATIVE,
       type: ChangeType.UPDATE,
       resource_content: "",
-      resource_id: "id2",
       resource_slug: "slug",
       resource_extension: "",
       initiator: ChangeInitiator.EXTERNAL,
@@ -108,7 +103,7 @@ describe("ChangeLogProcessor", () => {
       .subscribe({
         next: received => {
           expect(received.length).toBe(2);
-          const updateChange = received.find(change => change.resource_id === "id1");
+          const updateChange = received.find(change => change.resource_slug === "slug2");
 
           expect(updateChange._id).toBeDefined();
           delete updateChange._id;
@@ -120,7 +115,6 @@ describe("ChangeLogProcessor", () => {
             sub_module: updateChange.sub_module,
             origin: updateChange.origin,
             resource_content: updateChange.resource_content,
-            resource_id: updateChange.resource_id,
             resource_slug: updateChange.resource_slug,
             resource_extension: updateChange.resource_extension,
             event_id: updateChange.event_id,
@@ -129,7 +123,7 @@ describe("ChangeLogProcessor", () => {
             initiator: updateChange.initiator
           });
 
-          const unrelatedChange = received.find(change => change.resource_id === "id2");
+          const unrelatedChange = received.find(change => change.resource_slug === "slug");
 
           expect(unrelatedChange._id).toBeDefined();
           delete unrelatedChange._id;
@@ -141,7 +135,6 @@ describe("ChangeLogProcessor", () => {
             sub_module: unrelatedChange.sub_module,
             origin: unrelatedChange.origin,
             resource_content: unrelatedChange.resource_content,
-            resource_id: unrelatedChange.resource_id,
             resource_slug: unrelatedChange.resource_slug,
             resource_extension: unrelatedChange.resource_extension,
             type: unrelatedChange.type,
@@ -165,7 +158,6 @@ describe("ChangeLogProcessor", () => {
       origin: ChangeOrigin.DOCUMENT,
       type: ChangeType.CREATE,
       resource_content: "",
-      resource_id: "123",
       resource_slug: "slug",
       resource_extension: "",
       initiator: ChangeInitiator.EXTERNAL,
@@ -179,7 +171,6 @@ describe("ChangeLogProcessor", () => {
       origin: ChangeOrigin.REPRESENTATIVE,
       type: ChangeType.CREATE,
       resource_content: "",
-      resource_id: "123",
       resource_slug: "slug",
       resource_extension: "",
       initiator: ChangeInitiator.EXTERNAL,
@@ -193,7 +184,6 @@ describe("ChangeLogProcessor", () => {
       origin: ChangeOrigin.REPRESENTATIVE,
       type: ChangeType.CREATE,
       resource_content: "",
-      resource_id: "123",
       resource_slug: "slug",
       resource_extension: "",
       initiator: ChangeInitiator.EXTERNAL,

@@ -8,7 +8,6 @@ import {
   SyncStatuses,
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
-import {ObjectId} from "bson";
 import {Logger} from "@nestjs/common";
 
 const logger = new Logger("FunctionDepSyncApplier");
@@ -18,40 +17,45 @@ const subModule = "package";
 const fileExtension = "json";
 
 export const getApplier = (fs: FunctionService, engine: FunctionEngine): DocumentChangeApplier => {
-  const findIdByName = async (name: string) => {
-    const fn = await fs.findOne({name});
-    return fn?._id?.toString();
-  };
   return {
     module,
     subModule,
     fileExtensions: [fileExtension],
-    extractId: async (slug: string, content?: string): Promise<string | null> => {
-      return findIdByName(slug);
-    },
 
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
-        const fn = await CRUD.findOne(fs, new ObjectId(change.resource_id), {});
-        const packageJson = JSON.parse(change.resource_content);
 
         switch (operationType) {
           case ChangeType.CREATE:
-            await CRUD.dependencies.create(fs, engine, fn._id, packageJson);
-            return {status: SyncStatuses.SUCCEEDED};
-
           case ChangeType.UPDATE:
-            const fnWithDeps = {
-              ...fn,
-              dependencies: packageJson.dependencies || {}
-            };
-            await CRUD.dependencies.update(engine, fnWithDeps);
-            return {status: SyncStatuses.SUCCEEDED};
-
+            for (let attempt = 1; attempt <= 5; attempt++) {
+              try {
+                const fn = await fs.findOne({name: change.resource_slug});
+                const packageJson = JSON.parse(change.resource_content);
+                const fnWithDeps = {
+                  ...fn,
+                  dependencies: packageJson.dependencies || {}
+                };
+                await CRUD.dependencies.update(engine, fnWithDeps);
+                return {status: SyncStatuses.SUCCEEDED};
+              } catch (error) {
+                logger.warn(
+                  `Attempt ${attempt} - Error applying function dependency change: ${
+                    (error as any).stack || String(error)
+                  }`
+                );
+                if (attempt === 5) {
+                  return {status: SyncStatuses.FAILED, reason: error.message};
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+              }
+            }
+            break;
           case ChangeType.DELETE:
-            await CRUD.dependencies.remove(fs, engine, fn._id);
-            return {status: SyncStatuses.SUCCEEDED};
+            return {
+              status: SyncStatuses.SUCCEEDED
+            };
 
           default:
             logger.warn(`Unknown operation type: ${operationType}`);

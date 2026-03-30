@@ -28,7 +28,6 @@ const getChangeForSchema = (
     sub_module: subModule,
     origin: ChangeOrigin.DOCUMENT,
     type: changeType,
-    resource_id: policy._id.toString(),
     resource_slug: policy.name,
     resource_content: YAML.stringify(policy),
     resource_extension: fileExtension,
