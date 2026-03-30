@@ -9,7 +9,7 @@
       "path": "../../../../../libs/interface/passport/policy"
     },
     {
-      "path": "../../asset"
+      "path": "../../../../../libs/api/asset"
     },
     {
       "path": "../../../../../libs/interface/asset"

@@ -24,7 +24,7 @@
       "path": "../../libs/api/batch"
     },
     {
-      "path": "src/asset"
+      "path": "../../libs/api/asset"
     },
     {
       "path": "src/replication"

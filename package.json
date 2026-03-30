@@ -22,7 +22,7 @@
       "libs/interface",
       "apps/api",
       "libs/api/activity",
-      "apps/api/src/asset",
+      "libs/api/asset",
       "libs/api/batch",
       "libs/api/bucket",
       "apps/api/src/config",

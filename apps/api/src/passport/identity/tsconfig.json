@@ -69,7 +69,7 @@
       "path": "../../../../../libs/interface/asset"
     },
     {
-      "path": "../../asset"
+      "path": "../../../../../libs/api/asset"
     },
     {
       "path": "../../../../../libs/interface/activity"

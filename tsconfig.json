@@ -184,7 +184,7 @@
       "path": "./libs/representative"
     },
     {
-      "path": "./apps/api/src/asset"
+      "path": "./libs/api/asset"
     },
     {
       "path": "./libs/core/testing"

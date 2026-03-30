@@ -18,7 +18,7 @@
       "path": "../../database"
     },
     {
-      "path": "../../../apps/api/src/asset"
+      "path": "../asset"
     },
     {
       "path": "../../interface/asset"

@@ -81,7 +81,7 @@
       "path": "../../interface/asset"
     },
     {
-      "path": "../../../apps/api/src/asset"
+      "path": "../asset"
     }
   ]
 }
