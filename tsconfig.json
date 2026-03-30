@@ -34,7 +34,7 @@
       "path": "./apps/api/src/function/pkgmanager/node"
     },
     {
-      "path": "./apps/api/src/bucket/hooks/proto/node"
+      "path": "./libs/api/bucket/hooks/proto/node"
     },
     {
       "path": "./apps/api/src/function/runtime/logger"
@@ -58,7 +58,7 @@
       "path": "./apps/api/src/preference/services"
     },
     {
-      "path": "./apps/api/src/bucket/hooks/proto"
+      "path": "./libs/api/bucket/hooks/proto"
     },
     {
       "path": "./apps/api/src/function/scheduler"
@@ -70,7 +70,7 @@
       "path": "./libs/api/activity/services"
     },
     {
-      "path": "./apps/api/src/bucket/expression"
+      "path": "./libs/api/bucket/expression"
     },
     {
       "path": "./apps/api/src/function/compiler"
@@ -97,10 +97,10 @@
       "path": "./apps/api/src/passport/testing"
     },
     {
-      "path": "./apps/api/src/bucket/realtime"
+      "path": "./libs/api/bucket/realtime"
     },
     {
-      "path": "./apps/api/src/bucket/services"
+      "path": "./libs/api/bucket/services"
     },
     {
       "path": "./apps/api/src/passport/apikey"
@@ -115,10 +115,10 @@
       "path": "./apps/api/src/status/services"
     },
     {
-      "path": "./apps/api/src/bucket/graphql"
+      "path": "./libs/api/bucket/graphql"
     },
     {
-      "path": "./apps/api/src/bucket/history"
+      "path": "./libs/api/bucket/history"
     },
     {
       "path": "./apps/api/src/function/queue"
@@ -130,13 +130,13 @@
       "path": "./apps/api/src/versioncontrol"
     },
     {
-      "path": "./apps/api/src/bucket/common"
+      "path": "./libs/api/bucket/common"
     },
     {
-      "path": "./apps/api/src/bucket/cache"
+      "path": "./libs/api/bucket/cache"
     },
     {
-      "path": "./apps/api/src/bucket/hooks"
+      "path": "./libs/api/bucket/hooks"
     },
     {
       "path": "./apps/api/src/function/log"
@@ -172,7 +172,7 @@
       "path": "./apps/api/src/storage"
     },
     {
-      "path": "./apps/api/src/bucket"
+      "path": "./libs/api/bucket"
     },
     {
       "path": "./apps/api/src/status"
@@ -370,7 +370,7 @@
       "path": "./libs/interface/passport/refresh_token"
     },
     {
-      "path": "./apps/api/src/bucket/schemas-realtime"
+      "path": "./libs/api/bucket/schemas-realtime"
     },
     {
       "path": "./apps/api/src/passport/guard/services"

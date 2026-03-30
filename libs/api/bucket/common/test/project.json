@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/common/test",
+  "sourceRoot": "libs/api/bucket/common/test",
+  "projectType": "library"
+}

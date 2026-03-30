@@ -9,11 +9,11 @@
   },
   "include": [
     // bucket hooks proto
-    "../../../../bucket/hooks/proto/src/*.ts",
-    "../../../../bucket/hooks/proto/index.ts",
+    "../../../../../../../libs/api/bucket/hooks/proto/src/*.ts",
+    "../../../../../../../libs/api/bucket/hooks/proto/index.ts",
     // bucket hooks proto node
-    "../../../../bucket/hooks/proto/node/src/*.ts",
-    "../../../../bucket/hooks/proto/node/index.ts",
+    "../../../../../../../libs/api/bucket/hooks/proto/node/src/*.ts",
+    "../../../../../../../libs/api/bucket/hooks/proto/node/index.ts",
     // function database package
     "../../../packages/database/src/*.ts",
     "../../../packages/database/index.ts",

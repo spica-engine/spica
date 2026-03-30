@@ -1,0 +1,63 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../../interface/passport/guard"
+    },
+    {
+      "path": "../../../interface/bucket/realtime"
+    },
+    {
+      "path": "../../../interface/activity"
+    },
+    {
+      "path": "../../../../apps/api/src/passport/guard"
+    },
+    {
+      "path": "../../../../apps/api/src/passport/guard/services"
+    },
+    {
+      "path": "../../../interface/realtime"
+    },
+    {
+      "path": "../../../database/realtime"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core/patch"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../hooks"
+    },
+    {
+      "path": "../history"
+    },
+    {
+      "path": "../cache"
+    },
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../interface/bucket"
+    },
+    {
+      "path": "../common"
+    },
+    {
+      "path": "../expression"
+    },
+    {
+      "path": "../../../realtime"
+    }
+  ]
+}

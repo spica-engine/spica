@@ -1,0 +1,27 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../../interface/bucket"
+    },
+    {
+      "path": "../../../interface/bucket/history"
+    },
+    {
+      "path": "../../../core/differ"
+    },
+    {
+      "path": "../../../../apps/api/src/passport/guard"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../../../interface/core"
+    }
+  ]
+}

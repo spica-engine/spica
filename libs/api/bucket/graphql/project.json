@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/graphql",
+  "sourceRoot": "libs/api/bucket/graphql",
+  "projectType": "library"
+}

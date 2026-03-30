@@ -1,0 +1,21 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../../../apps/api/src/preference/services"
+    },
+    {
+      "path": "../../../interface/core"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../interface/bucket"
+    },
+    {
+      "path": "../../../database"
+    }
+  ]
+}

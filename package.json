@@ -24,7 +24,7 @@
       "libs/api/activity",
       "apps/api/src/asset",
       "libs/api/batch",
-      "apps/api/src/bucket",
+      "libs/api/bucket",
       "apps/api/src/config",
       "libs/api/dashboard",
       "apps/api/src/env_var",

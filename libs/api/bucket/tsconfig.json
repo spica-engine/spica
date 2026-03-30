@@ -1,0 +1,87 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../../interface/status"
+    },
+    {
+      "path": "../../../apps/api/src/status"
+    },
+    {
+      "path": "expression"
+    },
+    {
+      "path": "../../interface/core"
+    },
+    {
+      "path": "../../core/differ"
+    },
+    {
+      "path": "../../interface/versioncontrol"
+    },
+    {
+      "path": "graphql"
+    },
+    {
+      "path": "../../interface/preference"
+    },
+    {
+      "path": "../../../apps/api/src/preference/services"
+    },
+    {
+      "path": "schemas-realtime"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../../core/patch"
+    },
+    {
+      "path": "common"
+    },
+    {
+      "path": "cache"
+    },
+    {
+      "path": "../../interface/passport/guard"
+    },
+    {
+      "path": "../../../apps/api/src/passport/guard"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "hooks"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../interface/bucket"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../interface/representative"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "services"
+    },
+    {
+      "path": "history"
+    },
+    {
+      "path": "../../interface/asset"
+    },
+    {
+      "path": "../../../apps/api/src/asset"
+    }
+  ]
+}

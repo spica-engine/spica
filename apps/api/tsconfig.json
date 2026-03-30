@@ -63,7 +63,7 @@
       "path": "../../libs/core"
     },
     {
-      "path": "src/bucket"
+      "path": "../../libs/api/bucket"
     },
     {
       "path": "../../libs/api/activity"
