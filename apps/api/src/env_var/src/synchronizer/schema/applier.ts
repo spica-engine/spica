@@ -48,10 +48,10 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
             return {status: SyncStatuses.SUCCEEDED};
           }
           case ChangeType.UPDATE: {
-            const envVar: EnvVar = YAML.parse(change.resource_content);
+            const envVar = YAML.parse(change.resource_content);
             const existing = await evs.findOne({key: change.resource_slug});
             if (existing) {
-              envVar._id = existing._id;
+              envVar._id = existing._id.toString();
             }
             overwriteSlug(envVar);
             await validate(envVar, validator);

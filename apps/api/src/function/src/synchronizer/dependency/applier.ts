@@ -54,9 +54,7 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
             break;
           case ChangeType.DELETE:
             return {
-              status: SyncStatuses.FAILED,
-              reason:
-                "Function package.json can't be deleted. Delete schema to remove the function."
+              status: SyncStatuses.SUCCEEDED
             };
 
           default:

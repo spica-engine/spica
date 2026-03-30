@@ -48,8 +48,7 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
             break;
           case ChangeType.DELETE:
             return {
-              status: SyncStatuses.FAILED,
-              reason: "Function index file can't be deleted. Delete schema to remove the function."
+              status: SyncStatuses.SUCCEEDED
             };
 
           default:
