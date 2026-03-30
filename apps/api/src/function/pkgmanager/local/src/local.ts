@@ -53,7 +53,7 @@ export class LocalPackageManager extends DelegatePkgManager {
       return pkg;
     }
 
-    pkg.version = "internal";
+    // pkg.version = "internal";
     return pkg;
   }
 
