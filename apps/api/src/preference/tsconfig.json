@@ -15,7 +15,7 @@
       "path": "../passport/guard"
     },
     {
-      "path": "../activity/services"
+      "path": "../../../../libs/api/activity/services"
     },
     {
       "path": "../../../../libs/interface/activity"

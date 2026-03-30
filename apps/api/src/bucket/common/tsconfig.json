@@ -45,7 +45,7 @@
       "path": "../../../../../libs/core/patch"
     },
     {
-      "path": "../../activity/services"
+      "path": "../../../../../libs/api/activity/services"
     }
   ]
 }

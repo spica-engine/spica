@@ -1,0 +1,24 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../database/pipeline"
+    },
+    {
+      "path": "../../../apps/api/src/passport/guard"
+    },
+    {
+      "path": "../../interface/activity"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "services"
+    }
+  ]
+}

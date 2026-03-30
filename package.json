@@ -21,7 +21,7 @@
       "libs/transaction",
       "libs/interface",
       "apps/api",
-      "apps/api/src/activity",
+      "libs/api/activity",
       "apps/api/src/asset",
       "libs/api/batch",
       "apps/api/src/bucket",

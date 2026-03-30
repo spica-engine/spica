@@ -42,7 +42,7 @@
       "path": "../history"
     },
     {
-      "path": "../../activity/services"
+      "path": "../../../../../libs/api/activity/services"
     }
   ]
 }

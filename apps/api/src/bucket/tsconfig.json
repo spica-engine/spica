@@ -57,7 +57,7 @@
       "path": "hooks"
     },
     {
-      "path": "../activity/services"
+      "path": "../../../../libs/api/activity/services"
     },
     {
       "path": "../../../../libs/interface/bucket"

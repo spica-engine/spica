@@ -45,7 +45,7 @@
       "path": "../../../../../libs/core"
     },
     {
-      "path": "../../activity/services"
+      "path": "../../../../../libs/api/activity/services"
     },
     {
       "path": "../../../../../libs/interface/config"

@@ -9,7 +9,7 @@
       "path": "../../../../libs/interface/versioncontrol"
     },
     {
-      "path": "../activity/services"
+      "path": "../../../../libs/api/activity/services"
     },
     {
       "path": "../passport/guard"

@@ -67,7 +67,7 @@
       "path": "./apps/mongoreplicationcontroller"
     },
     {
-      "path": "./apps/api/src/activity/services"
+      "path": "./libs/api/activity/services"
     },
     {
       "path": "./apps/api/src/bucket/expression"
@@ -157,7 +157,7 @@
       "path": "./libs/database/realtime"
     },
     {
-      "path": "./apps/api/src/activity"
+      "path": "./libs/api/activity"
     },
     {
       "path": "./apps/api/src/function"
