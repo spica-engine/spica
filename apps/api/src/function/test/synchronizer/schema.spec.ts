@@ -516,7 +516,7 @@ describe("Function Synchronizer", () => {
         sub_module: "schema",
         type: ChangeType.DELETE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_slug: null,
+        resource_slug: "function_to_delete",
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",

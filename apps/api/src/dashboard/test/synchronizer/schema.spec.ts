@@ -300,7 +300,7 @@ describe("Dashboard Synchronizer", () => {
         sub_module: "schema",
         type: ChangeType.DELETE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_slug: null,
+        resource_slug: "To Delete",
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",

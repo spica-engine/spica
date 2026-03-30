@@ -410,7 +410,7 @@ describe("Bucket Synchronizer", () => {
         sub_module: "schema",
         type: ChangeType.DELETE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_slug: null,
+        resource_slug: "Test Bucket",
         resource_content: "",
         created_at: new Date(),
         resource_extension: "yaml",
