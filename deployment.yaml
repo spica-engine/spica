@@ -191,6 +191,31 @@ spec:
                 port:
                   number: 4300
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: infrastructure-master-spicaengine-com
+  name: gateway-grpc
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts: [grpc.master.spicaengine.com]
+      secretName: spica-grpc
+  rules:
+    - host: grpc.master.spicaengine.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: spica
+                port:
+                  number: 50051
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
