@@ -26,7 +26,7 @@
       "libs/api/batch",
       "apps/api/src/bucket",
       "apps/api/src/config",
-      "apps/api/src/dashboard",
+      "libs/api/dashboard",
       "apps/api/src/env_var",
       "apps/api/src/function",
       "apps/api/src/mailer",

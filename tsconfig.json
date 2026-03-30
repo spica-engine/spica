@@ -148,7 +148,7 @@
       "path": "./apps/api/src/preference"
     },
     {
-      "path": "./apps/api/src/dashboard"
+      "path": "./libs/api/dashboard"
     },
     {
       "path": "./libs/database/pipeline"
@@ -331,7 +331,7 @@
       "path": "./libs/realtime"
     },
     {
-      "path": "./apps/api/src/dashboard/realtime"
+      "path": "./libs/api/dashboard/realtime"
     },
     {
       "path": "./apps/api/src/function/realtime"

@@ -1,5 +1,5 @@
 {
   "name": "api/dashboard/realtime/test",
-  "sourceRoot": "apps/api/src/dashboard/realtime/test",
+  "sourceRoot": "libs/api/dashboard/realtime/test",
   "projectType": "application"
 }

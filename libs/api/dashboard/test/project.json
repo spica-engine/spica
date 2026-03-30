@@ -1,5 +1,5 @@
 {
   "name": "api/dashboard/test",
-  "sourceRoot": "apps/api/src/dashboard/test",
+  "sourceRoot": "libs/api/dashboard/test",
   "projectType": "application"
 }

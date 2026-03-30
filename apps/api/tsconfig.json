@@ -51,7 +51,7 @@
       "path": "../../libs/database"
     },
     {
-      "path": "src/dashboard"
+      "path": "../../libs/api/dashboard"
     },
     {
       "path": "../../libs/core/websocket"
