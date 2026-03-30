@@ -105,7 +105,7 @@ describe("local package manager", () => {
         expect(packages).toEqual([
           {
             name: `@spica-fn/${fn2Name}`,
-            version: "internal",
+            version: "file:../my-second-function",
             types: {}
           },
           {
