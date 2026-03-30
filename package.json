@@ -23,7 +23,7 @@
       "apps/api",
       "apps/api/src/activity",
       "apps/api/src/asset",
-      "apps/api/src/batch",
+      "libs/api/batch",
       "apps/api/src/bucket",
       "apps/api/src/config",
       "apps/api/src/dashboard",

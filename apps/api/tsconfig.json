@@ -21,7 +21,7 @@
       "path": "src/env_var"
     },
     {
-      "path": "src/batch"
+      "path": "../../libs/api/batch"
     },
     {
       "path": "src/asset"

@@ -17,7 +17,7 @@
     "baseUrl": "./",
     "paths": {
       "@spica-devkit/*": ["apps/api/src/function/packages/*"],
-      "@spica-server/*": ["libs/*", "apps/api/src/*"],
+      "@spica-server/*": ["libs/*", "libs/api/*", "apps/api/src/*"],
       "@spica/*": ["apps/*"]
     },
     "lib": ["es2020", "dom"],
@@ -436,7 +436,7 @@
       "path": "./apps/api/src/secret"
     },
     {
-      "path": "./apps/api/src/batch"
+      "path": "./libs/api/batch"
     },
     {
       "path": "./libs/interface/sms"

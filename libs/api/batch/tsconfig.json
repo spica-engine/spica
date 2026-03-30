@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../interface/batch"
+    },
+    {
+      "path": "../../../apps/api/src/passport/guard"
+    }
+  ]
+}

@@ -19,6 +19,7 @@ ARG TARGETPLATFORM
 
 COPY --parents package.json yarn.lock \
      libs/*/package.json \
+     libs/api/*/package.json \
      apps/api/package.json \
      apps/api/src/*/package.json \
      apps/api/src/function/packages/*/package.json \
@@ -35,6 +36,7 @@ ARG TARGETPLATFORM
 
 COPY --parents package.json yarn.lock \
      libs/*/package.json \
+     libs/api/*/package.json \
      apps/api/package.json \
      apps/api/src/*/package.json \
      apps/api/src/function/packages/*/package.json \

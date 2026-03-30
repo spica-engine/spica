@@ -5,6 +5,18 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "build": {
+      "inputs": [
+        "{projectRoot}/package.json",
+        "{workspaceRoot}/tsconfig.json",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/src/main.ts",
+        {"dependentTasksOutputFiles": "**/*.d.ts"},
+        {"externalDependencies": ["typescript"]},
+        "^default",
+        "{workspaceRoot}/libs/api/**/*"
+      ]
+    },
     "serve": {
       "executor": "@nx/js:node",
       "dependsOn": ["compile"],
