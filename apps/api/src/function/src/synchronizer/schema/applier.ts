@@ -67,7 +67,7 @@ export const getApplier = (
             const fn: Function = YAML.parse(change.resource_content);
             overwriteSlug(fn);
             await validate(fn, validator);
-            await CRUD.insert(fs, engine, fn).then(console.log);
+            await CRUD.insert(fs, engine, fn);
             return {status: SyncStatuses.SUCCEEDED};
           }
           case ChangeType.UPDATE: {

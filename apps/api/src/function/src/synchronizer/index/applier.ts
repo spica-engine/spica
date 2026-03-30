@@ -28,19 +28,28 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
         switch (operationType) {
           case ChangeType.CREATE:
           case ChangeType.UPDATE:
-            console.log("Applying function index change for", change);
-            // let schema generated first
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            const fn = await fs.findOne({name: change.resource_slug});
-            console.log("Function found for index update:", fn);
-            await CRUD.index.write(fs, engine, fn._id, change.resource_content);
-            return {status: SyncStatuses.SUCCEEDED};
-
+            for (let attempt = 1; attempt <= 5; attempt++) {
+              try {
+                const fn = await fs.findOne({name: change.resource_slug});
+                await CRUD.index.write(fs, engine, fn._id, change.resource_content);
+                return {status: SyncStatuses.SUCCEEDED};
+              } catch (error) {
+                logger.warn(
+                  `Attempt ${attempt} - Error applying function index change: ${
+                    (error as any).stack || String(error)
+                  }`
+                );
+                if (attempt === 5) {
+                  return {status: SyncStatuses.FAILED, reason: error.message};
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+              }
+            }
+            break;
           case ChangeType.DELETE:
-            // const fn = await findFunctionBySlugWithRetry(fs, change.resource_slug);
-            // await engine.deleteIndex(fn);
             return {
-              status: SyncStatuses.SUCCEEDED
+              status: SyncStatuses.FAILED,
+              reason: "Function index file can't be deleted. Delete schema to remove the function."
             };
 
           default:

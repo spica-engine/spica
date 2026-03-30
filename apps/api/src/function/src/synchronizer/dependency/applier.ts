@@ -9,7 +9,6 @@ import {
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {Logger} from "@nestjs/common";
-import {findFunctionBySlugWithRetry} from "../retry";
 
 const logger = new Logger("FunctionDepSyncApplier");
 
@@ -26,26 +25,39 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
-        let fn;
-        let packageJson;
 
         switch (operationType) {
           case ChangeType.CREATE:
           case ChangeType.UPDATE:
-            // let schema generated first
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            fn = await fs.findOne({name: change.resource_slug});
-            packageJson = JSON.parse(change.resource_content);
-            const fnWithDeps = {
-              ...fn,
-              dependencies: packageJson.dependencies || {}
-            };
-            await CRUD.dependencies.update(engine, fnWithDeps);
-            return {status: SyncStatuses.SUCCEEDED};
-
+            for (let attempt = 1; attempt <= 5; attempt++) {
+              try {
+                const fn = await fs.findOne({name: change.resource_slug});
+                const packageJson = JSON.parse(change.resource_content);
+                const fnWithDeps = {
+                  ...fn,
+                  dependencies: packageJson.dependencies || {}
+                };
+                await CRUD.dependencies.update(engine, fnWithDeps);
+                return {status: SyncStatuses.SUCCEEDED};
+              } catch (error) {
+                logger.warn(
+                  `Attempt ${attempt} - Error applying function dependency change: ${
+                    (error as any).stack || String(error)
+                  }`
+                );
+                if (attempt === 5) {
+                  return {status: SyncStatuses.FAILED, reason: error.message};
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+              }
+            }
+            break;
           case ChangeType.DELETE:
-            // await CRUD.dependencies.remove(fs, engine, fn._id);
-            return {status: SyncStatuses.SUCCEEDED};
+            return {
+              status: SyncStatuses.FAILED,
+              reason:
+                "Function package.json can't be deleted. Delete schema to remove the function."
+            };
 
           default:
             logger.warn(`Unknown operation type: ${operationType}`);
