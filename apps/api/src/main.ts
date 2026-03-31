@@ -29,7 +29,7 @@ import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import {ConfigModule} from "./config";
+import {ConfigModule} from "@spica-server/config";
 import {deriveKey} from "@spica-server/core/encryption";
 
 const yargsInstance = yargs(process.argv.slice(2)) as any;

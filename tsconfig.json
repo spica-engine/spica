@@ -427,7 +427,7 @@
       "path": "./libs/interface/batch"
     },
     {
-      "path": "./apps/api/src/config"
+      "path": "./libs/api/config"
     },
     {
       "path": "./apps/api/src/mailer"

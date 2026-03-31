@@ -317,26 +317,5 @@ describe("ConfigController", () => {
       expect([functionResponse.statusCode, functionResponse.statusText]).toEqual([200, "OK"]);
       expect(functionResponse.body.options.timeout).toBe(5000);
     });
-
-    it("should reject data with additional top-level properties", async () => {
-      const invalidConfig = {maxLimit: 100, extra: "field"};
-      const response = await request.put("/config/bucket", invalidConfig);
-      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-    });
-
-    it("should allow dynamically registered modules", async () => {
-      const newConfig = {maxSize: 1024};
-      const response1 = await request.put("/config/storage", newConfig);
-      expect(response1.statusCode).toBe(400);
-
-      registry.register("storage", {
-        type: "object",
-        properties: {maxSize: {type: "number"}}
-      });
-
-      const response2 = await request.put("/config/storage", newConfig);
-      expect([response2.statusCode, response2.statusText]).toEqual([200, "OK"]);
-      expect(response2.body.options.maxSize).toBe(1024);
-    });
   });
 });

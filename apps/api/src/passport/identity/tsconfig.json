@@ -54,7 +54,7 @@
       "path": "../../../../../libs/database"
     },
     {
-      "path": "../../config"
+      "path": "../../../../../libs/api/config"
     },
     {
       "path": "../../../../../libs/interface/passport/identity"

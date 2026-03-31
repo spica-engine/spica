@@ -1,0 +1,27 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../../apps/api/src/passport/testing"
+    },
+    {
+      "path": "../../core/testing"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../interface/config"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../../apps/api/src/passport/guard"
+    }
+  ]
+}

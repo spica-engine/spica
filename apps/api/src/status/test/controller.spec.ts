@@ -15,7 +15,7 @@ import {StorageModule} from "@spica-server/storage";
 import os from "os";
 import {Binary} from "bson";
 import {WsAdapter} from "@spica-server/core/websocket";
-import {ConfigModule} from "@spica-server/config/src/config.module";
+import {ConfigModule} from "@spica-server/config";
 import {SecretModule} from "@spica-server/secret/src/module";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:50051";

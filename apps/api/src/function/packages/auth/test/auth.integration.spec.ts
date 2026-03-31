@@ -14,7 +14,7 @@ import {MailerModule} from "@spica-server/mailer";
 import {UserConfigService} from "@spica-server/passport/user/src/config.service";
 import {GenericContainer} from "testcontainers";
 import fetch from "node-fetch";
-import {ConfigModule} from "@spica-server/config/src/config.module";
+import {ConfigModule} from "@spica-server/config";
 
 const EXPIRES_IN = 60 * 60 * 24;
 const MAX_EXPIRES_IN = EXPIRES_IN * 2;

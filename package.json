@@ -25,7 +25,7 @@
       "libs/api/asset",
       "libs/api/batch",
       "libs/api/bucket",
-      "apps/api/src/config",
+      "libs/api/config",
       "libs/api/dashboard",
       "apps/api/src/env_var",
       "apps/api/src/function",
