@@ -36,7 +36,7 @@
       "libs/api/replication",
       "libs/api/sms",
       "libs/api/status",
-      "apps/api/src/storage",
+      "libs/api/storage",
       "apps/api/src/versioncontrol",
       "apps/api/src/function/packages/*",
       "apps/cli",

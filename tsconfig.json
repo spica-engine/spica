@@ -169,7 +169,7 @@
       "path": "./libs/database/testing"
     },
     {
-      "path": "./apps/api/src/storage"
+      "path": "./libs/api/storage"
     },
     {
       "path": "./libs/api/bucket"

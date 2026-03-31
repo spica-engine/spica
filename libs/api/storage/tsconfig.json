@@ -1,0 +1,42 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../../transaction"
+    },
+    {
+      "path": "../passport/guard/services"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../database/pipeline"
+    },
+    {
+      "path": "../status"
+    },
+    {
+      "path": "../../interface/core"
+    },
+    {
+      "path": "../../interface/storage"
+    },
+    {
+      "path": "../../interface/activity"
+    }
+  ]
+}

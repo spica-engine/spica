@@ -6,13 +6,8 @@
     "declaration": true,
     "baseUrl": "./",
     "paths": {
-      "@spica-devkit/*": [
-        "*"
-      ],
-      "@spica-server/*": [
-        "../../../../../libs/*",
-        "../../*"
-      ]
+      "@spica-devkit/*": ["*"],
+      "@spica-server/*": ["../../../../../libs/*", "../../../../../libs/api/*", "../../*"]
     }
   }
 }
