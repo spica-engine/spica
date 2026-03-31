@@ -1,0 +1,10 @@
+{
+  "name": "api/versioncontrol",
+  "sourceRoot": "libs/api/versioncontrol",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "tsc --build libs/api/versioncontrol/tsconfig.json --pretty --verbose"
+    }
+  }
+}

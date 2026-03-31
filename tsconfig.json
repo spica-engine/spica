@@ -127,7 +127,7 @@
       "path": "./libs/api/passport/guard"
     },
     {
-      "path": "./apps/api/src/versioncontrol"
+      "path": "./libs/api/versioncontrol"
     },
     {
       "path": "./libs/api/bucket/common"
@@ -337,10 +337,10 @@
       "path": "./apps/api/src/function/realtime"
     },
     {
-      "path": "./apps/api/src/versioncontrol/processors/changelog"
+      "path": "./libs/api/versioncontrol/processors/changelog"
     },
     {
-      "path": "./apps/api/src/versioncontrol/services/changelog"
+      "path": "./libs/api/versioncontrol/services/changelog"
     },
     {
       "path": "./libs/api/passport/refresh_token/realtime"
@@ -349,16 +349,16 @@
       "path": "./libs/api/passport/refresh_token/services"
     },
     {
-      "path": "./apps/api/src/versioncontrol/processors/sync"
+      "path": "./libs/api/versioncontrol/processors/sync"
     },
     {
-      "path": "./apps/api/src/versioncontrol/services/sync"
+      "path": "./libs/api/versioncontrol/services/sync"
     },
     {
-      "path": "./apps/api/src/versioncontrol/sync/realtime"
+      "path": "./libs/api/versioncontrol/sync/realtime"
     },
     {
-      "path": "./apps/api/src/versioncontrol/sync/engine"
+      "path": "./libs/api/versioncontrol/sync/engine"
     },
     {
       "path": "./apps/api/src/function/pkgmanager/local"
@@ -382,7 +382,7 @@
       "path": "./libs/api/passport/user/realtime"
     },
     {
-      "path": "./apps/api/src/versioncontrol/sync"
+      "path": "./libs/api/versioncontrol/sync"
     },
     {
       "path": "./libs/interface/function/packages"

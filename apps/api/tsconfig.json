@@ -30,7 +30,7 @@
       "path": "../../libs/api/replication"
     },
     {
-      "path": "src/versioncontrol"
+      "path": "../../libs/api/versioncontrol"
     },
     {
       "path": "../../libs/api/storage"

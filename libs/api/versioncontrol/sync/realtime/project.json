@@ -1,0 +1,5 @@
+{
+  "name": "api/versioncontrol/sync/realtime",
+  "sourceRoot": "libs/api/versioncontrol/sync/realtime",
+  "projectType": "library"
+}

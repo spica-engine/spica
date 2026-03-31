@@ -1,0 +1,27 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../services/sync"
+    },
+    {
+      "path": "../../passport/guard"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../../interface/versioncontrol"
+    },
+    {
+      "path": "../../../database/pipeline"
+    }
+  ]
+}

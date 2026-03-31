@@ -37,7 +37,7 @@
       "libs/api/sms",
       "libs/api/status",
       "libs/api/storage",
-      "apps/api/src/versioncontrol",
+      "libs/api/versioncontrol",
       "apps/api/src/function/packages/*",
       "apps/cli",
       "apps/migrate",
