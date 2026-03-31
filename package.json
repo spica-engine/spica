@@ -31,7 +31,7 @@
       "apps/api/src/function",
       "libs/api/mailer",
       "libs/api/passport",
-      "apps/api/src/preference",
+      "libs/api/preference",
       "apps/api/src/replication",
       "apps/api/src/secret",
       "apps/api/src/sms",

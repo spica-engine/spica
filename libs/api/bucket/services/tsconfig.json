@@ -1,12 +1,9 @@
 {
   "extends": "../../../../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../../apps/api/src/preference/services"
+      "path": "../../preference/services"
     },
     {
       "path": "../../../interface/core"

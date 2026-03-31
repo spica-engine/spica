@@ -1,0 +1,24 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "services/src/preference.service.ts"],
+  "references": [
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../interface/preference"
+    },
+    {
+      "path": "services"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../interface/activity"
+    }
+  ]
+}

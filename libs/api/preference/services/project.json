@@ -1,0 +1,5 @@
+{
+  "name": "api/preference/services",
+  "sourceRoot": "libs/api/preference/services",
+  "projectType": "library"
+}

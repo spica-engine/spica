@@ -1,10 +1,6 @@
 {
   "extends": "../../../../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "../../../../apps/api/src/status"
@@ -67,7 +63,7 @@
       "path": "../../../interface/representative"
     },
     {
-      "path": "../../../../apps/api/src/preference/services"
+      "path": "../../preference/services"
     },
     {
       "path": "../../../interface/asset"

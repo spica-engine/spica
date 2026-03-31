@@ -55,7 +55,7 @@
       "path": "./libs/api/passport/authfactor"
     },
     {
-      "path": "./apps/api/src/preference/services"
+      "path": "./libs/api/preference/services"
     },
     {
       "path": "./libs/api/bucket/hooks/proto"
@@ -145,7 +145,7 @@
       "path": "./apps/api/src/replication"
     },
     {
-      "path": "./apps/api/src/preference"
+      "path": "./libs/api/preference"
     },
     {
       "path": "./libs/api/dashboard"
