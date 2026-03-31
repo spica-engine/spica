@@ -15,7 +15,7 @@
       "path": "../../libs/api/mailer"
     },
     {
-      "path": "src/secret"
+      "path": "../../libs/api/secret"
     },
     {
       "path": "../../libs/api/env_var"

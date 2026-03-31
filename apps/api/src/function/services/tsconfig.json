@@ -12,7 +12,7 @@
       "path": "../../../../../libs/api/env_var/services"
     },
     {
-      "path": "../../secret/services"
+      "path": "../../../../../libs/api/secret/services"
     },
     {
       "path": "../../../../../libs/interface/function"

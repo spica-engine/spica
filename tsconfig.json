@@ -394,10 +394,10 @@
       "path": "./libs/api/env_var/services"
     },
     {
-      "path": "./apps/api/src/secret/realtime"
+      "path": "./libs/api/secret/realtime"
     },
     {
-      "path": "./apps/api/src/secret/services"
+      "path": "./libs/api/secret/services"
     },
     {
       "path": "./libs/interface/passport/user"
@@ -433,7 +433,7 @@
       "path": "./libs/api/mailer"
     },
     {
-      "path": "./apps/api/src/secret"
+      "path": "./libs/api/secret"
     },
     {
       "path": "./libs/api/batch"
