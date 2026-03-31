@@ -1,0 +1,82 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../../../apps/api/src/status"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../../../interface/passport/policy"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "../refresh_token/services"
+    },
+    {
+      "path": "../../../interface/core"
+    },
+    {
+      "path": "../../../database/pipeline"
+    },
+    {
+      "path": "../../../interface/replication"
+    },
+    {
+      "path": "../../../../apps/api/src/replication"
+    },
+    {
+      "path": "../../../interface/passport/authfactor"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
+      "path": "../guard"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../interface/config"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../config"
+    },
+    {
+      "path": "../../../interface/passport/identity"
+    },
+    {
+      "path": "../../../interface/representative"
+    },
+    {
+      "path": "../../../../apps/api/src/preference/services"
+    },
+    {
+      "path": "../../../interface/asset"
+    },
+    {
+      "path": "../../asset"
+    },
+    {
+      "path": "../../../interface/activity"
+    }
+  ]
+}

@@ -1,12 +1,16 @@
 {
   "extends": "../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "src/**/*.json"
+  ],
   "references": [
     {
       "path": "../../../realtime"
     },
     {
-      "path": "../../../../apps/api/src/passport/guard/services"
+      "path": "../../passport/guard/services"
     },
     {
       "path": "../../../interface/realtime"

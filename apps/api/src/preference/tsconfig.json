@@ -1,6 +1,9 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
   "references": [
     {
       "path": "../../../../libs/database"
@@ -12,7 +15,7 @@
       "path": "services"
     },
     {
-      "path": "../passport/guard"
+      "path": "../../../../libs/api/passport/guard"
     },
     {
       "path": "../../../../libs/api/activity/services"

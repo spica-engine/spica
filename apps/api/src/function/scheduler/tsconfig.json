@@ -1,6 +1,9 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
   "references": [
     {
       "path": "../runtime/node"
@@ -57,7 +60,7 @@
       "path": "../../../../../libs/database"
     },
     {
-      "path": "../../passport/guard/services"
+      "path": "../../../../../libs/api/passport/guard/services"
     },
     {
       "path": "../../../../../libs/interface/function/scheduler"

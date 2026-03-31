@@ -1,0 +1,37 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../filter"
+    },
+    {
+      "path": "../../../database/pipeline"
+    },
+    {
+      "path": "../../../interface/passport/refresh_token"
+    },
+    {
+      "path": "services"
+    },
+    {
+      "path": "../guard"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core"
+    }
+  ]
+}

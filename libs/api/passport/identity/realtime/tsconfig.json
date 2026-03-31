@@ -1,0 +1,24 @@
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
+  "references": [
+    {
+      "path": "../../guard"
+    },
+    {
+      "path": "../../../../interface/realtime"
+    },
+    {
+      "path": "../../../../realtime"
+    },
+    {
+      "path": "../../guard/services"
+    },
+    {
+      "path": "../../../../database/realtime"
+    }
+  ]
+}

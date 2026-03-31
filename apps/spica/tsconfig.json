@@ -4,15 +4,28 @@
     "moduleResolution": "node",
     "module": "esnext",
     "baseUrl": "./",
-    "lib": ["es2018", "dom"],
+    "lib": [
+      "es2018",
+      "dom"
+    ],
     "paths": {
-      "@spica-client/*": ["./packages/*", "./src/*"]
+      "@spica-client/*": [
+        "./packages/*",
+        "./src/*"
+      ]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "useDefineForClassFields": false
   },
-  "files": ["src/main.ts", "src/polyfills.ts"],
-  "exclude": ["src/**/*.worker.ts"],
-  "include": ["src/**/*.d.ts"]
+  "files": [
+    "src/main.ts",
+    "src/polyfills.ts"
+  ],
+  "exclude": [
+    "src/**/*.worker.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
+  ]
 }

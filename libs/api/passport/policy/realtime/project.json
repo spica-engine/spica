@@ -1,0 +1,5 @@
+{
+  "name": "api/passport/policy/realtime",
+  "sourceRoot": "libs/api/passport/policy/realtime",
+  "projectType": "library"
+}

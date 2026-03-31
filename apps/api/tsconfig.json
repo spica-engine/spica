@@ -1,6 +1,8 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/main.ts"],
+  "include": [
+    "src/main.ts"
+  ],
   "references": [
     {
       "path": "../../libs/core/encryption"
@@ -42,7 +44,7 @@
       "path": "src/preference"
     },
     {
-      "path": "src/passport"
+      "path": "../../libs/api/passport"
     },
     {
       "path": "src/function"

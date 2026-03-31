@@ -1,9 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
   "references": [
     {
-      "path": "./proto"
+      "path": "proto"
     }
   ]
 }

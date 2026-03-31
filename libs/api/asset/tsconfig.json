@@ -1,6 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["src/**/*.ts", "schema/*.json", "index.ts"],
+  "include": [
+    "src/**/*.ts",
+    "schema/*.json",
+    "index.ts"
+  ],
   "references": [
     {
       "path": "../../core/differ"
@@ -9,7 +13,7 @@
       "path": "../../representative"
     },
     {
-      "path": "../../../apps/api/src/passport/guard"
+      "path": "../passport/guard"
     },
     {
       "path": "../../core/schema"

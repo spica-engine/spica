@@ -1,0 +1,82 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../../core/encryption"
+    },
+    {
+      "path": "../../../interface/core"
+    },
+    {
+      "path": "../../../interface/replication"
+    },
+    {
+      "path": "../../../../apps/api/src/replication"
+    },
+    {
+      "path": "../../../interface/passport/authfactor"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
+      "path": "../guard"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../../apps/api/src/status"
+    },
+    {
+      "path": "../../../database/pipeline"
+    },
+    {
+      "path": "../../../../apps/api/src/sms"
+    },
+    {
+      "path": "../../mailer"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../refresh_token/services"
+    },
+    {
+      "path": "../../../interface/passport/policy"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../filter"
+    },
+    {
+      "path": "../../../interface/passport/user"
+    },
+    {
+      "path": "../../../interface/config"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../config"
+    },
+    {
+      "path": "../../../interface/activity"
+    }
+  ]
+}

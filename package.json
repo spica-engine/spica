@@ -30,7 +30,7 @@
       "libs/api/env_var",
       "apps/api/src/function",
       "libs/api/mailer",
-      "apps/api/src/passport",
+      "libs/api/passport",
       "apps/api/src/preference",
       "apps/api/src/replication",
       "apps/api/src/secret",

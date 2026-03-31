@@ -52,7 +52,7 @@
       "path": "./apps/api/src/function/runtime/io"
     },
     {
-      "path": "./apps/api/src/passport/authfactor"
+      "path": "./libs/api/passport/authfactor"
     },
     {
       "path": "./apps/api/src/preference/services"
@@ -82,10 +82,10 @@
       "path": "./apps/api/src/function/services"
     },
     {
-      "path": "./apps/api/src/passport/identity"
+      "path": "./libs/api/passport/identity"
     },
     {
-      "path": "./apps/api/src/passport/identity/realtime"
+      "path": "./libs/api/passport/identity/realtime"
     },
     {
       "path": "./apps/api/src/function/runtime"
@@ -94,7 +94,7 @@
       "path": "./apps/api/src/function/webhook"
     },
     {
-      "path": "./apps/api/src/passport/testing"
+      "path": "./libs/api/passport/testing"
     },
     {
       "path": "./libs/api/bucket/realtime"
@@ -103,13 +103,13 @@
       "path": "./libs/api/bucket/services"
     },
     {
-      "path": "./apps/api/src/passport/apikey"
+      "path": "./libs/api/passport/apikey"
     },
     {
-      "path": "./apps/api/src/passport/apikey/realtime"
+      "path": "./libs/api/passport/apikey/realtime"
     },
     {
-      "path": "./apps/api/src/passport/policy"
+      "path": "./libs/api/passport/policy"
     },
     {
       "path": "./apps/api/src/status/services"
@@ -124,7 +124,7 @@
       "path": "./apps/api/src/function/queue"
     },
     {
-      "path": "./apps/api/src/passport/guard"
+      "path": "./libs/api/passport/guard"
     },
     {
       "path": "./apps/api/src/versioncontrol"
@@ -163,7 +163,7 @@
       "path": "./apps/api/src/function"
     },
     {
-      "path": "./apps/api/src/passport"
+      "path": "./libs/api/passport"
     },
     {
       "path": "./libs/database/testing"
@@ -343,10 +343,10 @@
       "path": "./apps/api/src/versioncontrol/services/changelog"
     },
     {
-      "path": "./apps/api/src/passport/refresh_token/realtime"
+      "path": "./libs/api/passport/refresh_token/realtime"
     },
     {
-      "path": "./apps/api/src/passport/refresh_token/services"
+      "path": "./libs/api/passport/refresh_token/services"
     },
     {
       "path": "./apps/api/src/versioncontrol/processors/sync"
@@ -364,7 +364,7 @@
       "path": "./apps/api/src/function/pkgmanager/local"
     },
     {
-      "path": "./apps/api/src/passport/policy/realtime"
+      "path": "./libs/api/passport/policy/realtime"
     },
     {
       "path": "./libs/interface/passport/refresh_token"
@@ -373,13 +373,13 @@
       "path": "./libs/api/bucket/schemas-realtime"
     },
     {
-      "path": "./apps/api/src/passport/guard/services"
+      "path": "./libs/api/passport/guard/services"
     },
     {
-      "path": "./apps/api/src/passport/refresh_token"
+      "path": "./libs/api/passport/refresh_token"
     },
     {
-      "path": "./apps/api/src/passport/user/realtime"
+      "path": "./libs/api/passport/user/realtime"
     },
     {
       "path": "./apps/api/src/versioncontrol/sync"
@@ -403,7 +403,7 @@
       "path": "./libs/interface/passport/user"
     },
     {
-      "path": "./apps/api/src/passport/user"
+      "path": "./libs/api/passport/user"
     },
     {
       "path": "./libs/interface/env_var"

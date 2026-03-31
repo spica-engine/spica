@@ -1,7 +1,13 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"],
-  "exclude": ["test/**/*.ts", "**/*.spec.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
+  "exclude": [
+    "test/**/*.ts",
+    "**/*.spec.ts"
+  ],
   "references": [
     {
       "path": "sync/engine"
@@ -22,7 +28,7 @@
       "path": "../../../../libs/interface/versioncontrol"
     },
     {
-      "path": "../passport/guard"
+      "path": "../../../../libs/api/passport/guard"
     }
   ]
 }

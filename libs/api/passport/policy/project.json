@@ -1,0 +1,5 @@
+{
+  "name": "api/passport/policy",
+  "sourceRoot": "libs/api/passport/policy",
+  "projectType": "library"
+}

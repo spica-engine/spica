@@ -1,0 +1,18 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../interface/passport/testing"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
+      "path": "../guard/services"
+    }
+  ]
+}

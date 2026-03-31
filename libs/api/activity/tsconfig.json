@@ -1,12 +1,15 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
   "references": [
     {
       "path": "../../database/pipeline"
     },
     {
-      "path": "../../../apps/api/src/passport/guard"
+      "path": "../passport/guard"
     },
     {
       "path": "../../interface/activity"

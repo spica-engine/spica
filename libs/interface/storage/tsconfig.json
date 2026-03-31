@@ -1,5 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"],
-  "references": [{"path": "../../database"}]
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
+  "references": [
+    {
+      "path": "../../database"
+    }
+  ]
 }

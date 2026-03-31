@@ -1,6 +1,10 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "src/**/*.json"
+  ],
   "references": [
     {
       "path": "../status"
@@ -21,7 +25,7 @@
       "path": "../../../../libs/core/patch"
     },
     {
-      "path": "../passport/guard"
+      "path": "../../../../libs/api/passport/guard"
     },
     {
       "path": "../../../../libs/core"
@@ -87,7 +91,7 @@
       "path": "../../../../libs/realtime"
     },
     {
-      "path": "../passport/guard/services"
+      "path": "../../../../libs/api/passport/guard/services"
     },
     {
       "path": "../../../../libs/database/realtime"
@@ -99,7 +103,7 @@
       "path": "../../../../libs/interface/batch"
     },
     {
-      "path": "./realtime"
+      "path": "realtime"
     }
   ]
 }

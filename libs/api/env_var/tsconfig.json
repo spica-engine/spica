@@ -1,6 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "src/**/*.json"
+  ],
   "references": [
     {
       "path": "realtime"
@@ -12,7 +16,7 @@
       "path": "../activity/services"
     },
     {
-      "path": "../../../apps/api/src/passport/guard"
+      "path": "../passport/guard"
     },
     {
       "path": "../../interface/passport/identity"

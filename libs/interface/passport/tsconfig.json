@@ -1,15 +1,18 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
   "references": [
     {
       "path": "../../database"
     },
     {
-      "path": "./identity"
+      "path": "identity"
     },
     {
-      "path": "./user"
+      "path": "user"
     }
   ]
 }

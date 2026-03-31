@@ -1,12 +1,16 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "src/**/*.json"
+  ],
   "references": [
     {
       "path": "../../database/testing"
     },
     {
-      "path": "../../../apps/api/src/passport/testing"
+      "path": "../passport/testing"
     },
     {
       "path": "../../core/testing"
@@ -21,7 +25,7 @@
       "path": "../../database"
     },
     {
-      "path": "../../../apps/api/src/passport/guard"
+      "path": "../passport/guard"
     }
   ]
 }
