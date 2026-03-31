@@ -6,7 +6,7 @@
   ],
   "references": [
     {
-      "path": "../../../replication"
+      "path": "../../../../../../libs/api/replication"
     },
     {
       "path": "../../processors/sync"

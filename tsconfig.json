@@ -142,7 +142,7 @@
       "path": "./apps/api/src/function/log"
     },
     {
-      "path": "./apps/api/src/replication"
+      "path": "./libs/api/replication"
     },
     {
       "path": "./libs/api/preference"

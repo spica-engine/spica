@@ -32,7 +32,7 @@
       "libs/api/mailer",
       "libs/api/passport",
       "libs/api/preference",
-      "apps/api/src/replication",
+      "libs/api/replication",
       "apps/api/src/secret",
       "apps/api/src/sms",
       "apps/api/src/status",

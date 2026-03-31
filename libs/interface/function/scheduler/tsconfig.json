@@ -12,7 +12,7 @@
       "path": "../../core"
     },
     {
-      "path": "../../../../apps/api/src/replication"
+      "path": "../../../api/replication"
     },
     {
       "path": "../../../../apps/api/src/function/queue"

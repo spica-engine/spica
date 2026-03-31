@@ -27,7 +27,7 @@
       "path": "../../libs/api/asset"
     },
     {
-      "path": "src/replication"
+      "path": "../../libs/api/replication"
     },
     {
       "path": "src/versioncontrol"

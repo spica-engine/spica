@@ -16,7 +16,7 @@
       "path": "sync"
     },
     {
-      "path": "../replication"
+      "path": "../../../../libs/api/replication"
     },
     {
       "path": "../../../../libs/representative"

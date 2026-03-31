@@ -24,7 +24,7 @@
       "path": "../../../../../libs/interface/replication"
     },
     {
-      "path": "../../replication"
+      "path": "../../../../../libs/api/replication"
     },
     {
       "path": "../queue/proto"

@@ -1,5 +1,5 @@
 {
   "name": "api/replication/test",
-  "sourceRoot": "apps/api/src/replication/test",
+  "sourceRoot": "libs/api/replication/test",
   "projectType": "application"
 }

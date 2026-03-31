@@ -9,7 +9,7 @@
       "path": "../../../interface/replication"
     },
     {
-      "path": "../../../../apps/api/src/replication"
+      "path": "../../replication"
     },
     {
       "path": "../../../interface/passport/authfactor"
