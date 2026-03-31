@@ -78,6 +78,13 @@ describe("local package manager", () => {
       }
       expect(errMsg).toEqual("Cannot install package into itself.");
     });
+
+    it("should not transform local package names that already have a version specifier", async () => {
+      const pkgWithSemver = `@spica-fn/${fn2Name}@1.0.0`;
+      const pkgWithFile = `@spica-fn/${fn2Name}@file:../custom-path`;
+      await localPkgManager.install(cwd, [pkgWithSemver, pkgWithFile]).toPromise();
+      expect(mockPackageManager.install).toHaveBeenCalledWith(cwd, [pkgWithSemver, pkgWithFile]);
+    });
   });
 
   describe("integration tests", () => {
@@ -97,6 +104,19 @@ describe("local package manager", () => {
           path.join(fn2Dir, "package.json"),
           JSON.stringify({name: `@spica-fn/${fn2Name}`})
         );
+      });
+
+      it("should not transform local package names that already have an explicit file specifier", async () => {
+        const explicitFilePkg = `@spica-fn/${fn2Name}@file:../${fn2Name}`;
+        await localPackageManager.install(cwd, [explicitFilePkg]).toPromise();
+        const packages = await localPackageManager.ls(cwd);
+        expect(packages).toEqual([
+          {
+            name: `@spica-fn/${fn2Name}`,
+            version: `file:../${fn2Name}`,
+            types: {}
+          }
+        ]);
       });
 
       it("should install, uninstall packages", async () => {

@@ -31,13 +31,9 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
           case ChangeType.UPDATE:
             for (let attempt = 1; attempt <= 5; attempt++) {
               try {
-                const fn = await fs.findOne({name: change.resource_slug});
                 const packageJson = JSON.parse(change.resource_content);
-                const fnWithDeps = {
-                  ...fn,
-                  dependencies: packageJson.dependencies || {}
-                };
-                await CRUD.dependencies.update(engine, fnWithDeps);
+                const deps = packageJson.dependencies || {};
+                await CRUD.dependencies.writeAndInstall(fs, engine, change.resource_slug, deps);
                 return {status: SyncStatuses.SUCCEEDED};
               } catch (error) {
                 logger.warn(

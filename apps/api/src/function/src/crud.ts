@@ -126,6 +126,11 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
   return fn;
 }
 
+export async function insertSchema(fs: FunctionService, engine: FunctionEngine, fn: Function) {
+  await insertWithChanges(fs, engine, fn);
+  return fn;
+}
+
 export async function replace(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   const _id = new ObjectId(fn._id);
 
@@ -212,6 +217,19 @@ export namespace index {
     engine.categorizeChanges(changes);
 
     return engine.compile(fn);
+  }
+
+  export async function writeByName(
+    fs: FunctionService,
+    engine: FunctionEngine,
+    name: string,
+    content: string
+  ) {
+    const fn = await findByName(fs, name);
+    if (!fn) {
+      throw new NotFoundException(`Cannot find function with name ${name}.`);
+    }
+    return write(fs, engine, fn._id, content);
   }
 
   export async function filter(
@@ -356,6 +374,20 @@ export namespace dependencies {
       fn,
       existingDependencies.map(d => d.name)
     );
+  }
+
+  export async function writeAndInstall(
+    fs: FunctionService,
+    engine: FunctionEngine,
+    name: string,
+    deps: Dependency
+  ) {
+    const fn = await findByName(fs, name);
+    if (!fn) {
+      throw new NotFoundException(`Could not find the function with name ${name}.`);
+    }
+    await engine.writePackageJson(fn, deps);
+    await engine.installFromPackageJson(fn).toPromise();
   }
 }
 

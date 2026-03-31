@@ -8,7 +8,7 @@ import {
 
 export class LocalPackageManager extends DelegatePkgManager {
   private readonly LOCAL_PACKAGE_PREFIX = "@spica-fn/";
-  private readonly LOCAL_PACKAGE_REGEX = /^@spica-fn\/.+/;
+  private readonly LOCAL_PACKAGE_REGEX = /^@spica-fn\/[^@]+$/;
 
   constructor(pkgManager: PackageManager) {
     super(pkgManager);
