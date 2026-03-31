@@ -25,11 +25,9 @@ describe("MailerService", () => {
   let createTransportSpy: jest.SpyInstance;
 
   beforeEach(async () => {
-    createTransportSpy = jest
-      .spyOn(nodemailer, "createTransport")
-      .mockImplementation((opts: any) => {
-        return {sendMail: sendMailMock} as any;
-      });
+    createTransportSpy = jest.spyOn(nodemailer, "createTransport").mockImplementation((opts: any) => {
+      return {sendMail: sendMailMock} as any;
+    });
 
     module = await Test.createTestingModule({
       imports: [MailerModule.forRoot(mockOptions)]
@@ -89,7 +87,6 @@ describe("MailerService", () => {
     sendMailMock.mockRejectedValue(new Error("transport-failure"));
     try {
       await service.sendMail({to: "x@x.com", subject: "err"} as any);
-      // If no error thrown, fail the test
       throw new Error("Expected transporter to throw");
     } catch (e: any) {
       expect({message: e.message, calls: sendMailMock.mock.calls.length}).toEqual({

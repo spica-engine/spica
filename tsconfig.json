@@ -430,7 +430,7 @@
       "path": "./libs/api/config"
     },
     {
-      "path": "./apps/api/src/mailer"
+      "path": "./libs/api/mailer"
     },
     {
       "path": "./apps/api/src/secret"

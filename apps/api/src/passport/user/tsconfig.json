@@ -39,7 +39,7 @@
       "path": "../../sms"
     },
     {
-      "path": "../../mailer"
+      "path": "../../../../../libs/api/mailer"
     },
     {
       "path": "realtime"

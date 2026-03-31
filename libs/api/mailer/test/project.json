@@ -1,5 +1,5 @@
 {
   "name": "api/mailer/test",
-  "sourceRoot": "apps/api/src/mailer/test",
+  "sourceRoot": "libs/api/mailer/test",
   "projectType": "application"
 }

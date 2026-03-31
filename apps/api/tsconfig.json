@@ -12,7 +12,7 @@
       "path": "src/sms"
     },
     {
-      "path": "src/mailer"
+      "path": "../../libs/api/mailer"
     },
     {
       "path": "src/secret"

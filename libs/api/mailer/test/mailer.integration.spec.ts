@@ -28,9 +28,7 @@ describe("MailerService Integration", () => {
       apiPort = parseInt(apiParts[1]);
     } else {
       try {
-        container = await new GenericContainer("mailhog/mailhog")
-          .withExposedPorts(1025, 8025)
-          .start();
+        container = await new GenericContainer("mailhog/mailhog").withExposedPorts(1025, 8025).start();
         smtpPort = container.getMappedPort(1025);
         apiPort = container.getMappedPort(8025);
       } catch (e) {
@@ -66,7 +64,6 @@ describe("MailerService Integration", () => {
       text: "Hello from integration test"
     } as any);
 
-    // wait a moment for MailHog to receive
     await new Promise(r => setTimeout(r, 500));
 
     const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
@@ -76,7 +73,6 @@ describe("MailerService Integration", () => {
     const item: any = body.items[0];
     expect(item).toBeDefined();
 
-    // MailHog may return headers under different keys (Content.Headers or Raw.Headers)
     const headers = (item.Content && item.Content.Headers) || (item.Raw && item.Raw.Headers) || {};
 
     const findHeader = (obj: any, keys: string[]) => {
@@ -96,7 +92,6 @@ describe("MailerService Integration", () => {
           ? item.Content.Body
           : "";
 
-    // Normalize an extracted object and assert it in a single expect for readability.
     const extracted = {
       to: toHeader ? String(toHeader[0]) : String(raw || ""),
       subject: subjectHeader ? String(subjectHeader[0]) : String(raw || ""),

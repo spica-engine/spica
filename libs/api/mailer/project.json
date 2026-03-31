@@ -1,0 +1,5 @@
+{
+  "name": "api/mailer",
+  "sourceRoot": "libs/api/mailer",
+  "projectType": "library"
+}

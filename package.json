@@ -29,7 +29,7 @@
       "libs/api/dashboard",
       "libs/api/env_var",
       "apps/api/src/function",
-      "apps/api/src/mailer",
+      "libs/api/mailer",
       "apps/api/src/passport",
       "apps/api/src/preference",
       "apps/api/src/replication",
