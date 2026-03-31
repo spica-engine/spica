@@ -3,7 +3,7 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../status"
+      "path": "../../../../libs/api/status"
     },
     {
       "path": "../../../../libs/database/pipeline"

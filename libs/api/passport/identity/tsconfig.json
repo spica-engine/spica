@@ -3,7 +3,7 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../../../apps/api/src/status"
+      "path": "../../status"
     },
     {
       "path": "realtime"

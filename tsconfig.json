@@ -112,7 +112,7 @@
       "path": "./libs/api/passport/policy"
     },
     {
-      "path": "./apps/api/src/status/services"
+      "path": "./libs/api/status/services"
     },
     {
       "path": "./libs/api/bucket/graphql"
@@ -175,7 +175,7 @@
       "path": "./libs/api/bucket"
     },
     {
-      "path": "./apps/api/src/status"
+      "path": "./libs/api/status"
     },
     {
       "path": "./libs/core/websocket"

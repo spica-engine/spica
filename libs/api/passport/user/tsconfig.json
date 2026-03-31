@@ -30,7 +30,7 @@
       "path": "../../activity/services"
     },
     {
-      "path": "../../../../apps/api/src/status"
+      "path": "../../status"
     },
     {
       "path": "../../../database/pipeline"

@@ -6,7 +6,7 @@
       "path": "../../interface/status"
     },
     {
-      "path": "../../../apps/api/src/status"
+      "path": "../status"
     },
     {
       "path": "expression"

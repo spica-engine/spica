@@ -36,7 +36,7 @@
       "path": "src/storage"
     },
     {
-      "path": "src/status"
+      "path": "../../libs/api/status"
     },
     {
       "path": "../../libs/api/preference"

@@ -1,8 +1,11 @@
 {
   "name": "api/status",
-  "sourceRoot": "apps/api/src/status",
-  "projectType": "application",
+  "sourceRoot": "libs/api/status",
+  "projectType": "library",
   "targets": {
+    "build": {
+      "command": "tsc --build libs/api/status/tsconfig.json --pretty --verbose"
+    },
     "test": {
       "dependsOn": [
         {
