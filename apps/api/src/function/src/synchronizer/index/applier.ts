@@ -30,8 +30,7 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
           case ChangeType.UPDATE:
             for (let attempt = 1; attempt <= 5; attempt++) {
               try {
-                const fn = await fs.findOne({name: change.resource_slug});
-                await CRUD.index.write(fs, engine, fn._id, change.resource_content);
+                await CRUD.index.writeByName(fs, engine, change.resource_slug, change.resource_content);
                 return {status: SyncStatuses.SUCCEEDED};
               } catch (error) {
                 logger.warn(
