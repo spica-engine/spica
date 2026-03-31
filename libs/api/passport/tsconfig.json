@@ -3,34 +3,10 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json", "guard/services/src/guard.service.ts"],
   "references": [
     {
-      "path": "guard"
-    },
-    {
       "path": "../../interface/passport/user"
     },
     {
-      "path": "refresh_token"
-    },
-    {
-      "path": "guard/services"
-    },
-    {
-      "path": "policy"
-    },
-    {
-      "path": "user"
-    },
-    {
-      "path": "apikey"
-    },
-    {
       "path": "../../interface/replication"
-    },
-    {
-      "path": "../replication"
-    },
-    {
-      "path": "authfactor"
     },
     {
       "path": "../../interface/passport"
@@ -46,9 +22,6 @@
     },
     {
       "path": "../../interface/passport/identity"
-    },
-    {
-      "path": "identity"
     }
   ]
 }

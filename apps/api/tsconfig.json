@@ -6,52 +6,7 @@
       "path": "../../libs/core/encryption"
     },
     {
-      "path": "../../libs/api/config"
-    },
-    {
-      "path": "../../libs/api/sms"
-    },
-    {
-      "path": "../../libs/api/mailer"
-    },
-    {
-      "path": "../../libs/api/secret"
-    },
-    {
-      "path": "../../libs/api/env_var"
-    },
-    {
-      "path": "../../libs/api/batch"
-    },
-    {
-      "path": "../../libs/api/asset"
-    },
-    {
-      "path": "../../libs/api/replication"
-    },
-    {
-      "path": "../../libs/api/versioncontrol"
-    },
-    {
-      "path": "../../libs/api/storage"
-    },
-    {
-      "path": "../../libs/api/status"
-    },
-    {
-      "path": "../../libs/api/preference"
-    },
-    {
-      "path": "../../libs/api/passport"
-    },
-    {
-      "path": "src/function"
-    },
-    {
       "path": "../../libs/database"
-    },
-    {
-      "path": "../../libs/api/dashboard"
     },
     {
       "path": "../../libs/core/websocket"
@@ -61,12 +16,6 @@
     },
     {
       "path": "../../libs/core"
-    },
-    {
-      "path": "../../libs/api/bucket"
-    },
-    {
-      "path": "../../libs/api/activity"
     }
   ]
 }

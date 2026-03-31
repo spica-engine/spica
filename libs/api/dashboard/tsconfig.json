@@ -1,10 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "../../interface/versioncontrol"
@@ -13,16 +9,10 @@
       "path": "realtime"
     },
     {
-      "path": "../passport/guard"
-    },
-    {
       "path": "../../interface/dashboard"
     },
     {
       "path": "../../database"
-    },
-    {
-      "path": "../asset"
     },
     {
       "path": "../../interface/asset"

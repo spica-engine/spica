@@ -3,15 +3,6 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "realtime"
-    },
-    {
-      "path": "../services/sync"
-    },
-    {
-      "path": "../../passport/guard"
-    },
-    {
       "path": "../../../database"
     },
     {

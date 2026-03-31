@@ -12,9 +12,6 @@
       "path": "../../../database"
     },
     {
-      "path": "../services"
-    },
-    {
       "path": "../../../interface/function/enqueuer"
     },
     {
@@ -22,21 +19,6 @@
     },
     {
       "path": "../../../interface/replication"
-    },
-    {
-      "path": "../../replication"
-    },
-    {
-      "path": "proto"
-    },
-    {
-      "path": "../../../../apps/api/src/function/queue/proto"
-    },
-    {
-      "path": "../../../../apps/api/src/function/queue"
-    },
-    {
-      "path": "../../../../apps/api/src/function/enqueuer"
     }
   ]
 }

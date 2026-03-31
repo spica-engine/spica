@@ -16,7 +16,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@spica-devkit/*": ["apps/api/src/function/packages/*"],
+      "@spica-devkit/*": ["libs/api/function/packages/*"],
       "@spica-server/*": ["libs/*", "libs/api/*", "apps/api/src/*"],
       "@spica/*": ["apps/*"]
     },
@@ -25,31 +25,31 @@
   },
   "references": [
     {
-      "path": "./apps/api/src/function/compiler/javascript"
+      "path": "./libs/api/function/compiler/javascript"
     },
     {
-      "path": "./apps/api/src/function/compiler/typescript"
+      "path": "./libs/api/function/compiler/typescript"
     },
     {
-      "path": "./apps/api/src/function/pkgmanager/node"
+      "path": "./libs/api/function/pkgmanager/node"
     },
     {
       "path": "./libs/api/bucket/hooks/proto/node"
     },
     {
-      "path": "./apps/api/src/function/runtime/logger"
+      "path": "./libs/api/function/runtime/logger"
     },
     {
-      "path": "./apps/api/src/function/runtime/node"
+      "path": "./libs/api/function/runtime/node"
     },
     {
-      "path": "./apps/api/src/function/queue/proto"
+      "path": "./libs/api/function/queue/proto"
     },
     {
-      "path": "./apps/api/src/function/queue/node"
+      "path": "./libs/api/function/queue/node"
     },
     {
-      "path": "./apps/api/src/function/runtime/io"
+      "path": "./libs/api/function/runtime/io"
     },
     {
       "path": "./libs/api/passport/authfactor"
@@ -61,7 +61,7 @@
       "path": "./libs/api/bucket/hooks/proto"
     },
     {
-      "path": "./apps/api/src/function/scheduler"
+      "path": "./libs/api/function/scheduler"
     },
     {
       "path": "./apps/mongoreplicationcontroller"
@@ -73,13 +73,13 @@
       "path": "./libs/api/bucket/expression"
     },
     {
-      "path": "./apps/api/src/function/compiler"
+      "path": "./libs/api/function/compiler"
     },
     {
-      "path": "./apps/api/src/function/enqueuer"
+      "path": "./libs/api/function/enqueuer"
     },
     {
-      "path": "./apps/api/src/function/services"
+      "path": "./libs/api/function/services"
     },
     {
       "path": "./libs/api/passport/identity"
@@ -88,10 +88,10 @@
       "path": "./libs/api/passport/identity/realtime"
     },
     {
-      "path": "./apps/api/src/function/runtime"
+      "path": "./libs/api/function/runtime"
     },
     {
-      "path": "./apps/api/src/function/webhook"
+      "path": "./libs/api/function/webhook"
     },
     {
       "path": "./libs/api/passport/testing"
@@ -121,7 +121,7 @@
       "path": "./libs/api/bucket/history"
     },
     {
-      "path": "./apps/api/src/function/queue"
+      "path": "./libs/api/function/queue"
     },
     {
       "path": "./libs/api/passport/guard"
@@ -139,7 +139,7 @@
       "path": "./libs/api/bucket/hooks"
     },
     {
-      "path": "./apps/api/src/function/log"
+      "path": "./libs/api/function/log"
     },
     {
       "path": "./libs/api/replication"
@@ -160,7 +160,7 @@
       "path": "./libs/api/activity"
     },
     {
-      "path": "./apps/api/src/function"
+      "path": "./libs/api/function"
     },
     {
       "path": "./libs/api/passport"
@@ -334,7 +334,7 @@
       "path": "./libs/api/dashboard/realtime"
     },
     {
-      "path": "./apps/api/src/function/realtime"
+      "path": "./libs/api/function/realtime"
     },
     {
       "path": "./libs/api/versioncontrol/processors/changelog"
@@ -361,7 +361,7 @@
       "path": "./libs/api/versioncontrol/sync/engine"
     },
     {
-      "path": "./apps/api/src/function/pkgmanager/local"
+      "path": "./libs/api/function/pkgmanager/local"
     },
     {
       "path": "./libs/api/passport/policy/realtime"

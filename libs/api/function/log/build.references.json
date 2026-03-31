@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "references": [
+    {
+      "path": "../../../api/passport/guard/services"
+    },
+    {
+      "path": "../../../database/realtime"
+    },
+    {
+      "path": "../../../interface/function/log"
+    },
+    {
+      "path": "../../../api/passport/guard"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../../realtime"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "api/function/runtime",
+  "sourceRoot": "libs/api/function/runtime",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "tsc --build {projectRoot}/build.references.json --pretty --verbose"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "libs/api/function/runtime/jest.config.ts"
+      },
+      "dependsOn": [
+        {
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "build"
+        },
+        {
+          "projects": ["api/function/compiler/typescript"],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

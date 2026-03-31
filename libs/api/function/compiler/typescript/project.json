@@ -1,0 +1,18 @@
+{
+  "name": "api/function/compiler/typescript",
+  "sourceRoot": "libs/api/function/compiler/typescript",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "tsc --build {projectRoot}/build.references.json --pretty --verbose"
+    },
+    "test": {
+      "dependsOn": [
+        {
+          "projects": ["api/function/compiler/typescript"],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

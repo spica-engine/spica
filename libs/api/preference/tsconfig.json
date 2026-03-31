@@ -9,15 +9,6 @@
       "path": "../../interface/preference"
     },
     {
-      "path": "services"
-    },
-    {
-      "path": "../passport/guard"
-    },
-    {
-      "path": "../activity/services"
-    },
-    {
       "path": "../../interface/activity"
     }
   ]

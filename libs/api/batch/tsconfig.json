@@ -1,19 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
-    {
-      "path": "../../core/schema"
-    },
     {
       "path": "../../interface/batch"
     },
     {
-      "path": "../passport/guard"
+      "path": "../../core/schema"
     }
   ]
 }

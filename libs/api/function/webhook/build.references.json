@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "references": [
+    {
+      "path": "../../../interface/function"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../api/passport/guard"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../../interface/function/webhook"
+    },
+    {
+      "path": "../../../database"
+    }
+  ]
+}

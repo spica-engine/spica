@@ -4,15 +4,6 @@
   "exclude": ["test/**/*.ts", "**/*.spec.ts"],
   "references": [
     {
-      "path": "sync/engine"
-    },
-    {
-      "path": "sync"
-    },
-    {
-      "path": "../replication"
-    },
-    {
       "path": "../../representative"
     },
     {
@@ -20,9 +11,6 @@
     },
     {
       "path": "../../interface/versioncontrol"
-    },
-    {
-      "path": "../passport/guard"
     }
   ]
 }

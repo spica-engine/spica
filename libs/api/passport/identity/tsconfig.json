@@ -3,19 +3,10 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../status"
-    },
-    {
       "path": "realtime"
     },
     {
       "path": "../../../interface/passport/policy"
-    },
-    {
-      "path": "../policy"
-    },
-    {
-      "path": "../refresh_token/services"
     },
     {
       "path": "../../../interface/core"
@@ -27,16 +18,7 @@
       "path": "../../../interface/replication"
     },
     {
-      "path": "../../replication"
-    },
-    {
       "path": "../../../interface/passport/authfactor"
-    },
-    {
-      "path": "../authfactor"
-    },
-    {
-      "path": "../guard"
     },
     {
       "path": "../../../core/schema"
@@ -45,16 +27,10 @@
       "path": "../../../core"
     },
     {
-      "path": "../../activity/services"
-    },
-    {
       "path": "../../../interface/config"
     },
     {
       "path": "../../../database"
-    },
-    {
-      "path": "../../config"
     },
     {
       "path": "../../../interface/passport/identity"
@@ -63,13 +39,7 @@
       "path": "../../../interface/representative"
     },
     {
-      "path": "../../preference/services"
-    },
-    {
       "path": "../../../interface/asset"
-    },
-    {
-      "path": "../../asset"
     },
     {
       "path": "../../../interface/activity"

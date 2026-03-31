@@ -1,0 +1,5 @@
+{
+  "name": "api/function/scheduler/test",
+  "sourceRoot": "libs/api/function/scheduler/test",
+  "projectType": "application"
+}

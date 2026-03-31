@@ -12,46 +12,19 @@
       "path": "../../../interface/replication"
     },
     {
-      "path": "../../replication"
-    },
-    {
       "path": "../../../interface/passport/authfactor"
-    },
-    {
-      "path": "../authfactor"
-    },
-    {
-      "path": "../guard"
     },
     {
       "path": "../../../core"
     },
     {
-      "path": "../../activity/services"
-    },
-    {
-      "path": "../../status"
-    },
-    {
       "path": "../../../database/pipeline"
-    },
-    {
-      "path": "../../sms"
-    },
-    {
-      "path": "../../mailer"
     },
     {
       "path": "realtime"
     },
     {
-      "path": "../refresh_token/services"
-    },
-    {
       "path": "../../../interface/passport/policy"
-    },
-    {
-      "path": "../policy"
     },
     {
       "path": "../../../core/schema"
@@ -67,9 +40,6 @@
     },
     {
       "path": "../../../database"
-    },
-    {
-      "path": "../../config"
     },
     {
       "path": "../../../interface/activity"

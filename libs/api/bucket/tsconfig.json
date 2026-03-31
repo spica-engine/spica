@@ -6,12 +6,6 @@
       "path": "../../interface/status"
     },
     {
-      "path": "../status"
-    },
-    {
-      "path": "expression"
-    },
-    {
       "path": "../../interface/core"
     },
     {
@@ -21,43 +15,16 @@
       "path": "../../interface/versioncontrol"
     },
     {
-      "path": "graphql"
-    },
-    {
       "path": "../../interface/preference"
-    },
-    {
-      "path": "../preference/services"
-    },
-    {
-      "path": "schemas-realtime"
-    },
-    {
-      "path": "realtime"
     },
     {
       "path": "../../core/patch"
     },
     {
-      "path": "common"
-    },
-    {
-      "path": "cache"
-    },
-    {
       "path": "../../interface/passport/guard"
     },
     {
-      "path": "../passport/guard"
-    },
-    {
       "path": "../../core"
-    },
-    {
-      "path": "hooks"
-    },
-    {
-      "path": "../activity/services"
     },
     {
       "path": "../../interface/bucket"
@@ -72,16 +39,7 @@
       "path": "../../core/schema"
     },
     {
-      "path": "services"
-    },
-    {
-      "path": "history"
-    },
-    {
       "path": "../../interface/asset"
-    },
-    {
-      "path": "../asset"
     }
   ]
 }

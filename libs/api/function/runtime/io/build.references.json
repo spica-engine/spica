@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "references": [
+    {
+      "path": "../../../../database"
+    },
+    {
+      "path": "../logger/build.references.json"
+    },
+    {
+      "path": "../../../../interface/function/runtime"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "references": [
+    {
+      "path": "../../libs/core/encryption"
+    },
+    {
+      "path": "../../libs/database"
+    },
+    {
+      "path": "../../libs/core/websocket"
+    },
+    {
+      "path": "../../libs/core/schema"
+    },
+    {
+      "path": "../../libs/core"
+    }
+  ]
+}

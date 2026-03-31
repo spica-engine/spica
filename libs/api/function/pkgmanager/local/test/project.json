@@ -1,0 +1,5 @@
+{
+  "name": "api/function/pkgmanager/local/test",
+  "sourceRoot": "libs/api/function/pkgmanager/local/test",
+  "projectType": "application"
+}

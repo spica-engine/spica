@@ -1,0 +1,11 @@
+{
+  "name": "api/function/packages/storage",
+  "sourceRoot": "libs/api/function/packages/storage",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "yarn rollup -c {projectRoot}/rollup.config.cjs --bundleConfigAsCjs"
+    },
+    "set-version": {}
+  }
+}

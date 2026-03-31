@@ -22,7 +22,7 @@ COPY --parents package.json yarn.lock \
      libs/api/*/package.json \
      apps/api/package.json \
      apps/api/src/*/package.json \
-     apps/api/src/function/packages/*/package.json \
+     libs/api/function/packages/*/package.json \
      ./
 RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-${TARGETPLATFORM} \
     YARN_CACHE_FOLDER=/root/.yarn-cache \
@@ -39,7 +39,7 @@ COPY --parents package.json yarn.lock \
      libs/api/*/package.json \
      apps/api/package.json \
      apps/api/src/*/package.json \
-     apps/api/src/function/packages/*/package.json \
+     libs/api/function/packages/*/package.json \
      ./
 RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod-${TARGETPLATFORM} \
     YARN_CACHE_FOLDER=/root/.yarn-cache \

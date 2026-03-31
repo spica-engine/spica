@@ -1,19 +1,12 @@
 {
   "extends": "../../../../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "realtime"
     },
     {
       "path": "../../../interface/passport/policy"
-    },
-    {
-      "path": "../../asset"
     },
     {
       "path": "../../../interface/asset"
@@ -25,9 +18,6 @@
       "path": "../../../interface/passport/apikey"
     },
     {
-      "path": "../guard"
-    },
-    {
       "path": "../../../database"
     },
     {
@@ -35,9 +25,6 @@
     },
     {
       "path": "../../../core"
-    },
-    {
-      "path": "../../activity/services"
     },
     {
       "path": "../../../interface/activity"

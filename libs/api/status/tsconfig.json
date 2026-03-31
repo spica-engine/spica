@@ -3,16 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "services"
-    },
-    {
       "path": "../../database"
     },
     {
       "path": "../../interface/status"
-    },
-    {
-      "path": "../passport/guard"
     },
     {
       "path": "../../core"

@@ -1,19 +1,9 @@
 {
   "extends": "../../../../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../guard"
-    },
-    {
       "path": "../../../core"
-    },
-    {
-      "path": "../../activity/services"
     },
     {
       "path": "realtime"

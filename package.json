@@ -29,7 +29,7 @@
       "libs/api/dashboard",
       "libs/api/env_var",
       "libs/api/secret",
-      "apps/api/src/function",
+      "libs/api/function",
       "libs/api/mailer",
       "libs/api/passport",
       "libs/api/preference",
@@ -38,7 +38,7 @@
       "libs/api/status",
       "libs/api/storage",
       "libs/api/versioncontrol",
-      "apps/api/src/function/packages/*",
+      "libs/api/function/packages/*",
       "apps/cli",
       "apps/migrate",
       "apps/mongoreplicationcontroller"

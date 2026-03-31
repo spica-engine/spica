@@ -6,12 +6,6 @@
       "path": "../../transaction"
     },
     {
-      "path": "../passport/guard/services"
-    },
-    {
-      "path": "../passport/guard"
-    },
-    {
       "path": "../../database"
     },
     {
@@ -21,13 +15,7 @@
       "path": "../../core"
     },
     {
-      "path": "../activity/services"
-    },
-    {
       "path": "../../database/pipeline"
-    },
-    {
-      "path": "../status"
     },
     {
       "path": "../../interface/core"

@@ -1,0 +1,10 @@
+{
+  "name": "api/function/compiler",
+  "sourceRoot": "libs/api/function/compiler",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "tsc --build {projectRoot}/build.references.json --pretty --verbose"
+    }
+  }
+}

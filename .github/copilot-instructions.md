@@ -17,7 +17,7 @@ Spica is an **open-source backend development engine** built as an Nx monorepo w
 
 ```
 @spica-server/*  → libs/*, apps/api/src/*
-@spica-devkit/*  → apps/api/src/function/packages/*
+@spica-devkit/*  → libs/api/function/packages/*
 @spica/*         → apps/*
 ```
 

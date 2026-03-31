@@ -6,9 +6,6 @@
       "path": "../../../interface/replication"
     },
     {
-      "path": "../../replication"
-    },
-    {
       "path": "../../../interface/passport/authfactor"
     }
   ]
