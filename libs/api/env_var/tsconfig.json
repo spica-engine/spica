@@ -1,0 +1,51 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../../interface/versioncontrol"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../../apps/api/src/passport/guard"
+    },
+    {
+      "path": "../../interface/passport/identity"
+    },
+    {
+      "path": "../../database/pipeline"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../interface/env_var"
+    },
+    {
+      "path": "services"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../interface/representative"
+    },
+    {
+      "path": "../../interface/asset"
+    },
+    {
+      "path": "../asset"
+    },
+    {
+      "path": "../../interface/activity"
+    }
+  ]
+}

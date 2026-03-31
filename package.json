@@ -27,7 +27,7 @@
       "libs/api/bucket",
       "libs/api/config",
       "libs/api/dashboard",
-      "apps/api/src/env_var",
+      "libs/api/env_var",
       "apps/api/src/function",
       "apps/api/src/mailer",
       "apps/api/src/passport",

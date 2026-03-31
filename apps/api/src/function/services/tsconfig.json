@@ -6,7 +6,7 @@
       "path": "../../../../../libs/database"
     },
     {
-      "path": "../../env_var/services"
+      "path": "../../../../../libs/api/env_var/services"
     },
     {
       "path": "../../secret/services"

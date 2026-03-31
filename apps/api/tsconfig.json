@@ -18,7 +18,7 @@
       "path": "src/secret"
     },
     {
-      "path": "src/env_var"
+      "path": "../../libs/api/env_var"
     },
     {
       "path": "../../libs/api/batch"

@@ -388,10 +388,10 @@
       "path": "./libs/interface/function/packages"
     },
     {
-      "path": "./apps/api/src/env_var/realtime"
+      "path": "./libs/api/env_var/realtime"
     },
     {
-      "path": "./apps/api/src/env_var/services"
+      "path": "./libs/api/env_var/services"
     },
     {
       "path": "./apps/api/src/secret/realtime"
@@ -418,7 +418,7 @@
       "path": "./libs/interface/secret"
     },
     {
-      "path": "./apps/api/src/env_var"
+      "path": "./libs/api/env_var"
     },
     {
       "path": "./libs/core/encryption"
