@@ -9,7 +9,7 @@
       "path": "../../libs/api/config"
     },
     {
-      "path": "src/sms"
+      "path": "../../libs/api/sms"
     },
     {
       "path": "../../libs/api/mailer"

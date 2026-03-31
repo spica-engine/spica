@@ -34,7 +34,7 @@
       "libs/api/passport",
       "libs/api/preference",
       "libs/api/replication",
-      "apps/api/src/sms",
+      "libs/api/sms",
       "apps/api/src/status",
       "apps/api/src/storage",
       "apps/api/src/versioncontrol",

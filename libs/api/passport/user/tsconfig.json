@@ -36,7 +36,7 @@
       "path": "../../../database/pipeline"
     },
     {
-      "path": "../../../../apps/api/src/sms"
+      "path": "../../sms"
     },
     {
       "path": "../../mailer"

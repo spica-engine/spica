@@ -442,7 +442,7 @@
       "path": "./libs/interface/sms"
     },
     {
-      "path": "./apps/api/src/sms"
+      "path": "./libs/api/sms"
     },
     {
       "path": "./libs/transaction"
