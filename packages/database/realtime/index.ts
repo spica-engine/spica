@@ -1,2 +1,2 @@
-export {RealtimeDatabaseModule} from "./src/database.module";
-export {RealtimeDatabaseService} from "./src/database.service";
+export {RealtimeDatabaseModule} from "./src/database.module.js";
+export {RealtimeDatabaseService} from "./src/database.service.js";

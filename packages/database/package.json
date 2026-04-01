@@ -2,13 +2,32 @@
   "name": "@spica-server/database",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./testing": "./testing/index.ts",
-    "./realtime": "./realtime/index.ts",
-    "./realtime/src/database.service": "./realtime/src/database.service.ts",
-    "./realtime/src/levenshtein": "./realtime/src/levenshtein.ts",
-    "./pipeline": "./pipeline/index.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./testing/index.ts",
+      "default": "./testing/dist/index.js"
+    },
+    "./realtime": {
+      "types": "./realtime/index.ts",
+      "default": "./realtime/dist/index.js"
+    },
+    "./realtime/src/database.service": {
+      "types": "./realtime/src/database.service.ts",
+      "default": "./realtime/dist/src/database.service.js"
+    },
+    "./realtime/src/levenshtein": {
+      "types": "./realtime/src/levenshtein.ts",
+      "default": "./realtime/dist/src/levenshtein.js"
+    },
+    "./pipeline": {
+      "types": "./pipeline/index.ts",
+      "default": "./pipeline/dist/index.js"
+    }
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",

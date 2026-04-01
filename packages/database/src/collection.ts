@@ -20,7 +20,7 @@ import {
   ChangeStreamOptions,
   ChangeStreamDocument
 } from "mongodb";
-import {DatabaseService} from "./database.service";
+import {DatabaseService} from "./database.service.js";
 import {InitializeOptions, OptionalId, ProfilerEntry} from "@spica-server/interface/database";
 import {Observable} from "rxjs";
 

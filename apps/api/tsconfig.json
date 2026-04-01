@@ -19,6 +19,9 @@
       "path": "../../packages/api/mailer"
     },
     {
+      "path": "../../packages/database"
+    },
+    {
       "path": "../../packages/core"
     }
   ]

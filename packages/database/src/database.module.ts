@@ -1,6 +1,6 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {MongoClient, MongoClientOptions} from "mongodb";
-import {DatabaseService} from "./database.service";
+import {DatabaseService} from "./database.service.js";
 
 @Global()
 @Module({})

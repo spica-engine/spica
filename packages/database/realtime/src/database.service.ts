@@ -3,7 +3,7 @@ import {ChangeStream, DatabaseService, Document} from "@spica-server/database";
 import {StreamChunk} from "@spica-server/interface/realtime";
 import {Observable} from "rxjs";
 import {FindOptions} from "@spica-server/interface/database";
-import {Emitter} from "./stream";
+import {Emitter} from "./stream.js";
 import isEqual from "lodash/isEqual.js";
 
 @Injectable()
