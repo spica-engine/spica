@@ -10,23 +10,23 @@
     },
     "./schema": {
       "types": "./schema/index.ts",
-      "default": "./dist/schema/index.js"
+      "default": "./schema/dist/index.js"
     },
     "./schema/formats": {
       "types": "./schema/formats.ts",
-      "default": "./dist/schema/formats.js"
+      "default": "./schema/dist/formats.js"
     },
     "./schema/defaults": {
       "types": "./schema/defaults.ts",
-      "default": "./dist/schema/defaults.js"
+      "default": "./schema/dist/defaults.js"
     },
     "./schema/src/validator": {
       "types": "./schema/src/validator.ts",
-      "default": "./dist/schema/src/validator.js"
+      "default": "./schema/dist/src/validator.js"
     },
     "./encryption": {
       "types": "./encryption/index.ts",
-      "default": "./dist/encryption/index.js"
+      "default": "./encryption/dist/index.js"
     },
     "./testing": {
       "types": "./testing/index.ts",

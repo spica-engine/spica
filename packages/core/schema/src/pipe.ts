@@ -1,6 +1,6 @@
 import {BadRequestException, Inject, mixin, Optional, PipeTransform, Type} from "@nestjs/common";
 import {REQUEST} from "@nestjs/core";
-import {Validator} from "./validator";
+import {Validator} from "./validator.js";
 
 abstract class MixinValidator implements PipeTransform {
   abstract uriSchemaOrResolver: string | object;

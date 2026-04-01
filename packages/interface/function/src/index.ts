@@ -1,2 +1,2 @@
-export * from "./function";
-export * from "./services";
+export * from "./function.js";
+export * from "./services.js";

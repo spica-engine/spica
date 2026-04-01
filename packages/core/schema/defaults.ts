@@ -1,1 +1,1 @@
-export * from "./src/defaults";
+export * from "./src/defaults.js";

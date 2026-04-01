@@ -1,4 +1,4 @@
-export * from "./options";
+export * from "./options.js";
 
 export interface SmsSender {
   to: string;

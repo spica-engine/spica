@@ -1,4 +1,4 @@
-import {StorageObjectMeta} from "./body";
+import {StorageObjectMeta} from "./body.js";
 
 export type StorageResponse = StorageObjectMeta;
 

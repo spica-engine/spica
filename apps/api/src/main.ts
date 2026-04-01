@@ -3,9 +3,9 @@ import {NestFactory} from "@nestjs/core";
 // import {ActivityModule} from "@spica-server/activity";
 // import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
-// import {SchemaModule} from "@spica-server/core/schema";
-// import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-// import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule} from "@spica-server/core/schema";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
 // import {DashboardModule} from "@spica-server/dashboard";
 // import {DatabaseModule} from "@spica-server/database";
@@ -739,11 +739,11 @@ const modules = [
       authToken: args["twilio-sms-service-auth-token"],
       fromNumber: args["twilio-sms-service-from-number"]
     }
+  }),
+  SchemaModule.forRoot({
+    formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
+    defaults: [CREATED_AT, UPDATED_AT]
   })
-  // SchemaModule.forRoot({
-  //   formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
-  //   defaults: [CREATED_AT, UPDATED_AT]
-  // }),
   // BucketModule.forRoot({
   //   hooks: args["bucket-hooks"],
   //   history: args["bucket-history"],

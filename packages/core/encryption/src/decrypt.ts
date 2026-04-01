@@ -1,6 +1,6 @@
 import * as crypto from "node:crypto";
-import {BaseEncryptedData} from "./types";
-import {deriveKeyBuffer} from "./derive";
+import {BaseEncryptedData} from "./types.js";
+import {deriveKeyBuffer} from "./derive.js";
 
 const ALGORITHM = "aes-256-gcm";
 

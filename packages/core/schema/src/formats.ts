@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "mongodb";
 import {Format} from "@spica-server/interface/core";
 import {hash, encrypt} from "@spica-server/core/encryption";
 

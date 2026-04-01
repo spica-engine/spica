@@ -10,10 +10,13 @@
       "path": "../../packages/core/websocket"
     },
     {
-      "path": "../../packages/core"
+      "path": "../../packages/core/schema"
     },
     {
       "path": "../../packages/api/sms"
+    },
+    {
+      "path": "../../packages/core"
     }
   ]
 }

@@ -1,3 +1,3 @@
-export * from "./crud";
-export * from "./locale";
-export * from "./relation";
+export * from "./crud.js";
+export * from "./locale.js";
+export * from "./relation.js";

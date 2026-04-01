@@ -1,12 +1,13 @@
 {
   "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
   "include": ["src/**/*.ts", "defaults.ts", "formats.ts", "index.ts"],
   "references": [
     {
       "path": "../../interface/config"
-    },
-    {
-      "path": "../../database"
     },
     {
       "path": "../../interface/core"
