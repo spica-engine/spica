@@ -2,8 +2,15 @@
   "name": "@spica-server/dashboard",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./realtime": "./realtime/index.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./realtime": {
+      "types": "./realtime/index.ts",
+      "default": "./realtime/dist/index.js"
+    }
   }
 }

@@ -1,5 +1,5 @@
-import {DashboardService} from "../../dashboard.service";
-import * as CRUD from "../../crud";
+import {DashboardService} from "../../dashboard.service.js";
+import * as CRUD from "../../crud.js";
 import {Dashboard} from "@spica-server/interface/dashboard";
 import YAML from "yaml";
 import {

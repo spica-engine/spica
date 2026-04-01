@@ -1,2 +1,2 @@
-export * from "./dashboard.module";
-export * from "./dashboard.service";
+export * from "./dashboard.module.js";
+export * from "./dashboard.service.js";

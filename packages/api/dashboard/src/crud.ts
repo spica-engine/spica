@@ -1,5 +1,5 @@
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {DashboardService} from "./dashboard.service";
+import {DashboardService} from "./dashboard.service.js";
 import {Dashboard} from "@spica-server/interface/dashboard";
 import {NotFoundException} from "@nestjs/common";
 

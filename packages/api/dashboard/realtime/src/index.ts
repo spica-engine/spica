@@ -1,1 +1,1 @@
-export {DashboardRealtimeModule} from "./realtime.module";
+export {DashboardRealtimeModule} from "./realtime.module.js";

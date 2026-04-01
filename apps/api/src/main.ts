@@ -7,7 +7,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
-// import {DashboardModule} from "@spica-server/dashboard";
+import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
 // import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
@@ -703,7 +703,7 @@ const modules = [
   BatchModule.forRoot({
     port: args["port"]
   }),
-  // DashboardModule.forRoot({realtime: true}),
+  DashboardModule.forRoot({realtime: true}),
   PreferenceModule.forRoot(),
   // AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {

@@ -12,12 +12,12 @@ import {
   HttpException
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
-import {DashboardService} from "./dashboard.service";
+import {DashboardService} from "./dashboard.service.js";
 import {Dashboard} from "@spica-server/interface/dashboard";
 import {Schema} from "@spica-server/core/schema";
 import {ResourceFilter} from "@spica-server/passport/guard";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import * as CRUD from "./crud";
+import * as CRUD from "./crud.js";
 
 @Controller("dashboard")
 export class DashboardController {

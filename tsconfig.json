@@ -414,6 +414,9 @@
     },
     {
       "path": "./packages/api/preference/services"
+    },
+    {
+      "path": "./packages/api/dashboard/realtime"
     }
   ]
 }

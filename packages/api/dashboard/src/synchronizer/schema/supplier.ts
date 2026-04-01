@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {DashboardService} from "../../dashboard.service";
+import {DashboardService} from "../../dashboard.service.js";
 import YAML from "yaml";
 import {
   ChangeLog,

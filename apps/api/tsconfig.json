@@ -13,6 +13,9 @@
       "path": "../../packages/api/batch"
     },
     {
+      "path": "../../packages/api/dashboard"
+    },
+    {
       "path": "../../packages/core/websocket"
     },
     {
