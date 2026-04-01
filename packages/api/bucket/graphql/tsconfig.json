@@ -1,27 +1,36 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
-    {
-      "path": "../../../interface/activity"
-    },
     {
       "path": "../../../core/patch"
     },
     {
-      "path": "../../../interface/passport/guard"
+      "path": "../common"
     },
     {
-      "path": "../../../interface/bucket"
+      "path": "../../passport/guard"
     },
     {
-      "path": "../../../interface/bucket/graphql"
+      "path": "../../passport"
     },
     {
       "path": "../../../database"
     },
     {
-      "path": "../../../core/schema"
+      "path": "../../../core"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../hooks"
+    },
+    {
+      "path": "../history"
+    },
+    {
+      "path": "../../activity/services"
     }
   ]
 }

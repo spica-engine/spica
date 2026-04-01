@@ -1,48 +1,42 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../../core/encryption"
+      "path": "../../replication"
     },
     {
-      "path": "../../../interface/core"
+      "path": "../authfactor"
     },
     {
-      "path": "../../../interface/replication"
+      "path": "../guard"
     },
     {
-      "path": "../../../interface/passport/authfactor"
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../status"
+    },
+    {
+      "path": "../../sms"
+    },
+    {
+      "path": "../../mailer"
+    },
+    {
+      "path": ".."
     },
     {
       "path": "../../../core"
     },
     {
-      "path": "../../../database/pipeline"
-    },
-    {
-      "path": "realtime"
-    },
-    {
-      "path": "../../../interface/passport/policy"
-    },
-    {
-      "path": "../../../core/schema"
-    },
-    {
       "path": "../../../filter"
-    },
-    {
-      "path": "../../../interface/passport/user"
-    },
-    {
-      "path": "../../../interface/config"
     },
     {
       "path": "../../../database"
     },
     {
-      "path": "../../../interface/activity"
+      "path": "../../config"
     }
   ]
 }

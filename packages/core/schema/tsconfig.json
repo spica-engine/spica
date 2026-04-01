@@ -1,23 +1,12 @@
 {
-  "extends": "../../../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "defaults.ts",
-    "formats.ts",
-    "index.ts"
-  ],
+  "extends": "../../../tsconfig.base.json",
+  "include": ["src/**/*.ts", "defaults.ts", "formats.ts", "index.ts"],
   "references": [
-    {
-      "path": "../../interface/config"
-    },
     {
       "path": "../../database"
     },
     {
-      "path": "../../interface/core"
-    },
-    {
-      "path": "../encryption"
+      "path": ".."
     }
   ]
 }

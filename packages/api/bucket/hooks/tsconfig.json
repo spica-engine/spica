@@ -1,24 +1,27 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
-    {
-      "path": "../../../interface/function/scheduler"
-    },
-    {
-      "path": "../../../interface/function"
-    },
     {
       "path": "../../../database"
     },
     {
-      "path": "../../../interface/function/enqueuer"
+      "path": "../services"
     },
     {
-      "path": "../../../interface/bucket/hooks"
+      "path": "../../replication"
     },
     {
-      "path": "../../../interface/replication"
+      "path": ".."
+    },
+    {
+      "path": "../../function"
+    },
+    {
+      "path": "../../function/queue"
+    },
+    {
+      "path": "../../function/enqueuer"
     }
   ]
 }

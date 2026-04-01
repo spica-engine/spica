@@ -1,15 +1,15 @@
 {
-  "extends": "../../../../../tsconfig.json",
+  "extends": "../../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../../interface/versioncontrol"
-    },
-    {
-      "path": "../../../../interface/config"
+      "path": "../../services/sync"
     },
     {
       "path": "../../../../database"
+    },
+    {
+      "path": "../../../config"
     }
   ]
 }

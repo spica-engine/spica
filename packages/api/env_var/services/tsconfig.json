@@ -1,15 +1,12 @@
 {
-  "extends": "../../../../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "extends": "../../../../tsconfig.base.json",
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../database"
+      "path": "../../../interface/env_var"
     },
     {
-      "path": "../../../interface/env_var"
+      "path": "../../../database"
     }
   ]
 }

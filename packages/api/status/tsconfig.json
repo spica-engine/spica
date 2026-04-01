@@ -1,12 +1,15 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
+    {
+      "path": "services"
+    },
     {
       "path": "../../database"
     },
     {
-      "path": "../../interface/status"
+      "path": "../passport/guard"
     },
     {
       "path": "../../core"

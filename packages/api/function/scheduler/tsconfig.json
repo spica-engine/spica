@@ -1,5 +1,51 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../runtime/node"
+    },
+    {
+      "path": "../../../interface/function/runtime"
+    },
+    {
+      "path": "../../replication"
+    },
+    {
+      "path": "../runtime/io"
+    },
+    {
+      "path": "../runtime"
+    },
+    {
+      "path": ".."
+    },
+    {
+      "path": "../queue"
+    },
+    {
+      "path": "../pkgmanager/local"
+    },
+    {
+      "path": "../pkgmanager/node"
+    },
+    {
+      "path": "../enqueuer"
+    },
+    {
+      "path": "../compiler/typescript"
+    },
+    {
+      "path": "../compiler/javascript"
+    },
+    {
+      "path": "../compiler"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../passport"
+    }
+  ]
 }

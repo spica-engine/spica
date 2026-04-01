@@ -1,19 +1,7 @@
 {
-  "extends": "../../../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "extends": "../../../tsconfig.base.json",
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
-    {
-      "path": "../testing"
-    },
-    {
-      "path": "../../interface/database"
-    },
-    {
-      "path": "../../interface/realtime"
-    },
     {
       "path": ".."
     }

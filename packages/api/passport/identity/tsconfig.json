@@ -1,48 +1,39 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "realtime"
+      "path": "../../status"
     },
     {
-      "path": "../../../interface/passport/policy"
+      "path": ".."
     },
     {
-      "path": "../../../interface/core"
+      "path": "../../replication"
     },
     {
-      "path": "../../../database/pipeline"
+      "path": "../authfactor"
     },
     {
-      "path": "../../../interface/replication"
-    },
-    {
-      "path": "../../../interface/passport/authfactor"
-    },
-    {
-      "path": "../../../core/schema"
+      "path": "../guard"
     },
     {
       "path": "../../../core"
     },
     {
-      "path": "../../../interface/config"
+      "path": "../../activity/services"
     },
     {
       "path": "../../../database"
     },
     {
-      "path": "../../../interface/passport/identity"
+      "path": "../../config"
     },
     {
-      "path": "../../../interface/representative"
+      "path": "../../preference"
     },
     {
-      "path": "../../../interface/asset"
-    },
-    {
-      "path": "../../../interface/activity"
+      "path": "../../asset"
     }
   ]
 }

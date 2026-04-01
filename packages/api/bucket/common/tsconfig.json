@@ -1,39 +1,30 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../interface/core"
+      "path": "../cache"
     },
     {
-      "path": "../../../core/differ"
+      "path": "../services"
     },
     {
       "path": "../../../filter"
     },
     {
-      "path": "../../../interface/bucket/expression"
+      "path": "../../../core"
     },
     {
-      "path": "../../../core/encryption"
-    },
-    {
-      "path": "../../../interface/bucket"
-    },
-    {
-      "path": "../../../interface/bucket/common"
-    },
-    {
-      "path": "../../../database/pipeline"
+      "path": "../expression"
     },
     {
       "path": "../../../database"
     },
     {
-      "path": "../../../interface/activity"
+      "path": "../../../core/patch"
     },
     {
-      "path": "../../../core/patch"
+      "path": "../../activity/services"
     }
   ]
 }

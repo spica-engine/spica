@@ -1,9 +1,18 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../core"
+      "path": "../../../api/function"
+    },
+    {
+      "path": "../../../api/replication"
+    },
+    {
+      "path": "../../../api/function/queue"
+    },
+    {
+      "path": "../../../api/function/enqueuer"
     }
   ]
 }

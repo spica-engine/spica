@@ -1,45 +1,57 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../interface/status"
+      "path": "../status"
     },
     {
-      "path": "../../interface/core"
+      "path": "expression"
     },
     {
-      "path": "../../core/differ"
+      "path": "graphql"
     },
     {
-      "path": "../../interface/versioncontrol"
+      "path": "../preference"
     },
     {
-      "path": "../../interface/preference"
+      "path": "schemas-realtime"
+    },
+    {
+      "path": "realtime"
     },
     {
       "path": "../../core/patch"
     },
     {
-      "path": "../../interface/passport/guard"
+      "path": "common"
     },
     {
-      "path": "../../core"
+      "path": "cache"
     },
     {
-      "path": "../../interface/bucket"
+      "path": "../passport/guard"
+    },
+    {
+      "path": "hooks"
+    },
+    {
+      "path": "../activity/services"
     },
     {
       "path": "../../database"
     },
     {
-      "path": "../../interface/representative"
+      "path": "../../core"
     },
     {
-      "path": "../../core/schema"
+      "path": "services"
     },
     {
-      "path": "../../interface/asset"
+      "path": "history"
+    },
+    {
+      "path": "../asset"
     }
   ]
 }

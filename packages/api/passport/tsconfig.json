@@ -1,27 +1,33 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json", "guard/services/src/guard.service.ts"],
   "references": [
     {
-      "path": "../../interface/passport/user"
+      "path": "guard"
     },
     {
-      "path": "../../interface/replication"
+      "path": "refresh_token"
     },
     {
-      "path": "../../interface/passport"
+      "path": "user"
+    },
+    {
+      "path": "apikey"
+    },
+    {
+      "path": "../replication"
+    },
+    {
+      "path": "authfactor"
     },
     {
       "path": "../../database"
     },
     {
-      "path": "../../core/schema"
-    },
-    {
       "path": "../../core"
     },
     {
-      "path": "../../interface/passport/identity"
+      "path": "identity"
     }
   ]
 }

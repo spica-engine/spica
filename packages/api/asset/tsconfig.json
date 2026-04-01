@@ -1,21 +1,15 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "schema/*.json", "index.ts"],
   "references": [
-    {
-      "path": "../../core/differ"
-    },
     {
       "path": "../../representative"
     },
     {
-      "path": "../../core/schema"
+      "path": "../passport/guard"
     },
     {
       "path": "../../core"
-    },
-    {
-      "path": "../../interface/asset"
     },
     {
       "path": "../../database"

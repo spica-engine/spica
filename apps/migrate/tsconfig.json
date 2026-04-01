@@ -1,10 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "include": ["src/**/*.ts", "src/**/*.json"],
   "exclude": ["test/**/*"],
   "references": [
     {
-      "path": "../../packages/database/testing"
+      "path": "../../packages/database"
     }
   ]
 }

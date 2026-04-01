@@ -1,16 +1,22 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
   "exclude": ["test/**/*.ts", "**/*.spec.ts"],
   "references": [
     {
+      "path": "sync/engine"
+    },
+    {
+      "path": "sync"
+    },
+    {
+      "path": "../replication"
+    },
+    {
       "path": "../../representative"
     },
     {
-      "path": "../../interface/config"
-    },
-    {
-      "path": "../../interface/versioncontrol"
+      "path": "../passport/guard"
     }
   ]
 }

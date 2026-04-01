@@ -1,7 +1,55 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
+    {
+      "path": "../status"
+    },
+    {
+      "path": "webhook"
+    },
+    {
+      "path": "../../core/patch"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../replication"
+    },
+    {
+      "path": "scheduler"
+    },
+    {
+      "path": "../../interface/secret"
+    },
+    {
+      "path": "../../interface/env_var"
+    },
+    {
+      "path": "log"
+    },
+    {
+      "path": "services"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../asset"
+    },
+    {
+      "path": "../../realtime"
+    },
+    {
+      "path": "../passport"
+    },
+    {
+      "path": "../../database"
+    },
     {
       "path": "realtime"
     }

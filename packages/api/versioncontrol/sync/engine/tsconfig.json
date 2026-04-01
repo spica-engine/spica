@@ -1,12 +1,15 @@
 {
-  "extends": "../../../../../tsconfig.json",
+  "extends": "../../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../../interface/versioncontrol"
+      "path": "../../../replication"
     },
     {
-      "path": "../../../../interface/representative"
+      "path": "../../processors/sync"
+    },
+    {
+      "path": "../../processors/changelog"
     }
   ]
 }

@@ -1,15 +1,15 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts", "services/src/preference.service.ts"],
   "references": [
     {
       "path": "../../database"
     },
     {
-      "path": "../../interface/preference"
+      "path": "../passport/guard"
     },
     {
-      "path": "../../interface/activity"
+      "path": "../activity/services"
     }
   ]
 }

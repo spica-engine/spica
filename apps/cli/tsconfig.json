@@ -1,13 +1,6 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "files": [],
   "include": ["package.json"],
-  "references": [
-    {
-      "path": "../../packages/interface/function"
-    },
-    {
-      "path": "../../packages/interface/asset"
-    }
-  ]
+  "references": []
 }

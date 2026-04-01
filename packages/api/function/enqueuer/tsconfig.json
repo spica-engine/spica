@@ -1,5 +1,21 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../replication"
+    },
+    {
+      "path": ".."
+    },
+    {
+      "path": "../queue"
+    },
+    {
+      "path": "../../../database"
+    }
+  ]
 }

@@ -1,21 +1,18 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../database/testing"
+      "path": "../passport/testing"
     },
     {
-      "path": "../../core/testing"
-    },
-    {
-      "path": "../../core/schema"
-    },
-    {
-      "path": "../../interface/config"
+      "path": "../../core"
     },
     {
       "path": "../../database"
+    },
+    {
+      "path": "../passport"
     }
   ]
 }
