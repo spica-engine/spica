@@ -1,7 +1,7 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {SmsOptions, SMS_OPTIONS, SmsStrategy} from "@spica-server/interface/sms";
-import {SmsService} from "./service";
-import {TwilioStrategy} from "./strategy";
+import {SmsService} from "./service.js";
+import {TwilioStrategy} from "./strategy/index.js";
 
 @Global()
 @Module({})

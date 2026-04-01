@@ -21,7 +21,7 @@ import {WsAdapter} from "@spica-server/core/websocket";
 // import {EnvVarModule} from "@spica-server/env_var";
 // import {SecretModule} from "@spica-server/secret";
 // import {MailerModule} from "@spica-server/mailer";
-// import {SmsModule} from "@spica-server/sms";
+import {SmsModule} from "@spica-server/sms";
 
 import fs from "fs";
 import https from "https";
@@ -732,14 +732,14 @@ const modules = [
   //     from: args["mailer-from"]
   //   }
   // }),
-  // SmsModule.forRoot({
-  //   strategy: args["sms-sender-strategy"] as "twilio",
-  //   twilio: {
-  //     accountSid: args["twilio-sms-service-account-sid"],
-  //     authToken: args["twilio-sms-service-auth-token"],
-  //     fromNumber: args["twilio-sms-service-from-number"]
-  //   }
-  // }),
+  SmsModule.forRoot({
+    strategy: args["sms-sender-strategy"] as "twilio",
+    twilio: {
+      accountSid: args["twilio-sms-service-account-sid"],
+      authToken: args["twilio-sms-service-auth-token"],
+      fromNumber: args["twilio-sms-service-from-number"]
+    }
+  }),
   // SchemaModule.forRoot({
   //   formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
   //   defaults: [CREATED_AT, UPDATED_AT]

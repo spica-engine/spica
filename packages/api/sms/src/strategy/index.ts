@@ -1,1 +1,1 @@
-export * from "./twilio.strategy";
+export * from "./twilio.strategy.js";

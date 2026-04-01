@@ -1,3 +1,3 @@
-export * from "./src/module";
-export * from "./src/service";
-export * from "./src/strategy";
+export * from "./src/module.js";
+export * from "./src/service.js";
+export * from "./src/strategy/index.js";
