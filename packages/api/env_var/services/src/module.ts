@@ -1,5 +1,5 @@
 import {Global, Module} from "@nestjs/common";
-import {EnvVarService} from "./service";
+import {EnvVarService} from "./service.js";
 
 @Global()
 @Module({})

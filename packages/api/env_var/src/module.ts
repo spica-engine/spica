@@ -1,16 +1,16 @@
 import {DynamicModule, Inject, Module, Optional} from "@nestjs/common";
 import {EnvVarService, ServicesModule} from "@spica-server/env_var/services";
-import {EnvVarController} from "./controller";
+import {EnvVarController} from "./controller.js";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import EnvVarSchema from "./schema.json" with {type: "json"};
 import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {registerAssetHandlers} from "./asset";
+import {registerAssetHandlers} from "./asset.js";
 import {
   REGISTER_VC_CHANGE_HANDLER,
   RegisterVCChangeHandler
 } from "@spica-server/interface/versioncontrol";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {getSupplier, getApplier} from "./synchronizer/schema";
+import {getSupplier, getApplier} from "./synchronizer/schema/index.js";
 import {EnvVarRealtimeModule} from "@spica-server/env_var/realtime";
 
 @Module({})

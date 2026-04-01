@@ -13,6 +13,9 @@
       "path": "../../packages/api/secret"
     },
     {
+      "path": "../../packages/api/env_var"
+    },
+    {
       "path": "../../packages/api/batch"
     },
     {

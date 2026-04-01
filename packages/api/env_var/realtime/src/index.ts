@@ -1,1 +1,1 @@
-export {EnvVarRealtimeModule} from "./realtime.module";
+export {EnvVarRealtimeModule} from "./realtime.module.js";

@@ -5,7 +5,7 @@ import {Schema, Validator} from "@spica-server/core/schema";
 import {EnvVarService} from "@spica-server/env_var/services";
 import {EnvVar} from "@spica-server/interface/env_var";
 import {ObjectId} from "@spica-server/database";
-import * as CRUD from "./crud";
+import * as CRUD from "./crud.js";
 
 const _module = "env_var";
 

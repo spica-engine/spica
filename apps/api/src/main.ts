@@ -18,7 +18,7 @@ import {PreferenceModule} from "@spica-server/preference";
 import {ReplicationModule} from "@spica-server/replication";
 // import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
-// import {EnvVarModule} from "@spica-server/env_var";
+import {EnvVarModule} from "@spica-server/env_var";
 import {SecretModule} from "@spica-server/secret";
 import {MailerModule} from "@spica-server/mailer";
 import {SmsModule} from "@spica-server/sms";
@@ -713,9 +713,9 @@ const modules = [
     appName: "spica",
     readPreference: args["database-read-preference"]
   }),
-  // EnvVarModule.forRoot({
-  //   realtime: true
-  // }),
+  EnvVarModule.forRoot({
+    realtime: true
+  }),
   SecretModule.forRoot({
     realtime: true,
     encryptionSecret: args["secret-module-encryption-secret"]

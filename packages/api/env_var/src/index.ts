@@ -1,1 +1,1 @@
-export {EnvVarModule} from "./module";
+export {EnvVarModule} from "./module.js";
