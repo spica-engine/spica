@@ -6,7 +6,7 @@ import {Middlewares} from "@spica-server/core";
 // import {SchemaModule} from "@spica-server/core/schema";
 // import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 // import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-// import {WsAdapter} from "@spica-server/core/websocket";
+import {WsAdapter} from "@spica-server/core/websocket";
 // import {DashboardModule} from "@spica-server/dashboard";
 // import {DatabaseModule} from "@spica-server/database";
 // import {FunctionModule} from "@spica-server/function";
@@ -883,7 +883,7 @@ NestFactory.create(RootModule, {
 }).then(async app => {
   app.getHttpAdapter().getInstance().set("trust proxy", args["trust-proxy"]);
   console.log("PROXY at main.ts", app.getHttpAdapter().getInstance().get("trust proxy"));
-  // app.useWebSocketAdapter(new WsAdapter(app));
+  app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
     Middlewares.Headers({
       "Cache-Control": args["cache-control-header"],

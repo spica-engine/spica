@@ -1,1 +1,1 @@
-export {WsAdapter} from "./adapter";
+export {WsAdapter} from "./adapter.js";

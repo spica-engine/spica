@@ -48,8 +48,8 @@ export class WsAdapter extends BaseAdapter {
       return true;
     };
 
-    this.httpServer.removeAllListeners("upgrade");
-    this.httpServer.on("upgrade", (request, socket, head) => {
+    (this as any).httpServer.removeAllListeners("upgrade");
+    (this as any).httpServer.on("upgrade", (request, socket, head) => {
       let matched = false;
       for (const [path, server] of this.paths.entries()) {
         const url = new URL(request.url, "http://insteadof");
@@ -68,5 +68,9 @@ export class WsAdapter extends BaseAdapter {
       }
     });
     return server;
+  }
+
+  bindClientConnect(server: any, callback: Function) {
+    server.on("connection", callback);
   }
 }

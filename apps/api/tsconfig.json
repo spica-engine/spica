@@ -7,6 +7,9 @@
   "include": ["src/main.ts"],
   "references": [
     {
+      "path": "../../packages/core/websocket"
+    },
+    {
       "path": "../../packages/core"
     }
   ]
