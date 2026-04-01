@@ -15,7 +15,7 @@ import {
   Res,
   UseGuards
 } from "@nestjs/common";
-import {AssetService} from "./service";
+import {AssetService} from "./service.js";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
 import {
   Asset,
@@ -27,12 +27,12 @@ import {
   InstallationChanges,
   INSTALLATION_STRATEGIES
 } from "@spica-server/interface/asset";
-import {exporters, operators, validators} from "./registration";
-import {putConfiguration} from "./helpers";
+import {exporters, operators, validators} from "./registration.js";
+import {putConfiguration} from "./helpers.js";
 import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
-import {AssetRepManager} from "./representative";
+import {AssetRepManager} from "./representative.js";
 import {createReadStream} from "fs";
 import {OptionalId} from "@spica-server/database";
 

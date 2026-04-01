@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {IncomingOAuthPreset, OAuthStrategy} from "@spica-server/interface/passport";
-import {CustomOAuthService} from "./custom";
+import {CustomOAuthService} from "./custom.js";
 
 @Injectable()
 export class Auth0OAuthService extends CustomOAuthService {

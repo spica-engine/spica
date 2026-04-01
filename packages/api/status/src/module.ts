@@ -1,5 +1,5 @@
 import {DynamicModule, Module} from "@nestjs/common";
-import {StatusController} from "./controller";
+import {StatusController} from "./controller.js";
 import {
   CoreStatusServiceModule,
   StatusInterceptor,
@@ -7,7 +7,7 @@ import {
 } from "@spica-server/status/services";
 import {StatusOptions} from "@spica-server/interface/status";
 import {APP_INTERCEPTOR} from "@nestjs/core";
-import {registerStatusProvider} from "./status";
+import {registerStatusProvider} from "./status.js";
 
 @Module({})
 export class StatusModule {

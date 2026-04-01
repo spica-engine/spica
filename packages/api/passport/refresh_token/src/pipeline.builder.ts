@@ -1,6 +1,6 @@
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {replaceFilterDates, replaceFilterObjectIds} from "@spica-server/filter";
-import {replaceRefreshTokenFilter} from "./filter";
+import {replaceRefreshTokenFilter} from "./filter.js";
 
 export class RefreshTokenPipelineBuilder extends PipelineBuilder {
   constructor(private readonly hashSecret?: string) {

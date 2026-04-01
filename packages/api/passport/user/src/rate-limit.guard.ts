@@ -7,7 +7,7 @@ import {
   mixin
 } from "@nestjs/common";
 import {Type} from "@nestjs/common/interfaces";
-import {RateLimitService} from "./rate-limit.service";
+import {RateLimitService} from "./rate-limit.service.js";
 
 export function RateLimitGuard(group: string): Type<CanActivate> {
   class MixinRateLimitGuard implements CanActivate {

@@ -1,2 +1,2 @@
-export * from "./src/gateway";
-export * from "./src/options-builder";
+export * from "./src/gateway.js";
+export * from "./src/options-builder.js";

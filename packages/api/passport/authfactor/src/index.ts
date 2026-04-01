@@ -1,2 +1,2 @@
-export {AuthFactor} from "./authfactor";
-export {AuthFactorModule} from "./module";
+export {AuthFactor} from "./authfactor.js";
+export {AuthFactorModule} from "./module.js";

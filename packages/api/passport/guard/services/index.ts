@@ -1,1 +1,1 @@
-export {GuardService} from "./src/guard.service";
+export {GuardService} from "./src/guard.service.js";

@@ -1,2 +1,2 @@
-export * from "./identity.service";
-export * from "./module";
+export * from "./identity.service.js";
+export * from "./module.js";

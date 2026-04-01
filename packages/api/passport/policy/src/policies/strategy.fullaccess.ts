@@ -1,4 +1,4 @@
-import StrategyReadOnlyAccess from "./strategy.readonly";
+import StrategyReadOnlyAccess from "./strategy.readonly.js";
 
 export default {
   _id: "StrategyFullAccess",

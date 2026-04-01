@@ -1,1 +1,1 @@
-export {IdentityRealtimeModule} from "./realtime.module";
+export {IdentityRealtimeModule} from "./realtime.module.js";

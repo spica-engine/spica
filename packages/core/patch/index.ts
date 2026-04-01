@@ -1,1 +1,1 @@
-export * from "./src/patch";
+export * from "./src/patch.js";

@@ -18,8 +18,8 @@ import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {createApikeyActivity} from "./activity.resource";
-import {ApiKeyService} from "./apikey.service";
+import {createApikeyActivity} from "./activity.resource.js";
+import {ApiKeyService} from "./apikey.service.js";
 import {ApiKey} from "@spica-server/interface/passport/apikey";
 import {nanoid} from "nanoid";
 

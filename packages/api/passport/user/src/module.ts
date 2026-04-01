@@ -7,13 +7,13 @@ import {
   POLICY_PROVIDER,
   VERIFICATION_PROVIDERS_INITIALIZER
 } from "@spica-server/interface/passport/user";
-import {UserController} from "./user.controller";
-import {UserService} from "./user.service";
-import {UserStrategy} from "./user.strategy";
-import {providePolicyFinalizer} from "./utility";
+import {UserController} from "./user.controller.js";
+import {UserService} from "./user.service.js";
+import {UserStrategy} from "./user.strategy.js";
+import {providePolicyFinalizer} from "./utility.js";
 import {PolicyService} from "@spica-server/passport/policy";
 import {USER_POLICY_FINALIZER} from "@spica-server/interface/passport/policy";
-import {registerStatusProvider} from "./status";
+import {registerStatusProvider} from "./status.js";
 import userSchema from "./schemas/user.json" with {type: "json"};
 import userCreateSchema from "./schemas/user-create.json" with {type: "json"};
 import userUpdateSchema from "./schemas/user-update.json" with {type: "json"};
@@ -24,22 +24,22 @@ import passwordlessLoginVerifySchema from "./schemas/passwordless-login-verify.j
 import forgotPasswordStartSchema from "./schemas/forgot-password-start.json" with {type: "json"};
 import forgotPasswordVerifySchema from "./schemas/forgot-password-verify.json" with {type: "json"};
 import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
-import {UserRealtimeModule} from "../realtime";
-import {VerificationService} from "./verification.service";
+import {UserRealtimeModule} from "@spica-server/passport/user/realtime";
+import {VerificationService} from "./verification.service.js";
 import {
   VerificationProviderRegistry,
   EmailVerificationProvider,
   PhoneVerificationProvider
-} from "./providers";
+} from "./providers/index.js";
 import {MailerService} from "@spica-server/mailer";
 import {SmsService} from "@spica-server/sms";
-import {UserConfigService} from "./config.service";
-import {ProviderVerificationService} from "./services/provider.verification.service";
-import {PasswordlessLoginService} from "./services/passwordless-login.service";
-import {PasswordResetService} from "./services/password-reset.service";
+import {UserConfigService} from "./config.service.js";
+import {ProviderVerificationService} from "./services/provider.verification.service.js";
+import {PasswordlessLoginService} from "./services/passwordless-login.service.js";
+import {PasswordResetService} from "./services/password-reset.service.js";
 import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
-import {provideUserPasswordPolicySchemaResolver} from "./password-policy.schema.resolver";
-import {RateLimitService} from "./rate-limit.service";
+import {provideUserPasswordPolicySchemaResolver} from "./password-policy.schema.resolver.js";
+import {RateLimitService} from "./rate-limit.service.js";
 
 @Global()
 @Module({})

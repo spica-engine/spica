@@ -1,15 +1,15 @@
 import {DynamicModule, Global, Inject, Module, Optional} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {ApiKeyController} from "./apikey.controller";
-import {ApiKeyService} from "./apikey.service";
-import {ApiKeyStrategy} from "./apikey.strategy";
+import {ApiKeyController} from "./apikey.controller.js";
+import {ApiKeyService} from "./apikey.service.js";
+import {ApiKeyStrategy} from "./apikey.strategy.js";
 import {APIKEY_POLICY_FINALIZER} from "@spica-server/interface/passport/policy";
-import {providePolicyFinalizer} from "./utility";
+import {providePolicyFinalizer} from "./utility.js";
 import ApiKeySchema from "./schemas/apikey.json" with {type: "json"};
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {registerAssetHandlers} from "./asset";
-import {ApikeyRealtimeModule} from "../realtime";
+import {registerAssetHandlers} from "./asset.js";
+import {ApikeyRealtimeModule} from "@spica-server/passport/apikey/realtime";
 
 @Global()
 @Module({})

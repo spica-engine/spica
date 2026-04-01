@@ -1,15 +1,25 @@
 {
   "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "../../status"
     },
     {
+      "path": "realtime"
+    },
+    {
       "path": "../../../interface/passport/policy"
     },
     {
       "path": "../policy"
+    },
+    {
+      "path": "../refresh_token/services"
     },
     {
       "path": "../../../interface/core"
@@ -55,6 +65,9 @@
     },
     {
       "path": "../../../interface/representative"
+    },
+    {
+      "path": "../../preference/services"
     },
     {
       "path": "../../../interface/asset"

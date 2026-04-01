@@ -1,4 +1,4 @@
-import ApiKeyReadOnlyAccess from "./apikey.readonly";
+import ApiKeyReadOnlyAccess from "./apikey.readonly.js";
 
 export default {
   _id: "ApiKeyFullAccess",

@@ -7,7 +7,7 @@ import {
   PassportOptions,
   PASSPORT_OPTIONS
 } from "@spica-server/interface/passport";
-import {StrategyService} from "./strategy.service";
+import {StrategyService} from "./strategy.service.js";
 import forge from "node-forge";
 import {ObjectId} from "@spica-server/database";
 

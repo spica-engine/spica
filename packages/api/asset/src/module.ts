@@ -1,7 +1,7 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
-import {AssetController} from "./controller";
-import {AssetService} from "./service";
+import {AssetController} from "./controller.js";
+import {AssetService} from "./service.js";
 
 import {
   AssetOptions,
@@ -14,8 +14,8 @@ import fs from "fs";
 import AssetSchema from "../schema/asset.json" with {type: "json"};
 import ConfigsSchema from "../schema/configs.json" with {type: "json"};
 import ExportSchema from "../schema/export.json" with {type: "json"};
-import {AssetRepManager} from "./representative";
-import {installationStrategies} from "./strategies";
+import {AssetRepManager} from "./representative.js";
+import {installationStrategies} from "./strategies.js";
 
 @Global()
 @Module({})

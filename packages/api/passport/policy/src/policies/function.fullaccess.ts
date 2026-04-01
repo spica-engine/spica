@@ -1,6 +1,6 @@
-import FunctionReadOnlyAccess from "./function.readonly";
-import EnvVarFullAccess from "./env.var.fullaccess";
-import SecretFullAccess from "./secret.fullaccess";
+import FunctionReadOnlyAccess from "./function.readonly.js";
+import EnvVarFullAccess from "./env.var.fullaccess.js";
+import SecretFullAccess from "./secret.fullaccess.js";
 
 export default {
   _id: "FunctionFullAccess",

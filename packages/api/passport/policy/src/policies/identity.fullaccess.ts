@@ -1,4 +1,4 @@
-import IdentityReadOnlyAccess from "./identity.readonly";
+import IdentityReadOnlyAccess from "./identity.readonly.js";
 
 export default {
   _id: "IdentityFullAccess",

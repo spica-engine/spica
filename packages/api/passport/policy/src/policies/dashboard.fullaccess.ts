@@ -1,4 +1,4 @@
-import DashboardReadOnlyAccess from "./dashboard.readonly";
+import DashboardReadOnlyAccess from "./dashboard.readonly.js";
 
 export default {
   _id: "DashboardFullAccess",

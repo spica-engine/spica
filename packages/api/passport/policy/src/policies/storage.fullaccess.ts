@@ -1,4 +1,4 @@
-import StorageReadOnlyAccess from "./storage.readonly";
+import StorageReadOnlyAccess from "./storage.readonly.js";
 
 export default {
   _id: "StorageFullAccess",

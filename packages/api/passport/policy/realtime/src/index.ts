@@ -1,1 +1,1 @@
-export {PolicyRealtimeModule} from "./realtime.module";
+export {PolicyRealtimeModule} from "./realtime.module.js";

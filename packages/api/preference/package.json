@@ -2,10 +2,23 @@
   "name": "@spica-server/preference",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./services": "./services/index.ts",
-    "./testing": "./testing/index.ts",
-    "./src/activity.resource": "./src/activity.resource.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./services": {
+      "types": "./services/index.ts",
+      "default": "./services/dist/index.js"
+    },
+    "./testing": {
+      "types": "./testing/index.ts",
+      "default": "./testing/dist/index.js"
+    },
+    "./src/activity.resource": {
+      "types": "./src/activity.resource.ts",
+      "default": "./dist/src/activity.resource.js"
+    }
   }
 }

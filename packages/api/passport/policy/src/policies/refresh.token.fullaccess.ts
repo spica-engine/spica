@@ -1,4 +1,4 @@
-import RefreshTokenReadOnlyAccess from "./refresh.token.readonly";
+import RefreshTokenReadOnlyAccess from "./refresh.token.readonly.js";
 
 export default {
   _id: "RefreshTokenFullAccess",

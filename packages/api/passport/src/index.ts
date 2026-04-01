@@ -1,1 +1,1 @@
-export {PassportModule} from "./passport.module";
+export {PassportModule} from "./passport.module.js";

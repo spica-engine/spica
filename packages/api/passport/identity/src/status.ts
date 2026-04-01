@@ -1,5 +1,5 @@
 import {register} from "@spica-server/status";
-import {IdentityService} from "./identity.service";
+import {IdentityService} from "./identity.service.js";
 
 export async function registerStatusProvider(service: IdentityService) {
   const provide = async () => {

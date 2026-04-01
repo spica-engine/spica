@@ -24,6 +24,9 @@
       "path": "../../passport/guard"
     },
     {
+      "path": "../../passport/guard/services"
+    },
+    {
       "path": "../../../database"
     },
     {

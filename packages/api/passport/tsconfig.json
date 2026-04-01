@@ -1,6 +1,10 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json", "guard/services/src/guard.service.ts"],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "guard"
@@ -10,6 +14,9 @@
     },
     {
       "path": "refresh_token"
+    },
+    {
+      "path": "guard/services"
     },
     {
       "path": "policy"
@@ -24,28 +31,55 @@
       "path": "../../interface/replication"
     },
     {
-      "path": "../replication"
-    },
-    {
       "path": "authfactor"
     },
     {
       "path": "../../interface/passport"
     },
     {
-      "path": "../../database"
-    },
-    {
       "path": "../../core/schema"
-    },
-    {
-      "path": "../../core"
     },
     {
       "path": "../../interface/passport/identity"
     },
     {
       "path": "identity"
+    },
+    {
+      "path": "../status"
+    },
+    {
+      "path": "../sms"
+    },
+    {
+      "path": "../replication"
+    },
+    {
+      "path": "../../realtime"
+    },
+    {
+      "path": "../preference"
+    },
+    {
+      "path": "../mailer"
+    },
+    {
+      "path": "../../filter"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../config"
+    },
+    {
+      "path": "../asset"
+    },
+    {
+      "path": "../activity"
     }
   ]
 }

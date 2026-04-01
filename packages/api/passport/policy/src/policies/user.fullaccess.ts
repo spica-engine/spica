@@ -1,4 +1,4 @@
-import UserReadOnlyAccess from "./user.readonly";
+import UserReadOnlyAccess from "./user.readonly.js";
 
 export default {
   _id: "UserFullAccess",

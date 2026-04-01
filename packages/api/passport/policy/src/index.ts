@@ -1,2 +1,2 @@
-export * from "./policy.service";
-export * from "./module";
+export * from "./policy.service.js";
+export * from "./module.js";

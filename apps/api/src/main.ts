@@ -10,8 +10,8 @@ import {WsAdapter} from "@spica-server/core/websocket";
 // import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
 // import {FunctionModule} from "@spica-server/function";
-// import {PassportModule} from "@spica-server/passport";
-// import {PreferenceModule} from "@spica-server/preference";
+import {PassportModule} from "@spica-server/passport";
+import {PreferenceModule} from "@spica-server/preference";
 // import {StatusModule} from "@spica-server/status";
 // import {StorageModule} from "@spica-server/storage";
 // import {VersionControlModule} from "@spica-server/versioncontrol";
@@ -704,7 +704,7 @@ const modules = [
   //   port: args["port"]
   // }),
   // DashboardModule.forRoot({realtime: true}),
-  // PreferenceModule.forRoot(),
+  PreferenceModule.forRoot(),
   // AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
@@ -743,7 +743,7 @@ const modules = [
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
     defaults: [CREATED_AT, UPDATED_AT]
-  })
+  }),
   // BucketModule.forRoot({
   //   hooks: args["bucket-hooks"],
   //   history: args["bucket-history"],
@@ -767,53 +767,53 @@ const modules = [
   //   totalSizeLimit: args["storage-total-size-limit"],
   //   resumableUploadExpiresIn: args["resumable-upload-expires-in"]
   // }),
-  // PassportModule.forRoot({
-  //   publicUrl: args["public-url"],
-  //   defaultStrategy: args["passport-default-strategy"],
-  //   samlCertificateTTL: args["passport-saml-certificate-ttl"],
-  //   apikeyRealtime: true,
-  //   refreshTokenRealtime: true,
-  //   policyRealtime: true,
-  //   identityOptions: {
-  //     expiresIn: args["passport-identity-token-expires-in"],
-  //     maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
-  //     issuer: args["public-url"],
-  //     refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
-  //     refreshTokenHashSecret: args["refresh-token-hash-secret"],
-  //     secretOrKey: args["passport-secret"],
-  //     audience: "spica.io",
-  //     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
-  //     defaultIdentityPassword: args["passport-default-identity-password"],
-  //     defaultIdentityPolicies: args["passport-default-identity-policies"],
-  //     entryLimit: args["passport-identity-limit"],
-  //     passwordHistoryLimit: args["passport-identity-password-history-limit"],
-  //     blockingOptions: {
-  //       failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
-  //       blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
-  //     },
-  //     identityRealtime: true
-  //   },
-  //   userOptions: {
-  //     expiresIn: args["passport-user-token-expires-in"],
-  //     maxExpiresIn: args["passport-user-token-expiration-seconds-limit"],
-  //     issuer: args["public-url"],
-  //     refreshTokenExpiresIn: args["passport-user-refresh-token-expires-in"],
-  //     refreshTokenHashSecret: args["refresh-token-hash-secret"],
-  //     secretOrKey: args["passport-secret"],
-  //     audience: "spica.io",
-  //     entryLimit: args["passport-user-limit"],
-  //     passwordHistoryLimit: args["passport-user-password-history-limit"],
-  //     blockingOptions: {
-  //       failedAttemptLimit: args["passport-user-failed-login-attempt-limit"],
-  //       blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
-  //     },
-  //     userRealtime: true,
-  //     verificationHashSecret: args["user-verification-hash-secret"],
-  //     providerEncryptionSecret: args["user-provider-encryption-secret"],
-  //     providerHashSecret: args["user-provider-hash-secret"],
-  //     verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
-  //   }
-  // }),
+  PassportModule.forRoot({
+    publicUrl: args["public-url"],
+    defaultStrategy: args["passport-default-strategy"],
+    samlCertificateTTL: args["passport-saml-certificate-ttl"],
+    apikeyRealtime: true,
+    refreshTokenRealtime: true,
+    policyRealtime: true,
+    identityOptions: {
+      expiresIn: args["passport-identity-token-expires-in"],
+      maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
+      issuer: args["public-url"],
+      refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
+      refreshTokenHashSecret: args["refresh-token-hash-secret"],
+      secretOrKey: args["passport-secret"],
+      audience: "spica.io",
+      defaultIdentityIdentifier: args["passport-default-identity-identifier"],
+      defaultIdentityPassword: args["passport-default-identity-password"],
+      defaultIdentityPolicies: args["passport-default-identity-policies"],
+      entryLimit: args["passport-identity-limit"],
+      passwordHistoryLimit: args["passport-identity-password-history-limit"],
+      blockingOptions: {
+        failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
+        blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
+      },
+      identityRealtime: true
+    },
+    userOptions: {
+      expiresIn: args["passport-user-token-expires-in"],
+      maxExpiresIn: args["passport-user-token-expiration-seconds-limit"],
+      issuer: args["public-url"],
+      refreshTokenExpiresIn: args["passport-user-refresh-token-expires-in"],
+      refreshTokenHashSecret: args["refresh-token-hash-secret"],
+      secretOrKey: args["passport-secret"],
+      audience: "spica.io",
+      entryLimit: args["passport-user-limit"],
+      passwordHistoryLimit: args["passport-user-password-history-limit"],
+      blockingOptions: {
+        failedAttemptLimit: args["passport-user-failed-login-attempt-limit"],
+        blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
+      },
+      userRealtime: true,
+      verificationHashSecret: args["user-verification-hash-secret"],
+      providerEncryptionSecret: args["user-provider-encryption-secret"],
+      providerHashSecret: args["user-provider-hash-secret"],
+      verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
+    }
+  })
   // FunctionModule.forRoot({
   //   logExpireAfterSeconds: args["common-log-lifespan"],
   //   path: args["persistent-path"],

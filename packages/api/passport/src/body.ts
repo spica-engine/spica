@@ -7,7 +7,7 @@ import {switchMapTo} from "rxjs/operators";
 abstract class __UrlEncodedBody {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const [req, res] = context.getArgs();
-    return new Observable(observer => {
+    return new Observable<void>(observer => {
       const parser = urlencoded({extended: false});
       parser(req, res, error => {
         if (error) {

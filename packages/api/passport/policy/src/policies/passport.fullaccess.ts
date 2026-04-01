@@ -1,9 +1,9 @@
-import IdentityFullAccess from "./identity.fullaccess";
-import StrategyFullAccess from "./strategy.fullaccess";
-import ApiKeyFullAccess from "./apikey.fullaccess";
-import PolicyFullAccess from "./policy.fullaccess";
-import RefreshTokenFullAccess from "./refresh.token.fullaccess";
-import UserFullAccess from "./user.fullaccess";
+import IdentityFullAccess from "./identity.fullaccess.js";
+import StrategyFullAccess from "./strategy.fullaccess.js";
+import ApiKeyFullAccess from "./apikey.fullaccess.js";
+import PolicyFullAccess from "./policy.fullaccess.js";
+import RefreshTokenFullAccess from "./refresh.token.fullaccess.js";
+import UserFullAccess from "./user.fullaccess.js";
 
 export default {
   _id: "PassportFullAccess",

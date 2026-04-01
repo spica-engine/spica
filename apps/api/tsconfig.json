@@ -16,19 +16,49 @@
       "path": "../../packages/core/schema"
     },
     {
+      "path": "../../packages/api/status"
+    },
+    {
       "path": "../../packages/api/sms"
+    },
+    {
+      "path": "../../packages/representative"
     },
     {
       "path": "../../packages/api/replication"
     },
     {
+      "path": "../../packages/realtime"
+    },
+    {
+      "path": "../../packages/api/preference"
+    },
+    {
+      "path": "../../packages/api/passport"
+    },
+    {
       "path": "../../packages/api/mailer"
+    },
+    {
+      "path": "../../packages/filter"
+    },
+    {
+      "path": "../../packages/api/preference"
     },
     {
       "path": "../../packages/database"
     },
     {
       "path": "../../packages/core"
+    },
+    {
+      "path": "../../packages/api/config"
+    },
+    {
+      "path": "../../packages/api/asset"
+    },
+    {
+      "path": "../../packages/api/activity"
     }
   ]
 }

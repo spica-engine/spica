@@ -1,3 +1,3 @@
-export * from "./module";
-export * from "./registration";
-export * from "./helpers";
+export * from "./module.js";
+export * from "./registration.js";
+export * from "./helpers.js";

@@ -1,2 +1,2 @@
-export * from "./src/representative";
-export * from "./src/vcrepresentative";
+export * from "./src/representative.js";
+export * from "./src/vcrepresentative.js";

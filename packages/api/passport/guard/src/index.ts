@@ -3,5 +3,5 @@ export {
   SimpleActionGuard,
   ResourceFilter,
   resourceFilterFunction
-} from "./action.guard";
-export {AuthGuard, StrategyType, extractStrategyType} from "./auth.guard";
+} from "./action.guard.js";
+export {AuthGuard, StrategyType, extractStrategyType} from "./auth.guard.js";

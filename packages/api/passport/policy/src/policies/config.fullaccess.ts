@@ -1,4 +1,4 @@
-import ConfigReadOnlyAccess from "./config.readonly";
+import ConfigReadOnlyAccess from "./config.readonly.js";
 
 export default {
   _id: "ConfigFullAccess",

@@ -27,9 +27,9 @@ import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {AuthFactor} from "@spica-server/passport/authfactor";
 import {Factor, FactorMeta} from "@spica-server/interface/passport/authfactor";
-import {createIdentityActivity} from "./activity.resource";
-import {compare, hash} from "./hash";
-import {IdentityService} from "./identity.service";
+import {createIdentityActivity} from "./activity.resource.js";
+import {compare, hash} from "./hash.js";
+import {IdentityService} from "./identity.service.js";
 import {
   Identity,
   IDENTITY_OPTIONS,
@@ -37,7 +37,7 @@ import {
   PaginationResponse,
   POLICY_PROVIDER
 } from "@spica-server/interface/passport/identity";
-import {registerPolicyAttacher} from "./utility";
+import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";

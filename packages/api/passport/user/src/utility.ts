@@ -1,4 +1,4 @@
-import {UserService} from "./user.service";
+import {UserService} from "./user.service.js";
 
 export function registerPolicyAttacher(policy: string | string[]) {
   policy = Array.isArray(policy) ? policy : [policy];

@@ -38,15 +38,15 @@
     },
     "./differ": {
       "types": "./differ/index.ts",
-      "default": "./dist/differ/index.js"
+      "default": "./differ/dist/index.js"
     },
     "./patch": {
       "types": "./patch/index.ts",
-      "default": "./dist/patch/index.js"
+      "default": "./patch/dist/index.js"
     },
     "./copy": {
       "types": "./copy/index.ts",
-      "default": "./dist/copy/index.js"
+      "default": "./copy/dist/index.js"
     },
     "./src/middlewares": {
       "types": "./src/middlewares.ts",

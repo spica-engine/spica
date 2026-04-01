@@ -1,1 +1,1 @@
-export {ApikeyRealtimeModule} from "./realtime.module";
+export {ApikeyRealtimeModule} from "./realtime.module.js";

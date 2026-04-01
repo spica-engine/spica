@@ -1,4 +1,4 @@
-import SecretReadOnlyAccess from "./secret.readonly";
+import SecretReadOnlyAccess from "./secret.readonly.js";
 
 export default {
   _id: "SecretFullAccess",

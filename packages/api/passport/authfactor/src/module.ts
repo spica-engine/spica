@@ -1,6 +1,6 @@
 import {Global, Module} from "@nestjs/common";
-import {Totp, TotpFactorSchemaProvider} from "./totp";
-import {AuthFactor} from "./authfactor";
+import {Totp, TotpFactorSchemaProvider} from "./totp.js";
+import {AuthFactor} from "./authfactor.js";
 import {ClassCommander} from "@spica-server/replication";
 
 @Global()

@@ -1,7 +1,7 @@
 import {Global, Module} from "@nestjs/common";
-import {ConfigService} from "./config.service";
-import {ConfigController} from "./config.controller";
-import {ConfigSchemaRegistry} from "./config.schema.registry";
+import {ConfigService} from "./config.service.js";
+import {ConfigController} from "./config.controller.js";
+import {ConfigSchemaRegistry} from "./config.schema.registry.js";
 import {REGISTER_CONFIG_SCHEMA} from "@spica-server/interface/config";
 import {SchemaModule} from "@spica-server/core/schema";
 

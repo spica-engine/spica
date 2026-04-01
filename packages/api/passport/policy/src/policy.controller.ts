@@ -19,15 +19,15 @@ import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {createPolicyActivity} from "./activity.resource";
+import {createPolicyActivity} from "./activity.resource.js";
 import {
   Policy,
   APIKEY_POLICY_FINALIZER,
   changeFactory,
   IDENTITY_POLICY_FINALIZER
 } from "@spica-server/interface/passport/policy";
-import {PolicyService} from "./policy.service";
-import * as CRUD from "./crud";
+import {PolicyService} from "./policy.service.js";
+import * as CRUD from "./crud.js";
 
 @Controller("passport/policy")
 export class PolicyController {

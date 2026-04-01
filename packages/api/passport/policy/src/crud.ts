@@ -1,8 +1,8 @@
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {PolicyService} from "./policy.service";
+import {PolicyService} from "./policy.service.js";
 import {changeFactory, Policy} from "@spica-server/interface/passport/policy";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
-import {createDuplicatedActionsErrorMessage, getDuplicatedActionMaps} from "./utility";
+import {createDuplicatedActionsErrorMessage, getDuplicatedActionMaps} from "./utility.js";
 
 export async function find(ps: PolicyService, filter: object, limit?: number, skip?: number) {
   return ps.paginate(filter, limit, skip);

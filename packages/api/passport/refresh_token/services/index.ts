@@ -1,2 +1,2 @@
-export * from "./src/service";
-export {RefreshTokenServicesModule} from "./src/module";
+export * from "./src/service.js";
+export {RefreshTokenServicesModule} from "./src/module.js";

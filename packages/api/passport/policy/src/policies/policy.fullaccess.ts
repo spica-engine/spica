@@ -1,4 +1,4 @@
-import PolicyReadOnlyAccess from "./policy.readonly";
+import PolicyReadOnlyAccess from "./policy.readonly.js";
 
 export default {
   _id: "PolicyFullAccess",

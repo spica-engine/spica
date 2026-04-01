@@ -390,6 +390,30 @@
     },
     {
       "path": "./apps/cli"
+    },
+    {
+      "path": "./packages/api/passport/refresh_token/realtime"
+    },
+    {
+      "path": "./packages/api/passport/refresh_token/services"
+    },
+    {
+      "path": "./packages/api/passport/identity/realtime"
+    },
+    {
+      "path": "./packages/api/passport/apikey/realtime"
+    },
+    {
+      "path": "./packages/api/passport/policy/realtime"
+    },
+    {
+      "path": "./packages/api/passport/guard/services"
+    },
+    {
+      "path": "./packages/api/passport/user/realtime"
+    },
+    {
+      "path": "./packages/api/preference/services"
     }
   ]
 }

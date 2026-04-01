@@ -1,4 +1,4 @@
-import WebhookReadOnlyAccess from "./webhook.readonly";
+import WebhookReadOnlyAccess from "./webhook.readonly.js";
 
 export default {
   _id: "WebhookFullAccess",

@@ -5,20 +5,20 @@ import {IdentityModule} from "@spica-server/passport/identity";
 import {UserModule} from "@spica-server/passport/user";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {GuardService} from "@spica-server/passport/guard/services";
-import {RequestService} from "./options";
+import {RequestService} from "./options.js";
 import {
   PassportOptions,
   PASSPORT_OPTIONS,
   REQUEST_SERVICE,
   STRATEGIES
 } from "@spica-server/interface/passport";
-import {PassportIdentityController} from "./passport.identity.controller";
-import {PassportUserController} from "./passport.user.controller";
-import {SamlService} from "./strategy/services/saml.service";
-import {StrategyController} from "./strategy/strategy.controller";
-import {StrategyService} from "./strategy/services/strategy.service";
+import {PassportIdentityController} from "./passport.identity.controller.js";
+import {PassportUserController} from "./passport.user.controller.js";
+import {SamlService} from "./strategy/services/saml.service.js";
+import {StrategyController} from "./strategy/strategy.controller.js";
+import {StrategyService} from "./strategy/services/strategy.service.js";
 import {SchemaModule} from "@spica-server/core/schema";
-import {initializeOAuthServices} from "./strategy/services/oauth/oauth.service";
+import {initializeOAuthServices} from "./strategy/services/oauth/oauth.service.js";
 import {AuthFactorModule} from "@spica-server/passport/authfactor";
 import LoginSchema from "./schemas/login.json" with {type: "json"};
 import StrategySchema from "./schemas/strategy.json" with {type: "json"};

@@ -1,7 +1,7 @@
 import {ObjectId} from "@spica-server/database";
-import {VerificationService} from "../verification.service";
+import {VerificationService} from "../verification.service.js";
 import {Injectable} from "@nestjs/common";
-import {UserService} from "../user.service";
+import {UserService} from "../user.service.js";
 
 @Injectable()
 export class ProviderVerificationService {

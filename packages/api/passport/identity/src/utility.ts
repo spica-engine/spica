@@ -1,4 +1,4 @@
-import {IdentityService} from "./identity.service";
+import {IdentityService} from "./identity.service.js";
 
 export function registerPolicyAttacher(policy: string | string[]) {
   policy = Array.isArray(policy) ? policy : [policy];

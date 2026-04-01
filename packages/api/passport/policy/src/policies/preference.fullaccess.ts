@@ -1,4 +1,4 @@
-import PreferenceReadOnly from "./preference.readonly";
+import PreferenceReadOnly from "./preference.readonly.js";
 
 export default {
   _id: "PreferenceFullAccess",

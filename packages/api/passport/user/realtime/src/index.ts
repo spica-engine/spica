@@ -1,1 +1,1 @@
-export {UserRealtimeModule} from "./realtime.module";
+export {UserRealtimeModule} from "./realtime.module.js";

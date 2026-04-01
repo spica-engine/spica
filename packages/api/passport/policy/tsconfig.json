@@ -1,5 +1,9 @@
 {
   "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
@@ -10,6 +14,9 @@
     },
     {
       "path": "../../activity/services"
+    },
+    {
+      "path": "realtime"
     },
     {
       "path": "../../../interface/versioncontrol"

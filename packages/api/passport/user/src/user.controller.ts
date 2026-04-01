@@ -27,9 +27,9 @@ import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {AuthFactor} from "@spica-server/passport/authfactor";
 import {Factor, FactorMeta} from "@spica-server/interface/passport/authfactor";
-import {createUserActivity} from "./activity.resource";
-import {compare, hash} from "./hash";
-import {UserService} from "./user.service";
+import {createUserActivity} from "./activity.resource.js";
+import {compare, hash} from "./hash.js";
+import {UserService} from "./user.service.js";
 import {
   User,
   USER_OPTIONS,
@@ -39,16 +39,16 @@ import {
   UserSelfUpdate,
   DecryptedUser
 } from "@spica-server/interface/passport/user";
-import {registerPolicyAttacher} from "./utility";
+import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {VerificationService} from "./verification.service";
-import {ProviderVerificationService} from "./services/provider.verification.service";
-import {PasswordlessLoginService} from "./services/passwordless-login.service";
-import {PasswordResetService} from "./services/password-reset.service";
-import {UserPipelineBuilder} from "./pipeline.builder";
-import {RateLimitGuard} from "./rate-limit.guard";
+import {VerificationService} from "./verification.service.js";
+import {ProviderVerificationService} from "./services/provider.verification.service.js";
+import {PasswordlessLoginService} from "./services/passwordless-login.service.js";
+import {PasswordResetService} from "./services/password-reset.service.js";
+import {UserPipelineBuilder} from "./pipeline.builder.js";
+import {RateLimitGuard} from "./rate-limit.guard.js";
 
 @Controller("passport/user")
 export class UserController {

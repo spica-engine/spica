@@ -1,4 +1,4 @@
-import EnvVarReadonlyAccess from "./env.var.readonly";
+import EnvVarReadonlyAccess from "./env.var.readonly.js";
 
 export default {
   _id: "EnvVarFullAccess",

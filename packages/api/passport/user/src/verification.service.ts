@@ -8,8 +8,8 @@ import {
 } from "@spica-server/interface/passport/user";
 import {hash, encrypt, decrypt, BaseEncryptedData} from "@spica-server/core/encryption";
 import {randomInt} from "crypto";
-import {VerificationProviderRegistry} from "./providers";
-import {UserConfigService} from "./config.service";
+import {VerificationProviderRegistry} from "./providers/index.js";
+import {UserConfigService} from "./config.service.js";
 
 interface MagicLinkPayload {
   userId: string;

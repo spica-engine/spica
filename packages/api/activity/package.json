@@ -2,8 +2,15 @@
   "name": "@spica-server/activity",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./services": "./services/index.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./services": {
+      "types": "./services/index.ts",
+      "default": "./services/dist/index.js"
+    }
   }
 }

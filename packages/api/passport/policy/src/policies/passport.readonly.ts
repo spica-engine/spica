@@ -1,9 +1,9 @@
-import IdentityReadOnly from "./identity.readonly";
-import StrategyReadOnly from "./strategy.readonly";
-import ApiKeyReadOnly from "./apikey.readonly";
-import PolicyReadOnly from "./policy.readonly";
-import RefreshTokenReadonlyAccess from "./refresh.token.readonly";
-import UserReadOnly from "./user.readonly";
+import IdentityReadOnly from "./identity.readonly.js";
+import StrategyReadOnly from "./strategy.readonly.js";
+import ApiKeyReadOnly from "./apikey.readonly.js";
+import PolicyReadOnly from "./policy.readonly.js";
+import RefreshTokenReadonlyAccess from "./refresh.token.readonly.js";
+import UserReadOnly from "./user.readonly.js";
 
 export default {
   _id: "PassportReadOnlyAccess",

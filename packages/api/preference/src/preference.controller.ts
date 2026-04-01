@@ -17,7 +17,7 @@ import {
   BUCKET_LANGUAGE_FINALIZER,
   changeFactory
 } from "@spica-server/interface/preference";
-import {createPreferenceActivity} from "./activity.resource";
+import {createPreferenceActivity} from "./activity.resource.js";
 import {ReturnDocument} from "@spica-server/database";
 
 @Controller("preference")

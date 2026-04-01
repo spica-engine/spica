@@ -57,6 +57,9 @@
       "path": "../../../database"
     },
     {
+      "path": "../../passport/guard/services"
+    },
+    {
       "path": "../../../interface/function/scheduler"
     }
   ]

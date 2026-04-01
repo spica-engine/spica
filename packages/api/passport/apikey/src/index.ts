@@ -1,2 +1,2 @@
-export {ApiKeyStrategy} from "./apikey.strategy";
-export {ApiKeyModule} from "./module";
+export {ApiKeyStrategy} from "./apikey.strategy.js";
+export {ApiKeyModule} from "./module.js";

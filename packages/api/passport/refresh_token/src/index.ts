@@ -1,1 +1,1 @@
-export {RefreshTokenModule} from "./module";
+export {RefreshTokenModule} from "./module.js";

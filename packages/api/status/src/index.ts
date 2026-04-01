@@ -1,2 +1,2 @@
-export {StatusModule} from "./module";
-export {register} from "./providers";
+export {StatusModule} from "./module.js";
+export {register} from "./providers.js";

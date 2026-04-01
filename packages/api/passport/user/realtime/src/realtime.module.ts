@@ -1,5 +1,5 @@
 import {Module} from "@nestjs/common";
-import {UserRealtimeGateway} from "./realtime.gateway";
+import {UserRealtimeGateway} from "./realtime.gateway.js";
 import {RealtimeDatabaseModule} from "@spica-server/database/realtime";
 
 @Module({})

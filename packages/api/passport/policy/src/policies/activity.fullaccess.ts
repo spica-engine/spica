@@ -1,4 +1,4 @@
-import ActivityReadOnlyAccess from "./activity.readonly";
+import ActivityReadOnlyAccess from "./activity.readonly.js";
 
 export default {
   _id: "ActivityFullAccess",

@@ -19,8 +19,8 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
 import {RefreshToken, PaginationResponse} from "@spica-server/interface/passport/refresh_token";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options";
-import {RefreshTokenPipelineBuilder} from "./pipeline.builder";
+import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options.js";
+import {RefreshTokenPipelineBuilder} from "./pipeline.builder.js";
 
 @Controller("passport/refresh-token")
 export class RefreshTokenController {

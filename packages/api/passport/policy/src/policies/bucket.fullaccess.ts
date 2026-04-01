@@ -1,4 +1,4 @@
-import BucketReadOnlyAccess from "./bucket.readonly";
+import BucketReadOnlyAccess from "./bucket.readonly.js";
 
 export default {
   _id: "BucketFullAccess",

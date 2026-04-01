@@ -1,7 +1,7 @@
 import {Injectable, Logger, NestInterceptor, ExecutionContext, CallHandler} from "@nestjs/common";
 import {Observable} from "rxjs";
 import {AttachStatusTracker} from "@spica-server/interface/status";
-import {StatusService} from "./service";
+import {StatusService} from "./service.js";
 
 @Injectable()
 export class StatusInterceptor implements NestInterceptor {

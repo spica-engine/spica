@@ -6,6 +6,9 @@
       "path": "../../../realtime"
     },
     {
+      "path": "../../passport/guard/services"
+    },
+    {
       "path": "../../../interface/realtime"
     },
     {

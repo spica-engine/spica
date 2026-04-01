@@ -1,6 +1,6 @@
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {UserService} from "./user.service";
-import {replaceProviderFilter} from "./filter";
+import {UserService} from "./user.service.js";
+import {replaceProviderFilter} from "./filter.js";
 import {replaceFilterDates, replaceFilterObjectIds} from "@spica-server/filter";
 
 export class UserPipelineBuilder extends PipelineBuilder {

@@ -2,7 +2,11 @@
   "name": "@spica-server/asset",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

@@ -1,5 +1,9 @@
 {
   "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
@@ -7,6 +11,9 @@
     },
     {
       "path": "../authfactor"
+    },
+    {
+      "path": "../guard/services"
     }
   ]
 }

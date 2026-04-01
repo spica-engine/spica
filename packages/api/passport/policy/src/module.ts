@@ -7,15 +7,15 @@ import {
   IDENTITY_POLICY_FINALIZER,
   changeFactory
 } from "@spica-server/interface/passport/policy";
-import {PolicyController} from "./policy.controller";
-import {PolicyService} from "./policy.service";
+import {PolicyController} from "./policy.controller.js";
+import {PolicyService} from "./policy.service.js";
 import PolicySchema from "./schemas/policy.json" with {type: "json"};
-import {getSupplier, getApplier} from "./synchronizer/schema";
+import {getSupplier, getApplier} from "./synchronizer/schema/index.js";
 import {
   REGISTER_VC_CHANGE_HANDLER,
   RegisterVCChangeHandler
 } from "@spica-server/interface/versioncontrol";
-import {PolicyRealtimeModule} from "../realtime";
+import {PolicyRealtimeModule} from "@spica-server/passport/policy/realtime";
 @Global()
 @Module({})
 export class PolicyModule {

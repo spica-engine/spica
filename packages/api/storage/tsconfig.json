@@ -6,6 +6,9 @@
       "path": "../../transaction"
     },
     {
+      "path": "../passport/guard/services"
+    },
+    {
       "path": "../passport/guard"
     },
     {

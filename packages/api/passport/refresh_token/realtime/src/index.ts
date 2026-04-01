@@ -1,1 +1,1 @@
-export {RefreshTokenRealtimeModule} from "./realtime.module";
+export {RefreshTokenRealtimeModule} from "./realtime.module.js";

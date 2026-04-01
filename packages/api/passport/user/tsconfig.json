@@ -1,5 +1,9 @@
 {
   "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
@@ -40,6 +44,12 @@
     },
     {
       "path": "../../mailer"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../refresh_token/services"
     },
     {
       "path": "../../../interface/passport/policy"

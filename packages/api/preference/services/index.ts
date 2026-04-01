@@ -1,1 +1,1 @@
-export {PreferenceService} from "./src/preference.service";
+export {PreferenceService} from "./src/preference.service.js";

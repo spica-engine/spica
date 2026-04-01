@@ -1,7 +1,7 @@
 import {Injectable, BadRequestException, Logger, NotFoundException} from "@nestjs/common";
-import {UserService} from "../user.service";
-import {VerificationService} from "../verification.service";
-import {UserConfigService} from "../config.service";
+import {UserService} from "../user.service.js";
+import {VerificationService} from "../verification.service.js";
+import {UserConfigService} from "../config.service.js";
 
 @Injectable()
 export class PasswordResetService {

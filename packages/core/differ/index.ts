@@ -1,2 +1,2 @@
-export * from "./src/differ";
-export * from "./src/schema";
+export * from "./src/differ.js";
+export * from "./src/schema.js";

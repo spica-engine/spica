@@ -87,6 +87,9 @@
       "path": "../../realtime"
     },
     {
+      "path": "../passport/guard/services"
+    },
+    {
       "path": "../../database/realtime"
     },
     {

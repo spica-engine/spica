@@ -17,7 +17,7 @@ import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "@spica-server/interface/passport";
 import {Strategy, StrategyTypeServices} from "@spica-server/interface/passport";
-import {StrategyService} from "./services/strategy.service";
+import {StrategyService} from "./services/strategy.service.js";
 
 @Controller("passport/strategy")
 export class StrategyController {

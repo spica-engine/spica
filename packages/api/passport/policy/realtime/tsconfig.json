@@ -1,5 +1,9 @@
 {
-  "extends": "../tsconfig.base.json",
+  "extends": "../../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
@@ -10,6 +14,9 @@
     },
     {
       "path": "../../../../realtime"
+    },
+    {
+      "path": "../../guard/services"
     },
     {
       "path": "../../../../database/realtime"

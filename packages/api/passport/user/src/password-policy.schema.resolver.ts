@@ -3,7 +3,7 @@ import {Validator, applyPasswordPolicy} from "@spica-server/core/schema";
 import {UserConfigSettings} from "@spica-server/interface/passport/user";
 import {Observable, ReplaySubject, Subject, merge, defer} from "rxjs";
 import {map, takeUntil} from "rxjs/operators";
-import {UserConfigService} from "./config.service";
+import {UserConfigService} from "./config.service.js";
 
 @Injectable()
 export class UserPasswordPolicySchemaResolver implements OnModuleDestroy {

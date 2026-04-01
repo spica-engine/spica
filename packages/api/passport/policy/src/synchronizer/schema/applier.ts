@@ -1,7 +1,7 @@
 import {PolicyService} from "@spica-server/passport/policy";
 import {changeFactory, Policy} from "@spica-server/interface/passport/policy";
 import YAML from "yaml";
-import * as CRUD from "../../../src/crud";
+import * as CRUD from "../../../src/crud.js";
 import {
   ChangeLog,
   ApplyResult,

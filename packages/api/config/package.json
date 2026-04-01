@@ -2,8 +2,15 @@
   "name": "@spica-server/config",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./src/config.module": "./src/config.module.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/config.module": {
+      "types": "./src/config.module.ts",
+      "default": "./dist/src/config.module.js"
+    }
   }
 }
