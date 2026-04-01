@@ -16,7 +16,7 @@ import {PreferenceModule} from "@spica-server/preference";
 // import {StorageModule} from "@spica-server/storage";
 // import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
-// import {AssetModule} from "@spica-server/asset";
+import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
 import {EnvVarModule} from "@spica-server/env_var";
 import {SecretModule} from "@spica-server/secret";
@@ -705,7 +705,7 @@ const modules = [
   }),
   DashboardModule.forRoot({realtime: true}),
   PreferenceModule.forRoot(),
-  // AssetModule.forRoot({persistentPath: args["persistent-path"]}),
+  AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
