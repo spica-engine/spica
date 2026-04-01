@@ -1,0 +1,5 @@
+{
+  "name": "api/batch",
+  "sourceRoot": "packages/api/batch",
+  "projectType": "library"
+}

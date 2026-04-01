@@ -12,10 +12,10 @@
         "{projectRoot}/**/*",
         "!{projectRoot}/test/*",
         "!{projectRoot}/node_modules/*",
-        "{workspaceRoot}/libs/interface/asset/src/**/*.ts",
-        "{workspaceRoot}/libs/interface/asset/index.ts",
-        "{workspaceRoot}/libs/interface/function/src/**/*.ts",
-        "{workspaceRoot}/libs/interface/function/index.ts"
+        "{workspaceRoot}/packages/interface/asset/src/**/*.ts",
+        "{workspaceRoot}/packages/interface/asset/index.ts",
+        "{workspaceRoot}/packages/interface/function/src/**/*.ts",
+        "{workspaceRoot}/packages/interface/function/index.ts"
       ],
       "options": {
         "commands": [

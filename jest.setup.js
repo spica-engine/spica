@@ -21,7 +21,7 @@ process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(
 process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH = path.join(
   workspaceRoot,
   "dist",
-  "libs",
+  "packages",
   "api",
   "function",
   "runtime",
@@ -34,7 +34,7 @@ process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH = path.join(
 process.env.FUNCTION_TS_COMPILER_PATH = path.join(
   workspaceRoot,
   "dist",
-  "libs",
+  "packages",
   "api",
   "function",
   "compiler",

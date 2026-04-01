@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/expression/test",
+  "sourceRoot": "packages/api/bucket/expression/test",
+  "projectType": "library"
+}

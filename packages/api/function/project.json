@@ -1,0 +1,18 @@
+{
+  "name": "api/function",
+  "sourceRoot": "packages/api/function",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "tsc -p packages/api/function/build.references.json --pretty"
+    },
+    "test": {
+      "dependsOn": [
+        {
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

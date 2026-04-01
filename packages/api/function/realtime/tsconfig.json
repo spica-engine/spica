@@ -1,0 +1,15 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../../../packages/database/realtime"
+    },
+    {
+      "path": "../../../../packages/api/passport/guard/services"
+    },
+    {
+      "path": "../../../../packages/realtime"
+    }
+  ]
+}

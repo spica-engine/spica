@@ -3,19 +3,19 @@
   "include": ["src/main.ts"],
   "references": [
     {
-      "path": "../../libs/core/encryption"
+      "path": "../../packages/core/encryption"
     },
     {
-      "path": "../../libs/database"
+      "path": "../../packages/database"
     },
     {
-      "path": "../../libs/core/websocket"
+      "path": "../../packages/core/websocket"
     },
     {
-      "path": "../../libs/core/schema"
+      "path": "../../packages/core/schema"
     },
     {
-      "path": "../../libs/core"
+      "path": "../../packages/core"
     }
   ]
 }

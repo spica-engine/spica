@@ -161,7 +161,7 @@ export class LanguageDirective implements OnChanges, OnDestroy {
   }
 
   upsertDependencies() {
-    this.clearLibs();
+    this.clearpackages();
 
     for (const dep of this.dependencies || []) {
       const defs = Object.values(dep.types || {}).reduce((acc, curr) => acc + "\n" + curr, "");
@@ -180,7 +180,7 @@ export class LanguageDirective implements OnChanges, OnDestroy {
     this.updateModelUri(this.editor.getModel());
   }
 
-  clearLibs() {
+  clearpackages() {
     this.extraLibDisposables.forEach(d => d.dispose());
     this.extraLibDisposables = [];
   }

@@ -1,5 +1,0 @@
-{
-  "name": "interface/database",
-  "sourceRoot": "libs/interface/database/src",
-  "projectType": "library"
-}

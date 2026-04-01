@@ -1,5 +1,0 @@
-{
-  "name": "api/passport/refresh_token",
-  "sourceRoot": "libs/api/passport/refresh_token",
-  "projectType": "library"
-}

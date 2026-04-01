@@ -1,0 +1,5 @@
+{
+  "name": "interface/function/runtime",
+  "sourceRoot": "packages/interface/function/runtime/src",
+  "projectType": "library"
+}

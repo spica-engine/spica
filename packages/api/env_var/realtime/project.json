@@ -1,0 +1,5 @@
+{
+  "name": "api/env_var/realtime",
+  "sourceRoot": "packages/api/env_var/realtime",
+  "projectType": "library"
+}

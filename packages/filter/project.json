@@ -1,0 +1,5 @@
+{
+  "name": "filter",
+  "sourceRoot": "packages/filter/src",
+  "projectType": "library"
+}

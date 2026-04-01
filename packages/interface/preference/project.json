@@ -1,0 +1,5 @@
+{
+  "name": "interface/preference",
+  "sourceRoot": "packages/interface/preference/src",
+  "projectType": "library"
+}

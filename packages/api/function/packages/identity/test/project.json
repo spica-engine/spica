@@ -1,0 +1,5 @@
+{
+  "name": "api/function/packages/identity/test",
+  "sourceRoot": "packages/api/function/packages/identity/test",
+  "projectType": "application"
+}

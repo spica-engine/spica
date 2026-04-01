@@ -67,7 +67,7 @@ Nx works with whatever folder structure you have. A common convention for JavaSc
 - **tsconfig.base.json**: Shared `compilerOptions` inherited by all projects
 - **tsconfig.json**: Root TypeScript configuration that references project-level `tsconfig.json` files
 
-You may also see `libs/` used in place of `packages/` in some Nx workspaces. Both work. The `packages/` convention aligns with common pnpm, yarn, and npm workspace conventions.
+You may also see `packages/` used in place of `packages/` in some Nx workspaces. Both work. The `packages/` convention aligns with common pnpm, yarn, and npm workspace conventions.
 
 This layout is a suggestion, not a requirement. You can organize projects however you like, including flat structures, nested directories, or patterns specific to your ecosystem. For non-JS workspaces, follow the monorepo conventions in your language (e.g., Gradle multi-project builds, uv workspaces). Nx identifies projects by their `package.json` or `project.json` files, not by folder names.
 

@@ -1,0 +1,5 @@
+{
+  "name": "transaction",
+  "sourceRoot": "packages/transaction/src",
+  "projectType": "library"
+}

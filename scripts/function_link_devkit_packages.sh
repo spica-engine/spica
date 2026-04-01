@@ -15,12 +15,12 @@ for DIR in $FUNCTION_PATH/*; do
   IDENTITY_PATH="$DIR/node_modules/@spica-devkit/identity"
   STORAGE_PATH="$DIR/node_modules/@spica-devkit/storage"
 
-  (mkdir -p $DATABASE_PATH && rsync -ar --no-owner --no-group ./dist/libs/api/function/packages/database/* $DATABASE_PATH)
+  (mkdir -p $DATABASE_PATH && rsync -ar --no-owner --no-group ./dist/packages/api/function/packages/database/* $DATABASE_PATH)
   (cd $DATABASE_PATH && npm install)
-  (mkdir -p $BUCKET_PATH && rsync -ar --no-owner --no-group ./dist/libs/api/function/packages/bucket/* $BUCKET_PATH)
+  (mkdir -p $BUCKET_PATH && rsync -ar --no-owner --no-group ./dist/packages/api/function/packages/bucket/* $BUCKET_PATH)
   (cd $BUCKET_PATH && npm install)
-  (mkdir -p $IDENTITY_PATH && rsync -ar --no-owner --no-group ./dist/libs/api/function/packages/identity/* $IDENTITY_PATH)
+  (mkdir -p $IDENTITY_PATH && rsync -ar --no-owner --no-group ./dist/packages/api/function/packages/identity/* $IDENTITY_PATH)
   (cd $IDENTITY_PATH && npm install)
-  (mkdir -p $STORAGE_PATH && rsync -ar --no-owner --no-group ./dist/libs/api/function/packages/storage/* $STORAGE_PATH)
+  (mkdir -p $STORAGE_PATH && rsync -ar --no-owner --no-group ./dist/packages/api/function/packages/storage/* $STORAGE_PATH)
   (cd $STORAGE_PATH && npm install)
 done

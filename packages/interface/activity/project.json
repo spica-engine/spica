@@ -1,0 +1,5 @@
+{
+  "name": "interface/activity",
+  "sourceRoot": "packages/interface/activity/src",
+  "projectType": "library"
+}

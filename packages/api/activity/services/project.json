@@ -1,0 +1,5 @@
+{
+  "name": "api/activity/services",
+  "sourceRoot": "packages/api/activity/services",
+  "projectType": "library"
+}

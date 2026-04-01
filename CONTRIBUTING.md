@@ -219,7 +219,7 @@ The following is the list of supported scopes:
 - **mongorc**
 - **spica**
 - **devkit**
-- **libs**
+- **packages**
 - **chart**
 
 There are currently a few exceptions to the "use package name" rule:

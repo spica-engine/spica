@@ -1,0 +1,5 @@
+{
+  "name": "interface/core",
+  "sourceRoot": "packages/interface/core/src",
+  "projectType": "library"
+}

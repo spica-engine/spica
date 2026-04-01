@@ -1,0 +1,5 @@
+{
+  "name": "api/passport/identity",
+  "sourceRoot": "packages/api/passport/identity",
+  "projectType": "library"
+}

@@ -34,8 +34,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY apps/migrate ./apps/migrate
 COPY nx.json package.json tsconfig.json yarn.lock ./
 COPY jest.flaky.setup.js jest.preset.js jest.setup.js ./
-COPY libs/database ./libs/database
-COPY libs/interface/database ./libs/interface/database
+COPY packages/database ./packages/database
+COPY packages/interface/database ./packages/interface/database
 COPY *.env ./
 ARG MONGODB_URL=""
 ENV MONGODB_URL=$MONGODB_URL

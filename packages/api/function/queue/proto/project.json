@@ -1,0 +1,5 @@
+{
+  "name": "api/function/queue/proto",
+  "sourceRoot": "packages/api/function/queue/proto",
+  "projectType": "library"
+}

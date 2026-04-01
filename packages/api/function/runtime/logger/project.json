@@ -1,0 +1,10 @@
+{
+  "name": "api/function/runtime/logger",
+  "sourceRoot": "packages/api/function/runtime/logger",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "tsc --build {projectRoot}/build.references.json --pretty --verbose"
+    }
+  }
+}

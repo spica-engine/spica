@@ -1,0 +1,10 @@
+{
+  "name": "api/function/pkgmanager/local",
+  "sourceRoot": "packages/api/function/pkgmanager/local",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "tsc --build {projectRoot}/build.references.json --pretty --verbose"
+    }
+  }
+}

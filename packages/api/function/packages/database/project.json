@@ -1,0 +1,11 @@
+{
+  "name": "api/function/packages/database",
+  "sourceRoot": "packages/api/function/packages/database",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "yarn rollup -c {projectRoot}/rollup.config.cjs --bundleConfigAsCjs"
+    },
+    "set-version": {}
+  }
+}

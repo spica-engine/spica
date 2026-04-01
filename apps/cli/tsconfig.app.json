@@ -10,10 +10,10 @@
   "exclude": ["**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
-      "path": "../../libs/interface/function"
+      "path": "../../packages/interface/function"
     },
     {
-      "path": "../../libs/interface/asset"
+      "path": "../../packages/interface/asset"
     }
   ]
 }

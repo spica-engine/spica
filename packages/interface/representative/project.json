@@ -1,0 +1,5 @@
+{
+  "name": "interface/representative",
+  "sourceRoot": "packages/interface/representative/src",
+  "projectType": "library"
+}

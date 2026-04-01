@@ -1,0 +1,18 @@
+{
+  "name": "api/status",
+  "sourceRoot": "packages/api/status",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "tsc --build packages/api/status/tsconfig.json --pretty --verbose"
+    },
+    "test": {
+      "dependsOn": [
+        {
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

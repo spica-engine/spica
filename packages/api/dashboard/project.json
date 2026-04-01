@@ -1,0 +1,5 @@
+{
+  "name": "api/dashboard",
+  "sourceRoot": "packages/api/dashboard",
+  "projectType": "library"
+}

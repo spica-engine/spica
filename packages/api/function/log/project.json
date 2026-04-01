@@ -1,0 +1,10 @@
+{
+  "name": "api/function/log",
+  "sourceRoot": "packages/api/function/log",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "tsc --build {projectRoot}/build.references.json --pretty --verbose"
+    }
+  }
+}

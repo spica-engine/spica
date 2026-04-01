@@ -1,0 +1,5 @@
+{
+  "name": "api/replication/test",
+  "sourceRoot": "packages/api/replication/test",
+  "projectType": "application"
+}

@@ -14,7 +14,7 @@
         {"dependentTasksOutputFiles": "**/*.d.ts"},
         {"externalDependencies": ["typescript"]},
         "^default",
-        "{workspaceRoot}/libs/api/**/*"
+        "{workspaceRoot}/packages/api/**/*"
       ]
     },
     "serve": {

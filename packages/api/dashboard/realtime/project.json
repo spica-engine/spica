@@ -1,0 +1,5 @@
+{
+  "name": "api/dashboard/realtime",
+  "sourceRoot": "packages/api/dashboard/realtime",
+  "projectType": "library"
+}

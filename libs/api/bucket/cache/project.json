@@ -1,5 +1,0 @@
-{
-  "name": "api/bucket/cache",
-  "sourceRoot": "libs/api/bucket/cache",
-  "projectType": "library"
-}

@@ -18,11 +18,11 @@ WORKDIR /app
 ARG TARGETPLATFORM
 
 COPY --parents package.json yarn.lock \
-     libs/*/package.json \
-     libs/api/*/package.json \
+     packages/*/package.json \
+     packages/api/*/package.json \
      apps/api/package.json \
      apps/api/src/*/package.json \
-     libs/api/function/packages/*/package.json \
+     packages/api/function/packages/*/package.json \
      ./
 RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-${TARGETPLATFORM} \
     YARN_CACHE_FOLDER=/root/.yarn-cache \
@@ -35,11 +35,11 @@ WORKDIR /app
 ARG TARGETPLATFORM
 
 COPY --parents package.json yarn.lock \
-     libs/*/package.json \
-     libs/api/*/package.json \
+     packages/*/package.json \
+     packages/api/*/package.json \
      apps/api/package.json \
      apps/api/src/*/package.json \
-     libs/api/function/packages/*/package.json \
+     packages/api/function/packages/*/package.json \
      ./
 RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod-${TARGETPLATFORM} \
     YARN_CACHE_FOLDER=/root/.yarn-cache \
@@ -52,7 +52,7 @@ WORKDIR /app
 ARG TARGETPLATFORM
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
-COPY libs ./libs
+COPY packages ./packages
 COPY nx.json package.json tsconfig.json yarn.lock ./
 RUN --mount=type=cache,target=/app/.nx/cache,id=nx-cache-${TARGETPLATFORM},sharing=locked \
     --mount=type=cache,target=/app/.nx/workspace-data,id=nx-workspace-${TARGETPLATFORM},sharing=locked \
@@ -65,7 +65,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install libcurl4 -y
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
-COPY libs ./libs
+COPY packages ./packages
 COPY nx.json package.json tsconfig.json yarn.lock ./
 COPY jest.flaky.setup.js jest.preset.js jest.setup.js ./
 COPY *.env ./

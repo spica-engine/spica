@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/hooks",
+  "sourceRoot": "packages/api/bucket/hooks",
+  "projectType": "library"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "interface/function/scheduler",
+  "sourceRoot": "packages/interface/function/scheduler/src",
+  "projectType": "library"
+}

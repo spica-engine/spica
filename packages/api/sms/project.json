@@ -1,0 +1,5 @@
+{
+  "name": "api/sms",
+  "sourceRoot": "packages/api/sms",
+  "projectType": "library"
+}

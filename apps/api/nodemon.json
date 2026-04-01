@@ -1,5 +1,5 @@
 {
-  "watch": ["apps/api", "libs"],
+  "watch": ["apps/api", "packages"],
   "ext": "ts,js,json",
   "ignore": ["**/*.spec.ts"],
   "exec": "yarn nx serve api",

@@ -1,0 +1,5 @@
+{
+  "name": "api/versioncontrol/processors/changelog",
+  "sourceRoot": "packages/api/versioncontrol/processors/changelog",
+  "projectType": "library"
+}

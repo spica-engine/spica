@@ -16,8 +16,8 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@spica-devkit/*": ["libs/api/function/packages/*"],
-      "@spica-server/*": ["libs/*", "libs/api/*", "apps/api/src/*"],
+      "@spica-devkit/*": ["packages/api/function/packages/*"],
+      "@spica-server/*": ["packages/*", "packages/api/*", "apps/api/src/*"],
       "@spica/*": ["apps/*"]
     },
     "lib": ["es2020", "dom"],
@@ -25,196 +25,196 @@
   },
   "references": [
     {
-      "path": "./libs/api/function/compiler/javascript"
+      "path": "./packages/api/function/compiler/javascript"
     },
     {
-      "path": "./libs/api/function/compiler/typescript"
+      "path": "./packages/api/function/compiler/typescript"
     },
     {
-      "path": "./libs/api/function/pkgmanager/node"
+      "path": "./packages/api/function/pkgmanager/node"
     },
     {
-      "path": "./libs/api/bucket/hooks/proto/node"
+      "path": "./packages/api/bucket/hooks/proto/node"
     },
     {
-      "path": "./libs/api/function/runtime/logger"
+      "path": "./packages/api/function/runtime/logger"
     },
     {
-      "path": "./libs/api/function/runtime/node"
+      "path": "./packages/api/function/runtime/node"
     },
     {
-      "path": "./libs/api/function/queue/proto"
+      "path": "./packages/api/function/queue/proto"
     },
     {
-      "path": "./libs/api/function/queue/node"
+      "path": "./packages/api/function/queue/node"
     },
     {
-      "path": "./libs/api/function/runtime/io"
+      "path": "./packages/api/function/runtime/io"
     },
     {
-      "path": "./libs/api/passport/authfactor"
+      "path": "./packages/api/passport/authfactor"
     },
     {
-      "path": "./libs/api/preference/services"
+      "path": "./packages/api/preference/services"
     },
     {
-      "path": "./libs/api/bucket/hooks/proto"
+      "path": "./packages/api/bucket/hooks/proto"
     },
     {
-      "path": "./libs/api/function/scheduler"
+      "path": "./packages/api/function/scheduler"
     },
     {
       "path": "./apps/mongoreplicationcontroller"
     },
     {
-      "path": "./libs/api/activity/services"
+      "path": "./packages/api/activity/services"
     },
     {
-      "path": "./libs/api/bucket/expression"
+      "path": "./packages/api/bucket/expression"
     },
     {
-      "path": "./libs/api/function/compiler"
+      "path": "./packages/api/function/compiler"
     },
     {
-      "path": "./libs/api/function/enqueuer"
+      "path": "./packages/api/function/enqueuer"
     },
     {
-      "path": "./libs/api/function/services"
+      "path": "./packages/api/function/services"
     },
     {
-      "path": "./libs/api/passport/identity"
+      "path": "./packages/api/passport/identity"
     },
     {
-      "path": "./libs/api/passport/identity/realtime"
+      "path": "./packages/api/passport/identity/realtime"
     },
     {
-      "path": "./libs/api/function/runtime"
+      "path": "./packages/api/function/runtime"
     },
     {
-      "path": "./libs/api/function/webhook"
+      "path": "./packages/api/function/webhook"
     },
     {
-      "path": "./libs/api/passport/testing"
+      "path": "./packages/api/passport/testing"
     },
     {
-      "path": "./libs/api/bucket/realtime"
+      "path": "./packages/api/bucket/realtime"
     },
     {
-      "path": "./libs/api/bucket/services"
+      "path": "./packages/api/bucket/services"
     },
     {
-      "path": "./libs/api/passport/apikey"
+      "path": "./packages/api/passport/apikey"
     },
     {
-      "path": "./libs/api/passport/apikey/realtime"
+      "path": "./packages/api/passport/apikey/realtime"
     },
     {
-      "path": "./libs/api/passport/policy"
+      "path": "./packages/api/passport/policy"
     },
     {
-      "path": "./libs/api/status/services"
+      "path": "./packages/api/status/services"
     },
     {
-      "path": "./libs/api/bucket/graphql"
+      "path": "./packages/api/bucket/graphql"
     },
     {
-      "path": "./libs/api/bucket/history"
+      "path": "./packages/api/bucket/history"
     },
     {
-      "path": "./libs/api/function/queue"
+      "path": "./packages/api/function/queue"
     },
     {
-      "path": "./libs/api/passport/guard"
+      "path": "./packages/api/passport/guard"
     },
     {
-      "path": "./libs/api/versioncontrol"
+      "path": "./packages/api/versioncontrol"
     },
     {
-      "path": "./libs/api/bucket/common"
+      "path": "./packages/api/bucket/common"
     },
     {
-      "path": "./libs/api/bucket/cache"
+      "path": "./packages/api/bucket/cache"
     },
     {
-      "path": "./libs/api/bucket/hooks"
+      "path": "./packages/api/bucket/hooks"
     },
     {
-      "path": "./libs/api/function/log"
+      "path": "./packages/api/function/log"
     },
     {
-      "path": "./libs/api/replication"
+      "path": "./packages/api/replication"
     },
     {
-      "path": "./libs/api/preference"
+      "path": "./packages/api/preference"
     },
     {
-      "path": "./libs/api/dashboard"
+      "path": "./packages/api/dashboard"
     },
     {
-      "path": "./libs/database/pipeline"
+      "path": "./packages/database/pipeline"
     },
     {
-      "path": "./libs/database/realtime"
+      "path": "./packages/database/realtime"
     },
     {
-      "path": "./libs/api/activity"
+      "path": "./packages/api/activity"
     },
     {
-      "path": "./libs/api/function"
+      "path": "./packages/api/function"
     },
     {
-      "path": "./libs/api/passport"
+      "path": "./packages/api/passport"
     },
     {
-      "path": "./libs/database/testing"
+      "path": "./packages/database/testing"
     },
     {
-      "path": "./libs/api/storage"
+      "path": "./packages/api/storage"
     },
     {
-      "path": "./libs/api/bucket"
+      "path": "./packages/api/bucket"
     },
     {
-      "path": "./libs/api/status"
+      "path": "./packages/api/status"
     },
     {
-      "path": "./libs/core/websocket"
+      "path": "./packages/core/websocket"
     },
     {
-      "path": "./libs/representative"
+      "path": "./packages/representative"
     },
     {
-      "path": "./libs/api/asset"
+      "path": "./packages/api/asset"
     },
     {
-      "path": "./libs/core/testing"
+      "path": "./packages/core/testing"
     },
     {
-      "path": "./libs/core/differ"
+      "path": "./packages/core/differ"
     },
     {
-      "path": "./libs/core/schema"
+      "path": "./packages/core/schema"
     },
     {
-      "path": "./libs/core/patch"
+      "path": "./packages/core/patch"
     },
     {
-      "path": "./libs/core/copy"
+      "path": "./packages/core/copy"
     },
     {
-      "path": "./libs/database"
+      "path": "./packages/database"
     },
     {
       "path": "./apps/migrate"
     },
     {
-      "path": "./libs/filter"
+      "path": "./packages/filter"
     },
     {
       "path": "./apps/spica"
     },
     {
-      "path": "./libs/core"
+      "path": "./packages/core"
     },
     {
       "path": "./apps/api"
@@ -223,229 +223,229 @@
       "path": "./apps/cli"
     },
     {
-      "path": "./libs/interface/activity"
+      "path": "./packages/interface/activity"
     },
     {
-      "path": "./libs/interface/asset"
+      "path": "./packages/interface/asset"
     },
     {
-      "path": "./libs/interface/bucket"
+      "path": "./packages/interface/bucket"
     },
     {
-      "path": "./libs/interface/bucket/common"
+      "path": "./packages/interface/bucket/common"
     },
     {
-      "path": "./libs/interface/bucket/expression"
+      "path": "./packages/interface/bucket/expression"
     },
     {
-      "path": "./libs/interface/bucket/graphql"
+      "path": "./packages/interface/bucket/graphql"
     },
     {
-      "path": "./libs/interface/bucket/history"
+      "path": "./packages/interface/bucket/history"
     },
     {
-      "path": "./libs/interface/bucket/hooks"
+      "path": "./packages/interface/bucket/hooks"
     },
     {
-      "path": "./libs/interface/bucket/realtime"
+      "path": "./packages/interface/bucket/realtime"
     },
     {
-      "path": "./libs/interface/core"
+      "path": "./packages/interface/core"
     },
     {
-      "path": "./libs/interface/dashboard"
+      "path": "./packages/interface/dashboard"
     },
     {
-      "path": "./libs/interface/database"
+      "path": "./packages/interface/database"
     },
     {
-      "path": "./libs/interface/filter"
+      "path": "./packages/interface/filter"
     },
     {
-      "path": "./libs/interface/function"
+      "path": "./packages/interface/function"
     },
     {
-      "path": "./libs/interface/function/compiler"
+      "path": "./packages/interface/function/compiler"
     },
     {
-      "path": "./libs/interface/function/enqueuer"
+      "path": "./packages/interface/function/enqueuer"
     },
     {
-      "path": "./libs/interface/function/log"
+      "path": "./packages/interface/function/log"
     },
     {
-      "path": "./libs/interface/function/pkgmanager"
+      "path": "./packages/interface/function/pkgmanager"
     },
     {
-      "path": "./libs/interface/function/runtime"
+      "path": "./packages/interface/function/runtime"
     },
     {
-      "path": "./libs/interface/function/scheduler"
+      "path": "./packages/interface/function/scheduler"
     },
     {
-      "path": "./libs/interface/function/webhook"
+      "path": "./packages/interface/function/webhook"
     },
     {
-      "path": "./libs/interface/passport"
+      "path": "./packages/interface/passport"
     },
     {
-      "path": "./libs/interface/passport/apikey"
+      "path": "./packages/interface/passport/apikey"
     },
     {
-      "path": "./libs/interface/passport/authfactor"
+      "path": "./packages/interface/passport/authfactor"
     },
     {
-      "path": "./libs/interface/passport/guard"
+      "path": "./packages/interface/passport/guard"
     },
     {
-      "path": "./libs/interface/passport/identity"
+      "path": "./packages/interface/passport/identity"
     },
     {
-      "path": "./libs/interface/passport/policy"
+      "path": "./packages/interface/passport/policy"
     },
     {
-      "path": "./libs/interface/passport/testing"
+      "path": "./packages/interface/passport/testing"
     },
     {
-      "path": "./libs/interface/preference"
+      "path": "./packages/interface/preference"
     },
     {
-      "path": "./libs/interface/realtime"
+      "path": "./packages/interface/realtime"
     },
     {
-      "path": "./libs/interface/replication"
+      "path": "./packages/interface/replication"
     },
     {
-      "path": "./libs/interface/representative"
+      "path": "./packages/interface/representative"
     },
     {
-      "path": "./libs/interface/status"
+      "path": "./packages/interface/status"
     },
     {
-      "path": "./libs/interface/storage"
+      "path": "./packages/interface/storage"
     },
     {
-      "path": "./libs/interface/versioncontrol"
+      "path": "./packages/interface/versioncontrol"
     },
     {
-      "path": "./libs/realtime"
+      "path": "./packages/realtime"
     },
     {
-      "path": "./libs/api/dashboard/realtime"
+      "path": "./packages/api/dashboard/realtime"
     },
     {
-      "path": "./libs/api/function/realtime"
+      "path": "./packages/api/function/realtime"
     },
     {
-      "path": "./libs/api/versioncontrol/processors/changelog"
+      "path": "./packages/api/versioncontrol/processors/changelog"
     },
     {
-      "path": "./libs/api/versioncontrol/services/changelog"
+      "path": "./packages/api/versioncontrol/services/changelog"
     },
     {
-      "path": "./libs/api/passport/refresh_token/realtime"
+      "path": "./packages/api/passport/refresh_token/realtime"
     },
     {
-      "path": "./libs/api/passport/refresh_token/services"
+      "path": "./packages/api/passport/refresh_token/services"
     },
     {
-      "path": "./libs/api/versioncontrol/processors/sync"
+      "path": "./packages/api/versioncontrol/processors/sync"
     },
     {
-      "path": "./libs/api/versioncontrol/services/sync"
+      "path": "./packages/api/versioncontrol/services/sync"
     },
     {
-      "path": "./libs/api/versioncontrol/sync/realtime"
+      "path": "./packages/api/versioncontrol/sync/realtime"
     },
     {
-      "path": "./libs/api/versioncontrol/sync/engine"
+      "path": "./packages/api/versioncontrol/sync/engine"
     },
     {
-      "path": "./libs/api/function/pkgmanager/local"
+      "path": "./packages/api/function/pkgmanager/local"
     },
     {
-      "path": "./libs/api/passport/policy/realtime"
+      "path": "./packages/api/passport/policy/realtime"
     },
     {
-      "path": "./libs/interface/passport/refresh_token"
+      "path": "./packages/interface/passport/refresh_token"
     },
     {
-      "path": "./libs/api/bucket/schemas-realtime"
+      "path": "./packages/api/bucket/schemas-realtime"
     },
     {
-      "path": "./libs/api/passport/guard/services"
+      "path": "./packages/api/passport/guard/services"
     },
     {
-      "path": "./libs/api/passport/refresh_token"
+      "path": "./packages/api/passport/refresh_token"
     },
     {
-      "path": "./libs/api/passport/user/realtime"
+      "path": "./packages/api/passport/user/realtime"
     },
     {
-      "path": "./libs/api/versioncontrol/sync"
+      "path": "./packages/api/versioncontrol/sync"
     },
     {
-      "path": "./libs/interface/function/packages"
+      "path": "./packages/interface/function/packages"
     },
     {
-      "path": "./libs/api/env_var/realtime"
+      "path": "./packages/api/env_var/realtime"
     },
     {
-      "path": "./libs/api/env_var/services"
+      "path": "./packages/api/env_var/services"
     },
     {
-      "path": "./libs/api/secret/realtime"
+      "path": "./packages/api/secret/realtime"
     },
     {
-      "path": "./libs/api/secret/services"
+      "path": "./packages/api/secret/services"
     },
     {
-      "path": "./libs/interface/passport/user"
+      "path": "./packages/interface/passport/user"
     },
     {
-      "path": "./libs/api/passport/user"
+      "path": "./packages/api/passport/user"
     },
     {
-      "path": "./libs/interface/env_var"
+      "path": "./packages/interface/env_var"
     },
     {
-      "path": "./libs/interface/config"
+      "path": "./packages/interface/config"
     },
     {
-      "path": "./libs/interface/mailer"
+      "path": "./packages/interface/mailer"
     },
     {
-      "path": "./libs/interface/secret"
+      "path": "./packages/interface/secret"
     },
     {
-      "path": "./libs/api/env_var"
+      "path": "./packages/api/env_var"
     },
     {
-      "path": "./libs/core/encryption"
+      "path": "./packages/core/encryption"
     },
     {
-      "path": "./libs/interface/batch"
+      "path": "./packages/interface/batch"
     },
     {
-      "path": "./libs/api/config"
+      "path": "./packages/api/config"
     },
     {
-      "path": "./libs/api/mailer"
+      "path": "./packages/api/mailer"
     },
     {
-      "path": "./libs/api/secret"
+      "path": "./packages/api/secret"
     },
     {
-      "path": "./libs/api/batch"
+      "path": "./packages/api/batch"
     },
     {
-      "path": "./libs/interface/sms"
+      "path": "./packages/interface/sms"
     },
     {
-      "path": "./libs/api/sms"
+      "path": "./packages/api/sms"
     },
     {
-      "path": "./libs/transaction"
+      "path": "./packages/transaction"
     }
   ]
 }

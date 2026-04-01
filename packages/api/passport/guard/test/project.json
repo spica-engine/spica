@@ -1,0 +1,5 @@
+{
+  "name": "api/passport/guard/test",
+  "sourceRoot": "packages/api/passport/guard/test",
+  "projectType": "library"
+}
