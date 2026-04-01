@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { TypeProperties, TypeRepresenterValue } from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 
-interface EntityWithPolicies {
+export interface EntityWithPolicies {
   _id?: string;
   policies?: string[];
   [key: string]: any;
