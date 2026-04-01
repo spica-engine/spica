@@ -29,7 +29,7 @@ import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-// import {ConfigModule} from "@spica-server/config";
+import {ConfigModule} from "@spica-server/config";
 import {deriveKey} from "@spica-server/core/encryption";
 
 const yargsInstance = yargs(process.argv.slice(2)) as any;
@@ -813,7 +813,7 @@ const modules = [
       providerHashSecret: args["user-provider-hash-secret"],
       verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
     }
-  })
+  }),
   // FunctionModule.forRoot({
   //   logExpireAfterSeconds: args["common-log-lifespan"],
   //   path: args["persistent-path"],
@@ -838,7 +838,7 @@ const modules = [
   //   realtime: true,
   //   grpcPort: args["grpc-function-port"]
   // }),
-  // ConfigModule.forRoot(),
+  ConfigModule.forRoot()
   // StatusModule.forRoot({
   //   expireAfterSeconds: args["common-log-lifespan"],
   //   httpStatusTracking: args["http-status-tracking"]
