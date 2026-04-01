@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Button, FlexElement, Icon, Spinner, type TableColumn } from "oziko-ui-kit";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {
@@ -8,20 +8,25 @@ import {
 import { useGetPoliciesQuery, type Policy } from "../../store/api/policyApi";
 import SpicaTable from "../../components/organisms/table/Table";
 import DeleteIdentity from "../../components/prefabs/delete-identity/DeleteIdentity";
+import { useInfiniteList } from "../../hooks/useInfiniteList";
 import IdentityDrawer from "./IdentityDrawer";
-import styles from "./Identity.module.scss";
+import styles from "../shared/EntityPage.module.scss";
 
 const PAGE_SIZE = 20;
 
 const Identity = () => {
-  const [skip, setSkip] = useState(0);
-  const [allIdentities, setAllIdentities] = useState<IdentityType[]>([]);
-
   const { data: identityResponse, isLoading, isFetching } = useGetIdentitiesQuery({
     paginate: true,
     limit: PAGE_SIZE,
-    skip,
+    skip: 0,
   });
+
+  const { allItems, skip, hasMore, handleLoadMore, resetList } = useInfiniteList<IdentityType>({
+    response: identityResponse,
+    isFetching,
+    pageSize: PAGE_SIZE,
+  });
+
   const { data: policies } = useGetPoliciesQuery();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -32,28 +37,6 @@ const Identity = () => {
     (policies ?? []).forEach((p: Policy) => map.set(p._id, p.name));
     return map;
   }, [policies]);
-
-  useEffect(() => {
-    if (!identityResponse?.data) return;
-    if (skip === 0) {
-      setAllIdentities(identityResponse.data);
-    } else {
-      setAllIdentities((prev) => {
-        const existingIds = new Set(prev.map((i) => i._id));
-        const newItems = identityResponse.data.filter((i) => !existingIds.has(i._id));
-        return [...prev, ...newItems];
-      });
-    }
-  }, [identityResponse, skip]);
-
-  const totalCount = identityResponse?.meta?.total ?? 0;
-  const hasMore = allIdentities.length < totalCount;
-
-  const handleLoadMore = useCallback(() => {
-    if (!isFetching) {
-      setSkip((prev) => prev + PAGE_SIZE);
-    }
-  }, [isFetching]);
 
   const handleOpenCreateDrawer = useCallback(() => {
     setSelectedIdentity(null);
@@ -68,11 +51,6 @@ const Identity = () => {
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false);
     setSelectedIdentity(null);
-  }, []);
-
-  const handleIdentityDeleted = useCallback(() => {
-    setSkip(0);
-    setAllIdentities([]);
   }, []);
 
   const columns: TableColumn<IdentityType>[] = useMemo(
@@ -137,7 +115,7 @@ const Identity = () => {
             >
               <Icon name="pencil" />
             </Button>
-            <DeleteIdentity identity={row} onDeleted={handleIdentityDeleted}>
+            <DeleteIdentity identity={row} onDeleted={resetList}>
               {({ onOpen }) => (
                 <Button
                   variant="icon"
@@ -153,7 +131,7 @@ const Identity = () => {
         ),
       },
     ],
-    [handleOpenEditDrawer, policyNameMap]
+    [handleOpenEditDrawer, policyNameMap, resetList]
   );
 
   return (
@@ -161,7 +139,7 @@ const Identity = () => {
       dimensionX="fill"
       direction="vertical"
       gap={10}
-      className={styles.identityContainer}
+      className={styles.pageContainer}
     >
       <FlexElement
         dimensionX="fill"
@@ -179,7 +157,7 @@ const Identity = () => {
 
       <div id="identity-scroll-container" className={styles.scrollContainer}>
         <InfiniteScroll
-          dataLength={allIdentities.length}
+          dataLength={allItems.length}
           next={handleLoadMore}
           hasMore={hasMore}
           loader={
@@ -191,7 +169,7 @@ const Identity = () => {
         >
           <SpicaTable
             columns={columns}
-            data={allIdentities}
+            data={allItems}
             isLoading={isLoading && skip === 0}
             skeletonRowCount={10}
           />

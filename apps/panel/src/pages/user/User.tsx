@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Button, FlexElement, Icon, Spinner, type TableColumn } from "oziko-ui-kit";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {
@@ -8,20 +8,25 @@ import {
 import { useGetPoliciesQuery, type Policy } from "../../store/api/policyApi";
 import SpicaTable from "../../components/organisms/table/Table";
 import DeleteUser from "../../components/prefabs/delete-user/DeleteUser";
+import { useInfiniteList } from "../../hooks/useInfiniteList";
 import UserDrawer from "./UserDrawer";
-import styles from "./User.module.scss";
+import styles from "../shared/EntityPage.module.scss";
 
 const PAGE_SIZE = 20;
 
 const User = () => {
-  const [skip, setSkip] = useState(0);
-  const [allUsers, setAllUsers] = useState<UserType[]>([]);
-
   const { data: userResponse, isLoading, isFetching } = useGetUsersQuery({
     paginate: true,
     limit: PAGE_SIZE,
-    skip,
+    skip: 0,
   });
+
+  const { allItems, skip, hasMore, handleLoadMore, resetList } = useInfiniteList<UserType>({
+    response: userResponse,
+    isFetching,
+    pageSize: PAGE_SIZE,
+  });
+
   const { data: policies } = useGetPoliciesQuery();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -32,28 +37,6 @@ const User = () => {
     (policies ?? []).forEach((p: Policy) => map.set(p._id, p.name));
     return map;
   }, [policies]);
-
-  useEffect(() => {
-    if (!userResponse?.data) return;
-    if (skip === 0) {
-      setAllUsers(userResponse.data);
-    } else {
-      setAllUsers((prev) => {
-        const existingIds = new Set(prev.map((u) => u._id));
-        const newItems = userResponse.data.filter((u) => !existingIds.has(u._id));
-        return [...prev, ...newItems];
-      });
-    }
-  }, [userResponse, skip]);
-
-  const totalCount = userResponse?.meta?.total ?? 0;
-  const hasMore = allUsers.length < totalCount;
-
-  const handleLoadMore = useCallback(() => {
-    if (!isFetching) {
-      setSkip((prev) => prev + PAGE_SIZE);
-    }
-  }, [isFetching]);
 
   const handleOpenCreateDrawer = useCallback(() => {
     setSelectedUser(null);
@@ -68,11 +51,6 @@ const User = () => {
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false);
     setSelectedUser(null);
-  }, []);
-
-  const handleUserDeleted = useCallback(() => {
-    setSkip(0);
-    setAllUsers([]);
   }, []);
 
   const getStatusLabel = useCallback((bannedUntil?: string) => {
@@ -151,7 +129,7 @@ const User = () => {
             >
               <Icon name="pencil" />
             </Button>
-            <DeleteUser user={row} onDeleted={handleUserDeleted}>
+            <DeleteUser user={row} onDeleted={resetList}>
               {({ onOpen }) => (
                 <Button
                   variant="icon"
@@ -167,7 +145,7 @@ const User = () => {
         ),
       },
     ],
-    [handleOpenEditDrawer, policyNameMap, getStatusLabel]
+    [handleOpenEditDrawer, policyNameMap, getStatusLabel, resetList]
   );
 
   return (
@@ -175,7 +153,7 @@ const User = () => {
       dimensionX="fill"
       direction="vertical"
       gap={10}
-      className={styles.userContainer}
+      className={styles.pageContainer}
     >
       <FlexElement
         dimensionX="fill"
@@ -190,7 +168,7 @@ const User = () => {
 
       <div id="user-scroll-container" className={styles.scrollContainer}>
         <InfiniteScroll
-          dataLength={allUsers.length}
+          dataLength={allItems.length}
           next={handleLoadMore}
           hasMore={hasMore}
           loader={
@@ -202,7 +180,7 @@ const User = () => {
         >
           <SpicaTable
             columns={columns}
-            data={allUsers}
+            data={allItems}
             isLoading={isLoading && skip === 0}
             skeletonRowCount={10}
           />

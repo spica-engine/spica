@@ -1,4 +1,4 @@
-.identityContainer {
+.pageContainer {
   padding: var(--padding-md);
 }
 
@@ -6,20 +6,23 @@
   padding: 0;
   width: unset !important;
 }
-
-.drawerContainer {
-  background-color: var(--color-background);
-  border-top-left-radius: var(--border-radius-xl);
-  border-bottom-left-radius: var(--border-radius-xl);
+.drawerContainer{
+    height: 100%;
+    width: 100%;
 }
-
 .drawerContent {
-  padding: var(--padding-xl);
 }
 
 .drawerFooter {
   border-top: 1px solid var(--color-border);
   padding: var(--padding-md) var(--padding-xl);
+}
+.fieldContainer{
+  flex: 1;
+}
+
+.drawerTitle, .drawerContent, .fieldContainer{
+  padding: var(--padding-xl);
 }
 
 .policiesCell {
@@ -33,5 +36,14 @@
 .scrollContainer {
   flex: 1;
   overflow-y: auto;
+  width: 100%;
+}
+
+.error {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+.inputFieldContainer {
   width: 100%;
 }
