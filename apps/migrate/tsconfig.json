@@ -4,7 +4,7 @@
   "exclude": ["test/**/*"],
   "references": [
     {
-      "path": "../../packages/database"
+      "path": "../../packages/database/testing"
     }
   ]
 }

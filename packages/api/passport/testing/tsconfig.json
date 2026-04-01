@@ -3,10 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../authfactor"
+      "path": "../../../interface/passport/testing"
     },
     {
-      "path": ".."
+      "path": "../authfactor"
     }
   ]
 }

@@ -6,22 +6,46 @@
       "path": "realtime"
     },
     {
-      "path": "../activity"
+      "path": "../../interface/versioncontrol"
     },
     {
-      "path": "../passport"
+      "path": "../activity/services"
     },
     {
-      "path": "../../database"
+      "path": "../passport/guard"
     },
     {
-      "path": "services"
+      "path": "../../interface/passport/identity"
+    },
+    {
+      "path": "../../database/pipeline"
     },
     {
       "path": "../../core"
     },
     {
+      "path": "../../database"
+    },
+    {
+      "path": "../../interface/env_var"
+    },
+    {
+      "path": "services"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../interface/representative"
+    },
+    {
+      "path": "../../interface/asset"
+    },
+    {
       "path": "../asset"
+    },
+    {
+      "path": "../../interface/activity"
     }
   ]
 }

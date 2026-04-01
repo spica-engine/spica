@@ -3,13 +3,31 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../passport"
+      "path": "../../../interface/passport/guard"
+    },
+    {
+      "path": "../../../interface/bucket/realtime"
+    },
+    {
+      "path": "../../../interface/activity"
+    },
+    {
+      "path": "../../passport/guard"
+    },
+    {
+      "path": "../../../interface/realtime"
+    },
+    {
+      "path": "../../../database/realtime"
     },
     {
       "path": "../../../database"
     },
     {
-      "path": "../../../core"
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core/patch"
     },
     {
       "path": "../services"
@@ -24,7 +42,10 @@
       "path": "../cache"
     },
     {
-      "path": "../../activity"
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../interface/bucket"
     },
     {
       "path": "../common"

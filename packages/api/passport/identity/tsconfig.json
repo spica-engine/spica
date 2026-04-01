@@ -6,22 +6,43 @@
       "path": "../../status"
     },
     {
+      "path": "../../../interface/passport/policy"
+    },
+    {
       "path": "../policy"
+    },
+    {
+      "path": "../../../interface/core"
+    },
+    {
+      "path": "../../../database/pipeline"
+    },
+    {
+      "path": "../../../interface/replication"
     },
     {
       "path": "../../replication"
     },
     {
+      "path": "../../../interface/passport/authfactor"
+    },
+    {
       "path": "../authfactor"
     },
     {
-      "path": ".."
+      "path": "../guard"
+    },
+    {
+      "path": "../../../core/schema"
     },
     {
       "path": "../../../core"
     },
     {
-      "path": "../../activity"
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../interface/config"
     },
     {
       "path": "../../../database"
@@ -30,10 +51,19 @@
       "path": "../../config"
     },
     {
-      "path": "../../preference"
+      "path": "../../../interface/passport/identity"
+    },
+    {
+      "path": "../../../interface/representative"
+    },
+    {
+      "path": "../../../interface/asset"
     },
     {
       "path": "../../asset"
+    },
+    {
+      "path": "../../../interface/activity"
     }
   ]
 }

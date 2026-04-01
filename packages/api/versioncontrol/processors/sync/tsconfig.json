@@ -6,6 +6,12 @@
       "path": "../../services/sync"
     },
     {
+      "path": "../../../../interface/versioncontrol"
+    },
+    {
+      "path": "../../../../interface/config"
+    },
+    {
       "path": "../../../../database"
     },
     {

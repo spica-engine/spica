@@ -3,10 +3,13 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../preference"
+      "path": "../../../interface/core"
     },
     {
-      "path": "../../../core"
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../interface/bucket"
     },
     {
       "path": "../../../database"

@@ -3,16 +3,31 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": ".."
-    },
-    {
-      "path": "../../activity"
+      "path": "../guard"
     },
     {
       "path": "../../../core"
     },
     {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../interface/versioncontrol"
+    },
+    {
+      "path": "../../../interface/passport/guard"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../interface/passport/policy"
+    },
+    {
       "path": "../../../database"
+    },
+    {
+      "path": "../../../interface/activity"
     }
   ]
 }

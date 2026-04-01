@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId} from "mongodb";
 import {
   Expression,
   Extractor,

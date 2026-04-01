@@ -3,16 +3,28 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
+      "path": "../../interface/status"
+    },
+    {
       "path": "../status"
     },
     {
       "path": "expression"
     },
     {
+      "path": "../../interface/core"
+    },
+    {
+      "path": "../../core/differ"
+    },
+    {
+      "path": "../../interface/versioncontrol"
+    },
+    {
       "path": "graphql"
     },
     {
-      "path": "../preference"
+      "path": "../../interface/preference"
     },
     {
       "path": "schemas-realtime"
@@ -21,31 +33,49 @@
       "path": "realtime"
     },
     {
+      "path": "../../core/patch"
+    },
+    {
       "path": "common"
     },
     {
       "path": "cache"
     },
     {
-      "path": "../passport"
+      "path": "../../interface/passport/guard"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../core"
     },
     {
       "path": "hooks"
     },
     {
-      "path": "../activity"
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../interface/bucket"
     },
     {
       "path": "../../database"
     },
     {
-      "path": "../../core"
+      "path": "../../interface/representative"
+    },
+    {
+      "path": "../../core/schema"
     },
     {
       "path": "services"
     },
     {
       "path": "history"
+    },
+    {
+      "path": "../../interface/asset"
     },
     {
       "path": "../asset"

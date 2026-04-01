@@ -3,13 +3,22 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../passport"
+      "path": "../../database/pipeline"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../interface/activity"
     },
     {
       "path": "../../database"
     },
     {
       "path": "../../core"
+    },
+    {
+      "path": "services"
     }
   ]
 }

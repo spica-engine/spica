@@ -3,7 +3,13 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../core"
+      "path": "../../config"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
+      "path": "../../../core/encryption"
     },
     {
       "path": "../../../database"

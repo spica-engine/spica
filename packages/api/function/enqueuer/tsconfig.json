@@ -3,13 +3,31 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../interface/passport/guard"
+    },
+    {
+      "path": "../../../interface/status"
+    },
+    {
+      "path": "../../../interface/core"
+    },
+    {
       "path": "../../../core"
+    },
+    {
+      "path": "../../../interface/function/enqueuer"
+    },
+    {
+      "path": "../../../interface/replication"
     },
     {
       "path": "../../replication"
     },
     {
-      "path": ".."
+      "path": "../queue/proto"
+    },
+    {
+      "path": "../queue"
     },
     {
       "path": "../../../database"

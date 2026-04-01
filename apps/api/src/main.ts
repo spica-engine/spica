@@ -1,27 +1,27 @@
 import {Logger, Module} from "@nestjs/common";
 import {NestFactory} from "@nestjs/core";
-import {ActivityModule} from "@spica-server/activity";
-import {BucketModule} from "@spica-server/bucket";
+// import {ActivityModule} from "@spica-server/activity";
+// import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
-import {SchemaModule} from "@spica-server/core/schema";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {WsAdapter} from "@spica-server/core/websocket";
-import {DashboardModule} from "@spica-server/dashboard";
-import {DatabaseModule} from "@spica-server/database";
-import {FunctionModule} from "@spica-server/function";
-import {PassportModule} from "@spica-server/passport";
-import {PreferenceModule} from "@spica-server/preference";
-import {StatusModule} from "@spica-server/status";
-import {StorageModule} from "@spica-server/storage";
-import {VersionControlModule} from "@spica-server/versioncontrol";
-import {ReplicationModule} from "@spica-server/replication";
-import {AssetModule} from "@spica-server/asset";
-import {BatchModule} from "@spica-server/batch";
-import {EnvVarModule} from "@spica-server/env_var";
-import {SecretModule} from "@spica-server/secret";
-import {MailerModule} from "@spica-server/mailer";
-import {SmsModule} from "@spica-server/sms";
+// import {SchemaModule} from "@spica-server/core/schema";
+// import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+// import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+// import {WsAdapter} from "@spica-server/core/websocket";
+// import {DashboardModule} from "@spica-server/dashboard";
+// import {DatabaseModule} from "@spica-server/database";
+// import {FunctionModule} from "@spica-server/function";
+// import {PassportModule} from "@spica-server/passport";
+// import {PreferenceModule} from "@spica-server/preference";
+// import {StatusModule} from "@spica-server/status";
+// import {StorageModule} from "@spica-server/storage";
+// import {VersionControlModule} from "@spica-server/versioncontrol";
+// import {ReplicationModule} from "@spica-server/replication";
+// import {AssetModule} from "@spica-server/asset";
+// import {BatchModule} from "@spica-server/batch";
+// import {EnvVarModule} from "@spica-server/env_var";
+// import {SecretModule} from "@spica-server/secret";
+// import {MailerModule} from "@spica-server/mailer";
+// import {SmsModule} from "@spica-server/sms";
 
 import fs from "fs";
 import https from "https";
@@ -29,8 +29,8 @@ import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import {ConfigModule} from "@spica-server/config";
-import {deriveKey} from "@spica-server/core/encryption";
+// import {ConfigModule} from "@spica-server/config";
+// import {deriveKey} from "@spica-server/core/encryption";
 
 const yargsInstance = yargs(process.argv.slice(2)) as any;
 
@@ -686,7 +686,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     } else {
       for (const key of derivableSecretsKeys) {
         if (!args[key]) {
-          args[key] = deriveKey(masterKey, key);
+          // args[key] = deriveKey(masterKey, key);
         }
       }
     }
@@ -700,167 +700,167 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .parse() as any;
 
 const modules = [
-  BatchModule.forRoot({
-    port: args["port"]
-  }),
-  DashboardModule.forRoot({realtime: true}),
-  PreferenceModule.forRoot(),
-  AssetModule.forRoot({persistentPath: args["persistent-path"]}),
-  DatabaseModule.withConnection(args["database-uri"], {
-    database: args["database-name"],
-    replicaSet: args["database-replica-set"],
-    maxPoolSize: args["database-pool-size"],
-    appName: "spica",
-    readPreference: args["database-read-preference"]
-  }),
-  EnvVarModule.forRoot({
-    realtime: true
-  }),
-  SecretModule.forRoot({
-    realtime: true,
-    encryptionSecret: args["secret-module-encryption-secret"]
-  }),
-  MailerModule.forRoot({
-    host: args["mailer-host"],
-    port: args["mailer-port"],
-    secure: args["mailer-secure"],
-    auth: {
-      user: args["mailer-user"],
-      pass: args["mailer-pass"]
-    },
-    defaults: {
-      from: args["mailer-from"]
-    }
-  }),
-  SmsModule.forRoot({
-    strategy: args["sms-sender-strategy"] as "twilio",
-    twilio: {
-      accountSid: args["twilio-sms-service-account-sid"],
-      authToken: args["twilio-sms-service-auth-token"],
-      fromNumber: args["twilio-sms-service-from-number"]
-    }
-  }),
-  SchemaModule.forRoot({
-    formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
-    defaults: [CREATED_AT, UPDATED_AT]
-  }),
-  BucketModule.forRoot({
-    hooks: args["bucket-hooks"],
-    history: args["bucket-history"],
-    realtime: true,
-    cache: args["bucket-cache"],
-    cacheTtl: args["bucket-cache-ttl"],
-    bucketDataLimit: args["bucket-data-limit"],
-    graphql: args["bucket-graphql"],
-    hashSecret: args["bucket-data-hash-secret"],
-    encryptionSecret: args["bucket-data-encryption-secret"]
-  }),
-  StorageModule.forRoot({
-    strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",
-    defaultPath: path.join(args["persistent-path"], args["default-storage-path"]),
-    defaultPublicUrl: args["default-storage-public-url"],
-    gcloudServiceAccountPath: args["gcloud-service-account-path"],
-    gcloudBucketName: args["gcloud-bucket-name"],
-    awss3CredentialsPath: args["awss3-credentials-path"],
-    awss3BucketName: args["awss3-bucket-name"],
-    objectSizeLimit: args["storage-object-size-limit"],
-    totalSizeLimit: args["storage-total-size-limit"],
-    resumableUploadExpiresIn: args["resumable-upload-expires-in"]
-  }),
-  PassportModule.forRoot({
-    publicUrl: args["public-url"],
-    defaultStrategy: args["passport-default-strategy"],
-    samlCertificateTTL: args["passport-saml-certificate-ttl"],
-    apikeyRealtime: true,
-    refreshTokenRealtime: true,
-    policyRealtime: true,
-    identityOptions: {
-      expiresIn: args["passport-identity-token-expires-in"],
-      maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
-      issuer: args["public-url"],
-      refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
-      refreshTokenHashSecret: args["refresh-token-hash-secret"],
-      secretOrKey: args["passport-secret"],
-      audience: "spica.io",
-      defaultIdentityIdentifier: args["passport-default-identity-identifier"],
-      defaultIdentityPassword: args["passport-default-identity-password"],
-      defaultIdentityPolicies: args["passport-default-identity-policies"],
-      entryLimit: args["passport-identity-limit"],
-      passwordHistoryLimit: args["passport-identity-password-history-limit"],
-      blockingOptions: {
-        failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
-        blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
-      },
-      identityRealtime: true
-    },
-    userOptions: {
-      expiresIn: args["passport-user-token-expires-in"],
-      maxExpiresIn: args["passport-user-token-expiration-seconds-limit"],
-      issuer: args["public-url"],
-      refreshTokenExpiresIn: args["passport-user-refresh-token-expires-in"],
-      refreshTokenHashSecret: args["refresh-token-hash-secret"],
-      secretOrKey: args["passport-secret"],
-      audience: "spica.io",
-      entryLimit: args["passport-user-limit"],
-      passwordHistoryLimit: args["passport-user-password-history-limit"],
-      blockingOptions: {
-        failedAttemptLimit: args["passport-user-failed-login-attempt-limit"],
-        blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
-      },
-      userRealtime: true,
-      verificationHashSecret: args["user-verification-hash-secret"],
-      providerEncryptionSecret: args["user-provider-encryption-secret"],
-      providerHashSecret: args["user-provider-hash-secret"],
-      verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
-    }
-  }),
-  FunctionModule.forRoot({
-    logExpireAfterSeconds: args["common-log-lifespan"],
-    path: args["persistent-path"],
-    databaseName: args["database-name"],
-    databaseReplicaSet: args["database-replica-set"],
-    databaseUri: args["database-uri"],
-    apiUrl: args["function-api-url"],
-    timeout: args["function-timeout"],
-    experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
-    entryLimit: args["function-limit"],
-    corsOptions: {
-      allowedOrigins: args["cors-allowed-origins"],
-      allowedMethods: args["cors-allowed-methods"],
-      allowedHeaders: args["cors-allowed-headers"],
-      allowCredentials: args["cors-allow-credentials"]
-    },
-    debug: args["function-debug"],
-    maxConcurrency: args["function-worker-concurrency"],
-    realtimeLogs: true,
-    logger: args["function-logger"],
-    invocationLogs: args["function-invocation-logs"],
-    realtime: true,
-    grpcPort: args["grpc-function-port"]
-  }),
-  ConfigModule.forRoot(),
-  StatusModule.forRoot({
-    expireAfterSeconds: args["common-log-lifespan"],
-    httpStatusTracking: args["http-status-tracking"]
-  })
+  // BatchModule.forRoot({
+  //   port: args["port"]
+  // }),
+  // DashboardModule.forRoot({realtime: true}),
+  // PreferenceModule.forRoot(),
+  // AssetModule.forRoot({persistentPath: args["persistent-path"]}),
+  // DatabaseModule.withConnection(args["database-uri"], {
+  //   database: args["database-name"],
+  //   replicaSet: args["database-replica-set"],
+  //   maxPoolSize: args["database-pool-size"],
+  //   appName: "spica",
+  //   readPreference: args["database-read-preference"]
+  // }),
+  // EnvVarModule.forRoot({
+  //   realtime: true
+  // }),
+  // SecretModule.forRoot({
+  //   realtime: true,
+  //   encryptionSecret: args["secret-module-encryption-secret"]
+  // }),
+  // MailerModule.forRoot({
+  //   host: args["mailer-host"],
+  //   port: args["mailer-port"],
+  //   secure: args["mailer-secure"],
+  //   auth: {
+  //     user: args["mailer-user"],
+  //     pass: args["mailer-pass"]
+  //   },
+  //   defaults: {
+  //     from: args["mailer-from"]
+  //   }
+  // }),
+  // SmsModule.forRoot({
+  //   strategy: args["sms-sender-strategy"] as "twilio",
+  //   twilio: {
+  //     accountSid: args["twilio-sms-service-account-sid"],
+  //     authToken: args["twilio-sms-service-auth-token"],
+  //     fromNumber: args["twilio-sms-service-from-number"]
+  //   }
+  // }),
+  // SchemaModule.forRoot({
+  //   formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
+  //   defaults: [CREATED_AT, UPDATED_AT]
+  // }),
+  // BucketModule.forRoot({
+  //   hooks: args["bucket-hooks"],
+  //   history: args["bucket-history"],
+  //   realtime: true,
+  //   cache: args["bucket-cache"],
+  //   cacheTtl: args["bucket-cache-ttl"],
+  //   bucketDataLimit: args["bucket-data-limit"],
+  //   graphql: args["bucket-graphql"],
+  //   hashSecret: args["bucket-data-hash-secret"],
+  //   encryptionSecret: args["bucket-data-encryption-secret"]
+  // }),
+  // StorageModule.forRoot({
+  //   strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",
+  //   defaultPath: path.join(args["persistent-path"], args["default-storage-path"]),
+  //   defaultPublicUrl: args["default-storage-public-url"],
+  //   gcloudServiceAccountPath: args["gcloud-service-account-path"],
+  //   gcloudBucketName: args["gcloud-bucket-name"],
+  //   awss3CredentialsPath: args["awss3-credentials-path"],
+  //   awss3BucketName: args["awss3-bucket-name"],
+  //   objectSizeLimit: args["storage-object-size-limit"],
+  //   totalSizeLimit: args["storage-total-size-limit"],
+  //   resumableUploadExpiresIn: args["resumable-upload-expires-in"]
+  // }),
+  // PassportModule.forRoot({
+  //   publicUrl: args["public-url"],
+  //   defaultStrategy: args["passport-default-strategy"],
+  //   samlCertificateTTL: args["passport-saml-certificate-ttl"],
+  //   apikeyRealtime: true,
+  //   refreshTokenRealtime: true,
+  //   policyRealtime: true,
+  //   identityOptions: {
+  //     expiresIn: args["passport-identity-token-expires-in"],
+  //     maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
+  //     issuer: args["public-url"],
+  //     refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
+  //     refreshTokenHashSecret: args["refresh-token-hash-secret"],
+  //     secretOrKey: args["passport-secret"],
+  //     audience: "spica.io",
+  //     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
+  //     defaultIdentityPassword: args["passport-default-identity-password"],
+  //     defaultIdentityPolicies: args["passport-default-identity-policies"],
+  //     entryLimit: args["passport-identity-limit"],
+  //     passwordHistoryLimit: args["passport-identity-password-history-limit"],
+  //     blockingOptions: {
+  //       failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
+  //       blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
+  //     },
+  //     identityRealtime: true
+  //   },
+  //   userOptions: {
+  //     expiresIn: args["passport-user-token-expires-in"],
+  //     maxExpiresIn: args["passport-user-token-expiration-seconds-limit"],
+  //     issuer: args["public-url"],
+  //     refreshTokenExpiresIn: args["passport-user-refresh-token-expires-in"],
+  //     refreshTokenHashSecret: args["refresh-token-hash-secret"],
+  //     secretOrKey: args["passport-secret"],
+  //     audience: "spica.io",
+  //     entryLimit: args["passport-user-limit"],
+  //     passwordHistoryLimit: args["passport-user-password-history-limit"],
+  //     blockingOptions: {
+  //       failedAttemptLimit: args["passport-user-failed-login-attempt-limit"],
+  //       blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
+  //     },
+  //     userRealtime: true,
+  //     verificationHashSecret: args["user-verification-hash-secret"],
+  //     providerEncryptionSecret: args["user-provider-encryption-secret"],
+  //     providerHashSecret: args["user-provider-hash-secret"],
+  //     verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
+  //   }
+  // }),
+  // FunctionModule.forRoot({
+  //   logExpireAfterSeconds: args["common-log-lifespan"],
+  //   path: args["persistent-path"],
+  //   databaseName: args["database-name"],
+  //   databaseReplicaSet: args["database-replica-set"],
+  //   databaseUri: args["database-uri"],
+  //   apiUrl: args["function-api-url"],
+  //   timeout: args["function-timeout"],
+  //   experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
+  //   entryLimit: args["function-limit"],
+  //   corsOptions: {
+  //     allowedOrigins: args["cors-allowed-origins"],
+  //     allowedMethods: args["cors-allowed-methods"],
+  //     allowedHeaders: args["cors-allowed-headers"],
+  //     allowCredentials: args["cors-allow-credentials"]
+  //   },
+  //   debug: args["function-debug"],
+  //   maxConcurrency: args["function-worker-concurrency"],
+  //   realtimeLogs: true,
+  //   logger: args["function-logger"],
+  //   invocationLogs: args["function-invocation-logs"],
+  //   realtime: true,
+  //   grpcPort: args["grpc-function-port"]
+  // }),
+  // ConfigModule.forRoot(),
+  // StatusModule.forRoot({
+  //   expireAfterSeconds: args["common-log-lifespan"],
+  //   httpStatusTracking: args["http-status-tracking"]
+  // })
 ];
 
 if (args["activity-stream"]) {
-  modules.push(ActivityModule.forRoot({expireAfterSeconds: args["common-log-lifespan"]}));
+  // modules.push(ActivityModule.forRoot({expireAfterSeconds: args["common-log-lifespan"]}));
 }
 
 if (args["version-control"]) {
-  modules.push(
-    VersionControlModule.forRoot({
-      persistentPath: args["persistent-path"],
-      isReplicationEnabled: args["replication"],
-      realtime: args["versioncontrol-sync-realtime"]
-    })
-  );
+  // modules.push(
+  //   VersionControlModule.forRoot({
+  //     persistentPath: args["persistent-path"],
+  //     isReplicationEnabled: args["replication"],
+  //     realtime: args["versioncontrol-sync-realtime"]
+  //   })
+  // );
 }
 
 if (args["replication"]) {
-  modules.push(ReplicationModule.forRoot());
+  // modules.push(ReplicationModule.forRoot());
 }
 
 @Module({
@@ -883,7 +883,7 @@ NestFactory.create(RootModule, {
 }).then(async app => {
   app.getHttpAdapter().getInstance().set("trust proxy", args["trust-proxy"]);
   console.log("PROXY at main.ts", app.getHttpAdapter().getInstance().get("trust proxy"));
-  app.useWebSocketAdapter(new WsAdapter(app));
+  // app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
     Middlewares.Headers({
       "Cache-Control": args["cache-control-header"],

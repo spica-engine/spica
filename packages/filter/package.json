@@ -4,5 +4,8 @@
   "private": true,
   "exports": {
     ".": "./index.ts"
+  },
+  "dependencies": {
+    "mongodb": "^6.12.0"
   }
 }

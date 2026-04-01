@@ -3,7 +3,13 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../interface/replication"
+    },
+    {
       "path": "../../replication"
+    },
+    {
+      "path": "../../../interface/passport/authfactor"
     }
   ]
 }

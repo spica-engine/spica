@@ -3,6 +3,12 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../../interface/batch"
+    },
+    {
+      "path": "../../../../interface/function/packages"
+    },
+    {
       "path": "../.."
     }
   ]

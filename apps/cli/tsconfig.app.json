@@ -8,5 +8,12 @@
   },
   "include": ["index.ts", "src/**/*.ts", "package.json"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../../packages/interface/function"
+    },
+    {
+      "path": "../../packages/interface/asset"
+    }
+  ]
 }

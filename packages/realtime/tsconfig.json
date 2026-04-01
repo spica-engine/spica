@@ -3,7 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../database"
+      "path": "../interface/passport/guard"
+    },
+    {
+      "path": "../database/realtime"
     }
   ]
 }

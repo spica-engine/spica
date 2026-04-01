@@ -3,7 +3,13 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../../core"
+      "path": "../../../../interface/batch"
+    },
+    {
+      "path": "../../../../interface/function/packages"
+    },
+    {
+      "path": "../../../../core/copy"
     },
     {
       "path": "../.."

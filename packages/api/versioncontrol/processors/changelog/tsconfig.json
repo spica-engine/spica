@@ -4,6 +4,9 @@
   "references": [
     {
       "path": "../../services/changelog"
+    },
+    {
+      "path": "../../../../interface/versioncontrol"
     }
   ]
 }

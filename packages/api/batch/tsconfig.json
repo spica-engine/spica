@@ -3,10 +3,13 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../passport"
+      "path": "../../interface/batch"
     },
     {
-      "path": "../../core"
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../core/schema"
     }
   ]
 }

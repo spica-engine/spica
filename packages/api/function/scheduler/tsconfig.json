@@ -6,6 +6,15 @@
       "path": "../runtime/node"
     },
     {
+      "path": "../../../interface/function/runtime"
+    },
+    {
+      "path": "../../../interface/status"
+    },
+    {
+      "path": "../../../interface/replication"
+    },
+    {
       "path": "../../replication"
     },
     {
@@ -18,13 +27,22 @@
       "path": "../runtime"
     },
     {
+      "path": "../queue/proto"
+    },
+    {
+      "path": "../queue"
+    },
+    {
       "path": "../pkgmanager/local"
     },
     {
       "path": "../pkgmanager/node"
     },
     {
-      "path": ".."
+      "path": "../../../interface/function/pkgmanager"
+    },
+    {
+      "path": "../enqueuer"
     },
     {
       "path": "../compiler/typescript"
@@ -39,7 +57,7 @@
       "path": "../../../database"
     },
     {
-      "path": "../../passport"
+      "path": "../../../interface/function/scheduler"
     }
   ]
 }

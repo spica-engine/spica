@@ -2,19 +2,84 @@
   "name": "@spica-server/core",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./schema": "./schema/index.ts",
-    "./schema/formats": "./schema/formats.ts",
-    "./schema/defaults": "./schema/defaults.ts",
-    "./schema/src/validator": "./schema/src/validator.ts",
-    "./encryption": "./encryption/index.ts",
-    "./testing": "./testing/index.ts",
-    "./websocket": "./websocket/index.ts",
-    "./differ": "./differ/index.ts",
-    "./patch": "./patch/index.ts",
-    "./copy": "./copy/index.ts",
-    "./src/middlewares": "./src/middlewares.ts",
-    "./src/pipes": "./src/pipes.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./schema/index.ts",
+      "default": "./dist/schema/index.js"
+    },
+    "./schema/formats": {
+      "types": "./schema/formats.ts",
+      "default": "./dist/schema/formats.js"
+    },
+    "./schema/defaults": {
+      "types": "./schema/defaults.ts",
+      "default": "./dist/schema/defaults.js"
+    },
+    "./schema/src/validator": {
+      "types": "./schema/src/validator.ts",
+      "default": "./dist/schema/src/validator.js"
+    },
+    "./encryption": {
+      "types": "./encryption/index.ts",
+      "default": "./dist/encryption/index.js"
+    },
+    "./testing": {
+      "types": "./testing/index.ts",
+      "default": "./dist/testing/index.js"
+    },
+    "./websocket": {
+      "types": "./websocket/index.ts",
+      "default": "./dist/websocket/index.js"
+    },
+    "./differ": {
+      "types": "./differ/index.ts",
+      "default": "./dist/differ/index.js"
+    },
+    "./patch": {
+      "types": "./patch/index.ts",
+      "default": "./dist/patch/index.js"
+    },
+    "./copy": {
+      "types": "./copy/index.ts",
+      "default": "./dist/copy/index.js"
+    },
+    "./src/middlewares": {
+      "types": "./src/middlewares.ts",
+      "default": "./dist/src/middlewares.js"
+    },
+    "./src/pipes": {
+      "types": "./src/pipes.ts",
+      "default": "./dist/src/pipes.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-ws": "^10.4.15",
+    "@spica-server/interface": "*",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "body-parser": "^1.20.3",
+    "deep-diff": "^1.0.2",
+    "diff-match-patch": "^1.0.5",
+    "got": "^14.4.6",
+    "json-merge-patch": "^1.0.2",
+    "matcher": "^5.0.0",
+    "path-to-regexp": "^8.2.0",
+    "rxjs": "^7.8.1",
+    "type-is": "^1.6.18",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/deep-diff": "^1.0.5",
+    "@types/diff-match-patch": "^1.0.36",
+    "@types/json-schema": "^7.0.15",
+    "@types/matcher": "^2.0.0",
+    "@types/ws": "^8.5.13"
   }
 }

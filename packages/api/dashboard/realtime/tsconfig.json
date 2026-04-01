@@ -6,10 +6,10 @@
       "path": "../../../realtime"
     },
     {
-      "path": "../../passport"
+      "path": "../../../interface/realtime"
     },
     {
-      "path": "../../../database"
+      "path": "../../../database/realtime"
     }
   ]
 }

@@ -3,10 +3,19 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../api/function/queue/proto"
+    },
+    {
+      "path": "../../core"
+    },
+    {
       "path": "../../../api/replication"
     },
     {
-      "path": "../../../api/function"
+      "path": "../../../api/function/queue"
+    },
+    {
+      "path": "../../../api/function/enqueuer"
     }
   ]
 }

@@ -3,7 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../core"
+      "path": "../../../core/patch"
+    },
+    {
+      "path": "../../../interface/preference"
     },
     {
       "path": "../../../database"

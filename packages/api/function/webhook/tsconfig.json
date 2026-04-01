@@ -3,10 +3,19 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../passport"
+      "path": "../../../interface/function"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../passport/guard"
     },
     {
       "path": "../../../core"
+    },
+    {
+      "path": "../../../interface/function/webhook"
     },
     {
       "path": "../../../database"

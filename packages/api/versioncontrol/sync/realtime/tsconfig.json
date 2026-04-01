@@ -3,13 +3,16 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../passport/guard"
+    },
+    {
+      "path": "../../../../interface/realtime"
+    },
+    {
       "path": "../../../../realtime"
     },
     {
-      "path": "../../../passport"
-    },
-    {
-      "path": "../../../../database"
+      "path": "../../../../database/realtime"
     }
   ]
 }

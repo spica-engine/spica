@@ -1,2 +1,2 @@
-export * from "./src/middlewares";
-export * from "./src/pipes";
+export * from "./src/middlewares.js";
+export * from "./src/pipes.js";

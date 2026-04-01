@@ -2,5 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "files": [],
   "include": ["package.json"],
-  "references": []
+  "references": [
+    {
+      "path": "../../packages/interface/function"
+    },
+    {
+      "path": "../../packages/interface/asset"
+    }
+  ]
 }

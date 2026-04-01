@@ -9,7 +9,10 @@
       "path": "../../database"
     },
     {
-      "path": "../passport"
+      "path": "../../interface/status"
+    },
+    {
+      "path": "../passport/guard"
     },
     {
       "path": "../../core"

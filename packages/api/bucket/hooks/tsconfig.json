@@ -3,10 +3,25 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../interface/function/scheduler"
+    },
+    {
+      "path": "../../../interface/function"
+    },
+    {
       "path": "../../../database"
     },
     {
       "path": "../services"
+    },
+    {
+      "path": "../../../interface/function/enqueuer"
+    },
+    {
+      "path": "../../../interface/bucket/hooks"
+    },
+    {
+      "path": "../../../interface/replication"
     },
     {
       "path": "../../replication"
@@ -15,7 +30,13 @@
       "path": "proto"
     },
     {
-      "path": "../../function"
+      "path": "../../function/queue/proto"
+    },
+    {
+      "path": "../../function/queue"
+    },
+    {
+      "path": "../../function/enqueuer"
     }
   ]
 }

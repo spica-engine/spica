@@ -3,19 +3,37 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
+      "path": "../../../core/encryption"
+    },
+    {
+      "path": "../../../interface/core"
+    },
+    {
+      "path": "../../../interface/replication"
+    },
+    {
       "path": "../../replication"
+    },
+    {
+      "path": "../../../interface/passport/authfactor"
     },
     {
       "path": "../authfactor"
     },
     {
-      "path": ".."
+      "path": "../guard"
     },
     {
-      "path": "../../activity"
+      "path": "../../../core"
+    },
+    {
+      "path": "../../activity/services"
     },
     {
       "path": "../../status"
+    },
+    {
+      "path": "../../../database/pipeline"
     },
     {
       "path": "../../sms"
@@ -24,19 +42,31 @@
       "path": "../../mailer"
     },
     {
+      "path": "../../../interface/passport/policy"
+    },
+    {
       "path": "../policy"
     },
     {
-      "path": "../../../core"
+      "path": "../../../core/schema"
     },
     {
       "path": "../../../filter"
+    },
+    {
+      "path": "../../../interface/passport/user"
+    },
+    {
+      "path": "../../../interface/config"
     },
     {
       "path": "../../../database"
     },
     {
       "path": "../../config"
+    },
+    {
+      "path": "../../../interface/activity"
     }
   ]
 }

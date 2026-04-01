@@ -3,6 +3,12 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../config"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
       "path": "../../../database"
     }
   ]

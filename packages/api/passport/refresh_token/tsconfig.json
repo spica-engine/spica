@@ -3,10 +3,19 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
+      "path": "../../../core/schema"
+    },
+    {
       "path": "../../../filter"
     },
     {
-      "path": ".."
+      "path": "../../../database/pipeline"
+    },
+    {
+      "path": "../../../interface/passport/refresh_token"
+    },
+    {
+      "path": "../guard"
     },
     {
       "path": "../../../database"

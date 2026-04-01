@@ -3,7 +3,13 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../passport"
+      "path": "../../interface/versioncontrol"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../interface/dashboard"
     },
     {
       "path": "../../database"
@@ -12,7 +18,13 @@
       "path": "../asset"
     },
     {
-      "path": "../../core"
+      "path": "../../interface/asset"
+    },
+    {
+      "path": "../../interface/representative"
+    },
+    {
+      "path": "../../core/schema"
     }
   ]
 }

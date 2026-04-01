@@ -3,13 +3,22 @@
   "include": ["src/**/*.ts", "schema/*.json", "index.ts"],
   "references": [
     {
+      "path": "../../core/differ"
+    },
+    {
       "path": "../../representative"
     },
     {
-      "path": "../passport"
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../core/schema"
     },
     {
       "path": "../../core"
+    },
+    {
+      "path": "../../interface/asset"
     },
     {
       "path": "../../database"

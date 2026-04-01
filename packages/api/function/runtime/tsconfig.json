@@ -1,5 +1,12 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "include": ["src/**/*.ts", "index.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../../../interface/function/compiler"
+    },
+    {
+      "path": "../../../interface/function/runtime"
+    }
+  ]
 }

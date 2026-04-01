@@ -6,16 +6,58 @@
       "path": "../status"
     },
     {
+      "path": "../../database/pipeline"
+    },
+    {
+      "path": "../../interface/versioncontrol"
+    },
+    {
       "path": "webhook"
     },
     {
-      "path": "../activity"
+      "path": "../../interface/function/scheduler"
+    },
+    {
+      "path": "../../core/patch"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../interface/replication"
     },
     {
       "path": "../replication"
     },
     {
+      "path": "queue/proto"
+    },
+    {
+      "path": "../../interface/function/pkgmanager"
+    },
+    {
       "path": "scheduler"
+    },
+    {
+      "path": "../../interface/secret"
+    },
+    {
+      "path": "../../interface/env_var"
+    },
+    {
+      "path": "../../core/differ"
+    },
+    {
+      "path": "../../interface/representative"
+    },
+    {
+      "path": "../../database"
     },
     {
       "path": "log"
@@ -24,19 +66,34 @@
       "path": "services"
     },
     {
-      "path": "../../core"
+      "path": "../../interface/function"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../interface/asset"
     },
     {
       "path": "../asset"
     },
     {
+      "path": "../../interface/activity"
+    },
+    {
+      "path": "../../interface/realtime"
+    },
+    {
       "path": "../../realtime"
     },
     {
-      "path": "../passport"
+      "path": "../../database/realtime"
     },
     {
-      "path": "../../database"
+      "path": "../../interface/function/packages"
+    },
+    {
+      "path": "../../interface/batch"
     },
     {
       "path": "realtime"

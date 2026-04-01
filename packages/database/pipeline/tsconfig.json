@@ -6,6 +6,9 @@
       "path": "../../filter"
     },
     {
+      "path": "../../interface/database"
+    },
+    {
       "path": ".."
     }
   ]

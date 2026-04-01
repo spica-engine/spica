@@ -16,7 +16,13 @@
       "path": "../../representative"
     },
     {
-      "path": "../passport"
+      "path": "../../interface/config"
+    },
+    {
+      "path": "../../interface/versioncontrol"
+    },
+    {
+      "path": "../passport/guard"
     }
   ]
 }

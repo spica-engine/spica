@@ -10,6 +10,12 @@
     },
     {
       "path": "../../processors/changelog"
+    },
+    {
+      "path": "../../../../interface/versioncontrol"
+    },
+    {
+      "path": "../../../../interface/representative"
     }
   ]
 }

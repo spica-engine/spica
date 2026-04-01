@@ -3,13 +3,22 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../core"
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../../core/testing"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../interface/config"
     },
     {
       "path": "../../database"
-    },
-    {
-      "path": "../passport"
     }
   ]
 }

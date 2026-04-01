@@ -6,10 +6,16 @@
       "path": "../../database"
     },
     {
-      "path": "../passport"
+      "path": "../../interface/preference"
     },
     {
-      "path": "../activity"
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../interface/activity"
     }
   ]
 }

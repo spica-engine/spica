@@ -3,7 +3,13 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../../core"
+      "path": "../../../../interface/passport/user"
+    },
+    {
+      "path": "../../../../core/copy"
+    },
+    {
+      "path": "../../../../interface/function/packages"
     },
     {
       "path": "../.."

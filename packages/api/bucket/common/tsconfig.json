@@ -6,10 +6,31 @@
       "path": "../cache"
     },
     {
+      "path": "../../../interface/core"
+    },
+    {
+      "path": "../../../core/differ"
+    },
+    {
       "path": "../services"
     },
     {
       "path": "../../../filter"
+    },
+    {
+      "path": "../../../interface/bucket/expression"
+    },
+    {
+      "path": "../../../core/encryption"
+    },
+    {
+      "path": "../../../interface/bucket"
+    },
+    {
+      "path": "../../../interface/bucket/common"
+    },
+    {
+      "path": "../../../database/pipeline"
     },
     {
       "path": "../expression"
@@ -18,10 +39,13 @@
       "path": "../../../database"
     },
     {
-      "path": "../../../core"
+      "path": "../../../interface/activity"
     },
     {
-      "path": "../../activity"
+      "path": "../../../core/patch"
+    },
+    {
+      "path": "../../activity/services"
     }
   ]
 }

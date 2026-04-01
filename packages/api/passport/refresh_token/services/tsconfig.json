@@ -3,6 +3,9 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../../interface/passport/refresh_token"
+    },
+    {
       "path": "../../../../database"
     }
   ]
