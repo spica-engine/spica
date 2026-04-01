@@ -9,12 +9,12 @@ interface UseInfiniteListOptions<T> {
   response: PaginatedResponse<T> | undefined;
   isFetching: boolean;
   pageSize: number;
-  idKey?: keyof T;
+  skip: number;
+  setSkip: React.Dispatch<React.SetStateAction<number>>;
 }
 
 interface UseInfiniteListReturn<T> {
   allItems: T[];
-  skip: number;
   totalCount: number;
   hasMore: boolean;
   handleLoadMore: () => void;
@@ -25,8 +25,9 @@ export function useInfiniteList<T extends { _id?: string }>({
   response,
   isFetching,
   pageSize,
+  skip,
+  setSkip,
 }: UseInfiniteListOptions<T>): UseInfiniteListReturn<T> {
-  const [skip, setSkip] = useState(0);
   const [allItems, setAllItems] = useState<T[]>([]);
 
   useEffect(() => {
@@ -49,12 +50,12 @@ export function useInfiniteList<T extends { _id?: string }>({
     if (!isFetching) {
       setSkip((prev) => prev + pageSize);
     }
-  }, [isFetching, pageSize]);
+  }, [isFetching, pageSize, setSkip]);
 
   const resetList = useCallback(() => {
     setSkip(0);
     setAllItems([]);
-  }, []);
+  }, [setSkip]);
 
-  return { allItems, skip, totalCount, hasMore, handleLoadMore, resetList };
+  return { allItems, totalCount, hasMore, handleLoadMore, resetList };
 }

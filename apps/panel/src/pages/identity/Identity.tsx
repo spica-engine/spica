@@ -15,16 +15,20 @@ import styles from "../shared/EntityPage.module.scss";
 const PAGE_SIZE = 20;
 
 const Identity = () => {
+  const [skip, setSkip] = useState(0);
+
   const { data: identityResponse, isLoading, isFetching } = useGetIdentitiesQuery({
     paginate: true,
     limit: PAGE_SIZE,
-    skip: 0,
+    skip,
   });
 
-  const { allItems, skip, hasMore, handleLoadMore, resetList } = useInfiniteList<IdentityType>({
+  const { allItems, hasMore, handleLoadMore, resetList } = useInfiniteList<IdentityType>({
     response: identityResponse,
     isFetching,
     pageSize: PAGE_SIZE,
+    skip,
+    setSkip,
   });
 
   const { data: policies } = useGetPoliciesQuery();
@@ -170,7 +174,7 @@ const Identity = () => {
           <SpicaTable
             columns={columns}
             data={allItems}
-            isLoading={isLoading && skip === 0}
+            isLoading={isLoading}
             skeletonRowCount={10}
           />
         </InfiniteScroll>

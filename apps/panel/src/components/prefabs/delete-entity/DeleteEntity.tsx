@@ -24,19 +24,32 @@ const DeleteEntity: FC<DeleteEntityProps> = ({
   children,
 }) => {
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDelete = async () => {
-    await deleteMutation(entityId).unwrap();
-    setIsConfirmationOpen(false);
-    onDeleted?.();
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteMutation(entityId).unwrap();
+      setIsConfirmationOpen(false);
+      onDeleted?.();
+    } catch (error: any) {
+      const message = error?.data?.message || "Failed to delete. Please try again.";
+      setDeleteError(message);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleCancel = () => {
     setIsConfirmationOpen(false);
+    setDeleteError(null);
   };
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setDeleteError(null);
     setIsConfirmationOpen(true);
   };
 
@@ -78,6 +91,8 @@ const DeleteEntity: FC<DeleteEntityProps> = ({
           confirmCondition={(val) => val === entityName}
           onConfirm={handleDelete}
           onCancel={handleCancel}
+          loading={isDeleting}
+          error={deleteError}
         />
       )}
     </>

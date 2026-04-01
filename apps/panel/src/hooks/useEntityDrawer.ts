@@ -121,21 +121,27 @@ export function useEntityDrawer<TEntity extends EntityWithPolicies>({
         const toRemove = existingPolicies.filter((p) => !selectedPolicies.includes(p));
 
         setIsSavingPolicies(true);
-        await Promise.all([
-          ...toAdd.map((policyId) => addPolicyMutation({ id: selectedEntity._id!, policyId }).unwrap()),
-          ...toRemove.map((policyId) => removePolicyMutation({ id: selectedEntity._id!, policyId }).unwrap()),
-        ]);
-        setIsSavingPolicies(false);
+        try {
+          await Promise.all([
+            ...toAdd.map((policyId) => addPolicyMutation({ id: selectedEntity._id!, policyId }).unwrap()),
+            ...toRemove.map((policyId) => removePolicyMutation({ id: selectedEntity._id!, policyId }).unwrap()),
+          ]);
+        } finally {
+          setIsSavingPolicies(false);
+        }
       } else {
         const createBody: Record<string, any> = { [nameField]: nameValue, password };
         const created = await createMutation(createBody).unwrap();
 
         if (selectedPolicies.length > 0 && created._id) {
           setIsSavingPolicies(true);
-          await Promise.all(
-            selectedPolicies.map((policyId) => addPolicyMutation({ id: created._id!, policyId }).unwrap())
-          );
-          setIsSavingPolicies(false);
+          try {
+            await Promise.all(
+              selectedPolicies.map((policyId) => addPolicyMutation({ id: created._id!, policyId }).unwrap())
+            );
+          } finally {
+            setIsSavingPolicies(false);
+          }
         }
       }
       onClose();

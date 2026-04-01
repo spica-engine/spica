@@ -88,7 +88,7 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, id) => [{ type: 'User', id }, 'User'],
     }),
 
-    addUserPolicy: builder.mutation<User, { id: string; policyId: string }>({
+    addUserPolicy: builder.mutation<void, { id: string; policyId: string }>({
       query: ({ id, policyId }) => ({
         url: `passport/user/${id}/policy/${policyId}`,
         method: 'PUT',
@@ -96,7 +96,7 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: 'User', id }, 'User'],
     }),
 
-    removeUserPolicy: builder.mutation<User, { id: string; policyId: string }>({
+    removeUserPolicy: builder.mutation<void, { id: string; policyId: string }>({
       query: ({ id, policyId }) => ({
         url: `passport/user/${id}/policy/${policyId}`,
         method: 'DELETE',
