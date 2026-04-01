@@ -1,8 +1,8 @@
 import {Module, DynamicModule} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import BatchSchema from "./schema/batch.json" with {type: "json"};
-import {BatchController} from "./controller";
-import {AxiosHttpService} from "./service";
+import {BatchController} from "./controller.js";
+import {AxiosHttpService} from "./service.js";
 import {BATCH_OPTIONS, BatchOptions, HTTP_SERVICE} from "@spica-server/interface/batch";
 
 @Module({})

@@ -17,7 +17,7 @@ import {PreferenceModule} from "@spica-server/preference";
 // import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
 // import {AssetModule} from "@spica-server/asset";
-// import {BatchModule} from "@spica-server/batch";
+import {BatchModule} from "@spica-server/batch";
 // import {EnvVarModule} from "@spica-server/env_var";
 // import {SecretModule} from "@spica-server/secret";
 import {MailerModule} from "@spica-server/mailer";
@@ -700,9 +700,9 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .parse() as any;
 
 const modules = [
-  // BatchModule.forRoot({
-  //   port: args["port"]
-  // }),
+  BatchModule.forRoot({
+    port: args["port"]
+  }),
   // DashboardModule.forRoot({realtime: true}),
   PreferenceModule.forRoot(),
   // AssetModule.forRoot({persistentPath: args["persistent-path"]}),

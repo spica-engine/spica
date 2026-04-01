@@ -10,6 +10,9 @@
       "path": "../../packages/core/encryption"
     },
     {
+      "path": "../../packages/api/batch"
+    },
+    {
       "path": "../../packages/core/websocket"
     },
     {
@@ -41,9 +44,6 @@
     },
     {
       "path": "../../packages/filter"
-    },
-    {
-      "path": "../../packages/api/preference"
     },
     {
       "path": "../../packages/database"
