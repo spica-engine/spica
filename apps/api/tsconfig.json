@@ -16,6 +16,9 @@
       "path": "../../packages/api/sms"
     },
     {
+      "path": "../../packages/api/mailer"
+    },
+    {
       "path": "../../packages/core"
     }
   ]

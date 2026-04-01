@@ -2,7 +2,16 @@
   "name": "@spica-server/mailer",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/interface": "*",
+    "nodemailer": "^6.9.16"
   }
 }

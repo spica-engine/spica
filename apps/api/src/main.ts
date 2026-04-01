@@ -20,7 +20,7 @@ import {WsAdapter} from "@spica-server/core/websocket";
 // import {BatchModule} from "@spica-server/batch";
 // import {EnvVarModule} from "@spica-server/env_var";
 // import {SecretModule} from "@spica-server/secret";
-// import {MailerModule} from "@spica-server/mailer";
+import {MailerModule} from "@spica-server/mailer";
 import {SmsModule} from "@spica-server/sms";
 
 import fs from "fs";
@@ -720,18 +720,18 @@ const modules = [
   //   realtime: true,
   //   encryptionSecret: args["secret-module-encryption-secret"]
   // }),
-  // MailerModule.forRoot({
-  //   host: args["mailer-host"],
-  //   port: args["mailer-port"],
-  //   secure: args["mailer-secure"],
-  //   auth: {
-  //     user: args["mailer-user"],
-  //     pass: args["mailer-pass"]
-  //   },
-  //   defaults: {
-  //     from: args["mailer-from"]
-  //   }
-  // }),
+  MailerModule.forRoot({
+    host: args["mailer-host"],
+    port: args["mailer-port"],
+    secure: args["mailer-secure"],
+    auth: {
+      user: args["mailer-user"],
+      pass: args["mailer-pass"]
+    },
+    defaults: {
+      from: args["mailer-from"]
+    }
+  }),
   SmsModule.forRoot({
     strategy: args["sms-sender-strategy"] as "twilio",
     twilio: {

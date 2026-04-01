@@ -1,2 +1,2 @@
-export * from "./src/mailer.service";
-export * from "./src/mailer.module";
+export * from "./src/mailer.service.js";
+export * from "./src/mailer.module.js";
