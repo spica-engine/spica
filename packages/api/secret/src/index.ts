@@ -1,1 +1,1 @@
-export {SecretModule} from "./module";
+export {SecretModule} from "./module.js";

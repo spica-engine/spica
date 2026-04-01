@@ -19,7 +19,7 @@ import {ReplicationModule} from "@spica-server/replication";
 // import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
 // import {EnvVarModule} from "@spica-server/env_var";
-// import {SecretModule} from "@spica-server/secret";
+import {SecretModule} from "@spica-server/secret";
 import {MailerModule} from "@spica-server/mailer";
 import {SmsModule} from "@spica-server/sms";
 
@@ -716,10 +716,10 @@ const modules = [
   // EnvVarModule.forRoot({
   //   realtime: true
   // }),
-  // SecretModule.forRoot({
-  //   realtime: true,
-  //   encryptionSecret: args["secret-module-encryption-secret"]
-  // }),
+  SecretModule.forRoot({
+    realtime: true,
+    encryptionSecret: args["secret-module-encryption-secret"]
+  }),
   MailerModule.forRoot({
     host: args["mailer-host"],
     port: args["mailer-port"],
