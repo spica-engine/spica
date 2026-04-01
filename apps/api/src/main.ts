@@ -739,7 +739,7 @@ const modules = [
       authToken: args["twilio-sms-service-auth-token"],
       fromNumber: args["twilio-sms-service-from-number"]
     }
-  }),
+  })
   // SchemaModule.forRoot({
   //   formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
   //   defaults: [CREATED_AT, UPDATED_AT]
