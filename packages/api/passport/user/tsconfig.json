@@ -9,10 +9,10 @@
       "path": "../authfactor"
     },
     {
-      "path": "../guard"
+      "path": ".."
     },
     {
-      "path": "../../activity/services"
+      "path": "../../activity"
     },
     {
       "path": "../../status"
@@ -24,7 +24,7 @@
       "path": "../../mailer"
     },
     {
-      "path": ".."
+      "path": "../policy"
     },
     {
       "path": "../../../core"

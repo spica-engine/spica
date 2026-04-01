@@ -3,7 +3,7 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../core/patch"
+      "path": "../../../core"
     },
     {
       "path": "../../../database"

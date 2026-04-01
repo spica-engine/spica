@@ -3,9 +3,6 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../interface/env_var"
-    },
-    {
       "path": "../../../database"
     }
   ]

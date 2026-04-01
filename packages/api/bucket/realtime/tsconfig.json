@@ -3,9 +3,6 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../passport/guard"
-    },
-    {
       "path": "../../passport"
     },
     {
@@ -13,9 +10,6 @@
     },
     {
       "path": "../../../core"
-    },
-    {
-      "path": "../../../core/patch"
     },
     {
       "path": "../services"
@@ -30,7 +24,7 @@
       "path": "../cache"
     },
     {
-      "path": "../../activity/services"
+      "path": "../../activity"
     },
     {
       "path": "../common"

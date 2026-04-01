@@ -6,10 +6,10 @@
       "path": "../runtime/node"
     },
     {
-      "path": "../../../interface/function/runtime"
+      "path": "../../replication"
     },
     {
-      "path": "../../replication"
+      "path": "../runtime/logger"
     },
     {
       "path": "../runtime/io"
@@ -18,19 +18,13 @@
       "path": "../runtime"
     },
     {
-      "path": ".."
-    },
-    {
-      "path": "../queue"
-    },
-    {
       "path": "../pkgmanager/local"
     },
     {
       "path": "../pkgmanager/node"
     },
     {
-      "path": "../enqueuer"
+      "path": ".."
     },
     {
       "path": "../compiler/typescript"

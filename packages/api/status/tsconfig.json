@@ -9,7 +9,7 @@
       "path": "../../database"
     },
     {
-      "path": "../passport/guard"
+      "path": "../passport"
     },
     {
       "path": "../../core"

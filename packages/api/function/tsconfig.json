@@ -9,25 +9,13 @@
       "path": "webhook"
     },
     {
-      "path": "../../core/patch"
-    },
-    {
-      "path": "../passport/guard"
-    },
-    {
-      "path": "../activity/services"
+      "path": "../activity"
     },
     {
       "path": "../replication"
     },
     {
       "path": "scheduler"
-    },
-    {
-      "path": "../../interface/secret"
-    },
-    {
-      "path": "../../interface/env_var"
     },
     {
       "path": "log"

@@ -3,16 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../api/function"
-    },
-    {
       "path": "../../../api/replication"
     },
     {
-      "path": "../../../api/function/queue"
-    },
-    {
-      "path": "../../../api/function/enqueuer"
+      "path": "../../../api/function"
     }
   ]
 }

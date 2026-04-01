@@ -16,7 +16,7 @@
       "path": "../../representative"
     },
     {
-      "path": "../passport/guard"
+      "path": "../passport"
     }
   ]
 }

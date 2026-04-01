@@ -9,13 +9,10 @@
       "path": "../passport"
     },
     {
-      "path": "../passport/guard"
-    },
-    {
       "path": "../../core"
     },
     {
-      "path": "../activity/services"
+      "path": "../activity"
     },
     {
       "path": "../../database"

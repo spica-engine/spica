@@ -6,19 +6,16 @@
       "path": "realtime"
     },
     {
-      "path": "services"
+      "path": "../activity"
     },
     {
-      "path": "../activity/services"
-    },
-    {
-      "path": "../passport/guard"
+      "path": "../passport"
     },
     {
       "path": "../../database"
     },
     {
-      "path": "../../interface/env_var"
+      "path": "services"
     },
     {
       "path": "../../core"

@@ -12,19 +12,16 @@
       "path": "../../../filter"
     },
     {
-      "path": "../../../core"
-    },
-    {
       "path": "../expression"
     },
     {
       "path": "../../../database"
     },
     {
-      "path": "../../../core/patch"
+      "path": "../../../core"
     },
     {
-      "path": "../../activity/services"
+      "path": "../../activity"
     }
   ]
 }

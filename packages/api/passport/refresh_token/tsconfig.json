@@ -6,7 +6,7 @@
       "path": "../../../filter"
     },
     {
-      "path": "../guard"
+      "path": ".."
     },
     {
       "path": "../../../database"

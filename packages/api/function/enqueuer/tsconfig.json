@@ -12,9 +12,6 @@
       "path": ".."
     },
     {
-      "path": "../queue"
-    },
-    {
       "path": "../../../database"
     }
   ]

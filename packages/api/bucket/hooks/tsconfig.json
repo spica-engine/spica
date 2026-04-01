@@ -12,16 +12,10 @@
       "path": "../../replication"
     },
     {
-      "path": ".."
+      "path": "proto"
     },
     {
       "path": "../../function"
-    },
-    {
-      "path": "../../function/queue"
-    },
-    {
-      "path": "../../function/enqueuer"
     }
   ]
 }

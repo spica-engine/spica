@@ -21,22 +21,19 @@
       "path": "realtime"
     },
     {
-      "path": "../../core/patch"
-    },
-    {
       "path": "common"
     },
     {
       "path": "cache"
     },
     {
-      "path": "../passport/guard"
+      "path": "../passport"
     },
     {
       "path": "hooks"
     },
     {
-      "path": "../activity/services"
+      "path": "../activity"
     },
     {
       "path": "../../database"

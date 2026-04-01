@@ -6,7 +6,7 @@
       "path": "../../asset"
     },
     {
-      "path": "../guard"
+      "path": ".."
     },
     {
       "path": "../../../database"
@@ -15,7 +15,7 @@
       "path": "../../../core"
     },
     {
-      "path": "../../activity/services"
+      "path": "../../activity"
     }
   ]
 }

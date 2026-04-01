@@ -9,7 +9,7 @@
       "path": "../services/sync"
     },
     {
-      "path": "../../passport/guard"
+      "path": "../../passport"
     },
     {
       "path": "../../../core"

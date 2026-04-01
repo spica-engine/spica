@@ -3,16 +3,13 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json", "guard/services/src/guard.service.ts"],
   "references": [
     {
-      "path": "guard"
-    },
-    {
       "path": "refresh_token"
     },
     {
-      "path": "user"
+      "path": "policy"
     },
     {
-      "path": "apikey"
+      "path": "user"
     },
     {
       "path": "../replication"
@@ -25,9 +22,6 @@
     },
     {
       "path": "../../core"
-    },
-    {
-      "path": "identity"
     }
   ]
 }

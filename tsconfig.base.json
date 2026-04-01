@@ -1,12 +1,21 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "composite": true,
+    "rootDir": ".",
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "resolveJsonModule": true,
     "declaration": true,
-    "declarationMap": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "target": "ES2020",
     "sourceMap": true,
-    "strict": true
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "lib": ["es2020", "dom"],
+    "esModuleInterop": true
   }
 }

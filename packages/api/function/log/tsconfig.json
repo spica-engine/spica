@@ -6,9 +6,6 @@
       "path": "../../passport"
     },
     {
-      "path": "../../passport/guard"
-    },
-    {
       "path": "../../../database"
     },
     {
