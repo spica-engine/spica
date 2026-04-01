@@ -7,6 +7,9 @@
   "include": ["src/main.ts"],
   "references": [
     {
+      "path": "../../packages/core/encryption"
+    },
+    {
       "path": "../../packages/core/websocket"
     },
     {
@@ -16,13 +19,13 @@
       "path": "../../packages/api/sms"
     },
     {
+      "path": "../../packages/api/replication"
+    },
+    {
       "path": "../../packages/api/mailer"
     },
     {
       "path": "../../packages/database"
-    },
-    {
-      "path": "../../packages/api/replication"
     },
     {
       "path": "../../packages/core"

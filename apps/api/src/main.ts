@@ -30,7 +30,7 @@ import yargs from "yargs/yargs";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 // import {ConfigModule} from "@spica-server/config";
-// import {deriveKey} from "@spica-server/core/encryption";
+import {deriveKey} from "@spica-server/core/encryption";
 
 const yargsInstance = yargs(process.argv.slice(2)) as any;
 
@@ -686,7 +686,7 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     } else {
       for (const key of derivableSecretsKeys) {
         if (!args[key]) {
-          // args[key] = deriveKey(masterKey, key);
+          args[key] = deriveKey(masterKey, key);
         }
       }
     }
