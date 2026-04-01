@@ -5,8 +5,8 @@ import {
   CommandMessageFilter,
   REPLICA_ID
 } from "@spica-server/interface/replication";
-import {CommandMemory} from "../memory";
-import {Messenger} from "./messenger";
+import {CommandMemory} from "../memory/index.js";
+import {Messenger} from "./messenger.js";
 
 @Injectable()
 export class CommandMessenger extends Messenger<CommandMessage> {

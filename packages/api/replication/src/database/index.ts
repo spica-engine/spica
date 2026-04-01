@@ -1,2 +1,2 @@
-export {CommandService} from "./command";
-export {JobService} from "./job";
+export {CommandService} from "./command.js";
+export {JobService} from "./job.js";

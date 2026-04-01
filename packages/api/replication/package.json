@@ -2,9 +2,26 @@
   "name": "@spica-server/replication",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./src": "./src/index.ts",
-    "./testing": "./testing/index.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./testing/index.ts",
+      "default": "./testing/dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/database": "*",
+    "@spica-server/interface": "*",
+    "mongodb": "^6.12.0",
+    "rxjs": "^7.8.1",
+    "uniqid": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/uniqid": "^5.3.4"
   }
 }

@@ -1,1 +1,1 @@
-export {CommandMemory} from "./command";
+export {CommandMemory} from "./command.js";

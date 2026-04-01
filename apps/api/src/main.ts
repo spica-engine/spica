@@ -15,7 +15,7 @@ import {DatabaseModule} from "@spica-server/database";
 // import {StatusModule} from "@spica-server/status";
 // import {StorageModule} from "@spica-server/storage";
 // import {VersionControlModule} from "@spica-server/versioncontrol";
-// import {ReplicationModule} from "@spica-server/replication";
+import {ReplicationModule} from "@spica-server/replication";
 // import {AssetModule} from "@spica-server/asset";
 // import {BatchModule} from "@spica-server/batch";
 // import {EnvVarModule} from "@spica-server/env_var";
@@ -860,7 +860,7 @@ if (args["version-control"]) {
 }
 
 if (args["replication"]) {
-  // modules.push(ReplicationModule.forRoot());
+  modules.push(ReplicationModule.forRoot());
 }
 
 @Module({

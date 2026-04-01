@@ -22,6 +22,9 @@
       "path": "../../packages/database"
     },
     {
+      "path": "../../packages/api/replication"
+    },
+    {
       "path": "../../packages/core"
     }
   ]

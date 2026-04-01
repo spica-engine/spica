@@ -12,6 +12,6 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@spica-server/interface": "*",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^8.0.4"
   }
 }

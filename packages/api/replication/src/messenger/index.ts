@@ -1,2 +1,2 @@
-export * from "./command";
-export * from "./messenger";
+export * from "./command.js";
+export * from "./messenger.js";

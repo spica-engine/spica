@@ -1,16 +1,16 @@
 import {Global, Module} from "@nestjs/common";
-import {CommandMessenger} from "./messenger";
-import {replicaIdProvider, replicationServiceOptions, commandMemoryOptions} from "./consts";
+import {CommandMessenger} from "./messenger/index.js";
+import {replicaIdProvider, replicationServiceOptions, commandMemoryOptions} from "./consts.js";
 import {
   REPLICA_ID,
   COMMAND_MEMORY_OPTIONS,
   REPLICATION_SERVICE_OPTIONS
 } from "@spica-server/interface/replication";
-import {CommandService} from "./database";
-import {CommandMemory} from "./memory";
-import {ClassCommander} from "./commander";
-import {JobReducer} from "./reducer";
-import {JobService} from "./database/job";
+import {CommandService} from "./database/index.js";
+import {CommandMemory} from "./memory/index.js";
+import {ClassCommander} from "./commander.js";
+import {JobReducer} from "./reducer.js";
+import {JobService} from "./database/job.js";
 
 @Global()
 @Module({})

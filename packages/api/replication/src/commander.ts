@@ -1,5 +1,5 @@
 import {Injectable, Logger, Scope} from "@nestjs/common";
-import {CommandMessenger} from "./messenger";
+import {CommandMessenger} from "./messenger/index.js";
 import {
   ICommander,
   CommandMessage,
