@@ -2,14 +2,42 @@
   "name": "@spica-server/versioncontrol",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./sync": "./sync/index.ts",
-    "./sync/engine": "./sync/engine/index.ts",
-    "./sync/realtime": "./sync/realtime/index.ts",
-    "./services/changelog": "./services/changelog/index.ts",
-    "./services/sync": "./services/sync/index.ts",
-    "./processors/changelog": "./processors/changelog/index.ts",
-    "./processors/sync": "./processors/sync/index.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./sync": {
+      "types": "./sync/index.ts",
+      "default": "./sync/dist/index.js"
+    },
+    "./sync/engine": {
+      "types": "./sync/engine/index.ts",
+      "default": "./sync/engine/dist/index.js"
+    },
+    "./sync/realtime": {
+      "types": "./sync/realtime/index.ts",
+      "default": "./sync/realtime/dist/index.js"
+    },
+    "./services/changelog": {
+      "types": "./services/changelog/index.ts",
+      "default": "./services/changelog/dist/index.js"
+    },
+    "./services/sync": {
+      "types": "./services/sync/index.ts",
+      "default": "./services/sync/dist/index.js"
+    },
+    "./processors/changelog": {
+      "types": "./processors/changelog/index.ts",
+      "default": "./processors/changelog/dist/index.js"
+    },
+    "./processors/sync": {
+      "types": "./processors/sync/index.ts",
+      "default": "./processors/sync/dist/index.js"
+    }
+  },
+  "dependencies": {
+    "simple-git": "^3.27.0"
   }
 }

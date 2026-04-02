@@ -1,1 +1,1 @@
-export {SyncRealtimeModule} from "./realtime.module";
+export {SyncRealtimeModule} from "./realtime.module.js";

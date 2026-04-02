@@ -1,2 +1,2 @@
-export * from "./sync.module";
-export * from "./sync.controller";
+export * from "./sync.module.js";
+export * from "./sync.controller.js";

@@ -12,7 +12,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {SyncService} from "@spica-server/versioncontrol/services/sync";
 import {ObjectId} from "@spica-server/database";
-import {VCConfigService} from "./config.service";
+import {VCConfigService} from "./config.service.js";
 
 @Injectable()
 export class SyncProcessor implements ISyncProcessor {

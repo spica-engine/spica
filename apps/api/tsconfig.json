@@ -77,6 +77,9 @@
     },
     {
       "path": "../../packages/api/bucket"
+    },
+    {
+      "path": "../../packages/api/versioncontrol"
     }
   ]
 }

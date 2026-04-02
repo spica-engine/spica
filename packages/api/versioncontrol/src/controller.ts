@@ -9,7 +9,7 @@ import {
   Param
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
-import {VersionManager} from "./interface";
+import {VersionManager} from "./interface.js";
 
 @Controller("versioncontrol")
 export class VersionControlController {

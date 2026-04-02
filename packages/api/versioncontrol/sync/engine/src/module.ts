@@ -1,5 +1,5 @@
 import {Module} from "@nestjs/common";
-import {SyncEngine} from "./engine";
+import {SyncEngine} from "./engine.js";
 import {
   ChangeLogProcessor,
   ChangeLogProcessorsModule

@@ -1,2 +1,2 @@
-export * from "./src/processor";
-export {ChangeLogProcessorsModule} from "./src/module";
+export * from "./src/processor.js";
+export {ChangeLogProcessorsModule} from "./src/module.js";

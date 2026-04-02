@@ -1,5 +1,5 @@
 import {Module} from "@nestjs/common";
-import {ChangeLogProcessor} from "./processor";
+import {ChangeLogProcessor} from "./processor.js";
 import {ChangeLogService, ServicesModule} from "@spica-server/versioncontrol/services/changelog";
 
 @Module({})

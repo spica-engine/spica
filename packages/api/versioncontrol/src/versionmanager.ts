@@ -1,4 +1,4 @@
-import {VersionManager} from "./interface";
+import {VersionManager} from "./interface.js";
 import {Injectable} from "@nestjs/common";
 import simpleGit, {SimpleGit} from "simple-git";
 import {JobReducer} from "@spica-server/replication";

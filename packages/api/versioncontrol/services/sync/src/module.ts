@@ -1,5 +1,5 @@
 import {Module} from "@nestjs/common";
-import {SyncService} from "./service";
+import {SyncService} from "./service.js";
 
 @Module({})
 export class ServicesModule {

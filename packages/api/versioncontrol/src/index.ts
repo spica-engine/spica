@@ -1,2 +1,2 @@
-export * from "./module";
-export * from "./interface";
+export * from "./module.js";
+export * from "./interface.js";

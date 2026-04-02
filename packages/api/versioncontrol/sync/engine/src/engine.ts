@@ -9,9 +9,9 @@ import {
   SyncStatuses,
   VC_REPRESENTATIVE_MANAGER
 } from "@spica-server/interface/versioncontrol";
-import {getSupplier} from "./supplier";
+import {getSupplier} from "./supplier.js";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {getApplier} from "./applier";
+import {getApplier} from "./applier.js";
 import {ChangeLogProcessor} from "@spica-server/versioncontrol/processors/changelog";
 import {SyncProcessor} from "@spica-server/versioncontrol/processors/sync";
 import {JobReducer} from "@spica-server/replication";

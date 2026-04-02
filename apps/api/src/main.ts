@@ -14,7 +14,7 @@ import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 // import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
-// import {VersionControlModule} from "@spica-server/versioncontrol";
+import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
@@ -850,13 +850,13 @@ if (args["activity-stream"]) {
 }
 
 if (args["version-control"]) {
-  // modules.push(
-  //   VersionControlModule.forRoot({
-  //     persistentPath: args["persistent-path"],
-  //     isReplicationEnabled: args["replication"],
-  //     realtime: args["versioncontrol-sync-realtime"]
-  //   })
-  // );
+  modules.push(
+    VersionControlModule.forRoot({
+      persistentPath: args["persistent-path"],
+      isReplicationEnabled: args["replication"],
+      realtime: args["versioncontrol-sync-realtime"]
+    })
+  );
 }
 
 if (args["replication"]) {

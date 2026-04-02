@@ -6,7 +6,7 @@ import {
   ChangeOrigin,
   ChangeType
 } from "@spica-server/interface/versioncontrol";
-import {ChangeLogAggregator} from "./interface";
+import {ChangeLogAggregator} from "./interface.js";
 import {ChangeLogService} from "@spica-server/versioncontrol/services/changelog";
 
 @Injectable()

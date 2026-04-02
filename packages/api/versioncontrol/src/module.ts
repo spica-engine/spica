@@ -1,6 +1,6 @@
 import {Global, Module, Inject, Optional} from "@nestjs/common";
-import {VersionControlController} from "./controller";
-import {VersionManager} from "./interface";
+import {VersionControlController} from "./controller.js";
+import {VersionManager} from "./interface.js";
 import {
   VersionControlOptions,
   VERSIONCONTROL_WORKING_DIRECTORY,
@@ -11,7 +11,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
 import {VCRepresentativeManager} from "@spica-server/representative";
-import {Git} from "./versionmanager";
+import {Git} from "./versionmanager.js";
 import fs from "fs";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {SyncModule} from "@spica-server/versioncontrol/sync";
