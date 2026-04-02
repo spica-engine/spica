@@ -38,6 +38,27 @@
     }
   },
   "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/websockets": "^10.4.15",
+    "@spica-server/config": "*",
+    "@spica-server/core": "*",
+    "@spica-server/database": "*",
+    "@spica-server/interface": "*",
+    "@spica-server/passport": "*",
+    "@spica-server/realtime": "*",
+    "@spica-server/replication": "*",
+    "@spica-server/representative": "*",
+    "rxjs": "^7.8.1",
     "simple-git": "^3.27.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/bucket": "*",
+    "@spica-server/env_var": "*",
+    "@spica-server/function": "*",
+    "@spica-server/preference": "*",
+    "@spica-server/secret": "*",
+    "uuid": "^11.0.5",
+    "yaml": "^2.7.0"
   }
 }
