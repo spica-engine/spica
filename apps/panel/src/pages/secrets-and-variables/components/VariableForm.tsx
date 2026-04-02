@@ -47,6 +47,7 @@ const VariableForm = ({ isOpen, selectedVariable, onClose }: VariableFormProps) 
       setSubmitError(null);
       try {
         if (isEditMode) {
+          if (!selectedVariable) return;
           await updateEnvVar({
             id: selectedVariable._id,
             key: values.key,

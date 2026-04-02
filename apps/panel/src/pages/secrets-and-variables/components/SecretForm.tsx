@@ -33,8 +33,8 @@ const initialValues: SecretFormValues = {
 };
 
 const SecretForm = ({ isOpen, selectedSecret, onClose }: SecretFormProps) => {
-  const [createSecret, { isLoading: isCreating, error: createError }] = useCreateSecretMutation();
-  const [updateSecret, { isLoading: isUpdating, error: updateError }] = useUpdateSecretMutation();
+  const [createSecret, { isLoading: isCreating }] = useCreateSecretMutation();
+  const [updateSecret, { isLoading: isUpdating }] = useUpdateSecretMutation();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isEditMode = selectedSecret !== null;
@@ -47,6 +47,7 @@ const SecretForm = ({ isOpen, selectedSecret, onClose }: SecretFormProps) => {
       setSubmitError(null);
       try {
         if (isEditMode) {
+          if (!selectedSecret) return;
           await updateSecret({
             id: selectedSecret._id,
             key: values.key,
@@ -118,6 +119,7 @@ const SecretForm = ({ isOpen, selectedSecret, onClose }: SecretFormProps) => {
             icon="notes"
             value={formik.values.value}
             onChange={(e) => formik.setFieldValue("value", e.target.value)}
+            textAreaProps={{ onBlur: () => formik.setFieldTouched("value") }}
           />
           {isEditMode && (
             <Text className={styles.fieldHint}>
