@@ -8,5 +8,23 @@
       "types": "./index.ts",
       "default": "./dist/index.js"
     }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/core": "*",
+    "@spica-server/database": "*",
+    "@spica-server/interface": "*",
+    "@spica-server/passport": "*",
+    "@spica-server/representative": "*",
+    "archiver": "^7.0.1",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@types/archiver": "^6.0.3",
+    "@spica-server/bucket": "*",
+    "@spica-server/dashboard": "*",
+    "@spica-server/function": "*",
+    "@spica-server/preference": "*"
   }
 }
