@@ -61,7 +61,6 @@
     "@nestjs/common": "^10.4.15",
     "@nestjs/core": "^10.4.15",
     "@nestjs/platform-ws": "^10.4.15",
-    "@nestjs/websockets": "^10.4.15",
     "@spica-server/interface": "*",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
@@ -71,12 +70,14 @@
     "got": "^14.4.6",
     "json-merge-patch": "^1.0.2",
     "matcher": "^5.0.0",
+    "mongodb": "^6.12.0",
     "path-to-regexp": "^8.2.0",
     "rxjs": "^7.8.1",
     "type-is": "^1.6.18",
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.19.6",
     "@types/deep-diff": "^1.0.5",
     "@types/diff-match-patch": "^1.0.36",
     "@types/json-schema": "^7.0.15",
