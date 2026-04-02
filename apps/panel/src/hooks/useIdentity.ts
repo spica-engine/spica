@@ -8,8 +8,8 @@ import {
   useDeleteIdentityMutation,
   useAuthenticateIdentityMutation,
   useVerifyIdentityQuery,
-  useGetIdentityPoliciesQuery,
-  useUpdateIdentityPoliciesMutation,
+  useAddIdentityPolicyMutation,
+  useRemoveIdentityPolicyMutation,
   type Identity,
   type CreateIdentityRequest,
   type UpdateIdentityRequest,
@@ -117,31 +117,35 @@ export function useIdentityList(params?: {
 
 export function useIdentityDetails(id: string, options?: { skip?: boolean }) {
   const identityQuery = useGetIdentityQuery(id, { skip: options?.skip });
-  const policiesQuery = useGetIdentityPoliciesQuery(id, { skip: options?.skip });
-  const [updatePolicies] = useUpdateIdentityPoliciesMutation();
+  const [addPolicy] = useAddIdentityPolicyMutation();
+  const [removePolicy] = useRemoveIdentityPolicyMutation();
 
   const handleUpdatePolicies = useCallback(
     async (policies: string[]) => {
       try {
-        const result = await updatePolicies({ id, policies }).unwrap();
-        return { success: true, data: result };
+        const existingPolicies = identityQuery.data?.policies ?? [];
+        const toAdd = policies.filter((p) => !existingPolicies.includes(p));
+        const toRemove = existingPolicies.filter((p) => !policies.includes(p));
+
+        await Promise.all([
+          ...toAdd.map((policyId) => addPolicy({ id, policyId }).unwrap()),
+          ...toRemove.map((policyId) => removePolicy({ id, policyId }).unwrap()),
+        ]);
+        return { success: true };
       } catch (error) {
         return { success: false, error };
       }
     },
-    [updatePolicies, id]
+    [addPolicy, removePolicy, id, identityQuery.data?.policies]
   );
 
   return {
     identity: identityQuery.data,
-    policies: policiesQuery.data || [],
+    policies: identityQuery.data?.policies || [],
     isLoadingIdentity: identityQuery.isLoading,
-    isLoadingPolicies: policiesQuery.isLoading,
     identityError: identityQuery.error,
-    policiesError: policiesQuery.error,
     updatePolicies: handleUpdatePolicies,
     refetchIdentity: identityQuery.refetch,
-    refetchPolicies: policiesQuery.refetch,
   };
 }
 
@@ -164,6 +168,6 @@ export {
   useDeleteIdentityMutation,
   useAuthenticateIdentityMutation,
   useVerifyIdentityQuery,
-  useGetIdentityPoliciesQuery,
-  useUpdateIdentityPoliciesMutation,
+  useAddIdentityPolicyMutation,
+  useRemoveIdentityPolicyMutation,
 } from '../store/api/identityApi';

@@ -2,29 +2,29 @@ import React, { useCallback, useMemo, useState } from "react";
 import { Button, FlexElement, Icon, Spinner, type TableColumn } from "oziko-ui-kit";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {
-  useGetIdentitiesQuery,
-  type Identity as IdentityType,
-} from "../../store/api/identityApi";
+  useGetUsersQuery,
+  type User as UserType,
+} from "../../store/api/userApi";
 import { useGetPoliciesQuery, type Policy } from "../../store/api/policyApi";
 import SpicaTable from "../../components/organisms/table/Table";
-import DeleteIdentity from "../../components/prefabs/delete-identity/DeleteIdentity";
+import DeleteUser from "../../components/prefabs/delete-user/DeleteUser";
 import { useInfiniteList } from "../../hooks/useInfiniteList";
-import IdentityDrawer from "./IdentityDrawer";
+import UserDrawer from "./UserDrawer";
 import styles from "../shared/EntityPage.module.scss";
 
 const PAGE_SIZE = 20;
 
-const Identity = () => {
+const User = () => {
   const [skip, setSkip] = useState(0);
 
-  const { data: identityResponse, isLoading, isFetching } = useGetIdentitiesQuery({
+  const { data: userResponse, isLoading, isFetching } = useGetUsersQuery({
     paginate: true,
     limit: PAGE_SIZE,
     skip,
   });
 
-  const { allItems, hasMore, handleLoadMore, resetList } = useInfiniteList<IdentityType>({
-    response: identityResponse,
+  const { allItems, hasMore, handleLoadMore, resetList } = useInfiniteList<UserType>({
+    response: userResponse,
     isFetching,
     pageSize: PAGE_SIZE,
     skip,
@@ -34,7 +34,7 @@ const Identity = () => {
   const { data: policies } = useGetPoliciesQuery();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedIdentity, setSelectedIdentity] = useState<IdentityType | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
 
   const policyNameMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -43,21 +43,28 @@ const Identity = () => {
   }, [policies]);
 
   const handleOpenCreateDrawer = useCallback(() => {
-    setSelectedIdentity(null);
+    setSelectedUser(null);
     setIsDrawerOpen(true);
   }, []);
 
-  const handleOpenEditDrawer = useCallback((identity: IdentityType) => {
-    setSelectedIdentity(identity);
+  const handleOpenEditDrawer = useCallback((user: UserType) => {
+    setSelectedUser(user);
     setIsDrawerOpen(true);
   }, []);
 
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false);
-    setSelectedIdentity(null);
+    setSelectedUser(null);
   }, []);
 
-  const columns: TableColumn<IdentityType>[] = useMemo(
+  const getStatusLabel = useCallback((bannedUntil?: string) => {
+    if (!bannedUntil) return "Active";
+    const bannedDate = new Date(bannedUntil);
+    if (bannedDate > new Date()) return `Banned until ${bannedDate.toLocaleDateString()}`;
+    return "Active";
+  }, []);
+
+  const columns: TableColumn<UserType>[] = useMemo(
     () => [
       {
         header: <FlexElement>#</FlexElement>,
@@ -67,16 +74,16 @@ const Identity = () => {
         renderCell: ({ row }) => <span>{row._id}</span>,
       },
       {
-        header: <FlexElement>Identifier</FlexElement>,
-        key: "identifier",
+        header: <FlexElement>Username</FlexElement>,
+        key: "username",
         width: "200px",
         minWidth: "150px",
-        renderCell: ({ row }) => <span>{row.identifier}</span>,
+        renderCell: ({ row }) => <span>{row.username}</span>,
       },
       {
         header: <FlexElement>Policies</FlexElement>,
         key: "policies",
-        width: "300px",
+        width: "250px",
         minWidth: "200px",
         renderCell: ({ row }) => {
           const policyNames = (row.policies ?? [])
@@ -88,6 +95,13 @@ const Identity = () => {
             </span>
           );
         },
+      },
+      {
+        header: <FlexElement>Status</FlexElement>,
+        key: "status",
+        width: "160px",
+        minWidth: "120px",
+        renderCell: ({ row }) => <span>{getStatusLabel(row.bannedUntil)}</span>,
       },
       {
         header: <FlexElement>Last Login</FlexElement>,
@@ -119,7 +133,7 @@ const Identity = () => {
             >
               <Icon name="pencil" />
             </Button>
-            <DeleteIdentity identity={row} onDeleted={resetList}>
+            <DeleteUser user={row} onDeleted={resetList}>
               {({ onOpen }) => (
                 <Button
                   variant="icon"
@@ -130,12 +144,12 @@ const Identity = () => {
                   <Icon name="delete" />
                 </Button>
               )}
-            </DeleteIdentity>
+            </DeleteUser>
           </FlexElement>
         ),
       },
     ],
-    [handleOpenEditDrawer, policyNameMap, resetList]
+    [handleOpenEditDrawer, policyNameMap, getStatusLabel, resetList]
   );
 
   return (
@@ -151,15 +165,12 @@ const Identity = () => {
         direction="horizontal"
         gap={10}
       >
-        <Button onClick={() => {}}>
-          <Icon name="filter" /> Filter
-        </Button>
         <Button onClick={handleOpenCreateDrawer}>
-          <Icon name="plus" /> New Identity
+          <Icon name="plus" /> New User
         </Button>
       </FlexElement>
 
-      <div id="identity-scroll-container" className={styles.scrollContainer}>
+      <div id="user-scroll-container" className={styles.scrollContainer}>
         <InfiniteScroll
           dataLength={allItems.length}
           next={handleLoadMore}
@@ -169,7 +180,7 @@ const Identity = () => {
               <Spinner size="small" />
             </FlexElement>
           }
-          scrollableTarget="identity-scroll-container"
+          scrollableTarget="user-scroll-container"
         >
           <SpicaTable
             columns={columns}
@@ -180,13 +191,13 @@ const Identity = () => {
         </InfiniteScroll>
       </div>
 
-      <IdentityDrawer
+      <UserDrawer
         isOpen={isDrawerOpen}
-        selectedIdentity={selectedIdentity}
+        selectedUser={selectedUser}
         onClose={handleCloseDrawer}
       />
     </FlexElement>
   );
 };
 
-export default Identity;
+export default User;
