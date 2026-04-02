@@ -20,5 +20,18 @@
       "types": "./src/activity.resource.ts",
       "default": "./dist/src/activity.resource.js"
     }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/activity": "*",
+    "@spica-server/core": "*",
+    "@spica-server/database": "*",
+    "@spica-server/interface": "*",
+    "@spica-server/passport": "*",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/bucket": "*"
   }
 }
