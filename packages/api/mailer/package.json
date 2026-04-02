@@ -13,5 +13,11 @@
     "@nestjs/common": "^10.4.15",
     "@spica-server/interface": "*",
     "nodemailer": "^8.0.4"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@types/nodemailer": "^6.4.19",
+    "node-fetch": "^3.3.2",
+    "testcontainers": "^10.0.0"
   }
 }
