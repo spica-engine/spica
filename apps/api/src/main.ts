@@ -1,7 +1,7 @@
 import {Logger, Module} from "@nestjs/common";
 import {NestFactory} from "@nestjs/core";
 // import {ActivityModule} from "@spica-server/activity";
-// import {BucketModule} from "@spica-server/bucket";
+import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
@@ -744,17 +744,17 @@ const modules = [
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
     defaults: [CREATED_AT, UPDATED_AT]
   }),
-  // BucketModule.forRoot({
-  //   hooks: args["bucket-hooks"],
-  //   history: args["bucket-history"],
-  //   realtime: true,
-  //   cache: args["bucket-cache"],
-  //   cacheTtl: args["bucket-cache-ttl"],
-  //   bucketDataLimit: args["bucket-data-limit"],
-  //   graphql: args["bucket-graphql"],
-  //   hashSecret: args["bucket-data-hash-secret"],
-  //   encryptionSecret: args["bucket-data-encryption-secret"]
-  // }),
+  BucketModule.forRoot({
+    hooks: args["bucket-hooks"],
+    history: args["bucket-history"],
+    realtime: true,
+    cache: args["bucket-cache"],
+    cacheTtl: args["bucket-cache-ttl"],
+    bucketDataLimit: args["bucket-data-limit"],
+    graphql: args["bucket-graphql"],
+    hashSecret: args["bucket-data-hash-secret"],
+    encryptionSecret: args["bucket-data-encryption-secret"]
+  }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",
     defaultPath: path.join(args["persistent-path"], args["default-storage-path"]),

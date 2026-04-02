@@ -1,5 +1,5 @@
-import {convert, wrapExpressionByMode} from "./convert";
-import {compile} from "./compile";
+import {convert, wrapExpressionByMode} from "./convert.js";
+import {compile} from "./compile.js";
 import {ObjectId} from "@spica-server/database";
 import {ArgumentValidation, Func} from "@spica-server/interface/bucket/expression";
 

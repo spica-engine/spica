@@ -1,4 +1,4 @@
-import {getMostLeftSelectIdentifier} from "./ast";
+import {getMostLeftSelectIdentifier} from "./ast.js";
 
 function visit(node) {
   if (Array.isArray(node)) {

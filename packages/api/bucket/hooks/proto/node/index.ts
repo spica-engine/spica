@@ -1,2 +1,2 @@
-export {ChangeQueue} from "./src/queue";
-export {Change} from "./src/change";
+export {ChangeQueue} from "./src/queue.js";
+export {Change} from "./src/change.js";

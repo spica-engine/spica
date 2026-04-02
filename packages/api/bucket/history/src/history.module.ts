@@ -1,6 +1,6 @@
 import {Module} from "@nestjs/common";
-import {HistoryController} from "./history.controller";
-import {HistoryService} from "./history.service";
+import {HistoryController} from "./history.controller.js";
+import {HistoryService} from "./history.service.js";
 
 @Module({})
 export class HistoryModule {

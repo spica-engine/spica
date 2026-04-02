@@ -3,10 +3,13 @@
   "sourceRoot": "packages/api/bucket/expression/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "dependsOn": ["^build", "build-assets"]
+    },
     "build-assets": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "mkdir -p ./dist/packages/api/bucket/expression/src && cp ./packages/api/bucket/expression/src/grammar.pegjs ./dist/packages/api/bucket/expression/src/grammar.pegjs"
+        "command": "mkdir -p {projectRoot}/dist/src && cp {projectRoot}/src/grammar.pegjs {projectRoot}/dist/src/grammar.pegjs"
       }
     }
   }

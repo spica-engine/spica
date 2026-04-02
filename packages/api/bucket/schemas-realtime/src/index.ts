@@ -1,1 +1,1 @@
-export {SchemasRealtimeModule} from "./schemas-realtime.module";
+export {SchemasRealtimeModule} from "./schemas-realtime.module.js";

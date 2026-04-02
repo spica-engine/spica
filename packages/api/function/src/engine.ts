@@ -6,7 +6,7 @@ import {event} from "@spica-server/function/queue/proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
-import rimraf from "rimraf";
+import {rimraf} from "rimraf";
 import {Observable} from "rxjs";
 import {FunctionService} from "@spica-server/function/services";
 import {

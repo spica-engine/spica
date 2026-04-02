@@ -9,7 +9,7 @@ import {
 } from "@nestjs/common";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
-import {BucketCacheService} from "./service";
+import {BucketCacheService} from "./service.js";
 import {CacheInterceptor, CACHE_MANAGER} from "@nestjs/cache-manager";
 import {Cache} from "cache-manager";
 import {Reflector} from "@nestjs/core";

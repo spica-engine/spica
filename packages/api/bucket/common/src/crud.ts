@@ -4,16 +4,16 @@ import {
   createRelationMap,
   getRelationPipeline,
   resetNonOverlappingPathsInRelationMap
-} from "./relation";
+} from "./relation.js";
 import {getUpdateQueryForPatch} from "@spica-server/core/patch";
 import {
   ACLSyntaxException,
   BadRequestException,
   DatabaseException,
   ForbiddenException
-} from "./exception";
-import {categorizePropertyMap} from "./helpers";
-import {BucketPipelineBuilder} from "./pipeline.builder";
+} from "./exception.js";
+import {categorizePropertyMap} from "./helpers.js";
+import {BucketPipelineBuilder} from "./pipeline.builder.js";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {
   CrudOptions,
@@ -23,8 +23,8 @@ import {
   RelationMap
 } from "@spica-server/interface/bucket/common";
 import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface/bucket";
-import {decryptDocumentFields} from "./decrypt";
-import {buildExpressionReplacers} from "./expression.filter";
+import {decryptDocumentFields} from "./decrypt.js";
+import {buildExpressionReplacers} from "./expression.filter.js";
 
 export async function findDocuments<T>(
   schema: Bucket,

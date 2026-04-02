@@ -1,2 +1,2 @@
-export {HookModule} from "./module";
-export {ChangeEmitter} from "./emitter";
+export {HookModule} from "./module.js";
+export {ChangeEmitter} from "./emitter.js";

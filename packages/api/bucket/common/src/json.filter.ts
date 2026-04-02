@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica-server/database";
-import * as Relation from "./relation";
-import {getPropertyByPath} from "./schema";
+import * as Relation from "./relation.js";
+import {getPropertyByPath} from "./schema.js";
 import {
   constructValue,
   extractFilterPropertyMap,

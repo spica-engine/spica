@@ -2,28 +2,96 @@
   "name": "@spica-server/bucket",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./services": "./services/index.ts",
-    "./cache": "./cache/index.ts",
-    "./common": "./common/index.ts",
-    "./expression": "./expression/index.ts",
-    "./expression/src/builtin_funcs": "./expression/src/builtin_funcs.ts",
-    "./expression/src/parser": "./expression/src/parser.ts",
-    "./hooks": "./hooks/index.ts",
-    "./hooks/proto": "./hooks/proto/index.ts",
-    "./hooks/proto/node": "./hooks/proto/node/index.ts",
-    "./hooks/src/emitter": "./hooks/src/emitter.ts",
-    "./hooks/src/enqueuer": "./hooks/src/enqueuer.ts",
-    "./hooks/src/module": "./hooks/src/module.ts",
-    "./history": "./history/index.ts",
-    "./history/": "./history/index.ts",
-    "./history/src/path": "./history/src/path.ts",
-    "./realtime": "./realtime/index.ts",
-    "./schemas-realtime": "./schemas-realtime/index.ts",
-    "./graphql": "./graphql/index.ts",
-    "./src": "./src/index.ts",
-    "./src/bucket.schema.resolver": "./src/bucket.schema.resolver.ts",
-    "./src/synchronizer/schema": "./src/synchronizer/schema.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./services": {
+      "types": "./services/index.ts",
+      "default": "./services/dist/index.js"
+    },
+    "./cache": {
+      "types": "./cache/index.ts",
+      "default": "./cache/dist/index.js"
+    },
+    "./common": {
+      "types": "./common/index.ts",
+      "default": "./common/dist/index.js"
+    },
+    "./expression": {
+      "types": "./expression/index.ts",
+      "default": "./expression/dist/index.js"
+    },
+    "./expression/src/builtin_funcs": {
+      "types": "./expression/src/builtin_funcs.ts",
+      "default": "./expression/dist/src/builtin_funcs.js"
+    },
+    "./expression/src/parser": {
+      "types": "./expression/src/parser.ts",
+      "default": "./expression/dist/src/parser.js"
+    },
+    "./hooks": {
+      "types": "./hooks/index.ts",
+      "default": "./hooks/dist/index.js"
+    },
+    "./hooks/proto": {
+      "types": "./hooks/proto/index.ts",
+      "default": "./hooks/proto/dist/index.js"
+    },
+    "./hooks/proto/node": {
+      "types": "./hooks/proto/node/index.ts",
+      "default": "./hooks/proto/node/dist/index.js"
+    },
+    "./hooks/src/emitter": {
+      "types": "./hooks/src/emitter.ts",
+      "default": "./hooks/dist/src/emitter.js"
+    },
+    "./hooks/src/enqueuer": {
+      "types": "./hooks/src/enqueuer.ts",
+      "default": "./hooks/dist/src/enqueuer.js"
+    },
+    "./hooks/src/module": {
+      "types": "./hooks/src/module.ts",
+      "default": "./hooks/dist/src/module.js"
+    },
+    "./history": {
+      "types": "./history/index.ts",
+      "default": "./history/dist/index.js"
+    },
+    "./history/src/path": {
+      "types": "./history/src/path.ts",
+      "default": "./history/dist/src/path.js"
+    },
+    "./realtime": {
+      "types": "./realtime/index.ts",
+      "default": "./realtime/dist/index.js"
+    },
+    "./schemas-realtime": {
+      "types": "./schemas-realtime/index.ts",
+      "default": "./schemas-realtime/dist/index.js"
+    },
+    "./graphql": {
+      "types": "./graphql/index.ts",
+      "default": "./graphql/dist/index.js"
+    },
+    "./src": {
+      "types": "./src/index.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./src/bucket.schema.resolver": {
+      "types": "./src/bucket.schema.resolver.ts",
+      "default": "./dist/src/bucket.schema.resolver.js"
+    },
+    "./src/synchronizer/schema": {
+      "types": "./src/synchronizer/schema.ts",
+      "default": "./dist/src/synchronizer/schema.js"
+    }
+  },
+  "dependencies": {
+    "graphql": "*",
+    "@graphql-tools/merge": "*",
+    "@graphql-tools/schema": "*"
   }
 }

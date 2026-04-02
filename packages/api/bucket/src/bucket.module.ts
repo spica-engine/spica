@@ -9,27 +9,27 @@ import {createHashFormat, createEncryptedFormat} from "@spica-server/core/schema
 import {PreferenceService} from "@spica-server/preference/services";
 import {BUCKET_LANGUAGE_FINALIZER} from "@spica-server/interface/preference";
 import {BucketCacheModule} from "@spica-server/bucket/cache";
-import {BucketDataController} from "./bucket-data.controller";
-import {BucketController} from "./bucket.controller";
+import {BucketDataController} from "./bucket-data.controller.js";
+import {BucketController} from "./bucket.controller.js";
 import {
   BucketSchemaResolver,
   bucketSpecificDefault,
   provideBucketSchemaResolver
-} from "./bucket.schema.resolver";
+} from "./bucket.schema.resolver.js";
 import {GraphQLModule} from "@spica-server/bucket/graphql";
 import {provideLanguageFinalizer} from "@spica-server/bucket/common";
-import {registerStatusProvider} from "./status";
+import {registerStatusProvider} from "./status.js";
 import BucketSchema from "./schemas/bucket.schema.json" with {type: "json"};
 import BucketsSchema from "./schemas/buckets.schema.json" with {type: "json"};
 import {
   REGISTER_VC_CHANGE_HANDLER,
   RegisterVCChangeHandler
 } from "@spica-server/interface/versioncontrol";
-import {registerAssetHandlers} from "./asset";
+import {registerAssetHandlers} from "./asset.js";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {BucketOptions} from "@spica-server/interface/bucket";
-import {getSupplier, getApplier} from "./synchronizer/schema";
+import {getSupplier, getApplier} from "./synchronizer/schema/index.js";
 
 @Module({})
 export class BucketModule {

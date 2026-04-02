@@ -1,8 +1,8 @@
 import {BucketService, getBucketDataCollection} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {buildI18nAggregation} from "./locale";
+import {buildI18nAggregation} from "./locale.js";
 import {deepCopy} from "@spica-server/core/patch";
-import {setPropertyByPath} from "./schema";
+import {setPropertyByPath} from "./schema.js";
 import {
   Locale,
   RelationType,

@@ -5,9 +5,9 @@ import {SCHEMA, COLL_SLUG} from "@spica-server/interface/function";
 import {EventQueue} from "@spica-server/function/queue";
 import {ENQUEUER} from "@spica-server/interface/function/scheduler";
 import {JSONSchema7} from "json-schema";
-import {ChangeEmitter} from "./emitter";
-import {ChangeEnqueuer} from "./enqueuer";
-import {ChangeQueue} from "./queue";
+import {ChangeEmitter} from "./emitter.js";
+import {ChangeEnqueuer} from "./enqueuer.js";
+import {ChangeQueue} from "./queue.js";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 
 export function createSchema(db: DatabaseService): Promise<JSONSchema7> {

@@ -12,7 +12,7 @@ import {
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
-import {getBucketDataCollection} from "./";
+import {getBucketDataCollection} from "./index.js";
 import {
   IndexDefinition,
   ExistingIndex,

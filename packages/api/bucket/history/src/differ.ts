@@ -1,6 +1,6 @@
 import {Change, ChangeKind} from "@spica-server/interface/core";
 import {JSONSchema7} from "json-schema";
-import {Path} from "./path";
+import {Path} from "./path.js";
 import diffMatchPatch from "diff-match-patch";
 
 export function applyPatch<T>(changes: Change[], document: T, schema: JSONSchema7) {

@@ -50,7 +50,7 @@ import {
   filterReviver,
   decryptDocumentFields
 } from "@spica-server/bucket/common";
-import {expressionFilterParser} from "./filter";
+import {expressionFilterParser} from "./filter.js";
 import {
   clearRelations,
   getRelationPaths,

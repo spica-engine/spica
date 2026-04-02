@@ -42,7 +42,7 @@ import {
 } from "@spica-server/interface/bucket";
 import {getConnectionHandlers} from "@spica-server/realtime";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
-import {BucketDataOptionsBuilder} from "./bucket-data-options.builder";
+import {BucketDataOptionsBuilder} from "./bucket-data-options.builder.js";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"

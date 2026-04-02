@@ -74,6 +74,9 @@
     },
     {
       "path": "../../packages/api/function"
+    },
+    {
+      "path": "../../packages/api/bucket"
     }
   ]
 }

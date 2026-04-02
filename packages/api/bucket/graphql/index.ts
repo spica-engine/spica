@@ -1,3 +1,3 @@
-export * from "./src/graphql";
-export * from "./src/module";
-export * from "./src/schema";
+export * from "./src/graphql.js";
+export * from "./src/module.js";
+export * from "./src/schema.js";

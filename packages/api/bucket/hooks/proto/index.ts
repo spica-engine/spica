@@ -1,1 +1,1 @@
-export * from "./src/hooks";
+export * from "./src/hooks.js";

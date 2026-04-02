@@ -50,7 +50,7 @@ import {
   requestedFieldsFromExpression,
   requestedFieldsFromInfo,
   validateBuckets
-} from "./schema";
+} from "./schema.js";
 import {applyPatch, deepCopy} from "@spica-server/core/patch";
 import {Action} from "@spica-server/interface/activity";
 import {SchemaWarning} from "@spica-server/interface/bucket/graphql";

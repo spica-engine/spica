@@ -1,6 +1,6 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {CacheModule, CacheModuleOptions} from "@nestjs/cache-manager";
-import {BucketCacheService} from "./service";
+import {BucketCacheService} from "./service.js";
 
 @Module({})
 export class BucketCacheModule {
