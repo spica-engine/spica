@@ -3,6 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/core": "*",
+    "@spica-server/database": "*",
+    "@spica-server/interface": "*",
+    "@spica-server/passport": "*"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@types/json-schema": "^7.0.15"
+  },
   "exports": {
     ".": {
       "types": "./index.ts",
