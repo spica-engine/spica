@@ -15,8 +15,8 @@
     "../../../../../../packages/api/bucket/hooks/proto/node/src/*.ts",
     "../../../../../../packages/api/bucket/hooks/proto/node/index.ts",
     // function database package
-    "../../../packages/database/src/*.ts",
-    "../../../packages/database/index.ts",
+    "../../../../../../packages/devkit/database/src/*.ts",
+    "../../../../../../packages/devkit/database/index.ts",
     // function queue node
     "../../../queue/node/src/*.ts",
     "../../../queue/node/index.ts",

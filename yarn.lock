@@ -3678,6 +3678,15 @@
     is-module "^1.0.0"
     resolve "^1.22.1"
 
+"@rollup/plugin-terser@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@rollup/plugin-terser/-/plugin-terser-1.0.0.tgz#dabbc4414d127aa7d43fc5e7ea8699b9c3bc59e5"
+  integrity sha512-FnCxhTBx6bMOYQrar6C8h3scPt8/JwIzw3+AJ2K++6guogH5fYaIFia+zZuhqv0eo1RN7W1Pz630SyvLbDjhtQ==
+  dependencies:
+    serialize-javascript "^7.0.3"
+    smob "^1.0.0"
+    terser "^5.17.4"
+
 "@rollup/plugin-typescript@^12.3.0":
   version "12.3.0"
   resolved "https://registry.yarnpkg.com/@rollup/plugin-typescript/-/plugin-typescript-12.3.0.tgz#cc51b830973bc14c9456fe6532f322f2a40f5f12"
@@ -12669,6 +12678,11 @@ serialize-javascript@^6.0.0, serialize-javascript@^6.0.1:
   dependencies:
     randombytes "^2.1.0"
 
+serialize-javascript@^7.0.3:
+  version "7.0.5"
+  resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-7.0.5.tgz#c798cc0552ffbb08981914a42a8756e339d0d5b1"
+  integrity sha512-F4LcB0UqUl1zErq+1nYEEzSHJnIwb3AF2XWB94b+afhrekOUijwooAYqFyRbjYkm2PAKBabx6oYv/xDxNi8IBw==
+
 serve-index@^1.9.1:
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/serve-index/-/serve-index-1.9.2.tgz#2988e3612106d78a5e4849ddff552ce7bd3d9bcb"
@@ -12820,6 +12834,11 @@ slice-ansi@^2.1.0:
     ansi-styles "^3.2.0"
     astral-regex "^1.0.0"
     is-fullwidth-code-point "^2.0.0"
+
+smob@^1.0.0:
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/smob/-/smob-1.6.1.tgz#930607366738545aee542a93e03e47b54e0303e0"
+  integrity sha512-KAkBqZl3c2GvNgNhcoyJae1aKldDW0LO279wF9bk1PnluRTETKBq0WyzRXxEhoQLk56yHaOY4JCBEKDuJIET5g==
 
 snake-case@^2.1.0:
   version "2.1.0"
@@ -13424,7 +13443,7 @@ terser@5.16.3:
     commander "^2.20.0"
     source-map-support "~0.5.20"
 
-terser@^5.31.1:
+terser@^5.17.4, terser@^5.31.1:
   version "5.46.1"
   resolved "https://registry.yarnpkg.com/terser/-/terser-5.46.1.tgz#40e4b1e35d5f13130f82793a8b3eeb7ec3a92eee"
   integrity sha512-vzCjQO/rgUuK9sf8VJZvjqiqiHFaZLnOiimmUuOKODxWL8mm/xua7viT7aqX7dgPY60otQjUotzFMmCB4VdmqQ==
