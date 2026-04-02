@@ -6,6 +6,7 @@ import Home from "./pages/home/Home";
 import Layout from "./layout/Layout";
 import Bucket from "./pages/bucket/Bucket";
 import Identity from "./pages/identity/Identity";
+import User from "./pages/user/User";
 import Diagram from "./pages/diagram/Diagram";
 import ProtectedRoute from "./components/guards/ProtectedRoute";
 import Storage from "./pages/storage/Storage";
@@ -55,6 +56,10 @@ const router = createBrowserRouter(
         {
           path: "passport/identity",
           element: <Identity />
+        },
+        {
+          path: "passport/user",
+          element: <User />
         },
         {
           path: "passport/policy",

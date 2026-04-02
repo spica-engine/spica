@@ -49,6 +49,8 @@ export const baseApi = createApi({
     'Webhook',
     'VersionControl',
     'Config',
+    'RefreshToken',
+    'User',
   ],
   endpoints: () => ({}),
 });

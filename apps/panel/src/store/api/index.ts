@@ -87,8 +87,8 @@ export {
   useDeleteIdentityMutation,
   useAuthenticateIdentityMutation,
   useVerifyIdentityQuery,
-  useGetIdentityPoliciesQuery,
-  useUpdateIdentityPoliciesMutation,
+  useAddIdentityPolicyMutation,
+  useRemoveIdentityPolicyMutation,
 } from './identityApi';
 
 export type {
