@@ -8,6 +8,7 @@ import {
   StringInput,
   Text,
 } from "oziko-ui-kit";
+import isEqual from "lodash/isEqual";
 import { useUpdateConfigMutation } from "../../store/api/configApi";
 import type { ConfigItem } from "../../store/api/configApi";
 import styles from "./Config.module.scss";
@@ -23,15 +24,71 @@ const PROVIDER_ENUM = ["email", "phone"] as const;
 const STRATEGY_ENUM = ["Otp", "MagicLink"] as const;
 
 type ProviderItem = { provider: string; strategy: string };
-type RateLimitItem = { limit: number; ttl: number };
+type ProviderItemWithId = ProviderItem & { _id: string };
+type RateLimitValue = number | "";
+type RateLimitItem = { limit: RateLimitValue; ttl: RateLimitValue };
 
-function deepEqual(a: unknown, b: unknown): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
+let _nextId = 0;
+function genId(): string {
+  return `_pid_${_nextId++}`;
+}
+
+function withIds(items: ProviderItem[]): ProviderItemWithId[] {
+  return items.map((item) => ({ ...item, _id: genId() }));
+}
+
+function stripIds(items: ProviderItemWithId[]): ProviderItem[] {
+  return items.map(({ _id, ...rest }) => rest);
 }
 
 function getInitialOptions(config: ConfigItem | null): Record<string, unknown> {
   if (!config?.options) return {};
-  return JSON.parse(JSON.stringify(config.options));
+  const opts = JSON.parse(JSON.stringify(config.options)) as Record<string, unknown>;
+  if (Array.isArray(opts.providerVerificationConfig)) {
+    opts.providerVerificationConfig = withIds(opts.providerVerificationConfig as ProviderItem[]);
+  }
+  if (Array.isArray(opts.resetPasswordProvider)) {
+    opts.resetPasswordProvider = withIds(opts.resetPasswordProvider as ProviderItem[]);
+  }
+  const pl = opts.passwordlessLogin as { passwordlessLoginProvider?: ProviderItem[] } | undefined;
+  if (pl && Array.isArray(pl.passwordlessLoginProvider)) {
+    opts.passwordlessLogin = { ...pl, passwordlessLoginProvider: withIds(pl.passwordlessLoginProvider) };
+  }
+  return opts;
+}
+
+function sanitizeOptionsForSave(options: Record<string, unknown>): Record<string, unknown> | null {
+  const result = { ...options };
+
+  if (Array.isArray(result.providerVerificationConfig)) {
+    result.providerVerificationConfig = stripIds(result.providerVerificationConfig as ProviderItemWithId[]);
+  }
+  if (Array.isArray(result.resetPasswordProvider)) {
+    result.resetPasswordProvider = stripIds(result.resetPasswordProvider as ProviderItemWithId[]);
+  }
+  const pl = result.passwordlessLogin as { passwordlessLoginProvider?: ProviderItemWithId[] } | undefined;
+  if (pl && Array.isArray(pl.passwordlessLoginProvider)) {
+    result.passwordlessLogin = { ...pl, passwordlessLoginProvider: stripIds(pl.passwordlessLoginProvider) };
+  }
+
+  if (result.rateLimits) {
+    const rawRl = result.rateLimits as Record<string, RateLimitItem>;
+    const cleanRl: Record<string, { limit: number; ttl: number }> = {};
+    for (const [cat, rl] of Object.entries(rawRl)) {
+      const limitEmpty = rl.limit === "" || rl.limit === 0;
+      const ttlEmpty = rl.ttl === "" || rl.ttl === 0;
+      if (limitEmpty && ttlEmpty) continue;
+      if (limitEmpty !== ttlEmpty) return null;
+      cleanRl[cat] = { limit: rl.limit as number, ttl: rl.ttl as number };
+    }
+    if (Object.keys(cleanRl).length === 0) {
+      delete result.rateLimits;
+    } else {
+      result.rateLimits = cleanRl;
+    }
+  }
+
+  return result;
 }
 
 const ConfigForm = ({ isOpen, selectedConfig, onClose }: ConfigFormProps) => {
@@ -50,12 +107,14 @@ const ConfigForm = ({ isOpen, selectedConfig, onClose }: ConfigFormProps) => {
     }
   }, [isOpen, selectedConfig]);
 
-  const hasChanges = useMemo(() => !deepEqual(options, baseline), [options, baseline]);
+  const hasChanges = useMemo(() => !isEqual(options, baseline), [options, baseline]);
 
   const handleSave = useCallback(async () => {
     if (!selectedConfig || !hasChanges) return;
+    const sanitized = sanitizeOptionsForSave(options);
+    if (!sanitized) return;
     try {
-      await updateConfig({ module: selectedConfig.module, options }).unwrap();
+      await updateConfig({ module: selectedConfig.module, options: sanitized }).unwrap();
       onClose();
     } catch {
       // Error handled by mutation
@@ -174,15 +233,15 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
   const rateLimits = (options.rateLimits ?? {}) as Record<string, RateLimitItem>;
 
   const updateRateLimit = (category: string, field: "limit" | "ttl", value: string) => {
-    const numVal = parseInt(value, 10);
-    if (isNaN(numVal) && value !== "") return;
+    if (value !== "" && (isNaN(parseInt(value, 10)) || parseInt(value, 10) < 1)) return;
+    const stored: RateLimitValue = value === "" ? "" : parseInt(value, 10);
     setOptions((prev) => ({
       ...prev,
       rateLimits: {
         ...(prev.rateLimits as Record<string, RateLimitItem> ?? {}),
         [category]: {
-          ...((prev.rateLimits as Record<string, RateLimitItem> ?? {})[category] ?? { limit: 0, ttl: 0 }),
-          [field]: value === "" ? 0 : numVal,
+          ...((prev.rateLimits as Record<string, RateLimitItem> ?? {})[category] ?? { limit: "", ttl: "" }),
+          [field]: stored,
         },
       },
     }));
@@ -212,8 +271,8 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
     setOptions((prev) => ({
       ...prev,
       providerVerificationConfig: [
-        ...((prev.providerVerificationConfig ?? []) as ProviderItem[]),
-        { provider: "email", strategy: "Otp" },
+        ...((prev.providerVerificationConfig ?? []) as ProviderItemWithId[]),
+        { provider: "email", strategy: "Otp", _id: genId() },
       ],
     }));
   };
@@ -243,12 +302,12 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
 
   const addPasswordlessProvider = () => {
     setOptions((prev) => {
-      const pl = (prev.passwordlessLogin ?? {}) as { passwordlessLoginProvider?: ProviderItem[] };
+      const pl = (prev.passwordlessLogin ?? {}) as { passwordlessLoginProvider?: ProviderItemWithId[] };
       return {
         ...prev,
         passwordlessLogin: {
           ...pl,
-          passwordlessLoginProvider: [...(pl.passwordlessLoginProvider ?? []), { provider: "email", strategy: "" }],
+          passwordlessLoginProvider: [...(pl.passwordlessLoginProvider ?? []), { provider: "email", strategy: "", _id: genId() }],
         },
       };
     });
@@ -281,8 +340,8 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
     setOptions((prev) => ({
       ...prev,
       resetPasswordProvider: [
-        ...((prev.resetPasswordProvider ?? []) as ProviderItem[]),
-        { provider: "email", strategy: "" },
+        ...((prev.resetPasswordProvider ?? []) as ProviderItemWithId[]),
+        { provider: "email", strategy: "", _id: genId() },
       ],
     }));
   };
@@ -312,18 +371,18 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
 
       <Text className={styles.sectionTitle}>Rate Limits</Text>
       {RATE_LIMIT_KEYS.map((category) => {
-        const rl = rateLimits[category] ?? { limit: 0, ttl: 0 };
+        const rl = rateLimits[category] ?? { limit: "", ttl: "" };
         return (
           <FlexElement key={category} dimensionX="fill" direction="horizontal" gap={8} className={styles.rateLimitRow}>
             <Text className={styles.rateLimitLabel}>{category.replace(/([A-Z])/g, " $1")}</Text>
             <StringInput
               label="Limit"
-              value={String(rl.limit ?? 0)}
+              value={rl.limit === 0 ? "" : String(rl.limit ?? "")}
               onChange={(v) => updateRateLimit(category, "limit", v)}
             />
             <StringInput
               label="TTL (s)"
-              value={String(rl.ttl ?? 0)}
+              value={rl.ttl === 0 ? "" : String(rl.ttl ?? "")}
               onChange={(v) => updateRateLimit(category, "ttl", v)}
             />
           </FlexElement>
@@ -331,8 +390,8 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
       })}
 
       <Text className={styles.sectionTitle}>Provider Verification Config</Text>
-      {providerVerificationConfig.map((item, index) => (
-        <FlexElement key={index} dimensionX="fill" direction="horizontal" gap={8} className={styles.providerRow}>
+      {(providerVerificationConfig as ProviderItemWithId[]).map((item, index) => (
+        <FlexElement key={item._id} dimensionX="fill" direction="horizontal" gap={8} className={styles.providerRow}>
           <Select
             dimensionX="fill"
             dimensionY={36}
@@ -359,8 +418,8 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
       </Button>
 
       <Text className={styles.sectionTitle}>Passwordless Login Providers</Text>
-      {passwordlessProviders.map((item, index) => (
-        <FlexElement key={index} dimensionX="fill" direction="horizontal" gap={8} className={styles.providerRow}>
+      {(passwordlessProviders as ProviderItemWithId[]).map((item, index) => (
+        <FlexElement key={item._id} dimensionX="fill" direction="horizontal" gap={8} className={styles.providerRow}>
           <Select
             dimensionX="fill"
             dimensionY={36}
@@ -384,8 +443,8 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
       </Button>
 
       <Text className={styles.sectionTitle}>Reset Password Providers</Text>
-      {resetPasswordProvider.map((item, index) => (
-        <FlexElement key={index} dimensionX="fill" direction="horizontal" gap={8} className={styles.providerRow}>
+      {(resetPasswordProvider as ProviderItemWithId[]).map((item, index) => (
+        <FlexElement key={item._id} dimensionX="fill" direction="horizontal" gap={8} className={styles.providerRow}>
           <Select
             dimensionX="fill"
             dimensionY={36}
