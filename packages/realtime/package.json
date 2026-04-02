@@ -10,8 +10,8 @@
     }
   },
   "dependencies": {
-    "@spica-server/database": "*",
-    "@spica-server/interface": "*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface": "workspace:*",
     "rxjs": "^7.8.1"
   }
 }

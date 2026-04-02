@@ -182,10 +182,10 @@
     }
   },
   "dependencies": {
-    "@spica-server/core": "*",
-    "@spica-server/database": "*",
-    "@spica-server/function": "*",
-    "@spica-server/replication": "*",
+    "@spica-server/core": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/function": "workspace:*",
+    "@spica-server/replication": "workspace:*",
     "mongodb": "^6.12.0",
     "rxjs": "^7.8.1",
     "ws": "^8.18.0"

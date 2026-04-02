@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
-    "@spica-server/core": "*",
-    "@spica-server/interface": "*",
-    "@spica-server/passport": "*",
+    "@spica-server/core": "workspace:*",
+    "@spica-server/interface": "workspace:*",
+    "@spica-server/passport": "workspace:*",
     "axios": "^1.8.2"
   },
   "devDependencies": {
