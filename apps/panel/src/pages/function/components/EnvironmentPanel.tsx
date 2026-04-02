@@ -3,148 +3,232 @@
  * email: rio.kenan@gmail.com
  */
 
-import {memo, useCallback, useState} from "react";
-import {Button, FlexElement, Icon, Text} from "oziko-ui-kit";
-import styles from "../FunctionPage.module.scss";
+import {memo, useCallback, useMemo, useState} from "react";
+import {
+  Accordion,
+  Button,
+  FlexElement,
+  FluidContainer,
+  Icon,
+  Select,
+  Text,
+  type TypeAccordionItem,
+} from "oziko-ui-kit";
+import type {TypeLabeledValue} from "oziko-ui-kit";
+import type {ResolvedEnvVar, ResolvedSecret} from "../../../store/api/functionApi";
+import {useGetEnvVarsQuery} from "../../../store/api/envVarApi";
+import {useGetSecretsQuery} from "../../../store/api/secretApi";
+import styles from "./EnvironmentPanel.module.scss";
+
+type TabKey = "variables" | "secrets";
 
 type EnvironmentPanelProps = {
-  env: Record<string, string>;
-  onChange: (env: Record<string, string>) => void;
+  envVars: ResolvedEnvVar[];
+  secrets: ResolvedSecret[];
+  onEnvVarsChange: (envVars: ResolvedEnvVar[]) => void;
+  onSecretsChange: (secrets: ResolvedSecret[]) => void;
 };
 
-type EnvEntry = {key: string; value: string};
+const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: EnvironmentPanelProps) => {
+  const [activeTab, setActiveTab] = useState<TabKey>("variables");
+  const [selectedVarIds, setSelectedVarIds] = useState<string[]>([]);
+  const [selectedSecretIds, setSelectedSecretIds] = useState<string[]>([]);
 
-const EnvironmentPanel = ({env, onChange}: EnvironmentPanelProps) => {
-  const [expanded, setExpanded] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const {data: envVarsResponse} = useGetEnvVarsQuery();
+  const {data: secretsResponse} = useGetSecretsQuery();
 
-  const entries: EnvEntry[] = Object.entries(env).map(([key, value]) => ({key, value}));
+  const allEnvVars = envVarsResponse?.data ?? [];
+  const allSecrets = secretsResponse?.data ?? [];
 
-  const toggleExpanded = useCallback(() => setExpanded(prev => !prev), []);
-
-  const commitEntries = useCallback(
-    (updated: EnvEntry[]) => {
-      const result: Record<string, string> = {};
-      for (const entry of updated) {
-        if (entry.key && entry.value) {
-          result[entry.key] = entry.value;
-        }
-      }
-      onChange(result);
-    },
-    [onChange]
+  const assignedEnvVarIdSet = useMemo(
+    () => new Set(envVars.map(v => v._id)),
+    [envVars]
   );
 
-  const handleAdd = useCallback(() => {
-    const updated = [...entries, {key: "", value: ""}];
-    commitEntries(updated);
-    setEditingIndex(updated.length - 1);
-  }, [entries, commitEntries]);
-
-  const handleDelete = useCallback(
-    (index: number) => {
-      const updated = entries.filter((_, i) => i !== index);
-      commitEntries(updated);
-      if (editingIndex === index) setEditingIndex(null);
-    },
-    [entries, commitEntries, editingIndex]
+  const assignedSecretIdSet = useMemo(
+    () => new Set(secrets.map(s => s._id)),
+    [secrets]
   );
 
-  const handleKeyChange = useCallback(
-    (index: number, newKey: string) => {
-      const updated = entries.map((e, i) => (i === index ? {key: newKey, value: e.value} : e));
-      commitEntries(updated);
-    },
-    [entries, commitEntries]
+  const envVarOptions = useMemo<TypeLabeledValue[]>(
+    () =>
+      allEnvVars
+        .filter(v => !assignedEnvVarIdSet.has(v._id))
+        .map(v => ({value: v._id, label: v.key})),
+    [allEnvVars, assignedEnvVarIdSet]
   );
 
-  const handleValueChange = useCallback(
-    (index: number, newValue: string) => {
-      const updated = entries.map((e, i) => (i === index ? {key: e.key, value: newValue} : e));
-      commitEntries(updated);
-    },
-    [entries, commitEntries]
+  const secretOptions = useMemo<TypeLabeledValue[]>(
+    () =>
+      allSecrets
+        .filter(s => !assignedSecretIdSet.has(s._id))
+        .map(s => ({value: s._id, label: s.key})),
+    [allSecrets, assignedSecretIdSet]
   );
+
+  const handleAddEnvVars = useCallback(() => {
+    if (!selectedVarIds.length) return;
+    const newVars = selectedVarIds
+      .map(id => allEnvVars.find(v => v._id === id))
+      .filter((v): v is typeof allEnvVars[number] => !!v)
+      .map(v => ({_id: v._id, key: v.key, value: v.value}));
+    onEnvVarsChange([...envVars, ...newVars]);
+    setSelectedVarIds([]);
+  }, [selectedVarIds, allEnvVars, envVars, onEnvVarsChange]);
+
+  const handleRemoveEnvVar = useCallback(
+    (envVarId: string) => {
+      onEnvVarsChange(envVars.filter(v => v._id !== envVarId));
+    },
+    [envVars, onEnvVarsChange]
+  );
+
+  const handleAddSecrets = useCallback(() => {
+    if (!selectedSecretIds.length) return;
+    const newSecrets = selectedSecretIds
+      .map(id => allSecrets.find(s => s._id === id))
+      .filter((s): s is typeof allSecrets[number] => !!s)
+      .map(s => ({_id: s._id, key: s.key}));
+    onSecretsChange([...secrets, ...newSecrets]);
+    setSelectedSecretIds([]);
+  }, [selectedSecretIds, allSecrets, secrets, onSecretsChange]);
+
+  const handleRemoveSecret = useCallback(
+    (secretId: string) => {
+      onSecretsChange(secrets.filter(s => s._id !== secretId));
+    },
+    [secrets, onSecretsChange]
+  );
+
+  const variablesContent = (
+    <FlexElement direction="vertical" dimensionX="fill" gap={10}>
+      {envVars.map(v => (
+        <FluidContainer
+          key={v._id}
+          dimensionX="fill"
+          mode="fill"
+          alignment="leftCenter"
+          root={{
+            children: <Text size="medium">{v.key}</Text>,
+            alignment: "leftCenter",
+          }}
+          suffix={{
+            children: (
+              <Button
+                variant="icon"
+                color="danger"
+                onClick={() => handleRemoveEnvVar(v._id)}
+                className={styles.button}
+              >
+                <Icon name="delete" />
+              </Button>
+            ),
+          }}
+        />
+      ))}
+      <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
+        <Select
+          options={envVarOptions}
+          value={selectedVarIds}
+          multiple
+          placeholder="Select variables..."
+          onChange={value => setSelectedVarIds(Array.isArray(value) ? (value as string[]) : [])}
+          dimensionX="fill"
+        />
+        <Button
+          variant="icon"
+          color="default"
+          onClick={handleAddEnvVars}
+          disabled={!selectedVarIds.length}
+        >
+          <Icon name="plus" />
+        </Button>
+      </FlexElement>
+    </FlexElement>
+  );
+
+  const secretsContent = (
+    <FlexElement direction="vertical" dimensionX="fill" gap={10}>
+      {secrets.map(s => (
+        <FluidContainer
+          key={s._id}
+          dimensionX="fill"
+          mode="fill"
+          alignment="leftCenter"
+          root={{
+            children: <Text size="medium">{s.key}</Text>,
+            alignment: "leftCenter",
+          }}
+          suffix={{
+            children: (
+              <Button
+                variant="icon"
+                color="danger"
+                onClick={() => handleRemoveSecret(s._id)}
+                className={styles.button}
+              >
+                <Icon name="delete" />
+              </Button>
+            ),
+          }}
+        />
+      ))}
+      <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
+        <Select
+          options={secretOptions}
+          value={selectedSecretIds}
+          multiple
+          placeholder="Select secrets..."
+          onChange={value => setSelectedSecretIds(Array.isArray(value) ? (value as string[]) : [])}
+          dimensionX="fill"
+        />
+        <Button
+          variant="icon"
+          color="default"
+          onClick={handleAddSecrets}
+          disabled={!selectedSecretIds.length}
+        >
+          <Icon name="plus" />
+        </Button>
+      </FlexElement>
+    </FlexElement>
+  );
+
+  const accordionItems: TypeAccordionItem[] = [
+    {
+      title: (
+        <FlexElement gap={8} alignment="leftCenter">
+          <Text size="medium">Environment</Text>
+        </FlexElement>
+      ),
+      content: (
+        <FlexElement direction="vertical" alignment="leftTop" dimensionX="fill" gap={0}>
+          <div className={styles.tabsHeader}>
+            <button
+              className={activeTab === "variables" ? styles.tabActive : styles.tab}
+              onClick={() => setActiveTab("variables")}
+            >
+              Variables
+            </button>
+            <button
+              className={activeTab === "secrets" ? styles.tabActive : styles.tab}
+              onClick={() => setActiveTab("secrets")}
+            >
+              Secrets
+            </button>
+          </div>
+          {activeTab === "variables" ? variablesContent : secretsContent}
+        </FlexElement>
+      ),
+    },
+  ];
 
   return (
-    <div className={styles.sidebarSection}>
-      <div className={styles.sectionHeader} onClick={toggleExpanded}>
-        <Icon name={expanded ? "chevronDown" : "chevronRight"} size="sm" />
-        <Text size="medium">Environment Variables</Text>
-      </div>
-      {expanded && (
-        <div className={styles.sectionContent}>
-          {entries.map((entry, index) => {
-            const isEditing = editingIndex === index;
-            return (
-              <div key={index} className={styles.envItem}>
-                {!isEditing ? (
-                  <FlexElement
-                    dimensionX="fill"
-                    alignment="spaceBetween"
-                    className={styles.envDisplay}
-                  >
-                    <Text size="small" className={styles.envText}>
-                      {entry.key}={entry.value}
-                    </Text>
-                    <FlexElement gap={4}>
-                      <Button
-                        variant="icon"
-                        color="transparent"
-                        onClick={() => setEditingIndex(index)}
-                      >
-                        <Icon name="pencil" size="sm" />
-                      </Button>
-                      <Button
-                        variant="icon"
-                        color="transparent"
-                        onClick={() => handleDelete(index)}
-                      >
-                        <Icon name="delete" size="sm" />
-                      </Button>
-                    </FlexElement>
-                  </FlexElement>
-                ) : (
-                  <div className={styles.envForm}>
-                    <input
-                      className={styles.input}
-                      placeholder="Key"
-                      value={entry.key}
-                      onChange={e => handleKeyChange(index, e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && setEditingIndex(null)}
-                    />
-                    <textarea
-                      className={styles.input}
-                      placeholder="Value"
-                      value={entry.value}
-                      rows={1}
-                      onChange={e => handleValueChange(index, e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && setEditingIndex(null)}
-                    />
-                    <Button
-                      variant="icon"
-                      color="transparent"
-                      onClick={() => setEditingIndex(null)}
-                    >
-                      <Icon name="check" size="sm" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          <Button
-            variant="text"
-            color="default"
-            onClick={handleAdd}
-            className={styles.addButton}
-          >
-            <Icon name="plus" size="sm" />
-            Add Variable
-          </Button>
-        </div>
-      )}
-    </div>
+    <Accordion
+      items={accordionItems}
+      suffixOnHover={false}
+      noBackgroundOnFocus
+    />
   );
 };
 

@@ -11,8 +11,10 @@ import {
   useInstallFunctionDependenciesMutation,
   useGetFunctionTriggersQuery,
   useUpdateFunctionTriggersMutation,
-  useGetFunctionEnvQuery,
-  useUpdateFunctionEnvMutation,
+  useInjectEnvVarMutation,
+  useEjectEnvVarMutation,
+  useInjectSecretMutation,
+  useEjectSecretMutation,
   type SpicaFunction,
   type CreateFunctionRequest,
   type UpdateFunctionRequest,
@@ -122,11 +124,13 @@ export function useFunctionDetails(id: string, options?: { skip?: boolean }) {
   const functionQuery = useGetFunctionQuery(id, { skip: options?.skip });
   const dependenciesQuery = useGetFunctionDependenciesQuery(id, { skip: options?.skip });
   const triggersQuery = useGetFunctionTriggersQuery(id, { skip: options?.skip });
-  const envQuery = useGetFunctionEnvQuery(id, { skip: options?.skip });
 
   const [installDependencies] = useInstallFunctionDependenciesMutation();
   const [updateTriggers] = useUpdateFunctionTriggersMutation();
-  const [updateEnv] = useUpdateFunctionEnvMutation();
+  const [injectEnvVar] = useInjectEnvVarMutation();
+  const [ejectEnvVar] = useEjectEnvVarMutation();
+  const [injectSecret] = useInjectSecretMutation();
+  const [ejectSecret] = useEjectSecretMutation();
 
   const handleInstallDependencies = useCallback(
     async (dependencies: Record<string, string>) => {
@@ -152,42 +156,79 @@ export function useFunctionDetails(id: string, options?: { skip?: boolean }) {
     [updateTriggers, id]
   );
 
-  const handleUpdateEnv = useCallback(
-    async (env: Record<string, string>) => {
+  const handleInjectEnvVar = useCallback(
+    async (envVarId: string) => {
       try {
-        const result = await updateEnv({ id, env }).unwrap();
-        return { success: true, data: result };
+        await injectEnvVar({ functionId: id, envVarId }).unwrap();
+        return { success: true };
       } catch (error) {
         return { success: false, error };
       }
     },
-    [updateEnv, id]
+    [injectEnvVar, id]
+  );
+
+  const handleEjectEnvVar = useCallback(
+    async (envVarId: string) => {
+      try {
+        await ejectEnvVar({ functionId: id, envVarId }).unwrap();
+        return { success: true };
+      } catch (error) {
+        return { success: false, error };
+      }
+    },
+    [ejectEnvVar, id]
+  );
+
+  const handleInjectSecret = useCallback(
+    async (secretId: string) => {
+      try {
+        await injectSecret({ functionId: id, secretId }).unwrap();
+        return { success: true };
+      } catch (error) {
+        return { success: false, error };
+      }
+    },
+    [injectSecret, id]
+  );
+
+  const handleEjectSecret = useCallback(
+    async (secretId: string) => {
+      try {
+        await ejectSecret({ functionId: id, secretId }).unwrap();
+        return { success: true };
+      } catch (error) {
+        return { success: false, error };
+      }
+    },
+    [ejectSecret, id]
   );
 
   return {
     function: functionQuery.data,
     dependencies: dependenciesQuery.data || {},
     triggers: triggersQuery.data || [],
-    env: envQuery.data || {},
+    envVars: functionQuery.data?.env_vars || [],
+    secrets: functionQuery.data?.secrets || [],
     
     isLoadingFunction: functionQuery.isLoading,
     isLoadingDependencies: dependenciesQuery.isLoading,
     isLoadingTriggers: triggersQuery.isLoading,
-    isLoadingEnv: envQuery.isLoading,
     
     functionError: functionQuery.error,
     dependenciesError: dependenciesQuery.error,
     triggersError: triggersQuery.error,
-    envError: envQuery.error,
     
     installDependencies: handleInstallDependencies,
     updateTriggers: handleUpdateTriggers,
-    updateEnv: handleUpdateEnv,
+    injectEnvVar: handleInjectEnvVar,
+    ejectEnvVar: handleEjectEnvVar,
+    injectSecret: handleInjectSecret,
+    ejectSecret: handleEjectSecret,
     
     refetchFunction: functionQuery.refetch,
     refetchDependencies: dependenciesQuery.refetch,
     refetchTriggers: triggersQuery.refetch,
-    refetchEnv: envQuery.refetch,
   };
 }
 
@@ -259,8 +300,10 @@ export {
   useInstallFunctionDependenciesMutation,
   useGetFunctionTriggersQuery,
   useUpdateFunctionTriggersMutation,
-  useGetFunctionEnvQuery,
-  useUpdateFunctionEnvMutation,
+  useInjectEnvVarMutation,
+  useEjectEnvVarMutation,
+  useInjectSecretMutation,
+  useEjectSecretMutation,
   useGetFunctionIndexQuery,
   useUpdateFunctionIndexMutation,
   useGetFunctionInformationQuery,

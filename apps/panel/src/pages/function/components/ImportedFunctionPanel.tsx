@@ -4,7 +4,17 @@
  */
 
 import {memo, useCallback, useMemo, useState} from "react";
-import {Accordion, Button, FlexElement, FluidContainer, Icon, Text, type TypeAccordionItem} from "oziko-ui-kit";
+import {
+  Accordion,
+  Button,
+  FlexElement,
+  FluidContainer,
+  Icon,
+  Select,
+  Text,
+  type TypeAccordionItem,
+} from "oziko-ui-kit";
+import type {TypeLabeledValue} from "oziko-ui-kit";
 import {useGetFunctionsQuery} from "../../../store/api/functionApi";
 import type {SpicaFunction} from "../../../store/api/functionApi";
 import styles from "./DependencyPanel.module.scss";
@@ -28,10 +38,11 @@ type ImportedFunction = {
 type ImportedFunctionPanelProps = {
   code: string;
   onCodeChange: (newCode: string) => void;
+  currentFunctionId?: string;
 };
 
-const ImportedFunctionPanel = ({code, onCodeChange}: ImportedFunctionPanelProps) => {
-  const [inputValue, setInputValue] = useState("");
+const ImportedFunctionPanel = ({code, onCodeChange, currentFunctionId}: ImportedFunctionPanelProps) => {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const {data: functionsResponse} = useGetFunctionsQuery();
   const functionList = Array.isArray(functionsResponse) ? functionsResponse : functionsResponse?.data;
 
@@ -53,27 +64,32 @@ const ImportedFunctionPanel = ({code, onCodeChange}: ImportedFunctionPanelProps)
     return results;
   }, [code]);
 
-  const handleAdd = useCallback(() => {
-    const id = inputValue.trim();
-    if (!id) return;
-
-    const fn = functionsMap[id];
-    if (!fn) return;
-
-    if (importedFunctions.some(imp => imp.functionId === id)) return;
-
-    const alias = toPascalCase(fn.name) || "ImportedFn";
-    const importLine = `import * as ${alias} from "../../${id}/.build";\n`;
-    onCodeChange(importLine + code);
-    setInputValue("");
-  }, [inputValue, functionsMap, importedFunctions, code, onCodeChange]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") handleAdd();
-    },
-    [handleAdd]
+  const importedFunctionIdSet = useMemo(
+    () => new Set(importedFunctions.map(imp => imp.functionId)),
+    [importedFunctions]
   );
+
+  const selectOptions = useMemo<TypeLabeledValue[]>(() => {
+    if (!functionList) return [];
+    return functionList
+      .filter(fn => fn._id && fn._id !== currentFunctionId && !importedFunctionIdSet.has(fn._id))
+      .map(fn => ({value: fn._id as string, label: fn.name}));
+  }, [functionList, currentFunctionId, importedFunctionIdSet]);
+
+  const handleAdd = useCallback(() => {
+    if (!selectedIds.length) return;
+
+    const importLines = selectedIds
+      .map(id => {
+        const fn = functionsMap[id];
+        const alias = fn ? toPascalCase(fn.name) || "ImportedFn" : "ImportedFn";
+        return `import * as ${alias} from "../../${id}/.build";\n`;
+      })
+      .join("");
+
+    onCodeChange(importLines + code);
+    setSelectedIds([]);
+  }, [selectedIds, functionsMap, code, onCodeChange]);
 
   const handleDelete = useCallback(
     (functionId: string) => {
@@ -126,18 +142,19 @@ const ImportedFunctionPanel = ({code, onCodeChange}: ImportedFunctionPanelProps)
             );
           })}
           <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
-            <input
-              className={styles.input}
-              placeholder="Function ID..."
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
+            <Select
+              options={selectOptions}
+              value={selectedIds}
+              multiple
+              placeholder="Select functions..."
+              onChange={value => setSelectedIds(Array.isArray(value) ? (value as string[]) : [])}
+              dimensionX="fill"
             />
             <Button
               variant="icon"
               color="default"
               onClick={handleAdd}
-              disabled={!inputValue.trim()}
+              disabled={!selectedIds.length}
             >
               <Icon name="plus" />
             </Button>

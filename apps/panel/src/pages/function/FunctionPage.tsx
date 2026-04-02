@@ -12,13 +12,16 @@ import {
   useGetFunctionIndexQuery,
   useUpdateFunctionIndexMutation,
   useUpdateFunctionMutation,
-  useUpdateFunctionEnvMutation,
   useDeleteFunctionMutation,
   useGetFunctionInformationQuery,
+  useInjectEnvVarMutation,
+  useEjectEnvVarMutation,
+  useInjectSecretMutation,
+  useEjectSecretMutation,
 } from "../../store/api/functionApi";
-import type {FunctionTrigger} from "../../store/api/functionApi";
 import {useGetFunctionLogsQuery} from "../../store/api/functionApi";
 import type {FunctionLog} from "../../store/api/functionApi";
+import type {FunctionTrigger, ResolvedEnvVar, ResolvedSecret} from "../../store/api/functionApi";
 import {useAppDispatch} from "../../store/hook";
 import Loader from "../../components/atoms/loader/Loader";
 import Confirmation from "../../components/molecules/confirmation/Confirmation";
@@ -55,8 +58,11 @@ const FunctionPage = () => {
   const {data: information} = useGetFunctionInformationQuery();
   const [updateIndex, {isLoading: isIndexSaving}] = useUpdateFunctionIndexMutation();
   const [updateFunction] = useUpdateFunctionMutation();
-  const [updateEnv] = useUpdateFunctionEnvMutation();
   const [deleteFunction, {isLoading: isDeleting, error: deleteError}] = useDeleteFunctionMutation();
+  const [injectEnvVar] = useInjectEnvVarMutation();
+  const [ejectEnvVar] = useEjectEnvVarMutation();
+  const [injectSecret] = useInjectSecretMutation();
+  const [ejectSecret] = useEjectSecretMutation();
 
   const [code, setCode] = useState("");
   const [lastSavedCode, setLastSavedCode] = useState("");
@@ -67,7 +73,8 @@ const FunctionPage = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [localTriggers, setLocalTriggers] = useState<FunctionTrigger[]>([]);
-  const [localEnv, setLocalEnv] = useState<Record<string, string>>({});
+  const [localEnvVars, setLocalEnvVars] = useState<ResolvedEnvVar[]>([]);
+  const [localSecrets, setLocalSecrets] = useState<ResolvedSecret[]>([]);
   const [isSidebarSaving, setIsSidebarSaving] = useState(false);
   const [logSearchQuery, setLogSearchQuery] = useState("");
 
@@ -154,7 +161,8 @@ const FunctionPage = () => {
   useEffect(() => {
     if (fn) {
       setLocalTriggers(serverTriggers);
-      setLocalEnv(fn.env ?? {});
+      setLocalEnvVars(fn.env_vars ?? []);
+      setLocalSecrets(fn.secrets ?? []);
     }
   }, [fn, serverTriggers]);
 
@@ -209,7 +217,8 @@ const FunctionPage = () => {
   const hasUnsavedChanges = code !== lastSavedCode;
   const hasSidebarChanges =
     JSON.stringify(localTriggers) !== JSON.stringify(serverTriggers) ||
-    JSON.stringify(localEnv) !== JSON.stringify(fn?.env ?? {});
+    JSON.stringify(localEnvVars) !== JSON.stringify(fn?.env_vars ?? []) ||
+    JSON.stringify(localSecrets) !== JSON.stringify(fn?.secrets ?? []);
 
   const handleSaveIndex = useCallback(async () => {
     if (!functionId || isIndexSaving) return;
@@ -227,7 +236,6 @@ const FunctionPage = () => {
     setIsSidebarSaving(true);
     try {
       const triggersChanged = JSON.stringify(localTriggers) !== JSON.stringify(serverTriggers);
-      const envChanged = JSON.stringify(localEnv) !== JSON.stringify(fn.env ?? {});
 
       if (triggersChanged) {
         const triggersMap = localTriggers.reduce<Record<string, any>>((acc, trigger, i) => {
@@ -242,8 +250,32 @@ const FunctionPage = () => {
         }).unwrap();
       }
 
-      if (envChanged) {
-        await updateEnv({id: fn._id, env: localEnv}).unwrap();
+      const serverEnvVarIds = new Set((fn.env_vars ?? []).map(v => v._id));
+      const localEnvVarIds = new Set(localEnvVars.map(v => v._id));
+
+      for (const v of localEnvVars) {
+        if (!serverEnvVarIds.has(v._id)) {
+          await injectEnvVar({functionId: fn._id, envVarId: v._id}).unwrap();
+        }
+      }
+      for (const v of fn.env_vars ?? []) {
+        if (!localEnvVarIds.has(v._id)) {
+          await ejectEnvVar({functionId: fn._id, envVarId: v._id}).unwrap();
+        }
+      }
+
+      const serverSecretIds = new Set((fn.secrets ?? []).map(s => s._id));
+      const localSecretIds = new Set(localSecrets.map(s => s._id));
+
+      for (const s of localSecrets) {
+        if (!serverSecretIds.has(s._id)) {
+          await injectSecret({functionId: fn._id, secretId: s._id}).unwrap();
+        }
+      }
+      for (const s of fn.secrets ?? []) {
+        if (!localSecretIds.has(s._id)) {
+          await ejectSecret({functionId: fn._id, secretId: s._id}).unwrap();
+        }
       }
 
       if (hasUnsavedChanges) {
@@ -254,7 +286,7 @@ const FunctionPage = () => {
     } finally {
       setIsSidebarSaving(false);
     }
-  }, [fn, localTriggers, localEnv, serverTriggers, isSidebarSaving, updateFunction, updateEnv, hasUnsavedChanges, code, updateIndex]);
+  }, [fn, localTriggers, serverTriggers, localEnvVars, localSecrets, isSidebarSaving, updateFunction, injectEnvVar, ejectEnvVar, injectSecret, ejectSecret, hasUnsavedChanges, code, updateIndex]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!functionId) return;
@@ -376,7 +408,7 @@ const FunctionPage = () => {
       {/* Right sidebar */}
       <div className={`${styles.sidebar} ${!showSidebar ? styles.sidebarHidden : ""}`}>
         <div className={styles.sidebarContent}>
-        <ImportedFunctionPanel code={code} onCodeChange={setCode} />
+        <ImportedFunctionPanel code={code} onCodeChange={setCode} currentFunctionId={functionId} />
         <TriggerPanel
           triggers={localTriggers}
           enqueuers={information?.enqueuers ?? []}
@@ -384,7 +416,12 @@ const FunctionPage = () => {
           onChange={setLocalTriggers}
         />
         <DependencyPanel functionId={functionId} />
-        <EnvironmentPanel env={localEnv} onChange={setLocalEnv} />
+        <EnvironmentPanel
+          envVars={localEnvVars}
+          secrets={localSecrets}
+          onEnvVarsChange={setLocalEnvVars}
+          onSecretsChange={setLocalSecrets}
+        />
         </div>
         <FlexElement className={styles.saveButtonContainer} direction="vertical" dimensionX="fill">
         <Button

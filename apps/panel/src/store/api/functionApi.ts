@@ -1,5 +1,16 @@
 import { baseApi } from './baseApi';
 
+export interface ResolvedEnvVar {
+  _id: string;
+  key: string;
+  value: string;
+}
+
+export interface ResolvedSecret {
+  _id: string;
+  key: string;
+}
+
 export interface SpicaFunction {
   _id?: string;
   name: string;
@@ -9,6 +20,8 @@ export interface SpicaFunction {
   timeout?: number;
   memoryLimit?: number;
   env?: Record<string, string>;
+  env_vars?: ResolvedEnvVar[];
+  secrets?: ResolvedSecret[];
   dependencies?: Record<string, string>;
   triggers?: TriggerMap | FunctionTrigger[];
   order?: number;
@@ -212,18 +225,36 @@ export const functionApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: 'Function', id }, 'Function'],
     }),
 
-    getFunctionEnv: builder.query<Record<string, string>, string>({
-      query: (id) => `/function/${id}/env`,
-      providesTags: (result, error, id) => [{ type: 'Function', id }],
+    injectEnvVar: builder.mutation<void, { functionId: string; envVarId: string }>({
+      query: ({ functionId, envVarId }) => ({
+        url: `/function/${functionId}/env-var/${envVarId}`,
+        method: 'PUT',
+      }),
+      invalidatesTags: (result, error, { functionId }) => [{ type: 'Function', id: functionId }, 'Function'],
     }),
 
-    updateFunctionEnv: builder.mutation<SpicaFunction, { id: string; env: Record<string, string> }>({
-      query: ({ id, env }) => ({
-        url: `/function/${id}/env`,
-        method: 'PUT',
-        body: { env },
+    ejectEnvVar: builder.mutation<void, { functionId: string; envVarId: string }>({
+      query: ({ functionId, envVarId }) => ({
+        url: `/function/${functionId}/env-var/${envVarId}`,
+        method: 'DELETE',
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Function', id }, 'Function'],
+      invalidatesTags: (result, error, { functionId }) => [{ type: 'Function', id: functionId }, 'Function'],
+    }),
+
+    injectSecret: builder.mutation<void, { functionId: string; secretId: string }>({
+      query: ({ functionId, secretId }) => ({
+        url: `/function/${functionId}/secret/${secretId}`,
+        method: 'PUT',
+      }),
+      invalidatesTags: (result, error, { functionId }) => [{ type: 'Function', id: functionId }, 'Function'],
+    }),
+
+    ejectSecret: builder.mutation<void, { functionId: string; secretId: string }>({
+      query: ({ functionId, secretId }) => ({
+        url: `/function/${functionId}/secret/${secretId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { functionId }) => [{ type: 'Function', id: functionId }, 'Function'],
     }),
 
     updateFunctionOrder: builder.mutation<SpicaFunction, { functionId: string; order: number }>({
@@ -407,8 +438,10 @@ export const {
   useInstallFunctionDependenciesMutation,
   useGetFunctionTriggersQuery,
   useUpdateFunctionTriggersMutation,
-  useGetFunctionEnvQuery,
-  useUpdateFunctionEnvMutation,
+  useInjectEnvVarMutation,
+  useEjectEnvVarMutation,
+  useInjectSecretMutation,
+  useEjectSecretMutation,
   useUpdateFunctionOrderMutation,
   useChangeFunctionCategoryMutation,
   useRenameFunctionMutation,
