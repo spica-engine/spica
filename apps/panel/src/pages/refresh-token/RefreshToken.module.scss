@@ -1,0 +1,24 @@
+.container {
+  padding: var(--padding-md);
+}
+
+.idCell {
+  font-family: monospace;
+  font-size: var(--font-size-sm);
+  opacity: 0.7;
+}
+
+.statusActive {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.statusDisabled {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.actionButton {
+  padding: 0;
+  width: unset !important;
+}
