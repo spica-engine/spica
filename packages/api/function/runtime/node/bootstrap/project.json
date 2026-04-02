@@ -2,24 +2,34 @@
   "name": "api/function/runtime/node/bootstrap",
   "sourceRoot": "packages/api/function/runtime/node/bootstrap",
   "projectType": "library",
+  "implicitDependencies": [
+    "api/bucket/hooks/proto",
+    "api/bucket/hooks/proto/node",
+    "api/function/queue/node",
+    "api/function/queue/proto",
+    "api/function/runtime/logger",
+    "devkit/database"
+  ],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "inputs": [
-        "{projectRoot}/*",
+        "production",
+        "^production",
         "{workspaceRoot}/tsconfig.json",
-        "{workspaceRoot}/packages/api/bucket/hooks/proto/src/*.ts",
-        "{workspaceRoot}/packages/api/bucket/hooks/proto/index.ts",
-        "{workspaceRoot}/packages/api/bucket/hooks/proto/node/src/*.ts",
-        "{workspaceRoot}/packages/api/bucket/hooks/proto/node/index.ts",
-        "{workspaceRoot}/packages/devkit/database/src/*.ts",
-        "{workspaceRoot}/packages/devkit/database/index.ts",
-        "{workspaceRoot}/packages/api/function/queue/node/src/*.ts",
-        "{workspaceRoot}/packages/api/function/queue/node/index.ts",
-        "{workspaceRoot}/packages/api/function/queue/proto/*.ts",
-        "{workspaceRoot}/packages/api/function/queue/proto/index.ts",
-        "{workspaceRoot}/packages/api/function/runtime/logger/*.ts",
-        "{workspaceRoot}/packages/api/function/runtime/logger/index.ts"
+        "{workspaceRoot}/tsconfig.base.json",
+        {
+          "externalDependencies": [
+            "rollup",
+            "typescript",
+            "@rollup/plugin-commonjs",
+            "@rollup/plugin-json",
+            "@rollup/plugin-node-resolve",
+            "@rollup/plugin-terser",
+            "@rollup/plugin-typescript",
+            "rollup-plugin-copy"
+          ]
+        }
       ],
       "outputs": ["{workspaceRoot}/packages/api/function/runtime/node/dist/bootstrap"],
       "options": {
