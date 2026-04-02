@@ -1,6 +1,6 @@
 import {Logger, Module} from "@nestjs/common";
 import {NestFactory} from "@nestjs/core";
-// import {ActivityModule} from "@spica-server/activity";
+import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
@@ -12,7 +12,7 @@ import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
-// import {StatusModule} from "@spica-server/status";
+import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
 import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
@@ -838,15 +838,15 @@ const modules = [
     realtime: true,
     grpcPort: args["grpc-function-port"]
   }),
-  ConfigModule.forRoot()
-  // StatusModule.forRoot({
-  //   expireAfterSeconds: args["common-log-lifespan"],
-  //   httpStatusTracking: args["http-status-tracking"]
-  // })
+  ConfigModule.forRoot(),
+  StatusModule.forRoot({
+    expireAfterSeconds: args["common-log-lifespan"],
+    httpStatusTracking: args["http-status-tracking"]
+  })
 ];
 
 if (args["activity-stream"]) {
-  // modules.push(ActivityModule.forRoot({expireAfterSeconds: args["common-log-lifespan"]}));
+  modules.push(ActivityModule.forRoot({expireAfterSeconds: args["common-log-lifespan"]}));
 }
 
 if (args["version-control"]) {
