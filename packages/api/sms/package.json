@@ -12,6 +12,9 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@spica-server/interface": "*",
-    "twilio": "^5.4.0"
+    "twilio": "^5.11.2"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15"
   }
 }
