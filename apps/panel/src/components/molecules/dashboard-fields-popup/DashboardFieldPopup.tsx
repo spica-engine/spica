@@ -7,11 +7,12 @@ import {
   type TypeInputType
 } from "oziko-ui-kit";
 import styles from "./DashboardFieldPopup.module.scss";
-import {type FC, memo} from "react";
+import {type FC, memo, useState, useCallback} from "react";
 
 type DashboardFieldPopupProps = {
-  onClickApply?: () => void;
+  onClickApply?: (filterValues: Record<string, string>) => void;
   onClickCancel?: () => void;
+  initialValues?: Record<string, string>;
   inputs?: {
     [key: string]: {
       type: Exclude<TypeInputType, "location" | "storage">;
@@ -23,9 +24,10 @@ type DashboardFieldPopupProps = {
 const DashboardFieldPopup: FC<DashboardFieldPopupProps> = ({
   onClickApply,
   onClickCancel,
+  initialValues,
   inputs = {}
 }) => {
-  const initialValue = Object.keys(inputs).reduce(
+  const defaultValues = initialValues ?? Object.keys(inputs).reduce(
     (acc, key) => {
       acc[key] = "";
       return acc;
@@ -33,11 +35,22 @@ const DashboardFieldPopup: FC<DashboardFieldPopupProps> = ({
     {} as Record<string, string>
   );
 
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(defaultValues);
+
+  const handleChange = useCallback((newValues: Record<string, string>) => {
+    setFilterValues(prev => ({...prev, ...newValues}));
+  }, []);
+
   const inputRepresenter = useInputRepresenter({
     properties: inputs,
-    value: initialValue,
-    onChange: () => {}
+    value: filterValues,
+    onChange: handleChange
   });
+
+  const handleApply = useCallback(() => {
+    onClickApply?.(filterValues);
+  }, [onClickApply, filterValues]);
+
   return (
     <FluidContainer
       className={styles.container}
@@ -61,7 +74,7 @@ const DashboardFieldPopup: FC<DashboardFieldPopupProps> = ({
               <Icon name="close"></Icon>
               <Text>Cancel</Text>
             </Button>
-            <Button onClick={onClickApply}>
+            <Button onClick={handleApply}>
               <Icon name="filter"></Icon>
               <Text className={styles.buttonText}>Apply</Text>
             </Button>

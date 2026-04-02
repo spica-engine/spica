@@ -17,6 +17,11 @@ export default {
       ...commonConfig,
       testMatch: ["<rootDir>/test/graphql.spec.ts"],
       setupFilesAfterEnv: [path.join(workspaceRoot, "jest.flaky.setup.js")]
+    },
+    {
+      ...commonConfig,
+      testMatch: ["<rootDir>/test/acl-rules.spec.ts"],
+      setupFilesAfterEnv: [path.join(workspaceRoot, "jest.flaky.setup.js")]
     }
   ]
 };

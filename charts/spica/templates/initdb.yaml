@@ -84,7 +84,7 @@ data:
 
     echo "Initializing has been completed successfully."
 
-  init-replica.sh: | 
+  set-profiling-level.sh: | 
     #!/bin/bash
     
     echo "Defining retry command.."
@@ -113,4 +113,9 @@ data:
     retry_command mongosh --quiet --eval "db.runCommand({ ping: 1 })"
     echo "Ping succeeded!"
 
-    mongosh --authenticationDatabase "admin" -u "$ROOT_USERNAME" -p "$ROOT_PASSWORD" --eval "rs.reconfig({ _id: 'rs0', members: $RS_MEMBERS },{force: true})"
+    echo "Setting Profiling level: $PROFILING_LEVEL, Slowms: $PROFILING_SLOWMS on the $DATABASE_NAME database.."
+    mongosh --authenticationDatabase "admin" -u "$ROOT_USERNAME" -p "$ROOT_PASSWORD" --eval <<EOF
+      use $DATABASE_NAME
+      db.setProfilingLevel($PROFILING_LEVEL,{ slowms: $PROFILING_SLOWMS})
+    EOF
+    echo "Set Profiling level!"

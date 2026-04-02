@@ -1,0 +1,131 @@
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  NotFoundException,
+  Param,
+  Put,
+  Query,
+  UseGuards,
+  Body,
+  BadRequestException
+} from "@nestjs/common";
+import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
+import {RefreshToken, PaginationResponse} from "@spica-server/interface/passport/refresh_token";
+import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {REFRESH_TOKEN_OPTIONS, RefreshTokenOptions} from "./options";
+import {RefreshTokenPipelineBuilder} from "./pipeline.builder";
+
+@Controller("passport/refresh-token")
+export class RefreshTokenController {
+  private readonly HIDDEN_FIELDS = {token: 0} as const;
+
+  constructor(
+    private service: RefreshTokenService,
+    @Inject(REFRESH_TOKEN_OPTIONS) private options: RefreshTokenOptions
+  ) {}
+
+  @Get()
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:index"))
+  async find(
+    @Query("limit", DEFAULT(0), NUMBER) limit: number,
+    @Query("skip", DEFAULT(0), NUMBER) skip: number,
+    @Query("sort", JSONP) sort: object,
+    @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
+    @Query("filter", JSONP) filter: object,
+    @ResourceFilter() resourceFilter: object
+  ) {
+    const pipelineBuilder = await new RefreshTokenPipelineBuilder(
+      this.options.refreshTokenHashSecret
+    )
+      .filterResources(resourceFilter)
+      .filterByUserRequest(filter);
+
+    const seekingPipeline = new PipelineBuilder()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .setVisibilityOfFields({...this.HIDDEN_FIELDS})
+      .result();
+
+    const pipeline = (
+      await pipelineBuilder.paginate(
+        paginate,
+        seekingPipeline,
+        this.service.estimatedDocumentCount()
+      )
+    ).result();
+
+    if (paginate) {
+      return this.service
+        .aggregate<PaginationResponse<RefreshToken>>(pipeline)
+        .next()
+        .then(r => {
+          if (!r.data.length) {
+            r.meta = {total: 0};
+          }
+          return r;
+        });
+    }
+
+    return this.service.aggregate<RefreshToken[]>([...pipeline, ...seekingPipeline]).toArray();
+  }
+
+  @Get(":id")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:show"))
+  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    const pipeline = new PipelineBuilder()
+      .findOneIfRequested(id)
+      .setVisibilityOfFields({...this.HIDDEN_FIELDS})
+      .result();
+
+    return this.service
+      .aggregate<RefreshToken>(pipeline)
+      .next()
+      .then(r => {
+        if (!r) {
+          throw new NotFoundException();
+        }
+        return r;
+      });
+  }
+
+  @Put(":id")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:update"))
+  async update(@Param("id", OBJECT_ID) id: ObjectId, @Body() body: Partial<RefreshToken>) {
+    const disabled = body?.disabled;
+
+    if (typeof disabled !== "boolean") {
+      throw new BadRequestException("Only disabled field can be updated and it must be a boolean");
+    }
+
+    const updatedToken = await this.service.findOneAndUpdate(
+      {_id: id},
+      {$set: {disabled}},
+      {returnDocument: "after", projection: this.HIDDEN_FIELDS}
+    );
+
+    if (!updatedToken) {
+      throw new NotFoundException();
+    }
+
+    return updatedToken;
+  }
+
+  @Delete(":id")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("passport:refresh-token:delete"))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.service.deleteOne({_id: id}).then(r => {
+      if (!r) {
+        throw new NotFoundException();
+      }
+    });
+  }
+}

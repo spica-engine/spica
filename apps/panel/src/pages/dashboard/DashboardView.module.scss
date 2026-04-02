@@ -1,0 +1,25 @@
+.container {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-font-tertiary);
+  font-size: var(--font-size-md);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-font-tertiary);
+  font-size: var(--font-size-md);
+}

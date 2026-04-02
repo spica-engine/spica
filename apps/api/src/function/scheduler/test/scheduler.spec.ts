@@ -5,7 +5,7 @@ import {event} from "@spica-server/function/queue/proto";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {PassThrough} from "stream";
-import {WorkerState} from "@spica-server/function/scheduler";
+import {WorkerState} from "@spica-server/interface/function/scheduler";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
 process.env.DISABLE_LOGGER = "true";
@@ -74,9 +74,10 @@ describe("Scheduler", () => {
   }
 
   function triggerGotWorker(_id?: string) {
-    const [workerId] = Array.from(scheduler.workers.entries()).find(([id, worker]) =>
-      _id ? _id == id : worker.state == WorkerState.Fresh
-    );
+    const [workerId] = Array.from(scheduler.workers.entries()).find(([id, worker]) => {
+      if (_id) return _id == id;
+      return worker.state == WorkerState.Initial || worker.state == WorkerState.Fresh;
+    });
     scheduler.gotWorker(workerId, () => {});
   }
 
@@ -87,7 +88,7 @@ describe("Scheduler", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet(), SchedulerModule.forRoot(schedulerOptions)]
+      imports: [DatabaseTestingModule.standalone(), SchedulerModule.forRoot(schedulerOptions)]
     }).compile();
     module.enableShutdownHooks();
 
@@ -118,7 +119,6 @@ describe("Scheduler", () => {
 
   afterEach(async () => {
     scheduler.kill();
-    await app.close();
     jest.useRealTimers();
     spawnSpy.mockReset();
   });

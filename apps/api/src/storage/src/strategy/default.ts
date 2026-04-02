@@ -1,23 +1,47 @@
 import fs from "fs";
-import {Strategy} from "./strategy";
+import {FileStore} from "@tus/file-store";
+import {BaseStrategy} from "./base-strategy";
+import {Logger} from "@nestjs/common";
 
-export class Default implements Strategy {
+export class Default extends BaseStrategy {
+  private readonly logger = new Logger(Default.name);
+
   constructor(
     private path: string,
-    private publicUrl: string
+    private publicUrl: string,
+    resumableUploadExpiresIn: number
   ) {
+    super(resumableUploadExpiresIn);
     this.publicUrl = publicUrl;
+    this.initializeTusServer();
+  }
+
+  protected initializeTusServer() {
+    const datastore = new FileStore({
+      directory: this.path,
+      expirationPeriodInMilliseconds: this.resumableUploadExpiresIn
+    });
+
+    super.initializeTusServer(datastore);
   }
 
   async writeStream(id: string, data: fs.ReadStream, mimeType?: string): Promise<void> {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
 
+    if (this.isDirectory(id)) {
+      await this.createDir(objectPath);
+      return;
+    }
+
     return new Promise((resolve, reject) => {
       const writeStream = fs.createWriteStream(objectPath);
 
       writeStream.on("error", err => {
-        console.error(err);
+        this.logger.error(
+          err instanceof Error ? err.message : String(err),
+          err instanceof Error ? err.stack : ""
+        );
         return reject(err);
       });
 
@@ -38,12 +62,24 @@ export class Default implements Strategy {
   async write(id: string, data: Buffer) {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
+
+    if (this.isDirectory(id)) {
+      await this.createDir(objectPath);
+      return;
+    }
+
     return fs.promises.writeFile(objectPath, data);
   }
 
   async delete(id: string) {
     await this.ensureStorageDiskExists();
     const objectPath = this.buildPath(id);
+
+    if (this.isDirectory(id)) {
+      await this.removeDir(objectPath);
+      return;
+    }
+
     return fs.promises.unlink(objectPath);
   }
 
@@ -52,7 +88,7 @@ export class Default implements Strategy {
   }
 
   private buildPath(id: string) {
-    return `${this.path}/${id}.storageobj`;
+    return `${this.path}/${id}`;
   }
 
   private async ensureStorageDiskExists() {
@@ -64,5 +100,34 @@ export class Default implements Strategy {
       return fs.promises.mkdir(this.path);
     }
     return Promise.resolve();
+  }
+
+  async rename(oldName: string, newName: string): Promise<void> {
+    const oldPath = this.buildPath(oldName);
+    const newPath = this.buildPath(newName);
+    try {
+      await fs.promises.rename(oldPath, newPath);
+    } catch (err) {
+      this.logger.error(
+        `Error renaming file from ${oldName} to ${newName}:`,
+        err instanceof Error ? err.stack : String(err)
+      );
+      throw err;
+    }
+  }
+
+  private isDirectory(id) {
+    if (id.endsWith("/")) {
+      return true;
+    }
+    return false;
+  }
+
+  private createDir(objectPath) {
+    return fs.promises.mkdir(objectPath, {recursive: true});
+  }
+
+  private removeDir(objectPath) {
+    return fs.promises.rm(objectPath, {recursive: true});
   }
 }

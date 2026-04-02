@@ -1,4 +1,4 @@
-import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
+import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
 import {Language} from "@spica-server/function/compiler";
@@ -10,31 +10,47 @@ import {
   FirehoseEnqueuer,
   HttpEnqueuer,
   ScheduleEnqueuer,
-  SystemEnqueuer
+  SystemEnqueuer,
+  RabbitMQEnqueuer,
+  GrpcEnqueuer
 } from "@spica-server/function/enqueuer";
-import {DelegatePkgManager} from "@spica-server/function/pkgmanager";
+import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
 import {LocalPackageManager} from "@spica-server/function/pkgmanager/local";
-import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
+import {
+  DatabaseQueue,
+  EventQueue,
+  FirehoseQueue,
+  HttpQueue,
+  RabbitMQQueue,
+  GrpcQueue
+} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
-import {generateLog, LogLevels} from "@spica-server/function/runtime/logger";
-import {ClassCommander, CommandType, JobReducer} from "@spica-server/replication";
-import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/status/services";
+import {generateLog} from "@spica-server/function/runtime/logger";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
+import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/interface/status";
+import {GuardService} from "@spica-server/passport/guard/services";
 import uniqid from "uniqid";
-import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
-import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
+import {SchedulingOptions, SCHEDULING_OPTIONS} from "@spica-server/interface/function/scheduler";
 import {Subject} from "rxjs";
 import {take} from "rxjs/operators";
-import {ScheduleWorker, Node, WorkerState} from "@spica-server/function/scheduler";
+import {ScheduleWorker, Node} from "@spica-server/function/scheduler";
+import {LogLevels} from "@spica-server/interface/function/runtime";
+import {ENQUEUER, EnqueuerFactory, WorkerState} from "@spica-server/interface/function/scheduler";
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(Scheduler.name);
+
   private queue: EventQueue;
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
   private firehoseQueue: FirehoseQueue;
+  private rabbitmqQueue: RabbitMQQueue;
+  private grpcQueue: GrpcQueue;
 
   readonly runtimes = new Map<string, Runtime>();
   readonly pkgmanagers = new Map<string, DelegatePkgManager>();
@@ -50,7 +66,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
     @Optional() private jobReducer: JobReducer,
-    @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker
+    @Optional() @Inject(ATTACH_STATUS_TRACKER) private attachStatusTracker: AttachStatusTracker,
+    private guardService: GuardService
   ) {
     if (this.commander) {
       this.commander.register(this, [this.outdateWorkers], CommandType.SYNC);
@@ -78,6 +95,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.firehoseQueue = new FirehoseQueue();
     this.queue.addQueue(this.firehoseQueue);
+
+    this.rabbitmqQueue = new RabbitMQQueue();
+    this.queue.addQueue(this.rabbitmqQueue);
+
+    this.grpcQueue = new GrpcQueue();
+    this.queue.addQueue(this.grpcQueue);
   }
 
   async onModuleInit() {
@@ -92,6 +115,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.http.httpAdapter.getInstance(),
         this.options.corsOptions,
         schedulerUnsubscription,
+        this.guardService,
         this.attachStatusTracker
       )
     );
@@ -122,6 +146,25 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
+    this.enqueuers.add(
+      new RabbitMQEnqueuer(
+        this.queue,
+        this.rabbitmqQueue,
+        schedulerUnsubscription,
+        this.jobReducer,
+        this.commander
+      )
+    );
+
+    this.enqueuers.add(
+      new GrpcEnqueuer(
+        this.queue,
+        this.grpcQueue,
+        schedulerUnsubscription,
+        this.options.grpcPort
+      )
+    );
+
     if (typeof this.enqueuerFactory == "function") {
       const factory = this.enqueuerFactory(this.queue, this.jobReducer, this.commander);
       this.queue.addQueue(factory.queue);
@@ -135,7 +178,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   killFreeWorkers() {
     const freeWorkers = Array.from(this.workers.entries()).filter(
-      ([key, worker]) => worker.state == WorkerState.Fresh || worker.state == WorkerState.Targeted
+      ([key, worker]) =>
+        worker.state == WorkerState.Initial ||
+        worker.state == WorkerState.Fresh ||
+        worker.state == WorkerState.Targeted
     );
 
     const killWorkers = freeWorkers.map(([key, worker]) => {
@@ -192,8 +238,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   getStatus() {
     const workers = Array.from(this.workers.values());
 
+    const initial = workers.filter(w => w.state == WorkerState.Initial).length;
     const fresh = workers.filter(w => w.state == WorkerState.Fresh).length;
-    const activated = workers.length - fresh;
+    const activated = workers.length - initial - fresh;
 
     return {
       activated: activated,
@@ -302,7 +349,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.print(`the worker ${id} won't be scheduled anymore.`);
     } else {
       let message;
-      if (relatedWorker.state == WorkerState.Fresh) {
+      if (relatedWorker.state == WorkerState.Initial) {
         message = `got a new worker ${id}`;
       } else if (relatedWorker.state == WorkerState.Busy) {
         message = `worker ${id} is waiting for new event`;
@@ -378,7 +425,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   private print(message: string) {
     if (this.options.debug) {
-      console.debug(message);
+      this.logger.debug(message);
     }
   }
 }

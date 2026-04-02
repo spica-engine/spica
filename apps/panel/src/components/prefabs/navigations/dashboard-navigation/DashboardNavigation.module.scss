@@ -1,0 +1,53 @@
+.dashboardLink {
+  text-decoration: none;
+  display: block;
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.15s ease;
+
+  &.active {
+    background-color: var(--color-hover);
+  }
+}
+
+.popoverMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+  padding: var(--padding-xs);
+}
+
+.popoverMenuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: var(--padding-sm) var(--padding-md);
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  color: var(--color-font-primary);
+  width: 100%;
+  text-align: left;
+
+  &:hover {
+    background-color: var(--color-hover);
+  }
+
+  &.danger {
+    color: var(--color-danger);
+
+    &:hover {
+      background-color: rgba(var(--color-danger-rgb, 244, 67, 54), 0.08);
+    }
+  }
+}
+
+.addButtonContainer {
+  width: 100%;
+  padding: var(--padding-md);
+
+  .addButton {
+    border-radius: var(--border-radius-md) !important;
+  }
+}

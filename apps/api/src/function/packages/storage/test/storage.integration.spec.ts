@@ -6,28 +6,35 @@ import {CoreTestingModule} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {StorageModule} from "@spica-server/storage";
 import * as Storage from "@spica-devkit/storage";
+import {BatchModule} from "@spica-server/batch";
 
 const PORT = 3001;
 const PUBLIC_URL = `http://localhost:${PORT}`;
+
+// ISO 8601 date format: e.g 2025-11-13T13:49:27.271Z
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 describe("Storage", () => {
   let module: TestingModule;
   let app: INestApplication;
   let storageObject;
+  let storageObject2;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot(),
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.standalone(),
         PassportTestingModule.initialize({overriddenStrategyType: "identity"}),
         StorageModule.forRoot({
           objectSizeLimit: 10,
           strategy: "default",
           defaultPublicUrl: PUBLIC_URL,
-          defaultPath: process.env.TEST_TMPDIR
+          defaultPath: process.env.TEST_TMPDIR,
+          resumableUploadExpiresIn: 0
         }),
-        CoreTestingModule
+        CoreTestingModule,
+        BatchModule.forRoot({port: PORT.toString()})
       ]
     }).compile();
     app = module.createNestApplication();
@@ -37,6 +44,12 @@ describe("Storage", () => {
       contentType: "text/plain",
       name: "test.txt",
       data: Buffer.from("spica")
+    };
+
+    storageObject2 = {
+      contentType: "text/plain",
+      name: "test2.txt",
+      data: Buffer.from("hello")
     };
 
     Storage.initialize({identity: "token", publicUrl: PUBLIC_URL});
@@ -54,11 +67,13 @@ describe("Storage", () => {
       {
         _id: getAllResponse[0]._id,
         name: "test.txt",
-        url: `${PUBLIC_URL}/storage/${getAllResponse[0]._id}/view`,
+        url: `${PUBLIC_URL}/storage/test.txt/view`,
         content: {
           size: 5,
           type: "text/plain"
-        }
+        },
+        created_at: expect.stringMatching(ISO_DATE_REGEX),
+        updated_at: expect.stringMatching(ISO_DATE_REGEX)
       }
     ]);
   });
@@ -73,11 +88,13 @@ describe("Storage", () => {
         {
           _id: getAllResponse.data[0]._id,
           name: "test.txt",
-          url: `${PUBLIC_URL}/storage/${getAllResponse.data[0]._id}/view`,
+          url: `${PUBLIC_URL}/storage/test.txt/view`,
           content: {
             size: 5,
             type: "text/plain"
-          }
+          },
+          created_at: expect.stringMatching(ISO_DATE_REGEX),
+          updated_at: expect.stringMatching(ISO_DATE_REGEX)
         }
       ]
     });
@@ -90,11 +107,13 @@ describe("Storage", () => {
     expect(getResponse).toEqual({
       _id: getResponse._id,
       name: "test.txt",
-      url: `${PUBLIC_URL}/storage/${storageObj._id}/view`,
+      url: `${PUBLIC_URL}/storage/test.txt/view`,
       content: {
         size: 5,
         type: "text/plain"
-      }
+      },
+      created_at: expect.stringMatching(ISO_DATE_REGEX),
+      updated_at: expect.stringMatching(ISO_DATE_REGEX)
     });
   });
 
@@ -104,11 +123,13 @@ describe("Storage", () => {
     const expectedObj = {
       _id: insertedObject._id,
       name: "test.txt",
-      url: `${PUBLIC_URL}/storage/${insertedObject._id}/view`,
+      url: `${PUBLIC_URL}/storage/test.txt/view`,
       content: {
         size: 5,
         type: "text/plain"
-      }
+      },
+      created_at: expect.stringMatching(ISO_DATE_REGEX),
+      updated_at: expect.stringMatching(ISO_DATE_REGEX)
     };
     expect(ObjectId.isValid(insertedObject._id)).toEqual(true);
     expect(insertedObject).toEqual(expectedObj);
@@ -127,20 +148,24 @@ describe("Storage", () => {
       {
         _id: insertedObjects[0]._id,
         name: "test.txt",
-        url: `${PUBLIC_URL}/storage/${insertedObjects[0]._id}/view`,
+        url: `${PUBLIC_URL}/storage/test.txt/view`,
         content: {
           size: 5,
           type: "text/plain"
-        }
+        },
+        created_at: expect.stringMatching(ISO_DATE_REGEX),
+        updated_at: expect.stringMatching(ISO_DATE_REGEX)
       },
       {
         _id: insertedObjects[1]._id,
         name: "test2.json",
-        url: `${PUBLIC_URL}/storage/${insertedObjects[1]._id}/view`,
+        url: `${PUBLIC_URL}/storage/test2.json/view`,
         content: {
           size: 2,
           type: "application/json"
-        }
+        },
+        created_at: expect.stringMatching(ISO_DATE_REGEX),
+        updated_at: expect.stringMatching(ISO_DATE_REGEX)
       }
     ];
     expect(insertedObjects).toEqual(expectedObjects);
@@ -156,20 +181,29 @@ describe("Storage", () => {
 
     const updateResponse = await Storage.update(insertedObj._id, updatedObject);
 
-    const expectedObject = {
+    expect(updateResponse).toEqual({
       _id: insertedObj._id,
       name: "test.txt",
-      url: `${PUBLIC_URL}/storage/${insertedObj._id}/view`,
+      url: `${PUBLIC_URL}/storage/test.txt/view`,
       content: {
         size: 9,
         type: "text/plain"
-      }
-    };
-
-    expect(updateResponse).toEqual(expectedObject);
+      },
+      updated_at: expect.stringMatching(ISO_DATE_REGEX)
+    });
 
     const existing = await Storage.get(insertedObj._id);
-    expect(existing).toEqual(expectedObject);
+    expect(existing).toEqual({
+      _id: insertedObj._id,
+      name: "test.txt",
+      url: `${PUBLIC_URL}/storage/test.txt/view`,
+      content: {
+        size: 9,
+        type: "text/plain"
+      },
+      created_at: expect.stringMatching(ISO_DATE_REGEX),
+      updated_at: expect.stringMatching(ISO_DATE_REGEX)
+    });
   });
 
   it("should patch", async () => {
@@ -180,11 +214,13 @@ describe("Storage", () => {
     const expectedObject = {
       _id: insertedObj._id,
       name: "updated_test.txt",
-      url: `${PUBLIC_URL}/storage/${insertedObj._id}/view`,
+      url: `${PUBLIC_URL}/storage/updated_test.txt/view`,
       content: {
         size: 5,
         type: "text/plain"
-      }
+      },
+      created_at: expect.stringMatching(ISO_DATE_REGEX),
+      updated_at: expect.stringMatching(ISO_DATE_REGEX)
     };
 
     expect(updateResponse).toEqual(expectedObject);
@@ -199,6 +235,38 @@ describe("Storage", () => {
     await Storage.remove(insertedObj._id);
 
     const existings = await Storage.getAll();
+    expect(existings).toEqual([]);
+  });
+
+  it("should remove multiple storage objects", async () => {
+    const insertedObjects = await Storage.insertMany([storageObject, storageObject2]);
+
+    const response = await Storage.removeMany([...insertedObjects.map(i => i._id), "123"]);
+
+    expect(response).toEqual({
+      successes: [
+        {
+          request: `storage/${insertedObjects[0]._id}`,
+          response: ""
+        },
+        {
+          request: `storage/${insertedObjects[1]._id}`,
+          response: ""
+        }
+      ],
+      failures: [
+        {
+          request: "storage/123",
+          response: {
+            error: "Not Found",
+            message: "Storage object could not be found"
+          }
+        }
+      ]
+    });
+
+    const existings = await Storage.getAll();
+
     expect(existings).toEqual([]);
   });
 

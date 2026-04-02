@@ -1,0 +1,166 @@
+/* ── Edit (name-only) modal ── */
+.modal {
+  height: min-content !important;
+  min-height: fit-content;
+  padding: 0;
+  width: 360px !important;
+  min-width: 360px !important;
+  box-shadow: var(--box-shadow);
+
+  * {
+    line-height: unset !important;
+  }
+}
+
+.containerWithError {
+  gap: var(--gap-xl) !important;
+}
+
+.container {
+  background-color: var(--color-menu-background);
+  border-radius: var(--border-radius-md);
+  width: 360px !important;
+
+  > div,
+  .header,
+  .header > div {
+    width: 100% !important;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between !important;
+    border-bottom: var(--border-default);
+    padding: var(--padding-xl) var(--padding-md);
+  }
+
+  .headerText {
+    margin: 0 !important;
+    font-size: var(--font-size-lg) !important;
+    font-weight: bold !important;
+    font-family: var(--font-family-base) !important;
+    color: var(--color-black);
+  }
+
+  .buttonsContainer {
+    padding-bottom: var(--padding-md);
+    padding-right: var(--padding-md);
+  }
+
+  .addButtonWrapper {
+    border-radius: var(--border-radius-md);
+  }
+
+  .addButton,
+  .cancelButton {
+    height: 32px !important;
+  }
+
+  .inputContainer {
+    width: 340px !important;
+    height: 44px;
+    padding: 0 var(--padding-md);
+    border-radius: var(--border-radius-md);
+    border: var(--border-default);
+    background-color: var(--color-input-background);
+  }
+
+  .input {
+    height: 44px;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-md);
+  }
+}
+
+.addButtonText {
+  color: var(--color-font-secondary);
+}
+
+.errorText {
+  max-width: 100%;
+  font-size: var(--font-size-xs) !important;
+  padding: 0 var(--padding-md);
+}
+
+/* ── Create (full form) modal ── */
+.createModal {
+  width: 90vw !important;
+  max-width: 1100px !important;
+  height: min-content !important;
+  min-height: fit-content;
+  padding: 0 !important;
+  box-shadow: var(--box-shadow);
+}
+
+.createContainer {
+  padding: var(--padding-xl) var(--padding-xl) var(--padding-md);
+  gap: var(--gap-lg);
+}
+
+.dashboardNameInput {
+  width: 100%;
+  height: 48px;
+  padding: 0 var(--padding-md);
+  border-radius: var(--border-radius-md);
+  border: var(--border-default);
+  background-color: var(--color-input-background);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+}
+
+.componentsHeader {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-black);
+}
+
+.componentInput {
+  flex: 1;
+  height: 44px;
+  padding: 0 var(--padding-md);
+  border-radius: var(--border-radius-md);
+  border: var(--border-default);
+  background-color: var(--color-input-background);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+}
+
+.ratioLabel {
+  color: var(--color-font-tertiary);
+  white-space: nowrap;
+}
+
+.componentActionButton {
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  flex-shrink: 0;
+}
+
+.urlHint {
+  color: var(--color-font-tertiary);
+  padding-left: 2px;
+}
+
+.addComponentButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-sm);
+  width: 100%;
+  padding: var(--padding-lg);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--border-radius-md);
+  background: none;
+  cursor: pointer;
+  color: var(--color-font-primary);
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: var(--color-hover);
+  }
+}
+
+.createFooter {
+  padding-top: var(--padding-md);
+}

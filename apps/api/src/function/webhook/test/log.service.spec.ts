@@ -1,7 +1,7 @@
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {WEBHOOK_OPTIONS} from "@spica-server/function/webhook/src/interface";
+import {WEBHOOK_OPTIONS} from "@spica-server/interface/function/webhook";
 
 describe("Webhook Log Service", () => {
   let module: TestingModule;

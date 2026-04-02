@@ -1,4 +1,4 @@
-import {Action} from "@spica-server/activity/services";
+import {Action} from "@spica-server/interface/activity";
 import {createApikeyActivity} from "@spica-server/passport/apikey/src/activity.resource";
 
 describe("Activity Resource", () => {

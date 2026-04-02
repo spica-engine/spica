@@ -1,0 +1,536 @@
+import {Test, TestingModule} from "@nestjs/testing";
+import {INestApplication} from "@nestjs/common";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {VerificationService} from "@spica-server/passport/user/src/verification.service";
+import {UserService} from "@spica-server/passport/user/src/user.service";
+import {MailerService} from "@spica-server/mailer";
+import {MailerModule} from "@spica-server/mailer";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {SchemaModule} from "@spica-server/core/schema";
+import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {UserModule} from "@spica-server/passport/user";
+import {PolicyModule} from "@spica-server/passport/policy";
+import fetch from "node-fetch";
+import {GenericContainer} from "testcontainers";
+import {UserConfigService} from "../src/config.service";
+import {ConfigModule} from "@spica-server/config";
+
+describe("Provider Verification E2E with MailHog", () => {
+  let module: TestingModule;
+  let app: INestApplication;
+  let req: Request;
+  let verificationService: VerificationService;
+  let userConfigService: UserConfigService;
+  let userService: UserService;
+  let mailerService: MailerService;
+  let db: DatabaseService;
+  let container: any;
+  let smtpPort: number;
+  let apiPort: number;
+  let apiHost: string;
+  let testUserId: ObjectId;
+
+  const wrongCode = "999999";
+  const STRATEGY = "Otp";
+  const PURPOSE = "verify";
+  const EMAIL_PROVIDER = "email";
+  const PHONE_NUMBER_PROVIDER = "phone";
+  const MAGIC_LINK_STRATEGY = "MagicLink";
+
+  beforeEach(async () => {
+    const mailerUrl = process.env.MAILER_URL;
+    let smtpHost = "localhost";
+    apiHost = "localhost";
+
+    if (mailerUrl) {
+      const [smtpUrl, apiUrl] = mailerUrl.split(",");
+      const smtpParts = smtpUrl.split("://")[1].split(":");
+      const apiParts = apiUrl.split("://")[1].split(":");
+
+      smtpHost = smtpParts[0];
+      smtpPort = parseInt(smtpParts[1]);
+      apiHost = apiParts[0];
+      apiPort = parseInt(apiParts[1]);
+    } else {
+      try {
+        container = await new GenericContainer("mailhog/mailhog")
+          .withExposedPorts(1025, 8025)
+          .start();
+        smtpPort = container.getMappedPort(1025);
+        apiPort = container.getMappedPort(8025);
+      } catch (e) {
+        console.error("Failed to start MailHog container:", e);
+        throw e;
+      }
+    }
+
+    module = await Test.createTestingModule({
+      imports: [
+        SchemaModule.forRoot({
+          formats: [OBJECT_ID]
+        }),
+        DatabaseTestingModule.replicaSet(),
+        CoreTestingModule,
+        PassportTestingModule.initialize(),
+        PreferenceTestingModule,
+        MailerModule.forRoot({
+          host: smtpHost,
+          port: smtpPort,
+          secure: false,
+          defaults: {
+            from: "noreply@spica.internal"
+          }
+        }),
+        PolicyModule.forRoot({realtime: false}),
+        ConfigModule.forRoot(),
+        UserModule.forRoot({
+          expiresIn: 3600,
+          issuer: "test",
+          maxExpiresIn: 7200,
+          secretOrKey: "test-secret",
+          passwordHistoryLimit: 0,
+          blockingOptions: {
+            blockDurationMinutes: 0,
+            failedAttemptLimit: 0
+          },
+          userRealtime: false,
+          verificationHashSecret: "3fe2e8060da06c70906096b43db6de11",
+          providerEncryptionSecret: "3fe2e8060da06c70906096b43db6de11",
+          providerHashSecret: "8be2e8060da06c70906096b43db6de99",
+          verificationCodeExpiresIn: 300,
+          refreshTokenHashSecret: "refresh_token_hash_secret",
+          publicUrl: "http://localhost"
+        })
+      ]
+    }).compile();
+
+    verificationService = module.get(VerificationService);
+    userService = module.get(UserService);
+    mailerService = module.get(MailerService);
+    db = module.get(DatabaseService);
+    userConfigService = module.get(UserConfigService);
+
+    await userConfigService.set({
+      verificationProcessMaxAttempt: 3
+    });
+
+    app = module.createNestApplication();
+    req = module.get(Request);
+    await app.listen(req.socket);
+    await app.init();
+  }, 60000);
+
+  afterEach(async () => {
+    if (app) await app.close();
+    if (module) await module.close();
+    if (container) await container.stop();
+  });
+
+  beforeEach(async () => {
+    testUserId = new ObjectId();
+    await userService.insertOne({
+      _id: testUserId,
+      username: "testuser",
+      password: "testpassword"
+    } as any);
+  });
+
+  afterEach(async () => {
+    await db.collection("verification").deleteMany({});
+    await db.collection("user").deleteMany({});
+
+    try {
+      await fetch(`http://${apiHost}:${apiPort}/api/v1/messages`, {method: "DELETE"});
+    } catch (e) {
+      console.warn("Failed to clear MailHog messages:", e);
+    }
+  });
+
+  describe("Complete provider email verification flow", () => {
+    beforeEach(async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: STRATEGY}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
+    });
+
+    it("should successfully verify user with correct code sent via email", async () => {
+      const email = "test@example.com";
+
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(201);
+      expect(startResponse.body).toMatchObject({
+        message: expect.stringContaining("successfully"),
+        value: email
+      });
+
+      const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
+      const body: any = await resp.json();
+
+      expect(body.total).toBeGreaterThan(0);
+      const item: any = body.items[0];
+      expect(item).toBeDefined();
+
+      const raw =
+        item.Raw && item.Raw.Data
+          ? item.Raw.Data
+          : item.Content && item.Content.Body
+          ? item.Content.Body
+          : "";
+
+      const codeMatch = raw.match(/is: (\d{6})/);
+      expect(codeMatch).toBeTruthy();
+      const code = codeMatch[1];
+
+      const verification = await verificationService.findOne({
+        userId: testUserId,
+        provider: EMAIL_PROVIDER
+      });
+
+      expect(verification).toMatchObject({
+        userId: testUserId,
+        destination: email,
+        purpose: PURPOSE,
+        is_used: false
+      });
+
+      const verifyResponse = await req.post(`/passport/user/${testUserId}/verify-provider`, {
+        code,
+        provider: EMAIL_PROVIDER,
+        strategy: STRATEGY,
+        purpose: PURPOSE
+      });
+
+      expect(verifyResponse.statusCode).toBe(201);
+      expect(verifyResponse.body).toEqual({
+        destination: email,
+        message: "Verification completed successfully",
+        provider: EMAIL_PROVIDER
+      });
+
+      const updatedVerification = await verificationService.findOne({_id: verification._id});
+
+      expect(updatedVerification.is_used).toBe(true);
+
+      const userResponse = await req.get(`/passport/user/${testUserId}`);
+
+      expect(userResponse.body.email).toBe(email);
+      expect(userResponse.body.email_verified_at).toBeDefined();
+    });
+
+    it("should fail verification when user enters wrong code", async () => {
+      const email = "wrongcode@example.com";
+
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(201);
+      expect(startResponse.body).toMatchObject({
+        message: expect.stringContaining("successfully"),
+        value: email
+      });
+
+      const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
+      const body: any = await resp.json();
+
+      expect(body.total).toBeGreaterThan(0);
+
+      const verification = await verificationService.findOne({
+        userId: testUserId,
+        provider: EMAIL_PROVIDER
+      });
+
+      expect(verification).toMatchObject({
+        userId: testUserId,
+        destination: email,
+        purpose: PURPOSE,
+        is_used: false
+      });
+
+      const verifyResponse = await req.post(`/passport/user/${testUserId}/verify-provider`, {
+        code: wrongCode,
+        provider: EMAIL_PROVIDER,
+        strategy: STRATEGY,
+        purpose: PURPOSE
+      });
+
+      expect(verifyResponse.statusCode).toBe(400);
+      expect(verifyResponse.body.message).toBe("Invalid verification code");
+
+      const updatedVerification = await verificationService.findOne({_id: verification._id});
+
+      expect(updatedVerification.is_used).toBe(true);
+
+      const userResponse = await req.get(`/passport/user/${testUserId}`);
+
+      expect(userResponse.body.email).toBeUndefined();
+    });
+
+    it("should reject invalid email format", async () => {
+      const invalidEmail = "not-an-email";
+
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: invalidEmail,
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(400);
+      expect(startResponse.body.message).toContain("Invalid destination format");
+
+      const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
+      const body: any = await resp.json();
+
+      expect(body.total).toBe(0);
+    });
+
+    it("should fail when attempting verification a second time", async () => {
+      const email = "maxattempts@example.com";
+
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(201);
+      expect(startResponse.body).toMatchObject({
+        message: expect.stringContaining("successfully"),
+        value: email
+      });
+
+      const verification = await verificationService.findOne({
+        userId: testUserId,
+        provider: EMAIL_PROVIDER
+      });
+
+      expect(verification).toMatchObject({
+        userId: testUserId,
+        destination: email,
+        purpose: PURPOSE,
+        is_used: false
+      });
+
+      const firstVerifyResponse = await req.post(`/passport/user/${testUserId}/verify-provider`, {
+        code: wrongCode,
+        provider: EMAIL_PROVIDER,
+        strategy: STRATEGY,
+        purpose: PURPOSE
+      });
+
+      expect(firstVerifyResponse.statusCode).toBe(400);
+      expect(firstVerifyResponse.body.message).toBe("Invalid verification code");
+
+      const updatedVerification = await verificationService.findOne({_id: verification._id});
+
+      expect(updatedVerification.is_used).toBe(true);
+
+      const secondVerifyResponse = await req.post(`/passport/user/${testUserId}/verify-provider`, {
+        code: wrongCode,
+        provider: EMAIL_PROVIDER,
+        strategy: STRATEGY,
+        purpose: PURPOSE
+      });
+
+      expect(secondVerifyResponse.statusCode).toBe(404);
+      expect(secondVerifyResponse.body.message).toBe("No verification found");
+    });
+
+    it("should reject start when strategy is not configured for the provider", async () => {
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: "12312312",
+          provider: PHONE_NUMBER_PROVIDER,
+          strategy: MAGIC_LINK_STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(400);
+    });
+  });
+
+  describe("MagicLink provider verification flow", () => {
+    beforeEach(async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "email", strategy: "MagicLink"}
+      ]);
+    });
+
+    afterEach(async () => {
+      await userConfigService.updateProviderVerificationConfig(undefined);
+    });
+
+    it("should send magic link email and verify via GET endpoint", async () => {
+      const email = "magiclink-e2e@example.com";
+
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: MAGIC_LINK_STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(201);
+      expect(startResponse.body).toMatchObject({
+        message: expect.stringContaining("successfully"),
+        value: email
+      });
+
+      const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
+      const body: any = await resp.json();
+
+      expect(body.total).toBeGreaterThan(0);
+      const item: any = body.items[0];
+      expect(item).toBeDefined();
+
+      const raw =
+        item.Raw && item.Raw.Data
+          ? item.Raw.Data
+          : item.Content && item.Content.Body
+          ? item.Content.Body
+          : "";
+
+      const cleanedRaw = raw.replace(/=\r?\n/g, "").replace(/=3D/g, "=");
+      const tokenMatch = cleanedRaw.match(/token=([A-Za-z0-9_-]+)/);
+      expect(tokenMatch).toBeTruthy();
+      const token = tokenMatch[1];
+
+      const verification = await verificationService.findOne({
+        userId: testUserId,
+        provider: EMAIL_PROVIDER,
+        strategy: MAGIC_LINK_STRATEGY
+      });
+
+      expect(verification).toMatchObject({
+        userId: testUserId,
+        destination: email,
+        purpose: PURPOSE,
+        strategy: MAGIC_LINK_STRATEGY,
+        is_used: false
+      });
+
+      const verifyResponse = await req.get(`/passport/user/verify-magic-link?token=${token}`);
+
+      expect(verifyResponse.statusCode).toBe(200);
+      expect(verifyResponse.body).toEqual({
+        destination: email,
+        message: "Verification completed successfully",
+        provider: EMAIL_PROVIDER
+      });
+
+      const updatedVerification = await verificationService.findOne({_id: verification._id});
+      expect(updatedVerification.is_used).toBe(true);
+
+      const userResponse = await req.get(`/passport/user/${testUserId}`);
+      expect(userResponse.body.email).toBe(email);
+      expect(userResponse.body.email_verified_at).toBeDefined();
+    });
+
+    it("should fail magic link verification with tampered token", async () => {
+      const tamperedToken = "dGhpcyBpcyBub3QgYSB2YWxpZCB0b2tlbg";
+
+      const verifyResponse = await req.get(
+        `/passport/user/verify-magic-link?token=${tamperedToken}`
+      );
+
+      expect(verifyResponse.statusCode).toBe(400);
+    });
+
+    it("should fail magic link verification when token is missing", async () => {
+      const verifyResponse = await req.get("/passport/user/verify-magic-link");
+
+      expect(verifyResponse.statusCode).toBe(400);
+      expect(verifyResponse.body.message).toBe("Token query parameter is required.");
+    });
+
+    it("should fail when using magic link token a second time", async () => {
+      const email = "reuse-e2e@example.com";
+
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: MAGIC_LINK_STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(201);
+
+      const resp = await fetch(`http://${apiHost}:${apiPort}/api/v2/messages`);
+      const body: any = await resp.json();
+      const item: any = body.items[0];
+      const raw =
+        item.Raw && item.Raw.Data
+          ? item.Raw.Data
+          : item.Content && item.Content.Body
+          ? item.Content.Body
+          : "";
+      const cleanedRaw = raw.replace(/=\r?\n/g, "").replace(/=3D/g, "=");
+      const tokenMatch = cleanedRaw.match(/token=([A-Za-z0-9_-]+)/);
+      const token = tokenMatch[1];
+
+      const firstVerify = await req.get(`/passport/user/verify-magic-link?token=${token}`);
+      expect(firstVerify.statusCode).toBe(200);
+
+      const secondVerify = await req.get(`/passport/user/verify-magic-link?token=${token}`);
+      expect(secondVerify.statusCode).toBe(404);
+    });
+
+    it("should reject start when MagicLink strategy is not configured for the provider", async () => {
+      await userConfigService.updateProviderVerificationConfig([
+        {provider: "phone", strategy: "MagicLink"}
+      ]);
+
+      const email = "not-configured@example.com";
+
+      const startResponse = await req.post(
+        `/passport/user/${testUserId}/start-provider-verification`,
+        {
+          value: email,
+          provider: EMAIL_PROVIDER,
+          strategy: MAGIC_LINK_STRATEGY,
+          purpose: PURPOSE
+        }
+      );
+
+      expect(startResponse.statusCode).toBe(400);
+      expect(startResponse.body.message).toContain("MagicLink strategy is not enabled");
+    });
+  });
+});

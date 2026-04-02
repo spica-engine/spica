@@ -5,7 +5,10 @@ import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
-import {TargetChange, ChangeKind} from "@spica-server/function/src/change";
+import {EnvVarService} from "@spica-server/env_var/services";
+import {TargetChange, ChangeKind} from "@spica-server/interface/function";
+import {SecretService} from "@spica-server/secret/services";
+import {encrypt} from "@spica-server/core/encryption";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
@@ -16,9 +19,13 @@ describe("Engine", () => {
   let scheduler: Scheduler;
   let database: DatabaseService;
   let fs: FunctionService;
+  let evs: EnvVarService;
+  let ss: SecretService;
 
   let module: TestingModule;
   let app: INestApplication;
+
+  const hexString = "507f1f77bcf86cd799439011";
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -51,7 +58,10 @@ describe("Engine", () => {
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
 
-    fs = new FunctionService(database, {} as any);
+    evs = new EnvVarService(database);
+    ss = new SecretService(database, "test-encryption-secret");
+
+    fs = new FunctionService(database, evs, ss, {} as any);
     engine = new FunctionEngine(
       fs,
       database,
@@ -63,7 +73,8 @@ describe("Engine", () => {
         outDir: ".build"
       },
       undefined,
-      undefined
+      undefined,
+      val => val as any
     );
 
     await app.init();
@@ -73,10 +84,13 @@ describe("Engine", () => {
   });
 
   afterEach(async () => {
-    subscribeSpy.mockReset();
-    unsubscribeSpy.mockReset();
-    await module.close();
-    return app.close();
+    try {
+      subscribeSpy.mockReset();
+      unsubscribeSpy.mockReset();
+      await app.close();
+    } catch (error) {
+      console.error(error);
+    }
   });
 
   it("should subscribe to new trigger if ChangeKind is Added", () => {
@@ -84,7 +98,8 @@ describe("Engine", () => {
       kind: ChangeKind.Added,
       target: {
         id: "test_id",
-        handler: "test_handler"
+        handler: "test_handler",
+        name: "test_function"
       }
     };
 
@@ -100,7 +115,8 @@ describe("Engine", () => {
       kind: ChangeKind.Removed,
       target: {
         id: "test_id",
-        handler: "test_handler"
+        handler: "test_handler",
+        name: "test_function"
       }
     };
 
@@ -118,7 +134,8 @@ describe("Engine", () => {
         kind: ChangeKind.Updated,
         target: {
           id: "test_id",
-          handler: "test_handler"
+          handler: "test_handler",
+          name: "test_function"
         }
       }
     ];
@@ -138,14 +155,16 @@ describe("Engine", () => {
         kind: ChangeKind.Updated,
         target: {
           id: "test_id",
-          handler: "test_handler"
+          handler: "test_handler",
+          name: "test_function"
         }
       },
       {
         kind: ChangeKind.Removed,
         target: {
           id: "test_id",
-          handler: "test_handler2"
+          handler: "test_handler2",
+          name: "test_function"
         }
       }
     ];
@@ -159,6 +178,7 @@ describe("Engine", () => {
       target: {
         id: "test_id",
         handler: "test_handler",
+        name: "test_function",
         context: {
           env: {
             TEST: "true"
@@ -181,7 +201,7 @@ describe("Engine", () => {
     engine["categorizeChanges"]([changes]);
     expect(httpSubscribe.mock.calls[httpSubscribe.mock.calls.length - 1][0].toObject()).toEqual({
       id: "test_id",
-      cwd: "test_root/test_id",
+      cwd: "test_root/test_function",
       handler: "test_handler",
       context: {
         env: [{key: "TEST", value: "true"}],
@@ -191,11 +211,9 @@ describe("Engine", () => {
   });
 
   it("should unregister triggers on module destroy", async () => {
-    const hexString = "507f1f77bcf86cd799439011";
-
     await fs.insertOne({
       _id: new ObjectId(hexString),
-      env: {},
+      env_vars: [],
       language: "js",
       timeout: 10,
       name: "my_fn",
@@ -208,6 +226,7 @@ describe("Engine", () => {
         target: {
           id: hexString,
           handler: "test_handler",
+          name: "my_fn",
           context: {
             env: {},
             timeout: 10
@@ -220,40 +239,198 @@ describe("Engine", () => {
 
     engine["categorizeChanges"](changes);
 
+    delete changes[0].target.context;
+
     await engine.onModuleDestroy();
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
     expect(unsubscribeSpy).toHaveBeenCalledWith({...changes[0], kind: ChangeKind.Removed});
   });
 
-  describe("Database Schema", () => {
-    it("should get initial schema", async () => {
-      await database.createCollection("functions");
-      const expectedSchema: any = {
-        $id: "http://spica.internal/function/enqueuer/database",
-        type: "object",
-        required: ["collection", "type"],
-        properties: {
-          collection: {
-            title: "Collection Name",
-            type: "string",
-            //@ts-ignore
-            viewEnum: ["functions"],
-            enum: ["functions"],
-            description: "Collection name that the event will be tracked on"
-          },
-          type: {
-            title: "Operation type",
-            description: "Operation type that must be performed in the specified collection",
-            type: "string",
-            enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
-          }
-        },
-        additionalProperties: false
-      };
-      const schemaPromise = await engine.getSchema("database");
-
-      expect(schemaPromise).toEqual(expectedSchema);
+  it("should reload function environments when environment variable changed", async () => {
+    const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
+    const fnId = new ObjectId(hexString);
+    await fs.insertOne({
+      _id: fnId,
+      env_vars: [env._id],
+      language: "js",
+      timeout: 10,
+      name: "my_fn",
+      triggers: {test_handler: {active: true, options: {}, type: "http"}}
     });
+
+    await evs.findOneAndUpdate({_id: env._id}, {$set: {value: "YES"}});
+
+    let change: any = {
+      kind: ChangeKind.Updated,
+      target: {
+        id: hexString,
+        handler: "test_handler",
+        name: "my_fn",
+        context: {
+          env: {IGNORE_ME: "YES"},
+          timeout: 10
+        }
+      },
+      options: {},
+      type: "http"
+    };
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
+    expect(unsubscribeSpy).toHaveBeenCalledWith(change);
+
+    expect(subscribeSpy).toHaveBeenCalledTimes(1);
+    expect(subscribeSpy).toHaveBeenCalledWith(change);
+  });
+
+  it("should reload function environments and clear relation when environment variable removed", async () => {
+    const env = await evs.insertOne({_id: undefined, key: "IGNORE_ME", value: "NO"});
+    const fnId = new ObjectId(hexString);
+    await fs.insertOne({
+      _id: fnId,
+      env_vars: [env._id],
+      language: "js",
+      timeout: 10,
+      name: "my_fn",
+      triggers: {test_handler: {active: true, options: {}, type: "http"}}
+    });
+
+    await evs.findOneAndDelete({_id: env._id});
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const change = {
+      kind: ChangeKind.Updated,
+      target: {
+        id: hexString,
+        handler: "test_handler",
+        name: "my_fn",
+        context: {
+          env: {},
+          timeout: 10
+        }
+      },
+      options: {},
+      type: "http"
+    };
+    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
+    expect(unsubscribeSpy).toHaveBeenCalledWith(change);
+
+    expect(subscribeSpy).toHaveBeenCalledTimes(1);
+    expect(subscribeSpy).toHaveBeenCalledWith(change);
+
+    const fn = await fs.findOne({_id: fnId});
+    expect(fn.env_vars).toEqual([]);
+  });
+
+  it("should reload function secrets when secret changed", async () => {
+    const encryptionSecret = "test-encryption-secret";
+    const encryptedValue = encrypt("secret_value", encryptionSecret);
+    const secret = await ss.insertOne({
+      _id: undefined,
+      key: "DB_PASSWORD",
+      value: encryptedValue
+    });
+    const fnId = new ObjectId(hexString);
+    await fs.insertOne({
+      _id: fnId,
+      env_vars: [],
+      secrets: [secret._id],
+      language: "js",
+      timeout: 10,
+      name: "my_fn",
+      triggers: {test_handler: {active: true, options: {}, type: "http"}}
+    });
+
+    const newEncryptedValue = encrypt("new_secret_value", encryptionSecret);
+    await ss.findOneAndUpdate({_id: secret._id}, {$set: {value: newEncryptedValue}});
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
+    expect(subscribeSpy).toHaveBeenCalledTimes(1);
+
+    const subscribedChange = subscribeSpy.mock.calls[0][0];
+    expect(subscribedChange.kind).toBe(ChangeKind.Updated);
+    expect(subscribedChange.target.id).toBe(hexString);
+    expect(subscribedChange.target.handler).toBe("test_handler");
+    expect(subscribedChange.target.context.env).toHaveProperty("DB_PASSWORD");
+  });
+
+  it("should reload function secrets and clear relation when secret removed", async () => {
+    const encryptionSecret = "test-encryption-secret";
+    const encryptedValue = encrypt("secret_value", encryptionSecret);
+    const secret = await ss.insertOne({
+      _id: undefined,
+      key: "REMOVED_SECRET",
+      value: encryptedValue
+    });
+    const fnId = new ObjectId(hexString);
+    await fs.insertOne({
+      _id: fnId,
+      env_vars: [],
+      secrets: [secret._id],
+      language: "js",
+      timeout: 10,
+      name: "my_fn",
+      triggers: {test_handler: {active: true, options: {}, type: "http"}}
+    });
+
+    await ss.findOneAndDelete({_id: secret._id});
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const change = {
+      kind: ChangeKind.Updated,
+      target: {
+        id: hexString,
+        handler: "test_handler",
+        name: "my_fn",
+        context: {
+          env: {},
+          timeout: 10
+        }
+      },
+      options: {},
+      type: "http"
+    };
+    expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
+    expect(unsubscribeSpy).toHaveBeenCalledWith(change);
+
+    expect(subscribeSpy).toHaveBeenCalledTimes(1);
+    expect(subscribeSpy).toHaveBeenCalledWith(change);
+
+    const fn = await fs.findOne({_id: fnId});
+    expect(fn.secrets).toEqual([]);
+  });
+
+  it("should get initial schema for database trigger", async () => {
+    await database.createCollection("test");
+    const expectedSchema: any = {
+      $id: "http://spica.internal/function/enqueuer/database",
+      type: "object",
+      required: ["collection", "type"],
+      properties: {
+        collection: {
+          title: "Collection Name",
+          type: "string",
+          viewEnum: expect.arrayContaining(["test"]),
+          enum: expect.arrayContaining(["test"]),
+          description: "Collection name that the event will be tracked on"
+        },
+        type: {
+          title: "Operation type",
+          description: "Operation type that must be performed in the specified collection",
+          type: "string",
+          enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+        }
+      },
+      additionalProperties: false
+    };
+    const schemaPromise = await engine.getSchema("database");
+
+    expect(schemaPromise).toEqual(expectedSchema);
   });
 });

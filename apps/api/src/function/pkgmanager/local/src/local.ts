@@ -1,10 +1,14 @@
-import {Package, PackageManager, DelegatePkgManager} from "@spica-server/function/pkgmanager";
+import path from "path";
 import {Observable, throwError} from "rxjs";
+import {
+  Package,
+  PackageManager,
+  DelegatePkgManager
+} from "@spica-server/interface/function/pkgmanager";
 
 export class LocalPackageManager extends DelegatePkgManager {
-  private LOCAL_PACKAGE_NAME_REGEX = /^[a-fA-F0-9]{24}$/;
-  private LOCAL_PACKAGE_VERSION_REGEX = /file:.*([a-fA-F0-9]{24}).*/;
-  private LOCAL_PACKAGE_NAME_REGEX_REPLACER = /([a-fA-F0-9]{24}$)/;
+  private readonly LOCAL_PACKAGE_PREFIX = "@spica-fn/";
+  private readonly LOCAL_PACKAGE_REGEX = /^@spica-fn\/.+/;
 
   constructor(pkgManager: PackageManager) {
     super(pkgManager);
@@ -32,27 +36,28 @@ export class LocalPackageManager extends DelegatePkgManager {
     if (!this.isLocalPackage(name)) {
       return name;
     }
-    const localPackageName = cwd.replace(this.LOCAL_PACKAGE_NAME_REGEX_REPLACER, name);
+    const folderName = name.slice(this.LOCAL_PACKAGE_PREFIX.length);
+    const folderPath = path.join(path.dirname(cwd), folderName);
 
-    const areTheySame = localPackageName == cwd;
+    const areTheySame = folderPath === cwd;
     if (areTheySame) {
       throw Error("Cannot install package into itself.");
     }
 
-    return localPackageName;
+    const relativePath = path.relative(cwd, folderPath);
+    return `${name}@file:${relativePath}`;
   }
 
   private maskLocalPackage(pkg: Package) {
-    const isLocalPackage = this.LOCAL_PACKAGE_VERSION_REGEX.test(pkg.version);
-    if (!isLocalPackage) {
+    if (!pkg.version.startsWith("file:")) {
       return pkg;
     }
 
-    pkg.version = this.LOCAL_PACKAGE_VERSION_REGEX.exec(pkg.version)[1];
+    pkg.version = "internal";
     return pkg;
   }
 
   private isLocalPackage(name: string): boolean {
-    return this.LOCAL_PACKAGE_NAME_REGEX.test(name);
+    return this.LOCAL_PACKAGE_REGEX.test(name);
   }
 }

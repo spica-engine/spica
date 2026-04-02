@@ -31,7 +31,6 @@ spec:
         checksum/secret: {{ include (print $.Template.BasePath "/databasesecrets.yaml") . | sha256sum }}
         checksum/initdb: {{ include (print $.Template.BasePath "/initdb.yaml") . | sha256sum }}
     spec:
-      terminationGracePeriodSeconds: 10
       volumes:
       - name: init-db
         configMap:
@@ -47,8 +46,12 @@ spec:
           command:
             - "/bin/sh"
             - "-c"
-            - | 
-              ./scripts/init-users.sh > ./init-users.log
+            - |
+              if [ "$(hostname)" = "{{ .Release.Name }}-database-0" ]; then
+                ./scripts/init-users.sh > ./init-users.log
+              else
+                echo "Skipping init-users on this pod"
+              fi
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /data/db
@@ -83,19 +86,63 @@ spec:
             - "-c"
           args: 
             - |
-              mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replicaAuthKey
+              mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replicaAuthKey  --setParameter logLevel={{ .Values.database.logLevel }}
           ports:
             - containerPort: 27017
-          {{- if eq (int .Values.database.replicas) 1}}
+          startupProbe:
+            exec:
+              command:
+                - mongosh
+                - --username
+                - $(ROOT_USERNAME)
+                - --password
+                - $(ROOT_PASSWORD)
+                - --authenticationDatabase
+                - admin
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: {{ .Values.database.startupProbeInitialDelaySeconds }}
+            periodSeconds: {{ .Values.database.startupProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.startupProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.startupProbeFailureThreshold }}
+          livenessProbe:
+            exec:
+              command:
+                - mongosh
+                - --username
+                - $(ROOT_USERNAME)
+                - --password
+                - $(ROOT_PASSWORD)
+                - --authenticationDatabase
+                - admin
+                - --eval
+                - "db.adminCommand('ping')"
+            periodSeconds: {{ .Values.database.livenessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.livenessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.livenessProbeFailureThreshold }}
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - --username
+                - $(ROOT_USERNAME)
+                - --password
+                - $(ROOT_PASSWORD)
+                - --authenticationDatabase
+                - admin
+                - --eval
+                - "db.adminCommand('ping')"
+            periodSeconds: {{ .Values.database.readinessProbePeriodSeconds }}
+            timeoutSeconds: {{ .Values.database.readinessProbeTimeoutSeconds }}
+            failureThreshold: {{ .Values.database.readinessProbeFailureThreshold }}
           lifecycle:
             postStart:
               exec:
                 command:
                   - "/bin/sh"
                   - "-c"
-                  - | 
-                    ./scripts/init-replica.sh > ./init-replica.log
-          {{- end}}
+                  - |
+                    ./scripts/set-profiling-level.sh > ./set-profiling-level.log
           resources:
 {{ toYaml .Values.database.resources | indent 12 }}
           volumeMounts:
@@ -116,6 +163,12 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-database-root-credentials
                   key: rootPassword
+            - name: DATABASE_NAME
+              value: {{ .Values.database.name }}
+            - name: PROFILING_LEVEL
+              value: "{{ .Values.database.profilingLevel }}"
+            - name: PROFILING_SLOWMS
+              value: "{{ .Values.database.profilingSlowms }}"
             {{- if eq (int .Values.database.replicas) 1}}
             - name: RS_MEMBERS
               value: '{{ template "generateReplicaSetMembers" . }}'

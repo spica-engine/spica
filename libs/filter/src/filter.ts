@@ -1,5 +1,23 @@
 import {ObjectId} from "@spica-server/database";
-import {Expression, Extractor, KeyValidator, ValueConstructor} from "./interface";
+import {
+  Expression,
+  Extractor,
+  KeyValidator,
+  ValueConstructor
+} from "@spica-server/interface/filter";
+
+export type FilterReplacer = (filter: object) => Promise<object>;
+
+export class FilterReplaceManager {
+  constructor(private replacers: FilterReplacer[] = [replaceFilterObjectIds, replaceFilterDates]) {}
+
+  public async replace(filter: object) {
+    for (let replacer of this.replacers) {
+      filter = await replacer(filter);
+    }
+    return filter;
+  }
+}
 
 export const DefaultExtractor: Extractor = {
   operators: [],
@@ -55,6 +73,11 @@ export function replaceFilterObjectIds(filter: object) {
   return Promise.resolve(replaceFilter(filter, keyValidators, ObjectIdIfValid));
 }
 
+export function replaceFilterDates(filter: object) {
+  const keyValidators = [key => key == "created_at" || key == "updated_at"];
+  return Promise.resolve(replaceFilter(filter, keyValidators, DateIfValid));
+}
+
 export function replaceFilter(
   filter: object,
   keyValidators: KeyValidator[],
@@ -76,7 +99,7 @@ export function replaceFilter(
   return filter;
 }
 
-function constructValue(value: object, ctor: ValueConstructor) {
+export function constructValue(value: object, ctor: ValueConstructor) {
   // { "key": { ... } }
   if (typeof value == "object") {
     for (let [k, v] of Object.entries(value)) {
@@ -103,4 +126,10 @@ function constructValue(value: object, ctor: ValueConstructor) {
 
 function ObjectIdIfValid(val): ValueConstructor<ObjectId> {
   return ObjectId.isValid(val) ? new ObjectId(val) : val;
+}
+
+function DateIfValid(val): any {
+  if (val instanceof Date) return val;
+  const date = new Date(val);
+  return !isNaN(date.getTime()) ? date : val;
 }

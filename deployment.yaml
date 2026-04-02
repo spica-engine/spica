@@ -17,7 +17,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
-          image: mongo:7.0.16
+          image: mongo:8.0.4
           command:
             - mongod
             - "--replSet"
@@ -103,6 +103,7 @@ spec:
               cpu: "1000m"
           ports:
             - containerPort: 4300
+            - containerPort: 50051
           args:
             - --port
             - "4300"
@@ -114,7 +115,7 @@ spec:
             - "200"
             - --database-replica-set
             - rs0
-            - --passport-secret
+            - --master-key
             - $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
             - --passport-password
             - spica
@@ -150,6 +151,9 @@ spec:
     - name: api
       port: 4300
       targetPort: 4300
+    - name: grpc
+      port: 50051
+      targetPort: 50051
   selector:
     app: spica
 ---

@@ -1,4 +1,5 @@
 import {bold, green, red} from "colorette";
+import * as path from "path";
 
 export function projectName(input: string): string {
   if (input && !input.match(/^[a-z][a-z0-9]+(?:-[a-z0-9]+)*$/)) {
@@ -11,7 +12,25 @@ export function projectName(input: string): string {
   return input;
 }
 
-export const availableSyncModules = ["bucket", "function", "bucket-data", "apikey", "policy"];
+export function projectLocalResourceFolder(input: string): string {
+  if (!path.isAbsolute(input)) {
+    throw new Error(
+      `${red(input)} is not an absolute path.\n` +
+        `Please provide a full path starting with ${bold("/")}, like ${bold("/home/user/project")}`
+    );
+  }
+
+  return input;
+}
+
+export const availableSyncModules = [
+  "bucket",
+  "function",
+  "bucket-data",
+  "apikey",
+  "policy",
+  "env-var"
+];
 export function validateSyncModules(input: string): string {
   const moduleNames = input.split(",").map(m => m.trim());
 
@@ -30,6 +49,13 @@ ${availableSyncModules.map(m => `- ${green(m)}`).join("\n")}
     `);
   }
 
+  return input;
+}
+
+export function validateSyncIds(input: any): string {
+  if (typeof input !== "string") {
+    throw new Error("You should provide a comma separated string");
+  }
   return input;
 }
 

@@ -1,21 +1,46 @@
-import {Global, Module} from "@nestjs/common";
+import {Global, Module, Inject, Optional} from "@nestjs/common";
 import {VersionControlController} from "./controller";
+import {VersionManager} from "./interface";
 import {
-  REGISTER_VC_SYNC_PROVIDER,
-  VersionManager,
   VersionControlOptions,
   VERSIONCONTROL_WORKING_DIRECTORY,
-  VC_REP_MANAGER
-} from "./interface";
-import {RepresentativeManager} from "@spica-server/representative";
+  VC_REPRESENTATIVE_MANAGER,
+  REGISTER_VC_CHANGE_HANDLER,
+  DocumentChangeSupplier,
+  DocumentChangeApplier
+} from "@spica-server/interface/versioncontrol";
+import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
+import {VCRepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager";
 import fs from "fs";
-import {Synchronizer} from "./synchronizer";
-import {JobReducer} from "@spica-server/replication";
+import {ClassCommander, JobReducer} from "@spica-server/replication";
+import {SyncModule} from "@spica-server/versioncontrol/sync";
+import {SyncEngine, SyncEngineModule} from "@spica-server/versioncontrol/sync/engine";
 
 @Global()
 @Module({})
 export class VersionControlModule {
+  constructor(
+    @Optional()
+    @Inject(REGISTER_CONFIG_SCHEMA)
+    registerConfigSchema: RegisterConfigSchema
+  ) {
+    if (registerConfigSchema) {
+      registerConfigSchema("versioncontrol", {
+        type: "object",
+        properties: {
+          autoApproveSync: {
+            type: "object",
+            properties: {
+              document: {type: "boolean"},
+              representative: {type: "boolean"}
+            }
+          }
+        }
+      });
+    }
+  }
+
   static forRoot(options: VersionControlOptions) {
     const versionManagerProvider = {
       provide: VersionManager,
@@ -26,9 +51,14 @@ export class VersionControlModule {
     if (options.isReplicationEnabled) {
       versionManagerProvider.inject.push(JobReducer as any);
     }
+
     return {
       module: VersionControlModule,
       controllers: [VersionControlController],
+      imports: [
+        SyncModule.forRoot({realtime: options.realtime}),
+        SyncEngineModule.forRoot({isReplicationEnabled: options.isReplicationEnabled})
+      ],
       providers: [
         {
           provide: VERSIONCONTROL_WORKING_DIRECTORY,
@@ -40,20 +70,23 @@ export class VersionControlModule {
             return dir;
           }
         },
-        {
-          provide: VC_REP_MANAGER,
-          useFactory: dir => new RepresentativeManager(dir),
-          inject: [VERSIONCONTROL_WORKING_DIRECTORY]
-        },
-        Synchronizer,
         versionManagerProvider,
         {
-          provide: REGISTER_VC_SYNC_PROVIDER,
-          useFactory: (sync: Synchronizer) => provider => sync.register(provider),
-          inject: [Synchronizer, VC_REP_MANAGER]
+          provide: VC_REPRESENTATIVE_MANAGER,
+          useFactory: dir => new VCRepresentativeManager(dir),
+          inject: [VERSIONCONTROL_WORKING_DIRECTORY]
+        },
+        {
+          provide: REGISTER_VC_CHANGE_HANDLER,
+          useFactory: (engine: SyncEngine) => {
+            return (supplier: DocumentChangeSupplier, applier: DocumentChangeApplier) => {
+              engine.registerChangeHandler(supplier, applier);
+            };
+          },
+          inject: [SyncEngine]
         }
       ],
-      exports: [REGISTER_VC_SYNC_PROVIDER, VC_REP_MANAGER]
+      exports: [REGISTER_VC_CHANGE_HANDLER, VC_REPRESENTATIVE_MANAGER]
     };
   }
 }

@@ -16,11 +16,15 @@ const {
   HttpQueue,
   Message,
   Request,
-  Response
+  Response,
+  RabbitMQQueue,
+  RabbitMQMessage,
+  RabbitMQChannel,
+  GrpcQueue: GrpcQueueNode
 } = FnQueueNode;
 
 import * as FnQueueProto from "@spica-server/function/queue/proto";
-const {Database, event, Firehose, Http} = FnQueueProto;
+const {Database, event, Firehose, Http, RabbitMQ, Grpc: GrpcProto} = FnQueueProto;
 
 import {createRequire} from "module";
 import * as path from "path";
@@ -202,6 +206,72 @@ async function _process(ev, queue) {
         })
       );
       callArguments[0] = new BucketChange(bucketChange);
+      break;
+    case event.Type.RABBITMQ:
+      const rabbitmq = new RabbitMQQueue();
+      const rabbitmqPop = new RabbitMQ.Message.Pop({
+        id: ev.id
+      });
+
+      const rabbitmqMessage = await rabbitmq.pop(rabbitmqPop);
+      const rabbitmqMessageInstance = new RabbitMQMessage(rabbitmqMessage);
+
+      if (rabbitmqMessageInstance.errorMessage?.length) {
+        console.error(Buffer.from(rabbitmqMessageInstance.errorMessage).toString());
+        queue.complete(new event.Complete({id: ev.id, succedded: false}));
+        return;
+      }
+
+      callArguments[0] = {
+        content: Buffer.from(rabbitmqMessageInstance.content),
+        fields: JSON.parse(rabbitmqMessageInstance.fields),
+        properties: JSON.parse(rabbitmqMessageInstance.properties)
+      };
+
+      const channel = new RabbitMQChannel(
+        e => {
+          e.id = ev.id;
+          return rabbitmq.ack(e);
+        },
+        e => {
+          e.id = ev.id;
+          return rabbitmq.nack(e);
+        }
+      );
+      callArguments[1] = channel;
+      break;
+    case event.Type.GRPC:
+      const grpcQueue = new GrpcQueueNode();
+      const grpcPop = new GrpcProto.Request.Pop({
+        id: ev.id
+      });
+
+      const grpcRequest = await grpcQueue.pop(grpcPop);
+      let grpcRequestBody = {};
+      try {
+        grpcRequestBody = JSON.parse(grpcRequest.body);
+      } catch {
+        // empty body
+      }
+
+      callArguments[0] = grpcRequestBody;
+
+      callback = async result => {
+        const response = new GrpcProto.Response({
+          id: ev.id
+        });
+        try {
+          if (result instanceof Promise) {
+            result = await result;
+          }
+          response.body = JSON.stringify(result || {});
+          response.statusCode = 0;
+        } catch (e) {
+          response.error = e ? e.toString() : "Internal error";
+          response.statusCode = 13;
+        }
+        await grpcQueue.respond(response);
+      };
       break;
     default:
       exitAbnormally(`Invalid event type received. (${ev.type})`);

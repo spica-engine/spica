@@ -30,6 +30,13 @@ const AccessManagement = () => {
       }
     },
     {
+      title: "Users",
+      icon: "person",
+      onClick: () => {
+        navigate("/passport/user");
+      }
+    },
+    {
       title: "Policies",
       icon: "layers",
       onClick: () => {
@@ -51,10 +58,31 @@ const AccessManagement = () => {
       }
     },
     {
+      title: "Refresh Tokens",
+      icon: "key",
+      onClick: () => {
+        navigate("/passport/refresh-token");
+      }
+    },
+    {
+      title: "Secrets and Variables",
+      icon: "lock" as IconName,
+      onClick: () => {
+        navigate("/passport/secrets-and-variables");
+      }
+    },
+    {
       title: "User Activities",
       icon: <img src={accountDetails} alt="activity" className={styles.icon}/>,
       onClick: () => {
         navigate("/activity");
+      }
+    },
+    {
+      title: "Config",
+      icon: "cog",
+      onClick: () => {
+        navigate("/config");
       }
     }
   ];

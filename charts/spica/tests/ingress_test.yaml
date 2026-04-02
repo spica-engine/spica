@@ -1,0 +1,133 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: ingress
+templates:
+  - templates/ingress.yaml
+release:
+  name: release-name
+  namespace: default
+set:
+  application.secret: test-secret
+  application.masterKey: test-master-key
+  application.publicHost: https://test.example.com
+  ingress.hosts:
+    - name: test.example.com
+      application: /spica
+      api: /api
+
+tests:
+  - it: should render a single Ingress
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Ingress
+
+  - it: should be named after the release
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-application
+
+  - it: should set ingressClassName in spec for Kubernetes >= 1.18
+    asserts:
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+
+  - it: should use a custom ingressClassName when set
+    set:
+      ingress.ingressClassName: traefik
+    asserts:
+      - equal:
+          path: spec.ingressClassName
+          value: traefik
+
+  - it: should include the nginx rewrite-target annotation by default
+    asserts:
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+          value: /$1
+
+  - it: should include the nginx proxy-body-size annotation by default
+    asserts:
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/proxy-body-size"]
+          value: 15M
+
+  - it: should generate host rules for each entry in ingress.hosts
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: test.example.com
+
+  - it: should route application path (with regex suffix) to web port 80
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /spica?(.*)
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: ImplementationSpecific
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: release-name-application
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 80
+
+  - it: should route api path (with regex suffix) to api port 4300
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[1].path
+          value: /api?(.*)
+      - equal:
+          path: spec.rules[0].http.paths[1].backend.service.port.number
+          value: 4300
+
+  - it: should support multiple hosts
+    set:
+      ingress.hosts:
+        - name: app1.example.com
+          application: /spica
+        - name: app2.example.com
+          api: /api
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: app1.example.com
+      - equal:
+          path: spec.rules[1].host
+          value: app2.example.com
+
+  - it: should not add application path when not specified for a host
+    set:
+      ingress.hosts:
+        - name: api-only.example.com
+          api: /api
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 4300
+
+  - it: should include TLS configuration when ingress.tls is set
+    set:
+      ingress.tls:
+        - hosts:
+            - test.example.com
+          secretName: my-tls-secret
+    asserts:
+      - equal:
+          path: spec.tls[0].secretName
+          value: my-tls-secret
+      - contains:
+          path: spec.tls[0].hosts
+          content: test.example.com
+
+  - it: should carry standard Kubernetes labels
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: ingress
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: helm

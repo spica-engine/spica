@@ -20,7 +20,9 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.11.2",
     "tui-image-editor": "^3.15.3",
-    "yup": "^1.7.0"
+    "yup": "^1.7.0",
+    "@projectstorm/react-canvas-core": "^7.0.3",
+    "@projectstorm/react-diagrams": "^7.0.4"
   },
   "devDependencies": {
     "@nx/react": "^20.4.4",

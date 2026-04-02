@@ -1,18 +1,17 @@
 import {ChangeStream, DatabaseService} from "@spica-server/database";
 import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database, event} from "@spica-server/function/queue/proto";
-import {CommandType, JobReducer} from "@spica-server/replication";
-import {Description, Enqueuer} from "./enqueuer";
+import {JobReducer} from "@spica-server/replication";
+import {CommandType} from "@spica-server/interface/replication";
+import {Enqueuer} from "./enqueuer";
 import {ClassCommander} from "@spica-server/replication";
 import uniqid from "uniqid";
-
-interface DatabaseOptions {
-  collection: string;
-  type: "INSERT" | "UPDATE" | "REPLACE" | "DELETE";
-}
+import {DatabaseOptions, Description} from "@spica-server/interface/function/enqueuer";
+import {Logger} from "@nestjs/common";
 
 export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
   type = event.Type.DATABASE;
+  private readonly logger = new Logger(DatabaseEnqueuer.name);
 
   description: Description = {
     title: "Database",
@@ -115,7 +114,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     for (const event of events) {
       const shift = this.jobReducer.findOneAndDelete({event_id: event.id}).then(job => {
         if (!job) {
-          console.error(`Job ${event.id} does not exist!`);
+          this.logger.error(`Job ${event.id} does not exist!`);
           return;
         }
         const newChange = {...job, _id: {_data: job._id}};

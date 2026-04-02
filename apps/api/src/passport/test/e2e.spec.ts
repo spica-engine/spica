@@ -1,10 +1,10 @@
 import {Controller, Get, INestApplication, ModuleMetadata, Req, Res} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule, hash} from "@spica-server/core/schema";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportModule} from "@spica-server/passport";
-import {REQUEST_SERVICE} from "@spica-server/passport/src/options";
+import {REQUEST_SERVICE} from "@spica-server/interface/passport";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 import jsQR from "jsqr";
@@ -13,9 +13,17 @@ import speakeasy from "speakeasy";
 import {parse} from "url";
 import samlp from "samlp";
 
+import cookieParser from "cookie-parser";
+import {jwtDecode} from "jwt-decode";
+import {ConfigModule} from "@spica-server/config";
+
 const EXPIRES_IN = 60_000;
 
 const TOTP_TIMEOUT = 1000 * 30;
+
+const REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 3;
+
+const REFRESH_TOKEN_HASH_SECRET = "test_e2e_refresh_token_hash_secret";
 
 const CERTIFICATE = `-----BEGIN CERTIFICATE-----
 MIIDVjCCAj4CCQCIeeA38VX/wjANBgkqhkiG9w0BAQUFADBtMQswCQYDVQQGEwJU
@@ -175,25 +183,84 @@ export class RequestService {
   }
 }
 
+type ParsedCookie = {
+  name: string;
+  value: string;
+  attributes: Record<string, string | boolean>;
+};
+
+function parseCookie(setCookieHeader: string): ParsedCookie {
+  const parts = setCookieHeader.split(";").map(p => p.trim());
+  const [nameValue, ...attrParts] = parts;
+
+  const [name, value] = nameValue.split("=");
+  const attributes: Record<string, string | boolean> = {};
+
+  attrParts.forEach(attr => {
+    if (attr.includes("=")) {
+      const [key, val] = attr.split("=");
+      attributes[key.toLowerCase()] = val;
+    } else {
+      // Attributes without a value (flags)
+      attributes[attr.toLowerCase()] = true;
+    }
+  });
+
+  return {
+    name,
+    value: decodeURIComponent(value),
+    attributes
+  };
+}
+
 describe("E2E Tests", () => {
   const publicUrl = "http://insteadof";
   const moduleMetaData: ModuleMetadata = {
     controllers: [SAMLController, OAuthController],
     imports: [
       SchemaModule.forRoot(),
-      DatabaseTestingModule.standalone(),
+      DatabaseTestingModule.replicaSet(),
+      ConfigModule.forRoot(),
       PassportModule.forRoot({
-        expiresIn: EXPIRES_IN,
-        issuer: "spica",
-        maxExpiresIn: EXPIRES_IN,
         publicUrl: publicUrl,
         samlCertificateTTL: EXPIRES_IN,
-        secretOrKey: "spica",
         defaultStrategy: "IDENTITY",
-        defaultIdentityIdentifier: "spica",
-        defaultIdentityPassword: "spica",
-        audience: "spica",
-        defaultIdentityPolicies: ["PassportFullAccess"]
+        apikeyRealtime: false,
+        policyRealtime: false,
+        refreshTokenRealtime: false,
+        userOptions: {
+          expiresIn: EXPIRES_IN,
+          maxExpiresIn: EXPIRES_IN,
+          issuer: "spica",
+          audience: "spica",
+          refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+          refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
+          secretOrKey: "spica",
+          blockingOptions: {
+            failedAttemptLimit: 3,
+            blockDurationMinutes: 10
+          },
+          passwordHistoryLimit: 2,
+          userRealtime: false
+        },
+        identityOptions: {
+          expiresIn: EXPIRES_IN,
+          issuer: "spica",
+          maxExpiresIn: EXPIRES_IN,
+          secretOrKey: "spica",
+          defaultIdentityIdentifier: "spica",
+          defaultIdentityPassword: "spica",
+          audience: "spica",
+          defaultIdentityPolicies: ["PassportFullAccess"],
+          blockingOptions: {
+            failedAttemptLimit: 3,
+            blockDurationMinutes: 10
+          },
+          refreshTokenExpiresIn: REFRESH_TOKEN_EXPIRES_IN,
+          refreshTokenHashSecret: REFRESH_TOKEN_HASH_SECRET,
+          passwordHistoryLimit: 2,
+          identityRealtime: false
+        }
       }),
       PreferenceTestingModule,
       CoreTestingModule
@@ -203,14 +270,19 @@ describe("E2E Tests", () => {
   let req: Request;
   let app: INestApplication;
   let token: string;
+  let cookies: string[] = [];
 
   async function login(identifier?: string, password?: string) {
-    const {body} = await req.post("/passport/identify", {
+    const response = await req.post("/passport/identify", {
       identifier: identifier || "spica",
       password: password || "spica"
     });
 
-    token = body.token;
+    token = response.body.token;
+
+    cookies = response.headers["set-cookie"] as unknown as string[];
+
+    return response;
   }
 
   describe("JWT", () => {
@@ -219,6 +291,8 @@ describe("E2E Tests", () => {
 
       req = module.get(Request);
       app = module.createNestApplication();
+
+      app.use(cookieParser());
 
       await app.listen(req.socket);
 
@@ -266,6 +340,237 @@ describe("E2E Tests", () => {
       const {body: updatedIdentities} = await getIdentities();
       expect(updatedIdentities.length).toBe(1);
     });
+
+    it("should set refresh token cookie on login", async () => {
+      const now = new Date();
+      jest.useFakeTimers({doNotFake: ["nextTick"]}); // passport.authenticate() depends on it
+      jest.setSystemTime(now);
+
+      await login("spica", "spica");
+
+      jest.useRealTimers();
+
+      const {name, value, attributes} = parseCookie(cookies[0]);
+      expect(name).toEqual("refreshToken");
+      expect(value).toBeDefined();
+      expect(attributes).toEqual({
+        "max-age": String(REFRESH_TOKEN_EXPIRES_IN),
+        path: "passport/identity/session/refresh",
+        expires: new Date(now.getTime() + REFRESH_TOKEN_EXPIRES_IN * 1000).toUTCString(),
+        httponly: true,
+        secure: true,
+        samesite: "None"
+      });
+    });
+
+    it("should refresh jwt", async () => {
+      await login("spica", "spica");
+
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(200);
+      expect(body.scheme).toEqual("IDENTITY");
+      expect(body.issuer).toEqual("passport/identity");
+      expect(body.token).toBeDefined();
+
+      const newToken = body.token;
+
+      const response = await req.get(
+        "passport/identity/verify",
+        {},
+        {
+          Authorization: newToken
+        }
+      );
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.identifier).toEqual("spica");
+    });
+
+    it("should refresh expired jwts", async () => {
+      const tokenExpirationDate = new Date(Date.now() + EXPIRES_IN * 1000 + 100);
+      jest.useFakeTimers({doNotFake: ["nextTick"]});
+      jest.setSystemTime(tokenExpirationDate);
+
+      // ensure token is expired
+      let response = await req.get(
+        "passport/identity/verify",
+        {},
+        {
+          Authorization: token
+        }
+      );
+      expect(response.statusCode).toEqual(400);
+      expect(response.body.message).toEqual("jwt expired");
+
+      const {body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: cookies
+        }
+      );
+
+      const newToken = body.token;
+
+      jest.useRealTimers();
+
+      // new token should be valid
+      response = await req.get(
+        "passport/identity/verify",
+        {},
+        {
+          Authorization: newToken
+        }
+      );
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.identifier).toEqual("spica");
+
+      const parsedCookie = parseCookie(cookies[0]);
+
+      // also refresh token last_used_at should be updated
+      const {body: tokens} = await req.get(
+        "passport/refresh-token",
+        {filter: JSON.stringify({token: parsedCookie.value})},
+        {
+          Authorization: `IDENTITY ${newToken}`
+        }
+      );
+
+      expect(tokens.length).toEqual(1);
+      expect(tokens[0].last_used_at).toBeDefined();
+    });
+
+    it("should store refresh token", async () => {
+      const parsedCookie = parseCookie(cookies[0]);
+
+      let {
+        body: [refreshToken]
+      } = await req.get(
+        "passport/refresh-token",
+        {filter: JSON.stringify({token: parsedCookie.value})},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+
+      let {
+        body: [identity]
+      } = await getIdentities();
+      expect(identity._id).toEqual(refreshToken.identity);
+    });
+
+    it("should not refresh with expired refresh token", async () => {
+      const now = new Date();
+      jest.useFakeTimers({doNotFake: ["nextTick"]});
+      jest.setSystemTime(now);
+
+      const refreshTokenExpirationDate = new Date(
+        Date.now() + REFRESH_TOKEN_EXPIRES_IN * 1000 + 100
+      );
+      jest.setSystemTime(refreshTokenExpirationDate);
+
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toContain("jwt expired");
+
+      jest.useRealTimers();
+    });
+
+    it("should reject refresh with malformed access token", async () => {
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY malformed_token`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toContain("jwt malformed");
+    });
+
+    it("should reject refresh with malformed refresh token", async () => {
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: "refreshToken=malformed_token"
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toContain("jwt malformed");
+    });
+
+    it("should not refresh jwt if refresh token is disabled", async () => {
+      const parsedCookie = parseCookie(cookies[0]);
+
+      let {
+        body: [refreshToken]
+      } = await req.get(
+        "passport/refresh-token",
+        {filter: JSON.stringify({token: parsedCookie.value})},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+
+      await req.put(
+        `/passport/refresh-token/${refreshToken._id}`,
+        {disabled: true},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+
+      const {statusCode, body} = await req.post(
+        "passport/identity/session/refresh",
+        {},
+        {
+          Authorization: `IDENTITY ${token}`,
+          Cookie: cookies
+        }
+      );
+
+      expect(statusCode).toEqual(400);
+      expect(body.message).toEqual("Refresh token is disabled");
+    });
+
+    it("should not return token in refresh token response", async () => {
+      const parsedCookie = parseCookie(cookies[0]);
+      const rawTokenFromCookie = parsedCookie.value;
+
+      let {
+        body: [refreshToken]
+      } = await req.get(
+        "passport/refresh-token",
+        {filter: JSON.stringify({token: rawTokenFromCookie})},
+        {
+          Authorization: `IDENTITY ${token}`
+        }
+      );
+      expect(refreshToken.token).toBeUndefined();
+    });
   });
 
   describe("SSO", () => {
@@ -300,7 +605,7 @@ describe("E2E Tests", () => {
       });
 
       it("should list strategies with public properties", async () => {
-        const {body: strategies} = await req.get("/passport/strategies");
+        const {body: strategies} = await req.get("/passport/identity/strategies");
         expect(strategies).toEqual([
           {
             _id: strategies[0]._id,
@@ -366,46 +671,65 @@ describe("E2E Tests", () => {
       });
 
       it("should get strategy login url", async () => {
-        const {body: strategies} = await req.get("/passport/strategies");
-        const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
+        const {body: strategies} = await req.get("/passport/identity/strategies");
+        const {body: strategy} = await req.get(
+          `/passport/identity/strategy/${strategies[0]._id}/url`
+        );
 
         expect(strategy.state).toBeDefined();
         expect(strategy.url.startsWith("/idp/login?SAMLRequest=")).toBe(true);
       });
 
       it("should complete SSO with success", done => {
-        req.get("/passport/strategies").then(({body: strategies}) => {
-          req.get(`/passport/strategy/${strategies[0]._id}/url`).then(({body: strategy}) => {
-            req.get("/passport/identify", {state: strategy.state}).then(async res => {
-              expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
-              expect(res.body.scheme).toEqual("IDENTITY");
-              expect(res.body.issuer).toEqual("passport/identity");
-              expect(res.body.token).toBeDefined();
+        req.get("/passport/identity/strategies").then(({body: strategies}) => {
+          req
+            .get(`/passport/identity/strategy/${strategies[0]._id}/url`)
+            .then(({body: strategy}) => {
+              req.post("/passport/identify", {state: strategy.state}).then(async res => {
+                expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
+                expect(res.body.scheme).toEqual("IDENTITY");
+                expect(res.body.issuer).toEqual("passport/identity");
+                expect(res.body.token).toBeDefined();
 
-              // make sure token is valid
-              const {
-                body: {identifier}
-              } = await req.get("/passport/identity/verify", {}, {authorization: res.body.token});
-              expect(identifier).toEqual("testuser");
-              done();
-            });
-
-            const {url: strategyUrl, params: strategyParams} = parseUrl(strategy.url, publicUrl);
-            req
-              .get(strategyUrl, strategyParams, {authorization: "testuser"})
-              .then(({body: {SAMLResponse, url: completeUrl}}) => {
-                // this last request because of we use test environment,
-                // actual SSO implementation handles this last step automatically on browser environment and redirects user to the panel as logged in
-                const request = parseUrl(completeUrl, publicUrl);
-                req
-                  .post(request.url, {SAMLResponse: SAMLResponse}, {}, request.params)
-                  .then(res => {
-                    expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
-                    expect(res.body).toBeUndefined();
-                  });
+                // make sure token is valid
+                const {
+                  body: {identifier}
+                } = await req.get("/passport/identity/verify", {}, {authorization: res.body.token});
+                expect(identifier).toEqual("testuser");
+                done();
               });
-          });
+
+              const {url: strategyUrl, params: strategyParams} = parseUrl(strategy.url, publicUrl);
+              req
+                .get(strategyUrl, strategyParams, {authorization: "testuser"})
+                .then(({body: {SAMLResponse, url: completeUrl}}) => {
+                  // this last request because of we use test environment,
+                  // actual SSO implementation handles this last step automatically on browser environment and redirects user to the panel as logged in
+                  const request = parseUrl(completeUrl, publicUrl);
+                  const completeEndpoint = `/passport/identity/strategy/${strategies[0]._id}/complete`;
+                  req
+                    .post(completeEndpoint, {SAMLResponse: SAMLResponse}, {}, request.params)
+                    .then(res => {
+                      expect([res.statusCode, res.statusText]).toEqual([204, "No Content"]);
+                      expect(res.body).toBeUndefined();
+                    });
+                });
+            });
         });
+      });
+
+      it("should return error when sending SAML to user endpoints", async () => {
+        const {body: strategies} = await req.get(
+          "/passport/strategy",
+          {},
+          {
+            Authorization: `IDENTITY ${token}`
+          }
+        );
+        const id = strategies[0]._id;
+        const {statusCode, body} = await req.get(`/passport/user/strategy/${id}/url`);
+        expect(statusCode).toEqual(400);
+        expect(body.message).toBe("Strategy type is not supported for users.");
       });
     });
 
@@ -416,6 +740,7 @@ describe("E2E Tests", () => {
         title: "oauth",
         icon: "login",
         options: {
+          idp: "custom",
           code: {
             base_url: publicUrl + "/oauth/code",
             params: {
@@ -468,7 +793,7 @@ describe("E2E Tests", () => {
       });
 
       it("should list strategies", async () => {
-        const {body: strategies} = await req.get("/passport/strategies");
+        const {body: strategies} = await req.get("/passport/user/strategies");
         expect(strategies).toEqual([
           {
             _id: strategies[0]._id,
@@ -481,8 +806,8 @@ describe("E2E Tests", () => {
       });
 
       it("should get strategy login url", async () => {
-        const {body: strategies} = await req.get("/passport/strategies");
-        const {body: strategy} = await req.get(`/passport/strategy/${strategies[0]._id}/url`);
+        const {body: strategies} = await req.get("/passport/user/strategies");
+        const {body: strategy} = await req.get(`/passport/user/strategy/${strategies[0]._id}/url`);
 
         expect(strategy.state).toBeDefined();
         expect(
@@ -493,29 +818,23 @@ describe("E2E Tests", () => {
       });
 
       it("should complete SSO with success", done => {
-        req.get("/passport/strategies").then(({body: strategies}) => {
-          req.get(`/passport/strategy/${strategies[0]._id}/url`).then(({body: strategy}) => {
-            const _ = req.get("/passport/identify", {state: strategy.state}).then(async res => {
+        req.get("/passport/user/strategies").then(({body: strategies}) => {
+          req.get(`/passport/user/strategy/${strategies[0]._id}/url`).then(({body: strategy}) => {
+            const _ = req.get("/passport/login", {state: strategy.state}).then(async res => {
               expect([res.statusCode, res.statusText]).toEqual([200, "OK"]);
-              expect(res.body.scheme).toEqual("IDENTITY");
-              expect(res.body.issuer).toEqual("passport/identity");
+              expect(res.body.scheme).toEqual("USER");
+              expect(res.body.issuer).toEqual("passport/user");
               expect(res.body.token).toBeDefined();
 
               // make sure token is valid
               const {body} = await req.get(
-                "/passport/identity/verify",
+                "/passport/user/verify",
                 {},
                 {authorization: res.body.token}
               );
-              expect(body.identifier).toEqual("testuser@testuser.com");
-              expect(body.attributes).toEqual({
-                email: "testuser@testuser.com",
-                picture: "url"
-              });
+              expect(body.username).toEqual("testuser@testuser.com");
               done();
             });
-
-            // we should get code and send it to the compelete endpoint manually, there is no such a step in real scenario
 
             // get code
             const {url: strategyUrl, params: strategyParams} = parseUrl(strategy.url, publicUrl);
@@ -525,12 +844,10 @@ describe("E2E Tests", () => {
               })
               .then(({body: code}) => {
                 // send code to the strategy complete endpoint
-                const {url: completeUrl, params: completeParams} = parseUrl(
-                  strategyParams.redirect_uri,
-                  publicUrl
-                );
+                const {params: completeParams} = parseUrl(strategyParams.redirect_uri, publicUrl);
+                const completeEndpoint = `/passport/user/strategy/${strategies[0]._id}/complete`;
                 req
-                  .get(completeUrl, {
+                  .get(completeEndpoint, {
                     ...completeParams,
                     code: code,
                     state: strategyParams.state
@@ -542,6 +859,15 @@ describe("E2E Tests", () => {
               });
           });
         });
+      });
+
+      it("should return error when sending OAuth to identity endpoints", async () => {
+        const {body: strategies} = await req.get("/passport/user/strategies");
+        const {statusCode, body} = await req.get(
+          `/passport/identity/strategy/${strategies[0]._id}/url`
+        );
+        expect(statusCode).toEqual(400);
+        expect(body.message).toBe("Strategy type is not supported for identities.");
       });
     });
   });
@@ -642,7 +968,7 @@ describe("E2E Tests", () => {
           const totp = generateTotp(challenge);
 
           res = await req.post(res.body.answerUrl, {answer: totp});
-          expect(res.statusCode).toEqual(201);
+          expect(res.statusCode).toEqual(200);
           expect(res.body.token).toBeDefined();
         });
 
@@ -723,6 +1049,179 @@ describe("E2E Tests", () => {
           expect(res.body.message).toEqual("Unauthorized");
         });
       });
+    });
+  });
+
+  describe("Login attempts", () => {
+    beforeEach(async () => {
+      const module = await Test.createTestingModule(moduleMetaData).compile();
+
+      req = module.get(Request);
+      app = module.createNestApplication();
+
+      await app.listen(req.socket);
+
+      // WAIT UNTIL IDENTITY IS INSERTED
+      await new Promise((resolve, _) => setTimeout(resolve, 3000));
+
+      jest.useFakeTimers({doNotFake: ["nextTick"]});
+      jest.setSystemTime(new Date());
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it("should block if the attempt limit is exceeded ", async () => {
+      const responses = [];
+      for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
+        responses.push(await fn());
+      }
+
+      const responseWithBlockedError = responses[responses.length - 1];
+
+      expect(responseWithBlockedError.statusCode).toEqual(401);
+      expect(responseWithBlockedError.statusText).toEqual("Unauthorized");
+      expect(responseWithBlockedError.body.message).toEqual(
+        "Too many failed login attempts. Try again after 10 minutes."
+      );
+
+      await login();
+      expect(token).toBeUndefined();
+
+      jest.advanceTimersByTime(6 * 60 * 1000);
+
+      const retryResponse = await login("spica", "wrongPassword");
+      expect(retryResponse.body.message).toEqual(
+        "Too many failed login attempts. Try again after 4 minutes."
+      );
+    });
+
+    it("should unlock after the lock time expires", async () => {
+      for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
+        await fn();
+      }
+
+      await login();
+      expect(token).toBeUndefined();
+
+      jest.advanceTimersByTime(11 * 60 * 1000);
+
+      await login();
+      expect(token).toBeDefined();
+    });
+
+    it("should give three chances after the block duration ended", async () => {
+      for (const fn of Array(3).fill(() => login("spica", "wrongPassword"))) {
+        await fn();
+      }
+
+      jest.advanceTimersByTime(11 * 60 * 1000);
+
+      for (const fn of Array(2).fill(() => login("spica", "wrongPassword"))) {
+        const res = await fn();
+        expect(res.body.message).toEqual("Identifier or password was incorrect.");
+      }
+      await login();
+      expect(token).toBeDefined();
+    });
+  });
+
+  describe("Prevent reusing old passwords", () => {
+    let identityID: string;
+
+    beforeEach(async () => {
+      const module = await Test.createTestingModule(moduleMetaData).compile();
+
+      req = module.get(Request);
+      app = module.createNestApplication();
+
+      await app.listen(req.socket);
+
+      // WAIT UNTIL IDENTITY IS INSERTED
+      await new Promise((resolve, _) => setTimeout(resolve, 3000));
+
+      await login();
+
+      identityID = await req
+        .get("/passport/identity", {}, {Authorization: `IDENTITY ${token}`})
+        .then(r => r.body[0]._id);
+    });
+
+    const updatePassword = (newPassword: string) =>
+      req.put(
+        `/passport/identity/${identityID}`,
+        {identifier: "spica", password: newPassword},
+        {Authorization: `IDENTITY ${token}`}
+      );
+
+    const sleep = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    it("should prevent password update if it is current one", async () => {
+      const errRes = await updatePassword("spica");
+      expect(errRes.statusCode).toEqual(400);
+      expect(errRes.body.message).toEqual("New password can't be the one of last 2 passwords.");
+    });
+
+    it("should prevent password update if it was one of the last used", async () => {
+      const updateResponse = await updatePassword("newPassword");
+      expect(updateResponse.statusCode).toEqual(200);
+
+      await sleep(1000);
+      const res = await login("spica", "newPassword");
+      expect(res.statusCode).toEqual(200);
+      expect(res.statusText).toEqual("OK");
+
+      const errRes = await updatePassword("spica");
+      expect(errRes.statusCode).toEqual(400);
+      expect(errRes.body.message).toEqual("New password can't be the one of last 2 passwords.");
+
+      const reUpdateResponse = await updatePassword("brandNewPassword");
+      expect(reUpdateResponse.statusCode).toEqual(200);
+
+      await sleep(1000);
+      const res2 = await login("spica", "brandNewPassword");
+      expect(res2.statusCode).toEqual(200);
+      expect(res2.statusText).toEqual("OK");
+
+      const repeatErrRes = await updatePassword("newPassword");
+      expect(repeatErrRes.statusCode).toEqual(400);
+      expect(repeatErrRes.body.message).toEqual(
+        "New password can't be the one of last 2 passwords."
+      );
+    });
+
+    it("should not prevent password update if it is not in the last passwords array", async () => {
+      const updateResponse = await updatePassword("newPassword");
+      expect(updateResponse.statusCode).toEqual(200);
+
+      await sleep(1000);
+      const res = await login("spica", "newPassword");
+      expect(res.statusCode).toEqual(200);
+      expect(res.statusText).toEqual("OK");
+
+      const errRes = await updatePassword("spica");
+      expect(errRes.statusCode).toEqual(400);
+      expect(errRes.body.message).toEqual("New password can't be the one of last 2 passwords.");
+
+      await updatePassword("brandNewPassword");
+
+      await sleep(1000);
+      const res2 = await login("spica", "brandNewPassword");
+      expect(res2.statusCode).toEqual(200);
+      expect(res2.statusText).toEqual("OK");
+
+      const reUpdateResponse = await updatePassword("spica");
+      expect(reUpdateResponse.statusCode).toEqual(200);
+    });
+
+    it("should not return last passwords", async () => {
+      const res = await login();
+
+      expect(res).not.toHaveProperty("lastPasswords");
+      expect(res.headers).not.toHaveProperty("lastPasswords");
+      expect(res.body).not.toHaveProperty("lastPasswords");
+      expect(jwtDecode(token)).not.toHaveProperty("lastPasswords");
     });
   });
 });

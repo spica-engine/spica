@@ -13,6 +13,18 @@
     },
     {
       "path": "../../activity/services"
+    },
+    {
+      "path": "../../../../../libs/interface/activity"
+    },
+    {
+      "path": "../../../../../libs/interface/passport/policy"
+    },
+    {
+      "path": "../../../../../libs/interface/versioncontrol"
+    },
+    {
+      "path": "./realtime"
     }
   ]
 }

@@ -3,9 +3,9 @@ import {StatusController} from "./controller";
 import {
   CoreStatusServiceModule,
   StatusInterceptor,
-  StatusOptions,
   StatusService
 } from "@spica-server/status/services";
+import {StatusOptions} from "@spica-server/interface/status";
 import {APP_INTERCEPTOR} from "@nestjs/core";
 import {registerStatusProvider} from "./status";
 
@@ -16,16 +16,18 @@ export class StatusModule {
   }
 
   static forRoot(options: StatusOptions): DynamicModule {
+    const providers = [];
+    if (options.httpStatusTracking) {
+      providers.push({
+        provide: APP_INTERCEPTOR,
+        useClass: StatusInterceptor
+      });
+    }
     return {
       module: StatusModule,
       controllers: [StatusController],
       imports: [CoreStatusServiceModule.forRoot(options)],
-      providers: [
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: StatusInterceptor
-        }
-      ]
+      providers
     };
   }
 }

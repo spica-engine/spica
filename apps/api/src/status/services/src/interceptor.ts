@@ -1,6 +1,6 @@
-import {Injectable, NestInterceptor, ExecutionContext, CallHandler} from "@nestjs/common";
+import {Injectable, Logger, NestInterceptor, ExecutionContext, CallHandler} from "@nestjs/common";
 import {Observable} from "rxjs";
-import {AttachStatusTracker} from "./interface";
+import {AttachStatusTracker} from "@spica-server/interface/status";
 import {StatusService} from "./service";
 
 @Injectable()
@@ -18,6 +18,7 @@ export class StatusInterceptor implements NestInterceptor {
 }
 
 export function attachStatusTrackerFactory(service: StatusService): AttachStatusTracker {
+  const logger = new Logger("StatusTracker");
   const calculatePayloadSize = (payload: string) => {
     return Buffer.byteLength(payload ? payload : "");
   };
@@ -50,7 +51,12 @@ export function attachStatusTrackerFactory(service: StatusService): AttachStatus
             size: resSize
           }
         })
-        .catch(e => console.error(e));
+        .catch(e =>
+          logger.error(
+            e instanceof Error ? e.message : String(e),
+            e instanceof Error ? e.stack : ""
+          )
+        );
     };
 
     interceptMethod(res, "write", payload => (resSize += calculatePayloadSize(payload)));

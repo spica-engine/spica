@@ -5,7 +5,7 @@ database:
   replicas: 1
   replicaSetName: 'rs0'
   name: spica
-  version: '7.0'
+  version: '8.0.4'
   storageSize: 2Gi
   storageClass:
   resources: {}
@@ -15,6 +15,23 @@ database:
   rootUsername:
   rootPassword:
   replicaAuthKey:
+  logLevel: 0
+  profilingLevel: 1
+  profilingSlowms: 100
+  # probes
+  # startup
+  startupProbeInitialDelaySeconds: 15
+  startupProbePeriodSeconds: 5
+  startupProbeTimeoutSeconds: 5
+  startupProbeFailureThreshold: 20
+  # liveness
+  livenessProbePeriodSeconds: 30
+  livenessProbeTimeoutSeconds: 10
+  livenessProbeFailureThreshold: 3
+  # readiness
+  readinessProbePeriodSeconds: 10
+  readinessProbeTimeoutSeconds: 5
+  readinessProbeFailureThreshold: 3
 
 images:
   api: spicaengine/api
@@ -24,7 +41,27 @@ images:
 
 application:
   replicas: 1
+  # Master key used to derive all module-specific secrets (hash, encryption, etc) except secrets specifically provided
+  masterKey:
+  # each secret will override the masterKey derived secret
+  # optional if masterKey is provided, all required if not
+  # passport secret for signing JWT tokens
   secret:
+  # bucket data encryption/hash secret for encrypting/hashing data stored in buckets
+  bucketDataHashSecret:
+  bucketDataEncryptionSecret:
+  # secret to encrypt secrets stored in secret module(especially function secrets)
+  secretModuleEncryptionSecret:
+  # user verification hash secret for hashing user verification tokens
+  userVerificationHashSecret:
+  # user provider encryption/hash secret for encrypting/hashing user email/phone number etc.
+  userProviderEncryptionSecret:
+  userProviderHashSecret:
+  refreshTokenHashSecret:
+  # sms provider configuration
+  twilioAccountSid:
+  twilioAuthToken:
+  twilioFromNumber:
   defaultPassword: spica
   webBaseUrl: /spica/
   apiBaseUrl: /api/
@@ -36,8 +73,22 @@ application:
   args: []
   diskAccessMode: ReadWriteOnce
   serviceAccountName: default
+  # probes
+  # startup
+  apiStartupProbeInitialDelaySeconds: 10
+  apiStartupProbePeriodSeconds: 5
+  apiStartupProbeTimeoutSeconds: 3
+  apiStartupProbeFailureThreshold: 24
+  # liveness
+  apiLivenessProbePeriodSeconds: 15
+  apiLivenessProbeTimeoutSeconds: 5
+  apiLivenessProbeFailureThreshold: 3
+  # readiness
+  apiReadinessProbePeriodSeconds: 5
+  apiReadinessProbeTimeoutSeconds: 5
+  apiReadinessProbeFailureThreshold: 6
 ingress:
-  host:
+  hosts: []
   tls: []
   ingressClassName: nginx
   annotations:

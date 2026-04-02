@@ -6,6 +6,9 @@
       "path": "./src/activity"
     },
     {
+      "path": "./src/batch"
+    },
+    {
       "path": "./src/bucket"
     },
     {
@@ -16,6 +19,12 @@
     },
     {
       "path": "./src/passport"
+    },
+    {
+      "path": "./src/env_var"
+    },
+    {
+      "path": "./src/secret"
     },
     {
       "path": "./src/preference"
@@ -36,6 +45,9 @@
       "path": "./src/asset"
     },
     {
+      "path": "./src/mailer"
+    },
+    {
       "path": "../../libs/core"
     },
     {
@@ -43,6 +55,9 @@
     },
     {
       "path": "../../libs/core/websocket"
+    },
+    {
+      "path": "./src/sms"
     }
   ]
 }

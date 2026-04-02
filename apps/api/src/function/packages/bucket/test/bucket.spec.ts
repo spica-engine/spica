@@ -5,12 +5,14 @@ describe("@spica-devkit/bucket", () => {
   let getSpy: jest.Mocked<any>;
   let postSpy: jest.Mocked<any>;
   let putSpy: jest.Mocked<any>;
+  let patchSpy: jest.Mocked<any>;
   let deleteSpy: jest.Mocked<any>;
 
   beforeEach(() => {
     getSpy = jest.spyOn(Axios.prototype, "get").mockReturnValue(Promise.resolve());
-    postSpy = jest.spyOn(Axios.prototype, "post").mockReturnValue(Promise.resolve());
+    postSpy = jest.spyOn(Axios.prototype, "post").mockReturnValue(Promise.resolve({responses: []}));
     putSpy = jest.spyOn(Axios.prototype, "put").mockReturnValue(Promise.resolve());
+    patchSpy = jest.spyOn(Axios.prototype, "patch").mockReturnValue(Promise.resolve());
     deleteSpy = jest.spyOn(Axios.prototype, "delete").mockReturnValue(Promise.resolve());
 
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
@@ -21,7 +23,7 @@ describe("@spica-devkit/bucket", () => {
     getSpy.mockClear();
     postSpy.mockClear();
     putSpy.mockClear();
-    deleteSpy.mockClear();
+    patchSpy.mockClear();
     deleteSpy.mockClear();
   });
 
@@ -43,12 +45,30 @@ describe("@spica-devkit/bucket", () => {
         name: {
           type: "string",
           title: "name",
-          options: {position: "left"}
+          options: {}
         },
         surname: {
           type: "string",
           title: "surname",
-          options: {position: "right"}
+          options: {}
+        }
+      }
+    };
+
+    const bucket2: Bucket.Bucket = {
+      title: "Address Bucket",
+      description: "Address Bucket Description",
+      primary: "street",
+      properties: {
+        street: {
+          type: "string",
+          title: "street",
+          options: {}
+        },
+        city: {
+          type: "string",
+          title: "city",
+          options: {}
         }
       }
     };
@@ -57,7 +77,48 @@ describe("@spica-devkit/bucket", () => {
       Bucket.insert(bucket);
 
       expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith("bucket", bucket);
+      expect(postSpy).toHaveBeenCalledWith("bucket", bucket, {headers: undefined});
+    });
+
+    it("should insert multiple buckets", () => {
+      Bucket.insertMany([bucket, bucket2]);
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "batch",
+        {
+          requests: [
+            {
+              body: bucket,
+              headers: {
+                Authorization: "APIKEY TEST_APIKEY"
+              },
+              id: "0",
+              method: "POST",
+              url: "bucket"
+            },
+            {
+              body: bucket2,
+              headers: {
+                Authorization: "APIKEY TEST_APIKEY"
+              },
+              id: "1",
+              method: "POST",
+              url: "bucket"
+            }
+          ]
+        },
+        {headers: undefined}
+      );
+    });
+
+    it("should insert bucket with headers", () => {
+      Bucket.insert(bucket, {Accept: "application/json"});
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith("bucket", bucket, {
+        headers: {Accept: "application/json"}
+      });
     });
 
     it("should update bucket", () => {
@@ -65,28 +126,95 @@ describe("@spica-devkit/bucket", () => {
       Bucket.update("bucket_id", updatedBucket);
 
       expect(putSpy).toHaveBeenCalledTimes(1);
-      expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id", updatedBucket);
+      expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id", updatedBucket, {headers: undefined});
+    });
+
+    it("should update bucket with headers", () => {
+      const updatedBucket = {...bucket, title: "new title"};
+      Bucket.update("bucket_id", updatedBucket, {Accept: "application/json"});
+
+      expect(putSpy).toHaveBeenCalledTimes(1);
+      expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id", updatedBucket, {
+        headers: {Accept: "application/json"}
+      });
     });
 
     it("should get all buckets", () => {
       Bucket.getAll();
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("bucket");
+      expect(getSpy).toHaveBeenCalledWith("bucket", {headers: undefined});
+    });
+
+    it("should get all buckets with headers", () => {
+      Bucket.getAll({Accept: "application/json"});
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("bucket", {headers: {Accept: "application/json"}});
     });
 
     it("should get specific bucket", () => {
       Bucket.get("bucket_id");
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id");
+      expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id", {headers: undefined});
+    });
+
+    it("should get specific bucket with headers", () => {
+      Bucket.get("bucket_id", {Accept: "application/json"});
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id", {
+        headers: {Accept: "application/json"}
+      });
     });
 
     it("should remove bucket", () => {
       Bucket.remove("bucket_id");
 
       expect(deleteSpy).toHaveBeenCalledTimes(1);
-      expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id");
+      expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id", {headers: undefined});
+    });
+
+    it("should remove multiple buckets", () => {
+      Bucket.removeMany(["bucket_id_1", "bucket_id_2"]);
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        "batch",
+        {
+          requests: [
+            {
+              body: undefined,
+              headers: {
+                Authorization: "APIKEY TEST_APIKEY"
+              },
+              id: "0",
+              method: "DELETE",
+              url: "bucket/bucket_id_1"
+            },
+            {
+              body: undefined,
+              headers: {
+                Authorization: "APIKEY TEST_APIKEY"
+              },
+              id: "1",
+              method: "DELETE",
+              url: "bucket/bucket_id_2"
+            }
+          ]
+        },
+        {headers: undefined}
+      );
+    });
+
+    it("should remove bucket with headers", () => {
+      Bucket.remove("bucket_id", {Accept: "application/json"});
+
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id", {
+        headers: {Accept: "application/json"}
+      });
     });
 
     describe("bucket-data", () => {
@@ -95,18 +223,145 @@ describe("@spica-devkit/bucket", () => {
         surname: "surname"
       };
 
+      const document2: Bucket.BucketDocument = {
+        name: "micheal",
+        surname: "smith"
+      };
+
       it("should insert bucket-data", () => {
         Bucket.data.insert("bucket_id", document);
 
         expect(postSpy).toHaveBeenCalledTimes(1);
-        expect(postSpy).toHaveBeenCalledWith("bucket/bucket_id/data", document);
+        expect(postSpy).toHaveBeenCalledWith("bucket/bucket_id/data", document, {
+          headers: undefined
+        });
+      });
+
+      it("should insert multiple bucket data", () => {
+        Bucket.data.insertMany("bucket_id", [document, document2]);
+
+        expect(postSpy).toHaveBeenCalledTimes(1);
+        expect(postSpy).toHaveBeenCalledWith(
+          "batch",
+          {
+            requests: [
+              {
+                body: document,
+                headers: {
+                  Authorization: "APIKEY TEST_APIKEY"
+                },
+                id: "0",
+                method: "POST",
+                url: "bucket/bucket_id/data"
+              },
+              {
+                body: document2,
+                headers: {
+                  Authorization: "APIKEY TEST_APIKEY"
+                },
+                id: "1",
+                method: "POST",
+                url: "bucket/bucket_id/data"
+              }
+            ]
+          },
+          {headers: undefined}
+        );
+      });
+
+      it("should insert bucket-data with headers", () => {
+        Bucket.data.insert("bucket_id", document, {Accept: "application/json"});
+
+        expect(postSpy).toHaveBeenCalledTimes(1);
+        expect(postSpy).toHaveBeenCalledWith("bucket/bucket_id/data", document, {
+          headers: {Accept: "application/json"}
+        });
       });
 
       it("should update bucket-data", () => {
         Bucket.data.update("bucket_id", "document_id", document);
 
         expect(putSpy).toHaveBeenCalledTimes(1);
-        expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document);
+        expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document, {
+          headers: undefined
+        });
+      });
+
+      it("should update bucket-data with headers", () => {
+        Bucket.data.update("bucket_id", "document_id", document, {Accept: "application/json"});
+
+        expect(putSpy).toHaveBeenCalledTimes(1);
+        expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document, {
+          headers: {Accept: "application/json"}
+        });
+      });
+
+      it("should patch bucket-data", () => {
+        Bucket.data.patch("bucket_id", "document_id", document);
+
+        expect(patchSpy).toHaveBeenCalledTimes(1);
+        expect(patchSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document, {
+          headers: undefined
+        });
+      });
+
+      it("should patch bucket-data with headers", () => {
+        Bucket.data.patch("bucket_id", "document_id", document, {Accept: "application/json"});
+
+        expect(patchSpy).toHaveBeenCalledTimes(1);
+        expect(patchSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document, {
+          headers: {Accept: "application/json"}
+        });
+      });
+
+      it("should remove bucket-data", () => {
+        Bucket.data.remove("bucket_id", "document_id");
+
+        expect(deleteSpy).toHaveBeenCalledTimes(1);
+        expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", {
+          headers: undefined
+        });
+      });
+
+      it("should remove multiple bucket data", () => {
+        Bucket.data.removeMany("bucket_id", ["bucket_id_1", "bucket_id_2"]);
+
+        expect(postSpy).toHaveBeenCalledTimes(1);
+        expect(postSpy).toHaveBeenCalledWith(
+          "batch",
+          {
+            requests: [
+              {
+                body: undefined,
+                headers: {
+                  Authorization: "APIKEY TEST_APIKEY"
+                },
+                id: "0",
+                method: "DELETE",
+                url: "bucket/bucket_id/data/bucket_id_1"
+              },
+              {
+                body: undefined,
+                headers: {
+                  Authorization: "APIKEY TEST_APIKEY"
+                },
+                id: "1",
+                method: "DELETE",
+                url: "bucket/bucket_id/data/bucket_id_2"
+              }
+            ]
+          },
+          {headers: undefined}
+        );
+      });
+
+      it("should remove bucket-data with headers", () => {
+        Bucket.data.remove("bucket_id", "document_id", {Accept: "application/json"});
+
+        expect(deleteSpy).toHaveBeenCalledTimes(1);
+        expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", {
+          headers: {Accept: "application/json"}
+        });
       });
 
       it("should get bucket-data", () => {

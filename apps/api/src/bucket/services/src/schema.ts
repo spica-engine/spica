@@ -1,19 +1,8 @@
 import {JSONSchema7, JSONSchema7Definition} from "json-schema";
-import {Bucket, BucketPreferences} from "./bucket";
-import {BadRequestException} from "@nestjs/common";
+import {BadRequestException, Logger} from "@nestjs/common";
+import {Bucket, BucketPreferences, ExtendedJSONSchema7Type} from "@spica-server/interface/bucket";
 
-type ExtendedJSONSchema7Type =
-  | JSONSchema7["type"]
-  | "objectid"
-  | "storage"
-  | "richtext"
-  | "textarea"
-  | "color"
-  | "multiselect"
-  | "relation"
-  | "date"
-  | "location"
-  | "json";
+const logger = new Logger("BucketSchema");
 
 function addIdField(bucket) {
   bucket.properties._id = {
@@ -31,7 +20,7 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
         if (typeof spec == "object") {
           schema.properties[key] = map(spec);
         } else {
-          console.debug(`ignoring boolean property at ${key}`);
+          logger.debug(`ignoring boolean property at ${key}`);
         }
       }
     } else if (schema.items) {
@@ -48,6 +37,16 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
       case "richtext":
       case "textarea":
         schema.type = "string";
+        break;
+
+      case "hash":
+        schema.type = "string";
+        schema.format = "hash";
+        break;
+
+      case "encrypted":
+        schema.type = "string";
+        schema.format = "encrypted";
         break;
 
       case "color":

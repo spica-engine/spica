@@ -1,9 +1,19 @@
 import {INestApplication} from "@nestjs/common";
+import {NestExpressApplication} from "@nestjs/platform-express";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {HttpEnqueuer, HttpMethod} from "@spica-server/function/enqueuer";
+import {HttpEnqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
+import {HttpMethod} from "@spica-server/interface/function/enqueuer";
+import {IGuardService} from "@spica-server/interface/passport/guard";
+
+function createNoopGuardService(): IGuardService {
+  return {
+    checkAuthentication: jest.fn().mockResolvedValue(true),
+    checkAuthorization: jest.fn().mockResolvedValue(true)
+  } as any;
+}
 
 /**
  * TODO: Provide some tests for req.query, req.headers and req.params
@@ -61,7 +71,8 @@ describe("http enqueuer", () => {
       httpQueue as any,
       app.getHttpAdapter().getInstance(),
       corsOptions,
-      schedulerUnsubscriptionSpy
+      schedulerUnsubscriptionSpy,
+      createNoopGuardService()
     );
   });
 
@@ -330,5 +341,558 @@ describe("http enqueuer", () => {
       httpEnqueuer.unsubscribe(noopTarget);
       done();
     });
+  });
+});
+
+describe("http enqueuer with authentication and authorization", () => {
+  let app: INestApplication;
+  let req: Request;
+  let httpEnqueuer: HttpEnqueuer;
+  let noopTarget: event.Target;
+
+  let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+  let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+
+  let schedulerUnsubscriptionSpy: jest.Mock;
+
+  let guardService: {
+    checkAuthentication: jest.Mock;
+    checkAuthorization: jest.Mock;
+  };
+
+  let corsOptions = {
+    allowCredentials: true,
+    allowedHeaders: ["*"],
+    allowedMethods: ["*"],
+    allowedOrigins: ["*"]
+  };
+
+  function createTarget(cwd?: string, handler?: string) {
+    const target = new event.Target();
+    target.cwd = cwd || "/tmp/fn1";
+    target.handler = handler || "default";
+    target.id = "function_id_1";
+    return target;
+  }
+
+  beforeEach(async () => {
+    noopTarget = createTarget();
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
+
+    app = module.createNestApplication();
+    req = module.get(Request);
+
+    eventQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+    httpQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+
+    guardService = {
+      checkAuthentication: jest.fn().mockResolvedValue(true),
+      checkAuthorization: jest.fn().mockResolvedValue(true)
+    };
+
+    await app.listen(req.socket);
+
+    schedulerUnsubscriptionSpy = jest.fn();
+    httpEnqueuer = new HttpEnqueuer(
+      eventQueue as any,
+      httpQueue as any,
+      app.getHttpAdapter().getInstance(),
+      corsOptions,
+      schedulerUnsubscriptionSpy,
+      guardService as any
+    );
+  });
+
+  afterEach(() => {
+    app.close();
+  });
+
+  it("should perform authentication when authenticate strategies are provided", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/auth-test",
+      preflight: false,
+      authenticate: ["IDENTITY"],
+      authorize: false
+    });
+
+    await req.get("/fn-execute/auth-test");
+
+    expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthentication).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedStrategies: ["IDENTITY"]
+      })
+    );
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should return 401 when authentication fails", async () => {
+    const error = new Error("Unauthorized");
+    (error as any).status = 401;
+    guardService.checkAuthentication.mockRejectedValue(error);
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/auth-fail",
+      preflight: false,
+      authenticate: ["IDENTITY"],
+      authorize: false
+    });
+
+    const response = await req.get("/fn-execute/auth-fail");
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body).toEqual({message: "Unauthorized"});
+    expect(eventQueue.enqueue).not.toHaveBeenCalled();
+    expect(httpQueue.enqueue).not.toHaveBeenCalled();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should perform authorization when both authenticate and authorize are set", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/authz-test",
+      preflight: false,
+      authenticate: ["APIKEY"],
+      authorize: true
+    });
+
+    await req.post("/fn-execute/authz-test");
+
+    expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthentication).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedStrategies: ["APIKEY"]
+      })
+    );
+
+    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthorization).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actions: ["function:invoke"]
+      })
+    );
+
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should set correct route path and params for authorization check", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    let capturedRoute: any;
+    let capturedParams: any;
+    guardService.checkAuthorization.mockImplementation(({request}) => {
+      capturedRoute = {...request.route};
+      capturedParams = {...request.params};
+      return Promise.resolve(true);
+    });
+
+    const target = createTarget("/tmp/fn1", "myHandler");
+    target.id = "abc123";
+
+    httpEnqueuer.subscribe(target, {
+      method: HttpMethod.Get,
+      path: "/authz-params",
+      preflight: false,
+      authenticate: ["IDENTITY"],
+      authorize: true
+    });
+
+    await req.get("/fn-execute/authz-params");
+
+    expect(capturedRoute).toEqual({path: "function/:functionId/invoke/:handlerId"});
+    expect(capturedParams).toEqual({functionId: "abc123", handlerId: "myHandler"});
+
+    httpEnqueuer.unsubscribe(target);
+  });
+
+  it("should return 403 when authorization fails", async () => {
+    const error = new Error("Forbidden");
+    (error as any).status = 403;
+    guardService.checkAuthorization.mockRejectedValue(error);
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/authz-fail",
+      preflight: false,
+      authenticate: ["APIKEY"],
+      authorize: true
+    });
+
+    const response = await req.get("/fn-execute/authz-fail");
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body).toEqual({message: "Forbidden"});
+    expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
+    expect(eventQueue.enqueue).not.toHaveBeenCalled();
+    expect(httpQueue.enqueue).not.toHaveBeenCalled();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should skip auth when authenticate is empty array", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/no-auth",
+      preflight: false,
+      authenticate: [],
+      authorize: false
+    });
+
+    await req.get("/fn-execute/no-auth");
+
+    expect(guardService.checkAuthentication).not.toHaveBeenCalled();
+    expect(guardService.checkAuthorization).not.toHaveBeenCalled();
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should skip auth when authenticate is undefined", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/no-auth-undef",
+      preflight: false
+    });
+
+    await req.get("/fn-execute/no-auth-undef");
+
+    expect(guardService.checkAuthentication).not.toHaveBeenCalled();
+    expect(guardService.checkAuthorization).not.toHaveBeenCalled();
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should ignore authorize when authenticate is empty", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/authz-no-authn",
+      preflight: false,
+      authenticate: [],
+      authorize: true
+    });
+
+    await req.get("/fn-execute/authz-no-authn");
+
+    expect(guardService.checkAuthentication).not.toHaveBeenCalled();
+    expect(guardService.checkAuthorization).not.toHaveBeenCalled();
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should accept multiple authentication strategies", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/multi-auth",
+      preflight: false,
+      authenticate: ["IDENTITY", "APIKEY", "USER"],
+      authorize: false
+    });
+
+    await req.get("/fn-execute/multi-auth");
+
+    expect(guardService.checkAuthentication).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedStrategies: ["IDENTITY", "APIKEY", "USER"]
+      })
+    );
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should enqueue event after successful authentication and authorization", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => {
+      res.writeHead(200, undefined, {"Content-type": "application/json"});
+      res.end(JSON.stringify({success: true}));
+    });
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/full-auth",
+      preflight: false,
+      authenticate: ["IDENTITY"],
+      authorize: true
+    });
+
+    const response = await req.post("/fn-execute/full-auth");
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({success: true});
+    expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthorization).toHaveBeenCalledTimes(1);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+    expect(httpQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should not call checkAuthorization when authorize is false even with authenticate set", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/auth-no-authz",
+      preflight: false,
+      authenticate: ["IDENTITY"],
+      authorize: false
+    });
+
+    await req.get("/fn-execute/auth-no-authz");
+
+    expect(guardService.checkAuthentication).toHaveBeenCalledTimes(1);
+    expect(guardService.checkAuthorization).not.toHaveBeenCalled();
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+});
+
+describe("http enqueuer with rate limiting", () => {
+  let app: INestApplication;
+  let req: Request;
+  let httpEnqueuer: HttpEnqueuer;
+  let noopTarget: event.Target;
+
+  let eventQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+  let httpQueue: {enqueue: jest.Mock; dequeue: jest.Mock};
+
+  let schedulerUnsubscriptionSpy: jest.Mock;
+
+  let guardService: {
+    checkAuthentication: jest.Mock;
+    checkAuthorization: jest.Mock;
+  };
+
+  let corsOptions = {
+    allowCredentials: true,
+    allowedHeaders: ["*"],
+    allowedMethods: ["*"],
+    allowedOrigins: ["*"]
+  };
+
+  function createTarget(cwd?: string, handler?: string) {
+    const target = new event.Target();
+    target.cwd = cwd || "/tmp/fn1";
+    target.handler = handler || "default";
+    target.id = "function_id_1";
+    return target;
+  }
+
+  beforeEach(async () => {
+    noopTarget = createTarget();
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
+
+    app = module.createNestApplication<NestExpressApplication>();
+    app.getHttpAdapter().getInstance().set("trust proxy", true);
+    req = module.get(Request);
+
+    eventQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+    httpQueue = {
+      enqueue: jest.fn(),
+      dequeue: jest.fn()
+    };
+
+    guardService = {
+      checkAuthentication: jest.fn().mockResolvedValue(true),
+      checkAuthorization: jest.fn().mockResolvedValue(true)
+    };
+
+    await app.listen(req.socket);
+
+    schedulerUnsubscriptionSpy = jest.fn();
+    httpEnqueuer = new HttpEnqueuer(
+      eventQueue as any,
+      httpQueue as any,
+      app.getHttpAdapter().getInstance(),
+      corsOptions,
+      schedulerUnsubscriptionSpy,
+      guardService as any
+    );
+  });
+
+  afterEach(() => {
+    app.close();
+  });
+
+  it("should enqueue event when no rateLimit is configured", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/no-limit",
+      preflight: false
+    });
+
+    const response = await req.get("/fn-execute/no-limit", undefined, {
+      "X-Forwarded-For": "1.2.3.4"
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+    expect(response.headers["x-ratelimit-limit"]).toBeUndefined();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should enqueue event when within rate limit", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-ok",
+      preflight: false,
+      rateLimit: {limit: 3, ttl: 60_000}
+    });
+
+    const response = await req.get("/fn-execute/rate-ok", undefined, {
+      "X-Forwarded-For": "1.2.3.4"
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+    expect(response.headers["x-ratelimit-limit"]).toBe("3");
+    expect(response.headers["x-ratelimit-remaining"]).toBe("2");
+    expect(response.headers["x-ratelimit-reset"]).toBeDefined();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should enqueue event when rate limiting is removed", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-toggle",
+      preflight: false,
+      rateLimit: {limit: 1, ttl: 60_000}
+    });
+
+    const ip = {"X-Forwarded-For": "1.2.3.4"};
+
+    // First request passes (within limit)
+    const response1 = await req.get("/fn-execute/rate-toggle", undefined, ip);
+    expect(response1.statusCode).toBe(200);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    // Second request is blocked (exceeds limit)
+    const response2 = await req.get("/fn-execute/rate-toggle", undefined, ip);
+    expect(response2.statusCode).toBe(429);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
+
+    // Re-subscribe without rate limit
+    httpEnqueuer.unsubscribe(noopTarget);
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-toggle",
+      preflight: false
+    });
+
+    // Third request passes with no rate limit headers
+    const response3 = await req.get("/fn-execute/rate-toggle", undefined, ip);
+    expect(response3.statusCode).toBe(200);
+    expect(eventQueue.enqueue).toHaveBeenCalledTimes(2);
+    expect(response3.headers["x-ratelimit-limit"]).toBeUndefined();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should return 429 when rate limit is exceeded", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-exceed",
+      preflight: false,
+      rateLimit: {limit: 2, ttl: 60_000}
+    });
+
+    const ip = {"X-Forwarded-For": "1.2.3.4"};
+    await req.get("/fn-execute/rate-exceed", undefined, ip);
+    await req.get("/fn-execute/rate-exceed", undefined, ip);
+
+    eventQueue.enqueue.mockClear();
+    httpQueue.enqueue.mockClear();
+
+    const response = await req.get("/fn-execute/rate-exceed", undefined, ip);
+
+    expect(response.statusCode).toBe(429);
+    expect(response.body).toEqual({
+      statusCode: 429,
+      message: "Too many requests. Please try again later.",
+      error: "Too Many Requests"
+    });
+    expect(response.headers["x-ratelimit-limit"]).toBe("2");
+    expect(response.headers["x-ratelimit-remaining"]).toBe("0");
+    expect(response.headers["retry-after"]).toBeDefined();
+    expect(eventQueue.enqueue).not.toHaveBeenCalled();
+    expect(httpQueue.enqueue).not.toHaveBeenCalled();
+
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
+  it("should use new config when trigger is re-added with different rate limit", async () => {
+    httpQueue.enqueue.mockImplementation((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-reconfig",
+      preflight: false,
+      rateLimit: {limit: 1, ttl: 60_000}
+    });
+
+    const ip = {"X-Forwarded-For": "1.2.3.4"};
+    await req.get("/fn-execute/rate-reconfig", undefined, ip);
+    const blocked = await req.get("/fn-execute/rate-reconfig", undefined, ip);
+    expect(blocked.statusCode).toBe(429);
+
+    httpEnqueuer.unsubscribe(noopTarget);
+
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/rate-reconfig",
+      preflight: false,
+      rateLimit: {limit: 5, ttl: 60_000}
+    });
+
+    const response = await req.get("/fn-execute/rate-reconfig", undefined, ip);
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["x-ratelimit-limit"]).toBe("5");
+    expect(response.headers["x-ratelimit-remaining"]).toBe("4");
+
+    httpEnqueuer.unsubscribe(noopTarget);
   });
 });

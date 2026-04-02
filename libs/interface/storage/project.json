@@ -1,0 +1,5 @@
+{
+  "name": "interface/storage",
+  "sourceRoot": "libs/interface/storage/src",
+  "projectType": "library"
+}

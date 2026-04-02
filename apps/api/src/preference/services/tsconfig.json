@@ -4,6 +4,12 @@
   "references": [
     {
       "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../../../../../libs/interface/preference"
+    },
+    {
+      "path": "../../../../../libs/core/patch"
     }
   ]
 }

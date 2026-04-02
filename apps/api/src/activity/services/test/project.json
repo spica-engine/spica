@@ -1,0 +1,5 @@
+{
+  "name": "api/activity/services/test",
+  "sourceRoot": "apps/api/src/activity/services/test",
+  "projectType": "application"
+}

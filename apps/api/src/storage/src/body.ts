@@ -5,18 +5,27 @@ import {
   HttpException,
   HttpStatus,
   Inject,
+  Logger,
   mixin,
   Type
 } from "@nestjs/common";
-import {ObjectId} from "@spica-server/database";
 import pkg from "body-parser";
 const {raw, json} = pkg;
 import {deserialize} from "bson";
 import {Observable, OperatorFunction, PartialObserver, Subscriber, TeardownLogic} from "rxjs";
 import {finalize, switchMapTo} from "rxjs/operators";
-import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import multer from "multer";
 import fs from "fs";
+import {
+  StorageOptions,
+  STORAGE_OPTIONS,
+  StorageObject,
+  MultipartFormData,
+  IBodyConverter,
+  MixedBody,
+  BsonArray,
+  JsonArray
+} from "@spica-server/interface/storage";
 
 class __BaseBody {
   payloadSizeError: HttpException;
@@ -64,6 +73,7 @@ class __BaseBody {
 // minimize copy-paste code
 abstract class __MultipartFormDataBody extends __BaseBody {
   isArray: boolean;
+  private readonly logger = new Logger("MultipartFormDataBody");
 
   constructor(@Inject(STORAGE_OPTIONS) public options: StorageOptions) {
     super(options);
@@ -77,7 +87,17 @@ abstract class __MultipartFormDataBody extends __BaseBody {
     const [req] = context.getArgs();
     if (this.isContentTypeValid(req)) {
       const files = this.isArray ? req.body : [req.body];
-      return Promise.all(files.map(b => fs.promises.unlink(b.path)));
+      return Promise.all(
+        files.map(file =>
+          fs.promises
+            .unlink(file.path)
+            .catch(e =>
+              this.logger.error(
+                `Storage can't remove the tmp file ${file.filename}, reason: ${e.message}`
+              )
+            )
+        )
+      );
     }
     return Promise.resolve();
   }
@@ -230,35 +250,6 @@ export function MultipartFormDataParser(options: {isArray: boolean}): Type<any> 
   );
 }
 
-export interface StorageObject<DataType> {
-  _id?: string | ObjectId;
-  name: string;
-  url?: string;
-  content: StorageObjectContent<DataType>;
-}
-
-export interface StorageObjectContent<DataType> {
-  data: DataType;
-  type: string;
-  size?: number;
-}
-
-export type StorageObjectContentMeta = Omit<StorageObjectContent<any>, "data">;
-
-export type StorageObjectMeta = Omit<StorageObject<any>, "content"> & {
-  content: StorageObjectContentMeta;
-};
-
-export interface BsonArray {
-  content: StorageObject<Buffer>[];
-}
-
-export type JsonArray = StorageObject<Buffer>[];
-
-export type MultipartFormData = Express.Multer.File;
-
-export type MixedBody = BsonArray | JsonArray | MultipartFormData[];
-
 export function isMultipartFormDataArray(object: unknown): object is MultipartFormData[] {
   return Array.isArray(object) && isMultipartFormData(object[0]);
 }
@@ -289,11 +280,6 @@ export function multipartToStorageObject(object: MultipartFormData): StorageObje
 export function addContentSize(object: StorageObject<Buffer>) {
   object.content.size = object.content.data.byteLength;
   return object;
-}
-
-interface IBodyConverter<I, O> {
-  validate: (body: unknown) => boolean;
-  convert: (body: I) => O;
 }
 
 const MultipartConverter: IBodyConverter<MultipartFormData, StorageObject<fs.ReadStream>> = {
@@ -361,4 +347,34 @@ export function getPostBodyConverter(body: MixedBody) {
 
 export function getPutBodyConverter(body: MultipartFormData | StorageObject<Buffer>) {
   return putConverters.find(c => c.validate(body));
+}
+
+// for tests
+export function getMultipartFormDataMeta(
+  files: {name: string; data: string; type: string}[],
+  method: "post" | "put"
+) {
+  const boundary = "--------------------------" + Date.now().toString(16);
+  const headers = {
+    "Content-Type": `multipart/form-data; boundary=${boundary}`
+  };
+
+  let body = "";
+
+  for (let file of files) {
+    body +=
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="${
+        method == "post" ? "files" : "file"
+      }"; filename="${file.name}"\r\n` +
+      `Content-Type: ${file.type}\r\n\r\n` +
+      `${file.data}\r\n`;
+  }
+
+  body += `--${boundary}--\r\n`;
+
+  return {
+    body: Buffer.from(body),
+    headers: headers
+  };
 }

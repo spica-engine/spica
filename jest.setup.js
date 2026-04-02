@@ -5,7 +5,7 @@ import {workspaceRoot} from "@nx/devkit";
 import {jest} from "@jest/globals";
 
 global.jest = jest;
-jest.setTimeout(30000);
+jest.setTimeout(30_000);
 
 // directory for all tests
 const testTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "jest-"));
@@ -51,7 +51,14 @@ afterAll(async () => {
   }
 
   if (globalThis.__CLEANUPCALLBACKS) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
     await Promise.all(globalThis.__CLEANUPCALLBACKS.map(callback => callback()));
   }
+});
+
+process.on("uncaughtException", err => {
+  if (err?.codeName === "InterruptedAtShutdown") {
+    return; // ignore during tests
+  }
+  throw err;
 });

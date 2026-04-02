@@ -9,14 +9,14 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json yarn.lock ./
 COPY apps/api/package.json ./apps/api/package.json
-RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile --network-timeout 600000
 
 # install app production deps to nodejs image
 FROM base AS deps-production
 WORKDIR /app
 COPY package.json yarn.lock ./
 COPY apps/api/package.json ./apps/api/package.json
-RUN yarn install --frozen-lockfile --production
+RUN yarn install --frozen-lockfile --production --network-timeout 600000
 
 # build app to nodejs image
 FROM base AS build 
@@ -30,6 +30,7 @@ RUN yarn run build:api
 # test app
 FROM tools AS test
 WORKDIR /app
+# for mongo memory server
 RUN apt-get update && apt-get install libcurl4 -y
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
@@ -39,9 +40,15 @@ COPY jest.flaky.setup.js jest.preset.js jest.setup.js ./
 COPY *.env ./
 ARG PROJECTS=""
 ARG EXCLUDE=""
-RUN yarn nx run-many -t test --projects=$PROJECTS --exclude=$EXCLUDE
+ARG RABBITMQ_URL=""
+ARG MAILER_URL=""
+ARG MONGODB_URL=""
+ENV RABBITMQ_URL=$RABBITMQ_URL
+ENV MAILER_URL=$MAILER_URL
+ENV MONGODB_URL=$MONGODB_URL
+RUN yarn nx run-many -t test --projects=$PROJECTS --exclude=$EXCLUDE 
 
-# start app from tools, because app executes many mongodb commands
+# start app from tools, because app uses git
 # copy deps and build
 FROM tools AS runner
 WORKDIR /app

@@ -36,7 +36,7 @@ describe("Dashboard", () => {
         DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize({overriddenStrategyType: "JWT"}),
         SchemaModule.forRoot({formats: [OBJECT_ID, OBJECTID_STRING]}),
-        DashboardModule.forRoot(),
+        DashboardModule.forRoot({realtime: false}),
         AssetModule.forRoot({persistentPath: os.tmpdir()})
       ]
     }).compile();

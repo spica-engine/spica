@@ -18,7 +18,7 @@ type AbortInfo = {
 
 function resolveEndpoint(endpoint: string) {
   if (endpoint.startsWith("http")) return endpoint;
-  return `${import.meta.env.VITE_BASE_URL}${endpoint}`;
+  return `${import.meta.env.VITE_BASE_URL || "/api"}${endpoint}`;
 }
 
 function useApi<T>({

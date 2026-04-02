@@ -22,24 +22,26 @@ spec:
   tls:
 {{ toYaml .Values.ingress.tls | indent 4 }}
   rules:
-      {{ if .Values.ingress.host }}
-    - host: {{.Values.ingress.host}}
-      http:
-      {{ else }}
-    - http:
-      {{ end }}
-        paths:
-          - path: {{ .Values.application.webBaseUrl }}?(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: {{ .Release.Name }}-application
-                port:
-                  number: 80
-          - path: {{ .Values.application.apiBaseUrl }}?(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: {{ .Release.Name }}-application
-                port:
-                  number: 4300
+{{- range .Values.ingress.hosts }}
+  - host: {{ .name }}
+    http:
+      paths:
+{{- if .application }}
+      - path: {{ .application }}?(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: {{ $.Release.Name }}-application
+            port:
+              number: 80
+{{- end }}
+{{- if .api }}
+      - path: {{ .api }}?(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: {{ $.Release.Name }}-application
+            port:
+              number: 4300
+{{- end }}
+{{- end }}

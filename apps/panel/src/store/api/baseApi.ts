@@ -4,7 +4,7 @@ import type { RootState } from '../index';
 import { selectParsedToken, clearToken } from '../slices/authSlice';
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_BASE_URL,
+  baseUrl: import.meta.env.VITE_BASE_URL || "/api",
   prepareHeaders: (headers, { getState }) => {
     const token = selectParsedToken(getState() as RootState);
     
@@ -48,6 +48,11 @@ export const baseApi = createApi({
     'Activity',
     'Webhook',
     'VersionControl',
+    'Config',
+    'RefreshToken',
+    'Secret',
+    'EnvVar',
+    'User',
   ],
   endpoints: () => ({}),
 });

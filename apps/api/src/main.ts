@@ -1,4 +1,4 @@
-import {Module} from "@nestjs/common";
+import {Logger, Module} from "@nestjs/common";
 import {NestFactory} from "@nestjs/core";
 import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
@@ -17,13 +17,24 @@ import {StorageModule} from "@spica-server/storage";
 import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
+import {BatchModule} from "@spica-server/batch";
+import {EnvVarModule} from "@spica-server/env_var";
+import {SecretModule} from "@spica-server/secret";
+import {MailerModule} from "@spica-server/mailer";
+import {SmsModule} from "@spica-server/sms";
+
 import fs from "fs";
 import https from "https";
 import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import {ConfigModule} from "./config";
+import {deriveKey} from "@spica-server/core/encryption";
 
-const args = yargs(process.argv.slice(2))
+const yargsInstance = yargs(process.argv.slice(2)) as any;
+
+const args = yargsInstance
   /* TLS Options */
   .options({
     "cert-file": {
@@ -34,6 +45,26 @@ const args = yargs(process.argv.slice(2))
       string: true,
       description: "Path to the client server TLS key file."
     }
+  })
+  /* Proxy options */
+  .options({
+    "trust-proxy": {
+      default: true,
+      description:
+        "Whether to trust the X-Forwarded-* headers set by the proxy. Possible values are true, false, a number representing the number of hops to trust, or a comma-separated list of IPs to trust."
+    }
+  })
+  .coerce("trust-proxy", (arg: any) => {
+    if (arg === true || arg === "true") return true;
+    if (arg === false || arg === "false") return false;
+    const num = Number(arg);
+    if (!isNaN(num)) return num;
+
+    if (arg.includes(",")) {
+      return arg.split(",").map(v => v.trim());
+    }
+
+    return arg;
   })
   /* Database Options */
   .options({
@@ -54,10 +85,17 @@ const args = yargs(process.argv.slice(2))
       number: true,
       description: "Amount of connection that will be opened against database.",
       default: 50
+    },
+    "database-read-preference": {
+      string: true,
+      description: "Read preference for the database connection.",
+      default: "primary",
+      choices: ["primary", "primaryPreferred", "secondary", "secondaryPreferred", "nearest"]
     }
   })
   .demandOption("database-name")
   .demandOption("database-uri")
+  /* Dashboard Options */
   /* Feature Toggling: Bucket and Activity Stream */
   .options({
     "bucket-cache": {
@@ -85,11 +123,6 @@ const args = yargs(process.argv.slice(2))
       description: "Whether Bucket History feature is enabled.",
       default: true
     },
-    "experimental-bucket-realtime": {
-      boolean: true,
-      description: "Whether the experimental Bucket realtime feature is enabled.",
-      default: true
-    },
     "bucket-data-limit": {
       number: true,
       description: "Maximum document count in all bucket-data collections."
@@ -98,6 +131,11 @@ const args = yargs(process.argv.slice(2))
       boolean: true,
       description: "Whether Bucket GraphQL feature is enabled.",
       default: false
+    },
+    "master-key": {
+      string: true,
+      description:
+        "Master key used to derive all module-specific secrets (hash, encryption, etc) except secrets specifically provided."
     }
   })
   /* Passport Options  */
@@ -117,9 +155,34 @@ const args = yargs(process.argv.slice(2))
       description: "Default lifespan of the issued JWT tokens. Unit: second",
       default: 60 * 60 * 24 * 2
     },
+    "passport-identity-password-history-limit": {
+      number: true,
+      description:
+        "How many of last passwords will be compared with the new password in terms of uniqueness",
+      default: 0
+    },
+    "passport-identity-failed-login-attempt-limit": {
+      number: true,
+      description: "Maximum failed login attempt before blocking further attempts.",
+      default: 0
+    },
+    "passport-identity-block-duration-after-failed-login-attempts": {
+      number: true,
+      description: "Duration of blocking login attempts in minutes.",
+      default: 0
+    },
     "passport-identity-token-expiration-seconds-limit": {
       number: true,
       description: "Maximum lifespan of the requested JWT token can have. Unit: second"
+    },
+    "passport-identity-refresh-token-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued refresh JWT tokens. Unit: second",
+      default: 60 * 60 * 24 * 3
+    },
+    "refresh-token-hash-secret": {
+      string: true,
+      description: "Secret used for hashing refresh tokens before storing in the database"
     },
     "passport-default-identity-identifier": {
       string: true,
@@ -128,7 +191,7 @@ const args = yargs(process.argv.slice(2))
     },
     "passport-default-strategy": {
       string: true,
-      description: "The default startegy to authenticate identities.",
+      description: "The default strategy to authenticate identities.",
       default: "IDENTITY",
       choices: ["IDENTITY", "APIKEY"]
     },
@@ -141,35 +204,79 @@ const args = yargs(process.argv.slice(2))
       array: true,
       description: "Policies to attach to the default identity.",
       default: [
-        "ApiKeyFullAccess",
-        "IdentityFullAccess",
-        "StrategyFullAccess",
-        "PolicyFullAccess",
-        "PassportFullAccess",
         "ActivityFullAccess",
-        "StorageFullAccess",
-        "FunctionFullAccess",
+        "ApiKeyFullAccess",
+        "AssetFullAccess",
         "BucketFullAccess",
         "DashboardFullAccess",
-        "WebhookFullAccess",
+        "EnvVarFullAccess",
+        "SecretFullAccess",
+        "FunctionFullAccess",
+        "IdentityFullAccess",
+        "PassportFullAccess",
+        "PolicyFullAccess",
         "PreferenceFullAccess",
+        "RefreshTokenFullAccess",
         "StatusFullAccess",
-        "AssetFullAccess",
-        "VersionControlFullAccess"
+        "StorageFullAccess",
+        "StrategyFullAccess",
+        "VersionControlFullAccess",
+        "WebhookFullAccess",
+        "UserFullAccess",
+        "ConfigFullAccess"
       ]
     },
     "passport-identity-limit": {
       number: true,
       description: "Maximum number of identity that can be inserted."
+    },
+    "passport-user-token-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued JWT tokens for users. Unit: second",
+      default: 60 * 60 * 24 * 2
+    },
+    "passport-user-password-history-limit": {
+      number: true,
+      description:
+        "How many of last passwords will be compared with the new password in terms of uniqueness for users",
+      default: 0
+    },
+    "passport-user-failed-login-attempt-limit": {
+      number: true,
+      description: "Maximum failed login attempt before blocking further attempts for users.",
+      default: 0
+    },
+    "passport-user-block-duration-after-failed-login-attempts": {
+      number: true,
+      description: "Duration of blocking login attempts in minutes for users.",
+      default: 0
+    },
+    "passport-user-token-expiration-seconds-limit": {
+      number: true,
+      description: "Maximum lifespan of the requested JWT token can have for users. Unit: second"
+    },
+    "passport-user-refresh-token-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued refresh JWT tokens for users. Unit: second",
+      default: 60 * 60 * 24 * 3
+    },
+    "passport-user-limit": {
+      number: true,
+      description: "Maximum number of users that can be inserted."
+    },
+    "passport-user-verification-code-expires-in": {
+      number: true,
+      description: "Default lifespan of the issued verification codes for users. Unit: second",
+      default: 60 * 5
     }
   })
-  .demandOption("passport-secret")
+
   /* Function Options */
   .options({
     "function-api-url": {
       string: true,
       description:
-        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
+        "URL of the server api to be injected into function workers environment variables. Devkit packages in functions will use this value to connect the server api if not present. Default value is http://127.0.0.1:<port> to support loopback connections to improve performance."
     },
     "function-timeout": {
       number: true,
@@ -196,15 +303,15 @@ const args = yargs(process.argv.slice(2))
       description: "Enable/disable function workers debugging mode. Default value is true",
       default: false
     },
-    "function-realtime-logs": {
-      boolean: true,
-      description: "Enable/disable tracking function logs realtime. Default value is false.",
-      default: true
-    },
     "function-logger": {
       boolean: true,
       description: "Allows keeping logs with their levels like DEBUG, INFO, WARN, ERROR etc.",
       default: true
+    },
+    "grpc-function-port": {
+      number: true,
+      description: "Port for the gRPC trigger server. Default is 50051.",
+      default: 50051
     },
     "function-invocation-logs": {
       boolean: true,
@@ -256,14 +363,68 @@ const args = yargs(process.argv.slice(2))
     "storage-total-size-limit": {
       number: true,
       description: "Total size limit of storage. Unit: Mb"
+    },
+    "resumable-upload-expires-in": {
+      number: true,
+      description: "Storage period for unloaded files in milliseconds, default is 2 days",
+      default: 1000 * 60 * 60 * 24 * 2 // 2 days
+    }
+  })
+  /* Sms Sender Options */
+  .options({
+    "sms-sender-strategy": {
+      string: true,
+      description: "SMS service provider strategy. Default is twilio.",
+      default: "twilio",
+      choices: ["twilio"]
+    },
+    "twilio-sms-service-account-sid": {
+      string: true,
+      description: "Twilio SMS service Account SID."
+    },
+    "twilio-sms-service-auth-token": {
+      string: true,
+      description: "Twilio SMS service Auth Token."
+    },
+    "twilio-sms-service-from-number": {
+      string: true,
+      description: "Twilio SMS service From Number."
+    }
+  })
+  /* Mailer Options */
+  .options({
+    "mailer-host": {
+      string: true,
+      description: "SMTP server host (e.g. smtp.example.com)"
+    },
+    "mailer-port": {
+      number: true,
+      description: "SMTP server port (e.g. 587)"
+    },
+    "mailer-secure": {
+      boolean: true,
+      description: "Use secure connection (TLS/SSL)",
+      default: false
+    },
+    "mailer-user": {
+      string: true,
+      description: "SMTP auth user"
+    },
+    "mailer-pass": {
+      string: true,
+      description: "SMTP auth password"
+    },
+    "mailer-from": {
+      string: true,
+      description: "Default From address for outgoing mails"
     }
   })
   /* Status Options */
   .options({
-    "status-tracking": {
+    "http-status-tracking": {
       boolean: true,
       description:
-        "When enabled, server will be able to show the stats of core modules and track the request-response stats too.",
+        "When enabled, server will track the request-response stats like request count, request size, and response size.",
       default: true
     }
   })
@@ -305,6 +466,17 @@ const args = yargs(process.argv.slice(2))
       boolean: true,
       description: "Access-Control-Allow-Credentials",
       default: true
+    }
+  })
+  /* Additional Header Options */
+  .option({
+    "cache-control-header": {
+      string: true,
+      description: "Cache-Control"
+    },
+    "x-frame-options-header": {
+      string: true,
+      description: "X-Frame-Option"
     }
   })
   /* Common Options */
@@ -356,6 +528,11 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     description: "Regex to filter access logs by status code",
     default: ".*"
   })
+  .option("versioncontrol-sync-realtime", {
+    boolean: true,
+    description: "Enable/disable listening to version control sync realtime. Default value is true",
+    default: true
+  })
   .middleware(args => {
     const username = process.env.MONGODB_USERNAME;
     const password = process.env.MONGODB_PASSWORD;
@@ -368,11 +545,61 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 
       args["database-uri"] = uri.toString();
     }
+
+    const masterKey = process.env.MASTER_KEY;
+    if (masterKey) args["master-key"] = masterKey;
+
+    const passportSecret = process.env.PASSPORT_SECRET || process.env.SECRET;
+    if (passportSecret) args["passport-secret"] = passportSecret;
+
+    const bucketDataHashSecret = process.env.BUCKET_DATA_HASH_SECRET;
+    if (bucketDataHashSecret) args["bucket-data-hash-secret"] = bucketDataHashSecret;
+
+    const bucketDataEncryptionSecret = process.env.BUCKET_DATA_ENCRYPTION_SECRET;
+    if (bucketDataEncryptionSecret)
+      args["bucket-data-encryption-secret"] = bucketDataEncryptionSecret;
+
+    const secretModuleEncryptionSecret = process.env.SECRET_MODULE_ENCRYPTION_SECRET;
+    if (secretModuleEncryptionSecret)
+      args["secret-module-encryption-secret"] = secretModuleEncryptionSecret;
+
+    const userVerificationHashSecret = process.env.USER_VERIFICATION_HASH_SECRET;
+    if (userVerificationHashSecret)
+      args["user-verification-hash-secret"] = userVerificationHashSecret;
+
+    const userProviderEncryptionSecret = process.env.USER_PROVIDER_ENCRYPTION_SECRET;
+    if (userProviderEncryptionSecret)
+      args["user-provider-encryption-secret"] = userProviderEncryptionSecret;
+
+    const userProviderHashSecret = process.env.USER_PROVIDER_HASH_SECRET;
+    if (userProviderHashSecret) args["user-provider-hash-secret"] = userProviderHashSecret;
+
+    const refreshTokenHashSecret = process.env.REFRESH_TOKEN_HASH_SECRET;
+    if (refreshTokenHashSecret) args["refresh-token-hash-secret"] = refreshTokenHashSecret;
+
+    const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
+    if (twilioAccountSid) {
+      args["twilio-sms-service-account-sid"] = twilioAccountSid;
+    }
+
+    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+    if (twilioAuthToken) {
+      args["twilio-sms-service-auth-token"] = twilioAuthToken;
+    }
+
+    const twilioFromNumber = process.env.TWILIO_FROM_NUMBER;
+    if (twilioFromNumber) {
+      args["twilio-sms-service-from-number"] = twilioFromNumber;
+    }
   })
   .check(args => {
     if (!args["passport-identity-token-expiration-seconds-limit"]) {
       args["passport-identity-token-expiration-seconds-limit"] =
         args["passport-identity-token-expires-in"];
+    }
+
+    if (!args["passport-user-token-expiration-seconds-limit"]) {
+      args["passport-user-token-expiration-seconds-limit"] = args["passport-user-token-expires-in"];
     }
 
     if (args["bucket-cache"] && args["bucket-cache-ttl"] < 1) {
@@ -388,12 +615,20 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       );
     }
 
+    if (
+      args["passport-user-token-expiration-seconds-limit"] < args["passport-user-token-expires-in"]
+    ) {
+      throw new TypeError(
+        `--passport-user-token-expiration-seconds-limit(${args["passport-user-token-expiration-seconds-limit"]} seconds) can not be less than --passport-user-token-expires-in(${args["passport-user-token-expires-in"]} seconds)`
+      );
+    }
+
     if (!args["default-storage-public-url"]) {
       args["default-storage-public-url"] = args["public-url"];
     }
 
     if (!args["function-api-url"]) {
-      args["function-api-url"] = args["public-url"];
+      args["function-api-url"] = `http://127.0.0.1:${args["port"]}`;
     }
 
     if (args["function-worker-concurrency"] < 1) {
@@ -430,23 +665,80 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       }
     }
 
+    const masterKey = args["master-key"];
+    const derivableSecretsKeys = [
+      "passport-secret",
+      "bucket-data-hash-secret",
+      "bucket-data-encryption-secret",
+      "secret-module-encryption-secret",
+      "user-verification-hash-secret",
+      "user-provider-encryption-secret",
+      "user-provider-hash-secret",
+      "refresh-token-hash-secret"
+    ];
+
+    if (!masterKey) {
+      for (const key of derivableSecretsKeys) {
+        if (!args[key]) {
+          throw new TypeError(`${key} is required when the master-key is not provided`);
+        }
+      }
+    } else {
+      for (const key of derivableSecretsKeys) {
+        if (!args[key]) {
+          args[key] = deriveKey(masterKey, key);
+        }
+      }
+    }
+
     return true;
   })
   .parserConfiguration({
     "duplicate-arguments-array": false
   })
   .env()
-  .parse();
+  .parse() as any;
 
 const modules = [
-  DashboardModule.forRoot(),
+  BatchModule.forRoot({
+    port: args["port"]
+  }),
+  DashboardModule.forRoot({realtime: true}),
   PreferenceModule.forRoot(),
   AssetModule.forRoot({persistentPath: args["persistent-path"]}),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
     maxPoolSize: args["database-pool-size"],
-    appName: "spica"
+    appName: "spica",
+    readPreference: args["database-read-preference"]
+  }),
+  EnvVarModule.forRoot({
+    realtime: true
+  }),
+  SecretModule.forRoot({
+    realtime: true,
+    encryptionSecret: args["secret-module-encryption-secret"]
+  }),
+  MailerModule.forRoot({
+    host: args["mailer-host"],
+    port: args["mailer-port"],
+    secure: args["mailer-secure"],
+    auth: {
+      user: args["mailer-user"],
+      pass: args["mailer-pass"]
+    },
+    defaults: {
+      from: args["mailer-from"]
+    }
+  }),
+  SmsModule.forRoot({
+    strategy: args["sms-sender-strategy"] as "twilio",
+    twilio: {
+      accountSid: args["twilio-sms-service-account-sid"],
+      authToken: args["twilio-sms-service-auth-token"],
+      fromNumber: args["twilio-sms-service-from-number"]
+    }
   }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
@@ -455,11 +747,13 @@ const modules = [
   BucketModule.forRoot({
     hooks: args["bucket-hooks"],
     history: args["bucket-history"],
-    realtime: args["experimental-bucket-realtime"],
+    realtime: true,
     cache: args["bucket-cache"],
     cacheTtl: args["bucket-cache-ttl"],
     bucketDataLimit: args["bucket-data-limit"],
-    graphql: args["bucket-graphql"]
+    graphql: args["bucket-graphql"],
+    hashSecret: args["bucket-data-hash-secret"],
+    encryptionSecret: args["bucket-data-encryption-secret"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",
@@ -470,21 +764,55 @@ const modules = [
     awss3CredentialsPath: args["awss3-credentials-path"],
     awss3BucketName: args["awss3-bucket-name"],
     objectSizeLimit: args["storage-object-size-limit"],
-    totalSizeLimit: args["storage-total-size-limit"]
+    totalSizeLimit: args["storage-total-size-limit"],
+    resumableUploadExpiresIn: args["resumable-upload-expires-in"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
-    secretOrKey: args["passport-secret"],
-    issuer: args["public-url"],
-    expiresIn: args["passport-identity-token-expires-in"],
-    maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
     defaultStrategy: args["passport-default-strategy"],
-    entryLimit: args["passport-identity-limit"],
-    defaultIdentityPolicies: args["passport-default-identity-policies"],
-    defaultIdentityIdentifier: args["passport-default-identity-identifier"],
-    defaultIdentityPassword: args["passport-default-identity-password"],
-    audience: "spica.io",
-    samlCertificateTTL: args["passport-saml-certificate-ttl"]
+    samlCertificateTTL: args["passport-saml-certificate-ttl"],
+    apikeyRealtime: true,
+    refreshTokenRealtime: true,
+    policyRealtime: true,
+    identityOptions: {
+      expiresIn: args["passport-identity-token-expires-in"],
+      maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
+      issuer: args["public-url"],
+      refreshTokenExpiresIn: args["passport-identity-refresh-token-expires-in"],
+      refreshTokenHashSecret: args["refresh-token-hash-secret"],
+      secretOrKey: args["passport-secret"],
+      audience: "spica.io",
+      defaultIdentityIdentifier: args["passport-default-identity-identifier"],
+      defaultIdentityPassword: args["passport-default-identity-password"],
+      defaultIdentityPolicies: args["passport-default-identity-policies"],
+      entryLimit: args["passport-identity-limit"],
+      passwordHistoryLimit: args["passport-identity-password-history-limit"],
+      blockingOptions: {
+        failedAttemptLimit: args["passport-identity-failed-login-attempt-limit"],
+        blockDurationMinutes: args["passport-identity-block-duration-after-failed-login-attempts"]
+      },
+      identityRealtime: true
+    },
+    userOptions: {
+      expiresIn: args["passport-user-token-expires-in"],
+      maxExpiresIn: args["passport-user-token-expiration-seconds-limit"],
+      issuer: args["public-url"],
+      refreshTokenExpiresIn: args["passport-user-refresh-token-expires-in"],
+      refreshTokenHashSecret: args["refresh-token-hash-secret"],
+      secretOrKey: args["passport-secret"],
+      audience: "spica.io",
+      entryLimit: args["passport-user-limit"],
+      passwordHistoryLimit: args["passport-user-password-history-limit"],
+      blockingOptions: {
+        failedAttemptLimit: args["passport-user-failed-login-attempt-limit"],
+        blockDurationMinutes: args["passport-user-block-duration-after-failed-login-attempts"]
+      },
+      userRealtime: true,
+      verificationHashSecret: args["user-verification-hash-secret"],
+      providerEncryptionSecret: args["user-provider-encryption-secret"],
+      providerHashSecret: args["user-provider-hash-secret"],
+      verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
+    }
   }),
   FunctionModule.forRoot({
     logExpireAfterSeconds: args["common-log-lifespan"],
@@ -504,9 +832,16 @@ const modules = [
     },
     debug: args["function-debug"],
     maxConcurrency: args["function-worker-concurrency"],
-    realtimeLogs: args["function-realtime-logs"],
+    realtimeLogs: true,
     logger: args["function-logger"],
-    invocationLogs: args["function-invocation-logs"]
+    invocationLogs: args["function-invocation-logs"],
+    realtime: true,
+    grpcPort: args["grpc-function-port"]
+  }),
+  ConfigModule.forRoot(),
+  StatusModule.forRoot({
+    expireAfterSeconds: args["common-log-lifespan"],
+    httpStatusTracking: args["http-status-tracking"]
   })
 ];
 
@@ -514,19 +849,12 @@ if (args["activity-stream"]) {
   modules.push(ActivityModule.forRoot({expireAfterSeconds: args["common-log-lifespan"]}));
 }
 
-if (args["status-tracking"]) {
-  modules.push(
-    StatusModule.forRoot({
-      expireAfterSeconds: args["common-log-lifespan"]
-    })
-  );
-}
-
 if (args["version-control"]) {
   modules.push(
     VersionControlModule.forRoot({
       persistentPath: args["persistent-path"],
-      isReplicationEnabled: args["replication"]
+      isReplicationEnabled: args["replication"],
+      realtime: args["versioncontrol-sync-realtime"]
     })
   );
 }
@@ -553,8 +881,14 @@ NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false
 }).then(async app => {
+  app.getHttpAdapter().getInstance().set("trust proxy", args["trust-proxy"]);
+  console.log("PROXY at main.ts", app.getHttpAdapter().getInstance().get("trust proxy"));
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
+    Middlewares.Headers({
+      "Cache-Control": args["cache-control-header"],
+      "X-Frame-Options": args["x-frame-options-header"]
+    }),
     Middlewares.Preflight({
       allowedOrigins: args["cors-allowed-origins"],
       allowedMethods: args["cors-allowed-methods"],
@@ -585,7 +919,9 @@ NestFactory.create(RootModule, {
     );
   }
 
+  app.use(cookieParser());
+
   const {port} = await args;
   await app.listen(port);
-  console.log(`: APIs are ready on port ${port}`);
+  new Logger("Bootstrap").log(`: APIs are ready on port ${port}`);
 });
