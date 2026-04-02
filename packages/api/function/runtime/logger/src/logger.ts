@@ -3,7 +3,7 @@ import {
   RESERVED_LOG_LEVEL_INDICATOR,
   RESERVED_LOG_REGEX,
   RESERVED_STARTING_INDICATOR
-} from "./consts";
+} from "./consts.js";
 import {LogChannels, LogLevels} from "@spica-server/interface/function/runtime";
 
 export function getLoggerConsole() {

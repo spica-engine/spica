@@ -1,6 +1,6 @@
 import {Database} from "@spica-server/function/queue/proto";
 import grpc from "@grpc/grpc-js";
-import {Queue} from "./queue";
+import {Queue} from "./queue.js";
 
 export class DatabaseQueue extends Queue<typeof Database.Queue> {
   readonly TYPE = Database.Queue;

@@ -1,6 +1,6 @@
 import {Collection, DatabaseService} from "@spica-server/database";
 import {PassThrough, Transform, Writable} from "stream";
-import {StandartStream} from "./standart_stream";
+import {StandartStream} from "./standart_stream.js";
 import {getLogs} from "@spica-server/function/runtime/logger";
 import {StreamOptions, LogChannels} from "@spica-server/interface/function/runtime";
 

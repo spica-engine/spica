@@ -1,2 +1,2 @@
-export * from "./src/logger";
-export * from "./src/consts";
+export * from "./src/logger.js";
+export * from "./src/consts.js";

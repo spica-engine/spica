@@ -1,10 +1,5 @@
 {
   "name": "api/function/enqueuer",
   "sourceRoot": "packages/api/function/enqueuer",
-  "projectType": "library",
-  "targets": {
-    "build": {
-      "command": "tsc --build {projectRoot}/build.references.json --pretty --verbose"
-    }
-  }
+  "projectType": "library"
 }

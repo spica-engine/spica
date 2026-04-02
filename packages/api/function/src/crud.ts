@@ -7,12 +7,12 @@ import {
   ChangeKind,
   SecretRelation
 } from "@spica-server/interface/function";
-import {changesFromTriggers, createTargetChanges, hasContextChange} from "./change";
+import {changesFromTriggers, createTargetChanges, hasContextChange} from "./change.js";
 import {ObjectId} from "@spica-server/database";
-import {FunctionEngine} from "./engine";
+import {FunctionEngine} from "./engine.js";
 import {LogService} from "@spica-server/function/log";
 import {BadRequestException, InternalServerErrorException, NotFoundException} from "@nestjs/common";
-import {FunctionPipelineBuilder} from "./pipeline.builder";
+import {FunctionPipelineBuilder} from "./pipeline.builder.js";
 import fs from "fs";
 import * as readline from "readline";
 

@@ -1,3 +1,3 @@
-export * from "./scheduler";
-export * from "./scheduler.module";
-export * from "./worker";
+export * from "./scheduler.js";
+export * from "./scheduler.module.js";
+export * from "./worker.js";

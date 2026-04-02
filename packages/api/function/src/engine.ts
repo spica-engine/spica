@@ -6,7 +6,7 @@ import {event} from "@spica-server/function/queue/proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
-import {rimraf} from "rimraf";
+import rimraf from "rimraf";
 import {Observable} from "rxjs";
 import {FunctionService} from "@spica-server/function/services";
 import {
@@ -25,7 +25,7 @@ import {
 } from "@spica-server/interface/function";
 import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface/secret";
 
-import {createTargetChanges} from "./change";
+import {createTargetChanges} from "./change.js";
 
 import HttpSchema from "./schema/http.json" with {type: "json"};
 import ScheduleSchema from "./schema/schedule.json" with {type: "json"};
@@ -33,7 +33,7 @@ import FirehoseSchema from "./schema/firehose.json" with {type: "json"};
 import SystemSchema from "./schema/system.json" with {type: "json"};
 import RabbitMQSchema from "./schema/rabbitmq.json" with {type: "json"};
 import GrpcSchema from "./schema/grpc.json" with {type: "json"};
-import * as CRUD from "./crud";
+import * as CRUD from "./crud.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {Package} from "@spica-server/interface/function/pkgmanager";

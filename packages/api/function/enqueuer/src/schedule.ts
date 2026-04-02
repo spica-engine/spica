@@ -3,7 +3,7 @@ import {event} from "@spica-server/function/queue/proto";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import schedule from "node-schedule";
-import {Enqueuer} from "./enqueuer";
+import {Enqueuer} from "./enqueuer.js";
 import uniqid from "uniqid";
 import {Description, ScheduleOptions} from "@spica-server/interface/function/enqueuer";
 import {Logger} from "@nestjs/common";

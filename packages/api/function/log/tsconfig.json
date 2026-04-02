@@ -1,6 +1,9 @@
 {
   "extends": "../../../../tsconfig.base.json",
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
   "references": [
     {
       "path": "../../passport/guard/services"
@@ -23,5 +26,9 @@
     {
       "path": "../../../realtime"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  }
 }

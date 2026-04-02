@@ -3,9 +3,6 @@
   "sourceRoot": "packages/api/function/runtime",
   "projectType": "library",
   "targets": {
-    "build": {
-      "command": "tsc --build {projectRoot}/build.references.json --pretty --verbose"
-    },
     "test": {
       "executor": "@nx/jest:jest",
       "options": {
@@ -13,11 +10,15 @@
       },
       "dependsOn": [
         {
-          "projects": ["api/function/runtime/node/bootstrap"],
+          "projects": [
+            "api/function/runtime/node/bootstrap"
+          ],
           "target": "build"
         },
         {
-          "projects": ["api/function/compiler/typescript"],
+          "projects": [
+            "api/function/compiler/typescript"
+          ],
           "target": "build"
         }
       ]

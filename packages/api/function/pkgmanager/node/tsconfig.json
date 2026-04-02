@@ -1,10 +1,20 @@
 {
   "extends": "../../../../../tsconfig.base.json",
-  "include": ["src/**/*.ts", "index.ts"],
-  "exclude": ["test/**/*.ts", "**/*.spec.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
+  "exclude": [
+    "test/**/*.ts",
+    "**/*.spec.ts"
+  ],
   "references": [
     {
       "path": "../../../../interface/function/pkgmanager"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  }
 }

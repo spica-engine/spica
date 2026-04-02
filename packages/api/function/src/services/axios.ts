@@ -1,4 +1,4 @@
-import {Http} from "./interface";
+import {Http} from "./interface.js";
 import axios, {AxiosInstance, AxiosResponse} from "axios";
 import {Injectable} from "@nestjs/common";
 

@@ -6,10 +6,10 @@ import {
   FunctionContents,
   FunctionWithDependencies
 } from "@spica-server/interface/function";
-import {generate} from "./schema/enqueuer.resolver";
-import * as CRUD from "./crud";
+import {generate} from "./schema/enqueuer.resolver.js";
+import * as CRUD from "./crud.js";
 import {FunctionService} from "@spica-server/function/services";
-import {FunctionEngine} from "./engine";
+import {FunctionEngine} from "./engine.js";
 import {LogService} from "@spica-server/function/log";
 import {ObjectId} from "@spica-server/database";
 import {IRepresentativeManager} from "@spica-server/interface/representative";

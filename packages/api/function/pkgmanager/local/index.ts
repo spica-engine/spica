@@ -1,1 +1,1 @@
-export {LocalPackageManager} from "./src/local";
+export {LocalPackageManager} from "./src/local.js";

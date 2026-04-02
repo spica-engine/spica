@@ -71,6 +71,9 @@
     },
     {
       "path": "../../packages/api/activity"
+    },
+    {
+      "path": "../../packages/api/function"
     }
   ]
 }

@@ -8,7 +8,7 @@ import {
   DocumentChangeSupplier,
   ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
-import * as CRUD from "../../../src/crud";
+import * as CRUD from "../../../src/crud.js";
 import {Function} from "@spica-server/interface/function";
 import {Logger} from "@nestjs/common";
 

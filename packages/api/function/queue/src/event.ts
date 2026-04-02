@@ -2,7 +2,7 @@ import grpc from "@grpc/grpc-js";
 import {event} from "@spica-server/function/queue/proto";
 import uniqid from "uniqid";
 import util from "util";
-import {Queue} from "./queue";
+import {Queue} from "./queue.js";
 
 export class EventQueue {
   private server: grpc.Server;

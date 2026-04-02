@@ -1,6 +1,6 @@
 import {FunctionService} from "@spica-server/function/services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import * as CRUD from "../../../src/crud";
+import * as CRUD from "../../../src/crud.js";
 import {
   ChangeLog,
   ApplyResult,

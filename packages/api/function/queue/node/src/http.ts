@@ -1,6 +1,6 @@
 import {Http} from "@spica-server/function/queue/proto";
 import grpc from "@grpc/grpc-js";
-import {parseBody} from "./parser";
+import {parseBody} from "./parser.js";
 
 export class HttpQueue {
   private client: any;

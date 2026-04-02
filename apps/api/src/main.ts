@@ -9,7 +9,7 @@ import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/f
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
-// import {FunctionModule} from "@spica-server/function";
+import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 // import {StatusModule} from "@spica-server/status";
@@ -814,30 +814,30 @@ const modules = [
       verificationCodeExpiresIn: args["passport-user-verification-code-expires-in"]
     }
   }),
-  // FunctionModule.forRoot({
-  //   logExpireAfterSeconds: args["common-log-lifespan"],
-  //   path: args["persistent-path"],
-  //   databaseName: args["database-name"],
-  //   databaseReplicaSet: args["database-replica-set"],
-  //   databaseUri: args["database-uri"],
-  //   apiUrl: args["function-api-url"],
-  //   timeout: args["function-timeout"],
-  //   experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
-  //   entryLimit: args["function-limit"],
-  //   corsOptions: {
-  //     allowedOrigins: args["cors-allowed-origins"],
-  //     allowedMethods: args["cors-allowed-methods"],
-  //     allowedHeaders: args["cors-allowed-headers"],
-  //     allowCredentials: args["cors-allow-credentials"]
-  //   },
-  //   debug: args["function-debug"],
-  //   maxConcurrency: args["function-worker-concurrency"],
-  //   realtimeLogs: true,
-  //   logger: args["function-logger"],
-  //   invocationLogs: args["function-invocation-logs"],
-  //   realtime: true,
-  //   grpcPort: args["grpc-function-port"]
-  // }),
+  FunctionModule.forRoot({
+    logExpireAfterSeconds: args["common-log-lifespan"],
+    path: args["persistent-path"],
+    databaseName: args["database-name"],
+    databaseReplicaSet: args["database-replica-set"],
+    databaseUri: args["database-uri"],
+    apiUrl: args["function-api-url"],
+    timeout: args["function-timeout"],
+    experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
+    entryLimit: args["function-limit"],
+    corsOptions: {
+      allowedOrigins: args["cors-allowed-origins"],
+      allowedMethods: args["cors-allowed-methods"],
+      allowedHeaders: args["cors-allowed-headers"],
+      allowCredentials: args["cors-allow-credentials"]
+    },
+    debug: args["function-debug"],
+    maxConcurrency: args["function-worker-concurrency"],
+    realtimeLogs: true,
+    logger: args["function-logger"],
+    invocationLogs: args["function-invocation-logs"],
+    realtime: true,
+    grpcPort: args["grpc-function-port"]
+  }),
   ConfigModule.forRoot()
   // StatusModule.forRoot({
   //   expireAfterSeconds: args["common-log-lifespan"],

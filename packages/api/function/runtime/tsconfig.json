@@ -1,6 +1,9 @@
 {
   "extends": "../../../../tsconfig.base.json",
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
   "references": [
     {
       "path": "../../../interface/function/compiler"
@@ -8,5 +11,9 @@
     {
       "path": "../../../interface/function/runtime"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  }
 }

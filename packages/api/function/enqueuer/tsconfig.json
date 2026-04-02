@@ -1,6 +1,9 @@
 {
   "extends": "../../../../tsconfig.base.json",
-  "include": ["src/**/*.ts", "index.ts"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
   "references": [
     {
       "path": "../../../interface/passport/guard"
@@ -32,5 +35,9 @@
     {
       "path": "../../../database"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  }
 }

@@ -3,9 +3,6 @@
   "sourceRoot": "packages/api/function",
   "projectType": "library",
   "targets": {
-    "build": {
-      "command": "tsc -p packages/api/function/build.references.json --pretty"
-    },
     "test": {
       "dependsOn": [
         {

@@ -3,7 +3,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import {Observable} from "rxjs";
-import {NodePackageManager} from "./node";
+import {NodePackageManager} from "./node.js";
 
 function getNpmPath() {
   let npmPath: string = "npm";

@@ -1,7 +1,7 @@
 import {FunctionService} from "@spica-server/function/services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {LogService} from "@spica-server/function/log";
-import * as CRUD from "../../../src/crud";
+import * as CRUD from "../../../src/crud.js";
 import {Function} from "@spica-server/interface/function";
 import YAML from "yaml";
 import {
@@ -12,7 +12,7 @@ import {
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
 import {Schema, Validator} from "@spica-server/core/schema";
-import {generate} from "../../schema/enqueuer.resolver";
+import {generate} from "../../schema/enqueuer.resolver.js";
 import {Logger} from "@nestjs/common";
 
 const logger = new Logger("FunctionSyncApplier");

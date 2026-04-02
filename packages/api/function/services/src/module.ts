@@ -1,6 +1,6 @@
 import {Module} from "@nestjs/common";
 import {FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface/function";
-import {FunctionService} from "./service";
+import {FunctionService} from "./service.js";
 import {
   EnvVarService,
   ServicesModule as EnvVarServicesModule

@@ -3,7 +3,7 @@ import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database, event} from "@spica-server/function/queue/proto";
 import {JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
-import {Enqueuer} from "./enqueuer";
+import {Enqueuer} from "./enqueuer.js";
 import {ClassCommander} from "@spica-server/replication";
 import uniqid from "uniqid";
 import {DatabaseOptions, Description} from "@spica-server/interface/function/enqueuer";

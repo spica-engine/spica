@@ -1,10 +1,5 @@
 {
   "name": "api/function/pkgmanager/node",
   "sourceRoot": "packages/api/function/pkgmanager/node",
-  "projectType": "library",
-  "targets": {
-    "build": {
-      "command": "tsc --build {projectRoot}/build.references.json --pretty --verbose"
-    }
-  }
+  "projectType": "library"
 }

@@ -1,2 +1,2 @@
-export * from "./webhook.module";
-export * from "./webhook.service";
+export * from "./webhook.module.js";
+export * from "./webhook.service.js";

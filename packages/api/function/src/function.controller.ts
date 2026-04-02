@@ -36,8 +36,8 @@ import {
   createFunctionDependencyActivity,
   createFunctionEnvVarActivity,
   createFunctionSecretActivity
-} from "./activity.resource";
-import {FunctionEngine} from "./engine";
+} from "./activity.resource.js";
+import {FunctionEngine} from "./engine.js";
 import {FunctionService} from "@spica-server/function/services";
 import {
   Options,
@@ -47,9 +47,9 @@ import {
   SecretRelation
 } from "@spica-server/interface/function";
 import {LogService} from "@spica-server/function/log/src/log.service";
-import {generate} from "./schema/enqueuer.resolver";
+import {generate} from "./schema/enqueuer.resolver.js";
 import {applyPatch} from "@spica-server/core/patch";
-import * as CRUD from "./crud";
+import * as CRUD from "./crud.js";
 
 /**
  * @name Function

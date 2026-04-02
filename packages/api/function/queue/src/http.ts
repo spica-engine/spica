@@ -1,7 +1,7 @@
 import {Http} from "@spica-server/function/queue/proto";
 import grpc from "@grpc/grpc-js";
 import http from "http";
-import {Queue} from "./queue";
+import {Queue} from "./queue.js";
 
 export class HttpQueue extends Queue<typeof Http.Queue> {
   readonly TYPE = Http.Queue;

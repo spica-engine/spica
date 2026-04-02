@@ -2,7 +2,7 @@ import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from "@nestj
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport/guard/services";
 import {getConnectionHandlers} from "@spica-server/realtime";
-import {LogOptionsBuilder} from "./log-options.builder";
+import {LogOptionsBuilder} from "./log-options.builder.js";
 
 @WebSocketGateway(31, {
   path: "/function-logs"

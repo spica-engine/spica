@@ -1,3 +1,3 @@
-export {DatabaseOutput} from "./src/database";
-export {PassThroughOutput} from "./src/passthrough";
-export {StandartStream} from "./src/standart_stream";
+export {DatabaseOutput} from "./src/database.js";
+export {PassThroughOutput} from "./src/passthrough.js";
+export {StandartStream} from "./src/standart_stream.js";

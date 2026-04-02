@@ -4,20 +4,20 @@ import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {SchedulingOptions} from "@spica-server/interface/function/scheduler";
 import {WebhookModule} from "@spica-server/function/webhook";
 import path from "path";
-import {FunctionEngine} from "./engine";
-import {FunctionController} from "./function.controller";
+import {FunctionEngine} from "./engine.js";
+import {FunctionController} from "./function.controller.js";
 import {LogModule, LogService} from "@spica-server/function/log";
 import {FunctionService, ServicesModule} from "@spica-server/function/services";
-import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
-import {Http} from "./services/interface";
-import {Axios} from "./services/axios";
-import {registerStatusProvider} from "./status";
+import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver.js";
+import {Http} from "./services/interface.js";
+import {Axios} from "./services/axios.js";
+import {registerStatusProvider} from "./status.js";
 import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {
   REGISTER_VC_CHANGE_HANDLER,
   RegisterVCChangeHandler
 } from "@spica-server/interface/versioncontrol";
-import {registerAssetHandlers} from "./asset";
+import {registerAssetHandlers} from "./asset.js";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {
@@ -29,12 +29,12 @@ import {
 import {
   getSupplier as getSchemaSupplier,
   getApplier as getSchemaApplier
-} from "./synchronizer/schema";
-import {getSupplier as getIndexSupplier, getApplier as getIndexApplier} from "./synchronizer/index";
+} from "./synchronizer/schema/index.js";
+import {getSupplier as getIndexSupplier, getApplier as getIndexApplier} from "./synchronizer/index/index.js";
 import {
   getSupplier as getDependencySupplier,
   getApplier as getDependencyApplier
-} from "./synchronizer/dependency";
+} from "./synchronizer/dependency/index.js";
 import {FunctionRealtimeModule} from "@spica-server/function/realtime";
 
 @Module({})

@@ -1,2 +1,2 @@
-export * from "./applier";
-export * from "./supplier";
+export * from "./applier.js";
+export * from "./supplier.js";

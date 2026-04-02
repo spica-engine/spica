@@ -1,2 +1,2 @@
-export {LogModule} from "./log.module";
-export {LogService} from "./log.service";
+export {LogModule} from "./log.module.js";
+export {LogService} from "./log.service.js";

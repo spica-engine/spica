@@ -1,6 +1,6 @@
 import {Grpc} from "@spica-server/function/queue/proto";
 import grpc from "@grpc/grpc-js";
-import {Queue} from "./queue";
+import {Queue} from "./queue.js";
 
 export class GrpcQueue extends Queue<typeof Grpc.UnimplementedQueueService.definition> {
   readonly TYPE = Grpc.UnimplementedQueueService.definition;
