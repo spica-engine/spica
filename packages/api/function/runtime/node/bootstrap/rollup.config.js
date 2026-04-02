@@ -8,7 +8,7 @@ import copy from "rollup-plugin-copy";
 module.exports = {
   input: "./packages/api/function/runtime/node/bootstrap/entrypoint.js",
   output: {
-    dir: "./dist/packages/api/function/runtime/node/bootstrap",
+    dir: "./packages/api/function/runtime/node/dist/bootstrap",
     format: "esm",
     sourcemap: true
   },
@@ -20,7 +20,7 @@ module.exports = {
       preferBuiltins: true
     }),
     typescript({
-      outDir: "./dist/packages/api/function/runtime/node/bootstrap",
+      outDir: "./packages/api/function/runtime/node/dist/bootstrap",
       tsconfig: "./packages/api/function/runtime/node/bootstrap/tsconfig.rollup.json"
     }),
     json(),
@@ -32,7 +32,7 @@ module.exports = {
       targets: [
         {
           src: "./packages/api/function/runtime/node/bootstrap/package.json",
-          dest: "./dist/packages/api/function/runtime/node/bootstrap"
+          dest: "./packages/api/function/runtime/node/dist/bootstrap"
         }
       ]
     })

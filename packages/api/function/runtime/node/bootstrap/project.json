@@ -21,7 +21,7 @@
         "{workspaceRoot}/packages/api/function/runtime/logger/*.ts",
         "{workspaceRoot}/packages/api/function/runtime/logger/index.ts"
       ],
-      "outputs": ["{workspaceRoot}/dist/packages/api/function/runtime/node/bootstrap/*"],
+      "outputs": ["{workspaceRoot}/packages/api/function/runtime/node/dist/bootstrap"],
       "options": {
         "command": "yarn rollup -c './packages/api/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs"
       },

@@ -15,7 +15,6 @@ export class NodeWorker extends Worker {
 
   constructor(options: SpawnOptions) {
     super();
-
     const entrypointPath = options.entrypointPath || this.getEntrypointPath();
     this._process = child_process.spawn(`node`, [entrypointPath], {
       env: {

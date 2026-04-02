@@ -20,12 +20,12 @@ process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(
 // directory for function spawned worker entrypoints
 process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH = path.join(
   workspaceRoot,
-  "dist",
   "packages",
   "api",
   "function",
   "runtime",
   "node",
+  "dist",
   "bootstrap",
   "entrypoint.js"
 );
