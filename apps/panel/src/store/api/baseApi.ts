@@ -51,6 +51,7 @@ export const baseApi = createApi({
     'RefreshToken',
     'Secret',
     'EnvVar',
+    'User',
   ],
   endpoints: () => ({}),
 });
