@@ -1,3 +1,3 @@
-export * from "./storage.module";
-export * from "./storage.service";
-export * from "./body";
+export * from "./storage.module.js";
+export * from "./storage.service.js";
+export * from "./body.js";

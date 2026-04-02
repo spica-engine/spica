@@ -1,6 +1,10 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "src/**/*.json"
+  ],
   "references": [
     {
       "path": "../../transaction"
@@ -38,5 +42,9 @@
     {
       "path": "../../interface/activity"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  }
 }

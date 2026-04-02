@@ -1,6 +1,6 @@
 import fs from "fs";
 import {FileStore} from "@tus/file-store";
-import {BaseStrategy} from "./base-strategy";
+import {BaseStrategy} from "./base-strategy.js";
 import {Logger} from "@nestjs/common";
 
 export class Default extends BaseStrategy {

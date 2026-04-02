@@ -1,1 +1,1 @@
-export {BASE_64} from "./base64.format";
+export {BASE_64} from "./base64.format.js";

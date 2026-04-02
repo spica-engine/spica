@@ -32,16 +32,16 @@ import {
 } from "@spica-server/passport/guard";
 import {OR} from "@spica-server/core";
 import etag from "etag";
-import {createStorageActivity} from "./activity.resource";
+import {createStorageActivity} from "./activity.resource.js";
 import {
   BsonBodyParser,
   JsonBodyParser,
   MultipartFormDataParser,
   getPostBodyConverter,
   getPutBodyConverter
-} from "./body";
+} from "./body.js";
 import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface/storage";
-import {StorageService} from "./storage.service";
+import {StorageService} from "./storage.service.js";
 import {GuardService} from "@spica-server/passport/guard/services";
 
 /**

@@ -1,7 +1,7 @@
 import {ReadStream} from "fs";
 import {Storage, Bucket} from "@google-cloud/storage";
 import {GCSStore} from "@tus/gcs-store";
-import {BaseStrategy} from "./base-strategy";
+import {BaseStrategy} from "./base-strategy.js";
 import {Logger} from "@nestjs/common";
 
 export class GCloud extends BaseStrategy {

@@ -1,13 +1,13 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {StorageOptions, STORAGE_OPTIONS} from "@spica-server/interface/storage";
-import {StorageController} from "./storage.controller";
-import {StorageService} from "./storage.service";
-import {Default} from "./strategy/default";
-import {GCloud} from "./strategy/gcloud";
-import {Strategy} from "./strategy/strategy";
-import {BASE_64} from "./schema/format";
-import {registerStatusProvider} from "./status";
+import {StorageController} from "./storage.controller.js";
+import {StorageService} from "./storage.service.js";
+import {Default} from "./strategy/default.js";
+import {GCloud} from "./strategy/gcloud.js";
+import {Strategy} from "./strategy/strategy.js";
+import {BASE_64} from "./schema/format/index.js";
+import {registerStatusProvider} from "./status.js";
 
 import BsonObject from "./schema/bson.object.schema.json" with {type: "json"};
 import JsonObject from "./schema/json.object.schema.json" with {type: "json"};
@@ -16,7 +16,7 @@ import MultipartObject from "./schema/multipart.object.schema.json" with {type: 
 import BodySchema from "./schema/body.schema.json" with {type: "json"};
 import BodySingleSchema from "./schema/body.single.schema.json" with {type: "json"};
 
-import {AWSS3} from "./strategy/aws.s3";
+import {AWSS3} from "./strategy/aws.s3.js";
 
 @Module({})
 export class StorageModule {

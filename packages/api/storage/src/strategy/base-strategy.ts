@@ -2,7 +2,7 @@ import {StorageObjectMeta} from "@spica-server/interface/storage";
 import {Server, EVENTS} from "@tus/server";
 import {CronJob} from "cron";
 import {Observable, Subject} from "rxjs";
-import {Strategy} from "./strategy";
+import {Strategy} from "./strategy.js";
 
 export abstract class BaseStrategy implements Strategy {
   protected tusServer: Server;

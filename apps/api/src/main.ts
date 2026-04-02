@@ -13,7 +13,7 @@ import {DatabaseModule} from "@spica-server/database";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 // import {StatusModule} from "@spica-server/status";
-// import {StorageModule} from "@spica-server/storage";
+import {StorageModule} from "@spica-server/storage";
 // import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
@@ -755,18 +755,18 @@ const modules = [
   //   hashSecret: args["bucket-data-hash-secret"],
   //   encryptionSecret: args["bucket-data-encryption-secret"]
   // }),
-  // StorageModule.forRoot({
-  //   strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",
-  //   defaultPath: path.join(args["persistent-path"], args["default-storage-path"]),
-  //   defaultPublicUrl: args["default-storage-public-url"],
-  //   gcloudServiceAccountPath: args["gcloud-service-account-path"],
-  //   gcloudBucketName: args["gcloud-bucket-name"],
-  //   awss3CredentialsPath: args["awss3-credentials-path"],
-  //   awss3BucketName: args["awss3-bucket-name"],
-  //   objectSizeLimit: args["storage-object-size-limit"],
-  //   totalSizeLimit: args["storage-total-size-limit"],
-  //   resumableUploadExpiresIn: args["resumable-upload-expires-in"]
-  // }),
+  StorageModule.forRoot({
+    strategy: args["storage-strategy"] as "default" | "gcloud" | "awss3",
+    defaultPath: path.join(args["persistent-path"], args["default-storage-path"]),
+    defaultPublicUrl: args["default-storage-public-url"],
+    gcloudServiceAccountPath: args["gcloud-service-account-path"],
+    gcloudBucketName: args["gcloud-bucket-name"],
+    awss3CredentialsPath: args["awss3-credentials-path"],
+    awss3BucketName: args["awss3-bucket-name"],
+    objectSizeLimit: args["storage-object-size-limit"],
+    totalSizeLimit: args["storage-total-size-limit"],
+    resumableUploadExpiresIn: args["resumable-upload-expires-in"]
+  }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
     defaultStrategy: args["passport-default-strategy"],

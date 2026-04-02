@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "*",
+    "@types/multer": "*",
     "@types/yargs": "^17.0.33",
     "nodemon": "^3.1.9"
   }

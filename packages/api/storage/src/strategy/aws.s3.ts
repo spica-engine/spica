@@ -10,7 +10,7 @@ import {
 } from "@aws-sdk/client-s3";
 import {readFileSync} from "fs";
 import {S3Store} from "@tus/s3-store";
-import {BaseStrategy} from "./base-strategy";
+import {BaseStrategy} from "./base-strategy.js";
 
 export class AWSS3 extends BaseStrategy {
   s3: S3Client;

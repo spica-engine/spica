@@ -2,12 +2,20 @@
   "name": "@spica-server/storage",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./src/activity.resource": "./src/activity.resource.ts",
-    "./src/strategy/strategy": "./src/strategy/strategy.ts",
-    "./src/strategy/default": "./src/strategy/default.ts",
-    "./src/strategy/gcloud": "./src/strategy/gcloud.ts",
-    "./src/strategy/aws.s3": "./src/strategy/aws.s3.ts"
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "*",
+    "@google-cloud/storage": "*",
+    "@tus/file-store": "*",
+    "@tus/gcs-store": "*",
+    "@tus/s3-store": "*",
+    "@tus/server": "*",
+    "cron": "*"
   }
 }

@@ -14,7 +14,7 @@ import {
   WithId
 } from "@spica-server/database";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
-import {StoragePipelineBuilder} from "./storage-pipeline.builder";
+import {StoragePipelineBuilder} from "./storage-pipeline.builder.js";
 import {
   StorageOptions,
   StorageObject,
@@ -23,7 +23,7 @@ import {
   StorageResponse,
   PaginatedStorageResponse
 } from "@spica-server/interface/storage";
-import {Strategy} from "./strategy/strategy";
+import {Strategy} from "./strategy/strategy.js";
 import {TransactionExecutor} from "@spica-server/transaction";
 
 import fs from "fs";

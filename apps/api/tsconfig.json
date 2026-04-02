@@ -19,6 +19,9 @@
       "path": "../../packages/api/batch"
     },
     {
+      "path": "../../packages/api/storage"
+    },
+    {
       "path": "../../packages/api/dashboard"
     },
     {
