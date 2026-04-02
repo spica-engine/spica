@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../interface/passport/user"
+    },
+    {
+      "path": "../../core/copy"
+    },
+    {
+      "path": "../../interface/function/packages"
+    }
+  ]
+}

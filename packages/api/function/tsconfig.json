@@ -1,10 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "../status"
@@ -95,12 +91,6 @@
     },
     {
       "path": "../../database/realtime"
-    },
-    {
-      "path": "../../interface/function/packages"
-    },
-    {
-      "path": "../../interface/batch"
     },
     {
       "path": "realtime"

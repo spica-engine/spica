@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "sourceMap": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "../../interface/batch/**/*.ts",
+    "../../interface/function/packages/**/*.ts",
+    "../internal_common/**/*.ts"
+  ],
+  "exclude": []
+}

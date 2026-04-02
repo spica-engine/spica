@@ -1,0 +1,11 @@
+{
+  "name": "devkit/auth",
+  "sourceRoot": "packages/devkit/auth",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "yarn rollup -c {projectRoot}/rollup.config.cjs --bundleConfigAsCjs"
+    },
+    "set-version": {}
+  }
+}

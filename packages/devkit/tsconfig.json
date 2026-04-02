@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "baseUrl": "./",
+    "paths": {
+      "@spica-devkit/*": ["*"],
+      "@spica-server/*": ["../*", "../api/*"]
+    }
+  }
+}
