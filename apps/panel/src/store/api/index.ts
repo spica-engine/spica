@@ -262,21 +262,21 @@ export type {
   LogResponse,
 } from './versionControlApi';
 
-// export {
-//   refreshTokenApi,
-//   refreshTokenApiReducerPath,
-//   refreshTokenApiMiddleware,
-//   useGetRefreshTokensQuery,
-//   useGetRefreshTokenQuery,
-//   useUpdateRefreshTokenMutation,
-//   useDeleteRefreshTokenMutation,
-// } from './refreshTokenApi';
+export {
+  refreshTokenApi,
+  refreshTokenApiReducerPath,
+  refreshTokenApiMiddleware,
+  useGetRefreshTokensQuery,
+  useGetRefreshTokenQuery,
+  useUpdateRefreshTokenMutation,
+  useDeleteRefreshTokenMutation,
+} from './refreshTokenApi';
 
-// export type {
-//   RefreshToken,
-//   RefreshTokenListResponse,
-//   RefreshTokenOptions,
-// } from './refreshTokenApi';
+export type {
+  RefreshToken,
+  RefreshTokenListResponse,
+  RefreshTokenOptions,
+} from './refreshTokenApi';
 
 export {
   secretApi,

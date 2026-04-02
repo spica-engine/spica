@@ -1,0 +1,108 @@
+.configContainer {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)) !important;
+  gap: var(--padding-lg) !important;
+}
+
+.configItem {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 55px !important;
+  border: var(--border-default) !important;
+  color: var(--color-font-primary) !important;
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-soft-light);
+  cursor: pointer;
+  padding: var(--padding-lg);
+
+  &:hover {
+    background-color: var(--color-hover);
+  }
+}
+
+.configItemTitle {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.configItemMeta {
+  color: var(--color-input-placeholder);
+  font-size: var(--font-size-sm);
+}
+
+.skeletonItem {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 55px !important;
+  border: var(--border-default) !important;
+  color: var(--color-font-primary) !important;
+  background-color: var(--color-layout-background) !important;
+  border-radius: var(--border-radius-md);
+}
+
+.drawerForm {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+}
+
+.drawerContent {
+  padding: var(--padding-lg);
+  flex: 1;
+  overflow-y: auto;
+  align-items: start;
+}
+
+.drawerTitle {
+  margin-bottom: var(--padding-md);
+}
+
+.drawerActions {
+  padding: var(--padding-lg);
+  border-top: var(--border-default);
+}
+
+.sectionTitle {
+  font-weight: 600;
+  margin-top: var(--padding-md);
+}
+
+.fieldGroup {
+  padding: var(--padding-sm) 0;
+  border-bottom: var(--border-default);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.rateLimitRow {
+  display: flex;
+  gap: var(--gap-md);
+  align-items: center;
+}
+
+.rateLimitLabel {
+  min-width: 140px;
+  text-transform: capitalize;
+  font-size: var(--font-size-md);
+}
+
+.providerRow {
+  display: flex;
+  gap: var(--gap-md);
+  align-items: flex-end;
+  padding: var(--padding-sm) 0;
+}
+
+.addButton {
+  margin-top: var(--padding-sm);
+}
+
+.removeButton {
+  min-width: unset !important;
+  width: unset !important;
+  padding: 0 !important;
+}
