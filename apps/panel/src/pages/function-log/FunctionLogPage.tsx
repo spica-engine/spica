@@ -10,7 +10,13 @@ import type {FunctionLog} from "../../store/api/functionApi";
 import FunctionLogFilter from "./FunctionLogFilter";
 import FunctionLogChart from "./FunctionLogChart";
 import FunctionLogList from "./FunctionLogList";
-import {MOCK_FUNCTION_MAP, MOCK_HANDLER_MAP, LEVEL_LABELS} from "./mockData";
+const LEVEL_LABELS: Record<number, string> = {
+  0: "Debug",
+  1: "Log",
+  2: "Info",
+  3: "Warning",
+  4: "Error",
+};
 import styles from "./FunctionLogPage.module.scss";
 
 function getDefaultRange(): {begin: Date; end: Date} {
@@ -38,13 +44,13 @@ const FunctionLogPage = () => {
 
   const functionNameMap = useMemo<Record<string, string>>(() => {
     if (isFunctionsError || !Array.isArray(functionList) || functionList.length === 0)
-      return MOCK_FUNCTION_MAP;
+      return {};
     return Object.fromEntries(functionList.map(fn => [fn._id!, fn.name]));
   }, [functionList, isFunctionsError]);
 
   const handlerNameMap = useMemo<Record<string, string>>(() => {
     if (isFunctionsError || !Array.isArray(functionList) || functionList.length === 0)
-      return MOCK_HANDLER_MAP;
+      return {};
     return Object.fromEntries(
       functionList.map(fn => {
         const triggers = fn.triggers;
