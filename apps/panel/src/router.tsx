@@ -19,6 +19,8 @@ import FunctionPage from "./pages/function/FunctionPage";
 import VersionControl from "./pages/version-control/VersionControl";
 import DashboardView from "./pages/dashboard/DashboardView";
 import Config from "./pages/config/Config";
+import RefreshToken from "./pages/refresh-token/RefreshToken";
+import SecretsAndVariables from "./pages/secrets-and-variables/SecretsAndVariables";
 
 const router = createBrowserRouter(
   [
@@ -68,6 +70,14 @@ const router = createBrowserRouter(
         {
           path: "passport/strategy",
           element: <Strategy />
+        },
+        {
+          path: "passport/refresh-token",
+          element: <RefreshToken />
+        },
+        {
+          path: "passport/secrets-and-variables",
+          element: <SecretsAndVariables />
         },
         {
           path: "activity",

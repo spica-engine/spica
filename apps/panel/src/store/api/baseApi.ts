@@ -50,6 +50,8 @@ export const baseApi = createApi({
     'VersionControl',
     'Config',
     'RefreshToken',
+    'Secret',
+    'EnvVar',
     'User',
   ],
   endpoints: () => ({}),
