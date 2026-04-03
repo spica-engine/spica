@@ -41,7 +41,8 @@
       "apps/api/src/function/packages/*",
       "apps/cli",
       "apps/migrate",
-      "apps/mongoreplicationcontroller"
+      "apps/mongoreplicationcontroller",
+      "apps/panel"
     ],
     "nohoist": [
       "@spica/cli/**"

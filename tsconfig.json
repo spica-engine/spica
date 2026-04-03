@@ -211,9 +211,6 @@
       "path": "./libs/filter"
     },
     {
-      "path": "./apps/spica"
-    },
-    {
       "path": "./libs/core"
     },
     {
