@@ -37,9 +37,6 @@
       "path": "../../../interface/replication"
     },
     {
-      "path": "../../../interface/realtime"
-    },
-    {
       "path": "../../../interface/passport/policy"
     },
     {

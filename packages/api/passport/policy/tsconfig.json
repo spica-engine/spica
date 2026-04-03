@@ -16,9 +16,6 @@
       "path": "../../../interface/versioncontrol"
     },
     {
-      "path": "../../../interface/realtime"
-    },
-    {
       "path": "../../../interface/passport/policy"
     },
     {

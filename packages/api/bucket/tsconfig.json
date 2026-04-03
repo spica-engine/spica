@@ -25,46 +25,13 @@
       "path": "../../interface/representative"
     },
     {
-      "path": "../../interface/replication"
-    },
-    {
-      "path": "../../interface/realtime"
-    },
-    {
       "path": "../../interface/preference"
     },
     {
       "path": "../../interface/passport/guard"
     },
     {
-      "path": "../../interface/function/scheduler"
-    },
-    {
-      "path": "../../interface/function/enqueuer"
-    },
-    {
-      "path": "../../interface/function"
-    },
-    {
       "path": "../../interface/core"
-    },
-    {
-      "path": "../../interface/bucket/realtime"
-    },
-    {
-      "path": "../../interface/bucket/hooks"
-    },
-    {
-      "path": "../../interface/bucket/history"
-    },
-    {
-      "path": "../../interface/bucket/graphql"
-    },
-    {
-      "path": "../../interface/bucket/expression"
-    },
-    {
-      "path": "../../interface/bucket/common"
     },
     {
       "path": "../../interface/bucket"

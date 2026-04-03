@@ -34,55 +34,16 @@
       "path": "apikey"
     },
     {
-      "path": "../../interface/versioncontrol"
-    },
-    {
-      "path": "../../interface/representative"
-    },
-    {
       "path": "../../interface/replication"
-    },
-    {
-      "path": "../../interface/realtime"
     },
     {
       "path": "../../interface/passport/user"
     },
     {
-      "path": "../../interface/passport/testing"
-    },
-    {
-      "path": "../../interface/passport/refresh_token"
-    },
-    {
-      "path": "../../interface/passport/policy"
-    },
-    {
       "path": "../../interface/passport/identity"
     },
     {
-      "path": "../../interface/passport/guard"
-    },
-    {
-      "path": "../../interface/passport/authfactor"
-    },
-    {
-      "path": "../../interface/passport/apikey"
-    },
-    {
       "path": "../../interface/passport"
-    },
-    {
-      "path": "../../interface/core"
-    },
-    {
-      "path": "../../interface/config"
-    },
-    {
-      "path": "../../interface/asset"
-    },
-    {
-      "path": "../../interface/activity"
     },
     {
       "path": "../../database"

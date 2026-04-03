@@ -19,12 +19,6 @@
       "path": "../../../interface/versioncontrol"
     },
     {
-      "path": "../../../interface/representative"
-    },
-    {
-      "path": "../../../interface/realtime"
-    },
-    {
       "path": "../../../database/pipeline"
     },
     {

@@ -16,9 +16,6 @@
       "path": "../guard"
     },
     {
-      "path": "../../../interface/realtime"
-    },
-    {
       "path": "../../../interface/passport/refresh_token"
     },
     {
