@@ -3,64 +3,85 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "./realtime"
-    },
-    {
-      "path": "./services"
-    },
-    {
-      "path": "./cache"
-    },
-    {
-      "path": "./common"
-    },
-    {
-      "path": "./expression"
-    },
-    {
-      "path": "./hooks"
-    },
-    {
-      "path": "./history"
-    },
-    {
-      "path": "./schemas-realtime"
-    },
-    {
-      "path": "./graphql"
-    },
-    {
-      "path": "../../../../libs/interface/bucket"
-    },
-    {
       "path": "../../../../libs/interface/status"
     },
     {
-      "path": "../../../../libs/core/schema"
+      "path": "../status"
     },
     {
-      "path": "../preference/services"
+      "path": "expression"
     },
     {
-      "path": "../../../../libs/interface/preference"
+      "path": "../../../../libs/interface/core"
     },
     {
-      "path": "../../../../libs/core/patch"
+      "path": "../../../../libs/core/differ"
     },
     {
       "path": "../../../../libs/interface/versioncontrol"
     },
     {
+      "path": "graphql"
+    },
+    {
+      "path": "../../../../libs/interface/preference"
+    },
+    {
+      "path": "../preference/services"
+    },
+    {
+      "path": "schemas-realtime"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../../../../libs/core/patch"
+    },
+    {
+      "path": "common"
+    },
+    {
+      "path": "cache"
+    },
+    {
+      "path": "../../../../libs/interface/passport/guard"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../../../libs/core"
+    },
+    {
+      "path": "hooks"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../../../libs/interface/bucket"
+    },
+    {
+      "path": "../../../../libs/database"
+    },
+    {
       "path": "../../../../libs/interface/representative"
     },
     {
-      "path": "../../../../libs/representative"
+      "path": "../../../../libs/core/schema"
     },
     {
-      "path": "../versioncontrol"
+      "path": "services"
+    },
+    {
+      "path": "history"
     },
     {
       "path": "../../../../libs/interface/asset"
+    },
+    {
+      "path": "../asset"
     }
   ]
 }

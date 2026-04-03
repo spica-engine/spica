@@ -19,7 +19,7 @@
       ],
       "options": {
         "commands": [
-          "tsc --project apps/cli/tsconfig.app.json",
+          "tsc -b apps/cli/tsconfig.app.json",
           "node apps/cli/copy-bin.js",
           "resolve-tspaths"
         ],

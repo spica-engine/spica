@@ -1,0 +1,13 @@
+{
+  "name": "@spica-server/database",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./testing": "./testing/index.ts",
+    "./realtime": "./realtime/index.ts",
+    "./realtime/src/database.service": "./realtime/src/database.service.ts",
+    "./realtime/src/levenshtein": "./realtime/src/levenshtein.ts",
+    "./pipeline": "./pipeline/index.ts"
+  }
+}

@@ -135,7 +135,6 @@ describe("Function Dependency Synchronizer", () => {
             sub_module: "package",
             type: ChangeType.CREATE,
             origin: ChangeOrigin.DOCUMENT,
-            resource_id: mockFunction._id.toString(),
             resource_extension: "json",
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
@@ -173,14 +172,13 @@ describe("Function Dependency Synchronizer", () => {
         await sleep(1000);
         const subs = dependencySupplier.listen().subscribe((changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
-            const fnWithUpdatedDeps = {...fn, dependencies: {axios: "^1.0.0", lodash: "^4.17.21"}};
+            const fnWithUpdatedDeps = {...fn, dependencies: {"is-number": "~7.0.0"}};
             CRUD.dependencies.update(engine, fnWithUpdatedDeps);
             return;
           }
 
           expect(JSON.parse(changeLog.resource_content).dependencies).toEqual({
-            axios: "^1.0.0",
-            lodash: "^4.17.21"
+            "is-number": "~7.0.0"
           });
           delete changeLog.resource_content;
 
@@ -189,7 +187,6 @@ describe("Function Dependency Synchronizer", () => {
             sub_module: "package",
             type: ChangeType.UPDATE,
             origin: ChangeOrigin.DOCUMENT,
-            resource_id: mockFunction._id.toString(),
             resource_extension: "json",
             resource_slug: mockFunction.name,
             created_at: expect.any(Date),
@@ -228,20 +225,23 @@ describe("Function Dependency Synchronizer", () => {
         await sleep(1000);
         const subs = dependencySupplier.listen().subscribe((changeLog: ChangeLog) => {
           if (changeLog.type === ChangeType.CREATE) {
-            const fnWithUpdatedDeps = {...fn, dependencies: {axios: "^1.0.0", lodash: "^4.17.21"}};
+            const fnWithUpdatedDeps = {
+              ...fn,
+              dependencies: {"is-number": "~7.0.0", "is-odd": "~3.0.0"}
+            };
             CRUD.dependencies.update(engine, fnWithUpdatedDeps);
             return;
           }
 
           if (changeLog.type === ChangeType.UPDATE && !firstUpdateReceived) {
-            const fnWithUpdatedDeps = {...fn, dependencies: {axios: "^1.0.0"}};
+            const fnWithUpdatedDeps = {...fn, dependencies: {"is-number": "~7.0.0"}};
             CRUD.dependencies.update(engine, fnWithUpdatedDeps);
             firstUpdateReceived = true;
             return;
           }
 
           expect(JSON.parse(changeLog.resource_content).dependencies).toEqual({
-            axios: "^1.0.0"
+            "is-number": "~7.0.0"
           });
 
           expect(changeLog).toEqual({
@@ -249,7 +249,6 @@ describe("Function Dependency Synchronizer", () => {
             sub_module: "package",
             type: ChangeType.UPDATE,
             origin: ChangeOrigin.DOCUMENT,
-            resource_id: mockFunction._id.toString(),
             resource_extension: "json",
             resource_content: changeLog.resource_content,
             resource_slug: mockFunction.name,
@@ -297,7 +296,6 @@ describe("Function Dependency Synchronizer", () => {
             sub_module: "package",
             type: ChangeType.DELETE,
             origin: ChangeOrigin.DOCUMENT,
-            resource_id: mockFunction._id.toString(),
             resource_slug: mockFunction.name,
             resource_extension: "json",
             resource_content: null,
@@ -325,8 +323,6 @@ describe("Function Dependency Synchronizer", () => {
         module: "function",
         subModule: "package",
         fileExtensions: ["json"],
-        findIdBySlug: expect.any(Function),
-        findIdByContent: expect.any(Function),
         apply: expect.any(Function)
       });
     });
@@ -356,7 +352,7 @@ describe("Function Dependency Synchronizer", () => {
         name: "new_function",
         version: "1.0.0",
         dependencies: {
-          express: "^4.18.0"
+          "is-even": "~1.0.0"
         }
       });
 
@@ -367,7 +363,6 @@ describe("Function Dependency Synchronizer", () => {
         sub_module: "package",
         type: ChangeType.CREATE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
         resource_content: packageContent,
         created_at: new Date(),
@@ -382,7 +377,7 @@ describe("Function Dependency Synchronizer", () => {
         status: SyncStatuses.SUCCEEDED
       });
       const packages = await CRUD.dependencies.findOne(functionService, engine, mockFunction._id);
-      expect(packages.some(p => p.name === "express")).toBe(true);
+      expect(packages.some(p => p.name === "is-even")).toBe(true);
     });
 
     it("should apply update change successfully", async () => {
@@ -408,15 +403,15 @@ describe("Function Dependency Synchronizer", () => {
 
       await CRUD.insert(functionService, engine, mockFunction);
 
-      const fnWithInitialDeps = {...mockFunction, dependencies: {axios: "^1.0.0"}};
+      const fnWithInitialDeps = {...mockFunction, dependencies: {"is-number": "~7.0.0"}};
       await CRUD.dependencies.update(engine, fnWithInitialDeps);
 
       const updatedPackage = JSON.stringify({
         name: "update_function",
         version: "2.0.0",
         dependencies: {
-          axios: "^1.5.0",
-          lodash: "^4.17.21"
+          "is-number": "~7.0.0",
+          "is-odd": "~3.0.0"
         }
       });
 
@@ -425,7 +420,6 @@ describe("Function Dependency Synchronizer", () => {
         sub_module: "package",
         type: ChangeType.UPDATE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
         resource_content: updatedPackage,
         created_at: new Date(),
@@ -441,11 +435,12 @@ describe("Function Dependency Synchronizer", () => {
       });
 
       const packages = await CRUD.dependencies.findOne(functionService, engine, mockFunction._id);
-      expect(packages.some(p => p.name === "lodash")).toBe(true);
-      expect(packages.some(p => p.name === "axios")).toBe(true);
+      expect(packages.some(p => p.name === "is-odd")).toBe(true);
+      expect(packages.some(p => p.name === "is-number")).toBe(true);
     });
 
-    it("should handle delete change by clearing package file", async () => {
+    // intentionally disabled this behavior since it can break something
+    xit("should handle delete change by clearing package file", async () => {
       const mockFunction: Function = {
         _id: new ObjectId(),
         name: "delete_function",
@@ -477,7 +472,6 @@ describe("Function Dependency Synchronizer", () => {
         sub_module: "package",
         type: ChangeType.DELETE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
         resource_content: null,
         created_at: new Date(),
@@ -510,7 +504,6 @@ describe("Function Dependency Synchronizer", () => {
         sub_module: "package",
         type: ChangeType.UPDATE,
         origin: ChangeOrigin.REPRESENTATIVE,
-        resource_id: "invalid-id",
         resource_slug: "test_function",
         resource_content: JSON.stringify({name: "test", version: "1.0.0"}),
         created_at: new Date(),

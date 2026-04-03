@@ -4,12 +4,6 @@
   "references": [
     {
       "path": "../../../../libs/interface/sms"
-    },
-    {
-      "path": "../../../../libs/database"
-    },
-    {
-      "path": "../passport/guard"
     }
   ]
 }

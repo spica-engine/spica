@@ -103,6 +103,7 @@ export class Default extends BaseStrategy {
   }
 
   async rename(oldName: string, newName: string): Promise<void> {
+    await this.ensureStorageDiskExists();
     const oldPath = this.buildPath(oldName);
     const newPath = this.buildPath(newName);
     try {

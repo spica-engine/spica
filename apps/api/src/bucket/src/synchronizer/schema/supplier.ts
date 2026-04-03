@@ -28,7 +28,6 @@ const getChangeLogFromBucket = (
     sub_module: subModule,
     origin: ChangeOrigin.DOCUMENT,
     type: type,
-    resource_id: bucket._id.toString(),
     resource_slug: bucket.title,
     resource_content: YAML.stringify(bucket),
     resource_extension: fileExtension,

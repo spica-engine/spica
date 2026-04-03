@@ -25,39 +25,15 @@ function validate(dashboard: Dashboard, validator: Validator): Promise<void> {
 }
 
 export const getApplier = (ds: DashboardService, validator: Validator): DocumentChangeApplier => {
-  const findDashboardByName = async (name: string) => {
-    const dashboard = await ds.findOne({name});
-    return dashboard?._id?.toString();
-  };
-
   return {
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findDashboardByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let dashboard: Dashboard;
-
-      try {
-        dashboard = YAML.parse(content);
-      } catch (error) {
-        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return Promise.resolve(null);
-      }
-
-      return findDashboardByName(dashboard.name);
-    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const type = change.type;
 
-        const overwritePrimaries = (change: ChangeLog, dashboard: any) => {
-          if (change.resource_id) {
-            dashboard._id = change.resource_id;
-          }
-
+        const overwriteSlug = (dashboard: any) => {
           if (change.resource_slug) {
             dashboard.name = change.resource_slug;
           }
@@ -66,7 +42,7 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
         switch (type) {
           case ChangeType.CREATE: {
             const dashboard: Dashboard = YAML.parse(change.resource_content);
-            overwritePrimaries(change, dashboard);
+            overwriteSlug(dashboard);
             await validate(dashboard, validator);
             await CRUD.insert(ds, dashboard);
             return {status: SyncStatuses.SUCCEEDED};
@@ -74,15 +50,24 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
 
           case ChangeType.UPDATE: {
             const dashboard: Dashboard = YAML.parse(change.resource_content);
-            overwritePrimaries(change, dashboard);
+            const existing = await ds.findOne({name: change.resource_slug});
+            if (existing) {
+              dashboard._id = existing._id;
+            }
+            overwriteSlug(dashboard);
             await validate(dashboard, validator);
             await CRUD.replace(ds, dashboard);
             return {status: SyncStatuses.SUCCEEDED};
           }
 
-          case ChangeType.DELETE:
-            await CRUD.remove(ds, change.resource_id);
+          case ChangeType.DELETE: {
+            const existing = await ds.findOne({name: change.resource_slug});
+            if (!existing) {
+              return {status: SyncStatuses.FAILED, reason: "Dashboard not found"};
+            }
+            await CRUD.remove(ds, existing._id);
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
           default:
             return {

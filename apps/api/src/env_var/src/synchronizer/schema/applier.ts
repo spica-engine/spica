@@ -25,38 +25,15 @@ function validate(envVar: EnvVar, validator: Validator): Promise<void> {
 }
 
 export const getApplier = (evs: EnvVarService, validator: Validator): DocumentChangeApplier => {
-  const findEnvVarByKey = async (key: string) => {
-    const envVar = await evs.findOne({key});
-    return envVar?._id?.toString();
-  };
-
   return {
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findEnvVarByKey(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let envVar: EnvVar;
-
-      try {
-        envVar = YAML.parse(content);
-        return findEnvVarByKey(envVar?.key);
-      } catch (error) {
-        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return Promise.resolve(null);
-      }
-    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const type = change.type;
 
-        const overwritePrimaries = (change: ChangeLog, envVar) => {
-          if (change.resource_id) {
-            envVar._id = change.resource_id;
-          }
-
+        const overwriteSlug = envVar => {
           if (change.resource_slug) {
             envVar.key = change.resource_slug;
           }
@@ -65,22 +42,31 @@ export const getApplier = (evs: EnvVarService, validator: Validator): DocumentCh
         switch (type) {
           case ChangeType.CREATE: {
             const envVar: EnvVar = YAML.parse(change.resource_content);
-            overwritePrimaries(change, envVar);
+            overwriteSlug(envVar);
             await validate(envVar, validator);
             await CRUD.insert(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
           }
           case ChangeType.UPDATE: {
-            const envVar: EnvVar = YAML.parse(change.resource_content);
-            overwritePrimaries(change, envVar);
+            const envVar = YAML.parse(change.resource_content);
+            const existing = await evs.findOne({key: change.resource_slug});
+            if (existing) {
+              envVar._id = existing._id.toString();
+            }
+            overwriteSlug(envVar);
             await validate(envVar, validator);
             await CRUD.replace(evs, envVar);
             return {status: SyncStatuses.SUCCEEDED};
           }
 
-          case ChangeType.DELETE:
-            await CRUD.remove(evs, change.resource_id);
+          case ChangeType.DELETE: {
+            const existing = await evs.findOne({key: change.resource_slug});
+            if (!existing) {
+              return {status: SyncStatuses.FAILED, reason: "EnvVar not found"};
+            }
+            await CRUD.remove(evs, existing._id.toString());
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
           default:
             return {

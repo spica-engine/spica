@@ -351,7 +351,7 @@ describe("Versioning e2e", () => {
           //bucket
           `bucket/${bucket.title}/schema.yaml`,
           //fn
-          `function/${fn.name}/index.js`,
+          `function/${fn.name}/index.mjs`,
           `function/${fn.name}/package.json`,
           `function/${fn.name}/schema.yaml`
         ]);
@@ -366,7 +366,7 @@ describe("Versioning e2e", () => {
 
         const changes = stringToArray(res.body.message);
         expect(changes).toEqual([
-          `function/${fn.name}/index.js`,
+          `function/${fn.name}/index.mjs`,
           `function/${fn.name}/package.json`,
           `function/${fn.name}/schema.yaml`
         ]);

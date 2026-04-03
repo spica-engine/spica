@@ -3,37 +3,103 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../versioncontrol"
-    },
-    {
-      "path": "./webhook"
-    },
-    {
-      "path": "./scheduler"
-    },
-    {
-      "path": "./log"
-    },
-    {
-      "path": "../asset"
-    },
-    {
-      "path": "./realtime"
-    },
-    {
       "path": "../status"
-    },
-    {
-      "path": "../activity/services"
-    },
-    {
-      "path": "../../../../libs/core/patch"
     },
     {
       "path": "../../../../libs/database/pipeline"
     },
     {
+      "path": "../../../../libs/interface/versioncontrol"
+    },
+    {
+      "path": "webhook"
+    },
+    {
+      "path": "../../../../libs/interface/function/scheduler"
+    },
+    {
+      "path": "../../../../libs/core/patch"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../../../libs/core"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../../../../libs/interface/replication"
+    },
+    {
+      "path": "../replication"
+    },
+    {
+      "path": "queue/proto"
+    },
+    {
+      "path": "../../../../libs/interface/function/pkgmanager"
+    },
+    {
+      "path": "scheduler"
+    },
+    {
       "path": "../../../../libs/interface/secret"
+    },
+    {
+      "path": "../../../../libs/interface/env_var"
+    },
+    {
+      "path": "../../../../libs/core/differ"
+    },
+    {
+      "path": "../../../../libs/interface/representative"
+    },
+    {
+      "path": "../../../../libs/database"
+    },
+    {
+      "path": "log"
+    },
+    {
+      "path": "services"
+    },
+    {
+      "path": "../../../../libs/interface/function"
+    },
+    {
+      "path": "../../../../libs/core/schema"
+    },
+    {
+      "path": "../../../../libs/interface/asset"
+    },
+    {
+      "path": "../asset"
+    },
+    {
+      "path": "../../../../libs/interface/activity"
+    },
+    {
+      "path": "../../../../libs/interface/realtime"
+    },
+    {
+      "path": "../../../../libs/realtime"
+    },
+    {
+      "path": "../passport/guard/services"
+    },
+    {
+      "path": "../../../../libs/database/realtime"
+    },
+    {
+      "path": "../../../../libs/interface/function/packages"
+    },
+    {
+      "path": "../../../../libs/interface/batch"
+    },
+    {
+      "path": "./realtime"
     }
   ]
 }

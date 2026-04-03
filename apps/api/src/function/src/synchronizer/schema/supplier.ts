@@ -28,7 +28,6 @@ const getChangeForSchema = (
     sub_module: subModule,
     origin: ChangeOrigin.DOCUMENT,
     type,
-    resource_id: fn._id.toString(),
     resource_slug: fn.name,
     resource_content: YAML.stringify(fn),
     resource_extension: fileExtension,

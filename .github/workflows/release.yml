@@ -5,28 +5,86 @@ on:
     types: [published]
 
 jobs:
-  release:
-    name: Release new version
+  docker-images:
+    name: Release Docker image (${{ matrix.target }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        targets:
+        target:
           - api
           - migrate
           - mongoreplicationcontroller
-          - devkit:*
-          - cli
-          - charts
+        include:
+          - target: api
+            dockerfile: apps/api/Dockerfile
+            image: spicaengine/api
+          - target: migrate
+            dockerfile: apps/migrate/Dockerfile
+            image: spicaengine/migrate
+          - target: mongoreplicationcontroller
+            dockerfile: apps/mongoreplicationcontroller/Dockerfile
+            image: spicaengine/mongoreplicationcontroller
 
     steps:
-      - name: Free up some space on disk
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      - name: Set the VERSION
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        id: setup-buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Cache Docker cache mounts
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: docker-cache-mounts
+          key: ${{ runner.os }}-docker-cache-${{ matrix.target }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-cache-${{ matrix.target }}-
+
+      - name: Inject Docker cache mounts
+        uses: reproducible-containers/buildkit-cache-dance@1b8ab18fbda5ad3646e3fcc9ed9dd41ce2f297b4 # v3.3.2
+        with:
+          builder: ${{ steps.setup-buildx.outputs.name }}
+          cache-dir: docker-cache-mounts
+          dockerfile: ${{ matrix.dockerfile }}
+          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ matrix.image }}:${{ env.VERSION }}
+          target: runner
+          platforms: linux/amd64, linux/arm64
+          cache-from: type=gha,scope=${{ matrix.target }}
+          cache-to: type=gha,scope=${{ matrix.target }},mode=max
+
+  npm-packages:
+    name: Release npm package (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - devkit:*
+          - cli
+
+    steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -49,11 +107,43 @@ jobs:
             ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
             ${{ runner.os }}-node-modules-
 
+      - name: Restore Nx Cache
+        uses: actions/cache@v4
+        with:
+          path: .nx
+          key: ${{ runner.os }}-nx-${{ hashFiles('**/yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nx-${{ hashFiles('**/yarn.lock') }}-
+            ${{ runner.os }}-nx-
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile --network-timeout 600000
 
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+
+      - name: Set the VERSION
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Set Yarn registry explicitly
+        run: yarn config set registry https://registry.npmjs.org
+
+      - name: Release npm packages
+        run: yarn run publish:${{ matrix.target }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  helm-charts:
+    name: Release Helm charts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set the VERSION
         run: |
@@ -68,19 +158,8 @@ jobs:
         with:
           credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
 
-      - name: Login to GPC
+      - name: Login to GCP
         run: gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Set Yarn registry explicitly
-        run: yarn config set registry https://registry.npmjs.org
-
-      - name: Release Applications
-        run: yarn run publish:${{ matrix.targets }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Release Helm charts
+        run: yarn run publish:charts

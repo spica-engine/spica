@@ -15,15 +15,14 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "lib": ["es2020", "dom"],
-    "esModuleInterop": true,
     "paths": {
       "@spica-devkit/*": ["apps/api/src/function/packages/*"],
       "@spica-server/*": ["libs/*", "apps/api/src/*"],
       "@spica/*": ["apps/*"]
-    }
+    },
+    "lib": ["es2020", "dom"],
+    "esModuleInterop": true
   },
-  "exclude": ["{workspaceRoot}/node_modules", "{workspaceRoot}/tmp", "{workspaceRoot}/dist"],
   "references": [
     {
       "path": "./apps/api/src/function/compiler/javascript"
@@ -336,6 +335,117 @@
     },
     {
       "path": "./apps/api/src/function/realtime"
+    },
+    {
+      "path": "./apps/api/src/versioncontrol/processors/changelog"
+    },
+    {
+      "path": "./apps/api/src/versioncontrol/services/changelog"
+    },
+    {
+      "path": "./apps/api/src/passport/refresh_token/realtime"
+    },
+    {
+      "path": "./apps/api/src/passport/refresh_token/services"
+    },
+    {
+      "path": "./apps/api/src/versioncontrol/processors/sync"
+    },
+    {
+      "path": "./apps/api/src/versioncontrol/services/sync"
+    },
+    {
+      "path": "./apps/api/src/versioncontrol/sync/realtime"
+    },
+    {
+      "path": "./apps/api/src/versioncontrol/sync/engine"
+    },
+    {
+      "path": "./apps/api/src/function/pkgmanager/local"
+    },
+    {
+      "path": "./apps/api/src/passport/policy/realtime"
+    },
+    {
+      "path": "./libs/interface/passport/refresh_token"
+    },
+    {
+      "path": "./apps/api/src/bucket/schemas-realtime"
+    },
+    {
+      "path": "./apps/api/src/passport/guard/services"
+    },
+    {
+      "path": "./apps/api/src/passport/refresh_token"
+    },
+    {
+      "path": "./apps/api/src/passport/user/realtime"
+    },
+    {
+      "path": "./apps/api/src/versioncontrol/sync"
+    },
+    {
+      "path": "./libs/interface/function/packages"
+    },
+    {
+      "path": "./apps/api/src/env_var/realtime"
+    },
+    {
+      "path": "./apps/api/src/env_var/services"
+    },
+    {
+      "path": "./apps/api/src/secret/realtime"
+    },
+    {
+      "path": "./apps/api/src/secret/services"
+    },
+    {
+      "path": "./libs/interface/passport/user"
+    },
+    {
+      "path": "./apps/api/src/passport/user"
+    },
+    {
+      "path": "./libs/interface/env_var"
+    },
+    {
+      "path": "./libs/interface/config"
+    },
+    {
+      "path": "./libs/interface/mailer"
+    },
+    {
+      "path": "./libs/interface/secret"
+    },
+    {
+      "path": "./apps/api/src/env_var"
+    },
+    {
+      "path": "./libs/core/encryption"
+    },
+    {
+      "path": "./libs/interface/batch"
+    },
+    {
+      "path": "./apps/api/src/config"
+    },
+    {
+      "path": "./apps/api/src/mailer"
+    },
+    {
+      "path": "./apps/api/src/secret"
+    },
+    {
+      "path": "./apps/api/src/batch"
+    },
+    {
+      "path": "./libs/interface/sms"
+    },
+    {
+      "path": "./apps/api/src/sms"
+    },
+    {
+      "path": "./libs/transaction"
     }
   ]
 }

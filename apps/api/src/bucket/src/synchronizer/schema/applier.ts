@@ -31,37 +31,15 @@ export const getApplier = (
   history: HistoryService,
   validator: Validator
 ): DocumentChangeApplier => {
-  const findBucketByTitle = async (title: string) => {
-    const bucket = await bs.findOne({title});
-    return bucket?._id?.toString();
-  };
   return {
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findBucketByTitle(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let bucket: Bucket;
-
-      try {
-        bucket = YAML.parse(content);
-        return findBucketByTitle(bucket?.title);
-      } catch (error) {
-        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return Promise.resolve(null);
-      }
-    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
 
-        const overwritePrimaries = (change: ChangeLog, bucket) => {
-          if (change.resource_id) {
-            bucket._id = change.resource_id;
-          }
-
+        const overwriteSlug = bucket => {
           if (change.resource_slug) {
             bucket.title = change.resource_slug;
           }
@@ -70,7 +48,7 @@ export const getApplier = (
         switch (operationType) {
           case ChangeType.CREATE: {
             const bucket = YAML.parse(change.resource_content);
-            overwritePrimaries(change, bucket);
+            overwriteSlug(bucket);
             await validate(bucket, validator);
             await CRUD.insert(bs, bucket);
             return {status: SyncStatuses.SUCCEEDED};
@@ -78,15 +56,24 @@ export const getApplier = (
 
           case ChangeType.UPDATE: {
             const bucket = YAML.parse(change.resource_content);
-            overwritePrimaries(change, bucket);
+            const existing = await bs.findOne({title: change.resource_slug});
+            if (existing) {
+              bucket._id = existing._id.toString();
+            }
+            overwriteSlug(bucket);
             await validate(bucket, validator);
             await CRUD.replace(bs, bds, history, bucket);
             return {status: SyncStatuses.SUCCEEDED};
           }
 
-          case ChangeType.DELETE:
-            await CRUD.remove(bs, bds, history, change.resource_id);
+          case ChangeType.DELETE: {
+            const existing = await bs.findOne({title: change.resource_slug});
+            if (!existing) {
+              return {status: SyncStatuses.FAILED, reason: "Bucket not found"};
+            }
+            await CRUD.remove(bs, bds, history, existing._id.toString());
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
           default:
             logger.warn(`Unknown operation type: ${operationType}`);

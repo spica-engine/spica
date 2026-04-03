@@ -2,19 +2,23 @@
   "extends": "../../../tsconfig.json",
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
-    {"path": "../../../../../libs/database/realtime"},
-    {"path": "../../../../../libs/core"},
-    {
-      "path": "../../passport/guard"
-    },
     {
       "path": "../../passport/guard/services"
     },
     {
-      "path": "../runtime/logger"
+      "path": "../../../../../libs/database/realtime"
     },
     {
       "path": "../../../../../libs/interface/function/log"
+    },
+    {
+      "path": "../../passport/guard"
+    },
+    {
+      "path": "../../../../../libs/database"
+    },
+    {
+      "path": "../../../../../libs/core"
     },
     {
       "path": "../../../../../libs/realtime"

@@ -1,31 +1,60 @@
+# syntax=docker/dockerfile:1
 FROM node:22-slim AS base
+
+ENV NX_DAEMON=false
+ENV NX_NO_CLOUD=true
+ENV NX_CACHE_DIRECTORY=/app/.nx/cache
+ENV NX_WORKSPACE_DATA_DIRECTORY=/app/.nx/workspace-data
 
 # install necessary tools
 FROM base AS tools
-RUN apt-get update && apt-get install git -y
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install git -y
 
 # install app deps to nodejs image
 FROM base AS deps
 WORKDIR /app
-COPY package.json yarn.lock ./
-COPY apps/api/package.json ./apps/api/package.json
-RUN yarn install --frozen-lockfile --network-timeout 600000
+ARG TARGETPLATFORM
+
+COPY --parents package.json yarn.lock \
+     libs/*/package.json \
+     apps/api/package.json \
+     apps/api/src/*/package.json \
+     apps/api/src/function/packages/*/package.json \
+     ./
+RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-${TARGETPLATFORM},sharing=locked \
+    YARN_CACHE_FOLDER=/root/.yarn-cache \
+    yarn install --frozen-lockfile --network-timeout 600000
+
 
 # install app production deps to nodejs image
 FROM base AS deps-production
 WORKDIR /app
-COPY package.json yarn.lock ./
-COPY apps/api/package.json ./apps/api/package.json
-RUN yarn install --frozen-lockfile --production --network-timeout 600000
+ARG TARGETPLATFORM
+
+COPY --parents package.json yarn.lock \
+     libs/*/package.json \
+     apps/api/package.json \
+     apps/api/src/*/package.json \
+     apps/api/src/function/packages/*/package.json \
+     ./
+RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod-${TARGETPLATFORM},sharing=locked \
+    YARN_CACHE_FOLDER=/root/.yarn-cache \
+    yarn install --frozen-lockfile --production --network-timeout 600000
+
 
 # build app to nodejs image
 FROM base AS build 
 WORKDIR /app
+ARG TARGETPLATFORM
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api ./apps/api
 COPY libs ./libs
 COPY nx.json package.json tsconfig.json yarn.lock ./
-RUN yarn run build:api
+RUN --mount=type=cache,target=/app/.nx/cache,id=nx-cache-${TARGETPLATFORM},sharing=locked \
+    --mount=type=cache,target=/app/.nx/workspace-data,id=nx-workspace-${TARGETPLATFORM},sharing=locked \
+    yarn nx compile api --skip-sync
 
 # test app
 FROM tools AS test

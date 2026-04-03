@@ -23,7 +23,6 @@ export interface ChangeLog {
   sub_module: string;
   type: ChangeType;
   origin: ChangeOrigin;
-  resource_id: string;
   resource_slug: string;
   resource_content: string;
   resource_extension: string;
@@ -57,8 +56,6 @@ export interface ChangeApplier extends ChangeModuleMeta {
 }
 
 export interface DocumentChangeApplier extends ChangeApplier {
-  findIdBySlug(slug: string): Promise<string | null>;
-  findIdByContent(content: string): Promise<string | null>;
   fileExtensions: string[];
 }
 

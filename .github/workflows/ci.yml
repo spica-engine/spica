@@ -64,13 +64,6 @@ jobs:
     name: Build Affected
     runs-on: ubuntu-latest
     steps:
-      - name: Free up some space on disk
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -95,6 +88,8 @@ jobs:
         run: git fetch origin ${{ env.origin_branch }}:${{ env.origin_branch }}
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+      - name: Verify TypeScript project references in sync
+        run: yarn nx sync:check
       - name: Build Affected
         run: yarn nx affected -t build
 
@@ -145,13 +140,6 @@ jobs:
       matrix:
         project: ${{ fromJson(needs.prepare_tests.outputs.projects) }}
     steps:
-      - name: Free up some space on disk
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Checkout
         uses: actions/checkout@v4
         with:

@@ -8,7 +8,6 @@ import {
   SyncStatuses,
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
-import {ObjectId} from "bson";
 import {Logger} from "@nestjs/common";
 
 const logger = new Logger("FunctionIdxSyncApplier");
@@ -18,21 +17,10 @@ const subModule = "index";
 const fileExtensions = ["mjs", "ts"];
 
 export const getApplier = (fs: FunctionService, engine: FunctionEngine): DocumentChangeApplier => {
-  const findFnByName = async (name: string) => {
-    const fn = await fs.findOne({name});
-    return fn?._id?.toString();
-  };
   return {
     module,
     subModule,
     fileExtensions,
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findFnByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      // no way to find fn by index content
-      return Promise.resolve(null);
-    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
@@ -40,12 +28,29 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
         switch (operationType) {
           case ChangeType.CREATE:
           case ChangeType.UPDATE:
-            await CRUD.index.write(fs, engine, change.resource_id, change.resource_content);
-            return {status: SyncStatuses.SUCCEEDED};
-
+            for (let attempt = 1; attempt <= 5; attempt++) {
+              try {
+                await CRUD.index.writeByName(
+                  fs,
+                  engine,
+                  change.resource_slug,
+                  change.resource_content
+                );
+                return {status: SyncStatuses.SUCCEEDED};
+              } catch (error) {
+                logger.warn(
+                  `Attempt ${attempt} - Error applying function index change: ${
+                    (error as any).stack || String(error)
+                  }`
+                );
+                if (attempt === 5) {
+                  return {status: SyncStatuses.FAILED, reason: error.message};
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+              }
+            }
+            break;
           case ChangeType.DELETE:
-            const fn = await CRUD.findOne(fs, new ObjectId(change.resource_id), {});
-            await engine.deleteIndex(fn);
             return {
               status: SyncStatuses.SUCCEEDED
             };

@@ -8,7 +8,7 @@ import {
 
 export class LocalPackageManager extends DelegatePkgManager {
   private readonly LOCAL_PACKAGE_PREFIX = "@spica-fn/";
-  private readonly LOCAL_PACKAGE_REGEX = /^@spica-fn\/.+/;
+  private readonly LOCAL_PACKAGE_REGEX = /^@spica-fn\/[^@]+$/;
 
   constructor(pkgManager: PackageManager) {
     super(pkgManager);
@@ -27,9 +27,7 @@ export class LocalPackageManager extends DelegatePkgManager {
     return super.uninstall(cwd, name);
   }
   ls(cwd: string, includeTypes?: boolean): Promise<Package[]> {
-    return super
-      .ls(cwd, includeTypes)
-      .then(packages => packages.map(pkg => this.maskLocalPackage(pkg)));
+    return super.ls(cwd, includeTypes);
   }
 
   private transformLocalPackageName(cwd: string, name: string) {
@@ -46,15 +44,6 @@ export class LocalPackageManager extends DelegatePkgManager {
 
     const relativePath = path.relative(cwd, folderPath);
     return `${name}@file:${relativePath}`;
-  }
-
-  private maskLocalPackage(pkg: Package) {
-    if (!pkg.version.startsWith("file:")) {
-      return pkg;
-    }
-
-    pkg.version = "internal";
-    return pkg;
   }
 
   private isLocalPackage(name: string): boolean {

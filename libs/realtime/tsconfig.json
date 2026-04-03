@@ -3,9 +3,6 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../interface/realtime"
-    },
-    {
       "path": "../interface/passport/guard"
     },
     {

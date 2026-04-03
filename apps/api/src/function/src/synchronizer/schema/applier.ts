@@ -48,36 +48,15 @@ export const getApplier = (
   logs: LogService,
   validator: Validator
 ): DocumentChangeApplier => {
-  const findFnByName = async (name: string) => {
-    const fn = await fs.findOne({name});
-    return fn?._id?.toString();
-  };
   return {
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findFnByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let fn: Function;
-      try {
-        fn = YAML.parse(content);
-        return findFnByName(fn?.name);
-      } catch (error) {
-        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return Promise.resolve(null);
-      }
-    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
 
-        const overwritePrimaries = (change: ChangeLog, fn) => {
-          if (change.resource_id) {
-            fn._id = change.resource_id;
-          }
-
+        const overwriteSlug = fn => {
           if (change.resource_slug) {
             fn.name = change.resource_slug;
           }
@@ -86,22 +65,31 @@ export const getApplier = (
         switch (operationType) {
           case ChangeType.CREATE: {
             const fn: Function = YAML.parse(change.resource_content);
-            overwritePrimaries(change, fn);
+            overwriteSlug(fn);
             await validate(fn, validator);
-            await CRUD.insert(fs, engine, fn);
+            await CRUD.insertSchema(fs, engine, fn);
             return {status: SyncStatuses.SUCCEEDED};
           }
           case ChangeType.UPDATE: {
             const fn: Function = YAML.parse(change.resource_content);
-            overwritePrimaries(change, fn);
+            const existing = await fs.findOne({name: change.resource_slug});
+            if (existing) {
+              fn._id = existing._id.toString();
+            }
+            overwriteSlug(fn);
             await validate(fn, validator);
             await CRUD.replace(fs, engine, fn);
             return {status: SyncStatuses.SUCCEEDED};
           }
 
-          case ChangeType.DELETE:
-            await CRUD.remove(fs, engine, logs, change.resource_id);
+          case ChangeType.DELETE: {
+            const existing = await fs.findOne({name: change.resource_slug});
+            if (!existing) {
+              return {status: SyncStatuses.FAILED, reason: "Function not found"};
+            }
+            await CRUD.remove(fs, engine, logs, existing._id.toString());
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
           default:
             logger.warn(`Unknown operation type: ${operationType}`);
