@@ -28,6 +28,7 @@
       "packages/api/bucket",
       "packages/api/config",
       "packages/api/dashboard",
+      "packages/api/dashboard/realtime",
       "packages/api/env_var",
       "packages/api/secret",
       "packages/api/function",

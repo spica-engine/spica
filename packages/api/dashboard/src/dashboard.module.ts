@@ -6,7 +6,7 @@ import DashboardSchema from "./schema/dashboard.json" with {type: "json"};
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {registerAssetHandlers} from "./asset.js";
-import {DashboardRealtimeModule} from "@spica-server/dashboard/realtime";
+import {DashboardRealtimeModule} from "@spica-server/dashboard-realtime";
 import {
   REGISTER_VC_CHANGE_HANDLER,
   RegisterVCChangeHandler

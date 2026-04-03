@@ -6081,19 +6081,32 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/dashboard-realtime@workspace:*, @spica-server/dashboard-realtime@workspace:packages/api/dashboard/realtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/dashboard-realtime@workspace:packages/api/dashboard/realtime"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/testing": "npm:^10.4.15"
+    "@nestjs/websockets": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@spica-server/realtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/dashboard@workspace:*, @spica-server/dashboard@workspace:packages/api/dashboard":
   version: 0.0.0-use.local
   resolution: "@spica-server/dashboard@workspace:packages/api/dashboard"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
-    "@nestjs/websockets": "npm:^10.4.15"
     "@spica-server/asset": "workspace:*"
     "@spica-server/core": "workspace:*"
+    "@spica-server/dashboard-realtime": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
-    "@spica-server/realtime": "workspace:*"
     rxjs: "npm:^7.8.1"
     yaml: "npm:^2.7.0"
   languageName: unknown
