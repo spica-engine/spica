@@ -124,7 +124,7 @@ export function constructValue(value: object, ctor: ValueConstructor) {
   return value;
 }
 
-function ObjectIdIfValid(val): ValueConstructor<ObjectId> {
+function ObjectIdIfValid(val): ObjectId | typeof val {
   return ObjectId.isValid(val) ? new ObjectId(val) : val;
 }
 
