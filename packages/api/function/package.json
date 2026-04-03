@@ -8,105 +8,9 @@
       "types": "./index.ts",
       "default": "./dist/index.js"
     },
-    "./services": {
-      "types": "./services/index.ts",
-      "default": "./services/dist/index.js"
-    },
-    "./scheduler": {
-      "types": "./scheduler/index.ts",
-      "default": "./scheduler/dist/index.js"
-    },
-    "./log": {
-      "types": "./log/index.ts",
-      "default": "./log/dist/index.js"
-    },
-    "./log/src/log.service": {
-      "types": "./log/src/log.service.ts",
-      "default": "./log/dist/src/log.service.js"
-    },
-    "./webhook": {
-      "types": "./webhook/index.ts",
-      "default": "./webhook/dist/index.js"
-    },
-    "./webhook/src/invoker": {
-      "types": "./webhook/src/invoker.ts",
-      "default": "./webhook/dist/src/invoker.js"
-    },
-    "./webhook/src/log.controller": {
-      "types": "./webhook/src/log.controller.ts",
-      "default": "./webhook/dist/src/log.controller.js"
-    },
-    "./webhook/src/log.service": {
-      "types": "./webhook/src/log.service.ts",
-      "default": "./webhook/dist/src/log.service.js"
-    },
-    "./webhook/src/schema": {
-      "types": "./webhook/src/schema.ts",
-      "default": "./webhook/dist/src/schema.js"
-    },
-    "./webhook/src/webhook.controller": {
-      "types": "./webhook/src/webhook.controller.ts",
-      "default": "./webhook/dist/src/webhook.controller.js"
-    },
-    "./enqueuer": {
-      "types": "./enqueuer/index.ts",
-      "default": "./enqueuer/dist/index.js"
-    },
-    "./compiler": {
-      "types": "./compiler/index.ts",
-      "default": "./compiler/dist/index.js"
-    },
-    "./compiler/javascript": {
-      "types": "./compiler/javascript/index.ts",
-      "default": "./compiler/javascript/dist/index.js"
-    },
-    "./compiler/typescript": {
-      "types": "./compiler/typescript/index.ts",
-      "default": "./compiler/typescript/dist/index.js"
-    },
-    "./runtime": {
-      "types": "./runtime/index.ts",
-      "default": "./runtime/dist/index.js"
-    },
-    "./runtime/node": {
-      "types": "./runtime/node/index.ts",
-      "default": "./runtime/node/dist/index.js"
-    },
-    "./runtime/io": {
-      "types": "./runtime/io/index.ts",
-      "default": "./runtime/io/dist/index.js"
-    },
-    "./runtime/logger": {
-      "types": "./runtime/logger/index.ts",
-      "default": "./runtime/logger/dist/index.js"
-    },
     "./runtime/testing": {
       "types": "./runtime/testing/index.ts",
       "default": "./runtime/testing/dist/index.js"
-    },
-    "./queue": {
-      "types": "./queue/index.ts",
-      "default": "./queue/dist/index.js"
-    },
-    "./queue/proto": {
-      "types": "./queue/proto/index.ts",
-      "default": "./queue/proto/dist/index.js"
-    },
-    "./queue/node": {
-      "types": "./queue/node/index.ts",
-      "default": "./queue/node/dist/index.js"
-    },
-    "./pkgmanager/node": {
-      "types": "./pkgmanager/node/index.ts",
-      "default": "./pkgmanager/node/dist/index.js"
-    },
-    "./pkgmanager/local": {
-      "types": "./pkgmanager/local/index.ts",
-      "default": "./pkgmanager/local/dist/index.js"
-    },
-    "./realtime": {
-      "types": "./realtime/index.ts",
-      "default": "./realtime/dist/index.js"
     },
     "./src/activity.resource": {
       "types": "./src/activity.resource.ts",
@@ -142,8 +46,6 @@
     }
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.12.5",
-    "@grpc/proto-loader": "^0.8.0",
     "@nestjs/common": "^10.4.15",
     "@nestjs/core": "^10.4.15",
     "@nestjs/platform-express": "^10.4.15",
@@ -153,6 +55,12 @@
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
+    "@spica-server/function-log": "workspace:*",
+    "@spica-server/function-queue-proto": "workspace:*",
+    "@spica-server/function-realtime": "workspace:*",
+    "@spica-server/function-scheduler": "workspace:*",
+    "@spica-server/function-services": "workspace:*",
+    "@spica-server/function-webhook": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport": "workspace:*",
     "@spica-server/realtime": "workspace:*",
@@ -160,22 +68,11 @@
     "@spica-server/secret": "workspace:*",
     "@spica-server/secret-services": "workspace:*",
     "@spica-server/status": "workspace:*",
-    "amqplib": "^0.10.7",
     "axios": "^1.8.2",
-    "body-parser": "^1.20.3",
     "bson": "^6.10.1",
     "chokidar": "^4.0.3",
-    "express": "^4.21.2",
-    "fast-glob": "^3.3.3",
-    "google-protobuf": "^3.21.4",
-    "handlebars": "^4.7.8",
-    "node-fetch": "^3.3.2",
-    "node-schedule": "^2.1.1",
-    "qs": "^6.14.0",
     "rimraf": "^6.0.1",
     "rxjs": "^7.8.1",
-    "typescript": "^5.7.3",
-    "uniqid": "^5.4.0",
     "ws": "^8.18.0",
     "yaml": "^2.7.0"
   },
@@ -184,11 +81,7 @@
     "@spica-devkit/database": "*",
     "@spica-server/bucket": "workspace:*",
     "@spica-server/preference-testing": "workspace:*",
-    "@types/amqplib": "^0.10.7",
-    "@types/express": "^4.17.21",
     "@types/json-schema": "^7.0.15",
-    "@types/uniqid": "^5.3.4",
-    "@types/ws": "^8.5.13",
     "testcontainers": "^10.0.0"
   }
 }

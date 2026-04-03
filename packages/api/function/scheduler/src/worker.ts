@@ -1,6 +1,6 @@
-import {event} from "@spica-server/function/queue/proto";
-import {Runtime} from "@spica-server/function/runtime";
-import {NodeWorker} from "@spica-server/function/runtime/node";
+import {event} from "@spica-server/function-queue-proto";
+import {Runtime} from "@spica-server/function-runtime";
+import {NodeWorker} from "@spica-server/function-runtime-node";
 import {Description, SpawnOptions} from "@spica-server/interface/function/runtime";
 import {Schedule, WorkerState} from "@spica-server/interface/function/scheduler";
 

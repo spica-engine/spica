@@ -1,4 +1,4 @@
-import {HttpRateLimitService} from "@spica-server/function/enqueuer";
+import {HttpRateLimitService} from "@spica-server/function-enqueuer";
 
 describe("HttpRateLimitService", () => {
   let service: HttpRateLimitService;

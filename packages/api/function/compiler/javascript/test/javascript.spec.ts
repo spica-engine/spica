@@ -1,5 +1,5 @@
 import {Compilation} from "@spica-server/interface/function/compiler";
-import {Javascript} from "@spica-server/function/compiler/javascript";
+import {Javascript} from "@spica-server/function-compiler-javascript";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import fs from "fs";
 import path from "path";

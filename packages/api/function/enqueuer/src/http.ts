@@ -1,6 +1,6 @@
 import {Middlewares} from "@spica-server/core";
-import {EventQueue, HttpQueue} from "@spica-server/function/queue";
-import {event, Http} from "@spica-server/function/queue/proto";
+import {EventQueue, HttpQueue} from "@spica-server/function-queue";
+import {event, Http} from "@spica-server/function-queue-proto";
 import {Enqueuer} from "./enqueuer.js";
 import express from "express";
 import bodyParser from "body-parser";

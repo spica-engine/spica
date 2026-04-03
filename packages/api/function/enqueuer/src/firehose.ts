@@ -1,5 +1,5 @@
-import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
-import {event, Firehose} from "@spica-server/function/queue/proto";
+import {EventQueue, FirehoseQueue} from "@spica-server/function-queue";
+import {event, Firehose} from "@spica-server/function-queue-proto";
 import url from "url";
 import ws, {WebSocketServer} from "ws";
 import {Enqueuer} from "./enqueuer.js";

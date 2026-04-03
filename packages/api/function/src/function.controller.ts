@@ -25,7 +25,7 @@ import {activity} from "@spica-server/activity-services";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {Scheduler} from "@spica-server/function/scheduler";
+import {Scheduler} from "@spica-server/function-scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import os from "os";
 import {of, OperatorFunction} from "rxjs";
@@ -38,7 +38,7 @@ import {
   createFunctionSecretActivity
 } from "./activity.resource.js";
 import {FunctionEngine} from "./engine.js";
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "@spica-server/function-services";
 import {
   Options,
   FUNCTION_OPTIONS,
@@ -46,7 +46,7 @@ import {
   Function,
   SecretRelation
 } from "@spica-server/interface/function";
-import {LogService} from "@spica-server/function/log/src/log.service";
+import {LogService} from "@spica-server/function-log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver.js";
 import {applyPatch} from "@spica-server/core/patch";
 import * as CRUD from "./crud.js";

@@ -1,14 +1,14 @@
 import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
-import {Scheduler} from "@spica-server/function/scheduler";
+import {Scheduler} from "@spica-server/function-scheduler";
 import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
-import {event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function-queue-proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
 import {rimraf} from "rimraf";
 import {Observable} from "rxjs";
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "@spica-server/function-services";
 import {
   CollectionSlug,
   Options,

@@ -1,5 +1,5 @@
-import {Npm} from "@spica-server/function/pkgmanager/node";
-import {LocalPackageManager} from "@spica-server/function/pkgmanager/local";
+import {Npm} from "@spica-server/function-pkgmanager-node";
+import {LocalPackageManager} from "@spica-server/function-pkgmanager-local";
 import fs from "fs";
 import path from "path";
 import {of} from "rxjs";

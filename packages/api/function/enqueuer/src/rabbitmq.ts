@@ -1,7 +1,7 @@
-import {EventQueue, RabbitMQOptions, RabbitMQQueue} from "@spica-server/function/queue";
+import {EventQueue, RabbitMQOptions, RabbitMQQueue} from "@spica-server/function-queue";
 import {Enqueuer} from "./enqueuer.js";
 import {Description} from "@spica-server/interface/function/enqueuer";
-import {event, RabbitMQ} from "@spica-server/function/queue/proto";
+import {event, RabbitMQ} from "@spica-server/function-queue-proto";
 import amqp from "amqplib";
 import uniqid from "uniqid";
 import {ClassCommander, JobReducer} from "@spica-server/replication";

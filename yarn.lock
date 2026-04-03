@@ -6100,7 +6100,9 @@ __metadata:
     "@spica-server/bucket-hooks-proto": "workspace:*"
     "@spica-server/bucket-services": "workspace:*"
     "@spica-server/database": "workspace:*"
-    "@spica-server/function": "workspace:*"
+    "@spica-server/function-enqueuer": "workspace:*"
+    "@spica-server/function-queue": "workspace:*"
+    "@spica-server/function-queue-proto": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
@@ -6331,12 +6333,243 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/function-compiler-javascript@workspace:*, @spica-server/function-compiler-javascript@workspace:packages/api/function/compiler/javascript":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-compiler-javascript@workspace:packages/api/function/compiler/javascript"
+  dependencies:
+    "@spica-server/function-compiler": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-compiler-typescript@workspace:*, @spica-server/function-compiler-typescript@workspace:packages/api/function/compiler/typescript":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-compiler-typescript@workspace:packages/api/function/compiler/typescript"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/function-compiler": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    rxjs: "npm:^7.8.1"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-compiler@workspace:*, @spica-server/function-compiler@workspace:packages/api/function/compiler":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-compiler@workspace:packages/api/function/compiler"
+  dependencies:
+    "@spica-server/interface": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-enqueuer@workspace:*, @spica-server/function-enqueuer@workspace:packages/api/function/enqueuer":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-enqueuer@workspace:packages/api/function/enqueuer"
+  dependencies:
+    "@grpc/grpc-js": "npm:^1.12.5"
+    "@grpc/proto-loader": "npm:^0.8.0"
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/function-queue": "workspace:*"
+    "@spica-server/function-queue-proto": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/replication": "workspace:*"
+    "@types/amqplib": "npm:^0.10.7"
+    "@types/express": "npm:^4.17.21"
+    "@types/uniqid": "npm:^5.3.4"
+    "@types/ws": "npm:^8.5.13"
+    amqplib: "npm:^0.10.7"
+    body-parser: "npm:^1.20.3"
+    express: "npm:^4.21.2"
+    node-schedule: "npm:^2.1.1"
+    rxjs: "npm:^7.8.1"
+    uniqid: "npm:^5.4.0"
+    ws: "npm:^8.18.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-log@workspace:*, @spica-server/function-log@workspace:packages/api/function/log":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-log@workspace:packages/api/function/log"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/websockets": "npm:^10.4.15"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@spica-server/realtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-pkgmanager-local@workspace:*, @spica-server/function-pkgmanager-local@workspace:packages/api/function/pkgmanager/local":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-pkgmanager-local@workspace:packages/api/function/pkgmanager/local"
+  dependencies:
+    "@spica-server/interface": "workspace:*"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-pkgmanager-node@workspace:*, @spica-server/function-pkgmanager-node@workspace:packages/api/function/pkgmanager/node":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-pkgmanager-node@workspace:packages/api/function/pkgmanager/node"
+  dependencies:
+    "@spica-server/interface": "workspace:*"
+    fast-glob: "npm:^3.3.3"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-queue-node@workspace:packages/api/function/queue/node":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-queue-node@workspace:packages/api/function/queue/node"
+  dependencies:
+    "@grpc/grpc-js": "npm:^1.12.5"
+    "@spica-server/function-queue-proto": "workspace:*"
+    qs: "npm:^6.14.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-queue-proto@workspace:*, @spica-server/function-queue-proto@workspace:packages/api/function/queue/proto":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-queue-proto@workspace:packages/api/function/queue/proto"
+  dependencies:
+    "@grpc/grpc-js": "npm:^1.12.5"
+    google-protobuf: "npm:^3.21.4"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-queue@workspace:*, @spica-server/function-queue@workspace:packages/api/function/queue":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-queue@workspace:packages/api/function/queue"
+  dependencies:
+    "@grpc/grpc-js": "npm:^1.12.5"
+    "@spica-server/function-queue-proto": "workspace:*"
+    "@types/amqplib": "npm:^0.10.7"
+    "@types/uniqid": "npm:^5.3.4"
+    "@types/ws": "npm:^8.5.13"
+    amqplib: "npm:^0.10.7"
+    uniqid: "npm:^5.4.0"
+    ws: "npm:^8.18.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-realtime@workspace:*, @spica-server/function-realtime@workspace:packages/api/function/realtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-realtime@workspace:packages/api/function/realtime"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/websockets": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@spica-server/realtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-runtime-io@workspace:*, @spica-server/function-runtime-io@workspace:packages/api/function/runtime/io":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-runtime-io@workspace:packages/api/function/runtime/io"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    "@spica-server/function-runtime-logger": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-runtime-logger@workspace:*, @spica-server/function-runtime-logger@workspace:packages/api/function/runtime/logger":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-runtime-logger@workspace:packages/api/function/runtime/logger"
+  dependencies:
+    "@spica-server/interface": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-runtime-node-bootstrap@workspace:packages/api/function/runtime/node/bootstrap":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-runtime-node-bootstrap@workspace:packages/api/function/runtime/node/bootstrap"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-runtime-node@workspace:*, @spica-server/function-runtime-node@workspace:packages/api/function/runtime/node":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-runtime-node@workspace:packages/api/function/runtime/node"
+  dependencies:
+    "@spica-server/function-runtime": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-runtime@workspace:*, @spica-server/function-runtime@workspace:packages/api/function/runtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-runtime@workspace:packages/api/function/runtime"
+  dependencies:
+    "@spica-server/interface": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-scheduler@workspace:*, @spica-server/function-scheduler@workspace:packages/api/function/scheduler":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-scheduler@workspace:packages/api/function/scheduler"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/core": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/function-compiler": "workspace:*"
+    "@spica-server/function-compiler-javascript": "workspace:*"
+    "@spica-server/function-compiler-typescript": "workspace:*"
+    "@spica-server/function-enqueuer": "workspace:*"
+    "@spica-server/function-pkgmanager-local": "workspace:*"
+    "@spica-server/function-pkgmanager-node": "workspace:*"
+    "@spica-server/function-queue": "workspace:*"
+    "@spica-server/function-queue-proto": "workspace:*"
+    "@spica-server/function-runtime": "workspace:*"
+    "@spica-server/function-runtime-io": "workspace:*"
+    "@spica-server/function-runtime-logger": "workspace:*"
+    "@spica-server/function-runtime-node": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@spica-server/replication": "workspace:*"
+    "@types/uniqid": "npm:^5.3.4"
+    rxjs: "npm:^7.8.1"
+    uniqid: "npm:^5.4.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-services@workspace:*, @spica-server/function-services@workspace:packages/api/function/services":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-services@workspace:packages/api/function/services"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/env_var-services": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/secret-services": "workspace:*"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-webhook@workspace:*, @spica-server/function-webhook@workspace:packages/api/function/webhook":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-webhook@workspace:packages/api/function/webhook"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@types/json-schema": "npm:^7.0.15"
+    handlebars: "npm:^4.7.8"
+    node-fetch: "npm:^3.3.2"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/function@workspace:*, @spica-server/function@workspace:packages/api/function":
   version: 0.0.0-use.local
   resolution: "@spica-server/function@workspace:packages/api/function"
   dependencies:
-    "@grpc/grpc-js": "npm:^1.12.5"
-    "@grpc/proto-loader": "npm:^0.8.0"
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/core": "npm:^10.4.15"
     "@nestjs/platform-express": "npm:^10.4.15"
@@ -6349,6 +6582,12 @@ __metadata:
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/env_var-services": "workspace:*"
+    "@spica-server/function-log": "workspace:*"
+    "@spica-server/function-queue-proto": "workspace:*"
+    "@spica-server/function-realtime": "workspace:*"
+    "@spica-server/function-scheduler": "workspace:*"
+    "@spica-server/function-services": "workspace:*"
+    "@spica-server/function-webhook": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/preference-testing": "workspace:*"
@@ -6357,28 +6596,13 @@ __metadata:
     "@spica-server/secret": "workspace:*"
     "@spica-server/secret-services": "workspace:*"
     "@spica-server/status": "workspace:*"
-    "@types/amqplib": "npm:^0.10.7"
-    "@types/express": "npm:^4.17.21"
     "@types/json-schema": "npm:^7.0.15"
-    "@types/uniqid": "npm:^5.3.4"
-    "@types/ws": "npm:^8.5.13"
-    amqplib: "npm:^0.10.7"
     axios: "npm:^1.8.2"
-    body-parser: "npm:^1.20.3"
     bson: "npm:^6.10.1"
     chokidar: "npm:^4.0.3"
-    express: "npm:^4.21.2"
-    fast-glob: "npm:^3.3.3"
-    google-protobuf: "npm:^3.21.4"
-    handlebars: "npm:^4.7.8"
-    node-fetch: "npm:^3.3.2"
-    node-schedule: "npm:^2.1.1"
-    qs: "npm:^6.14.0"
     rimraf: "npm:^6.0.1"
     rxjs: "npm:^7.8.1"
     testcontainers: "npm:^10.0.0"
-    typescript: "npm:^5.7.3"
-    uniqid: "npm:^5.4.0"
     ws: "npm:^8.18.0"
     yaml: "npm:^2.7.0"
   languageName: unknown
@@ -6390,7 +6614,9 @@ __metadata:
   dependencies:
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
-    "@spica-server/function": "workspace:*"
+    "@spica-server/function-enqueuer": "workspace:*"
+    "@spica-server/function-queue": "workspace:*"
+    "@spica-server/function-queue-proto": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@types/express": "npm:^4.17.21"
     "@types/json-schema": "npm:^7.0.15"
@@ -6740,6 +6966,9 @@ __metadata:
     "@spica-server/env_var": "workspace:*"
     "@spica-server/env_var-services": "workspace:*"
     "@spica-server/function": "workspace:*"
+    "@spica-server/function-log": "workspace:*"
+    "@spica-server/function-scheduler": "workspace:*"
+    "@spica-server/function-services": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/preference-testing": "workspace:*"

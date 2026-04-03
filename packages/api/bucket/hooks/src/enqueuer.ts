@@ -1,6 +1,6 @@
-import {Enqueuer} from "@spica-server/function/enqueuer";
-import {EventQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
+import {Enqueuer} from "@spica-server/function-enqueuer";
+import {EventQueue} from "@spica-server/function-queue";
+import {event} from "@spica-server/function-queue-proto";
 import {hooks} from "@spica-server/bucket-hooks-proto";
 import {ChangeQueue} from "./queue.js";
 import {ChangeEmitter, changeKey} from "./emitter.js";

@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "@spica-server/function-services";
 import YAML from "yaml";
 import {
   ChangeLog,

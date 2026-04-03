@@ -1,4 +1,4 @@
-import {Grpc} from "@spica-server/function/queue/proto";
+import {Grpc} from "@spica-server/function-queue-proto";
 import grpc from "@grpc/grpc-js";
 
 export class GrpcQueue {

@@ -1,0 +1,17 @@
+{
+  "name": "@spica-server/function-runtime-io",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@spica-server/database": "workspace:*",
+    "@spica-server/function-runtime-logger": "workspace:*",
+    "@spica-server/interface": "workspace:*"
+  }
+}

@@ -1,5 +1,5 @@
-import {EventQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
+import {EventQueue} from "@spica-server/function-queue";
+import {event} from "@spica-server/function-queue-proto";
 import {Subject} from "rxjs";
 import {debounceTime, take} from "rxjs/operators";
 import {Enqueuer} from "./enqueuer.js";

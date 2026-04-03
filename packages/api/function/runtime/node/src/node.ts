@@ -1,4 +1,4 @@
-import {Worker} from "@spica-server/function/runtime";
+import {Worker} from "@spica-server/function-runtime";
 import child_process from "child_process";
 import {Writable} from "stream";
 import path from "path";

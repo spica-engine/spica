@@ -1,9 +1,9 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
-import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "@spica-server/function-services";
 import {INestApplication} from "@nestjs/common";
 import {EnvVarService} from "@spica-server/env_var-services";
 import {TargetChange, ChangeKind} from "@spica-server/interface/function";

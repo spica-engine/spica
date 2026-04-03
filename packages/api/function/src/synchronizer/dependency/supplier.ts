@@ -1,6 +1,6 @@
 import {Observable} from "rxjs";
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "@spica-server/function-services";
 import {
   ChangeLog,
   ChangeType,

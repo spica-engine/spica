@@ -1,5 +1,5 @@
-import {EventQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
+import {EventQueue} from "@spica-server/function-queue";
+import {event} from "@spica-server/function-queue-proto";
 import {ChangeEnqueuer} from "@spica-server/bucket-hooks/src/enqueuer";
 import {ChangeEmitter} from "@spica-server/bucket-hooks/src/emitter";
 

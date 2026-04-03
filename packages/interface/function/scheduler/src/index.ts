@@ -1,8 +1,8 @@
-import {Enqueuer} from "@spica-server/function/enqueuer";
-import {EventQueue, Queue} from "@spica-server/function/queue";
+import {Enqueuer} from "@spica-server/function-enqueuer";
+import {EventQueue, Queue} from "@spica-server/function-queue";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CorsOptions} from "@spica-server/interface/core";
-import {event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function-queue-proto";
 
 export type EnqueuerFactory<QueueType, OptionsT> = (
   queue: EventQueue,

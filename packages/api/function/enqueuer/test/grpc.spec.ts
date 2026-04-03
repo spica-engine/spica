@@ -1,6 +1,6 @@
-import {GrpcEnqueuer} from "@spica-server/function/enqueuer";
-import {GrpcQueue} from "@spica-server/function/queue";
-import {event, Grpc} from "@spica-server/function/queue/proto";
+import {GrpcEnqueuer} from "@spica-server/function-enqueuer";
+import {GrpcQueue} from "@spica-server/function-queue";
+import {event, Grpc} from "@spica-server/function-queue-proto";
 import grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
 import fs from "fs";

@@ -1,4 +1,4 @@
-import {event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function-queue-proto";
 import {Description} from "@spica-server/interface/function/enqueuer";
 
 export abstract class Enqueuer<OptionsT> {

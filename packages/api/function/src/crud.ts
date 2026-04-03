@@ -1,4 +1,4 @@
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "@spica-server/function-services";
 import {
   Dependency,
   EnvRelation,
@@ -10,7 +10,7 @@ import {
 import {changesFromTriggers, createTargetChanges, hasContextChange} from "./change.js";
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine.js";
-import {LogService} from "@spica-server/function/log";
+import {LogService} from "@spica-server/function-log";
 import {BadRequestException, InternalServerErrorException, NotFoundException} from "@nestjs/common";
 import {FunctionPipelineBuilder} from "./pipeline.builder.js";
 import fs from "fs";

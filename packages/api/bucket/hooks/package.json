@@ -27,7 +27,9 @@
     "@spica-server/bucket-hooks-proto": "workspace:*",
     "@spica-server/bucket-services": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/function": "workspace:*",
+    "@spica-server/function-enqueuer": "workspace:*",
+    "@spica-server/function-queue": "workspace:*",
+    "@spica-server/function-queue-proto": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/replication": "workspace:*",
     "uniqid": "^5.4.0"

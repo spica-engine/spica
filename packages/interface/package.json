@@ -184,7 +184,9 @@
   "dependencies": {
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/function": "workspace:*",
+    "@spica-server/function-enqueuer": "workspace:*",
+    "@spica-server/function-queue": "workspace:*",
+    "@spica-server/function-queue-proto": "workspace:*",
     "@spica-server/replication": "workspace:*",
     "mongodb": "^6.12.0",
     "rxjs": "^7.8.1",

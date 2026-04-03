@@ -1,0 +1,37 @@
+{
+  "name": "@spica-server/function-scheduler",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/function-compiler": "workspace:*",
+    "@spica-server/function-compiler-javascript": "workspace:*",
+    "@spica-server/function-compiler-typescript": "workspace:*",
+    "@spica-server/function-enqueuer": "workspace:*",
+    "@spica-server/function-pkgmanager-local": "workspace:*",
+    "@spica-server/function-pkgmanager-node": "workspace:*",
+    "@spica-server/function-queue": "workspace:*",
+    "@spica-server/function-queue-proto": "workspace:*",
+    "@spica-server/function-runtime": "workspace:*",
+    "@spica-server/function-runtime-io": "workspace:*",
+    "@spica-server/function-runtime-logger": "workspace:*",
+    "@spica-server/function-runtime-node": "workspace:*",
+    "@spica-server/interface": "workspace:*",
+    "@spica-server/passport": "workspace:*",
+    "@spica-server/replication": "workspace:*",
+    "rxjs": "^7.8.1",
+    "uniqid": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/uniqid": "^5.3.4"
+  }
+}

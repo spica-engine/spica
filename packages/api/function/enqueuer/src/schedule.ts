@@ -1,5 +1,5 @@
-import {EventQueue} from "@spica-server/function/queue";
-import {event} from "@spica-server/function/queue/proto";
+import {EventQueue} from "@spica-server/function-queue";
+import {event} from "@spica-server/function-queue-proto";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import schedule from "node-schedule";

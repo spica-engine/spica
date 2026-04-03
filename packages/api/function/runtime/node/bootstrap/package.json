@@ -1,4 +1,6 @@
 {
-  "name": "function-node-entrypoint",
+  "name": "@spica-server/function-runtime-node-bootstrap",
+  "version": "0.0.0",
+  "private": true,
   "type": "module"
 }

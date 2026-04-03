@@ -18,10 +18,10 @@ import {
 import {
   FunctionService,
   ServicesModule as FunctionServicesModule
-} from "@spica-server/function/services";
+} from "@spica-server/function-services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import {LogModule} from "@spica-server/function/log";
-import {SchedulerModule} from "@spica-server/function/scheduler";
+import {LogModule} from "@spica-server/function-log";
+import {SchedulerModule} from "@spica-server/function-scheduler";
 import {Function, FUNCTION_OPTIONS} from "@spica-server/interface/function";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {VersionControlModule} from "../../src";

@@ -1,6 +1,6 @@
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "@spica-server/function-services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import {LogService} from "@spica-server/function/log";
+import {LogService} from "@spica-server/function-log";
 import * as CRUD from "../../../src/crud.js";
 import {Function} from "@spica-server/interface/function";
 import YAML from "yaml";

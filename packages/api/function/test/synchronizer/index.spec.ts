@@ -1,5 +1,5 @@
 import {Test} from "@nestjs/testing";
-import {FunctionService} from "@spica-server/function/services";
+import {FunctionService} from "@spica-server/function-services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {DatabaseService} from "@spica-server/database";
@@ -16,7 +16,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
-import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
+import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {SecretService} from "@spica-server/secret-services";
 
 function sleep(ms: number) {
