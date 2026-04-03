@@ -1,6 +1,6 @@
 import {Module} from "@nestjs/common";
 import {SyncProcessor} from "./processor.js";
-import {ServicesModule, SyncService} from "@spica-server/versioncontrol/services/sync";
+import {ServicesModule, SyncService} from "@spica-server/versioncontrol-services-sync";
 import {VCConfigService} from "./config.service.js";
 
 @Module({})

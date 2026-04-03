@@ -6498,28 +6498,108 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/versioncontrol-processors-changelog@workspace:*, @spica-server/versioncontrol-processors-changelog@workspace:packages/api/versioncontrol/processors/changelog":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/versioncontrol-processors-changelog@workspace:packages/api/versioncontrol/processors/changelog"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/versioncontrol-services-changelog": "workspace:*"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/versioncontrol-processors-sync@workspace:*, @spica-server/versioncontrol-processors-sync@workspace:packages/api/versioncontrol/processors/sync":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/versioncontrol-processors-sync@workspace:packages/api/versioncontrol/processors/sync"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/config": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/versioncontrol-services-sync": "workspace:*"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/versioncontrol-services-changelog@workspace:*, @spica-server/versioncontrol-services-changelog@workspace:packages/api/versioncontrol/services/changelog":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/versioncontrol-services-changelog@workspace:packages/api/versioncontrol/services/changelog"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/versioncontrol-services-sync@workspace:*, @spica-server/versioncontrol-services-sync@workspace:packages/api/versioncontrol/services/sync":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/versioncontrol-services-sync@workspace:packages/api/versioncontrol/services/sync"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/versioncontrol-sync-engine@workspace:*, @spica-server/versioncontrol-sync-engine@workspace:packages/api/versioncontrol/sync/engine":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/versioncontrol-sync-engine@workspace:packages/api/versioncontrol/sync/engine"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/replication": "workspace:*"
+    "@spica-server/versioncontrol-processors-changelog": "workspace:*"
+    "@spica-server/versioncontrol-processors-sync": "workspace:*"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/versioncontrol-sync-realtime@workspace:*, @spica-server/versioncontrol-sync-realtime@workspace:packages/api/versioncontrol/sync/realtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/versioncontrol-sync-realtime@workspace:packages/api/versioncontrol/sync/realtime"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/websockets": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@spica-server/realtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/versioncontrol-sync@workspace:*, @spica-server/versioncontrol-sync@workspace:packages/api/versioncontrol/sync":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/versioncontrol-sync@workspace:packages/api/versioncontrol/sync"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@spica-server/versioncontrol-services-sync": "workspace:*"
+    "@spica-server/versioncontrol-sync-realtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/versioncontrol@workspace:*, @spica-server/versioncontrol@workspace:packages/api/versioncontrol":
   version: 0.0.0-use.local
   resolution: "@spica-server/versioncontrol@workspace:packages/api/versioncontrol"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
-    "@nestjs/websockets": "npm:^10.4.15"
     "@spica-server/bucket": "workspace:*"
-    "@spica-server/config": "workspace:*"
-    "@spica-server/core": "workspace:*"
-    "@spica-server/database": "workspace:*"
     "@spica-server/env_var": "workspace:*"
     "@spica-server/env_var-services": "workspace:*"
     "@spica-server/function": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/preference-testing": "workspace:*"
-    "@spica-server/realtime": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@spica-server/representative": "workspace:*"
     "@spica-server/secret": "workspace:*"
-    rxjs: "npm:^7.8.1"
+    "@spica-server/versioncontrol-sync": "workspace:*"
+    "@spica-server/versioncontrol-sync-engine": "workspace:*"
     simple-git: "npm:^3.27.0"
     uuid: "npm:^11.0.5"
     yaml: "npm:^2.7.0"

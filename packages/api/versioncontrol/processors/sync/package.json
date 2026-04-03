@@ -1,0 +1,20 @@
+{
+  "name": "@spica-server/versioncontrol-processors-sync",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/config": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface": "workspace:*",
+    "@spica-server/versioncontrol-services-sync": "workspace:*",
+    "rxjs": "^7.8.1"
+  }
+}

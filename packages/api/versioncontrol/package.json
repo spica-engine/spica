@@ -7,48 +7,16 @@
     ".": {
       "types": "./index.ts",
       "default": "./dist/index.js"
-    },
-    "./sync": {
-      "types": "./sync/index.ts",
-      "default": "./sync/dist/index.js"
-    },
-    "./sync/engine": {
-      "types": "./sync/engine/index.ts",
-      "default": "./sync/engine/dist/index.js"
-    },
-    "./sync/realtime": {
-      "types": "./sync/realtime/index.ts",
-      "default": "./sync/realtime/dist/index.js"
-    },
-    "./services/changelog": {
-      "types": "./services/changelog/index.ts",
-      "default": "./services/changelog/dist/index.js"
-    },
-    "./services/sync": {
-      "types": "./services/sync/index.ts",
-      "default": "./services/sync/dist/index.js"
-    },
-    "./processors/changelog": {
-      "types": "./processors/changelog/index.ts",
-      "default": "./processors/changelog/dist/index.js"
-    },
-    "./processors/sync": {
-      "types": "./processors/sync/index.ts",
-      "default": "./processors/sync/dist/index.js"
     }
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
-    "@nestjs/websockets": "^10.4.15",
-    "@spica-server/config": "workspace:*",
-    "@spica-server/core": "workspace:*",
-    "@spica-server/database": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport": "workspace:*",
-    "@spica-server/realtime": "workspace:*",
     "@spica-server/replication": "workspace:*",
     "@spica-server/representative": "workspace:*",
-    "rxjs": "^7.8.1",
+    "@spica-server/versioncontrol-sync": "workspace:*",
+    "@spica-server/versioncontrol-sync-engine": "workspace:*",
     "simple-git": "^3.27.0"
   },
   "devDependencies": {

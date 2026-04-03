@@ -14,8 +14,8 @@ import {VCRepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager.js";
 import fs from "fs";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {SyncModule} from "@spica-server/versioncontrol/sync";
-import {SyncEngine, SyncEngineModule} from "@spica-server/versioncontrol/sync/engine";
+import {SyncModule} from "@spica-server/versioncontrol-sync";
+import {SyncEngine, SyncEngineModule} from "@spica-server/versioncontrol-sync-engine";
 
 @Global()
 @Module({})

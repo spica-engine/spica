@@ -1,7 +1,7 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {SyncController} from "./sync.controller.js";
-import {ServicesModule} from "@spica-server/versioncontrol/services/sync";
-import {SyncRealtimeModule} from "@spica-server/versioncontrol/sync/realtime";
+import {ServicesModule} from "@spica-server/versioncontrol-services-sync";
+import {SyncRealtimeModule} from "@spica-server/versioncontrol-sync-realtime";
 
 @Module({})
 export class SyncModule {

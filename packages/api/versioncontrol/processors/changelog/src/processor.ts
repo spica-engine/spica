@@ -7,7 +7,7 @@ import {
   ChangeType
 } from "@spica-server/interface/versioncontrol";
 import {ChangeLogAggregator} from "./interface.js";
-import {ChangeLogService} from "@spica-server/versioncontrol/services/changelog";
+import {ChangeLogService} from "@spica-server/versioncontrol-services-changelog";
 
 @Injectable()
 export class ChangeLogProcessor implements IChangeLogProcessor {

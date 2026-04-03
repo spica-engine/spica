@@ -12,8 +12,8 @@ import {
 import {getSupplier} from "./supplier.js";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {getApplier} from "./applier.js";
-import {ChangeLogProcessor} from "@spica-server/versioncontrol/processors/changelog";
-import {SyncProcessor} from "@spica-server/versioncontrol/processors/sync";
+import {ChangeLogProcessor} from "@spica-server/versioncontrol-processors-changelog";
+import {SyncProcessor} from "@spica-server/versioncontrol-processors-sync";
 import {JobReducer} from "@spica-server/replication";
 import {Inject, Logger, Optional} from "@nestjs/common";
 

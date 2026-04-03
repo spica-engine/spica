@@ -3,8 +3,8 @@ import {SyncEngine} from "./engine.js";
 import {
   ChangeLogProcessor,
   ChangeLogProcessorsModule
-} from "@spica-server/versioncontrol/processors/changelog";
-import {SyncProcessor, SyncProcessorsModule} from "@spica-server/versioncontrol/processors/sync";
+} from "@spica-server/versioncontrol-processors-changelog";
+import {SyncProcessor, SyncProcessorsModule} from "@spica-server/versioncontrol-processors-sync";
 import {VC_REPRESENTATIVE_MANAGER} from "@spica-server/interface/versioncontrol";
 import {JobReducer} from "@spica-server/replication";
 
