@@ -8,74 +8,6 @@
       "types": "./index.ts",
       "default": "./dist/index.js"
     },
-    "./services": {
-      "types": "./services/index.ts",
-      "default": "./services/dist/index.js"
-    },
-    "./cache": {
-      "types": "./cache/index.ts",
-      "default": "./cache/dist/index.js"
-    },
-    "./common": {
-      "types": "./common/index.ts",
-      "default": "./common/dist/index.js"
-    },
-    "./expression": {
-      "types": "./expression/index.ts",
-      "default": "./expression/dist/index.js"
-    },
-    "./expression/src/builtin_funcs": {
-      "types": "./expression/src/builtin_funcs.ts",
-      "default": "./expression/dist/src/builtin_funcs.js"
-    },
-    "./expression/src/parser": {
-      "types": "./expression/src/parser.ts",
-      "default": "./expression/dist/src/parser.js"
-    },
-    "./hooks": {
-      "types": "./hooks/index.ts",
-      "default": "./hooks/dist/index.js"
-    },
-    "./hooks/proto": {
-      "types": "./hooks/proto/index.ts",
-      "default": "./hooks/proto/dist/index.js"
-    },
-    "./hooks/proto/node": {
-      "types": "./hooks/proto/node/index.ts",
-      "default": "./hooks/proto/node/dist/index.js"
-    },
-    "./hooks/src/emitter": {
-      "types": "./hooks/src/emitter.ts",
-      "default": "./hooks/dist/src/emitter.js"
-    },
-    "./hooks/src/enqueuer": {
-      "types": "./hooks/src/enqueuer.ts",
-      "default": "./hooks/dist/src/enqueuer.js"
-    },
-    "./hooks/src/module": {
-      "types": "./hooks/src/module.ts",
-      "default": "./hooks/dist/src/module.js"
-    },
-    "./history": {
-      "types": "./history/index.ts",
-      "default": "./history/dist/index.js"
-    },
-    "./history/src/path": {
-      "types": "./history/src/path.ts",
-      "default": "./history/dist/src/path.js"
-    },
-    "./realtime": {
-      "types": "./realtime/index.ts",
-      "default": "./realtime/dist/index.js"
-    },
-    "./schemas-realtime": {
-      "types": "./schemas-realtime/index.ts",
-      "default": "./schemas-realtime/dist/index.js"
-    },
-    "./graphql": {
-      "types": "./graphql/index.ts",
-      "default": "./graphql/dist/index.js"
-    },
     "./src": {
       "types": "./src/index.ts",
       "default": "./dist/src/index.js"
@@ -90,45 +22,32 @@
     }
   },
   "dependencies": {
-    "@graphql-tools/merge": "^9.0.17",
-    "@graphql-tools/schema": "^10.0.16",
-    "@grpc/grpc-js": "^1.12.5",
-    "@nestjs/cache-manager": "^2.3.0",
     "@nestjs/common": "^10.4.15",
     "@nestjs/core": "^10.4.15",
-    "@nestjs/websockets": "^10.4.15",
-    "@spica-server/activity": "workspace:*",
     "@spica-server/activity-services": "workspace:*",
     "@spica-server/asset": "workspace:*",
+    "@spica-server/bucket-cache": "workspace:*",
+    "@spica-server/bucket-common": "workspace:*",
+    "@spica-server/bucket-expression": "workspace:*",
+    "@spica-server/bucket-graphql": "workspace:*",
+    "@spica-server/bucket-history": "workspace:*",
+    "@spica-server/bucket-hooks": "workspace:*",
+    "@spica-server/bucket-realtime": "workspace:*",
+    "@spica-server/bucket-schemas-realtime": "workspace:*",
+    "@spica-server/bucket-services": "workspace:*",
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/filter": "workspace:*",
-    "@spica-server/function": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport": "workspace:*",
     "@spica-server/preference-services": "workspace:*",
-    "@spica-server/realtime": "workspace:*",
-    "@spica-server/replication": "workspace:*",
     "@spica-server/status": "workspace:*",
-    "cache-manager": "^5.7.6",
-    "cron": "^3.5.0",
-    "diff-match-patch": "^1.0.5",
-    "express-graphql": "^0.12.0",
-    "google-protobuf": "^3.21.4",
-    "graphql": "^16.10.0",
-    "locale": "^0.1.0",
-    "pegjs": "^0.10.0",
     "rxjs": "^7.8.1",
-    "uniqid": "^5.4.0",
     "yaml": "^2.7.0"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
     "@spica-server/config": "workspace:*",
     "@spica-server/preference-testing": "workspace:*",
-    "@types/diff-match-patch": "^1.0.36",
-    "@types/json-schema": "^7.0.15",
-    "@types/uniqid": "^5.3.4",
     "prettier": "^3.4.2"
   }
 }

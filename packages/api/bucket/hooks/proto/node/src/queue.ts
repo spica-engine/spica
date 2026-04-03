@@ -1,4 +1,4 @@
-import {hooks} from "@spica-server/bucket/hooks/proto";
+import {hooks} from "@spica-server/bucket-hooks-proto";
 import grpc from "@grpc/grpc-js";
 
 export class ChangeQueue {

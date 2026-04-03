@@ -1,4 +1,4 @@
-import {hooks} from "@spica-server/bucket/hooks/proto";
+import {hooks} from "@spica-server/bucket-hooks-proto";
 import {Queue} from "@spica-server/function/queue";
 import grpc from "@grpc/grpc-js";
 

@@ -20,9 +20,9 @@ import {
   HttpException
 } from "@nestjs/common";
 import {activity, ActivityService, createActivity} from "@spica-server/activity-services";
-import {HistoryService} from "@spica-server/bucket/history";
-import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {HistoryService} from "@spica-server/bucket-history";
+import {ChangeEmitter} from "@spica-server/bucket-hooks";
+import {BucketDataService, BucketService} from "@spica-server/bucket-services";
 import {
   ARRAY,
   BOOLEAN,
@@ -38,7 +38,7 @@ import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport/guard";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
-import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
+import {invalidateCache, registerCache} from "@spica-server/bucket-cache";
 import {
   deleteDocument,
   findDocuments,
@@ -49,14 +49,14 @@ import {
   isJSONFilter,
   filterReviver,
   decryptDocumentFields
-} from "@spica-server/bucket/common";
+} from "@spica-server/bucket-common";
 import {expressionFilterParser} from "./filter.js";
 import {
   clearRelations,
   getRelationPaths,
   getDependents,
   createBucketDataActivity
-} from "@spica-server/bucket/common";
+} from "@spica-server/bucket-common";
 import {applyPatch} from "@spica-server/core/patch";
 import {BucketDocument} from "@spica-server/interface/bucket";
 import {

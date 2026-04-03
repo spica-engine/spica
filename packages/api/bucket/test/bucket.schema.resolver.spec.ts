@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {BucketService} from "@spica-server/bucket/services";
+import {BucketService} from "@spica-server/bucket-services";
 import {BucketSchemaResolver} from "@spica-server/bucket/src/bucket.schema.resolver";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";

@@ -5996,47 +5996,193 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/bucket-cache@workspace:*, @spica-server/bucket-cache@workspace:packages/api/bucket/cache":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-cache@workspace:packages/api/bucket/cache"
+  dependencies:
+    "@nestjs/cache-manager": "npm:^2.3.0"
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/core": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    cache-manager: "npm:^5.7.6"
+    cron: "npm:^3.5.0"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/bucket-common@workspace:*, @spica-server/bucket-common@workspace:packages/api/bucket/common":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-common@workspace:packages/api/bucket/common"
+  dependencies:
+    "@spica-server/activity-services": "workspace:*"
+    "@spica-server/bucket-cache": "workspace:*"
+    "@spica-server/bucket-expression": "workspace:*"
+    "@spica-server/bucket-services": "workspace:*"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/filter": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    locale: "npm:^0.1.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/bucket-expression@workspace:*, @spica-server/bucket-expression@workspace:packages/api/bucket/expression":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-expression@workspace:packages/api/bucket/expression"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    pegjs: "npm:^0.10.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/bucket-graphql@workspace:*, @spica-server/bucket-graphql@workspace:packages/api/bucket/graphql":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-graphql@workspace:packages/api/bucket/graphql"
+  dependencies:
+    "@graphql-tools/merge": "npm:^9.0.17"
+    "@graphql-tools/schema": "npm:^10.0.16"
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/core": "npm:^10.4.15"
+    "@spica-server/activity-services": "workspace:*"
+    "@spica-server/bucket-history": "workspace:*"
+    "@spica-server/bucket-hooks": "workspace:*"
+    "@spica-server/bucket-services": "workspace:*"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    express-graphql: "npm:^0.12.0"
+    graphql: "npm:^16.10.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/bucket-history@workspace:*, @spica-server/bucket-history@workspace:packages/api/bucket/history":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-history@workspace:packages/api/bucket/history"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/bucket-services": "workspace:*"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@types/diff-match-patch": "npm:^1.0.36"
+    "@types/json-schema": "npm:^7.0.15"
+    diff-match-patch: "npm:^1.0.5"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/bucket-hooks-proto-node@workspace:packages/api/bucket/hooks/proto/node":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-hooks-proto-node@workspace:packages/api/bucket/hooks/proto/node"
+  dependencies:
+    "@grpc/grpc-js": "npm:^1.12.5"
+    "@spica-server/bucket-hooks-proto": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/bucket-hooks-proto@workspace:*, @spica-server/bucket-hooks-proto@workspace:packages/api/bucket/hooks/proto":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-hooks-proto@workspace:packages/api/bucket/hooks/proto"
+  dependencies:
+    "@grpc/grpc-js": "npm:^1.12.5"
+    google-protobuf: "npm:^3.21.4"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/bucket-hooks@workspace:*, @spica-server/bucket-hooks@workspace:packages/api/bucket/hooks":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-hooks@workspace:packages/api/bucket/hooks"
+  dependencies:
+    "@grpc/grpc-js": "npm:^1.12.5"
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/bucket-hooks-proto": "workspace:*"
+    "@spica-server/bucket-services": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/function": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/replication": "workspace:*"
+    "@types/json-schema": "npm:^7.0.15"
+    "@types/uniqid": "npm:^5.3.4"
+    uniqid: "npm:^5.4.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/bucket-realtime@workspace:*, @spica-server/bucket-realtime@workspace:packages/api/bucket/realtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-realtime@workspace:packages/api/bucket/realtime"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/websockets": "npm:^10.4.15"
+    "@spica-server/activity-services": "workspace:*"
+    "@spica-server/bucket-cache": "workspace:*"
+    "@spica-server/bucket-expression": "workspace:*"
+    "@spica-server/bucket-history": "workspace:*"
+    "@spica-server/bucket-hooks": "workspace:*"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@spica-server/realtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/bucket-schemas-realtime@workspace:*, @spica-server/bucket-schemas-realtime@workspace:packages/api/bucket/schemas-realtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-schemas-realtime@workspace:packages/api/bucket/schemas-realtime"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/websockets": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@spica-server/realtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/bucket-services@workspace:*, @spica-server/bucket-services@workspace:packages/api/bucket/services":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/bucket-services@workspace:packages/api/bucket/services"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/preference-services": "workspace:*"
+    "@types/json-schema": "npm:^7.0.15"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/bucket@workspace:*, @spica-server/bucket@workspace:packages/api/bucket":
   version: 0.0.0-use.local
   resolution: "@spica-server/bucket@workspace:packages/api/bucket"
   dependencies:
-    "@graphql-tools/merge": "npm:^9.0.17"
-    "@graphql-tools/schema": "npm:^10.0.16"
-    "@grpc/grpc-js": "npm:^1.12.5"
-    "@nestjs/cache-manager": "npm:^2.3.0"
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/core": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
-    "@nestjs/websockets": "npm:^10.4.15"
-    "@spica-server/activity": "workspace:*"
     "@spica-server/activity-services": "workspace:*"
     "@spica-server/asset": "workspace:*"
+    "@spica-server/bucket-cache": "workspace:*"
+    "@spica-server/bucket-common": "workspace:*"
+    "@spica-server/bucket-expression": "workspace:*"
+    "@spica-server/bucket-graphql": "workspace:*"
+    "@spica-server/bucket-history": "workspace:*"
+    "@spica-server/bucket-hooks": "workspace:*"
+    "@spica-server/bucket-realtime": "workspace:*"
+    "@spica-server/bucket-schemas-realtime": "workspace:*"
+    "@spica-server/bucket-services": "workspace:*"
     "@spica-server/config": "workspace:*"
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
-    "@spica-server/filter": "workspace:*"
-    "@spica-server/function": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/preference-services": "workspace:*"
     "@spica-server/preference-testing": "workspace:*"
-    "@spica-server/realtime": "workspace:*"
-    "@spica-server/replication": "workspace:*"
     "@spica-server/status": "workspace:*"
-    "@types/diff-match-patch": "npm:^1.0.36"
-    "@types/json-schema": "npm:^7.0.15"
-    "@types/uniqid": "npm:^5.3.4"
-    cache-manager: "npm:^5.7.6"
-    cron: "npm:^3.5.0"
-    diff-match-patch: "npm:^1.0.5"
-    express-graphql: "npm:^0.12.0"
-    google-protobuf: "npm:^3.21.4"
-    graphql: "npm:^16.10.0"
-    locale: "npm:^0.1.0"
-    pegjs: "npm:^0.10.0"
     prettier: "npm:^3.4.2"
     rxjs: "npm:^7.8.1"
-    uniqid: "npm:^5.4.0"
     yaml: "npm:^2.7.0"
   languageName: unknown
   linkType: soft
@@ -6589,6 +6735,8 @@ __metadata:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
     "@spica-server/bucket": "workspace:*"
+    "@spica-server/bucket-history": "workspace:*"
+    "@spica-server/bucket-services": "workspace:*"
     "@spica-server/env_var": "workspace:*"
     "@spica-server/env_var-services": "workspace:*"
     "@spica-server/function": "workspace:*"

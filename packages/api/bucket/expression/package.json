@@ -1,0 +1,25 @@
+{
+  "name": "@spica-server/bucket-expression",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/builtin_funcs": {
+      "types": "./src/builtin_funcs.ts",
+      "default": "./dist/src/builtin_funcs.js"
+    },
+    "./src/parser": {
+      "types": "./src/parser.ts",
+      "default": "./dist/src/parser.js"
+    }
+  },
+  "dependencies": {
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface": "workspace:*",
+    "pegjs": "^0.10.0"
+  }
+}

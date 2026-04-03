@@ -1,5 +1,5 @@
-import {BucketDataService, BucketService} from "@spica-server/bucket/services";
-import {HistoryService} from "@spica-server/bucket/history";
+import {BucketDataService, BucketService} from "@spica-server/bucket-services";
+import {HistoryService} from "@spica-server/bucket-history";
 import * as CRUD from "../../crud.js";
 import {Bucket} from "@spica-server/interface/bucket";
 import YAML from "yaml";

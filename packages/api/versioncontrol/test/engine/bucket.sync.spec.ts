@@ -19,8 +19,8 @@ import {
   BucketDataService,
   BucketService,
   ServicesModule as BucketServiceModule
-} from "@spica-server/bucket/services";
-import {HistoryModule, HistoryService} from "@spica-server/bucket/history/";
+} from "@spica-server/bucket-services";
+import {HistoryModule, HistoryService} from "@spica-server/bucket-history/";
 import {Bucket} from "@spica-server/interface/bucket";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {VersionControlModule} from "../../src";

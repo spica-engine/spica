@@ -8,9 +8,9 @@ import {
 } from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {ActivityService} from "@spica-server/activity-services";
-import {HistoryService} from "@spica-server/bucket/history";
-import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {BucketService} from "@spica-server/bucket/services";
+import {HistoryService} from "@spica-server/bucket-history";
+import {ChangeEmitter} from "@spica-server/bucket-hooks";
+import {BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {GuardService} from "@spica-server/passport/guard/services";
@@ -25,7 +25,7 @@ import {
 } from "graphql";
 import {makeExecutableSchema} from "@graphql-tools/schema";
 import {mergeResolvers, mergeTypeDefs} from "@graphql-tools/merge";
-import {BucketDataService} from "@spica-server/bucket/services";
+import {BucketDataService} from "@spica-server/bucket-services";
 import {
   deleteDocument,
   findDocuments,
@@ -37,7 +37,7 @@ import {
   findLocale,
   insertActivity,
   decryptDocumentFields
-} from "@spica-server/bucket/common";
+} from "@spica-server/bucket-common";
 import {FindResponse} from "@spica-server/interface/bucket/graphql";
 import {Bucket, BUCKET_DATA_HASH_SECRET, BucketDocument} from "@spica-server/interface/bucket";
 import {BUCKET_DATA_ENCRYPTION_SECRET} from "@spica-server/interface/bucket";

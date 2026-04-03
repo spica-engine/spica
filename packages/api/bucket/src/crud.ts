@@ -1,10 +1,10 @@
 import {schemaDiff} from "@spica-server/core/differ";
 import {ChangeKind} from "@spica-server/interface/core";
-import {findRelations} from "@spica-server/bucket/common";
-import {BucketDataService, BucketService} from "@spica-server/bucket/services";
+import {findRelations} from "@spica-server/bucket-common";
+import {BucketDataService, BucketService} from "@spica-server/bucket-services";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {HistoryService} from "@spica-server/bucket/history";
-import * as expression from "@spica-server/bucket/expression";
+import {HistoryService} from "@spica-server/bucket-history";
+import * as expression from "@spica-server/bucket-expression";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {Bucket} from "@spica-server/interface/bucket";
 

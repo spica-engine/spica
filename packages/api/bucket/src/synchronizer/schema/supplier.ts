@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {BucketService} from "@spica-server/bucket/services";
+import {BucketService} from "@spica-server/bucket-services";
 import YAML from "yaml";
 import {
   ChangeLog,

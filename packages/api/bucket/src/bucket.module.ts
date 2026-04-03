@@ -1,14 +1,14 @@
 import {DynamicModule, Global, Inject, Module, Optional, Type} from "@nestjs/common";
-import {HistoryModule, HistoryService} from "@spica-server/bucket/history";
-import {HookModule} from "@spica-server/bucket/hooks";
-import {RealtimeModule} from "@spica-server/bucket/realtime";
-import {SchemasRealtimeModule} from "@spica-server/bucket/schemas-realtime";
-import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
+import {HistoryModule, HistoryService} from "@spica-server/bucket-history";
+import {HookModule} from "@spica-server/bucket-hooks";
+import {RealtimeModule} from "@spica-server/bucket-realtime";
+import {SchemasRealtimeModule} from "@spica-server/bucket-schemas-realtime";
+import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket-services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {createHashFormat, createEncryptedFormat} from "@spica-server/core/schema/formats";
 import {PreferenceService} from "@spica-server/preference-services";
 import {BUCKET_LANGUAGE_FINALIZER} from "@spica-server/interface/preference";
-import {BucketCacheModule} from "@spica-server/bucket/cache";
+import {BucketCacheModule} from "@spica-server/bucket-cache";
 import {BucketDataController} from "./bucket-data.controller.js";
 import {BucketController} from "./bucket.controller.js";
 import {
@@ -16,8 +16,8 @@ import {
   bucketSpecificDefault,
   provideBucketSchemaResolver
 } from "./bucket.schema.resolver.js";
-import {GraphQLModule} from "@spica-server/bucket/graphql";
-import {provideLanguageFinalizer} from "@spica-server/bucket/common";
+import {GraphQLModule} from "@spica-server/bucket-graphql";
+import {provideLanguageFinalizer} from "@spica-server/bucket-common";
 import {registerStatusProvider} from "./status.js";
 import BucketSchema from "./schemas/bucket.schema.json" with {type: "json"};
 import BucketsSchema from "./schemas/buckets.schema.json" with {type: "json"};

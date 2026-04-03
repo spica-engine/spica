@@ -1,5 +1,5 @@
 import {BaseCollection, ObjectId, ReturnDocument} from "@spica-server/database";
-import * as expression from "@spica-server/bucket/expression";
+import * as expression from "@spica-server/bucket-expression";
 import {
   createRelationMap,
   getRelationPipeline,

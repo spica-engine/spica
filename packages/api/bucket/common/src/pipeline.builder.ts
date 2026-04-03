@@ -1,8 +1,8 @@
-import * as expression from "@spica-server/bucket/expression";
+import * as expression from "@spica-server/bucket-expression";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale.js";
 import {deepCopy} from "@spica-server/core/patch";
 import {compareAndUpdateRelations, createRelationMap, getRelationPipeline} from "./relation.js";
-import {buildExpressionReplacers, constructFilterValues} from "@spica-server/bucket/common";
+import {buildExpressionReplacers, constructFilterValues} from "@spica-server/bucket-common";
 import {categorizePropertyMap} from "./helpers.js";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {extractFilterPropertyMap} from "@spica-server/filter";

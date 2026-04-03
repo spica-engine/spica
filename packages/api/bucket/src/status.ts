@@ -2,7 +2,7 @@ import {
   BucketDataService,
   BucketService,
   getBucketDataCollection
-} from "@spica-server/bucket/services";
+} from "@spica-server/bucket-services";
 import {register} from "@spica-server/status";
 import {Status} from "@spica-server/interface/status";
 

@@ -1,5 +1,5 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
-import {BucketService, compile} from "@spica-server/bucket/services";
+import {BucketService, compile} from "@spica-server/bucket-services";
 import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
 import {combineLatest, Observable, Subject} from "rxjs";

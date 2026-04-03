@@ -1,11 +1,11 @@
 import {RealtimeOptionsBuilder} from "@spica-server/realtime";
-import * as expression from "@spica-server/bucket/expression";
-import {aggregate} from "@spica-server/bucket/expression";
+import * as expression from "@spica-server/bucket-expression";
+import {aggregate} from "@spica-server/bucket-expression";
 import {
   authIdToString,
   filterReviver,
   constructFilterValues
-} from "@spica-server/bucket/common";
+} from "@spica-server/bucket-common";
 import {Bucket} from "@spica-server/interface/bucket";
 
 export class BucketDataOptionsBuilder extends RealtimeOptionsBuilder {

@@ -6,7 +6,7 @@ import {
   WebSocketGateway
 } from "@nestjs/websockets";
 import {ActivityService} from "@spica-server/activity-services";
-import {BucketCacheService} from "@spica-server/bucket/cache";
+import {BucketCacheService} from "@spica-server/bucket-cache";
 import {
   insertDocument,
   insertActivity,
@@ -17,14 +17,14 @@ import {
   getDependents,
   applyFieldLevelAcl,
   decryptDocumentFields
-} from "@spica-server/bucket/common";
-import {HistoryService} from "@spica-server/bucket/history";
-import {ChangeEmitter} from "@spica-server/bucket/hooks";
+} from "@spica-server/bucket-common";
+import {HistoryService} from "@spica-server/bucket-history";
+import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {
   BucketService,
   getBucketDataCollection,
   BucketDataService
-} from "@spica-server/bucket/services";
+} from "@spica-server/bucket-services";
 import {applyPatch, deepCopy} from "@spica-server/core/patch";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
