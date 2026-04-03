@@ -1,4 +1,4 @@
-import {diff} from "@spica-server/core/differ";
+import {diff} from "@spica-server/core-differ";
 import {EnvVar} from "@spica-server/interface/env_var";
 import {Secret, SecretDecryptor} from "@spica-server/interface/secret";
 import {

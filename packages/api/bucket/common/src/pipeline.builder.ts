@@ -1,6 +1,6 @@
 import * as expression from "@spica-server/bucket-expression";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale.js";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "@spica-server/core-patch";
 import {compareAndUpdateRelations, createRelationMap, getRelationPipeline} from "./relation.js";
 import {buildExpressionReplacers, constructFilterValues} from "@spica-server/bucket-common";
 import {categorizePropertyMap} from "./helpers.js";

@@ -17,7 +17,7 @@ import {PassportUserController} from "./passport.user.controller.js";
 import {SamlService} from "./strategy/services/saml.service.js";
 import {StrategyController} from "./strategy/strategy.controller.js";
 import {StrategyService} from "./strategy/services/strategy.service.js";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica-server/core-schema";
 import {initializeOAuthServices} from "./strategy/services/oauth/oauth.service.js";
 import {AuthFactorModule} from "@spica-server/passport-authfactor";
 import LoginSchema from "./schemas/login.json" with {type: "json"};

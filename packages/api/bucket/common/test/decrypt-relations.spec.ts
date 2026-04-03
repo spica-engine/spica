@@ -1,5 +1,5 @@
 import {decryptDocumentFields} from "@spica-server/bucket-common";
-import {encrypt} from "@spica-server/core/schema";
+import {encrypt} from "@spica-server/core-schema";
 import {Bucket} from "@spica-server/interface/bucket";
 import {RelationType} from "@spica-server/interface/bucket/common";
 

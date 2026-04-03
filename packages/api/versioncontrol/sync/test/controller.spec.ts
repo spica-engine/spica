@@ -1,6 +1,6 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {SyncModule} from "../src/sync.module";
 import {SyncService} from "@spica-server/versioncontrol/services/sync";
@@ -12,8 +12,8 @@ import {
   ChangeInitiator
 } from "@spica-server/interface/versioncontrol";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule} from "@spica-server/core-schema";
+import {OBJECT_ID} from "@spica-server/core-schema";
 
 describe("Sync Controller", () => {
   let app: INestApplication;

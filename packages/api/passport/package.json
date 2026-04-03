@@ -17,6 +17,9 @@
     "@nestjs/common": "^10.4.15",
     "@nestjs/passport": "^10.0.3",
     "@spica-server/core": "workspace:*",
+    "@spica-server/core-encryption": "workspace:*",
+    "@spica-server/core-patch": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport-apikey": "workspace:*",
@@ -37,6 +40,8 @@
     "uuid": "^11.0.0"
   },
   "devDependencies": {
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*",
     "@spica-server/preference-testing": "workspace:*"
   }
 }

@@ -29,7 +29,7 @@ import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body.js";
 import {StrategyService} from "./strategy/services/strategy.service.js";
 import {NUMBER} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
+import {Schema} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface/passport";
 import {AuthFactor} from "@spica-server/passport-authfactor";

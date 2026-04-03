@@ -16,5 +16,8 @@
     "@spica-server/passport-authfactor": "workspace:*",
     "@spica-server/passport-guard-services": "workspace:*",
     "passport": "^0.7.0"
+  },
+  "devDependencies": {
+    "@spica-server/core-testing": "workspace:*"
   }
 }

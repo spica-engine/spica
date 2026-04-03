@@ -10,11 +10,11 @@ import {
   SyncStatuses
 } from "@spica-server/interface/versioncontrol";
 import YAML from "yaml";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "@spica-server/core-patch";
 import {getApplier, getSupplier} from "../../src/synchronizer/schema";
 import {firstValueFrom} from "rxjs";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule, Validator} from "@spica-server/core-schema";
+import {OBJECT_ID} from "@spica-server/core-schema";
 import PolicySchema from "../../src/schemas/policy.json" with {type: "json"};
 
 function sleep(ms: number) {

@@ -28,7 +28,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
-import {Validator} from "@spica-server/core/schema/src/validator";
+import {Validator} from "@spica-server/core-schema/src/validator";
 
 xdescribe("SyncEngine Integration - Function", () => {
   let module: TestingModule;

@@ -10,7 +10,7 @@ import {
 } from "@spica-server/database";
 import {Preference} from "@spica-server/interface/preference";
 import {Observable} from "rxjs";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "@spica-server/core-patch";
 
 @Injectable()
 export class PreferenceService extends BaseCollection("preferences") {

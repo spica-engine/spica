@@ -12,6 +12,8 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@spica-server/core": "workspace:*",
+    "@spica-server/core-differ": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
     "@spica-server/bucket": "workspace:*",
+    "@spica-server/core-testing": "workspace:*",
     "@spica-server/dashboard": "workspace:*",
     "@spica-server/function": "workspace:*",
     "@spica-server/passport-apikey": "workspace:*",

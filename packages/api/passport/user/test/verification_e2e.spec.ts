@@ -5,11 +5,11 @@ import {VerificationService} from "@spica-server/passport-user/src/verification.
 import {UserService} from "@spica-server/passport-user/src/user.service";
 import {MailerService} from "@spica-server/mailer";
 import {MailerModule} from "@spica-server/mailer";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule} from "@spica-server/core-schema";
+import {OBJECT_ID} from "@spica-server/core-schema";
 import {UserModule} from "@spica-server/passport-user";
 import {PolicyModule} from "@spica-server/passport-policy";
 import fetch from "node-fetch";
@@ -189,8 +189,8 @@ describe("Provider Verification E2E with MailHog", () => {
         item.Raw && item.Raw.Data
           ? item.Raw.Data
           : item.Content && item.Content.Body
-          ? item.Content.Body
-          : "";
+            ? item.Content.Body
+            : "";
 
       const codeMatch = raw.match(/is: (\d{6})/);
       expect(codeMatch).toBeTruthy();
@@ -421,8 +421,8 @@ describe("Provider Verification E2E with MailHog", () => {
         item.Raw && item.Raw.Data
           ? item.Raw.Data
           : item.Content && item.Content.Body
-          ? item.Content.Body
-          : "";
+            ? item.Content.Body
+            : "";
 
       const cleanedRaw = raw.replace(/=\r?\n/g, "").replace(/=3D/g, "=");
       const tokenMatch = cleanedRaw.match(/token=([A-Za-z0-9_-]+)/);
@@ -499,8 +499,8 @@ describe("Provider Verification E2E with MailHog", () => {
         item.Raw && item.Raw.Data
           ? item.Raw.Data
           : item.Content && item.Content.Body
-          ? item.Content.Body
-          : "";
+            ? item.Content.Body
+            : "";
       const cleanedRaw = raw.replace(/=\r?\n/g, "").replace(/=3D/g, "=");
       const tokenMatch = cleanedRaw.match(/token=([A-Za-z0-9_-]+)/);
       const token = tokenMatch[1];

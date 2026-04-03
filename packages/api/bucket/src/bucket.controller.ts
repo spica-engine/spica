@@ -20,13 +20,13 @@ import {
 import {activity} from "@spica-server/activity-services";
 import {HistoryService} from "@spica-server/bucket-history";
 import {BucketDataService, BucketService} from "@spica-server/bucket-services";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createBucketActivity} from "@spica-server/bucket-common";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket-cache";
 import * as CRUD from "./crud.js";
-import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core/patch";
+import {applyPatch, getUpdateQueryForPatch} from "@spica-server/core-patch";
 import {Bucket} from "@spica-server/interface/bucket";
 
 /**

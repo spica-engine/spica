@@ -1,5 +1,5 @@
 import {Inject, Injectable, NotFoundException, Optional} from "@nestjs/common";
-import {Validator} from "@spica-server/core/schema";
+import {Validator} from "@spica-server/core-schema";
 import {Default} from "@spica-server/interface/core";
 import {
   BaseCollection,

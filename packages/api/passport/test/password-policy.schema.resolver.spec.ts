@@ -1,4 +1,4 @@
-import {applyPasswordPolicy} from "@spica-server/core/schema";
+import {applyPasswordPolicy} from "@spica-server/core-schema";
 
 describe("applyPasswordPolicy", () => {
   const baseSchema = {

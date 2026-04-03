@@ -12,7 +12,7 @@ import {
   Put,
   UseGuards
 } from "@nestjs/common";
-import {Schema} from "@spica-server/core/schema";
+import {Schema} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {PassportOptions, PASSPORT_OPTIONS, STRATEGIES} from "@spica-server/interface/passport";

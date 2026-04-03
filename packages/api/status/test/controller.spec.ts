@@ -1,9 +1,9 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
-import {SchemaModule} from "@spica-server/core/schema";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {SchemaModule} from "@spica-server/core-schema";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
+import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {IdentityModule} from "@spica-server/passport-identity";
@@ -14,7 +14,7 @@ import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
 import os from "os";
 import {Binary} from "bson";
-import {WsAdapter} from "@spica-server/core/websocket";
+import {WsAdapter} from "@spica-server/core-websocket";
 import {ConfigModule} from "@spica-server/config";
 import {SecretModule} from "@spica-server/secret/src/module";
 

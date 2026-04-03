@@ -8,7 +8,7 @@ import {INestApplication} from "@nestjs/common";
 import {EnvVarService} from "@spica-server/env_var-services";
 import {TargetChange, ChangeKind} from "@spica-server/interface/function";
 import {SecretService} from "@spica-server/secret-services";
-import {encrypt} from "@spica-server/core/encryption";
+import {encrypt} from "@spica-server/core-encryption";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {

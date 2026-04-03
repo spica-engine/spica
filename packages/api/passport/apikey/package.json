@@ -23,6 +23,7 @@
     "@spica-server/activity-services": "workspace:*",
     "@spica-server/asset": "workspace:*",
     "@spica-server/core": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport-apikey-realtime": "workspace:*",
@@ -31,5 +32,9 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "uniqid": "^5.4.0"
+  },
+  "devDependencies": {
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*"
   }
 }

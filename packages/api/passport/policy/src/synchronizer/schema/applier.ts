@@ -11,7 +11,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import {ObjectId} from "bson";
 import {Logger} from "@nestjs/common";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica-server/core-schema";
 
 const logger = new Logger("PolicySyncApplier");
 

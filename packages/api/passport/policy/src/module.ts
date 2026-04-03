@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Inject, Module, Optional} from "@nestjs/common";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {SchemaModule, Validator} from "@spica-server/core-schema";
 import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/interface/passport/guard";
 import {
   Policy,

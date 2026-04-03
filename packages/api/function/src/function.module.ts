@@ -1,5 +1,5 @@
 import {DynamicModule, Inject, Module, Optional} from "@nestjs/common";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {SchemaModule, Validator} from "@spica-server/core-schema";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {SchedulingOptions} from "@spica-server/interface/function/scheduler";
 import {WebhookModule} from "@spica-server/function-webhook";

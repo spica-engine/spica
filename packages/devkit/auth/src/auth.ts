@@ -21,7 +21,7 @@ import {
   PublicInitialization,
   UserInitialization
 } from "@spica-server/interface/function/packages";
-import {deepCopyJSON} from "@spica-server/core/copy";
+import {deepCopyJSON} from "@spica-server/core-copy";
 import {UserSelfUpdate} from "@spica-server/interface/passport/user";
 let authorization;
 

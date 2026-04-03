@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {Validator} from "@spica-server/core/schema";
+import {Validator} from "@spica-server/core-schema";
 import {DatabaseService} from "@spica-server/database";
 import {JSONSchema7} from "json-schema";
 

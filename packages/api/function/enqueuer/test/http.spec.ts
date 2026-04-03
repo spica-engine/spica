@@ -1,7 +1,7 @@
 import {INestApplication} from "@nestjs/common";
 import {NestExpressApplication} from "@nestjs/platform-express";
 import {Test} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {HttpEnqueuer} from "@spica-server/function-enqueuer";
 import {EventQueue, HttpQueue} from "@spica-server/function-queue";
 import {event} from "@spica-server/function-queue-proto";

@@ -1,4 +1,4 @@
-import {Validator, Schema} from "@spica-server/core/schema";
+import {Validator, Schema} from "@spica-server/core-schema";
 // @TODO: create separate apikey services module and update this import
 import {ApiKeyService} from "./apikey.service.js";
 import {IRepresentativeManager} from "@spica-server/interface/representative";

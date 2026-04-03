@@ -1,10 +1,10 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
-import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule} from "@spica-server/core-schema";
+import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ConfigModule} from "@spica-server/config";
 

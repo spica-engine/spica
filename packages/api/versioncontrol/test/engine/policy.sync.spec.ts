@@ -22,7 +22,7 @@ import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";
 import fs from "fs";
-import {Validator} from "@spica-server/core/schema";
+import {Validator} from "@spica-server/core-schema";
 
 xdescribe("SyncEngine Integration - Policy", () => {
   let module: TestingModule;

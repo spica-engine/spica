@@ -1,7 +1,7 @@
 import {getSelectPath, getFieldSideAndValueSide} from "@spica-server/bucket-expression";
 import {getPropertyByPath} from "./schema.js";
 import {Replacer} from "@spica-server/interface/bucket/expression";
-import {hash} from "@spica-server/core/encryption";
+import {hash} from "@spica-server/core-encryption";
 import {Bucket} from "@spica-server/interface/bucket";
 import {RelationResolver} from "@spica-server/interface/bucket/common";
 import * as Relation from "./relation.js";

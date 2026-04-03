@@ -1,7 +1,7 @@
 import {EnvRelation, Function, ChangeKind, SecretRelation} from "@spica-server/interface/function";
 import {ObjectId} from "@spica-devkit/database";
 import {EnvVar} from "@spica-server/interface/env_var";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "@spica-server/core-patch";
 import {
   createTargetChanges,
   changesFromTriggers,

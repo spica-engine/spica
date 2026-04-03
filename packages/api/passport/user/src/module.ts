@@ -1,5 +1,5 @@
 import {Module, Global, DynamicModule, Inject, Optional} from "@nestjs/common";
-import {Validator, SchemaModule} from "@spica-server/core/schema";
+import {Validator, SchemaModule} from "@spica-server/core-schema";
 import {JwtModule} from "@nestjs/jwt";
 import {
   UserOptions,

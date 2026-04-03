@@ -1,4 +1,4 @@
-import {diff} from "@spica-server/core/differ";
+import {diff} from "@spica-server/core-differ";
 import {ChangeKind} from "@spica-server/interface/core";
 
 describe("differ", () => {

@@ -17,7 +17,7 @@ import {
 } from "@spica-devkit/internal_common";
 import {Strategy} from "./interface";
 import {Observable} from "rxjs";
-import {deepCopyJSON} from "@spica-server/core/copy";
+import {deepCopyJSON} from "@spica-server/core-copy";
 import {
   ApikeyInitialization,
   IdentityInitialization,

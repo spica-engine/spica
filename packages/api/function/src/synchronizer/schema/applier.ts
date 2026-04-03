@@ -11,7 +11,7 @@ import {
   SyncStatuses,
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica-server/core-schema";
 import {generate} from "../../schema/enqueuer.resolver.js";
 import {Logger} from "@nestjs/common";
 

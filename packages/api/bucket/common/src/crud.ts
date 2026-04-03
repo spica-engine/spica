@@ -5,7 +5,7 @@ import {
   getRelationPipeline,
   resetNonOverlappingPathsInRelationMap
 } from "./relation.js";
-import {getUpdateQueryForPatch} from "@spica-server/core/patch";
+import {getUpdateQueryForPatch} from "@spica-server/core-patch";
 import {
   ACLSyntaxException,
   BadRequestException,

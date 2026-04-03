@@ -18,6 +18,8 @@
     "form-data": "^4.0.1"
   },
   "devDependencies": {
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/core-testing": "workspace:*",
     "@spica-server/passport-testing": "workspace:*"
   }
 }

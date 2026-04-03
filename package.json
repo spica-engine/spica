@@ -14,6 +14,13 @@
   "workspaces": {
     "packages": [
       "packages/core",
+      "packages/core/copy",
+      "packages/core/differ",
+      "packages/core/encryption",
+      "packages/core/patch",
+      "packages/core/schema",
+      "packages/core/testing",
+      "packages/core/websocket",
       "packages/database",
       "packages/filter",
       "packages/realtime",

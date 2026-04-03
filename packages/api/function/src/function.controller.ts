@@ -23,7 +23,7 @@ import {
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
+import {Schema} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
@@ -48,7 +48,7 @@ import {
 } from "@spica-server/interface/function";
 import {LogService} from "@spica-server/function-log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver.js";
-import {applyPatch} from "@spica-server/core/patch";
+import {applyPatch} from "@spica-server/core-patch";
 import * as CRUD from "./crud.js";
 
 /**

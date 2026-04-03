@@ -5,11 +5,11 @@ import {
   ProfilingLevel
 } from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {IdentityModule} from "@spica-server/passport-identity";
 import {INestApplication} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule} from "@spica-server/core-schema";
+import {OBJECT_ID} from "@spica-server/core-schema";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";

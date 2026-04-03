@@ -12,8 +12,8 @@ import {
 import YAML from "yaml";
 import {EnvVar} from "@spica-server/interface/env_var";
 import {firstValueFrom} from "rxjs";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule, Validator} from "@spica-server/core-schema";
+import {OBJECT_ID} from "@spica-server/core-schema";
 import EnvVarSchema from "../../src/schema.json" with {type: "json"};
 
 describe("EnvVar Synchronizer", () => {

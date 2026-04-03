@@ -56,6 +56,8 @@
     "@spica-server/activity-services": "workspace:*",
     "@spica-server/config": "workspace:*",
     "@spica-server/core": "workspace:*",
+    "@spica-server/core-encryption": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/filter": "workspace:*",
     "@spica-server/interface": "workspace:*",
@@ -72,5 +74,9 @@
     "passport-jwt": "^4.0.1",
     "rxjs": "^7.8.1",
     "uuid": "^11.0.0"
+  },
+  "devDependencies": {
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*"
   }
 }

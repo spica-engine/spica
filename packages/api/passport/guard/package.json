@@ -17,5 +17,8 @@
     "matcher": "^5.0.0",
     "passport": "^0.7.0",
     "path-to-regexp": "^8.2.0"
+  },
+  "devDependencies": {
+    "@spica-server/core-testing": "workspace:*"
   }
 }

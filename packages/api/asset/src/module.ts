@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica-server/core-schema";
 import {AssetController} from "./controller.js";
 import {AssetService} from "./service.js";
 

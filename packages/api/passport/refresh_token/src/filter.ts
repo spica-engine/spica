@@ -1,5 +1,5 @@
 import {replaceFilter} from "@spica-server/filter";
-import {hash} from "@spica-server/core/schema";
+import {hash} from "@spica-server/core-schema";
 
 /**
  * Replaces the `token` field values in a filter with their hashed equivalents.

@@ -25,8 +25,8 @@ import {
   getBucketDataCollection,
   BucketDataService
 } from "@spica-server/bucket-services";
-import {applyPatch, deepCopy} from "@spica-server/core/patch";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {applyPatch, deepCopy} from "@spica-server/core-patch";
+import {Schema, Validator} from "@spica-server/core-schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ChunkKind} from "@spica-server/interface/realtime";

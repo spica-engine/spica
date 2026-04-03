@@ -182,7 +182,7 @@
     }
   },
   "dependencies": {
-    "@spica-server/core": "workspace:*",
+    "@spica-server/core-encryption": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/function-enqueuer": "workspace:*",
     "@spica-server/function-queue": "workspace:*",

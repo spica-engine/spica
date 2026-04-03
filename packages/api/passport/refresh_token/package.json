@@ -12,11 +12,16 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@spica-server/core": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/filter": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/passport-refresh_token-realtime": "workspace:*",
     "@spica-server/passport-refresh_token-services": "workspace:*"
+  },
+  "devDependencies": {
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*"
   }
 }

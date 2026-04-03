@@ -5,11 +5,11 @@ import {PasswordlessLoginService} from "@spica-server/passport-user/src/services
 import {UserService} from "@spica-server/passport-user/src/user.service";
 import {UserConfigService} from "@spica-server/passport-user/src/config.service";
 import {MailerModule} from "@spica-server/mailer";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule} from "@spica-server/core-schema";
+import {OBJECT_ID} from "@spica-server/core-schema";
 import {UserModule} from "@spica-server/passport-user";
 import {PolicyModule} from "@spica-server/passport-policy";
 import fetch from "node-fetch";

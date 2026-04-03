@@ -1,6 +1,6 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {VersionControlController} from "../src/controller";
 import {VersionManager} from "../src/interface";

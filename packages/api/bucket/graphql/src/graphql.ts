@@ -11,7 +11,7 @@ import {ActivityService} from "@spica-server/activity-services";
 import {HistoryService} from "@spica-server/bucket-history";
 import {ChangeEmitter} from "@spica-server/bucket-hooks";
 import {BucketService} from "@spica-server/bucket-services";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica-server/core-schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {resourceFilterFunction, extractStrategyType} from "@spica-server/passport-guard";
@@ -51,7 +51,7 @@ import {
   requestedFieldsFromInfo,
   validateBuckets
 } from "./schema.js";
-import {applyPatch, deepCopy} from "@spica-server/core/patch";
+import {applyPatch, deepCopy} from "@spica-server/core-patch";
 import {Action} from "@spica-server/interface/activity";
 import {SchemaWarning} from "@spica-server/interface/bucket/graphql";
 

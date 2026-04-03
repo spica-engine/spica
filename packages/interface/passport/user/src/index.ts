@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica-server/database";
-import {EncryptedData} from "@spica-server/core/encryption";
+import {EncryptedData} from "@spica-server/core-encryption";
 import {FactorMeta} from "@spica-server/interface/passport/authfactor";
 
 export interface User {

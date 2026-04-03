@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica-server/core-schema";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {SchemaResolver} from "@spica-server/function-webhook/src/schema";
 

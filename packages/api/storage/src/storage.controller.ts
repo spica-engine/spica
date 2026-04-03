@@ -22,7 +22,7 @@ import {
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity-services";
 import {BOOLEAN, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
+import {Schema} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {
   ActionGuard,

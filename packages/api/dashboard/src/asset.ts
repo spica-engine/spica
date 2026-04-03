@@ -1,4 +1,4 @@
-import {Validator, Schema} from "@spica-server/core/schema";
+import {Validator, Schema} from "@spica-server/core-schema";
 import {DashboardService} from "@spica-server/dashboard";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {Resource} from "@spica-server/interface/asset";

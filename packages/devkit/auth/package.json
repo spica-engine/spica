@@ -14,10 +14,13 @@
   "typings": "dist/index.d.ts",
   "sideEffects": false,
   "dependencies": {
+    "@spica-server/core-copy": "workspace:*",
     "axios": "^1.7.9",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/core-testing": "workspace:*",
     "@spica-server/passport": "workspace:*",
     "@spica-server/passport-testing": "workspace:*",
     "@spica-server/passport-user": "workspace:*",

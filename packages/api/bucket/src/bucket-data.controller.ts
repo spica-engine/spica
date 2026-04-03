@@ -34,7 +34,7 @@ import {
   OR,
   EXPRESSION
 } from "@spica-server/core";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport-guard";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
@@ -57,7 +57,7 @@ import {
   getDependents,
   createBucketDataActivity
 } from "@spica-server/bucket-common";
-import {applyPatch} from "@spica-server/core/patch";
+import {applyPatch} from "@spica-server/core-patch";
 import {BucketDocument} from "@spica-server/interface/bucket";
 import {
   BUCKET_DATA_HASH_SECRET,

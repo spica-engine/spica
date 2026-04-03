@@ -3,8 +3,8 @@ import {BucketDataService, BucketService} from "@spica-server/bucket-services";
 import {HistoryService} from "@spica-server/bucket-history";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {OBJECT_ID, OBJECTID_STRING} from "@spica-server/core/schema/formats";
+import {SchemaModule, Validator} from "@spica-server/core-schema";
+import {OBJECT_ID, OBJECTID_STRING} from "@spica-server/core-schema";
 import {getApplier, getSupplier} from "../../src/synchronizer/schema/index";
 import {
   ChangeInitiator,
@@ -15,7 +15,7 @@ import {
 } from "@spica-server/interface/versioncontrol";
 import * as CRUD from "../../src/crud";
 import YAML from "yaml";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "@spica-server/core-patch";
 import {skip} from "rxjs/operators";
 import {firstValueFrom} from "rxjs";
 import BucketSchema from "../../src/schemas/bucket.schema.json" with {type: "json"};

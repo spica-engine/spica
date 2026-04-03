@@ -1,7 +1,7 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {ServicesModule} from "@spica-server/secret-services";
 import {SecretController} from "./controller.js";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica-server/core-schema";
 import SecretSchema from "./schema.json" with {type: "json"};
 import {SecretRealtimeModule} from "@spica-server/secret-realtime";
 

@@ -19,6 +19,8 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*",
     "@spica-server/passport-testing": "workspace:*"
   }
 }

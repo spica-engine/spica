@@ -1,5 +1,5 @@
 import {Injectable, Logger} from "@nestjs/common";
-import {Validator} from "@spica-server/core/schema";
+import {Validator} from "@spica-server/core-schema";
 import {FunctionEngine} from "../engine.js";
 import {Function} from "@spica-server/interface/function";
 

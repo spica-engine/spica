@@ -25,11 +25,17 @@
     "@nestjs/common": "^10.4.15",
     "@spica-server/activity-services": "workspace:*",
     "@spica-server/core": "workspace:*",
+    "@spica-server/core-patch": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/passport-policy-realtime": "workspace:*",
     "bson": "^6.10.1",
     "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*"
   }
 }

@@ -9,7 +9,7 @@ import {
   SyncStatuses,
   DocumentChangeApplier
 } from "@spica-server/interface/versioncontrol";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica-server/core-schema";
 import {Logger} from "@nestjs/common";
 
 const logger = new Logger("DashboardSyncApplier");

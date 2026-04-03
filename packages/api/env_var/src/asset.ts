@@ -1,7 +1,7 @@
 import {registrar} from "@spica-server/asset";
 import {Resource} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {Schema, Validator} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica-server/core-schema";
 import {EnvVarService} from "@spica-server/env_var-services";
 import {EnvVar} from "@spica-server/interface/env_var";
 import {ObjectId} from "@spica-server/database";

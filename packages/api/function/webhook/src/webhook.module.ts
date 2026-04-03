@@ -1,5 +1,5 @@
 import {DynamicModule, Module} from "@nestjs/common";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica-server/core-schema";
 import {WebhookInvoker} from "./invoker.js";
 import {SchemaResolver} from "./schema.js";
 import {WebhookController} from "./webhook.controller.js";

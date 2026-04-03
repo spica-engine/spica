@@ -12,8 +12,8 @@ import {
 import YAML from "yaml";
 import {Dashboard} from "@spica-server/interface/dashboard";
 import {firstValueFrom} from "rxjs";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule, Validator} from "@spica-server/core-schema";
+import {OBJECT_ID} from "@spica-server/core-schema";
 import DashboardSchema from "../../src/schema/dashboard.json" with {type: "json"};
 
 describe("Dashboard Synchronizer", () => {

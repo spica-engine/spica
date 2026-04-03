@@ -14,11 +14,11 @@ import {
   SyncStatuses
 } from "@spica-server/interface/versioncontrol";
 import YAML from "yaml";
-import {deepCopy} from "@spica-server/core/patch";
+import {deepCopy} from "@spica-server/core-patch";
 import {skip, firstValueFrom} from "rxjs";
 import {rimraf} from "rimraf";
-import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {OBJECT_ID} from "@spica-server/core/schema/formats";
+import {SchemaModule, Validator} from "@spica-server/core-schema";
+import {OBJECT_ID} from "@spica-server/core-schema";
 import FunctionSchema from "../../src/schema/function.json" with {type: "json"};
 import {SecretService} from "@spica-server/secret-services";
 

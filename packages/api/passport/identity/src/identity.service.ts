@@ -5,7 +5,7 @@ import {
   IDENTITY_OPTIONS,
   IdentityOptions
 } from "@spica-server/interface/passport/identity";
-import {Validator, hash as hashToken} from "@spica-server/core/schema";
+import {Validator, hash as hashToken} from "@spica-server/core-schema";
 import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash.js";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";

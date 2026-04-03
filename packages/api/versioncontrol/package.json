@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
+    "@spica-server/core-schema": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/replication": "workspace:*",
@@ -24,6 +25,8 @@
     "@spica-server/bucket": "workspace:*",
     "@spica-server/bucket-history": "workspace:*",
     "@spica-server/bucket-services": "workspace:*",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*",
     "@spica-server/env_var": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
     "@spica-server/function": "workspace:*",
