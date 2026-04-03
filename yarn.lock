@@ -6429,6 +6429,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/status-services@workspace:*, @spica-server/status-services@workspace:packages/api/status/services":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/status-services@workspace:packages/api/status/services"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/testing": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/status@workspace:*, @spica-server/status@workspace:packages/api/status":
   version: 0.0.0-use.local
   resolution: "@spica-server/status@workspace:packages/api/status"
@@ -6445,9 +6457,9 @@ __metadata:
     "@spica-server/passport": "workspace:*"
     "@spica-server/preference-testing": "workspace:*"
     "@spica-server/secret": "workspace:*"
+    "@spica-server/status-services": "workspace:*"
     "@spica-server/storage": "workspace:*"
     bson: "npm:^6.10.1"
-    rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
 

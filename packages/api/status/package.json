@@ -10,7 +10,7 @@
     "@spica-server/database": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport": "workspace:*",
-    "rxjs": "^7.8.1"
+    "@spica-server/status-services": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
@@ -26,10 +26,6 @@
     ".": {
       "types": "./index.ts",
       "default": "./dist/index.js"
-    },
-    "./services": {
-      "types": "./services/index.ts",
-      "default": "./services/dist/index.js"
     }
   }
 }
