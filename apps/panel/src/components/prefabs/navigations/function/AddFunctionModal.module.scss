@@ -1,10 +1,13 @@
 .modal {
-  height: min-content !important;
-  min-height: fit-content;
   padding: 0;
   width: 700px !important;
   min-width: 400px !important;
+  max-height: 80vh !important;
+  height: auto !important;
   box-shadow: var(--box-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
   * {
     line-height: unset !important;
@@ -12,15 +15,20 @@
 }
 
 .container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 80vh;
+  overflow: hidden;
   background-color: var(--color-menu-background);
   border-radius: var(--border-radius-md);
   width: 100% !important;
+}
 
-  > div,
-  .header,
-  .header > div {
-    width: 100% !important;
-  }
+.scrollBody {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .header {
@@ -94,10 +102,15 @@
   font-family: monospace;
 }
 
-.buttonsContainer {
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
   padding: var(--padding-md);
+  border-top: var(--border-default);
 
-  .createButtonText{
+  .createButtonText {
     color: var(--color-white) !important;
   }
 }
@@ -119,4 +132,48 @@
   height: 44px;
   font-family: var(--font-family-base);
   font-size: var(--font-size-md);
+}
+
+.nestedGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding-left: var(--padding-md);
+  border-left: 2px solid var(--color-border, #333);
+}
+
+.arrayRow {
+  width: 100%;
+  padding: var(--padding-xs);
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-input-background);
+}
+
+.addRowButton,
+.removeRowButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--color-font-secondary, #999);
+  padding: 4px;
+  border-radius: var(--border-radius-sm);
+
+  &:hover {
+    color: var(--color-primary);
+    background-color: var(--color-hover-background, rgba(255, 255, 255, 0.05));
+  }
+}
+
+.removeRowButton {
+  flex-shrink: 0;
+  color: var(--color-danger, #e74c3c);
+
+  &:hover {
+    color: var(--color-danger-hover, #c0392b);
+  }
 }

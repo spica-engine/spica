@@ -4,13 +4,14 @@
  */
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
-import {Button, FlexElement, FluidContainer, Icon, Input, Modal, Select, Text} from "oziko-ui-kit";
+import {Button, FlexElement, Icon, Input, Modal, Select, Text} from "oziko-ui-kit";
 import {
   useCreateFunctionMutation,
   useUpdateFunctionIndexMutation,
   useGetFunctionInformationQuery
 } from "../../../../store/api/functionApi";
 import type {SpicaFunction, Enqueuer} from "../../../../store/api/functionApi";
+import {resolveRenderer, SchemaFieldProvider} from "./schema-fields";
 import styles from "./AddFunctionModal.module.scss";
 
 type AddFunctionModalProps = {
@@ -56,16 +57,23 @@ const BUCKET_EXAMPLES: Record<string, string> = {
   DELETE: `export default function (change) {\n\tconsole.log(change.kind + " action has been performed on document with id " + change.documentKey + " of bucket with id " + change.bucket);\n\tconsole.log("Previous document: ",change.previous)\n}`
 };
 
-const getDefaultTriggerOptions = (enqueuers: Enqueuer[], type: string): Record<string, any> => {
-  const enqueuer = enqueuers.find(e => e.description.name === type);
-  if (!enqueuer?.options?.properties) return {};
+const getSchemaDefaults = (properties: Record<string, any>): Record<string, any> => {
   const defaults: Record<string, any> = {};
-  for (const [key, schema] of Object.entries(enqueuer.options.properties)) {
-    if ((schema as any).default !== undefined) {
-      defaults[key] = (schema as any).default;
+  for (const [key, schema] of Object.entries(properties)) {
+    if (schema.default !== undefined) {
+      defaults[key] = schema.default;
+    } else if (schema.type === "object" && schema.properties) {
+      const nested = getSchemaDefaults(schema.properties);
+      if (Object.keys(nested).length > 0) defaults[key] = nested;
     }
   }
   return defaults;
+};
+
+const getDefaultTriggerOptions = (enqueuers: Enqueuer[], type: string): Record<string, any> => {
+  const enqueuer = enqueuers.find(e => e.description.name === type);
+  if (!enqueuer?.options?.properties) return {};
+  return getSchemaDefaults(enqueuer.options.properties);
 };
 
 const getExampleCode = (type: string, options: Record<string, any>): string => {
@@ -112,6 +120,38 @@ const AddFunctionModal = ({isOpen, onClose, onCreated}: AddFunctionModalProps) =
 
   const handleTriggerOptionChange = useCallback((key: string, value: any) => {
     setTriggerOptionValues(prev => ({...prev, [key]: value}));
+  }, []);
+
+  const handleNestedOptionChange = useCallback((parentKey: string, childKey: string, value: any) => {
+    setTriggerOptionValues(prev => ({
+      ...prev,
+      [parentKey]: {...(prev[parentKey] ?? {}), [childKey]: value}
+    }));
+  }, []);
+
+  const handleArrayItemChange = useCallback(
+    (key: string, index: number, field: string, value: any) => {
+      setTriggerOptionValues(prev => {
+        const arr = [...(prev[key] ?? [])];
+        arr[index] = {...(arr[index] ?? {}), [field]: value};
+        return {...prev, [key]: arr};
+      });
+    },
+    []
+  );
+
+  const handleArrayItemAdd = useCallback((key: string) => {
+    setTriggerOptionValues(prev => ({
+      ...prev,
+      [key]: [...(prev[key] ?? []), {}]
+    }));
+  }, []);
+
+  const handleArrayItemRemove = useCallback((key: string, index: number) => {
+    setTriggerOptionValues(prev => ({
+      ...prev,
+      [key]: (prev[key] ?? []).filter((_: any, i: number) => i !== index)
+    }));
   }, []);
 
   const handleTriggerTypeChange = useCallback((value: string) => {
@@ -185,80 +225,44 @@ const AddFunctionModal = ({isOpen, onClose, onCreated}: AddFunctionModalProps) =
 
   const formatTimeout = (val: number) => (val >= 60 ? `${(val / 60).toFixed(1)}m` : `${val}s`);
 
+  const renderField = useCallback(
+    (key: string, schema: any, value: any, onChange: (val: any) => void, prefix = "") => {
+      const fieldKey = prefix ? `${prefix}.${key}` : key;
+      const label = schema.title ?? key;
+      const {Component} = resolveRenderer(schema);
+      return (
+        <Component
+          key={fieldKey}
+          fieldKey={fieldKey}
+          label={label}
+          schema={schema}
+          value={value}
+          onChange={onChange}
+        />
+      );
+    },
+    []
+  );
+
+  const schemaFieldContextValue = useMemo(
+    () => ({
+      renderField,
+      styles,
+      onArrayItemAdd: handleArrayItemAdd,
+      onArrayItemRemove: handleArrayItemRemove,
+      onArrayItemChange: handleArrayItemChange,
+      onNestedChange: handleNestedOptionChange
+    }),
+    [renderField, handleArrayItemAdd, handleArrayItemRemove, handleArrayItemChange, handleNestedOptionChange]
+  );
+
   const renderTriggerOptionFields = () => {
     const properties = selectedEnqueuer?.options?.properties;
     if (!properties) return null;
 
-    return Object.entries(properties).map(([key, schema]: [string, any]) => {
-      const label = schema.title ?? key;
-      const value = triggerOptionValues[key];
-
-      if (schema.type === "boolean") {
-        return (
-          <FlexElement
-            key={key}
-            dimensionX="fill"
-            gap={8}
-            alignment="leftCenter"
-            className={styles.checkboxRow}
-          >
-            <input
-              type="checkbox"
-              checked={value ?? false}
-              onChange={e => handleTriggerOptionChange(key, e.target.checked)}
-              id={`trigger-opt-${key}`}
-            />
-            <label htmlFor={`trigger-opt-${key}`}>
-              <Text size="small" className={styles.fieldLabel}>
-                {label}
-              </Text>
-            </label>
-          </FlexElement>
-        );
-      }
-
-      if (schema.enum) {
-        const viewEnum = schema.viewEnum as string[] | undefined;
-        const selectOptions = (schema.enum as string[]).map((val: string, i: number) => ({
-          label: viewEnum?.[i] ?? val,
-          value: val
-        }));
-        return (
-          <FlexElement key={key} direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
-            <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-              {label}
-            </Text>
-
-              <Select
-                options={selectOptions}
-                value={value ?? ""}
-                onChange={v => handleTriggerOptionChange(key, v as string)}
-                dimensionX="fill"
-              />
-
-          </FlexElement>
-        );
-      }
-
-      const placeholder = schema.examples?.[0] ?? schema.description ?? "";
-      return (
-        <FlexElement key={key} direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
-          <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-            {label}
-          </Text>
-          <FlexElement gap={5} className={styles.inputContainer}>
-            <Icon name="formatQuoteClose" size="md" />
-            <Input
-              placeholder={String(placeholder)}
-              value={value ?? ""}
-              onChange={e => handleTriggerOptionChange(key, e.target.value)}
-              className={styles.input}
-              type="text"
-            />
-          </FlexElement>
-        </FlexElement>
-      );
-    });
+    return Object.entries(properties).map(([key, schema]: [string, any]) =>
+      renderField(key, schema, triggerOptionValues[key], (val: any) => handleTriggerOptionChange(key, val))
+    );
   };
 
   if (!isOpen) return null;
@@ -267,124 +271,106 @@ const AddFunctionModal = ({isOpen, onClose, onCreated}: AddFunctionModalProps) =
 
   return (
     <Modal showCloseButton={false} onClose={handleClose} className={styles.modal} isOpen>
-      <FluidContainer
-        className={styles.container}
-        direction="vertical"
-        gap={10}
-        mode="fill"
-        prefix={{
-          children: (
-            <div className={styles.header}>
-              <Text className={styles.headerText}>ADD NEW FUNCTION</Text>
-            </div>
-          )
-        }}
-        root={{
-          children: (
-            <FlexElement
-              direction="vertical"
-              dimensionX="fill"
-              alignment="leftCenter"
-              gap={12}
-              className={styles.formBody}
-            >
-              <FlexElement direction="vertical"  alignment="leftCenter" dimensionX="fill" gap={6}>
-                <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                  Name
-                </Text>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <Text className={styles.headerText}>ADD NEW FUNCTION</Text>
+        </div>
 
-                <FlexElement gap={5} className={styles.inputContainer}>
-                  <Icon name="formatQuoteClose" size="md" />
-                  <Input
-                    placeholder="Function name"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    className={styles.input}
-                  />
-                </FlexElement>
+        <div className={styles.scrollBody}>
+          <FlexElement
+            direction="vertical"
+            dimensionX="fill"
+            alignment="leftCenter"
+            gap={12}
+            className={styles.formBody}
+          >
+            <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
+              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
+                Name
+              </Text>
+              <FlexElement gap={5} className={styles.inputContainer}>
+                <Icon name="formatQuoteClose" size="md" />
+                <Input
+                  placeholder="Function name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className={styles.input}
+                />
               </FlexElement>
+            </FlexElement>
 
-              <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
-                <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                  Language
-                </Text>
+            <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
+              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
+                Language
+              </Text>
+              <Select
+                options={LANGUAGE_OPTIONS}
+                value={language}
+                onChange={v => setLanguage(v as string)}
+                dimensionX="fill"
+              />
+            </FlexElement>
 
-                  <Select
-                    options={LANGUAGE_OPTIONS}
-                    value={language}
-                    onChange={v => setLanguage(v as string)}
-                    dimensionX="fill"
-                  />
+            <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
+              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
+                Timeout ({formatTimeout(timeout)})
+              </Text>
+              <input
+                type="range"
+                className={styles.slider}
+                min={1}
+                max={maxTimeout}
+                step={1}
+                value={timeout}
+                onChange={e => setTimeout(Number(e.target.value))}
+              />
+            </FlexElement>
 
-              </FlexElement>
+            <Text size="xlarge" dimensionX="fill" className={styles.triggerHeading}>
+              Trigger
+            </Text>
 
-              <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
-                <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                  Timeout ({formatTimeout(timeout)})
-                </Text>
-                  <input
-                    type="range"
-                    className={styles.slider}
-                    min={1}
-                    max={maxTimeout}
-                    step={1}
-                    value={timeout}
-                    onChange={e => setTimeout(Number(e.target.value))}
-                  />
-              </FlexElement>
+            <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
+              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
+                Type
+              </Text>
+              <Select
+                options={triggerTypeSelectOptions}
+                value={triggerType}
+                onChange={v => handleTriggerTypeChange(v as string)}
+                dimensionX="fill"
+              />
+            </FlexElement>
 
-
-                <Text size="xlarge" dimensionX="fill" className={styles.triggerHeading}>
-                  Trigger
-                </Text>
-
-
-              <FlexElement direction="vertical" alignment="leftCenter" dimensionX="fill" gap={6}>
-                <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                  Type
-                </Text>
-
-                  <Select
-                    options={triggerTypeSelectOptions}
-                    value={triggerType}
-                    onChange={v => handleTriggerTypeChange(v as string)}
-                    dimensionX="fill"
-                  />
-              </FlexElement>
-
+            <SchemaFieldProvider value={schemaFieldContextValue}>
               {renderTriggerOptionFields()}
+            </SchemaFieldProvider>
 
-              {triggerType === "http" && triggerOptionValues.path && (
-                <Text size="small" className={styles.httpUrlPreview}>
-                  {baseUrl}/fn-execute{triggerOptionValues.path}
-                </Text>
-              )}
+            {triggerType === "http" && triggerOptionValues.path && (
+              <Text size="small" className={styles.httpUrlPreview}>
+                {baseUrl}/fn-execute{triggerOptionValues.path}
+              </Text>
+            )}
 
-              {error && (
-                <Text variant="danger" className={styles.errorText}>
-                  {error}
-                </Text>
-              )}
-            </FlexElement>
-          )
-        }}
-        suffix={{
-          dimensionX: "fill",
-          alignment: "rightCenter",
-          children: (
-            <FlexElement gap={10} className={styles.buttonsContainer}>
-              <Button onClick={handleSave} variant="solid" color="primary" disabled={isCreating || !name.trim() || !triggerType} loading={isCreating}>
-                <Icon name="plus" />
-                <Text color="white" className={styles.createButtonText}>Create</Text>
-              </Button>
-              <Button variant="text" onClick={handleClose} disabled={isCreating}>
-                <Icon name="close" />
-                <Text>Cancel</Text>
-              </Button>
-            </FlexElement>
-          )
-        }}
-      />
+            {error && (
+              <Text variant="danger" className={styles.errorText}>
+                {error}
+              </Text>
+            )}
+          </FlexElement>
+        </div>
+
+        <div className={styles.footer}>
+          <Button onClick={handleSave} variant="solid" color="primary" disabled={isCreating || !name.trim() || !triggerType} loading={isCreating}>
+            <Icon name="plus" />
+            <Text color="white" className={styles.createButtonText}>Create</Text>
+          </Button>
+          <Button variant="text" onClick={handleClose} disabled={isCreating}>
+            <Icon name="close" />
+            <Text>Cancel</Text>
+          </Button>
+        </div>
+      </div>
     </Modal>
   );
 };
