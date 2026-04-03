@@ -16,7 +16,7 @@ import {
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {PipelineBuilder} from "@spica-server/database/pipeline";
 import {PaginationResponse} from "@spica-server/interface/passport/identity";
-import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var-services";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
 import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport/guard";

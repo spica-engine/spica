@@ -152,7 +152,7 @@
     "@spica-server/asset": "workspace:*",
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/env_var": "workspace:*",
+    "@spica-server/env_var-services": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport": "workspace:*",
     "@spica-server/realtime": "workspace:*",

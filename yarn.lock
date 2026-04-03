@@ -6130,21 +6130,44 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/env_var-realtime@workspace:*, @spica-server/env_var-realtime@workspace:packages/api/env_var/realtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/env_var-realtime@workspace:packages/api/env_var/realtime"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/websockets": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@spica-server/realtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/env_var-services@workspace:*, @spica-server/env_var-services@workspace:packages/api/env_var/services":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/env_var-services@workspace:packages/api/env_var/services"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/env_var@workspace:*, @spica-server/env_var@workspace:packages/api/env_var":
   version: 0.0.0-use.local
   resolution: "@spica-server/env_var@workspace:packages/api/env_var"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
-    "@nestjs/websockets": "npm:^10.4.15"
     "@spica-server/activity-services": "workspace:*"
     "@spica-server/asset": "workspace:*"
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
+    "@spica-server/env_var-realtime": "workspace:*"
+    "@spica-server/env_var-services": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/preference": "workspace:*"
-    "@spica-server/realtime": "workspace:*"
     rxjs: "npm:^7.8.1"
     yaml: "npm:^2.7.0"
   languageName: unknown
@@ -6175,7 +6198,7 @@ __metadata:
     "@spica-server/bucket": "workspace:*"
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
-    "@spica-server/env_var": "workspace:*"
+    "@spica-server/env_var-services": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/preference": "workspace:*"
@@ -6422,6 +6445,7 @@ __metadata:
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/env_var": "workspace:*"
+    "@spica-server/env_var-services": "workspace:*"
     "@spica-server/function": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"

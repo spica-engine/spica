@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var-services";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {getSupplier, getApplier} from "../../src/synchronizer/schema";
 import {

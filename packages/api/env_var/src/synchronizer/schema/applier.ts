@@ -1,4 +1,4 @@
-import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var-services";
 import * as CRUD from "../../../src/crud.js";
 import {EnvVar} from "@spica-server/interface/env_var";
 import YAML from "yaml";

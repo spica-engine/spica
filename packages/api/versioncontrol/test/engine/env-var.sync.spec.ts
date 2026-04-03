@@ -15,7 +15,7 @@ import {
   getApplier as getEnvVarApplier,
   getSupplier as getEnvVarSupplier
 } from "@spica-server/env_var/src/synchronizer/schema";
-import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var-services";
 import {EnvVar} from "@spica-server/interface/env_var";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {VersionControlModule} from "../../src";

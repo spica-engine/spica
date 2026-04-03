@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var-services";
 import YAML from "yaml";
 import {
   ChangeLog,

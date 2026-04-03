@@ -5,7 +5,7 @@ import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionService} from "@spica-server/function/services";
 import {INestApplication} from "@nestjs/common";
-import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var-services";
 import {TargetChange, ChangeKind} from "@spica-server/interface/function";
 import {SecretService} from "@spica-server/secret/services";
 import {encrypt} from "@spica-server/core/encryption";

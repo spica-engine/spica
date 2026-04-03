@@ -30,6 +30,8 @@
       "packages/api/dashboard",
       "packages/api/dashboard/realtime",
       "packages/api/env_var",
+      "packages/api/env_var/realtime",
+      "packages/api/env_var/services",
       "packages/api/secret",
       "packages/api/function",
       "packages/api/mailer",

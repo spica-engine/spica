@@ -3,7 +3,7 @@ import {FunctionService} from "@spica-server/function/services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {LogService} from "@spica-server/function/log";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var-services";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {getApplier, getSupplier} from "../../src/synchronizer/schema";
 import {

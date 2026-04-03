@@ -9,7 +9,7 @@ import {
   ObjectId,
   WithId
 } from "@spica-server/database";
-import {EnvVarService} from "@spica-server/env_var/services";
+import {EnvVarService} from "@spica-server/env_var-services";
 import {SecretService} from "@spica-server/secret/services";
 import {filter, map, Observable, switchMap} from "rxjs";
 import {Function, FunctionOptions, FUNCTION_OPTIONS} from "@spica-server/interface/function";

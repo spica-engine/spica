@@ -1,0 +1,20 @@
+{
+  "name": "@spica-server/env_var-realtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/websockets": "^10.4.15",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface": "workspace:*",
+    "@spica-server/passport": "workspace:*",
+    "@spica-server/realtime": "workspace:*"
+  }
+}
