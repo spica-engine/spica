@@ -5932,17 +5932,30 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@spica-server/activity@workspace:*, @spica-server/activity@workspace:packages/api/activity":
+"@spica-server/activity-services@workspace:*, @spica-server/activity-services@workspace:packages/api/activity/services":
   version: 0.0.0-use.local
-  resolution: "@spica-server/activity@workspace:packages/api/activity"
+  resolution: "@spica-server/activity-services@workspace:packages/api/activity/services"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/interface": "workspace:*"
-    "@spica-server/passport": "workspace:*"
     rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/activity@workspace:*, @spica-server/activity@workspace:packages/api/activity":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/activity@workspace:packages/api/activity"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/testing": "npm:^10.4.15"
+    "@spica-server/activity-services": "workspace:*"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -5993,6 +6006,7 @@ __metadata:
     "@nestjs/testing": "npm:^10.4.15"
     "@nestjs/websockets": "npm:^10.4.15"
     "@spica-server/activity": "workspace:*"
+    "@spica-server/activity-services": "workspace:*"
     "@spica-server/asset": "workspace:*"
     "@spica-server/config": "workspace:*"
     "@spica-server/core": "workspace:*"
@@ -6110,7 +6124,7 @@ __metadata:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
     "@nestjs/websockets": "npm:^10.4.15"
-    "@spica-server/activity": "workspace:*"
+    "@spica-server/activity-services": "workspace:*"
     "@spica-server/asset": "workspace:*"
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
@@ -6143,7 +6157,7 @@ __metadata:
     "@nestjs/testing": "npm:^10.4.15"
     "@nestjs/websockets": "npm:^10.4.15"
     "@spica-devkit/database": "npm:*"
-    "@spica-server/activity": "workspace:*"
+    "@spica-server/activity-services": "workspace:*"
     "@spica-server/asset": "workspace:*"
     "@spica-server/bucket": "workspace:*"
     "@spica-server/core": "workspace:*"
@@ -6222,7 +6236,7 @@ __metadata:
     "@nestjs/jwt": "npm:^10.2.0"
     "@nestjs/passport": "npm:^10.0.3"
     "@nestjs/websockets": "npm:^10.4.15"
-    "@spica-server/activity": "workspace:*"
+    "@spica-server/activity-services": "workspace:*"
     "@spica-server/asset": "workspace:*"
     "@spica-server/config": "workspace:*"
     "@spica-server/core": "workspace:*"
@@ -6251,7 +6265,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
-    "@spica-server/activity": "workspace:*"
+    "@spica-server/activity-services": "workspace:*"
     "@spica-server/bucket": "workspace:*"
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
@@ -6306,7 +6320,7 @@ __metadata:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
     "@nestjs/websockets": "npm:^10.4.15"
-    "@spica-server/activity": "workspace:*"
+    "@spica-server/activity-services": "workspace:*"
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/interface": "workspace:*"
@@ -6356,7 +6370,7 @@ __metadata:
     "@google-cloud/storage": "npm:^7.15.0"
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
-    "@spica-server/activity": "workspace:*"
+    "@spica-server/activity-services": "workspace:*"
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/interface": "workspace:*"

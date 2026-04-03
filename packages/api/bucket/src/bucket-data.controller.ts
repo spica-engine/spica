@@ -19,7 +19,7 @@ import {
   Inject,
   HttpException
 } from "@nestjs/common";
-import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
+import {activity, ActivityService, createActivity} from "@spica-server/activity-services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {BucketDataService, BucketService} from "@spica-server/bucket/services";

@@ -7,7 +7,7 @@ import {
   PipeTransform
 } from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {ActivityService} from "@spica-server/activity/services";
+import {ActivityService} from "@spica-server/activity-services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {BucketService} from "@spica-server/bucket/services";

@@ -14,7 +14,7 @@ import {
   HttpCode,
   HttpStatus
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
+import {activity} from "@spica-server/activity-services";
 import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";

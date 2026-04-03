@@ -22,10 +22,16 @@
       "path": "../../interface/config"
     },
     {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../passport"
+    },
+    {
       "path": "../../database"
     },
     {
-      "path": "../passport/guard"
+      "path": "../../core"
     }
   ]
 }

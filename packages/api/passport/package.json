@@ -150,7 +150,7 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/websockets": "^10.4.15",
-    "@spica-server/activity": "workspace:*",
+    "@spica-server/activity-services": "workspace:*",
     "@spica-server/asset": "workspace:*",
     "@spica-server/config": "workspace:*",
     "@spica-server/core": "workspace:*",

@@ -5,7 +5,7 @@ import {
   SubscribeMessage,
   WebSocketGateway
 } from "@nestjs/websockets";
-import {ActivityService} from "@spica-server/activity/services";
+import {ActivityService} from "@spica-server/activity-services";
 import {BucketCacheService} from "@spica-server/bucket/cache";
 import {
   insertDocument,

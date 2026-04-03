@@ -1,9 +1,6 @@
 {
   "extends": "../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
       "path": "../../interface/realtime"
@@ -13,9 +10,6 @@
     },
     {
       "path": "../../interface/function/packages"
-    },
-    {
-      "path": "../../api/function"
     }
   ]
 }

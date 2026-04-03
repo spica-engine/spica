@@ -4,17 +4,10 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts",
-    "src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
       "path": "../../interface/status"
-    },
-    {
-      "path": "../status"
     },
     {
       "path": "expression"
@@ -59,19 +52,10 @@
       "path": "../passport/guard"
     },
     {
-      "path": "../../core"
-    },
-    {
       "path": "hooks"
     },
     {
-      "path": "../activity/services"
-    },
-    {
       "path": "../../interface/bucket"
-    },
-    {
-      "path": "../../database"
     },
     {
       "path": "../../interface/representative"
@@ -89,7 +73,43 @@
       "path": "../../interface/asset"
     },
     {
+      "path": "../status"
+    },
+    {
+      "path": "../replication"
+    },
+    {
+      "path": "../../realtime"
+    },
+    {
+      "path": "../preference"
+    },
+    {
+      "path": "../passport"
+    },
+    {
+      "path": "../function"
+    },
+    {
+      "path": "../../filter"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core"
+    },
+    {
       "path": "../asset"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../activity"
+    },
+    {
+      "path": "../config"
     }
   ]
 }

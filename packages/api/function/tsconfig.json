@@ -3,9 +3,6 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../status"
-    },
-    {
       "path": "../../database/pipeline"
     },
     {
@@ -24,16 +21,7 @@
       "path": "../passport/guard"
     },
     {
-      "path": "../../core"
-    },
-    {
-      "path": "../activity/services"
-    },
-    {
       "path": "../../interface/replication"
-    },
-    {
-      "path": "../replication"
     },
     {
       "path": "queue/proto"
@@ -57,9 +45,6 @@
       "path": "../../interface/representative"
     },
     {
-      "path": "../../database"
-    },
-    {
       "path": "log"
     },
     {
@@ -75,22 +60,52 @@
       "path": "../../interface/asset"
     },
     {
-      "path": "../asset"
-    },
-    {
       "path": "../../interface/activity"
     },
     {
       "path": "../../interface/realtime"
     },
     {
-      "path": "../../realtime"
-    },
-    {
       "path": "../passport/guard/services"
     },
     {
       "path": "../../database/realtime"
+    },
+    {
+      "path": "../status"
+    },
+    {
+      "path": "../secret"
+    },
+    {
+      "path": "../replication"
+    },
+    {
+      "path": "../../realtime"
+    },
+    {
+      "path": "../passport"
+    },
+    {
+      "path": "../env_var"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../asset"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../preference"
+    },
+    {
+      "path": "../bucket"
     },
     {
       "path": "realtime"

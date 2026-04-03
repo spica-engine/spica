@@ -21,7 +21,7 @@ import {
   UseInterceptors,
   Headers
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
+import {activity} from "@spica-server/activity-services";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";

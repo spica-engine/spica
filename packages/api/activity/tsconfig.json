@@ -16,6 +16,9 @@
       "path": "../../interface/activity"
     },
     {
+      "path": "../passport"
+    },
+    {
       "path": "../../database"
     },
     {

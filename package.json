@@ -22,6 +22,7 @@
       "packages/interface",
       "apps/api",
       "packages/api/activity",
+      "packages/api/activity/services",
       "packages/api/asset",
       "packages/api/batch",
       "packages/api/bucket",

@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import {ActivityService} from "@spica-server/activity/services";
+import {ActivityService} from "@spica-server/activity-services";
 import {DATE, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {Filter, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Activity} from "@spica-server/interface/activity";

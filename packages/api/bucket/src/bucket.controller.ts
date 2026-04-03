@@ -17,7 +17,7 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
+import {activity} from "@spica-server/activity-services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";

@@ -10,22 +10,37 @@
       "path": "../../core/differ"
     },
     {
-      "path": "../../representative"
-    },
-    {
       "path": "../passport/guard"
     },
     {
       "path": "../../core/schema"
     },
     {
-      "path": "../../core"
-    },
-    {
       "path": "../../interface/asset"
     },
     {
+      "path": "../../representative"
+    },
+    {
+      "path": "../passport"
+    },
+    {
       "path": "../../database"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../preference"
+    },
+    {
+      "path": "../function"
+    },
+    {
+      "path": "../dashboard"
+    },
+    {
+      "path": "../bucket"
     }
   ]
 }

@@ -79,7 +79,7 @@
       "path": "../asset"
     },
     {
-      "path": "../activity"
+      "path": "../activity/services"
     }
   ]
 }

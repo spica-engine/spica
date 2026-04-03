@@ -4,26 +4,14 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
-  "exclude": [
-    "test/**/*.ts",
-    "**/*.spec.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
+  "exclude": ["test/**/*.ts", "**/*.spec.ts"],
   "references": [
     {
       "path": "sync/engine"
     },
     {
       "path": "sync"
-    },
-    {
-      "path": "../replication"
-    },
-    {
-      "path": "../../representative"
     },
     {
       "path": "../../interface/config"
@@ -33,6 +21,42 @@
     },
     {
       "path": "../passport/guard"
+    },
+    {
+      "path": "../../representative"
+    },
+    {
+      "path": "../replication"
+    },
+    {
+      "path": "../../realtime"
+    },
+    {
+      "path": "../passport"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../config"
+    },
+    {
+      "path": "../secret"
+    },
+    {
+      "path": "../preference"
+    },
+    {
+      "path": "../function"
+    },
+    {
+      "path": "../env_var"
+    },
+    {
+      "path": "../bucket"
     }
   ]
 }

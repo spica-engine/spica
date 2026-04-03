@@ -10,16 +10,37 @@
       "path": "services"
     },
     {
-      "path": "../../database"
-    },
-    {
       "path": "../../interface/status"
     },
     {
       "path": "../passport/guard"
     },
     {
+      "path": "../passport"
+    },
+    {
+      "path": "../../database"
+    },
+    {
       "path": "../../core"
+    },
+    {
+      "path": "../storage"
+    },
+    {
+      "path": "../secret"
+    },
+    {
+      "path": "../preference"
+    },
+    {
+      "path": "../function"
+    },
+    {
+      "path": "../config"
+    },
+    {
+      "path": "../bucket"
     }
   ]
 }

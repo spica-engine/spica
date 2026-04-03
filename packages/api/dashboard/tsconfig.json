@@ -19,12 +19,6 @@
       "path": "../../interface/dashboard"
     },
     {
-      "path": "../../database"
-    },
-    {
-      "path": "../asset"
-    },
-    {
       "path": "../../interface/asset"
     },
     {
@@ -32,6 +26,21 @@
     },
     {
       "path": "../../core/schema"
+    },
+    {
+      "path": "../../realtime"
+    },
+    {
+      "path": "../passport"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../asset"
     }
   ]
 }

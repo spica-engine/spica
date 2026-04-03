@@ -9,7 +9,7 @@ import {
   Optional,
   Inject
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
+import {activity} from "@spica-server/activity-services";
 import {AuthGuard, ActionGuard} from "@spica-server/passport/guard";
 import {PreferenceService} from "@spica-server/preference/services";
 import {
