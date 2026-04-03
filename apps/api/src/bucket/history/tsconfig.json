@@ -3,16 +3,25 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../../../libs/interface/bucket"
+    },
+    {
+      "path": "../../../../../libs/interface/bucket/history"
+    },
+    {
       "path": "../../../../../libs/core/differ"
     },
     {
       "path": "../../passport/guard"
     },
     {
+      "path": "../../../../../libs/database"
+    },
+    {
       "path": "../services"
     },
     {
-      "path": "../../../../../libs/interface/bucket/history"
+      "path": "../../../../../libs/interface/core"
     }
   ]
 }

@@ -25,7 +25,7 @@ function validate(dashboard: Dashboard, validator: Validator): Promise<void> {
 }
 
 export const getApplier = (ds: DashboardService, validator: Validator): DocumentChangeApplier => {
-  const findDashboardByName = async (name: string) => {
+  const findIdByName = async (name: string) => {
     const dashboard = await ds.findOne({name});
     return dashboard?._id?.toString();
   };
@@ -34,20 +34,22 @@ export const getApplier = (ds: DashboardService, validator: Validator): Document
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findDashboardByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let dashboard: Dashboard;
+    extractId: async (slug: string, content?: string): Promise<string | null> => {
+      const id = await findIdByName(slug);
+      if (id) return id;
 
-      try {
-        dashboard = YAML.parse(content);
-      } catch (error) {
-        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return Promise.resolve(null);
+      if (content) {
+        let dashboard: Dashboard;
+        try {
+          dashboard = YAML.parse(content);
+        } catch (error) {
+          logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
+          return null;
+        }
+        return dashboard?._id ? String(dashboard._id) : null;
       }
 
-      return findDashboardByName(dashboard.name);
+      return null;
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {

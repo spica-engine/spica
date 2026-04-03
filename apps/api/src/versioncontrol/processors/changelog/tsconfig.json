@@ -3,13 +3,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../../../../libs/interface/versioncontrol"
-    },
-    {
-      "path": "../../../../../../libs/database"
-    },
-    {
       "path": "../../services/changelog"
+    },
+    {
+      "path": "../../../../../../libs/interface/versioncontrol"
     }
   ]
 }

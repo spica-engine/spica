@@ -18,7 +18,7 @@ const subModule = "package";
 const fileExtension = "json";
 
 export const getApplier = (fs: FunctionService, engine: FunctionEngine): DocumentChangeApplier => {
-  const findFnByName = async (name: string) => {
+  const findIdByName = async (name: string) => {
     const fn = await fs.findOne({name});
     return fn?._id?.toString();
   };
@@ -26,20 +26,8 @@ export const getApplier = (fs: FunctionService, engine: FunctionEngine): Documen
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findFnByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let name;
-      try {
-        name = JSON.parse(content).name;
-      } catch (error) {
-        logger.warn(
-          `Error parsing function package content: ${(error as any).stack || String(error)}`
-        );
-        return Promise.resolve(null);
-      }
-      return findFnByName(name);
+    extractId: async (slug: string, content?: string): Promise<string | null> => {
+      return findIdByName(slug);
     },
 
     apply: async (change: ChangeLog): Promise<ApplyResult> => {

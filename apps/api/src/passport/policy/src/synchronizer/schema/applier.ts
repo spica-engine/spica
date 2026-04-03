@@ -31,7 +31,7 @@ export function getApplier(
   identityFinalizer: changeFactory,
   validator: Validator
 ): DocumentChangeApplier {
-  const findPolicyByName = async (name: string) => {
+  const findIdByName = async (name: string) => {
     const policy = await ps.findOne({name});
     return policy?._id?.toString();
   };
@@ -39,19 +39,22 @@ export function getApplier(
     module,
     subModule,
     fileExtensions: [fileExtension],
-    findIdBySlug: (slug: string): Promise<string> => {
-      return findPolicyByName(slug);
-    },
-    findIdByContent: (content: string): Promise<string> => {
-      let policy: Policy;
+    extractId: async (slug: string, content?: string): Promise<string | null> => {
+      const id = await findIdByName(slug);
+      if (id) return id;
 
-      try {
-        policy = YAML.parse(content);
-        return findPolicyByName(policy?.name);
-      } catch (error) {
-        logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-        return Promise.resolve(null);
+      if (content) {
+        let policy: Policy;
+        try {
+          policy = YAML.parse(content);
+        } catch (error) {
+          logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
+          return null;
+        }
+        return policy?._id ? String(policy._id) : null;
       }
+
+      return null;
     },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {

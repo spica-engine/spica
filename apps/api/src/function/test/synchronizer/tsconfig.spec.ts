@@ -276,8 +276,7 @@ describe("Function tsconfig Synchronizer", () => {
         module: "function",
         subModule: "tsconfig",
         fileExtensions: ["json"],
-        findIdBySlug: expect.any(Function),
-        findIdByContent: expect.any(Function),
+        extractId: expect.any(Function),
         apply: expect.any(Function)
       });
     });

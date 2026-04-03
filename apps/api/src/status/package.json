@@ -1,0 +1,9 @@
+{
+  "name": "@spica-server/status",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./services": "./services/index.ts"
+  }
+}

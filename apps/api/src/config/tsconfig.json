@@ -3,6 +3,18 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
+      "path": "../../../../libs/database/testing"
+    },
+    {
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../../../../libs/core/testing"
+    },
+    {
+      "path": "../../../../libs/core/schema"
+    },
+    {
       "path": "../../../../libs/interface/config"
     },
     {
@@ -10,9 +22,6 @@
     },
     {
       "path": "../passport/guard"
-    },
-    {
-      "path": "../../../../libs/core/schema"
     }
   ]
 }

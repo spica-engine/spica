@@ -3,13 +3,16 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../services/sync"
+    },
+    {
       "path": "../../../../../../libs/interface/versioncontrol"
     },
     {
-      "path": "../../../../../../libs/database"
+      "path": "../../../../../../libs/interface/config"
     },
     {
-      "path": "../../services/sync"
+      "path": "../../../../../../libs/database"
     },
     {
       "path": "../../../config"

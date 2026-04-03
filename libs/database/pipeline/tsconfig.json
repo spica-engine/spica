@@ -3,10 +3,13 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../"
+      "path": "../../filter"
     },
     {
-      "path": "../../filter"
+      "path": "../../interface/database"
+    },
+    {
+      "path": ".."
     }
   ]
 }

@@ -3,61 +3,70 @@
   "include": ["src/main.ts"],
   "references": [
     {
-      "path": "./src/activity"
+      "path": "../../libs/core/encryption"
     },
     {
-      "path": "./src/batch"
+      "path": "src/config"
     },
     {
-      "path": "./src/bucket"
+      "path": "src/sms"
     },
     {
-      "path": "./src/dashboard"
+      "path": "src/mailer"
     },
     {
-      "path": "./src/function"
+      "path": "src/secret"
     },
     {
-      "path": "./src/passport"
+      "path": "src/env_var"
     },
     {
-      "path": "./src/env_var"
+      "path": "src/batch"
     },
     {
-      "path": "./src/secret"
+      "path": "src/asset"
     },
     {
-      "path": "./src/preference"
+      "path": "src/replication"
     },
     {
-      "path": "./src/status"
+      "path": "src/versioncontrol"
     },
     {
-      "path": "./src/storage"
+      "path": "src/storage"
     },
     {
-      "path": "./src/versioncontrol"
+      "path": "src/status"
     },
     {
-      "path": "./src/replication"
+      "path": "src/preference"
     },
     {
-      "path": "./src/asset"
+      "path": "src/passport"
     },
     {
-      "path": "./src/mailer"
+      "path": "src/function"
     },
     {
-      "path": "../../libs/core"
+      "path": "../../libs/database"
     },
     {
-      "path": "../../libs/core/schema"
+      "path": "src/dashboard"
     },
     {
       "path": "../../libs/core/websocket"
     },
     {
-      "path": "./src/sms"
+      "path": "../../libs/core/schema"
+    },
+    {
+      "path": "../../libs/core"
+    },
+    {
+      "path": "src/bucket"
+    },
+    {
+      "path": "src/activity"
     }
   ]
 }

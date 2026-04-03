@@ -1,0 +1,15 @@
+{
+  "name": "@spica-server/versioncontrol",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./sync": "./sync/index.ts",
+    "./sync/engine": "./sync/engine/index.ts",
+    "./sync/realtime": "./sync/realtime/index.ts",
+    "./services/changelog": "./services/changelog/index.ts",
+    "./services/sync": "./services/sync/index.ts",
+    "./processors/changelog": "./processors/changelog/index.ts",
+    "./processors/sync": "./processors/sync/index.ts"
+  }
+}

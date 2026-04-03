@@ -1,0 +1,10 @@
+{
+  "name": "@spica-server/replication",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./src": "./src/index.ts",
+    "./testing": "./testing/index.ts"
+  }
+}
