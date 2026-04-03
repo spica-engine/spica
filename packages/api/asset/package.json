@@ -23,16 +23,9 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
-    "@spica-server/bucket": "workspace:*",
     "@spica-server/core-testing": "workspace:*",
-    "@spica-server/dashboard": "workspace:*",
     "@spica-server/database-testing": "workspace:*",
-    "@spica-server/function": "workspace:*",
-    "@spica-server/passport-apikey": "workspace:*",
-    "@spica-server/passport-identity": "workspace:*",
-    "@spica-server/passport-policy": "workspace:*",
     "@spica-server/passport-testing": "workspace:*",
-    "@spica-server/preference": "workspace:*",
     "@types/archiver": "^6.0.3"
   }
 }
