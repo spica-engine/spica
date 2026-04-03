@@ -17,7 +17,7 @@ import {
 } from "@spica-server/passport/policy/src/synchronizer/schema";
 import {PolicyService} from "@spica-server/passport/policy";
 import {Policy} from "@spica-server/interface/passport/policy";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";

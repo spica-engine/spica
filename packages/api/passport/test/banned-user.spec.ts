@@ -5,7 +5,7 @@ import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID, DATE_TIME} from "@spica-server/core/schema/formats";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {Config} from "twilio/lib/twiml/VoiceResponse";
 import {ConfigModule} from "@spica-server/config";
 

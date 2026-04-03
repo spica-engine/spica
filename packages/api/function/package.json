@@ -182,7 +182,7 @@
     "@nestjs/testing": "^10.4.15",
     "@spica-devkit/database": "*",
     "@spica-server/bucket": "workspace:*",
-    "@spica-server/preference": "workspace:*",
+    "@spica-server/preference-testing": "workspace:*",
     "@types/amqplib": "^0.10.7",
     "@types/express": "^4.17.21",
     "@types/json-schema": "^7.0.15",

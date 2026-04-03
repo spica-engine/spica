@@ -11,7 +11,7 @@ import {
   ProfilingLevel
 } from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 describe("BucketDataController profiler", () => {
   let app: INestApplication;

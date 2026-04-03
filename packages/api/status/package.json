@@ -17,7 +17,7 @@
     "@spica-server/bucket": "workspace:*",
     "@spica-server/config": "workspace:*",
     "@spica-server/function": "workspace:*",
-    "@spica-server/preference": "workspace:*",
+    "@spica-server/preference-testing": "workspace:*",
     "@spica-server/secret": "workspace:*",
     "@spica-server/storage": "workspace:*",
     "bson": "^6.10.1"

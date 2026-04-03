@@ -22,7 +22,7 @@ import {
 } from "@spica-server/bucket/services";
 import {HistoryModule, HistoryService} from "@spica-server/bucket/history/";
 import {Bucket} from "@spica-server/interface/bucket";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import YAML from "yaml";

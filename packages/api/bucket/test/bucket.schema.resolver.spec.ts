@@ -3,7 +3,7 @@ import {BucketService} from "@spica-server/bucket/services";
 import {BucketSchemaResolver} from "@spica-server/bucket/src/bucket.schema.resolver";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {Observable, Subject} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
 

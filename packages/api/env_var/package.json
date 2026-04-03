@@ -24,6 +24,6 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
-    "@spica-server/preference": "workspace:*"
+    "@spica-server/preference-testing": "workspace:*"
   }
 }

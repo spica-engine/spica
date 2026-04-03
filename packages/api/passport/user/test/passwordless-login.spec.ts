@@ -9,7 +9,7 @@ import {SmsModule, SmsService} from "@spica-server/sms";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {CoreTestingModule} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {UserModule} from "@spica-server/passport/user";

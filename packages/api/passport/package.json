@@ -158,7 +158,7 @@
     "@spica-server/filter": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/mailer": "workspace:*",
-    "@spica-server/preference": "workspace:*",
+    "@spica-server/preference-services": "workspace:*",
     "@spica-server/realtime": "workspace:*",
     "@spica-server/replication": "workspace:*",
     "@spica-server/sms": "workspace:*",
@@ -170,5 +170,8 @@
     "qrcode": "^1.5.4",
     "saml2-js": "^4.0.2",
     "speakeasy": "^2.0.0"
+  },
+  "devDependencies": {
+    "@spica-server/preference-testing": "workspace:*"
   }
 }

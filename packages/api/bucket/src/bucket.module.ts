@@ -6,7 +6,7 @@ import {SchemasRealtimeModule} from "@spica-server/bucket/schemas-realtime";
 import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {createHashFormat, createEncryptedFormat} from "@spica-server/core/schema/formats";
-import {PreferenceService} from "@spica-server/preference/services";
+import {PreferenceService} from "@spica-server/preference-services";
 import {BUCKET_LANGUAGE_FINALIZER} from "@spica-server/interface/preference";
 import {BucketCacheModule} from "@spica-server/bucket/cache";
 import {BucketDataController} from "./bucket-data.controller.js";

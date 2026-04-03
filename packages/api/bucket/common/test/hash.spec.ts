@@ -8,7 +8,7 @@ import {OBJECTID_STRING, OBJECT_ID, DATE_TIME} from "@spica-server/core/schema/f
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId, DatabaseService} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 describe("Hash Field", () => {
   let app: INestApplication;

@@ -5,7 +5,7 @@ import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/tes
 import {PassportModule} from "@spica-server/passport";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID, DATE_TIME} from "@spica-server/core/schema/formats";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ConfigModule} from "@spica-server/config";
 
 describe("Password Policy - Identity", () => {

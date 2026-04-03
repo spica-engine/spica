@@ -5,7 +5,7 @@ import {RateLimitGuard} from "@spica-server/passport/user/src/rate-limit.guard";
 import {UserConfigService} from "@spica-server/passport/user/src/config.service";
 import {CoreTestingModule} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {UserModule} from "@spica-server/passport/user";

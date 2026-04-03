@@ -6,7 +6,7 @@ import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {GuardService} from "@spica-server/passport/guard/services";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";

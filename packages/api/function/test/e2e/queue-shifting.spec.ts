@@ -12,7 +12,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {event} from "@spica-server/function/queue/proto";
 import {JobReducer, ReplicationModule} from "@spica-server/replication";

@@ -9,7 +9,7 @@ import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {PassportModule} from "@spica-server/passport";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 const EXPIRES_IN = 60_000;
 

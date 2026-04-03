@@ -37,6 +37,8 @@
       "packages/api/mailer",
       "packages/api/passport",
       "packages/api/preference",
+      "packages/api/preference/services",
+      "packages/api/preference/testing",
       "packages/api/replication",
       "packages/api/sms",
       "packages/api/status",

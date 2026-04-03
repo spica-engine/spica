@@ -8,14 +8,6 @@
       "types": "./index.ts",
       "default": "./dist/index.js"
     },
-    "./services": {
-      "types": "./services/index.ts",
-      "default": "./services/dist/index.js"
-    },
-    "./testing": {
-      "types": "./testing/index.ts",
-      "default": "./testing/dist/index.js"
-    },
     "./src/activity.resource": {
       "types": "./src/activity.resource.ts",
       "default": "./dist/src/activity.resource.js"
@@ -24,10 +16,10 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@spica-server/activity-services": "workspace:*",
-    "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport": "workspace:*",
+    "@spica-server/preference-services": "workspace:*",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {

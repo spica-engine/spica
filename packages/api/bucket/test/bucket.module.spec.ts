@@ -4,7 +4,7 @@ import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {BucketCacheModule} from "@spica-server/bucket/cache";
 
 describe("Bucket Module", () => {

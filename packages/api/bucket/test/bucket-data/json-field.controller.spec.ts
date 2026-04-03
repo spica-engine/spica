@@ -7,7 +7,7 @@ import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/f
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 describe("BucketDataController json field", () => {
   let app: INestApplication;

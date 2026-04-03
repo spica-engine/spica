@@ -1,6 +1,6 @@
 import {registrar} from "@spica-server/asset";
 import {Resource} from "@spica-server/interface/asset";
-import {PreferenceService} from "@spica-server/preference/services";
+import {PreferenceService} from "@spica-server/preference-services";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {IdentitySettingsContents} from "@spica-server/interface/passport/identity";
 

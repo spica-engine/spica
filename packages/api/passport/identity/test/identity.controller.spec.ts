@@ -10,7 +10,7 @@ import {IdentityModule} from "@spica-server/passport/identity";
 import {INestApplication} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {ConfigModule} from "@spica-server/config";
 

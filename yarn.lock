@@ -5881,6 +5881,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-devkit/auth@workspace:packages/devkit/auth"
   dependencies:
+    "@spica-server/preference-testing": "workspace:*"
     axios: "npm:^1.7.9"
     rxjs: "npm:^7.8.1"
   languageName: unknown
@@ -5890,6 +5891,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-devkit/bucket@workspace:packages/devkit/bucket"
   dependencies:
+    "@spica-server/preference-testing": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
     axios: "npm:^1.7.9"
     rxjs: "npm:^7.8.1"
@@ -5918,6 +5920,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-devkit/identity@workspace:packages/devkit/identity"
   dependencies:
+    "@spica-server/preference-testing": "workspace:*"
     axios: "npm:^1.7.9"
     rxjs: "npm:^7.8.1"
   languageName: unknown
@@ -6015,7 +6018,8 @@ __metadata:
     "@spica-server/function": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
-    "@spica-server/preference": "workspace:*"
+    "@spica-server/preference-services": "workspace:*"
+    "@spica-server/preference-testing": "workspace:*"
     "@spica-server/realtime": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@spica-server/status": "workspace:*"
@@ -6167,7 +6171,7 @@ __metadata:
     "@spica-server/env_var-services": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
-    "@spica-server/preference": "workspace:*"
+    "@spica-server/preference-testing": "workspace:*"
     rxjs: "npm:^7.8.1"
     yaml: "npm:^2.7.0"
   languageName: unknown
@@ -6201,7 +6205,7 @@ __metadata:
     "@spica-server/env_var-services": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
-    "@spica-server/preference": "workspace:*"
+    "@spica-server/preference-testing": "workspace:*"
     "@spica-server/realtime": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@spica-server/secret": "workspace:*"
@@ -6280,7 +6284,8 @@ __metadata:
     "@spica-server/filter": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/mailer": "workspace:*"
-    "@spica-server/preference": "workspace:*"
+    "@spica-server/preference-services": "workspace:*"
+    "@spica-server/preference-testing": "workspace:*"
     "@spica-server/realtime": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@spica-server/sms": "workspace:*"
@@ -6295,6 +6300,29 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/preference-services@workspace:*, @spica-server/preference-services@workspace:packages/api/preference/services":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/preference-services@workspace:packages/api/preference/services"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/preference-testing@workspace:*, @spica-server/preference-testing@workspace:packages/api/preference/testing":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/preference-testing@workspace:packages/api/preference/testing"
+  dependencies:
+    "@jest/globals": "npm:^29.7.0"
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/preference-services": "workspace:*"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/preference@workspace:*, @spica-server/preference@workspace:packages/api/preference":
   version: 0.0.0-use.local
   resolution: "@spica-server/preference@workspace:packages/api/preference"
@@ -6303,10 +6331,10 @@ __metadata:
     "@nestjs/testing": "npm:^10.4.15"
     "@spica-server/activity-services": "workspace:*"
     "@spica-server/bucket": "workspace:*"
-    "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
+    "@spica-server/preference-services": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
@@ -6390,7 +6418,7 @@ __metadata:
     "@spica-server/function": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
-    "@spica-server/preference": "workspace:*"
+    "@spica-server/preference-testing": "workspace:*"
     "@spica-server/secret": "workspace:*"
     "@spica-server/storage": "workspace:*"
     bson: "npm:^6.10.1"
@@ -6449,7 +6477,7 @@ __metadata:
     "@spica-server/function": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
-    "@spica-server/preference": "workspace:*"
+    "@spica-server/preference-testing": "workspace:*"
     "@spica-server/realtime": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@spica-server/representative": "workspace:*"

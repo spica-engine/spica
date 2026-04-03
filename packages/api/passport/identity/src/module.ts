@@ -1,6 +1,6 @@
 import {Module, Global, DynamicModule, Inject, Optional} from "@nestjs/common";
 import {Validator, SchemaModule} from "@spica-server/core/schema";
-import {PreferenceService} from "@spica-server/preference/services";
+import {PreferenceService} from "@spica-server/preference-services";
 import {JwtModule} from "@nestjs/jwt";
 import {
   IdentityOptions,

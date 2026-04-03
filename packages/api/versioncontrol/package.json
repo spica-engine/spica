@@ -57,7 +57,7 @@
     "@spica-server/env_var": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
     "@spica-server/function": "workspace:*",
-    "@spica-server/preference": "workspace:*",
+    "@spica-server/preference-testing": "workspace:*",
     "@spica-server/secret": "workspace:*",
     "uuid": "^11.0.5",
     "yaml": "^2.7.0"

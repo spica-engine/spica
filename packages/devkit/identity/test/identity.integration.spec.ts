@@ -3,7 +3,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {CoreTestingModule} from "@spica-server/core/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {PassportModule} from "@spica-server/passport";
 import * as Identity from "@spica-devkit/identity";
 import Axios from "axios";

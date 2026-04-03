@@ -8,7 +8,7 @@ import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/f
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportModule} from "@spica-server/passport";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 const EXPIRES_IN = 60_000;
 const REFRESH_TOKEN_HASH_SECRET = "refresh_token_hash_secret";

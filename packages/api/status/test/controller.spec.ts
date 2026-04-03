@@ -9,7 +9,7 @@ import {FunctionModule} from "@spica-server/function";
 import {IdentityModule} from "@spica-server/passport/identity";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
 import os from "os";

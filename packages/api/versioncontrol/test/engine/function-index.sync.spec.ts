@@ -23,7 +23,7 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {LogModule} from "@spica-server/function/log";
 import {SchedulerModule} from "@spica-server/function/scheduler";
 import {Function, FUNCTION_OPTIONS} from "@spica-server/interface/function";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";
 import fs from "fs";

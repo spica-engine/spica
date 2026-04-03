@@ -5,7 +5,7 @@ import {PassportModule} from "@spica-server/passport";
 import {INestApplication} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {ConfigModule} from "@spica-server/config";
 
 describe("User Update Endpoints", () => {
