@@ -129,6 +129,7 @@ const Policy = () => {
               color="default"
               className={styles.actionButton}
               onClick={() => openEditPolicy(row)}
+              disabled={row.system}
             >
               <Icon name="layers" />
             </Button>
