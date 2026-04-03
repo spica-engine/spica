@@ -12,7 +12,7 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@nestjs/websockets": "^10.4.15",
-    "@spica-server/database": "workspace:*",
+    "@spica-server/database-realtime": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/passport-guard-services": "workspace:*",
@@ -22,6 +22,7 @@
     "@nestjs/testing": "^10.4.15",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
     "@spica-server/passport-testing": "workspace:*"
   }
 }

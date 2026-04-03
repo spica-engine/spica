@@ -31,6 +31,7 @@
     "@spica-server/core": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport-authfactor": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
@@ -47,6 +48,7 @@
   },
   "devDependencies": {
     "@spica-server/core-testing": "workspace:*",
-    "@spica-server/core-websocket": "workspace:*"
+    "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*"
   }
 }

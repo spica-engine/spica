@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {RateLimitService} from "@spica-server/passport-user/src/rate-limit.service";
 import {RateLimitGuard} from "@spica-server/passport-user/src/rate-limit.guard";
 import {UserConfigService} from "@spica-server/passport-user/src/config.service";

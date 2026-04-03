@@ -1,5 +1,5 @@
 import {Test} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {
   ChangeInitiator,
   ChangeLog,

@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {ConfigModule} from "../src/config.module";
 import {ConfigService} from "../src/config.service";
 import {ConfigSchemaRegistry} from "../src/config.schema.registry";

@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database-testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {INestApplication} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core-schema";

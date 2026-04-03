@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica-server/database";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {EnvRelation, SecretRelation} from "@spica-server/interface/function";
 
 export class FunctionPipelineBuilder extends PipelineBuilder {

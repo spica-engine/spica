@@ -59,6 +59,7 @@
     "@spica-server/core-encryption": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/filter": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/mailer": "workspace:*",
@@ -77,6 +78,7 @@
   },
   "devDependencies": {
     "@spica-server/core-testing": "workspace:*",
-    "@spica-server/core-websocket": "workspace:*"
+    "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*"
   }
 }

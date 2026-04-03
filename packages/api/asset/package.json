@@ -26,6 +26,7 @@
     "@spica-server/bucket": "workspace:*",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/dashboard": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
     "@spica-server/function": "workspace:*",
     "@spica-server/passport-apikey": "workspace:*",
     "@spica-server/passport-identity": "workspace:*",

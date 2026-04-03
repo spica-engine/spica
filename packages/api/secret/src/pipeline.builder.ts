@@ -1,4 +1,4 @@
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 
 export class SecretPipelineBuilder extends PipelineBuilder {
   hideSecrets(): this {

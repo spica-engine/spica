@@ -1,7 +1,7 @@
 import {INestApplication, NestApplicationOptions, ForbiddenException} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {getMultipartFormDataMeta, StorageModule} from "@spica-server/storage";
 import {Binary, serialize} from "bson";

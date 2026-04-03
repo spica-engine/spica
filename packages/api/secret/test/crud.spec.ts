@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {SecretService, ServicesModule} from "@spica-server/secret-services";
 import {isEncryptedData} from "@spica-server/core-encryption";
 import * as CRUD from "../src/crud";

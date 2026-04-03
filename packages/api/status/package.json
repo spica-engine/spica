@@ -19,6 +19,7 @@
     "@spica-server/config": "workspace:*",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
     "@spica-server/function": "workspace:*",
     "@spica-server/passport-identity": "workspace:*",
     "@spica-server/passport-policy": "workspace:*",

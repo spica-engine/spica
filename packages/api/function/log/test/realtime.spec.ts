@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {LogModule} from "@spica-server/function-log";
 import {CoreTestingModule, Websocket} from "@spica-server/core-testing";
 import {WsAdapter} from "@spica-server/core-websocket";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {ChunkKind} from "@spica-server/interface/realtime";
 

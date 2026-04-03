@@ -3,7 +3,7 @@ import {
   DatabaseService,
   DatabaseTestingModule,
   ProfilingLevel
-} from "@spica-server/database/testing";
+} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {IdentityModule} from "@spica-server/passport-identity";

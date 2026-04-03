@@ -1,6 +1,6 @@
 import {LogService} from "@spica-server/function-log/src/log.service";
 import {TestingModule, Test} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {FUNCTION_LOG_OPTIONS} from "@spica-server/interface/function/log";
 
 describe("Function Log Service", () => {

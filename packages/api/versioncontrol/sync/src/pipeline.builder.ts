@@ -1,4 +1,4 @@
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {ChangeInitiator} from "@spica-server/interface/versioncontrol";
 
 export class SyncPipelineBuilder extends PipelineBuilder {

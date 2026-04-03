@@ -4,7 +4,7 @@ import {
   DatabaseService,
   DatabaseTestingModule,
   getConnectionUri
-} from "@spica-server/database/testing";
+} from "@spica-server/database-testing";
 import {ClassCommander, ReplicationModule} from "@spica-server/replication/src";
 import {CommandType} from "@spica-server/interface/replication";
 

@@ -6,7 +6,7 @@ import {
   DatabaseTestingModule,
   getConnectionUri,
   stream
-} from "@spica-server/database/testing";
+} from "@spica-server/database-testing";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {SchemaModule} from "@spica-server/core-schema";

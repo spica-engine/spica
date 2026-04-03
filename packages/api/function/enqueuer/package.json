@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
     "@types/amqplib": "^0.10.7",
     "@types/express": "^4.17.21",
     "@types/uniqid": "^5.3.4",

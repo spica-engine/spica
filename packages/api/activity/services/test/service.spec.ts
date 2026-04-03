@@ -1,6 +1,6 @@
 import {ActivityService} from "@spica-server/activity-services";
 import {TestingModule, Test} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {ACTIVITY_OPTIONS} from "@spica-server/interface/activity";
 
 describe("Activity Service", () => {

@@ -10,7 +10,7 @@
     }
   },
   "dependencies": {
-    "@spica-server/database": "workspace:*",
+    "@spica-server/database-realtime": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "rxjs": "^7.8.1"
   }

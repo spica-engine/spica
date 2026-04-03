@@ -1,6 +1,6 @@
 import {Test} from "@nestjs/testing";
 import {DatabaseService, ObjectId} from "@spica-server/database";
-import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
+import {DatabaseTestingModule, stream} from "@spica-server/database-testing";
 import {DatabaseOutput} from "@spica-server/function-runtime-io";
 import {generateLog, getLoggerConsole} from "@spica-server/function-runtime-logger";
 import {LogLevels} from "@spica-server/interface/function/runtime";

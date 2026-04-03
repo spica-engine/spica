@@ -16,6 +16,7 @@
     "@spica-server/core": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/env_var-realtime": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
     "@spica-server/interface": "workspace:*",
@@ -27,6 +28,7 @@
     "@nestjs/testing": "^10.4.15",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
     "@spica-server/passport-guard-services": "workspace:*",
     "@spica-server/passport-testing": "workspace:*",
     "@spica-server/preference-testing": "workspace:*"

@@ -20,11 +20,13 @@
     "@spica-server/core-patch": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/filter": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "locale": "^0.1.0"
   },
   "devDependencies": {
-    "@spica-server/core-testing": "workspace:*"
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*"
   }
 }

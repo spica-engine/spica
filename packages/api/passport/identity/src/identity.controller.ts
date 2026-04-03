@@ -40,7 +40,7 @@ import {
 import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 
 @Controller("passport/identity")
 export class IdentityController {

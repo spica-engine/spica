@@ -14,12 +14,14 @@
     "@spica-server/activity-services": "workspace:*",
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport-guard": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
     "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
     "@spica-server/passport-testing": "workspace:*"
   }
 }

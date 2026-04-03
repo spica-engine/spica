@@ -4,7 +4,7 @@ import {
   getDatabaseName,
   ObjectId,
   start
-} from "@spica-server/database/testing";
+} from "@spica-server/database-testing";
 import {MongoClient} from "mongodb";
 import color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate";

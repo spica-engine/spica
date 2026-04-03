@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {SyncEngine} from "../../sync/engine/src/engine";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {
   ChangeInitiator,
   ChangeOrigin,

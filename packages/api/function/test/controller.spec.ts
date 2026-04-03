@@ -3,7 +3,7 @@ import {FunctionModule} from "@spica-server/function";
 import os from "os";
 import {INestApplication} from "@nestjs/common";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";

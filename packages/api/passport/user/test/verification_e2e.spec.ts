@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {INestApplication} from "@nestjs/common";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {VerificationService} from "@spica-server/passport-user/src/verification.service";
 import {UserService} from "@spica-server/passport-user/src/user.service";
 import {MailerService} from "@spica-server/mailer";

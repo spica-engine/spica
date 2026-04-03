@@ -1,4 +1,4 @@
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 
 export class StoragePipelineBuilder extends PipelineBuilder {
   static createResourceFilter(resourceFilter: {include?: string[]; exclude?: string[]}): object {

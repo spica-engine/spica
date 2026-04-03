@@ -5,7 +5,7 @@ import {
   ObjectId,
   DeleteResult,
   InsertOneResult
-} from "@spica-server/database/testing";
+} from "@spica-server/database-testing";
 import {HistoryService} from "@spica-server/bucket-history";
 import {diff} from "@spica-server/core-differ";
 

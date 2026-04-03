@@ -13,7 +13,7 @@ import {
   ReturnDocument,
   WithId
 } from "@spica-server/database";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {StoragePipelineBuilder} from "./storage-pipeline.builder.js";
 import {
   StorageOptions,

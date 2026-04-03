@@ -43,6 +43,7 @@
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
     "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
     "@spica-server/passport-testing": "workspace:*",
     "@types/json-schema": "^7.0.15"
   }

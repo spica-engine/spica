@@ -1,6 +1,6 @@
 import {fromEvent, of} from "rxjs";
 import {catchError, concatMap, takeUntil} from "rxjs/operators";
-import {RealtimeDatabaseService} from "@spica-server/database/realtime";
+import {RealtimeDatabaseService} from "@spica-server/database-realtime";
 import {ResourceFilterFunction, IGuardService} from "@spica-server/interface/passport/guard";
 
 export function getConnectionHandlers(

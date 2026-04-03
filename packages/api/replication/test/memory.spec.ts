@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId, stream} from "@spica-server/database-testing";
 import {CommandMemory, CommandService} from "@spica-server/replication";
 import {
   COMMAND_MEMORY_OPTIONS,

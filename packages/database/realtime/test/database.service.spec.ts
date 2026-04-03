@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {bufferCount, delay, first, skip, take, tap} from "rxjs/operators";
-import {RealtimeDatabaseService} from "@spica-server/database/realtime/src/database.service";
+import {RealtimeDatabaseService} from "@spica-server/database-realtime/src/database.service";
 import {ChunkKind, SequenceKind} from "@spica-server/interface/realtime";
 
 const LATENCY = 500;

@@ -20,6 +20,7 @@
   "devDependencies": {
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
     "@spica-server/passport-testing": "workspace:*"
   }
 }

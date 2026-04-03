@@ -16,5 +16,8 @@
     "@spica-server/interface": "workspace:*",
     "@spica-server/versioncontrol-services-sync": "workspace:*",
     "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@spica-server/database-testing": "workspace:*"
   }
 }

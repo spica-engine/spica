@@ -1,4 +1,4 @@
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {replaceFilterDates, replaceFilterObjectIds} from "@spica-server/filter";
 import {replaceRefreshTokenFilter} from "./filter.js";
 

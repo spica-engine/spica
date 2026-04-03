@@ -1,5 +1,5 @@
 {
-  "name": "@spica-server/function-runtime",
+  "name": "@spica-server/database-pipeline",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,9 +10,8 @@
     }
   },
   "dependencies": {
+    "@spica-server/database": "workspace:*",
+    "@spica-server/filter": "workspace:*",
     "@spica-server/interface": "workspace:*"
-  },
-  "devDependencies": {
-    "@spica-server/database-testing": "workspace:*"
   }
 }

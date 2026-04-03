@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
+    "@spica-server/database-testing": "workspace:*",
     "@types/uniqid": "^5.3.4"
   }
 }

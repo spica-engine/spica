@@ -1,7 +1,7 @@
 import {Test} from "@nestjs/testing";
 import {FunctionService} from "@spica-server/function-services";
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {DatabaseService} from "@spica-server/database";
 import {EnvVarService} from "@spica-server/env_var-services";
 import * as CRUD from "../../src/crud";

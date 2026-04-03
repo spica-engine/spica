@@ -53,6 +53,7 @@
     "@spica-server/config": "workspace:*",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
     "@spica-server/passport": "workspace:*",
     "@spica-server/passport-guard-services": "workspace:*",
     "@spica-server/passport-testing": "workspace:*",

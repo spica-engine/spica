@@ -5,7 +5,7 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
+import {DatabaseTestingModule, stream} from "@spica-server/database-testing";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 

@@ -1,4 +1,4 @@
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {Activity} from "@spica-server/interface/activity";
 import {Filter, ObjectId} from "@spica-server/database";
 

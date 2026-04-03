@@ -35,6 +35,7 @@
     "uniqid": "^5.4.0"
   },
   "devDependencies": {
+    "@spica-server/database-testing": "workspace:*",
     "@types/json-schema": "^7.0.15",
     "@types/uniqid": "^5.3.4"
   }

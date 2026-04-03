@@ -17,6 +17,7 @@
     "@spica-server/core": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/interface": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/passport-guard-services": "workspace:*",
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
     "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
     "@spica-server/passport-testing": "workspace:*",
     "@types/multer": "^2.1.0"
   }

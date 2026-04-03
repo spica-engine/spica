@@ -14,7 +14,7 @@ import {
 } from "./exception.js";
 import {categorizePropertyMap} from "./helpers.js";
 import {BucketPipelineBuilder} from "./pipeline.builder.js";
-import {PipelineBuilder} from "@spica-server/database/pipeline";
+import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {
   CrudOptions,
   CrudParams,
