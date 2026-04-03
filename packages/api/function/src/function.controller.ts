@@ -45,7 +45,7 @@ import {
   EnvRelation,
   Function,
   SecretRelation
-} from "@spica-server/interface/function";
+} from "@spica-server/interface-function";
 import {LogService} from "@spica-server/function-log/src/log.service";
 import {generate} from "./schema/enqueuer.resolver.js";
 import {applyPatch} from "@spica-server/core-patch";

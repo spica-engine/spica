@@ -19,7 +19,8 @@
     "@spica-server/core-patch": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-activity": "workspace:*",
+    "@spica-server/interface-preference": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/preference-services": "workspace:*",
     "rxjs": "^7.8.1"

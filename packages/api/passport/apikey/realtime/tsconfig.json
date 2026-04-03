@@ -7,19 +7,34 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../guard"
-    },
-    {
-      "path": "../../../../interface/realtime"
-    },
-    {
       "path": "../../../../realtime"
     },
     {
       "path": "../../guard/services"
     },
     {
+      "path": "../../guard"
+    },
+    {
+      "path": "../../../../interface/realtime"
+    },
+    {
+      "path": "../../../../interface/passport/apikey"
+    },
+    {
       "path": "../../../../database/realtime"
+    },
+    {
+      "path": "../../../../core/schema"
+    },
+    {
+      "path": "../../../../database/testing"
+    },
+    {
+      "path": "../../../../core/websocket"
+    },
+    {
+      "path": "../../../../core/testing"
     }
   ]
 }

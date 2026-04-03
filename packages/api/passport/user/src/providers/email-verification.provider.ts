@@ -4,7 +4,7 @@ import {
   VerificationProvider,
   VerificationMessage,
   VerificationResult
-} from "@spica-server/interface/passport/user";
+} from "@spica-server/interface-passport-user";
 
 @Injectable()
 export class EmailVerificationProvider implements VerificationProvider {

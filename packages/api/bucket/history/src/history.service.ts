@@ -8,9 +8,9 @@ import {
   ObjectId
 } from "@spica-server/database";
 import {diff, schemaDiff} from "@spica-server/core-differ";
-import {ChangePaths, ChangeKind} from "@spica-server/interface/core";
-import {History} from "@spica-server/interface/bucket/history";
-import {Bucket, BucketDocument} from "@spica-server/interface/bucket";
+import {ChangePaths, ChangeKind} from "@spica-server/interface-core";
+import {History} from "@spica-server/interface-bucket-history";
+import {Bucket, BucketDocument} from "@spica-server/interface-bucket";
 
 @Injectable()
 export class HistoryService {

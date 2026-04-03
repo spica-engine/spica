@@ -1,6 +1,6 @@
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {PolicyService} from "./policy.service.js";
-import {changeFactory, Policy} from "@spica-server/interface/passport/policy";
+import {changeFactory, Policy} from "@spica-server/interface-passport-policy";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {createDuplicatedActionsErrorMessage, getDuplicatedActionMaps} from "./utility.js";
 

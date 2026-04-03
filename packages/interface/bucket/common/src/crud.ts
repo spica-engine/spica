@@ -1,5 +1,5 @@
 import {ObjectId, BaseCollection} from "@spica-server/database";
-import {Bucket, BucketPreferences} from "@spica-server/interface/bucket";
+import {Bucket, BucketPreferences} from "@spica-server/interface-bucket";
 
 export interface CrudOptions<Paginate> {
   localize?: boolean;

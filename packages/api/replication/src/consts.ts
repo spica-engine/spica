@@ -3,7 +3,7 @@ import {
   ReplicationServiceOptions,
   MemoryOptions,
   CommandMessengerOptions
-} from "@spica-server/interface/replication";
+} from "@spica-server/interface-replication";
 
 export const replicationServiceOptions: ReplicationServiceOptions = {
   expireAfterSeconds: 5 * 60

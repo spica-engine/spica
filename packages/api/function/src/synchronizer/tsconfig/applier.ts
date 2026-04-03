@@ -5,7 +5,7 @@ import {
   ApplyResult,
   SyncStatuses,
   DocumentChangeApplier
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {Logger} from "@nestjs/common";
 
 const logger = new Logger("FunctionTsconfigSyncApplier");

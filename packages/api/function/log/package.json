@@ -19,7 +19,8 @@
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/database-realtime": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-function-log": "workspace:*",
+    "@spica-server/interface-realtime": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/passport-guard-services": "workspace:*",
     "@spica-server/realtime": "workspace:*"

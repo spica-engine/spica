@@ -1,5 +1,5 @@
 import {ObjectId} from "mongodb";
-import {Format} from "@spica-server/interface/core";
+import {Format} from "@spica-server/interface-core";
 import {hash, encrypt} from "@spica-server/core-encryption";
 
 export const OBJECT_ID: Format = {

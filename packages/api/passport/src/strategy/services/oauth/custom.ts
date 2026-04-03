@@ -10,7 +10,7 @@ import {
   PassportOptions,
   PASSPORT_OPTIONS,
   REQUEST_SERVICE
-} from "@spica-server/interface/passport";
+} from "@spica-server/interface-passport";
 import {StrategyService} from "../strategy.service.js";
 import {RequestService} from "../../../options.js";
 import {v4 as uuidv4} from "uuid";

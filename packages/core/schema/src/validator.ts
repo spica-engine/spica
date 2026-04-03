@@ -7,7 +7,7 @@ import {from, isObservable} from "rxjs";
 import {skip, take, tap} from "rxjs/operators";
 import defaultVocabulary from "./default.js";
 import formatVocabulary from "./format.js";
-import {Default, Format, Keyword, ModuleOptions, UriResolver} from "@spica-server/interface/core";
+import {Default, Format, Keyword, ModuleOptions, UriResolver} from "@spica-server/interface-core";
 import {GLOBAL_SCHEMA_MODULE_OPTIONS, SCHEMA_MODULE_OPTIONS} from "./consts.js";
 
 export {CodeKeywordDefinition, ErrorObject, KeywordCxt, _} from "ajv";

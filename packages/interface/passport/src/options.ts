@@ -1,5 +1,5 @@
-import {IdentityOptions} from "@spica-server/interface/passport/identity";
-import {UserOptions} from "@spica-server/interface/passport/user";
+import {IdentityOptions} from "@spica-server/interface-passport-identity";
+import {UserOptions} from "@spica-server/interface-passport-user";
 
 export interface PassportOptions {
   publicUrl: string;

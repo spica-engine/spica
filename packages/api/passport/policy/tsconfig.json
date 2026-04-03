@@ -7,7 +7,34 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
+      "path": "realtime"
+    },
+    {
       "path": "../guard"
+    },
+    {
+      "path": "../../../interface/versioncontrol"
+    },
+    {
+      "path": "../../../interface/realtime"
+    },
+    {
+      "path": "../../../interface/passport/policy"
+    },
+    {
+      "path": "../../../interface/passport/guard"
+    },
+    {
+      "path": "../../../interface/activity"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core/patch"
     },
     {
       "path": "../../../core"
@@ -16,25 +43,13 @@
       "path": "../../activity/services"
     },
     {
-      "path": "realtime"
+      "path": "../../../database/testing"
     },
     {
-      "path": "../../../interface/versioncontrol"
+      "path": "../../../core/websocket"
     },
     {
-      "path": "../../../interface/passport/guard"
-    },
-    {
-      "path": "../../../core/schema"
-    },
-    {
-      "path": "../../../interface/passport/policy"
-    },
-    {
-      "path": "../../../database"
-    },
-    {
-      "path": "../../../interface/activity"
+      "path": "../../../core/testing"
     }
   ]
 }

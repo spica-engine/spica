@@ -8,6 +8,9 @@
   "references": [
     {
       "path": "../interface/core"
+    },
+    {
+      "path": "../interface/config"
     }
   ]
 }

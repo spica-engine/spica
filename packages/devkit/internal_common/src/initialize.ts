@@ -5,7 +5,7 @@ import {
   InitializationResult,
   PublicInitialization,
   UserInitialization
-} from "@spica-server/interface/function/packages";
+} from "@spica-server/interface-function-packages";
 import {Axios} from "./request";
 
 let service: Axios;

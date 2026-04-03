@@ -1,5 +1,5 @@
 import {diff} from "@spica-server/core-differ";
-import {ChangeKind} from "@spica-server/interface/core";
+import {ChangeKind} from "@spica-server/interface-core";
 
 describe("differ", () => {
   it("should return no difference", () => {

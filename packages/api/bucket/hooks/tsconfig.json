@@ -4,37 +4,25 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../interface/function/scheduler"
-    },
-    {
-      "path": "../../../interface/function"
-    },
-    {
-      "path": "../../../database"
-    },
-    {
-      "path": "../services"
-    },
-    {
-      "path": "../../../interface/function/enqueuer"
-    },
-    {
-      "path": "../../../interface/bucket/hooks"
+      "path": "../../replication"
     },
     {
       "path": "../../../interface/replication"
     },
     {
-      "path": "../../replication"
+      "path": "../../../interface/function/scheduler"
     },
     {
-      "path": "proto"
+      "path": "../../../interface/function/enqueuer"
+    },
+    {
+      "path": "../../../interface/function"
+    },
+    {
+      "path": "../../../interface/bucket/hooks"
     },
     {
       "path": "../../function/queue/proto"
@@ -44,6 +32,18 @@
     },
     {
       "path": "../../function/enqueuer"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "proto"
+    },
+    {
+      "path": "../../../database/testing"
     }
   ]
 }

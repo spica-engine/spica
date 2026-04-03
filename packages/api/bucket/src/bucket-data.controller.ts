@@ -37,7 +37,7 @@ import {
 import {Schema, Validator} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport-guard";
-import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
+import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket-cache";
 import {
   deleteDocument,
@@ -58,11 +58,11 @@ import {
   createBucketDataActivity
 } from "@spica-server/bucket-common";
 import {applyPatch} from "@spica-server/core-patch";
-import {BucketDocument} from "@spica-server/interface/bucket";
+import {BucketDocument} from "@spica-server/interface-bucket";
 import {
   BUCKET_DATA_HASH_SECRET,
   BUCKET_DATA_ENCRYPTION_SECRET
-} from "@spica-server/interface/bucket";
+} from "@spica-server/interface-bucket";
 
 /**
  * All APIs related to bucket documents.

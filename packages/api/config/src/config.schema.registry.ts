@@ -1,6 +1,6 @@
 import {BadRequestException, Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core-schema";
-import {BaseConfig} from "@spica-server/interface/config";
+import {BaseConfig} from "@spica-server/interface-config";
 import {JSONSchema7} from "json-schema";
 
 const COMPOSITE_SCHEMA_ID = "http://spica.internal/config/composite";

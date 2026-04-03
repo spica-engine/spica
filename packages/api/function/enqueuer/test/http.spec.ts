@@ -5,8 +5,8 @@ import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {HttpEnqueuer} from "@spica-server/function-enqueuer";
 import {EventQueue, HttpQueue} from "@spica-server/function-queue";
 import {event} from "@spica-server/function-queue-proto";
-import {HttpMethod} from "@spica-server/interface/function/enqueuer";
-import {IGuardService} from "@spica-server/interface/passport/guard";
+import {HttpMethod} from "@spica-server/interface-function-enqueuer";
+import {IGuardService} from "@spica-server/interface-passport-guard";
 
 function createNoopGuardService(): IGuardService {
   return {

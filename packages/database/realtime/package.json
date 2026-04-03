@@ -20,7 +20,8 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-database": "workspace:*",
+    "@spica-server/interface-realtime": "workspace:*",
     "lodash": "^4.17.21",
     "mingo": "^6.5.1",
     "rxjs": "^7.8.1"

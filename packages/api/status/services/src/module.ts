@@ -1,6 +1,6 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {attachStatusTrackerFactory} from "./interceptor.js";
-import {StatusOptions, STATUS_OPTIONS, ATTACH_STATUS_TRACKER} from "@spica-server/interface/status";
+import {StatusOptions, STATUS_OPTIONS, ATTACH_STATUS_TRACKER} from "@spica-server/interface-status";
 import {StatusService} from "./service.js";
 
 @Global()

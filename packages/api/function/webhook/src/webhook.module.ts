@@ -6,7 +6,7 @@ import {WebhookController} from "./webhook.controller.js";
 import {WebhookService} from "./webhook.service.js";
 import {WebhookLogService} from "./log.service.js";
 import {WebhookLogController} from "./log.controller.js";
-import {WebhookOptions, WEBHOOK_OPTIONS} from "@spica-server/interface/function/webhook";
+import {WebhookOptions, WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
 
 @Module({})
 export class WebhookModule {

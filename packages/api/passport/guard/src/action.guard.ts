@@ -18,7 +18,7 @@ import {
   PolicyResolver,
   POLICY_RESOLVER,
   ResourceFilterFunction
-} from "@spica-server/interface/passport/guard";
+} from "@spica-server/interface-passport-guard";
 
 export function wrapArray(val: string | string[]) {
   return Array.isArray(val) ? val : Array(val);

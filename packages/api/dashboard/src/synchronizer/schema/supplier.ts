@@ -7,8 +7,8 @@ import {
   ChangeOrigin,
   DocumentChangeSupplier,
   ChangeInitiator
-} from "@spica-server/interface/versioncontrol";
-import {Dashboard} from "@spica-server/interface/dashboard";
+} from "@spica-server/interface-versioncontrol";
+import {Dashboard} from "@spica-server/interface-dashboard";
 import {Logger} from "@nestjs/common";
 
 const logger = new Logger("DashboardSyncSupplier");

@@ -4,11 +4,26 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../common"
+    },
+    {
+      "path": "../../../realtime"
+    },
+    {
+      "path": "../../passport/guard/services"
+    },
+    {
+      "path": "../../passport/guard"
+    },
+    {
+      "path": "../../../interface/realtime"
+    },
     {
       "path": "../../../interface/passport/guard"
     },
@@ -16,16 +31,10 @@
       "path": "../../../interface/bucket/realtime"
     },
     {
+      "path": "../../../interface/bucket"
+    },
+    {
       "path": "../../../interface/activity"
-    },
-    {
-      "path": "../../passport/guard"
-    },
-    {
-      "path": "../../passport/guard/services"
-    },
-    {
-      "path": "../../../interface/realtime"
     },
     {
       "path": "../../../database/realtime"
@@ -40,13 +49,13 @@
       "path": "../../../core/patch"
     },
     {
-      "path": "../services"
-    },
-    {
       "path": "../hooks"
     },
     {
       "path": "../history"
+    },
+    {
+      "path": "../expression"
     },
     {
       "path": "../cache"
@@ -55,16 +64,19 @@
       "path": "../../activity/services"
     },
     {
-      "path": "../../../interface/bucket"
+      "path": "../../passport/testing"
     },
     {
-      "path": "../common"
+      "path": "../../passport"
     },
     {
-      "path": "../expression"
+      "path": "../../../database/testing"
     },
     {
-      "path": "../../../realtime"
+      "path": "../../../core/websocket"
+    },
+    {
+      "path": "../../../core/testing"
     }
   ]
 }

@@ -7,8 +7,8 @@ import {
   ChangeOrigin,
   DocumentChangeSupplier,
   ChangeInitiator
-} from "@spica-server/interface/versioncontrol";
-import {Function} from "@spica-server/interface/function";
+} from "@spica-server/interface-versioncontrol";
+import {Function} from "@spica-server/interface-function";
 import {Logger} from "@nestjs/common";
 
 const logger = new Logger("FunctionSyncSupplier");

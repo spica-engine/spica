@@ -1,7 +1,7 @@
 import {DynamicModule, Inject, Module, Optional} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core-schema";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
-import {SchedulingOptions} from "@spica-server/interface/function/scheduler";
+import {SchedulingOptions} from "@spica-server/interface-function-scheduler";
 import {WebhookModule} from "@spica-server/function-webhook";
 import path from "path";
 import {FunctionEngine} from "./engine.js";
@@ -16,16 +16,16 @@ import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {
   REGISTER_VC_CHANGE_HANDLER,
   RegisterVCChangeHandler
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {registerAssetHandlers} from "./asset.js";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
+import {IRepresentativeManager} from "@spica-server/interface-representative";
+import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
 import {
   Function,
   FunctionOptions,
   FUNCTION_OPTIONS,
   FunctionWithContent
-} from "@spica-server/interface/function";
+} from "@spica-server/interface-function";
 import {
   getSupplier as getSchemaSupplier,
   getApplier as getSchemaApplier

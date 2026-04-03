@@ -1,10 +1,10 @@
 import {Validator, Schema} from "@spica-server/core-schema";
 import {DashboardService} from "@spica-server/dashboard";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {Resource} from "@spica-server/interface/asset";
+import {IRepresentativeManager} from "@spica-server/interface-representative";
+import {Resource} from "@spica-server/interface-asset";
 import {registrar} from "@spica-server/asset";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {DashboardAsset} from "@spica-server/interface/dashboard";
+import {DashboardAsset} from "@spica-server/interface-dashboard";
 
 const _module = "dashboard";
 

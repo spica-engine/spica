@@ -16,7 +16,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {SyncPipelineBuilder} from "./pipeline.builder.js";
 import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {SyncService} from "@spica-server/versioncontrol-services-sync";
-import {Sync, SyncStatuses} from "@spica-server/interface/versioncontrol";
+import {Sync, SyncStatuses} from "@spica-server/interface-versioncontrol";
 
 /**
  * All APIs related to version control synchronization.

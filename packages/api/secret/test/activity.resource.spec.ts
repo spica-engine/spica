@@ -1,4 +1,4 @@
-import {Action} from "@spica-server/interface/activity";
+import {Action} from "@spica-server/interface-activity";
 import {createSecretActivity} from "../src/activity.resource";
 
 describe("Activity Resource", () => {

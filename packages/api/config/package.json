@@ -7,7 +7,7 @@
     "@nestjs/common": "^10.4.15",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-config": "workspace:*",
     "@spica-server/passport-guard": "workspace:*"
   },
   "devDependencies": {

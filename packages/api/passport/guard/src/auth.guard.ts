@@ -11,7 +11,7 @@ import {AuthModuleOptions, Type} from "@nestjs/passport";
 import {defaultOptions} from "@nestjs/passport/dist/options.js";
 import passport from "passport";
 import {memoize} from "@nestjs/passport/dist/utils/memoize.util.js";
-import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
+import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 
 export function extractStrategyType(request: any): ReqAuthStrategy | undefined {
   const auth = request.headers?.["authorization"];

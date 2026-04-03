@@ -1,4 +1,4 @@
-import {Action} from "@spica-server/interface/activity";
+import {Action} from "@spica-server/interface-activity";
 import {createUserActivity} from "@spica-server/passport-user/src/activity.resource";
 
 describe("Activity Resource", () => {

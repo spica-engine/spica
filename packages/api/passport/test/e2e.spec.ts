@@ -4,7 +4,7 @@ import {SchemaModule, hash} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {PassportModule} from "@spica-server/passport";
-import {REQUEST_SERVICE} from "@spica-server/interface/passport";
+import {REQUEST_SERVICE} from "@spica-server/interface-passport";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 import jsQR from "jsqr";

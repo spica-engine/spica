@@ -12,8 +12,8 @@ import {
   ChangeOrigin,
   ChangeType,
   SyncStatuses
-} from "@spica-server/interface/versioncontrol";
-import {Function} from "@spica-server/interface/function";
+} from "@spica-server/interface-versioncontrol";
+import {Function} from "@spica-server/interface-function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
 import {SecretService} from "@spica-server/secret-services";

@@ -13,7 +13,8 @@
     "@nestjs/common": "^10.4.15",
     "@spica-server/config": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-config": "workspace:*",
+    "@spica-server/interface-versioncontrol": "workspace:*",
     "@spica-server/versioncontrol-services-sync": "workspace:*",
     "rxjs": "^7.8.1"
   },

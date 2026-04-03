@@ -25,7 +25,7 @@ import {
   APIKEY_POLICY_FINALIZER,
   changeFactory,
   IDENTITY_POLICY_FINALIZER
-} from "@spica-server/interface/passport/policy";
+} from "@spica-server/interface-passport-policy";
 import {PolicyService} from "./policy.service.js";
 import * as CRUD from "./crud.js";
 

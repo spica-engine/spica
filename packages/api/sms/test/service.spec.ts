@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {SmsService} from "../src/service";
-import {SmsStrategy, SmsSender} from "@spica-server/interface/sms";
+import {SmsStrategy, SmsSender} from "@spica-server/interface-sms";
 import {TwilioStrategy} from "../src/strategy/twilio.strategy";
 import {InternalServerErrorException} from "@nestjs/common";
 

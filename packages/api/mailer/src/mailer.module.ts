@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
-import {MAILER_OPTIONS, MailerOptions} from "@spica-server/interface/mailer";
+import {MAILER_OPTIONS, MailerOptions} from "@spica-server/interface-mailer";
 import {MailerService} from "./mailer.service.js";
 
 @Global()

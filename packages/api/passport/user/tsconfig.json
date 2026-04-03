@@ -7,43 +7,13 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../../core/encryption"
-    },
-    {
-      "path": "../../../interface/core"
-    },
-    {
-      "path": "../../../interface/replication"
-    },
-    {
-      "path": "../../replication"
-    },
-    {
-      "path": "../../../interface/passport/authfactor"
-    },
-    {
-      "path": "../authfactor"
-    },
-    {
-      "path": "../guard"
-    },
-    {
-      "path": "../../../core"
-    },
-    {
-      "path": "../../activity/services"
-    },
-    {
       "path": "../../status"
-    },
-    {
-      "path": "../../../database/pipeline"
     },
     {
       "path": "../../sms"
     },
     {
-      "path": "../../mailer"
+      "path": "../../replication"
     },
     {
       "path": "realtime"
@@ -52,31 +22,73 @@
       "path": "../refresh_token/services"
     },
     {
-      "path": "../../../interface/passport/policy"
-    },
-    {
       "path": "../policy"
     },
     {
-      "path": "../../../core/schema"
+      "path": "../guard"
     },
     {
-      "path": "../../../filter"
+      "path": "../authfactor"
+    },
+    {
+      "path": "../../mailer"
+    },
+    {
+      "path": "../../../interface/replication"
+    },
+    {
+      "path": "../../../interface/realtime"
     },
     {
       "path": "../../../interface/passport/user"
     },
     {
+      "path": "../../../interface/passport/policy"
+    },
+    {
+      "path": "../../../interface/passport/authfactor"
+    },
+    {
+      "path": "../../../interface/core"
+    },
+    {
       "path": "../../../interface/config"
+    },
+    {
+      "path": "../../../interface/activity"
+    },
+    {
+      "path": "../../../filter"
+    },
+    {
+      "path": "../../../database/pipeline"
     },
     {
       "path": "../../../database"
     },
     {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core/encryption"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
       "path": "../../config"
     },
     {
-      "path": "../../../interface/activity"
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/websocket"
+    },
+    {
+      "path": "../../../core/testing"
     }
   ]
 }

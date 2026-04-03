@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-passport-authfactor": "workspace:*",
+    "@spica-server/interface-replication": "workspace:*",
     "@spica-server/replication": "workspace:*",
     "qrcode": "^1.5.4",
     "speakeasy": "^2.0.0"

@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {activity, ActivityService} from "@spica-server/activity-services";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
-import {Predict, ModuleActivity, ACTIVITY_OPTIONS} from "@spica-server/interface/activity";
+import {Predict, ModuleActivity, ACTIVITY_OPTIONS} from "@spica-server/interface-activity";
 
 const TestPredict: Predict = (): ModuleActivity[] => {
   return [

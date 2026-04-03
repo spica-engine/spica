@@ -14,46 +14,85 @@
       "path": "sync"
     },
     {
-      "path": "../../interface/config"
-    },
-    {
-      "path": "../../interface/versioncontrol"
-    },
-    {
-      "path": "../passport/guard"
-    },
-    {
       "path": "../../representative"
     },
     {
       "path": "../replication"
     },
     {
-      "path": "../../realtime"
+      "path": "../passport/guard"
     },
     {
-      "path": "../passport"
+      "path": "../../interface/versioncontrol"
     },
     {
-      "path": "../../database"
+      "path": "../../interface/representative"
     },
     {
-      "path": "../../core"
+      "path": "../../interface/realtime"
     },
     {
-      "path": "../config"
+      "path": "../../interface/passport/policy"
+    },
+    {
+      "path": "../../interface/function"
+    },
+    {
+      "path": "../../interface/env_var"
+    },
+    {
+      "path": "../../interface/config"
+    },
+    {
+      "path": "../../interface/bucket"
+    },
+    {
+      "path": "../../core/schema"
     },
     {
       "path": "../secret"
     },
     {
-      "path": "../preference"
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../passport/policy"
+    },
+    {
+      "path": "../passport/guard/services"
+    },
+    {
+      "path": "../function/services"
+    },
+    {
+      "path": "../function/scheduler"
+    },
+    {
+      "path": "../function/log"
     },
     {
       "path": "../function"
     },
     {
+      "path": "../env_var/services"
+    },
+    {
       "path": "../env_var"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/websocket"
+    },
+    {
+      "path": "../../core/testing"
+    },
+    {
+      "path": "../bucket/services"
+    },
+    {
+      "path": "../bucket/history"
     },
     {
       "path": "../bucket"

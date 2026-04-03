@@ -5,9 +5,9 @@ import {
   USER_OPTIONS,
   UserOptions,
   DecryptedUser
-} from "@spica-server/interface/passport/user";
+} from "@spica-server/interface-passport-user";
 import {Validator} from "@spica-server/core-schema";
-import {Default} from "@spica-server/interface/core";
+import {Default} from "@spica-server/interface-core";
 import {hash, compare} from "./hash.js";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
 import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";

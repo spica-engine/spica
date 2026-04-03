@@ -1,6 +1,6 @@
 import {JSONSchema7} from "json-schema";
 import {diff} from "./differ.js";
-import {ChangeKind, SchemaChange, ChangePaths} from "@spica-server/interface/core";
+import {ChangeKind, SchemaChange, ChangePaths} from "@spica-server/interface-core";
 
 export function clearSchemaPaths(
   paths: ChangePaths,

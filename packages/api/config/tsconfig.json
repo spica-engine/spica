@@ -7,31 +7,25 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../database/testing"
-    },
-    {
-      "path": "../passport/testing"
-    },
-    {
-      "path": "../../core/testing"
-    },
-    {
-      "path": "../../core/schema"
+      "path": "../passport/guard"
     },
     {
       "path": "../../interface/config"
     },
     {
-      "path": "../passport/guard"
-    },
-    {
-      "path": "../passport"
-    },
-    {
       "path": "../../database"
     },
     {
-      "path": "../../core"
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/testing"
     }
   ]
 }

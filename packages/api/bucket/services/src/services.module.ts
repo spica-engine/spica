@@ -6,7 +6,7 @@ import {
   BUCKET_DATA_LIMIT,
   BUCKET_DATA_HASH_SECRET,
   BUCKET_DATA_ENCRYPTION_SECRET
-} from "@spica-server/interface/bucket";
+} from "@spica-server/interface-bucket";
 
 @Global()
 @Module({})

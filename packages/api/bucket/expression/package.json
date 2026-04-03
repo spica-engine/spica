@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-bucket-expression": "workspace:*",
     "pegjs": "^0.10.0"
   }
 }

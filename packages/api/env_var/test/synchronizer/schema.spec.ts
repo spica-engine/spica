@@ -8,9 +8,9 @@ import {
   ChangeOrigin,
   ChangeType,
   SyncStatuses
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import YAML from "yaml";
-import {EnvVar} from "@spica-server/interface/env_var";
+import {EnvVar} from "@spica-server/interface-env_var";
 import {firstValueFrom} from "rxjs";
 import {SchemaModule, Validator} from "@spica-server/core-schema";
 import {OBJECT_ID} from "@spica-server/core-schema";

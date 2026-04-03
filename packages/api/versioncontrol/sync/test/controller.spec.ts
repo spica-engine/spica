@@ -10,7 +10,7 @@ import {
   ChangeType,
   ChangeOrigin,
   ChangeInitiator
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID} from "@spica-server/core-schema";

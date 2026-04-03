@@ -7,7 +7,19 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../../core/schema"
+      "path": "services"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../guard"
+    },
+    {
+      "path": "../../../interface/realtime"
+    },
+    {
+      "path": "../../../interface/passport/refresh_token"
     },
     {
       "path": "../../../filter"
@@ -16,22 +28,22 @@
       "path": "../../../database/pipeline"
     },
     {
-      "path": "../../../interface/passport/refresh_token"
-    },
-    {
-      "path": "../guard"
-    },
-    {
       "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
     },
     {
       "path": "../../../core"
     },
     {
-      "path": "realtime"
+      "path": "../../../database/testing"
     },
     {
-      "path": "services"
+      "path": "../../../core/websocket"
+    },
+    {
+      "path": "../../../core/testing"
     }
   ]
 }

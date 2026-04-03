@@ -1,6 +1,6 @@
 import {DashboardService} from "../../dashboard.service.js";
 import * as CRUD from "../../crud.js";
-import {Dashboard} from "@spica-server/interface/dashboard";
+import {Dashboard} from "@spica-server/interface-dashboard";
 import YAML from "yaml";
 import {
   ChangeLog,
@@ -8,7 +8,7 @@ import {
   ChangeType,
   SyncStatuses,
   DocumentChangeApplier
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {Logger} from "@nestjs/common";
 

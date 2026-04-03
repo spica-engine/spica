@@ -38,10 +38,10 @@ import {
   insertActivity,
   decryptDocumentFields
 } from "@spica-server/bucket-common";
-import {FindResponse} from "@spica-server/interface/bucket/graphql";
-import {Bucket, BUCKET_DATA_HASH_SECRET, BucketDocument} from "@spica-server/interface/bucket";
-import {BUCKET_DATA_ENCRYPTION_SECRET} from "@spica-server/interface/bucket";
-import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
+import {FindResponse} from "@spica-server/interface-bucket-graphql";
+import {Bucket, BUCKET_DATA_HASH_SECRET, BucketDocument} from "@spica-server/interface-bucket";
+import {BUCKET_DATA_ENCRYPTION_SECRET} from "@spica-server/interface-bucket";
+import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 
 import {
   createSchema,
@@ -52,8 +52,8 @@ import {
   validateBuckets
 } from "./schema.js";
 import {applyPatch, deepCopy} from "@spica-server/core-patch";
-import {Action} from "@spica-server/interface/activity";
-import {SchemaWarning} from "@spica-server/interface/bucket/graphql";
+import {Action} from "@spica-server/interface-activity";
+import {SchemaWarning} from "@spica-server/interface-bucket-graphql";
 
 @Injectable()
 export class GraphqlController implements OnModuleInit {

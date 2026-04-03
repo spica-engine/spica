@@ -10,6 +10,21 @@
     },
     {
       "path": "../../interface/function/packages"
+    },
+    {
+      "path": "../../api/passport/testing"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/websocket"
+    },
+    {
+      "path": "../../core/testing"
+    },
+    {
+      "path": "../../core/schema"
     }
   ]
 }

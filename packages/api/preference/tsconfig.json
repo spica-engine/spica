@@ -7,28 +7,37 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../interface/preference"
-    },
-    {
       "path": "services"
     },
     {
       "path": "../passport/guard"
     },
     {
-      "path": "../../interface/activity"
+      "path": "../../interface/preference"
     },
     {
-      "path": "../passport"
+      "path": "../../interface/activity"
     },
     {
       "path": "../../database"
     },
     {
-      "path": "../../core"
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../core/patch"
     },
     {
       "path": "../activity/services"
+    },
+    {
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/testing"
     },
     {
       "path": "../bucket"

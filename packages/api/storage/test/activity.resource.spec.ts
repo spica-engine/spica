@@ -1,4 +1,4 @@
-import {Action} from "@spica-server/interface/activity";
+import {Action} from "@spica-server/interface-activity";
 import {createStorageActivity} from "@spica-server/storage/src/activity.resource";
 
 describe("Activity Resource", () => {

@@ -22,7 +22,7 @@ import {
   STORAGE_OPTIONS,
   StorageResponse,
   PaginatedStorageResponse
-} from "@spica-server/interface/storage";
+} from "@spica-server/interface-storage";
 import {Strategy} from "./strategy/strategy.js";
 import {TransactionExecutor} from "@spica-server/transaction";
 

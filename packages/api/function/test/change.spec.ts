@@ -1,13 +1,13 @@
-import {EnvRelation, Function, ChangeKind, SecretRelation} from "@spica-server/interface/function";
+import {EnvRelation, Function, ChangeKind, SecretRelation} from "@spica-server/interface-function";
 import {ObjectId} from "@spica-devkit/database";
-import {EnvVar} from "@spica-server/interface/env_var";
+import {EnvVar} from "@spica-server/interface-env_var";
 import {deepCopy} from "@spica-server/core-patch";
 import {
   createTargetChanges,
   changesFromTriggers,
   hasContextChange
 } from "@spica-server/function/src/change";
-import {Secret} from "@spica-server/interface/secret";
+import {Secret} from "@spica-server/interface-secret";
 
 describe("Change", () => {
   let fn: Function<EnvRelation.Resolved, SecretRelation.Resolved>;

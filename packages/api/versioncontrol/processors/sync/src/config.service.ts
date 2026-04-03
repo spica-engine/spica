@@ -1,8 +1,8 @@
 import {Injectable, Logger, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {ConfigService} from "@spica-server/config";
 import {DatabaseService} from "@spica-server/database";
-import {BaseConfig} from "@spica-server/interface/config";
-import {AutoApproveSyncConfig, VCConfigSettings} from "@spica-server/interface/versioncontrol";
+import {BaseConfig} from "@spica-server/interface-config";
+import {AutoApproveSyncConfig, VCConfigSettings} from "@spica-server/interface-versioncontrol";
 import {Observable, ReplaySubject, Subject, defer, firstValueFrom, merge, of} from "rxjs";
 import {filter, map, takeUntil, timeout} from "rxjs/operators";
 

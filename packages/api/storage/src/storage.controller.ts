@@ -40,7 +40,7 @@ import {
   getPostBodyConverter,
   getPutBodyConverter
 } from "./body.js";
-import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface/storage";
+import {MixedBody, StorageObject, MultipartFormData} from "@spica-server/interface-storage";
 import {StorageService} from "./storage.service.js";
 import {GuardService} from "@spica-server/passport-guard-services";
 

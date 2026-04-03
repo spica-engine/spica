@@ -10,6 +10,6 @@
     }
   },
   "dependencies": {
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-compiler": "workspace:*"
   }
 }

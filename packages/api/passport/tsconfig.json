@@ -7,79 +7,106 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "guard"
-    },
-    {
-      "path": "../../interface/passport/user"
-    },
-    {
-      "path": "refresh_token"
-    },
-    {
-      "path": "guard/services"
-    },
-    {
-      "path": "policy"
+      "path": "../replication"
     },
     {
       "path": "user"
     },
     {
-      "path": "apikey"
+      "path": "refresh_token"
     },
     {
-      "path": "../../interface/replication"
-    },
-    {
-      "path": "authfactor"
-    },
-    {
-      "path": "../../interface/passport"
-    },
-    {
-      "path": "../../core/schema"
-    },
-    {
-      "path": "../../interface/passport/identity"
+      "path": "policy"
     },
     {
       "path": "identity"
     },
     {
-      "path": "../status"
+      "path": "guard/services"
     },
     {
-      "path": "../sms"
+      "path": "guard"
     },
     {
-      "path": "../replication"
+      "path": "authfactor"
     },
     {
-      "path": "../../realtime"
+      "path": "apikey"
     },
     {
-      "path": "../preference"
+      "path": "../../interface/versioncontrol"
     },
     {
-      "path": "../mailer"
+      "path": "../../interface/representative"
     },
     {
-      "path": "../../filter"
+      "path": "../../interface/replication"
+    },
+    {
+      "path": "../../interface/realtime"
+    },
+    {
+      "path": "../../interface/passport/user"
+    },
+    {
+      "path": "../../interface/passport/testing"
+    },
+    {
+      "path": "../../interface/passport/refresh_token"
+    },
+    {
+      "path": "../../interface/passport/policy"
+    },
+    {
+      "path": "../../interface/passport/identity"
+    },
+    {
+      "path": "../../interface/passport/guard"
+    },
+    {
+      "path": "../../interface/passport/authfactor"
+    },
+    {
+      "path": "../../interface/passport/apikey"
+    },
+    {
+      "path": "../../interface/passport"
+    },
+    {
+      "path": "../../interface/core"
+    },
+    {
+      "path": "../../interface/config"
+    },
+    {
+      "path": "../../interface/asset"
+    },
+    {
+      "path": "../../interface/activity"
     },
     {
       "path": "../../database"
     },
     {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../core/patch"
+    },
+    {
+      "path": "../../core/encryption"
+    },
+    {
       "path": "../../core"
     },
     {
-      "path": "../config"
+      "path": "../../database/testing"
     },
     {
-      "path": "../asset"
+      "path": "../../core/websocket"
     },
     {
-      "path": "../activity/services"
+      "path": "../../core/testing"
     }
   ]
 }

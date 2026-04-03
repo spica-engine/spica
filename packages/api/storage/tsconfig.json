@@ -3,43 +3,49 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../passport/guard/services"
-    },
-    {
-      "path": "../passport/guard"
-    },
-    {
-      "path": "../../core/schema"
-    },
-    {
-      "path": "../../database/pipeline"
-    },
-    {
-      "path": "../../interface/core"
-    },
-    {
-      "path": "../../interface/storage"
-    },
-    {
-      "path": "../../interface/activity"
-    },
-    {
       "path": "../../transaction"
     },
     {
       "path": "../status"
     },
     {
-      "path": "../passport"
+      "path": "../passport/guard/services"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../interface/storage"
+    },
+    {
+      "path": "../../interface/core"
+    },
+    {
+      "path": "../../interface/activity"
+    },
+    {
+      "path": "../../database/pipeline"
     },
     {
       "path": "../../database"
+    },
+    {
+      "path": "../../core/schema"
     },
     {
       "path": "../../core"
     },
     {
       "path": "../activity/services"
+    },
+    {
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/testing"
     }
   ],
   "compilerOptions": {

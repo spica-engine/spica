@@ -21,7 +21,7 @@ import {
   ChangeStreamDocument
 } from "mongodb";
 import {DatabaseService} from "./database.service.js";
-import {InitializeOptions, OptionalId, ProfilerEntry} from "@spica-server/interface/database";
+import {InitializeOptions, OptionalId, ProfilerEntry} from "@spica-server/interface-database";
 import {Observable} from "rxjs";
 
 export class _MixinCollection<T> {

@@ -16,7 +16,7 @@
     "@spica-server/database": "workspace:*",
     "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/filter": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-passport-refresh_token": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/passport-refresh_token-realtime": "workspace:*",
     "@spica-server/passport-refresh_token-services": "workspace:*"

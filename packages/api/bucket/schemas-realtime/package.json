@@ -13,7 +13,8 @@
     "@nestjs/common": "^10.4.15",
     "@nestjs/websockets": "^10.4.15",
     "@spica-server/database-realtime": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
+    "@spica-server/interface-realtime": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/passport-guard-services": "workspace:*",
     "@spica-server/realtime": "workspace:*"

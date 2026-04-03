@@ -11,8 +11,8 @@ import {
   IdentityInitialization,
   IndexResult,
   HttpService
-} from "@spica-server/interface/function/packages";
-import {BatchResponse} from "@spica-server/interface/batch";
+} from "@spica-server/interface-function-packages";
+import {BatchResponse} from "@spica-server/interface-batch";
 
 let authorization;
 

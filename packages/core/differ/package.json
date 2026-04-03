@@ -10,7 +10,7 @@
     }
   },
   "dependencies": {
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-core": "workspace:*",
     "deep-diff": "^1.0.2",
     "diff-match-patch": "^1.0.5"
   },

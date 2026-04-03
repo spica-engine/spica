@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
-import {ModuleOptions} from "@spica-server/interface/core";
+import {ModuleOptions} from "@spica-server/interface-core";
 import {Validator} from "./validator.js";
 import {GLOBAL_SCHEMA_MODULE_OPTIONS, SCHEMA_MODULE_OPTIONS} from "./consts.js";
 

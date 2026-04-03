@@ -1,12 +1,12 @@
 import {DynamicModule, Global, Inject, Module, Optional} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core-schema";
-import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/interface/passport/guard";
+import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/interface-passport-guard";
 import {
   Policy,
   APIKEY_POLICY_FINALIZER,
   IDENTITY_POLICY_FINALIZER,
   changeFactory
-} from "@spica-server/interface/passport/policy";
+} from "@spica-server/interface-passport-policy";
 import {PolicyController} from "./policy.controller.js";
 import {PolicyService} from "./policy.service.js";
 import PolicySchema from "./schemas/policy.json" with {type: "json"};
@@ -14,7 +14,7 @@ import {getSupplier, getApplier} from "./synchronizer/schema/index.js";
 import {
   REGISTER_VC_CHANGE_HANDLER,
   RegisterVCChangeHandler
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {PolicyRealtimeModule} from "@spica-server/passport-policy-realtime";
 @Global()
 @Module({})

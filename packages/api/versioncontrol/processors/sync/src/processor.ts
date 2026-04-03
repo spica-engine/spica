@@ -9,7 +9,7 @@ import {
   PendingSync,
   Sync,
   SyncStatuses
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {SyncService} from "@spica-server/versioncontrol-services-sync";
 import {ObjectId} from "@spica-server/database";
 import {VCConfigService} from "./config.service.js";

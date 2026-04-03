@@ -4,13 +4,13 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {WebhookService} from "@spica-server/function-webhook";
-import {Webhook} from "@spica-server/interface/function/webhook";
+import {Webhook} from "@spica-server/interface-function-webhook";
 import {SchemaResolver} from "@spica-server/function-webhook/src/schema";
 import {WebhookController} from "@spica-server/function-webhook/src/webhook.controller";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {WebhookInvoker} from "@spica-server/function-webhook/src/invoker";
 import {WebhookLogService} from "@spica-server/function-webhook/src/log.service";
-import {WEBHOOK_OPTIONS} from "@spica-server/interface/function/webhook";
+import {WEBHOOK_OPTIONS} from "@spica-server/interface-function-webhook";
 
 describe("Webhook Controller", () => {
   let app: INestApplication;

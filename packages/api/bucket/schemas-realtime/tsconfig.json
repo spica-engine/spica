@@ -4,17 +4,8 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
-    {
-      "path": "../../passport/guard"
-    },
-    {
-      "path": "../../../interface/realtime"
-    },
     {
       "path": "../../../realtime"
     },
@@ -22,7 +13,22 @@
       "path": "../../passport/guard/services"
     },
     {
+      "path": "../../passport/guard"
+    },
+    {
+      "path": "../../../interface/realtime"
+    },
+    {
+      "path": "../../../interface/bucket"
+    },
+    {
       "path": "../../../database/realtime"
+    },
+    {
+      "path": "../../passport/testing"
+    },
+    {
+      "path": "../../../database/testing"
     }
   ]
 }

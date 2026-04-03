@@ -3,7 +3,7 @@ import {LocalPackageManager} from "@spica-server/function-pkgmanager-local";
 import fs from "fs";
 import path from "path";
 import {of} from "rxjs";
-import {Package, PackageManager} from "@spica-server/interface/function/pkgmanager";
+import {Package, PackageManager} from "@spica-server/interface-function-pkgmanager";
 
 describe("local package manager", () => {
   let fn1Name = "my-first-function";

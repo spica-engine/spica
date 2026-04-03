@@ -1,8 +1,8 @@
 import {Injectable} from "@nestjs/common";
 import {ConfigService} from "@spica-server/config";
 import {DatabaseService} from "@spica-server/database";
-import {BaseConfig} from "@spica-server/interface/config";
-import {UserConfigSettings, RateLimitConfig} from "@spica-server/interface/passport/user";
+import {BaseConfig} from "@spica-server/interface-config";
+import {UserConfigSettings, RateLimitConfig} from "@spica-server/interface-passport-user";
 import {filter, map} from "rxjs/operators";
 
 @Injectable()

@@ -2,11 +2,11 @@ import {ChangeStream, DatabaseService} from "@spica-server/database";
 import {DatabaseQueue, EventQueue} from "@spica-server/function-queue";
 import {Database, event} from "@spica-server/function-queue-proto";
 import {JobReducer} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
+import {CommandType} from "@spica-server/interface-replication";
 import {Enqueuer} from "./enqueuer.js";
 import {ClassCommander} from "@spica-server/replication";
 import uniqid from "uniqid";
-import {DatabaseOptions, Description} from "@spica-server/interface/function/enqueuer";
+import {DatabaseOptions, Description} from "@spica-server/interface-function-enqueuer";
 import {Logger} from "@nestjs/common";
 
 export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {

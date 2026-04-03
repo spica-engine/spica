@@ -1,6 +1,6 @@
 import {Inject, Injectable, Logger} from "@nestjs/common";
 import nodemailer, {Transporter} from "nodemailer";
-import {MAILER_OPTIONS, MailerOptions, SendMailOptions} from "@spica-server/interface/mailer";
+import {MAILER_OPTIONS, MailerOptions, SendMailOptions} from "@spica-server/interface-mailer";
 
 @Injectable()
 export class MailerService {

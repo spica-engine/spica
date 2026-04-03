@@ -5965,7 +5965,7 @@ __metadata:
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
@@ -5982,7 +5982,7 @@ __metadata:
     "@spica-server/database": "workspace:*"
     "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
   languageName: unknown
@@ -6003,7 +6003,7 @@ __metadata:
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/function": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-asset": "workspace:*"
     "@spica-server/passport-apikey": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-identity": "workspace:*"
@@ -6025,7 +6025,7 @@ __metadata:
     "@nestjs/testing": "npm:^10.4.15"
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-batch": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
     axios: "npm:^1.8.2"
@@ -6065,7 +6065,11 @@ __metadata:
     "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/filter": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-bucket": "workspace:*"
+    "@spica-server/interface-bucket-common": "workspace:*"
+    "@spica-server/interface-bucket-expression": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
     locale: "npm:^0.1.0"
   languageName: unknown
   linkType: soft
@@ -6075,7 +6079,7 @@ __metadata:
   resolution: "@spica-server/bucket-expression@workspace:packages/api/bucket/expression"
   dependencies:
     "@spica-server/database": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-bucket-expression": "workspace:*"
     pegjs: "npm:^0.10.0"
   languageName: unknown
   linkType: soft
@@ -6098,7 +6102,10 @@ __metadata:
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-bucket": "workspace:*"
+    "@spica-server/interface-bucket-graphql": "workspace:*"
+    "@spica-server/interface-passport-guard": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
@@ -6119,7 +6126,10 @@ __metadata:
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-bucket": "workspace:*"
+    "@spica-server/interface-bucket-history": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
+    "@spica-server/interface-passport-guard": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
     "@types/diff-match-patch": "npm:^1.0.36"
@@ -6159,7 +6169,11 @@ __metadata:
     "@spica-server/function-enqueuer": "workspace:*"
     "@spica-server/function-queue": "workspace:*"
     "@spica-server/function-queue-proto": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-bucket-hooks": "workspace:*"
+    "@spica-server/interface-function": "workspace:*"
+    "@spica-server/interface-function-enqueuer": "workspace:*"
+    "@spica-server/interface-function-scheduler": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
     "@types/uniqid": "npm:^5.3.4"
@@ -6186,7 +6200,11 @@ __metadata:
     "@spica-server/database": "workspace:*"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-bucket": "workspace:*"
+    "@spica-server/interface-bucket-realtime": "workspace:*"
+    "@spica-server/interface-passport-guard": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
@@ -6204,7 +6222,8 @@ __metadata:
     "@nestjs/websockets": "npm:^10.4.15"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-bucket": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -6220,7 +6239,8 @@ __metadata:
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-bucket": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
     "@spica-server/preference-services": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
     rxjs: "npm:^7.8.1"
@@ -6255,7 +6275,26 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-asset": "workspace:*"
+    "@spica-server/interface-bucket": "workspace:*"
+    "@spica-server/interface-bucket-common": "workspace:*"
+    "@spica-server/interface-bucket-expression": "workspace:*"
+    "@spica-server/interface-bucket-graphql": "workspace:*"
+    "@spica-server/interface-bucket-history": "workspace:*"
+    "@spica-server/interface-bucket-hooks": "workspace:*"
+    "@spica-server/interface-bucket-realtime": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
+    "@spica-server/interface-function": "workspace:*"
+    "@spica-server/interface-function-enqueuer": "workspace:*"
+    "@spica-server/interface-function-scheduler": "workspace:*"
+    "@spica-server/interface-passport-guard": "workspace:*"
+    "@spica-server/interface-preference": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
+    "@spica-server/interface-status": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
@@ -6279,7 +6318,7 @@ __metadata:
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-config": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
@@ -6296,7 +6335,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/core-differ@workspace:packages/core/differ"
   dependencies:
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
     "@types/deep-diff": "npm:^1.0.5"
     "@types/diff-match-patch": "npm:^1.0.36"
     "@types/json-schema": "npm:^7.0.15"
@@ -6326,7 +6365,8 @@ __metadata:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/core": "npm:^10.4.15"
     "@spica-server/core-encryption": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-config": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
     ajv: "npm:^8.17.1"
     ajv-formats: "npm:^3.0.1"
@@ -6341,7 +6381,7 @@ __metadata:
   resolution: "@spica-server/core-testing@workspace:packages/core/testing"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
     "@types/ws": "npm:^8.5.13"
     got: "npm:^14.4.6"
     ws: "npm:^8.18.0"
@@ -6364,7 +6404,8 @@ __metadata:
   resolution: "@spica-server/core@workspace:packages/core"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-config": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
     "@types/body-parser": "npm:^1.19.6"
     "@types/matcher": "npm:^2.0.0"
     body-parser: "npm:^1.20.3"
@@ -6382,7 +6423,7 @@ __metadata:
     "@nestjs/websockets": "npm:^10.4.15"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
     "@spica-server/realtime": "workspace:*"
@@ -6402,7 +6443,11 @@ __metadata:
     "@spica-server/dashboard-realtime": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-asset": "workspace:*"
+    "@spica-server/interface-dashboard": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -6417,7 +6462,7 @@ __metadata:
   dependencies:
     "@spica-server/database": "workspace:*"
     "@spica-server/filter": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-database": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -6429,7 +6474,8 @@ __metadata:
     "@nestjs/testing": "npm:^10.4.15"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-database": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@types/lodash": "npm:^4.17.14"
     lodash: "npm:^4.17.21"
     mingo: "npm:^6.5.1"
@@ -6456,7 +6502,8 @@ __metadata:
   resolution: "@spica-server/database@workspace:packages/database"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-database": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     mongodb: "npm:^6.12.0"
     rxjs: "npm:^7.8.1"
   languageName: unknown
@@ -6474,7 +6521,7 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -6488,7 +6535,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/database": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-env_var": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -6509,7 +6556,13 @@ __metadata:
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/env_var-realtime": "workspace:*"
     "@spica-server/env_var-services": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-asset": "workspace:*"
+    "@spica-server/interface-env_var": "workspace:*"
+    "@spica-server/interface-passport-identity": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -6532,7 +6585,7 @@ __metadata:
   resolution: "@spica-server/function-compiler-javascript@workspace:packages/api/function/compiler/javascript"
   dependencies:
     "@spica-server/function-compiler": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-compiler": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -6542,7 +6595,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/function-compiler": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-compiler": "workspace:*"
     rxjs: "npm:^7.8.1"
     typescript: "npm:^5.7.3"
   languageName: unknown
@@ -6552,7 +6605,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/function-compiler@workspace:packages/api/function/compiler"
   dependencies:
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-compiler": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -6569,7 +6622,11 @@ __metadata:
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/function-queue": "workspace:*"
     "@spica-server/function-queue-proto": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
+    "@spica-server/interface-function-enqueuer": "workspace:*"
+    "@spica-server/interface-passport-guard": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
+    "@spica-server/interface-status": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@types/amqplib": "npm:^0.10.7"
     "@types/express": "npm:^4.17.21"
@@ -6598,7 +6655,8 @@ __metadata:
     "@spica-server/database": "workspace:*"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-log": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -6610,7 +6668,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/function-pkgmanager-local@workspace:packages/api/function/pkgmanager/local"
   dependencies:
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-pkgmanager": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
@@ -6619,7 +6677,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/function-pkgmanager-node@workspace:packages/api/function/pkgmanager/node"
   dependencies:
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-pkgmanager": "workspace:*"
     fast-glob: "npm:^3.3.3"
     rxjs: "npm:^7.8.1"
   languageName: unknown
@@ -6670,7 +6728,7 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
     "@spica-server/realtime": "workspace:*"
@@ -6683,7 +6741,7 @@ __metadata:
   dependencies:
     "@spica-server/database": "workspace:*"
     "@spica-server/function-runtime-logger": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-runtime": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -6691,7 +6749,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/function-runtime-logger@workspace:packages/api/function/runtime/logger"
   dependencies:
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-runtime": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -6706,7 +6764,7 @@ __metadata:
   resolution: "@spica-server/function-runtime-node@workspace:packages/api/function/runtime/node"
   dependencies:
     "@spica-server/function-runtime": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-runtime": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -6715,7 +6773,8 @@ __metadata:
   resolution: "@spica-server/function-runtime@workspace:packages/api/function/runtime"
   dependencies:
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-compiler": "workspace:*"
+    "@spica-server/interface-function-runtime": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -6739,7 +6798,11 @@ __metadata:
     "@spica-server/function-runtime-io": "workspace:*"
     "@spica-server/function-runtime-logger": "workspace:*"
     "@spica-server/function-runtime-node": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-pkgmanager": "workspace:*"
+    "@spica-server/interface-function-runtime": "workspace:*"
+    "@spica-server/interface-function-scheduler": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
+    "@spica-server/interface-status": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@types/uniqid": "npm:^5.3.4"
@@ -6754,7 +6817,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/env_var-services": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function": "workspace:*"
     "@spica-server/secret-services": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
@@ -6771,7 +6834,8 @@ __metadata:
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function": "workspace:*"
+    "@spica-server/interface-function-webhook": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
@@ -6811,7 +6875,25 @@ __metadata:
     "@spica-server/function-scheduler": "workspace:*"
     "@spica-server/function-services": "workspace:*"
     "@spica-server/function-webhook": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-asset": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
+    "@spica-server/interface-env_var": "workspace:*"
+    "@spica-server/interface-function": "workspace:*"
+    "@spica-server/interface-function-compiler": "workspace:*"
+    "@spica-server/interface-function-enqueuer": "workspace:*"
+    "@spica-server/interface-function-log": "workspace:*"
+    "@spica-server/interface-function-pkgmanager": "workspace:*"
+    "@spica-server/interface-function-runtime": "workspace:*"
+    "@spica-server/interface-function-scheduler": "workspace:*"
+    "@spica-server/interface-function-webhook": "workspace:*"
+    "@spica-server/interface-passport-guard": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
+    "@spica-server/interface-secret": "workspace:*"
+    "@spica-server/interface-status": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -6833,22 +6915,354 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@spica-server/interface@workspace:*, @spica-server/interface@workspace:packages/interface":
+"@spica-server/interface-activity@workspace:*, @spica-server/interface-activity@workspace:packages/interface/activity":
   version: 0.0.0-use.local
-  resolution: "@spica-server/interface@workspace:packages/interface"
+  resolution: "@spica-server/interface-activity@workspace:packages/interface/activity"
   dependencies:
-    "@spica-server/core-encryption": "workspace:*"
     "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-asset@workspace:*, @spica-server/interface-asset@workspace:packages/interface/asset":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-asset@workspace:packages/interface/asset"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-batch@workspace:*, @spica-server/interface-batch@workspace:packages/interface/batch":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-batch@workspace:packages/interface/batch"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-bucket-common@workspace:*, @spica-server/interface-bucket-common@workspace:packages/interface/bucket/common":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-bucket-common@workspace:packages/interface/bucket/common"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface-bucket": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-bucket-expression@workspace:*, @spica-server/interface-bucket-expression@workspace:packages/interface/bucket/expression":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-bucket-expression@workspace:packages/interface/bucket/expression"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-bucket-graphql@workspace:*, @spica-server/interface-bucket-graphql@workspace:packages/interface/bucket/graphql":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-bucket-graphql@workspace:packages/interface/bucket/graphql"
+  dependencies:
+    "@spica-server/interface-bucket": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-bucket-history@workspace:*, @spica-server/interface-bucket-history@workspace:packages/interface/bucket/history":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-bucket-history@workspace:packages/interface/bucket/history"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-bucket-hooks@workspace:*, @spica-server/interface-bucket-hooks@workspace:packages/interface/bucket/hooks":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-bucket-hooks@workspace:packages/interface/bucket/hooks"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-bucket-realtime@workspace:*, @spica-server/interface-bucket-realtime@workspace:packages/interface/bucket/realtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-bucket-realtime@workspace:packages/interface/bucket/realtime"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-bucket@workspace:*, @spica-server/interface-bucket@workspace:packages/interface/bucket":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-bucket@workspace:packages/interface/bucket"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface-preference": "workspace:*"
+    "@types/json-schema": "npm:^7.0.15"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-config@workspace:*, @spica-server/interface-config@workspace:packages/interface/config":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-config@workspace:packages/interface/config"
+  dependencies:
+    "@types/json-schema": "npm:^7.0.15"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-core@workspace:*, @spica-server/interface-core@workspace:packages/interface/core":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-core@workspace:packages/interface/core"
+  dependencies:
+    "@types/ws": "npm:^8.5.13"
+    ajv: "npm:^8.17.1"
+    rxjs: "npm:^7.8.1"
+    ws: "npm:^8.18.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-dashboard@workspace:*, @spica-server/interface-dashboard@workspace:packages/interface/dashboard":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-dashboard@workspace:packages/interface/dashboard"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-database@workspace:*, @spica-server/interface-database@workspace:packages/interface/database":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-database@workspace:packages/interface/database"
+  dependencies:
+    mongodb: "npm:^6.12.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-env_var@workspace:*, @spica-server/interface-env_var@workspace:packages/interface/env_var":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-env_var@workspace:packages/interface/env_var"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-filter@workspace:packages/interface/filter":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-filter@workspace:packages/interface/filter"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-function-compiler@workspace:*, @spica-server/interface-function-compiler@workspace:packages/interface/function/compiler":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-function-compiler@workspace:packages/interface/function/compiler"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-function-enqueuer@workspace:*, @spica-server/interface-function-enqueuer@workspace:packages/interface/function/enqueuer":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-function-enqueuer@workspace:packages/interface/function/enqueuer"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-function-log@workspace:*, @spica-server/interface-function-log@workspace:packages/interface/function/log":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-function-log@workspace:packages/interface/function/log"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface-function-runtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-function-packages@workspace:packages/interface/function/packages":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-function-packages@workspace:packages/interface/function/packages"
+  dependencies:
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-function-pkgmanager@workspace:*, @spica-server/interface-function-pkgmanager@workspace:packages/interface/function/pkgmanager":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-function-pkgmanager@workspace:packages/interface/function/pkgmanager"
+  dependencies:
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-function-runtime@workspace:*, @spica-server/interface-function-runtime@workspace:packages/interface/function/runtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-function-runtime@workspace:packages/interface/function/runtime"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-function-scheduler@workspace:*, @spica-server/interface-function-scheduler@workspace:packages/interface/function/scheduler":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-function-scheduler@workspace:packages/interface/function/scheduler"
+  dependencies:
     "@spica-server/function-enqueuer": "workspace:*"
     "@spica-server/function-queue": "workspace:*"
     "@spica-server/function-queue-proto": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
     "@spica-server/replication": "workspace:*"
-    "@types/express": "npm:^4.17.21"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-function-webhook@workspace:*, @spica-server/interface-function-webhook@workspace:packages/interface/function/webhook":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-function-webhook@workspace:packages/interface/function/webhook"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-function@workspace:*, @spica-server/interface-function@workspace:packages/interface/function":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-function@workspace:packages/interface/function"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface-env_var": "workspace:*"
+    "@spica-server/interface-secret": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
-    "@types/ws": "npm:^8.5.13"
-    mongodb: "npm:^6.12.0"
     rxjs: "npm:^7.8.1"
-    ws: "npm:^8.18.0"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-mailer@workspace:*, @spica-server/interface-mailer@workspace:packages/interface/mailer":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-mailer@workspace:packages/interface/mailer"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-passport-apikey@workspace:*, @spica-server/interface-passport-apikey@workspace:packages/interface/passport/apikey":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-passport-apikey@workspace:packages/interface/passport/apikey"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-passport-authfactor@workspace:*, @spica-server/interface-passport-authfactor@workspace:packages/interface/passport/authfactor":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-passport-authfactor@workspace:packages/interface/passport/authfactor"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-passport-guard@workspace:*, @spica-server/interface-passport-guard@workspace:packages/interface/passport/guard":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-passport-guard@workspace:packages/interface/passport/guard"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-passport-identity@workspace:*, @spica-server/interface-passport-identity@workspace:packages/interface/passport/identity":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-passport-identity@workspace:packages/interface/passport/identity"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface-config": "workspace:*"
+    "@spica-server/interface-passport-authfactor": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-passport-policy@workspace:*, @spica-server/interface-passport-policy@workspace:packages/interface/passport/policy":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-passport-policy@workspace:packages/interface/passport/policy"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-passport-refresh_token@workspace:*, @spica-server/interface-passport-refresh_token@workspace:packages/interface/passport/refresh_token":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-passport-refresh_token@workspace:packages/interface/passport/refresh_token"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-passport-testing@workspace:*, @spica-server/interface-passport-testing@workspace:packages/interface/passport/testing":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-passport-testing@workspace:packages/interface/passport/testing"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-passport-user@workspace:*, @spica-server/interface-passport-user@workspace:packages/interface/passport/user":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-passport-user@workspace:packages/interface/passport/user"
+  dependencies:
+    "@spica-server/core-encryption": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface-config": "workspace:*"
+    "@spica-server/interface-passport-authfactor": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-passport@workspace:*, @spica-server/interface-passport@workspace:packages/interface/passport":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-passport@workspace:packages/interface/passport"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface-passport-identity": "workspace:*"
+    "@spica-server/interface-passport-user": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-preference@workspace:*, @spica-server/interface-preference@workspace:packages/interface/preference":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-preference@workspace:packages/interface/preference"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-realtime@workspace:*, @spica-server/interface-realtime@workspace:packages/interface/realtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-realtime@workspace:packages/interface/realtime"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-replication@workspace:*, @spica-server/interface-replication@workspace:packages/interface/replication":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-replication@workspace:packages/interface/replication"
+  dependencies:
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-representative@workspace:*, @spica-server/interface-representative@workspace:packages/interface/representative":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-representative@workspace:packages/interface/representative"
+  dependencies:
+    "@spica-server/interface-versioncontrol": "workspace:*"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-secret@workspace:*, @spica-server/interface-secret@workspace:packages/interface/secret":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-secret@workspace:packages/interface/secret"
+  dependencies:
+    "@spica-server/core-encryption": "workspace:*"
+    "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-sms@workspace:*, @spica-server/interface-sms@workspace:packages/interface/sms":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-sms@workspace:packages/interface/sms"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-status@workspace:*, @spica-server/interface-status@workspace:packages/interface/status":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-status@workspace:packages/interface/status"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    "@types/express": "npm:^4.17.21"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-storage@workspace:*, @spica-server/interface-storage@workspace:packages/interface/storage":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-storage@workspace:packages/interface/storage"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/interface-versioncontrol@workspace:*, @spica-server/interface-versioncontrol@workspace:packages/interface/versioncontrol":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/interface-versioncontrol@workspace:packages/interface/versioncontrol"
+  dependencies:
+    "@spica-server/database": "workspace:*"
+    rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
 
@@ -6858,7 +7272,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-mailer": "workspace:*"
     "@types/nodemailer": "npm:^6.4.19"
     node-fetch: "npm:^3.3.2"
     nodemailer: "npm:^8.0.4"
@@ -6877,7 +7291,8 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-passport-apikey": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/realtime": "workspace:*"
@@ -6898,7 +7313,12 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-asset": "workspace:*"
+    "@spica-server/interface-passport-apikey": "workspace:*"
+    "@spica-server/interface-passport-policy": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
     "@spica-server/passport-apikey-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     nanoid: "npm:^3.3.0"
@@ -6913,7 +7333,8 @@ __metadata:
   resolution: "@spica-server/passport-authfactor@workspace:packages/api/passport/authfactor"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-passport-authfactor": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
     "@spica-server/replication": "workspace:*"
     qrcode: "npm:^1.5.4"
     speakeasy: "npm:^2.0.0"
@@ -6939,7 +7360,7 @@ __metadata:
     "@nestjs/passport": "npm:^10.0.3"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-passport-guard": "workspace:*"
     matcher: "npm:^5.0.0"
     passport: "npm:^0.7.0"
     path-to-regexp: "npm:^8.2.0"
@@ -6957,7 +7378,8 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-passport-identity": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/realtime": "workspace:*"
@@ -6981,7 +7403,16 @@ __metadata:
     "@spica-server/database": "workspace:*"
     "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-asset": "workspace:*"
+    "@spica-server/interface-config": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
+    "@spica-server/interface-passport-authfactor": "workspace:*"
+    "@spica-server/interface-passport-identity": "workspace:*"
+    "@spica-server/interface-passport-policy": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
     "@spica-server/passport-authfactor": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-identity-realtime": "workspace:*"
@@ -7008,7 +7439,7 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/realtime": "workspace:*"
@@ -7028,7 +7459,11 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-passport-guard": "workspace:*"
+    "@spica-server/interface-passport-policy": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-policy-realtime": "workspace:*"
     bson: "npm:^6.10.1"
@@ -7047,7 +7482,7 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/realtime": "workspace:*"
@@ -7060,7 +7495,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/database": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-passport-refresh_token": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -7077,7 +7512,8 @@ __metadata:
     "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/filter": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-passport-refresh_token": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-refresh_token-realtime": "workspace:*"
     "@spica-server/passport-refresh_token-services": "workspace:*"
@@ -7091,7 +7527,7 @@ __metadata:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/passport": "npm:^10.0.3"
     "@spica-server/core-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-passport-testing": "workspace:*"
     "@spica-server/passport-authfactor": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     passport: "npm:^0.7.0"
@@ -7106,7 +7542,8 @@ __metadata:
     "@nestjs/websockets": "npm:^10.4.15"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-passport-user": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/realtime": "workspace:*"
@@ -7131,7 +7568,14 @@ __metadata:
     "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/filter": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-config": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
+    "@spica-server/interface-passport-authfactor": "workspace:*"
+    "@spica-server/interface-passport-policy": "workspace:*"
+    "@spica-server/interface-passport-user": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
     "@spica-server/mailer": "workspace:*"
     "@spica-server/passport-authfactor": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
@@ -7162,7 +7606,23 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-asset": "workspace:*"
+    "@spica-server/interface-config": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
+    "@spica-server/interface-passport": "workspace:*"
+    "@spica-server/interface-passport-apikey": "workspace:*"
+    "@spica-server/interface-passport-authfactor": "workspace:*"
+    "@spica-server/interface-passport-guard": "workspace:*"
+    "@spica-server/interface-passport-identity": "workspace:*"
+    "@spica-server/interface-passport-policy": "workspace:*"
+    "@spica-server/interface-passport-refresh_token": "workspace:*"
+    "@spica-server/interface-passport-testing": "workspace:*"
+    "@spica-server/interface-passport-user": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-apikey": "workspace:*"
     "@spica-server/passport-authfactor": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
@@ -7190,7 +7650,7 @@ __metadata:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/core-patch": "workspace:*"
     "@spica-server/database": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-preference": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
@@ -7219,7 +7679,8 @@ __metadata:
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-preference": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
     "@spica-server/preference-services": "workspace:*"
@@ -7232,7 +7693,7 @@ __metadata:
   resolution: "@spica-server/realtime@workspace:packages/realtime"
   dependencies:
     "@spica-server/database-realtime": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-passport-guard": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
@@ -7245,7 +7706,7 @@ __metadata:
     "@nestjs/testing": "npm:^10.4.15"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-replication": "workspace:*"
     "@types/uniqid": "npm:^5.3.4"
     mongodb: "npm:^6.12.0"
     rxjs: "npm:^7.8.1"
@@ -7258,7 +7719,8 @@ __metadata:
   resolution: "@spica-server/representative@workspace:packages/representative"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     chokidar: "npm:^4.0.3"
     dotenv: "npm:^16.4.7"
     rxjs: "npm:^7.8.1"
@@ -7278,7 +7740,7 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -7294,7 +7756,7 @@ __metadata:
     "@spica-server/core": "workspace:*"
     "@spica-server/core-encryption": "workspace:*"
     "@spica-server/database": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-secret": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -7313,7 +7775,10 @@ __metadata:
     "@spica-server/database": "workspace:*"
     "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-passport-identity": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-secret": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -7328,7 +7793,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-sms": "workspace:*"
     twilio: "npm:^5.11.2"
   languageName: unknown
   linkType: soft
@@ -7342,7 +7807,7 @@ __metadata:
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-status": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
@@ -7363,7 +7828,7 @@ __metadata:
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/function": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-status": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-identity": "workspace:*"
     "@spica-server/passport-policy": "workspace:*"
@@ -7391,7 +7856,9 @@ __metadata:
     "@spica-server/database": "workspace:*"
     "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-activity": "workspace:*"
+    "@spica-server/interface-core": "workspace:*"
+    "@spica-server/interface-storage": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -7423,7 +7890,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/versioncontrol-services-changelog": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
@@ -7437,7 +7904,8 @@ __metadata:
     "@spica-server/config": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-config": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/versioncontrol-services-sync": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
@@ -7449,7 +7917,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/database": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -7459,7 +7927,7 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/database": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -7468,7 +7936,8 @@ __metadata:
   resolution: "@spica-server/versioncontrol-sync-engine@workspace:packages/api/versioncontrol/sync/engine"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@spica-server/versioncontrol-processors-changelog": "workspace:*"
     "@spica-server/versioncontrol-processors-sync": "workspace:*"
@@ -7487,7 +7956,8 @@ __metadata:
     "@spica-server/core-websocket": "workspace:*"
     "@spica-server/database-realtime": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -7508,7 +7978,9 @@ __metadata:
     "@spica-server/database": "workspace:*"
     "@spica-server/database-pipeline": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -7536,7 +8008,14 @@ __metadata:
     "@spica-server/function-log": "workspace:*"
     "@spica-server/function-scheduler": "workspace:*"
     "@spica-server/function-services": "workspace:*"
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-bucket": "workspace:*"
+    "@spica-server/interface-config": "workspace:*"
+    "@spica-server/interface-env_var": "workspace:*"
+    "@spica-server/interface-function": "workspace:*"
+    "@spica-server/interface-passport-policy": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
+    "@spica-server/interface-representative": "workspace:*"
+    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-policy": "workspace:*"
@@ -7602,7 +8081,6 @@ __metadata:
     "@spica-server/env_var": "workspace:*"
     "@spica-server/filter": "workspace:*"
     "@spica-server/function": "workspace:*"
-    "@spica-server/interface": "workspace:*"
     "@spica-server/mailer": "workspace:*"
     "@spica-server/passport": "workspace:*"
     "@spica-server/preference": "workspace:*"

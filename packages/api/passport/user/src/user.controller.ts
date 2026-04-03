@@ -26,7 +26,7 @@ import {Schema} from "@spica-server/core-schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {AuthFactor} from "@spica-server/passport-authfactor";
-import {Factor, FactorMeta} from "@spica-server/interface/passport/authfactor";
+import {Factor, FactorMeta} from "@spica-server/interface-passport-authfactor";
 import {createUserActivity} from "./activity.resource.js";
 import {compare, hash} from "./hash.js";
 import {UserService} from "./user.service.js";
@@ -38,10 +38,10 @@ import {
   POLICY_PROVIDER,
   UserSelfUpdate,
   DecryptedUser
-} from "@spica-server/interface/passport/user";
+} from "@spica-server/interface-passport-user";
 import {registerPolicyAttacher} from "./utility.js";
 import {ClassCommander} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
+import {CommandType} from "@spica-server/interface-replication";
 import {PipelineBuilder} from "@spica-server/database-pipeline";
 import {VerificationService} from "./verification.service.js";
 import {ProviderVerificationService} from "./services/provider.verification.service.js";

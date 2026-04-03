@@ -1,7 +1,7 @@
 import {Controller, INestApplication, Post, Put, Req, UseInterceptors} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
-import {STORAGE_OPTIONS} from "@spica-server/interface/storage";
+import {STORAGE_OPTIONS} from "@spica-server/interface-storage";
 import {MultipartFormDataParser, getMultipartFormDataMeta} from "@spica-server/storage";
 import path from "path";
 import fs from "fs";

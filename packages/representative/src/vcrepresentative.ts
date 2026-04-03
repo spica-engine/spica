@@ -4,10 +4,10 @@ import path from "path";
 import {
   IRepresentativeManager,
   RepresentativeFileEvent
-} from "@spica-server/interface/representative";
+} from "@spica-server/interface-representative";
 import chokidar from "chokidar";
 import {Observable} from "rxjs";
-import {ChangeType} from "@spica-server/interface/versioncontrol";
+import {ChangeType} from "@spica-server/interface-versioncontrol";
 
 @Injectable()
 export class VCRepresentativeManager implements IRepresentativeManager {

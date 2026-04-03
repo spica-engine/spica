@@ -14,7 +14,7 @@ import {
   RabbitMQEnqueuer,
   GrpcEnqueuer
 } from "@spica-server/function-enqueuer";
-import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
+import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
 import {Npm} from "@spica-server/function-pkgmanager-node";
 import {LocalPackageManager} from "@spica-server/function-pkgmanager-local";
 import {
@@ -30,16 +30,16 @@ import {Runtime, Worker} from "@spica-server/function-runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function-runtime-io";
 import {generateLog} from "@spica-server/function-runtime-logger";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
-import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/interface/status";
+import {CommandType} from "@spica-server/interface-replication";
+import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/interface-status";
 import {GuardService} from "@spica-server/passport-guard-services";
 import uniqid from "uniqid";
-import {SchedulingOptions, SCHEDULING_OPTIONS} from "@spica-server/interface/function/scheduler";
+import {SchedulingOptions, SCHEDULING_OPTIONS} from "@spica-server/interface-function-scheduler";
 import {Subject} from "rxjs";
 import {take} from "rxjs/operators";
 import {ScheduleWorker, Node} from "@spica-server/function-scheduler";
-import {LogLevels} from "@spica-server/interface/function/runtime";
-import {ENQUEUER, EnqueuerFactory, WorkerState} from "@spica-server/interface/function/scheduler";
+import {LogLevels} from "@spica-server/interface-function-runtime";
+import {ENQUEUER, EnqueuerFactory, WorkerState} from "@spica-server/interface-function-scheduler";
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {

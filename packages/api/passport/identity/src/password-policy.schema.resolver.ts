@@ -1,6 +1,6 @@
 import {Injectable, OnModuleDestroy} from "@nestjs/common";
 import {Validator, applyPasswordPolicy} from "@spica-server/core-schema";
-import {IdentityConfigSettings} from "@spica-server/interface/passport/identity";
+import {IdentityConfigSettings} from "@spica-server/interface-passport-identity";
 import {Observable, ReplaySubject, Subject, merge, defer} from "rxjs";
 import {map, takeUntil} from "rxjs/operators";
 import {IdentityConfigService} from "./config.service.js";

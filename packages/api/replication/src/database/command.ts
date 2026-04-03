@@ -4,7 +4,7 @@ import {
   CommandMessage,
   REPLICATION_SERVICE_OPTIONS,
   ReplicationServiceOptions
-} from "@spica-server/interface/replication";
+} from "@spica-server/interface-replication";
 
 @Injectable()
 export class CommandService extends BaseCollection<CommandMessage>("commands") {

@@ -11,9 +11,6 @@
     },
     {
       "path": "../database/realtime"
-    },
-    {
-      "path": "../database"
     }
   ]
 }

@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {MailerService} from "../index";
 import {MailerModule} from "../index";
-import {MailerOptions} from "@spica-server/interface/mailer";
+import {MailerOptions} from "@spica-server/interface-mailer";
 import nodemailer from "nodemailer";
 
 describe("MailerService", () => {

@@ -10,6 +10,15 @@
     },
     {
       "path": "../../core/copy"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/testing"
+    },
+    {
+      "path": "../../core/schema"
     }
   ]
 }

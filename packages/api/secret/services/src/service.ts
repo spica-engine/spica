@@ -1,6 +1,6 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {Secret} from "@spica-server/interface/secret";
+import {Secret} from "@spica-server/interface-secret";
 
 export const SECRET_ENCRYPTION_SECRET = Symbol.for("SECRET_ENCRYPTION_SECRET");
 

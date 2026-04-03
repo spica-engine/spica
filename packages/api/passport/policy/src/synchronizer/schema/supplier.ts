@@ -7,8 +7,8 @@ import {
   ChangeOrigin,
   DocumentChangeSupplier,
   ChangeInitiator
-} from "@spica-server/interface/versioncontrol";
-import {Policy} from "@spica-server/interface/passport/policy";
+} from "@spica-server/interface-versioncontrol";
+import {Policy} from "@spica-server/interface-passport-policy";
 import {Logger} from "@nestjs/common";
 
 const logger = new Logger("PolicySyncSupplier");

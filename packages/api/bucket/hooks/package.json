@@ -30,7 +30,11 @@
     "@spica-server/function-enqueuer": "workspace:*",
     "@spica-server/function-queue": "workspace:*",
     "@spica-server/function-queue-proto": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-bucket-hooks": "workspace:*",
+    "@spica-server/interface-function": "workspace:*",
+    "@spica-server/interface-function-enqueuer": "workspace:*",
+    "@spica-server/interface-function-scheduler": "workspace:*",
+    "@spica-server/interface-replication": "workspace:*",
     "@spica-server/replication": "workspace:*",
     "uniqid": "^5.4.0"
   },

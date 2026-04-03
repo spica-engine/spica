@@ -7,10 +7,16 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../interface/status"
+    },
+    {
       "path": "../../../database"
     },
     {
-      "path": "../../../interface/status"
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/testing"
     }
   ]
 }

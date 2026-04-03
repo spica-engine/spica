@@ -10,16 +10,16 @@
       "path": "services"
     },
     {
-      "path": "../../interface/status"
-    },
-    {
       "path": "../passport/guard"
     },
     {
-      "path": "../passport"
+      "path": "../../interface/status"
     },
     {
       "path": "../../database"
+    },
+    {
+      "path": "../../core/schema"
     },
     {
       "path": "../../core"
@@ -31,10 +31,25 @@
       "path": "../secret"
     },
     {
-      "path": "../preference"
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../passport/policy"
+    },
+    {
+      "path": "../passport/identity"
     },
     {
       "path": "../function"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/websocket"
+    },
+    {
+      "path": "../../core/testing"
     },
     {
       "path": "../config"

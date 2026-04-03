@@ -1,7 +1,7 @@
 import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";
-import {EnvVar} from "@spica-server/interface/env_var";
-import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface/secret";
+import {EnvVar} from "@spica-server/interface-env_var";
+import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface-secret";
 import {ObjectId} from "@spica-server/database";
 
 export enum EnvRelation {

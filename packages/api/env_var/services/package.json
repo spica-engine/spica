@@ -12,6 +12,6 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-env_var": "workspace:*"
   }
 }

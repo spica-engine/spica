@@ -6,24 +6,24 @@ import {
   IdentityOptions,
   IDENTITY_OPTIONS,
   POLICY_PROVIDER
-} from "@spica-server/interface/passport/identity";
+} from "@spica-server/interface-passport-identity";
 import {IdentityController} from "./identity.controller.js";
 import {IdentityService} from "./identity.service.js";
 import {IdentityStrategy} from "./identity.strategy.js";
 import {providePolicyFinalizer} from "./utility.js";
 import {PolicyService} from "@spica-server/passport-policy";
-import {IDENTITY_POLICY_FINALIZER} from "@spica-server/interface/passport/policy";
+import {IDENTITY_POLICY_FINALIZER} from "@spica-server/interface-passport-policy";
 import {registerStatusProvider} from "./status.js";
 import IdentitySchema from "./schemas/identity.json" with {type: "json"};
 import IdentityCreateSchema from "./schemas/identity-create.json" with {type: "json"};
 import AuthFactorSchema from "./schemas/authfactor.json" with {type: "json"};
 import {registerAssetHandlers} from "./asset.js";
-import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
+import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {RefreshTokenServicesModule} from "@spica-server/passport-refresh_token-services";
 import {IdentityRealtimeModule} from "@spica-server/passport-identity-realtime";
 import {IdentityConfigService} from "./config.service.js";
-import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
+import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface-config";
 import {provideIdentityPasswordPolicySchemaResolver} from "./password-policy.schema.resolver.js";
 
 @Global()

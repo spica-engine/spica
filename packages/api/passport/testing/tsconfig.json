@@ -7,13 +7,16 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../interface/passport/testing"
+      "path": "../guard/services"
     },
     {
       "path": "../authfactor"
     },
     {
-      "path": "../guard/services"
+      "path": "../../../interface/passport/testing"
+    },
+    {
+      "path": "../../../core/testing"
     }
   ]
 }

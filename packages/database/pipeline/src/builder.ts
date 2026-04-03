@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica-server/database";
-import {IPipelineBuilder} from "@spica-server/interface/database";
+import {IPipelineBuilder} from "@spica-server/interface-database";
 import {
   FilterReplaceManager,
   FilterReplacer,

@@ -1,7 +1,7 @@
 import {EventQueue, GrpcQueue} from "@spica-server/function-queue";
 import {event, Grpc} from "@spica-server/function-queue-proto";
 import {Enqueuer} from "./enqueuer.js";
-import {Description, GrpcOptions, GrpcParam} from "@spica-server/interface/function/enqueuer";
+import {Description, GrpcOptions, GrpcParam} from "@spica-server/interface-function-enqueuer";
 import grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
 import uniqid from "uniqid";

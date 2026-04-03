@@ -7,8 +7,8 @@ import {
   ChangeOrigin,
   DocumentChangeSupplier,
   ChangeInitiator
-} from "@spica-server/interface/versioncontrol";
-import {Bucket} from "@spica-server/interface/bucket";
+} from "@spica-server/interface-versioncontrol";
+import {Bucket} from "@spica-server/interface-bucket";
 import {Logger} from "@nestjs/common";
 
 const logger = new Logger("BucketSyncSupplier");

@@ -15,7 +15,10 @@
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/dashboard-realtime": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-asset": "workspace:*",
+    "@spica-server/interface-dashboard": "workspace:*",
+    "@spica-server/interface-representative": "workspace:*",
+    "@spica-server/interface-versioncontrol": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "rxjs": "^7.8.1",
     "yaml": "^2.7.0"

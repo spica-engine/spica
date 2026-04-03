@@ -7,8 +7,8 @@ import {
   ChangeOrigin,
   DocumentChangeSupplier,
   ChangeInitiator
-} from "@spica-server/interface/versioncontrol";
-import {EnvVar} from "@spica-server/interface/env_var";
+} from "@spica-server/interface-versioncontrol";
+import {EnvVar} from "@spica-server/interface-env_var";
 import {Logger} from "@nestjs/common";
 
 const logger = new Logger("EnvVarSyncSupplier");

@@ -4,7 +4,7 @@ import {
   Package,
   PackageManager,
   DelegatePkgManager
-} from "@spica-server/interface/function/pkgmanager";
+} from "@spica-server/interface-function-pkgmanager";
 
 export class LocalPackageManager extends DelegatePkgManager {
   private readonly LOCAL_PACKAGE_PREFIX = "@spica-fn/";

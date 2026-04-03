@@ -1,4 +1,4 @@
-import {Action, PreActivity, ModuleActivity} from "@spica-server/interface/activity";
+import {Action, PreActivity, ModuleActivity} from "@spica-server/interface-activity";
 
 export function createUserActivity(preActivity: PreActivity, req: any, res: any): ModuleActivity[] {
   let activities: ModuleActivity[] = [];

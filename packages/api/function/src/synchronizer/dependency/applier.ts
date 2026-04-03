@@ -7,7 +7,7 @@ import {
   ChangeType,
   SyncStatuses,
   DocumentChangeApplier
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {ObjectId} from "bson";
 import {Logger} from "@nestjs/common";
 

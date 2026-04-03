@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "@spica-server/function-runtime": "workspace:*",
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-runtime": "workspace:*"
   }
 }

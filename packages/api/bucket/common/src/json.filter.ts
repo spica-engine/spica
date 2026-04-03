@@ -8,8 +8,8 @@ import {
   replaceFilter,
   replaceFilterObjectIds
 } from "@spica-server/filter";
-import {RelationResolver} from "@spica-server/interface/bucket/common";
-import {Bucket} from "@spica-server/interface/bucket";
+import {RelationResolver} from "@spica-server/interface-bucket-common";
+import {Bucket} from "@spica-server/interface-bucket";
 import {hash} from "@spica-server/core-encryption";
 
 // this reviver should be kept for backward compatibility and in case the filter is complex and our replacer can't detect the value that should be constructed

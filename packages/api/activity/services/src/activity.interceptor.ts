@@ -11,7 +11,7 @@ import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {ActivityService} from "./activity.service.js";
 import {createActivity} from "./activity.js";
-import {Predict} from "@spica-server/interface/activity";
+import {Predict} from "@spica-server/interface-activity";
 
 export abstract class ActivityInterceptor implements NestInterceptor {
   private readonly logger = new Logger(ActivityInterceptor.name);

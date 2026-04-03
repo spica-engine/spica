@@ -6,7 +6,7 @@ import {
   filterReviver,
   constructFilterValues
 } from "@spica-server/bucket-common";
-import {Bucket} from "@spica-server/interface/bucket";
+import {Bucket} from "@spica-server/interface-bucket";
 
 export class BucketDataOptionsBuilder extends RealtimeOptionsBuilder {
   applyAclRule(schema: Bucket, req: any): this {

@@ -4,7 +4,7 @@ import {CommandMemory, CommandService} from "@spica-server/replication";
 import {
   COMMAND_MEMORY_OPTIONS,
   REPLICATION_SERVICE_OPTIONS
-} from "@spica-server/interface/replication";
+} from "@spica-server/interface-replication";
 
 describe("Memory", () => {
   describe("Command", () => {

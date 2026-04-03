@@ -12,7 +12,7 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@nestjs/passport": "^10.0.3",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-passport-testing": "workspace:*",
     "@spica-server/passport-authfactor": "workspace:*",
     "@spica-server/passport-guard-services": "workspace:*",
     "passport": "^0.7.0"

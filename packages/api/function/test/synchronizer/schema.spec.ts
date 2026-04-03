@@ -12,7 +12,7 @@ import {
   ChangeOrigin,
   ChangeType,
   SyncStatuses
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import YAML from "yaml";
 import {deepCopy} from "@spica-server/core-patch";
 import {skip, firstValueFrom} from "rxjs";

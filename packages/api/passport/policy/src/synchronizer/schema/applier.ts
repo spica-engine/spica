@@ -1,5 +1,5 @@
 import {PolicyService} from "@spica-server/passport-policy";
-import {changeFactory, Policy} from "@spica-server/interface/passport/policy";
+import {changeFactory, Policy} from "@spica-server/interface-passport-policy";
 import YAML from "yaml";
 import * as CRUD from "../../../src/crud.js";
 import {
@@ -8,7 +8,7 @@ import {
   ChangeType,
   SyncStatuses,
   DocumentChangeApplier
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {ObjectId} from "bson";
 import {Logger} from "@nestjs/common";
 import {Schema, Validator} from "@spica-server/core-schema";

@@ -1,10 +1,10 @@
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {
   ChangeInitiator,
   ChangeOrigin,
   DocumentChangeApplier,
   RepresentativeChangeSupplier
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {Observable, from, map, mergeMap, of, switchMap, timer} from "rxjs";
 
 const MAX_RETRIES = 5;

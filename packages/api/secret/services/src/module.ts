@@ -1,7 +1,7 @@
 import {Global, Module} from "@nestjs/common";
 import {SecretService, SECRET_ENCRYPTION_SECRET} from "./service.js";
 import {decrypt} from "@spica-server/core-encryption";
-import {Secret, DecryptedSecret, SECRET_DECRYPTOR} from "@spica-server/interface/secret";
+import {Secret, DecryptedSecret, SECRET_DECRYPTOR} from "@spica-server/interface-secret";
 
 @Global()
 @Module({})

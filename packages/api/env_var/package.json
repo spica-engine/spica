@@ -19,7 +19,12 @@
     "@spica-server/database-pipeline": "workspace:*",
     "@spica-server/env_var-realtime": "workspace:*",
     "@spica-server/env_var-services": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-activity": "workspace:*",
+    "@spica-server/interface-asset": "workspace:*",
+    "@spica-server/interface-env_var": "workspace:*",
+    "@spica-server/interface-passport-identity": "workspace:*",
+    "@spica-server/interface-representative": "workspace:*",
+    "@spica-server/interface-versioncontrol": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "rxjs": "^7.8.1",
     "yaml": "^2.7.0"

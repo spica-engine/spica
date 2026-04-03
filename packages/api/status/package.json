@@ -9,7 +9,7 @@
     "@spica-server/core": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-status": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/status-services": "workspace:*"
   },

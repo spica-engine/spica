@@ -1,7 +1,7 @@
 import {decryptDocumentFields} from "@spica-server/bucket-common";
 import {encrypt} from "@spica-server/core-schema";
-import {Bucket} from "@spica-server/interface/bucket";
-import {RelationType} from "@spica-server/interface/bucket/common";
+import {Bucket} from "@spica-server/interface-bucket";
+import {RelationType} from "@spica-server/interface-bucket-common";
 
 describe("Decrypt Relations", () => {
   const ENCRYPTION_SECRET = "01234567890123456789012345678901";

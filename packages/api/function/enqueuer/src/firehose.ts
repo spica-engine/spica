@@ -4,7 +4,7 @@ import url from "url";
 import ws, {WebSocketServer} from "ws";
 import {Enqueuer} from "./enqueuer.js";
 import express from "express";
-import {Description, FirehoseOptions} from "@spica-server/interface/function/enqueuer";
+import {Description, FirehoseOptions} from "@spica-server/interface-function-enqueuer";
 
 export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
   type = event.Type.FIREHOSE;

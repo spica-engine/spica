@@ -4,7 +4,7 @@ import {
   ACTIVITY_OPTIONS,
   ActivityOptions,
   ModuleActivity
-} from "@spica-server/interface/activity";
+} from "@spica-server/interface-activity";
 import {Injectable, Inject} from "@nestjs/common";
 
 @Injectable()

@@ -7,7 +7,7 @@ import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core-testing";
 import {WsAdapter} from "@spica-server/core-websocket";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
-import {ChunkKind} from "@spica-server/interface/realtime";
+import {ChunkKind} from "@spica-server/interface-realtime";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 

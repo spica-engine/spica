@@ -21,8 +21,8 @@ import {
   CrudFactories,
   CrudPagination,
   RelationMap
-} from "@spica-server/interface/bucket/common";
-import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface/bucket";
+} from "@spica-server/interface-bucket-common";
+import {Bucket, LimitExceedBehaviours, BucketDocument} from "@spica-server/interface-bucket";
 import {decryptDocumentFields} from "./decrypt.js";
 import {buildExpressionReplacers} from "./expression.filter.js";
 

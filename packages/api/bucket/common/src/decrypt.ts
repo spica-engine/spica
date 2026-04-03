@@ -1,6 +1,6 @@
 import {decrypt, isEncryptedData, BaseEncryptedData} from "@spica-server/core-encryption";
-import {Bucket} from "@spica-server/interface/bucket";
-import {RelationType} from "@spica-server/interface/bucket/common";
+import {Bucket} from "@spica-server/interface-bucket";
+import {RelationType} from "@spica-server/interface-bucket-common";
 
 type SchemaResolver = (bucketId: string) => Promise<Bucket> | Bucket;
 

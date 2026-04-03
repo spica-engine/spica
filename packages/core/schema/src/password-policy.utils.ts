@@ -1,4 +1,4 @@
-import {PasswordPolicy} from "@spica-server/interface/config";
+import {PasswordPolicy} from "@spica-server/interface-config";
 
 export function applyPasswordPolicy(baseSchema: object, policy?: PasswordPolicy): object {
   const schema = JSON.parse(JSON.stringify(baseSchema));

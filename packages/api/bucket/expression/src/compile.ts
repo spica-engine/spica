@@ -1,4 +1,4 @@
-import {Mode} from "@spica-server/interface/bucket/expression";
+import {Mode} from "@spica-server/interface-bucket-expression";
 import * as func from "./func.js";
 
 function visitArgFns(fns: any[], ctx) {

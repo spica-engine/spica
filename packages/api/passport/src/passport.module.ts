@@ -11,7 +11,7 @@ import {
   PASSPORT_OPTIONS,
   REQUEST_SERVICE,
   STRATEGIES
-} from "@spica-server/interface/passport";
+} from "@spica-server/interface-passport";
 import {PassportIdentityController} from "./passport.identity.controller.js";
 import {PassportUserController} from "./passport.user.controller.js";
 import {SamlService} from "./strategy/services/saml.service.js";

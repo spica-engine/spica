@@ -1,6 +1,6 @@
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {DashboardService} from "./dashboard.service.js";
-import {Dashboard} from "@spica-server/interface/dashboard";
+import {Dashboard} from "@spica-server/interface-dashboard";
 import {NotFoundException} from "@nestjs/common";
 
 export function find(ds: DashboardService, resourceFilter: object): Promise<Dashboard[]> {

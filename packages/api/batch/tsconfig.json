@@ -7,19 +7,19 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../interface/batch"
+      "path": "../passport/guard"
     },
     {
-      "path": "../passport/guard"
+      "path": "../../interface/batch"
     },
     {
       "path": "../../core/schema"
     },
     {
-      "path": "../passport"
+      "path": "../passport/testing"
     },
     {
-      "path": "../../core"
+      "path": "../../core/testing"
     }
   ]
 }

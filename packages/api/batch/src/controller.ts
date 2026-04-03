@@ -9,7 +9,7 @@ import {
   HTTP_SERVICE,
   HTTPService,
   Response
-} from "@spica-server/interface/batch";
+} from "@spica-server/interface-batch";
 
 @Controller("batch")
 export class BatchController {

@@ -9,7 +9,7 @@ import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
-import {ChunkKind} from "@spica-server/interface/realtime";
+import {ChunkKind} from "@spica-server/interface-realtime";
 import {EnvVarModule} from "@spica-server/env_var";
 
 function url(path, query) {

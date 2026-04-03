@@ -6,7 +6,7 @@ import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
-import {POLICY_RESOLVER} from "@spica-server/interface/passport/guard";
+import {POLICY_RESOLVER} from "@spica-server/interface-passport-guard";
 
 describe("History Acceptance", () => {
   let app: INestApplication;

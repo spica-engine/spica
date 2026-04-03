@@ -12,7 +12,12 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@spica-server/core-schema": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
+    "@spica-server/interface-config": "workspace:*",
+    "@spica-server/interface-env_var": "workspace:*",
+    "@spica-server/interface-function": "workspace:*",
+    "@spica-server/interface-passport-policy": "workspace:*",
+    "@spica-server/interface-versioncontrol": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/replication": "workspace:*",
     "@spica-server/representative": "workspace:*",

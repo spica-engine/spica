@@ -29,19 +29,19 @@ import {applyPatch, deepCopy} from "@spica-server/core-patch";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {RealtimeDatabaseService} from "@spica-server/database-realtime";
-import {ChunkKind} from "@spica-server/interface/realtime";
+import {ChunkKind} from "@spica-server/interface-realtime";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {extractStrategyType} from "@spica-server/passport-guard";
-import {Action} from "@spica-server/interface/activity";
-import {MessageKind} from "@spica-server/interface/bucket/realtime";
+import {Action} from "@spica-server/interface-activity";
+import {MessageKind} from "@spica-server/interface-bucket-realtime";
 import {
   Bucket,
   BucketDocument,
   BUCKET_DATA_ENCRYPTION_SECRET,
   BUCKET_DATA_HASH_SECRET
-} from "@spica-server/interface/bucket";
+} from "@spica-server/interface-bucket";
 import {getConnectionHandlers} from "@spica-server/realtime";
-import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
+import {ReqAuthStrategy} from "@spica-server/interface-passport-guard";
 import {BucketDataOptionsBuilder} from "./bucket-data-options.builder.js";
 
 @WebSocketGateway({

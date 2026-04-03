@@ -5,7 +5,7 @@ import {
   ChangeStreamOptions,
   DatabaseService
 } from "@spica-server/database";
-import {ChangeLog} from "@spica-server/interface/versioncontrol";
+import {ChangeLog} from "@spica-server/interface-versioncontrol";
 
 @Injectable()
 export class ChangeLogService extends BaseCollection<ChangeLog>("changelog") {

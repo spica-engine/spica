@@ -7,7 +7,7 @@ import {BucketService, BucketDataService, ServicesModule} from "@spica-server/bu
 import {SchemaModule, Validator} from "@spica-server/core-schema";
 import {createHashFormat, createEncryptedFormat} from "@spica-server/core-schema";
 import {PreferenceService} from "@spica-server/preference-services";
-import {BUCKET_LANGUAGE_FINALIZER} from "@spica-server/interface/preference";
+import {BUCKET_LANGUAGE_FINALIZER} from "@spica-server/interface-preference";
 import {BucketCacheModule} from "@spica-server/bucket-cache";
 import {BucketDataController} from "./bucket-data.controller.js";
 import {BucketController} from "./bucket.controller.js";
@@ -24,11 +24,11 @@ import BucketsSchema from "./schemas/buckets.schema.json" with {type: "json"};
 import {
   REGISTER_VC_CHANGE_HANDLER,
   RegisterVCChangeHandler
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {registerAssetHandlers} from "./asset.js";
-import {IRepresentativeManager} from "@spica-server/interface/representative";
-import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
-import {BucketOptions} from "@spica-server/interface/bucket";
+import {IRepresentativeManager} from "@spica-server/interface-representative";
+import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
+import {BucketOptions} from "@spica-server/interface-bucket";
 import {getSupplier, getApplier} from "./synchronizer/schema/index.js";
 
 @Module({})

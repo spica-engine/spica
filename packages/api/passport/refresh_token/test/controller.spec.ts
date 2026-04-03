@@ -7,7 +7,7 @@ import {SchemaModule, hash} from "@spica-server/core-schema";
 import {OBJECT_ID} from "@spica-server/core-schema";
 import {RefreshTokenModule} from "@spica-server/passport-refresh_token";
 import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
-import {RefreshToken} from "@spica-server/interface/passport/refresh_token";
+import {RefreshToken} from "@spica-server/interface-passport-refresh_token";
 
 import {ObjectId} from "@spica-devkit/database";
 

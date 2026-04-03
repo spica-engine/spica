@@ -5,7 +5,7 @@ import {
   ChangeLogProcessorsModule
 } from "@spica-server/versioncontrol-processors-changelog";
 import {SyncProcessor, SyncProcessorsModule} from "@spica-server/versioncontrol-processors-sync";
-import {VC_REPRESENTATIVE_MANAGER} from "@spica-server/interface/versioncontrol";
+import {VC_REPRESENTATIVE_MANAGER} from "@spica-server/interface-versioncontrol";
 import {JobReducer} from "@spica-server/replication";
 
 @Module({})

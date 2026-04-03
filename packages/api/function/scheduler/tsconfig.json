@@ -1,15 +1,12 @@
 {
   "extends": "../../../../tsconfig.base.json",
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../runtime/node"
+      "path": "../../replication"
     },
     {
-      "path": "../../../interface/function/runtime"
+      "path": "../../passport/guard/services"
     },
     {
       "path": "../../../interface/status"
@@ -18,7 +15,16 @@
       "path": "../../../interface/replication"
     },
     {
-      "path": "../../replication"
+      "path": "../../../interface/function/scheduler"
+    },
+    {
+      "path": "../../../interface/function/runtime"
+    },
+    {
+      "path": "../../../interface/function/pkgmanager"
+    },
+    {
+      "path": "../runtime/node"
     },
     {
       "path": "../runtime/logger"
@@ -36,13 +42,10 @@
       "path": "../queue"
     },
     {
-      "path": "../pkgmanager/local"
-    },
-    {
       "path": "../pkgmanager/node"
     },
     {
-      "path": "../../../interface/function/pkgmanager"
+      "path": "../pkgmanager/local"
     },
     {
       "path": "../enqueuer"
@@ -60,10 +63,7 @@
       "path": "../../../database"
     },
     {
-      "path": "../../passport/guard/services"
-    },
-    {
-      "path": "../../../interface/function/scheduler"
+      "path": "../../../database/testing"
     }
   ],
   "compilerOptions": {

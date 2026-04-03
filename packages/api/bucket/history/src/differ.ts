@@ -1,4 +1,4 @@
-import {Change, ChangeKind} from "@spica-server/interface/core";
+import {Change, ChangeKind} from "@spica-server/interface-core";
 import {JSONSchema7} from "json-schema";
 import {Path} from "./path.js";
 import diffMatchPatch from "diff-match-patch";

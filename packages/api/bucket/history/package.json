@@ -18,7 +18,10 @@
     "@spica-server/bucket-services": "workspace:*",
     "@spica-server/core-differ": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
+    "@spica-server/interface-bucket-history": "workspace:*",
+    "@spica-server/interface-core": "workspace:*",
+    "@spica-server/interface-passport-guard": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "diff-match-patch": "^1.0.5"
   },

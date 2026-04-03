@@ -1,5 +1,5 @@
 import {Injectable, BadRequestException, Logger} from "@nestjs/common";
-import {VerificationProvider} from "@spica-server/interface/passport/user";
+import {VerificationProvider} from "@spica-server/interface-passport-user";
 
 @Injectable()
 export class VerificationProviderRegistry {

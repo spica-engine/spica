@@ -1,6 +1,6 @@
 import {Inject, Injectable, NotFoundException, Optional} from "@nestjs/common";
 import {Validator} from "@spica-server/core-schema";
-import {Default} from "@spica-server/interface/core";
+import {Default} from "@spica-server/interface-core";
 import {
   BaseCollection,
   Collection,
@@ -19,7 +19,7 @@ import {
   Bucket,
   BucketPreferences,
   BUCKET_DATA_LIMIT
-} from "@spica-server/interface/bucket";
+} from "@spica-server/interface-bucket";
 import * as crypto from "crypto";
 
 @Injectable()

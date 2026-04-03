@@ -4,55 +4,64 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../cache"
-    },
-    {
       "path": "../../../interface/core"
-    },
-    {
-      "path": "../../../core/differ"
-    },
-    {
-      "path": "../services"
-    },
-    {
-      "path": "../../../filter"
     },
     {
       "path": "../../../interface/bucket/expression"
     },
     {
-      "path": "../../../core/encryption"
+      "path": "../../../interface/bucket/common"
     },
     {
       "path": "../../../interface/bucket"
     },
     {
-      "path": "../../../interface/bucket/common"
+      "path": "../../../interface/activity"
+    },
+    {
+      "path": "../../../filter"
     },
     {
       "path": "../../../database/pipeline"
     },
     {
-      "path": "../expression"
-    },
-    {
       "path": "../../../database"
     },
     {
-      "path": "../../../interface/activity"
+      "path": "../../../core/schema"
     },
     {
       "path": "../../../core/patch"
     },
     {
+      "path": "../../../core/encryption"
+    },
+    {
+      "path": "../../../core/differ"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../expression"
+    },
+    {
+      "path": "../cache"
+    },
+    {
       "path": "../../activity/services"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/testing"
     }
   ]
 }

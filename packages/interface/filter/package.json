@@ -1,0 +1,12 @@
+{
+  "name": "@spica-server/interface-filter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}

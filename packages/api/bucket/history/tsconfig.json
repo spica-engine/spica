@@ -4,31 +4,40 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../../../interface/bucket"
+      "path": "../../passport/guard"
+    },
+    {
+      "path": "../../../interface/passport/guard"
+    },
+    {
+      "path": "../../../interface/core"
     },
     {
       "path": "../../../interface/bucket/history"
     },
     {
-      "path": "../../../core/differ"
-    },
-    {
-      "path": "../../passport/guard"
+      "path": "../../../interface/bucket"
     },
     {
       "path": "../../../database"
     },
     {
+      "path": "../../../core/differ"
+    },
+    {
       "path": "../services"
     },
     {
-      "path": "../../../interface/core"
+      "path": "../../passport/testing"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/testing"
     }
   ]
 }

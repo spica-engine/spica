@@ -8,9 +8,9 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SchemaModule} from "@spica-server/core-schema";
 import {DATE_TIME, OBJECT_ID} from "@spica-server/core-schema";
-import {ChunkKind} from "@spica-server/interface/realtime";
+import {ChunkKind} from "@spica-server/interface-realtime";
 import {UserModule} from "@spica-server/passport-user";
-import {User} from "@spica-server/interface/passport/user";
+import {User} from "@spica-server/interface-passport-user";
 import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
 

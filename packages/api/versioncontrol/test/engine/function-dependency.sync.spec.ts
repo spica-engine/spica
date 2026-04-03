@@ -7,7 +7,7 @@ import {
   ChangeType,
   SyncStatuses,
   VC_REPRESENTATIVE_MANAGER
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -22,7 +22,7 @@ import {
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {LogModule} from "@spica-server/function-log";
 import {SchedulerModule} from "@spica-server/function-scheduler";
-import {Function, FUNCTION_OPTIONS} from "@spica-server/interface/function";
+import {Function, FUNCTION_OPTIONS} from "@spica-server/interface-function";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";

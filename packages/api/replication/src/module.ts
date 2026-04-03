@@ -5,7 +5,7 @@ import {
   REPLICA_ID,
   COMMAND_MEMORY_OPTIONS,
   REPLICATION_SERVICE_OPTIONS
-} from "@spica-server/interface/replication";
+} from "@spica-server/interface-replication";
 import {CommandService} from "./database/index.js";
 import {CommandMemory} from "./memory/index.js";
 import {ClassCommander} from "./commander.js";

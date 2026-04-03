@@ -6,7 +6,7 @@ import {
   PolicyResolver,
   POLICY_RESOLVER,
   IGuardService
-} from "@spica-server/interface/passport/guard";
+} from "@spica-server/interface-passport-guard";
 
 @Injectable()
 export class GuardService implements IGuardService {

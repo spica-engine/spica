@@ -5,7 +5,7 @@ import {
   ChangeLog,
   ChangeOrigin,
   ChangeType
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {
   ChangeLogProcessor,
   ChangeLogProcessorsModule

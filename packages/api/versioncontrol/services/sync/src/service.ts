@@ -5,7 +5,7 @@ import {
   ChangeStreamOptions,
   DatabaseService
 } from "@spica-server/database";
-import {Sync} from "@spica-server/interface/versioncontrol";
+import {Sync} from "@spica-server/interface-versioncontrol";
 
 @Injectable()
 export class SyncService extends BaseCollection<Sync>("sync") {

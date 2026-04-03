@@ -8,9 +8,9 @@ import {
   PasswordResetCompleteResponse,
   TokenScheme
 } from "./interface";
-import {HttpService} from "@spica-server/interface/function/packages";
+import {HttpService} from "@spica-server/interface-function-packages";
 import {deepCopyJSON} from "@spica-server/core-copy";
-import {UserSelfUpdate} from "@spica-server/interface/passport/user";
+import {UserSelfUpdate} from "@spica-server/interface-passport-user";
 
 const userSegment = "passport/user";
 

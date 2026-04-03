@@ -6,9 +6,9 @@ import {ChangeQueue} from "./queue.js";
 import {ChangeEmitter, changeKey} from "./emitter.js";
 import uniqid from "uniqid";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
-import {ChangeOptions} from "@spica-server/interface/bucket/hooks";
-import {Description} from "@spica-server/interface/function/enqueuer";
+import {CommandType} from "@spica-server/interface-replication";
+import {ChangeOptions} from "@spica-server/interface-bucket-hooks";
+import {Description} from "@spica-server/interface-function-enqueuer";
 import {Logger} from "@nestjs/common";
 
 function getChangeType(type: string): hooks.Change.Kind {

@@ -1,4 +1,4 @@
-import {SmsSender, SmsStrategy, SmsSendResult, TwilioConfig} from "@spica-server/interface/sms";
+import {SmsSender, SmsStrategy, SmsSendResult, TwilioConfig} from "@spica-server/interface-sms";
 import {InternalServerErrorException, Logger} from "@nestjs/common";
 import twilio from "twilio";
 

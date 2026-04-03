@@ -26,7 +26,7 @@ import {
   IInstallationStrategy,
   InstallationChanges,
   INSTALLATION_STRATEGIES
-} from "@spica-server/interface/asset";
+} from "@spica-server/interface-asset";
 import {exporters, operators, validators} from "./registration.js";
 import {putConfiguration} from "./helpers.js";
 import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";

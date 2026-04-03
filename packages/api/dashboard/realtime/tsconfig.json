@@ -17,6 +17,12 @@
     },
     {
       "path": "../../../database/realtime"
+    },
+    {
+      "path": "../../passport/testing"
+    },
+    {
+      "path": "../../../database/testing"
     }
   ]
 }

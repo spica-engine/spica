@@ -15,7 +15,7 @@
     "@spica-server/core-differ": "workspace:*",
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-asset": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/representative": "workspace:*",
     "archiver": "^7.0.1",

@@ -7,25 +7,22 @@
   "include": ["src/**/*.ts", "schema/*.json", "index.ts"],
   "references": [
     {
-      "path": "../../core/differ"
+      "path": "../../representative"
     },
     {
       "path": "../passport/guard"
     },
     {
-      "path": "../../core/schema"
-    },
-    {
       "path": "../../interface/asset"
     },
     {
-      "path": "../../representative"
-    },
-    {
-      "path": "../passport"
-    },
-    {
       "path": "../../database"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../core/differ"
     },
     {
       "path": "../../core"
@@ -34,10 +31,28 @@
       "path": "../preference"
     },
     {
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../passport/policy"
+    },
+    {
+      "path": "../passport/identity"
+    },
+    {
+      "path": "../passport/apikey"
+    },
+    {
       "path": "../function"
     },
     {
+      "path": "../../database/testing"
+    },
+    {
       "path": "../dashboard"
+    },
+    {
+      "path": "../../core/testing"
     },
     {
       "path": "../bucket"

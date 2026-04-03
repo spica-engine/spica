@@ -1,6 +1,6 @@
 import {JSONSchema7, JSONSchema7Definition} from "json-schema";
 import {BadRequestException, Logger} from "@nestjs/common";
-import {Bucket, BucketPreferences, ExtendedJSONSchema7Type} from "@spica-server/interface/bucket";
+import {Bucket, BucketPreferences, ExtendedJSONSchema7Type} from "@spica-server/interface-bucket";
 
 const logger = new Logger("BucketSchema");
 

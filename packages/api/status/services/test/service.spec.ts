@@ -1,7 +1,7 @@
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule, DatabaseService} from "@spica-server/database-testing";
 import {StatusService} from "../src/service";
-import {STATUS_OPTIONS} from "@spica-server/interface/status";
+import {STATUS_OPTIONS} from "@spica-server/interface-status";
 
 describe("StatusService", () => {
   let service: StatusService;

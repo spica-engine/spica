@@ -1,4 +1,4 @@
-import {IRepresentativeManager} from "@spica-server/interface/representative";
+import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {
   ApplyResult,
   ChangeLog,
@@ -6,7 +6,7 @@ import {
   DocumentChangeSupplier,
   RepresentativeChangeApplier,
   SyncStatuses
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 
 export const getApplier = (
   repManager: IRepresentativeManager,

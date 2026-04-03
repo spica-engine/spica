@@ -6,7 +6,7 @@ import {PassportTestingModule} from "@spica-server/passport-testing";
 import {getMultipartFormDataMeta, StorageModule} from "@spica-server/storage";
 import {Binary, serialize} from "bson";
 import etag from "etag";
-import {StorageObject} from "@spica-server/interface/storage";
+import {StorageObject} from "@spica-server/interface-storage";
 import {GuardService} from "@spica-server/passport-guard-services";
 
 describe("Storage Acceptance", () => {

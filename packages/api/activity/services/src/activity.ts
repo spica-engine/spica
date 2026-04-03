@@ -1,5 +1,5 @@
 import {Logger} from "@nestjs/common";
-import {Predict, Action} from "@spica-server/interface/activity";
+import {Predict, Action} from "@spica-server/interface-activity";
 
 const logger = new Logger("Activity");
 

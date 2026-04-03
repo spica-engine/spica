@@ -20,7 +20,6 @@
     "@spica-server/env_var": "workspace:*",
     "@spica-server/filter": "workspace:*",
     "@spica-server/function": "workspace:*",
-    "@spica-server/interface": "workspace:*",
     "@spica-server/mailer": "workspace:*",
     "@spica-server/passport": "workspace:*",
     "@spica-server/preference": "workspace:*",

@@ -1,7 +1,7 @@
 import {BucketDataService, BucketService} from "@spica-server/bucket-services";
 import {HistoryService} from "@spica-server/bucket-history";
 import * as CRUD from "../../crud.js";
-import {Bucket} from "@spica-server/interface/bucket";
+import {Bucket} from "@spica-server/interface-bucket";
 import YAML from "yaml";
 import {
   ChangeLog,
@@ -9,7 +9,7 @@ import {
   ChangeType,
   SyncStatuses,
   DocumentChangeApplier
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {Schema, Validator} from "@spica-server/core-schema";
 import {Logger} from "@nestjs/common";
 

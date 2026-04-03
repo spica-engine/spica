@@ -6,7 +6,7 @@ import {
   FunctionWithDependencies,
   ChangeKind,
   SecretRelation
-} from "@spica-server/interface/function";
+} from "@spica-server/interface-function";
 import {changesFromTriggers, createTargetChanges, hasContextChange} from "./change.js";
 import {ObjectId} from "@spica-server/database";
 import {FunctionEngine} from "./engine.js";

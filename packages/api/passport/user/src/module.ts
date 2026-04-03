@@ -6,13 +6,13 @@ import {
   USER_OPTIONS,
   POLICY_PROVIDER,
   VERIFICATION_PROVIDERS_INITIALIZER
-} from "@spica-server/interface/passport/user";
+} from "@spica-server/interface-passport-user";
 import {UserController} from "./user.controller.js";
 import {UserService} from "./user.service.js";
 import {UserStrategy} from "./user.strategy.js";
 import {providePolicyFinalizer} from "./utility.js";
 import {PolicyService} from "@spica-server/passport-policy";
-import {USER_POLICY_FINALIZER} from "@spica-server/interface/passport/policy";
+import {USER_POLICY_FINALIZER} from "@spica-server/interface-passport-policy";
 import {registerStatusProvider} from "./status.js";
 import userSchema from "./schemas/user.json" with {type: "json"};
 import userCreateSchema from "./schemas/user-create.json" with {type: "json"};
@@ -37,7 +37,7 @@ import {UserConfigService} from "./config.service.js";
 import {ProviderVerificationService} from "./services/provider.verification.service.js";
 import {PasswordlessLoginService} from "./services/passwordless-login.service.js";
 import {PasswordResetService} from "./services/password-reset.service.js";
-import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface/config";
+import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface-config";
 import {provideUserPasswordPolicySchemaResolver} from "./password-policy.schema.resolver.js";
 import {RateLimitService} from "./rate-limit.service.js";
 

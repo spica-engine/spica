@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@spica-server/database-realtime": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-passport-guard": "workspace:*",
     "rxjs": "^7.8.1"
   }
 }

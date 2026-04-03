@@ -1,5 +1,5 @@
 import {ObjectId} from "@spica-server/database";
-import {FactorMeta} from "@spica-server/interface/passport/authfactor";
+import {FactorMeta} from "@spica-server/interface-passport-authfactor";
 
 export interface IdentitySettingsContents {
   schema: IdentitySchema;
@@ -63,7 +63,7 @@ export interface IdentityOptions {
 }
 
 export interface IdentityConfigSettings {
-  password?: import("@spica-server/interface/config").PasswordPolicy;
+  password?: import("@spica-server/interface-config").PasswordPolicy;
 }
 
 export const IDENTITY_OPTIONS = Symbol.for("IDENTITY_OPTIONS");

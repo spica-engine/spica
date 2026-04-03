@@ -4,10 +4,7 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
       "path": "realtime"
@@ -19,16 +16,40 @@
       "path": "../../passport/guard"
     },
     {
+      "path": "../../../interface/versioncontrol"
+    },
+    {
+      "path": "../../../interface/representative"
+    },
+    {
+      "path": "../../../interface/realtime"
+    },
+    {
+      "path": "../../../database/pipeline"
+    },
+    {
       "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
     },
     {
       "path": "../../../core"
     },
     {
-      "path": "../../../interface/versioncontrol"
+      "path": "../../passport/testing"
     },
     {
-      "path": "../../../database/pipeline"
+      "path": "../../passport/guard/services"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/websocket"
+    },
+    {
+      "path": "../../../core/testing"
     }
   ]
 }

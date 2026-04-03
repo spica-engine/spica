@@ -4,16 +4,16 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
       "path": "../../services/changelog"
     },
     {
       "path": "../../../../interface/versioncontrol"
+    },
+    {
+      "path": "../../../../database/testing"
     }
   ]
 }

@@ -4,7 +4,7 @@ import {convert, convertWithReplacers, applyReplacersToAst} from "./convert.js";
 import {extract} from "./property_map.js";
 import * as func from "./func.js";
 import * as builtin from "./builtin_funcs.js";
-import {Mode, Replacer} from "@spica-server/interface/bucket/expression";
+import {Mode, Replacer} from "@spica-server/interface-bucket-expression";
 
 export {
   isSelectOperator,

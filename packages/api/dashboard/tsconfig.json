@@ -7,13 +7,16 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
+      "path": "../passport/guard"
+    },
+    {
       "path": "../../interface/versioncontrol"
     },
     {
-      "path": "realtime"
+      "path": "../../interface/representative"
     },
     {
-      "path": "../passport/guard"
+      "path": "../../interface/realtime"
     },
     {
       "path": "../../interface/dashboard"
@@ -22,25 +25,31 @@
       "path": "../../interface/asset"
     },
     {
-      "path": "../../interface/representative"
+      "path": "../../database"
+    },
+    {
+      "path": "realtime"
     },
     {
       "path": "../../core/schema"
     },
     {
-      "path": "../../realtime"
-    },
-    {
-      "path": "../passport"
-    },
-    {
-      "path": "../../database"
-    },
-    {
-      "path": "../../core"
-    },
-    {
       "path": "../asset"
+    },
+    {
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../passport/guard/services"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/websocket"
+    },
+    {
+      "path": "../../core/testing"
     }
   ]
 }

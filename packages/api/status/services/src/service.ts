@@ -1,6 +1,6 @@
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Inject, Injectable, Logger} from "@nestjs/common";
-import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "@spica-server/interface/status";
+import {ApiStatus, StatusOptions, STATUS_OPTIONS} from "@spica-server/interface-status";
 import {ObjectId} from "@spica-server/database";
 
 @Injectable()

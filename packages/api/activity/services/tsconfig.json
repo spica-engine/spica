@@ -13,7 +13,10 @@
       "path": "../../../database"
     },
     {
-      "path": "../../../core"
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/testing"
     }
   ]
 }

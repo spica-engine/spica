@@ -1,8 +1,8 @@
 import {Injectable} from "@nestjs/common";
 import {ConfigService} from "@spica-server/config";
 import {DatabaseService} from "@spica-server/database";
-import {BaseConfig} from "@spica-server/interface/config";
-import {IdentityConfigSettings} from "@spica-server/interface/passport/identity";
+import {BaseConfig} from "@spica-server/interface-config";
+import {IdentityConfigSettings} from "@spica-server/interface-passport-identity";
 import {filter, map} from "rxjs/operators";
 
 @Injectable()

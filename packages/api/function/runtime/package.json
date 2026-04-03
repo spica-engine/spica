@@ -10,7 +10,8 @@
     }
   },
   "dependencies": {
-    "@spica-server/interface": "workspace:*"
+    "@spica-server/interface-function-compiler": "workspace:*",
+    "@spica-server/interface-function-runtime": "workspace:*"
   },
   "devDependencies": {
     "@spica-server/database-testing": "workspace:*"

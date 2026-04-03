@@ -3,31 +3,22 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "realtime"
+      "path": "../passport/guard"
     },
     {
       "path": "../../interface/versioncontrol"
     },
     {
-      "path": "../passport/guard"
+      "path": "../../interface/representative"
+    },
+    {
+      "path": "../../interface/realtime"
     },
     {
       "path": "../../interface/passport/identity"
     },
     {
-      "path": "../../database/pipeline"
-    },
-    {
       "path": "../../interface/env_var"
-    },
-    {
-      "path": "services"
-    },
-    {
-      "path": "../../core/schema"
-    },
-    {
-      "path": "../../interface/representative"
     },
     {
       "path": "../../interface/asset"
@@ -36,13 +27,19 @@
       "path": "../../interface/activity"
     },
     {
-      "path": "../../realtime"
+      "path": "services"
     },
     {
-      "path": "../passport"
+      "path": "realtime"
+    },
+    {
+      "path": "../../database/pipeline"
     },
     {
       "path": "../../database"
+    },
+    {
+      "path": "../../core/schema"
     },
     {
       "path": "../../core"
@@ -54,7 +51,19 @@
       "path": "../activity/services"
     },
     {
-      "path": "../preference"
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../passport/guard/services"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/websocket"
+    },
+    {
+      "path": "../../core/testing"
     }
   ],
   "compilerOptions": {

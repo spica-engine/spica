@@ -1,11 +1,11 @@
 import {EventQueue, RabbitMQOptions, RabbitMQQueue} from "@spica-server/function-queue";
 import {Enqueuer} from "./enqueuer.js";
-import {Description} from "@spica-server/interface/function/enqueuer";
+import {Description} from "@spica-server/interface-function-enqueuer";
 import {event, RabbitMQ} from "@spica-server/function-queue-proto";
 import amqp from "amqplib";
 import uniqid from "uniqid";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
+import {CommandType} from "@spica-server/interface-replication";
 import {Logger} from "@nestjs/common";
 
 export class RabbitMQEnqueuer extends Enqueuer<RabbitMQOptions> {

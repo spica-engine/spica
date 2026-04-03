@@ -15,7 +15,7 @@
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/database-pipeline": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-activity": "workspace:*",
     "@spica-server/passport-guard": "workspace:*"
   },
   "devDependencies": {

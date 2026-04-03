@@ -1,5 +1,5 @@
 import {PipelineBuilder} from "@spica-server/database-pipeline";
-import {ChangeInitiator} from "@spica-server/interface/versioncontrol";
+import {ChangeInitiator} from "@spica-server/interface-versioncontrol";
 
 export class SyncPipelineBuilder extends PipelineBuilder {
   async filterByUserRequest(filter: object) {

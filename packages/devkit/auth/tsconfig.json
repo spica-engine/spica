@@ -6,10 +6,28 @@
       "path": "../../interface/passport/user"
     },
     {
+      "path": "../../interface/function/packages"
+    },
+    {
       "path": "../../core/copy"
     },
     {
-      "path": "../../interface/function/packages"
+      "path": "../../api/passport/user"
+    },
+    {
+      "path": "../../api/passport/testing"
+    },
+    {
+      "path": "../../api/passport"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/testing"
+    },
+    {
+      "path": "../../core/schema"
     }
   ]
 }

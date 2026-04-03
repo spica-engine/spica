@@ -7,28 +7,94 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../interface/status"
+      "path": "../status"
     },
     {
-      "path": "expression"
+      "path": "../preference/services"
     },
     {
-      "path": "../../interface/core"
-    },
-    {
-      "path": "../../core/differ"
+      "path": "../passport/guard"
     },
     {
       "path": "../../interface/versioncontrol"
     },
     {
-      "path": "graphql"
+      "path": "../../interface/status"
+    },
+    {
+      "path": "../../interface/representative"
+    },
+    {
+      "path": "../../interface/replication"
+    },
+    {
+      "path": "../../interface/realtime"
     },
     {
       "path": "../../interface/preference"
     },
     {
-      "path": "../preference/services"
+      "path": "../../interface/passport/guard"
+    },
+    {
+      "path": "../../interface/function/scheduler"
+    },
+    {
+      "path": "../../interface/function/enqueuer"
+    },
+    {
+      "path": "../../interface/function"
+    },
+    {
+      "path": "../../interface/core"
+    },
+    {
+      "path": "../../interface/bucket/realtime"
+    },
+    {
+      "path": "../../interface/bucket/hooks"
+    },
+    {
+      "path": "../../interface/bucket/history"
+    },
+    {
+      "path": "../../interface/bucket/graphql"
+    },
+    {
+      "path": "../../interface/bucket/expression"
+    },
+    {
+      "path": "../../interface/bucket/common"
+    },
+    {
+      "path": "../../interface/bucket"
+    },
+    {
+      "path": "../../interface/asset"
+    },
+    {
+      "path": "../../interface/activity"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../core/patch"
+    },
+    {
+      "path": "../../core/encryption"
+    },
+    {
+      "path": "../../core/differ"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "services"
     },
     {
       "path": "schemas-realtime"
@@ -37,7 +103,16 @@
       "path": "realtime"
     },
     {
-      "path": "../../core/patch"
+      "path": "hooks"
+    },
+    {
+      "path": "history"
+    },
+    {
+      "path": "graphql"
+    },
+    {
+      "path": "expression"
     },
     {
       "path": "common"
@@ -46,67 +121,28 @@
       "path": "cache"
     },
     {
-      "path": "../../interface/passport/guard"
-    },
-    {
-      "path": "../passport/guard"
-    },
-    {
-      "path": "hooks"
-    },
-    {
-      "path": "../../interface/bucket"
-    },
-    {
-      "path": "../../interface/representative"
-    },
-    {
-      "path": "../../core/schema"
-    },
-    {
-      "path": "services"
-    },
-    {
-      "path": "history"
-    },
-    {
-      "path": "../../interface/asset"
-    },
-    {
-      "path": "../status"
-    },
-    {
-      "path": "../replication"
-    },
-    {
-      "path": "../../realtime"
-    },
-    {
-      "path": "../preference"
-    },
-    {
-      "path": "../passport"
-    },
-    {
-      "path": "../function"
-    },
-    {
-      "path": "../../filter"
-    },
-    {
-      "path": "../../database"
-    },
-    {
-      "path": "../../core"
-    },
-    {
       "path": "../asset"
     },
     {
       "path": "../activity/services"
     },
     {
-      "path": "../activity"
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../passport/guard/services"
+    },
+    {
+      "path": "../passport"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/websocket"
+    },
+    {
+      "path": "../../core/testing"
     },
     {
       "path": "../config"

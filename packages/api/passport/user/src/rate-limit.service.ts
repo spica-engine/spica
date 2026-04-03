@@ -1,6 +1,6 @@
 import {Injectable, OnModuleInit, OnModuleDestroy} from "@nestjs/common";
 import {UserConfigService} from "./config.service.js";
-import {RateLimitConfig, RateLimitGroupConfig} from "@spica-server/interface/passport/user";
+import {RateLimitConfig, RateLimitGroupConfig} from "@spica-server/interface-passport-user";
 import {Subscription} from "rxjs";
 
 interface TrackerEntry {

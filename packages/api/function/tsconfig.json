@@ -3,76 +3,10 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
-      "path": "../../database/pipeline"
-    },
-    {
-      "path": "../../interface/versioncontrol"
-    },
-    {
-      "path": "webhook"
-    },
-    {
-      "path": "../../interface/function/scheduler"
-    },
-    {
-      "path": "../../core/patch"
-    },
-    {
-      "path": "../passport/guard"
-    },
-    {
-      "path": "../../interface/replication"
-    },
-    {
-      "path": "queue/proto"
-    },
-    {
-      "path": "../../interface/function/pkgmanager"
-    },
-    {
-      "path": "scheduler"
-    },
-    {
-      "path": "../../interface/secret"
-    },
-    {
-      "path": "../../interface/env_var"
-    },
-    {
-      "path": "../../core/differ"
-    },
-    {
-      "path": "../../interface/representative"
-    },
-    {
-      "path": "log"
-    },
-    {
-      "path": "services"
-    },
-    {
-      "path": "../../interface/function"
-    },
-    {
-      "path": "../../core/schema"
-    },
-    {
-      "path": "../../interface/asset"
-    },
-    {
-      "path": "../../interface/activity"
-    },
-    {
-      "path": "../../interface/realtime"
-    },
-    {
-      "path": "../passport/guard/services"
-    },
-    {
-      "path": "../../database/realtime"
-    },
-    {
       "path": "../status"
+    },
+    {
+      "path": "../secret/services"
     },
     {
       "path": "../secret"
@@ -84,13 +18,103 @@
       "path": "../../realtime"
     },
     {
-      "path": "../passport"
+      "path": "../passport/guard"
     },
     {
-      "path": "../env_var"
+      "path": "../../interface/versioncontrol"
+    },
+    {
+      "path": "../../interface/status"
+    },
+    {
+      "path": "../../interface/secret"
+    },
+    {
+      "path": "../../interface/representative"
+    },
+    {
+      "path": "../../interface/replication"
+    },
+    {
+      "path": "../../interface/realtime"
+    },
+    {
+      "path": "../../interface/passport/guard"
+    },
+    {
+      "path": "../../interface/function/webhook"
+    },
+    {
+      "path": "../../interface/function/scheduler"
+    },
+    {
+      "path": "../../interface/function/runtime"
+    },
+    {
+      "path": "../../interface/function/pkgmanager"
+    },
+    {
+      "path": "../../interface/function/log"
+    },
+    {
+      "path": "../../interface/function/enqueuer"
+    },
+    {
+      "path": "../../interface/function/compiler"
+    },
+    {
+      "path": "../../interface/function"
+    },
+    {
+      "path": "../../interface/env_var"
+    },
+    {
+      "path": "../../interface/core"
+    },
+    {
+      "path": "../../interface/asset"
+    },
+    {
+      "path": "../../interface/activity"
+    },
+    {
+      "path": "webhook"
+    },
+    {
+      "path": "services"
+    },
+    {
+      "path": "scheduler"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "queue/proto"
+    },
+    {
+      "path": "log"
+    },
+    {
+      "path": "../env_var/services"
+    },
+    {
+      "path": "../../database/pipeline"
     },
     {
       "path": "../../database"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../core/patch"
+    },
+    {
+      "path": "../../core/encryption"
+    },
+    {
+      "path": "../../core/differ"
     },
     {
       "path": "../../core"
@@ -102,13 +126,22 @@
       "path": "../activity/services"
     },
     {
-      "path": "../preference"
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../passport/guard/services"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/websocket"
+    },
+    {
+      "path": "../../core/testing"
     },
     {
       "path": "../bucket"
-    },
-    {
-      "path": "realtime"
     }
   ],
   "compilerOptions": {

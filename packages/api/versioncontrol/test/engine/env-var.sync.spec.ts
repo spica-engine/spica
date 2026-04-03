@@ -7,7 +7,7 @@ import {
   ChangeType,
   SyncStatuses,
   VC_REPRESENTATIVE_MANAGER
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -16,7 +16,7 @@ import {
   getSupplier as getEnvVarSupplier
 } from "@spica-server/env_var/src/synchronizer/schema";
 import {EnvVarService} from "@spica-server/env_var-services";
-import {EnvVar} from "@spica-server/interface/env_var";
+import {EnvVar} from "@spica-server/interface-env_var";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";

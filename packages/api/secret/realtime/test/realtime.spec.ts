@@ -5,7 +5,7 @@ import {WsAdapter} from "@spica-server/core-websocket";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {GuardService} from "@spica-server/passport-guard-services";
 import {PassportTestingModule} from "@spica-server/passport-testing";
-import {ChunkKind} from "@spica-server/interface/realtime";
+import {ChunkKind} from "@spica-server/interface-realtime";
 import {SecretModule} from "@spica-server/secret";
 import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECT_ID, OBJECTID_STRING} from "@spica-server/core-schema";

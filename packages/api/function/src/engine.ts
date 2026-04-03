@@ -1,7 +1,7 @@
 import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
-import {DelegatePkgManager} from "@spica-server/interface/function/pkgmanager";
+import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
 import {event} from "@spica-server/function-queue-proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
@@ -22,8 +22,8 @@ import {
   EnvRelation,
   FunctionWithContent,
   SecretRelation
-} from "@spica-server/interface/function";
-import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface/secret";
+} from "@spica-server/interface-function";
+import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
 
 import {createTargetChanges} from "./change.js";
 
@@ -35,8 +35,8 @@ import RabbitMQSchema from "./schema/rabbitmq.json" with {type: "json"};
 import GrpcSchema from "./schema/grpc.json" with {type: "json"};
 import * as CRUD from "./crud.js";
 import {ClassCommander} from "@spica-server/replication";
-import {CommandType} from "@spica-server/interface/replication";
-import {Package} from "@spica-server/interface/function/pkgmanager";
+import {CommandType} from "@spica-server/interface-replication";
+import {Package} from "@spica-server/interface-function-pkgmanager";
 import chokidar from "chokidar";
 
 @Injectable()

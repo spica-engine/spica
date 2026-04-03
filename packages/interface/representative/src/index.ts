@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {ChangeType} from "@spica-server/interface/versioncontrol";
+import {ChangeType} from "@spica-server/interface-versioncontrol";
 
 export interface IRepresentativeManager {
   write(

@@ -7,7 +7,7 @@ import {
   ChangeType,
   SyncStatuses,
   VC_REPRESENTATIVE_MANAGER
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -21,7 +21,7 @@ import {
   ServicesModule as BucketServiceModule
 } from "@spica-server/bucket-services";
 import {HistoryModule, HistoryService} from "@spica-server/bucket-history/";
-import {Bucket} from "@spica-server/interface/bucket";
+import {Bucket} from "@spica-server/interface-bucket";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {VersionControlModule} from "../../src";
 import {SyncProcessor} from "../../processors/sync";

@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import {
   IRepresentativeManager,
   RepresentativeFileEvent
-} from "@spica-server/interface/representative";
+} from "@spica-server/interface-representative";
 import {Observable} from "rxjs";
 
 @Injectable()

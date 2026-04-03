@@ -1,6 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {EncryptedData} from "@spica-server/core-encryption";
-import {FactorMeta} from "@spica-server/interface/passport/authfactor";
+import {FactorMeta} from "@spica-server/interface-passport-authfactor";
 
 export interface User {
   _id?: ObjectId;
@@ -86,7 +86,7 @@ export interface RateLimitConfig {
 
 export interface UserConfigSettings {
   verificationProcessMaxAttempt: number;
-  password?: import("@spica-server/interface/config").PasswordPolicy;
+  password?: import("@spica-server/interface-config").PasswordPolicy;
   passwordlessLogin?: PasswordlessLoginConfig;
   resetPasswordProvider?: Array<{
     provider: "email" | "phone";

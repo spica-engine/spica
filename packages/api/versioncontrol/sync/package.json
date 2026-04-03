@@ -15,7 +15,7 @@
     "@spica-server/core-schema": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/database-pipeline": "workspace:*",
-    "@spica-server/interface": "workspace:*",
+    "@spica-server/interface-versioncontrol": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/versioncontrol-services-sync": "workspace:*",
     "@spica-server/versioncontrol-sync-realtime": "workspace:*"

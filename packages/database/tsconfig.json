@@ -7,10 +7,10 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
-      "path": "../interface/database"
+      "path": "../interface/realtime"
     },
     {
-      "path": "../filter"
+      "path": "../interface/database"
     }
   ]
 }

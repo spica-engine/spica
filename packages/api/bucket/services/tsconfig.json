@@ -4,10 +4,7 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "index.ts"
-  ],
+  "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
       "path": "../../preference/services"
@@ -16,13 +13,16 @@
       "path": "../../../interface/core"
     },
     {
-      "path": "../../../core/schema"
-    },
-    {
       "path": "../../../interface/bucket"
     },
     {
       "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../database/testing"
     }
   ]
 }

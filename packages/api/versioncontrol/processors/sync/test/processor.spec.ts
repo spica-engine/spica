@@ -8,7 +8,7 @@ import {
   PendingSync,
   Sync,
   SyncStatuses
-} from "@spica-server/interface/versioncontrol";
+} from "@spica-server/interface-versioncontrol";
 import {
   SyncProcessor,
   SyncProcessorsModule,

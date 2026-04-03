@@ -4,7 +4,7 @@ import {
   Extractor,
   KeyValidator,
   ValueConstructor
-} from "@spica-server/interface/filter";
+} from "@spica-server/interface-filter";
 
 export type FilterReplacer = (filter: object) => Promise<object>;
 
