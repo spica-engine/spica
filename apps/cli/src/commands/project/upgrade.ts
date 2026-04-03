@@ -21,7 +21,7 @@ async function upgrade({args, options}: ActionParameters) {
     return console.error(`Project '${name}' does not exist.`);
   }
 
-  const oldClient = projectContainers.find(c => c.Image.startsWith("spicaengine/spica"));
+  const oldClient = projectContainers.find(c => c.Image.startsWith("spicaengine/panel"));
   if (!oldClient) {
     return console.error(
       "Unable to upgrade the version of the project. Make sure that it's running with no issue."
@@ -58,7 +58,7 @@ async function upgrade({args, options}: ActionParameters) {
           tag: desiredVersion
         },
         {
-          image: "spicaengine/spica",
+          image: "spicaengine/panel",
           tag: desiredVersion
         }
       ];
@@ -113,7 +113,7 @@ async function upgrade({args, options}: ActionParameters) {
     text: `Creating spica containers (0/2)`,
     op: async spinner => {
       const client = await machine.createContainer({
-        Image: `spicaengine/spica:${desiredVersion}`,
+        Image: `spicaengine/panel:${desiredVersion}`,
         name: `${name}-spica`,
         Env: ["BASE_URL=/"],
         Labels: {namespace: name},
