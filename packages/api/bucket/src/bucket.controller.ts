@@ -22,7 +22,7 @@ import {HistoryService} from "@spica-server/bucket-history";
 import {BucketDataService, BucketService} from "@spica-server/bucket-services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createBucketActivity} from "@spica-server/bucket-common";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket-cache";
 import * as CRUD from "./crud.js";

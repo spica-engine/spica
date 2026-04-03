@@ -7,7 +7,7 @@ import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {OBJECTID_STRING, OBJECT_ID, DATE_TIME} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId, DatabaseService} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 describe("Encrypted Field", () => {

@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {PolicyService} from "@spica-server/passport/policy";
+import {PolicyService} from "@spica-server/passport-policy";
 import YAML from "yaml";
 import {
   ChangeLog,

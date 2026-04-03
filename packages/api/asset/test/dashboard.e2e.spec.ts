@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {DashboardModule} from "@spica-server/dashboard";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {AssetModule} from "@spica-server/asset";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";

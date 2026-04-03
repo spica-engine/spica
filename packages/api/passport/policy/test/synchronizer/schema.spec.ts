@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {PolicyService} from "@spica-server/passport/policy";
+import {PolicyService} from "@spica-server/passport-policy";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 
 import {

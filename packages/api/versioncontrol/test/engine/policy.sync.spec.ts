@@ -14,8 +14,8 @@ import {join} from "node:path";
 import {
   getApplier as getPolicyApplier,
   getSupplier as getPolicySupplier
-} from "@spica-server/passport/policy/src/synchronizer/schema";
-import {PolicyService} from "@spica-server/passport/policy";
+} from "@spica-server/passport-policy/src/synchronizer/schema";
+import {PolicyService} from "@spica-server/passport-policy";
 import {Policy} from "@spica-server/interface/passport/policy";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {VersionControlModule} from "../../src";

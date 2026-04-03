@@ -1,5 +1,5 @@
 import {Action} from "@spica-server/interface/activity";
-import {createUserActivity} from "@spica-server/passport/user/src/activity.resource";
+import {createUserActivity} from "@spica-server/passport-user/src/activity.resource";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {

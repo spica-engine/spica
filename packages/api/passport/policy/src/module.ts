@@ -15,7 +15,7 @@ import {
   REGISTER_VC_CHANGE_HANDLER,
   RegisterVCChangeHandler
 } from "@spica-server/interface/versioncontrol";
-import {PolicyRealtimeModule} from "@spica-server/passport/policy/realtime";
+import {PolicyRealtimeModule} from "@spica-server/passport-policy-realtime";
 @Global()
 @Module({})
 export class PolicyModule {

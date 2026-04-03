@@ -5,7 +5,7 @@ import {ActivityService} from "@spica-server/activity-services";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {Action} from "@spica-server/interface/activity";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 
 describe("Activity Acceptance", () => {
   let request: Request;

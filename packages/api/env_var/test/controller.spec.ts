@@ -5,7 +5,7 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {EnvVarModule} from "../src";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 
 describe("Environment Variable", () => {
   let req: Request;

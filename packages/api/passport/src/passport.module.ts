@@ -1,10 +1,10 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {PassportModule as CorePassportModule} from "@nestjs/passport";
-import {ApiKeyModule} from "@spica-server/passport/apikey";
-import {IdentityModule} from "@spica-server/passport/identity";
-import {UserModule} from "@spica-server/passport/user";
-import {PolicyModule} from "@spica-server/passport/policy";
-import {GuardService} from "@spica-server/passport/guard/services";
+import {ApiKeyModule} from "@spica-server/passport-apikey";
+import {IdentityModule} from "@spica-server/passport-identity";
+import {UserModule} from "@spica-server/passport-user";
+import {PolicyModule} from "@spica-server/passport-policy";
+import {GuardService} from "@spica-server/passport-guard-services";
 import {RequestService} from "./options.js";
 import {
   PassportOptions,
@@ -19,10 +19,10 @@ import {StrategyController} from "./strategy/strategy.controller.js";
 import {StrategyService} from "./strategy/services/strategy.service.js";
 import {SchemaModule} from "@spica-server/core/schema";
 import {initializeOAuthServices} from "./strategy/services/oauth/oauth.service.js";
-import {AuthFactorModule} from "@spica-server/passport/authfactor";
+import {AuthFactorModule} from "@spica-server/passport-authfactor";
 import LoginSchema from "./schemas/login.json" with {type: "json"};
 import StrategySchema from "./schemas/strategy.json" with {type: "json"};
-import {RefreshTokenModule} from "@spica-server/passport/refresh_token";
+import {RefreshTokenModule} from "@spica-server/passport-refresh_token";
 
 @Global()
 @Module({})

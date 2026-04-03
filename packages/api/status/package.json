@@ -9,7 +9,7 @@
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/interface": "workspace:*",
-    "@spica-server/passport": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
     "@spica-server/status-services": "workspace:*"
   },
   "devDependencies": {
@@ -17,6 +17,9 @@
     "@spica-server/bucket": "workspace:*",
     "@spica-server/config": "workspace:*",
     "@spica-server/function": "workspace:*",
+    "@spica-server/passport-identity": "workspace:*",
+    "@spica-server/passport-policy": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*",
     "@spica-server/preference-testing": "workspace:*",
     "@spica-server/secret": "workspace:*",
     "@spica-server/storage": "workspace:*",

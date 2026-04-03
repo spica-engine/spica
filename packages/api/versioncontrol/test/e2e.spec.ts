@@ -7,7 +7,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {VersionControlModule} from "@spica-server/versioncontrol";

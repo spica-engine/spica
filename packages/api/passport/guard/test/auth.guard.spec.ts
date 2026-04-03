@@ -1,11 +1,11 @@
 import {ExecutionContext, UnauthorizedException, UseGuards} from "@nestjs/common";
-import {AuthGuard, StrategyType} from "@spica-server/passport/guard";
+import {AuthGuard, StrategyType} from "@spica-server/passport-guard";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 import passport from "passport";
 import {Controller, Get, INestApplication, Post} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 
 @Controller("test")
 export class TestController {

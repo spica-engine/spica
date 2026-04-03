@@ -30,8 +30,8 @@ import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, ReturnDocument} from "@spica-server/database";
 import {RealtimeDatabaseService} from "@spica-server/database/realtime";
 import {ChunkKind} from "@spica-server/interface/realtime";
-import {GuardService} from "@spica-server/passport/guard/services";
-import {extractStrategyType} from "@spica-server/passport/guard";
+import {GuardService} from "@spica-server/passport-guard-services";
+import {extractStrategyType} from "@spica-server/passport-guard";
 import {Action} from "@spica-server/interface/activity";
 import {MessageKind} from "@spica-server/interface/bucket/realtime";
 import {

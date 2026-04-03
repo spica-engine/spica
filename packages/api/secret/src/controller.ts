@@ -17,7 +17,7 @@ import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
 import {SecretService} from "@spica-server/secret-services";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
-import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {activity} from "@spica-server/activity-services";
 import {createSecretActivity} from "./activity.resource.js";
 import * as CRUD from "./crud.js";

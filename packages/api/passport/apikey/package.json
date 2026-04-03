@@ -1,0 +1,35 @@
+{
+  "name": "@spica-server/passport-apikey",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/activity.resource": {
+      "types": "./src/activity.resource.ts",
+      "default": "./dist/src/activity.resource.js"
+    },
+    "./src/utility": {
+      "types": "./src/utility.ts",
+      "default": "./dist/src/utility.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/passport": "^10.0.3",
+    "@spica-server/activity-services": "workspace:*",
+    "@spica-server/asset": "workspace:*",
+    "@spica-server/core": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface": "workspace:*",
+    "@spica-server/passport-apikey-realtime": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "nanoid": "^3.3.0",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "uniqid": "^5.4.0"
+  }
+}

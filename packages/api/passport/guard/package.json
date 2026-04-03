@@ -1,0 +1,21 @@
+{
+  "name": "@spica-server/passport-guard",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/passport": "^10.0.3",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface": "workspace:*",
+    "matcher": "^5.0.0",
+    "passport": "^0.7.0",
+    "path-to-regexp": "^8.2.0"
+  }
+}

@@ -14,7 +14,7 @@ import {
 import {NUMBER, JSONP} from "@spica-server/core";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {SyncPipelineBuilder} from "./pipeline.builder.js";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {SyncService} from "@spica-server/versioncontrol-services-sync";
 import {Sync, SyncStatuses} from "@spica-server/interface/versioncontrol";
 

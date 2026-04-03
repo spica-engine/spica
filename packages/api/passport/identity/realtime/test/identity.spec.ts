@@ -3,15 +3,15 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {GuardService} from "@spica-server/passport/guard/services";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {GuardService} from "@spica-server/passport-guard-services";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
 import {ChunkKind} from "@spica-server/interface/realtime";
-import {IdentityModule} from "@spica-server/passport/identity";
+import {IdentityModule} from "@spica-server/passport-identity";
 import {Identity} from "@spica-server/interface/passport/identity";
-import {PolicyModule} from "@spica-server/passport/policy";
+import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
 
 function url(query?: {[k: string]: string | number | boolean | object}) {

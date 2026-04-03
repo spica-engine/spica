@@ -22,7 +22,7 @@ import {
   Optional,
   Headers
 } from "@nestjs/common";
-import {UserService, RateLimitGuard} from "@spica-server/passport/user";
+import {UserService, RateLimitGuard} from "@spica-server/passport-user";
 import {User, LoginCredentials} from "@spica-server/interface/passport/user";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
@@ -32,7 +32,7 @@ import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface/passport";
-import {AuthFactor} from "@spica-server/passport/authfactor";
+import {AuthFactor} from "@spica-server/passport-authfactor";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 

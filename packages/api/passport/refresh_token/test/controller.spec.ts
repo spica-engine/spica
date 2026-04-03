@@ -2,11 +2,11 @@ import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {SchemaModule, hash} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
-import {RefreshTokenModule} from "@spica-server/passport/refresh_token";
-import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
+import {RefreshTokenModule} from "@spica-server/passport-refresh_token";
+import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
 import {RefreshToken} from "@spica-server/interface/passport/refresh_token";
 
 import {ObjectId} from "@spica-devkit/database";

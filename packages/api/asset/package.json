@@ -14,7 +14,7 @@
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/interface": "workspace:*",
-    "@spica-server/passport": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
     "@spica-server/representative": "workspace:*",
     "archiver": "^7.0.1",
     "rxjs": "^7.8.1"
@@ -24,6 +24,10 @@
     "@spica-server/bucket": "workspace:*",
     "@spica-server/dashboard": "workspace:*",
     "@spica-server/function": "workspace:*",
+    "@spica-server/passport-apikey": "workspace:*",
+    "@spica-server/passport-identity": "workspace:*",
+    "@spica-server/passport-policy": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*",
     "@spica-server/preference": "workspace:*",
     "@types/archiver": "^6.0.3"
   }

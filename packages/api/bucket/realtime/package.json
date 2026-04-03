@@ -20,7 +20,13 @@
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
     "@spica-server/interface": "workspace:*",
-    "@spica-server/passport": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "@spica-server/passport-guard-services": "workspace:*",
     "@spica-server/realtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/passport": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*"
   }
 }

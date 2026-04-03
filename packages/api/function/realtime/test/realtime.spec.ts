@@ -3,10 +3,10 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {ChunkKind} from "@spica-server/interface/realtime";
 import {FunctionRealtimeModule} from "../src";
-import {GuardService} from "@spica-server/passport/guard/services";
+import {GuardService} from "@spica-server/passport-guard-services";
 
 function url(path: string, query?: {[k: string]: string | string[]}) {
   const url = new URL(path, "ws://insteadof");

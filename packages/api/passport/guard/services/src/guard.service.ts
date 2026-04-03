@@ -1,6 +1,6 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {AuthModuleOptions} from "@nestjs/passport";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {from, Observable} from "rxjs";
 import {
   PolicyResolver,

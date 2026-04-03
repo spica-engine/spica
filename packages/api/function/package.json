@@ -62,7 +62,7 @@
     "@spica-server/function-services": "workspace:*",
     "@spica-server/function-webhook": "workspace:*",
     "@spica-server/interface": "workspace:*",
-    "@spica-server/passport": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
     "@spica-server/realtime": "workspace:*",
     "@spica-server/replication": "workspace:*",
     "@spica-server/secret": "workspace:*",
@@ -80,6 +80,8 @@
     "@nestjs/testing": "^10.4.15",
     "@spica-devkit/database": "*",
     "@spica-server/bucket": "workspace:*",
+    "@spica-server/passport-guard-services": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*",
     "@spica-server/preference-testing": "workspace:*",
     "@types/json-schema": "^7.0.15",
     "testcontainers": "^10.0.0"

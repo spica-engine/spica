@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceModule} from "@spica-server/preference";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {INestApplication} from "@nestjs/common";

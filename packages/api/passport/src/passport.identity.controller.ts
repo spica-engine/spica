@@ -21,7 +21,7 @@ import {
   Optional,
   Headers
 } from "@nestjs/common";
-import {IdentityService} from "@spica-server/passport/identity";
+import {IdentityService} from "@spica-server/passport-identity";
 import {Identity, LoginCredentials} from "@spica-server/interface/passport/identity";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
@@ -31,7 +31,7 @@ import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {STRATEGIES, StrategyTypeServices} from "@spica-server/interface/passport";
-import {AuthFactor} from "@spica-server/passport/authfactor";
+import {AuthFactor} from "@spica-server/passport-authfactor";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 

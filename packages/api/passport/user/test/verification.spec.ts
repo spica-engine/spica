@@ -1,19 +1,19 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {VerificationService} from "@spica-server/passport/user/src/verification.service";
-import {ProviderVerificationService} from "@spica-server/passport/user/src/services/provider.verification.service";
-import {UserConfigService} from "@spica-server/passport/user/src/config.service";
+import {VerificationService} from "@spica-server/passport-user/src/verification.service";
+import {ProviderVerificationService} from "@spica-server/passport-user/src/services/provider.verification.service";
+import {UserConfigService} from "@spica-server/passport-user/src/config.service";
 import {MailerService} from "@spica-server/mailer";
 import {MailerModule} from "@spica-server/mailer";
 import {SmsModule, SmsService} from "@spica-server/sms";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {CoreTestingModule} from "@spica-server/core/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {_, SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
-import {UserModule, UserService} from "@spica-server/passport/user";
-import {PolicyModule} from "@spica-server/passport/policy";
+import {UserModule, UserService} from "@spica-server/passport-user";
+import {PolicyModule} from "@spica-server/passport-policy";
 import {ConfigModule} from "@spica-server/config";
 
 describe("VerificationService", () => {

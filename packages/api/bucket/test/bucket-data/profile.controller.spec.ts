@@ -10,7 +10,7 @@ import {
   DatabaseTestingModule,
   ProfilingLevel
 } from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 
 describe("BucketDataController profiler", () => {

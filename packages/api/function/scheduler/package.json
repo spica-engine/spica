@@ -26,7 +26,7 @@
     "@spica-server/function-runtime-logger": "workspace:*",
     "@spica-server/function-runtime-node": "workspace:*",
     "@spica-server/interface": "workspace:*",
-    "@spica-server/passport": "workspace:*",
+    "@spica-server/passport-guard-services": "workspace:*",
     "@spica-server/replication": "workspace:*",
     "rxjs": "^7.8.1",
     "uniqid": "^5.4.0"

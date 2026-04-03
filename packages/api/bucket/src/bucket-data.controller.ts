@@ -36,7 +36,7 @@ import {
 } from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, StrategyType} from "@spica-server/passport-guard";
 import {ReqAuthStrategy} from "@spica-server/interface/passport/guard";
 import {invalidateCache, registerCache} from "@spica-server/bucket-cache";
 import {

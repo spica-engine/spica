@@ -17,7 +17,7 @@ import {activity} from "@spica-server/activity-services";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createApikeyActivity} from "./activity.resource.js";
 import {ApiKeyService} from "./apikey.service.js";
 import {ApiKey} from "@spica-server/interface/passport/apikey";

@@ -10,7 +10,7 @@ import {
 } from "@nestjs/common";
 import {BucketService, compile} from "@spica-server/bucket-services";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {applyPatch} from "./differ.js";
 import {HistoryService} from "./history.service.js";
 

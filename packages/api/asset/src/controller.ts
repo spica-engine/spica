@@ -31,7 +31,7 @@ import {exporters, operators, validators} from "./registration.js";
 import {putConfiguration} from "./helpers.js";
 import {BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard} from "@spica-server/passport-guard";
 import {AssetRepManager} from "./representative.js";
 import {createReadStream} from "fs";
 import {OptionalId} from "@spica-server/database";

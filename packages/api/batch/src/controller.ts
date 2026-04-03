@@ -1,6 +1,6 @@
 import {Controller, Body, Post, Inject, Req, UseGuards} from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
-import {AuthGuard} from "@spica-server/passport/guard";
+import {AuthGuard} from "@spica-server/passport-guard";
 import {getBaseUrl, handleResponse, splitIntoChunks} from "./utilities.js";
 import {
   BatchRequest,

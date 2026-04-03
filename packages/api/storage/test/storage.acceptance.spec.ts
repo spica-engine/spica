@@ -2,12 +2,12 @@ import {INestApplication, NestApplicationOptions, ForbiddenException} from "@nes
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {getMultipartFormDataMeta, StorageModule} from "@spica-server/storage";
 import {Binary, serialize} from "bson";
 import etag from "etag";
 import {StorageObject} from "@spica-server/interface/storage";
-import {GuardService} from "@spica-server/passport/guard/services";
+import {GuardService} from "@spica-server/passport-guard-services";
 
 describe("Storage Acceptance", () => {
   let app: INestApplication;

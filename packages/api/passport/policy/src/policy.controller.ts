@@ -18,7 +18,7 @@ import {activity} from "@spica-server/activity-services";
 import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {createPolicyActivity} from "./activity.resource.js";
 import {
   Policy,

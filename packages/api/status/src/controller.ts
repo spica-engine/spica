@@ -11,7 +11,7 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {DATE} from "@spica-server/core";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {StatusProvider} from "@spica-server/interface/status";
 import {DatabaseService} from "@spica-server/database";
 

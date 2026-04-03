@@ -9,7 +9,7 @@ import ApiKeySchema from "./schemas/apikey.json" with {type: "json"};
 import {ASSET_REP_MANAGER} from "@spica-server/interface/asset";
 import {IRepresentativeManager} from "@spica-server/interface/representative";
 import {registerAssetHandlers} from "./asset.js";
-import {ApikeyRealtimeModule} from "@spica-server/passport/apikey/realtime";
+import {ApikeyRealtimeModule} from "@spica-server/passport-apikey-realtime";
 
 @Global()
 @Module({})

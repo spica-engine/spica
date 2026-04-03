@@ -10,7 +10,7 @@ import {Validator} from "@spica-server/core/schema";
 import {Default} from "@spica-server/interface/core";
 import {hash, compare} from "./hash.js";
 import {JwtService, JwtSignOptions} from "@nestjs/jwt";
-import {RefreshTokenService} from "@spica-server/passport/refresh_token/services";
+import {RefreshTokenService} from "@spica-server/passport-refresh_token-services";
 import {v4 as uuidv4} from "uuid";
 import {
   encrypt,

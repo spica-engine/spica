@@ -32,7 +32,7 @@ import {generateLog} from "@spica-server/function-runtime-logger";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface/replication";
 import {AttachStatusTracker, ATTACH_STATUS_TRACKER} from "@spica-server/interface/status";
-import {GuardService} from "@spica-server/passport/guard/services";
+import {GuardService} from "@spica-server/passport-guard-services";
 import uniqid from "uniqid";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "@spica-server/interface/function/scheduler";
 import {Subject} from "rxjs";

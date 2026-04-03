@@ -1,7 +1,7 @@
 import {Controller, Put, Param, Body, Get, UseGuards, NotFoundException} from "@nestjs/common";
 import {ConfigService} from "./config.service.js";
 import {ConfigSchemaRegistry} from "./config.schema.registry.js";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {ReturnDocument} from "@spica-server/database";
 import {BaseConfig} from "@spica-server/interface/config";
 

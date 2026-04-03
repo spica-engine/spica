@@ -5,7 +5,7 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import * as Bucket from "@spica-devkit/bucket";
 import {bufferCount, take} from "rxjs/operators";

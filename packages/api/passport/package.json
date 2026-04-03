@@ -8,138 +8,6 @@
       "types": "./index.ts",
       "default": "./dist/index.js"
     },
-    "./guard": {
-      "types": "./guard/index.ts",
-      "default": "./guard/dist/index.js"
-    },
-    "./guard/services": {
-      "types": "./guard/services/index.ts",
-      "default": "./guard/services/dist/index.js"
-    },
-    "./identity": {
-      "types": "./identity/index.ts",
-      "default": "./identity/dist/index.js"
-    },
-    "./identity/realtime": {
-      "types": "./identity/realtime/index.ts",
-      "default": "./identity/realtime/dist/index.js"
-    },
-    "./identity/src/activity.resource": {
-      "types": "./identity/src/activity.resource.ts",
-      "default": "./identity/dist/src/activity.resource.js"
-    },
-    "./identity/src/hash": {
-      "types": "./identity/src/hash.ts",
-      "default": "./identity/dist/src/hash.js"
-    },
-    "./identity/src/utility": {
-      "types": "./identity/src/utility.ts",
-      "default": "./identity/dist/src/utility.js"
-    },
-    "./apikey": {
-      "types": "./apikey/index.ts",
-      "default": "./apikey/dist/index.js"
-    },
-    "./apikey/realtime": {
-      "types": "./apikey/realtime/index.ts",
-      "default": "./apikey/realtime/dist/index.js"
-    },
-    "./apikey/src/activity.resource": {
-      "types": "./apikey/src/activity.resource.ts",
-      "default": "./apikey/dist/src/activity.resource.js"
-    },
-    "./apikey/src/utility": {
-      "types": "./apikey/src/utility.ts",
-      "default": "./apikey/dist/src/utility.js"
-    },
-    "./authfactor": {
-      "types": "./authfactor/index.ts",
-      "default": "./authfactor/dist/index.js"
-    },
-    "./policy": {
-      "types": "./policy/index.ts",
-      "default": "./policy/dist/index.js"
-    },
-    "./policy/realtime": {
-      "types": "./policy/realtime/index.ts",
-      "default": "./policy/realtime/dist/index.js"
-    },
-    "./policy/src/activity.resource": {
-      "types": "./policy/src/activity.resource.ts",
-      "default": "./policy/dist/src/activity.resource.js"
-    },
-    "./policy/src/synchronizer/schema": {
-      "types": "./policy/src/synchronizer/schema.ts",
-      "default": "./policy/dist/src/synchronizer/schema.js"
-    },
-    "./policy/src/utility": {
-      "types": "./policy/src/utility.ts",
-      "default": "./policy/dist/src/utility.js"
-    },
-    "./refresh_token": {
-      "types": "./refresh_token/index.ts",
-      "default": "./refresh_token/dist/index.js"
-    },
-    "./refresh_token/realtime": {
-      "types": "./refresh_token/realtime/index.ts",
-      "default": "./refresh_token/realtime/dist/index.js"
-    },
-    "./refresh_token/services": {
-      "types": "./refresh_token/services/index.ts",
-      "default": "./refresh_token/services/dist/index.js"
-    },
-    "./user": {
-      "types": "./user/index.ts",
-      "default": "./user/dist/index.js"
-    },
-    "./user/realtime": {
-      "types": "./user/realtime/index.ts",
-      "default": "./user/realtime/dist/index.js"
-    },
-    "./user/src/activity.resource": {
-      "types": "./user/src/activity.resource.ts",
-      "default": "./user/dist/src/activity.resource.js"
-    },
-    "./user/src/config.service": {
-      "types": "./user/src/config.service.ts",
-      "default": "./user/dist/src/config.service.js"
-    },
-    "./user/src/rate-limit.guard": {
-      "types": "./user/src/rate-limit.guard.ts",
-      "default": "./user/dist/src/rate-limit.guard.js"
-    },
-    "./user/src/rate-limit.service": {
-      "types": "./user/src/rate-limit.service.ts",
-      "default": "./user/dist/src/rate-limit.service.js"
-    },
-    "./user/src/services/password-reset.service": {
-      "types": "./user/src/services/password-reset.service.ts",
-      "default": "./user/dist/src/services/password-reset.service.js"
-    },
-    "./user/src/services/passwordless-login.service": {
-      "types": "./user/src/services/passwordless-login.service.ts",
-      "default": "./user/dist/src/services/passwordless-login.service.js"
-    },
-    "./user/src/services/provider.verification.service": {
-      "types": "./user/src/services/provider.verification.service.ts",
-      "default": "./user/dist/src/services/provider.verification.service.js"
-    },
-    "./user/src/user.service": {
-      "types": "./user/src/user.service.ts",
-      "default": "./user/dist/src/user.service.js"
-    },
-    "./user/src/utility": {
-      "types": "./user/src/utility.ts",
-      "default": "./user/dist/src/utility.js"
-    },
-    "./user/src/verification.service": {
-      "types": "./user/src/verification.service.ts",
-      "default": "./user/dist/src/verification.service.js"
-    },
-    "./testing": {
-      "types": "./testing/index.ts",
-      "default": "./testing/dist/index.js"
-    },
     "./src/options": {
       "types": "./src/options.ts",
       "default": "./dist/src/options.js"
@@ -147,29 +15,26 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
-    "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
-    "@nestjs/websockets": "^10.4.15",
-    "@spica-server/activity-services": "workspace:*",
-    "@spica-server/asset": "workspace:*",
-    "@spica-server/config": "workspace:*",
     "@spica-server/core": "workspace:*",
     "@spica-server/database": "workspace:*",
-    "@spica-server/filter": "workspace:*",
     "@spica-server/interface": "workspace:*",
-    "@spica-server/mailer": "workspace:*",
-    "@spica-server/preference-services": "workspace:*",
-    "@spica-server/realtime": "workspace:*",
+    "@spica-server/passport-apikey": "workspace:*",
+    "@spica-server/passport-authfactor": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "@spica-server/passport-guard-services": "workspace:*",
+    "@spica-server/passport-identity": "workspace:*",
+    "@spica-server/passport-policy": "workspace:*",
+    "@spica-server/passport-refresh_token": "workspace:*",
+    "@spica-server/passport-user": "workspace:*",
     "@spica-server/replication": "workspace:*",
-    "@spica-server/sms": "workspace:*",
-    "@spica-server/status": "workspace:*",
-    "bcryptjs": "^2.4.3",
+    "axios": "^1.8.2",
+    "body-parser": "^1.20.3",
     "node-forge": "^1.3.1",
-    "passport": "^0.7.0",
-    "passport-jwt": "^4.0.1",
-    "qrcode": "^1.5.4",
+    "qs": "^6.14.0",
+    "rxjs": "^7.8.1",
     "saml2-js": "^4.0.2",
-    "speakeasy": "^2.0.0"
+    "uuid": "^11.0.0"
   },
   "devDependencies": {
     "@spica-server/preference-testing": "workspace:*"

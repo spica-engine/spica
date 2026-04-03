@@ -1,5 +1,5 @@
 import {ExecutionContext} from "@nestjs/common";
-import {SimpleActionGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {SimpleActionGuard, ResourceFilter} from "@spica-server/passport-guard";
 import {PolicyResolver} from "@spica-server/interface/passport/guard";
 
 describe("SimpleActionGuard", () => {

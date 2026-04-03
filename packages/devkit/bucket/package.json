@@ -20,6 +20,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@spica-server/passport-testing": "workspace:*",
     "@spica-server/preference-testing": "workspace:*"
   }
 }

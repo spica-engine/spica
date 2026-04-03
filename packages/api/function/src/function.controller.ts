@@ -26,7 +26,7 @@ import {ARRAY, BOOLEAN, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, ReturnDocument} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport-guard";
 import os from "os";
 import {of, OperatorFunction} from "rxjs";
 import {catchError, finalize, last, map, tap} from "rxjs/operators";

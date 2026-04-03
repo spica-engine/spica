@@ -11,7 +11,7 @@ import {UserController} from "./user.controller.js";
 import {UserService} from "./user.service.js";
 import {UserStrategy} from "./user.strategy.js";
 import {providePolicyFinalizer} from "./utility.js";
-import {PolicyService} from "@spica-server/passport/policy";
+import {PolicyService} from "@spica-server/passport-policy";
 import {USER_POLICY_FINALIZER} from "@spica-server/interface/passport/policy";
 import {registerStatusProvider} from "./status.js";
 import userSchema from "./schemas/user.json" with {type: "json"};
@@ -23,8 +23,8 @@ import passwordlessLoginStartSchema from "./schemas/passwordless-login-start.jso
 import passwordlessLoginVerifySchema from "./schemas/passwordless-login-verify.json" with {type: "json"};
 import forgotPasswordStartSchema from "./schemas/forgot-password-start.json" with {type: "json"};
 import forgotPasswordVerifySchema from "./schemas/forgot-password-verify.json" with {type: "json"};
-import {RefreshTokenServicesModule} from "@spica-server/passport/refresh_token/services";
-import {UserRealtimeModule} from "@spica-server/passport/user/realtime";
+import {RefreshTokenServicesModule} from "@spica-server/passport-refresh_token-services";
+import {UserRealtimeModule} from "@spica-server/passport-user-realtime";
 import {VerificationService} from "./verification.service.js";
 import {
   VerificationProviderRegistry,

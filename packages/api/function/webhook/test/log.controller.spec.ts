@@ -4,7 +4,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {WebhookLogController} from "@spica-server/function-webhook/src/log.controller";
 import {WebhookLogService} from "@spica-server/function-webhook/src/log.service";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {WEBHOOK_OPTIONS} from "@spica-server/interface/function/webhook";
 
 describe("Activity Controller", () => {

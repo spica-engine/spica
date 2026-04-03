@@ -1,19 +1,19 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {PasswordlessLoginService} from "@spica-server/passport/user/src/services/passwordless-login.service";
-import {UserService} from "@spica-server/passport/user/src/user.service";
-import {UserConfigService} from "@spica-server/passport/user/src/config.service";
+import {PasswordlessLoginService} from "@spica-server/passport-user/src/services/passwordless-login.service";
+import {UserService} from "@spica-server/passport-user/src/user.service";
+import {UserConfigService} from "@spica-server/passport-user/src/config.service";
 import {MailerService} from "@spica-server/mailer";
 import {MailerModule} from "@spica-server/mailer";
 import {SmsModule, SmsService} from "@spica-server/sms";
 import {BadRequestException, NotFoundException} from "@nestjs/common";
 import {CoreTestingModule} from "@spica-server/core/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECT_ID} from "@spica-server/core/schema/formats";
-import {UserModule} from "@spica-server/passport/user";
-import {PolicyModule} from "@spica-server/passport/policy";
+import {UserModule} from "@spica-server/passport-user";
+import {PolicyModule} from "@spica-server/passport-policy";
 import {User} from "@spica-server/interface/passport/user";
 import {ConfigModule} from "@spica-server/config";
 

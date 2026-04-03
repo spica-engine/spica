@@ -11,7 +11,7 @@ import {BatchModule} from "@spica-server/batch";
 import cookieParser from "cookie-parser";
 import {DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {MailerModule} from "@spica-server/mailer";
-import {UserConfigService} from "@spica-server/passport/user/src/config.service";
+import {UserConfigService} from "@spica-server/passport-user/src/config.service";
 import {GenericContainer} from "testcontainers";
 import fetch from "node-fetch";
 import {ConfigModule} from "@spica-server/config";
