@@ -158,6 +158,7 @@
     "@spica-server/realtime": "workspace:*",
     "@spica-server/replication": "workspace:*",
     "@spica-server/secret": "workspace:*",
+    "@spica-server/secret-services": "workspace:*",
     "@spica-server/status": "workspace:*",
     "amqplib": "^0.10.7",
     "axios": "^1.8.2",

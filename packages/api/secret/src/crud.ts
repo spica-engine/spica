@@ -1,5 +1,5 @@
 import {ObjectId, ReturnDocument} from "@spica-server/database";
-import {SecretService} from "@spica-server/secret/services";
+import {SecretService} from "@spica-server/secret-services";
 import {DecryptedSecret, HiddenSecret, Secret} from "@spica-server/interface/secret";
 import {encrypt} from "@spica-server/core/encryption";
 import {SecretPipelineBuilder} from "./pipeline.builder.js";

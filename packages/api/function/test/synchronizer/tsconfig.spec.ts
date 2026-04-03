@@ -15,7 +15,7 @@ import {
 import {Function} from "@spica-server/interface/function";
 import {rimraf} from "rimraf";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
-import {SecretService} from "@spica-server/secret/services/src/service";
+import {SecretService} from "@spica-server/secret-services/src/service";
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -14,7 +14,7 @@ import {
   UseInterceptors
 } from "@nestjs/common";
 import {BOOLEAN, DEFAULT, NUMBER, JSONP} from "@spica-server/core";
-import {SecretService} from "@spica-server/secret/services";
+import {SecretService} from "@spica-server/secret-services";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Schema} from "@spica-server/core/schema";
 import {AuthGuard, ActionGuard, ResourceFilter} from "@spica-server/passport/guard";

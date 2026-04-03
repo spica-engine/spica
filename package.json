@@ -33,6 +33,8 @@
       "packages/api/env_var/realtime",
       "packages/api/env_var/services",
       "packages/api/secret",
+      "packages/api/secret/realtime",
+      "packages/api/secret/services",
       "packages/api/function",
       "packages/api/mailer",
       "packages/api/passport",

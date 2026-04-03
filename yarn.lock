@@ -6209,6 +6209,7 @@ __metadata:
     "@spica-server/realtime": "workspace:*"
     "@spica-server/replication": "workspace:*"
     "@spica-server/secret": "workspace:*"
+    "@spica-server/secret-services": "workspace:*"
     "@spica-server/status": "workspace:*"
     "@types/amqplib": "npm:^0.10.7"
     "@types/express": "npm:^4.17.21"
@@ -6377,19 +6378,43 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/secret-realtime@workspace:*, @spica-server/secret-realtime@workspace:packages/api/secret/realtime":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/secret-realtime@workspace:packages/api/secret/realtime"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@nestjs/websockets": "npm:^10.4.15"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+    "@spica-server/passport": "workspace:*"
+    "@spica-server/realtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/secret-services@workspace:*, @spica-server/secret-services@workspace:packages/api/secret/services":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/secret-services@workspace:packages/api/secret/services"
+  dependencies:
+    "@nestjs/common": "npm:^10.4.15"
+    "@spica-server/core": "workspace:*"
+    "@spica-server/database": "workspace:*"
+    "@spica-server/interface": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/secret@workspace:*, @spica-server/secret@workspace:packages/api/secret":
   version: 0.0.0-use.local
   resolution: "@spica-server/secret@workspace:packages/api/secret"
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@nestjs/testing": "npm:^10.4.15"
-    "@nestjs/websockets": "npm:^10.4.15"
     "@spica-server/activity-services": "workspace:*"
     "@spica-server/core": "workspace:*"
     "@spica-server/database": "workspace:*"
     "@spica-server/interface": "workspace:*"
     "@spica-server/passport": "workspace:*"
-    "@spica-server/realtime": "workspace:*"
+    "@spica-server/secret-realtime": "workspace:*"
+    "@spica-server/secret-services": "workspace:*"
   languageName: unknown
   linkType: soft
 
