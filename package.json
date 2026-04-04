@@ -46,7 +46,8 @@
     ],
     "nohoist": [
       "@spica/cli/**",
-      "@spica/panel/**"
+      "@spica/panel/**/react-scripts",
+      "@spica/panel/**/react-scripts/**"
     ]
   },
   "scripts": {
