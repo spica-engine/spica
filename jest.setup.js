@@ -1,10 +1,8 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
-import {fileURLToPath} from "url";
+import {workspaceRoot} from "@nx/devkit";
 import {jest} from "@jest/globals";
-
-const workspaceRoot = path.dirname(fileURLToPath(import.meta.url));
 
 global.jest = jest;
 jest.setTimeout(30_000);

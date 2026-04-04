@@ -45,7 +45,8 @@
       "apps/panel"
     ],
     "nohoist": [
-      "@spica/cli/**"
+      "@spica/cli/**",
+      "@spica/panel/**"
     ]
   },
   "scripts": {
@@ -150,6 +151,7 @@
     "@types/deep-diff": "^1.0.5",
     "@types/diff-match-patch": "^1.0.36",
     "@types/jest": "^29.5.14",
+    "@jest/globals": "^29.7.0",
     "@types/json-schema": "^7.0.15",
     "@types/lodash": "^4.17.14",
     "@types/matcher": "^2.0.0",
