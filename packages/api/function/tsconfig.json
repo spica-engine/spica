@@ -114,6 +114,9 @@
       "path": "../../core/testing"
     },
     {
+      "path": "../preference"
+    },
+    {
       "path": "../bucket"
     }
   ],

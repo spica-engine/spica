@@ -28,34 +28,13 @@
       "path": "../../core"
     },
     {
-      "path": "../preference"
-    },
-    {
       "path": "../passport/testing"
-    },
-    {
-      "path": "../passport/policy"
-    },
-    {
-      "path": "../passport/identity"
-    },
-    {
-      "path": "../passport/apikey"
-    },
-    {
-      "path": "../function"
     },
     {
       "path": "../../database/testing"
     },
     {
-      "path": "../dashboard"
-    },
-    {
       "path": "../../core/testing"
-    },
-    {
-      "path": "../bucket"
     }
   ]
 }

@@ -1,10 +1,7 @@
-const path = require("path");
-const {workspaceRoot} = require("@nx/devkit");
+import {workspaceRoot} from "@nx/devkit";
 
 export default {
-  preset: "../../../../../../jest.preset.js",
-  testEnvironment: "node",
-  coverageDirectory: path.join(workspaceRoot, "coverage/packages/api/passport/user/realtime"),
+  preset: "../../../../../jest.preset.js",
   testMatch: ["<rootDir>/test/**/*.spec.ts"],
-  setupFilesAfterEnv: ["../../../../../../jest.flaky.setup.js"]
+  setupFilesAfterEnv: [`${workspaceRoot}/jest.flaky.setup.js`],
 };

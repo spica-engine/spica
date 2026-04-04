@@ -1,27 +1,20 @@
-const path = require("path");
-const {workspaceRoot} = require("@nx/devkit");
-
-const commonConfig = {
-  preset: "../../../../../jest.preset.js",
-  testEnvironment: "node",
-  coverageDirectory: path.join(workspaceRoot, "coverage/apps/api/bucket/graphql")
-};
+import {workspaceRoot} from "@nx/devkit";
 
 export default {
   projects: [
     {
-      ...commonConfig,
-      testMatch: ["<rootDir>/test/schema.spec.ts"]
+      preset: "../../../../jest.preset.js",
+      testMatch: ["<rootDir>/test/schema.spec.ts"],
     },
     {
-      ...commonConfig,
+      preset: "../../../../jest.preset.js",
       testMatch: ["<rootDir>/test/graphql.spec.ts"],
-      setupFilesAfterEnv: [path.join(workspaceRoot, "jest.flaky.setup.js")]
+      setupFilesAfterEnv: [`${workspaceRoot}/jest.flaky.setup.js`],
     },
     {
-      ...commonConfig,
+      preset: "../../../../jest.preset.js",
       testMatch: ["<rootDir>/test/acl-rules.spec.ts"],
-      setupFilesAfterEnv: [path.join(workspaceRoot, "jest.flaky.setup.js")]
-    }
-  ]
+      setupFilesAfterEnv: [`${workspaceRoot}/jest.flaky.setup.js`],
+    },
+  ],
 };
