@@ -1,10 +1,5 @@
 {
   "name": "api/storage",
   "sourceRoot": "packages/api/storage",
-  "projectType": "library",
-  "targets": {
-    "build": {
-      "command": "tsc --build packages/api/storage/tsconfig.json --pretty --verbose"
-    }
-  }
+  "projectType": "library"
 }

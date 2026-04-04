@@ -15,18 +15,11 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
-    "@spica-server/bucket": "workspace:*",
-    "@spica-server/config": "workspace:*",
     "@spica-server/core-testing": "workspace:*",
     "@spica-server/core-websocket": "workspace:*",
     "@spica-server/database-testing": "workspace:*",
-    "@spica-server/function": "workspace:*",
-    "@spica-server/passport-identity": "workspace:*",
-    "@spica-server/passport-policy": "workspace:*",
     "@spica-server/passport-testing": "workspace:*",
     "@spica-server/preference-testing": "workspace:*",
-    "@spica-server/secret": "workspace:*",
-    "@spica-server/storage": "workspace:*",
     "bson": "^6.10.1"
   },
   "exports": {

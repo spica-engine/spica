@@ -25,22 +25,7 @@
       "path": "../../core"
     },
     {
-      "path": "../storage"
-    },
-    {
-      "path": "../secret"
-    },
-    {
       "path": "../passport/testing"
-    },
-    {
-      "path": "../passport/policy"
-    },
-    {
-      "path": "../passport/identity"
-    },
-    {
-      "path": "../function"
     },
     {
       "path": "../../database/testing"
@@ -50,12 +35,6 @@
     },
     {
       "path": "../../core/testing"
-    },
-    {
-      "path": "../config"
-    },
-    {
-      "path": "../bucket"
     }
   ]
 }
