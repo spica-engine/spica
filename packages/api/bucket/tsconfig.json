@@ -100,9 +100,6 @@
       "path": "../passport/guard/services"
     },
     {
-      "path": "../passport"
-    },
-    {
       "path": "../../database/testing"
     },
     {

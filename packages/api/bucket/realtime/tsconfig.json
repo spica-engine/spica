@@ -67,9 +67,6 @@
       "path": "../../passport/testing"
     },
     {
-      "path": "../../passport"
-    },
-    {
       "path": "../../../database/testing"
     },
     {
