@@ -8412,6 +8412,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-devkit/internal_common@workspace:packages/devkit/internal_common":
+  version: 0.0.0-use.local
+  resolution: "@spica-devkit/internal_common@workspace:packages/devkit/internal_common"
+  languageName: unknown
+  linkType: soft
+
 "@spica-devkit/storage@workspace:packages/devkit/storage":
   version: 0.0.0-use.local
   resolution: "@spica-devkit/storage@workspace:packages/devkit/storage"
