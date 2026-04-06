@@ -8,7 +8,7 @@ import {SchemaModule} from "@spica-server/core-schema";
 import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {PreferenceTestingModule} from "@spica-server/preference-testing";
-import {SecretModule} from "@spica-server/secret/src/module";
+import {SecretModule} from "@spica-server/secret";
 
 describe("Function gRPC Trigger Schema", () => {
   let app: INestApplication;

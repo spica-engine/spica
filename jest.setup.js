@@ -33,12 +33,12 @@ process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH = path.join(
 // directory for function typescript compiler worker path
 process.env.FUNCTION_TS_COMPILER_PATH = path.join(
   workspaceRoot,
-  "dist",
   "packages",
   "api",
   "function",
   "compiler",
   "typescript",
+  "dist",
   "src",
   "typescript_worker.js"
 );

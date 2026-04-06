@@ -13,7 +13,7 @@ import {
   SyncProcessor,
   SyncProcessorsModule,
   VCConfigService
-} from "@spica-server/versioncontrol/processors/sync";
+} from "@spica-server/versioncontrol-processors-sync";
 import {bufferCount} from "rxjs";
 
 function getMockSync(

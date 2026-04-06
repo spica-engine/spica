@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
-import {VCConfigService} from "@spica-server/versioncontrol/processors/sync";
+import {VCConfigService} from "@spica-server/versioncontrol-processors-sync";
 import {AutoApproveSyncConfig} from "@spica-server/interface-versioncontrol";
 
 async function waitForAutoApproveSync(
