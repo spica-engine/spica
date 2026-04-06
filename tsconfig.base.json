@@ -16,6 +16,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "lib": ["es2020", "dom"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "types": ["node"]
   }
 }
