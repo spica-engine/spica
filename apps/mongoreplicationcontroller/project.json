@@ -5,31 +5,8 @@
   "projectType": "application",
   "tags": [],
   "targets": {
-    "serve": {
-      "executor": "@nx/js:node",
-      "options": {
-        "buildTarget": "mongoreplicationcontroller:build"
-      }
-    },
-    "build": {
-      "executor": "@nx/js:tsc",
-      "inputs": [
-        "{workspaceRoot}/tsconfig.json",
-        "{projectRoot}/src/**/*",
-        "{projectRoot}/tsconfig.json",
-        "{projectRoot}/project.json"
-      ],
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/apps/mongoreplicationcontroller",
-        "main": "apps/mongoreplicationcontroller/src/main.ts",
-        "tsConfig": "apps/mongoreplicationcontroller/tsconfig.json"
-      },
-      "cache": true
-    },
     "build-image": {
       "inputs": [
-        "{workspaceRoot}/tsconfig.json",
         "{projectRoot}/src/**/*",
         "{projectRoot}/tsconfig.json",
         "{projectRoot}/project.json",

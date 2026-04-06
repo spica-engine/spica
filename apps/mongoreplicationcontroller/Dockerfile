@@ -22,6 +22,7 @@ FROM base AS deps
 WORKDIR /app
 ARG TARGETPLATFORM
 COPY package.json yarn.lock ./
+COPY apps/mongoreplicationcontroller/package.json ./apps/mongoreplicationcontroller/package.json
 RUN --mount=type=cache,target=/root/.yarn-cache,id=mongorepl-yarn-${TARGETPLATFORM},sharing=locked \
     YARN_CACHE_FOLDER=/root/.yarn-cache \
     yarn install --frozen-lockfile --network-timeout 600000
@@ -32,10 +33,7 @@ WORKDIR /app
 ARG TARGETPLATFORM
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/mongoreplicationcontroller ./apps/mongoreplicationcontroller
-COPY nx.json ./
-COPY package.json ./
-COPY tsconfig.json ./
-COPY yarn.lock ./
+COPY nx.json package.json tsconfig.json tsconfig.base.json yarn.lock ./
 RUN --mount=type=cache,target=/app/.nx/cache,id=mongorepl-nx-cache-${TARGETPLATFORM},sharing=locked \
     --mount=type=cache,target=/app/.nx/workspace-data,id=mongorepl-nx-workspace-${TARGETPLATFORM},sharing=locked \
     yarn run build:mongoreplicationcontroller
@@ -45,5 +43,6 @@ RUN --mount=type=cache,target=/app/.nx/cache,id=mongorepl-nx-cache-${TARGETPLATF
 FROM tools AS runner
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-ENTRYPOINT ["node","./dist/apps/mongoreplicationcontroller"]
+COPY --from=build /app/apps/mongoreplicationcontroller/dist ./dist
+COPY --from=build /app/apps/mongoreplicationcontroller/package.json ./package.json
+ENTRYPOINT ["node","./dist/src/main.js"]
