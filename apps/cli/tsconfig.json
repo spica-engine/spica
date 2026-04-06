@@ -1,7 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
-  "files": [],
-  "include": ["package.json"],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["index.ts", "src/**/*.ts", "package.json"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
       "path": "../../packages/interface/function"

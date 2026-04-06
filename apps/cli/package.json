@@ -1,9 +1,29 @@
 {
   "name": "@spica/cli",
   "version": "0.0.0-PLACEHOLDER",
-  "main": "./index.js",
-  "typings": "./index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/commands/project/sync": {
+      "types": "./src/commands/project/sync.ts",
+      "default": "./dist/src/commands/project/sync.js"
+    },
+    "./src/compile": {
+      "types": "./src/compile.ts",
+      "default": "./dist/src/compile.js"
+    },
+    "./src/function/triggers/http/services": {
+      "types": "./src/function/triggers/http/services/index.ts",
+      "default": "./dist/src/function/triggers/http/services/index.js"
+    },
+    "./src/function/triggers": {
+      "types": "./src/function/triggers/index.ts",
+      "default": "./dist/src/function/triggers/index.js"
+    }
+  },
   "publishConfig": {
     "access": "public"
   },
