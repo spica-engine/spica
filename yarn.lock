@@ -8405,6 +8405,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica/mongoreplicationcontroller@workspace:apps/mongoreplicationcontroller":
+  version: 0.0.0-use.local
+  resolution: "@spica/mongoreplicationcontroller@workspace:apps/mongoreplicationcontroller"
+  dependencies:
+    "@types/node": "npm:^22.10.7"
+    "@types/yargs": "npm:^17.0.33"
+    yargs: "npm:^17.7.2"
+  languageName: unknown
+  linkType: soft
+
 "@spica/server@workspace:apps/api":
   version: 0.0.0-use.local
   resolution: "@spica/server@workspace:apps/api"

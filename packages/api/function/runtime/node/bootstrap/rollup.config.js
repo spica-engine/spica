@@ -9,9 +9,21 @@ module.exports = {
   output: {
     dir: "./packages/api/function/runtime/node/dist/bootstrap",
     format: "esm",
-    sourcemap: true
+    sourcemap: true,
+    chunkFileNames: "[name].js"
   },
   plugins: [
+    {
+      name: "preserve-database-sideeffects",
+      async resolveId(id, importer, options) {
+        if (id === "@spica-devkit/database") {
+          const resolved = await this.resolve(id, importer, {skipSelf: true, ...options});
+          if (resolved) {
+            return {...resolved, moduleSideEffects: true};
+          }
+        }
+      }
+    },
     nodeResolve({
       preferBuiltins: true
     }),
