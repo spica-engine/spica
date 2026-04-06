@@ -9,7 +9,7 @@ import color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate";
 import path from "path";
 
-process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/apps/migrate/src");
+process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/src");
 
 describe("Enable changeStreamPreAndPostImages for collections", () => {
   let db: Db;

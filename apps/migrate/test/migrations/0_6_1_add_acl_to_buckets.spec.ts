@@ -3,7 +3,7 @@ import color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate";
 import path from "path";
 
-process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/apps/migrate/src");
+process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/src");
 
 describe("Add acl to buckets", () => {
   let db: Db;

@@ -4,7 +4,7 @@
 // 2. Maps .js extensions to .ts for relative imports (ESM TypeScript convention where
 //    source files use .js extensions with moduleResolution: "bundler").
 const path = require("path");
-const WORKSPACE_PREFIXES = ["@spica-server/", "@spica-devkit/"];
+const WORKSPACE_PREFIXES = ["@spica-server/", "@spica-devkit/", "@spica/"];
 
 module.exports = function (request, options) {
   // For workspace packages, add 'types' condition to resolve to TS source
