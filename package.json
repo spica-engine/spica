@@ -212,6 +212,7 @@
   "devDependencies": {
     "@angular-devkit/build-angular": "^15.0.0",
     "@angular/compiler-cli": "^15.0.0",
+    "@jest/globals": "^29.7.0",
     "@nestjs/testing": "^10.4.15",
     "@nx/esbuild": "^22.6.4",
     "@nx/jest": "^20.3.1",
@@ -228,12 +229,12 @@
     "@swc/core": "^1.10.4",
     "@types/babel__traverse": "^7.20.6",
     "@types/jest": "^29.5.14",
-    "@jest/globals": "^29.7.0",
     "@types/json-schema": "^7.0.15",
     "@types/lodash": "^4.17.14",
     "@types/matcher": "^2.0.0",
     "@types/minimatch": "5.1.2",
     "@types/node": "^22.10.7",
+    "@vitejs/plugin-react": "^4.2.0",
     "dgeni": "^0.4.14",
     "dgeni-packages": "^0.30.0",
     "esbuild": "^0.28.0",
@@ -248,7 +249,8 @@
     "testcontainers": "^10.0.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vite": "^5.0.0"
   },
   "type": "module",
   "packageManager": "yarn@4.13.0"
