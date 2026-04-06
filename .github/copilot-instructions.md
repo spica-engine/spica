@@ -74,7 +74,7 @@ Jest timeout is 30 seconds globally. The `ci-cd` configuration runs with `--forc
 ## Docker & Deployment
 
 - Dockerfile: multi-stage (`deps` → `build` → `test` → `runner`). Runner uses `node:22-slim`, entrypoint is `node ./dist/apps/api/src/main.js`.
-- Images: `spicaengine/api`, `spicaengine/spica` (frontend).
+- Images: `spicaengine/api`, `spicaengine/panel` (frontend).
 - Kubernetes: deployed as a `StatefulSet` with MongoDB sidecar (see `deployment.yaml`, `charts/spica/`).
 - MongoDB must run as a **replica set** (`--replSet rs0`); change streams require it.
 

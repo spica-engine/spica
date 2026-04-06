@@ -1,3 +1,4 @@
+import express from "express";
 import {INestApplication} from "@nestjs/common";
 import {NestExpressApplication} from "@nestjs/platform-express";
 import {Test} from "@nestjs/testing";
@@ -7,6 +8,8 @@ import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
 import {HttpMethod} from "@spica-server/interface/function/enqueuer";
 import {IGuardService} from "@spica-server/interface/passport/guard";
+
+type TargetedHandler = express.RequestHandler & {target: event.Target};
 
 function createNoopGuardService(): IGuardService {
   return {
@@ -92,7 +95,10 @@ describe("http enqueuer", () => {
     expect(routes.length).toEqual(3);
 
     const optionsRoute = routes[0].stack[0];
-    const optionsCwdHandler = [optionsRoute.handle.target.cwd, optionsRoute.handle.target.handler];
+    const optionsCwdHandler = [
+      (optionsRoute.handle as TargetedHandler).target.cwd,
+      (optionsRoute.handle as TargetedHandler).target.handler
+    ];
 
     expect(optionsRoute.method).toEqual("options");
     expect(optionsCwdHandler).toEqual(["/tmp/fn1", "default"]);
@@ -101,8 +107,14 @@ describe("http enqueuer", () => {
 
     expect(putRoutes.map(r => r.method)).toEqual(["put", "put"]);
 
-    const cwds = [putRoutes[0].handle.target.cwd, putRoutes[1].handle.target.cwd];
-    const handlers = [putRoutes[0].handle.target.handler, putRoutes[1].handle.target.handler];
+    const cwds = [
+      (putRoutes[0].handle as TargetedHandler).target.cwd,
+      (putRoutes[1].handle as TargetedHandler).target.cwd
+    ];
+    const handlers = [
+      (putRoutes[0].handle as TargetedHandler).target.handler,
+      (putRoutes[1].handle as TargetedHandler).target.handler
+    ];
 
     expect(cwds).toEqual(["/tmp/fn1", "/tmp/fn1"]);
     expect(handlers).toEqual(["default", "default"]);

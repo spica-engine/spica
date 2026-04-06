@@ -1,0 +1,90 @@
+.container,
+.container *,
+.popoverContent,
+.popoverContent * {
+  line-height: unset !important;
+  font-family: var(--font-family-base) !important;
+}
+
+.popoverContainer {
+  width: 240px !important;
+  padding: 0;
+  z-index: 4;
+  justify-content: start !important;
+}
+
+.popoverContent {
+  width: 100% !important;
+  > div {
+    width: 100% !important;
+    justify-content: start !important;
+    padding: 0 var(--padding-md);
+    &:hover {
+      background-color: var(--color-hover) !important;
+    }
+  }
+}
+
+.configureRulesContainer {
+  border-bottom: var(--border-default);
+  height: 40px !important;
+  width: 100% !important;
+  align-items: baseline;
+  cursor: pointer;
+  button {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    justify-content: start;
+    padding-left: 0;
+    height: 20px;
+    > div > div {
+      gap: var(--gap-md) !important;
+    }
+  }
+
+  button:hover {
+    background-color: transparent !important;
+  }
+}
+
+.historyContainer {
+  padding: var(--padding-md) !important;
+  border-bottom: var(--border-default);
+  .historyCheckbox,
+  .historyButton {
+    height: 20px !important;
+  }
+  .historyButton {
+    padding-left: 0;
+    justify-content: start;
+    svg {
+      margin-left: -1px;
+    }
+    span {
+      margin-left: 4px;
+    }
+  }
+  .historyButton:hover {
+    background-color: transparent !important;
+  }
+}
+
+.limitationsCheckbox {
+  height: 40px !important;
+}
+
+.confirmText {
+  margin-top: 0;
+}
+
+.danger {
+  color: var(--color-danger) !important;
+}
+
+.limitationsContainer {
+  display: initial;
+  > div {
+    width: 100% !important
+  }
+}

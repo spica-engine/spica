@@ -1,0 +1,26 @@
+.container {
+  border-top: var(--border-default);
+  padding: var(--padding-md) var(--padding-xl);
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  color: var(--color-font-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+
+  &::placeholder {
+    color: #aaa;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

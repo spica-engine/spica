@@ -2,7 +2,8 @@ name: Spica Master Deployment
 
 env:
   VERSION: master
-
+  BASE_URL: /spica/
+  VITE_BASE_URL: https://master.spicaengine.com/api
 on:
   push:
     branches: ["master"]
@@ -42,6 +43,18 @@ jobs:
           cache-dir: docker-cache-mounts
           dockerfile: apps/api/Dockerfile
           skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+
+      - name: Build and push panel image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/panel/Dockerfile
+          push: true
+          tags: spicaengine/panel:${{ env.VERSION }}
+          target: runner
+          platforms: linux/amd64, linux/arm64
+          cache-from: type=gha,scope=panel
+          cache-to: type=gha,scope=panel,mode=max
 
       - name: Build and push API image
         uses: docker/build-push-action@v6

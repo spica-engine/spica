@@ -1,0 +1,28 @@
+@use "../../../../styles/mixins";
+
+.layoutContainer {
+  padding: var(--padding-md);
+  width: 100%;
+  height: 100%;
+
+  .addNewComponent {
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+
+    .plusIcon {
+      width: 80px;
+      height: 80px;
+      color: var(--color-font-primary);
+    }
+  }
+}
+
+.gridItem {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-menu-background);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}

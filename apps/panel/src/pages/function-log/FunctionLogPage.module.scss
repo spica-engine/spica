@@ -1,0 +1,240 @@
+.page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+  padding: var(--padding-md);
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* ── Top control area ────────────────────────────────────── */
+.topControls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--gap-sm);
+}
+
+.dateRangeText {
+  font-size: var(--font-size-sm, 13px);
+  color: var(--color-font-secondary, #666);
+  white-space: nowrap;
+  padding: var(--padding-md);
+  background:var(--color-menu-background);
+
+}
+
+/* ── Chart section ───────────────────────────────────────── */
+.chartSection {
+
+  border-radius: var(--border-radius-lg, 8px);
+  padding: var(--padding-md);
+  min-height: 200px;
+  max-height: 260px;
+  background-color: var(--color-menu-background);
+}
+
+.chartCanvas {
+  width: 100%;
+  max-height: 220px;
+}
+
+.listContainer{
+  background-color: var(--color-menu-background);
+  border-radius: var(--border-radius-md);
+  padding: var(--padding-md) 0;
+
+  .listHeader{
+    padding: var(--padding-lg);
+  }
+}
+/* ── Search + result count row ───────────────────────────── */
+.searchRow {
+  padding: var(--padding-md);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-input-background);
+}
+
+.searchInput {
+  max-width: 320px;
+}
+
+.resultCount {
+  font-size: var(--font-size-sm, 13px);
+  color: var(--color-font-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Log list section ────────────────────────────────────── */
+.logList {
+  display: flex;
+  flex-direction: column;
+
+  border-radius: var(--border-radius-lg, 8px);
+  overflow: hidden;
+}
+
+/* column header row */
+.columnHeader {
+  display: grid;
+  grid-template-columns: 90px 180px 1fr 140px 2fr;
+  gap: var(--gap-sm);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+  font-weight: 600;
+  font-size: var(--font-size-sm, 13px);
+  color: var(--color-font-primary);
+  width: 100%;
+}
+
+/* ── Accordion item (log row) ────────────────────────────── */
+.logRow {
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.logRowHeader {
+  display: grid;
+  grid-template-columns: 90px 180px 1fr 140px 2fr;
+  gap: var(--gap-sm);
+  align-items: center;
+  width: 100%;
+  font-size: var(--font-size-sm, 13px);
+  color: var(--color-font-primary, #333);
+}
+
+.logRowCell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* severity badge */
+.severityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+ padding: 4px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 500;
+  width: fit-content;
+}
+
+.severityDebug {
+  background: #f0f0f0;
+  color: #888;
+}
+
+.severityLog {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.severityInfo {
+  background: var(--color-primary);
+  color: var(--color-soft);
+}
+
+.severityWarning {
+  background: #fff8e1;
+  color: #f59e0b;
+}
+
+.severityError {
+  background: #fdecea;
+  color: #ef4444;
+}
+
+/* accordion detail area */
+.logDetail {
+  padding: 16px 20px;
+  background: var(--color-hover, #fafafa);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.detailRow {
+  display: flex;
+  gap: 8px;
+
+  span{
+  color: var(--color-font-primary);
+
+  }
+}
+
+.detailLabel {
+  font-weight: 600;
+  color: var(--color-font-secondary, #666);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.detailValue {
+  color: var(--color-font-primary, #333);
+  word-break: break-all;
+}
+
+.detailJson {
+  background: var(--color-background, #fff);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: var(--border-radius-sm, 4px);
+  padding: 12px;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  color: var(--color-font-primary, #333);
+}
+
+/* ── Filter popup ────────────────────────────────────────── */
+.filterContent {
+  padding: var(--padding-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+  min-width: 320px;
+  background: var(--color-menu-background, #fff);
+}
+
+.filterActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gap-sm);
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-font-secondary, #888);
+  font-size: var(--font-size-md, 14px);
+}
+
+/* ── Accordion overrides for log rows ────────────────────── */
+.accordionItem {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+
+  &:nth-child(even) .accordionHeader {
+    background: var(--color-hover, #f5f5f5);
+  }
+}
+
+.accordionHeader {
+  padding: 10px 16px !important;
+  min-height: unset !important;
+}
+
+.accordionContent {
+  padding: 0 !important;
+}

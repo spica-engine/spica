@@ -1,0 +1,42 @@
+.popoverContent {
+  padding: 0 !important;
+}
+
+.container {
+  background-color: var(--color-menu-background);
+  padding: var(--padding-md) 0;
+  border-radius: var(--border-radius-lg);
+  gap: 0 !important;
+  .item {
+    color: var(--color-font-primary);
+    padding: 0 var(--padding-sm-plus);
+    cursor: pointer;
+    height: 26.5px !important;
+  }
+  .item:hover {
+    background-color: var(--color-hover);
+  }
+}
+
+.bucketAddField {
+  max-height: 600px !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: block !important;
+  width: 400px !important;
+}
+
+.hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.newFieldButtonContainer{
+ > div {
+  width: 100% !important;
+ }
+  .addNewFieldButtonChildren{
+    width: 100% !important;
+  }
+}
+

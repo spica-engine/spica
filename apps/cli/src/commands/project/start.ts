@@ -134,7 +134,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
           tag: options.imageVersion.toString()
         },
         {
-          image: "spicaengine/spica",
+          image: "spicaengine/panel",
           tag: options.imageVersion.toString()
         },
         {
@@ -337,7 +337,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     text: `Creating spica containers (0/2)`,
     op: async spinner => {
       const client = await machine.createContainer({
-        Image: `spicaengine/spica:${options.imageVersion}`,
+        Image: `spicaengine/panel:${options.imageVersion}`,
         name: `${name}-spica`,
         Env: ["BASE_URL=/"],
         Labels: {namespace: name},
