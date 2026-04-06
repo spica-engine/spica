@@ -15,10 +15,6 @@ tmp
 # Dependencies (installed inside Docker)
 node_modules
 
-# Frontend (not needed for backend images)
-apps/spica
-apps/panel
-
 # CLI (separate npm publish, not Docker)
 apps/cli
 

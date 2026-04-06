@@ -4,7 +4,7 @@
   "projectType": "application",
   "targets": {
     "build-image": {
-      "command": "docker build --platform=linux/amd64 . -f ./apps/panel/Dockerfile -t spicaengine/panel:$VERSION --build-arg BASE_URL=$BASE_URL --build-arg VITE_BASE_URL=$VITE_BASE_URL"
+      "command": "docker build --platform=linux/amd64 --target runner . -f ./apps/panel/Dockerfile -t spicaengine/panel:local-test --build-arg BASE_URL=$BASE_URL --build-arg VITE_BASE_URL=$VITE_BASE_URL"
     },
     "publish": {
       "executor": "nx:run-commands",
