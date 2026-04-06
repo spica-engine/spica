@@ -30,7 +30,7 @@ RUN --mount=type=cache,target=/app/.nx/cache,id=nx-cache-panel-${TARGETPLATFORM}
     BASE_URL=$BASE_URL VITE_BASE_URL=$VITE_BASE_URL yarn run build:panel
 
 # start app
-FROM nginx:alpine AS prod
+FROM nginx:alpine AS runner
 COPY --from=build /app/dist/panel /usr/share/nginx/html
 COPY ./apps/panel/nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
