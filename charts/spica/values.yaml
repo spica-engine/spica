@@ -35,7 +35,7 @@ database:
 
 images:
   api: spicaengine/api
-  web: spicaengine/spica
+  web: spicaengine/panel
   replicationcontroller: spicaengine/mongoreplicationcontroller
   migrate: spicaengine/migrate
 

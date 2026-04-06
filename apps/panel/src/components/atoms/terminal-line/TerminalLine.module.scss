@@ -1,0 +1,26 @@
+.line {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--color-font-primary);
+}
+
+.command {
+  color: var(--color-font-primary);
+}
+
+.output {
+  color: var(--color-font-primary);
+  opacity: 0.85;
+}
+
+.error {
+  color: #c0392b;
+}
+
+.prompt {
+  color: #27ae60;
+  font-weight: 600;
+}

@@ -1,0 +1,40 @@
+@use "../../../styles/mixins";
+
+.bucketSchemaItem {
+  .suffixIcons,
+  .dragDropButton {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--transition-duration) ease,
+      visibility var(--transition-duration) ease;
+  }
+
+  &:hover {
+    .suffixIcons,
+    .dragDropButton {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+  .label {
+    @include mixins.textEllipsis(1);
+    display: block;
+    white-space: nowrap;
+    width: 100px;
+  }
+
+  .buttons {
+    padding: 0;
+    min-width: none;
+  }
+  .prefixDiv {
+    width: 100px;
+  }
+
+  .depthEllipsis {
+    margin-left: 2px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+}

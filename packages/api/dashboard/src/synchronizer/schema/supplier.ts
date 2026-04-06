@@ -28,7 +28,6 @@ const getChangeLogForSchema = (
     sub_module: subModule,
     origin: ChangeOrigin.DOCUMENT,
     type: type,
-    resource_id: dashboard._id.toString(),
     resource_slug: dashboard.name,
     resource_content: YAML.stringify(dashboard),
     resource_extension: fileExtension,

@@ -1,0 +1,43 @@
+.form {
+
+}
+
+.label {
+  display: block;
+  font-size: var(--font-size-lg) !important;
+  color: var(--color-font-secondary);
+  font-weight: bold;
+}
+
+.triggerSection {
+}
+
+.sectionTitle {
+  font-weight: 600;
+}
+
+.triggerLabel,
+.triggerValue {
+  flex-shrink: 0;
+}
+
+.monacoEditorWrapper {
+  width: 100%;
+  height: 200px;
+  border: var(--border-default);
+  border-radius: var(--border-radius-sm);
+
+  .monaco-editor {
+    border-radius: var(--border-radius-sm);
+  }
+}
+
+.error {
+  color: var(--color-danger, #dc3545);
+}
+
+.actions {
+  margin-top: var(--padding-md);
+  padding-top: var(--padding-md);
+  border-top: 1px solid var(--border-default);
+}

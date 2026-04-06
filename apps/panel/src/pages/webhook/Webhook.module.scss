@@ -1,0 +1,67 @@
+.webhookContainer{
+  padding: var(--padding-md) 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.infoContainer {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap-md) var(--gap-lg);
+  align-items: start;
+
+  .infoFullWidth {
+    grid-column: 1 / -1;
+  }
+}
+
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  color: var(--color-font-secondary);
+  font-weight: 500;
+}
+
+.value {
+  font-size: var(--font-size-md);
+  color: var(--color-font-primary);
+  font-weight: bold;
+}
+
+.empty {
+  color: var(--color-font-secondary);
+  font-size: var(--font-size-md);
+}
+
+.actionButtons {
+  padding: 0 var(--padding-md);
+}
+
+.logsPage{
+  display: flex;
+  height: 100% !important;
+}
+
+.logsList{
+  padding: var(--padding-md) 0 !important;
+  flex: 1 !important;
+}
+
+.logItem{
+  padding: 0 var(--padding-md) !important;
+   &:nth-child(even){
+    background-color: var(--color-zebra) !important;
+   }
+}
+
+.editDrawerContent {
+  padding: var(--padding-md);
+}

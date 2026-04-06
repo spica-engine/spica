@@ -1,0 +1,41 @@
+.dashboardItem {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+
+  .settingButton {
+    width: 35px;
+    height: 35px;
+  }
+
+  .header {
+    border-bottom: var(--border-default);
+    padding: var(--padding-md);
+  }
+
+  .chartContainer {
+    height: 100%;
+    width: 100%;
+    padding: var(--padding-xl);
+
+  }
+
+  .content {
+
+  }
+
+  .chart {
+  flex: 1;
+  }
+
+  .smallOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(var(--color-menu-background-rgb, 255, 255, 255), 0.85);
+    cursor: pointer;
+    z-index: 1;
+  }
+}

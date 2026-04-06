@@ -45,7 +45,6 @@ describe("Sync Realtime", () => {
         origin: ChangeOrigin.DOCUMENT,
         type: ChangeType.CREATE,
         resource_content: "{}",
-        resource_id: `resource-${idSuffix}`,
         resource_slug: `slug-${idSuffix}`,
         resource_extension: "json",
         initiator: ChangeInitiator.EXTERNAL,
@@ -266,7 +265,7 @@ describe("Sync Realtime", () => {
               _id: syncs[0]._id.toString(),
               status: SyncStatuses.PENDING,
               change_log: expect.objectContaining({
-                resource_id: "resource-sync1"
+                resource_slug: "slug-sync1"
               })
             }
           });
@@ -286,7 +285,7 @@ describe("Sync Realtime", () => {
               _id: syncs[1]._id.toString(),
               status: SyncStatuses.PENDING,
               change_log: expect.objectContaining({
-                resource_id: "resource-sync2"
+                resource_slug: "slug-sync2"
               })
             }
           });
@@ -306,7 +305,7 @@ describe("Sync Realtime", () => {
               _id: syncs[1]._id.toString(),
               status: SyncStatuses.PENDING,
               change_log: expect.objectContaining({
-                resource_id: "resource-sync2"
+                resource_slug: "slug-sync2"
               })
             }
           });
@@ -316,7 +315,7 @@ describe("Sync Realtime", () => {
               _id: syncs[0]._id.toString(),
               status: SyncStatuses.PENDING,
               change_log: expect.objectContaining({
-                resource_id: "resource-sync1"
+                resource_slug: "slug-sync1"
               })
             }
           });

@@ -25,7 +25,7 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
             l =>
               l.module == log.module &&
               l.sub_module == log.sub_module &&
-              l.resource_id == log.resource_id &&
+              l.resource_slug == log.resource_slug &&
               l.type == type2
           );
 
@@ -80,7 +80,7 @@ export class ChangeLogProcessor implements IChangeLogProcessor {
       type: changeLog.type,
       module: changeLog.module,
       sub_module: changeLog.sub_module,
-      resource_id: changeLog.resource_id,
+      resource_slug: changeLog.resource_slug,
       origin:
         changeLog.origin === ChangeOrigin.DOCUMENT
           ? ChangeOrigin.REPRESENTATIVE

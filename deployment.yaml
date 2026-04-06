@@ -77,7 +77,7 @@ spec:
     spec:
       containers:
         - name: spica
-          image: spicaengine/spica:master
+          image: spicaengine/panel:master
           imagePullPolicy: Always
           ports:
             - containerPort: 80

@@ -2,7 +2,8 @@ name: Spica Master Deployment
 
 env:
   VERSION: master
-
+  BASE_URL: /spica/
+  VITE_BASE_URL: https://master.spicaengine.com/api
 on:
   push:
     branches: ["master"]
@@ -17,6 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
+        id: setup-buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
@@ -24,6 +26,35 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Cache Docker cache mounts
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: docker-cache-mounts
+          key: ${{ runner.os }}-docker-cache-api-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-cache-api-
+
+      - name: Inject Docker cache mounts
+        uses: reproducible-containers/buildkit-cache-dance@1b8ab18fbda5ad3646e3fcc9ed9dd41ce2f297b4 # v3.3.2
+        with:
+          builder: ${{ steps.setup-buildx.outputs.name }}
+          cache-dir: docker-cache-mounts
+          dockerfile: apps/api/Dockerfile
+          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+
+      - name: Build and push panel image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/panel/Dockerfile
+          push: true
+          tags: spicaengine/panel:${{ env.VERSION }}
+          target: runner
+          platforms: linux/amd64, linux/arm64
+          cache-from: type=gha,scope=panel
+          cache-to: type=gha,scope=panel,mode=max
 
       - name: Build and push API image
         uses: docker/build-push-action@v6

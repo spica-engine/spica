@@ -1,0 +1,19 @@
+.error {
+  .viewer > div {
+    scale: 1 !important;
+  }
+}
+
+.viewerContainer {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  .viewer {
+    display: flex;
+    height: 100%;
+    > div {
+      height: max-content;
+      transform-origin: top left;
+    }
+  }
+}

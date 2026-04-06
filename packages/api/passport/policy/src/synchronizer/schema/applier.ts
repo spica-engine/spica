@@ -31,40 +31,15 @@ export function getApplier(
   identityFinalizer: changeFactory,
   validator: Validator
 ): DocumentChangeApplier {
-  const findIdByName = async (name: string) => {
-    const policy = await ps.findOne({name});
-    return policy?._id?.toString();
-  };
   return {
     module,
     subModule,
     fileExtensions: [fileExtension],
-    extractId: async (slug: string, content?: string): Promise<string | null> => {
-      const id = await findIdByName(slug);
-      if (id) return id;
-
-      if (content) {
-        let policy: Policy;
-        try {
-          policy = YAML.parse(content);
-        } catch (error) {
-          logger.error("YAML parsing error:", error instanceof Error ? error.stack : String(error));
-          return null;
-        }
-        return policy?._id ? String(policy._id) : null;
-      }
-
-      return null;
-    },
     apply: async (change: ChangeLog): Promise<ApplyResult> => {
       try {
         const operationType = change.type;
 
-        const overwritePrimaries = (change: ChangeLog, policy) => {
-          if (change.resource_id) {
-            policy._id = change.resource_id;
-          }
-
+        const overwriteSlug = policy => {
           if (change.resource_slug) {
             policy.name = change.resource_slug;
           }
@@ -73,7 +48,7 @@ export function getApplier(
         switch (operationType) {
           case ChangeType.CREATE: {
             const policy: Policy = YAML.parse(change.resource_content);
-            overwritePrimaries(change, policy);
+            overwriteSlug(policy);
             await validate(policy, validator);
             await CRUD.insert(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
@@ -81,20 +56,24 @@ export function getApplier(
 
           case ChangeType.UPDATE: {
             const policy: Policy = YAML.parse(change.resource_content);
-            overwritePrimaries(change, policy);
+            const existing = await ps.findOne({name: change.resource_slug});
+            if (existing) {
+              policy._id = existing._id.toString();
+            }
+            overwriteSlug(policy);
             await validate(policy, validator);
             await CRUD.replace(ps, policy);
             return {status: SyncStatuses.SUCCEEDED};
           }
 
-          case ChangeType.DELETE:
-            await CRUD.remove(
-              ps,
-              ObjectId.createFromHexString(change.resource_id),
-              apikeyFinalizer,
-              identityFinalizer
-            );
+          case ChangeType.DELETE: {
+            const existing = await ps.findOne({name: change.resource_slug});
+            if (!existing) {
+              return {status: SyncStatuses.FAILED, reason: "Policy not found"};
+            }
+            await CRUD.remove(ps, existing._id as ObjectId, apikeyFinalizer, identityFinalizer);
             return {status: SyncStatuses.SUCCEEDED};
+          }
 
           default:
             logger.warn(`Unknown operation type: ${operationType}`);

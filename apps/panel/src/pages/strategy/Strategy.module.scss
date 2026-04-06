@@ -1,0 +1,16 @@
+.strategyContainer {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)) !important;
+  gap: var(--padding-lg) !important;
+}
+
+.addStrategyButton {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 55px !important;
+  border: var(--border-default) !important;
+  color: var(--color-font-primary) !important;
+  background-color: var(--color-layout-background) !important;
+  border-color: var(--color-border) !important;
+}

@@ -28,7 +28,6 @@ const getChangeLogForSchema = (
     sub_module: subModule,
     origin: ChangeOrigin.DOCUMENT,
     type: type,
-    resource_id: envVar._id.toString(),
     resource_slug: envVar.key,
     resource_content: YAML.stringify(envVar),
     resource_extension: fileExtension,

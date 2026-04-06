@@ -1,0 +1,17 @@
+.imageEditorModal {
+    padding: 0 !important;
+    width: 70% !important;
+    height: 80%!important;
+}
+
+.saveButton {
+    position: absolute;
+    bottom: 2%;
+    right: 2%;
+    z-index: 1000;
+    background-color: var(--color-soft) !important;
+    color: var(--color-primary) !important;
+    width: 100px;
+}
+
+

@@ -1,0 +1,212 @@
+.node {
+  position: absolute;
+  width: 350px;
+  background: var(--color-soft-light);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 3px var(--padding-md) rgba(0, 0, 0, 0.2);
+  transition:
+    opacity var(--transition-duration) ease,
+    transform 0.2s ease,
+    box-shadow var(--transition-duration) ease,
+    z-index var(--transition-duration) ease;
+  overflow: hidden;
+  z-index: 10;
+  pointer-events: auto;
+
+
+  &.unfocused {
+    opacity: var(--disabled-opacity);
+  }
+
+  &.focused {
+    z-index: 20;
+    box-shadow: 0 var(--padding-sm) var(--padding-lg) rgba(0, 0, 0, 0.4);
+  }
+
+  &.related {
+    z-index: 11;
+    box-shadow: 0 var(--padding-xs) var(--padding-md) rgba(0, 0, 0, 0.35);
+  }
+
+  &:hover {
+    box-shadow: 0 var(--padding-sm) var(--padding-lg) rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+  }
+}
+
+.nodeHeader {
+  background: var(--color-primary);
+  color: var(--color-font-secondary);
+  padding: var(--padding-md) var(--padding-lg);
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--gap-sm);
+
+  .nodeTitle {
+    font-size: var(--font-size-md);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  h3,
+  span {
+    margin: 0;
+  }
+}
+.nodeBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+  padding: var(--padding-lg);
+}
+.nodeId {
+  font-size: var(--font-size-sm);
+  opacity: 0.8;
+  margin-left: var(--padding-sm-plus);
+}
+
+.nodeControls {
+  display: flex;
+  gap: var(--gap-md);
+
+  .settingsButton {
+    color: var(--color-soft-light) !important;
+    padding: 0;
+  }
+
+  .controlBtn:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .controlBtn.delete {
+    color: var(--color-danger-light);
+  }
+}
+
+.fieldRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--padding-sm-plus) 0;
+  gap: var(--gap-md);
+  transition: background-color 0.2s;
+}
+
+
+.expandButton {
+  padding: 0 !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  color: var(--color-font-tertiary) !important;
+
+  &:hover {
+    color: var(--color-font-primary) !important;
+  }
+}
+
+.expandPlaceholder {
+  width: 20px;
+  display: inline-block;
+}
+
+.fieldLeft {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-sm);
+  width: 80%;
+
+  .fieldName {
+    font-size: var(--font-size-md);
+    color: var(--color-font-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .fieldType {
+    color: var(--color-font-tertiary);
+    font-size: var(--font-size-sm);
+    text-align: start;
+    flex: 1;
+  }
+}
+
+.deepNestingIndicator {
+  color: var(--color-font-tertiary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-right: 4px;
+  letter-spacing: 1px;
+}
+
+.fieldControls {
+  display: flex;
+  gap: var(--gap-xs);
+
+  .controlBtn {
+    padding: var(--padding-xs) !important;
+    min-width: 24px !important;
+    height: 24px !important;
+    color: var(--color-font-tertiary) !important;
+
+    &:hover {
+      color: var(--color-font-primary) !important;
+    }
+
+    &.deleteBtn {
+      color: var(--color-danger) !important;
+
+      &:hover {
+        color: var(--color-danger-dark) !important;
+      }
+    }
+  }
+}
+
+.addFieldBtn {
+  width: 100%;
+  padding: var(--padding-md) !important;
+  margin-top: var(--padding-md);
+  border: 2px dashed var(--color-border) !important;
+  background: none !important;
+  color: var(--color-font-tertiary) !important;
+  border-radius: var(--border-radius-sm) !important;
+  cursor: pointer;
+  font-size: var(--font-size-sm) !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-sm);
+
+  &:hover {
+    border-color: var(--color-primary) !important;
+    color: var(--color-primary) !important;
+  }
+}
+
+.deleteButton {
+  color: var(--color-danger) !important;
+}
+
+.editButton,
+.deleteButton {
+  padding: 0;
+}
+
+.newFieldButton{
+  border: 1px dashed var(--color-border) !important;
+  background-color: var(--color-layout-background) !important;
+  width: 100% !important;
+  min-width: unset !important;
+
+}

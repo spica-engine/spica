@@ -1,0 +1,100 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7.0.16
+    container_name: mongo
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - spica
+
+  repl-init:
+    platform: linux/amd64
+    image: spicaengine/mongoreplicationcontroller:master
+    container_name: repl-init
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: ["--from-srv", "false", "--nodes", "mongo", "--debug", "true"]
+    restart: "no"
+    networks:
+      - spica
+  # use below if you want to serve panel locally via docker containers
+  # spica-web:
+  #   # use below if you want to build image locally
+  #   build:
+  #     context: ../../
+  #     dockerfile: apps/panel/Dockerfile
+  #     args:
+  #       BASE_URL: /
+  #       VITE_BASE_URL: http://localhost:4300
+  #   # image: spicaengine/panel:latest
+  #   container_name: spica-web
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   networks:
+  #     - spica
+
+  spica-api:
+    image: spicaengine/api:master
+    platform: linux/amd64
+    container_name: spica-api
+    command:
+      - --port
+      - "4300"
+      - --database-uri
+      - mongodb://mongo:27017/spica?replicaSet=rs0
+      - --database-name
+      - spica
+      - --database-pool-size
+      - "200"
+      - --database-replica-set
+      - rs0
+      - --master-key
+      - $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
+      - --passport-password
+      - spica
+      - --persistent-path
+      - /data
+      - --public-url
+      - http://localhost:4300/api
+      - --default-storage-public-url
+      - http://localhost:4300
+    ports:
+      - "4300:4300"
+    volumes:
+      - spica-data:/data
+    networks:
+      - spica
+
+  # /spica -> spica-web:80, /api -> spica-api:4300
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: spica-gateway
+  #   depends_on:
+  #     - spica-web
+  #     - spica-api
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - ./gateway.conf:/etc/nginx/nginx.conf:ro
+  #   networks:
+  #     - spica
+
+networks:
+  spica:
+
+volumes:
+  mongo-data:
+  spica-data:

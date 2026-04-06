@@ -29,7 +29,6 @@ function getMockSync(
       origin: ChangeOrigin.DOCUMENT,
       type: ChangeType.CREATE,
       resource_content: "",
-      resource_id: "id",
       resource_slug: "slug",
       resource_extension: "",
       initiator: ChangeInitiator.EXTERNAL,

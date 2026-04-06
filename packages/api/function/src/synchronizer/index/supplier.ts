@@ -37,7 +37,6 @@ const getChangeLogForIndex = (
     sub_module: subModule,
     origin: ChangeOrigin.DOCUMENT,
     type,
-    resource_id: fn._id.toString(),
     resource_slug: fn.name,
     resource_content: content,
     resource_extension: findExtension(fn),

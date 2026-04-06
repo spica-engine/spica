@@ -1,0 +1,53 @@
+.container{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+}
+
+.terminalContent{
+    width: 65%;
+    height: 100%;
+}
+
+.commitsContent{
+    width: 35%;
+    height: 100% !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+    display: flex !important;
+    flex-direction: column !important;
+
+    > * {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+
+        > *:first-child {
+            flex: 0 0 auto;
+        }
+
+        > *:last-child {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+    }
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--padding-xl);
+    font-size: var(--font-size-sm);
+    color: var(--color-font-tertiary);
+}
+
+.errorState {
+    color: var(--color-error-text);
+}

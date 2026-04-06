@@ -148,7 +148,6 @@ describe("Function tsconfig Synchronizer", () => {
             sub_module: "tsconfig",
             type: ChangeType.CREATE,
             origin: ChangeOrigin.DOCUMENT,
-            resource_id: mockFunction._id.toString(),
             resource_slug: mockFunction.name,
             resource_content: changeLog.resource_content,
             resource_extension: "json",
@@ -190,7 +189,6 @@ describe("Function tsconfig Synchronizer", () => {
           sub_module: "tsconfig",
           type: ChangeType.CREATE,
           origin: ChangeOrigin.DOCUMENT,
-          resource_id: mockFunction._id.toString(),
           resource_slug: mockFunction.name,
           resource_content: changeLog.resource_content,
           resource_extension: "json",
@@ -247,7 +245,6 @@ describe("Function tsconfig Synchronizer", () => {
               sub_module: "tsconfig",
               type: ChangeType.DELETE,
               origin: ChangeOrigin.DOCUMENT,
-              resource_id: mockFunction._id.toString(),
               resource_content: null,
               resource_extension: "json",
               resource_slug: mockFunction.name,
@@ -276,7 +273,6 @@ describe("Function tsconfig Synchronizer", () => {
         module: "function",
         subModule: "tsconfig",
         fileExtensions: ["json"],
-        extractId: expect.any(Function),
         apply: expect.any(Function)
       });
     });
@@ -311,7 +307,6 @@ describe("Function tsconfig Synchronizer", () => {
         sub_module: "tsconfig",
         origin: ChangeOrigin.DOCUMENT,
         type: ChangeType.CREATE,
-        resource_id: mockFunction._id.toString(),
         resource_slug: mockFunction.name,
         resource_content: JSON.stringify({
           compilerOptions: {

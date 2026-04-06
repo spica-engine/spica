@@ -24,7 +24,7 @@ COPY --parents package.json yarn.lock \
      apps/api/src/*/package.json \
      packages/api/function/packages/*/package.json \
      ./
-RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-${TARGETPLATFORM} \
+RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-${TARGETPLATFORM},sharing=locked \
     YARN_CACHE_FOLDER=/root/.yarn-cache \
     yarn install --frozen-lockfile --network-timeout 600000
 
@@ -41,7 +41,7 @@ COPY --parents package.json yarn.lock \
      apps/api/src/*/package.json \
      packages/api/function/packages/*/package.json \
      ./
-RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod-${TARGETPLATFORM} \
+RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod-${TARGETPLATFORM},sharing=locked \
     YARN_CACHE_FOLDER=/root/.yarn-cache \
     yarn install --frozen-lockfile --production --network-timeout 600000
 

@@ -95,7 +95,7 @@ tests:
     asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].image
-          pattern: "^spicaengine/spica:"
+          pattern: "^spicaengine/panel:"
       - equal:
           path: spec.template.spec.containers[0].name
           value: web

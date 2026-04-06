@@ -207,6 +207,30 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  async writePackageJson(fn: Function, dependencies: {[key: string]: string} = {}) {
+    const functionRoot = this.getFunctionRoot(fn);
+    const functionLanguage = this.getFunctionLanguage(fn);
+    await fs.promises.mkdir(functionRoot, {recursive: true});
+    const packageJson = {
+      name: fn.name,
+      description: fn.description || "No description.",
+      version: "0.0.1",
+      private: true,
+      keywords: ["spica", "function", "node.js"],
+      license: "UNLICENSED",
+      main: path.join(".", this.options.outDir, functionLanguage.description.entrypoints.runtime),
+      dependencies
+    };
+    return fs.promises.writeFile(
+      path.join(functionRoot, "package.json"),
+      JSON.stringify(packageJson, null, 2)
+    );
+  }
+
+  installFromPackageJson(fn: Function): Observable<number> {
+    return this.getDefaultPackageManager().install(this.getFunctionRoot(fn), []);
+  }
+
   deleteFunction(fn: Function) {
     const functionRoot = this.getFunctionRoot(fn);
     return rimraf(functionRoot);
@@ -222,9 +246,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  update(fn: Function, index: string): Promise<void> {
+  async update(fn: Function, index: string): Promise<void> {
     const filePath = this.getFunctionBuildEntrypoint(fn);
-
+    await fs.promises.mkdir(path.dirname(filePath), {recursive: true});
     return fs.promises.writeFile(filePath, index);
   }
 
