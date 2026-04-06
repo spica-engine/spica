@@ -423,6 +423,9 @@
     },
     {
       "path": "./packages/api/function/realtime"
+    },
+    {
+      "path": "./packages/devkit/internal_common"
     }
   ]
 }
