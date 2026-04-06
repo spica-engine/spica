@@ -101,7 +101,11 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
       this.server = null;
     }
 
-    this.server = new grpc.Server();
+    const maxMessageSize = Number(process.env.FUNCTION_GRPC_MAX_MESSAGE_SIZE) || 25 * 1024 * 1024;
+    this.server = new grpc.Server({
+      "grpc.max_receive_message_length": maxMessageSize,
+      "grpc.max_send_message_length": maxMessageSize
+    });
 
     const functionGroups = new Map<string, GrpcRegistration[]>();
     for (const reg of this.registrations.values()) {

@@ -88,7 +88,8 @@ export class FunctionModule {
           invocationLogs: options.invocationLogs,
           spawnEntrypointPath: options.spawnEntrypointPath,
           tsCompilerPath: options.tsCompilerPath,
-          grpcPort: options.grpcPort
+          grpcPort: options.grpcPort,
+          functionMaxSize: options.functionMaxSize
         }),
         ServicesModule.forRoot({
           logExpireAfterSeconds: options.logExpireAfterSeconds,

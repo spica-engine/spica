@@ -313,6 +313,11 @@ const args = yargsInstance
       description: "Port for the gRPC trigger server. Default is 50051.",
       default: 50051
     },
+    "function-max-size": {
+      number: true,
+      description: "Maximum message size in megabytes for function runtime communication.",
+      default: 25
+    },
     "function-invocation-logs": {
       boolean: true,
       description: "Log function invocations to the stdout.",
@@ -836,7 +841,8 @@ const modules = [
     logger: args["function-logger"],
     invocationLogs: args["function-invocation-logs"],
     realtime: true,
-    grpcPort: args["grpc-function-port"]
+    grpcPort: args["grpc-function-port"],
+    functionMaxSize: args["function-max-size"] * 1024 * 1024
   }),
   ConfigModule.forRoot(),
   StatusModule.forRoot({

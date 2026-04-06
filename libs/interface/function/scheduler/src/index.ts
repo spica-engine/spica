@@ -25,6 +25,7 @@ export interface SchedulingOptions {
   spawnEntrypointPath?: string;
   tsCompilerPath?: string;
   grpcPort?: number;
+  functionMaxSize?: number;
 }
 
 export type Schedule = (event: event.Event) => void;
