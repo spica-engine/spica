@@ -1,12 +1,10 @@
-import * as BucketHooksProtoNode from "@spica-server/bucket/hooks/proto/node";
-const {ChangeQueue: BucketChangeQueue, Change: BucketChange} = BucketHooksProtoNode;
+import {
+  ChangeQueue as BucketChangeQueue,
+  Change as BucketChange
+} from "@spica-server/bucket-hooks-proto-node";
+import {hooks as BucketHooks} from "@spica-server/bucket-hooks-proto";
 
-import * as BucketHooksProto from "@spica-server/bucket/hooks/proto";
-const {hooks: BucketHooks} = BucketHooksProto;
-
-import * as FnQueueNode from "@spica-server/function/queue/node";
-
-const {
+import {
   Change,
   DatabaseQueue,
   EventQueue,
@@ -20,17 +18,22 @@ const {
   RabbitMQQueue,
   RabbitMQMessage,
   RabbitMQChannel,
-  GrpcQueue: GrpcQueueNode
-} = FnQueueNode;
+  GrpcQueue as GrpcQueueNode
+} from "@spica-server/function-queue-node";
 
-import * as FnQueueProto from "@spica-server/function/queue/proto";
-const {Database, event, Firehose, Http, RabbitMQ, Grpc: GrpcProto} = FnQueueProto;
+import {
+  Database,
+  event,
+  Firehose,
+  Http,
+  RabbitMQ,
+  Grpc as GrpcProto
+} from "@spica-server/function-queue-proto";
 
 import {createRequire} from "module";
 import * as path from "path";
 
-import * as Logger from "@spica-server/function/runtime/logger";
-const {getLoggerConsole} = Logger;
+import {getLoggerConsole} from "@spica-server/function-runtime-logger";
 
 if (process.env.LOGGER) {
   console = getLoggerConsole();
@@ -54,10 +57,10 @@ if (!process.env.WORKER_ID) {
     id: process.env.WORKER_ID
   });
   await initialize();
-  let ev;
+  let ev: event.Event | void;
   console.log("Worker is ready to receive events.");
   while (
-    (ev = await queue.pop(pop).catch(e => {
+    (ev = await queue.pop(pop).catch((e: any) => {
       if (typeof e == "object" && e.code == 5) {
         return Promise.resolve();
       }
@@ -77,7 +80,7 @@ async function initialize() {
   }
 }
 
-async function _process(ev, queue) {
+async function _process(ev: event.Event, queue: EventQueue) {
   process.chdir(ev.target.cwd);
 
   process.env.TIMEOUT = String(ev.target.context.timeout);
@@ -86,9 +89,9 @@ async function _process(ev, queue) {
     process.env[env.key] = env.value;
   }
 
-  const callArguments = [];
+  const callArguments: any[] = [];
 
-  let callback = async arg => {};
+  let callback: (arg: any) => Promise<void> = async () => {};
 
   switch (ev.type) {
     case event.Type.HTTP:
@@ -97,7 +100,7 @@ async function _process(ev, queue) {
         id: ev.id
       });
 
-      const handleRejection = error => {
+      const handleRejection = (error: any) => {
         if (error && "code" in error && error.code == 1) {
           error.details = `The http request "${ev.id}" handled through "${ev.target.handler}" has been cancelled by the user.`;
           console.error(error.details);
@@ -113,15 +116,15 @@ async function _process(ev, queue) {
       }
 
       const response = new Response(
-        e => {
+        (e: any) => {
           e.id = ev.id;
           return httpQueue.writeHead(e).catch(handleRejection);
         },
-        e => {
+        (e: any) => {
           e.id = ev.id;
           return httpQueue.write(e).catch(handleRejection);
         },
-        e => {
+        (e: any) => {
           e.id = ev.id;
           return httpQueue.end(e).catch(handleRejection);
         }
@@ -130,12 +133,12 @@ async function _process(ev, queue) {
       callArguments[0] = new Request(request);
       callArguments[1] = response;
 
-      callback = async result => {
+      callback = async (result: any) => {
         if (!response.headersSent && result != undefined) {
           if (result instanceof Promise) {
-            result = await result.catch(e => {
+            result = await result.catch((e: any) => {
               if (!response.headersSent) {
-                const responseObj = {statusCode: 500, error: "Internal Server Error"};
+                const responseObj: any = {statusCode: 500, error: "Internal Server Error"};
 
                 if (e) {
                   responseObj.message = e.toString();
@@ -182,7 +185,7 @@ async function _process(ev, queue) {
               })
             );
           },
-          message => {
+          (message: any) => {
             firehose.send(
               new Firehose.Message.Outgoing({
                 client: clientDescription,
@@ -191,7 +194,7 @@ async function _process(ev, queue) {
             );
           }
         ),
-        pool: new FirehosePool(poolDescription, message => firehose.sendAll(message))
+        pool: new FirehosePool(poolDescription, (message: any) => firehose.sendAll(message))
       };
       break;
     case event.Type.SCHEDULE:
@@ -230,11 +233,11 @@ async function _process(ev, queue) {
       };
 
       const channel = new RabbitMQChannel(
-        e => {
+        (e: any) => {
           e.id = ev.id;
           return rabbitmq.ack(e);
         },
-        e => {
+        (e: any) => {
           e.id = ev.id;
           return rabbitmq.nack(e);
         }
@@ -248,7 +251,7 @@ async function _process(ev, queue) {
       });
 
       const grpcRequest = await grpcQueue.pop(grpcPop);
-      let grpcRequestBody = {};
+      let grpcRequestBody: any = {};
       try {
         grpcRequestBody = JSON.parse(grpcRequest.body);
       } catch {
@@ -257,7 +260,7 @@ async function _process(ev, queue) {
 
       callArguments[0] = grpcRequestBody;
 
-      callback = async result => {
+      callback = async (result: any) => {
         const response = new GrpcProto.Response({
           id: ev.id
         });
@@ -267,7 +270,7 @@ async function _process(ev, queue) {
           }
           response.body = JSON.stringify(result || {});
           response.statusCode = 0;
-        } catch (e) {
+        } catch (e: any) {
           response.error = e ? e.toString() : "Internal error";
           response.statusCode = 13;
         }
@@ -282,7 +285,7 @@ async function _process(ev, queue) {
   globalThis.require = createRequire(path.join(process.cwd(), "node_modules"));
 
   let module = await import(
-    path.join(process.cwd(), ".build", process.env.ENTRYPOINT) + "?event=" + ev.id
+    path.join(process.cwd(), ".build", process.env.ENTRYPOINT!) + "?event=" + ev.id
   );
 
   if ("default" in module && module.default.__esModule) {
@@ -317,7 +320,7 @@ async function _process(ev, queue) {
   }
 }
 
-function exitAbnormally(reason) {
+function exitAbnormally(reason?: string): never {
   if (reason) {
     console.error(reason);
   }

@@ -83,6 +83,9 @@
       "path": "./packages/api/function/runtime/node"
     },
     {
+      "path": "./packages/api/function/runtime/node/bootstrap"
+    },
+    {
       "path": "./packages/interface/bucket/realtime"
     },
     {
