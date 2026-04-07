@@ -58,7 +58,6 @@ if (!process.env.WORKER_ID) {
   });
   await initialize();
   let ev: event.Event | void;
-  console.log("Worker is ready to receive events.");
   while (
     (ev = await queue.pop(pop).catch((e: any) => {
       if (typeof e == "object" && e.code == 5) {
