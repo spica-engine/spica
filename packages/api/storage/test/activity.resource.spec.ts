@@ -1,5 +1,5 @@
 import {Action} from "@spica-server/interface-activity";
-import {createStorageActivity} from "@spica-server/storage/src/activity.resource";
+import {createStorageActivity} from "@spica-server/storage";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {

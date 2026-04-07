@@ -1,4 +1,4 @@
-import {AWSS3} from "@spica-server/storage/src/strategy/aws.s3";
+import {AWSS3} from "@spica-server/storage";
 import {Readable} from "stream";
 import fs from "fs";
 import path from "path";

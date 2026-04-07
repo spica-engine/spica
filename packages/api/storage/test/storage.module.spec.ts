@@ -1,8 +1,8 @@
 import {Test} from "@nestjs/testing";
 import {StorageModule} from "@spica-server/storage";
-import {Strategy} from "@spica-server/storage/src/strategy/strategy";
-import {Default} from "@spica-server/storage/src/strategy/default";
-import {GCloud} from "@spica-server/storage/src/strategy/gcloud";
+import {Strategy} from "@spica-server/storage";
+import {Default} from "@spica-server/storage";
+import {GCloud} from "@spica-server/storage";
 import {DatabaseTestingModule} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 

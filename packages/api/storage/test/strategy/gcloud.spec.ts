@@ -1,4 +1,4 @@
-import {GCloud} from "@spica-server/storage/src/strategy/gcloud";
+import {GCloud} from "@spica-server/storage";
 import {
   Storage,
   Bucket,
