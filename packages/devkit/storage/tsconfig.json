@@ -9,6 +9,9 @@
       "path": "../../interface/function/packages"
     },
     {
+      "path": "../internal_common"
+    },
+    {
       "path": "../../api/passport/testing"
     },
     {
