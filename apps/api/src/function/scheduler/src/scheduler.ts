@@ -85,7 +85,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       event => this.enqueue(event),
       id => this.cancel(id),
       (id, succedded) => this.complete(id, succedded),
-      this.options.functionMaxSize
+      this.options.functionGrpcMaxMessageSizeMb
     );
 
     this.httpQueue = new HttpQueue();
@@ -408,8 +408,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           ? "true"
           : "",
         LOGGER: this.options.logger ? "true" : undefined,
-        FUNCTION_GRPC_MAX_MESSAGE_SIZE: this.options.functionMaxSize
-          ? String(this.options.functionMaxSize)
+        FUNCTION_GRPC_MAX_MESSAGE_SIZE: this.options.functionGrpcMaxMessageSizeMb
+          ? String(this.options.functionGrpcMaxMessageSizeMb)
           : undefined
       },
       entrypointPath: this.options.spawnEntrypointPath
