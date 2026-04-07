@@ -6,9 +6,14 @@ export class HttpQueue {
   private client: any;
 
   constructor() {
+    const maxMessageSize = Number(process.env.FUNCTION_GRPC_MAX_MESSAGE_SIZE) || 25 * 1024 * 1024;
     this.client = new Http.QueueClient(
       process.env.FUNCTION_GRPC_ADDRESS,
-      grpc.credentials.createInsecure()
+      grpc.credentials.createInsecure(),
+      {
+        "grpc.max_receive_message_length": maxMessageSize,
+        "grpc.max_send_message_length": maxMessageSize
+      }
     );
   }
 

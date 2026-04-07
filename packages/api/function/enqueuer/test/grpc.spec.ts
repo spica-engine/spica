@@ -41,6 +41,7 @@ describe("grpc enqueuer", () => {
       grpcEnqueuer = new GrpcEnqueuer(
         eventQueue as any,
         grpcQueue,
+        25 * 1024 * 1024,
         schedulerUnsubscriptionSpy,
         testPort
       );
@@ -269,7 +270,7 @@ describe("grpc enqueuer", () => {
         dequeue: jest.fn()
       };
       grpcQueue = new GrpcQueue();
-      grpcEnqueuer = new GrpcEnqueuer(eventQueue as any, grpcQueue, jest.fn(), integrationPort);
+      grpcEnqueuer = new GrpcEnqueuer(eventQueue as any, grpcQueue, 25 * 1024 * 1024, jest.fn(), integrationPort);
     });
 
     afterEach(async () => {

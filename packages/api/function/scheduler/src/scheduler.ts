@@ -84,7 +84,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       (id, schedule) => this.gotWorker(id, schedule),
       event => this.enqueue(event),
       id => this.cancel(id),
-      (id, succedded) => this.complete(id, succedded)
+      (id, succedded) => this.complete(id, succedded),
+      this.options.functionGrpcMaxMessageSizeBytes
     );
 
     this.httpQueue = new HttpQueue();
@@ -160,6 +161,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       new GrpcEnqueuer(
         this.queue,
         this.grpcQueue,
+        this.options.functionGrpcMaxMessageSizeBytes,
         schedulerUnsubscription,
         this.options.grpcPort
       )
@@ -406,7 +408,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
           ? "true"
           : "",
-        LOGGER: this.options.logger ? "true" : undefined
+        LOGGER: this.options.logger ? "true" : undefined,
+        FUNCTION_GRPC_MAX_MESSAGE_SIZE: this.options.functionGrpcMaxMessageSizeBytes
+          ? String(this.options.functionGrpcMaxMessageSizeBytes)
+          : undefined
       },
       entrypointPath: this.options.spawnEntrypointPath
     });
