@@ -123,6 +123,13 @@ describe("Function Realtime", () => {
 
   describe("documents", () => {
     beforeEach(async () => {
+      const guardService = app.get(GuardService);
+      jest.spyOn(guardService, "checkAuthentication").mockResolvedValue(true);
+      jest.spyOn(guardService, "checkAuthorization").mockImplementation(({request}) => {
+        request.resourceFilter = {include: [], exclude: []};
+        return Promise.resolve(true);
+      });
+
       const insertData = [
         {
           _id: functionId1,
@@ -154,44 +161,58 @@ describe("Function Realtime", () => {
       await db.collection("function").drop();
     });
 
-    it("should do the initial sync", async () => {
+    it("should do the initial sync", done => {
+      const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
       const ws = wsc.get(url("/function"));
       const message = jest.fn();
-      ws.onmessage = e => message(JSON.parse(e.data as string));
-      await ws.connect;
-      await ws.close();
-      expect(message.mock.calls.map(c => c[0])).toEqual([
-        {kind: ChunkKind.Initial, document: rows[0]},
-        {kind: ChunkKind.Initial, document: rows[1]},
-        {kind: ChunkKind.EndOfInitial}
-      ]);
+      ws.onmessage = async e => {
+        message(JSON.parse(e.data as string));
+        if (e.data === lastMessage) {
+          expect(message.mock.calls.map(c => c[0])).toEqual([
+            {kind: ChunkKind.Initial, document: rows[0]},
+            {kind: ChunkKind.Initial, document: rows[1]},
+            {kind: ChunkKind.EndOfInitial}
+          ]);
+          await ws.close();
+          done();
+        }
+      };
+      ws.connect;
     });
 
-    it("should work with filter", async () => {
+    it("should work with filter", done => {
+      const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
       const filter = JSON.stringify({name: "test-function-1"});
       const ws = wsc.get(url("/function", {filter: filter}));
       const message = jest.fn();
-      ws.onmessage = e => message(JSON.parse(e.data as string));
-      await ws.connect;
-      await ws.close();
-      expect(message.mock.calls.map(c => c[0])).toEqual([
-        {kind: ChunkKind.Initial, document: rows[0]},
-        {kind: ChunkKind.EndOfInitial}
-      ]);
+      ws.onmessage = async e => {
+        message(JSON.parse(e.data as string));
+        if (e.data === lastMessage) {
+          expect(message.mock.calls.map(c => c[0])).toEqual([
+            {kind: ChunkKind.Initial, document: rows[0]},
+            {kind: ChunkKind.EndOfInitial}
+          ]);
+          await ws.close();
+          done();
+        }
+      };
+      ws.connect;
     });
 
-    it("should return only EndOfInitial when filter matches no function", async () => {
+    it("should return only EndOfInitial when filter matches no function", done => {
+      const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
       const filter = JSON.stringify({name: "test-function-invalid"});
       const ws = wsc.get(url("/function", {filter}));
       const message = jest.fn();
-
-      ws.onmessage = e => message(JSON.parse(e.data as string));
-
-      await ws.connect;
-      await new Promise(resolve => setTimeout(resolve, 100));
-      await ws.close();
-
-      expect(message.mock.calls.map(c => c[0])).toEqual([{kind: ChunkKind.EndOfInitial}]);
+      ws.onmessage = async e => {
+        message(JSON.parse(e.data as string));
+        if (e.data === lastMessage) {
+          expect(message.mock.calls.map(c => c[0])).toEqual([{kind: ChunkKind.EndOfInitial}]);
+          await ws.close();
+          done();
+        }
+      };
+      ws.connect;
     });
   });
 });
