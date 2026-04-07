@@ -3,7 +3,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core-testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {SyncModule} from "../src/sync.module";
-import {SyncService} from "@spica-server/versioncontrol/services/sync";
+import {SyncService} from "@spica-server/versioncontrol-services-sync";
 import {
   Sync,
   SyncStatuses,

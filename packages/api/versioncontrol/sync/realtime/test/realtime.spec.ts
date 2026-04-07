@@ -12,8 +12,8 @@ import {
   ChangeType,
   SyncStatuses
 } from "@spica-server/interface-versioncontrol";
-import {SyncService} from "@spica-server/versioncontrol/services/sync";
-import {ServicesModule as SyncServicesModule} from "@spica-server/versioncontrol/services/sync";
+import {SyncService} from "@spica-server/versioncontrol-services-sync";
+import {ServicesModule as SyncServicesModule} from "@spica-server/versioncontrol-services-sync";
 import {SyncRealtimeModule} from "../src";
 
 function url(path, query) {

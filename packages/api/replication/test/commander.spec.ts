@@ -5,7 +5,7 @@ import {
   DatabaseTestingModule,
   getConnectionUri
 } from "@spica-server/database-testing";
-import {ClassCommander, ReplicationModule} from "@spica-server/replication/src";
+import {ClassCommander, ReplicationModule} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
 
 function wait(ms: number) {

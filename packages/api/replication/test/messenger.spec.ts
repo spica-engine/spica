@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {CommandMessenger} from "@spica-server/replication/src";
+import {CommandMessenger} from "@spica-server/replication";
 import {CommandMessage, Command} from "@spica-server/interface-replication";
 import {ReplicationTestingModule} from "@spica-server/replication/testing";
 

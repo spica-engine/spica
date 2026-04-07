@@ -9,7 +9,7 @@ import {
 import {
   ChangeLogProcessor,
   ChangeLogProcessorsModule
-} from "@spica-server/versioncontrol/processors/changelog";
+} from "@spica-server/versioncontrol-processors-changelog";
 import {bufferCount} from "rxjs";
 
 describe("ChangeLogProcessor", () => {

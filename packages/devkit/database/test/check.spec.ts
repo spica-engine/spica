@@ -1,4 +1,4 @@
-import {checkDocument, checkDocuments} from "@spica-devkit/database/src/check";
+import {checkDocument, checkDocuments} from "../src/check";
 import {ObjectId} from "mongodb";
 
 describe("Checks", () => {
