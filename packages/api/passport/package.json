@@ -50,6 +50,8 @@
     "@spica-server/core-websocket": "workspace:*",
     "@spica-server/database-testing": "workspace:*",
     "@spica-server/preference": "workspace:*",
-    "@spica-server/preference-testing": "workspace:*"
+    "@spica-server/preference-testing": "workspace:*",
+    "jsqr": "^1.4.0",
+    "samlp": "^3.0.0"
   }
 }
