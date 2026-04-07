@@ -6,18 +6,24 @@ import {Queue} from "./queue";
 
 export class EventQueue {
   private server: grpc.Server;
+  private maxMessageSize: number;
 
   constructor(
     private _ready: (id: string, schedule: (event: event.Event | undefined) => void) => void,
     private _enqueue: (event: event.Event) => void,
     private _cancel: (id: string) => void,
-    private _complete: (id: string, succedded: boolean) => void
+    private _complete: (id: string, succedded: boolean) => void,
+    maxMessageSize?: number
   ) {
+    this.maxMessageSize = maxMessageSize || 25 * 1024 * 1024;
     this._create();
   }
 
   private _create() {
-    this.server = new grpc.Server();
+    this.server = new grpc.Server({
+      "grpc.max_receive_message_length": this.maxMessageSize,
+      "grpc.max_send_message_length": this.maxMessageSize
+    });
     this.server.addService(event.Queue, {
       pop: async (
         call: grpc.ServerUnaryCall<event.Pop, event.Event>,

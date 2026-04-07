@@ -32,6 +32,7 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
   constructor(
     private queue: EventQueue,
     private grpcQueue: GrpcQueue,
+    private functionGrpcMaxMessageSizeBytes: number,
     private schedulerUnsubscription: (targetId: string) => void,
     private port: number = 50051
   ) {
@@ -101,7 +102,11 @@ export class GrpcEnqueuer extends Enqueuer<GrpcOptions> {
       this.server = null;
     }
 
-    this.server = new grpc.Server();
+    const maxMessageSize = this.functionGrpcMaxMessageSizeBytes;
+    this.server = new grpc.Server({
+      "grpc.max_receive_message_length": maxMessageSize,
+      "grpc.max_send_message_length": maxMessageSize
+    });
 
     const functionGroups = new Map<string, GrpcRegistration[]>();
     for (const reg of this.registrations.values()) {
