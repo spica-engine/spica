@@ -7,8 +7,22 @@
     "compile": {
       "dependsOn": ["build"]
     },
-    "test": {
+    "build-test": {
       "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/migrate",
+        "command": "tsc -p tsconfig.test.json"
+      },
+      "inputs": [
+        "{projectRoot}/test/**/*.ts",
+        "{projectRoot}/tsconfig.test.json",
+        "{projectRoot}/tsconfig.json"
+      ],
+      "outputs": ["{projectRoot}/dist/test"]
+    },
+    "test": {
+      "dependsOn": ["build-test"],
       "options": {
         "runInBand": true
       }
