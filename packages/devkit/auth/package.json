@@ -21,9 +21,9 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@spica-server/interface-function-packages": "workspace:*",
-    "@spica-server/interface-passport-user": "workspace:*",
+    "@spica-devkit/internal_common": "workspace:*",
     "@spica-server/core-copy": "workspace:*",
-    "@spica-server/internal_common": "workspace:*"
+    "@spica-server/interface-function-packages": "workspace:*",
+    "@spica-server/interface-passport-user": "workspace:*"
   }
 }

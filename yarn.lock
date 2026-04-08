@@ -8357,14 +8357,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-devkit/auth@workspace:packages/devkit/auth"
   dependencies:
+    "@spica-devkit/internal_common": "workspace:*"
     "@spica-server/core-copy": "workspace:*"
-    "@spica-server/core-schema": "workspace:*"
-    "@spica-server/core-testing": "workspace:*"
-    "@spica-server/database-testing": "workspace:*"
-    "@spica-server/passport": "workspace:*"
-    "@spica-server/passport-testing": "workspace:*"
-    "@spica-server/passport-user": "workspace:*"
-    "@spica-server/preference-testing": "workspace:*"
+    "@spica-server/interface-function-packages": "workspace:*"
+    "@spica-server/interface-passport-user": "workspace:*"
     axios: "npm:^1.7.9"
     rxjs: "npm:^7.8.1"
   languageName: unknown
@@ -8374,12 +8370,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-devkit/bucket@workspace:packages/devkit/bucket"
   dependencies:
+    "@spica-devkit/internal_common": "workspace:*"
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
-    "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database-testing": "workspace:*"
-    "@spica-server/passport-testing": "workspace:*"
-    "@spica-server/preference-testing": "workspace:*"
+    "@spica-server/interface-batch": "workspace:*"
+    "@spica-server/interface-function-packages": "workspace:*"
+    "@spica-server/interface-realtime": "workspace:*"
     "@types/json-schema": "npm:^7.0.15"
     axios: "npm:^1.7.9"
     rxjs: "npm:^7.8.1"
@@ -8409,17 +8405,20 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-devkit/identity@workspace:packages/devkit/identity"
   dependencies:
+    "@spica-devkit/internal_common": "workspace:*"
     "@spica-server/core-copy": "workspace:*"
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
+    "@spica-server/interface-batch": "workspace:*"
+    "@spica-server/interface-function-packages": "workspace:*"
     "@spica-server/preference-testing": "workspace:*"
     axios: "npm:^1.7.9"
     rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
 
-"@spica-devkit/internal_common@workspace:packages/devkit/internal_common":
+"@spica-devkit/internal_common@workspace:*, @spica-devkit/internal_common@workspace:packages/devkit/internal_common":
   version: 0.0.0-use.local
   resolution: "@spica-devkit/internal_common@workspace:packages/devkit/internal_common"
   languageName: unknown
@@ -8429,9 +8428,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-devkit/storage@workspace:packages/devkit/storage"
   dependencies:
+    "@spica-devkit/internal_common": "workspace:*"
     "@spica-server/core-schema": "workspace:*"
     "@spica-server/core-testing": "workspace:*"
     "@spica-server/database-testing": "workspace:*"
+    "@spica-server/interface-batch": "workspace:*"
+    "@spica-server/interface-function-packages": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
     axios: "npm:^1.7.9"
     form-data: "npm:^4.0.1"
@@ -9515,7 +9517,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@spica-server/interface-function-packages@workspace:packages/interface/function/packages":
+"@spica-server/interface-function-packages@workspace:*, @spica-server/interface-function-packages@workspace:packages/interface/function/packages":
   version: 0.0.0-use.local
   resolution: "@spica-server/interface-function-packages@workspace:packages/interface/function/packages"
   dependencies:
