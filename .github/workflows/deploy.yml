@@ -9,13 +9,55 @@ on:
     branches: ["master"]
 
 jobs:
-  build_and_deploy:
-    name: Build and Deploy
+  build_and_push:
+    name: Build and Push (${{ matrix.project }})
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: api
+            dir: apps/api
+          - project: panel
+            dir: apps/panel
+          - project: migrate
+            dir: apps/migrate
+          - project: mongoreplicationcontroller
+            dir: apps/mongoreplicationcontroller
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Restore Node Modules Cache
+        uses: actions/cache@v4
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --network-timeout 600000
+
+      - name: Restore Nx Cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
+            ${{ runner.os }}-nx-
+
+      - name: Prune project
+        run: yarn nx prune ${{ matrix.project }}
 
       - name: Set up Docker Buildx
         id: setup-buildx
@@ -27,46 +69,34 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Cache Docker cache mounts
+      - name: Restore Docker Cache
         uses: actions/cache@v4
         id: cache
         with:
           path: docker-cache-mounts
-          key: ${{ runner.os }}-docker-cache-api-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-docker-cache-${{ matrix.project }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-docker-cache-api-
+            ${{ runner.os }}-docker-cache-${{ matrix.project }}-
 
-      - name: Inject Docker cache mounts
-        uses: reproducible-containers/buildkit-cache-dance@1b8ab18fbda5ad3646e3fcc9ed9dd41ce2f297b4 # v3.3.2
-        with:
-          builder: ${{ steps.setup-buildx.outputs.name }}
-          cache-dir: docker-cache-mounts
-          dockerfile: apps/api/Dockerfile
-          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
-
-      - name: Build and push panel image
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/panel/Dockerfile
+          file: ${{ matrix.dir }}/Dockerfile
           push: true
-          tags: spicaengine/panel:${{ env.VERSION }}
+          tags: spicaengine/${{ matrix.project }}:${{ env.VERSION }}
           target: runner
           platforms: linux/amd64, linux/arm64
-          cache-from: type=gha,scope=panel
-          cache-to: type=gha,scope=panel,mode=max
+          cache-from: type=gha,scope=${{ matrix.project }}
+          cache-to: type=gha,scope=${{ matrix.project }},mode=max
 
-      - name: Build and push API image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: apps/api/Dockerfile
-          push: true
-          tags: spicaengine/api:${{ env.VERSION }}
-          target: runner
-          platforms: linux/amd64, linux/arm64
-          cache-from: type=gha,scope=api
-          cache-to: type=gha,scope=api,mode=max
+  deploy:
+    name: Deploy to GKE
+    runs-on: ubuntu-latest
+    needs: build_and_push
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - uses: "google-github-actions/auth@v2"
         with:
