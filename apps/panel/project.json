@@ -3,8 +3,19 @@
   "sourceRoot": "apps/panel",
   "projectType": "application",
   "targets": {
-    "build-image": {
-      "command": "docker build --platform=linux/amd64 --target runner . -f ./apps/panel/Dockerfile -t spicaengine/panel:local-test --build-arg BASE_URL=$BASE_URL --build-arg VITE_BASE_URL=$VITE_BASE_URL"
+    "prune": {
+      "dependsOn": ["build"]
+    },
+    "docker:build": {
+      "dependsOn": ["prune"],
+      "command": "docker build .",
+      "options": {
+        "cwd": "apps/panel",
+        "args": [
+          "--tag spicaengine/panel:${VERSION-'latest'}",
+          "--platform ${PLATFORM-'linux/arm64'}"
+        ]
+      }
     },
     "publish": {
       "executor": "nx:run-commands",
