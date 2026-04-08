@@ -4,8 +4,15 @@
   "sourceRoot": "apps/migrate/src",
   "projectType": "application",
   "targets": {
-    "compile": {
-      "dependsOn": ["build"]
+    "serve": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "api:build",
+        "buildTargetOptions": {
+          "outputPath": "apps/migrate/dist",
+          "outputFileName": "src/main.js"
+        }
+      }
     },
     "build-test": {
       "dependsOn": ["build"],
@@ -27,25 +34,19 @@
         "runInBand": true
       }
     },
-    "test-image": {
-      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/migrate/Dockerfile",
-      "cache": true
+    "prune": {
+      "dependsOn": ["build"],
+      "command": "yarn prune:migrate"
     },
-    "build-image": {
-      "inputs": [
-        "{projectRoot}/src/**/*",
-        "{projectRoot}/tsconfig.json",
-        "{projectRoot}/project.json",
-        "{projectRoot}/Dockerfile"
-      ],
-      "command": "docker buildx build --platform=linux/amd64 --load --target runner --cache-from type=gha,scope=migrate --cache-to type=gha,scope=migrate,mode=max -f ./apps/migrate/Dockerfile -t spicaengine/migrate:$VERSION .",
-      "cache": true
-    },
-    "publish": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build-image"],
+    "docker:build": {
+      "dependsOn": ["prune"],
+      "command": "docker build .",
       "options": {
-        "command": "docker push spicaengine/migrate:$VERSION"
+        "cwd": "apps/migrate",
+        "args": [
+          "--tag spicaengine/migrate:${VERSION-'latest'}",
+          "--platform ${PLATFORM-'linux/arm64'}"
+        ]
       }
     }
   }
