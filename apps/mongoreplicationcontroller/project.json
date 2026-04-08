@@ -5,21 +5,29 @@
   "projectType": "application",
   "tags": [],
   "targets": {
-    "build-image": {
-      "inputs": [
-        "{projectRoot}/src/**/*",
-        "{projectRoot}/tsconfig.json",
-        "{projectRoot}/project.json",
-        "{projectRoot}/Dockerfile"
-      ],
-      "command": "docker buildx build --platform=linux/amd64 --load --target runner --cache-from type=gha,scope=mongoreplicationcontroller --cache-to type=gha,scope=mongoreplicationcontroller,mode=max -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:$VERSION .",
-      "cache": true
-    },
-    "publish": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build-image"],
+    "serve": {
+      "executor": "@nx/js:node",
       "options": {
-        "command": "docker push spicaengine/mongoreplicationcontroller:$VERSION"
+        "buildTarget": "mongoreplicationcontroller:build",
+        "buildTargetOptions": {
+          "outputPath": "apps/mongoreplicationcontroller/dist",
+          "outputFileName": "src/main.js"
+        }
+      }
+    },
+    "prune": {
+      "dependsOn": ["build"],
+      "command": "yarn prune:mongoreplicationcontroller"
+    },
+    "docker:build": {
+      "dependsOn": ["prune"],
+      "command": "docker build .",
+      "options": {
+        "cwd": "apps/mongoreplicationcontroller",
+        "args": [
+          "--tag spicaengine/mongoreplicationcontroller:${VERSION-'latest'}",
+          "--platform ${PLATFORM-'linux/arm64'}"
+        ]
       }
     }
   }
