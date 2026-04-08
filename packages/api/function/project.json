@@ -7,7 +7,7 @@
       "dependsOn": [
         {
           "projects": ["api/function/runtime/node/bootstrap"],
-          "target": "build"
+          "target": "bundle"
         }
       ]
     }

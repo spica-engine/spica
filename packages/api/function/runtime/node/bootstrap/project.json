@@ -3,7 +3,7 @@
   "sourceRoot": "packages/api/function/runtime/node/bootstrap",
   "projectType": "library",
   "targets": {
-    "build": {
+    "bundle": {
       "executor": "nx:run-commands",
       "dependsOn": ["build", "devkit/database:bundle"],
       "options": {
