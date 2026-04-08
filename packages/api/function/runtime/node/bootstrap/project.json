@@ -5,18 +5,10 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build"],
-      "inputs": [
-        "production",
-        "^production",
-        "{workspaceRoot}/tsconfig.json",
-        "{workspaceRoot}/tsconfig.base.json"
-      ],
-      "outputs": ["{workspaceRoot}/packages/api/function/runtime/node/dist/bootstrap"],
+      "dependsOn": ["build"],
       "options": {
-        "command": "yarn rollup -c './packages/api/function/runtime/node/bootstrap/rollup.config.js' --bundleConfigAsCjs"
-      },
-      "cache": true
+        "command": "yarn rollup -c '{projectRoot}/rollup.config.js' --bundleConfigAsCjs"
+      }
     }
   }
 }

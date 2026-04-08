@@ -9,7 +9,7 @@
     }
   },
   "dependencies": {
-    "@spica-devkit/database": "*",
+    "@spica-devkit/database": "workspace:*",
     "@spica-server/bucket-hooks-proto": "workspace:*",
     "@spica-server/bucket-hooks-proto-node": "workspace:*",
     "@spica-server/function-queue-node": "workspace:*",

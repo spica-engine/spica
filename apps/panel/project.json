@@ -16,13 +16,6 @@
           "--platform ${PLATFORM-'linux/arm64'}"
         ]
       }
-    },
-    "publish": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build-image"],
-      "options": {
-        "command": "docker push spicaengine/panel:$VERSION"
-      }
     }
   }
 }
