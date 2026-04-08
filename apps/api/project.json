@@ -14,6 +14,21 @@
           "outputFileName": "src/main.js"
         }
       }
+    },
+    "prune": {
+      "dependsOn": ["build"],
+      "command": "yarn prune:api"
+    },
+    "docker:build": {
+      "dependsOn": ["prune"],
+      "command": "docker build .",
+      "options": {
+        "cwd": "apps/api",
+        "args": [
+          "--tag spicaengine/api:${VERSION-'latest'}",
+          "--platform ${PLATFORM-'linux/arm64'}"
+        ]
+      }
     }
   }
 }
