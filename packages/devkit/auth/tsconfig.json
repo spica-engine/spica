@@ -1,13 +1,11 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
-    {
-      "path": "../../interface/passport/user"
-    },
-    {
-      "path": "../../interface/function/packages"
-    },
     {
       "path": "../internal_common"
     },
@@ -15,22 +13,10 @@
       "path": "../../core/copy"
     },
     {
-      "path": "../../api/passport/user"
+      "path": "../../interface/passport/user"
     },
     {
-      "path": "../../api/passport/testing"
-    },
-    {
-      "path": "../../api/passport"
-    },
-    {
-      "path": "../../database/testing"
-    },
-    {
-      "path": "../../core/testing"
-    },
-    {
-      "path": "../../core/schema"
+      "path": "../../interface/function/packages"
     }
   ]
 }

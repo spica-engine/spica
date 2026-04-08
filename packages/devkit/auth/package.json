@@ -8,23 +8,22 @@
     "spica",
     "devkit"
   ],
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
-  "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "sideEffects": false,
   "dependencies": {
-    "@spica-server/core-copy": "workspace:*",
     "axios": "^1.7.9",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@spica-server/core-schema": "workspace:*",
-    "@spica-server/core-testing": "workspace:*",
-    "@spica-server/database-testing": "workspace:*",
-    "@spica-server/passport": "workspace:*",
-    "@spica-server/passport-testing": "workspace:*",
-    "@spica-server/passport-user": "workspace:*",
-    "@spica-server/preference-testing": "workspace:*"
+    "@spica-server/interface-function-packages": "workspace:*",
+    "@spica-server/interface-passport-user": "workspace:*",
+    "@spica-server/core-copy": "workspace:*",
+    "@spica-server/internal_common": "workspace:*"
   }
 }

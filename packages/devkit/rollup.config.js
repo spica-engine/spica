@@ -23,18 +23,23 @@ const sharedExternals = [
   "json-schema"
 ];
 
-export default function getConfig(project, additionalCopyPaths = []) {
+export default function getConfig(project, additionalCopyPaths = [], additionalExternals = []) {
   const base = path.join("packages/devkit", project);
-  const dist = path.join("dist", base);
+  const dist = path.join(base, "dist");
 
   cleanUp(dist);
 
-  const tsConfigPath = path.join(base, "tsconfig.rollup.json");
+  const tsConfigPath = path.join(base, "tsconfig.json");
 
   const copyTargets = [
     {
       src: path.join(base, "package.json"),
-      dest: dist
+      dest: dist,
+      transform(contents) {
+        const pkg = JSON.parse(contents.toString());
+        delete pkg.devDependencies;
+        return JSON.stringify(pkg, null, 2);
+      }
     }
   ];
 
@@ -75,13 +80,14 @@ export default function getConfig(project, additionalCopyPaths = []) {
         tsconfig: tsConfigPath,
         outDir: path.join(dist, "dist"),
         declaration: false,
-        declarationDir: undefined
+        declarationDir: undefined,
+        composite: false
       }),
       copy({
         targets: copyTargets
       })
     ],
-    external: sharedExternals
+    external: [...sharedExternals, ...additionalExternals]
   };
 
   const dtsConfig = {
@@ -91,11 +97,17 @@ export default function getConfig(project, additionalCopyPaths = []) {
       format: "es"
     },
     plugins: [
+      resolve({
+        exportConditions: ["types", "import", "default"],
+        extensions: [".ts", ".d.ts", ".js", ".mjs"],
+        preferBuiltins: false
+      }),
       dts({
-        tsconfig: tsConfigPath
+        tsconfig: tsConfigPath,
+        respectExternal: true
       })
     ],
-    external: sharedExternals
+    external: [...sharedExternals, ...additionalExternals]
   };
 
   return [jsConfig, dtsConfig];

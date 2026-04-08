@@ -426,6 +426,21 @@
     },
     {
       "path": "./packages/devkit/internal_common"
+    },
+    {
+      "path": "./packages/devkit/auth"
+    },
+    {
+      "path": "./packages/devkit/database"
+    },
+    {
+      "path": "./packages/devkit/storage"
+    },
+    {
+      "path": "./packages/devkit/bucket"
+    },
+    {
+      "path": "./packages/devkit/identity"
     }
   ]
 }

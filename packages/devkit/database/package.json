@@ -8,11 +8,14 @@
     "spica",
     "devkit"
   ],
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "sideEffects": false,
-  "types": "dist/index.d.ts",
-  "typings": "dist/index.d.ts",
   "dependencies": {
     "mongodb": "^6.12.0"
   },

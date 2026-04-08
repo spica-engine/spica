@@ -9,9 +9,11 @@
     "spica",
     "devkit"
   ],
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
-  "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "sideEffects": false
 }

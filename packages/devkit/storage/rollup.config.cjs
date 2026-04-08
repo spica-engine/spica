@@ -1,3 +1,3 @@
 import getConfig from "../rollup.config.js";
 
-module.exports = getConfig("storage");
+module.exports = getConfig("storage", [], ["form-data"]);

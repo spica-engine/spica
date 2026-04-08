@@ -14,7 +14,7 @@ import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
 import ws from "ws";
-import * as Bucket from "@spica-devkit/bucket";
+import * as Bucket from "./bucket";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();

@@ -7,6 +7,9 @@
   "include": ["*.ts"],
   "references": [
     {
+      "path": "../../../../../devkit/database"
+    },
+    {
       "path": "../../logger"
     },
     {

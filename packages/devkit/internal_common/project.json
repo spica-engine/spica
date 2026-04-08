@@ -1,0 +1,6 @@
+{
+  "name": "devkit/internal_common",
+  "sourceRoot": "packages/devkit/internal_common",
+  "projectType": "library",
+  "targets": {}
+}

@@ -1,5 +1,9 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
@@ -13,15 +17,6 @@
     },
     {
       "path": "../internal_common"
-    },
-    {
-      "path": "../../api/passport/testing"
-    },
-    {
-      "path": "../../database/testing"
-    },
-    {
-      "path": "../../core/websocket"
     },
     {
       "path": "../../core/testing"

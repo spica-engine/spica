@@ -8396,7 +8396,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@spica-devkit/database@workspace:packages/devkit/database":
+"@spica-devkit/database@workspace:*, @spica-devkit/database@workspace:packages/devkit/database":
   version: 0.0.0-use.local
   resolution: "@spica-devkit/database@workspace:packages/devkit/database"
   dependencies:
@@ -9214,7 +9214,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/function-runtime-node-bootstrap@workspace:packages/api/function/runtime/node/bootstrap"
   dependencies:
-    "@spica-devkit/database": "npm:*"
+    "@spica-devkit/database": "workspace:*"
     "@spica-server/bucket-hooks-proto": "workspace:*"
     "@spica-server/bucket-hooks-proto-node": "workspace:*"
     "@spica-server/function-queue-node": "workspace:*"

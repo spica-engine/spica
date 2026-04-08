@@ -99,6 +99,9 @@
       "path": "../activity/services"
     },
     {
+      "path": "../preference"
+    },
+    {
       "path": "../passport/testing"
     },
     {
@@ -114,10 +117,10 @@
       "path": "../../core/testing"
     },
     {
-      "path": "../preference"
+      "path": "../bucket"
     },
     {
-      "path": "../bucket"
+      "path": "../../devkit/database"
     }
   ],
   "compilerOptions": {
