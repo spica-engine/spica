@@ -1,4 +1,4 @@
-import * as Bucket from "@spica-devkit/bucket";
+import * as Bucket from "../";
 import {Axios} from "@spica-devkit/internal_common";
 
 describe("@spica-devkit/bucket", () => {

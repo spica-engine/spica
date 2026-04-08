@@ -1,4 +1,4 @@
-import {close, isConnected, database} from "@spica-devkit/database";
+import {close, isConnected, database} from "../";
 import mongodb from "mongodb";
 import {ObjectId} from "mongodb";
 

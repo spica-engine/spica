@@ -1,4 +1,4 @@
-import * as Auth from "@spica-devkit/auth";
+import * as Auth from "../";
 import {Axios} from "@spica-devkit/internal_common";
 
 describe("@spica-devkit/auth", () => {

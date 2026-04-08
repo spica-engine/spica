@@ -1,4 +1,4 @@
-import * as Storage from "@spica-devkit/storage";
+import * as Storage from "../";
 import {Axios} from "@spica-devkit/internal_common";
 
 function getValueOfFormField(form, field) {

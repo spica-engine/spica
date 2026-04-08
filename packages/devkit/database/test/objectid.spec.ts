@@ -1,4 +1,4 @@
-import {objectId} from "@spica-devkit/database";
+import {objectId} from "../";
 import {ObjectId} from "mongodb";
 
 describe("objectId", () => {
