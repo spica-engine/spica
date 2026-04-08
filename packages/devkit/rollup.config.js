@@ -38,7 +38,9 @@ export default function getConfig(project, additionalCopyPaths = [], additionalE
       transform(contents) {
         const pkg = JSON.parse(contents.toString());
         delete pkg.devDependencies;
-        return JSON.stringify(pkg, null, 2);
+        // When published, dist/ is the package root, so strip the ./dist/ prefix.
+        const adjusted = JSON.stringify(pkg).replaceAll('"./dist/', '"./');
+        return JSON.stringify(JSON.parse(adjusted), null, 2);
       }
     }
   ];
@@ -54,13 +56,13 @@ export default function getConfig(project, additionalCopyPaths = [], additionalE
 
   const outputs = [
     {
-      dir: path.join(dist, "dist"),
+      dir: dist,
       format: "cjs",
       sourcemap: true,
       entryFileNames: "index.js"
     },
     {
-      dir: path.join(dist, "dist"),
+      dir: dist,
       format: "esm",
       sourcemap: true,
       entryFileNames: "index.mjs"
@@ -78,7 +80,7 @@ export default function getConfig(project, additionalCopyPaths = [], additionalE
       json(),
       typescript({
         tsconfig: tsConfigPath,
-        outDir: path.join(dist, "dist"),
+        outDir: dist,
         declaration: false,
         declarationDir: undefined,
         composite: false
@@ -93,7 +95,7 @@ export default function getConfig(project, additionalCopyPaths = [], additionalE
   const dtsConfig = {
     input: path.join(base, "src", "index.ts"),
     output: {
-      file: path.join(dist, "dist", "index.d.ts"),
+      file: path.join(dist, "index.d.ts"),
       format: "es"
     },
     plugins: [

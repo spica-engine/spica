@@ -117,15 +117,15 @@ async function _process(ev: event.Event, queue: EventQueue) {
       const response = new Response(
         (e: any) => {
           e.id = ev.id;
-          return httpQueue.writeHead(e).catch(handleRejection);
+          return httpQueue.writeHead(e).catch(handleRejection) as unknown as Promise<void>;
         },
         (e: any) => {
           e.id = ev.id;
-          return httpQueue.write(e).catch(handleRejection);
+          return httpQueue.write(e).catch(handleRejection) as unknown as Promise<void>;
         },
         (e: any) => {
           e.id = ev.id;
-          return httpQueue.end(e).catch(handleRejection);
+          return httpQueue.end(e).catch(handleRejection) as unknown as Promise<void>;
         }
       );
 
@@ -198,7 +198,8 @@ async function _process(ev: event.Event, queue: EventQueue) {
       break;
     case event.Type.SCHEDULE:
     case event.Type.SYSTEM:
-    case -1:
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    case -1 as any:
       // NO OP
       break;
     case event.Type.BUCKET:
@@ -234,11 +235,11 @@ async function _process(ev: event.Event, queue: EventQueue) {
       const channel = new RabbitMQChannel(
         (e: any) => {
           e.id = ev.id;
-          return rabbitmq.ack(e);
+          return rabbitmq.ack(e) as unknown as Promise<void>;
         },
         (e: any) => {
           e.id = ev.id;
-          return rabbitmq.nack(e);
+          return rabbitmq.nack(e) as unknown as Promise<void>;
         }
       );
       callArguments[1] = channel;
