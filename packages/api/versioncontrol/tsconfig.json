@@ -1,0 +1,95 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "index.ts"],
+  "exclude": ["test/**/*.ts", "**/*.spec.ts"],
+  "references": [
+    {
+      "path": "sync/engine"
+    },
+    {
+      "path": "sync"
+    },
+    {
+      "path": "../../representative"
+    },
+    {
+      "path": "../replication"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../interface/versioncontrol"
+    },
+    {
+      "path": "../../interface/passport/policy"
+    },
+    {
+      "path": "../../interface/function"
+    },
+    {
+      "path": "../../interface/env_var"
+    },
+    {
+      "path": "../../interface/config"
+    },
+    {
+      "path": "../../interface/bucket"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../secret"
+    },
+    {
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../passport/policy"
+    },
+    {
+      "path": "../passport/guard/services"
+    },
+    {
+      "path": "../function/services"
+    },
+    {
+      "path": "../function/scheduler"
+    },
+    {
+      "path": "../function/log"
+    },
+    {
+      "path": "../function"
+    },
+    {
+      "path": "../env_var/services"
+    },
+    {
+      "path": "../env_var"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/websocket"
+    },
+    {
+      "path": "../../core/testing"
+    },
+    {
+      "path": "../bucket/services"
+    },
+    {
+      "path": "../bucket/history"
+    },
+    {
+      "path": "../bucket"
+    }
+  ]
+}

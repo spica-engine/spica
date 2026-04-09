@@ -1,0 +1,5 @@
+{
+  "name": "core/differ",
+  "sourceRoot": "packages/core/differ/src",
+  "projectType": "library"
+}

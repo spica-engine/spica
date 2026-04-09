@@ -1,0 +1,5 @@
+{
+  "name": "devkit/bucket/test",
+  "sourceRoot": "packages/devkit/bucket/test",
+  "projectType": "application"
+}

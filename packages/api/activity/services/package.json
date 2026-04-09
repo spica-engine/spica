@@ -1,0 +1,23 @@
+{
+  "name": "@spica-server/activity-services",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface-activity": "workspace:*",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*"
+  }
+}

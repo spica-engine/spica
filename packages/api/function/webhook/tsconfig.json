@@ -1,0 +1,37 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../passport/guard"
+    },
+    {
+      "path": "../../../interface/function/webhook"
+    },
+    {
+      "path": "../../../interface/function"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../passport/testing"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/testing"
+    }
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  }
+}

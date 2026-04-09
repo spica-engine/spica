@@ -1,0 +1,5 @@
+{
+  "name": "representative",
+  "sourceRoot": "packages/representative/src",
+  "projectType": "library"
+}

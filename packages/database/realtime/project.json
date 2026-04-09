@@ -1,0 +1,5 @@
+{
+  "name": "database/realtime",
+  "sourceRoot": "packages/database/realtime/src",
+  "projectType": "library"
+}

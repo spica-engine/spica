@@ -1,0 +1,23 @@
+{
+  "name": "api/function/runtime",
+  "sourceRoot": "packages/api/function/runtime",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/api/function/runtime/jest.config.ts"
+      },
+      "dependsOn": [
+        {
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "bundle"
+        },
+        {
+          "projects": ["api/function/compiler/typescript"],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

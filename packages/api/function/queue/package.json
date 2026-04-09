@@ -1,0 +1,24 @@
+{
+  "name": "@spica-server/function-queue",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.5",
+    "@spica-server/function-queue-proto": "workspace:*",
+    "amqplib": "^0.10.7",
+    "uniqid": "^5.4.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.7",
+    "@types/uniqid": "^5.3.4",
+    "@types/ws": "^8.5.13"
+  }
+}

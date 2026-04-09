@@ -1,0 +1,652 @@
+import {Test, TestingModule} from "@nestjs/testing";
+import {FunctionService} from "@spica-server/function-services";
+import {FunctionEngine} from "@spica-server/function/src/engine";
+import {LogService} from "@spica-server/function-log";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {EnvVarService} from "@spica-server/env_var-services";
+import {Scheduler, SchedulerModule} from "@spica-server/function-scheduler";
+import {getApplier, getSupplier} from "../../src/synchronizer/schema";
+import {
+  ChangeInitiator,
+  ChangeLog,
+  ChangeOrigin,
+  ChangeType,
+  SyncStatuses
+} from "@spica-server/interface-versioncontrol";
+import YAML from "yaml";
+import {deepCopy} from "@spica-server/core-patch";
+import {skip, firstValueFrom} from "rxjs";
+import {rimraf} from "rimraf";
+import {SchemaModule, Validator} from "@spica-server/core-schema";
+import {OBJECT_ID} from "@spica-server/core-schema";
+import FunctionSchema from "../../src/schema/function.json" with {type: "json"};
+import {SecretService} from "@spica-server/secret-services";
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+describe("Function Synchronizer", () => {
+  let module: TestingModule;
+  let fs: FunctionService;
+  let engine: FunctionEngine;
+  let logs: LogService;
+  let database: DatabaseService;
+  let validator: Validator;
+
+  beforeEach(async () => {
+    module = await Test.createTestingModule({
+      imports: [
+        DatabaseTestingModule.replicaSet(),
+        SchemaModule.forChild({schemas: [FunctionSchema], formats: [OBJECT_ID]}),
+        SchedulerModule.forRoot({
+          invocationLogs: false,
+          databaseName: undefined,
+          databaseReplicaSet: undefined,
+          databaseUri: undefined,
+          apiUrl: undefined,
+          timeout: 60000,
+          corsOptions: {
+            allowedOrigins: ["*"],
+            allowedMethods: ["*"],
+            allowCredentials: true,
+            allowedHeaders: ["*"]
+          },
+          maxConcurrency: 1,
+          debug: false,
+          logger: false,
+          spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
+          tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
+        })
+      ]
+    }).compile();
+
+    database = module.get(DatabaseService);
+    const evs = new EnvVarService(database);
+    const ss = new SecretService(database, "test-encryption-secret");
+
+    const scheduler = module.get(Scheduler);
+    validator = module.get(Validator);
+
+    fs = new FunctionService(database, evs, ss, {entryLimit: 20} as any);
+    logs = new LogService(database, {expireAfterSeconds: 60 * 60 * 24 * 7, realtime: false});
+
+    engine = new FunctionEngine(
+      fs,
+      database,
+      scheduler,
+      undefined,
+      {
+        root: "test_root",
+        timeout: 60,
+        outDir: ".build"
+      },
+      undefined,
+      undefined,
+      val => val as any
+    );
+  });
+
+  afterEach(async () => {
+    try {
+      await rimraf("test_root");
+      await module.close();
+    } catch (error) {
+      console.error("Error during cleanup:", error);
+    }
+  });
+
+  describe("functionfuncSupplier", () => {
+    let funcSupplier;
+
+    beforeEach(() => {
+      funcSupplier = getSupplier(fs);
+    });
+
+    it("should return Change supplier with correct metadata", () => {
+      expect(funcSupplier).toEqual({
+        module: "function",
+        subModule: "schema",
+        listen: expect.any(Function)
+      });
+    });
+
+    it("should emit ChangeLog on initial start", async () => {
+      const mockFunction: any = {
+        _id: new ObjectId(),
+        name: "test_function",
+        description: "Test function description",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/test"
+            }
+          }
+        },
+        timeout: 60,
+        language: "javascript"
+      };
+      await fs.insertOne(mockFunction);
+
+      sleep(1000);
+
+      const changeLog = await firstValueFrom(funcSupplier.listen());
+
+      expect(changeLog).toEqual({
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.DOCUMENT,
+        resource_slug: "test_function",
+        resource_extension: "yaml",
+        resource_content: YAML.stringify(mockFunction),
+        created_at: expect.any(Date),
+        initiator: ChangeInitiator.INTERNAL,
+        event_id: expect.any(String)
+      });
+    });
+
+    it("should emit ChangeLog on function insert", done => {
+      const mockFunction: any = {
+        _id: new ObjectId(),
+        name: "test_function",
+        description: "Test function description",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/test"
+            }
+          }
+        },
+        timeout: 60,
+        language: "javascript"
+      };
+
+      const subs = funcSupplier.listen().subscribe(changeLog => {
+        expect(changeLog).toEqual({
+          module: "function",
+          sub_module: "schema",
+          type: ChangeType.CREATE,
+          origin: ChangeOrigin.DOCUMENT,
+          resource_slug: "test_function",
+          resource_extension: "yaml",
+          resource_content: YAML.stringify(mockFunction),
+          created_at: expect.any(Date),
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
+        });
+
+        subs.unsubscribe();
+        done();
+      });
+
+      sleep(1000).then(() => {
+        fs.insertOne(mockFunction);
+      });
+    });
+
+    it("should emit ChangeLog on function update", done => {
+      const functionId = new ObjectId();
+      const initialFunction: any = {
+        _id: functionId,
+        name: "initial_function",
+        description: "Initial description",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/initial"
+            }
+          }
+        },
+        timeout: 60,
+        language: "javascript"
+      };
+
+      let updatedFunction: any = {
+        _id: functionId,
+        name: "updated_function",
+        description: "Updated description",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Post",
+              path: "/updated"
+            }
+          }
+        },
+        timeout: 120,
+        language: "javascript"
+      };
+      const expectedUpdatedFunction = deepCopy(updatedFunction);
+
+      const subs = funcSupplier.listen().subscribe(changeLog => {
+        if (changeLog.type === ChangeType.UPDATE) {
+          expect(changeLog).toEqual({
+            module: "function",
+            sub_module: "schema",
+            type: ChangeType.UPDATE,
+            origin: ChangeOrigin.DOCUMENT,
+            resource_slug: "updated_function",
+            resource_extension: "yaml",
+            resource_content: YAML.stringify(expectedUpdatedFunction),
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
+          });
+
+          subs.unsubscribe();
+          done();
+        }
+      });
+
+      sleep(1000).then(async () => {
+        await fs.insertOne(initialFunction);
+        const {_id, language, ...updateFields} = updatedFunction;
+        await fs.findOneAndUpdate({_id: functionId}, {$set: updateFields});
+      });
+    });
+
+    it("should emit ChangeLog on function delete", done => {
+      const functionId = new ObjectId();
+      const functionToDelete: any = {
+        _id: functionId,
+        name: "function_to_delete",
+        description: "Will be deleted",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/delete"
+            }
+          }
+        },
+        timeout: 60,
+        language: "javascript"
+      };
+
+      const subs = funcSupplier.listen().subscribe(changeLog => {
+        if (changeLog.type === ChangeType.DELETE) {
+          expect(changeLog).toEqual({
+            module: "function",
+            sub_module: "schema",
+            type: ChangeType.DELETE,
+            origin: ChangeOrigin.DOCUMENT,
+            resource_slug: "function_to_delete",
+            resource_extension: "yaml",
+            resource_content: YAML.stringify(functionToDelete),
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
+          });
+          subs.unsubscribe();
+          done();
+        }
+      });
+
+      sleep(1000).then(async () => {
+        await fs.insertOne(functionToDelete);
+        await fs.findOneAndDelete({_id: functionId});
+      });
+    });
+  });
+
+  describe("functionApplier", () => {
+    let funcApplier;
+
+    beforeEach(() => {
+      funcApplier = getApplier(fs, engine, logs, validator);
+    });
+
+    it("should return Change Applier with correct metadata", () => {
+      expect(funcApplier).toEqual({
+        module: "function",
+        subModule: "schema",
+        fileExtensions: ["yaml"],
+        apply: expect.any(Function)
+      });
+    });
+
+    it("should apply insert change successfully", async () => {
+      const _id = new ObjectId();
+      const mockFunction: any = {
+        _id,
+        name: "new_function",
+        description: "New function",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/new"
+            }
+          }
+        },
+        timeout: 60,
+        memoryLimit: 100,
+        language: "javascript"
+      };
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "new_function",
+        resource_content: YAML.stringify(mockFunction),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toEqual({
+        status: SyncStatuses.SUCCEEDED
+      });
+
+      const insertedFunction = await fs.findOne({_id: mockFunction._id});
+      expect(insertedFunction).toEqual({
+        _id,
+        name: "new_function",
+        description: "New function",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/new"
+            }
+          }
+        },
+        timeout: 60,
+        memoryLimit: 100,
+        language: "javascript"
+      });
+    });
+
+    it("should apply update change successfully", async () => {
+      const _id = new ObjectId();
+      const existingFunction: any = {
+        _id,
+        name: "old_function",
+        description: "Old description",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/old"
+            }
+          }
+        },
+        timeout: 60,
+        language: "javascript",
+        memoryLimit: 100
+      };
+
+      await fs.insertOne(existingFunction);
+
+      const updatedFunction: any = {
+        _id,
+        name: "updated_function",
+        description: "Updated description",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Post",
+              path: "/updated"
+            }
+          },
+          schedule: {
+            type: "schedule",
+            active: true,
+            options: {
+              cron: "0 0 * * *",
+              timezone: "UTC"
+            }
+          }
+        },
+        timeout: 120,
+        language: "javascript",
+        memoryLimit: 100
+      };
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.UPDATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "updated_function",
+        resource_content: YAML.stringify(updatedFunction),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toEqual({
+        status: SyncStatuses.SUCCEEDED
+      });
+
+      const fn = await fs.findOne({_id});
+      expect(fn).toEqual({
+        _id,
+        name: "updated_function",
+        description: "Updated description",
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Post",
+              path: "/updated"
+            }
+          },
+          schedule: {
+            type: "schedule",
+            active: true,
+            options: {
+              cron: "0 0 * * *",
+              timezone: "UTC"
+            }
+          }
+        },
+        timeout: 120,
+        language: "javascript",
+        env_vars: [],
+        memoryLimit: 100
+      });
+    });
+
+    it("should apply delete change successfully", async () => {
+      const _id = new ObjectId();
+      const mockFunction: any = {
+        _id,
+        name: "function_to_delete",
+        description: "To be deleted",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/delete"
+            }
+          }
+        },
+        timeout: 60,
+        language: "javascript"
+      };
+
+      await fs.insertOne(mockFunction);
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.DELETE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "function_to_delete",
+        resource_content: "",
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toEqual({
+        status: SyncStatuses.SUCCEEDED
+      });
+
+      const fn = await fs.findOne({_id});
+      expect(fn).toBeNull();
+    });
+
+    it("should handle unknown operation type", async () => {
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: "upsert" as any,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: null,
+        resource_content: "",
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toEqual({
+        status: SyncStatuses.FAILED,
+        reason: "Unknown operation type: upsert"
+      });
+    });
+
+    it("should handle YAML parse errors", async () => {
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "test_function",
+        resource_content: "invalid: yaml: content:",
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toMatchObject({
+        status: SyncStatuses.FAILED
+      });
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should reject function if it's language is invalid", async () => {
+      const invalidFunction = {
+        _id: new ObjectId(),
+        name: "custom_function",
+        description: "A function with custom triggers",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {method: "Get", path: "/custom"}
+          }
+        },
+        timeout: 60,
+        language: "python"
+      };
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "Invalid Function",
+        resource_content: YAML.stringify(invalidFunction),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should allow function with custom trigger types", async () => {
+      const validFunction: any = {
+        _id: new ObjectId(),
+        name: "custom_function",
+        description: "A function with custom triggers",
+        env_vars: [],
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {method: "Get", path: "/custom"}
+          }
+        },
+        timeout: 60,
+        language: "javascript"
+      };
+
+      const changeLog: ChangeLog = {
+        module: "function",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "custom_function",
+        resource_content: YAML.stringify(validFunction),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await funcApplier.apply(changeLog);
+
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
+    });
+  });
+});

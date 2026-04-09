@@ -1,5 +1,0 @@
-{
-  "name": "interface/passport/identity",
-  "sourceRoot": "libs/interface/passport/identity/src",
-  "projectType": "library"
-}

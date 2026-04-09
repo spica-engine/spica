@@ -1,0 +1,17 @@
+{
+  "name": "@spica-server/interface-passport",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface-passport-identity": "workspace:*",
+    "@spica-server/interface-passport-user": "workspace:*"
+  }
+}

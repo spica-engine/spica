@@ -1,0 +1,5 @@
+{
+  "name": "interface/dashboard",
+  "sourceRoot": "packages/interface/dashboard/src",
+  "projectType": "library"
+}

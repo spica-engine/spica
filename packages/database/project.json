@@ -1,0 +1,5 @@
+{
+  "name": "database",
+  "sourceRoot": "packages/database/src",
+  "projectType": "library"
+}

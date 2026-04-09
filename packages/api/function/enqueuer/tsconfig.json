@@ -1,0 +1,46 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../replication"
+    },
+    {
+      "path": "../../../interface/status"
+    },
+    {
+      "path": "../../../interface/replication"
+    },
+    {
+      "path": "../../../interface/passport/guard"
+    },
+    {
+      "path": "../../../interface/function/enqueuer"
+    },
+    {
+      "path": "../../../interface/core"
+    },
+    {
+      "path": "../queue/proto"
+    },
+    {
+      "path": "../queue"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/testing"
+    }
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  }
+}

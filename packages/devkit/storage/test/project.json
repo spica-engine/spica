@@ -1,0 +1,5 @@
+{
+  "name": "devkit/storage/test",
+  "sourceRoot": "packages/devkit/storage/test",
+  "projectType": "application"
+}

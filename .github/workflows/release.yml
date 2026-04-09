@@ -1,35 +1,57 @@
 name: Spica Release
 
+env:
+  NX_NO_CLOUD: true
+  BASE_URL: /spica/
+  VITE_BASE_URL: /api
+
 on:
   release:
     types: [published]
 
 jobs:
   docker-images:
-    name: Release Docker image (${{ matrix.target }})
+    name: Release Docker image (${{ matrix.project }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target:
-          - api
-          - migrate
-          - mongoreplicationcontroller
         include:
-          - target: api
-            dockerfile: apps/api/Dockerfile
-            image: spicaengine/api
-          - target: migrate
-            dockerfile: apps/migrate/Dockerfile
-            image: spicaengine/migrate
-          - target: mongoreplicationcontroller
-            dockerfile: apps/mongoreplicationcontroller/Dockerfile
-            image: spicaengine/mongoreplicationcontroller
+          - project: api
+            dir: apps/api
+          - project: panel
+            dir: apps/panel
+          - project: migrate
+            dir: apps/migrate
+          - project: mongoreplicationcontroller
+            dir: apps/mongoreplicationcontroller
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Restore Node Modules Cache
+        uses: actions/cache@v4
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --network-timeout 600000
+
+      - name: Prune project
+        run: yarn nx prune ${{ matrix.project }}
 
       - name: Set the VERSION
         run: |
@@ -51,29 +73,21 @@ jobs:
         id: cache
         with:
           path: docker-cache-mounts
-          key: ${{ runner.os }}-docker-cache-${{ matrix.target }}-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-docker-cache-${{ matrix.project }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-docker-cache-${{ matrix.target }}-
-
-      - name: Inject Docker cache mounts
-        uses: reproducible-containers/buildkit-cache-dance@1b8ab18fbda5ad3646e3fcc9ed9dd41ce2f297b4 # v3.3.2
-        with:
-          builder: ${{ steps.setup-buildx.outputs.name }}
-          cache-dir: docker-cache-mounts
-          dockerfile: ${{ matrix.dockerfile }}
-          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+            ${{ runner.os }}-docker-cache-${{ matrix.project }}-
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ${{ matrix.dockerfile }}
+          context: ${{ matrix.dir }}
+          file: ${{ matrix.dir }}/Dockerfile
           push: true
-          tags: ${{ matrix.image }}:${{ env.VERSION }}
+          tags: spicaengine/${{ matrix.project }}:${{ env.VERSION }}
           target: runner
           platforms: linux/amd64, linux/arm64
-          cache-from: type=gha,scope=${{ matrix.target }}
-          cache-to: type=gha,scope=${{ matrix.target }},mode=max
+          cache-from: type=gha,scope=${{ matrix.project }}
+          cache-to: type=gha,scope=${{ matrix.project }},mode=max
 
   npm-packages:
     name: Release npm package (${{ matrix.target }})
@@ -81,7 +95,11 @@ jobs:
     strategy:
       matrix:
         target:
-          - devkit:*
+          - devkit:auth
+          - devkit:bucket
+          - devkit:database
+          - devkit:identity
+          - devkit:storage
           - cli
 
     steps:
@@ -107,15 +125,6 @@ jobs:
             ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
             ${{ runner.os }}-node-modules-
 
-      - name: Restore Nx Cache
-        uses: actions/cache@v4
-        with:
-          path: .nx
-          key: ${{ runner.os }}-nx-${{ hashFiles('**/yarn.lock') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-nx-${{ hashFiles('**/yarn.lock') }}-
-            ${{ runner.os }}-nx-
-
       - name: Install dependencies
         run: yarn install --frozen-lockfile --network-timeout 600000
 
@@ -128,7 +137,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set Yarn registry explicitly
-        run: yarn config set registry https://registry.npmjs.org
+        run: yarn config set npmRegistryServer https://registry.npmjs.org
 
       - name: Release npm packages
         run: yarn run publish:${{ matrix.target }}
@@ -162,4 +171,4 @@ jobs:
         run: gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 
       - name: Release Helm charts
-        run: yarn run publish:charts
+        run: ./scripts/sync_charts.sh

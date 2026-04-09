@@ -1,0 +1,36 @@
+{
+  "name": "@spica-server/bucket-common",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@spica-server/activity-services": "workspace:*",
+    "@spica-server/bucket-cache": "workspace:*",
+    "@spica-server/bucket-expression": "workspace:*",
+    "@spica-server/bucket-services": "workspace:*",
+    "@spica-server/core": "workspace:*",
+    "@spica-server/core-differ": "workspace:*",
+    "@spica-server/core-encryption": "workspace:*",
+    "@spica-server/core-patch": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
+    "@spica-server/filter": "workspace:*",
+    "@spica-server/interface-activity": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
+    "@spica-server/interface-bucket-common": "workspace:*",
+    "@spica-server/interface-bucket-expression": "workspace:*",
+    "@spica-server/interface-core": "workspace:*",
+    "locale": "^0.1.0"
+  },
+  "devDependencies": {
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*"
+  }
+}

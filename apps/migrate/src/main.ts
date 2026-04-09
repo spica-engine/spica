@@ -1,7 +1,7 @@
 import semver from "semver";
 import yargs from "yargs";
 import color from "cli-color";
-import {migrate} from "./migrate";
+import {migrate} from "./migrate.js";
 import {fileURLToPath} from "url";
 
 export async function run(arg?: string | readonly string[]) {

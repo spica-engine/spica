@@ -1,0 +1,15 @@
+{
+  "name": "api/function",
+  "sourceRoot": "packages/api/function",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "projects": ["api/function/runtime/node/bootstrap"],
+          "target": "bundle"
+        }
+      ]
+    }
+  }
+}

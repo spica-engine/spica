@@ -1,0 +1,82 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../replication"
+    },
+    {
+      "path": "user"
+    },
+    {
+      "path": "refresh_token"
+    },
+    {
+      "path": "policy"
+    },
+    {
+      "path": "identity"
+    },
+    {
+      "path": "guard/services"
+    },
+    {
+      "path": "guard"
+    },
+    {
+      "path": "authfactor"
+    },
+    {
+      "path": "apikey"
+    },
+    {
+      "path": "../../interface/replication"
+    },
+    {
+      "path": "../../interface/passport/user"
+    },
+    {
+      "path": "../../interface/passport/identity"
+    },
+    {
+      "path": "../../interface/passport"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../core/patch"
+    },
+    {
+      "path": "../../core/encryption"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../preference"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/websocket"
+    },
+    {
+      "path": "../../core/testing"
+    },
+    {
+      "path": "../config"
+    },
+    {
+      "path": "../asset"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@spica-server/bucket-cache",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/cache-manager": "^2.3.0",
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@spica-server/database": "workspace:*",
+    "cache-manager": "^5.7.6",
+    "cron": "^3.5.0",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@spica-server/database-testing": "workspace:*"
+  }
+}

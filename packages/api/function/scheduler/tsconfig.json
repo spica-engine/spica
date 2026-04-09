@@ -1,0 +1,73 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../../replication"
+    },
+    {
+      "path": "../../passport/guard/services"
+    },
+    {
+      "path": "../../../interface/status"
+    },
+    {
+      "path": "../../../interface/replication"
+    },
+    {
+      "path": "../../../interface/function/scheduler"
+    },
+    {
+      "path": "../../../interface/function/runtime"
+    },
+    {
+      "path": "../../../interface/function/pkgmanager"
+    },
+    {
+      "path": "../runtime/node"
+    },
+    {
+      "path": "../runtime/logger"
+    },
+    {
+      "path": "../runtime/io"
+    },
+    {
+      "path": "../runtime"
+    },
+    {
+      "path": "../queue/proto"
+    },
+    {
+      "path": "../queue"
+    },
+    {
+      "path": "../pkgmanager/node"
+    },
+    {
+      "path": "../pkgmanager/local"
+    },
+    {
+      "path": "../enqueuer"
+    },
+    {
+      "path": "../compiler/typescript"
+    },
+    {
+      "path": "../compiler/javascript"
+    },
+    {
+      "path": "../compiler"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../database/testing"
+    }
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  }
+}

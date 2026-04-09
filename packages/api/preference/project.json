@@ -1,0 +1,5 @@
+{
+  "name": "api/preference",
+  "sourceRoot": "packages/api/preference",
+  "projectType": "library"
+}

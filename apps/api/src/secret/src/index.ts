@@ -1,1 +1,0 @@
-export {SecretModule} from "./module";

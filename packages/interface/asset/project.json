@@ -1,0 +1,5 @@
+{
+  "name": "interface/asset",
+  "sourceRoot": "packages/interface/asset/src",
+  "projectType": "library"
+}

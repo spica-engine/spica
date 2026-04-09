@@ -5,27 +5,28 @@
   "projectType": "application",
   "tags": [],
   "targets": {
-    "build": {
-      "executor": "nx:run-commands",
+    "bundle": {
+      "executor": "@nx/esbuild:esbuild",
       "outputs": ["{workspaceRoot}/dist/apps/cli"],
-      "inputs": [
-        "{projectRoot}/**/*",
-        "!{projectRoot}/test/*",
-        "!{projectRoot}/node_modules/*",
-        "{workspaceRoot}/libs/interface/asset/src/**/*.ts",
-        "{workspaceRoot}/libs/interface/asset/index.ts",
-        "{workspaceRoot}/libs/interface/function/src/**/*.ts",
-        "{workspaceRoot}/libs/interface/function/index.ts"
-      ],
       "options": {
-        "commands": [
-          "tsc -b apps/cli/tsconfig.app.json",
-          "node apps/cli/copy-bin.js",
-          "resolve-tspaths"
-        ],
-        "parallel": false
-      },
-      "cache": true
+        "main": "apps/cli/index.ts",
+        "tsConfig": "apps/cli/tsconfig.json",
+        "outputPath": "apps/cli/dist",
+        "bundle": true,
+        "platform": "node",
+        "format": ["esm"],
+        "thirdParty": false,
+        "generatePackageJson": true,
+        "skipTypeCheck": true,
+        "declaration": false,
+        "assets": [
+          {
+            "glob": "spica",
+            "input": "apps/cli/bin",
+            "output": "bin"
+          }
+        ]
+      }
     },
     "set-version": {}
   }

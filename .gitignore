@@ -54,3 +54,6 @@ yarn-error.log
 .angular/
 
 .env
+# Yarn Berry
+.yarn/cache
+.yarn/install-state.gz

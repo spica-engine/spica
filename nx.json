@@ -56,12 +56,10 @@
   "nxCloudId": "66fba1edf5b0be5c19ad179e",
   "targetDefaults": {
     "typecheck": {
-      "cache": true,
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}"]
+      "cache": true
     },
     "build": {
-      "cache": true,
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}"]
+      "cache": true
     },
     "test": {
       "cache": true,
@@ -80,15 +78,15 @@
     },
     "set-version": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build"],
+      "dependsOn": ["bundle"],
       "options": {
-        "command": "yarn --cwd dist/{projectRoot} version --new-version $VERSION --no-git-tag-version --no-commit-hooks"
+        "command": "bash -c 'sed -i.bak \"s/\\\"version\\\": \\\"0\\.0\\.0-PLACEHOLDER\\\"/\\\"version\\\": \\\"${VERSION}\\\"/\" \"{projectRoot}/dist/package.json\" && rm -f \"{projectRoot}/dist/package.json.bak\"'"
       }
     },
     "nx-release-publish": {
       "dependsOn": ["set-version"],
       "options": {
-        "packageRoot": "dist/{projectRoot}"
+        "packageRoot": "{projectRoot}/dist"
       }
     }
   },

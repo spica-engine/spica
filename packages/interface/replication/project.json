@@ -1,0 +1,5 @@
+{
+  "name": "interface/replication",
+  "sourceRoot": "packages/interface/replication/src",
+  "projectType": "library"
+}

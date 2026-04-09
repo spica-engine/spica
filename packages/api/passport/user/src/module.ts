@@ -1,0 +1,273 @@
+import {Module, Global, DynamicModule, Inject, Optional} from "@nestjs/common";
+import {Validator, SchemaModule} from "@spica-server/core-schema";
+import {JwtModule} from "@nestjs/jwt";
+import {
+  UserOptions,
+  USER_OPTIONS,
+  POLICY_PROVIDER,
+  VERIFICATION_PROVIDERS_INITIALIZER
+} from "@spica-server/interface-passport-user";
+import {UserController} from "./user.controller.js";
+import {UserService} from "./user.service.js";
+import {UserStrategy} from "./user.strategy.js";
+import {providePolicyFinalizer} from "./utility.js";
+import {PolicyService} from "@spica-server/passport-policy";
+import {USER_POLICY_FINALIZER} from "@spica-server/interface-passport-policy";
+import {registerStatusProvider} from "./status.js";
+import userSchema from "./schemas/user.json" with {type: "json"};
+import userCreateSchema from "./schemas/user-create.json" with {type: "json"};
+import userUpdateSchema from "./schemas/user-update.json" with {type: "json"};
+import userSelfUpdateSchema from "./schemas/user-self-update.json" with {type: "json"};
+import AuthFactorSchema from "./schemas/authfactor.json" with {type: "json"};
+import passwordlessLoginStartSchema from "./schemas/passwordless-login-start.json" with {type: "json"};
+import passwordlessLoginVerifySchema from "./schemas/passwordless-login-verify.json" with {type: "json"};
+import forgotPasswordStartSchema from "./schemas/forgot-password-start.json" with {type: "json"};
+import forgotPasswordVerifySchema from "./schemas/forgot-password-verify.json" with {type: "json"};
+import {RefreshTokenServicesModule} from "@spica-server/passport-refresh_token-services";
+import {UserRealtimeModule} from "@spica-server/passport-user-realtime";
+import {VerificationService} from "./verification.service.js";
+import {
+  VerificationProviderRegistry,
+  EmailVerificationProvider,
+  PhoneVerificationProvider
+} from "./providers/index.js";
+import {MailerService} from "@spica-server/mailer";
+import {SmsService} from "@spica-server/sms";
+import {UserConfigService} from "./config.service.js";
+import {ProviderVerificationService} from "./services/provider.verification.service.js";
+import {PasswordlessLoginService} from "./services/passwordless-login.service.js";
+import {PasswordResetService} from "./services/password-reset.service.js";
+import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interface-config";
+import {provideUserPasswordPolicySchemaResolver} from "./password-policy.schema.resolver.js";
+import {RateLimitService} from "./rate-limit.service.js";
+
+@Global()
+@Module({})
+export class UserModule {
+  constructor(
+    @Inject(USER_OPTIONS) options: UserOptions,
+    private userService: UserService,
+    @Optional()
+    @Inject(REGISTER_CONFIG_SCHEMA)
+    registerConfigSchema: RegisterConfigSchema
+  ) {
+    registerStatusProvider(userService);
+    if (registerConfigSchema) {
+      registerConfigSchema("user", {
+        type: "object",
+        properties: {
+          verificationProcessMaxAttempt: {type: "integer"},
+          passwordlessLogin: {
+            type: "object",
+            properties: {
+              passwordlessLoginProvider: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    provider: {type: "string", enum: ["email", "phone"]},
+                    strategy: {type: "string"}
+                  }
+                }
+              }
+            }
+          },
+          resetPasswordProvider: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                provider: {type: "string", enum: ["email", "phone"]},
+                strategy: {type: "string"}
+              }
+            }
+          },
+          providerVerificationConfig: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                provider: {type: "string", enum: ["email", "phone"]},
+                strategy: {type: "string", enum: ["Otp", "MagicLink"]}
+              }
+            }
+          },
+          rateLimits: {
+            type: "object",
+            properties: {
+              login: {
+                type: "object",
+                properties: {
+                  limit: {type: "integer", minimum: 1},
+                  ttl: {type: "integer", minimum: 1}
+                },
+                required: ["limit", "ttl"]
+              },
+              providerVerification: {
+                type: "object",
+                properties: {
+                  limit: {type: "integer", minimum: 1},
+                  ttl: {type: "integer", minimum: 1}
+                },
+                required: ["limit", "ttl"]
+              },
+              forgotPassword: {
+                type: "object",
+                properties: {
+                  limit: {type: "integer", minimum: 1},
+                  ttl: {type: "integer", minimum: 1}
+                },
+                required: ["limit", "ttl"]
+              },
+              refreshToken: {
+                type: "object",
+                properties: {
+                  limit: {type: "integer", minimum: 1},
+                  ttl: {type: "integer", minimum: 1}
+                },
+                required: ["limit", "ttl"]
+              },
+              createUser: {
+                type: "object",
+                properties: {
+                  limit: {type: "integer", minimum: 1},
+                  ttl: {type: "integer", minimum: 1}
+                },
+                required: ["limit", "ttl"]
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  static forRoot(options: UserOptions): DynamicModule {
+    const module: DynamicModule = {
+      module: UserModule,
+      controllers: [UserController],
+      exports: [UserService, UserStrategy, USER_POLICY_FINALIZER, USER_OPTIONS, RateLimitService],
+      imports: [
+        RefreshTokenServicesModule,
+        JwtModule.register({
+          secret: options.secretOrKey,
+          signOptions: {
+            audience: options.audience,
+            issuer: options.issuer
+          }
+        }),
+        SchemaModule.forChild({
+          schemas: [
+            userSchema,
+            userCreateSchema,
+            userUpdateSchema,
+            userSelfUpdateSchema,
+            AuthFactorSchema,
+            passwordlessLoginStartSchema,
+            passwordlessLoginVerifySchema,
+            forgotPasswordStartSchema,
+            forgotPasswordVerifySchema
+          ],
+          customFields: [
+            "options",
+            // relation
+            "bucketId",
+            "relationType"
+            // "dependent"
+          ]
+        })
+      ],
+      providers: [
+        UserService,
+        UserStrategy,
+        VerificationService,
+        PasswordlessLoginService,
+        UserConfigService,
+        VerificationProviderRegistry,
+        ProviderVerificationService,
+        PasswordResetService,
+        RateLimitService,
+        {
+          provide: USER_OPTIONS,
+          useValue: options
+        },
+        {
+          provide: VERIFICATION_PROVIDERS_INITIALIZER,
+          useFactory: (
+            registry: VerificationProviderRegistry,
+            mailerService: MailerService | null,
+            smsService: SmsService | null
+          ) => {
+            if (mailerService) {
+              const emailProvider = new EmailVerificationProvider(mailerService);
+              registry.register(emailProvider);
+            }
+
+            if (smsService) {
+              const smsProvider = new PhoneVerificationProvider(smsService);
+              registry.register(smsProvider);
+            }
+          },
+          inject: [
+            VerificationProviderRegistry,
+            {token: MailerService, optional: true},
+            {token: SmsService, optional: true}
+          ]
+        },
+        {
+          provide: USER_POLICY_FINALIZER,
+          useFactory: providePolicyFinalizer,
+          inject: [UserService]
+        },
+        {
+          provide: POLICY_PROVIDER,
+          useFactory: PolicyProviderFactory,
+          inject: [PolicyService]
+        },
+        {
+          provide: "USER_PASSWORD_POLICY_RESOLVER",
+          useFactory: (validator: Validator, configService: UserConfigService) => {
+            return provideUserPasswordPolicySchemaResolver(validator, configService, {
+              "http://spica.internal/passport/user-create": userCreateSchema,
+              "http://spica.internal/passport/user-update": userUpdateSchema,
+              "http://spica.internal/passport/user-self-update": userSelfUpdateSchema
+            });
+          },
+          inject: [Validator, UserConfigService]
+        }
+      ]
+    };
+
+    if (options.userRealtime) {
+      module.imports.push(UserRealtimeModule.register());
+    }
+
+    return module;
+  }
+}
+
+export const PolicyProviderFactory = (service: PolicyService) => {
+  return async (req: any) => {
+    const userPolicies = [
+      {
+        statement: [
+          {
+            module: "passport:user",
+            action: "passport:user:show",
+            resource: {include: [req.user._id], exclude: []}
+          },
+          {
+            module: "passport:user",
+            action: "passport:user:update",
+            resource: {include: [req.user._id], exclude: []}
+          }
+        ]
+      }
+    ];
+
+    const actualPolicies = await service._findAll();
+    return req.user.policies
+      .map(upi => actualPolicies.find(ap => ap._id == upi))
+      .concat(userPolicies);
+  };
+};

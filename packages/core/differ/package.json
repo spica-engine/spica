@@ -1,0 +1,22 @@
+{
+  "name": "@spica-server/core-differ",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@spica-server/interface-core": "workspace:*",
+    "deep-diff": "^1.0.2",
+    "diff-match-patch": "^1.0.5"
+  },
+  "devDependencies": {
+    "@types/deep-diff": "^1.0.5",
+    "@types/diff-match-patch": "^1.0.36",
+    "@types/json-schema": "^7.0.15"
+  }
+}

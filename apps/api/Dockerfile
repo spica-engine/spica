@@ -1,89 +1,17 @@
 # syntax=docker/dockerfile:1
 FROM node:22-slim AS base
 
-ENV NX_DAEMON=false
-ENV NX_NO_CLOUD=true
-ENV NX_CACHE_DIRECTORY=/app/.nx/cache
-ENV NX_WORKSPACE_DATA_DIRECTORY=/app/.nx/workspace-data
-
 # install necessary tools
 FROM base AS tools
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install git -y
 
-# install app deps to nodejs image
-FROM base AS deps
-WORKDIR /app
-ARG TARGETPLATFORM
 
-COPY --parents package.json yarn.lock \
-     libs/*/package.json \
-     apps/api/package.json \
-     apps/api/src/*/package.json \
-     apps/api/src/function/packages/*/package.json \
-     ./
-RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-${TARGETPLATFORM},sharing=locked \
-    YARN_CACHE_FOLDER=/root/.yarn-cache \
-    yarn install --frozen-lockfile --network-timeout 600000
-
-
-# install app production deps to nodejs image
-FROM base AS deps-production
-WORKDIR /app
-ARG TARGETPLATFORM
-
-COPY --parents package.json yarn.lock \
-     libs/*/package.json \
-     apps/api/package.json \
-     apps/api/src/*/package.json \
-     apps/api/src/function/packages/*/package.json \
-     ./
-RUN --mount=type=cache,target=/root/.yarn-cache,id=api-deps-prod-${TARGETPLATFORM},sharing=locked \
-    YARN_CACHE_FOLDER=/root/.yarn-cache \
-    yarn install --frozen-lockfile --production --network-timeout 600000
-
-
-# build app to nodejs image
-FROM base AS build 
-WORKDIR /app
-ARG TARGETPLATFORM
-COPY --from=deps /app/node_modules ./node_modules
-COPY apps/api ./apps/api
-COPY libs ./libs
-COPY nx.json package.json tsconfig.json yarn.lock ./
-RUN --mount=type=cache,target=/app/.nx/cache,id=nx-cache-${TARGETPLATFORM},sharing=locked \
-    --mount=type=cache,target=/app/.nx/workspace-data,id=nx-workspace-${TARGETPLATFORM},sharing=locked \
-    yarn nx compile api --skip-sync
-
-# test app
-FROM tools AS test
-WORKDIR /app
-# for mongo memory server
-RUN apt-get update && apt-get install libcurl4 -y
-COPY --from=deps /app/node_modules ./node_modules
-COPY apps/api ./apps/api
-COPY libs ./libs
-COPY nx.json package.json tsconfig.json yarn.lock ./
-COPY jest.flaky.setup.js jest.preset.js jest.setup.js ./
-COPY *.env ./
-ARG PROJECTS=""
-ARG EXCLUDE=""
-ARG RABBITMQ_URL=""
-ARG MAILER_URL=""
-ARG MONGODB_URL=""
-ENV RABBITMQ_URL=$RABBITMQ_URL
-ENV MAILER_URL=$MAILER_URL
-ENV MONGODB_URL=$MONGODB_URL
-RUN yarn nx run-many -t test --projects=$PROJECTS --exclude=$EXCLUDE 
-
-# start app from tools, because app uses git
-# copy deps and build
 FROM tools AS runner
 WORKDIR /app
-COPY --from=build /app/dist ./dist
-COPY --from=deps-production /app/node_modules ./node_modules
-COPY --from=deps-production /app/apps/api/node_modules ./dist/apps/api/node_modules
+COPY dist .
+RUN yarn install --production --network-timeout 600000
 ENV DEFAULT_PASSWORD=spica
 ENV FUNCTION_GRPC_ADDRESS=0.0.0.0:5688
-ENTRYPOINT ["node","./dist/apps/api/src/main.js"]
+ENTRYPOINT ["node","src/main.js"]

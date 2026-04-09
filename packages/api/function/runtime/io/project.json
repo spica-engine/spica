@@ -1,0 +1,5 @@
+{
+  "name": "api/function/runtime/io",
+  "sourceRoot": "packages/api/function/runtime/io",
+  "projectType": "library"
+}

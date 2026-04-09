@@ -1,0 +1,46 @@
+{
+  "name": "@spica-server/bucket-hooks",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/emitter": {
+      "types": "./src/emitter.ts",
+      "default": "./dist/src/emitter.js"
+    },
+    "./src/enqueuer": {
+      "types": "./src/enqueuer.ts",
+      "default": "./dist/src/enqueuer.js"
+    },
+    "./src/module": {
+      "types": "./src/module.ts",
+      "default": "./dist/src/module.js"
+    }
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.5",
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/bucket-hooks-proto": "workspace:*",
+    "@spica-server/bucket-services": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/function-enqueuer": "workspace:*",
+    "@spica-server/function-queue": "workspace:*",
+    "@spica-server/function-queue-proto": "workspace:*",
+    "@spica-server/interface-bucket-hooks": "workspace:*",
+    "@spica-server/interface-function": "workspace:*",
+    "@spica-server/interface-function-enqueuer": "workspace:*",
+    "@spica-server/interface-function-scheduler": "workspace:*",
+    "@spica-server/interface-replication": "workspace:*",
+    "@spica-server/replication": "workspace:*",
+    "uniqid": "^5.4.0"
+  },
+  "devDependencies": {
+    "@spica-server/database-testing": "workspace:*",
+    "@types/json-schema": "^7.0.15",
+    "@types/uniqid": "^5.3.4"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "extends": "../../../../../tsconfig.base.json",
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../../interface/function/runtime"
+    },
+    {
+      "path": "../logger"
+    },
+    {
+      "path": "../../../../database"
+    }
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  }
+}

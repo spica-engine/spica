@@ -1,0 +1,52 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../guard"
+    },
+    {
+      "path": "../../../interface/versioncontrol"
+    },
+    {
+      "path": "../../../interface/passport/policy"
+    },
+    {
+      "path": "../../../interface/passport/guard"
+    },
+    {
+      "path": "../../../interface/activity"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core/patch"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/websocket"
+    },
+    {
+      "path": "../../../core/testing"
+    }
+  ]
+}

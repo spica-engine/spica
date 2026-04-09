@@ -1,0 +1,90 @@
+{
+  "name": "@spica-server/passport-user",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/activity.resource": {
+      "types": "./src/activity.resource.ts",
+      "default": "./dist/src/activity.resource.js"
+    },
+    "./src/config.service": {
+      "types": "./src/config.service.ts",
+      "default": "./dist/src/config.service.js"
+    },
+    "./src/rate-limit.guard": {
+      "types": "./src/rate-limit.guard.ts",
+      "default": "./dist/src/rate-limit.guard.js"
+    },
+    "./src/rate-limit.service": {
+      "types": "./src/rate-limit.service.ts",
+      "default": "./dist/src/rate-limit.service.js"
+    },
+    "./src/services/password-reset.service": {
+      "types": "./src/services/password-reset.service.ts",
+      "default": "./dist/src/services/password-reset.service.js"
+    },
+    "./src/services/passwordless-login.service": {
+      "types": "./src/services/passwordless-login.service.ts",
+      "default": "./dist/src/services/passwordless-login.service.js"
+    },
+    "./src/services/provider.verification.service": {
+      "types": "./src/services/provider.verification.service.ts",
+      "default": "./dist/src/services/provider.verification.service.js"
+    },
+    "./src/user.service": {
+      "types": "./src/user.service.ts",
+      "default": "./dist/src/user.service.js"
+    },
+    "./src/utility": {
+      "types": "./src/utility.ts",
+      "default": "./dist/src/utility.js"
+    },
+    "./src/verification.service": {
+      "types": "./src/verification.service.ts",
+      "default": "./dist/src/verification.service.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/jwt": "^10.2.0",
+    "@nestjs/passport": "^10.0.3",
+    "@spica-server/activity-services": "workspace:*",
+    "@spica-server/config": "workspace:*",
+    "@spica-server/core": "workspace:*",
+    "@spica-server/core-encryption": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
+    "@spica-server/filter": "workspace:*",
+    "@spica-server/interface-activity": "workspace:*",
+    "@spica-server/interface-config": "workspace:*",
+    "@spica-server/interface-core": "workspace:*",
+    "@spica-server/interface-passport-authfactor": "workspace:*",
+    "@spica-server/interface-passport-policy": "workspace:*",
+    "@spica-server/interface-passport-user": "workspace:*",
+    "@spica-server/interface-replication": "workspace:*",
+    "@spica-server/mailer": "workspace:*",
+    "@spica-server/passport-authfactor": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "@spica-server/passport-policy": "workspace:*",
+    "@spica-server/passport-refresh_token-services": "workspace:*",
+    "@spica-server/passport-user-realtime": "workspace:*",
+    "@spica-server/replication": "workspace:*",
+    "@spica-server/sms": "workspace:*",
+    "@spica-server/status": "workspace:*",
+    "bcryptjs": "^2.4.3",
+    "passport-jwt": "^4.0.1",
+    "rxjs": "^7.8.1",
+    "uuid": "^11.0.0"
+  },
+  "devDependencies": {
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*"
+  }
+}

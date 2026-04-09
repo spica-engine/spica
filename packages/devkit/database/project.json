@@ -1,0 +1,12 @@
+{
+  "name": "devkit/database",
+  "sourceRoot": "packages/devkit/database",
+  "projectType": "library",
+  "targets": {
+    "bundle": {
+      "dependsOn": ["build"],
+      "command": "yarn rollup -c {projectRoot}/rollup.config.cjs --bundleConfigAsCjs"
+    },
+    "set-version": {}
+  }
+}

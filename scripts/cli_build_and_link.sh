@@ -7,12 +7,11 @@ if [ ! -f nx.json ]; then
     exit 1;
 fi
 
-yarn nx build cli
+yarn nx bundle cli
 
-yarn global add "$(pwd)/dist/apps/cli"
+npm install -g "$(pwd)/apps/cli/dist"
 
 echo "###########################################"
 echo "Linking was completed successfully."
 echo "You may want to invoke cli by running 'spica' in your terminal"
 echo "###########################################"
-

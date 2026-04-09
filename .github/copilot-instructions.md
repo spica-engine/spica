@@ -10,14 +10,14 @@ Spica is an **open-source backend development engine** built as an Nx monorepo w
 - **`apps/spica/`** — Angular admin panel (separate build, not covered by backend tests).
 - **`apps/cli/`** — `@spica/cli` npm package for project management.
 - **`apps/migrate/`** — Database migration runner.
-- **`libs/`** — Shared libraries: `core` (pipes, schema, websocket, middleware), `database` (MongoDB wrapper), `filter`, `interface` (TypeScript interfaces per domain), `realtime`, `representative`, `transaction`.
-- **`libs/interface/`** — Pure TypeScript interfaces/types organized per domain. No logic—only contracts.
+- **`packages/`** — Shared libraries: `core` (pipes, schema, websocket, middleware), `database` (MongoDB wrapper), `filter`, `interface` (TypeScript interfaces per domain), `realtime`, `representative`, `transaction`.
+- **`packages/interface/`** — Pure TypeScript interfaces/types organized per domain. No logic—only contracts.
 
 ### Key Path Aliases (tsconfig.json)
 
 ```
-@spica-server/*  → libs/*, apps/api/src/*
-@spica-devkit/*  → apps/api/src/function/packages/*
+@spica-server/*  → packages/*, apps/api/src/*
+@spica-devkit/*  → packages/api/function/packages/*
 @spica/*         → apps/*
 ```
 

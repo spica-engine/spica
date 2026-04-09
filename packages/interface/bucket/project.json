@@ -1,0 +1,5 @@
+{
+  "name": "interface/bucket",
+  "sourceRoot": "packages/interface/bucket/src",
+  "projectType": "library"
+}

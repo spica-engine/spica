@@ -1,0 +1,30 @@
+{
+  "name": "@spica-server/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface-config": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*",
+    "@types/json-schema": "^7.0.15"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/config.module": {
+      "types": "./src/config.module.ts",
+      "default": "./dist/src/config.module.js"
+    }
+  }
+}

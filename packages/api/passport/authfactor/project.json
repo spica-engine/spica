@@ -1,0 +1,5 @@
+{
+  "name": "api/passport/authfactor",
+  "sourceRoot": "packages/api/passport/authfactor",
+  "projectType": "library"
+}

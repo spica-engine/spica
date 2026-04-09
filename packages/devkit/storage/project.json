@@ -1,0 +1,12 @@
+{
+  "name": "devkit/storage",
+  "sourceRoot": "packages/devkit/storage",
+  "projectType": "library",
+  "targets": {
+    "bundle": {
+      "dependsOn": ["build"],
+      "command": "yarn rollup -c {projectRoot}/rollup.config.cjs --bundleConfigAsCjs"
+    },
+    "set-version": {}
+  }
+}

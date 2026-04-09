@@ -1,0 +1,91 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../../status"
+    },
+    {
+      "path": "../../replication"
+    },
+    {
+      "path": "../../preference/services"
+    },
+    {
+      "path": "../refresh_token/services"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../guard"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
+      "path": "../../../interface/representative"
+    },
+    {
+      "path": "../../../interface/replication"
+    },
+    {
+      "path": "../../../interface/passport/policy"
+    },
+    {
+      "path": "../../../interface/passport/identity"
+    },
+    {
+      "path": "../../../interface/passport/authfactor"
+    },
+    {
+      "path": "../../../interface/core"
+    },
+    {
+      "path": "../../../interface/config"
+    },
+    {
+      "path": "../../../interface/asset"
+    },
+    {
+      "path": "../../../interface/activity"
+    },
+    {
+      "path": "../../../database/pipeline"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../config"
+    },
+    {
+      "path": "../../asset"
+    },
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/websocket"
+    },
+    {
+      "path": "../../../core/testing"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "name": "@spica-server/function-webhook",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/invoker": {
+      "types": "./src/invoker.ts",
+      "default": "./dist/src/invoker.js"
+    },
+    "./src/log.controller": {
+      "types": "./src/log.controller.ts",
+      "default": "./dist/src/log.controller.js"
+    },
+    "./src/log.service": {
+      "types": "./src/log.service.ts",
+      "default": "./dist/src/log.service.js"
+    },
+    "./src/schema": {
+      "types": "./src/schema.ts",
+      "default": "./dist/src/schema.js"
+    },
+    "./src/webhook.controller": {
+      "types": "./src/webhook.controller.ts",
+      "default": "./dist/src/webhook.controller.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/core": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface-function": "workspace:*",
+    "@spica-server/interface-function-webhook": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "handlebars": "^4.7.8",
+    "node-fetch": "^3.3.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*",
+    "@types/json-schema": "^7.0.15"
+  }
+}

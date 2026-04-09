@@ -1,0 +1,116 @@
+import commonjs from "@rollup/plugin-commonjs";
+import resolve from "@rollup/plugin-node-resolve";
+import json from "@rollup/plugin-json";
+import typescript from "@rollup/plugin-typescript";
+import copy from "rollup-plugin-copy";
+import {dts} from "rollup-plugin-dts";
+import fs from "fs";
+import path from "path";
+
+export function cleanUp(path) {
+  if (fs.existsSync(path)) {
+    fs.rmSync(path, {recursive: true, force: true});
+  }
+}
+
+const sharedExternals = [
+  "mongodb",
+  "axios",
+  "ws",
+  "rxjs",
+  "rxjs/operators",
+  "rxjs/webSocket",
+  "json-schema"
+];
+
+export default function getConfig(project, additionalCopyPaths = [], additionalExternals = []) {
+  const base = path.join("packages/devkit", project);
+  const dist = path.join(base, "dist");
+
+  cleanUp(dist);
+
+  const tsConfigPath = path.join(base, "tsconfig.json");
+
+  const copyTargets = [
+    {
+      src: path.join(base, "package.json"),
+      dest: dist,
+      transform(contents) {
+        const pkg = JSON.parse(contents.toString());
+        delete pkg.devDependencies;
+        // When published, dist/ is the package root, so strip the ./dist/ prefix.
+        const adjusted = JSON.stringify(pkg).replaceAll('"./dist/', '"./');
+        return JSON.stringify(JSON.parse(adjusted), null, 2);
+      }
+    }
+  ];
+
+  if (additionalCopyPaths) {
+    additionalCopyPaths.forEach(additionalCopyPath =>
+      copyTargets.push({
+        src: path.join(base, additionalCopyPath),
+        dest: dist
+      })
+    );
+  }
+
+  const outputs = [
+    {
+      dir: dist,
+      format: "cjs",
+      sourcemap: true,
+      entryFileNames: "index.js"
+    },
+    {
+      dir: dist,
+      format: "esm",
+      sourcemap: true,
+      entryFileNames: "index.mjs"
+    }
+  ];
+
+  const jsConfig = {
+    input: path.join(base, "src", "index.ts"),
+    output: outputs,
+    plugins: [
+      resolve({
+        preferBuiltins: true
+      }),
+      commonjs(),
+      json(),
+      typescript({
+        tsconfig: tsConfigPath,
+        outDir: dist,
+        declaration: false,
+        declarationDir: undefined,
+        composite: false
+      }),
+      copy({
+        targets: copyTargets
+      })
+    ],
+    external: [...sharedExternals, ...additionalExternals]
+  };
+
+  const dtsConfig = {
+    input: path.join(base, "src", "index.ts"),
+    output: {
+      file: path.join(dist, "index.d.ts"),
+      format: "es"
+    },
+    plugins: [
+      resolve({
+        exportConditions: ["types", "import", "default"],
+        extensions: [".ts", ".d.ts", ".js", ".mjs"],
+        preferBuiltins: false
+      }),
+      dts({
+        tsconfig: tsConfigPath,
+        respectExternal: true
+      })
+    ],
+    external: [...sharedExternals, ...additionalExternals]
+  };
+
+  return [jsConfig, dtsConfig];
+}

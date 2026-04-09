@@ -1,0 +1,19 @@
+{
+  "name": "@spica-devkit/internal_common",
+  "license": "AGPLv3",
+  "version": "0.0.0-PLACEHOLDER",
+  "description": "Internal common utilities for Spica devkit packages.",
+  "author": "spica",
+  "private": true,
+  "keywords": [
+    "spica",
+    "devkit"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "sideEffects": false
+}

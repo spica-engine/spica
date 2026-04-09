@@ -1,0 +1,5 @@
+{
+  "name": "api/versioncontrol/test",
+  "sourceRoot": "packages/api/versioncontrol/test",
+  "projectType": "library"
+}

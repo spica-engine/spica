@@ -1,0 +1,107 @@
+{
+  "name": "@spica-server/function",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./runtime/testing": {
+      "types": "./runtime/testing/index.ts",
+      "default": "./runtime/testing/dist/index.js"
+    },
+    "./src/activity.resource": {
+      "types": "./src/activity.resource.ts",
+      "default": "./dist/src/activity.resource.js"
+    },
+    "./src/change": {
+      "types": "./src/change.ts",
+      "default": "./dist/src/change.js"
+    },
+    "./src/crud": {
+      "types": "./src/crud.ts",
+      "default": "./dist/src/crud.js"
+    },
+    "./src/engine": {
+      "types": "./src/engine.ts",
+      "default": "./dist/src/engine.js"
+    },
+    "./src/synchronizer/dependency": {
+      "types": "./src/synchronizer/dependency/index.ts",
+      "default": "./dist/src/synchronizer/dependency/index.js"
+    },
+    "./src/synchronizer/index": {
+      "types": "./src/synchronizer/index/index.ts",
+      "default": "./dist/src/synchronizer/index/index.js"
+    },
+    "./src/synchronizer/schema": {
+      "types": "./src/synchronizer/schema/index.ts",
+      "default": "./dist/src/synchronizer/schema/index.js"
+    },
+    "./src/synchronizer/tsconfig": {
+      "types": "./src/synchronizer/tsconfig/index.ts",
+      "default": "./dist/src/synchronizer/tsconfig/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "@nestjs/websockets": "^10.4.15",
+    "@spica-server/activity-services": "workspace:*",
+    "@spica-server/asset": "workspace:*",
+    "@spica-server/core": "workspace:*",
+    "@spica-server/core-differ": "workspace:*",
+    "@spica-server/core-encryption": "workspace:*",
+    "@spica-server/core-patch": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
+    "@spica-server/env_var-services": "workspace:*",
+    "@spica-server/function-log": "workspace:*",
+    "@spica-server/function-queue-proto": "workspace:*",
+    "@spica-server/function-realtime": "workspace:*",
+    "@spica-server/function-scheduler": "workspace:*",
+    "@spica-server/function-services": "workspace:*",
+    "@spica-server/function-webhook": "workspace:*",
+    "@spica-server/interface-activity": "workspace:*",
+    "@spica-server/interface-asset": "workspace:*",
+    "@spica-server/interface-env_var": "workspace:*",
+    "@spica-server/interface-function": "workspace:*",
+    "@spica-server/interface-function-pkgmanager": "workspace:*",
+    "@spica-server/interface-function-scheduler": "workspace:*",
+    "@spica-server/interface-replication": "workspace:*",
+    "@spica-server/interface-representative": "workspace:*",
+    "@spica-server/interface-secret": "workspace:*",
+    "@spica-server/interface-versioncontrol": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "@spica-server/realtime": "workspace:*",
+    "@spica-server/replication": "workspace:*",
+    "@spica-server/secret": "workspace:*",
+    "@spica-server/secret-services": "workspace:*",
+    "@spica-server/status": "workspace:*",
+    "axios": "^1.8.2",
+    "bson": "^6.10.1",
+    "chokidar": "^4.0.3",
+    "rimraf": "^6.0.1",
+    "rxjs": "^7.8.1",
+    "ws": "^8.18.0",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-devkit/database": "*",
+    "@spica-server/bucket": "workspace:*",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/passport-guard-services": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*",
+    "@spica-server/preference": "workspace:*",
+    "@spica-server/preference-testing": "workspace:*",
+    "@types/json-schema": "^7.0.15",
+    "testcontainers": "^10.0.0"
+  }
+}

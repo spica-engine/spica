@@ -1,0 +1,46 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "services"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../guard"
+    },
+    {
+      "path": "../../../interface/passport/refresh_token"
+    },
+    {
+      "path": "../../../filter"
+    },
+    {
+      "path": "../../../database/pipeline"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/websocket"
+    },
+    {
+      "path": "../../../core/testing"
+    }
+  ]
+}

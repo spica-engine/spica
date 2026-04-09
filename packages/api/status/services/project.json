@@ -1,0 +1,5 @@
+{
+  "name": "api/status/services",
+  "sourceRoot": "packages/api/status/services",
+  "projectType": "library"
+}

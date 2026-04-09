@@ -1,0 +1,263 @@
+import {Middlewares} from "@spica-server/core";
+import {EventQueue, HttpQueue} from "@spica-server/function-queue";
+import {event, Http} from "@spica-server/function-queue-proto";
+import {Enqueuer} from "./enqueuer.js";
+import express from "express";
+import bodyParser from "body-parser";
+import {CorsOptions} from "@spica-server/interface-core";
+import {AttachStatusTracker} from "@spica-server/interface-status";
+import {Description, HttpMethod, HttpOptions} from "@spica-server/interface-function-enqueuer";
+import {IGuardService} from "@spica-server/interface-passport-guard";
+import {HttpRateLimitService} from "./http-rate-limit.service.js";
+
+export class HttpEnqueuer extends Enqueuer<HttpOptions> {
+  type = event.Type.HTTP;
+
+  description: Description = {
+    icon: "http",
+    name: "http",
+    title: "Http",
+    description: "Designed for APIs and Http Streaming"
+  };
+
+  private router = express.Router({mergeParams: true});
+  private rateLimitService = new HttpRateLimitService();
+
+  constructor(
+    private queue: EventQueue,
+    private http: HttpQueue,
+    httpServer: express.Application,
+    private corsOptions: CorsOptions,
+    private schedulerUnsubscription: (targetId: string) => void,
+    private guardService: IGuardService,
+    private attachStatusTracker?: AttachStatusTracker
+  ) {
+    super();
+    this.router.use(
+      bodyParser.raw({
+        limit: "10mb",
+        type: "*/*"
+      }) as any
+    );
+    this.router.use(this.handleUnhandled);
+    const stack = httpServer._router.stack;
+    httpServer.use("/fn-execute", this.router);
+    const expressInitIndex = stack.findIndex(l => l.name === "expressInit");
+    const layer = stack.splice(stack.length - 1, 1)[0];
+    stack.splice(expressInitIndex + 1, 0, layer);
+  }
+
+  private handleUnhandled(req, res) {
+    // By default express sends a default response if the OPTIONS route is unhandled
+    // https://github.com/expressjs/express/blob/3ed5090ca91f6a387e66370d57ead94d886275e1/lib/router/index.js#L640
+    if (!req.route) {
+      res.status(404).send({
+        message: "Invalid route",
+        url: req.originalUrl,
+        method: req.method,
+        engine: "Function"
+      });
+    }
+  }
+
+  private reorderUnhandledHandle() {
+    this.router.stack.splice(
+      this.router.stack.findIndex(l => l.handle == this.handleUnhandled),
+      1
+    );
+    this.router.use(this.handleUnhandled);
+  }
+
+  subscribe(target: event.Target, options: HttpOptions): void {
+    const method = options.method.toLowerCase();
+    const path = options.path.replace(/^\/?(.*?)\/?$/, "/$1");
+
+    if (options.preflight && options.method != HttpMethod.Head) {
+      if (options.method == HttpMethod.Options) {
+        throw new Error("Preflight option was used with HttpMethod.Options");
+      }
+
+      const fn = (req, res, next) => Middlewares.Preflight(this.corsOptions)(req, res, next);
+
+      Object.defineProperty(fn, "target", {writable: false, value: target});
+
+      this.router.options(path, fn);
+      this.router[method](path, fn);
+    }
+
+    const fn = async (req: express.Request, res: express.Response) => {
+      const shouldAuthenticate =
+        Array.isArray(options.authenticate) && options.authenticate.length > 0;
+
+      if (shouldAuthenticate) {
+        try {
+          await this.guardService.checkAuthentication({
+            request: req,
+            response: res,
+            allowedStrategies: options.authenticate
+          });
+        } catch (e) {
+          const status = e.status || 401;
+          if (!res.headersSent) {
+            res.status(status).json({message: e.message || "Unauthorized"});
+          }
+          return;
+        }
+
+        if (options.authorize) {
+          try {
+            const originalRoute = req.route;
+            req.route = {path: "function/:functionId/invoke/:handlerId"} as any;
+
+            const originalParams = req.params;
+            req.params = {functionId: target.id, handlerId: target.handler};
+
+            await this.guardService.checkAuthorization({
+              request: req,
+              response: res,
+              actions: ["function:invoke"],
+              options: {
+                resourceFilter: false
+              },
+              format: "function/:functionId/invoke/:handlerId"
+            });
+
+            req.params = originalParams;
+            req.route = originalRoute;
+          } catch (e) {
+            const status = e.status || 403;
+            if (!res.headersSent) {
+              res.status(status).json({message: e.message || "Forbidden"});
+            }
+            return;
+          }
+        }
+      }
+
+      if (options.rateLimit) {
+        const ip = req.ip;
+
+        if (!ip) {
+          console.warn(
+            "Could not determine client IP address for rate limiting. Allowing request by default."
+          );
+        } else {
+          const groupKey = `${target.cwd}:${target.handler}`;
+          const rateLimitResult = this.rateLimitService.checkLimit(groupKey, ip);
+
+          if (rateLimitResult.limit > 0) {
+            res.setHeader("X-RateLimit-Limit", rateLimitResult.limit);
+            res.setHeader("X-RateLimit-Remaining", rateLimitResult.remaining);
+            res.setHeader("X-RateLimit-Reset", Math.ceil(rateLimitResult.resetAt / 1000));
+
+            if (!rateLimitResult.allowed) {
+              const retryAfter = Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000);
+              res.setHeader("Retry-After", retryAfter);
+              res.status(429).json({
+                statusCode: 429,
+                message: "Too many requests. Please try again later.",
+                error: "Too Many Requests"
+              });
+              return;
+            }
+          }
+        }
+      }
+
+      const ev = new event.Event({
+        target,
+        type: event.Type.HTTP
+      });
+      this.queue.enqueue(ev);
+      const request = new Http.Request({
+        method: req.method,
+        url: req.url,
+        path: req.path,
+        statusCode: req.statusCode,
+        statusMessage: req.statusMessage,
+        query: JSON.stringify(req.query),
+        body: new Uint8Array(req.body)
+      });
+      request.params = Object.keys(req.params).reduce((acc, key) => {
+        const param = new Http.Param();
+        param.key = key;
+        param.value = req.params[key] as string;
+        acc.push(param);
+        return acc;
+      }, []);
+      request.headers = Object.keys(req.headers).reduce((acc, key) => {
+        const header = new Http.Header();
+        header.key = key;
+        if (typeof req.headers[key] == "string") {
+          header.value = req.headers[key] as string;
+        } else {
+          throw new Error("Implement array headers");
+        }
+
+        acc.push(header);
+        return acc;
+      }, []);
+
+      if (this.attachStatusTracker) {
+        this.attachStatusTracker(req, res);
+      }
+
+      this.http.enqueue(ev.id, request, res as any);
+
+      // https://github.com/nodejs/node/commit/0c545f0f72
+      // Due to changes above on nodejs v14, we can not listen request 'close' anymore because it will be invoked after request 'end' as well.
+      // After request body is read succesfully, request 'end' will be invoked for example.
+      // But actual 'close' we want to listen is for request cancellations, aborts etc. So we should listen connection 'close' instead.
+      req.connection.once("close", () => {
+        if (!req.res.headersSent) {
+          this.queue.dequeue(ev);
+          this.http.dequeue(ev.id);
+        }
+      });
+    };
+
+    Object.defineProperty(fn, "target", {writable: false, value: target});
+
+    if (options.rateLimit) {
+      const groupKey = `${target.cwd}:${target.handler}`;
+      this.rateLimitService.addLimit(groupKey, options.rateLimit);
+    }
+
+    this.router[method](path, fn);
+
+    this.reorderUnhandledHandle();
+  }
+
+  unsubscribe(target: event.Target): void {
+    this.schedulerUnsubscription(target.id);
+
+    const groupKey = `${target.cwd}:${target.handler}`;
+    this.rateLimitService.removeLimit(groupKey);
+
+    this.router.stack = this.router.stack.filter(layer => {
+      if (layer.route) {
+        return !layer.route.stack.some(layer => {
+          if (!target.handler) {
+            return layer.handle["target"].cwd == target.cwd;
+          } else {
+            return (
+              layer.handle["target"].cwd == target.cwd &&
+              layer.handle["target"].handler == target.handler
+            );
+          }
+        });
+      }
+      return true;
+    });
+    this.reorderUnhandledHandle();
+  }
+
+  onEventsAreDrained(events: event.Event[]): Promise<any> {
+    for (const event of events) {
+      const {response} = this.http.get(event.id);
+      response.status(503).send();
+    }
+
+    return Promise.resolve();
+  }
+}

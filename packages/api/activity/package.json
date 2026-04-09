@@ -1,0 +1,27 @@
+{
+  "name": "@spica-server/activity",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/activity-services": "workspace:*",
+    "@spica-server/core": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
+    "@spica-server/interface-activity": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*"
+  }
+}

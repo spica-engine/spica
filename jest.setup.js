@@ -13,20 +13,19 @@ process.env.TEST_TMPDIR = testTmpDir;
 
 // directory for migration tests
 process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(
-  process.cwd(),
-  "dist/apps/migrate/test/acceptance"
+  workspaceRoot,
+  "apps/migrate/dist/test/acceptance"
 );
 
 // directory for function spawned worker entrypoints
 process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH = path.join(
   workspaceRoot,
-  "dist",
-  "apps",
+  "packages",
   "api",
-  "src",
   "function",
   "runtime",
   "node",
+  "dist",
   "bootstrap",
   "entrypoint.js"
 );
@@ -34,13 +33,12 @@ process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH = path.join(
 // directory for function typescript compiler worker path
 process.env.FUNCTION_TS_COMPILER_PATH = path.join(
   workspaceRoot,
-  "dist",
-  "apps",
+  "packages",
   "api",
-  "src",
   "function",
   "compiler",
   "typescript",
+  "dist",
   "src",
   "typescript_worker.js"
 );

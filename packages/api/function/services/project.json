@@ -1,0 +1,5 @@
+{
+  "name": "api/function/services",
+  "sourceRoot": "packages/api/function/services",
+  "projectType": "library"
+}

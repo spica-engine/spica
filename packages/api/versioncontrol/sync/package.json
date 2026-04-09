@@ -1,0 +1,31 @@
+{
+  "name": "@spica-server/versioncontrol-sync",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/core": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
+    "@spica-server/interface-versioncontrol": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "@spica-server/versioncontrol-services-sync": "workspace:*",
+    "@spica-server/versioncontrol-sync-realtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/passport-guard-services": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*"
+  }
+}

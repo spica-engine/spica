@@ -1,0 +1,17 @@
+{
+  "name": "@spica-server/versioncontrol-services-changelog",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface-versioncontrol": "workspace:*"
+  }
+}

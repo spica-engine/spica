@@ -1,0 +1,5 @@
+{
+  "name": "api/config",
+  "sourceRoot": "packages/api/config",
+  "projectType": "library"
+}

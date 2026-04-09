@@ -1,0 +1,23 @@
+{
+  "name": "@spica-server/mailer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/interface-mailer": "workspace:*",
+    "nodemailer": "^8.0.4"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@types/nodemailer": "^6.4.19",
+    "node-fetch": "^3.3.2",
+    "testcontainers": "^10.0.0"
+  }
+}

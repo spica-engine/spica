@@ -1,0 +1,5 @@
+{
+  "name": "api/function/webhook",
+  "sourceRoot": "packages/api/function/webhook",
+  "projectType": "library"
+}

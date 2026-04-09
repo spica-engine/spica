@@ -1,0 +1,25 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "include": [
+    "src/**/*.ts",
+    "index.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../secret/services"
+    },
+    {
+      "path": "../../env_var/services"
+    },
+    {
+      "path": "../../../interface/function"
+    }
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  }
+}

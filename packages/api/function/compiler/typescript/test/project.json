@@ -1,0 +1,5 @@
+{
+  "name": "api/function/compiler/typescript/test",
+  "sourceRoot": "packages/api/function/compiler/typescript/test",
+  "projectType": "application"
+}

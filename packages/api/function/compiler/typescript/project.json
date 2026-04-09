@@ -1,0 +1,17 @@
+{
+  "name": "api/function/compiler/typescript",
+  "sourceRoot": "packages/api/function/compiler/typescript",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "projects": [
+            "api/function/compiler/typescript"
+          ],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../status"
+    },
+    {
+      "path": "../preference/services"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../interface/versioncontrol"
+    },
+    {
+      "path": "../../interface/status"
+    },
+    {
+      "path": "../../interface/representative"
+    },
+    {
+      "path": "../../interface/preference"
+    },
+    {
+      "path": "../../interface/passport/guard"
+    },
+    {
+      "path": "../../interface/core"
+    },
+    {
+      "path": "../../interface/bucket"
+    },
+    {
+      "path": "../../interface/asset"
+    },
+    {
+      "path": "../../interface/activity"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../core/patch"
+    },
+    {
+      "path": "../../core/encryption"
+    },
+    {
+      "path": "../../core/differ"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "services"
+    },
+    {
+      "path": "schemas-realtime"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "hooks"
+    },
+    {
+      "path": "history"
+    },
+    {
+      "path": "graphql"
+    },
+    {
+      "path": "expression"
+    },
+    {
+      "path": "common"
+    },
+    {
+      "path": "cache"
+    },
+    {
+      "path": "../asset"
+    },
+    {
+      "path": "../activity/services"
+    },
+    {
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../passport/guard/services"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/websocket"
+    },
+    {
+      "path": "../../core/testing"
+    },
+    {
+      "path": "../config"
+    }
+  ]
+}

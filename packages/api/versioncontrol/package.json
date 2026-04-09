@@ -1,0 +1,50 @@
+{
+  "name": "@spica-server/versioncontrol",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
+    "@spica-server/interface-config": "workspace:*",
+    "@spica-server/interface-env_var": "workspace:*",
+    "@spica-server/interface-function": "workspace:*",
+    "@spica-server/interface-passport-policy": "workspace:*",
+    "@spica-server/interface-versioncontrol": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "@spica-server/replication": "workspace:*",
+    "@spica-server/representative": "workspace:*",
+    "@spica-server/versioncontrol-sync": "workspace:*",
+    "@spica-server/versioncontrol-sync-engine": "workspace:*",
+    "simple-git": "^3.27.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/bucket": "workspace:*",
+    "@spica-server/bucket-history": "workspace:*",
+    "@spica-server/bucket-services": "workspace:*",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/env_var": "workspace:*",
+    "@spica-server/env_var-services": "workspace:*",
+    "@spica-server/function": "workspace:*",
+    "@spica-server/function-log": "workspace:*",
+    "@spica-server/function-scheduler": "workspace:*",
+    "@spica-server/function-services": "workspace:*",
+    "@spica-server/passport-guard-services": "workspace:*",
+    "@spica-server/passport-policy": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*",
+    "@spica-server/preference-testing": "workspace:*",
+    "@spica-server/secret": "workspace:*",
+    "uuid": "^11.0.5",
+    "yaml": "^2.7.0"
+  }
+}

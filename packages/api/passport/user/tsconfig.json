@@ -1,0 +1,91 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../../status"
+    },
+    {
+      "path": "../../sms"
+    },
+    {
+      "path": "../../replication"
+    },
+    {
+      "path": "realtime"
+    },
+    {
+      "path": "../refresh_token/services"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "../guard"
+    },
+    {
+      "path": "../authfactor"
+    },
+    {
+      "path": "../../mailer"
+    },
+    {
+      "path": "../../../interface/replication"
+    },
+    {
+      "path": "../../../interface/passport/user"
+    },
+    {
+      "path": "../../../interface/passport/policy"
+    },
+    {
+      "path": "../../../interface/passport/authfactor"
+    },
+    {
+      "path": "../../../interface/core"
+    },
+    {
+      "path": "../../../interface/config"
+    },
+    {
+      "path": "../../../interface/activity"
+    },
+    {
+      "path": "../../../filter"
+    },
+    {
+      "path": "../../../database/pipeline"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core/encryption"
+    },
+    {
+      "path": "../../../core"
+    },
+    {
+      "path": "../../config"
+    },
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/websocket"
+    },
+    {
+      "path": "../../../core/testing"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "devkit/bucket",
+  "sourceRoot": "packages/devkit/bucket",
+  "projectType": "library",
+  "targets": {
+    "bundle": {
+      "dependsOn": ["build"],
+      "command": "yarn rollup -c {projectRoot}/rollup.config.cjs --bundleConfigAsCjs"
+    },
+    "set-version": {}
+  }
+}

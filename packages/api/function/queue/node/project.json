@@ -1,0 +1,5 @@
+{
+  "name": "api/function/queue/node",
+  "sourceRoot": "packages/api/function/queue/node",
+  "projectType": "library"
+}

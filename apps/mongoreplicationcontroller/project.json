@@ -8,41 +8,26 @@
     "serve": {
       "executor": "@nx/js:node",
       "options": {
-        "buildTarget": "mongoreplicationcontroller:build"
+        "buildTarget": "mongoreplicationcontroller:build",
+        "buildTargetOptions": {
+          "outputPath": "apps/mongoreplicationcontroller/dist",
+          "outputFileName": "src/main.js"
+        }
       }
     },
-    "build": {
-      "executor": "@nx/js:tsc",
-      "inputs": [
-        "{workspaceRoot}/tsconfig.json",
-        "{projectRoot}/src/**/*",
-        "{projectRoot}/tsconfig.json",
-        "{projectRoot}/project.json"
-      ],
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/apps/mongoreplicationcontroller",
-        "main": "apps/mongoreplicationcontroller/src/main.ts",
-        "tsConfig": "apps/mongoreplicationcontroller/tsconfig.json"
-      },
-      "cache": true
+    "prune": {
+      "dependsOn": ["build"],
+      "command": "yarn prune:mongoreplicationcontroller"
     },
-    "build-image": {
-      "inputs": [
-        "{workspaceRoot}/tsconfig.json",
-        "{projectRoot}/src/**/*",
-        "{projectRoot}/tsconfig.json",
-        "{projectRoot}/project.json",
-        "{projectRoot}/Dockerfile"
-      ],
-      "command": "docker buildx build --platform=linux/amd64 --load --target runner --cache-from type=gha,scope=mongoreplicationcontroller --cache-to type=gha,scope=mongoreplicationcontroller,mode=max -f ./apps/mongoreplicationcontroller/Dockerfile -t spicaengine/mongoreplicationcontroller:$VERSION .",
-      "cache": true
-    },
-    "publish": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build-image"],
+    "docker:build": {
+      "dependsOn": ["prune"],
+      "command": "docker build .",
       "options": {
-        "command": "docker push spicaengine/mongoreplicationcontroller:$VERSION"
+        "cwd": "apps/mongoreplicationcontroller",
+        "args": [
+          "--tag spicaengine/mongoreplicationcontroller:${VERSION-'latest'}",
+          "--platform ${PLATFORM-'linux/arm64'}"
+        ]
       }
     }
   }

@@ -1,5 +1,0 @@
-{
-  "name": "core/websocket",
-  "sourceRoot": "libs/core/websocket/src",
-  "projectType": "library"
-}

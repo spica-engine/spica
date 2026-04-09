@@ -1,0 +1,5 @@
+{
+  "name": "api/function/pkgmanager/node",
+  "sourceRoot": "packages/api/function/pkgmanager/node",
+  "projectType": "library"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "api/bucket/history",
+  "sourceRoot": "packages/api/bucket/history",
+  "projectType": "library"
+}

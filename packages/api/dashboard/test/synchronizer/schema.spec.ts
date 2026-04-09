@@ -1,0 +1,419 @@
+import {Test, TestingModule} from "@nestjs/testing";
+import {DashboardService} from "../../src/dashboard.service";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
+import {getSupplier, getApplier} from "../../src/synchronizer/schema";
+import {
+  ChangeInitiator,
+  ChangeLog,
+  ChangeOrigin,
+  ChangeType,
+  SyncStatuses
+} from "@spica-server/interface-versioncontrol";
+import YAML from "yaml";
+import {Dashboard} from "@spica-server/interface-dashboard";
+import {firstValueFrom} from "rxjs";
+import {SchemaModule, Validator} from "@spica-server/core-schema";
+import {OBJECT_ID} from "@spica-server/core-schema";
+import DashboardSchema from "../../src/schema/dashboard.json" with {type: "json"};
+
+describe("Dashboard Synchronizer", () => {
+  let module: TestingModule;
+  let ds: DashboardService;
+  let validator: Validator;
+
+  beforeEach(async () => {
+    module = await Test.createTestingModule({
+      imports: [
+        DatabaseTestingModule.replicaSet(),
+        SchemaModule.forChild({schemas: [DashboardSchema], formats: [OBJECT_ID]})
+      ],
+      providers: [DashboardService]
+    }).compile();
+
+    ds = module.get(DashboardService);
+    validator = module.get(Validator);
+  });
+
+  afterEach(async () => {
+    await module.close();
+  });
+
+  describe("dashboardSupplier", () => {
+    let dashboardSupplier;
+
+    beforeEach(() => {
+      dashboardSupplier = getSupplier(ds);
+    });
+
+    it("should return Change Supplier with correct metadata", () => {
+      expect(dashboardSupplier).toEqual({
+        module: "dashboard",
+        subModule: "schema",
+        listen: expect.any(Function)
+      });
+    });
+
+    it("should emit ChangeLog on dashboard first sync", async () => {
+      const mockDashboard: Dashboard = {
+        _id: new ObjectId(),
+        name: "Test Dashboard",
+        icon: "test-icon",
+        components: []
+      };
+
+      await ds.insertOne(mockDashboard);
+
+      const changeLog = await firstValueFrom(dashboardSupplier.listen());
+
+      expect(changeLog).toEqual({
+        module: "dashboard",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.DOCUMENT,
+        resource_slug: "Test Dashboard",
+        resource_extension: "yaml",
+        resource_content: YAML.stringify(mockDashboard),
+        created_at: expect.any(Date),
+        initiator: ChangeInitiator.INTERNAL,
+        event_id: expect.any(String)
+      });
+    });
+
+    it("should emit ChangeLog on dashboard insert", done => {
+      const mockDashboard: Dashboard = {
+        _id: new ObjectId(),
+        name: "New Dashboard",
+        icon: "new-icon",
+        components: []
+      };
+
+      const observable = dashboardSupplier.listen();
+
+      observable.subscribe(changeLog => {
+        expect(changeLog).toEqual({
+          module: "dashboard",
+          sub_module: "schema",
+          type: ChangeType.CREATE,
+          origin: ChangeOrigin.DOCUMENT,
+          resource_slug: "New Dashboard",
+          resource_extension: "yaml",
+          resource_content: YAML.stringify(mockDashboard),
+          created_at: expect.any(Date),
+          initiator: ChangeInitiator.EXTERNAL,
+          event_id: expect.any(String)
+        });
+
+        done();
+      });
+
+      ds.insertOne(mockDashboard).catch(done.fail);
+    });
+
+    it("should emit ChangeLog on dashboard update", done => {
+      const dashboardId = new ObjectId();
+      const initialDashboard: Dashboard = {
+        _id: dashboardId,
+        name: "Old Dashboard",
+        icon: "old-icon",
+        components: []
+      };
+
+      const updatedDashboard: Dashboard = {
+        _id: dashboardId,
+        name: "Updated Dashboard",
+        icon: "updated-icon",
+        components: []
+      };
+
+      const observable = dashboardSupplier.listen();
+
+      observable.subscribe(changeLog => {
+        if (changeLog.type === ChangeType.UPDATE) {
+          expect(changeLog).toEqual({
+            module: "dashboard",
+            sub_module: "schema",
+            type: ChangeType.UPDATE,
+            origin: ChangeOrigin.DOCUMENT,
+            resource_slug: "Updated Dashboard",
+            resource_extension: "yaml",
+            resource_content: YAML.stringify(updatedDashboard),
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
+          });
+          done();
+        }
+      });
+
+      ds.insertOne(initialDashboard)
+        .then(() => ds.replaceOne({_id: dashboardId}, updatedDashboard))
+        .catch(done.fail);
+    });
+
+    it("should emit ChangeLog on dashboard delete", done => {
+      const dashboardId = new ObjectId();
+      const dashboardToDelete: Dashboard = {
+        _id: dashboardId,
+        name: "Temp Dashboard",
+        icon: "temp-icon",
+        components: []
+      };
+
+      const observable = dashboardSupplier.listen();
+
+      observable.subscribe(changeLog => {
+        if (changeLog.type === ChangeType.DELETE) {
+          expect(changeLog).toEqual({
+            module: "dashboard",
+            sub_module: "schema",
+            type: ChangeType.DELETE,
+            origin: ChangeOrigin.DOCUMENT,
+            resource_content: YAML.stringify(dashboardToDelete),
+            resource_extension: "yaml",
+            resource_slug: "Temp Dashboard",
+            created_at: expect.any(Date),
+            initiator: ChangeInitiator.EXTERNAL,
+            event_id: expect.any(String)
+          });
+          done();
+        }
+      });
+
+      ds.insertOne(dashboardToDelete)
+        .then(() => ds.deleteOne({_id: dashboardId}))
+        .catch(done.fail);
+    });
+  });
+
+  describe("dashboardApplier", () => {
+    let dashboardApplier;
+
+    beforeEach(() => {
+      dashboardApplier = getApplier(ds, validator);
+    });
+
+    it("should return Change Applier with correct metadata", () => {
+      expect(dashboardApplier).toEqual({
+        module: "dashboard",
+        subModule: "schema",
+        fileExtensions: ["yaml"],
+        apply: expect.any(Function)
+      });
+    });
+
+    it("should apply insert change successfully", async () => {
+      const _id = new ObjectId();
+      const mockDashboard: Dashboard = {
+        _id,
+        name: "New Dashboard",
+        icon: "new-icon",
+        components: []
+      };
+
+      const changeLog: ChangeLog = {
+        module: "dashboard",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "New Dashboard",
+        resource_content: YAML.stringify(mockDashboard),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await dashboardApplier.apply(changeLog);
+
+      expect(result).toEqual({
+        status: SyncStatuses.SUCCEEDED
+      });
+
+      const insertedDashboard = await ds.findOne({_id});
+      expect(insertedDashboard).toEqual({
+        _id,
+        name: "New Dashboard",
+        icon: "new-icon",
+        components: []
+      });
+    });
+
+    it("should apply update change successfully", async () => {
+      const _id = new ObjectId();
+      const existingDashboard: Dashboard = {
+        _id,
+        name: "Old Dashboard",
+        icon: "old-icon",
+        components: []
+      };
+
+      await ds.insertOne(existingDashboard);
+
+      const updatedDashboard: Dashboard = {
+        _id,
+        name: "Updated Dashboard",
+        icon: "updated-icon",
+        components: []
+      };
+
+      const changeLog: ChangeLog = {
+        module: "dashboard",
+        sub_module: "schema",
+        type: ChangeType.UPDATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "Updated Dashboard",
+        resource_content: YAML.stringify(updatedDashboard),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await dashboardApplier.apply(changeLog);
+
+      expect(result).toEqual({
+        status: SyncStatuses.SUCCEEDED
+      });
+
+      const dashboard = await ds.findOne({_id});
+      expect(dashboard).toEqual({
+        _id,
+        name: "Updated Dashboard",
+        icon: "updated-icon",
+        components: []
+      });
+    });
+
+    it("should apply delete change successfully", async () => {
+      const _id = new ObjectId();
+      const mockDashboard: Dashboard = {
+        _id,
+        name: "To Delete",
+        icon: "delete-icon",
+        components: []
+      };
+
+      await ds.insertOne(mockDashboard);
+
+      const changeLog: ChangeLog = {
+        module: "dashboard",
+        sub_module: "schema",
+        type: ChangeType.DELETE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "To Delete",
+        resource_content: "",
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await dashboardApplier.apply(changeLog);
+
+      expect(result).toEqual({
+        status: SyncStatuses.SUCCEEDED
+      });
+
+      const dashboard = await ds.findOne({_id});
+      expect(dashboard).toBeNull();
+    });
+
+    it("should handle unknown operation type", async () => {
+      const changeLog: ChangeLog = {
+        module: "dashboard",
+        sub_module: "schema",
+        type: "upsert" as any,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: null,
+        resource_content: "",
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await dashboardApplier.apply(changeLog);
+
+      expect(result).toEqual({
+        status: SyncStatuses.FAILED,
+        reason: "Unknown operation type: upsert"
+      });
+    });
+
+    it("should handle YAML parse errors", async () => {
+      const changeLog: ChangeLog = {
+        module: "dashboard",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "TEST",
+        resource_content: "invalid: yaml: content:",
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await dashboardApplier.apply(changeLog);
+
+      expect(result).toMatchObject({
+        status: SyncStatuses.FAILED
+      });
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should reject dashboard if it includes additional fields", async () => {
+      const invalidDashboard = {
+        _id: new ObjectId(),
+        name: "Custom Dashboard",
+        icon: "custom_icon",
+        components: [],
+        something_extra: "not allowed"
+      };
+
+      const changeLog: ChangeLog = {
+        module: "dashboard",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "Invalid Dashboard",
+        resource_content: YAML.stringify(invalidDashboard),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await dashboardApplier.apply(changeLog);
+
+      expect(result).toMatchObject({status: SyncStatuses.FAILED});
+      expect(result.reason).toBeDefined();
+    });
+
+    it("should allow dashboard with custom icon field", async () => {
+      const validDashboard: Dashboard = {
+        _id: new ObjectId(),
+        name: "Custom Dashboard",
+        icon: "custom_icon",
+        components: []
+      };
+
+      const changeLog: ChangeLog = {
+        module: "dashboard",
+        sub_module: "schema",
+        type: ChangeType.CREATE,
+        origin: ChangeOrigin.REPRESENTATIVE,
+        resource_slug: "Custom Dashboard",
+        resource_content: YAML.stringify(validDashboard),
+        created_at: new Date(),
+        resource_extension: "yaml",
+        initiator: ChangeInitiator.EXTERNAL,
+        event_id: "test-event-id"
+      };
+
+      const result = await dashboardApplier.apply(changeLog);
+
+      expect(result).toEqual({status: SyncStatuses.SUCCEEDED});
+    });
+  });
+});

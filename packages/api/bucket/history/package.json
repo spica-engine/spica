@@ -1,0 +1,36 @@
+{
+  "name": "@spica-server/bucket-history",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/path": {
+      "types": "./src/path.ts",
+      "default": "./dist/src/path.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/bucket-services": "workspace:*",
+    "@spica-server/core-differ": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface-bucket": "workspace:*",
+    "@spica-server/interface-bucket-history": "workspace:*",
+    "@spica-server/interface-core": "workspace:*",
+    "@spica-server/interface-passport-guard": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "diff-match-patch": "^1.0.5"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*",
+    "@types/diff-match-patch": "^1.0.36",
+    "@types/json-schema": "^7.0.15"
+  }
+}

@@ -3,10 +3,10 @@ import {NestFactory} from "@nestjs/core";
 import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
-import {SchemaModule} from "@spica-server/core/schema";
-import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
-import {WsAdapter} from "@spica-server/core/websocket";
+import {SchemaModule} from "@spica-server/core-schema";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core-schema";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core-schema";
+import {WsAdapter} from "@spica-server/core-websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
@@ -29,8 +29,8 @@ import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import {ConfigModule} from "./config";
-import {deriveKey} from "@spica-server/core/encryption";
+import {ConfigModule} from "@spica-server/config";
+import {deriveKey} from "@spica-server/core-encryption";
 
 const yargsInstance = yargs(process.argv.slice(2)) as any;
 

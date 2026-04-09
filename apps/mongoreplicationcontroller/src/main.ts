@@ -213,6 +213,7 @@ async function initialize() {
       await resolveSrv(namespace).catch((error: NodeJS.ErrnoException) => {
         if (error.code == dns.NOTFOUND || error.code == dns.NODATA) {
           debug("Can not reach to other nodes.");
+          return [];
         } else {
           return Promise.reject(error);
         }

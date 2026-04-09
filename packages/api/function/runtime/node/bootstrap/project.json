@@ -1,0 +1,14 @@
+{
+  "name": "api/function/runtime/node/bootstrap",
+  "sourceRoot": "packages/api/function/runtime/node/bootstrap",
+  "projectType": "library",
+  "targets": {
+    "bundle": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build", "devkit/database:bundle"],
+      "options": {
+        "command": "yarn rollup -c '{projectRoot}/rollup.config.js' --bundleConfigAsCjs"
+      }
+    }
+  }
+}

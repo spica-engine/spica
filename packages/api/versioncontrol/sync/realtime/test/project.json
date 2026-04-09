@@ -1,0 +1,5 @@
+{
+  "name": "api/versioncontrol/sync/realtime/test",
+  "sourceRoot": "packages/api/versioncontrol/sync/realtime/test",
+  "projectType": "library"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@spica-server/function-realtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/websockets": "^10.4.15",
+    "@spica-server/database-realtime": "workspace:*",
+    "@spica-server/interface-realtime": "workspace:*",
+    "@spica-server/passport-guard-services": "workspace:*",
+    "@spica-server/realtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*"
+  }
+}

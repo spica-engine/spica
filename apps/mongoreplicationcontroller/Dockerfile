@@ -1,10 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM node:22-slim AS base
 
-ENV NX_DAEMON=false
-ENV NX_NO_CLOUD=true
-ENV NX_CACHE_DIRECTORY=/app/.nx/cache
-ENV NX_WORKSPACE_DATA_DIRECTORY=/app/.nx/workspace-data
 
 # install tools to nodejs image
 FROM base AS tools
@@ -17,33 +13,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && apt-get purge -y gnupg curl && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
-# install app deps to nodejs image
-FROM base AS deps
-WORKDIR /app
-ARG TARGETPLATFORM
-COPY package.json yarn.lock ./
-RUN --mount=type=cache,target=/root/.yarn-cache,id=mongorepl-yarn-${TARGETPLATFORM},sharing=locked \
-    YARN_CACHE_FOLDER=/root/.yarn-cache \
-    yarn install --frozen-lockfile --network-timeout 600000
-
-# build app to nodejs image
-FROM base AS build
-WORKDIR /app
-ARG TARGETPLATFORM
-COPY --from=deps /app/node_modules ./node_modules
-COPY apps/mongoreplicationcontroller ./apps/mongoreplicationcontroller
-COPY nx.json ./
-COPY package.json ./
-COPY tsconfig.json ./
-COPY yarn.lock ./
-RUN --mount=type=cache,target=/app/.nx/cache,id=mongorepl-nx-cache-${TARGETPLATFORM},sharing=locked \
-    --mount=type=cache,target=/app/.nx/workspace-data,id=mongorepl-nx-workspace-${TARGETPLATFORM},sharing=locked \
-    yarn run build:mongoreplicationcontroller
-
-# start app from tools, because app executes many mongodb commands
-# copy deps and build
 FROM tools AS runner
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-ENTRYPOINT ["node","./dist/apps/mongoreplicationcontroller"]
+COPY dist .
+RUN yarn install --production --network-timeout 600000
+ENTRYPOINT ["node","src/main.js"]

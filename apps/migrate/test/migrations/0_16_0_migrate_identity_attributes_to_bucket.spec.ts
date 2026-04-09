@@ -4,13 +4,13 @@ import {
   getDatabaseName,
   ObjectId,
   start
-} from "@spica-server/database/testing";
+} from "@spica-server/database-testing";
 import {MongoClient} from "mongodb";
 import color from "cli-color/lib/supports-color";
 import {run} from "@spica/migrate";
 import path from "path";
 
-process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/apps/migrate/src");
+process.env.TESTONLY_MIGRATION_LOOKUP_DIR = path.join(process.cwd(), "dist/src");
 
 // Starting a MongoDB replica set via Docker can take well over 30 s
 jest.setTimeout(120_000);

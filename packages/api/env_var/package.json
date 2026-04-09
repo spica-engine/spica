@@ -1,0 +1,41 @@
+{
+  "name": "@spica-server/env_var",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/activity-services": "workspace:*",
+    "@spica-server/asset": "workspace:*",
+    "@spica-server/core": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/database-pipeline": "workspace:*",
+    "@spica-server/env_var-realtime": "workspace:*",
+    "@spica-server/env_var-services": "workspace:*",
+    "@spica-server/interface-activity": "workspace:*",
+    "@spica-server/interface-asset": "workspace:*",
+    "@spica-server/interface-env_var": "workspace:*",
+    "@spica-server/interface-passport-identity": "workspace:*",
+    "@spica-server/interface-representative": "workspace:*",
+    "@spica-server/interface-versioncontrol": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "rxjs": "^7.8.1",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/core-websocket": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/passport-guard-services": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*",
+    "@spica-server/preference-testing": "workspace:*"
+  }
+}

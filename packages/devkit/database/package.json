@@ -1,0 +1,25 @@
+{
+  "name": "@spica-devkit/database",
+  "license": "AGPLv3",
+  "version": "0.0.0-PLACEHOLDER",
+  "description": "Database package for Spica functions.",
+  "author": "spica",
+  "keywords": [
+    "spica",
+    "devkit"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "mongodb": "^6.12.0"
+  },
+  "devDependencies": {
+    "@spica-server/database-testing": "workspace:*"
+  }
+}

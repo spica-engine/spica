@@ -1,7 +1,6 @@
 /// <reference types='vitest' />
 import {defineConfig} from "vite";
 import react from "@vitejs/plugin-react";
-import {workspaceRoot} from "@nx/devkit";
 
 export default defineConfig({
   base: process.env.BASE_URL || "",
@@ -21,7 +20,7 @@ export default defineConfig({
   //  plugins: [ nxViteTsPaths() ],
   // },
   build: {
-    outDir: `${workspaceRoot}/dist/panel`,
+    outDir: `./dist`,
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {

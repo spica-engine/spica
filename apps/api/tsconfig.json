@@ -1,72 +1,85 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
   "include": ["src/main.ts"],
   "references": [
     {
-      "path": "../../libs/core/encryption"
+      "path": "../../packages/core/encryption"
     },
     {
-      "path": "src/config"
+      "path": "../../packages/api/secret"
     },
     {
-      "path": "src/sms"
+      "path": "../../packages/api/env_var"
     },
     {
-      "path": "src/mailer"
+      "path": "../../packages/api/batch"
     },
     {
-      "path": "src/secret"
+      "path": "../../packages/api/storage"
     },
     {
-      "path": "src/env_var"
+      "path": "../../packages/api/dashboard"
     },
     {
-      "path": "src/batch"
+      "path": "../../packages/core/websocket"
     },
     {
-      "path": "src/asset"
+      "path": "../../packages/core/schema"
     },
     {
-      "path": "src/replication"
+      "path": "../../packages/api/status"
     },
     {
-      "path": "src/versioncontrol"
+      "path": "../../packages/api/sms"
     },
     {
-      "path": "src/storage"
+      "path": "../../packages/representative"
     },
     {
-      "path": "src/status"
+      "path": "../../packages/api/replication"
     },
     {
-      "path": "src/preference"
+      "path": "../../packages/realtime"
     },
     {
-      "path": "src/passport"
+      "path": "../../packages/api/preference"
     },
     {
-      "path": "src/function"
+      "path": "../../packages/api/passport"
     },
     {
-      "path": "../../libs/database"
+      "path": "../../packages/api/mailer"
     },
     {
-      "path": "src/dashboard"
+      "path": "../../packages/filter"
     },
     {
-      "path": "../../libs/core/websocket"
+      "path": "../../packages/database"
     },
     {
-      "path": "../../libs/core/schema"
+      "path": "../../packages/core"
     },
     {
-      "path": "../../libs/core"
+      "path": "../../packages/api/config"
     },
     {
-      "path": "src/bucket"
+      "path": "../../packages/api/asset"
     },
     {
-      "path": "src/activity"
+      "path": "../../packages/api/activity"
+    },
+    {
+      "path": "../../packages/api/function"
+    },
+    {
+      "path": "../../packages/api/bucket"
+    },
+    {
+      "path": "../../packages/api/versioncontrol"
     }
   ]
 }

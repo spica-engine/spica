@@ -1,0 +1,5 @@
+{
+  "name": "api/function/log",
+  "sourceRoot": "packages/api/function/log",
+  "projectType": "library"
+}

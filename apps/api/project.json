@@ -7,61 +7,27 @@
   "targets": {
     "serve": {
       "executor": "@nx/js:node",
-      "dependsOn": ["compile"],
       "options": {
-        "buildTarget": "api:compile",
+        "buildTarget": "api:build",
         "buildTargetOptions": {
-          "outputPath": "dist/apps/api/src",
-          "outputFileName": "main.js"
+          "outputPath": "apps/api/dist",
+          "outputFileName": "src/main.js"
         }
       }
     },
-    "serve:watch": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "nodemon --config apps/api/nodemon.json"
-      }
-    },
-    "compile": {
-      "dependsOn": [
-        "transform-paths",
-        "build-assets",
-        {
-          "projects": ["api/function/runtime/node/bootstrap"],
-          "target": "build"
-        }
-      ]
-    },
-    "build-assets": {
-      "dependsOn": ["api/bucket/expression:build-assets"]
-    },
-    "transform-paths": {
-      "executor": "nx:run-commands",
+    "prune": {
       "dependsOn": ["build"],
+      "command": "yarn prune:api"
+    },
+    "docker:build": {
+      "dependsOn": ["prune"],
+      "command": "docker build .",
       "options": {
-        "command": "resolve-tspaths"
-      }
-    },
-    "test-image": {
-      "command": "docker build --target test --platform=linux/amd64 . -f ./apps/api/Dockerfile",
-      "cache": true
-    },
-    "build-image": {
-      "inputs": [
-        "{workspaceRoot}/tsconfig.json",
-        "{projectRoot}/src/**/*",
-        "{projectRoot}/tsconfig.json",
-        "{projectRoot}/project.json",
-        "{projectRoot}/Dockerfile"
-      ],
-      "command": "docker buildx build --platform=linux/amd64 --load --target runner --cache-from type=gha,scope=api --cache-to type=gha,scope=api,mode=max -f ./apps/api/Dockerfile -t spicaengine/api:$VERSION .",
-      "cache": true
-    },
-    "publish": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build-image"],
-      "options": {
-        "command": "docker push spicaengine/api:$VERSION"
+        "cwd": "apps/api",
+        "args": [
+          "--tag spicaengine/api:${VERSION-'latest'}",
+          "--platform ${PLATFORM-'linux/arm64'}"
+        ]
       }
     }
   }

@@ -1,6 +1,14 @@
 {
-  "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "src/**/*.json"],
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "src/**/*.json", "index.ts"],
   "exclude": ["test/**/*"],
-  "references": [{"path": "../../libs/database/testing"}]
+  "references": [
+    {
+      "path": "../../packages/database/testing"
+    }
+  ]
 }

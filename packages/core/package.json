@@ -1,0 +1,31 @@
+{
+  "name": "@spica-server/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/middlewares": {
+      "types": "./src/middlewares.ts",
+      "default": "./dist/src/middlewares.js"
+    },
+    "./src/pipes": {
+      "types": "./src/pipes.ts",
+      "default": "./dist/src/pipes.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/interface-core": "workspace:*",
+    "body-parser": "^1.20.3",
+    "matcher": "^5.0.0",
+    "type-is": "^1.6.18"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.6",
+    "@types/matcher": "^2.0.0"
+  }
+}

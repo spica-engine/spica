@@ -1,0 +1,35 @@
+{
+  "name": "@spica-server/preference",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
+    "./src/activity.resource": {
+      "types": "./src/activity.resource.ts",
+      "default": "./dist/src/activity.resource.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@spica-server/activity-services": "workspace:*",
+    "@spica-server/core-patch": "workspace:*",
+    "@spica-server/core-schema": "workspace:*",
+    "@spica-server/database": "workspace:*",
+    "@spica-server/interface-activity": "workspace:*",
+    "@spica-server/interface-preference": "workspace:*",
+    "@spica-server/passport-guard": "workspace:*",
+    "@spica-server/preference-services": "workspace:*",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "@spica-server/bucket": "workspace:*",
+    "@spica-server/core-testing": "workspace:*",
+    "@spica-server/database-testing": "workspace:*",
+    "@spica-server/passport-testing": "workspace:*"
+  }
+}

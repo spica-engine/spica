@@ -1,0 +1,5 @@
+{
+  "name": "api/function/scheduler",
+  "sourceRoot": "packages/api/function/scheduler",
+  "projectType": "library"
+}

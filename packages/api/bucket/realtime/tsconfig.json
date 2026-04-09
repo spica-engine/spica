@@ -1,0 +1,79 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "index.ts"],
+  "references": [
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../common"
+    },
+    {
+      "path": "../../../realtime"
+    },
+    {
+      "path": "../../passport/guard/services"
+    },
+    {
+      "path": "../../passport/guard"
+    },
+    {
+      "path": "../../../interface/realtime"
+    },
+    {
+      "path": "../../../interface/passport/guard"
+    },
+    {
+      "path": "../../../interface/bucket/realtime"
+    },
+    {
+      "path": "../../../interface/bucket"
+    },
+    {
+      "path": "../../../interface/activity"
+    },
+    {
+      "path": "../../../database/realtime"
+    },
+    {
+      "path": "../../../database"
+    },
+    {
+      "path": "../../../core/schema"
+    },
+    {
+      "path": "../../../core/patch"
+    },
+    {
+      "path": "../hooks"
+    },
+    {
+      "path": "../history"
+    },
+    {
+      "path": "../expression"
+    },
+    {
+      "path": "../cache"
+    },
+    {
+      "path": "../../activity/services"
+    },
+    {
+      "path": "../../passport/testing"
+    },
+    {
+      "path": "../../../database/testing"
+    },
+    {
+      "path": "../../../core/websocket"
+    },
+    {
+      "path": "../../../core/testing"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "name": "interface/sms",
+  "sourceRoot": "packages/interface/sms/src",
+  "projectType": "library"
+}

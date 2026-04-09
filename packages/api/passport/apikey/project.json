@@ -1,0 +1,5 @@
+{
+  "name": "api/passport/apikey",
+  "sourceRoot": "packages/api/passport/apikey",
+  "projectType": "library"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "api/replication",
+  "sourceRoot": "packages/api/replication",
+  "projectType": "library"
+}

@@ -1,0 +1,40 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "schema/*.json", "index.ts"],
+  "references": [
+    {
+      "path": "../../representative"
+    },
+    {
+      "path": "../passport/guard"
+    },
+    {
+      "path": "../../interface/asset"
+    },
+    {
+      "path": "../../database"
+    },
+    {
+      "path": "../../core/schema"
+    },
+    {
+      "path": "../../core/differ"
+    },
+    {
+      "path": "../../core"
+    },
+    {
+      "path": "../passport/testing"
+    },
+    {
+      "path": "../../database/testing"
+    },
+    {
+      "path": "../../core/testing"
+    }
+  ]
+}
