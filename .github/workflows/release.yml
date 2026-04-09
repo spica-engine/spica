@@ -17,18 +17,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - target: api
-            dockerfile: apps/api/Dockerfile
-            image: spicaengine/api
-          - target: panel
-            dockerfile: apps/panel/Dockerfile
-            image: spicaengine/panel
-          - target: migrate
-            dockerfile: apps/migrate/Dockerfile
-            image: spicaengine/migrate
-          - target: mongoreplicationcontroller
-            dockerfile: apps/mongoreplicationcontroller/Dockerfile
-            image: spicaengine/mongoreplicationcontroller
+          - project: api
+            dir: apps/api
+          - project: panel
+            dir: apps/panel
+          - project: migrate
+            dir: apps/migrate
+          - project: mongoreplicationcontroller
+            dir: apps/mongoreplicationcontroller
 
     steps:
       - name: Checkout
@@ -56,7 +52,7 @@ jobs:
         run: yarn install --frozen-lockfile --network-timeout 600000
 
       - name: Prune project
-        run: yarn nx prune ${{ matrix.target }}
+        run: yarn nx prune ${{ matrix.project }}
 
       # - name: Set the VERSION
       #   run: |
@@ -78,21 +74,21 @@ jobs:
         id: cache
         with:
           path: docker-cache-mounts
-          key: ${{ runner.os }}-docker-cache-${{ matrix.target }}-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-docker-cache-${{ matrix.project }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-docker-cache-${{ matrix.target }}-
+            ${{ runner.os }}-docker-cache-${{ matrix.project }}-
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ${{ matrix.dockerfile }}
+          context: ${{ matrix.dir }}
+          file: ${{ matrix.dir }}/Dockerfile
           push: true
-          tags: ${{ matrix.image }}:${{ env.VERSION }}
+          tags: ${{ matrix.project }}:${{ env.VERSION }}
           target: runner
           platforms: linux/amd64, linux/arm64
-          cache-from: type=gha,scope=${{ matrix.target }}
-          cache-to: type=gha,scope=${{ matrix.target }},mode=max
+          cache-from: type=gha,scope=${{ matrix.project }}
+          cache-to: type=gha,scope=${{ matrix.project }},mode=max
 
   npm-packages:
     name: Release npm package (${{ matrix.target }})
