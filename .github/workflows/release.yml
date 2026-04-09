@@ -138,7 +138,7 @@ jobs:
       #     echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set Yarn registry explicitly
-        run: yarn config set registry https://registry.npmjs.org
+        run: yarn config set npmRegistryServer https://registry.npmjs.org
 
       - name: Release npm packages
         run: yarn run publish:${{ matrix.target }}
