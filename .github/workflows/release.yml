@@ -1,13 +1,14 @@
 name: Spica Release
 
 env:
-  VERSION: master
+  VERSION: 0.18.18-pre
+  NX_NO_CLOUD: true
   BASE_URL: /spica/
   VITE_BASE_URL: /api
 
 on:
-  release:
-    types: [published]
+  pull_request:
+    branches: ["master"]
 
 jobs:
   docker-images:
@@ -15,11 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target:
-          - api
-          - panel
-          - migrate
-          - mongoreplicationcontroller
         include:
           - target: api
             dockerfile: apps/api/Dockerfile
@@ -59,22 +55,13 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile --network-timeout 600000
 
-      - name: Restore Nx Cache
-        uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
-            ${{ runner.os }}-nx-
-
       - name: Prune project
         run: yarn nx prune ${{ matrix.project }}
 
-      - name: Set the VERSION
-        run: |
-          VERSION=$(git describe --tags --abbrev=0)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      # - name: Set the VERSION
+      #   run: |
+      #     VERSION=$(git describe --tags --abbrev=0)
+      #     echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         id: setup-buildx
@@ -139,25 +126,16 @@ jobs:
             ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
             ${{ runner.os }}-node-modules-
 
-      - name: Restore Nx Cache
-        uses: actions/cache@v4
-        with:
-          path: .nx
-          key: ${{ runner.os }}-nx-${{ hashFiles('**/yarn.lock') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-nx-${{ hashFiles('**/yarn.lock') }}-
-            ${{ runner.os }}-nx-
-
       - name: Install dependencies
         run: yarn install --frozen-lockfile --network-timeout 600000
 
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
-      - name: Set the VERSION
-        run: |
-          VERSION=$(git describe --tags --abbrev=0)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      # - name: Set the VERSION
+      #   run: |
+      #     VERSION=$(git describe --tags --abbrev=0)
+      #     echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set Yarn registry explicitly
         run: yarn config set registry https://registry.npmjs.org
@@ -177,10 +155,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set the VERSION
-        run: |
-          VERSION=$(git describe --tags --abbrev=0)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      # - name: Set the VERSION
+      #   run: |
+      #     VERSION=$(git describe --tags --abbrev=0)
+      #     echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install Helm
         uses: azure/setup-helm@v4.2.0

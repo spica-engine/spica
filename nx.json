@@ -78,9 +78,9 @@
     },
     "set-version": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build"],
+      "dependsOn": ["bundle"],
       "options": {
-        "command": "yarn --cwd {projectRoot}/dist version --new-version $VERSION --no-git-tag-version --no-commit-hooks"
+        "command": "bash -c 'sed -i.bak \"s/\\\"version\\\": \\\"0\\.0\\.0-PLACEHOLDER\\\"/\\\"version\\\": \\\"${VERSION}\\\"/\" \"{projectRoot}/dist/package.json\" && rm -f \"{projectRoot}/dist/package.json.bak\"'"
       }
     },
     "nx-release-publish": {

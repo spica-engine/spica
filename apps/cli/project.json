@@ -5,13 +5,13 @@
   "projectType": "application",
   "tags": [],
   "targets": {
-    "compile": {
+    "bundle": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{workspaceRoot}/dist/apps/cli"],
       "options": {
         "main": "apps/cli/index.ts",
         "tsConfig": "apps/cli/tsconfig.json",
-        "outputPath": "dist/apps/cli",
+        "outputPath": "apps/cli/dist",
         "bundle": true,
         "platform": "node",
         "format": ["esm"],
@@ -28,8 +28,6 @@
         ]
       }
     },
-    "set-version": {
-      "dependsOn": ["compile"]
-    }
+    "set-version": {}
   }
 }
