@@ -1,7 +1,7 @@
 name: Spica Release
 
 env:
-  VERSION: 0.18.18-pre
+  VERSION: 0.18.18-pre2
   NX_NO_CLOUD: true
   BASE_URL: /spica/
   VITE_BASE_URL: /api
@@ -12,7 +12,7 @@ on:
 
 jobs:
   docker-images:
-    name: Release Docker image (${{ matrix.target }})
+    name: Release Docker image (${{ matrix.project }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
