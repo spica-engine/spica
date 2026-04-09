@@ -211,7 +211,6 @@
     "publish:devkit:identity": "yarn nx nx-release-publish devkit/identity",
     "publish:devkit:storage": "yarn nx nx-release-publish devkit/storage",
     "publish:devkit:auth": "yarn nx nx-release-publish devkit/auth",
-    "publish:devkit:*": "yarn nx run-many -t nx-release-publish --projects=devkit/*",
     "publish:cli": "yarn nx nx-release-publish cli",
     "publish:charts": "./scripts/sync_charts.sh"
   },

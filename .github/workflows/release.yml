@@ -56,7 +56,7 @@ jobs:
         run: yarn install --frozen-lockfile --network-timeout 600000
 
       - name: Prune project
-        run: yarn nx prune ${{ matrix.project }}
+        run: yarn nx prune ${{ matrix.target }}
 
       # - name: Set the VERSION
       #   run: |
@@ -100,7 +100,11 @@ jobs:
     strategy:
       matrix:
         target:
-          - devkit:*
+          - devkit:auth
+          - devkit:bucket
+          - devkit:database
+          - devkit:identity
+          - devkit:storage
           - cli
 
     steps:
