@@ -84,7 +84,7 @@ jobs:
           context: ${{ matrix.dir }}
           file: ${{ matrix.dir }}/Dockerfile
           push: true
-          tags: ${{ matrix.project }}:${{ env.VERSION }}
+          tags: spicaengine/${{ matrix.project }}:${{ env.VERSION }}
           target: runner
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha,scope=${{ matrix.project }}
