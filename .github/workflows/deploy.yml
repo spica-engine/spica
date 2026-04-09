@@ -1,11 +1,12 @@
 name: Spica Master Deployment
 
 env:
-  VERSION: master
+  VERSION: master-deploy
   BASE_URL: /spica/
   VITE_BASE_URL: https://master.spicaengine.com/api
+
 on:
-  push:
+  pull_request:
     branches: ["master"]
 
 jobs:
