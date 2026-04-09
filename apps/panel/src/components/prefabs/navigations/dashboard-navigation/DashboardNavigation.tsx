@@ -81,96 +81,95 @@ const DashboardNavigation = () => {
         }}
       />
 
-      {(() => {
-        if (isLoading) {
-          return (
-            <Text size="small" className={styles.defaultNavigationItem}>
-              Loading...
-            </Text>
-          );
-        }
+      <div className={styles.navigationListContainer}>
+        {(() => {
+          if (isLoading) {
+            return (
+              <Text size="small" className={styles.defaultNavigationItem}>
+                Loading...
+              </Text>
+            );
+          }
 
-        if (dashboards.length === 0) {
-          return (
-            <Text size="small" className={styles.defaultNavigationItem}>
-              No dashboards
-            </Text>
-          );
-        }
+          if (dashboards.length === 0) {
+            return (
+              <Text size="small" className={styles.defaultNavigationItem}>
+                No dashboards
+              </Text>
+            );
+          }
 
-        return dashboards.map(dashboard => {
-          const isActive = dashboard._id === activeDashboardId;
+          return dashboards.map(dashboard => {
+            const isActive = dashboard._id === activeDashboardId;
 
-          return (
-            <Link
-              key={dashboard._id}
-              to={`/dashboard/${dashboard._id}`}
-              className={`${styles.defaultNavigationItem} ${dashboardStyles.dashboardLink} ${
-                isActive ? dashboardStyles.active : ""
-              }`}
-            >
-              <FluidContainer
-                dimensionX="fill"
-                dimensionY={36}
-                mode="fill"
-                prefix={{
-                  children: <Icon name="dashboard" size="md" />
-                }}
-                root={{
-                  children: (
-                    <Text size="medium" dimensionX="fill">
-                      {dashboard.name}
-                    </Text>
-                  ),
-                  alignment: "leftCenter"
-                }}
-                suffix={{
-                  children: (
-                    <Popover
-                      trigger="hover"
-                      content={
-                        <div className={dashboardStyles.popoverMenu}>
-                          <EditDashboard
-                            dashboard={dashboard}
-                            mode="edit"
-                          >
-                            {({onOpen}) => (
-                              <button
-                                className={dashboardStyles.popoverMenuItem}
-                                onClick={onOpen}
-                              >
-                                <Icon name="pencil" size="sm" />
-                                <Text size="small">Change Name</Text>
-                              </button>
-                            )}
-                          </EditDashboard>
+            return (
+              <Link
+                key={dashboard._id}
+                to={`/dashboard/${dashboard._id}`}
+                className={`${styles.defaultNavigationItem} ${dashboardStyles.dashboardLink} ${
+                  isActive ? dashboardStyles.active : ""
+                }`}
+              >
+                <FluidContainer
+                  dimensionX="fill"
+                  dimensionY={36}
+                  mode="fill"
+                  prefix={{
+                    children: <Icon name="dashboard" size="md" />
+                  }}
+                  root={{
+                    children: (
+                      <Text size="medium" dimensionX="fill">
+                        {dashboard.name}
+                      </Text>
+                    ),
+                    alignment: "leftCenter"
+                  }}
+                  suffix={{
+                    children: (
+                      <Popover
+                        trigger="hover"
+                        content={
+                          <div className={dashboardStyles.popoverMenu}>
+                            <EditDashboard dashboard={dashboard} mode="edit">
+                              {({onOpen}) => (
+                                <button
+                                  className={dashboardStyles.popoverMenuItem}
+                                  onClick={onOpen}
+                                >
+                                  <Icon name="pencil" size="sm" />
+                                  <Text size="small">Change Name</Text>
+                                </button>
+                              )}
+                            </EditDashboard>
 
-                          <button
-                            className={`${dashboardStyles.popoverMenuItem} ${dashboardStyles.danger}`}
-                            onClick={e => handleDeleteClick(e, dashboard)}
-                          >
-                            <Icon name="delete" size="sm" />
-                            <Text size="small">Delete</Text>
-                          </button>
-                        </div>
-                      }
-                    >
-                      <Icon name="dotsVertical" />
-                    </Popover>
-                  )
-                }}
-              />
-            </Link>
-          );
-        });
-      })()}
+                            <button
+                              className={`${dashboardStyles.popoverMenuItem} ${dashboardStyles.danger}`}
+                              onClick={e => handleDeleteClick(e, dashboard)}
+                            >
+                              <Icon name="delete" size="sm" />
+                              <Text size="small">Delete</Text>
+                            </button>
+                          </div>
+                        }
+                      >
+                        <Icon name="dotsVertical" />
+                      </Popover>
+                    )
+                  }}
+                />
+              </Link>
+            );
+          });
+        })()}
+      </div>
 
       <div className={dashboardStyles.addButtonContainer}>
         <EditDashboard mode="create" onCreated={handleCreated}>
           {({onOpen}) => (
             <Button
-              variant="outlined"
-              color="default"
+              color="transparent"
+              variant="text"
               fullWidth
               onClick={onOpen}
               className={dashboardStyles.addButton}

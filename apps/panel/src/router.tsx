@@ -20,6 +20,7 @@ import FunctionLogPage from "./pages/function-log/FunctionLogPage";
 import VersionControl from "./pages/version-control/VersionControl";
 import DashboardView from "./pages/dashboard/DashboardView";
 import Config from "./pages/config/Config";
+import ConfigModule from "./pages/config/ConfigModule";
 import RefreshToken from "./pages/refresh-token/RefreshToken";
 import SecretsAndVariables from "./pages/secrets-and-variables/SecretsAndVariables";
 
@@ -111,6 +112,10 @@ const router = createBrowserRouter(
         {
           path: "config",
           element: <Config />
+        },
+        {
+          path: "config/:module",
+          element: <ConfigModule />
         }
       ]
     },

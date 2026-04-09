@@ -42,6 +42,11 @@ export const sideBarItems: SideBarItem[]=  [
     icon: "webhook",
   },
   {
+    id: "config",
+    name: "Configuration",
+    icon: "cog",
+  },
+  {
     id: "versionControl",
     name: "Version Control",
     icon: "forkRight",

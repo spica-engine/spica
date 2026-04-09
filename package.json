@@ -142,7 +142,7 @@
     "@angular/compiler-cli": "^15.0.0",
     "@nestjs/testing": "^10.4.15",
     "@nx/jest": "^20.3.1",
-    "@nx/js": "20.3.2",
+    "@nx/js": "^20.3.1",
     "@nx/node": "^20.3.1",
     "@nx/vite": "^20.3.1",
     "@nx/webpack": "^20.3.1",
