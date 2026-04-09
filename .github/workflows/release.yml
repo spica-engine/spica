@@ -1,14 +1,13 @@
 name: Spica Release
 
 env:
-  VERSION: 0.18.18-pre2
   NX_NO_CLOUD: true
   BASE_URL: /spica/
   VITE_BASE_URL: /api
 
 on:
-  pull_request:
-    branches: ["master"]
+  release:
+    types: [published]
 
 jobs:
   docker-images:
@@ -54,10 +53,10 @@ jobs:
       - name: Prune project
         run: yarn nx prune ${{ matrix.project }}
 
-      # - name: Set the VERSION
-      #   run: |
-      #     VERSION=$(git describe --tags --abbrev=0)
-      #     echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Set the VERSION
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         id: setup-buildx
@@ -132,10 +131,10 @@ jobs:
       - name: Disable Nx Cloud
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
-      # - name: Set the VERSION
-      #   run: |
-      #     VERSION=$(git describe --tags --abbrev=0)
-      #     echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Set the VERSION
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set Yarn registry explicitly
         run: yarn config set npmRegistryServer https://registry.npmjs.org
@@ -155,10 +154,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Set the VERSION
-      #   run: |
-      #     VERSION=$(git describe --tags --abbrev=0)
-      #     echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Set the VERSION
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install Helm
         uses: azure/setup-helm@v4.2.0

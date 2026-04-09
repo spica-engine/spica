@@ -7,9 +7,9 @@ if [ ! -f nx.json ]; then
     exit 1;
 fi
 
-yarn nx compile cli
+yarn nx bundle cli
 
-npm install -g "$(pwd)/dist/apps/cli"
+npm install -g "$(pwd)/apps/cli/dist"
 
 echo "###########################################"
 echo "Linking was completed successfully."
