@@ -2,12 +2,12 @@ name: Spica Master Deployment
 
 env:
   NX_NO_CLOUD: true
-  VERSION: master-deploy
+  VERSION: master
   BASE_URL: /spica/
   VITE_BASE_URL: https://master.spicaengine.com/api
 
 on:
-  pull_request:
+  push:
     branches: ["master"]
 
 jobs:
@@ -48,15 +48,6 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile --network-timeout 600000
-
-      - name: Restore Nx Cache
-        uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
-            ${{ runner.os }}-nx-
 
       - name: Prune project
         run: yarn nx prune ${{ matrix.project }}
