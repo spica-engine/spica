@@ -427,7 +427,7 @@ async function create({args: cmdArgs, options}: ActionParameters) {
           proxy_set_header Connection "Upgrade";
         }
 
-        location ~ ^/?(.*) {
+        location ~ ^/spica/?(.*) {
           proxy_pass http://${name}-spica/$1$is_args$args;
           proxy_set_header Host $host;
           proxy_set_header X-Forwarded-Proto $scheme;
@@ -450,8 +450,8 @@ async function create({args: cmdArgs, options}: ActionParameters) {
     }
   });
   console.info(`
-Spica ${name} is serving on ${publicHost}.
-Open your browser on ${publicHost} to login.
+Spica ${name} is serving on ${publicHost}/spica.
+Open your browser on ${publicHost}/spica/dashboard to login.
 
 Identitifer: ${identifier}
 Password: ${password}
