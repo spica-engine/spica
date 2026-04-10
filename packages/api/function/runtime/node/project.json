@@ -1,5 +1,10 @@
 {
   "name": "api/function/runtime/node",
   "sourceRoot": "packages/api/function/runtime/node",
-  "projectType": "library"
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "dependsOn": ["api/function/runtime/node/bootstrap:bundle"]
+    }
+  }
 }
