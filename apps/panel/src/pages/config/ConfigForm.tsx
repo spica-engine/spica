@@ -11,6 +11,17 @@ import {
 import isEqual from "lodash/isEqual";
 import { useUpdateConfigMutation } from "../../store/api/configApi";
 import type { ConfigItem } from "../../store/api/configApi";
+import {
+  type ProviderItem,
+  type ProviderItemWithId,
+  type RateLimitItem,
+  type RateLimitValue,
+  genId,
+  prepareOptions,
+  sanitizeForSave,
+  PROVIDER_OPTIONS,
+  STRATEGY_OPTIONS
+} from "./configHelpers";
 import styles from "./Config.module.scss";
 
 type ConfigFormProps = {
@@ -20,76 +31,6 @@ type ConfigFormProps = {
 };
 
 const RATE_LIMIT_KEYS = ["login", "providerVerification", "forgotPassword", "refreshToken", "createUser"] as const;
-const PROVIDER_ENUM = ["email", "phone"] as const;
-const STRATEGY_ENUM = ["Otp", "MagicLink"] as const;
-
-type ProviderItem = { provider: string; strategy: string };
-type ProviderItemWithId = ProviderItem & { _id: string };
-type RateLimitValue = number | "";
-type RateLimitItem = { limit: RateLimitValue; ttl: RateLimitValue };
-
-let _nextId = 0;
-function genId(): string {
-  return `_pid_${_nextId++}`;
-}
-
-function withIds(items: ProviderItem[]): ProviderItemWithId[] {
-  return items.map((item) => ({ ...item, _id: genId() }));
-}
-
-function stripIds(items: ProviderItemWithId[]): ProviderItem[] {
-  return items.map(({ _id, ...rest }) => rest);
-}
-
-function getInitialOptions(config: ConfigItem | null): Record<string, unknown> {
-  if (!config?.options) return {};
-  const opts = JSON.parse(JSON.stringify(config.options)) as Record<string, unknown>;
-  if (Array.isArray(opts.providerVerificationConfig)) {
-    opts.providerVerificationConfig = withIds(opts.providerVerificationConfig as ProviderItem[]);
-  }
-  if (Array.isArray(opts.resetPasswordProvider)) {
-    opts.resetPasswordProvider = withIds(opts.resetPasswordProvider as ProviderItem[]);
-  }
-  const pl = opts.passwordlessLogin as { passwordlessLoginProvider?: ProviderItem[] } | undefined;
-  if (pl && Array.isArray(pl.passwordlessLoginProvider)) {
-    opts.passwordlessLogin = { ...pl, passwordlessLoginProvider: withIds(pl.passwordlessLoginProvider) };
-  }
-  return opts;
-}
-
-function sanitizeOptionsForSave(options: Record<string, unknown>): Record<string, unknown> | null {
-  const result = { ...options };
-
-  if (Array.isArray(result.providerVerificationConfig)) {
-    result.providerVerificationConfig = stripIds(result.providerVerificationConfig as ProviderItemWithId[]);
-  }
-  if (Array.isArray(result.resetPasswordProvider)) {
-    result.resetPasswordProvider = stripIds(result.resetPasswordProvider as ProviderItemWithId[]);
-  }
-  const pl = result.passwordlessLogin as { passwordlessLoginProvider?: ProviderItemWithId[] } | undefined;
-  if (pl && Array.isArray(pl.passwordlessLoginProvider)) {
-    result.passwordlessLogin = { ...pl, passwordlessLoginProvider: stripIds(pl.passwordlessLoginProvider) };
-  }
-
-  if (result.rateLimits) {
-    const rawRl = result.rateLimits as Record<string, RateLimitItem>;
-    const cleanRl: Record<string, { limit: number; ttl: number }> = {};
-    for (const [cat, rl] of Object.entries(rawRl)) {
-      const limitEmpty = rl.limit === "" || rl.limit === 0;
-      const ttlEmpty = rl.ttl === "" || rl.ttl === 0;
-      if (limitEmpty && ttlEmpty) continue;
-      if (limitEmpty !== ttlEmpty) return null;
-      cleanRl[cat] = { limit: rl.limit as number, ttl: rl.ttl as number };
-    }
-    if (Object.keys(cleanRl).length === 0) {
-      delete result.rateLimits;
-    } else {
-      result.rateLimits = cleanRl;
-    }
-  }
-
-  return result;
-}
 
 const ConfigForm = ({ isOpen, selectedConfig, onClose }: ConfigFormProps) => {
   const [options, setOptions] = useState<Record<string, unknown>>({});
@@ -98,7 +39,7 @@ const ConfigForm = ({ isOpen, selectedConfig, onClose }: ConfigFormProps) => {
 
   useEffect(() => {
     if (isOpen && selectedConfig) {
-      const initial = getInitialOptions(selectedConfig);
+      const initial = prepareOptions(selectedConfig.options ?? {});
       setOptions(initial);
       setBaseline(initial);
     } else {
@@ -111,7 +52,7 @@ const ConfigForm = ({ isOpen, selectedConfig, onClose }: ConfigFormProps) => {
 
   const handleSave = useCallback(async () => {
     if (!selectedConfig || !hasChanges) return;
-    const sanitized = sanitizeOptionsForSave(options);
+    const sanitized = sanitizeForSave(options);
     if (!sanitized) return;
     try {
       await updateConfig({ module: selectedConfig.module, options: sanitized }).unwrap();
@@ -122,7 +63,7 @@ const ConfigForm = ({ isOpen, selectedConfig, onClose }: ConfigFormProps) => {
   }, [selectedConfig, options, hasChanges, updateConfig, onClose]);
 
   const handleCancel = useCallback(() => {
-    setOptions(getInitialOptions(selectedConfig));
+    setOptions(prepareOptions(selectedConfig?.options ?? {}));
     onClose();
   }, [selectedConfig, onClose]);
 
@@ -355,9 +296,6 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
     }));
   };
 
-  const providerOptions = PROVIDER_ENUM.map((p) => ({ label: p, value: p }));
-  const strategyOptions = STRATEGY_ENUM.map((s) => ({ label: s, value: s }));
-
   return (
     <FlexElement dimensionX="fill" direction="vertical" gap={12}>
       <FlexElement dimensionX="fill" direction="vertical" gap={4}>
@@ -395,7 +333,7 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
           <Select
             dimensionX="fill"
             dimensionY={36}
-            options={providerOptions}
+            options={PROVIDER_OPTIONS}
             value={item.provider}
             onChange={(v) => updateProviderConfig(index, "provider", v as string)}
             placeholder="Provider"
@@ -403,7 +341,7 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
           <Select
             dimensionX="fill"
             dimensionY={36}
-            options={strategyOptions}
+            options={STRATEGY_OPTIONS}
             value={item.strategy}
             onChange={(v) => updateProviderConfig(index, "strategy", v as string)}
             placeholder="Strategy"
@@ -423,7 +361,7 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
           <Select
             dimensionX="fill"
             dimensionY={36}
-            options={providerOptions}
+            options={PROVIDER_OPTIONS}
             value={item.provider}
             onChange={(v) => updatePasswordlessProvider(index, "provider", v as string)}
             placeholder="Provider"
@@ -448,7 +386,7 @@ const UserFields = ({ options, setOptions }: SetOptionsFieldProps) => {
           <Select
             dimensionX="fill"
             dimensionY={36}
-            options={providerOptions}
+            options={PROVIDER_OPTIONS}
             value={item.provider}
             onChange={(v) => updateResetProvider(index, "provider", v as string)}
             placeholder="Provider"

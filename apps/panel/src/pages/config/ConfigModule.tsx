@@ -1,142 +1,45 @@
-import React, {useCallback, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {useParams} from "react-router-dom";
-import {Button, Checkbox, FlexElement, Icon, Select, StringInput, Text} from "oziko-ui-kit";
+import {Button, Checkbox, Icon, Select, StringInput, Text} from "oziko-ui-kit";
 import isEqual from "lodash/isEqual";
 import Page from "../../components/organisms/page-layout/Page";
-import {useUpdateConfigMutation} from "../../store/api/configApi";
+import {useGetConfigQuery, useUpdateConfigMutation} from "../../store/api/configApi";
 import {configSchemas, type FieldMeta} from "./schemas";
+import {
+  type RateLimitValue,
+  type ProviderItemWithId,
+  genId,
+  getNestedValue,
+  setNestedValue,
+  prepareOptions,
+  sanitizeForSave,
+  PROVIDER_OPTIONS,
+  STRATEGY_OPTIONS
+} from "./configHelpers";
 import styles from "./ConfigModule.module.scss";
-
-type RateLimitValue = number | "";
-type ProviderItem = {provider: string; strategy: string};
-type ProviderItemWithId = ProviderItem & {_id: string};
-
-let _nextId = 0;
-function genId(): string {
-  return `_pid_${_nextId++}`;
-}
-
-function withIds(items: ProviderItem[]): ProviderItemWithId[] {
-  return items.map(item => ({...item, _id: genId()}));
-}
-
-function stripIds(items: ProviderItemWithId[]): ProviderItem[] {
-  return items.map(({_id, ...rest}) => rest);
-}
-
-function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
-  return path.split(".").reduce<unknown>((acc, key) => {
-    if (acc && typeof acc === "object") return (acc as Record<string, unknown>)[key];
-    return undefined;
-  }, obj);
-}
-
-function setNestedValue(
-  obj: Record<string, unknown>,
-  path: string,
-  value: unknown
-): Record<string, unknown> {
-  const keys = path.split(".");
-  const result = JSON.parse(JSON.stringify(obj)) as Record<string, unknown>;
-  let current: Record<string, unknown> = result;
-  for (let i = 0; i < keys.length - 1; i++) {
-    if (!current[keys[i]] || typeof current[keys[i]] !== "object") {
-      current[keys[i]] = {};
-    }
-    current = current[keys[i]] as Record<string, unknown>;
-  }
-  current[keys[keys.length - 1]] = value;
-  return result;
-}
-
-function prepareOptions(options: Record<string, unknown>): Record<string, unknown> {
-  const opts = JSON.parse(JSON.stringify(options)) as Record<string, unknown>;
-  if (Array.isArray(opts.providerVerificationConfig)) {
-    opts.providerVerificationConfig = withIds(opts.providerVerificationConfig as ProviderItem[]);
-  }
-  if (Array.isArray(opts.resetPasswordProvider)) {
-    opts.resetPasswordProvider = withIds(opts.resetPasswordProvider as ProviderItem[]);
-  }
-  const pl = opts.passwordlessLogin as {passwordlessLoginProvider?: ProviderItem[]} | undefined;
-  if (pl && Array.isArray(pl.passwordlessLoginProvider)) {
-    opts.passwordlessLogin = {...pl, passwordlessLoginProvider: withIds(pl.passwordlessLoginProvider)};
-  }
-  return opts;
-}
-
-function sanitizeForSave(options: Record<string, unknown>): Record<string, unknown> {
-  const result = JSON.parse(JSON.stringify(options)) as Record<string, unknown>;
-
-  if (Array.isArray(result.providerVerificationConfig)) {
-    result.providerVerificationConfig = stripIds(
-      result.providerVerificationConfig as ProviderItemWithId[]
-    );
-  }
-  if (Array.isArray(result.resetPasswordProvider)) {
-    result.resetPasswordProvider = stripIds(
-      result.resetPasswordProvider as ProviderItemWithId[]
-    );
-  }
-  const pl = result.passwordlessLogin as {
-    passwordlessLoginProvider?: ProviderItemWithId[];
-  } | undefined;
-  if (pl && Array.isArray(pl.passwordlessLoginProvider)) {
-    result.passwordlessLogin = {
-      ...pl,
-      passwordlessLoginProvider: stripIds(pl.passwordlessLoginProvider)
-    };
-  }
-
-  if (result.rateLimits && typeof result.rateLimits === "object") {
-    const rawRl = result.rateLimits as Record<string, {limit: RateLimitValue; ttl: RateLimitValue}>;
-    const cleanRl: Record<string, {limit: number; ttl: number}> = {};
-    for (const [cat, rl] of Object.entries(rawRl)) {
-      const limitEmpty = rl.limit === "" || rl.limit === 0;
-      const ttlEmpty = rl.ttl === "" || rl.ttl === 0;
-      if (limitEmpty && ttlEmpty) continue;
-      cleanRl[cat] = {
-        limit: typeof rl.limit === "number" ? rl.limit : 0,
-        ttl: typeof rl.ttl === "number" ? rl.ttl : 0
-      };
-    }
-    if (Object.keys(cleanRl).length === 0) {
-      delete result.rateLimits;
-    } else {
-      result.rateLimits = cleanRl;
-    }
-  }
-
-  return result;
-}
-
-const PROVIDER_OPTIONS = [
-  {label: "email", value: "email"},
-  {label: "phone", value: "phone"}
-];
-
-const STRATEGY_OPTIONS = [
-  {label: "Otp", value: "Otp"},
-  {label: "MagicLink", value: "MagicLink"}
-];
 
 function InputWithUnit({
   value,
   onChange,
   unit,
-  placeholder
+  placeholder,
+  min
 }: {
   value: string;
   onChange: (v: string) => void;
   unit?: string;
   placeholder?: string;
+  min?: number;
 }) {
   return (
     <div className={styles.inputWithUnit}>
       <input
-        type="text"
+        type="number"
+        inputMode="numeric"
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
+        min={min}
       />
       {unit && <span className={styles.unitLabel}>{unit}</span>}
     </div>
@@ -179,6 +82,7 @@ function RateLimitField({
           onChange={handleChange}
           unit={meta.unit}
           placeholder="0"
+          min={1}
         />
       </div>
     </div>
@@ -246,6 +150,7 @@ function IntegerField({
           onChange={handleChange}
           unit={meta.unit}
           placeholder="0"
+          min={0}
         />
       </div>
     </div>
@@ -391,10 +296,19 @@ function GenericKeyValueFields({
 
 const ConfigModule = () => {
   const {module} = useParams<{module: string}>();
+  const {data: configData, isLoading, error} = useGetConfigQuery(module!, {skip: !module});
   const [updateConfig, {isLoading: isSaving}] = useUpdateConfigMutation();
 
   const [options, setOptions] = useState<Record<string, unknown>>({});
   const [baseline, setBaseline] = useState<Record<string, unknown>>({});
+
+  useEffect(() => {
+    if (configData?.options) {
+      const prepared = prepareOptions(configData.options);
+      setOptions(prepared);
+      setBaseline(prepared);
+    }
+  }, [configData]);
 
   const hasChanges = useMemo(() => !isEqual(options, baseline), [options, baseline]);
 
@@ -405,6 +319,7 @@ const ConfigModule = () => {
   const handleSave = useCallback(async () => {
     if (!module || !hasChanges) return;
     const sanitized = sanitizeForSave(options);
+    if (!sanitized) return;
     try {
       await updateConfig({module, options: sanitized}).unwrap();
       const refreshed = prepareOptions(sanitized);
@@ -420,6 +335,26 @@ const ConfigModule = () => {
   if (!module) return null;
 
   const title = module.toUpperCase() + " CONFIGURATION";
+
+  if (isLoading) {
+    return (
+      <Page title={title}>
+        <div className={styles.loadingContainer}>
+          {Array.from({length: 5}).map((_, i) => (
+            <div key={i} className={styles.skeletonRow} />
+          ))}
+        </div>
+      </Page>
+    );
+  }
+
+  if (error) {
+    return (
+      <Page title={title}>
+        <Text>Error loading configuration. Please try again.</Text>
+      </Page>
+    );
+  }
 
   return (
     <Page title={title}>
@@ -489,7 +424,16 @@ function UserSchemaFields({
   setOptions: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
   onUpdate: (path: string, value: unknown) => void;
 }) {
-  const rateLimitPaths = Object.keys(fieldMeta).filter(k => k.startsWith("rateLimits.") && k.endsWith(".limit"));
+  const rateLimitCategories = useMemo(() => {
+    const categories = new Set<string>();
+    Object.keys(fieldMeta)
+      .filter(k => k.startsWith("rateLimits."))
+      .forEach(k => {
+        const parts = k.split(".");
+        if (parts.length === 3) categories.add(parts[1]);
+      });
+    return Array.from(categories);
+  }, [fieldMeta]);
 
   const providerVerificationConfig = (options.providerVerificationConfig ?? []) as ProviderItemWithId[];
   const resetPasswordProvider = (options.resetPasswordProvider ?? []) as ProviderItemWithId[];
@@ -509,17 +453,30 @@ function UserSchemaFields({
         />
       )}
 
-      {rateLimitPaths.map(limitPath => {
-        const meta = fieldMeta[limitPath];
-        if (!meta) return null;
+      {rateLimitCategories.map(category => {
+        const limitPath = `rateLimits.${category}.limit`;
+        const ttlPath = `rateLimits.${category}.ttl`;
+        const limitMeta = fieldMeta[limitPath];
+        const ttlMeta = fieldMeta[ttlPath];
         return (
-          <RateLimitField
-            key={limitPath}
-            path={limitPath}
-            meta={meta}
-            options={options}
-            onUpdate={onUpdate}
-          />
+          <React.Fragment key={category}>
+            {limitMeta && (
+              <RateLimitField
+                path={limitPath}
+                meta={limitMeta}
+                options={options}
+                onUpdate={onUpdate}
+              />
+            )}
+            {ttlMeta && (
+              <RateLimitField
+                path={ttlPath}
+                meta={ttlMeta}
+                options={options}
+                onUpdate={onUpdate}
+              />
+            )}
+          </React.Fragment>
         );
       })}
 
