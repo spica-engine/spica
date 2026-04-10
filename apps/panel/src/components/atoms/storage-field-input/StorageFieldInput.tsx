@@ -7,7 +7,7 @@ import type {Storage} from "../../../store/api/storageApi";
 import useStorage from "../../../hooks/useStorage";
 
 interface StorageFieldInputProps {
-  key: string;
+  fieldKey: string;
   title: string;
   description: string;
   value?: string;
@@ -51,10 +51,10 @@ const StorageFieldInput: React.FC<StorageFieldInputProps> = ({
 
   const handleFileSelect = useCallback(
     (file: Storage) => {
-      onChange?.({key: rest.key, value: file._id || ""});
+      onChange?.({key: rest.fieldKey, value: file._id || ""});
       handleCloseModal();
     },
-    [onChange, rest.key, handleCloseModal]
+    [onChange, rest.fieldKey, handleCloseModal]
   );
 
   const handleUpload = useCallback(
@@ -64,18 +64,18 @@ const StorageFieldInput: React.FC<StorageFieldInputProps> = ({
         fileList.items.add(file);
         const result = await uploadFiles({files: fileList.files}).unwrap();
         if (result && result.length > 0) {
-          onChange?.({key: rest.key, value: result[0]._id || ""});
+          onChange?.({key: rest.fieldKey, value: result[0]._id || ""});
         }
       } catch (error) {
         console.error("Failed to upload file:", error);
       }
     },
-    [uploadFiles, onChange, rest.key]
+    [uploadFiles, onChange, rest.fieldKey]
   );
 
   const handleDelete = useCallback(() => {
-    onChange?.({key: rest.key, value: ""});
-  }, [onChange, rest.key]);
+    onChange?.({key: rest.fieldKey, value: ""});
+  }, [onChange, rest.fieldKey]);
 
   return (
     <>

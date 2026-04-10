@@ -96,7 +96,7 @@ const BucketEntryDrawer = ({
     containerClassName: styles.inputFieldContainer,
     error: formState.errors as TypeInputRepresenterError,
     typeOverrides: {
-      storage: (props) => <StorageFieldInput {...props} />,
+      storage: (props) => <StorageFieldInput {...props} fieldKey={props.key} />,
     },
   });
 
