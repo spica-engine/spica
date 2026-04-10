@@ -1,9 +1,9 @@
-import React, {useCallback, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {useParams} from "react-router-dom";
 import {Button, Checkbox, Icon, Select, StringInput, Text} from "oziko-ui-kit";
 import isEqual from "lodash/isEqual";
 import Page from "../../components/organisms/page-layout/Page";
-import {useUpdateConfigMutation} from "../../store/api/configApi";
+import {useGetConfigQuery, useUpdateConfigMutation} from "../../store/api/configApi";
 import {configSchemas, type FieldMeta} from "./schemas";
 import {
   type RateLimitValue,
@@ -13,55 +13,55 @@ import {
   setNestedValue,
   prepareOptions,
   sanitizeForSave,
-  updateNestedArray,
   PROVIDER_OPTIONS,
   STRATEGY_OPTIONS
-} from "./configUtils";
+} from "./configHelpers";
 import styles from "./ConfigModule.module.scss";
 
 function InputWithUnit({
   value,
   onChange,
   unit,
-  placeholder
+  placeholder,
+  min
 }: {
   value: string;
   onChange: (v: string) => void;
   unit?: string;
   placeholder?: string;
+  min?: number;
 }) {
   return (
     <div className={styles.inputWithUnit}>
       <input
-        type="text"
+        type="number"
+        inputMode="numeric"
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
+        min={min}
       />
       {unit && <span className={styles.unitLabel}>{unit}</span>}
     </div>
   );
 }
 
-function NumericField({
+function RateLimitField({
   path,
   meta,
   options,
-  onUpdate,
-  emptyValue = 0
+  onUpdate
 }: {
   path: string;
   meta: FieldMeta;
   options: Record<string, unknown>;
   onUpdate: (path: string, value: unknown) => void;
-  emptyValue?: "" | 0;
 }) {
-  const currentValue = getNestedValue(options, path);
-  const displayValue = currentValue === undefined || currentValue === null || currentValue === "" ? "" : String(currentValue);
+  const currentValue = (getNestedValue(options, path) as RateLimitValue) ?? "";
 
   const handleChange = (v: string) => {
     if (v === "") {
-      onUpdate(path, emptyValue);
+      onUpdate(path, "");
       return;
     }
     const num = parseInt(v, 10);
@@ -78,15 +78,18 @@ function NumericField({
       </div>
       <div className={styles.fieldInput}>
         <InputWithUnit
-          value={displayValue}
+          value={currentValue === "" ? "" : String(currentValue)}
           onChange={handleChange}
           unit={meta.unit}
           placeholder="0"
+          min={1}
         />
       </div>
     </div>
   );
 }
+
+function BooleanField({
   path,
   meta,
   options,
@@ -110,6 +113,50 @@ function NumericField({
   );
 }
 
+function IntegerField({
+  path,
+  meta,
+  options,
+  onUpdate
+}: {
+  path: string;
+  meta: FieldMeta;
+  options: Record<string, unknown>;
+  onUpdate: (path: string, value: unknown) => void;
+}) {
+  const currentValue = getNestedValue(options, path);
+  const displayValue = currentValue === undefined || currentValue === null ? "" : String(currentValue);
+
+  const handleChange = (v: string) => {
+    if (v === "") {
+      onUpdate(path, 0);
+      return;
+    }
+    const num = parseInt(v, 10);
+    if (!isNaN(num) && num >= 0) {
+      onUpdate(path, num);
+    }
+  };
+
+  return (
+    <div className={styles.fieldRow}>
+      <div className={styles.fieldInfo}>
+        <span className={styles.fieldLabel}>{meta.label}</span>
+        <span className={styles.fieldDescription}>{meta.description}</span>
+      </div>
+      <div className={styles.fieldInput}>
+        <InputWithUnit
+          value={displayValue}
+          onChange={handleChange}
+          unit={meta.unit}
+          placeholder="0"
+          min={0}
+        />
+      </div>
+    </div>
+  );
+}
+
 function ArrayProviderField({
   path,
   meta,
@@ -124,22 +171,47 @@ function ArrayProviderField({
   strategyOptions: {label: string; value: string}[];
 }) {
   const updateItem = (index: number, field: "provider" | "strategy", value: string) => {
-    setOptions(prev => updateNestedArray(prev, path, list => {
-      const updated = [...list];
-      updated[index] = {...updated[index], [field]: value};
-      return updated;
-    }));
+    setOptions(prev => {
+      const pathParts = path.split(".");
+      if (pathParts.length === 1) {
+        const list = [...((prev[path] ?? []) as ProviderItemWithId[])];
+        list[index] = {...list[index], [field]: value};
+        return {...prev, [path]: list};
+      }
+      const parent = pathParts[0];
+      const child = pathParts[1];
+      const parentObj = (prev[parent] ?? {}) as Record<string, unknown>;
+      const list = [...((parentObj[child] ?? []) as ProviderItemWithId[])];
+      list[index] = {...list[index], [field]: value};
+      return {...prev, [parent]: {...parentObj, [child]: list}};
+    });
   };
 
   const addItem = () => {
-    setOptions(prev => updateNestedArray(prev, path, list => [
-      ...list,
-      {provider: "email", strategy: strategyOptions[0]?.value ?? "", _id: genId()}
-    ]));
+    setOptions(prev => {
+      const newItem: ProviderItemWithId = {provider: "email", strategy: strategyOptions[0]?.value ?? "", _id: genId()};
+      const pathParts = path.split(".");
+      if (pathParts.length === 1) {
+        return {...prev, [path]: [...((prev[path] ?? []) as ProviderItemWithId[]), newItem]};
+      }
+      const parent = pathParts[0];
+      const child = pathParts[1];
+      const parentObj = (prev[parent] ?? {}) as Record<string, unknown>;
+      return {...prev, [parent]: {...parentObj, [child]: [...((parentObj[child] ?? []) as ProviderItemWithId[]), newItem]}};
+    });
   };
 
   const removeItem = (index: number) => {
-    setOptions(prev => updateNestedArray(prev, path, list => list.filter((_, i) => i !== index)));
+    setOptions(prev => {
+      const pathParts = path.split(".");
+      if (pathParts.length === 1) {
+        return {...prev, [path]: ((prev[path] ?? []) as ProviderItemWithId[]).filter((_, i) => i !== index)};
+      }
+      const parent = pathParts[0];
+      const child = pathParts[1];
+      const parentObj = (prev[parent] ?? {}) as Record<string, unknown>;
+      return {...prev, [parent]: {...parentObj, [child]: ((parentObj[child] ?? []) as ProviderItemWithId[]).filter((_, i) => i !== index)}};
+    });
   };
 
   return (
@@ -224,10 +296,19 @@ function GenericKeyValueFields({
 
 const ConfigModule = () => {
   const {module} = useParams<{module: string}>();
+  const {data: configData, isLoading, error} = useGetConfigQuery(module!, {skip: !module});
   const [updateConfig, {isLoading: isSaving}] = useUpdateConfigMutation();
 
   const [options, setOptions] = useState<Record<string, unknown>>({});
   const [baseline, setBaseline] = useState<Record<string, unknown>>({});
+
+  useEffect(() => {
+    if (configData?.options) {
+      const prepared = prepareOptions(configData.options);
+      setOptions(prepared);
+      setBaseline(prepared);
+    }
+  }, [configData]);
 
   const hasChanges = useMemo(() => !isEqual(options, baseline), [options, baseline]);
 
@@ -254,6 +335,26 @@ const ConfigModule = () => {
   if (!module) return null;
 
   const title = module.toUpperCase() + " CONFIGURATION";
+
+  if (isLoading) {
+    return (
+      <Page title={title}>
+        <div className={styles.loadingContainer}>
+          {Array.from({length: 5}).map((_, i) => (
+            <div key={i} className={styles.skeletonRow} />
+          ))}
+        </div>
+      </Page>
+    );
+  }
+
+  if (error) {
+    return (
+      <Page title={title}>
+        <Text>Error loading configuration. Please try again.</Text>
+      </Page>
+    );
+  }
 
   return (
     <Page title={title}>
@@ -323,7 +424,16 @@ function UserSchemaFields({
   setOptions: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
   onUpdate: (path: string, value: unknown) => void;
 }) {
-  const rateLimitPaths = Object.keys(fieldMeta).filter(k => k.startsWith("rateLimits.") && k.endsWith(".limit"));
+  const rateLimitCategories = useMemo(() => {
+    const categories = new Set<string>();
+    Object.keys(fieldMeta)
+      .filter(k => k.startsWith("rateLimits."))
+      .forEach(k => {
+        const parts = k.split(".");
+        if (parts.length === 3) categories.add(parts[1]);
+      });
+    return Array.from(categories);
+  }, [fieldMeta]);
 
   const providerVerificationConfig = (options.providerVerificationConfig ?? []) as ProviderItemWithId[];
   const resetPasswordProvider = (options.resetPasswordProvider ?? []) as ProviderItemWithId[];
@@ -335,7 +445,7 @@ function UserSchemaFields({
   return (
     <>
       {fieldMeta["verificationProcessMaxAttempt"] && (
-        <NumericField
+        <IntegerField
           path="verificationProcessMaxAttempt"
           meta={fieldMeta["verificationProcessMaxAttempt"]}
           options={options}
@@ -343,18 +453,30 @@ function UserSchemaFields({
         />
       )}
 
-      {rateLimitPaths.map(limitPath => {
-        const meta = fieldMeta[limitPath];
-        if (!meta) return null;
+      {rateLimitCategories.map(category => {
+        const limitPath = `rateLimits.${category}.limit`;
+        const ttlPath = `rateLimits.${category}.ttl`;
+        const limitMeta = fieldMeta[limitPath];
+        const ttlMeta = fieldMeta[ttlPath];
         return (
-          <NumericField
-            key={limitPath}
-            path={limitPath}
-            meta={meta}
-            options={options}
-            onUpdate={onUpdate}
-            emptyValue=""
-          />
+          <React.Fragment key={category}>
+            {limitMeta && (
+              <RateLimitField
+                path={limitPath}
+                meta={limitMeta}
+                options={options}
+                onUpdate={onUpdate}
+              />
+            )}
+            {ttlMeta && (
+              <RateLimitField
+                path={ttlPath}
+                meta={ttlMeta}
+                options={options}
+                onUpdate={onUpdate}
+              />
+            )}
+          </React.Fragment>
         );
       })}
 
