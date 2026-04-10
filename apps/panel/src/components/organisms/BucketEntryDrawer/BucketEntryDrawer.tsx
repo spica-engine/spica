@@ -7,7 +7,7 @@ import {
 } from "oziko-ui-kit";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import styles from "./BucketEntryDrawer.module.scss";
-import type {BucketType} from "src/services/bucketService";
+import type {BucketType} from "src/store/api/bucketApi";
 import type {TypeInputRepresenterError} from "oziko-ui-kit/dist/custom-hooks/useInputRepresenter";
 import {FIELD_REGISTRY} from "../../../domain/fields";
 import {BucketEntryService, type IBucketApiClient} from "./services";
@@ -15,6 +15,7 @@ import {useBucketEntryForm, useBucketEntrySubmit, useValueProperties} from "./ho
 import {BucketEntryForm} from "../../molecules/BucketEntryForm";
 import {BucketEntryActions} from "../../molecules/BucketEntryActions";
 import {useCreateBucketEntryMutation} from "../../../store/api/bucketApi";
+import StorageFieldInput from "../../atoms/storage-field-input/StorageFieldInput";
 
 export interface BucketEntryDrawerProps {
   bucket: BucketType;
@@ -93,7 +94,10 @@ const BucketEntryDrawer = ({
     onChange: formActions.setValue,
     value: normalizedValue,
     containerClassName: styles.inputFieldContainer,
-    error: formState.errors as TypeInputRepresenterError
+    error: formState.errors as TypeInputRepresenterError,
+    typeOverrides: {
+      storage: (props) => <StorageFieldInput {...props} fieldKey={props.key} />,
+    },
   });
 
   const handleSubmit = useCallback(async () => {

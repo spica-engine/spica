@@ -8,7 +8,6 @@ import {DrawerProvider} from "./contexts/DrawerContext";
 import {StorageProvider} from "./contexts/StorageContext";
 import {Provider} from "react-redux";
 import {store} from "./store";
-import {BucketProvider} from "./contexts/BucketContext";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 
@@ -20,12 +19,10 @@ root.render(
       <DndProvider backend={HTML5Backend}>
         <DrawerProvider>
           <AuthProvider>
-            {/* TODO: Remove Bucket and Storage provider after all actions are migrated to RTK Query */}
-            <BucketProvider>
+            {/* TODO: Remove Storage provider after all actions are migrated to RTK Query */}
               <StorageProvider>
                 <AppRouter />
               </StorageProvider>
-            </BucketProvider>
           </AuthProvider>
         </DrawerProvider>
       </DndProvider>
