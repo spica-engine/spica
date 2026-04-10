@@ -9,124 +9,68 @@ export type SideBarItem = {
   route?: string;
 };
 
-export const sideBarItems: SideBarItem[]=  [
-  {
-    id: "bucket",
-    name: "Bucket",
-    icon: "bucket",
-  },
-  {
-    id: "dashboard",
-    name: "Dashboard",
-    icon: "dashboard",
-  },
- 
-  {
-    id: "storage",
-    name: "Storage",
-    icon: "storage",
-  },
-  {
-    id: "accessManagement",
-    name: "Access Management",
-    icon: "identities",
-  },
-  {
-    id: "function",
-    name: "Function",
-    icon: "function",
-  },
-  {
-    id: "webhook",
-    name: "Webhook",
-    icon: "webhook",
-  },
-  {
-    id: "config",
-    name: "Configuration",
-    icon: "cog",
-  },
-  {
-    id: "versionControl",
-    name: "Version Control",
-    icon: "forkRight",
-    position: "bottom",
-    route: "/version-control",
-  },
-]
+const BASE_ITEMS: Record<string, { id: string; name: string; icon: IconName }> = {
+  bucket:            { id: "bucket",            name: "Bucket",            icon: "bucket" },
+  dashboard:         { id: "dashboard",         name: "Dashboard",         icon: "dashboard" },
+  storage:           { id: "storage",           name: "Storage",           icon: "storage" },
+  accessManagement:  { id: "accessManagement",  name: "Access Management", icon: "identities" },
+  function:          { id: "function",          name: "Function",          icon: "function" },
+  webhook:           { id: "webhook",           name: "Webhook",           icon: "webhook" },
+  config:            { id: "config",            name: "Configuration",     icon: "cog" },
+  versionControl:    { id: "versionControl",    name: "Version Control",   icon: "forkRight" },
+  identity:          { id: "identity",          name: "Identity",          icon: "identities" },
+  assetstore:        { id: "assetstore",        name: "Assetstore",        icon: "assetstore" },
+};
 
-
-
+export const sideBarItems: SideBarItem[] = [
+  BASE_ITEMS.bucket,
+  BASE_ITEMS.dashboard,
+  BASE_ITEMS.storage,
+  BASE_ITEMS.accessManagement,
+  BASE_ITEMS.function,
+  BASE_ITEMS.webhook,
+  BASE_ITEMS.config,
+  { ...BASE_ITEMS.versionControl, position: "bottom", route: "/version-control" },
+];
 
 export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[] => [
   {
-    id: "bucket",
-    name: "Bucket",
-    icon: "bucket",
+    ...BASE_ITEMS.bucket,
     header: {
       name: "Tables",
       buttons: [
-        {
-          icon: "clockOutline",
-          onClick: () => {}
-        },
-        {icon: "viewList", onClick: () => navigate?.("/diagram")}
+        { icon: "clockOutline", onClick: () => {} },
+        { icon: "viewList", onClick: () => navigate?.("/diagram") }
       ]
     },
     addNewButtonText: "New Bucket"
   },
   {
-    id: "dashboard",
-    name: "Dashboard",
-    icon: "dashboard",
-    header: {
-      name: "Dashboards"
-    },
+    ...BASE_ITEMS.dashboard,
+    header: { name: "Dashboards" },
     addNewButtonText: "New Dashboard"
   },
   {
-    id: "storage",
-    name: "Storage",
-    icon: "storage",
-    header: {
-      name: "Storage"
-    }
+    ...BASE_ITEMS.storage,
+    header: { name: "Storage" }
   },
   {
-    id: "identity",
-    name: "Identity",
-    icon: "identities",
-    header: {
-      name: "Identity"
-    }
+    ...BASE_ITEMS.identity,
+    header: { name: "Identity" }
   },
   {
-    id: "function",
-    name: "Function",
-    icon: "function",
-    header: {
-      name: "Function"
-    }
+    ...BASE_ITEMS.function,
+    header: { name: "Function" }
   },
   {
-    id: "webhook",
-    name: "Webhook",
-    icon: "webhook",
-    header: {
-      name: "Webhook"
-    }
+    ...BASE_ITEMS.webhook,
+    header: { name: "Webhook" }
   },
   {
-    id: "assetstore",
-    name: "Assetstore",
-    icon: "assetstore",
-    header: {
-      name: "Assetstore"
-    }
+    ...BASE_ITEMS.assetstore,
+    header: { name: "Assetstore" }
   }
 ];
-
-export const menuItems: TypeMenuItems[] = getMenuItems();
 
 export const navigatorItems: {[key: string]: TypeNavigatorItem[]} = {
   bucket: [
