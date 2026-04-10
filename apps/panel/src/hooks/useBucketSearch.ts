@@ -1,5 +1,5 @@
 import {useState, useCallback, useEffect} from "react";
-import type {BucketDataQueryWithIdType} from "../services/bucketService";
+import type {BucketDataQueryWithIdType} from "../store/api/bucketApi";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 

@@ -1,6 +1,6 @@
 import {useState, useCallback, useRef} from "react";
 import {useGetBucketDataQuery} from "../store/api/bucketApi";
-import type {BucketDataQueryWithIdType} from "../services/bucketService";
+import type {BucketDataQueryWithIdType} from "../store/api/bucketApi";
 
 function smoothScrollToTop(el: HTMLElement): Promise<void> {
   return new Promise(resolve => {

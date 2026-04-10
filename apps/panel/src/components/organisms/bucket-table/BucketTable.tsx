@@ -17,6 +17,7 @@ interface BucketTableNewProps {
   data: BucketDataRow[];
   onDataChange?: (rowId: string, propertyKey: string, newValue: any) => void;
   loading?: boolean;
+  visibleColumns?: Record<string, boolean>;
 }
 
 
@@ -191,7 +192,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   bucket, 
   data,
   onDataChange,
-  loading = false
+  loading = false,
+  visibleColumns
 }) => {
 
   const [createBucketField] = useCreateBucketFieldMutation();
@@ -550,9 +552,13 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     const newKeys = propertyKeys.filter(key => !fieldsOrder.includes(key));
     const finalOrderedKeys = [...orderedKeys, ...newKeys];
 
-    const propertyColumns = finalOrderedKeys.map((key, index) => {
+    const visibleOrderedKeys = visibleColumns
+      ? finalOrderedKeys.filter(key => visibleColumns[key] !== false)
+      : finalOrderedKeys;
+
+    const propertyColumns = visibleOrderedKeys.map((key, index) => {
       const property: BucketProperty = bucket.properties[key];
-      return createPropertyColumn(key, property, index, finalOrderedKeys.length);
+      return createPropertyColumn(key, property, index, visibleOrderedKeys.length);
     });
 
     return [...systemColumns, ...propertyColumns];
@@ -560,7 +566,8 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     bucket?.properties,
     fieldsOrder,
     renderIdCell,
-    createPropertyColumn
+    createPropertyColumn,
+    visibleColumns
   ]);
 
 

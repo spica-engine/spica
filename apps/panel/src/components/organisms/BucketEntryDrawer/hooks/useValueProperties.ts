@@ -1,5 +1,5 @@
 import {useEffect, useMemo} from "react";
-import type {BucketType, Property} from "src/services/bucketService";
+import type {BucketType, Property} from "src/store/api/bucketApi";
 import {FIELD_REGISTRY} from "../../../../domain/fields/registry";
 import {FieldKind} from "../../../../domain/fields";
 import {

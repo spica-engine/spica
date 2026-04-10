@@ -4,7 +4,7 @@ import {useUpdateBucketEntryMutation, useGetBucketsQuery} from "../../store/api/
 import {useParams} from "react-router-dom";
 import {useCallback, useEffect, useMemo} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
-import type {BucketType} from "src/services/bucketService";
+import type {BucketType} from "src/store/api/bucketApi";
 import Loader from "../../components/atoms/loader/Loader";
 import {useBucketColumns} from "../../hooks/useBucketColumns";
 import {useBucketSearch} from "../../hooks/useBucketSearch";
@@ -175,6 +175,7 @@ export default function Bucket() {
           data={bucketData?.data ?? []}
           onDataChange={handleDataChange}
           loading={bucketDataLoading}
+          visibleColumns={visibleColumns}
         />
       </div>
     </BucketLookupContext.Provider>

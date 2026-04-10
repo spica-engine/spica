@@ -1,5 +1,5 @@
 import {useState, useCallback} from "react";
-import type {Properties} from "src/services/bucketService";
+import type {Properties} from "src/store/api/bucketApi";
 import type {BucketEntryService} from "../services";
 
 export interface BucketEntrySubmitState {

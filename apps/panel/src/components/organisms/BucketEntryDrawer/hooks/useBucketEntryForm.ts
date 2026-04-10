@@ -1,5 +1,5 @@
 import {useState, useEffect, useCallback, useRef} from "react";
-import type {Properties} from "src/services/bucketService";
+import type {Properties} from "src/store/api/bucketApi";
 import type {BucketEntryService} from "../services";
 import type {ValidationErrors} from "../services";
 

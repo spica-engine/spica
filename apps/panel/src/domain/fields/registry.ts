@@ -5,7 +5,7 @@
  * defaults, property construction, parsing, formatting and validation.
  */
 
-import type {BucketType, Property} from "src/services/bucketService";
+import type {BucketType, Property} from "src/store/api/bucketApi";
 import {BASE_FORM_DEFAULTS, DEFAULT_COORDINATES, freezeFormDefaults} from "./defaults";
 import {applyPresetLogic} from "./presets";
 import {
