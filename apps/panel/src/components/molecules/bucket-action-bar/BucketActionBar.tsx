@@ -5,7 +5,7 @@ import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
 import Confirmation from "../confirmation/Confirmation";
-import type {BucketDataType, BucketType, Property} from "src/services/bucketService";
+import type {BucketDataType, BucketType, Property} from "src/store/api/bucketApi";
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 import BucketEntryDrawer from "../../organisms/BucketEntryDrawer/BucketEntryDrawer";
 import {useEntrySelection} from "../../../hooks/useEntrySelection";

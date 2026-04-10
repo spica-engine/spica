@@ -6,7 +6,7 @@
 import React, {useCallback, useState, useEffect, useMemo} from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Filter from "../filter/Filter";
-import type {Property} from "src/services/bucketService";
+import type {Property} from "src/store/api/bucketApi";
 import {Button, FlexElement, FluidContainer, Text} from "oziko-ui-kit";
 import styles from "./RelationPicker.module.scss";
 import {useGetBucketDataQuery, useGetBucketQuery, useLazyGetBucketDataQuery} from "../../../store/api/bucketApi";

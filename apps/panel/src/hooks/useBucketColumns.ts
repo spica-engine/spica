@@ -1,5 +1,5 @@
 import {useMemo, useEffect} from "react";
-import type {BucketType} from "../services/bucketService";
+import type {BucketType} from "../store/api/bucketApi";
 import type {ColumnType} from "../components/organisms/bucket-table/BucketTable";
 import useLocalStorage from "./useLocalStorage";
 

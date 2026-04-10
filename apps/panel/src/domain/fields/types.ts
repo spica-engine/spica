@@ -1,5 +1,5 @@
 import type {IconName} from "oziko-ui-kit";
-import type {Property} from "../../services/bucketService";
+import type {Property} from "../../store/api/bucketApi";
 import type {
   TypeInputRepresenterError,
   TypeProperties
