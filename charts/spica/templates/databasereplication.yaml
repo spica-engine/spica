@@ -25,10 +25,10 @@ spec:
             "false",
             "--nodes",
             {{ template "database.nodes" . }},
-            "--username",
-            "$(ROOT_USERNAME)",
-            "--password",
-            "$(ROOT_PASSWORD)"
+            # "--username",
+            # "$(ROOT_USERNAME)",
+            # "--password",
+            # "$(ROOT_PASSWORD)"
           ]
           # env:
           #   - name: ROOT_USERNAME
