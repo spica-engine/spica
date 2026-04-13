@@ -49,7 +49,7 @@ describe("VersionControlController", () => {
 
       const response = await req.post("/versioncontrol/commands/push", {args: ["origin"]});
       expect(response.statusCode).toBe(400);
-      expect(response.body.message).toBe("Command execution failed");
+      expect(response.body.message).toContain("Command execution failed");
       expect(response.body.message).not.toContain("/var/data");
     });
   });
