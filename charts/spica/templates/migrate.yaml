@@ -35,16 +35,17 @@ spec:
                 configMapKeyRef:
                   name: {{ .Release.Name }}-version
                   key: VERSION
-            - name: MONGODB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-database-root-credentials
-                  key: rootUsername
-            - name: MONGODB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-database-root-credentials
-                  key: rootPassword
+            # 0.9.x versions of Spica db has no authentication.
+            # - name: MONGODB_USERNAME
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: {{ .Release.Name }}-database-root-credentials
+            #       key: rootUsername
+            # - name: MONGODB_PASSWORD
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: {{ .Release.Name }}-database-root-credentials
+            #       key: rootPassword
       {{- if .Values.database.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.database.nodeSelector | indent 8 }}
