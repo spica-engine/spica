@@ -93,7 +93,7 @@ spec:
           startupProbe:
             exec:
               command:
-                - mongo
+                - mongosh 
                 - --username
                 - $(ROOT_USERNAME)
                 - --password
@@ -109,7 +109,7 @@ spec:
           livenessProbe:
             exec:
               command:
-                - mongo
+                - mongosh 
                 - --username
                 - $(ROOT_USERNAME)
                 - --password
@@ -124,7 +124,7 @@ spec:
           readinessProbe:
             exec:
               command:
-                - mongo
+                - mongosh 
                 - --username
                 - $(ROOT_USERNAME)
                 - --password

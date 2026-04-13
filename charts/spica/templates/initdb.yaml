@@ -46,17 +46,17 @@ data:
 
     # Ping until mongodb process is ready
     echo "Trying to ping.."
-    retry_command mongo --quiet --eval "db.runCommand({ ping: 1 })"
+    retry_command mongosh --quiet --eval "db.runCommand({ ping: 1 })"
     echo "Ping succeeded!"
 
     # Initiate replicaset (idempotent: code 23 = AlreadyInitialized, safe to skip)
     echo "Trying to initiate replicaset.."
-    mongo --eval "try { rs.initiate(); print('RS initiated.') } catch(e) { if (e.code != 23) throw e; print('RS already initialized, skipping.') }"
+    mongosh --eval "try { rs.initiate(); print('RS initiated.') } catch(e) { if (e.code != 23) throw e; print('RS already initialized, skipping.') }"
     echo "Replicaset initiation succeeded!"
 
     # Insert root user if not exist
     echo "Inserting root user.."
-    mongo --quiet <<EOF
+    mongosh --quiet <<EOF
       use admin
       var user = db.getUser('$ROOT_USERNAME')
       var roles = [ "root" ]
@@ -70,7 +70,7 @@ data:
 
     # Upsert application user
     echo "Inserting spica user.."
-    mongo --quiet <<EOF
+    mongosh --quiet <<EOF
       use admin
       var user = db.getUser('$SPICA_USERNAME')
       var roles = [ { role: 'readWrite', db: 'spica' }, { role: 'dbAdmin', db: 'spica' } ]
@@ -114,11 +114,11 @@ data:
 
     # retry until mongodb process is ready
     echo "Trying to ping.."
-    retry_command mongo --quiet --eval "db.runCommand({ ping: 1 })"
+    retry_command mongosh --quiet --eval "db.runCommand({ ping: 1 })"
     echo "Ping succeeded!"
 
     echo "Setting Profiling level: $PROFILING_LEVEL, Slowms: $PROFILING_SLOWMS on the $DATABASE_NAME database.."
-    mongo --authenticationDatabase "admin" -u "$ROOT_USERNAME" -p "$ROOT_PASSWORD" --eval <<EOF
+    mongosh --authenticationDatabase "admin" -u "$ROOT_USERNAME" -p "$ROOT_PASSWORD" --eval <<EOF
       use $DATABASE_NAME
       db.setProfilingLevel($PROFILING_LEVEL,{ slowms: $PROFILING_SLOWMS})
     EOF
