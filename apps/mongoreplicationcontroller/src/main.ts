@@ -70,7 +70,7 @@ function debug(message: string) {
   options["debug"] && console.debug(`${new Date().toISOString()}  ${message}`);
 }
 
-let mongoCommand = "mongosh";
+let mongoCommand = "mongo";
 function execMongo(rest: string) {
   const command = `${mongoCommand} ${rest}`;
   return exec(command);
