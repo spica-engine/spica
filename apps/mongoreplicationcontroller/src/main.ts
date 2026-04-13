@@ -15,8 +15,7 @@ const options = yargs(process.argv.slice(2))
   })
   .option("authentication-database", {
     type: "string",
-    describe: "Database where mongodb user has been created.",
-    default: "admin"
+    describe: "Database where mongodb user has been created."
   })
   .option("from-srv", {
     type: "boolean",
