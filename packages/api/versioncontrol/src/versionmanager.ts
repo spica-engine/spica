@@ -102,6 +102,9 @@ export class Git implements VersionManager {
     this.git = simpleGit({baseDir: this.cwd, binary: "git", maxConcurrentProcesses: 6});
 
     const gitInit = async () => {
+      const systemGit = simpleGit({binary: "git", maxConcurrentProcesses: 6});
+      await systemGit.raw(["config", "--global", "--add", "safe.directory", this.cwd]);
+
       await this.git.init();
       await this.git.raw(["config", "--replace-all", "user.name", "Spica"]);
       await this.git.raw(["config", "--replace-all", "user.email", "Spica"]);
