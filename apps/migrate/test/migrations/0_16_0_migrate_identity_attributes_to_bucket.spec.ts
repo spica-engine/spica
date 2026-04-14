@@ -39,28 +39,26 @@ describe("Migrate identity attributes to bucket", () => {
     await db.collection("preferences").insertOne({
       scope: "passport",
       identity: {
-        schema: {
-          attributes: {
-            email: {
-              type: "string",
-              title: "Email",
-              description: "User email address"
-            },
-            role: {
-              type: "string",
-              title: "Role",
-              description: "User role"
-            },
-            phone: {
-              type: "string",
-              title: "Phone",
-              description: "User phone number"
-            },
-            department: {
-              type: "string",
-              title: "Department",
-              description: "User department"
-            }
+        attributes: {
+          email: {
+            type: "string",
+            title: "Email",
+            description: "User email address"
+          },
+          role: {
+            type: "string",
+            title: "Role",
+            description: "User role"
+          },
+          phone: {
+            type: "string",
+            title: "Phone",
+            description: "User phone number"
+          },
+          department: {
+            type: "string",
+            title: "Department",
+            description: "User department"
           }
         }
       }
