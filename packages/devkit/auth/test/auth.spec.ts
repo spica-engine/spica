@@ -85,6 +85,46 @@ describe("@spica-devkit/auth", () => {
       expect(user).toEqual({username: "test", password: "test"});
     });
 
+    it("should get all users", () => {
+      Auth.getAll();
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("passport/user", {
+        params: {},
+        headers: undefined
+      });
+    });
+
+    it("should get all users with headers", () => {
+      Auth.getAll({}, {Accept: "application/json"});
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("passport/user", {
+        params: {},
+        headers: {Accept: "application/json"}
+      });
+    });
+
+    it("should get all users with query params", () => {
+      Auth.getAll({limit: 10, skip: 5, paginate: true});
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("passport/user", {
+        params: {limit: 10, skip: 5, paginate: true},
+        headers: undefined
+      });
+    });
+
+    it("should get all users with filter", () => {
+      Auth.getAll({filter: {username: "test"}});
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith("passport/user", {
+        params: {filter: {username: "test"}},
+        headers: undefined
+      });
+    });
+
     it("should refresh token", async () => {
       Auth.refreshAccessToken("old_token", {Cookie: "refresh_token=refresh_token_value"});
 
