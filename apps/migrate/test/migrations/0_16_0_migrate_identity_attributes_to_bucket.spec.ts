@@ -37,28 +37,32 @@ describe("Migrate identity attributes to bucket", () => {
     db = connection.db(args[3]);
 
     await db.collection("preferences").insertOne({
+      _id: new ObjectId("62bb0cc82c6b0c40f62e2279"),
       scope: "passport",
       identity: {
         attributes: {
-          email: {
-            type: "string",
-            title: "Email",
-            description: "User email address"
-          },
-          role: {
-            type: "string",
-            title: "Role",
-            description: "User role"
-          },
-          phone: {
-            type: "string",
-            title: "Phone",
-            description: "User phone number"
-          },
-          department: {
-            type: "string",
-            title: "Department",
-            description: "User department"
+          properties: {
+            role: {
+              type: "string",
+              title: "Role",
+              description: "User role",
+              default: "user"
+            },
+            email: {
+              type: "string",
+              title: "Email",
+              description: "User email address"
+            },
+            phone: {
+              type: "string",
+              title: "Phone",
+              description: "User phone number"
+            },
+            department: {
+              type: "string",
+              title: "Department",
+              description: "User department"
+            }
           }
         }
       }
@@ -130,7 +134,8 @@ describe("Migrate identity attributes to bucket", () => {
     expect(bucket.properties.role).toEqual({
       type: "string",
       title: "Role",
-      description: "User role"
+      description: "User role",
+      default: "user"
     });
     expect(bucket.properties.phone).toEqual({
       type: "string",

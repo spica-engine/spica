@@ -15,7 +15,7 @@ export default async function (ctx: Context) {
     {session: ctx.session}
   );
 
-  const attributeSchema = passportPreference?.identity?.attributes || {};
+  const attributeSchema = passportPreference?.identity?.attributes?.properties || {};
 
   // Find a unique bucket title
   const bucketsCollection = ctx.database.collection("buckets");
