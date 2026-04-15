@@ -32,7 +32,9 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     private validator: Validator,
     @Optional() @Inject(BUCKET_DATA_LIMIT) private bucketDataLimit
   ) {
-    super(db);
+    super(db, {
+      collectionOptions: {changeStreamPreAndPostImages: {enabled: true}}
+    });
   }
 
   getPreferences() {

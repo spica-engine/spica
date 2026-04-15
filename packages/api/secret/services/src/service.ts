@@ -11,7 +11,8 @@ export class SecretService extends BaseCollection<Secret>("secret") {
     @Inject(SECRET_ENCRYPTION_SECRET) public readonly encryptionSecret: string
   ) {
     super(db, {
-      afterInit: () => this._coll.createIndex({key: 1}, {unique: true})
+      afterInit: () => this._coll.createIndex({key: 1}, {unique: true}),
+      collectionOptions: {changeStreamPreAndPostImages: {enabled: true}}
     });
   }
 }
