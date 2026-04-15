@@ -10437,7 +10437,6 @@ __metadata:
     "@spica-server/passport-policy": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
     "@spica-server/preference-testing": "workspace:*"
-    "@spica-server/replication": "workspace:*"
     "@spica-server/representative": "workspace:*"
     "@spica-server/secret": "workspace:*"
     "@spica-server/versioncontrol-sync": "workspace:*"
