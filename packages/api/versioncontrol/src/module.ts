@@ -61,7 +61,7 @@ export class VersionControlModule {
         },
         {
           provide: VersionManager,
-          useFactory: (cwd, jr) => new Git(cwd, jr),
+          useFactory: cwd => new Git(cwd),
           inject: [VERSIONCONTROL_WORKING_DIRECTORY]
         },
         {
