@@ -13,9 +13,7 @@ export class PolicyService extends BaseCollection<Policy>("policies") {
   }
 
   constructor(db: DatabaseService) {
-    super(db, {
-      collectionOptions: {changeStreamPreAndPostImages: {enabled: true}}
-    });
+    super(db);
     this.managedPolicies = managedPolicies.map(p => ({...p, system: true}) as PolicyWithType);
   }
 

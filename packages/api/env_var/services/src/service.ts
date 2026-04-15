@@ -6,8 +6,7 @@ import {EnvVar} from "@spica-server/interface-env_var";
 export class EnvVarService extends BaseCollection<EnvVar>("env_var") {
   constructor(db: DatabaseService) {
     super(db, {
-      afterInit: () => this._coll.createIndex({key: 1}, {unique: true}),
-      collectionOptions: {changeStreamPreAndPostImages: {enabled: true}}
+      afterInit: () => this._coll.createIndex({key: 1}, {unique: true})
     });
   }
 }
