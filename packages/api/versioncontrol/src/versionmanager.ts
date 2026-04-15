@@ -11,7 +11,22 @@ const DANGEROUS_ARG_PATTERNS: RegExp[] = [
   /^--config(=|$)/i,
   /^--git-dir(=|$)/i,
   /^--work-tree(=|$)/i,
-  /^--output(=|$)/i
+  /^--output(=|$)/i,
+  /^--template(=|$)/i,
+  /^--separate-git-dir(=|$)/i,
+  /^--file(=|$)/i
+];
+
+// Config keys that can trigger arbitrary command execution
+const DANGEROUS_CONFIG_KEYS: RegExp[] = [
+  /^core\.(sshCommand|pager|editor|fsmonitor|hooksPath)$/i,
+  /^alias\./i,
+  /^credential(\..+)?\.helper$/i,
+  /^filter\..+\.(clean|smudge|process)$/i,
+  /^diff\..+\.textconv$/i,
+  /^merge\..+\.driver$/i,
+  /^include\.path$/i,
+  /^includeIf\..+\.path$/i
 ];
 
 const CONTROL_CHAR_PATTERN = /[\x00-\x08\x0b\x0c\x0e-\x1f]/;
@@ -185,6 +200,13 @@ export class Git implements VersionManager {
   }
 
   config({args}) {
+    for (const arg of args) {
+      for (const pattern of DANGEROUS_CONFIG_KEYS) {
+        if (pattern.test(arg)) {
+          return Promise.reject(new Error(`Config key "${arg}" is not allowed`));
+        }
+      }
+    }
     return this.git.raw(["config", ...args]);
   }
 }
