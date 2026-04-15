@@ -69,7 +69,7 @@ data:
     mongo --quiet <<EOF
       use admin
       var user = db.getUser('$SPICA_USERNAME')
-      var roles = [ { role: 'readWrite', db: 'spica' } ]
+      var roles = [ { role: 'readWrite', db: 'spica' }, { role: 'dbAdmin', db: 'spica' } ]
       if(user){
           db.updateUser('$SPICA_USERNAME', { pwd: '$SPICA_PASSWORD', roles: roles })
       }else{
