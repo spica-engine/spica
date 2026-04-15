@@ -474,3 +474,69 @@ export async function completePasswordlessLogin(
     service
   });
 }
+
+export namespace policy {
+  /**
+   * Attach policies to a user.
+   *
+   * @param userId - User ID to attach policies to
+   * @param policyIds - Array of policy IDs to attach
+   * @param headers - Optional headers to include in the request
+   * @returns Promise resolving to an array of successfully attached policy IDs
+   */
+  export function attach(
+    userId: string,
+    policyIds: string[] = [],
+    headers?: object
+  ): Promise<string[]> {
+    checkInitialized(authorization, service);
+
+    const promises: Promise<any>[] = [];
+    const attachedPolicies = new Set<string>();
+
+    for (const policyId of policyIds) {
+      const promise = service
+        .put<any>(`${userSegment}/${userId}/policy/${policyId}`, {}, {headers})
+        .then(() => attachedPolicies.add(policyId))
+        .catch(e => {
+          console.error(`Failed to attach policy with id ${policyId}: `, e);
+          return e;
+        });
+      promises.push(promise);
+    }
+
+    return Promise.all(promises).then(() => Array.from(attachedPolicies));
+  }
+
+  /**
+   * Detach policies from a user.
+   *
+   * @param userId - User ID to detach policies from
+   * @param policyIds - Array of policy IDs to detach
+   * @param headers - Optional headers to include in the request
+   * @returns Promise resolving to an array of successfully detached policy IDs
+   */
+  export function detach(
+    userId: string,
+    policyIds: string[] = [],
+    headers?: object
+  ): Promise<string[]> {
+    checkInitialized(authorization, service);
+
+    const promises: Promise<any>[] = [];
+    const detachedPolicies = new Set<string>();
+
+    for (const policyId of policyIds) {
+      const promise = service
+        .delete(`${userSegment}/${userId}/policy/${policyId}`, {headers})
+        .then(() => detachedPolicies.add(policyId))
+        .catch(e => {
+          console.error(`Failed to detach policy with id ${policyId}: `, e);
+          return e;
+        });
+      promises.push(promise);
+    }
+
+    return Promise.all(promises).then(() => Array.from(detachedPolicies));
+  }
+}
