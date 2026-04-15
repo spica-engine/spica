@@ -1,7 +1,6 @@
 import {VersionManager} from "./interface.js";
 import {Injectable} from "@nestjs/common";
 import simpleGit, {SimpleGit} from "simple-git";
-import {JobReducer} from "@spica-server/replication";
 
 // Flags that enable arbitrary command execution or override git internals
 const DANGEROUS_ARG_PATTERNS: RegExp[] = [
@@ -97,10 +96,7 @@ export class Git implements VersionManager {
     });
   }
 
-  constructor(
-    private cwd: string,
-    private jobReducer?: JobReducer
-  ) {
+  constructor(private cwd: string) {
     this.git = simpleGit({baseDir: this.cwd, binary: "git"});
   }
 

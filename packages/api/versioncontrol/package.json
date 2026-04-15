@@ -19,7 +19,6 @@
     "@spica-server/interface-passport-policy": "workspace:*",
     "@spica-server/interface-versioncontrol": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
-    "@spica-server/replication": "workspace:*",
     "@spica-server/representative": "workspace:*",
     "@spica-server/versioncontrol-sync": "workspace:*",
     "@spica-server/versioncontrol-sync-engine": "workspace:*",

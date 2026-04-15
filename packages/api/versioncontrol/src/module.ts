@@ -13,7 +13,6 @@ import {REGISTER_CONFIG_SCHEMA, RegisterConfigSchema} from "@spica-server/interf
 import {VCRepresentativeManager} from "@spica-server/representative";
 import {Git} from "./versionmanager.js";
 import fs from "fs";
-import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {SyncModule} from "@spica-server/versioncontrol-sync";
 import {SyncEngine, SyncEngineModule} from "@spica-server/versioncontrol-sync-engine";
 
@@ -42,16 +41,6 @@ export class VersionControlModule {
   }
 
   static forRoot(options: VersionControlOptions) {
-    const versionManagerProvider = {
-      provide: VersionManager,
-      useFactory: (cwd, jr) => new Git(cwd, jr),
-      inject: [VERSIONCONTROL_WORKING_DIRECTORY]
-    };
-
-    if (options.isReplicationEnabled) {
-      versionManagerProvider.inject.push(JobReducer as any);
-    }
-
     return {
       module: VersionControlModule,
       controllers: [VersionControlController],
@@ -70,7 +59,11 @@ export class VersionControlModule {
             return dir;
           }
         },
-        versionManagerProvider,
+        {
+          provide: VersionManager,
+          useFactory: (cwd, jr) => new Git(cwd, jr),
+          inject: [VERSIONCONTROL_WORKING_DIRECTORY]
+        },
         {
           provide: VC_REPRESENTATIVE_MANAGER,
           useFactory: dir => new VCRepresentativeManager(dir),
