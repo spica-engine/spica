@@ -491,21 +491,19 @@ export namespace policy {
   ): Promise<string[]> {
     checkInitialized(authorization, service);
 
-    const promises: Promise<any>[] = [];
-    const attachedPolicies = new Set<string>();
-
-    for (const policyId of policyIds) {
-      const promise = service
+    const promises = policyIds.map(policyId =>
+      service
         .put<any>(`${userSegment}/${userId}/policy/${policyId}`, {}, {headers})
-        .then(() => attachedPolicies.add(policyId))
+        .then(() => true)
         .catch(e => {
           console.error(`Failed to attach policy with id ${policyId}: `, e);
-          return e;
-        });
-      promises.push(promise);
-    }
+          return false;
+        })
+    );
 
-    return Promise.all(promises).then(() => Array.from(attachedPolicies));
+    return Promise.all(promises).then(results =>
+      policyIds.filter((_, i) => results[i])
+    );
   }
 
   /**
@@ -523,20 +521,18 @@ export namespace policy {
   ): Promise<string[]> {
     checkInitialized(authorization, service);
 
-    const promises: Promise<any>[] = [];
-    const detachedPolicies = new Set<string>();
-
-    for (const policyId of policyIds) {
-      const promise = service
+    const promises = policyIds.map(policyId =>
+      service
         .delete(`${userSegment}/${userId}/policy/${policyId}`, {headers})
-        .then(() => detachedPolicies.add(policyId))
+        .then(() => true)
         .catch(e => {
           console.error(`Failed to detach policy with id ${policyId}: `, e);
-          return e;
-        });
-      promises.push(promise);
-    }
+          return false;
+        })
+    );
 
-    return Promise.all(promises).then(() => Array.from(detachedPolicies));
+    return Promise.all(promises).then(results =>
+      policyIds.filter((_, i) => results[i])
+    );
   }
 }
