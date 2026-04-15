@@ -219,4 +219,126 @@ describe("@spica-devkit/auth", () => {
       );
     });
   });
+
+  describe("policy", () => {
+    it("should attach policy", async () => {
+      await Auth.policy.attach("user_id", ["policy_id"]);
+
+      expect(putSpy).toHaveBeenCalledTimes(1);
+      expect(putSpy).toHaveBeenCalledWith(
+        "passport/user/user_id/policy/policy_id",
+        {},
+        {headers: undefined}
+      );
+    });
+
+    it("should attach policy with headers", async () => {
+      await Auth.policy.attach("user_id", ["policy_id"], {Accept: "application/json"});
+
+      expect(putSpy).toHaveBeenCalledTimes(1);
+      expect(putSpy).toHaveBeenCalledWith(
+        "passport/user/user_id/policy/policy_id",
+        {},
+        {headers: {Accept: "application/json"}}
+      );
+    });
+
+    it("should attach multiple policies", async () => {
+      await Auth.policy.attach("user_id", ["policy_1", "policy_2"]);
+
+      expect(putSpy).toHaveBeenCalledTimes(2);
+      expect(putSpy).toHaveBeenCalledWith(
+        "passport/user/user_id/policy/policy_1",
+        {},
+        {headers: undefined}
+      );
+      expect(putSpy).toHaveBeenCalledWith(
+        "passport/user/user_id/policy/policy_2",
+        {},
+        {headers: undefined}
+      );
+    });
+
+    it("should return attached policy ids", async () => {
+      const result = await Auth.policy.attach("user_id", ["policy_1", "policy_2"]);
+
+      expect(result).toEqual(["policy_1", "policy_2"]);
+    });
+
+    it("should handle empty policy ids on attach", async () => {
+      const result = await Auth.policy.attach("user_id", []);
+
+      expect(putSpy).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
+    });
+
+    it("should detach policy", async () => {
+      await Auth.policy.detach("user_id", ["policy_id"]);
+
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledWith("passport/user/user_id/policy/policy_id", {
+        headers: undefined
+      });
+    });
+
+    it("should detach policy with headers", async () => {
+      await Auth.policy.detach("user_id", ["policy_id"], {Accept: "application/json"});
+
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledWith("passport/user/user_id/policy/policy_id", {
+        headers: {Accept: "application/json"}
+      });
+    });
+
+    it("should detach multiple policies", async () => {
+      await Auth.policy.detach("user_id", ["policy_1", "policy_2"]);
+
+      expect(deleteSpy).toHaveBeenCalledTimes(2);
+      expect(deleteSpy).toHaveBeenCalledWith("passport/user/user_id/policy/policy_1", {
+        headers: undefined
+      });
+      expect(deleteSpy).toHaveBeenCalledWith("passport/user/user_id/policy/policy_2", {
+        headers: undefined
+      });
+    });
+
+    it("should return detached policy ids", async () => {
+      const result = await Auth.policy.detach("user_id", ["policy_1", "policy_2"]);
+
+      expect(result).toEqual(["policy_1", "policy_2"]);
+    });
+
+    it("should handle empty policy ids on detach", async () => {
+      const result = await Auth.policy.detach("user_id", []);
+
+      expect(deleteSpy).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
+    });
+
+    it("should exclude failed policies from attach result", async () => {
+      putSpy.mockImplementation((url: string) => {
+        if (url.includes("policy_2")) {
+          return Promise.reject(new Error("not found"));
+        }
+        return Promise.resolve();
+      });
+
+      const result = await Auth.policy.attach("user_id", ["policy_1", "policy_2"]);
+
+      expect(result).toEqual(["policy_1"]);
+    });
+
+    it("should exclude failed policies from detach result", async () => {
+      deleteSpy.mockImplementation((url: string) => {
+        if (url.includes("policy_2")) {
+          return Promise.reject(new Error("not found"));
+        }
+        return Promise.resolve();
+      });
+
+      const result = await Auth.policy.detach("user_id", ["policy_1", "policy_2"]);
+
+      expect(result).toEqual(["policy_1"]);
+    });
+  });
 });
