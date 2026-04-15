@@ -45,7 +45,9 @@ export class Git implements VersionManager {
     {name: "diff", exec: ops => this.diff(ops)},
     {name: "log", exec: ops => this.log(ops)},
     {name: "clean", exec: ops => this.clean(ops)},
-    {name: "rm", exec: ops => this.rm(ops)}
+    {name: "rm", exec: ops => this.rm(ops)},
+    {name: "init", exec: ops => this.init(ops)},
+    {name: "config", exec: ops => this.config(ops)}
   ];
 
   availables() {
@@ -99,25 +101,7 @@ export class Git implements VersionManager {
     private cwd: string,
     private jobReducer?: JobReducer
   ) {
-    this.git = simpleGit({baseDir: this.cwd, binary: "git", maxConcurrentProcesses: 6});
-
-    const gitInit = async () => {
-      const systemGit = simpleGit({binary: "git", maxConcurrentProcesses: 6});
-      await systemGit.raw(["config", "--global", "--add", "safe.directory", this.cwd]);
-
-      await this.git.init();
-      await this.git.raw(["config", "--replace-all", "user.name", "Spica"]);
-      await this.git.raw(["config", "--replace-all", "user.email", "Spica"]);
-    };
-
-    if (jobReducer) {
-      const meta = {
-        _id: "git-init"
-      };
-      jobReducer.do(meta, gitInit);
-    } else {
-      gitInit();
-    }
+    this.git = simpleGit({baseDir: this.cwd, binary: "git"});
   }
 
   checkout({args}) {
@@ -198,5 +182,13 @@ export class Git implements VersionManager {
 
   rm({args}) {
     return this.git.rm(args);
+  }
+
+  init({args}) {
+    return this.git.init(args);
+  }
+
+  config({args}) {
+    return this.git.raw(["config", ...args]);
   }
 }
