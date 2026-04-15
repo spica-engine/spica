@@ -26,6 +26,7 @@ export class FunctionService extends BaseCollection<Function>(collectionName) {
   ) {
     super(database, {
       entryLimit: options.entryLimit,
+      collectionOptions: {changeStreamPreAndPostImages: {enabled: true}},
       afterInit: () =>
         Promise.all([
           this.createIndex({env_vars: 1}),
