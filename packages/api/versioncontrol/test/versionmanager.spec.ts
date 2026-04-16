@@ -10,28 +10,9 @@ describe("Git VersionManager", () => {
   beforeEach(async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "git-test-"));
     git = new Git(tmpDir);
-    // Wait until git init AND the local user.name/email config have been
-    // written.  The Git constructor fires gitInit() without await; polling
-    // only for .git/ is not enough because addConfig runs after init and an
-    // unhandled rejection from it leaks into subsequent tests.
-    await new Promise<void>(resolve => {
-      const check = () => {
-        const configPath = path.join(tmpDir, ".git", "config");
-        if (fs.existsSync(configPath)) {
-          try {
-            const content = fs.readFileSync(configPath, "utf-8");
-            if (content.includes("name = Spica") && content.includes("email = Spica")) {
-              resolve();
-              return;
-            }
-          } catch {
-            // file may be partially written – retry
-          }
-        }
-        setTimeout(check, 50);
-      };
-      check();
-    });
+    await git.exec("init", {args: []});
+    await git.exec("config", {args: ["user.name", "Spica"]});
+    await git.exec("config", {args: ["user.email", "Spica"]});
   });
 
   afterEach(() => {
@@ -159,6 +140,122 @@ describe("Git VersionManager", () => {
 
       const result = await git.exec("branch", {args: ["-a"]});
       expect(result).toBeDefined();
+    });
+
+    it("should reject --template argument", async () => {
+      await expect(git.exec("init", {args: ["--template=/tmp/evil-hooks"]})).rejects.toThrow(
+        'Argument "--template=/tmp/evil-hooks" is not allowed'
+      );
+    });
+
+    it("should reject --separate-git-dir argument", async () => {
+      await expect(
+        git.exec("init", {args: ["--separate-git-dir=/tmp/stolen"]})
+      ).rejects.toThrow('Argument "--separate-git-dir=/tmp/stolen" is not allowed');
+    });
+
+    it("should reject --file argument", async () => {
+      await expect(
+        git.exec("config", {args: ["--file=/etc/gitconfig", "user.name"]})
+      ).rejects.toThrow('Argument "--file=/etc/gitconfig" is not allowed');
+    });
+  });
+
+  describe("config key validation", () => {
+    it("should reject core.sshCommand", async () => {
+      await expect(
+        git.exec("config", {args: ["core.sshCommand", "evil"]})
+      ).rejects.toThrow('Config key "core.sshCommand" is not allowed');
+    });
+
+    it("should reject core.pager", async () => {
+      await expect(
+        git.exec("config", {args: ["core.pager", "evil"]})
+      ).rejects.toThrow('Config key "core.pager" is not allowed');
+    });
+
+    it("should reject core.editor", async () => {
+      await expect(
+        git.exec("config", {args: ["core.editor", "evil"]})
+      ).rejects.toThrow('Config key "core.editor" is not allowed');
+    });
+
+    it("should reject core.fsmonitor", async () => {
+      await expect(
+        git.exec("config", {args: ["core.fsmonitor", "evil"]})
+      ).rejects.toThrow('Config key "core.fsmonitor" is not allowed');
+    });
+
+    it("should reject core.hooksPath", async () => {
+      await expect(
+        git.exec("config", {args: ["core.hooksPath", "/tmp/hooks"]})
+      ).rejects.toThrow('Config key "core.hooksPath" is not allowed');
+    });
+
+    it("should reject alias keys", async () => {
+      await expect(
+        git.exec("config", {args: ["alias.backdoor", "!rm -rf /"]})
+      ).rejects.toThrow('Config key "alias.backdoor" is not allowed');
+    });
+
+    it("should reject credential.helper", async () => {
+      await expect(
+        git.exec("config", {args: ["credential.helper", "!evil"]})
+      ).rejects.toThrow('Config key "credential.helper" is not allowed');
+    });
+
+    it("should reject credential scoped helper", async () => {
+      await expect(
+        git.exec("config", {args: ["credential.https://example.com.helper", "!evil"]})
+      ).rejects.toThrow("is not allowed");
+    });
+
+    it("should reject filter smudge/clean", async () => {
+      await expect(
+        git.exec("config", {args: ["filter.lfs.clean", "evil"]})
+      ).rejects.toThrow('Config key "filter.lfs.clean" is not allowed');
+    });
+
+    it("should reject diff textconv", async () => {
+      await expect(
+        git.exec("config", {args: ["diff.bin.textconv", "evil"]})
+      ).rejects.toThrow('Config key "diff.bin.textconv" is not allowed');
+    });
+
+    it("should reject merge driver", async () => {
+      await expect(
+        git.exec("config", {args: ["merge.custom.driver", "evil"]})
+      ).rejects.toThrow('Config key "merge.custom.driver" is not allowed');
+    });
+
+    it("should reject include.path", async () => {
+      await expect(
+        git.exec("config", {args: ["include.path", "/tmp/evil-config"]})
+      ).rejects.toThrow('Config key "include.path" is not allowed');
+    });
+
+    it("should reject includeIf path", async () => {
+      await expect(
+        git.exec("config", {args: ["includeIf.gitdir:/foo.path", "/tmp/evil"]})
+      ).rejects.toThrow("is not allowed");
+    });
+
+    it("should reject dangerous config keys case-insensitively", async () => {
+      await expect(
+        git.exec("config", {args: ["CORE.SSHCOMMAND", "evil"]})
+      ).rejects.toThrow("is not allowed");
+    });
+
+    it("should allow safe config keys", async () => {
+      await expect(
+        git.exec("config", {args: ["user.name", "TestUser"]})
+      ).resolves.toBeDefined();
+    });
+
+    it("should allow user.email config", async () => {
+      await expect(
+        git.exec("config", {args: ["user.email", "test@example.com"]})
+      ).resolves.toBeDefined();
     });
   });
 
