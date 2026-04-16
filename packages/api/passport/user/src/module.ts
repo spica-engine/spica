@@ -62,6 +62,32 @@ export class UserModule {
               "Maximum number of attempts allowed for verification processes like email or phone verification.",
             type: "integer"
           },
+          password: {
+            description: "Password policy configuration for users.",
+            type: "object",
+            properties: {
+              minLength: {
+                description: "Minimum number of characters required in the password.",
+                type: "integer"
+              },
+              minLowercase: {
+                description: "Minimum number of lowercase characters required in the password.",
+                type: "integer"
+              },
+              minUppercase: {
+                description: "Minimum number of uppercase characters required in the password.",
+                type: "integer"
+              },
+              minNumber: {
+                description: "Minimum number of numeric characters required in the password.",
+                type: "integer"
+              },
+              minSpecialCharacter: {
+                description: "Minimum number of special characters required in the password.",
+                type: "integer"
+              }
+            }
+          },
           passwordlessLogin: {
             description: "Configuration for passwordless login providers.",
             type: "object",
