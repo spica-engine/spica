@@ -28,12 +28,17 @@ export class VersionControlModule {
     if (registerConfigSchema) {
       registerConfigSchema("versioncontrol", {
         type: "object",
+        description: "Configuration for version control module",
         properties: {
           autoApproveSync: {
             type: "object",
+            description: "Configuration for auto-approving sync operations.",
             properties: {
-              document: {type: "boolean"},
-              representative: {type: "boolean"}
+              document: {type: "boolean", description: "Whether to auto-approve document changes."},
+              representative: {
+                type: "boolean",
+                description: "Whether to auto-approve representative changes."
+              }
             }
           }
         }
