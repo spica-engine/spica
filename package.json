@@ -262,5 +262,8 @@
     "vite": "^5.0.0"
   },
   "type": "module",
-  "packageManager": "yarn@4.13.0"
+  "packageManager": "yarn@4.13.0",
+  "dependencies": {
+    "oziko-ui-kit": "^0.0.128"
+  }
 }
