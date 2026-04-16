@@ -276,22 +276,24 @@ type TypeUseInputRepresenter = {
   properties: TypeProperties;
   value?: TypeValueType | TypeRepresenterValue;
   onChange?: (value: any) => void;
+  typeOverrides?: Partial<TypeInputTypeMap>;
 };
 
-const useInputRepresenter = ({ properties, value, onChange }: TypeUseInputRepresenter) => {
+const useInputRepresenter = ({ properties, value, onChange, typeOverrides }: TypeUseInputRepresenter) => {
   const handleChange = (event: { key: string; value: any }) => {
     const updatedValue: any = structuredClone(value);
     updatedValue[event.key] = event.value;
     onChange?.(updatedValue);
   };
 
+  const effectiveTypes = typeOverrides ? { ...types, ...typeOverrides } : types;
   return Object.entries(properties).map(([key, el]) => {
     const isObject = typeof value === "object" && !Array.isArray(value);
     const _value = isObject ? (value[key] ?? value) : value;
 
     return (
       <Fragment key={key}>
-        {types[el.type]({
+        {effectiveTypes[el.type]({
           key,
           title: el.title,
           description: el.description!,

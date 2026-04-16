@@ -29,7 +29,7 @@ export type BucketType = {
   [key: string]: any;
 };
 
-type Properties = { [key: string]: Property };
+export type Properties = { [key: string]: Property };
 
 export type Property =
   | BasicProperty

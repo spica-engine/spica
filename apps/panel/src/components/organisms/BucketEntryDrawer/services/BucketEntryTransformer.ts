@@ -1,4 +1,4 @@
-import type {Property, Properties} from "src/services/bucketService";
+import type {Property, Properties} from "src/store/api/bucketApi";
 import type {FieldRegistry} from "src/domain/fields/types";
 
 export class BucketEntryTransformer {

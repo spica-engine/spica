@@ -1,4 +1,4 @@
-import type {Properties} from "src/services/bucketService";
+import type {Properties} from "src/store/api/bucketApi";
 import type {FieldRegistry} from "src/domain/fields/types";
 import {BucketEntryValidator, type ValidationResult} from "./BucketEntryValidator";
 import {BucketEntryTransformer} from "./BucketEntryTransformer";
