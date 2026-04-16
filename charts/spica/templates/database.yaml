@@ -86,7 +86,8 @@ spec:
             - "-c"
           args: 
             - |
-              mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replicaAuthKey  --setParameter logLevel={{ .Values.database.logLevel }}
+              rm -f /data/db/mongod.lock /data/db/WiredTiger.lock
+              exec mongod --replSet rs0 --bind_ip_all --auth --keyFile ./etc/secrets/replicaAuthKey --setParameter logLevel={{ .Values.database.logLevel }}
           ports:
             - containerPort: 27017
           startupProbe:
@@ -173,6 +174,7 @@ spec:
             - name: RS_MEMBERS
               value: '{{ template "generateReplicaSetMembers" . }}'
             {{- end}}      
+      terminationGracePeriodSeconds: {{ .Values.database.terminationGracePeriodSeconds }}
       {{- if .Values.database.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.database.nodeSelector | indent 8 }}

@@ -6,6 +6,10 @@ metadata:
 data:
   init-users.sh: |
     #!/bin/bash
+    set -e
+
+    # Remove stale lock files left by force-killed pods (safe: StatefulSet PVCs are pod-exclusive)
+    rm -f /data/db/mongod.lock /data/db/WiredTiger.lock
 
     ROOT_USERNAME=$ROOT_USERNAME
     ROOT_PASSWORD=$ROOT_PASSWORD
@@ -45,9 +49,9 @@ data:
     retry_command mongo --quiet --eval "db.runCommand({ ping: 1 })"
     echo "Ping succeeded!"
 
-    # Initiate replicaset
+    # Initiate replicaset (idempotent: code 23 = AlreadyInitialized, safe to skip)
     echo "Trying to initiate replicaset.."
-    mongo --eval "rs.initiate()"
+    mongo --eval "try { rs.initiate(); print('RS initiated.') } catch(e) { if (e.code != 23) throw e; print('RS already initialized, skipping.') }"
     echo "Replicaset initiation succeeded!"
 
     # Insert root user if not exist

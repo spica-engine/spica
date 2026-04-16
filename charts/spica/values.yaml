@@ -18,6 +18,7 @@ database:
   logLevel: 0
   profilingLevel: 1
   profilingSlowms: 100
+  terminationGracePeriodSeconds: 60
   # probes
   # startup
   startupProbeInitialDelaySeconds: 15
