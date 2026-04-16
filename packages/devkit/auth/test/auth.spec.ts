@@ -260,6 +260,26 @@ describe("@spica-devkit/auth", () => {
     });
   });
 
+  describe("remove", () => {
+    it("should remove user", () => {
+      Auth.remove("user_id");
+
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledWith("passport/user/user_id", {
+        headers: undefined
+      });
+    });
+
+    it("should remove user with headers", () => {
+      Auth.remove("user_id", {Accept: "application/json"});
+
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledWith("passport/user/user_id", {
+        headers: {Accept: "application/json"}
+      });
+    });
+  });
+
   describe("policy", () => {
     it("should attach policy", async () => {
       await Auth.policy.attach("user_id", ["policy_id"]);

@@ -213,6 +213,20 @@ export async function updatePassword(
 }
 
 /**
+ * Remove a user by ID.
+ * Requires prior initialization call with appropriate authorization.
+ *
+ * @param id - User ID to remove
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving when the user is deleted
+ */
+export function remove(id: string, headers?: object): Promise<any> {
+  checkInitialized(authorization, service);
+
+  return service.delete(`${userSegment}/${id}`, {headers});
+}
+
+/**
  * Refresh an access token using a refresh token.
  * This function is designed for browser usage, wont be working in Node.js environment due to cookie handling.
  *
