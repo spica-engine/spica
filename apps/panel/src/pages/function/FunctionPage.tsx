@@ -31,6 +31,7 @@ import TriggerPanel from "./components/TriggerPanel";
 import DependencyPanel from "./components/DependencyPanel";
 import EnvironmentPanel from "./components/EnvironmentPanel";
 import FunctionLogList from "../function-log/FunctionLogList";
+import FunctionLogFilter from "../function-log/FunctionLogFilter";
 import ConfigurationDialog from "./components/ConfigurationDialog";
 import styles from "./FunctionPage.module.scss";
 
@@ -77,24 +78,26 @@ const FunctionPage = () => {
   const [localSecrets, setLocalSecrets] = useState<ResolvedSecret[]>([]);
   const [isSidebarSaving, setIsSidebarSaving] = useState(false);
   const [logSearchQuery, setLogSearchQuery] = useState("");
+  const [logDateRange, setLogDateRange] = useState(() => {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const begin = new Date();
+    begin.setDate(begin.getDate() - 7);
+    begin.setHours(0, 0, 0, 0);
+    return {begin, end};
+  });
+  const [logSelectedLevels, setLogSelectedLevels] = useState<number[]>([]);
 
   const isResizingRef = useRef(false);
 
-  const logDateRange = useMemo(() => {
-    const d = new Date();
-    return {
-      begin: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).toISOString(),
-      end: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).toISOString(),
-    };
-  }, []);
-
-  const {data: fnLogs = []} = useGetFunctionLogsQuery(
+  const {data: fnLogs = [], refetch: refetchLogs, isFetching: isLogsFetching} = useGetFunctionLogsQuery(
     {
       functions: [functionId],
-      begin: logDateRange.begin,
-      end: logDateRange.end,
+      begin: logDateRange.begin.toISOString(),
+      end: logDateRange.end.toISOString(),
       limit: 100,
       sort: {_id: -1},
+      levels: logSelectedLevels.length > 0 ? logSelectedLevels : undefined,
     },
     {skip: !functionId || !showLogs}
   );
@@ -318,6 +321,27 @@ const FunctionPage = () => {
     document.addEventListener("mouseup", handleMouseUp);
   }, [handleMouseMove, handleMouseUp]);
 
+  const handleLogFilterApply = useCallback(
+    (begin: Date, end: Date, _functions: string[], levels: number[]) => {
+      setLogDateRange({begin, end});
+      setLogSelectedLevels(levels);
+    },
+    []
+  );
+
+  const handleLogReset = useCallback(() => {
+    setLogSearchQuery("");
+    setLogSelectedLevels([]);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const begin = new Date();
+    begin.setDate(begin.getDate() - 7);
+    begin.setHours(0, 0, 0, 0);
+    setLogDateRange({begin, end});
+  }, []);
+
+  const isLogFilterApplied = logSearchQuery.trim() !== "" || logSelectedLevels.length > 0;
+
   const toggleLogs = useCallback(() => setShowLogs(prev => !prev), []);
   const toggleSidebar = useCallback(() => setShowSidebar(prev => !prev), []);
 
@@ -399,6 +423,19 @@ const FunctionPage = () => {
                 onSearchChange={setLogSearchQuery}
                 functionNames={logFunctionNames}
                 handlerNames={logHandlerNames}
+                onRefresh={refetchLogs}
+                onReset={handleLogReset}
+                isFilterApplied={isLogFilterApplied}
+                isRefreshing={isLogsFetching}
+                toolbarActions={
+                  <FunctionLogFilter
+                    begin={logDateRange.begin}
+                    end={logDateRange.end}
+                    selectedLevels={logSelectedLevels}
+                    onApply={handleLogFilterApply}
+                    hideFunctionFilter
+                  />
+                }
               />
             </div>
           )}
