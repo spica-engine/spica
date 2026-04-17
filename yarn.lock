@@ -10514,7 +10514,7 @@ __metadata:
     formik: "npm:^2.4.6"
     jwt-decode: "npm:^4.0.0"
     monaco-editor: "npm:^0.52.2"
-    oziko-ui-kit: "npm:^0.0.127"
+    oziko-ui-kit: "npm:^0.0.137"
     react: "npm:^19.0.0"
     react-dnd: "npm:^16.0.1"
     react-dnd-html5-backend: "npm:^16.0.1"
@@ -24674,9 +24674,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oziko-ui-kit@npm:^0.0.127":
-  version: 0.0.127
-  resolution: "oziko-ui-kit@npm:0.0.127"
+"oziko-ui-kit@npm:^0.0.137":
+  version: 0.0.137
+  resolution: "oziko-ui-kit@npm:0.0.137"
   dependencies:
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.0"
@@ -24707,7 +24707,7 @@ __metadata:
   peerDependencies:
     react: ^19.0.0
     react-dom: ^19.0.0
-  checksum: 10c0/91cce5b309a64cc974984de5de77419eccbd7ea206761767374ecde443030586db59851f332ef454cd38f56a5fa681831d4d7f6fc7106477c0dddff32dfa7c82
+  checksum: 10c0/a99668cd5db85d0ff77bb4727f56437b8b529588ee12c476abea06ff805c00017449af87b15911209f357b2c454e91d2d8ef25285fac4f8930f7b9d1f7b66d6e
   languageName: node
   linkType: hard
 
@@ -29812,6 +29812,7 @@ __metadata:
     jsdom: "npm:~22.1.0"
     mongodb-memory-server: "npm:^10.1.3"
     nx: "npm:^20.3.1"
+    oziko-ui-kit: "npm:^0.0.137"
     prettier: "npm:^3.4.2"
     resolve-tspaths: "npm:^0.8.23"
     rollup: "npm:^4.60.1"

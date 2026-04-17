@@ -73,9 +73,6 @@ function buildBaseProperty(values: FieldFormState): Property {
     title: fieldValues.title,
     description: fieldValues.description || undefined,
     options: {
-      position: "bottom",
-      index: configurationValues.index || undefined,
-      unique: configurationValues.uniqueValues || undefined,
       translate: configurationValues.translate || undefined
     },
     required:
