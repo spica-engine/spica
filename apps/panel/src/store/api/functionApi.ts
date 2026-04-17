@@ -1,4 +1,8 @@
 import { baseApi } from './baseApi';
+import { selectParsedToken } from '../slices/authSlice';
+import type { RootState } from '../index';
+import { createRealtimeWebSocket } from '../../utils/realtimeWebSocket';
+import { ChunkKind } from '../../types/realtime';
 
 export interface ResolvedEnvVar {
   _id: string;
@@ -143,6 +147,51 @@ export const functionApi = baseApi.injectEndpoints({
         params: params || {},
       }),
       providesTags: ['Function'],
+      async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, getState }) {
+        let ws: ReturnType<typeof createRealtimeWebSocket> | null = null;
+        try {
+          await cacheDataLoaded;
+          const token = selectParsedToken(getState() as RootState);
+          ws = createRealtimeWebSocket('/function', token);
+          ws.onMessage((chunk) => {
+            if (chunk.kind === ChunkKind.Initial || chunk.kind === ChunkKind.EndOfInitial) return;
+            if (!chunk.document) return;
+
+            updateCachedData((draft) => {
+              switch (chunk.kind) {
+                case ChunkKind.Insert: {
+                  const existing = draft.data.find((f) => f._id === chunk.document!._id);
+                  if (existing) {
+                    Object.assign(existing, chunk.document);
+                  } else {
+                    draft.data.push(chunk.document as SpicaFunction);
+                  }
+                  break;
+                }
+                case ChunkKind.Update:
+                case ChunkKind.Replace: {
+                  const found = draft.data.find((f) => f._id === chunk.document!._id);
+                  if (found) {
+                    Object.assign(found, chunk.document);
+                  }
+                  break;
+                }
+                case ChunkKind.Delete:
+                case ChunkKind.Expunge: {
+                  const idx = draft.data.findIndex((f) => f._id === chunk.document!._id);
+                  if (idx !== -1) {
+                    draft.data.splice(idx, 1);
+                  }
+                  break;
+                }
+              }
+            });
+          });
+          await cacheEntryRemoved;
+        } finally {
+          ws?.close();
+        }
+      },
     }),
 
     getFunction: builder.query<SpicaFunction, string>({
@@ -377,6 +426,43 @@ export const functionApi = baseApi.injectEndpoints({
           params.levels.forEach(level => searchParams.append('levels', level.toString()));
         }
         return `/function-logs?${searchParams.toString()}`;
+      },
+      async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, getState }) {
+        let ws: ReturnType<typeof createRealtimeWebSocket> | null = null;
+        try {
+          await cacheDataLoaded;
+          const token = selectParsedToken(getState() as RootState);
+          ws = createRealtimeWebSocket('/function-logs', token, {
+            filter: arg.functions?.length ? { function: { $in: arg.functions } } : undefined,
+          });
+          ws.onMessage((chunk) => {
+            if (chunk.kind === ChunkKind.Initial || chunk.kind === ChunkKind.EndOfInitial) return;
+            if (!chunk.document) return;
+
+            updateCachedData((draft) => {
+              switch (chunk.kind) {
+                case ChunkKind.Insert: {
+                  const existing = draft.find((l) => l._id === chunk.document!._id);
+                  if (!existing) {
+                    draft.unshift(chunk.document as FunctionLog);
+                  }
+                  break;
+                }
+                case ChunkKind.Delete:
+                case ChunkKind.Expunge: {
+                  const idx = draft.findIndex((l) => l._id === chunk.document!._id);
+                  if (idx !== -1) {
+                    draft.splice(idx, 1);
+                  }
+                  break;
+                }
+              }
+            });
+          });
+          await cacheEntryRemoved;
+        } finally {
+          ws?.close();
+        }
       },
     }),
 

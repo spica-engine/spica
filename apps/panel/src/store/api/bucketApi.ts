@@ -1,4 +1,8 @@
 import { baseApi } from './baseApi';
+import { selectParsedToken } from '../slices/authSlice';
+import type { RootState } from '../index';
+import { createRealtimeWebSocket } from '../../utils/realtimeWebSocket';
+import { ChunkKind } from '../../types/realtime';
 
 // Types (migrated from bucketService.ts)
 export type BucketDataType = {
@@ -47,8 +51,8 @@ interface IProperty {
 interface BasicProperty extends IProperty {
   type: "string" | "textarea" | "color" | "richtext" | "storage" | "number" | "date" | "boolean";
   options: {
-    translate: boolean;
-    position?: string;
+    translate?: boolean;
+    history?: boolean;
   };
 }
 
@@ -137,6 +141,55 @@ export const bucketApi = baseApi.injectEndpoints({
         params: params ?? {},
       }),
       providesTags: ['Bucket'],
+      async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, getState }) {
+        let ws: ReturnType<typeof createRealtimeWebSocket> | null = null;
+        try {
+          await cacheDataLoaded;
+          const token = selectParsedToken(getState() as RootState);
+          ws = createRealtimeWebSocket('/bucket', token, {
+            sort: { order: 1 },
+          });
+          ws.onMessage((chunk) => {
+            // Skip initial load — HTTP already provided the data
+            if (chunk.kind === ChunkKind.Initial || chunk.kind === ChunkKind.EndOfInitial) return;
+            if (!chunk.document) return;
+
+            updateCachedData((draft) => {
+              switch (chunk.kind) {
+                case ChunkKind.Insert: {
+                  const existing = draft.find((b) => b._id === chunk.document!._id);
+                  if (existing) {
+                    // Server-authoritative: overwrite optimistic entry
+                    Object.assign(existing, chunk.document);
+                  } else {
+                    draft.push(chunk.document as BucketType);
+                  }
+                  break;
+                }
+                case ChunkKind.Update:
+                case ChunkKind.Replace: {
+                  const found = draft.find((b) => b._id === chunk.document!._id);
+                  if (found) {
+                    Object.assign(found, chunk.document);
+                  }
+                  break;
+                }
+                case ChunkKind.Delete:
+                case ChunkKind.Expunge: {
+                  const idx = draft.findIndex((b) => b._id === chunk.document!._id);
+                  if (idx !== -1) {
+                    draft.splice(idx, 1);
+                  }
+                  break;
+                }
+              }
+            });
+          });
+          await cacheEntryRemoved;
+        } finally {
+          ws?.close();
+        }
+      },
     }),
 
     getBucket: builder.query<BucketType, string>({
@@ -178,6 +231,57 @@ export const bucketApi = baseApi.injectEndpoints({
         { type: 'BucketData', id: bucketId },
         'BucketData',
       ],
+      async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, getState }) {
+        let ws: ReturnType<typeof createRealtimeWebSocket> | null = null;
+        try {
+          await cacheDataLoaded;
+          const token = selectParsedToken(getState() as RootState);
+          ws = createRealtimeWebSocket(`/bucket/${arg.bucketId}/data`, token, {
+            sort: arg.sort,
+          });
+          ws.onMessage((chunk) => {
+            // Skip initial load — HTTP already provided the data
+            if (chunk.kind === ChunkKind.Initial || chunk.kind === ChunkKind.EndOfInitial) return;
+            if (!chunk.document) return;
+
+            updateCachedData((draft) => {
+              switch (chunk.kind) {
+                case ChunkKind.Insert: {
+                  const existing = draft.data.find((d) => d._id === chunk.document!._id);
+                  if (existing) {
+                    // Server-authoritative: overwrite optimistic entry
+                    Object.assign(existing, chunk.document);
+                  } else {
+                    draft.data.unshift(chunk.document!);
+                    draft.meta.total += 1;
+                  }
+                  break;
+                }
+                case ChunkKind.Update:
+                case ChunkKind.Replace: {
+                  const found = draft.data.find((d) => d._id === chunk.document!._id);
+                  if (found) {
+                    Object.assign(found, chunk.document);
+                  }
+                  break;
+                }
+                case ChunkKind.Delete:
+                case ChunkKind.Expunge: {
+                  const idx = draft.data.findIndex((d) => d._id === chunk.document!._id);
+                  if (idx !== -1) {
+                    draft.data.splice(idx, 1);
+                    draft.meta.total -= 1;
+                  }
+                  break;
+                }
+              }
+            });
+          });
+          await cacheEntryRemoved;
+        } finally {
+          ws?.close();
+        }
+      },
     }),
 
     getBucketEntry: builder.query<any, { bucketId: string; entryId: string }>({
@@ -203,13 +307,13 @@ export const bucketApi = baseApi.injectEndpoints({
               type: "string",
               title: "title",
               description: "Title of the row",
-              options: { position: "left", translate: false }
+              options: {}
             },
             description: {
               type: "textarea",
               title: "description",
               description: "Description of the row",
-              options: { position: "right", translate: false }
+              options: {}
             }
           },
           acl: body.acl || {
