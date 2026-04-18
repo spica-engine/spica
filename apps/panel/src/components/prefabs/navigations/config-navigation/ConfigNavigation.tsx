@@ -2,22 +2,20 @@ import {FlexElement, FluidContainer, Icon, Text} from "oziko-ui-kit";
 import styles from "../Navigation.module.scss";
 import React from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import {useGetConfigsQuery} from "../../../../store/api/configApi";
-
-const FALLBACK_CONFIG_ITEMS = [
-  {module: "user", label: "User"},
-  {module: "versioncontrol", label: "Version Control"}
-];
+import {useGetConfigSchemasQuery} from "../../../../store/api/configApi";
 
 const ConfigNavigation = () => {
   const navigate = useNavigate();
   const {module: activeModule} = useParams<{module: string}>();
-  const {data: configs, isLoading, error} = useGetConfigsQuery();
+  const {data: schemas, isLoading} = useGetConfigSchemasQuery();
 
-  const items =
-    !isLoading && !error && configs && configs.length > 0
-      ? configs.map(c => ({module: c.module, label: c.module}))
-      : FALLBACK_CONFIG_ITEMS;
+  console.log("ConfigNavigation schemas:", schemas);
+
+  const items = schemas
+    ? Object.keys(schemas).map(key => ({module: key, label: key}))
+    : [];
+
+    console.log("ConfigNavigation items:", items);
 
   return (
     <div className={styles.container}>
