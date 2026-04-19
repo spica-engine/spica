@@ -11,7 +11,6 @@ import SpicaTable from "../../components/organisms/table/Table";
 import DeleteEntity from "../../components/prefabs/delete-entity/DeleteEntity";
 import { useInfiniteList } from "../../hooks/useInfiniteList";
 import ApiKeyDrawer from "./ApiKeyDrawer";
-import Confirmation from "../../components/molecules/confirmation/Confirmation";
 import styles from "./ApiKey.module.scss";
 import sharedStyles from "../shared/EntityPage.module.scss";
 
@@ -70,10 +69,6 @@ const ApiKeyPage = () => {
 
   const handleKeyCreated = useCallback((key: string) => {
     setCreatedKey(key);
-  }, []);
-
-  const handleDismissKeyBanner = useCallback(() => {
-    setCreatedKey(null);
   }, []);
 
   const handleCopyKey = useCallback(
