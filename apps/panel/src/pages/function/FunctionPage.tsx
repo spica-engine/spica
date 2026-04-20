@@ -31,16 +31,10 @@ import TriggerPanel from "./components/TriggerPanel";
 import DependencyPanel from "./components/DependencyPanel";
 import EnvironmentPanel from "./components/EnvironmentPanel";
 import FunctionLogList from "../function-log/FunctionLogList";
+import FunctionLogFilter from "../function-log/FunctionLogFilter";
 import ConfigurationDialog from "./components/ConfigurationDialog";
+import {LOG_LEVEL_LABELS as LEVEL_LABELS} from "../../utils/functionLogLevels";
 import styles from "./FunctionPage.module.scss";
-
-const LEVEL_LABELS: Record<number, string> = {
-  0: "Debug",
-  1: "Log",
-  2: "Info",
-  3: "Warning",
-  4: "Error",
-};
 
 const IMPORT_REGEX = /^import\s+\*\s+as\s+(\w+)\s+from\s+["']\.\.\/\.\.\/([^/]+)\/\.build["'];?\s*$/gm;
 
@@ -77,24 +71,25 @@ const FunctionPage = () => {
   const [localSecrets, setLocalSecrets] = useState<ResolvedSecret[]>([]);
   const [isSidebarSaving, setIsSidebarSaving] = useState(false);
   const [logSearchQuery, setLogSearchQuery] = useState("");
+  const [logDateRange, setLogDateRange] = useState(() => {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const begin = new Date();
+    begin.setHours(0, 0, 0, 0);
+    return {begin, end};
+  });
+  const [logSelectedLevels, setLogSelectedLevels] = useState<number[]>([]);
 
   const isResizingRef = useRef(false);
 
-  const logDateRange = useMemo(() => {
-    const d = new Date();
-    return {
-      begin: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).toISOString(),
-      end: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).toISOString(),
-    };
-  }, []);
-
-  const {data: fnLogs = []} = useGetFunctionLogsQuery(
+  const {data: fnLogs = [], refetch: refetchLogs, isFetching: isLogsFetching} = useGetFunctionLogsQuery(
     {
       functions: [functionId],
-      begin: logDateRange.begin,
-      end: logDateRange.end,
+      begin: logDateRange.begin.toISOString(),
+      end: logDateRange.end.toISOString(),
       limit: 100,
       sort: {_id: -1},
+      levels: logSelectedLevels.length > 0 ? logSelectedLevels : undefined,
     },
     {skip: !functionId || !showLogs}
   );
@@ -318,6 +313,37 @@ const FunctionPage = () => {
     document.addEventListener("mouseup", handleMouseUp);
   }, [handleMouseMove, handleMouseUp]);
 
+  const handleLogFilterApply = useCallback(
+    (begin: Date, end: Date, _functions: string[], levels: number[]) => {
+      setLogDateRange({begin, end});
+      setLogSelectedLevels(levels);
+    },
+    []
+  );
+
+  const handleLogReset = useCallback(() => {
+    setLogSearchQuery("");
+    setLogSelectedLevels([]);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const begin = new Date();
+    begin.setHours(0, 0, 0, 0);
+    setLogDateRange({begin, end});
+  }, []);
+
+  const isLogFilterApplied = (() => {
+    if (logSearchQuery.trim() !== "" || logSelectedLevels.length > 0) return true;
+    const today = new Date();
+    return (
+      logDateRange.begin.toDateString() !== today.toDateString() ||
+      logDateRange.begin.getHours() !== 0 ||
+      logDateRange.begin.getMinutes() !== 0 ||
+      logDateRange.end.toDateString() !== today.toDateString() ||
+      logDateRange.end.getHours() !== 23 ||
+      logDateRange.end.getMinutes() !== 59
+    );
+  })();
+
   const toggleLogs = useCallback(() => setShowLogs(prev => !prev), []);
   const toggleSidebar = useCallback(() => setShowSidebar(prev => !prev), []);
 
@@ -399,6 +425,19 @@ const FunctionPage = () => {
                 onSearchChange={setLogSearchQuery}
                 functionNames={logFunctionNames}
                 handlerNames={logHandlerNames}
+                onRefresh={refetchLogs}
+                onReset={handleLogReset}
+                isFilterApplied={isLogFilterApplied}
+                isRefreshing={isLogsFetching}
+                toolbarActions={
+                  <FunctionLogFilter
+                    begin={logDateRange.begin}
+                    end={logDateRange.end}
+                    selectedLevels={logSelectedLevels}
+                    onApply={handleLogFilterApply}
+                    hideFunctionFilter
+                  />
+                }
               />
             </div>
           )}

@@ -1,6 +1,7 @@
-import {memo, useMemo} from "react";
+import {memo, useMemo, type ReactNode} from "react";
 import {
   Accordion,
+  Button,
   FlexElement,
   Input,
   Icon,
@@ -18,6 +19,11 @@ type FunctionLogListProps = {
   onSearchChange: (query: string) => void;
   functionNames: Record<string, string>;
   handlerNames: Record<string, string>;
+  onRefresh: () => void;
+  onReset: () => void;
+  isFilterApplied: boolean;
+  isRefreshing: boolean;
+  toolbarActions?: ReactNode;
 };
 
 const FunctionLogList = ({
@@ -25,7 +31,12 @@ const FunctionLogList = ({
   searchQuery,
   onSearchChange,
   functionNames,
-  handlerNames
+  handlerNames,
+  onRefresh,
+  onReset,
+  isFilterApplied,
+  isRefreshing,
+  toolbarActions,
 }: FunctionLogListProps) => {
   const accordionItems = useMemo<TypeAccordionItem[]>(
     () =>
@@ -68,7 +79,24 @@ const FunctionLogList = ({
           alignment: "leftCenter"
         }}
         root={{children: <></>}}
-        suffix={{children: <Text className={styles.resultCount}>{logs.length} Results</Text>}}
+        suffix={{
+          children: (
+            <FlexElement alignment="rightCenter" gap={8}>
+              {toolbarActions}
+              <Button variant="solid" color="soft" onClick={onRefresh} type="button" loading={isRefreshing} disabled={isRefreshing}>
+                <Icon name="refresh" size="sm" />
+                Refresh
+              </Button>
+              {isFilterApplied && (
+                <Button onClick={onReset} type="button">
+                  <Icon name="undo" size="sm" />
+                  Reset
+                </Button>
+              )}
+              <Text className={styles.resultCount}>{logs.length} Results</Text>
+            </FlexElement>
+          )
+        }}
       />
       <FlexElement className={styles.logList} dimensionX="fill" direction="vertical">
         <div className={styles.columnHeader}>
