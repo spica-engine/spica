@@ -3,6 +3,7 @@ import {Button, DatePicker, FlexElement, Icon, Popover, Select, Text} from "ozik
 import styles from "./FunctionLogPage.module.scss";
 import {LOG_LEVEL_OPTIONS as LEVEL_OPTIONS} from "../../utils/functionLogLevels";
 
+
 type FunctionOption = {value: string; label: string};
 
 type FunctionLogFilterProps = {
