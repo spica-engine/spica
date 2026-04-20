@@ -10,13 +10,7 @@ import type {FunctionLog} from "../../store/api/functionApi";
 import FunctionLogFilter from "./FunctionLogFilter";
 import FunctionLogChart from "./FunctionLogChart";
 import FunctionLogList from "./FunctionLogList";
-const LEVEL_LABELS: Record<number, string> = {
-  0: "Debug",
-  1: "Log",
-  2: "Info",
-  3: "Warning",
-  4: "Error",
-};
+import {LOG_LEVEL_LABELS as LEVEL_LABELS} from "../../utils/functionLogLevels";
 import styles from "./FunctionLogPage.module.scss";
 
 function getDefaultRange(): {begin: Date; end: Date} {
@@ -116,6 +110,19 @@ const FunctionLogPage = () => {
     setSearchQuery("");
   }, []);
 
+  const isFilterApplied = (() => {
+    if (selectedFunctions.length > 0 || selectedLevels.length > 0 || searchQuery.trim() !== "") return true;
+    const def = getDefaultRange();
+    return (
+      dateRange.begin.toDateString() !== def.begin.toDateString() ||
+      dateRange.begin.getHours() !== 0 ||
+      dateRange.begin.getMinutes() !== 0 ||
+      dateRange.end.toDateString() !== def.end.toDateString() ||
+      dateRange.end.getHours() !== 23 ||
+      dateRange.end.getMinutes() !== 59
+    );
+  })();
+
   return (
     <FlexElement className={styles.page} dimensionX="fill" direction="vertical" gap={10}>
       <FunctionLogChart logs={filteredLogs} begin={dateRange.begin} end={dateRange.end} />
@@ -128,11 +135,7 @@ const FunctionLogPage = () => {
         handlerNames={handlerNameMap}
         onRefresh={refetch}
         onReset={handleReset}
-        isFilterApplied={
-          selectedFunctions.length > 0 ||
-          selectedLevels.length > 0 ||
-          searchQuery.trim() !== ""
-        }
+        isFilterApplied={isFilterApplied}
         isRefreshing={isFetching}
         toolbarActions={
           <FunctionLogFilter

@@ -33,15 +33,8 @@ import EnvironmentPanel from "./components/EnvironmentPanel";
 import FunctionLogList from "../function-log/FunctionLogList";
 import FunctionLogFilter from "../function-log/FunctionLogFilter";
 import ConfigurationDialog from "./components/ConfigurationDialog";
+import {LOG_LEVEL_LABELS as LEVEL_LABELS} from "../../utils/functionLogLevels";
 import styles from "./FunctionPage.module.scss";
-
-const LEVEL_LABELS: Record<number, string> = {
-  0: "Debug",
-  1: "Log",
-  2: "Info",
-  3: "Warning",
-  4: "Error",
-};
 
 const IMPORT_REGEX = /^import\s+\*\s+as\s+(\w+)\s+from\s+["']\.\.\/\.\.\/([^/]+)\/\.build["'];?\s*$/gm;
 
@@ -82,7 +75,6 @@ const FunctionPage = () => {
     const end = new Date();
     end.setHours(23, 59, 59, 999);
     const begin = new Date();
-    begin.setDate(begin.getDate() - 7);
     begin.setHours(0, 0, 0, 0);
     return {begin, end};
   });
@@ -335,12 +327,22 @@ const FunctionPage = () => {
     const end = new Date();
     end.setHours(23, 59, 59, 999);
     const begin = new Date();
-    begin.setDate(begin.getDate() - 7);
     begin.setHours(0, 0, 0, 0);
     setLogDateRange({begin, end});
   }, []);
 
-  const isLogFilterApplied = logSearchQuery.trim() !== "" || logSelectedLevels.length > 0;
+  const isLogFilterApplied = (() => {
+    if (logSearchQuery.trim() !== "" || logSelectedLevels.length > 0) return true;
+    const today = new Date();
+    return (
+      logDateRange.begin.toDateString() !== today.toDateString() ||
+      logDateRange.begin.getHours() !== 0 ||
+      logDateRange.begin.getMinutes() !== 0 ||
+      logDateRange.end.toDateString() !== today.toDateString() ||
+      logDateRange.end.getHours() !== 23 ||
+      logDateRange.end.getMinutes() !== 59
+    );
+  })();
 
   const toggleLogs = useCallback(() => setShowLogs(prev => !prev), []);
   const toggleSidebar = useCallback(() => setShowSidebar(prev => !prev), []);

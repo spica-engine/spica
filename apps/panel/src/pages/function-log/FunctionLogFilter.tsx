@@ -1,14 +1,7 @@
 import {memo, useCallback, useState} from "react";
 import {Button, DatePicker, FlexElement, Icon, Popover, Select, Text} from "oziko-ui-kit";
 import styles from "./FunctionLogPage.module.scss";
-
-const LEVEL_OPTIONS = [
-  {value: 0, label: "Debug"},
-  {value: 1, label: "Log"},
-  {value: 2, label: "Info"},
-  {value: 3, label: "Warning"},
-  {value: 4, label: "Error"},
-];
+import {LOG_LEVEL_OPTIONS as LEVEL_OPTIONS} from "../../utils/functionLogLevels";
 
 type FunctionOption = {value: string; label: string};
 
