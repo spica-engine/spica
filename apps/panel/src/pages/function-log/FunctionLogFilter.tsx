@@ -1,33 +1,29 @@
 import {memo, useCallback, useState} from "react";
 import {Button, DatePicker, FlexElement, Icon, Popover, Select, Text} from "oziko-ui-kit";
 import styles from "./FunctionLogPage.module.scss";
+import {LOG_LEVEL_OPTIONS as LEVEL_OPTIONS} from "../../utils/functionLogLevels";
 
-const LEVEL_OPTIONS = [
-  {value: 0, label: "Debug"},
-  {value: 1, label: "Log"},
-  {value: 2, label: "Info"},
-  {value: 3, label: "Warning"},
-  {value: 4, label: "Error"},
-];
 
 type FunctionOption = {value: string; label: string};
 
 type FunctionLogFilterProps = {
   begin: Date;
   end: Date;
-  functionOptions: FunctionOption[];
-  selectedFunctions: string[];
+  functionOptions?: FunctionOption[];
+  selectedFunctions?: string[];
   selectedLevels: number[];
   onApply: (begin: Date, end: Date, functions: string[], levels: number[]) => void;
+  hideFunctionFilter?: boolean;
 };
 
 const FunctionLogFilter = ({
   begin,
   end,
-  functionOptions,
-  selectedFunctions,
+  functionOptions = [],
+  selectedFunctions = [],
   selectedLevels,
   onApply,
+  hideFunctionFilter = false,
 }: FunctionLogFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [localBegin, setLocalBegin] = useState<Date | null>(begin);
@@ -92,17 +88,19 @@ const FunctionLogFilter = ({
                   suffixIcon={<Icon name="chevronDown" />}
                 />
               </FlexElement>
-              <FlexElement direction="vertical" gap={4} dimensionX="fill">
-                <Text size="small">Function</Text>
-                <Select
-                  options={functionOptions}
-                  value={localFunctions}
-                  onChange={v => setLocalFunctions(v as string[])}
-                  placeholder="All functions"
-                  multiple
-                  dimensionX="fill"
-                />
-              </FlexElement>
+              {!hideFunctionFilter && (
+                <FlexElement direction="vertical" gap={4} dimensionX="fill">
+                  <Text size="small">Function</Text>
+                  <Select
+                    options={functionOptions}
+                    value={localFunctions}
+                    onChange={v => setLocalFunctions(v as string[])}
+                    placeholder="All functions"
+                    multiple
+                    dimensionX="fill"
+                  />
+                </FlexElement>
+              )}
               <FlexElement direction="vertical" gap={4} dimensionX="fill">
                 <Text size="small">Log Level</Text>
                 <Select

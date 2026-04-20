@@ -80,6 +80,22 @@ describe("Replace env vars", () => {
         env: {
           SECRET: "123"
         }
+      },
+      {
+        name: "fnWithNoEnv",
+        language: "javascript",
+        timeout: 6,
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/fn-with-no-env",
+              preflight: true
+            }
+          }
+        }
       }
     ]);
   });
@@ -165,6 +181,23 @@ describe("Replace env vars", () => {
           }
         },
         env_vars: [envVarIds[2]]
+      },
+      {
+        name: "fnWithNoEnv",
+        language: "javascript",
+        timeout: 6,
+        triggers: {
+          default: {
+            type: "http",
+            active: true,
+            options: {
+              method: "Get",
+              path: "/fn-with-no-env",
+              preflight: true
+            }
+          }
+        },
+        env_vars: []
       }
     ]);
 

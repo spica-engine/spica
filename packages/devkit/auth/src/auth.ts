@@ -18,6 +18,7 @@ import {
   ApikeyInitialization,
   HttpService,
   IdentityInitialization,
+  IndexResult,
   PublicInitialization,
   UserInitialization
 } from "@spica-server/interface-function-packages";
@@ -123,6 +124,58 @@ export async function signUp(user: UserCreate, headers?: object): Promise<UserGe
 }
 
 /**
+ * Get all users with optional filtering, sorting, and pagination.
+ *
+ * @param queryParams - Optional query parameters (limit, skip, filter, sort, paginate)
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to an array of users (without password)
+ */
+export function getAll(
+  queryParams?: {
+    paginate?: false;
+    limit?: number;
+    skip?: number;
+    filter?: object;
+    sort?: object;
+  },
+  headers?: object
+): Promise<UserGet[]>;
+/**
+ * Get all users with pagination.
+ *
+ * @param queryParams - Query parameters with paginate set to true
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving to paginated result with meta.total and data array
+ */
+export function getAll(
+  queryParams?: {
+    paginate?: true;
+    limit?: number;
+    skip?: number;
+    filter?: object;
+    sort?: object;
+  },
+  headers?: object
+): Promise<IndexResult<UserGet>>;
+export function getAll(
+  queryParams: {
+    paginate?: boolean;
+    limit?: number;
+    skip?: number;
+    filter?: object;
+    sort?: object;
+  } = {},
+  headers?: object
+): Promise<UserGet[] | IndexResult<UserGet>> {
+  checkInitialized(authorization, service);
+
+  return service.get<UserGet[] | IndexResult<UserGet>>(userSegment, {
+    params: queryParams,
+    headers
+  });
+}
+
+/**
  * Get user by ID.
  * @param id - User ID to retrieve
  * @param headers - Optional headers to include in the request
@@ -157,6 +210,20 @@ export async function updatePassword(
   });
 
   return updatedUser;
+}
+
+/**
+ * Remove a user by ID.
+ * Requires prior initialization call with appropriate authorization.
+ *
+ * @param id - User ID to remove
+ * @param headers - Optional headers to include in the request
+ * @returns Promise resolving when the user is deleted
+ */
+export function remove(id: string, headers?: object): Promise<any> {
+  checkInitialized(authorization, service);
+
+  return service.delete(`${userSegment}/${id}`, {headers});
 }
 
 /**
