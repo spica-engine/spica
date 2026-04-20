@@ -2,9 +2,9 @@ import { baseApi } from './baseApi';
 
 export interface ApiKey {
   _id?: string;
+  key?: string;
   name: string;
   description?: string;
-  key?: string;
   policies?: string[];
   active?: boolean;
   expiresAt?: string | null;
@@ -117,6 +117,22 @@ export const apiKeyApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'ApiKey', id }, 'ApiKey'],
     }),
+
+    addApiKeyPolicy: builder.mutation<ApiKey, { id: string; policyId: string }>({
+      query: ({ id, policyId }) => ({
+        url: `passport/apikey/${id}/policy/${policyId}`,
+        method: 'PUT',
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'ApiKey', id }, 'ApiKey'],
+    }),
+
+    removeApiKeyPolicy: builder.mutation<void, { id: string; policyId: string }>({
+      query: ({ id, policyId }) => ({
+        url: `passport/apikey/${id}/policy/${policyId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'ApiKey', id }, 'ApiKey'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -129,6 +145,8 @@ export const {
   useDeleteApiKeyMutation,
   useGetApiKeyPoliciesQuery,
   useUpdateApiKeyPoliciesMutation,
+  useAddApiKeyPolicyMutation,
+  useRemoveApiKeyPolicyMutation,
 } = apiKeyApi;
 
 export const apiKeyApiReducerPath = apiKeyApi.reducerPath;
