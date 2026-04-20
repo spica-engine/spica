@@ -40,11 +40,11 @@ export class VersionControlController {
     const cmdResult = await this.vers
       .exec(cmd, body)
       .catch(e => {
-        this.logger.error(
-          `Error executing command ${cmd}:`,
-          e instanceof Error ? e.stack : String(e)
-        );
-        throw new BadRequestException("Command execution failed");
+        const internalMsg =
+          `Command execution failed: ${cmd}\n` + (e instanceof Error ? e.stack : String(e));
+        const externalMsg = e instanceof Error ? e.message : String(e);
+        this.logger.error(internalMsg);
+        throw new BadRequestException(externalMsg);
       })
       .then(res => (typeof res == "string" ? {message: res} : res));
 

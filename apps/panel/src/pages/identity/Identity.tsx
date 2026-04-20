@@ -1,8 +1,9 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, FlexElement, Icon, Spinner, type TableColumn } from "oziko-ui-kit";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {
   useGetIdentitiesQuery,
+  useGetIdentityQuery,
   type Identity as IdentityType,
 } from "../../store/api/identityApi";
 import { useGetPoliciesQuery, type Policy } from "../../store/api/policyApi";
@@ -11,11 +12,16 @@ import DeleteIdentity from "../../components/prefabs/delete-identity/DeleteIdent
 import { useInfiniteList } from "../../hooks/useInfiniteList";
 import IdentityDrawer from "./IdentityDrawer";
 import styles from "../shared/EntityPage.module.scss";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 20;
 
 const Identity = () => {
   const [skip, setSkip] = useState(0);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const openIdentityId = (location.state as { openIdentityId?: string })?.openIdentityId;
 
   const { data: identityResponse, isLoading, isFetching } = useGetIdentitiesQuery({
     paginate: true,
@@ -35,6 +41,39 @@ const Identity = () => {
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedIdentity, setSelectedIdentity] = useState<IdentityType | null>(null);
+  const [profileIdentityId, setProfileIdentityId] = useState<string | null>(null);
+
+  const { data: fetchedProfileIdentity } = useGetIdentityQuery(profileIdentityId!, {
+    skip: !profileIdentityId,
+  });
+
+  const openDrawerForIdentity = useCallback((identityId: string) => {
+    setProfileIdentityId(identityId);
+  }, []);
+
+  useEffect(() => {
+    if (fetchedProfileIdentity) {
+      setSelectedIdentity(fetchedProfileIdentity);
+      setIsDrawerOpen(true);
+      setProfileIdentityId(null);
+    }
+  }, [fetchedProfileIdentity]);
+
+  useEffect(() => {
+    if (openIdentityId) {
+      openDrawerForIdentity(openIdentityId);
+      navigate(location.pathname, {replace: true, state: {}});
+    }
+  }, [openIdentityId]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const identityId = (e as CustomEvent<{identityId: string}>).detail.identityId;
+      openDrawerForIdentity(identityId);
+    };
+    window.addEventListener("open-identity-drawer", handler);
+    return () => window.removeEventListener("open-identity-drawer", handler);
+  }, [openDrawerForIdentity]);
 
   const policyNameMap = useMemo(() => {
     const map = new Map<string, string>();

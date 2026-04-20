@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {FlexElement, Icon, Table, type TableColumn, Button, Popover, type IconName } from "oziko-ui-kit";
+import {FlexElement, Icon, Table, type TableColumn, Button, Popover, type IconName, useLayer } from "oziko-ui-kit";
 import type { BucketSchema, BucketDataRow, BucketProperty } from "./types";
 import { EditableCell } from "./EditableCell";
 import styles from "./BucketTable.module.scss";
@@ -345,110 +345,24 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   }, [bucket?.properties, bucket?._id]);
 
 
-  const hasPopoverRole = useCallback((element: Element): boolean => {
-    const role = element.getAttribute('role');
-    if (!role) return false;
-    
-    const popoverRoles = ['dialog', 'menu', 'listbox', 'tooltip', 'combobox', 'grid', 'tree'];
-    return popoverRoles.includes(role);
-  }, []);
-
-  const hasPortalClassName = useCallback((element: Element): boolean => {
-    const className = element.className;
-    let classNameStr = '';
-    
-    if (typeof className === 'string') {
-      classNameStr = className;
-    } else if (className && typeof className === 'object') {
-      const classNameObj = className as { baseVal?: string };
-      classNameStr = (typeof classNameObj.baseVal === 'string')
-        ? classNameObj.baseVal
-        : String(className);
-    }
-    
-    if (!classNameStr) return false;
-    
-    const portalClassNames = [
-      'rc-portal', 'rc-tooltip', 'rc-dropdown', 
-      'popover', 'Popover', 'portal', 'Portal'
-    ];
-    
-    return portalClassNames.some(name => classNameStr.includes(name));
-  }, []);
-
-  const hasPopoverAriaAttributes = useCallback((element: Element): boolean => {
-    if (element.getAttribute('aria-expanded') === 'true') return true;
-    if (element.getAttribute('aria-haspopup') === 'true') return true;
-    
-    if (element instanceof HTMLElement) {
-      return 'popover' in element.dataset || 'portal' in element.dataset;
-    }
-    
-    return false;
-  }, []);
-
-  const hasFixedPositioning = useCallback((element: Element): boolean => {
-    const style = globalThis.getComputedStyle(element);
-    if (style.position !== 'fixed') return false;
-    
-    const zIndex = style.zIndex;
-    return zIndex !== 'auto' && Number.parseInt(zIndex, 10) > 1000;
-  }, []);
-
-  const isInsidePopover = useCallback((element: Node | null): boolean => {
-    if (!element) return false;
-    
-    let current: Node | null = element;
-    
-    while (current && current !== document.body) {
-      if (!(current instanceof Element)) {
-        current = current.parentNode;
-        continue;
-      }
-      
-      if (
-        hasPopoverRole(current) ||
-        hasPortalClassName(current) ||
-        hasPopoverAriaAttributes(current) ||
-        hasFixedPositioning(current)
-      ) {
-        return true;
-      }
-      
-      current = current.parentNode;
-    }
-    
-    return false;
-  }, [hasPopoverRole, hasPortalClassName, hasPopoverAriaAttributes, hasFixedPositioning]);
-
+  useLayer(
+    [tableContainerRef],
+    () => setBlurTrigger(prev => prev + 1)
+  );
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      
-      if (isInsidePopover(target)) {
-        return;
-      }
-      
-      if (tableContainerRef.current && !tableContainerRef.current.contains(target)) {
-        setBlurTrigger(prev => prev + 1);
-      }
-    };
-
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setBlurTrigger(prev => prev + 1);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEscKey);
-    
+
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscKey);
     };
-  }, [isInsidePopover]);
+  }, []);
 
 
   const renderIdCell = useCallback((params: { row: BucketDataRow; isFocused: boolean }) => {

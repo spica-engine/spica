@@ -23,6 +23,7 @@ import Config from "./pages/config/Config";
 import ConfigModule from "./pages/config/ConfigModule";
 import RefreshToken from "./pages/refresh-token/RefreshToken";
 import SecretsAndVariables from "./pages/secrets-and-variables/SecretsAndVariables";
+import ApiKeyPage from "./pages/api-key/ApiKey";
 
 const router = createBrowserRouter(
   [
@@ -76,6 +77,10 @@ const router = createBrowserRouter(
         {
           path: "passport/refresh-token",
           element: <RefreshToken />
+        },
+        {
+          path: "passport/api-key",
+          element: <ApiKeyPage />
         },
         {
           path: "passport/secrets-and-variables",
