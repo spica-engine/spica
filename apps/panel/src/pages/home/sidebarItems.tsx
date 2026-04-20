@@ -42,6 +42,11 @@ export const sideBarItems: SideBarItem[]=  [
     icon: "webhook",
   },
   {
+    id: "config",
+    name: "Configuration",
+    icon: "cog",
+  },
+  {
     id: "versionControl",
     name: "Version Control",
     icon: "forkRight",
@@ -50,76 +55,64 @@ export const sideBarItems: SideBarItem[]=  [
   },
 ]
 
+type MenuItemMeta = {
+  headerName?: string;
+  addNewButtonText?: string;
+  buttons?: (navigate?: (path: string) => void) => {icon: IconName; onClick: () => void}[];
+};
 
-
-
-export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[] => [
-  {
-    id: "bucket",
-    name: "Bucket",
-    icon: "bucket",
-    header: {
-      name: "Tables",
-      buttons: [
-        {
-          icon: "clockOutline",
-          onClick: () => {}
-        },
-        {icon: "viewList", onClick: () => navigate?.("/diagram")}
-      ]
-    },
-    addNewButtonText: "New Bucket"
+const menuItemMeta: Record<string, MenuItemMeta> = {
+  bucket: {
+    headerName: "Tables",
+    addNewButtonText: "New Bucket",
+    buttons: (navigate) => [
+      {icon: "clockOutline", onClick: () => {}},
+      {icon: "viewList", onClick: () => navigate?.("/diagram")}
+    ]
   },
-  {
-    id: "dashboard",
-    name: "Dashboard",
-    icon: "dashboard",
-    header: {
-      name: "Dashboards"
-    },
+  dashboard: {
+    headerName: "Dashboards",
     addNewButtonText: "New Dashboard"
   },
-  {
-    id: "storage",
-    name: "Storage",
-    icon: "storage",
-    header: {
-      name: "Storage"
-    }
-  },
-  {
-    id: "identity",
-    name: "Identity",
-    icon: "identities",
-    header: {
-      name: "Identity"
-    }
-  },
-  {
-    id: "function",
-    name: "Function",
-    icon: "function",
-    header: {
-      name: "Function"
-    }
-  },
-  {
-    id: "webhook",
-    name: "Webhook",
-    icon: "webhook",
-    header: {
-      name: "Webhook"
-    }
-  },
-  {
-    id: "assetstore",
-    name: "Assetstore",
-    icon: "assetstore",
-    header: {
-      name: "Assetstore"
-    }
-  }
+  storage: {headerName: "Storage"},
+  identity: {headerName: "Identity"},
+  function: {headerName: "Function"},
+  webhook: {headerName: "Webhook"},
+  assetstore: {headerName: "Assetstore"}
+};
+
+const menuItemIds: string[] = [
+  "bucket", "dashboard", "storage", "identity", "function", "webhook", "assetstore"
 ];
+
+const sideBarItemsById = new Map(sideBarItems.map(item => [item.id, item]));
+
+const extraMenuItems: {id: string; name: string; icon: IconName}[] = [
+  {id: "identity", name: "Identity", icon: "identities"},
+  {id: "assetstore", name: "Assetstore", icon: "assetstore"}
+];
+const extraMenuItemsById = new Map(extraMenuItems.map(item => [item.id, item]));
+
+export const getMenuItems = (navigate?: (path: string) => void): TypeMenuItems[] =>
+  menuItemIds.map(id => {
+    const sideBarItem = sideBarItemsById.get(id);
+    const extra = extraMenuItemsById.get(id);
+    const source = sideBarItem ?? extra;
+    const meta = menuItemMeta[id];
+    if (!source || !meta) return null;
+
+    const item: TypeMenuItems = {
+      id: source.id,
+      name: source.name,
+      icon: source.icon,
+      header: {
+        name: meta.headerName,
+        ...(meta.buttons ? {buttons: meta.buttons(navigate)} : {})
+      },
+      ...(meta.addNewButtonText ? {addNewButtonText: meta.addNewButtonText} : {})
+    };
+    return item;
+  }).filter((item): item is TypeMenuItems => item !== null);
 
 export const menuItems: TypeMenuItems[] = getMenuItems();
 
