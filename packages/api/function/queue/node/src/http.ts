@@ -133,6 +133,15 @@ export class Response {
     private _end: (e: Http.End) => Promise<void>
   ) {}
 
+  async json(body: any): Promise<void> {
+    const chunk = Buffer.from(JSON.stringify(body));
+    await this.writeHead(this.statusCode || 200, this.statusMessage || "OK", {
+      "Content-type": "application/json",
+      "Content-length": String(Buffer.byteLength(chunk))
+    });
+    return this.end(chunk, "utf-8");
+  }
+
   async send(body: Buffer | Array<any> | object | string | boolean | number): Promise<void> {
     let type: string;
     let chunk: Buffer;
