@@ -70,7 +70,7 @@ function debug(message: string) {
   options["debug"] && console.debug(`${new Date().toISOString()}  ${message}`);
 }
 
-let mongoCommand = "mongosh";
+let mongoCommand = "mongosh --directConnection";
 function execMongo(rest: string) {
   const command = `${mongoCommand} ${rest}`;
   return exec(command);
@@ -100,7 +100,7 @@ async function findPrimaryNode(nodes: string[]) {
       }
     } catch (error) {
       const out = error.stderr + error.stdout + "";
-      if (out.indexOf("connection attempt failed") != -1) {
+      if (out.indexOf("connection attempt failed") != -1 || out.indexOf("ENOTFOUND") != -1) {
         debug(`Searching for primary node: ${node} is offline.`);
       } else {
         throw error;
@@ -251,8 +251,8 @@ async function initialize() {
         success = true;
         break;
       } catch (error) {
-        const stdout: string = error.stdout || "";
-        if (stdout.indexOf("connection attempt failed") == -1) {
+        const out: string = (error.stdout || "") + (error.stderr || "");
+        if (out.indexOf("connection attempt failed") == -1 && out.indexOf("ENOTFOUND") == -1) {
           // If the error is not a connection error then re-throw the error
           throw error;
         } else {
