@@ -1,2 +1,4 @@
 charts/spica/**/*.yaml
 charts/spica/**/*.yml
+
+.vscode/
