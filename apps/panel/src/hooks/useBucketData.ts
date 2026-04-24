@@ -58,7 +58,6 @@ export function useBucketData(
     },
     {
       skip: !bucketId,
-      refetchOnMountOrArgChange: 10,
       refetchOnFocus: true
     }
   );

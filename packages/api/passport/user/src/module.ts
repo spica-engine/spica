@@ -54,84 +54,198 @@ export class UserModule {
     registerStatusProvider(userService);
     if (registerConfigSchema) {
       registerConfigSchema("user", {
+        description: "Configuration for the User module",
         type: "object",
         properties: {
-          verificationProcessMaxAttempt: {type: "integer"},
+          verificationProcessMaxAttempt: {
+            description:
+              "Maximum number of attempts allowed for verification processes like email or phone verification.",
+            type: "integer"
+          },
+          password: {
+            description: "Password policy configuration for users.",
+            type: "object",
+            properties: {
+              minLength: {
+                description: "Minimum number of characters required in the password.",
+                type: "integer"
+              },
+              minLowercase: {
+                description: "Minimum number of lowercase characters required in the password.",
+                type: "integer"
+              },
+              minUppercase: {
+                description: "Minimum number of uppercase characters required in the password.",
+                type: "integer"
+              },
+              minNumber: {
+                description: "Minimum number of numeric characters required in the password.",
+                type: "integer"
+              },
+              minSpecialCharacter: {
+                description: "Minimum number of special characters required in the password.",
+                type: "integer"
+              }
+            }
+          },
           passwordlessLogin: {
+            description: "Configuration for passwordless login providers.",
             type: "object",
             properties: {
               passwordlessLoginProvider: {
+                description: "List of providers that can be used for passwordless login.",
                 type: "array",
                 items: {
                   type: "object",
                   properties: {
-                    provider: {type: "string", enum: ["email", "phone"]},
-                    strategy: {type: "string"}
+                    provider: {
+                      description: "The provider type for passwordless login.",
+                      type: "string",
+                      enum: ["email", "phone"]
+                    },
+                    strategy: {
+                      description: "The strategy used for passwordless login.",
+                      type: "string",
+                      enum: ["Otp", "MagicLink"]
+                    }
                   }
                 }
               }
             }
           },
           resetPasswordProvider: {
+            description: "List of providers that can be used for password reset.",
             type: "array",
             items: {
               type: "object",
               properties: {
-                provider: {type: "string", enum: ["email", "phone"]},
-                strategy: {type: "string"}
+                provider: {
+                  description: "The provider type for password reset.",
+                  type: "string",
+                  enum: ["email", "phone"]
+                },
+                strategy: {
+                  description: "The strategy used for password reset.",
+                  type: "string",
+                  enum: ["Otp", "MagicLink"]
+                }
               }
             }
           },
           providerVerificationConfig: {
+            description: "Configuration for verifying user providers like email or phone.",
             type: "array",
             items: {
               type: "object",
               properties: {
-                provider: {type: "string", enum: ["email", "phone"]},
-                strategy: {type: "string", enum: ["Otp", "MagicLink"]}
+                provider: {
+                  description: "The provider type for verification.",
+                  type: "string",
+                  enum: ["email", "phone"]
+                },
+                strategy: {
+                  description: "The strategy used for verification.",
+                  type: "string",
+                  enum: ["Otp", "MagicLink"]
+                }
               }
             }
           },
           rateLimits: {
+            description: "Rate limit configurations for various user-related actions.",
             type: "object",
             properties: {
               login: {
+                description: "Rate limit configuration for login attempts.",
                 type: "object",
                 properties: {
-                  limit: {type: "integer", minimum: 1},
-                  ttl: {type: "integer", minimum: 1}
+                  limit: {
+                    type: "integer",
+                    description:
+                      "Maximum number of login attempts allowed within the specified time-to-live (TTL).",
+                    minimum: 1
+                  },
+                  ttl: {
+                    type: "integer",
+                    description: "Time-to-live (TTL) in seconds for the rate limit window.",
+                    minimum: 1
+                  }
                 },
                 required: ["limit", "ttl"]
               },
               providerVerification: {
                 type: "object",
+                description: "Rate limit configuration for provider verification attempts.",
                 properties: {
-                  limit: {type: "integer", minimum: 1},
-                  ttl: {type: "integer", minimum: 1}
+                  limit: {
+                    type: "integer",
+                    description:
+                      "Maximum number of provider verification attempts allowed within the specified time-to-live (TTL).",
+                    minimum: 1
+                  },
+                  ttl: {
+                    type: "integer",
+                    description:
+                      "Time-to-live (TTL) in seconds for the provider verification rate limit window.",
+                    minimum: 1
+                  }
                 },
                 required: ["limit", "ttl"]
               },
               forgotPassword: {
                 type: "object",
+                description: "Rate limit configuration for forgot password attempts.",
                 properties: {
-                  limit: {type: "integer", minimum: 1},
-                  ttl: {type: "integer", minimum: 1}
+                  limit: {
+                    type: "integer",
+                    description:
+                      "Maximum number of forgot password attempts allowed within the specified time-to-live (TTL).",
+                    minimum: 1
+                  },
+                  ttl: {
+                    type: "integer",
+                    description:
+                      "Time-to-live (TTL) in seconds for the forgot password rate limit window.",
+                    minimum: 1
+                  }
                 },
                 required: ["limit", "ttl"]
               },
               refreshToken: {
                 type: "object",
+                description: "Rate limit configuration for refresh token attempts.",
                 properties: {
-                  limit: {type: "integer", minimum: 1},
-                  ttl: {type: "integer", minimum: 1}
+                  limit: {
+                    type: "integer",
+                    description:
+                      "Maximum number of refresh token attempts allowed within the specified time-to-live (TTL).",
+                    minimum: 1
+                  },
+                  ttl: {
+                    type: "integer",
+                    description:
+                      "Time-to-live (TTL) in seconds for the refresh token rate limit window.",
+                    minimum: 1
+                  }
                 },
                 required: ["limit", "ttl"]
               },
               createUser: {
                 type: "object",
+                description: "Rate limit configuration for create user attempts.",
                 properties: {
-                  limit: {type: "integer", minimum: 1},
-                  ttl: {type: "integer", minimum: 1}
+                  limit: {
+                    type: "integer",
+                    description:
+                      "Maximum number of create user attempts allowed within the specified time-to-live (TTL).",
+                    minimum: 1
+                  },
+                  ttl: {
+                    type: "integer",
+                    description:
+                      "Time-to-live (TTL) in seconds for the create user rate limit window.",
+                    minimum: 1
+                  }
                 },
                 required: ["limit", "ttl"]
               }

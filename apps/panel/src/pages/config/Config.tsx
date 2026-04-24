@@ -1,12 +1,13 @@
 import React, { useCallback, useState } from "react";
 import { Drawer, FlexElement, Text } from "oziko-ui-kit";
-import { useGetConfigsQuery } from "../../store/api/configApi";
+import { useGetConfigsQuery, useGetConfigSchemasQuery } from "../../store/api/configApi";
 import type { ConfigItem } from "../../store/api/configApi";
 import Page from "../../components/organisms/page-layout/Page";
 import ConfigForm from "./ConfigForm";
 import styles from "./Config.module.scss";
 
-function getConfigSummary(config: ConfigItem): string {
+function getConfigSummary(config: ConfigItem | undefined): string {
+  if (!config) return "Not configured yet";
   const keys = Object.keys(config.options || {});
   if (keys.length === 0) return "No options configured";
   return `${keys.length} option${keys.length > 1 ? "s" : ""}: ${keys.join(", ")}`;
@@ -16,12 +17,21 @@ const Config = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<ConfigItem | null>(null);
 
-  const { data: configs, isLoading, error } = useGetConfigsQuery();
+  const { data: schemas, isLoading: schemasLoading } = useGetConfigSchemasQuery();
+  const { data: configs, isLoading: configsLoading } = useGetConfigsQuery();
 
-  const handleOpenDrawer = useCallback((config: ConfigItem) => {
-    setSelectedConfig(config);
+  const isLoading = schemasLoading || configsLoading;
+
+  const modules = schemas ? Object.keys(schemas) : [];
+  const configByModule = configs
+    ? Object.fromEntries(configs.map(c => [c.module, c]))
+    : {};
+
+  const handleOpenDrawer = useCallback((moduleName: string) => {
+    const existing = configByModule[moduleName];
+    setSelectedConfig(existing ?? { module: moduleName, options: {} } as ConfigItem);
     setIsDrawerOpen(true);
-  }, []);
+  }, [configByModule]);
 
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false);
@@ -52,28 +62,23 @@ const Config = () => {
           </>
         )}
 
-        {error && (
-          <Text variant="danger">Error loading configurations. Please try again.</Text>
-        )}
-
-        {!isLoading && !error && (!configs || configs.length === 0) && (
+        {!isLoading && modules.length === 0 && (
           <Text>No configurations available.</Text>
         )}
 
         {!isLoading &&
-          !error &&
-          configs?.map((config) => (
+          modules.map((moduleName) => (
             <FlexElement
-              key={config.module}
+              key={moduleName}
               dimensionX="fill"
               direction="vertical"
               gap={4}
               className={styles.configItem}
-              onClick={() => handleOpenDrawer(config)}
+              onClick={() => handleOpenDrawer(moduleName)}
             >
-              <Text className={styles.configItemTitle}>{config.module}</Text>
+              <Text className={styles.configItemTitle}>{moduleName}</Text>
               <Text className={styles.configItemMeta}>
-                {getConfigSummary(config)}
+                {getConfigSummary(configByModule[moduleName])}
               </Text>
             </FlexElement>
           ))}
