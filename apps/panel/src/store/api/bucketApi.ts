@@ -26,6 +26,14 @@ export type BucketType = {
     write: string;
     read: string;
   };
+  documentSettings?: {
+    countLimit: number;
+    limitExceedBehaviour: "prevent" | "remove";
+  };
+  indexes?: {
+    definition: Record<string, number | string>;
+    options?: Record<string, any>;
+  }[];
   [key: string]: any;
 };
 
@@ -45,10 +53,10 @@ interface IProperty {
 }
 
 interface BasicProperty extends IProperty {
-  type: "string" | "textarea" | "color" | "richtext" | "storage" | "number" | "date" | "boolean";
+  type: "string" | "textarea" | "color" | "richtext" | "storage" | "number" | "date" | "boolean" | "json" | "hash" | "encrypted";
   options: {
-    translate: boolean;
-    position?: string;
+    translate?: boolean;
+    history?: boolean;
   };
 }
 
@@ -67,10 +75,12 @@ interface RelationProperty extends IProperty {
   type: "relation";
   bucketId: string;
   relationType: "onetoone" | "onetomany";
+  dependent?: boolean;
 }
 
 interface LocationProperty extends IProperty {
   type: "location";
+  locationType?: "Point";
 }
 
 export type BucketDataQueryType = {
@@ -97,6 +107,14 @@ export interface CreateBucketRequest {
     write: string;
     read: string;
   };
+  documentSettings?: {
+    countLimit: number;
+    limitExceedBehaviour: "prevent" | "remove";
+  };
+  indexes?: {
+    definition: Record<string, number | string>;
+    options?: Record<string, any>;
+  }[];
 }
 
 export interface UpdateBucketRequest {
@@ -114,6 +132,14 @@ export interface UpdateBucketRequest {
   };
   order?: number;
   category?: string;
+  documentSettings?: {
+    countLimit: number;
+    limitExceedBehaviour: "prevent" | "remove";
+  };
+  indexes?: {
+    definition: Record<string, number | string>;
+    options?: Record<string, any>;
+  }[];
 }
 
 export interface BucketListResponse {
@@ -203,13 +229,13 @@ export const bucketApi = baseApi.injectEndpoints({
               type: "string",
               title: "title",
               description: "Title of the row",
-              options: { position: "left", translate: false }
+              options: { translate: false }
             },
             description: {
               type: "textarea",
               title: "description",
               description: "Description of the row",
-              options: { position: "right", translate: false }
+              options: { translate: false }
             }
           },
           acl: body.acl || {
