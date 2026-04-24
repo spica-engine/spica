@@ -52,8 +52,13 @@ export const AuthorizedImage = ({
       }
     };
 
-    if (file.content.type.startsWith("image/") && token) {
-      fetchImage();
+    if (file.content.type.startsWith("image/")) {
+      if (token) {
+        fetchImage();
+      } else {
+        setError("Unable to load image.");
+        setIsImageLoading(false);
+      }
     }
 
     return () => {

@@ -11,10 +11,10 @@ export function useFileOperations(
   const {convertData} = useStorageConverter(directory);
 
   const onUploadComplete = (file: TypeFile & {prefix?: string}) => {
+    const {prefix, ...fileWithoutPrefix} = file;
+    const convertedFile = convertData([fileWithoutPrefix])?.[0];
     const newDirectories = directory
       .map(dir => {
-        const {prefix, ...fileWithoutPrefix} = file;
-        const convertedFile = convertData([fileWithoutPrefix])?.[0];
         if (dir.fullPath === prefix || (!prefix && dir.fullPath === ROOT_PATH)) {
           return {
             ...dir,
@@ -25,6 +25,9 @@ export function useFileOperations(
       })
       .filter(Boolean) as TypeDirectories;
     setDirectory(newDirectories);
+    if (convertedFile) {
+      setPreviewFile(convertedFile as DirectoryItem);
+    }
   };
 
   const onFileReplaced = (updatedFile: TypeFile) => {
