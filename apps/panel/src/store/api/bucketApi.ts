@@ -677,6 +677,24 @@ export const bucketApi = baseApi.injectEndpoints({
       ],
     }),
 
+    // Get bucket data profiler entries
+    getBucketDataProfile: builder.query<import('./userApi').ProfilerEntry[], {
+      bucketId: string;
+      filter?: Record<string, any>;
+      limit?: number;
+      skip?: number;
+      sort?: Record<string, 1 | -1>;
+    }>({
+      query: ({ bucketId, filter, limit, skip, sort }) => {
+        const queryParams: Record<string, string> = {};
+        if (filter) queryParams['filter'] = JSON.stringify(filter);
+        if (limit !== undefined) queryParams['limit'] = String(limit);
+        if (skip !== undefined) queryParams['skip'] = String(skip);
+        if (sort) queryParams['sort'] = JSON.stringify(sort);
+        return { url: `bucket/${bucketId}/data/profile`, params: queryParams };
+      },
+    }),
+
     // Delete bucket field
     deleteBucketField: builder.mutation<BucketType, { bucketId: string; fieldKey: string; bucket: BucketType }>({
       query: ({ bucketId, fieldKey, bucket }) => {
@@ -756,6 +774,7 @@ export const {
   useUpdateBucketEntryMutation,
   useDeleteBucketEntryMutation,
   useDeleteBucketFieldMutation,
+  useGetBucketDataProfileQuery,
 } = bucketApi;
 
 export const bucketApiReducerPath = bucketApi.reducerPath;
