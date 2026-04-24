@@ -223,7 +223,7 @@ export {
   useUpdateStorageItemMutation,
   useDeleteStorageItemMutation,
   useUpdateStorageNameMutation,
-  useGetSubResourcesQuery,
+
 } from './storageApi';
 
 export type {

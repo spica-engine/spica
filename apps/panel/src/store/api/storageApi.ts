@@ -26,6 +26,8 @@ export interface Storage {
   _id?: string;
   name: string;
   url?: string;
+  created_at?: string;
+  updated_at?: string;
   content?: {
     type: string;
     size?: number;
@@ -173,28 +175,16 @@ export const storageApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => createStorageIdTags(id),
     }),
 
-    getSubResources: builder.query<
-      StorageListResponse,
-      { id: string; options?: StorageOptions }
-    >({
-      query: ({ id, options = {} }) => {
-        const params = new URLSearchParams();
-        const { limit, skip, sort, filter, paginate } = options;
-
-        if (limit != null) params.append('limit', String(limit));
-        if (skip != null) params.append('skip', String(skip));
-        if (sort) params.append('sort', JSON.stringify(sort));
-        if (filter) params.append('filter', JSON.stringify(filter));
-        params.append('paginate', JSON.stringify(paginate ?? false));
-
-        return `/storage/${id}/sub-resources?${params.toString()}`;
-      },
-      providesTags: (result, error, { id }) => [
-        { type: STORAGE_TAG, id: `${id}-sub` },
-      ],
+    deleteManyStorageItems: builder.mutation<void, (string | {id: string})[]>({
+      query: (items) => ({
+        url: `/storage`,
+        method: 'DELETE',
+        body: items.map(item => (typeof item === 'string' ? item : item.id)),
+      }),
+      invalidatesTags: [STORAGE_TAGS.LIST, STORAGE_TAGS.BROWSE],
     }),
 
-    browseStorage: builder.query<StorageListResponse, StorageOptions & { path?: string }>({
+    browseStorage: builder.query<Storage[], StorageOptions & { path?: string }>({
       query: (options: StorageOptions & { path?: string } = {}) => {
         const params = new URLSearchParams();
         const { path, limit, skip, sort, filter, paginate } = options;
@@ -210,9 +200,9 @@ export const storageApi = baseApi.injectEndpoints({
         return qs ? `/storage/browse?${qs}` : `/storage/browse`;
       },
       providesTags: (result) =>
-        result?.data
+        result
           ? [
-              ...result.data.map(({ _id }) => ({ type: STORAGE_TAG, id: _id })),
+              ...result.map(({ _id }) => ({ type: STORAGE_TAG, id: _id })),
               STORAGE_TAGS.BROWSE,
             ]
           : [STORAGE_TAGS.BROWSE],
@@ -228,7 +218,7 @@ export const {
   useUpdateStorageItemMutation,
   useDeleteStorageItemMutation,
   useUpdateStorageNameMutation,
-  useGetSubResourcesQuery,
+  useDeleteManyStorageItemsMutation,
   useBrowseStorageQuery,
   useLazyBrowseStorageQuery,
 } = storageApi;
