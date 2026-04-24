@@ -40,14 +40,16 @@ const DashboardItem = ({headerProps, chartProps, onSettingsClick}: TypeDashboard
         }}
         className={styles.header}
       />
-      <FlexElement dimensionX="fill" dimensionY="fill" className={styles.content} >
+      <FlexElement dimensionX="fill" dimensionY="fill" className={styles.content}>
         {safeChartData && (
-          <Chart
-            type={chartProps!.type!}
-            data={safeChartData}
-            options={chartProps!.options!}
-            className={styles.chart}
-          />
+
+            <Chart
+              type={chartProps!.type!}
+              data={safeChartData}
+              options={chartProps!.options!}
+              className={styles.chart}
+            />
+
         )}
       </FlexElement>
     </FlexElement>
