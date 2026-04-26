@@ -47,10 +47,9 @@ export const sideBarItems: SideBarItem[]=  [
     icon: "cog",
   },
   {
-    id: "userProfiler",
-    name: "User Profiler",
-    icon: "query_stats",
-    route: "/passport/user/profile",
+    id: "observability",
+    name: "Observability",
+    icon: "security",
   },
   {
     id: "versionControl",

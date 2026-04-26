@@ -26,6 +26,7 @@ import ConfigModule from "./pages/config/ConfigModule";
 import RefreshToken from "./pages/refresh-token/RefreshToken";
 import SecretsAndVariables from "./pages/secrets-and-variables/SecretsAndVariables";
 import ApiKeyPage from "./pages/api-key/ApiKey";
+import ObservabilityBucket from "./pages/observability/ObservabilityBucket";
 
 const router = createBrowserRouter(
   [
@@ -131,6 +132,10 @@ const router = createBrowserRouter(
         {
           path: "config/:module",
           element: <ConfigModule />
+        },
+        {
+          path: "passport/observability/bucket",
+          element: <ObservabilityBucket />
         }
       ]
     },

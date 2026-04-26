@@ -775,6 +775,7 @@ export const {
   useDeleteBucketEntryMutation,
   useDeleteBucketFieldMutation,
   useGetBucketDataProfileQuery,
+  useLazyGetBucketDataProfileQuery,
 } = bucketApi;
 
 export const bucketApiReducerPath = bucketApi.reducerPath;

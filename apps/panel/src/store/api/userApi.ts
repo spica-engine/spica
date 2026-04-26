@@ -154,4 +154,5 @@ export const {
   useAddUserPolicyMutation,
   useRemoveUserPolicyMutation,
   useGetUserProfileQuery,
+  useLazyGetUserProfileQuery,
 } = userApi;
