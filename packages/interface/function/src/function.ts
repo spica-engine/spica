@@ -84,6 +84,7 @@ export interface TargetChange {
   kind: ChangeKind;
   type?: string;
   options?: unknown;
+  language?: string;
   target: {
     id: string;
     handler?: string;

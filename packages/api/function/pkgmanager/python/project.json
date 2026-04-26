@@ -1,0 +1,5 @@
+{
+  "name": "api/function/pkgmanager/python",
+  "sourceRoot": "packages/api/function/pkgmanager/python",
+  "projectType": "library"
+}

@@ -101,6 +101,7 @@ export function createTargetChanges<CK extends ChangeKind>(
       kind: trigger.active ? changeKind : ChangeKind.Removed,
       options: trigger.options,
       type: trigger.type,
+      language: fn.language,
       target: {
         id: fn._id.toString(),
         handler,

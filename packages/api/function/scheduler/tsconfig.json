@@ -27,6 +27,9 @@
       "path": "../runtime/node"
     },
     {
+      "path": "../runtime/python"
+    },
+    {
       "path": "../runtime/logger"
     },
     {
@@ -45,6 +48,9 @@
       "path": "../pkgmanager/node"
     },
     {
+      "path": "../pkgmanager/python"
+    },
+    {
       "path": "../pkgmanager/local"
     },
     {
@@ -52,6 +58,9 @@
     },
     {
       "path": "../compiler/typescript"
+    },
+    {
+      "path": "../compiler/python"
     },
     {
       "path": "../compiler/javascript"

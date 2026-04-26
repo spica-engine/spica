@@ -80,6 +80,7 @@ describe("Change", () => {
     expect(changes).toEqual([
       {
         kind: ChangeKind.Added,
+        language: "javascript",
         options: {
           path: "/test"
         },
@@ -101,6 +102,7 @@ describe("Change", () => {
       },
       {
         kind: ChangeKind.Added,
+        language: "javascript",
         options: {
           collection: "bucket"
         },

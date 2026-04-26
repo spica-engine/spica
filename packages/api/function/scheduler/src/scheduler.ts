@@ -4,6 +4,7 @@ import {DatabaseService} from "@spica-server/database";
 import {Language} from "@spica-server/function-compiler";
 import {Javascript} from "@spica-server/function-compiler-javascript";
 import {Typescript} from "@spica-server/function-compiler-typescript";
+import {Python as PythonLanguage} from "@spica-server/function-compiler-python";
 import {
   DatabaseEnqueuer,
   Enqueuer,
@@ -14,9 +15,10 @@ import {
   RabbitMQEnqueuer,
   GrpcEnqueuer
 } from "@spica-server/function-enqueuer";
-import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
+import {DelegatePkgManager, PackageManager} from "@spica-server/interface-function-pkgmanager";
 import {Npm} from "@spica-server/function-pkgmanager-node";
 import {LocalPackageManager} from "@spica-server/function-pkgmanager-local";
+import {Pip} from "@spica-server/function-pkgmanager-python";
 import {
   DatabaseQueue,
   EventQueue,
@@ -37,7 +39,25 @@ import uniqid from "uniqid";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "@spica-server/interface-function-scheduler";
 import {Subject} from "rxjs";
 import {take} from "rxjs/operators";
-import {ScheduleWorker, Node} from "@spica-server/function-scheduler";
+import {ScheduleWorker, Node, Python} from "@spica-server/function-scheduler";
+
+/**
+ * Mapping from a function's ``language`` value to the runtime that should
+ * execute it. Multiple languages may share a runtime (typescript and javascript
+ * both run on node).
+ */
+const LANGUAGE_RUNTIMES: Readonly<Record<string, string>> = {
+  typescript: "node",
+  javascript: "node",
+  python: "python"
+};
+
+const DEFAULT_RUNTIME = "node";
+
+function runtimeForLanguage(language?: string): string {
+  if (!language) return DEFAULT_RUNTIME;
+  return LANGUAGE_RUNTIMES[language] || DEFAULT_RUNTIME;
+}
 import {LogLevels} from "@spica-server/interface-function-runtime";
 import {ENQUEUER, EnqueuerFactory, WorkerState} from "@spica-server/interface-function-scheduler";
 
@@ -53,9 +73,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private grpcQueue: GrpcQueue;
 
   readonly runtimes = new Map<string, Runtime>();
-  readonly pkgmanagers = new Map<string, DelegatePkgManager>();
+  readonly pkgmanagers = new Map<string, PackageManager>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
   readonly languages = new Map<string, Language>();
+
+  /** Map of ``target.id`` -> runtime name. Populated by the engine when it
+   * subscribes a trigger; used by the scheduler to pick the right runtime to
+   * spawn for a queued event. */
+  readonly targetRuntimes = new Map<string, string>();
 
   private output: StandartStream;
 
@@ -77,8 +102,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.languages.set("typescript", new Typescript(options.tsCompilerPath));
     this.languages.set("javascript", new Javascript());
+    this.languages.set("python", new PythonLanguage());
     this.runtimes.set("node", new Node());
+    this.runtimes.set("python", new Python());
     this.pkgmanagers.set("node", new LocalPackageManager(new Npm()));
+    this.pkgmanagers.set("python", new Pip());
 
     this.queue = new EventQueue(
       (id, schedule) => this.gotWorker(id, schedule),
@@ -252,6 +280,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   takeAWorker(target: event.Target): {id: string; worker: ScheduleWorker} {
+    const requiredRuntime = this.targetRuntimes.get(target.id) || DEFAULT_RUNTIME;
+
     const workers = Array.from(this.workers.entries()).map(([id, worker]) => {
       return {id, worker};
     });
@@ -268,7 +298,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       return available;
     }
 
-    const fresh = workers.find(({worker}) => worker.state == WorkerState.Fresh);
+    const fresh = workers.find(
+      ({worker}) => worker.state == WorkerState.Fresh && worker.runtime == requiredRuntime
+    );
     if (sameTargets.length < this.options.maxConcurrency) {
       return fresh;
     }
@@ -387,18 +419,48 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       });
   }
 
-  private scaleWorkers() {
-    const hasFreshWorker = Array.from(this.workers.values()).find(
-      worker => worker.state == WorkerState.Fresh
-    );
+  /** Tell the scheduler which runtime should execute a given target. */
+  registerTargetLanguage(targetId: string, language?: string) {
+    this.targetRuntimes.set(targetId, runtimeForLanguage(language));
+  }
 
-    if (hasFreshWorker) {
+  unregisterTargetLanguage(targetId: string) {
+    this.targetRuntimes.delete(targetId);
+  }
+
+  private scaleWorkers() {
+    // Determine which runtimes need a fresh worker. We always want a Fresh
+    // Node worker available (the historical default) plus a Fresh worker for
+    // every runtime that has at least one event pending in the queue.
+    const requiredRuntimes = new Set<string>([DEFAULT_RUNTIME]);
+    for (const ev of this.eventQueue.values()) {
+      requiredRuntimes.add(this.targetRuntimes.get(ev.target.id) || DEFAULT_RUNTIME);
+    }
+
+    const freshByRuntime = new Map<string, ScheduleWorker>();
+    for (const worker of this.workers.values()) {
+      if (worker.state == WorkerState.Fresh && !freshByRuntime.has(worker.runtime)) {
+        freshByRuntime.set(worker.runtime, worker);
+      }
+    }
+
+    for (const runtimeName of requiredRuntimes) {
+      if (freshByRuntime.has(runtimeName)) {
+        continue;
+      }
+      this.spawnWorker(runtimeName);
+    }
+  }
+
+  private spawnWorker(runtimeName: string) {
+    const runtime = this.runtimes.get(runtimeName);
+    if (!runtime) {
+      this.logger.warn(`No runtime registered under '${runtimeName}'.`);
       return;
     }
 
     const id: string = uniqid();
-    const node = this.runtimes.get("node") as Node;
-    const worker = node.spawn({
+    const worker = runtime.spawn({
       id,
       env: {
         __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
@@ -413,8 +475,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           ? String(this.options.functionGrpcMaxMessageSizeBytes)
           : undefined
       },
-      entrypointPath: this.options.spawnEntrypointPath
-    });
+      entrypointPath:
+        runtimeName == "python" ? this.options.pythonBootstrapPath : this.options.spawnEntrypointPath
+    }) as ScheduleWorker;
 
     worker.once("exit", () => this.lostWorker(id));
 

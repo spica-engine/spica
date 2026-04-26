@@ -1,7 +1,7 @@
 import {Inject, Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function-scheduler";
-import {DelegatePkgManager} from "@spica-server/interface-function-pkgmanager";
+import {DelegatePkgManager, PackageManager} from "@spica-server/interface-function-pkgmanager";
 import {event} from "@spica-server/function-queue-proto";
 import fs from "fs";
 import {JSONSchema7} from "json-schema";
@@ -153,8 +153,16 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private getDefaultPackageManager(): DelegatePkgManager {
+  private getDefaultPackageManager(): PackageManager {
     return this.scheduler.pkgmanagers.get("node");
+  }
+
+  private getPackageManagerFor(fn: Function): PackageManager {
+    const lang = (fn && fn.language) || "";
+    if (lang === "python") {
+      return this.scheduler.pkgmanagers.get("python") || this.getDefaultPackageManager();
+    }
+    return this.getDefaultPackageManager();
   }
 
   private getFunctionRoot(fn: Function) {
@@ -162,21 +170,35 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   getPackages(fn: Function): Promise<Package[]> {
-    return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn), true);
+    return this.getPackageManagerFor(fn).ls(this.getFunctionRoot(fn), true);
   }
 
   addPackage(fn: Function, qualifiedNames: string | string[]): Observable<number> {
-    return this.getDefaultPackageManager().install(this.getFunctionRoot(fn), qualifiedNames);
+    return this.getPackageManagerFor(fn).install(this.getFunctionRoot(fn), qualifiedNames);
   }
 
   removePackage(fn: Function, name: string): Promise<void> {
-    return this.getDefaultPackageManager().uninstall(this.getFunctionRoot(fn), name);
+    return this.getPackageManagerFor(fn).uninstall(this.getFunctionRoot(fn), name);
   }
 
   async createFunction(fn: Function) {
     const functionRoot = this.getFunctionRoot(fn);
     const functionLanguage = this.getFunctionLanguage(fn);
     await fs.promises.mkdir(functionRoot, {recursive: true});
+
+    if (fn.language === "python") {
+      // Python functions don't have a ``package.json``; seed an empty
+      // ``requirements.txt`` so subsequent ``pip install`` calls have a file
+      // to merge into.
+      const requirementsPath = path.join(functionRoot, "requirements.txt");
+      try {
+        await fs.promises.access(requirementsPath);
+      } catch {
+        await fs.promises.writeFile(requirementsPath, "");
+      }
+      return;
+    }
+
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
       name: fn.name,
@@ -390,6 +412,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   private subscribe(change: TargetChange) {
     const enqueuer = this.getEnqueuer(change.type);
     if (enqueuer) {
+      this.scheduler.registerTargetLanguage(change.target.id, change.language);
       const target = new event.Target({
         id: change.target.id,
         cwd: path.join(this.options.root, change.target.name),
@@ -419,6 +442,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   private unsubscribe(change: TargetChange) {
+    this.scheduler.unregisterTargetLanguage(change.target.id);
     for (const enqueuer of this.scheduler.enqueuers) {
       const target = new event.Target({
         id: change.target.id,

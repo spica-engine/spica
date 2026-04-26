@@ -40,7 +40,7 @@
     },
     "language": {
       "type": "string",
-      "enum": ["typescript", "javascript"],
+      "enum": ["typescript", "javascript", "python"],
       "description": "Language of the function"
     },
     "order": {

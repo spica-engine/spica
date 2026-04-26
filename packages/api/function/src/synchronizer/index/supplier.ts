@@ -19,6 +19,7 @@ const subModule = "index";
 const findExtension = fn => {
   if (fn.language === "javascript") return "mjs";
   if (fn.language === "typescript") return "ts";
+  if (fn.language === "python") return "py";
   console.warn(
     `Unknown language ${fn.language} for function ${fn._id}, defaulting to 'mjs' extension`
   );

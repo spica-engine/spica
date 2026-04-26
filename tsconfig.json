@@ -441,6 +441,15 @@
     },
     {
       "path": "./packages/devkit/identity"
+    },
+    {
+      "path": "./packages/api/function/pkgmanager/python"
+    },
+    {
+      "path": "./packages/api/function/compiler/python"
+    },
+    {
+      "path": "./packages/api/function/runtime/python"
     }
   ]
 }

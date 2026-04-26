@@ -9030,6 +9030,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/function-compiler-python@workspace:*, @spica-server/function-compiler-python@workspace:packages/api/function/compiler/python":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-compiler-python@workspace:packages/api/function/compiler/python"
+  dependencies:
+    "@spica-server/function-compiler": "workspace:*"
+    "@spica-server/interface-function-compiler": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/function-compiler-typescript@workspace:*, @spica-server/function-compiler-typescript@workspace:packages/api/function/compiler/typescript":
   version: 0.0.0-use.local
   resolution: "@spica-server/function-compiler-typescript@workspace:packages/api/function/compiler/typescript"
@@ -9120,6 +9129,15 @@ __metadata:
   dependencies:
     "@spica-server/interface-function-pkgmanager": "workspace:*"
     fast-glob: "npm:^3.3.3"
+    rxjs: "npm:^7.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-pkgmanager-python@workspace:*, @spica-server/function-pkgmanager-python@workspace:packages/api/function/pkgmanager/python":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-pkgmanager-python@workspace:packages/api/function/pkgmanager/python"
+  dependencies:
+    "@spica-server/interface-function-pkgmanager": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
@@ -9216,6 +9234,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@spica-server/function-runtime-python-bootstrap@workspace:packages/api/function/runtime/python/bootstrap":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-runtime-python-bootstrap@workspace:packages/api/function/runtime/python/bootstrap"
+  languageName: unknown
+  linkType: soft
+
+"@spica-server/function-runtime-python@workspace:*, @spica-server/function-runtime-python@workspace:packages/api/function/runtime/python":
+  version: 0.0.0-use.local
+  resolution: "@spica-server/function-runtime-python@workspace:packages/api/function/runtime/python"
+  dependencies:
+    "@spica-server/function-runtime": "workspace:*"
+    "@spica-server/interface-function-runtime": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@spica-server/function-runtime@workspace:*, @spica-server/function-runtime@workspace:packages/api/function/runtime":
   version: 0.0.0-use.local
   resolution: "@spica-server/function-runtime@workspace:packages/api/function/runtime"
@@ -9236,16 +9269,19 @@ __metadata:
     "@spica-server/database-testing": "workspace:*"
     "@spica-server/function-compiler": "workspace:*"
     "@spica-server/function-compiler-javascript": "workspace:*"
+    "@spica-server/function-compiler-python": "workspace:*"
     "@spica-server/function-compiler-typescript": "workspace:*"
     "@spica-server/function-enqueuer": "workspace:*"
     "@spica-server/function-pkgmanager-local": "workspace:*"
     "@spica-server/function-pkgmanager-node": "workspace:*"
+    "@spica-server/function-pkgmanager-python": "workspace:*"
     "@spica-server/function-queue": "workspace:*"
     "@spica-server/function-queue-proto": "workspace:*"
     "@spica-server/function-runtime": "workspace:*"
     "@spica-server/function-runtime-io": "workspace:*"
     "@spica-server/function-runtime-logger": "workspace:*"
     "@spica-server/function-runtime-node": "workspace:*"
+    "@spica-server/function-runtime-python": "workspace:*"
     "@spica-server/interface-function-pkgmanager": "workspace:*"
     "@spica-server/interface-function-runtime": "workspace:*"
     "@spica-server/interface-function-scheduler": "workspace:*"

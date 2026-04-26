@@ -1,6 +1,9 @@
+import {EventEmitter} from "events";
+import {Writable} from "stream";
 import {event} from "@spica-server/function-queue-proto";
-import {Runtime} from "@spica-server/function-runtime";
+import {Runtime, Worker as RuntimeWorker} from "@spica-server/function-runtime";
 import {NodeWorker} from "@spica-server/function-runtime-node";
+import {PythonWorker} from "@spica-server/function-runtime-python";
 import {Description, SpawnOptions} from "@spica-server/interface-function-runtime";
 import {Schedule, WorkerState} from "@spica-server/interface-function-scheduler";
 
@@ -12,11 +15,28 @@ export class Node extends Runtime {
   };
 
   spawn(options: SpawnOptions): ScheduleWorker {
-    return new ScheduleWorker(options);
+    return new ScheduleWorker(this.description.name, new NodeWorker(options));
   }
 }
 
-export class ScheduleWorker extends NodeWorker {
+export class Python extends Runtime {
+  description: Description = {
+    name: "python",
+    title: "Python 3.12",
+    description: "Python is an interpreted, high-level, general-purpose programming language."
+  };
+
+  spawn(options: SpawnOptions): ScheduleWorker {
+    return new ScheduleWorker(this.description.name, new PythonWorker(options));
+  }
+}
+
+/**
+ * Wraps a runtime ``Worker`` with the scheduler-side state machine. The state
+ * machine itself is language-agnostic; only the underlying process changes per
+ * runtime.
+ */
+export class ScheduleWorker extends EventEmitter {
   private _state: WorkerState = WorkerState.Initial;
   public get state(): WorkerState {
     return this._state;
@@ -36,6 +56,23 @@ export class ScheduleWorker extends NodeWorker {
     [WorkerState.Timeouted]: [WorkerState.Outdated],
     [WorkerState.Outdated]: [WorkerState.Timeouted]
   };
+
+  constructor(
+    public readonly runtime: string,
+    private readonly inner: RuntimeWorker
+  ) {
+    super();
+    // Forward "exit" so existing callers can keep using ``worker.once("exit")``.
+    inner.once("exit", (...args: unknown[]) => this.emit("exit", ...args));
+  }
+
+  attach(stdout?: Writable, stderr?: Writable): void {
+    this.inner.attach(stdout, stderr);
+  }
+
+  kill(): Promise<void> {
+    return this.inner.kill();
+  }
 
   public execute(event: event.Event) {
     this.transitionTo(WorkerState.Busy);

@@ -24,6 +24,8 @@ export interface SchedulingOptions {
   invocationLogs: boolean;
   spawnEntrypointPath?: string;
   tsCompilerPath?: string;
+  pythonBootstrapPath?: string;
+  pythonExecutable?: string;
   grpcPort?: number;
   functionGrpcMaxMessageSizeBytes?: number;
 }

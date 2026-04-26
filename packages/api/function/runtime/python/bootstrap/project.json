@@ -1,0 +1,30 @@
+{
+  "name": "api/function/runtime/python/bootstrap",
+  "sourceRoot": "packages/api/function/runtime/python/bootstrap",
+  "projectType": "library",
+  "targets": {
+    "codegen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "mkdir -p packages/api/function/runtime/python/bootstrap/spica_runtime/_pb",
+          "touch packages/api/function/runtime/python/bootstrap/spica_runtime/_pb/__init__.py",
+          "python3 -m grpc_tools.protoc -Ipackages/api/function/queue/proto/src --python_out=packages/api/function/runtime/python/bootstrap/spica_runtime/_pb --grpc_python_out=packages/api/function/runtime/python/bootstrap/spica_runtime/_pb event.proto http.proto database.proto"
+        ],
+        "parallel": false
+      }
+    },
+    "copy": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["codegen"],
+      "options": {
+        "commands": [
+          "mkdir -p packages/api/function/runtime/python/dist/bootstrap",
+          "cp -R packages/api/function/runtime/python/bootstrap/main.py packages/api/function/runtime/python/dist/bootstrap/",
+          "cp -R packages/api/function/runtime/python/bootstrap/spica_runtime packages/api/function/runtime/python/dist/bootstrap/"
+        ],
+        "parallel": false
+      }
+    }
+  }
+}

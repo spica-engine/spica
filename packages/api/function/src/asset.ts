@@ -94,7 +94,13 @@ export function registerAssetHandlers(
     const index = await engine.read(fn, "index");
 
     promises.push(
-      manager.write(_module, _id, "index", index, fn.language == "javascript" ? "js" : "ts")
+      manager.write(
+        _module,
+        _id,
+        "index",
+        index,
+        fn.language == "javascript" ? "js" : fn.language == "python" ? "py" : "ts"
+      )
     );
 
     Promise.all(promises);

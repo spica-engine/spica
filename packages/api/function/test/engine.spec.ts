@@ -223,6 +223,7 @@ describe("Engine", () => {
     let changes: TargetChange[] = [
       {
         kind: ChangeKind.Added,
+        language: "js",
         target: {
           id: hexString,
           handler: "test_handler",
@@ -263,6 +264,7 @@ describe("Engine", () => {
 
     let change: any = {
       kind: ChangeKind.Updated,
+      language: "js",
       target: {
         id: hexString,
         handler: "test_handler",
@@ -303,6 +305,7 @@ describe("Engine", () => {
 
     const change = {
       kind: ChangeKind.Updated,
+      language: "js",
       target: {
         id: hexString,
         handler: "test_handler",
@@ -384,6 +387,7 @@ describe("Engine", () => {
 
     const change = {
       kind: ChangeKind.Updated,
+      language: "js",
       target: {
         id: hexString,
         handler: "test_handler",

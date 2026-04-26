@@ -1,0 +1,5 @@
+{
+  "name": "api/function/compiler/python",
+  "sourceRoot": "packages/api/function/compiler/python",
+  "projectType": "library"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "@spica-server/function-runtime-python-bootstrap",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Python bootstrap for Spica function workers. Runs as a child process spawned by the API and consumes events from the gRPC event queue."
+}

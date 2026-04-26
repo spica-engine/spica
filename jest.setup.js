@@ -43,6 +43,19 @@ process.env.FUNCTION_TS_COMPILER_PATH = path.join(
   "typescript_worker.js"
 );
 
+// directory for python function bootstrap entrypoint
+process.env.FUNCTION_PYTHON_BOOTSTRAP_PATH = path.join(
+  workspaceRoot,
+  "packages",
+  "api",
+  "function",
+  "runtime",
+  "python",
+  "dist",
+  "bootstrap",
+  "main.py"
+);
+
 afterAll(async () => {
   if (fs.existsSync(testTmpDir)) {
     fs.rmSync(testTmpDir, {recursive: true, force: true});

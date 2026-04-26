@@ -1,0 +1,10 @@
+{
+  "name": "api/function/runtime/python",
+  "sourceRoot": "packages/api/function/runtime/python",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "dependsOn": ["api/function/runtime/python/bootstrap:copy"]
+    }
+  }
+}

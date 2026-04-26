@@ -91,6 +91,8 @@ export class FunctionModule {
           invocationLogs: options.invocationLogs,
           spawnEntrypointPath: options.spawnEntrypointPath,
           tsCompilerPath: options.tsCompilerPath,
+          pythonBootstrapPath: options.pythonBootstrapPath,
+          pythonExecutable: options.pythonExecutable,
           grpcPort: options.grpcPort,
           functionGrpcMaxMessageSizeBytes: options.functionGrpcMaxMessageSizeBytes
         }),

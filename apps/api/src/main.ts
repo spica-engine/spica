@@ -842,7 +842,9 @@ const modules = [
     invocationLogs: args["function-invocation-logs"],
     realtime: true,
     grpcPort: args["grpc-function-port"],
-    functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"] 
+    functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"],
+    pythonBootstrapPath: process.env.FUNCTION_PYTHON_BOOTSTRAP_PATH,
+    pythonExecutable: process.env.FUNCTION_PYTHON_EXECUTABLE
   }),
   ConfigModule.forRoot(),
   StatusModule.forRoot({
