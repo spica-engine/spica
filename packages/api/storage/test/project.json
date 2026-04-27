@@ -1,5 +1,0 @@
-{
-  "name": "api/storage/test",
-  "sourceRoot": "packages/api/storage/test",
-  "projectType": "library"
-}
