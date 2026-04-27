@@ -209,6 +209,22 @@ describe("Http", () => {
         const [bodyBuffer] = endSpy.mock.calls[0];
         expect(bodyBuffer.toString()).toBe("null");
       });
+
+      it("should fall back to null for non-serializable function values", async () => {
+        const endSpy = jest.spyOn(response, "end");
+        await response.json(() => {});
+
+        const [bodyBuffer] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe("null");
+      });
+
+      it("should fall back to null for non-serializable symbol values", async () => {
+        const endSpy = jest.spyOn(response, "end");
+        await response.json(Symbol("s"));
+
+        const [bodyBuffer] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe("null");
+      });
     });
 
     describe("send", () => {
