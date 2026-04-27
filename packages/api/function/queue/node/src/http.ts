@@ -134,7 +134,7 @@ export class Response {
   ) {}
 
   async json(body: any): Promise<void> {
-    const chunk = Buffer.from(JSON.stringify(body));
+    const chunk = Buffer.from(JSON.stringify(body) ?? "null");
     await this.writeHead(this.statusCode || 200, this.statusMessage || "OK", {
       "Content-type": "application/json",
       "Content-length": String(Buffer.byteLength(chunk))

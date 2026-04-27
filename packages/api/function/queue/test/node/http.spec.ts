@@ -196,6 +196,19 @@ describe("Http", () => {
           "Content-length": "16"
         });
       });
+
+      it("should fall back to null for non-serializable values like undefined", async () => {
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
+        await response.json(undefined);
+
+        expect(writeHeadSpy).toHaveBeenCalledWith(200, "OK", {
+          "Content-type": "application/json",
+          "Content-length": "4"
+        });
+        const [bodyBuffer] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe("null");
+      });
     });
 
     describe("send", () => {
