@@ -379,18 +379,11 @@ export class FunctionDependencySynchronizer implements ModuleSynchronizer {
   }
 
   async analyze() {
-    const deleteTypes = deps =>
-      deps.map(d => {
-        delete d.types;
-        return d;
-      });
     const sourceDeps = await this.sourceService
-      .get<any[]>(`function/${this.fn._id}/dependencies`)
-      .then(deleteTypes);
+      .get<any[]>(`function/${this.fn._id}/dependencies`);
 
     const targetDeps = await this.targetService
       .get<any[]>(`function/${this.fn._id}/dependencies`)
-      .then(deleteTypes)
       .catch(e => {
         if (isNotFoundException(e)) {
           return [];

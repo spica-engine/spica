@@ -24,8 +24,7 @@ describe("local package manager", () => {
           return [
             {
               name: "mock-fn",
-              version: "1",
-              types: {}
+              version: "1"
             }
           ] as Package[];
         }),
@@ -113,8 +112,7 @@ describe("local package manager", () => {
         expect(packages).toEqual([
           {
             name: `@spica-fn/${fn2Name}`,
-            version: `file:../${fn2Name}`,
-            types: {}
+            version: `file:../${fn2Name}`
           }
         ]);
       });
@@ -125,13 +123,11 @@ describe("local package manager", () => {
         expect(packages).toEqual([
           {
             name: `@spica-fn/${fn2Name}`,
-            version: "file:../my-second-function",
-            types: {}
+            version: "file:../my-second-function"
           },
           {
             name: "debug",
-            version: "^4.1.1",
-            types: {}
+            version: "^4.1.1"
           }
         ]);
 
@@ -140,8 +136,7 @@ describe("local package manager", () => {
         expect(packages).toEqual([
           {
             name: "debug",
-            version: "^4.1.1",
-            types: {}
+            version: "^4.1.1"
           }
         ]);
 

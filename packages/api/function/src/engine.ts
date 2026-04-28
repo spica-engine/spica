@@ -162,7 +162,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   getPackages(fn: Function): Promise<Package[]> {
-    return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn), true);
+    return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn));
   }
 
   addPackage(fn: Function, qualifiedNames: string | string[]): Observable<number> {
