@@ -47,6 +47,11 @@ export const sideBarItems: SideBarItem[]=  [
     icon: "cog",
   },
   {
+    id: "observability",
+    name: "Observability",
+    icon: "security",
+  },
+  {
     id: "versionControl",
     name: "Version Control",
     icon: "forkRight",
