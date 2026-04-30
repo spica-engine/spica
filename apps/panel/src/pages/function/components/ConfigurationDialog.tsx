@@ -128,7 +128,8 @@ const ConfigurationDialog = ({
       >
         <Text size="large">{isEdit ? "Edit Function" : "New Function"}</Text>
 
-        <label className={styles.fieldLabel} htmlFor="fn-name">Name</label>
+        <FlexElement dimensionX="fill" gap={4} direction="vertical" alignment="leftTop">
+          <label className={styles.fieldLabel} htmlFor="fn-name">Name</label>
         <input
           id="fn-name"
           className={styles.input}
@@ -138,19 +139,22 @@ const ConfigurationDialog = ({
           minLength={3}
           maxLength={50}
         />
+        </FlexElement>
 
+         <FlexElement dimensionX="fill" gap={4} direction="vertical" alignment="leftTop">
         <label className={styles.fieldLabel} htmlFor="fn-language">Language</label>
         <select
           id="fn-language"
           className={styles.select}
           value={language}
           onChange={e => setLanguage(e.target.value as "javascript" | "typescript")}
-          disabled={isEdit}
         >
           <option value="javascript">JavaScript</option>
           <option value="typescript">TypeScript</option>
         </select>
+        </FlexElement>
 
+      <FlexElement dimensionX="fill" gap={4} direction="vertical" alignment="leftTop">
         <label className={styles.fieldLabel} htmlFor="fn-timeout">
           Timeout ({formatTimeout(timeout)})
         </label>
@@ -164,6 +168,7 @@ const ConfigurationDialog = ({
           value={timeout}
           onChange={e => setTimeout(Number(e.target.value))}
         />
+        </FlexElement>
 
         {!isEdit && (
           <>
