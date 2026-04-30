@@ -1,8 +1,18 @@
-import React, {useMemo} from "react";
-import {Button, FlexElement, Icon, Spinner, type TableColumn} from "oziko-ui-kit";
+import React, {useCallback, useMemo, useState} from "react";
+import {Button, FlexElement, Icon, Popover, Spinner, type TableColumn} from "oziko-ui-kit";
+import InfiniteScroll from "react-infinite-scroll-component";
 import SpicaTable from "../table/Table";
 import type {ProfilerEntry} from "../../../store/api/userApi";
 import pageStyles from "../../../pages/shared/EntityPage.module.scss";
+import styles from "./ProfilerTable.module.scss";
+import ProfilerFilter from "../../molecules/profiler-filter/ProfilerFilter";
+import ProfilerEntryDrawer from "../../molecules/profiler-entry-drawer/ProfilerEntryDrawer";
+import {
+  createProfilerFilterDefaultValues,
+  isDefaultProfilerFilter,
+  OP_OPTIONS,
+  type ProfilerFilterValues,
+} from "../../../utils/profilerFilter";
 
 const OP_COLORS: Record<string, string> = {
   insert: "#4caf50",
@@ -14,17 +24,6 @@ const OP_COLORS: Record<string, string> = {
   getMore: "#607d8b",
   default: "#9e9e9e",
 };
-
-export const OP_OPTIONS = [
-  {label: "All", value: ""},
-  {label: "Insert", value: "insert"},
-  {label: "Query", value: "query"},
-  {label: "Update", value: "update"},
-  {label: "Remove", value: "remove"},
-  {label: "Command", value: "command"},
-  {label: "Count", value: "count"},
-  {label: "Get More", value: "getMore"},
-];
 
 function extractQueryText(row: ProfilerEntry): string {
   const cmd = row.command;
@@ -59,15 +58,14 @@ export type ProfilerTableProps = {
   entries: ProfilerEntry[];
   isLoading: boolean;
   isFetching: boolean;
-  skip: number;
-  pageSize: number;
-  opFilter: string;
+  hasMore: boolean;
+  onLoadMore: () => void;
+  scrollContainerId: string;
+  filter: ProfilerFilterValues;
   sortOrder: 1 | -1;
-  onFilterChange: (value: string) => void;
+  onFilterChange: (filter: ProfilerFilterValues) => void;
   onToggleSort: () => void;
   onRefetch: () => void;
-  onPrevPage: () => void;
-  onNextPage: () => void;
 };
 
 const ProfilerTable = ({
@@ -76,16 +74,22 @@ const ProfilerTable = ({
   entries,
   isLoading,
   isFetching,
-  skip,
-  pageSize,
-  opFilter,
+  hasMore,
+  onLoadMore,
+  scrollContainerId,
+  filter,
   sortOrder,
   onFilterChange,
   onToggleSort,
   onRefetch,
-  onPrevPage,
-  onNextPage,
 }: ProfilerTableProps) => {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<ProfilerEntry | null>(null);
+  const hasActiveFilter = useMemo(() => !isDefaultProfilerFilter(filter), [filter]);
+
+  const handleRowClick = useCallback(({row}: {row: ProfilerEntry}) => {
+    setSelectedEntry(row);
+  }, []);
   const maxMillis = useMemo(
     () => entries.reduce((max, e) => (e.millis > max ? e.millis : max), 1),
     [entries]
@@ -132,15 +136,6 @@ const ProfilerTable = ({
       ),
     },
     {
-      header: <FlexElement>Namespace</FlexElement>,
-      key: "ns",
-      width: "220px",
-      minWidth: "160px",
-      renderCell: ({row}) => (
-        <span style={{fontFamily: "monospace", fontSize: "13px"}}>{row.ns}</span>
-      ),
-    },
-    {
       header: (
         <FlexElement
           direction="horizontal"
@@ -150,7 +145,9 @@ const ProfilerTable = ({
           onClick={onToggleSort}
         >
           Time consumed
-          <Icon name={sortOrder === -1 ? "arrow_downward" : "arrow_upward"} size={14} />
+          <span style={sortOrder === 1 ? {display: "inline-flex", transform: "rotate(180deg)"} : {display: "inline-flex"}}>
+            <Icon name="chevronDown" size={14} />
+          </span>
         </FlexElement>
       ),
       key: "millis",
@@ -258,32 +255,47 @@ const ProfilerTable = ({
   ];
 
   return (
-    <div className={pageStyles.pageContainer}>
-      <FlexElement direction="horizontal" style={{marginBottom: "16px"}}>
+    <FlexElement className={pageStyles.pageContainer} direction="vertical" gap={16} dimensionX="fill">
+      <FlexElement direction="horizontal" dimensionX="fill" style={{justifyContent: "space-between", alignItems: "center"}}>
         <FlexElement direction="horizontal" gap={8} alignment="leftCenter">
-          <Icon name="query_stats" size={22} />
+          <Icon name="filterCenterFocus" size={22} />
           <span style={{fontSize: "18px", fontWeight: 600}}>{title}</span>
           <span style={{fontSize: "13px", color: "var(--color-text-secondary)"}}>{subtitle}</span>
         </FlexElement>
         <FlexElement direction="horizontal" gap={8} alignment="rightCenter">
-          <select
-            value={opFilter}
-            onChange={e => onFilterChange(e.target.value)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: "6px",
-              border: "1px solid var(--color-border)",
-              background: "var(--color-surface)",
-              color: "var(--color-text)",
-              fontSize: "14px",
-            }}
+          <Popover
+            open={isFilterOpen}
+            onClose={() => setIsFilterOpen(false)}
+            placement="bottom"
+            content={
+              <ProfilerFilter
+                initialValues={filter}
+                onApply={values => {
+                  onFilterChange(values);
+                  setIsFilterOpen(false);
+                }}
+                onCancel={() => setIsFilterOpen(false)}
+              />
+            }
           >
-            {OP_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <Button
+              onClick={() => setIsFilterOpen(prev => !prev)}
+              color={hasActiveFilter ? "primary" : undefined}
+            >
+              <Icon name="filter" size="sm" />
+              Filter
+              {hasActiveFilter && <Icon name="check" size="sm" />}
+            </Button>
+          </Popover>
+          {hasActiveFilter && (
+            <Button
+              variant="text"
+              onClick={() => onFilterChange(createProfilerFilterDefaultValues())}
+            >
+              <Icon name="close" size="sm" />
+              Clear Filters
+            </Button>
+          )}
           <Button variant="text" onClick={onRefetch} disabled={isFetching}>
             <Icon name="refresh" size={16} />
           </Button>
@@ -295,35 +307,36 @@ const ProfilerTable = ({
           <Spinner />
         </FlexElement>
       ) : (
-        <>
-          <SpicaTable columns={columns} data={entries} />
-          <FlexElement
-            direction="horizontal"
-            gap={8}
-            alignment="spaceBetweenCenter"
-            style={{marginTop: "16px"}}
+        <div
+          id={scrollContainerId}
+          style={{overflowY: "auto", width: "100%", flex: 1}}
+        >
+          <InfiniteScroll
+            dataLength={entries.length}
+            next={onLoadMore}
+            hasMore={hasMore}
+            loader={
+              <FlexElement dimensionX="fill" alignment="center" style={{padding: "16px 0"}}>
+                <Spinner size="small" />
+              </FlexElement>
+            }
+            scrollableTarget={scrollContainerId}
           >
-            <span style={{fontSize: "13px", color: "var(--color-text-secondary)"}}>
-              Showing {skip + 1}&#x2013;{skip + entries.length} entries
-            </span>
-            <FlexElement direction="horizontal" gap={8}>
-              <Button variant="secondary" disabled={skip === 0} onClick={onPrevPage}>
-                <Icon name="chevron_left" size={16} />
-                Prev
-              </Button>
-              <Button
-                variant="secondary"
-                disabled={entries.length < pageSize}
-                onClick={onNextPage}
-              >
-                Next
-                <Icon name="chevron_right" size={16} />
-              </Button>
-            </FlexElement>
-          </FlexElement>
-        </>
+            <SpicaTable
+              columns={columns}
+              data={entries}
+              cellClassName={styles.clickableCell}
+              onRowClick={handleRowClick}
+            />
+          </InfiniteScroll>
+        </div>
       )}
-    </div>
+
+      <ProfilerEntryDrawer
+        entry={selectedEntry}
+        onClose={() => setSelectedEntry(null)}
+      />
+    </FlexElement>
   );
 };
 

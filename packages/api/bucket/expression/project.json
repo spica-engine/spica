@@ -9,7 +9,7 @@
     "build-assets": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "mkdir -p {projectRoot}/dist/src && cp {projectRoot}/src/grammar.pegjs {projectRoot}/dist/src/grammar.pegjs"
+       "command": "shx mkdir -p packages/api/bucket/expression/dist/src && shx cp packages/api/bucket/expression/src/grammar.pegjs packages/api/bucket/expression/dist/src/grammar.pegjs"
       }
     }
   }

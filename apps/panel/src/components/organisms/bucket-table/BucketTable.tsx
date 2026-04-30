@@ -542,6 +542,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           cellClassName={styles.cell}
           loading={loading}
           skeletonRowCount={10}
+          isCellFocusable={({columnKey}) => columnKey !== '_id'}
         />
       </div>
       <FlexElement

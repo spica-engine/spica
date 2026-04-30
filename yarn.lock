@@ -10514,7 +10514,7 @@ __metadata:
     formik: "npm:^2.4.6"
     jwt-decode: "npm:^4.0.0"
     monaco-editor: "npm:^0.52.2"
-    oziko-ui-kit: "npm:^0.0.137"
+    oziko-ui-kit: "npm:^0.0.139"
     react: "npm:^19.0.0"
     react-dnd: "npm:^16.0.1"
     react-dnd-html5-backend: "npm:^16.0.1"
@@ -24674,9 +24674,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oziko-ui-kit@npm:^0.0.137":
-  version: 0.0.137
-  resolution: "oziko-ui-kit@npm:0.0.137"
+"oziko-ui-kit@npm:^0.0.139":
+  version: 0.0.139
+  resolution: "oziko-ui-kit@npm:0.0.139"
   dependencies:
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.0"
@@ -24707,7 +24707,7 @@ __metadata:
   peerDependencies:
     react: ^19.0.0
     react-dom: ^19.0.0
-  checksum: 10c0/a99668cd5db85d0ff77bb4727f56437b8b529588ee12c476abea06ff805c00017449af87b15911209f357b2c454e91d2d8ef25285fac4f8930f7b9d1f7b66d6e
+  checksum: 10c0/0204149c896bb8b1d7f2b1f694c012fc52a6629c77f75e0da2065546e7bb97ce587653bac96633a00fc75fdcc52cfa9252a5a745cde20cff7b9255e0dac79d35
   languageName: node
   linkType: hard
 
