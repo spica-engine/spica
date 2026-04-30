@@ -5,10 +5,9 @@ import App from "./app/app";
 import Home from "./pages/home/Home";
 import Layout from "./layout/Layout";
 import Bucket from "./pages/bucket/Bucket";
-import BucketDataProfiler from "./pages/bucket/BucketDataProfiler";
 import Identity from "./pages/identity/Identity";
 import User from "./pages/user/User";
-import UserProfiler from "./pages/user/UserProfiler";
+import UserProfiler from "./pages/observability/UserProfiler";
 import Diagram from "./pages/diagram/Diagram";
 import ProtectedRoute from "./components/guards/ProtectedRoute";
 import Storage from "./pages/storage/Storage";
@@ -60,10 +59,6 @@ const router = createBrowserRouter(
         {
           path: "bucket/:bucketId",
           element: <Bucket />
-        },
-        {
-          path: "bucket/:bucketId/profile",
-          element: <BucketDataProfiler />
         },
         {
           path: "passport/identity",
