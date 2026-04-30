@@ -293,6 +293,12 @@ const MODULE_CONFIGS: ModuleConfig[] = [
     dataProvider: BucketModuleDataProvider
   },
   {
+    name: "bucket:data",
+    renderer: new BucketModuleRenderer(),
+    contextTransformer: createContextTransformer<BucketType[]>("buckets"),
+    dataProvider: BucketModuleDataProvider
+  },
+  {
     name: "passport:apikey",
     renderer: new ApiKeyModuleRenderer(),
     contextTransformer: createContextTransformer<ApiKey[]>("apiKeys"),
