@@ -24,6 +24,7 @@ import ConfigModule from "./pages/config/ConfigModule";
 import RefreshToken from "./pages/refresh-token/RefreshToken";
 import SecretsAndVariables from "./pages/secrets-and-variables/SecretsAndVariables";
 import ApiKeyPage from "./pages/api-key/ApiKey";
+import FunctionVariablesPage from "./pages/function-variables/FunctionVariablesPage";
 
 const router = createBrowserRouter(
   [
@@ -105,6 +106,10 @@ const router = createBrowserRouter(
         {
           path: "function-logs",
           element: <FunctionLogPage />
+        },
+        {
+          path: "function-variables",
+          element: <FunctionVariablesPage />
         },
         {
           path: "webhook/:webhookId",
