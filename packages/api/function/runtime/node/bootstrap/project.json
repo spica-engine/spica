@@ -7,7 +7,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build", "devkit/database:bundle"],
       "options": {
-        "command": "yarn rollup -c ./packages/api/function/runtime/node/bootstrap/rollup.config.js --bundleConfigAsCjs"
+        "command": "yarn rollup -c '{projectRoot}/rollup.config.js' --bundleConfigAsCjs"
       }
     }
   }
