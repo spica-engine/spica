@@ -1,5 +1,0 @@
-{
-  "name": "api/versioncontrol/processors/changelog/test",
-  "sourceRoot": "packages/api/versioncontrol/processors/changelog/test",
-  "projectType": "library"
-}

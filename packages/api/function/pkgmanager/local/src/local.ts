@@ -26,8 +26,8 @@ export class LocalPackageManager extends DelegatePkgManager {
   uninstall(cwd: string, name: string): Promise<void> {
     return super.uninstall(cwd, name);
   }
-  ls(cwd: string, includeTypes?: boolean): Promise<Package[]> {
-    return super.ls(cwd, includeTypes);
+  ls(cwd: string): Promise<Package[]> {
+    return super.ls(cwd);
   }
 
   private transformLocalPackageName(cwd: string, name: string) {

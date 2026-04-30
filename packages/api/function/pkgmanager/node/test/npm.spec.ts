@@ -20,8 +20,7 @@ describe("npm", () => {
     expect(packages).toEqual([
       {
         name: "debug",
-        version: "^4.1.1",
-        types: {}
+        version: "^4.1.1"
       }
     ]);
   });
@@ -32,8 +31,7 @@ describe("npm", () => {
     expect(packages).toEqual([
       {
         name: "rxjs",
-        version: "^6.0.0",
-        types: expect.any(Object)
+        version: "^6.0.0"
       }
     ]);
     await npm.uninstall(cwd, "rxjs");
