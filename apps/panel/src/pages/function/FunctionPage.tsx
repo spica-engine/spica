@@ -382,9 +382,6 @@ const FunctionPage = () => {
               </span>
             )}
             {isIndexSaving && <span className={styles.saveStatus}>Saving...</span>}
-            <Button variant="icon" color="transparent" onClick={() => setIsDeleteOpen(true)}>
-              <Icon name="delete" size="sm" />
-            </Button>
             <Button variant="icon" color="transparent" onClick={toggleSidebar}>
               <Icon name={showSidebar ? "chevronRight" : "chevronLeft"} size="sm" />
             </Button>
