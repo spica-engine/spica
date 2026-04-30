@@ -281,7 +281,7 @@ xdescribe("SyncEngine Integration - Function Dependency", () => {
       const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
         succeededSub.unsubscribe();
         const deps = await CRUD.dependencies.findOne(functionService, functionEngine, _id);
-        expect(deps).toEqual([{name: "lodash", version: "^4.17.21", types: {}}]);
+        expect(deps).toEqual([{name: "lodash", version: "^4.17.21"}]);
         done();
       });
       repManager.write("function", name, fileName, packageContent, fileExtension);

@@ -3,7 +3,6 @@ import {Observable} from "rxjs";
 export interface Package {
   name: string;
   version: string;
-  types: object;
 }
 
 export abstract class PackageManager {
@@ -13,7 +12,7 @@ export abstract class PackageManager {
 
   abstract install(cwd: string, qualifiedNames: string | string[]): Observable<number>;
   abstract uninstall(cwd: string, name: string): Promise<void>;
-  abstract ls(cwd: string, includeTypes?: boolean): Promise<Package[]>;
+  abstract ls(cwd: string): Promise<Package[]>;
 }
 
 export abstract class DelegatePkgManager extends PackageManager {
@@ -30,7 +29,7 @@ export abstract class DelegatePkgManager extends PackageManager {
   uninstall(cwd: string, name: string): Promise<void> {
     return this.pkgManager.uninstall(cwd, name);
   }
-  ls(cwd: string, includeTypes?: boolean): Promise<Package[]> {
-    return this.pkgManager.ls(cwd, includeTypes);
+  ls(cwd: string): Promise<Package[]> {
+    return this.pkgManager.ls(cwd);
   }
 }
