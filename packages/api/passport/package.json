@@ -40,7 +40,7 @@
     "qs": "^6.14.0",
     "rxjs": "^7.8.1",
     "saml2-js": "^4.0.2",
-    "uuid": "^11.0.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
