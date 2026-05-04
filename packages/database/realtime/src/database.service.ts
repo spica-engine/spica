@@ -5,21 +5,25 @@ import {Observable} from "rxjs";
 import {FindOptions} from "@spica-server/interface-database";
 import {Emitter} from "./stream.js";
 import isEqual from "lodash/isEqual.js";
+import {PassThrough} from "stream";
 
 @Injectable()
 export class RealtimeDatabaseService implements OnModuleDestroy {
   constructor(private database: DatabaseService) {}
 
-  private changeStreams = new Map<string, ChangeStream>();
+  private changeStreams = new Map<string, {stream: ChangeStream; hub: PassThrough}>();
   private getChangeStream(name: string) {
     if (this.changeStreams.has(name)) {
-      return this.changeStreams.get(name);
+      return this.changeStreams.get(name)!;
     }
 
-    const changeStream = this.database.collection(name).watch([], {fullDocument: "updateLookup"});
-    this.changeStreams.set(name, changeStream);
+    const stream = this.database.collection(name).watch([], {fullDocument: "updateLookup"});
+    const hub = new PassThrough({objectMode: true});
+    stream.stream().pipe(hub);
+    const entry = {stream, hub};
+    this.changeStreams.set(name, entry);
 
-    return changeStream;
+    return entry;
   }
 
   private emitters = new Map<string, {value: Emitter<any>; listenerCount: number}>();
@@ -32,9 +36,9 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
       return emitter.value;
     }
 
-    const changeStream = this.getChangeStream(name);
+    const {hub} = this.getChangeStream(name);
     const emitter = {
-      value: new Emitter(this.database.collection(name), changeStream, options),
+      value: new Emitter(this.database.collection(name), hub, options),
       listenerCount: 1
     };
 
@@ -63,11 +67,19 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
+    const closedStreams = new Set<string>();
     await Promise.all(
       Array.from(this.emitters).map(([_, emitter]) => {
-        const stream = this.changeStreams.get(emitter.value.collectionName);
-        this.changeStreams.delete(emitter.value.collectionName);
-        return this.closeStreamSafely(stream);
+        const collName = emitter.value.collectionName;
+        if (closedStreams.has(collName)) {
+          return;
+        }
+        closedStreams.add(collName);
+        const entry = this.changeStreams.get(collName);
+        this.changeStreams.delete(collName);
+        if (entry) {
+          return this.closeStreamSafely(entry);
+        }
       })
     );
     this.emitters.clear();
@@ -90,8 +102,10 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
         .some(name => name == collName);
 
       if (!streamListenersRemain) {
-        const changeStream = this.changeStreams.get(collName);
-        this.closeStreamSafely(changeStream);
+        const entry = this.changeStreams.get(collName);
+        if (entry) {
+          this.closeStreamSafely(entry);
+        }
         this.changeStreams.delete(collName);
       }
     }
@@ -108,12 +122,14 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
     return this.getEmitter(name, options).getObservable();
   }
 
-  private closeStreamSafely(stream: ChangeStream) {
-    if (stream && !stream.closed) {
-      return stream.close();
+  private closeStreamSafely(entry: {stream: ChangeStream; hub: PassThrough}) {
+    if (entry && entry.stream && !entry.stream.closed) {
+      entry.hub.removeAllListeners();
+      entry.hub.end();
+      return entry.stream.close();
     } else {
       console.warn(
-        `Change stream for collection ${stream?.namespace?.collection} is already closed.`
+        `Change stream for collection ${entry?.stream?.namespace?.collection} is already closed.`
       );
     }
   }
