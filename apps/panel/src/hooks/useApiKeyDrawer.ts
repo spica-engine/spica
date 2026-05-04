@@ -6,7 +6,8 @@ import type {
 import {
   useCreateApiKeyMutation,
   useUpdateApiKeyMutation,
-  useUpdateApiKeyPoliciesMutation,
+  useAddApiKeyPolicyMutation,
+  useRemoveApiKeyPolicyMutation,
   type ApiKey,
 } from "../store/api/apiKeyApi";
 import { useGetPoliciesQuery } from "../store/api/policyApi";
@@ -26,8 +27,8 @@ export function useApiKeyDrawer({
 }: UseApiKeyDrawerConfig) {
   const [createApiKey, { isLoading: isCreating }] = useCreateApiKeyMutation();
   const [updateApiKey, { isLoading: isUpdating }] = useUpdateApiKeyMutation();
-  const [updatePolicies, { isLoading: isUpdatingPolicies }] =
-    useUpdateApiKeyPoliciesMutation();
+  const [addPolicy, { isLoading: isAddingPolicy }] = useAddApiKeyPolicyMutation();
+  const [removePolicy, { isLoading: isRemovingPolicy }] = useRemoveApiKeyPolicyMutation();
   const { data: policies } = useGetPoliciesQuery();
 
   const isEditMode = !!selectedApiKey?._id;
@@ -40,7 +41,7 @@ export function useApiKeyDrawer({
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const isSaving = isCreating || isUpdating || isUpdatingPolicies;
+  const isSaving = isCreating || isUpdating || isAddingPolicy || isRemovingPolicy;
 
   useEffect(() => {
     if (isOpen) {
@@ -116,18 +117,28 @@ export function useApiKeyDrawer({
 
       if (isEditMode && selectedApiKey?._id) {
         await updateApiKey({ id: selectedApiKey._id, body }).unwrap();
-        await updatePolicies({
-          id: selectedApiKey._id,
-          policies: selectedPolicies,
-        }).unwrap();
+
+        const currentPolicies = selectedApiKey.policies ?? [];
+        const toAdd = selectedPolicies.filter((p) => !currentPolicies.includes(p));
+        const toRemove = currentPolicies.filter((p) => !selectedPolicies.includes(p));
+
+        await Promise.all([
+          ...toAdd.map((policyId) =>
+            addPolicy({ id: selectedApiKey._id!, policyId }).unwrap()
+          ),
+          ...toRemove.map((policyId) =>
+            removePolicy({ id: selectedApiKey._id!, policyId }).unwrap()
+          ),
+        ]);
       } else {
         const created = await createApiKey(body).unwrap();
 
         if (selectedPolicies.length > 0 && created._id) {
-          await updatePolicies({
-            id: created._id,
-            policies: selectedPolicies,
-          }).unwrap();
+          await Promise.all(
+            selectedPolicies.map((policyId) =>
+              addPolicy({ id: created._id!, policyId }).unwrap()
+            )
+          );
         }
 
         if (created.key) {
@@ -147,7 +158,8 @@ export function useApiKeyDrawer({
     selectedApiKey,
     createApiKey,
     updateApiKey,
-    updatePolicies,
+    addPolicy,
+    removePolicy,
     onClose,
     onKeyCreated,
   ]);
