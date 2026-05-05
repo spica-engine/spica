@@ -19,7 +19,7 @@ import {
   useInjectSecretMutation,
   useEjectSecretMutation,
 } from "../../store/api/functionApi";
-import {useGetFunctionLogsQuery} from "../../store/api/functionApi";
+import {useGetFunctionLogsQuery, useClearFunctionLogsMutation} from "../../store/api/functionApi";
 import type {FunctionLog} from "../../store/api/functionApi";
 import type {FunctionTrigger, ResolvedEnvVar, ResolvedSecret} from "../../store/api/functionApi";
 import {useAppDispatch} from "../../store/hook";
@@ -57,6 +57,7 @@ const FunctionPage = () => {
   const [ejectEnvVar] = useEjectEnvVarMutation();
   const [injectSecret] = useInjectSecretMutation();
   const [ejectSecret] = useEjectSecretMutation();
+  const [clearFunctionLogs, {isLoading: isClearingLogs}] = useClearFunctionLogsMutation();
 
   const [code, setCode] = useState("");
   const [lastSavedCode, setLastSavedCode] = useState("");
@@ -331,6 +332,16 @@ const FunctionPage = () => {
     setLogDateRange({begin, end});
   }, []);
 
+  const handleClearLogs = useCallback(async () => {
+    if (!functionId) return;
+    await clearFunctionLogs({
+      functionId,
+      begin: logDateRange.begin.toISOString(),
+      end: logDateRange.end.toISOString(),
+    });
+    refetchLogs();
+  }, [functionId, clearFunctionLogs, logDateRange, refetchLogs]);
+
   const isLogFilterApplied = (() => {
     if (logSearchQuery.trim() !== "" || logSelectedLevels.length > 0) return true;
     const today = new Date();
@@ -427,6 +438,12 @@ const FunctionPage = () => {
                 isFilterApplied={isLogFilterApplied}
                 isRefreshing={isLogsFetching}
                 toolbarActions={
+                  <Button variant="solid" color="danger" onClick={handleClearLogs} loading={isClearingLogs} disabled={isClearingLogs || fnLogs.length === 0}>
+                    <Icon name="delete" size="sm" />
+                    Clear
+                  </Button>
+                }
+                filterActions={
                   <FunctionLogFilter
                     begin={logDateRange.begin}
                     end={logDateRange.end}
