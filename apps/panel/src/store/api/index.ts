@@ -156,7 +156,8 @@ export {
   useUpdateApiKeyMutation,
   useDeleteApiKeyMutation,
   useGetApiKeyPoliciesQuery,
-  useUpdateApiKeyPoliciesMutation,
+  useAddApiKeyPolicyMutation,
+  useRemoveApiKeyPolicyMutation,
 } from './apiKeyApi';
 
 export type {

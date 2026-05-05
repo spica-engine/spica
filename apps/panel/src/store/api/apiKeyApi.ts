@@ -109,15 +109,6 @@ export const apiKeyApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: 'ApiKey', id }],
     }),
 
-    updateApiKeyPolicies: builder.mutation<ApiKey, { id: string; policies: string[] }>({
-      query: ({ id, policies }) => ({
-        url: `passport/apikey/${id}/policies`,
-        method: 'PUT',
-        body: { policies },
-      }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'ApiKey', id }, 'ApiKey'],
-    }),
-
     addApiKeyPolicy: builder.mutation<ApiKey, { id: string; policyId: string }>({
       query: ({ id, policyId }) => ({
         url: `passport/apikey/${id}/policy/${policyId}`,
@@ -144,7 +135,6 @@ export const {
   useUpdateApiKeyMutation,
   useDeleteApiKeyMutation,
   useGetApiKeyPoliciesQuery,
-  useUpdateApiKeyPoliciesMutation,
   useAddApiKeyPolicyMutation,
   useRemoveApiKeyPolicyMutation,
 } = apiKeyApi;
