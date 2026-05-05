@@ -43,10 +43,13 @@ export function groupStatements(flatStatements: PolicyStatement[]): DisplayedSta
         ],
       });
     } else {
-      grouped[existingIndex].actions.push({
-        name: statement.action,
-        resource: statement.resource,
-      });
+      const actionExists = grouped[existingIndex].actions.some((a) => a.name === statement.action);
+      if (!actionExists) {
+        grouped[existingIndex].actions.push({
+          name: statement.action,
+          resource: statement.resource,
+        });
+      }
     }
   });
 
@@ -55,9 +58,13 @@ export function groupStatements(flatStatements: PolicyStatement[]): DisplayedSta
 
 export function flattenStatements(groupedStatements: DisplayedStatement[]): PolicyStatement[] {
   const flat: PolicyStatement[] = [];
+  const seen = new Set<string>();
 
   groupedStatements.forEach((statement) => {
     statement.actions.forEach((action) => {
+      const key = `${statement.module}\x00${action.name}`;
+      if (seen.has(key)) return;
+      seen.add(key);
       flat.push({
         module: statement.module,
         action: action.name,
@@ -130,11 +137,9 @@ export function validateStatements(
       // Check if the action exists in module and has resource defined (means it accepts resource)
       const moduleAction = moduleStatement.actions.find((a) => a.action === action.name);
       const acceptsResource = moduleAction?.resource !== undefined;
-      
-      if (acceptsResource) {
-        if (!action.resource || action.resource.include.length === 0) {
-          return false;
-        }
+
+      if (acceptsResource && !action.resource) {
+        return false;
       }
     }
   }
