@@ -7,11 +7,9 @@
     color: var(--color-font-primary);
   }
 }
-
 .itemButton{
-     padding: 0 !important;
+    padding: 0 !important;
 }
-
 .popoverContainer {
   padding: 0 !important;
   z-index: 3;
@@ -40,10 +38,7 @@
       color: var(--color-danger);
     }
   }
-}
 
-.confirmText {
-  margin-top: 0;
 }
 
 [class^="Portal-module_container__"] {

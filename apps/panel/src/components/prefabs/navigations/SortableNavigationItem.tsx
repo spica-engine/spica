@@ -79,6 +79,10 @@ const SortableNavigationItem: FC<SortableNavigationItemProps> = ({
   renderSuffix
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const indexRef = useRef(index);
+  indexRef.current = index;
+  const groupKeyRef = useRef(groupKey);
+  groupKeyRef.current = groupKey;
 
   const [{handlerId}, drop] = useDrop<NavigationDragItem, void, {handlerId: Identifier | null}>({
     accept: dndType,
@@ -86,12 +90,12 @@ const SortableNavigationItem: FC<SortableNavigationItemProps> = ({
       handlerId: monitor.getHandlerId()
     }),
     hover: (item, monitor) => {
-      if (item.groupKey !== groupKey) {
+      if (item.groupKey !== groupKeyRef.current) {
         return;
       }
 
       const dragIndex = item.index;
-      const hoverIndex = index;
+      const hoverIndex = indexRef.current;
 
       if (shouldPreventHover(containerRef, dragIndex, hoverIndex, monitor)) {
         return;
@@ -105,8 +109,8 @@ const SortableNavigationItem: FC<SortableNavigationItemProps> = ({
   const [{isDragging}, drag, dragPreview] = useDrag(() => ({
     type: dndType,
     item: () => {
-      onDragStart(index);
-      return {id, index, groupKey, type: dndType};
+      onDragStart(indexRef.current);
+      return {id, index: indexRef.current, groupKey: groupKeyRef.current, type: dndType};
     },
     end: draggedItem => {
       if (!draggedItem) {

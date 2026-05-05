@@ -10,7 +10,10 @@ import {
   Accordion,
   FlexElement,
   FluidContainer,
-  Button
+  Button,
+  Popover,
+  Input,
+  Modal
 } from "oziko-ui-kit";
 import styles from "../Navigation.module.scss";
 import bucketNavigationStyles from "./Bucket.module.scss";
@@ -29,12 +32,13 @@ import {
 
 import {useNavigate} from "react-router-dom";
 import {useGetBucketsQuery} from "../../../../store/api";
-import {useUpdateBucketOrderMutation, type BucketType} from "../../../../store/api/bucketApi";
+import {useUpdateBucketOrderMutation, useChangeBucketCategoryMutation, type BucketType} from "../../../../store/api/bucketApi";
 import {useDrag, useDrop} from "react-dnd";
 import type {Identifier} from "dnd-core";
 import AddBucketPopup from "../../../molecules/add-bucket-popup/AddBucketPopup";
 import BucketNavigatorPopup from "../../../molecules/bucket-navigator-popup/BucketNavigatorPopup";
 import SortableNavigationItem, {shouldPreventHover} from "../SortableNavigationItem";
+import Confirmation from "../../../molecules/confirmation/Confirmation";
 
 const BUCKET_ITEM_TYPE = "BUCKET_NAVIGATION_ITEM";
 const CATEGORY_ITEM_TYPE = "BUCKET_NAVIGATION_CATEGORY";
@@ -135,6 +139,8 @@ type SortableCategoryItemProps = {
 
 const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index, moveCategory, children}) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const indexRef = useRef(index);
+  indexRef.current = index;
 
   const [{handlerId}, drop] = useDrop<CategoryDragItem, void, {handlerId: Identifier | null}>({
     accept: CATEGORY_ITEM_TYPE,
@@ -143,7 +149,7 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index
     }),
     hover: (item, monitor) => {
       const dragIndex = item.index;
-      const hoverIndex = index;
+      const hoverIndex = indexRef.current;
 
       if (shouldPreventHover(containerRef, dragIndex, hoverIndex, monitor)) {
         return;
@@ -156,7 +162,7 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index
 
   const [{isDragging}, drag, dragPreview] = useDrag(() => ({
     type: CATEGORY_ITEM_TYPE,
-    item: {id: categoryKey, index, type: CATEGORY_ITEM_TYPE},
+    item: () => ({id: categoryKey, index: indexRef.current, type: CATEGORY_ITEM_TYPE}),
     collect: monitor => ({
       isDragging: monitor.isDragging()
     })
@@ -194,14 +200,206 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index
   );
 };
 
+type CategoryNavigatorPopupProps = {
+  categoryName: string;
+  isOpen: boolean;
+  setIsOpen: (state: SetStateAction<boolean>) => void;
+  onRename: (newName: string) => Promise<void>;
+  onDelete: () => Promise<void>;
+};
+
+const CategoryNavigatorPopup: FC<CategoryNavigatorPopupProps> = ({
+  categoryName,
+  isOpen,
+  setIsOpen,
+  onRename,
+  onDelete
+}) => {
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [editValue, setEditValue] = useState(categoryName);
+  const [editError, setEditError] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleOpenEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditValue(categoryName);
+    setEditError("");
+    setIsOpen(false);
+    setIsEditOpen(true);
+  };
+
+  const handleOpenDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteError(null);
+    setIsOpen(false);
+    setIsDeleteOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editValue.trim()) {
+      setEditError("Category name cannot be empty.");
+      return;
+    }
+    setEditLoading(true);
+    setEditError("");
+    try {
+      await onRename(editValue.trim());
+      setIsEditOpen(false);
+    } catch (err: any) {
+      setEditError(err?.data?.message ?? err?.message ?? "Failed to rename category.");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      await onDelete();
+      setIsDeleteOpen(false);
+    } catch (err: any) {
+      setDeleteError(err?.data?.message ?? err?.message ?? "Failed to delete category.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  return (
+    <div className={bucketNavigationStyles.categoryPopupContainer}>
+      <Popover
+        open={isOpen}
+        contentProps={{className: bucketNavigationStyles.categoryPopoverContainer}}
+        onClose={() => setIsOpen(false)}
+        content={
+          <FlexElement
+            dimensionX={160}
+            direction="vertical"
+            className={bucketNavigationStyles.categoryPopoverContent}
+          >
+            <Button
+              containerProps={{alignment: "leftCenter", dimensionX: "fill"}}
+              color="default"
+              onClick={handleOpenEdit}
+              className={bucketNavigationStyles.categoryPopoverButton}
+            >
+              <Icon name="pencil" />
+              <Text>Edit category</Text>
+            </Button>
+            <Button
+              containerProps={{alignment: "leftCenter", dimensionX: "fill"}}
+              color="default"
+              onClick={handleOpenDelete}
+              className={bucketNavigationStyles.categoryPopoverButton}
+            >
+              <Icon name="delete" className={bucketNavigationStyles.deleteCategoryIcon} />
+              <Text variant="danger">Delete category</Text>
+            </Button>
+          </FlexElement>
+        }
+      >
+        <Button
+          onClick={e => {
+            e.stopPropagation();
+            setIsOpen(prev => !prev);
+          }}
+          color="transparent"
+          variant="icon"
+        >
+          <Icon name="dotsVertical" size="sm" />
+        </Button>
+      </Popover>
+
+      {isEditOpen && (
+        <Modal
+          showCloseButton={false}
+          onClose={() => setIsEditOpen(false)}
+          className={bucketNavigationStyles.categoryEditModal}
+          isOpen
+          onClick={e => e.stopPropagation()}
+        >
+          <div className={bucketNavigationStyles.categoryEditContainer}>
+            <div className={bucketNavigationStyles.categoryEditHeader}>
+              <Text className={bucketNavigationStyles.categoryEditHeaderText}>EDIT CATEGORY</Text>
+            </div>
+            <div className={bucketNavigationStyles.categoryEditBody}>
+              <div className={bucketNavigationStyles.categoryEditInputContainer}>
+                <Icon name="formatQuoteClose" size="md" />
+                <Input
+                  className={bucketNavigationStyles.categoryEditInput}
+                  value={editValue}
+                  onChange={e => setEditValue(e.target.value)}
+                  placeholder="Category name"
+                />
+              </div>
+              {editError && (
+                <Text variant="danger" className={bucketNavigationStyles.categoryEditErrorText}>
+                  {editError}
+                </Text>
+              )}
+            </div>
+            <div className={bucketNavigationStyles.categoryEditFooter}>
+              <Button onClick={handleSaveEdit} disabled={editLoading} loading={editLoading}>
+                <Icon name="save" />
+                <Text>Save</Text>
+              </Button>
+              <Button variant="text" onClick={() => setIsEditOpen(false)} disabled={editLoading}>
+                <Icon name="close" />
+                <Text>Cancel</Text>
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {isDeleteOpen && (
+        <Confirmation
+          title="DELETE CATEGORY"
+          description={
+            <>
+              This will ungroup all buckets in <strong>{categoryName}</strong>. The buckets
+              themselves will not be deleted.
+            </>
+          }
+          confirmLabel={
+            <>
+              <Icon name="delete" />
+              Delete
+            </>
+          }
+          cancelLabel={
+            <>
+              <Icon name="close" />
+              Cancel
+            </>
+          }
+          showInput={false}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => {
+            setIsDeleteOpen(false);
+            setDeleteError(null);
+          }}
+          loading={deleteLoading}
+          error={deleteError}
+        />
+      )}
+    </div>
+  );
+};
+
 const Bucket = () => {
   const navigate = useNavigate();
   const {data: buckets = []} = useGetBucketsQuery();
   const [orderedBuckets, setOrderedBuckets] = useState<BucketNavigationItemData[]>([]);
   const [openBucketId, setOpenBucketId] = useState<string | null>(null);
   const [updateBucketOrder] = useUpdateBucketOrderMutation();
+  const [changeBucketCategory] = useChangeBucketCategoryMutation();
   const previousBucketsRef = useRef<BucketNavigationItemData[] | null>(null);
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
+  const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
 
   const sortedBuckets = useMemo(() => {
     if (!Array.isArray(buckets)) {
@@ -345,6 +543,35 @@ const Bucket = () => {
     persistCategoryOrder(categoryOrder);
   }, [categoryOrder]);
 
+  const handleSetCategoryPopupOpen = useCallback((categoryName: string, state: SetStateAction<boolean>) => {
+    setOpenCategoryId(prevId => {
+      const prevIsOpen = prevId === categoryName;
+      const nextIsOpen = typeof state === "function" ? state(prevIsOpen) : state;
+      if (nextIsOpen) return categoryName;
+      return prevIsOpen ? null : prevId;
+    });
+  }, []);
+
+  const handleRenameCategory = useCallback(
+    async (oldName: string, newName: string) => {
+      const targets = orderedBuckets.filter(b => b.category === oldName);
+      await Promise.all(
+        targets.map(b => changeBucketCategory({bucketId: b._id, category: newName}).unwrap())
+      );
+    },
+    [orderedBuckets, changeBucketCategory]
+  );
+
+  const handleDeleteCategory = useCallback(
+    async (categoryName: string) => {
+      const targets = orderedBuckets.filter(b => b.category === categoryName);
+      await Promise.all(
+        targets.map(b => changeBucketCategory({bucketId: b._id, category: ""}).unwrap())
+      );
+    },
+    [orderedBuckets, changeBucketCategory]
+  );
+
   const moveCategory = useCallback((fromIndex: number, toIndex: number) => {
     setCategoryOrder(prevOrder => {
       if (
@@ -465,7 +692,13 @@ const Bucket = () => {
                         <div ref={setDragHandleRef} className={bucketNavigationStyles.categoryDragHandle}>
                           <Icon name="dragHorizontalVariant" />
                         </div>
-                        <Icon name="dotsVertical" />
+                        <CategoryNavigatorPopup
+                          categoryName={groupItem.category}
+                          isOpen={openCategoryId === groupItem.category}
+                          setIsOpen={state => handleSetCategoryPopupOpen(groupItem.category, state)}
+                          onRename={newName => handleRenameCategory(groupItem.category, newName)}
+                          onDelete={() => handleDeleteCategory(groupItem.category)}
+                        />
                       </FlexElement>
                     )
                   }
@@ -480,7 +713,7 @@ const Bucket = () => {
           </SortableCategoryItem>
         );
       }),
-    [moveCategory, orderedGrouped, renderBucketItem]
+    [moveCategory, orderedGrouped, renderBucketItem, openCategoryId, handleSetCategoryPopupOpen, handleRenameCategory, handleDeleteCategory]
   );
 
 
