@@ -92,6 +92,9 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         ignored: /(^|[/\\])\../,
         persistent: true,
         depth: 2,
+        usePolling: true,
+        interval: 1000,
+        binaryInterval: 1000,
         awaitWriteFinish: true
       });
 
