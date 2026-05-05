@@ -1,53 +1,55 @@
 @use "../../../../styles/mixins";
 
+.functionsItemContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 
-.bucketsItemContainer {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: none; 
-    -ms-overflow-style: none;
-    
-    &::-webkit-scrollbar {
-        display: none;
-    }
-
-    .bucketItem {
-        transition: opacity 0.2s ease-in-out;
-        padding: 0 var(--padding-sm) 0 var(--padding-md);
-      
-        &:hover {
-          background-color: var(--color-hover);
-          cursor: pointer;
-          .actionButtons {
-            opacity: 1;
-          }
-        }
-      
-        .itemButton {
-          padding: 0 !important;
-        }
-      
-        .bucketTitle {
-          overflow-wrap: anywhere;
-        }
-        .actionButtons {
-          opacity: 0;
-          transition: opacity 0.2s ease-in-out;
-        }
-      }
+  &::-webkit-scrollbar {
+    display: none;
   }
 
+  .functionItem {
+    transition: opacity 0.2s ease-in-out;
+    padding: 0 var(--padding-sm) 0 var(--padding-md);
+
+    &:hover {
+      background-color: var(--color-hover);
+      cursor: pointer;
+
+      .actionButtons {
+        opacity: 1;
+      }
+    }
+
+    .itemButton {
+      padding: 0 !important;
+    }
+
+    .functionTitle {
+      overflow-wrap: anywhere;
+    }
+
+    .actionButtons {
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+    }
+  }
+}
 
 .accordionHeader {
   height: 32px !important;
   padding: 0 var(--padding-sm) 0 var(--padding-md);
+
   svg {
     display: none;
   }
+
   &:hover svg {
     display: block;
   }
@@ -174,5 +176,3 @@
   gap: var(--gap-sm);
   padding: var(--padding-sm) var(--padding-md) var(--padding-md);
 }
-
-

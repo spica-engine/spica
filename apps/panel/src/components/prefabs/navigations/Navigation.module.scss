@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--gap-sm);
+  overflow: hidden;
 
   .header {
     padding: 0 var(--padding-md);

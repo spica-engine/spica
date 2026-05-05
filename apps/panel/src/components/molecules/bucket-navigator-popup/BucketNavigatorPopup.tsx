@@ -124,6 +124,7 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           }}
           color="transparent"
           variant="icon"
+          className={styles.itemButton}
         >
           <Icon name="dotsVertical" size="sm" />
         </Button>
