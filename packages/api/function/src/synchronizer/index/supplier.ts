@@ -65,7 +65,7 @@ export const getSupplier = (engine: FunctionEngine, fs: FunctionService): Change
               );
               observer.next(changelog);
             } catch (error) {
-              observer.error(`Error on fn ${fn._id} index read: ${error}`);
+              logger.error(`Error on fn ${fn._id} index read:`, error instanceof Error ? error.stack : String(error));
             }
           });
         });

@@ -1,0 +1,72 @@
+.container {
+  padding: var(--padding-md);
+  width: 100%;
+}
+
+.resultCount {
+  color: var(--color-font-secondary);
+  font-size: var(--font-size-sm);
+  margin-right: var(--padding-sm);
+}
+
+.keyCell {
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.valueCell {
+  font-family: monospace;
+  color: var(--color-font-primary);
+  letter-spacing: 0.05em;
+}
+
+.chipList {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.functionChip {
+  font-size: var(--font-size-sm);
+  background-color: var(--color-primary-soft, var(--color-hover)) !important;
+  color: var(--color-font-primary) !important;
+  border-radius: 999px;
+  padding: 2px 10px !important;
+}
+
+.emptyFunctions {
+  color: var(--color-font-primary);
+}
+
+.actionButton {
+  padding: 0;
+  width: unset !important;
+}
+
+.emptyState {
+  padding: var(--padding-lg);
+  color: var(--color-font-secondary);
+}
+
+/* Drawer */
+.drawerForm {
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawerContent {
+  padding: var(--padding-lg);
+  flex: 1;
+  overflow-y: auto;
+  align-items: flex-start;
+}
+
+.drawerTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--padding-sm);
+}
+
+.drawerActions {
+  padding: var(--padding-md) var(--padding-lg);
+}

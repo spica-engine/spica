@@ -160,6 +160,10 @@ const FunctionNavigation = () => {
     navigate("/function-logs");
   }, [navigate]);
 
+  const handleNavigateToVariables = useCallback(() => {
+    navigate("/function-variables");
+  }, [navigate]);
+
   return (
     <div className={styles.container}>
       <FluidContainer
@@ -175,14 +179,24 @@ const FunctionNavigation = () => {
         }}
         suffix={{
           children: (
+         <>
             <Button
               variant="icon"
               color="transparent"
               className={styles.button}
               onClick={handleNavigateToLogs}
             >
+              <Icon name="bug" size="sm" />
+            </Button>
+                <Button
+              variant="icon"
+              color="transparent"
+              className={styles.button}
+              onClick={handleNavigateToVariables}
+            >
               <Icon name="cog" size="sm" />
             </Button>
+         </>
           )
         }}
       />

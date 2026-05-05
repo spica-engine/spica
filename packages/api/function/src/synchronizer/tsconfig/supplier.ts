@@ -65,8 +65,7 @@ export const getSupplier = (
               );
               observer.next(changelog);
             } catch (error) {
-              observer.error(`Error on fn ${fn._id} tsconfig read: ${error}`);
-              return;
+              logger.error(`Error on fn ${fn._id} tsconfig read:`, error instanceof Error ? error.stack : String(error));
             }
           });
         });
