@@ -4,8 +4,8 @@
  */
 
 import {useCallback, useMemo, useState} from "react";
-import {FlexElement, Text} from "oziko-ui-kit";
-import {useGetFunctionLogsQuery, useGetFunctionsQuery} from "../../store/api/functionApi";
+import {Button, FlexElement, Icon, Text} from "oziko-ui-kit";
+import {useGetFunctionLogsQuery, useGetFunctionsQuery, useClearFunctionLogsMutation} from "../../store/api/functionApi";
 import type {FunctionLog} from "../../store/api/functionApi";
 import FunctionLogFilter from "./FunctionLogFilter";
 import FunctionLogChart from "./FunctionLogChart";
@@ -27,6 +27,8 @@ const FunctionLogPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFunctions, setSelectedFunctions] = useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<number[]>([]);
+
+  const [clearFunctionLogs, {isLoading: isClearingLogs}] = useClearFunctionLogsMutation();
 
   const {data: apiLogs, refetch, isFetching} = useGetFunctionLogsQuery({
     begin: dateRange.begin.toISOString(),
@@ -110,6 +112,23 @@ const FunctionLogPage = () => {
     setSearchQuery("");
   }, []);
 
+  const handleClearLogs = useCallback(async () => {
+    const targets =
+      selectedFunctions.length > 0
+        ? selectedFunctions
+        : (functionList ?? []).map(fn => fn._id!).filter(Boolean);
+    await Promise.all(
+      targets.map(functionId =>
+        clearFunctionLogs({
+          functionId,
+          begin: dateRange.begin.toISOString(),
+          end: dateRange.end.toISOString(),
+        })
+      )
+    );
+    refetch();
+  }, [selectedFunctions, functionList, clearFunctionLogs, dateRange, refetch]);
+
   const isFilterApplied = (() => {
     if (selectedFunctions.length > 0 || selectedLevels.length > 0 || searchQuery.trim() !== "") return true;
     const def = getDefaultRange();
@@ -138,6 +157,12 @@ const FunctionLogPage = () => {
         isFilterApplied={isFilterApplied}
         isRefreshing={isFetching}
         toolbarActions={
+          <Button variant="solid" color="danger" onClick={handleClearLogs} loading={isClearingLogs} disabled={isClearingLogs || logs.length === 0}>
+            <Icon name="delete" size="sm" />
+            Clear
+          </Button>
+        }
+        filterActions={
           <FunctionLogFilter
             begin={dateRange.begin}
             end={dateRange.end}

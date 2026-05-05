@@ -61,7 +61,13 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
 
   const handleHandlerChange = useCallback(
     (index: number, handler: string) => {
-      onChange(triggers.map((t, i) => (i === index ? {...t, handler} : t)));
+      onChange(
+        triggers.map((t, i) => {
+          if (i !== index) return t;
+          const options = t.type === "http" ? {...t.options, path: `/${handler}`} : t.options;
+          return {...t, handler, options};
+        })
+      );
     },
     [triggers, onChange]
   );
