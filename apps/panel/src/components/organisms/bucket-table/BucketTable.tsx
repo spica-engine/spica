@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {FlexElement, Icon, Table, type TableColumn, Button, Popover, type IconName, useLayer } from "oziko-ui-kit";
+import {useEntrySelection} from "../../../hooks/useEntrySelection";
 import type { BucketSchema, BucketDataRow, BucketProperty } from "./types";
 import { EditableCell } from "./EditableCell";
 import styles from "./BucketTable.module.scss";
@@ -195,6 +196,7 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   loading = false,
   visibleColumns
 }) => {
+  const {selectedEntries, selectEntry, deselectEntry, selectEntries, resetSelection} = useEntrySelection(bucket._id);
 
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
@@ -446,21 +448,39 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     createPropertyRenderCell
   ]);
 
-  const columns = useMemo((): TableColumn<BucketDataRow>[] => {
+  const renderCheckboxCell = useCallback((params: {row: BucketDataRow; isFocused: boolean}) => {
+    const isChecked = selectedEntries.has(params.row._id);
+    return (
+      <div className={styles.checkboxCell}>
+        <input
+          type="checkbox"
+          className={styles.rowCheckbox}
+          checked={isChecked}
+          onChange={(e) => {
+            e.stopPropagation();
+            if (isChecked) {
+              deselectEntry(params.row._id);
+            } else {
+              selectEntry(params.row._id);
+            }
+          }}
+        />
+      </div>
+    );
+  }, [selectedEntries, selectEntry, deselectEntry]);
+
+  const propertyColumns = useMemo((): TableColumn<BucketDataRow>[] => {
     if (!bucket?.properties) return [];
 
-    const systemColumns: TableColumn<BucketDataRow>[] = [
-      {
-        key: '_id',
-        header: '_id',
-        width: '250px',
-        minWidth: '250px',
-        renderCell: renderIdCell,
-      }
-    ];
+    const idColumn: TableColumn<BucketDataRow> = {
+      key: '_id',
+      header: '_id',
+      width: '250px',
+      minWidth: '250px',
+      renderCell: renderIdCell,
+    };
 
     const propertyKeys = Object.keys(bucket.properties);
-
 
     const orderedKeys = fieldsOrder.filter(key => propertyKeys.includes(key));
     const newKeys = propertyKeys.filter(key => !fieldsOrder.includes(key));
@@ -470,12 +490,12 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       ? finalOrderedKeys.filter(key => visibleColumns[key] !== false)
       : finalOrderedKeys;
 
-    const propertyColumns = visibleOrderedKeys.map((key, index) => {
+    const propCols = visibleOrderedKeys.map((key, index) => {
       const property: BucketProperty = bucket.properties[key];
       return createPropertyColumn(key, property, index, visibleOrderedKeys.length);
     });
 
-    return [...systemColumns, ...propertyColumns];
+    return [idColumn, ...propCols];
   }, [
     bucket?.properties,
     fieldsOrder,
@@ -483,6 +503,39 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     createPropertyColumn,
     visibleColumns
   ]);
+
+  const columns = useMemo((): TableColumn<BucketDataRow>[] => {
+    const hasData = data.length > 0;
+    const allSelected = hasData && data.every(row => selectedEntries.has(row._id));
+    const someSelected = hasData && !allSelected && data.some(row => selectedEntries.has(row._id));
+
+    const checkboxColumn: TableColumn<BucketDataRow> = {
+      key: 'checkbox',
+      header: (
+        <div className={styles.checkboxCell}>
+          <input
+            type="checkbox"
+            className={styles.rowCheckbox}
+            checked={allSelected}
+            disabled={!hasData}
+            ref={el => { if (el) el.indeterminate = someSelected; }}
+            onChange={() => {
+              if (allSelected || someSelected) {
+                resetSelection();
+              } else {
+                selectEntries(data.map(row => row._id));
+              }
+            }}
+          />
+        </div>
+      ),
+      width: '40px',
+      minWidth: '40px',
+      renderCell: renderCheckboxCell,
+    };
+
+    return [checkboxColumn, ...propertyColumns];
+  }, [data, selectedEntries, selectEntries, resetSelection, propertyColumns, renderCheckboxCell]);
 
 
   const compareValues = useCallback((aValue: any, bValue: any): number => {
@@ -534,15 +587,15 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
           columns={columns}
           data={sortedData}
           saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
-          fixedColumns={['_id']}
-          noResizeableColumns={['_id']}
+          fixedColumns={['checkbox', '_id']}
+          noResizeableColumns={['checkbox', '_id']}
           tableClassName={styles.table}
           headerClassName={styles.header}
           columnClassName={styles.column}
           cellClassName={styles.cell}
           loading={loading}
           skeletonRowCount={10}
-          isCellFocusable={({columnKey}) => columnKey !== '_id'}
+          isCellFocusable={({columnKey}) => columnKey !== '_id' && columnKey !== 'checkbox'}
         />
       </div>
       <FlexElement
