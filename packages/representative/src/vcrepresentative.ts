@@ -96,7 +96,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         persistent: true,
         usePolling,
         interval: pollingInterval,
-        awaitWriteFinish: true
+        awaitWriteFinish: !usePolling
       });
 
       watcher.on("all", async (event, filePath) => {

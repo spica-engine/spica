@@ -319,7 +319,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         persistent: true,
         usePolling,
         interval: pollingInterval,
-        awaitWriteFinish: true
+        awaitWriteFinish: !usePolling
       });
 
       const handleFileEvent = async (filePath: string, type: "create" | "update" | "delete") => {
