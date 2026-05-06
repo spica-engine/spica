@@ -344,6 +344,23 @@ tests:
       - isNotEmpty:
           path: spec.template.metadata.annotations["checksum/application-secrets"]
 
+  - it: should add podAnnotations to Pod template when set
+    set:
+      application.podAnnotations:
+        instrumentation.opentelemetry.io/inject-nodejs: "true"
+        instrumentation.opentelemetry.io/container-names: "api"
+    template: templates/application.yaml
+    documentSelector:
+      path: kind
+      value: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["instrumentation.opentelemetry.io/inject-nodejs"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["instrumentation.opentelemetry.io/container-names"]
+          value: "api"
+
   - it: should use the default serviceAccountName
     template: templates/application.yaml
     documentSelector:

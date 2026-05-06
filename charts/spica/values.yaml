@@ -74,6 +74,7 @@ application:
   args: []
   diskAccessMode: ReadWriteOnce
   serviceAccountName: default
+  podAnnotations: {}
   # probes
   # startup
   apiStartupProbeInitialDelaySeconds: 10
