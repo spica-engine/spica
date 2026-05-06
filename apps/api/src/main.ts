@@ -538,6 +538,21 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     description: "Enable/disable listening to version control sync realtime. Default value is true",
     default: true
   })
+  .option("versioncontrol-watch-mode", {
+    string: true,
+    choices: ["realtime", "polling"] as const,
+      description:
+        "File watching strategy for version control. " +
+        "'realtime' uses inotify (low latency, does not work on NFS). " +
+      "'polling' periodically checks for changes (works on all file systems including NFS).",
+    default: "realtime"
+  })
+  .option("versioncontrol-polling-interval", {
+    number: true,
+    description:
+      "Interval in milliseconds between polling checks. Only active when versioncontrol-watch-mode is 'polling'.",
+    default: 1000
+  })
   .middleware(args => {
     const username = process.env.MONGODB_USERNAME;
     const password = process.env.MONGODB_PASSWORD;
@@ -842,7 +857,7 @@ const modules = [
     invocationLogs: args["function-invocation-logs"],
     realtime: true,
     grpcPort: args["grpc-function-port"],
-    functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"] 
+    functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"]
   }),
   ConfigModule.forRoot(),
   StatusModule.forRoot({
@@ -860,7 +875,9 @@ if (args["version-control"]) {
     VersionControlModule.forRoot({
       persistentPath: args["persistent-path"],
       isReplicationEnabled: args["replication"],
-      realtime: args["versioncontrol-sync-realtime"]
+      realtime: args["versioncontrol-sync-realtime"],
+      watchMode: args["versioncontrol-watch-mode"] as "realtime" | "polling",
+      pollingInterval: args["versioncontrol-polling-interval"]
     })
   );
 }

@@ -1,10 +1,12 @@
-import {Global, Module, Inject, Optional} from "@nestjs/common";
+import {DynamicModule, Global, Module, Inject, Optional} from "@nestjs/common";
 import {VersionControlController} from "./controller.js";
 import {VersionManager} from "./interface.js";
 import {
   VersionControlOptions,
   VERSIONCONTROL_WORKING_DIRECTORY,
   VC_REPRESENTATIVE_MANAGER,
+  VC_WATCH_OPTIONS,
+  VCWatchOptions,
   REGISTER_VC_CHANGE_HANDLER,
   DocumentChangeSupplier,
   DocumentChangeApplier
@@ -45,7 +47,7 @@ export class VersionControlModule {
     }
   }
 
-  static forRoot(options: VersionControlOptions) {
+  static forRoot(options: VersionControlOptions): DynamicModule {
     return {
       module: VersionControlModule,
       controllers: [VersionControlController],
@@ -70,9 +72,17 @@ export class VersionControlModule {
           inject: [VERSIONCONTROL_WORKING_DIRECTORY]
         },
         {
+          provide: VC_WATCH_OPTIONS,
+          useValue: {
+            watchMode: options.watchMode,
+            pollingInterval: options.pollingInterval
+          } as VCWatchOptions
+        },
+        {
           provide: VC_REPRESENTATIVE_MANAGER,
-          useFactory: dir => new VCRepresentativeManager(dir),
-          inject: [VERSIONCONTROL_WORKING_DIRECTORY]
+          useFactory: (dir: string, watchOpts: VCWatchOptions) =>
+            new VCRepresentativeManager(dir, watchOpts),
+          inject: [VERSIONCONTROL_WORKING_DIRECTORY, VC_WATCH_OPTIONS]
         },
         {
           provide: REGISTER_VC_CHANGE_HANDLER,
@@ -84,7 +94,7 @@ export class VersionControlModule {
           inject: [SyncEngine]
         }
       ],
-      exports: [REGISTER_VC_CHANGE_HANDLER, VC_REPRESENTATIVE_MANAGER]
+      exports: [REGISTER_VC_CHANGE_HANDLER, VC_REPRESENTATIVE_MANAGER, VC_WATCH_OPTIONS]
     };
   }
 }

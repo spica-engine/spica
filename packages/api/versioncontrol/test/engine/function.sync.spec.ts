@@ -47,7 +47,8 @@ xdescribe("SyncEngine Integration - Function", () => {
         VersionControlModule.forRoot({
           isReplicationEnabled: false,
           persistentPath: join(tmpdir()),
-          realtime: false
+          realtime: false,
+          watchMode: "realtime"
         }),
         SchedulerModule.forRoot({
           invocationLogs: false,

@@ -7,11 +7,11 @@ import {
 } from "@spica-server/interface-representative";
 import chokidar from "chokidar";
 import {Observable} from "rxjs";
-import {ChangeType} from "@spica-server/interface-versioncontrol";
+import {ChangeType, VCWatchOptions} from "@spica-server/interface-versioncontrol";
 
 @Injectable()
 export class VCRepresentativeManager implements IRepresentativeManager {
-  constructor(protected cwd: string) {
+  constructor(protected cwd: string, protected watchOptions: VCWatchOptions) {
     try {
       const entries = fs.readdirSync(this.cwd);
       for (const entry of entries) {
@@ -88,13 +88,14 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     this.createModuleDirectory(moduleDir);
 
     return new Observable<RepresentativeFileEvent>(subscriber => {
-      const watcher = chokidar.watch(moduleDir, {
-        ignored: /(^|[/\\])\../,
+      const patterns = files.map(file => path.join(moduleDir, "*", file));
+      const usePolling = this.watchOptions.watchMode === "polling";
+      const pollingInterval = this.watchOptions.pollingInterval ?? 1000;
+      const watcher = chokidar.watch(patterns, {
+        ignored: /(\/|\\)\../,
         persistent: true,
-        depth: 2,
-        usePolling: true,
-        interval: 1000,
-        binaryInterval: 1000,
+        usePolling,
+        interval: pollingInterval,
         awaitWriteFinish: true
       });
 
@@ -104,10 +105,6 @@ export class VCRepresentativeManager implements IRepresentativeManager {
 
         const relativePath = filePath.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
-
-        const isCorrectDepth = parts.length == 2;
-        const isTrackedFile = files.some(file => parts[1] == file);
-        if (!isCorrectDepth || !isTrackedFile) return;
 
         const extension = parts[1].split(".").at(-1);
 
