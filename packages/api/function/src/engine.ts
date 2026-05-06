@@ -311,11 +311,16 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     fs.mkdirSync(moduleDir, {recursive: true});
 
     return new Observable(observer => {
-      const patterns = files.map(file => path.join(moduleDir, "*", file));
       const usePolling = options?.usePolling ?? false;
       const pollingInterval = options?.pollingInterval ?? 1000;
-      const watcher = chokidar.watch(patterns, {
-        ignored: /(^|[/\\])\../,
+      const watcher = chokidar.watch(moduleDir, {
+        ignored: (filePath: string) => {
+          if (/(^|[/\\])\./.test(filePath)) return true;
+          const relativePath = filePath.slice(moduleDir.length + 1);
+          const parts = relativePath.split(/[/\\]/);
+          if (parts.length === 1) return false; // fn name directory, need to recurse
+          return !files.some(file => parts[1] === file);
+        },
         persistent: true,
         usePolling,
         interval: pollingInterval,

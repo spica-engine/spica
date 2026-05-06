@@ -88,11 +88,16 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     this.createModuleDirectory(moduleDir);
 
     return new Observable<RepresentativeFileEvent>(subscriber => {
-      const patterns = files.map(file => path.join(moduleDir, "*", file));
       const usePolling = this.watchOptions.watchMode === "polling";
       const pollingInterval = this.watchOptions.pollingInterval ?? 1000;
-      const watcher = chokidar.watch(patterns, {
-        ignored: /(\/|\\)\../,
+      const watcher = chokidar.watch(moduleDir, {
+        ignored: (filePath: string) => {
+          if (/(^|[/\\])\./.test(filePath)) return true;
+          const relativePath = filePath.slice(moduleDir.length + 1);
+          const parts = relativePath.split(/[/\\]/);
+          if (parts.length === 1) return false; // id directory, need to recurse
+          return !files.some(file => parts[1] === file);
+        },
         persistent: true,
         usePolling,
         interval: pollingInterval,
@@ -105,6 +110,8 @@ export class VCRepresentativeManager implements IRepresentativeManager {
 
         const relativePath = filePath.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
+
+        if (parts.length < 2) return; // directory event, not a file
 
         const extension = parts[1].split(".").at(-1);
 
