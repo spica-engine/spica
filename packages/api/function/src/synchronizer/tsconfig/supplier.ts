@@ -6,7 +6,8 @@ import {
   ChangeType,
   ChangeOrigin,
   DocumentChangeSupplier,
-  ChangeInitiator
+  ChangeInitiator,
+  VCWatchOptions
 } from "@spica-server/interface-versioncontrol";
 import * as CRUD from "../../../src/crud.js";
 import {Function} from "@spica-server/interface-function";
@@ -41,7 +42,8 @@ const getChangeLogForTsconfig = (
 
 export const getSupplier = (
   engine: FunctionEngine,
-  fs: FunctionService
+  fs: FunctionService,
+  watchOpts: VCWatchOptions
 ): DocumentChangeSupplier => {
   return {
     module,
@@ -70,7 +72,12 @@ export const getSupplier = (
           });
         });
 
-        const subscription = engine.watch("tsconfig").subscribe({
+        const subscription = engine
+          .watch("tsconfig", {
+            usePolling: watchOpts.watchMode === "polling",
+            pollingInterval: watchOpts.pollingInterval
+          })
+          .subscribe({
           next: change => {
             const changeMap = {
               create: ChangeType.CREATE,

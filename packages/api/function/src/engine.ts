@@ -286,7 +286,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return fs.promises.rm(filePath);
   }
 
-  watch(scope: "index" | "dependency" | "tsconfig"): Observable<{
+  watch(
+    scope: "index" | "dependency" | "tsconfig",
+    options?: {usePolling?: boolean; pollingInterval?: number}
+  ): Observable<{
     fn: FunctionWithContent;
     type: "create" | "update" | "delete";
     event_id: string;
@@ -308,20 +311,25 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     fs.mkdirSync(moduleDir, {recursive: true});
 
     return new Observable(observer => {
+      const usePolling = options?.usePolling ?? false;
+      const pollingInterval = options?.pollingInterval ?? 1000;
       const watcher = chokidar.watch(moduleDir, {
-        ignored: /(^|[/\\])\../,
+        ignored: (filePath: string) => {
+          if (/(^|[/\\])\./.test(filePath)) return true;
+          const relativePath = filePath.slice(moduleDir.length + 1);
+          const parts = relativePath.split(/[/\\]/);
+          if (parts.length === 1) return false; // fn name directory, need to recurse
+          return !files.some(file => parts[1] === file);
+        },
         persistent: true,
-        depth: 2,
-        awaitWriteFinish: true
+        usePolling,
+        interval: pollingInterval,
+        awaitWriteFinish: !usePolling
       });
 
       const handleFileEvent = async (filePath: string, type: "create" | "update" | "delete") => {
         const relativePath = filePath.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
-
-        const isCorrectDepth = parts.length == 2;
-        const isTrackedFile = files.some(file => parts[1] == file);
-        if (!isCorrectDepth || !isTrackedFile) return;
 
         const dirName = parts[0];
 

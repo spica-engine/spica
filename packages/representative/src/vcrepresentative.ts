@@ -7,11 +7,11 @@ import {
 } from "@spica-server/interface-representative";
 import chokidar from "chokidar";
 import {Observable} from "rxjs";
-import {ChangeType} from "@spica-server/interface-versioncontrol";
+import {ChangeType, VCWatchOptions} from "@spica-server/interface-versioncontrol";
 
 @Injectable()
 export class VCRepresentativeManager implements IRepresentativeManager {
-  constructor(protected cwd: string) {
+  constructor(protected cwd: string, protected watchOptions: VCWatchOptions) {
     try {
       const entries = fs.readdirSync(this.cwd);
       for (const entry of entries) {
@@ -88,11 +88,20 @@ export class VCRepresentativeManager implements IRepresentativeManager {
     this.createModuleDirectory(moduleDir);
 
     return new Observable<RepresentativeFileEvent>(subscriber => {
+      const usePolling = this.watchOptions.watchMode === "polling";
+      const pollingInterval = this.watchOptions.pollingInterval ?? 1000;
       const watcher = chokidar.watch(moduleDir, {
-        ignored: /(^|[/\\])\../,
+        ignored: (filePath: string) => {
+          if (/(^|[/\\])\./.test(filePath)) return true;
+          const relativePath = filePath.slice(moduleDir.length + 1);
+          const parts = relativePath.split(/[/\\]/);
+          if (parts.length === 1) return false; // id directory, need to recurse
+          return !files.some(file => parts[1] === file);
+        },
         persistent: true,
-        depth: 2,
-        awaitWriteFinish: true
+        usePolling,
+        interval: pollingInterval,
+        awaitWriteFinish: !usePolling
       });
 
       watcher.on("all", async (event, filePath) => {
@@ -102,9 +111,7 @@ export class VCRepresentativeManager implements IRepresentativeManager {
         const relativePath = filePath.slice(moduleDir.length + 1);
         const parts = relativePath.split(/[/\\]/);
 
-        const isCorrectDepth = parts.length == 2;
-        const isTrackedFile = files.some(file => parts[1] == file);
-        if (!isCorrectDepth || !isTrackedFile) return;
+        if (parts.length < 2) return; // directory event, not a file
 
         const extension = parts[1].split(".").at(-1);
 

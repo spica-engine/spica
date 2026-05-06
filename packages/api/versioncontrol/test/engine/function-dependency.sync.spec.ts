@@ -70,7 +70,8 @@ xdescribe("SyncEngine Integration - Function Dependency", () => {
         VersionControlModule.forRoot({
           isReplicationEnabled: false,
           persistentPath: join(tmpdir()),
-          realtime: false
+          realtime: false,
+          watchMode: "realtime"
         }),
         SchedulerModule.forRoot({
           invocationLogs: false,
@@ -124,7 +125,7 @@ xdescribe("SyncEngine Integration - Function Dependency", () => {
     functionEngine = module.get(FunctionEngine);
 
     syncEngine.registerChangeHandler(
-      getFunctionDependencySupplier(functionEngine, functionService),
+      getFunctionDependencySupplier(functionEngine, functionService, {watchMode: "realtime"}),
       getFunctionDependencyApplier(functionService, functionEngine)
     );
   });
