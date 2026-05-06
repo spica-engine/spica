@@ -12,7 +12,7 @@
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@spica-server/interface-mailer": "workspace:*",
-    "nodemailer": "^8.0.4"
+    "nodemailer": "^8.0.5"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
