@@ -17,7 +17,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "axios": "^1.7.9",
+    "axios": "^1.15.2",
     "form-data": "^4.0.1"
   },
   "devDependencies": {
