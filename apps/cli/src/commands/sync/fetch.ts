@@ -94,4 +94,3 @@ export default function (program: Program): Command {
     )
     .action(fetch_);
 }
-

@@ -43,14 +43,14 @@ describe("functionModule.readLocal", () => {
       fs.writeFileSync(path.join(fnDir, "index.mjs"), "export default () => {};");
       fs.writeFileSync(
         path.join(fnDir, "package.json"),
-        JSON.stringify({name: "MyFn", dependencies: {"lodash": "^4.0.0"}})
+        JSON.stringify({name: "MyFn", dependencies: {lodash: "^4.0.0"}})
       );
 
       const result = await functionModule.readLocal(dir);
       expect(result).toHaveLength(1);
       expect(result[0].slug).toBe("MyFn");
       expect(result[0].data.index).toBe("export default () => {};");
-      expect(result[0].data.dependencies).toEqual({"lodash": "^4.0.0"});
+      expect(result[0].data.dependencies).toEqual({lodash: "^4.0.0"});
     } finally {
       cleanup(dir);
     }
@@ -96,9 +96,11 @@ describe("functionModule.readLocal", () => {
 describe("functionModule.readRemote", () => {
   it("fetches schema, index, and dependencies for each function", async () => {
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve([{_id: "fn1", name: "MyFn", language: "javascript"}]);
+      if (url === "function")
+        return Promise.resolve([{_id: "fn1", name: "MyFn", language: "javascript"}]);
       if (url === "function/fn1/index") return Promise.resolve({index: "export default () => {};"});
-      if (url === "function/fn1/dependencies") return Promise.resolve([{name: "lodash", version: "^4.0.0"}]);
+      if (url === "function/fn1/dependencies")
+        return Promise.resolve([{name: "lodash", version: "^4.0.0"}]);
       return Promise.resolve([]);
     });
 
@@ -111,11 +113,16 @@ describe("functionModule.readRemote", () => {
 
   it("normalizes resolved env_vars and secrets objects to plain ID strings", async () => {
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function") return Promise.resolve([{
-        _id: "fn1", name: "MyFn", language: "javascript",
-        env_vars: [{_id: "ev-id-1", key: "API_KEY", value: "secret"}],
-        secrets: [{_id: "sec-id-1", key: "DB_PASS"}]
-      }]);
+      if (url === "function")
+        return Promise.resolve([
+          {
+            _id: "fn1",
+            name: "MyFn",
+            language: "javascript",
+            env_vars: [{_id: "ev-id-1", key: "API_KEY", value: "secret"}],
+            secrets: [{_id: "sec-id-1", key: "DB_PASS"}]
+          }
+        ]);
       if (url === "function/fn1/index") return Promise.resolve({index: ""});
       if (url === "function/fn1/dependencies") return Promise.resolve([]);
       return Promise.resolve([]);
@@ -140,15 +147,19 @@ describe("functionModule.create", () => {
       data: {
         schema: {name: "MyFn", language: "javascript"},
         index: "export default () => {};",
-        dependencies: {"lodash": "4.17.21"}
+        dependencies: {lodash: "4.17.21"}
       }
     });
 
     const schemaCall = mockHttp.post.mock.calls[0];
     expect(schemaCall[0]).toBe("function");
     expect(schemaCall[1]).not.toHaveProperty("env_vars");
-    expect(mockHttp.post).toHaveBeenCalledWith("function/new-id/index", {index: "export default () => {};"});
-    expect(mockHttp.post).toHaveBeenCalledWith("function/new-id/dependencies", {name: ["lodash@4.17.21"]});
+    expect(mockHttp.post).toHaveBeenCalledWith("function/new-id/index", {
+      index: "export default () => {};"
+    });
+    expect(mockHttp.post).toHaveBeenCalledWith("function/new-id/dependencies", {
+      name: ["lodash@4.17.21"]
+    });
   });
 
   it("injects env_vars via PUT after create", async () => {
@@ -216,18 +227,23 @@ describe("functionModule.update", () => {
     mockHttp.put.mockResolvedValue({});
     mockHttp.post.mockResolvedValue({});
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function/fn-id") return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: []});
+      if (url === "function/fn-id")
+        return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: []});
       return Promise.resolve([]);
     });
 
-    await functionModule.update(mockHttp, {
-      slug: "MyFn",
-      data: {
-        schema: {name: "MyFn"},
-        index: "updated code",
-        dependencies: {}
-      }
-    }, "fn-id");
+    await functionModule.update(
+      mockHttp,
+      {
+        slug: "MyFn",
+        data: {
+          schema: {name: "MyFn"},
+          index: "updated code",
+          dependencies: {}
+        }
+      },
+      "fn-id"
+    );
 
     const putSchemaCall = mockHttp.put.mock.calls.find((c: any[]) => c[0] === "function/fn-id");
     expect(putSchemaCall).toBeDefined();
@@ -241,18 +257,23 @@ describe("functionModule.update", () => {
     mockHttp.post.mockResolvedValue({});
     mockHttp.delete.mockResolvedValue({});
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function/fn-id") return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: ["ev-old", "ev-keep"]});
+      if (url === "function/fn-id")
+        return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: ["ev-old", "ev-keep"]});
       return Promise.resolve([]); // dependencies
     });
 
-    await functionModule.update(mockHttp, {
-      slug: "MyFn",
-      data: {
-        schema: {name: "MyFn", env_vars: ["ev-keep", "ev-new"]},
-        index: "",
-        dependencies: {}
-      }
-    }, "fn-id");
+    await functionModule.update(
+      mockHttp,
+      {
+        slug: "MyFn",
+        data: {
+          schema: {name: "MyFn", env_vars: ["ev-keep", "ev-new"]},
+          index: "",
+          dependencies: {}
+        }
+      },
+      "fn-id"
+    );
 
     expect(mockHttp.put).toHaveBeenCalledWith("function/fn-id/env-var/ev-new", {});
     expect(mockHttp.delete).toHaveBeenCalledWith("function/fn-id/env-var/ev-old");
@@ -264,18 +285,28 @@ describe("functionModule.update", () => {
     mockHttp.post.mockResolvedValue({});
     mockHttp.delete.mockResolvedValue({});
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function/fn-id") return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: [], secrets: ["sec-old", "sec-keep"]});
+      if (url === "function/fn-id")
+        return Promise.resolve({
+          _id: "fn-id",
+          name: "MyFn",
+          env_vars: [],
+          secrets: ["sec-old", "sec-keep"]
+        });
       return Promise.resolve([]); // dependencies
     });
 
-    await functionModule.update(mockHttp, {
-      slug: "MyFn",
-      data: {
-        schema: {name: "MyFn", secrets: ["sec-keep", "sec-new"]},
-        index: "",
-        dependencies: {}
-      }
-    }, "fn-id");
+    await functionModule.update(
+      mockHttp,
+      {
+        slug: "MyFn",
+        data: {
+          schema: {name: "MyFn", secrets: ["sec-keep", "sec-new"]},
+          index: "",
+          dependencies: {}
+        }
+      },
+      "fn-id"
+    );
 
     expect(mockHttp.put).toHaveBeenCalledWith("function/fn-id/secret/sec-new", {});
     expect(mockHttp.delete).toHaveBeenCalledWith("function/fn-id/secret/sec-old");
@@ -287,24 +318,31 @@ describe("functionModule.update", () => {
     mockHttp.post.mockResolvedValue({});
     mockHttp.delete.mockResolvedValue({});
     mockHttp.get.mockImplementation((url: string) => {
-      if (url === "function/fn-id") return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: []});
+      if (url === "function/fn-id")
+        return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: []});
       return Promise.resolve([
         {name: "old-pkg", version: "^1.0.0"},
         {name: "keep-pkg", version: "^2.0.0"}
       ]);
     });
 
-    await functionModule.update(mockHttp, {
-      slug: "MyFn",
-      data: {
-        schema: {name: "MyFn"},
-        index: "",
-        dependencies: {"keep-pkg": "^2.0.0", "new-pkg": "^3.0.0"}
-      }
-    }, "fn-id");
+    await functionModule.update(
+      mockHttp,
+      {
+        slug: "MyFn",
+        data: {
+          schema: {name: "MyFn"},
+          index: "",
+          dependencies: {"keep-pkg": "^2.0.0", "new-pkg": "^3.0.0"}
+        }
+      },
+      "fn-id"
+    );
 
     expect(mockHttp.delete).toHaveBeenCalledWith("function/fn-id/dependencies/old-pkg");
-    expect(mockHttp.post).toHaveBeenCalledWith("function/fn-id/dependencies", {name: ["new-pkg@3.0.0"]});
+    expect(mockHttp.post).toHaveBeenCalledWith("function/fn-id/dependencies", {
+      name: ["new-pkg@3.0.0"]
+    });
   });
 });
 
@@ -408,7 +446,11 @@ describe("functionModule.renderDetail", () => {
       data: {
         schema: {name: "f"},
         index: "",
-        dependencies: {"@spica-devkit/bucket": "^0.18.25", axios: "^0.21.4", "@spica-fn/Common": "file:../Common"}
+        dependencies: {
+          "@spica-devkit/bucket": "^0.18.25",
+          axios: "^0.21.4",
+          "@spica-fn/Common": "file:../Common"
+        }
       }
     };
     const remote = {
@@ -417,7 +459,11 @@ describe("functionModule.renderDetail", () => {
       data: {
         schema: {name: "f"},
         index: "",
-        dependencies: {"@spica-devkit/bucket": "^0.18.25", "@spica-fn/Common": "file:../Common", axios: "^0.21.4"}
+        dependencies: {
+          "@spica-devkit/bucket": "^0.18.25",
+          "@spica-fn/Common": "file:../Common",
+          axios: "^0.21.4"
+        }
       }
     };
     const detail = functionModule.renderDetail(local, remote);

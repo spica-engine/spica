@@ -30,7 +30,10 @@ describe("envVarModule", () => {
     try {
       const envDir = path.join(dir, "env-var", "MY_KEY");
       fs.mkdirSync(envDir, {recursive: true});
-      fs.writeFileSync(path.join(envDir, "schema.yaml"), yaml.stringify({key: "MY_KEY", value: "hello"}));
+      fs.writeFileSync(
+        path.join(envDir, "schema.yaml"),
+        yaml.stringify({key: "MY_KEY", value: "hello"})
+      );
 
       const result = await envVarModule.readLocal(dir);
       expect(result).toHaveLength(1);
@@ -68,7 +71,11 @@ describe("envVarModule", () => {
   it("writes schema.yaml on writeLocal", async () => {
     const dir = makeTmpDir();
     try {
-      await envVarModule.writeLocal(dir, {slug: "MY_KEY", id: "id1", data: {key: "MY_KEY", value: "v"}});
+      await envVarModule.writeLocal(dir, {
+        slug: "MY_KEY",
+        id: "id1",
+        data: {key: "MY_KEY", value: "v"}
+      });
       const file = path.join(dir, "env-var", "MY_KEY", "schema.yaml");
       expect(fs.existsSync(file)).toBe(true);
     } finally {
@@ -103,7 +110,10 @@ describe("secretModule", () => {
     try {
       const secDir = path.join(dir, "secret", "API_KEY");
       fs.mkdirSync(secDir, {recursive: true});
-      fs.writeFileSync(path.join(secDir, "schema.yaml"), yaml.stringify({key: "API_KEY", value: "s3cr3t"}));
+      fs.writeFileSync(
+        path.join(secDir, "schema.yaml"),
+        yaml.stringify({key: "API_KEY", value: "s3cr3t"})
+      );
 
       const result = await secretModule.readLocal(dir);
       expect(result[0].slug).toBe("API_KEY");
@@ -157,10 +167,12 @@ describe("policyModule", () => {
   });
 
   it("filters out system policies when remote returns paginated {data: [...]}", async () => {
-    mockHttp.get.mockResolvedValue({data: [
-      {_id: "id1", name: "User Policy", statement: []},
-      {_id: "id2", name: "System", statement: [], system: true}
-    ]});
+    mockHttp.get.mockResolvedValue({
+      data: [
+        {_id: "id1", name: "User Policy", statement: []},
+        {_id: "id2", name: "System", statement: [], system: true}
+      ]
+    });
     const result = await policyModule.readRemote(mockHttp);
     expect(result).toHaveLength(1);
   });

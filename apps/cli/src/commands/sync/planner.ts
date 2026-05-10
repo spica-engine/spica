@@ -395,11 +395,7 @@ export function diffObjectFields(
 /**
  * Build a unified diff string between two text representations.
  */
-export function buildUnifiedDiff(
-  oldContent: string,
-  newContent: string,
-  filename: string
-): string {
+export function buildUnifiedDiff(oldContent: string, newContent: string, filename: string): string {
   return createTwoFilesPatch(`remote/${filename}`, `local/${filename}`, oldContent, newContent);
 }
 

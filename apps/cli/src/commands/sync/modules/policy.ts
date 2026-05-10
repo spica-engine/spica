@@ -36,7 +36,7 @@ export const policyModule: ResourceModule<Policy> = {
   async readRemote(http) {
     const res = await http.get<{data: Policy[]} | Policy[]>("passport/policy");
     // The policy endpoint may paginate and return {data: [...]}
-    const items: Policy[] = Array.isArray(res) ? res : (res as any).data ?? [];
+    const items: Policy[] = Array.isArray(res) ? res : ((res as any).data ?? []);
     // Filter out system policies which cannot be modified
     return items
       .filter(p => !p.system)

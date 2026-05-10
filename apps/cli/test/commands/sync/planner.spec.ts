@@ -1,5 +1,17 @@
-import {buildPlan, applyPlan, fetchToDisk, diffObjectFields, buildUnifiedDiff, renderPlan} from "@spica/cli/src/commands/sync/planner";
-import {ChangeKind, LocalResource, RemoteResource, ResourceModule} from "@spica/cli/src/commands/sync/types";
+import {
+  buildPlan,
+  applyPlan,
+  fetchToDisk,
+  diffObjectFields,
+  buildUnifiedDiff,
+  renderPlan
+} from "@spica/cli/src/commands/sync/planner";
+import {
+  ChangeKind,
+  LocalResource,
+  RemoteResource,
+  ResourceModule
+} from "@spica/cli/src/commands/sync/types";
 
 function makeMockModule(
   name: string,
@@ -60,11 +72,7 @@ describe("diffObjectFields", () => {
   });
 
   it("handles nested objects with deep equality", () => {
-    const changed = diffObjectFields(
-      {props: {x: 1, y: 2}},
-      {props: {x: 1, y: 2}},
-      []
-    );
+    const changed = diffObjectFields({props: {x: 1, y: 2}}, {props: {x: 1, y: 2}}, []);
     expect(changed).toEqual([]);
   });
 });
@@ -188,8 +196,16 @@ describe("applyPlan", () => {
   it("calls delete, update, create in order for each entry", async () => {
     const createLocal: LocalResource = {slug: "to-create", data: {name: "to-create"}};
     const updateLocal: LocalResource = {slug: "to-update", data: {name: "to-update", v: "new"}};
-    const deleteRemote: RemoteResource = {slug: "to-delete", id: "del-id", data: {name: "to-delete"}};
-    const updateRemote: RemoteResource = {slug: "to-update", id: "upd-id", data: {name: "to-update", v: "old"}};
+    const deleteRemote: RemoteResource = {
+      slug: "to-delete",
+      id: "del-id",
+      data: {name: "to-delete"}
+    };
+    const updateRemote: RemoteResource = {
+      slug: "to-update",
+      id: "upd-id",
+      data: {name: "to-update", v: "old"}
+    };
 
     const locals = [createLocal, updateLocal];
     const remotes = [updateRemote, deleteRemote];

@@ -3,7 +3,16 @@ import yaml from "yaml";
 import isEqual from "lodash/isEqual.js";
 import {httpService} from "../../../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
-import {ensureDir, listFolders, omit, readText, readYaml, removeDir, writeText, writeYaml} from "../fs-utils";
+import {
+  ensureDir,
+  listFolders,
+  omit,
+  readText,
+  readYaml,
+  removeDir,
+  writeText,
+  writeYaml
+} from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";
 
 interface FunctionSchema {
@@ -99,7 +108,9 @@ export const functionModule: ResourceModule<FunctionData> = {
 
       const [indexRes, depsRes] = await Promise.all([
         http.get<{index: string}>(`function/${id}/index`).catch(() => ({index: ""})),
-        http.get<RemoteDependency[]>(`function/${id}/dependencies`).catch(() => [] as RemoteDependency[])
+        http
+          .get<RemoteDependency[]>(`function/${id}/dependencies`)
+          .catch(() => [] as RemoteDependency[])
       ]);
 
       const dependencies: Record<string, string> = {};
@@ -123,7 +134,10 @@ export const functionModule: ResourceModule<FunctionData> = {
   },
 
   async create(http, local) {
-    const created = await http.post<FunctionSchema>("function", omit(local.data.schema, ["env_vars"]));
+    const created = await http.post<FunctionSchema>(
+      "function",
+      omit(local.data.schema, ["env_vars"])
+    );
     const id = created._id ?? local.data.schema._id;
     if (!id) return;
 
@@ -138,14 +152,10 @@ export const functionModule: ResourceModule<FunctionData> = {
     }
 
     const envVarIds: string[] = (local.data.schema.env_vars as string[] | undefined) ?? [];
-    await Promise.all(
-      envVarIds.map(evId => http.put(`function/${id}/env-var/${evId}`, {}))
-    );
+    await Promise.all(envVarIds.map(evId => http.put(`function/${id}/env-var/${evId}`, {})));
 
     const secretIds: string[] = (local.data.schema.secrets as string[] | undefined) ?? [];
-    await Promise.all(
-      secretIds.map(sId => http.put(`function/${id}/secret/${sId}`, {}))
-    );
+    await Promise.all(secretIds.map(sId => http.put(`function/${id}/secret/${sId}`, {})));
   },
 
   async update(http, local, remoteId) {
@@ -153,28 +163,35 @@ export const functionModule: ResourceModule<FunctionData> = {
     await http.post(`function/${remoteId}/index`, {index: local.data.index});
 
     // Sync env_vars via inject/eject endpoints
-    const localEnvVarIds = new Set<string>((local.data.schema.env_vars as string[] | undefined) ?? []);
-    const currentFn = await http.get<FunctionSchema>(`function/${remoteId}`).then(normalizeSchema).catch(() => ({} as FunctionSchema));
+    const localEnvVarIds = new Set<string>(
+      (local.data.schema.env_vars as string[] | undefined) ?? []
+    );
+    const currentFn = await http
+      .get<FunctionSchema>(`function/${remoteId}`)
+      .then(normalizeSchema)
+      .catch(() => ({}) as FunctionSchema);
     const remoteEnvVarIds = new Set<string>((currentFn.env_vars as string[] | undefined) ?? []);
     await Promise.all([
-      ...[...localEnvVarIds].filter(id => !remoteEnvVarIds.has(id)).map(id =>
-        http.put(`function/${remoteId}/env-var/${id}`, {})
-      ),
-      ...[...remoteEnvVarIds].filter(id => !localEnvVarIds.has(id)).map(id =>
-        http.delete(`function/${remoteId}/env-var/${id}`)
-      )
+      ...[...localEnvVarIds]
+        .filter(id => !remoteEnvVarIds.has(id))
+        .map(id => http.put(`function/${remoteId}/env-var/${id}`, {})),
+      ...[...remoteEnvVarIds]
+        .filter(id => !localEnvVarIds.has(id))
+        .map(id => http.delete(`function/${remoteId}/env-var/${id}`))
     ]);
 
     // Sync secrets via inject/eject endpoints
-    const localSecretIds = new Set<string>((local.data.schema.secrets as string[] | undefined) ?? []);
+    const localSecretIds = new Set<string>(
+      (local.data.schema.secrets as string[] | undefined) ?? []
+    );
     const remoteSecretIds = new Set<string>((currentFn.secrets as string[] | undefined) ?? []);
     await Promise.all([
-      ...[...localSecretIds].filter(id => !remoteSecretIds.has(id)).map(id =>
-        http.put(`function/${remoteId}/secret/${id}`, {})
-      ),
-      ...[...remoteSecretIds].filter(id => !localSecretIds.has(id)).map(id =>
-        http.delete(`function/${remoteId}/secret/${id}`)
-      )
+      ...[...localSecretIds]
+        .filter(id => !remoteSecretIds.has(id))
+        .map(id => http.put(`function/${remoteId}/secret/${id}`, {})),
+      ...[...remoteSecretIds]
+        .filter(id => !localSecretIds.has(id))
+        .map(id => http.delete(`function/${remoteId}/secret/${id}`))
     ]);
 
     // Re-fetch current remote deps to compute delta
@@ -186,9 +203,7 @@ export const functionModule: ResourceModule<FunctionData> = {
     const localDeps = local.data.dependencies;
 
     // Delete deps not in local (skip file: deps)
-    const toDelete = currentDeps.filter(
-      d => !d.name.startsWith("file:") && !(d.name in localDeps)
-    );
+    const toDelete = currentDeps.filter(d => !d.name.startsWith("file:") && !(d.name in localDeps));
     await Promise.all(
       toDelete.map(d => http.delete(`function/${remoteId}/dependencies/${d.name}`).catch(() => {}))
     );
