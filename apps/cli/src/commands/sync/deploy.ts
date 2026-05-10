@@ -65,7 +65,7 @@ async function deploy({args, options}: ActionParameters) {
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.log(`\n${bold(red(`✗ ${msg}`))}}`);
+    console.log(`\n${bold(red(`✗ ${msg}`))}`);
     process.exitCode = 1;
   }
 }

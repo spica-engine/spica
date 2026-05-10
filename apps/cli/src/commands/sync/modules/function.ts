@@ -202,8 +202,34 @@ export const functionModule: ResourceModule<FunctionData> = {
 
     // Delete deps not in local
     const toDelete = currentDeps.filter(d => !(d.name in localDeps));
+    const isNotFoundError = (error: unknown) => {
+      if (!error || typeof error != "object") {
+        return false;
+      }
+
+      const candidate = error as {
+        status?: number;
+        statusCode?: number;
+        response?: {status?: number; statusCode?: number};
+      };
+
+      return (
+        candidate.status == 404 ||
+        candidate.statusCode == 404 ||
+        candidate.response?.status == 404 ||
+        candidate.response?.statusCode == 404
+      );
+    };
     await Promise.all(
-      toDelete.map(d => http.delete(`function/${remoteId}/dependencies/${d.name}`).catch(() => {}))
+      toDelete.map(d =>
+        http.delete(`function/${remoteId}/dependencies/${d.name}`).catch(error => {
+          if (isNotFoundError(error)) {
+            return;
+          }
+
+          throw error;
+        })
+      )
     );
 
     // Add/update deps present in local but not matching remote
