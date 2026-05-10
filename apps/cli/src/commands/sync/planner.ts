@@ -20,7 +20,8 @@ export async function buildPlan(
   modules: ResourceModule[],
   http: httpService.Client,
   rootDir: string,
-  detailed = false
+  detailed = false,
+  detectRenames = true
 ): Promise<Plan> {
   const modulePlans: ModulePlan[] = [];
 
@@ -85,13 +86,48 @@ export async function buildPlan(
       }
     }
 
+    // ── Rename reconciliation ─────────────────────────────────────────────────
+    // Only applicable for deploy/plan (local → remote direction).
+    // In fetch mode, promoting a rename to an update would leave the old local
+    // folder on disk while writing the new-named folder — causing duplicates.
+    if (detectRenames && mod.extractLocalId) {
+      const deleteByRemoteId = new Map(deletes.map(e => [e.remote!.id, e]));
+      const remainingCreates: PlanEntry[] = [];
+      const promotedRemoteIds = new Set<string>();
+
+      for (const create of creates) {
+        const localId = mod.extractLocalId(create.local!.data);
+        const matchedDelete = localId ? deleteByRemoteId.get(localId) : undefined;
+        if (matchedDelete) {
+          promotedRemoteIds.add(matchedDelete.remote!.id);
+          const changedFields = mod.diffFields(create.local!.data, matchedDelete.remote!.data);
+          updates.push({
+            kind: ChangeKind.Update,
+            slug: create.slug,
+            summary: mod.summaryLine(create.local!),
+            changedFields,
+            diffs: detailed ? mod.renderDetail(create.local!, matchedDelete.remote!) : {},
+            local: create.local,
+            remote: matchedDelete.remote
+          });
+        } else {
+          remainingCreates.push(create);
+        }
+      }
+
+      creates.splice(0, creates.length, ...remainingCreates);
+      deletes.splice(
+        0,
+        deletes.length,
+        ...deletes.filter(e => !promotedRemoteIds.has(e.remote!.id))
+      );
+    }
+
     modulePlans.push({module: mod, creates, updates, deletes});
   }
 
   return {modules: modulePlans};
 }
-
-// ─── Render ───────────────────────────────────────────────────────────────────
 
 export interface RenderOptions {
   detailed?: boolean;

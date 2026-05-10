@@ -2,7 +2,7 @@ import path from "path";
 import yaml from "yaml";
 import {httpService} from "../../../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
-import {listFolders, omit, readYaml, removeDir, writeYaml} from "../fs-utils";
+import {listFolders, omit, readYaml, removeDir, sanitizeSlug, unwrapList, writeYaml} from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";
 
 interface EnvVar {
@@ -32,9 +32,10 @@ export const envVarModule: ResourceModule<EnvVar> = {
   },
 
   async readRemote(http) {
-    const items = await http.get<EnvVar[]>("env-var");
+    const res = await http.get<EnvVar[] | {data: EnvVar[]}>("env-var");
+    const items = unwrapList(res);
     return items.map(e => ({
-      slug: e.key,
+      slug: sanitizeSlug(e.key),
       id: e._id!,
       data: e
     }));
@@ -79,5 +80,9 @@ export const envVarModule: ResourceModule<EnvVar> = {
 
   summaryLine(resource) {
     return `key: ${resource.data.key}`;
+  },
+
+  extractLocalId(data) {
+    return data._id;
   }
 };

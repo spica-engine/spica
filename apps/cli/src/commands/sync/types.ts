@@ -50,6 +50,14 @@ export interface ResourceModule<T = any> {
    */
   ignoredFields: string[];
 
+  /**
+   * Extract a stable server-assigned ID from local data (e.g. `_id` written by a
+   * previous fetch). When provided, buildPlan uses it to detect renames: a local
+   * resource whose identity field changed but whose `_id` matches a remote-only
+   * entry is promoted to an update instead of a delete + create pair.
+   */
+  extractLocalId?(data: T): string | undefined;
+
   /** Read all local resources from the project directory */
   readLocal(rootDir: string): Promise<LocalResource<T>[]>;
   /** Fetch all remote resources from the Spica API */

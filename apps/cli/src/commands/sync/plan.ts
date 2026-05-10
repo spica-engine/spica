@@ -1,7 +1,5 @@
 import path from "path";
 import {ActionParameters, Command, Program} from "@caporal/core";
-import caporalCore from "@caporal/core";
-const {CaporalValidator} = caporalCore;
 import {httpService} from "../../http";
 import {buildPlan, renderPlan} from "./planner";
 import {resolveModules, MODULE_NAMES} from "./modules/index";
@@ -46,7 +44,7 @@ export default function (program: Program): Command {
       "--module <name>",
       `Filter to specific module(s). Available: ${MODULE_NAMES.join(", ")}.`,
       {
-        validator: CaporalValidator.STRING
+        validator: MODULE_NAMES
       }
     )
     .action(plan);

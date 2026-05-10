@@ -43,6 +43,10 @@
       "types": "./src/commands/sync/types.ts",
       "default": "./dist/src/commands/sync/types.js"
     },
+    "./src/commands/sync/fs-utils": {
+      "types": "./src/commands/sync/fs-utils.ts",
+      "default": "./dist/src/commands/sync/fs-utils.js"
+    },
     "./src/compile": {
       "types": "./src/compile.ts",
       "default": "./dist/src/compile.js"

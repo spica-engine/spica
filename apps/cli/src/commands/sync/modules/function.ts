@@ -10,6 +10,7 @@ import {
   readText,
   readYaml,
   removeDir,
+  sanitizeSlug,
   writeText,
   writeYaml
 } from "../fs-utils";
@@ -101,42 +102,40 @@ export const functionModule: ResourceModule<FunctionData> = {
 
   async readRemote(http) {
     const fns = await http.get<FunctionSchema[]>("function");
-    const results: RemoteResource<FunctionData>[] = [];
 
-    for (const fn of fns) {
-      const id = fn._id!;
+    return Promise.all(
+      fns.map(async fn => {
+        const id = fn._id!;
 
-      const [indexRes, depsRes] = await Promise.all([
-        http.get<{index: string}>(`function/${id}/index`).catch(() => ({index: ""})),
-        http
-          .get<RemoteDependency[]>(`function/${id}/dependencies`)
-          .catch(() => [] as RemoteDependency[])
-      ]);
+        const [indexRes, depsRes] = await Promise.all([
+          http.get<{index: string}>(`function/${id}/index`).catch(() => ({index: ""})),
+          http
+            .get<RemoteDependency[]>(`function/${id}/dependencies`)
+            .catch(() => [] as RemoteDependency[])
+        ]);
 
-      const dependencies: Record<string, string> = {};
-      for (const dep of depsRes) {
-        // Remote version looks like "^1.0.0"; dep.version may include the "^"
-        dependencies[dep.name] = dep.version;
-      }
-
-      results.push({
-        slug: fn.name,
-        id,
-        data: {
-          schema: normalizeSchema(fn),
-          index: indexRes.index ?? "",
-          dependencies
+        const dependencies: Record<string, string> = {};
+        for (const dep of depsRes) {
+          dependencies[dep.name] = dep.version;
         }
-      });
-    }
 
-    return results;
+        return {
+          slug: sanitizeSlug(fn.name),
+          id,
+          data: {
+            schema: normalizeSchema(fn),
+            index: indexRes.index ?? "",
+            dependencies
+          }
+        };
+      })
+    );
   },
 
   async create(http, local) {
     const created = await http.post<FunctionSchema>(
       "function",
-      omit(local.data.schema, ["env_vars"])
+      omit(local.data.schema, ["env_vars", "secrets"])
     );
     const id = created._id ?? local.data.schema._id;
     if (!id) return;
@@ -301,5 +300,9 @@ export const functionModule: ResourceModule<FunctionData> = {
   summaryLine(resource) {
     const triggerCount = Object.keys(resource.data.schema.triggers ?? {}).length;
     return `${triggerCount} trigger${triggerCount !== 1 ? "s" : ""}`;
+  },
+
+  extractLocalId(data) {
+    return data.schema._id;
   }
 };

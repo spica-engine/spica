@@ -23,7 +23,7 @@ async function fetch_({args, options}: ActionParameters) {
   const http = await httpService.createFromCurrentCtx();
 
   console.log(bold("\nBuilding plan…"));
-  const p = await buildPlan(modules, http, rootDir, detailed);
+  const p = await buildPlan(modules, http, rootDir, detailed, false);
 
   // Fetch perspective: deletes = new remote files to write, updates = changed to overwrite,
   // creates = local-only stale files (removed only with --clean)
@@ -48,23 +48,29 @@ async function fetch_({args, options}: ActionParameters) {
   }
 
   console.log(bold("\nWriting files…"));
-  const {written, deleted, errors} = await fetchToDisk(p, http, rootDir, {
-    concurrency,
-    abortOnError,
-    clean
-  });
+  try {
+    const {written, deleted, errors} = await fetchToDisk(p, http, rootDir, {
+      concurrency,
+      abortOnError,
+      clean
+    });
 
-  if (errors.length) {
-    console.log(bold(yellow(`\n⚠  Completed with ${errors.length} error(s):`)));
-    for (const e of errors) console.log(`   ${red("✗")} ${e}`);
+    if (errors.length) {
+      console.log(bold(yellow(`\n⚠  Completed with ${errors.length} error(s):`)));
+      for (const e of errors) console.log(`   ${red("✗")} ${e}`);
+      process.exitCode = 1;
+    } else {
+      console.log(
+        bold(green(`\n✓ Fetch complete.`)) +
+          `  ${green(`+${written} written`)}` +
+          (deleted ? `  ${red(`-${deleted} deleted`)}` : "")
+      );
+      process.exitCode = 0;
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.log(`\n${bold(red(`✗ ${msg}`))}}`);
     process.exitCode = 1;
-  } else {
-    console.log(
-      bold(green(`\n✓ Fetch complete.`)) +
-        `  ${green(`+${written} written`)}` +
-        (deleted ? `  ${red(`-${deleted} deleted`)}` : "")
-    );
-    process.exitCode = 0;
   }
 }
 
@@ -88,7 +94,7 @@ export default function (program: Program): Command {
       "--module <name>",
       `Filter to specific module(s). Available: ${MODULE_NAMES.join(", ")}.`,
       {
-        validator: CaporalValidator.STRING
+        validator: MODULE_NAMES
       }
     )
     .action(fetch_);

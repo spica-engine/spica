@@ -2,7 +2,7 @@ import path from "path";
 import yaml from "yaml";
 import {httpService} from "../../../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
-import {listFolders, omit, readYaml, removeDir, writeYaml} from "../fs-utils";
+import {listFolders, omit, readYaml, removeDir, sanitizeSlug, unwrapList, writeYaml} from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";
 
 interface Bucket {
@@ -34,9 +34,10 @@ export const bucketModule: ResourceModule<Bucket> = {
   },
 
   async readRemote(http) {
-    const buckets = await http.get<Bucket[]>("bucket");
+    const res = await http.get<Bucket[] | {data: Bucket[]}>("bucket");
+    const buckets = unwrapList(res);
     return buckets.map(b => ({
-      slug: b.title,
+      slug: sanitizeSlug(b.title),
       id: b._id!,
       data: b
     }));
@@ -82,5 +83,9 @@ export const bucketModule: ResourceModule<Bucket> = {
   summaryLine(resource) {
     const propCount = Object.keys(resource.data.properties ?? {}).length;
     return `${propCount} properties`;
+  },
+
+  extractLocalId(data) {
+    return data._id;
   }
 };

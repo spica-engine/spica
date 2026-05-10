@@ -2,7 +2,7 @@ import path from "path";
 import yaml from "yaml";
 import {httpService} from "../../../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
-import {listFolders, omit, readYaml, removeDir, writeYaml} from "../fs-utils";
+import {listFolders, omit, readYaml, removeDir, sanitizeSlug, writeYaml} from "../fs-utils";
 import {LocalResource, RemoteResource, ResourceModule} from "../types";
 
 interface Policy {
@@ -41,7 +41,7 @@ export const policyModule: ResourceModule<Policy> = {
     return items
       .filter(p => !p.system)
       .map(p => ({
-        slug: p.name,
+        slug: sanitizeSlug(p.name),
         id: p._id!,
         data: p
       }));
@@ -89,5 +89,9 @@ export const policyModule: ResourceModule<Policy> = {
   summaryLine(resource) {
     const stmts = (resource.data.statement as any[])?.length ?? 0;
     return `${stmts} statement${stmts !== 1 ? "s" : ""}`;
+  },
+
+  extractLocalId(data) {
+    return data._id;
   }
 };

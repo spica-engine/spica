@@ -53,3 +53,21 @@ export function omit<T extends object>(obj: T, fields: string[]): Omit<T, string
   for (const f of fields) delete clone[f];
   return clone;
 }
+
+/**
+ * Sanitize a remote-supplied slug so it cannot escape the project directory.
+ * Uses path.basename to strip any directory components (e.g. "../../.ssh/authorized_keys"
+ * becomes "authorized_keys").
+ */
+export function sanitizeSlug(slug: string): string {
+  return path.basename(path.normalize(slug));
+}
+
+/**
+ * Unwrap a list response that may be paginated ({ data: T[] }) or a plain array (T[]).
+ * Use this defensively whenever the API might paginate.
+ */
+export function unwrapList<T>(res: T[] | {data: T[]}): T[] {
+  if (Array.isArray(res)) return res;
+  return (res as {data: T[]}).data ?? [];
+}

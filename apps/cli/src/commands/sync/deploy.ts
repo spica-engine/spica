@@ -46,21 +46,27 @@ async function deploy({args, options}: ActionParameters) {
   }
 
   console.log(bold("\nApplying changes…"));
-  const {errors} = await applyPlan(p, http, {concurrency, abortOnError});
+  try {
+    const {errors} = await applyPlan(p, http, {concurrency, abortOnError});
 
-  if (errors.length) {
-    console.log(bold(yellow(`\n⚠  Completed with ${errors.length} error(s):`)));
-    for (const e of errors) console.log(`   ${red("✗")} ${e}`);
+    if (errors.length) {
+      console.log(bold(yellow(`\n⚠  Completed with ${errors.length} error(s):`)));
+      for (const e of errors) console.log(`   ${red("✗")} ${e}`);
+      process.exitCode = 1;
+    } else {
+      const c = p.modules.reduce((n, m) => n + m.creates.length, 0);
+      const u = p.modules.reduce((n, m) => n + m.updates.length, 0);
+      const d = p.modules.reduce((n, m) => n + m.deletes.length, 0);
+      console.log(
+        bold(green(`\n✓ Deploy complete.`)) +
+          `  ${green(`+${c} created`)}  ${yellow(`~${u} updated`)}  ${red(`-${d} deleted`)}`
+      );
+      process.exitCode = 0;
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.log(`\n${bold(red(`✗ ${msg}`))}}`);
     process.exitCode = 1;
-  } else {
-    const c = p.modules.reduce((n, m) => n + m.creates.length, 0);
-    const u = p.modules.reduce((n, m) => n + m.updates.length, 0);
-    const d = p.modules.reduce((n, m) => n + m.deletes.length, 0);
-    console.log(
-      bold(green(`\n✓ Deploy complete.`)) +
-        `  ${green(`+${c} created`)}  ${yellow(`~${u} updated`)}  ${red(`-${d} deleted`)}`
-    );
-    process.exitCode = 0;
   }
 }
 
@@ -84,7 +90,7 @@ export default function (program: Program): Command {
       "--module <name>",
       `Filter to specific module(s). Available: ${MODULE_NAMES.join(", ")}.`,
       {
-        validator: CaporalValidator.STRING
+        validator: MODULE_NAMES
       }
     )
     .action(deploy);

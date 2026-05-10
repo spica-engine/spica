@@ -179,6 +179,118 @@ describe("buildPlan", () => {
   });
 });
 
+describe("buildPlan — rename detection", () => {
+  const mockHttp = {} as any;
+
+  function makeMockModuleWithId(
+    locals: LocalResource[],
+    remotes: RemoteResource[],
+    extractLocalId: (data: any) => string | undefined
+  ) {
+    const mod = makeMockModule("test", locals, remotes);
+    (mod as any).extractLocalId = extractLocalId;
+    return mod;
+  }
+
+  it("promotes a create+delete pair sharing the same _id to an update", async () => {
+    // Remote has "Members" (_id: "abc"). Local has "Members" but reads _id: "abc" from its yaml
+    // (i.e. the user renamed the local folder from "Users" to "Members" and kept _id in schema).
+    const local: LocalResource = {slug: "Members", data: {name: "Members", _id: "abc"}};
+    const remote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
+
+    const mod = makeMockModuleWithId([local], [remote], d => d._id);
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
+    const mp = plan.modules[0];
+
+    expect(mp.creates).toHaveLength(0);
+    expect(mp.deletes).toHaveLength(0);
+    expect(mp.updates).toHaveLength(1);
+    expect(mp.updates[0].slug).toBe("Members");
+    expect(mp.updates[0].remote!.id).toBe("abc");
+  });
+
+  it("leaves create+delete unpromoted when _ids do not match", async () => {
+    const local: LocalResource = {slug: "Members", data: {name: "Members", _id: "different-id"}};
+    const remote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
+
+    const mod = makeMockModuleWithId([local], [remote], d => d._id);
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
+    const mp = plan.modules[0];
+
+    expect(mp.creates).toHaveLength(1);
+    expect(mp.deletes).toHaveLength(1);
+    expect(mp.updates).toHaveLength(0);
+  });
+
+  it("leaves create+delete unpromoted when local has no _id", async () => {
+    const local: LocalResource = {slug: "Members", data: {name: "Members"}};
+    const remote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
+
+    const mod = makeMockModuleWithId([local], [remote], d => d._id);
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
+    const mp = plan.modules[0];
+
+    expect(mp.creates).toHaveLength(1);
+    expect(mp.deletes).toHaveLength(1);
+    expect(mp.updates).toHaveLength(0);
+  });
+
+  it("does not promote renames when detectRenames=false (fetch mode)", async () => {
+    const local: LocalResource = {slug: "Members", data: {name: "Members", _id: "abc"}};
+    const remote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
+
+    const mod = makeMockModuleWithId([local], [remote], d => d._id);
+    // detectRenames=false simulates fetch path
+    const plan = await buildPlan([mod], mockHttp, "/tmp", false, false);
+    const mp = plan.modules[0];
+
+    expect(mp.creates).toHaveLength(1);
+    expect(mp.deletes).toHaveLength(1);
+    expect(mp.updates).toHaveLength(0);
+  });
+
+  it("does not affect modules without extractLocalId", async () => {
+    const local: LocalResource = {slug: "Members", data: {name: "Members", _id: "abc"}};
+    const remote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
+
+    // makeMockModule does not set extractLocalId
+    const mod = makeMockModule("test", [local], [remote]);
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
+    const mp = plan.modules[0];
+
+    expect(mp.creates).toHaveLength(1);
+    expect(mp.deletes).toHaveLength(1);
+    expect(mp.updates).toHaveLength(0);
+  });
+
+  it("only promotes the matched pair — independent creates and deletes remain", async () => {
+    const renamedLocal: LocalResource = {slug: "Members", data: {name: "Members", _id: "abc"}};
+    const newLocal: LocalResource = {slug: "Products", data: {name: "Products"}};
+    const renamedRemote: RemoteResource = {slug: "Users", id: "abc", data: {name: "Users"}};
+    const stalRemote: RemoteResource = {slug: "Orders", id: "xyz", data: {name: "Orders"}};
+
+    const mod = makeMockModuleWithId(
+      [renamedLocal, newLocal],
+      [renamedRemote, stalRemote],
+      d => d._id
+    );
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
+    const mp = plan.modules[0];
+
+    // "Members" (_id: abc) is promoted from create+delete to update
+    expect(mp.updates).toHaveLength(1);
+    expect(mp.updates[0].slug).toBe("Members");
+
+    // "Products" has no _id → remains a create
+    expect(mp.creates).toHaveLength(1);
+    expect(mp.creates[0].slug).toBe("Products");
+
+    // "Orders" has no local counterpart with _id "xyz" → remains a delete
+    expect(mp.deletes).toHaveLength(1);
+    expect(mp.deletes[0].slug).toBe("Orders");
+  });
+});
+
 describe("renderPlan", () => {
   let consoleSpy: jest.SpyInstance;
   beforeEach(() => {
