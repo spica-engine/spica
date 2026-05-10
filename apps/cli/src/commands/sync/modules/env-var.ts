@@ -9,6 +9,7 @@ interface EnvVar {
   _id?: string;
   key: string;
   value?: string;
+  [key: string]: unknown;
 }
 
 const IGNORED_FIELDS = ["_id"];
