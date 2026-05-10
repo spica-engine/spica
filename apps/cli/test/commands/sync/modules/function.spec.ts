@@ -111,11 +111,12 @@ describe("functionModule.readRemote", () => {
 });
 
 describe("functionModule.create", () => {
-  it("POSTs schema, then index, then dependencies", async () => {
+  it("POSTs schema without env_vars, then index, then dependencies", async () => {
     mockHttp.post.mockImplementation((url: string) => {
       if (url === "function") return Promise.resolve({_id: "new-id"});
       return Promise.resolve({});
     });
+    mockHttp.put.mockResolvedValue({});
 
     await functionModule.create(mockHttp, {
       slug: "MyFn",
@@ -126,9 +127,51 @@ describe("functionModule.create", () => {
       }
     });
 
-    expect(mockHttp.post).toHaveBeenNthCalledWith(1, "function", expect.objectContaining({name: "MyFn"}));
-    expect(mockHttp.post).toHaveBeenNthCalledWith(2, "function/new-id/index", {index: "export default () => {};"});
-    expect(mockHttp.post).toHaveBeenNthCalledWith(3, "function/new-id/dependencies", {name: ["lodash@4.17.21"]});
+    const schemaCall = mockHttp.post.mock.calls[0];
+    expect(schemaCall[0]).toBe("function");
+    expect(schemaCall[1]).not.toHaveProperty("env_vars");
+    expect(mockHttp.post).toHaveBeenCalledWith("function/new-id/index", {index: "export default () => {};"});
+    expect(mockHttp.post).toHaveBeenCalledWith("function/new-id/dependencies", {name: ["lodash@4.17.21"]});
+  });
+
+  it("injects env_vars via PUT after create", async () => {
+    mockHttp.post.mockImplementation((url: string) => {
+      if (url === "function") return Promise.resolve({_id: "new-id"});
+      return Promise.resolve({});
+    });
+    mockHttp.put.mockResolvedValue({});
+
+    await functionModule.create(mockHttp, {
+      slug: "MyFn",
+      data: {
+        schema: {name: "MyFn", language: "javascript", env_vars: ["ev-1", "ev-2"]},
+        index: "",
+        dependencies: {}
+      }
+    });
+
+    expect(mockHttp.put).toHaveBeenCalledWith("function/new-id/env-var/ev-1", {});
+    expect(mockHttp.put).toHaveBeenCalledWith("function/new-id/env-var/ev-2", {});
+  });
+
+  it("injects secrets via PUT after create", async () => {
+    mockHttp.post.mockImplementation((url: string) => {
+      if (url === "function") return Promise.resolve({_id: "new-id"});
+      return Promise.resolve({});
+    });
+    mockHttp.put.mockResolvedValue({});
+
+    await functionModule.create(mockHttp, {
+      slug: "MyFn",
+      data: {
+        schema: {name: "MyFn", language: "javascript", secrets: ["sec-1", "sec-2"]},
+        index: "",
+        dependencies: {}
+      }
+    });
+
+    expect(mockHttp.put).toHaveBeenCalledWith("function/new-id/secret/sec-1", {});
+    expect(mockHttp.put).toHaveBeenCalledWith("function/new-id/secret/sec-2", {});
   });
 
   it("skips dependencies POST when there are no dependencies", async () => {
@@ -136,6 +179,7 @@ describe("functionModule.create", () => {
       if (url === "function") return Promise.resolve({_id: "new-id"});
       return Promise.resolve({});
     });
+    mockHttp.put.mockResolvedValue({});
 
     await functionModule.create(mockHttp, {
       slug: "NoDeps",
@@ -151,10 +195,13 @@ describe("functionModule.create", () => {
 });
 
 describe("functionModule.update", () => {
-  it("PUTs schema and POSTs index", async () => {
+  it("PUTs schema without env_vars and POSTs index", async () => {
     mockHttp.put.mockResolvedValue({});
     mockHttp.post.mockResolvedValue({});
-    mockHttp.get.mockResolvedValue([]); // no existing deps
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function/fn-id") return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: []});
+      return Promise.resolve([]);
+    });
 
     await functionModule.update(mockHttp, {
       slug: "MyFn",
@@ -165,18 +212,70 @@ describe("functionModule.update", () => {
       }
     }, "fn-id");
 
-    expect(mockHttp.put).toHaveBeenCalledWith("function/fn-id", {name: "MyFn"});
+    const putSchemaCall = mockHttp.put.mock.calls.find((c: any[]) => c[0] === "function/fn-id");
+    expect(putSchemaCall).toBeDefined();
+    expect(putSchemaCall[1]).not.toHaveProperty("env_vars");
+    expect(putSchemaCall[1]).not.toHaveProperty("secrets");
     expect(mockHttp.post).toHaveBeenCalledWith("function/fn-id/index", {index: "updated code"});
+  });
+
+  it("injects newly added env_vars and ejects removed ones", async () => {
+    mockHttp.put.mockResolvedValue({});
+    mockHttp.post.mockResolvedValue({});
+    mockHttp.delete.mockResolvedValue({});
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function/fn-id") return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: ["ev-old", "ev-keep"]});
+      return Promise.resolve([]); // dependencies
+    });
+
+    await functionModule.update(mockHttp, {
+      slug: "MyFn",
+      data: {
+        schema: {name: "MyFn", env_vars: ["ev-keep", "ev-new"]},
+        index: "",
+        dependencies: {}
+      }
+    }, "fn-id");
+
+    expect(mockHttp.put).toHaveBeenCalledWith("function/fn-id/env-var/ev-new", {});
+    expect(mockHttp.delete).toHaveBeenCalledWith("function/fn-id/env-var/ev-old");
+    expect(mockHttp.put).not.toHaveBeenCalledWith("function/fn-id/env-var/ev-keep", {});
+  });
+
+  it("injects newly added secrets and ejects removed ones", async () => {
+    mockHttp.put.mockResolvedValue({});
+    mockHttp.post.mockResolvedValue({});
+    mockHttp.delete.mockResolvedValue({});
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function/fn-id") return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: [], secrets: ["sec-old", "sec-keep"]});
+      return Promise.resolve([]); // dependencies
+    });
+
+    await functionModule.update(mockHttp, {
+      slug: "MyFn",
+      data: {
+        schema: {name: "MyFn", secrets: ["sec-keep", "sec-new"]},
+        index: "",
+        dependencies: {}
+      }
+    }, "fn-id");
+
+    expect(mockHttp.put).toHaveBeenCalledWith("function/fn-id/secret/sec-new", {});
+    expect(mockHttp.delete).toHaveBeenCalledWith("function/fn-id/secret/sec-old");
+    expect(mockHttp.put).not.toHaveBeenCalledWith("function/fn-id/secret/sec-keep", {});
   });
 
   it("deletes removed dependencies and adds new ones", async () => {
     mockHttp.put.mockResolvedValue({});
     mockHttp.post.mockResolvedValue({});
     mockHttp.delete.mockResolvedValue({});
-    mockHttp.get.mockResolvedValue([
-      {name: "old-pkg", version: "^1.0.0"},
-      {name: "keep-pkg", version: "^2.0.0"}
-    ]);
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function/fn-id") return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: []});
+      return Promise.resolve([
+        {name: "old-pkg", version: "^1.0.0"},
+        {name: "keep-pkg", version: "^2.0.0"}
+      ]);
+    });
 
     await functionModule.update(mockHttp, {
       slug: "MyFn",
@@ -242,6 +341,40 @@ describe("functionModule.diffFields", () => {
       {schema: {name: "f"}, index: "", dependencies: {}}
     );
     expect(changed).toContain("dependencies");
+  });
+
+  it("returns 'env_vars' when env_vars differ", () => {
+    const changed = functionModule.diffFields(
+      {schema: {name: "f", env_vars: ["ev-1", "ev-2"]}, index: "", dependencies: {}},
+      {schema: {name: "f", env_vars: ["ev-1"]}, index: "", dependencies: {}}
+    );
+    expect(changed).toContain("env_vars");
+  });
+
+  it("does not flag env_vars change as schema change", () => {
+    const changed = functionModule.diffFields(
+      {schema: {name: "f", env_vars: ["ev-1"]}, index: "", dependencies: {}},
+      {schema: {name: "f", env_vars: ["ev-2"]}, index: "", dependencies: {}}
+    );
+    expect(changed).not.toContain("schema");
+    expect(changed).toContain("env_vars");
+  });
+
+  it("returns 'secrets' when secrets differ", () => {
+    const changed = functionModule.diffFields(
+      {schema: {name: "f", secrets: ["sec-1", "sec-2"]}, index: "", dependencies: {}},
+      {schema: {name: "f", secrets: ["sec-1"]}, index: "", dependencies: {}}
+    );
+    expect(changed).toContain("secrets");
+  });
+
+  it("does not flag secrets change as schema change", () => {
+    const changed = functionModule.diffFields(
+      {schema: {name: "f", secrets: ["sec-1"]}, index: "", dependencies: {}},
+      {schema: {name: "f", secrets: ["sec-2"]}, index: "", dependencies: {}}
+    );
+    expect(changed).not.toContain("schema");
+    expect(changed).toContain("secrets");
   });
 
   it("returns empty when everything matches", () => {

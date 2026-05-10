@@ -1,6 +1,7 @@
 import {bold, cyan, green, red, yellow} from "colorette";
 import isEqual from "lodash/isEqual.js";
 import {createTwoFilesPatch} from "diff";
+import type {Ora} from "ora";
 import {spin} from "../../console";
 import {httpService} from "../../http";
 import {
@@ -211,7 +212,7 @@ export async function applyPlan(
 
     if (deletes.length) {
       await runConcurrently(
-        deletes.map(e => () => mod.delete(http, e.remote!.id)),
+        deletes.map(e => ({slug: e.slug, run: () => mod.delete(http, e.remote!.id)})),
         concurrency,
         `Deleting ${mod.displayName}`,
         handleErr
@@ -220,7 +221,7 @@ export async function applyPlan(
 
     if (updates.length) {
       await runConcurrently(
-        updates.map(e => () => mod.update(http, e.local!, e.remote!.id)),
+        updates.map(e => ({slug: e.slug, run: () => mod.update(http, e.local!, e.remote!.id)})),
         concurrency,
         `Updating ${mod.displayName}`,
         handleErr
@@ -229,7 +230,7 @@ export async function applyPlan(
 
     if (creates.length) {
       await runConcurrently(
-        creates.map(e => () => mod.create(http, e.local!)),
+        creates.map(e => ({slug: e.slug, run: () => mod.create(http, e.local!)})),
         concurrency,
         `Creating ${mod.displayName}`,
         handleErr
@@ -321,26 +322,33 @@ export function buildUnifiedDiff(
 }
 
 async function runConcurrently(
-  tasks: (() => Promise<void>)[],
+  tasks: Array<{slug: string; run: () => Promise<void>}>,
   concurrency: number,
   label: string,
   onError: (label: string, e: unknown) => void
 ): Promise<void> {
   if (!tasks.length) return;
 
+  const total = tasks.length;
+  let done = 0;
+
   await spin({
-    text: label,
-    op: async () => {
-      const limit = Math.min(tasks.length, concurrency);
-      let batch: (() => Promise<void>)[] = [];
+    text: `${label} (0/${total})`,
+    op: async (spinner: Ora) => {
+      const limit = Math.min(total, concurrency);
+      let batch: typeof tasks = [];
       for (let i = 0; i < tasks.length; i++) {
         batch.push(tasks[i]);
         if (batch.length === limit || i === tasks.length - 1) {
           await Promise.all(
-            batch.map(t =>
-              t().catch((e: unknown) => {
-                onError(label, e);
-              })
+            batch.map(task =>
+              task
+                .run()
+                .catch((e: unknown) => onError(`${label}: ${task.slug}`, e))
+                .finally(() => {
+                  done++;
+                  spinner.text = `${label} ${task.slug} (${done}/${total})`;
+                })
             )
           );
           batch = [];
