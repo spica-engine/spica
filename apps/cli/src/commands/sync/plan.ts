@@ -44,10 +44,9 @@ export default function (program: Program): Command {
     .option("--json", "Output the plan as JSON (machine-readable).", {default: false})
     .option(
       "--module <name>",
-      `Filter to specific module(s). Available: ${MODULE_NAMES.join(", ")}. Can be repeated.`,
+      `Filter to specific module(s). Available: ${MODULE_NAMES.join(", ")}.`,
       {
-        validator: CaporalValidator.STRING,
-        repeatable: true
+        validator: CaporalValidator.STRING
       }
     )
     .action(plan);
