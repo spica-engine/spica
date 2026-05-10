@@ -17,7 +17,7 @@ async function plan({args, options}: ActionParameters) {
   const modules = resolveModules(moduleFilter);
   const http = await httpService.createFromCurrentCtx();
 
-  const p = await buildPlan(modules, http, rootDir);
+  const p = await buildPlan(modules, http, rootDir, detailed);
   renderPlan(p, {detailed, json});
 
   const totalChanges = p.modules.reduce(

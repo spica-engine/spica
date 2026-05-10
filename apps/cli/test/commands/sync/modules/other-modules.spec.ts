@@ -5,6 +5,7 @@ import yaml from "yaml";
 import {envVarModule} from "@spica/cli/src/commands/sync/modules/env-var";
 import {secretModule} from "@spica/cli/src/commands/sync/modules/secret";
 import {policyModule} from "@spica/cli/src/commands/sync/modules/policy";
+import {resolveModules} from "@spica/cli/src/commands/sync/modules/index";
 
 function makeTmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "spica-module-test-"));
@@ -133,6 +134,22 @@ describe("secretModule", () => {
     await secretModule.delete(mockHttp, "id1");
     expect(mockHttp.delete).toHaveBeenCalledWith("secret/id1");
   });
+
+  it("does not flag value as changed when remote omits value (API hides it server-side)", () => {
+    const local = {key: "API_KEY", value: "s3cr3t"};
+    const remote = {key: "API_KEY"}; // value stripped by server
+    const changed = secretModule.diffFields(local, remote);
+    expect(changed).not.toContain("value");
+    expect(changed).toHaveLength(0);
+  });
+
+  it("does not include value in renderDetail diff", () => {
+    const local = {slug: "API_KEY", data: {key: "API_KEY", value: "s3cr3t"}};
+    const remote = {slug: "API_KEY", id: "id1", data: {key: "API_KEY"}};
+    const detail = secretModule.renderDetail(local, remote);
+    const diffText = Object.values(detail).join("");
+    expect(diffText).not.toContain("s3cr3t");
+  });
 });
 
 // ─── Policy ───────────────────────────────────────────────────────────────────
@@ -191,5 +208,24 @@ describe("policyModule", () => {
     mockHttp.delete.mockResolvedValue({});
     await policyModule.delete(mockHttp, "id1");
     expect(mockHttp.delete).toHaveBeenCalledWith("passport/policy/id1");
+  });
+});
+
+// ─── resolveModules ───────────────────────────────────────────────────────────
+
+describe("resolveModules", () => {
+  it("returns all modules when no filter is given", () => {
+    const mods = resolveModules();
+    expect(mods.length).toBeGreaterThan(0);
+  });
+
+  it("deduplicates repeated module names", () => {
+    const mods = resolveModules(["bucket", "bucket", "policy"]);
+    expect(mods).toHaveLength(2);
+    expect(mods.map(m => m.name)).toEqual(["bucket", "policy"]);
+  });
+
+  it("throws for unknown module name", () => {
+    expect(() => resolveModules(["nonexistent"])).toThrow("Unknown module");
   });
 });

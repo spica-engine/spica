@@ -157,6 +157,26 @@ describe("buildPlan", () => {
     expect(entry.local).toBe(local);
     expect(entry.remote).toBe(remote);
   });
+
+  it("does not call renderDetail when detailed=false (default)", async () => {
+    const local: LocalResource = {slug: "item", data: {name: "item", value: "new"}};
+    const remote: RemoteResource = {slug: "item", id: "id-1", data: {name: "item", value: "old"}};
+    const mod = makeMockModule("test", [local], [remote]);
+    const renderDetailSpy = jest.spyOn(mod, "renderDetail");
+
+    await buildPlan([mod], mockHttp, "/tmp");
+    expect(renderDetailSpy).not.toHaveBeenCalled();
+  });
+
+  it("calls renderDetail when detailed=true", async () => {
+    const local: LocalResource = {slug: "item", data: {name: "item", value: "new"}};
+    const remote: RemoteResource = {slug: "item", id: "id-1", data: {name: "item", value: "old"}};
+    const mod = makeMockModule("test", [local], [remote]);
+    const renderDetailSpy = jest.spyOn(mod, "renderDetail");
+
+    await buildPlan([mod], mockHttp, "/tmp", true);
+    expect(renderDetailSpy).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("renderPlan", () => {

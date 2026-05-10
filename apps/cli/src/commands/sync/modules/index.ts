@@ -21,7 +21,7 @@ export const MODULE_NAMES = ALL_MODULES.map(m => m.name);
 
 export function resolveModules(names?: string[]): ResourceModule[] {
   if (!names || names.length === 0) return ALL_MODULES;
-  return names.map(name => {
+  return [...new Set(names)].map(name => {
     const mod = ALL_MODULES.find(m => m.name === name);
     if (!mod) throw new Error(`Unknown module: "${name}". Available: ${MODULE_NAMES.join(", ")}`);
     return mod;

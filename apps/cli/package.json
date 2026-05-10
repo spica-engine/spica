@@ -35,6 +35,10 @@
       "types": "./src/commands/sync/modules/function.ts",
       "default": "./dist/src/commands/sync/modules/function.js"
     },
+    "./src/commands/sync/modules/index": {
+      "types": "./src/commands/sync/modules/index.ts",
+      "default": "./dist/src/commands/sync/modules/index.js"
+    },
     "./src/commands/sync/types": {
       "types": "./src/commands/sync/types.ts",
       "default": "./dist/src/commands/sync/types.js"

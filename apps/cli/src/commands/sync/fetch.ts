@@ -23,7 +23,7 @@ async function fetch_({args, options}: ActionParameters) {
   const http = await httpService.createFromCurrentCtx();
 
   console.log(bold("\nBuilding plan…"));
-  const p = await buildPlan(modules, http, rootDir);
+  const p = await buildPlan(modules, http, rootDir, detailed);
 
   // Fetch perspective: deletes = new remote files to write, updates = changed to overwrite,
   // creates = local-only stale files (removed only with --clean)

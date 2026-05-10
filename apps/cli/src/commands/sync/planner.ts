@@ -19,7 +19,8 @@ import {
 export async function buildPlan(
   modules: ResourceModule[],
   http: httpService.Client,
-  rootDir: string
+  rootDir: string,
+  detailed = false
 ): Promise<Plan> {
   const modulePlans: ModulePlan[] = [];
 
@@ -62,7 +63,7 @@ export async function buildPlan(
             slug: local.slug,
             summary: mod.summaryLine(local),
             changedFields,
-            diffs: mod.renderDetail(local, remote),
+            diffs: detailed ? mod.renderDetail(local, remote) : {},
             local,
             remote
           });
@@ -413,7 +414,7 @@ async function runConcurrently(
   await spin({
     text: `${label} (0/${total})`,
     op: async (spinner: Ora) => {
-      const limit = Math.min(total, concurrency);
+      const limit = Math.max(1, Math.min(total, concurrency));
       let batch: typeof tasks = [];
       for (let i = 0; i < tasks.length; i++) {
         batch.push(tasks[i]);

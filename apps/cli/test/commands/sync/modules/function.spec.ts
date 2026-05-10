@@ -202,6 +202,48 @@ describe("functionModule.create", () => {
     expect(mockHttp.put).toHaveBeenCalledWith("function/new-id/secret/sec-2", {});
   });
 
+  it("preserves version range (^) when posting dependencies", async () => {
+    mockHttp.post.mockImplementation((url: string) => {
+      if (url === "function") return Promise.resolve({_id: "new-id"});
+      return Promise.resolve({});
+    });
+    mockHttp.put.mockResolvedValue({});
+
+    await functionModule.create(mockHttp, {
+      slug: "MyFn",
+      data: {
+        schema: {name: "MyFn", language: "javascript"},
+        index: "",
+        dependencies: {lodash: "^4.17.21"}
+      }
+    });
+
+    expect(mockHttp.post).toHaveBeenCalledWith("function/new-id/dependencies", {
+      name: ["lodash@^4.17.21"]
+    });
+  });
+
+  it("sends file: dependencies to the server as-is", async () => {
+    mockHttp.post.mockImplementation((url: string) => {
+      if (url === "function") return Promise.resolve({_id: "new-id"});
+      return Promise.resolve({});
+    });
+    mockHttp.put.mockResolvedValue({});
+
+    await functionModule.create(mockHttp, {
+      slug: "MyFn",
+      data: {
+        schema: {name: "MyFn", language: "javascript"},
+        index: "",
+        dependencies: {"local-lib": "file:../local-lib", axios: "^1.0.0"}
+      }
+    });
+
+    expect(mockHttp.post).toHaveBeenCalledWith("function/new-id/dependencies", {
+      name: expect.arrayContaining(["local-lib@file:../local-lib", "axios@^1.0.0"])
+    });
+  });
+
   it("skips dependencies POST when there are no dependencies", async () => {
     mockHttp.post.mockImplementation((url: string) => {
       if (url === "function") return Promise.resolve({_id: "new-id"});
@@ -313,6 +355,34 @@ describe("functionModule.update", () => {
     expect(mockHttp.put).not.toHaveBeenCalledWith("function/fn-id/secret/sec-keep", {});
   });
 
+  it("sends file: dependencies to the server during update", async () => {
+    mockHttp.put.mockResolvedValue({});
+    mockHttp.post.mockResolvedValue({});
+    mockHttp.delete.mockResolvedValue({});
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function/fn-id")
+        return Promise.resolve({_id: "fn-id", name: "MyFn", env_vars: []});
+      return Promise.resolve([]); // no existing deps
+    });
+
+    await functionModule.update(
+      mockHttp,
+      {
+        slug: "MyFn",
+        data: {
+          schema: {name: "MyFn"},
+          index: "",
+          dependencies: {"local-lib": "file:../local-lib", axios: "^1.0.0"}
+        }
+      },
+      "fn-id"
+    );
+
+    expect(mockHttp.post).toHaveBeenCalledWith("function/fn-id/dependencies", {
+      name: expect.arrayContaining(["local-lib@file:../local-lib", "axios@^1.0.0"])
+    });
+  });
+
   it("deletes removed dependencies and adds new ones", async () => {
     mockHttp.put.mockResolvedValue({});
     mockHttp.post.mockResolvedValue({});
@@ -341,7 +411,7 @@ describe("functionModule.update", () => {
 
     expect(mockHttp.delete).toHaveBeenCalledWith("function/fn-id/dependencies/old-pkg");
     expect(mockHttp.post).toHaveBeenCalledWith("function/fn-id/dependencies", {
-      name: ["new-pkg@3.0.0"]
+      name: ["new-pkg@^3.0.0"]
     });
   });
 });
@@ -440,7 +510,8 @@ describe("functionModule.diffFields", () => {
 });
 
 describe("functionModule.renderDetail", () => {
-  it("does not include a dependencies diff when only key order differs", () => {
+  it("includes a dependencies diff when local has a file: dep the remote lacks", () => {
+    // Server stores and returns file: deps too, so a mismatch is a real diff.
     const local = {
       slug: "f",
       data: {
@@ -461,13 +532,12 @@ describe("functionModule.renderDetail", () => {
         index: "",
         dependencies: {
           "@spica-devkit/bucket": "^0.18.25",
-          "@spica-fn/Common": "file:../Common",
           axios: "^0.21.4"
         }
       }
     };
     const detail = functionModule.renderDetail(local, remote);
-    expect(detail).not.toHaveProperty("dependencies");
+    expect(detail).toHaveProperty("dependencies");
   });
 
   it("includes a dependencies diff when deps actually differ", () => {

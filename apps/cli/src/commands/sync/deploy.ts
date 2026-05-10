@@ -22,7 +22,7 @@ async function deploy({args, options}: ActionParameters) {
   const http = await httpService.createFromCurrentCtx();
 
   console.log(bold("\nBuilding plan…"));
-  const p = await buildPlan(modules, http, rootDir);
+  const p = await buildPlan(modules, http, rootDir, detailed);
 
   const totalChanges = p.modules.reduce(
     (n, m) => n + m.creates.length + m.updates.length + m.deletes.length,

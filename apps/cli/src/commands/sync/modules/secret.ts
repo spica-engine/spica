@@ -12,7 +12,9 @@ interface Secret {
   [key: string]: unknown;
 }
 
-const IGNORED_FIELDS = ["_id"];
+// "value" is excluded from diff/render: the API never returns it (projected out server-side),
+// so comparing or displaying it would cause permanent false-positives and secret leakage.
+const IGNORED_FIELDS = ["_id", "value"];
 
 export const secretModule: ResourceModule<Secret> = {
   name: "secret",

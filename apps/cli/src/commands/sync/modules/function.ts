@@ -144,8 +144,7 @@ export const functionModule: ResourceModule<FunctionData> = {
     await http.post(`function/${id}/index`, {index: local.data.index});
 
     const depNames = Object.entries(local.data.dependencies)
-      .filter(([n]) => !n.startsWith("file:"))
-      .map(([n, v]) => `${n}@${v.replace(/^\^|^~/, "")}`);
+      .map(([n, v]) => `${n}@${v}`);
 
     if (depNames.length) {
       await http.post(`function/${id}/dependencies`, {name: depNames});
@@ -202,20 +201,19 @@ export const functionModule: ResourceModule<FunctionData> = {
     const currentByName = new Map(currentDeps.map(d => [d.name, d.version]));
     const localDeps = local.data.dependencies;
 
-    // Delete deps not in local (skip file: deps)
-    const toDelete = currentDeps.filter(d => !d.name.startsWith("file:") && !(d.name in localDeps));
+    // Delete deps not in local
+    const toDelete = currentDeps.filter(d => !(d.name in localDeps));
     await Promise.all(
       toDelete.map(d => http.delete(`function/${remoteId}/dependencies/${d.name}`).catch(() => {}))
     );
 
     // Add/update deps present in local but not matching remote
     const toAdd = Object.entries(localDeps)
-      .filter(([n]) => !n.startsWith("file:"))
       .filter(([n, v]) => {
         const cur = currentByName.get(n);
         return !cur || cur !== v;
       })
-      .map(([n, v]) => `${n}@${v.replace(/^\^|^~/, "")}`);
+      .map(([n, v]) => `${n}@${v}`);
 
     if (toAdd.length) {
       await http.post(`function/${remoteId}/dependencies`, {name: toAdd});
