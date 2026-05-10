@@ -82,10 +82,9 @@ export default function (program: Program): Command {
     .option("--detailed", "Show full unified diffs in the plan before applying.", {default: false})
     .option(
       "--module <name>",
-      `Filter to specific module(s). Available: ${MODULE_NAMES.join(", ")}. Can be repeated.`,
+      `Filter to specific module(s). Available: ${MODULE_NAMES.join(", ")}.`,
       {
-        validator: CaporalValidator.STRING,
-        repeatable: true
+        validator: CaporalValidator.STRING
       }
     )
     .action(deploy);
