@@ -383,3 +383,41 @@ describe("functionModule.diffFields", () => {
     expect(changed).toEqual([]);
   });
 });
+
+describe("functionModule.renderDetail", () => {
+  it("does not include a dependencies diff when only key order differs", () => {
+    const local = {
+      slug: "f",
+      data: {
+        schema: {name: "f"},
+        index: "",
+        dependencies: {"@spica-devkit/bucket": "^0.18.25", axios: "^0.21.4", "@spica-fn/Common": "file:../Common"}
+      }
+    };
+    const remote = {
+      slug: "f",
+      id: "id1",
+      data: {
+        schema: {name: "f"},
+        index: "",
+        dependencies: {"@spica-devkit/bucket": "^0.18.25", "@spica-fn/Common": "file:../Common", axios: "^0.21.4"}
+      }
+    };
+    const detail = functionModule.renderDetail(local, remote);
+    expect(detail).not.toHaveProperty("dependencies");
+  });
+
+  it("includes a dependencies diff when deps actually differ", () => {
+    const local = {
+      slug: "f",
+      data: {schema: {name: "f"}, index: "", dependencies: {axios: "^0.21.4", lodash: "^4.0.0"}}
+    };
+    const remote = {
+      slug: "f",
+      id: "id1",
+      data: {schema: {name: "f"}, index: "", dependencies: {axios: "^0.21.4"}}
+    };
+    const detail = functionModule.renderDetail(local, remote);
+    expect(detail).toHaveProperty("dependencies");
+  });
+});

@@ -254,8 +254,10 @@ export const functionModule: ResourceModule<FunctionData> = {
       );
     }
 
-    const localDepsYaml = yaml.stringify(local.data.dependencies);
-    const remoteDepsYaml = yaml.stringify(remote.data.dependencies);
+    const sortKeys = (obj: Record<string, string>) =>
+      Object.fromEntries(Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)));
+    const localDepsYaml = yaml.stringify(sortKeys(local.data.dependencies));
+    const remoteDepsYaml = yaml.stringify(sortKeys(remote.data.dependencies));
     if (localDepsYaml !== remoteDepsYaml) {
       result["dependencies"] = buildUnifiedDiff(remoteDepsYaml, localDepsYaml, "package.json");
     }
