@@ -234,6 +234,26 @@ describe("fetchToDisk", () => {
     expect(deleted).toBe(0);
   });
 
+  it("skips writeLocal when local already matches remote", async () => {
+    const locals: LocalResource[] = [{slug: "a", data: {name: "a"}}];
+    const remotes: RemoteResource[] = [{slug: "a", id: "id-a", data: {name: "a"}}];
+    const mod = makeMockModule("test", locals, remotes);
+
+    const {written} = await fetchToDisk([mod], mockHttp, "/tmp");
+    expect(mod.writeLocal).not.toHaveBeenCalled();
+    expect(written).toBe(0);
+  });
+
+  it("writes when local differs from remote", async () => {
+    const locals: LocalResource[] = [{slug: "a", data: {name: "a", title: "old"}}];
+    const remotes: RemoteResource[] = [{slug: "a", id: "id-a", data: {name: "a", title: "new"}}];
+    const mod = makeMockModule("test", locals, remotes);
+
+    const {written} = await fetchToDisk([mod], mockHttp, "/tmp");
+    expect(mod.writeLocal).toHaveBeenCalledTimes(1);
+    expect(written).toBe(1);
+  });
+
   it("calls deleteLocal for stale local resources when --clean is set", async () => {
     const locals: LocalResource[] = [{slug: "stale", data: {name: "stale"}}];
     const remotes: RemoteResource[] = [{slug: "fresh", id: "id-1", data: {name: "fresh"}}];

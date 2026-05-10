@@ -268,11 +268,16 @@ export async function fetchToDisk(
       })
     ]);
 
+    const localBySlug = new Map(locals.map(l => [l.slug, l]));
     const remoteSlugs = new Set(remotes.map(r => r.slug));
 
     for (const remote of remotes) {
-      await mod.writeLocal(rootDir, remote);
-      written++;
+      const local = localBySlug.get(remote.slug);
+      const isChanged = !local || mod.diffFields(local.data, remote.data).length > 0;
+      if (isChanged) {
+        await mod.writeLocal(rootDir, remote);
+        written++;
+      }
     }
 
     if (opts.clean) {
