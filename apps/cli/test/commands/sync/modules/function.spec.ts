@@ -108,6 +108,23 @@ describe("functionModule.readRemote", () => {
     expect(result[0].data.index).toBe("export default () => {};");
     expect(result[0].data.dependencies).toEqual({lodash: "^4.0.0"});
   });
+
+  it("normalizes resolved env_vars and secrets objects to plain ID strings", async () => {
+    mockHttp.get.mockImplementation((url: string) => {
+      if (url === "function") return Promise.resolve([{
+        _id: "fn1", name: "MyFn", language: "javascript",
+        env_vars: [{_id: "ev-id-1", key: "API_KEY", value: "secret"}],
+        secrets: [{_id: "sec-id-1", key: "DB_PASS"}]
+      }]);
+      if (url === "function/fn1/index") return Promise.resolve({index: ""});
+      if (url === "function/fn1/dependencies") return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+
+    const result = await functionModule.readRemote(mockHttp);
+    expect(result[0].data.schema.env_vars).toEqual(["ev-id-1"]);
+    expect(result[0].data.schema.secrets).toEqual(["sec-id-1"]);
+  });
 });
 
 describe("functionModule.create", () => {

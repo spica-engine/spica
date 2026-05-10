@@ -35,6 +35,26 @@ function indexFilename(language?: string): string {
   return language === "typescript" ? "index.ts" : "index.mjs";
 }
 
+/** Extract an ObjectId string from either a plain string or a resolved object with `_id`. */
+function extractId(v: unknown): string {
+  if (v && typeof v === "object" && "_id" in (v as object)) {
+    return String((v as Record<string, unknown>)._id);
+  }
+  return String(v);
+}
+
+/** Normalize env_vars / secrets fields to arrays of plain ID strings. */
+function normalizeSchema(schema: FunctionSchema): FunctionSchema {
+  const normalized: FunctionSchema = {...schema};
+  if (Array.isArray(schema.env_vars)) {
+    normalized.env_vars = (schema.env_vars as unknown[]).map(extractId);
+  }
+  if (Array.isArray(schema.secrets)) {
+    normalized.secrets = (schema.secrets as unknown[]).map(extractId);
+  }
+  return normalized;
+}
+
 export const functionModule: ResourceModule<FunctionData> = {
   name: "function",
   displayName: "Function",
@@ -92,7 +112,7 @@ export const functionModule: ResourceModule<FunctionData> = {
         slug: fn.name,
         id,
         data: {
-          schema: fn,
+          schema: normalizeSchema(fn),
           index: indexRes.index ?? "",
           dependencies
         }
@@ -134,7 +154,7 @@ export const functionModule: ResourceModule<FunctionData> = {
 
     // Sync env_vars via inject/eject endpoints
     const localEnvVarIds = new Set<string>((local.data.schema.env_vars as string[] | undefined) ?? []);
-    const currentFn = await http.get<FunctionSchema>(`function/${remoteId}`).catch(() => ({} as FunctionSchema));
+    const currentFn = await http.get<FunctionSchema>(`function/${remoteId}`).then(normalizeSchema).catch(() => ({} as FunctionSchema));
     const remoteEnvVarIds = new Set<string>((currentFn.env_vars as string[] | undefined) ?? []);
     await Promise.all([
       ...[...localEnvVarIds].filter(id => !remoteEnvVarIds.has(id)).map(id =>
