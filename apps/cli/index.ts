@@ -15,6 +15,9 @@ import projectRemove from "./src/commands/project/remove";
 import projectStart from "./src/commands/project/start";
 import projectSync from "./src/commands/project/sync";
 import projectUpgrade from "./src/commands/project/upgrade";
+import plan from "./src/commands/sync/plan";
+import deploy from "./src/commands/sync/deploy";
+import fetch from "./src/commands/sync/fetch";
 import {readPackageVersion} from "./src/version";
 
 export function run(argv?: string[]) {
@@ -37,6 +40,9 @@ export function run(argv?: string[]) {
   projectStart(program);
   projectSync(program);
   projectUpgrade(program);
+  plan(program);
+  deploy(program);
+  fetch(program);
 
   return program.run(argv);
 }
