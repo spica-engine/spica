@@ -95,6 +95,15 @@ export async function buildPlan(
 export interface RenderOptions {
   detailed?: boolean;
   json?: boolean;
+  /**
+   * When true, render from the fetch perspective:
+   *   plan.deletes (remote-only) → "+" will be written to disk
+   *   plan.updates (differ)      → "~" will be overwritten on disk
+   *   plan.creates (local-only)  → "-" will be deleted from disk (only when clean is also true)
+   */
+  fetchMode?: boolean;
+  /** When true (fetch --clean), include stale local-only entries in the plan output. */
+  clean?: boolean;
 }
 
 export function renderPlan(plan: Plan, opts: RenderOptions = {}): void {
@@ -110,6 +119,59 @@ export function renderPlan(plan: Plan, opts: RenderOptions = {}): void {
       deletes: mp.deletes.map(e => ({slug: e.slug, summary: e.summary}))
     }));
     console.log(JSON.stringify(output, null, 2));
+    return;
+  }
+
+  if (opts.fetchMode) {
+    // Fetch perspective: deletes=new writes, updates=overwrites, creates=stale deletes (only with --clean)
+    const toWrite = plan.modules.reduce((n, m) => n + m.deletes.length, 0);
+    const toUpdate = plan.modules.reduce((n, m) => n + m.updates.length, 0);
+    const toDelete = opts.clean ? plan.modules.reduce((n, m) => n + m.creates.length, 0) : 0;
+    const totalChanges = toWrite + toUpdate + toDelete;
+
+    if (totalChanges === 0) {
+      console.log(bold(green("\n✓ No changes detected. Local files already match remote.")));
+      return;
+    }
+
+    for (const mp of plan.modules) {
+      const {module: mod, creates, updates, deletes} = mp;
+      if (!creates.length && !updates.length && !deletes.length) continue;
+
+      const staleCount = opts.clean ? creates.length : 0;
+      console.log(
+        `\n${bold(cyan(`── ${mod.displayName.toUpperCase()} ──`))}  ${summaryBadges(deletes.length, updates.length, staleCount)}`
+      );
+
+      for (const e of deletes) {
+        console.log(`  ${green("+")} ${bold(e.slug)}  ${dim(e.summary)}`);
+      }
+      for (const e of updates) {
+        console.log(
+          `  ${yellow("~")} ${bold(e.slug)}  ${dim(e.summary)}  ${yellow(`[${e.changedFields.join(", ")}]`)}`
+        );
+        if (opts.detailed) {
+          for (const [section, diff] of Object.entries(e.diffs)) {
+            if (!diff) continue;
+            console.log(`      ${bold(section)}:`);
+            renderUnifiedDiff(diff);
+          }
+        }
+      }
+      if (opts.clean) {
+        for (const e of creates) {
+          console.log(`  ${red("-")} ${bold(e.slug)}  ${dim(e.summary)}`);
+        }
+      }
+    }
+
+    console.log(
+      `\n${bold("Plan:")}  ${green(`+${toWrite} to write`)}   ${yellow(`~${toUpdate} to update`)}   ${red(`-${toDelete} to delete`)}`
+    );
+
+    if (!opts.detailed && toUpdate > 0) {
+      console.log(`  ${dim("Run with --detailed to see full diffs.")}`);
+    }
     return;
   }
 
@@ -245,52 +307,67 @@ export async function applyPlan(
 
 export interface FetchOptions {
   clean?: boolean;
+  concurrency?: number;
+  abortOnError?: boolean;
 }
 
 export async function fetchToDisk(
-  modules: ResourceModule[],
+  plan: Plan,
   http: httpService.Client,
   rootDir: string,
   opts: FetchOptions = {}
-): Promise<{written: number; deleted: number}> {
+): Promise<{written: number; deleted: number; errors: string[]}> {
+  const concurrency = opts.concurrency ?? 10;
+  const errors: string[] = [];
   let written = 0;
   let deleted = 0;
 
-  for (const mod of modules) {
-    const [locals, remotes] = await Promise.all([
-      spin<LocalResource[]>({
-        text: `Reading local ${mod.displayName} files`,
-        op: () => mod.readLocal(rootDir)
-      }),
-      spin<RemoteResource[]>({
-        text: `Fetching remote ${mod.displayName}`,
-        op: () => mod.readRemote(http)
-      })
-    ]);
+  const handleErr = (label: string, e: unknown) => {
+    const msg = formatError(e);
+    const full = `${label}: ${msg}`;
+    if (opts.abortOnError) throw new Error(full);
+    console.warn(bold(yellow(`  ⚠  ${full}`)));
+    errors.push(full);
+  };
 
-    const localBySlug = new Map(locals.map(l => [l.slug, l]));
-    const remoteSlugs = new Set(remotes.map(r => r.slug));
+  for (const mp of plan.modules) {
+    const {module: mod, updates, deletes, creates} = mp;
 
-    for (const remote of remotes) {
-      const local = localBySlug.get(remote.slug);
-      const isChanged = !local || mod.diffFields(local.data, remote.data).length > 0;
-      if (isChanged) {
-        await mod.writeLocal(rootDir, remote);
-        written++;
-      }
+    // plan.deletes = remote-only (new local files); plan.updates = changed (overwrite)
+    const toWrite = [...deletes, ...updates];
+    if (toWrite.length) {
+      await runConcurrently(
+        toWrite.map(e => ({
+          slug: e.slug,
+          run: async () => {
+            await mod.writeLocal(rootDir, e.remote!);
+            written++;
+          }
+        })),
+        concurrency,
+        `Writing ${mod.displayName}`,
+        handleErr
+      );
     }
 
-    if (opts.clean) {
-      for (const local of locals) {
-        if (!remoteSlugs.has(local.slug)) {
-          await mod.deleteLocal(rootDir, local.slug);
-          deleted++;
-        }
-      }
+    // plan.creates = local-only (stale) → delete from disk when --clean
+    if (opts.clean && creates.length) {
+      await runConcurrently(
+        creates.map(e => ({
+          slug: e.slug,
+          run: async () => {
+            await mod.deleteLocal(rootDir, e.slug);
+            deleted++;
+          }
+        })),
+        concurrency,
+        `Deleting ${mod.displayName}`,
+        handleErr
+      );
     }
   }
 
-  return {written, deleted};
+  return {written, deleted, errors};
 }
 
 // ─── Shared helpers ──────────────────────────────────────────────────────────

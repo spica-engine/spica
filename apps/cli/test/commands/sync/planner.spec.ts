@@ -227,19 +227,22 @@ describe("fetchToDisk", () => {
       {slug: "b", id: "id-b", data: {name: "b"}}
     ];
     const mod = makeMockModule("test", [], remotes);
-    const {written, deleted} = await fetchToDisk([mod], mockHttp, "/tmp");
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
+    const {written, deleted, errors} = await fetchToDisk(plan, mockHttp, "/tmp");
 
     expect(mod.writeLocal).toHaveBeenCalledTimes(2);
     expect(written).toBe(2);
     expect(deleted).toBe(0);
+    expect(errors).toHaveLength(0);
   });
 
   it("skips writeLocal when local already matches remote", async () => {
     const locals: LocalResource[] = [{slug: "a", data: {name: "a"}}];
     const remotes: RemoteResource[] = [{slug: "a", id: "id-a", data: {name: "a"}}];
     const mod = makeMockModule("test", locals, remotes);
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
 
-    const {written} = await fetchToDisk([mod], mockHttp, "/tmp");
+    const {written} = await fetchToDisk(plan, mockHttp, "/tmp");
     expect(mod.writeLocal).not.toHaveBeenCalled();
     expect(written).toBe(0);
   });
@@ -248,8 +251,9 @@ describe("fetchToDisk", () => {
     const locals: LocalResource[] = [{slug: "a", data: {name: "a", title: "old"}}];
     const remotes: RemoteResource[] = [{slug: "a", id: "id-a", data: {name: "a", title: "new"}}];
     const mod = makeMockModule("test", locals, remotes);
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
 
-    const {written} = await fetchToDisk([mod], mockHttp, "/tmp");
+    const {written} = await fetchToDisk(plan, mockHttp, "/tmp");
     expect(mod.writeLocal).toHaveBeenCalledTimes(1);
     expect(written).toBe(1);
   });
@@ -258,8 +262,9 @@ describe("fetchToDisk", () => {
     const locals: LocalResource[] = [{slug: "stale", data: {name: "stale"}}];
     const remotes: RemoteResource[] = [{slug: "fresh", id: "id-1", data: {name: "fresh"}}];
     const mod = makeMockModule("test", locals, remotes);
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
 
-    const {deleted} = await fetchToDisk([mod], mockHttp, "/tmp", {clean: true});
+    const {deleted} = await fetchToDisk(plan, mockHttp, "/tmp", {clean: true});
     expect(mod.deleteLocal).toHaveBeenCalledWith("/tmp", "stale");
     expect(deleted).toBe(1);
   });
@@ -268,8 +273,22 @@ describe("fetchToDisk", () => {
     const locals: LocalResource[] = [{slug: "stale", data: {name: "stale"}}];
     const remotes: RemoteResource[] = [{slug: "fresh", id: "id-1", data: {name: "fresh"}}];
     const mod = makeMockModule("test", locals, remotes);
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
 
-    await fetchToDisk([mod], mockHttp, "/tmp");
+    await fetchToDisk(plan, mockHttp, "/tmp");
     expect(mod.deleteLocal).not.toHaveBeenCalled();
+  });
+
+  it("collects errors without throwing when abortOnError is false", async () => {
+    const remotes: RemoteResource[] = [{slug: "fail", id: "id-fail", data: {name: "fail"}}];
+    const mod = makeMockModule("test", [], remotes);
+    mod.writeLocal.mockRejectedValue(new Error("disk error"));
+    const plan = await buildPlan([mod], mockHttp, "/tmp");
+
+    const consolewarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const {errors} = await fetchToDisk(plan, mockHttp, "/tmp", {abortOnError: false});
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain("disk error");
+    consolewarn.mockRestore();
   });
 });
