@@ -1,7 +1,7 @@
 import {bold, cyan, green, red, yellow} from "colorette";
 import isEqual from "lodash/isEqual.js";
 import {createTwoFilesPatch} from "diff";
-import type {Ora} from "ora";
+import ora from "ora";
 import {spin} from "../../console";
 import {httpService} from "../../http";
 import {
@@ -447,30 +447,35 @@ async function runConcurrently(
   const total = tasks.length;
   let done = 0;
 
-  await spin({
-    text: `${label} (0/${total})`,
-    op: async (spinner: Ora) => {
-      const limit = Math.max(1, Math.min(total, concurrency));
-      let batch: typeof tasks = [];
-      for (let i = 0; i < tasks.length; i++) {
-        batch.push(tasks[i]);
-        if (batch.length === limit || i === tasks.length - 1) {
-          await Promise.all(
-            batch.map(task =>
-              task
-                .run()
-                .catch((e: unknown) => onError(`${label}: ${task.slug}`, e))
-                .finally(() => {
-                  done++;
-                  spinner.text = `${label} ${task.slug} (${done}/${total})`;
-                })
-            )
-          );
-          batch = [];
-        }
+  // Use ora directly instead of spin() to ensure errors thrown by onError
+  // (abortOnError path) propagate to the caller's try/catch rather than being
+  // intercepted by spin()'s process.exit() rejection handler.
+  const spinner = ora({text: `${label} (0/${total})`, color: "yellow"}).start();
+  try {
+    const limit = Math.max(1, Math.min(total, concurrency));
+    let batch: typeof tasks = [];
+    for (let i = 0; i < tasks.length; i++) {
+      batch.push(tasks[i]);
+      if (batch.length === limit || i === tasks.length - 1) {
+        await Promise.all(
+          batch.map(task =>
+            task
+              .run()
+              .catch((e: unknown) => onError(`${label}: ${task.slug}`, e))
+              .finally(() => {
+                done++;
+                spinner.text = `${label}: ${task.slug} (${done}/${total})`;
+              })
+          )
+        );
+        batch = [];
       }
     }
-  });
+    spinner.succeed();
+  } catch (e) {
+    spinner.fail();
+    throw e;
+  }
 }
 
 function formatError(e: unknown): string {
