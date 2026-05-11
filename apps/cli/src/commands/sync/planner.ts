@@ -87,7 +87,7 @@ export async function buildPlan(
     }
 
     // ── Rename reconciliation ─────────────────────────────────────────────────
-    // Only applicable for deploy/plan (local → remote direction).
+    // Only applicable for apply/plan (local → remote direction).
     // In fetch mode, promoting a rename to an update would leave the old local
     // folder on disk while writing the new-named folder — causing duplicates.
     if (detectRenames && mod.extractLocalId) {

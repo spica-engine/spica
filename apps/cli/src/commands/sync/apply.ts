@@ -8,7 +8,7 @@ import {applyPlan, buildPlan, renderPlan} from "./planner";
 import {confirm} from "./prompt";
 import {resolveModules, MODULE_NAMES} from "./modules/index";
 
-async function deploy({args, options}: ActionParameters) {
+async function apply({args, options}: ActionParameters) {
   const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
   const autoApprove = !!options.autoApprove;
   const concurrency = (options.concurrency as number) ?? 10;
@@ -58,7 +58,7 @@ async function deploy({args, options}: ActionParameters) {
       const u = p.modules.reduce((n, m) => n + m.updates.length, 0);
       const d = p.modules.reduce((n, m) => n + m.deletes.length, 0);
       console.log(
-        bold(green(`\n✓ Deploy complete.`)) +
+        bold(green(`\n✓ Apply completed.`)) +
           `  ${green(`+${c} created`)}  ${yellow(`~${u} updated`)}  ${red(`-${d} deleted`)}`
       );
       process.exitCode = 0;
@@ -73,7 +73,7 @@ async function deploy({args, options}: ActionParameters) {
 export default function (program: Program): Command {
   return program
     .command(
-      "deploy",
+      "apply",
       "Detect changes between local project files and remote Spica resources and apply them."
     )
     .argument("[dir]", "Project directory (default: current working directory)")
@@ -81,7 +81,7 @@ export default function (program: Program): Command {
       default: false
     })
     .option("--concurrency <n>", "Maximum parallel API requests.", {
-      default: 10 as number,
+      default: 5 as number,
       validator: CaporalValidator.NUMBER
     })
     .option("--abort-on-error", "Stop immediately if any operation fails.", {default: false})
@@ -93,5 +93,5 @@ export default function (program: Program): Command {
         validator: MODULE_NAMES
       }
     )
-    .action(deploy);
+    .action(apply);
 }
