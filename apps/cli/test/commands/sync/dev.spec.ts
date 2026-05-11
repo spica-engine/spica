@@ -4,6 +4,7 @@ import fs from "fs";
 import yaml from "yaml";
 import {createDevDispatcher, DevState} from "@spica/cli/src/commands/sync/dev";
 import {ResourceModule, LocalResource, RemoteResource} from "@spica/cli/src/commands/sync/types";
+import {functionModule} from "@spica/cli/src/commands/sync/modules/function";
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -50,6 +51,17 @@ function makeMockModule(
     extractLocalId: (data: any) => data._id,
     ...overrides
   } as any;
+}
+
+/** Build a function module mock: real devHandleEvent + watchedFiles, mocked CRUD */
+function makeFunctionMod() {
+  return {
+    ...functionModule,
+    readRemote: jest.fn<Promise<any[]>, []>().mockResolvedValue([]),
+    create: jest.fn<Promise<void>, any[]>().mockResolvedValue(undefined),
+    update: jest.fn<Promise<void>, any[]>().mockResolvedValue(undefined),
+    delete: jest.fn<Promise<void>, any[]>().mockResolvedValue(undefined)
+  };
 }
 
 const mockHttp = {
@@ -291,10 +303,7 @@ describe("DevDispatcher — function: insert ordering with retry", () => {
       );
       // index.mjs and package.json do NOT exist yet
 
-      const mod = makeMockModule("function", {
-        name: "function",
-        readRemote: jest.fn().mockResolvedValue([])
-      });
+      const mod = makeFunctionMod();
       const state = makeState(); // no existing function
       const logs: string[] = [];
       const warns: string[] = [];
@@ -305,9 +314,7 @@ describe("DevDispatcher — function: insert ordering with retry", () => {
         rootDir: dir,
         state,
         logger: m => logs.push(m),
-        warnLogger: m => warns.push(m),
-        fnFileRetryDelayMs: 100,
-        fnFileMaxRetries: 5
+        warnLogger: m => warns.push(m)
       });
 
       // Start the event — it will be waiting for index+package
@@ -326,8 +333,8 @@ describe("DevDispatcher — function: insert ordering with retry", () => {
         path.join(fnDir, "package.json"),
         JSON.stringify({name: "MyFn", dependencies: {}})
       );
-      // Advance remaining retries
-      await jest.advanceTimersByTimeAsync(500);
+      // Advance remaining retries (5 retries × 200ms = 1000ms max)
+      await jest.advanceTimersByTimeAsync(1000);
 
       await eventPromise;
 
@@ -351,10 +358,7 @@ describe("DevDispatcher — function: insert ordering with retry", () => {
       );
       // Intentionally do NOT write index.mjs or package.json
 
-      const mod = makeMockModule("function", {
-        name: "function",
-        readRemote: jest.fn().mockResolvedValue([])
-      });
+      const mod = makeFunctionMod();
       const state = makeState();
       const warns: string[] = [];
 
@@ -363,9 +367,7 @@ describe("DevDispatcher — function: insert ordering with retry", () => {
         http: mockHttp,
         rootDir: dir,
         state,
-        warnLogger: m => warns.push(m),
-        fnFileRetryDelayMs: 100,
-        fnFileMaxRetries: 3
+        warnLogger: m => warns.push(m)
       });
 
       const eventPromise = dispatcher.handleEvent(
@@ -373,8 +375,8 @@ describe("DevDispatcher — function: insert ordering with retry", () => {
         path.join(dir, "function", "NoFiles", "schema.yaml")
       );
 
-      // Advance all retries
-      await jest.advanceTimersByTimeAsync(1000);
+      // Advance past all retries (5 × 200ms = 1000ms)
+      await jest.advanceTimersByTimeAsync(1100);
       await eventPromise;
 
       expect(mod.create).not.toHaveBeenCalled();
@@ -400,7 +402,7 @@ describe("DevDispatcher — function: unlink of index/package warns, no API call
         yaml.stringify({name: "MyFn", language: "javascript"})
       );
 
-      const mod = makeMockModule("function", {name: "function"});
+      const mod = makeFunctionMod();
       const state = makeState({function: {MyFn: "remote-id-1"}});
       const warns: string[] = [];
 
@@ -437,25 +439,25 @@ describe("DevDispatcher — function: unlink of index/package warns, no API call
         yaml.stringify({name: "MyFn", language: "javascript"})
       );
 
-      const mod = makeMockModule("function", {name: "function"});
-      const state = makeState({function: {MyFn: "remote-id-1"}});
-      const warns: string[] = [];
+      const mod2 = makeFunctionMod();
+      const state2 = makeState({function: {MyFn: "remote-id-1"}});
+      const warns2: string[] = [];
 
-      const dispatcher = createDevDispatcher({
-        modules: [mod],
+      const dispatcher2 = createDevDispatcher({
+        modules: [mod2],
         http: mockHttp,
         rootDir: dir,
-        state,
-        warnLogger: m => warns.push(m)
+        state: state2,
+        warnLogger: m => warns2.push(m)
       });
 
-      await dispatcher.handleEvent(
+      await dispatcher2.handleEvent(
         "unlink",
         path.join(dir, "function", "MyFn", "package.json")
       );
 
-      expect(mod.delete).not.toHaveBeenCalled();
-      expect(warns[0]).toContain("no effect");
+      expect(mod2.delete).not.toHaveBeenCalled();
+      expect(warns2[0]).toContain("no effect");
     } finally {
       cleanup(dir);
     }
@@ -469,7 +471,7 @@ describe("DevDispatcher — function: schema.yaml unlink deletes remote", () => 
     jest.useFakeTimers();
     const dir = makeTmpDir();
     try {
-      const mod = makeMockModule("function", {name: "function"});
+      const mod = makeFunctionMod();
       const state = makeState({function: {MyFn: "remote-fn-id"}});
       const logs: string[] = [];
 
@@ -514,7 +516,7 @@ describe("DevDispatcher — function: index/package change triggers update", () 
       fs.writeFileSync(path.join(fnDir, "index.mjs"), "export default () => 42;");
       fs.writeFileSync(path.join(fnDir, "package.json"), JSON.stringify({dependencies: {}}));
 
-      const mod = makeMockModule("function", {name: "function"});
+      const mod = makeFunctionMod();
       const state = makeState({function: {MyFn: "remote-fn-id"}});
       const logs: string[] = [];
 
@@ -556,7 +558,7 @@ describe("DevDispatcher — function: index/package change triggers update", () 
         JSON.stringify({dependencies: {lodash: "^4.0.0"}})
       );
 
-      const mod = makeMockModule("function", {name: "function"});
+      const mod = makeFunctionMod();
       const state = makeState({function: {MyFn: "remote-fn-id"}});
 
       const dispatcher = createDevDispatcher({
@@ -598,10 +600,7 @@ describe("DevDispatcher — function rename: promoted to single update", () => {
         JSON.stringify({dependencies: {}})
       );
 
-      const mod = makeMockModule("function", {
-        name: "function",
-        readRemote: jest.fn().mockResolvedValue([])
-      });
+      const mod = makeFunctionMod();
       const state = makeState({function: {"old-fn-name": "fn-id-1"}});
       const logs: string[] = [];
 
@@ -611,9 +610,7 @@ describe("DevDispatcher — function rename: promoted to single update", () => {
         rootDir: dir,
         state,
         logger: m => logs.push(m),
-        renameWindowMs: 500,
-        fnFileRetryDelayMs: 0,
-        fnFileMaxRetries: 1
+        renameWindowMs: 500
       });
 
       // Simulate rename: unlink old, then add new within the window

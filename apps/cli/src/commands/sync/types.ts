@@ -1,5 +1,54 @@
 import {httpService} from "../../http";
 
+// ─── Dev-watcher extension types ─────────────────────────────────────────────
+
+/**
+ * Context object passed to a module's `devHandleEvent` hook.
+ * Provides everything needed to react to a file change without coupling
+ * the module to the dispatcher's internal data structures.
+ *
+ * All slug/remoteId operations are automatically scoped to the calling module.
+ */
+export interface DevEventContext {
+  /** "add" | "change" | "unlink" — the chokidar event type */
+  type: "add" | "change" | "unlink";
+  /** The sub-directory name under <rootDir>/<moduleName>/ */
+  slug: string;
+  /** The filename within the slug dir (e.g. "schema.yaml", "index.ts") */
+  file: string;
+  /** The HTTP client for API calls */
+  http: httpService.Client;
+  /** Absolute path to the project root */
+  rootDir: string;
+  /** Retrieve the cached remote ID for this module's slug */
+  getRemoteId(slug: string): string | undefined;
+  /** Store a remote ID mapping after a create */
+  setRemoteId(slug: string, id: string): void;
+  /** Remove a remote ID mapping after a delete */
+  clearRemoteId(slug: string): void;
+  /**
+   * Enqueue a pending delete for the given slug.
+   * After `renameWindowMs` the delete is executed unless `consumePendingDeleteByRemoteId`
+   * is called first with the matching remoteId (rename promotion).
+   */
+  schedulePendingDelete(slug: string, remoteId: string): void;
+  /**
+   * Find, cancel, and return any pending-delete entry whose remoteId matches.
+   * Used for rename detection: call this on `add schema.yaml` with the new
+   * file's `_id` — if it matches a pending delete, it's a rename, not a create.
+   * Returns undefined when no match is found.
+   */
+  consumePendingDeleteByRemoteId(remoteId: string): {slug: string; remoteId: string} | undefined;
+  /** Await a delay — honours fake timers in tests */
+  sleep(ms: number): Promise<void>;
+  /** Refresh the module's remote-ID state after a create/rename */
+  refreshState(): Promise<void>;
+  /** Info-level logger (replaces console.log) */
+  log(msg: string): void;
+  /** Warning-level logger (replaces console.warn) */
+  warn(msg: string): void;
+}
+
 export enum ChangeKind {
   Create = "create",
   Update = "update",
@@ -87,6 +136,29 @@ export interface ResourceModule<T = any> {
   renderDetail(local: LocalResource<T>, remote: RemoteResource<T>): Record<string, string>;
   /** One-liner shown in plan output; e.g. "Pages (12 properties)" */
   summaryLine(resource: LocalResource<T> | RemoteResource<T>): string;
+
+  /**
+   * File names (relative to the slug dir) that the dev watcher should track.
+   * Defaults to `["schema.yaml"]` when omitted.
+   * Used both to filter chokidar events and to build the watch-ignored predicate.
+   *
+   * Example — function module: `["schema.yaml", "index.ts", "index.mjs", "index.js", "package.json"]`
+   */
+  watchedFiles?: string[];
+
+  /**
+   * Handle a single file-change event from the dev watcher.
+   *
+   * When provided, the dispatcher calls this instead of its default schema-only
+   * handler, giving the module full control over create/update/delete logic for
+   * all file types it owns.
+   *
+   * When absent, the dispatcher falls back to the built-in schema-only behaviour:
+   * - `add`    → create or update via `schema.yaml`
+   * - `change` → update via `schema.yaml`
+   * - `unlink` → schedule delete (with rename-window promotion)
+   */
+  devHandleEvent?(ctx: DevEventContext): Promise<void>;
 }
 
 export interface LocalResource<T = any> {

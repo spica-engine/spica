@@ -9,9 +9,8 @@ import {config} from "../../config";
 import {buildPlan, applyPlan, renderPlan} from "./planner";
 import {confirm} from "./prompt";
 import {resolveModules, MODULE_NAMES} from "./modules/index";
-import {readYaml, readText} from "./fs-utils";
-import {ResourceModule, LocalResource} from "./types";
-import {FunctionData} from "./modules/function";
+import {readYaml} from "./fs-utils";
+import {DevEventContext, ResourceModule, LocalResource} from "./types";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -56,10 +55,11 @@ async function refreshStateForModule(
 
 // ─── Globs ───────────────────────────────────────────────────────────────────
 
-const FUNCTION_FILES_RE = /^(?:schema\.yaml|index\.(?:ts|mjs|js)|package\.json)$/;
-
 function buildWatchIgnored(modules: ResourceModule[], rootDir: string) {
-  const moduleNames = new Set(modules.map(m => m.name));
+  // Build a per-module set of watched filenames for fast lookup
+  const watchedByModule = new Map(
+    modules.map(m => [m.name, new Set(m.watchedFiles ?? ["schema.yaml"])])
+  );
   return (filePath: string, stats?: fs.Stats) => {
     // Never ignore directories — chokidar must recurse into them
     if (!stats || stats.isDirectory()) return false;
@@ -68,34 +68,10 @@ function buildWatchIgnored(modules: ResourceModule[], rootDir: string) {
     // Ignore files outside <moduleName>/<slug>/<file> depth
     if (parts.length !== 3) return true;
     const [moduleName, , file] = parts;
-    if (!moduleNames.has(moduleName)) return true;
-    if (moduleName === "function") return !FUNCTION_FILES_RE.test(file);
-    return file !== "schema.yaml";
+    const watched = watchedByModule.get(moduleName);
+    if (!watched) return true;
+    return !watched.has(file);
   };
-}
-
-// ─── Function-module helpers ─────────────────────────────────────────────────
-
-function indexFilename(language?: string): string {
-  return language === "typescript" ? "index.ts" : "index.mjs";
-}
-
-function readLocalFunction(rootDir: string, slug: string): LocalResource<FunctionData> | null {
-  const fnDir = path.join(rootDir, "function", slug);
-  const schema = readYaml<FunctionData["schema"]>(path.join(fnDir, "schema.yaml"));
-  if (!schema) return null;
-  const filename = indexFilename(schema.language as string | undefined);
-  const index = readText(path.join(fnDir, filename)) ?? "";
-  let dependencies: Record<string, string> = {};
-  const pkgText = readText(path.join(fnDir, "package.json"));
-  if (pkgText) {
-    try {
-      dependencies = JSON.parse(pkgText).dependencies ?? {};
-    } catch {
-      /* ignore */
-    }
-  }
-  return {slug, data: {schema, index, dependencies} as FunctionData};
 }
 
 /**
@@ -125,10 +101,6 @@ export interface DevDispatcherOptions {
   warnLogger?: (msg: string) => void;
   /** How long (ms) to wait for rename partner after an unlink (default 500) */
   renameWindowMs?: number;
-  /** Delay (ms) between retries when waiting for function index/package (default 200) */
-  fnFileRetryDelayMs?: number;
-  /** Max retries when waiting for function index/package (default 5) */
-  fnFileMaxRetries?: number;
 }
 
 export interface DevDispatcher {
@@ -138,15 +110,7 @@ export interface DevDispatcher {
 }
 
 export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
-  const {
-    modules,
-    http,
-    rootDir,
-    state,
-    renameWindowMs = 500,
-    fnFileRetryDelayMs = 200,
-    fnFileMaxRetries = 5
-  } = opts;
+  const {modules, http, rootDir, state, renameWindowMs = 500} = opts;
   const log = opts.logger ?? ((m: string) => console.log(m));
   const warn = opts.warnLogger ?? ((m: string) => console.warn(m));
 
@@ -289,145 +253,53 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
     pendingDeletes.set(pendingKey, {timer, moduleName: mod.name, slug, remoteId});
   }
 
-  // ── function-module handler ────────────────────────────────────────────────
+  // ── DevEventContext factory ────────────────────────────────────────────────
 
-  const isFunctionIndexFile = (file: string) =>
-    file === "index.ts" || file === "index.mjs" || file === "index.js";
-  const isFunctionPackageFile = (file: string) => file === "package.json";
-
-  async function waitForFunctionFiles(rootDir: string, slug: string, schema: FunctionData["schema"]): Promise<boolean> {
-    const fnDir = path.join(rootDir, "function", slug);
-    const indexFile = indexFilename(schema.language as string | undefined);
-    for (let i = 0; i < fnFileMaxRetries; i++) {
-      if (
-        fs.existsSync(path.join(fnDir, indexFile)) &&
-        fs.existsSync(path.join(fnDir, "package.json"))
-      ) {
-        return true;
-      }
-      await sleep(fnFileRetryDelayMs);
-    }
-    // Final check
-    return (
-      fs.existsSync(path.join(fnDir, indexFile)) &&
-      fs.existsSync(path.join(fnDir, "package.json"))
-    );
-  }
-
-  async function handleFunctionSchemaAdd(slug: string): Promise<void> {
-    const mod = moduleMap.get("function")!;
-    const schemaPath = path.join(rootDir, "function", slug, "schema.yaml");
-    const schema = readYaml<FunctionData["schema"]>(schemaPath);
-    if (!schema) return;
-
-    // Check rename promotion
-    const newLocalId = schema._id as string | undefined;
-    let promotedKey: string | undefined;
-    if (newLocalId) {
-      for (const [key, pending] of pendingDeletes) {
-        if (pending.moduleName === "function" && pending.remoteId === newLocalId) {
-          promotedKey = key;
-          break;
+  function makeContext(
+    mod: ResourceModule,
+    type: "add" | "change" | "unlink",
+    slug: string,
+    file: string
+  ): DevEventContext {
+    return {
+      type,
+      slug,
+      file,
+      http,
+      rootDir,
+      getRemoteId: (s) => getRemoteId(mod.name, s),
+      setRemoteId: (s, id) => setRemoteId(mod.name, s, id),
+      clearRemoteId: (s) => clearRemoteId(mod.name, s),
+      schedulePendingDelete(s, remoteId) {
+        const pendingKey = `${mod.name}:${s}`;
+        if (pendingDeletes.has(pendingKey)) return;
+        const timer = setTimeout(async () => {
+          pendingDeletes.delete(pendingKey);
+          clearRemoteId(mod.name, s);
+          try {
+            await mod.delete(http, remoteId);
+            log(`${red("-")} [${mod.name}] deleted ${bold(s)}`);
+          } catch (err) {
+            warn(`${red("✗")} [${mod.name}] delete ${s}: ${formatError(err)}`);
+          }
+        }, renameWindowMs);
+        pendingDeletes.set(pendingKey, {timer, moduleName: mod.name, slug: s, remoteId});
+      },
+      consumePendingDeleteByRemoteId(remoteId) {
+        for (const [key, pending] of pendingDeletes) {
+          if (pending.moduleName === mod.name && pending.remoteId === remoteId) {
+            clearTimeout(pending.timer);
+            pendingDeletes.delete(key);
+            return {slug: pending.slug, remoteId: pending.remoteId};
+          }
         }
-      }
-    }
-
-    if (promotedKey) {
-      // Rename: cancel pending delete
-      const pending = pendingDeletes.get(promotedKey)!;
-      clearTimeout(pending.timer);
-      pendingDeletes.delete(promotedKey);
-      clearRemoteId("function", pending.slug);
-      setRemoteId("function", slug, pending.remoteId);
-
-      // Wait for all files then update
-      const allPresent = await waitForFunctionFiles(rootDir, slug, schema);
-      if (!allPresent) {
-        warn(`${yellow("⚠")} [function] timeout waiting for index/package of ${slug} after rename`);
-        return;
-      }
-      const local = readLocalFunction(rootDir, slug);
-      if (!local) return;
-      log(`${cyan("~")} [function] ${bold(pending.slug)} ${cyan("→")} ${bold(slug)}  ${yellow("(rename → update)")}`);
-      try {
-        await mod.update(http, local, pending.remoteId);
-        log(`${green("✓")} [function] updated ${bold(slug)}`);
-      } catch (err) {
-        warn(`${red("✗")} [function] update ${slug}: ${formatError(err)}`);
-      }
-      return;
-    }
-
-    const remoteId = getRemoteId("function", slug);
-    if (remoteId) {
-      // Already exists remotely — treat as update; wait for files
-      const allPresent = await waitForFunctionFiles(rootDir, slug, schema);
-      if (!allPresent) {
-        warn(`${yellow("⚠")} [function] timeout waiting for index/package of ${slug}`);
-        return;
-      }
-      const local = readLocalFunction(rootDir, slug);
-      if (!local) return;
-      try {
-        await mod.update(http, local, remoteId);
-        log(`${green("✓")} [function] updated ${bold(slug)}`);
-      } catch (err) {
-        warn(`${red("✗")} [function] update ${slug}: ${formatError(err)}`);
-      }
-    } else {
-      // New function: wait for index + package, then create
-      log(`${green("+")} [function] creating ${bold(slug)}…`);
-      const allPresent = await waitForFunctionFiles(rootDir, slug, schema);
-      if (!allPresent) {
-        warn(`${yellow("⚠")} [function] timeout waiting for index/package of ${slug}; skipping create`);
-        return;
-      }
-      const local = readLocalFunction(rootDir, slug);
-      if (!local) return;
-      try {
-        await mod.create(http, local);
-        await refreshStateForModule(mod, http, state, rootDir);
-        log(`${green("✓")} [function] created ${bold(slug)}`);
-      } catch (err) {
-        warn(`${red("✗")} [function] create ${slug}: ${formatError(err)}`);
-      }
-    }
-  }
-
-  async function handleFunctionFileChange(slug: string): Promise<void> {
-    const mod = moduleMap.get("function")!;
-    const remoteId = getRemoteId("function", slug);
-    if (!remoteId) return; // No remote yet; schema add will handle creation
-    const local = readLocalFunction(rootDir, slug);
-    if (!local) return;
-    try {
-      await mod.update(http, local, remoteId);
-      log(`${green("✓")} [function] updated ${bold(slug)}`);
-    } catch (err) {
-      warn(`${red("✗")} [function] update ${slug}: ${formatError(err)}`);
-    }
-  }
-
-  async function handleFunctionSchemaUnlink(slug: string): Promise<void> {
-    const mod = moduleMap.get("function")!;
-    const remoteId = getRemoteId("function", slug);
-    if (!remoteId) return;
-
-    const pendingKey = `function:${slug}`;
-    if (pendingDeletes.has(pendingKey)) return;
-
-    const timer = setTimeout(async () => {
-      pendingDeletes.delete(pendingKey);
-      clearRemoteId("function", slug);
-      try {
-        await mod.delete(http, remoteId);
-        log(`${red("-")} [function] deleted ${bold(slug)}`);
-      } catch (err) {
-        warn(`${red("✗")} [function] delete ${slug}: ${formatError(err)}`);
-      }
-    }, renameWindowMs);
-
-    pendingDeletes.set(pendingKey, {timer, moduleName: "function", slug, remoteId});
+        return undefined;
+      },
+      sleep,
+      refreshState: () => refreshStateForModule(mod, http, state, rootDir),
+      log,
+      warn
+    };
   }
 
   // ── main dispatcher ────────────────────────────────────────────────────────
@@ -440,31 +312,11 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
     const mod = moduleMap.get(moduleName);
     if (!mod) return;
 
-    if (moduleName === "function") {
-      if (type === "add" && file === "schema.yaml") {
-        await handleFunctionSchemaAdd(slug);
-      } else if (type === "change" && file === "schema.yaml") {
-        // schema change: update if exists
-        const remoteId = getRemoteId("function", slug);
-        if (remoteId) {
-          await handleFunctionFileChange(slug);
-        }
-        // else: wait for schema add path to handle it
-      } else if (type === "change" && (isFunctionIndexFile(file) || isFunctionPackageFile(file))) {
-        await handleFunctionFileChange(slug);
-      } else if (type === "add" && (isFunctionIndexFile(file) || isFunctionPackageFile(file))) {
-        // Re-add of index/package: treat as update if function already exists
-        await handleFunctionFileChange(slug);
-      } else if (type === "unlink" && file === "schema.yaml") {
-        await handleFunctionSchemaUnlink(slug);
-      } else if (type === "unlink" && (isFunctionIndexFile(file) || isFunctionPackageFile(file))) {
-        warn(
-          `${yellow("⚠")} [function] Removing ${bold(file)} has no effect on the remote function. ` +
-            `Restore the file or delete schema.yaml to remove the function.`
-        );
-      }
+    if (mod.devHandleEvent) {
+      // Module provides its own full event handler
+      await mod.devHandleEvent(makeContext(mod, type, slug, file));
     } else {
-      // Schema-only modules
+      // Default schema-only handler (bucket / env-var / secret / policy)
       if (file !== "schema.yaml") return;
       if (type === "add") {
         await handleSchemaAdd(mod, slug);

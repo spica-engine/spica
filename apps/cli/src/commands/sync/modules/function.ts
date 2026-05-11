@@ -1,6 +1,8 @@
 import path from "path";
+import fs from "fs";
 import yaml from "yaml";
 import isEqual from "lodash/isEqual.js";
+import {bold, cyan, green, red, yellow} from "colorette";
 import {httpService} from "../../../http";
 import {buildUnifiedDiff, diffObjectFields} from "../planner";
 import {
@@ -14,7 +16,7 @@ import {
   writeText,
   writeYaml
 } from "../fs-utils";
-import {LocalResource, RemoteResource, ResourceModule} from "../types";
+import {DevEventContext, LocalResource, RemoteResource, ResourceModule} from "../types";
 
 interface FunctionSchema {
   _id?: string;
@@ -330,5 +332,162 @@ export const functionModule: ResourceModule<FunctionData> = {
 
   extractLocalId(data) {
     return data.schema._id;
+  },
+
+  watchedFiles: ["schema.yaml", "index.ts", "index.mjs", "index.js", "package.json"],
+
+  async devHandleEvent(ctx: DevEventContext) {
+    // `this` is the module object — enables test mocks to override create/update/delete
+    const self = this as ResourceModule<FunctionData>;
+    const {
+      type,
+      slug,
+      file,
+      http,
+      rootDir,
+      log,
+      warn,
+      sleep,
+      refreshState,
+      getRemoteId,
+      setRemoteId,
+      clearRemoteId,
+      schedulePendingDelete,
+      consumePendingDeleteByRemoteId
+    } = ctx;
+
+    const isIndexFile = (f: string) => f === "index.ts" || f === "index.mjs" || f === "index.js";
+    const isPackageFile = (f: string) => f === "package.json";
+
+    const fnDir = path.join(rootDir, "function", slug);
+
+    function readLocalFn(): LocalResource<FunctionData> | null {
+      const schema = readYaml<FunctionSchema>(path.join(fnDir, "schema.yaml"));
+      if (!schema) return null;
+      const idx = readText(path.join(fnDir, indexFilename(schema.language))) ?? "";
+      let dependencies: Record<string, string> = {};
+      const pkgText = readText(path.join(fnDir, "package.json"));
+      if (pkgText) {
+        try {
+          dependencies = JSON.parse(pkgText).dependencies ?? {};
+        } catch {
+          /* ignore malformed package.json */
+        }
+      }
+      return {slug, data: {schema, index: idx, dependencies}};
+    }
+
+    async function waitForFiles(schema: FunctionSchema): Promise<boolean> {
+      const idxFile = indexFilename(schema.language);
+      for (let i = 0; i < 5; i++) {
+        if (
+          fs.existsSync(path.join(fnDir, idxFile)) &&
+          fs.existsSync(path.join(fnDir, "package.json"))
+        ) {
+          return true;
+        }
+        await sleep(200);
+      }
+      return (
+        fs.existsSync(path.join(fnDir, idxFile)) &&
+        fs.existsSync(path.join(fnDir, "package.json"))
+      );
+    }
+
+    if (type === "add" && file === "schema.yaml") {
+      const schema = readYaml<FunctionSchema>(path.join(fnDir, "schema.yaml"));
+      if (!schema) return;
+
+      // Rename detection: if the new schema's _id matches a pending delete, it's a rename
+      const newLocalId = schema._id as string | undefined;
+      if (newLocalId) {
+        const pending = consumePendingDeleteByRemoteId(newLocalId);
+        if (pending) {
+          clearRemoteId(pending.slug);
+          setRemoteId(slug, pending.remoteId);
+          const allPresent = await waitForFiles(schema);
+          if (!allPresent) {
+            warn(`[function] timeout waiting for index/package files of "${slug}" after rename`);
+            return;
+          }
+          const local = readLocalFn();
+          if (!local) return;
+          log(`[function] "${pending.slug}" → "${slug}"  (rename → update)`);
+          try {
+            await self.update(http, local, pending.remoteId);
+            log(`[function] updated "${slug}"`);
+          } catch (err) {
+            warn(`[function] update "${slug}": ${err instanceof Error ? err.message : String(err)}`);
+          }
+          return;
+        }
+      }
+
+      const remoteId = getRemoteId(slug);
+      if (remoteId) {
+        // slug already exists remotely — treat re-add as update
+        const allPresent = await waitForFiles(schema);
+        if (!allPresent) {
+          warn(`[function] timeout waiting for index/package files of "${slug}"`);
+          return;
+        }
+        const local = readLocalFn();
+        if (!local) return;
+        try {
+          await self.update(http, local, remoteId);
+          log(`[function] updated "${slug}"`);
+        } catch (err) {
+          warn(`[function] update "${slug}": ${err instanceof Error ? err.message : String(err)}`);
+        }
+      } else {
+        // new function
+        log(`[function] creating "${slug}"…`);
+        const allPresent = await waitForFiles(schema);
+        if (!allPresent) {
+          warn(`[function] timeout waiting for index/package files of "${slug}"; skipping create`);
+          return;
+        }
+        const local = readLocalFn();
+        if (!local) return;
+        try {
+          await self.create(http, local);
+          await refreshState();
+          log(`[function] created "${slug}"`);
+        } catch (err) {
+          warn(`[function] create "${slug}": ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+    } else if (type === "change" && file === "schema.yaml") {
+      const remoteId = getRemoteId(slug);
+      if (!remoteId) return;
+      const local = readLocalFn();
+      if (!local) return;
+      try {
+        await self.update(http, local, remoteId);
+        log(`[function] updated "${slug}"`);
+      } catch (err) {
+        warn(`[function] update "${slug}": ${err instanceof Error ? err.message : String(err)}`);
+      }
+    } else if ((type === "change" || type === "add") && (isIndexFile(file) || isPackageFile(file))) {
+      const remoteId = getRemoteId(slug);
+      if (!remoteId) return;
+      const local = readLocalFn();
+      if (!local) return;
+      try {
+        await self.update(http, local, remoteId);
+        log(`[function] updated "${slug}"`);
+      } catch (err) {
+        warn(`[function] update "${slug}": ${err instanceof Error ? err.message : String(err)}`);
+      }
+    } else if (type === "unlink" && file === "schema.yaml") {
+      const remoteId = getRemoteId(slug);
+      if (!remoteId) return;
+      schedulePendingDelete(slug, remoteId);
+    } else if (type === "unlink" && (isIndexFile(file) || isPackageFile(file))) {
+      warn(
+        `[function] Removing "${file}" has no effect on the remote function. ` +
+          `Restore the file or delete schema.yaml to remove the function.`
+      );
+    }
   }
 };
