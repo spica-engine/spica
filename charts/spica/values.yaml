@@ -64,7 +64,7 @@ application:
   twilioAuthToken:
   twilioFromNumber:
   defaultPassword: spica
-  webBaseUrl: /spica/
+  webBaseUrl: /
   apiBaseUrl: /api/
   publicHost:
   storageSize: 2Gi
