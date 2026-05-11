@@ -52,7 +52,7 @@ async function apply({args, options}: ActionParameters) {
     if (errors.length) {
       console.log(bold(yellow(`\n⚠  Completed with ${errors.length} error(s):`)));
       for (const e of errors) console.log(`   ${red("✗")} ${e}`);
-      process.exitCode = 1;
+      process.exitCode = abortOnError ? 1 : 0;
     } else {
       const c = p.modules.reduce((n, m) => n + m.creates.length, 0);
       const u = p.modules.reduce((n, m) => n + m.updates.length, 0);
