@@ -43,7 +43,7 @@
     "@spica-server/passport-testing": "workspace:*",
     "@spica-server/preference-testing": "workspace:*",
     "@spica-server/secret": "workspace:*",
-    "uuid": "^11.0.5",
+    "uuid": "^14.0.0",
     "yaml": "^2.7.0"
   }
 }
