@@ -3,6 +3,7 @@ import fs from "fs";
 import chokidar from "chokidar";
 import {ActionParameters, Command, Program} from "@caporal/core";
 import {bold, cyan, green, red, yellow} from "colorette";
+import ora from "ora";
 import {httpService} from "../../http";
 import {context} from "../../context";
 import {config} from "../../config";
@@ -154,13 +155,25 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
     state.remoteIds.get(moduleName)?.delete(slug);
   }
 
+  // ── spinOp — shared spinner wrapper ───────────────────────────────────────
+
+  async function spinOp(
+    label: string,
+    successText: string,
+    op: () => Promise<void>
+  ): Promise<void> {
+    const spinner = ora({text: `${label}  Applying…`, color: "yellow"}).start();
+    try {
+      await op();
+      spinner.succeed(`${label}  ${successText}`);
+    } catch (err) {
+      spinner.fail(`${label}  failed: ${formatError(err)}`);
+    }
+  }
+
   // ── schema-module handler (bucket / env-var / secret / policy) ─────────────
 
   async function handleSchemaAdd(mod: ResourceModule, slug: string): Promise<void> {
-    // Check for rename promotion: does a pending delete exist for this module
-    // with an _id that matches the newly written schema?
-    const pendingKey = `${mod.name}:${slug}`;
-    // Also check all pending deletes for this module to find a matching _id
     const local = readLocalSchema(mod, rootDir, slug);
     if (!local) return;
 
@@ -176,43 +189,32 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
     }
 
     if (promotedKey) {
-      // Rename: cancel the pending delete and run update instead
       const pending = pendingDeletes.get(promotedKey)!;
       clearTimeout(pending.timer);
       pendingDeletes.delete(promotedKey);
-      // Re-map slug → remoteId to new slug
       clearRemoteId(mod.name, pending.slug);
       setRemoteId(mod.name, slug, pending.remoteId);
-      log(`${cyan("~")} [${mod.name}] ${bold(pending.slug)} ${cyan("→")} ${bold(slug)}  ${yellow("(rename → update)")}`);
-      try {
-        await mod.update(http, local, pending.remoteId);
-        log(`${green("✓")} [${mod.name}] updated ${bold(slug)}`);
-      } catch (err) {
-        warn(`${red("✗")} [${mod.name}] update ${slug}: ${formatError(err)}`);
-      }
+      const renameLabel = `${yellow("~")}  ${bold(mod.displayName)}  ${bold(pending.slug)} ${cyan("→")} ${bold(slug)}`;
+      await spinOp(renameLabel, "updated (rename)", () => mod.update(http, local, pending.remoteId));
       return;
     }
 
     const remoteId = getRemoteId(mod.name, slug);
     if (remoteId) {
-      // File re-added but we already track it — treat as update
-      try {
-        await mod.update(http, local, remoteId);
-        log(`${green("✓")} [${mod.name}] updated ${bold(slug)}`);
-      } catch (err) {
-        warn(`${red("✗")} [${mod.name}] update ${slug}: ${formatError(err)}`);
-      }
+      await spinOp(
+        `${yellow("~")}  ${bold(mod.displayName)}  ${bold(slug)}`,
+        "updated",
+        () => mod.update(http, local, remoteId)
+      );
     } else {
-      // Genuinely new
-      try {
-        log(`${green("+")} [${mod.name}] creating ${bold(slug)}…`);
-        await mod.create(http, local);
-        // Refresh state to capture new remote id
-        await refreshStateForModule(mod, http, state, rootDir);
-        log(`${green("✓")} [${mod.name}] created ${bold(slug)}`);
-      } catch (err) {
-        warn(`${red("✗")} [${mod.name}] create ${slug}: ${formatError(err)}`);
-      }
+      await spinOp(
+        `${green("+")}  ${bold(mod.displayName)}  ${bold(slug)}`,
+        "created",
+        async () => {
+          await mod.create(http, local);
+          await refreshStateForModule(mod, http, state, rootDir);
+        }
+      );
     }
   }
 
@@ -220,34 +222,29 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
     const local = readLocalSchema(mod, rootDir, slug);
     if (!local) return;
     const remoteId = getRemoteId(mod.name, slug);
-    if (!remoteId) {
-      // Treat as create
-      return handleSchemaAdd(mod, slug);
-    }
-    try {
-      await mod.update(http, local, remoteId);
-      log(`${green("✓")} [${mod.name}] updated ${bold(slug)}`);
-    } catch (err) {
-      warn(`${red("✗")} [${mod.name}] update ${slug}: ${formatError(err)}`);
-    }
+    if (!remoteId) return handleSchemaAdd(mod, slug);
+    await spinOp(
+      `${yellow("~")}  ${bold(mod.displayName)}  ${bold(slug)}`,
+      "updated",
+      () => mod.update(http, local, remoteId)
+    );
   }
 
   async function handleSchemaUnlink(mod: ResourceModule, slug: string): Promise<void> {
     const remoteId = getRemoteId(mod.name, slug);
-    if (!remoteId) return; // nothing to delete
+    if (!remoteId) return;
 
     const pendingKey = `${mod.name}:${slug}`;
-    if (pendingDeletes.has(pendingKey)) return; // already pending
+    if (pendingDeletes.has(pendingKey)) return;
 
     const timer = setTimeout(async () => {
       pendingDeletes.delete(pendingKey);
       clearRemoteId(mod.name, slug);
-      try {
-        await mod.delete(http, remoteId);
-        log(`${red("-")} [${mod.name}] deleted ${bold(slug)}`);
-      } catch (err) {
-        warn(`${red("✗")} [${mod.name}] delete ${slug}: ${formatError(err)}`);
-      }
+      await spinOp(
+        `${red("-")}  ${bold(mod.displayName)}  ${bold(slug)}`,
+        "deleted",
+        () => mod.delete(http, remoteId)
+      );
     }, renameWindowMs);
 
     pendingDeletes.set(pendingKey, {timer, moduleName: mod.name, slug, remoteId});
@@ -276,12 +273,11 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
         const timer = setTimeout(async () => {
           pendingDeletes.delete(pendingKey);
           clearRemoteId(mod.name, s);
-          try {
-            await mod.delete(http, remoteId);
-            log(`${red("-")} [${mod.name}] deleted ${bold(s)}`);
-          } catch (err) {
-            warn(`${red("✗")} [${mod.name}] delete ${s}: ${formatError(err)}`);
-          }
+          await spinOp(
+            `${red("-")}  ${bold(mod.displayName)}  ${bold(s)}`,
+            "deleted",
+            () => mod.delete(http, remoteId)
+          );
         }, renameWindowMs);
         pendingDeletes.set(pendingKey, {timer, moduleName: mod.name, slug: s, remoteId});
       },
@@ -298,7 +294,8 @@ export function createDevDispatcher(opts: DevDispatcherOptions): DevDispatcher {
       sleep,
       refreshState: () => refreshStateForModule(mod, http, state, rootDir),
       log,
-      warn
+      warn,
+      spin: (label, successText, op) => spinOp(label, successText, op)
     };
   }
 

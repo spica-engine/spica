@@ -348,6 +348,7 @@ export const functionModule: ResourceModule<FunctionData> = {
       log,
       warn,
       sleep,
+      spin,
       refreshState,
       getRemoteId,
       setRemoteId,
@@ -358,6 +359,18 @@ export const functionModule: ResourceModule<FunctionData> = {
 
     const isIndexFile = (f: string) => f === "index.ts" || f === "index.mjs" || f === "index.js";
     const isPackageFile = (f: string) => f === "package.json";
+
+    function fileToSub(f: string): string {
+      if (f === "package.json") return "deps";
+      if (f === "schema.yaml") return "schema";
+      return "index";
+    }
+
+    function fnLabel(symbol: string, forSlug: string, sub?: string): string {
+      const parts = [symbol, bold(self.displayName), bold(forSlug)];
+      if (sub) parts.push(yellow(`[${sub}]`));
+      return parts.join("  ");
+    }
 
     const fnDir = path.join(rootDir, "function", slug);
 
@@ -390,15 +403,14 @@ export const functionModule: ResourceModule<FunctionData> = {
       return allPresent();
     }
 
-    async function applyUpdate(remoteId: string): Promise<void> {
+    async function applyUpdate(remoteId: string, label?: string, successText = "updated"): Promise<void> {
       const local = readLocalFn();
       if (!local) return;
-      try {
-        await self.update(http, local, remoteId);
-        log(`[function] updated "${slug}"`);
-      } catch (err) {
-        warn(`[function] update "${slug}": ${err instanceof Error ? err.message : String(err)}`);
-      }
+      await spin(
+        label ?? fnLabel(yellow("~"), slug),
+        successText,
+        () => self.update(http, local, remoteId)
+      );
     }
 
     async function onSchemaAdd(): Promise<void> {
@@ -413,11 +425,11 @@ export const functionModule: ResourceModule<FunctionData> = {
           clearRemoteId(pending.slug);
           setRemoteId(slug, pending.remoteId);
           if (!(await waitForFiles(schema))) {
-            warn(`[function] timeout waiting for index/package files of "${slug}" after rename`);
+            warn(`⚠  ${bold(self.displayName)}  ${bold(slug)}  timeout waiting for companion files after rename`);
             return;
           }
-          log(`[function] "${pending.slug}" → "${slug}"  (rename → update)`);
-          await applyUpdate(pending.remoteId);
+          const renameLabel = `${yellow("~")}  ${bold(self.displayName)}  ${bold(pending.slug)} ${cyan("→")} ${bold(slug)}`;
+          await applyUpdate(pending.remoteId, renameLabel, "updated (rename)");
           return;
         }
       }
@@ -426,26 +438,22 @@ export const functionModule: ResourceModule<FunctionData> = {
       if (remoteId) {
         // Already tracked remotely — re-add is an update
         if (!(await waitForFiles(schema))) {
-          warn(`[function] timeout waiting for index/package files of "${slug}"`);
+          warn(`⚠  ${bold(self.displayName)}  ${bold(slug)}  timeout waiting for companion files`);
           return;
         }
         await applyUpdate(remoteId);
       } else {
         // Brand new function
-        log(`[function] creating "${slug}"…`);
         if (!(await waitForFiles(schema))) {
-          warn(`[function] timeout waiting for index/package files of "${slug}"; skipping create`);
+          warn(`⚠  ${bold(self.displayName)}  ${bold(slug)}  timeout waiting for companion files; skipping create`);
           return;
         }
         const local = readLocalFn();
         if (!local) return;
-        try {
+        await spin(fnLabel(green("+"), slug), "created", async () => {
           await self.create(http, local);
           await refreshState();
-          log(`[function] created "${slug}"`);
-        } catch (err) {
-          warn(`[function] create "${slug}": ${err instanceof Error ? err.message : String(err)}`);
-        }
+        });
       }
     }
 
@@ -455,11 +463,11 @@ export const functionModule: ResourceModule<FunctionData> = {
     const isCodeFile = isIndexFile(file) || isPackageFile(file);
 
     if      (type === "add"    && isSchema)   await onSchemaAdd();
-    else if (type === "change" && isSchema)   { const id = getRemoteId(slug); if (id) await applyUpdate(id); }
-    else if (type !== "unlink" && isCodeFile) { const id = getRemoteId(slug); if (id) await applyUpdate(id); }
+    else if (type === "change" && isSchema)   { const id = getRemoteId(slug); if (id) await applyUpdate(id, fnLabel(yellow("~"), slug, "schema")); }
+    else if (type !== "unlink" && isCodeFile) { const id = getRemoteId(slug); if (id) await applyUpdate(id, fnLabel(yellow("~"), slug, fileToSub(file))); }
     else if (type === "unlink" && isSchema)   { const id = getRemoteId(slug); if (id) schedulePendingDelete(slug, id); }
     else if (type === "unlink" && isCodeFile) {
-      warn(`[function] Removing "${file}" has no effect on the remote function. Restore the file or delete schema.yaml to remove the function.`);
+      warn(`⚠  ${bold(self.displayName)}  ${bold(slug)}  removing "${file}" has no effect on the remote function — delete schema.yaml to remove it`);
     }
   }
 };

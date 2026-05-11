@@ -47,6 +47,13 @@ export interface DevEventContext {
   log(msg: string): void;
   /** Warning-level logger (replaces console.warn) */
   warn(msg: string): void;
+  /**
+   * Wrap `op` in a progress spinner while it runs.
+   * - Shows `label  Applying…` while running.
+   * - On resolve: displays `label  successText`.
+   * - On reject:  displays `label  failed: <error>`. Errors are swallowed.
+   */
+  spin(label: string, successText: string, op: () => Promise<void>): Promise<void>;
 }
 
 export enum ChangeKind {
