@@ -67,11 +67,53 @@ function normalizeSchema(schema: FunctionSchema): FunctionSchema {
   return normalized;
 }
 
-export const functionModule: ResourceModule<FunctionData> = {
+function isNotFoundError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const c = error as {status?: number; statusCode?: number; response?: {status?: number; statusCode?: number}};
+  return c.status === 404 || c.statusCode === 404 || c.response?.status === 404 || c.response?.statusCode === 404;
+}
+
+// ─── Extended interface with granular read/write operations ──────────────────
+
+export interface FunctionModule extends ResourceModule<FunctionData> {
+  // ── Granular reads (sync) ──────────────────────────────────────────────────
+  readSchema(rootDir: string, slug: string): FunctionSchema | null;
+  readIndex(rootDir: string, slug: string, language?: string): string;
+  readDependencies(rootDir: string, slug: string): Record<string, string>;
+  // ── Granular writes (async) ────────────────────────────────────────────────
+  /** POST schema → returns the new remote _id, or undefined on failure. */
+  createSchema(http: httpService.Client, schema: FunctionSchema): Promise<string | undefined>;
+  /** PUT schema + sync env_vars/secrets. */
+  updateSchema(http: httpService.Client, remoteId: string, schema: FunctionSchema): Promise<void>;
+  /** POST the index file content. */
+  uploadIndex(http: httpService.Client, remoteId: string, index: string): Promise<void>;
+  /** Delta-sync dependencies (add new / remove missing). */
+  uploadDependencies(http: httpService.Client, remoteId: string, deps: Record<string, string>): Promise<void>;
+}
+
+export const functionModule: FunctionModule = {
   name: "function",
   displayName: "Function",
   identityField: "name",
   ignoredFields: SCHEMA_IGNORED,
+
+  readSchema(rootDir, slug) {
+    return readYaml<FunctionSchema>(path.join(rootDir, "function", slug, "schema.yaml"));
+  },
+
+  readIndex(rootDir, slug, language) {
+    return readText(path.join(rootDir, "function", slug, indexFilename(language))) ?? "";
+  },
+
+  readDependencies(rootDir, slug) {
+    const pkgText = readText(path.join(rootDir, "function", slug, "package.json"));
+    if (!pkgText) return {};
+    try {
+      return JSON.parse(pkgText).dependencies ?? {};
+    } catch {
+      return {};
+    }
+  },
 
   async readLocal(rootDir) {
     const dir = path.join(rootDir, "function");
@@ -79,24 +121,10 @@ export const functionModule: ResourceModule<FunctionData> = {
     const results: LocalResource<FunctionData>[] = [];
 
     for (const slug of slugs) {
-      const fnDir = path.join(dir, slug);
-      const schema = readYaml<FunctionSchema>(path.join(fnDir, "schema.yaml"));
+      const schema = this.readSchema(rootDir, slug);
       if (!schema) continue;
-
-      const indexFile = indexFilename(schema.language);
-      const index = readText(path.join(fnDir, indexFile)) ?? "";
-
-      let dependencies: Record<string, string> = {};
-      const pkgJson = readText(path.join(fnDir, "package.json"));
-      if (pkgJson) {
-        try {
-          const parsed = JSON.parse(pkgJson);
-          dependencies = parsed.dependencies ?? {};
-        } catch {
-          // Ignore malformed package.json
-        }
-      }
-
+      const index = this.readIndex(rootDir, slug, schema.language);
+      const dependencies = this.readDependencies(rootDir, slug);
       results.push({slug, data: {schema, index, dependencies}});
     }
     return results;
@@ -135,37 +163,36 @@ export const functionModule: ResourceModule<FunctionData> = {
   },
 
   async create(http, local) {
+    const id = await this.createSchema(http, local.data.schema);
+    if (!id) return;
+    await this.uploadIndex(http, id, local.data.index);
+    await this.uploadDependencies(http, id, local.data.dependencies);
+  },
+
+  async createSchema(http, schema) {
     const created = await http.post<FunctionSchema>(
       "function",
-      omit(local.data.schema, ["env_vars", "secrets"])
+      omit(schema, ["env_vars", "secrets"])
     );
-    const id = created._id ?? local.data.schema._id;
-    if (!id) return;
-
-    await http.post(`function/${id}/index`, {index: local.data.index});
-
-    const depNames = Object.entries(local.data.dependencies)
-      .map(([n, v]) => `${n}@${v}`);
-
-    if (depNames.length) {
-      await http.post(`function/${id}/dependencies`, {name: depNames});
-    }
-
-    const envVarIds: string[] = (local.data.schema.env_vars as string[] | undefined) ?? [];
+    const id = (created._id ?? schema._id) as string | undefined;
+    if (!id) return undefined;
+    const envVarIds: string[] = (schema.env_vars as string[] | undefined) ?? [];
     await Promise.all(envVarIds.map(evId => http.put(`function/${id}/env-var/${evId}`, {})));
-
-    const secretIds: string[] = (local.data.schema.secrets as string[] | undefined) ?? [];
+    const secretIds: string[] = (schema.secrets as string[] | undefined) ?? [];
     await Promise.all(secretIds.map(sId => http.put(`function/${id}/secret/${sId}`, {})));
+    return id;
   },
 
   async update(http, local, remoteId) {
-    await http.put(`function/${remoteId}`, omit(local.data.schema, ["env_vars", "secrets"]));
-    await http.post(`function/${remoteId}/index`, {index: local.data.index});
+    await this.updateSchema(http, remoteId, local.data.schema);
+    await this.uploadIndex(http, remoteId, local.data.index);
+    await this.uploadDependencies(http, remoteId, local.data.dependencies);
+  },
 
-    // Sync env_vars via inject/eject endpoints
-    const localEnvVarIds = new Set<string>(
-      (local.data.schema.env_vars as string[] | undefined) ?? []
-    );
+  async updateSchema(http, remoteId, schema) {
+    await http.put(`function/${remoteId}`, omit(schema, ["env_vars", "secrets"]));
+
+    const localEnvVarIds = new Set<string>((schema.env_vars as string[] | undefined) ?? []);
     const currentFn = await http
       .get<FunctionSchema>(`function/${remoteId}`)
       .then(normalizeSchema)
@@ -180,10 +207,7 @@ export const functionModule: ResourceModule<FunctionData> = {
         .map(id => http.delete(`function/${remoteId}/env-var/${id}`))
     ]);
 
-    // Sync secrets via inject/eject endpoints
-    const localSecretIds = new Set<string>(
-      (local.data.schema.secrets as string[] | undefined) ?? []
-    );
+    const localSecretIds = new Set<string>((schema.secrets as string[] | undefined) ?? []);
     const remoteSecretIds = new Set<string>((currentFn.secrets as string[] | undefined) ?? []);
     await Promise.all([
       ...[...localSecretIds]
@@ -193,48 +217,29 @@ export const functionModule: ResourceModule<FunctionData> = {
         .filter(id => !localSecretIds.has(id))
         .map(id => http.delete(`function/${remoteId}/secret/${id}`))
     ]);
+  },
 
-    // Re-fetch current remote deps to compute delta
+  async uploadIndex(http, remoteId, index) {
+    await http.post(`function/${remoteId}/index`, {index});
+  },
+
+  async uploadDependencies(http, remoteId, localDeps) {
     const currentDeps = await http
       .get<RemoteDependency[]>(`function/${remoteId}/dependencies`)
       .catch(() => [] as RemoteDependency[]);
 
     const currentByName = new Map(currentDeps.map(d => [d.name, d.version]));
-    const localDeps = local.data.dependencies;
 
-    // Delete deps not in local
     const toDelete = currentDeps.filter(d => !(d.name in localDeps));
-    const isNotFoundError = (error: unknown) => {
-      if (!error || typeof error != "object") {
-        return false;
-      }
-
-      const candidate = error as {
-        status?: number;
-        statusCode?: number;
-        response?: {status?: number; statusCode?: number};
-      };
-
-      return (
-        candidate.status == 404 ||
-        candidate.statusCode == 404 ||
-        candidate.response?.status == 404 ||
-        candidate.response?.statusCode == 404
-      );
-    };
     await Promise.all(
       toDelete.map(d =>
         http.delete(`function/${remoteId}/dependencies/${d.name}`).catch(error => {
-          if (isNotFoundError(error)) {
-            return;
-          }
-
+          if (isNotFoundError(error)) return;
           throw error;
         })
       )
     );
 
-    // Add/update deps present in local but not matching remote
     const toAdd = Object.entries(localDeps)
       .filter(([n, v]) => {
         const cur = currentByName.get(n);
@@ -337,17 +342,15 @@ export const functionModule: ResourceModule<FunctionData> = {
   watchedFiles: ["schema.yaml", "index.ts", "index.mjs", "index.js", "package.json"],
 
   async devHandleEvent(ctx: DevEventContext) {
-    // `this` is the module object — enables test mocks to override create/update/delete
-    const self = this as ResourceModule<FunctionData>;
+    // `this` is the module object — enables test mocks to override granular methods
+    const self = this as FunctionModule;
     const {
       type,
       slug,
       file,
       http,
       rootDir,
-      log,
       warn,
-      sleep,
       spin,
       refreshState,
       getRemoteId,
@@ -360,61 +363,23 @@ export const functionModule: ResourceModule<FunctionData> = {
     const isIndexFile = (f: string) => f === "index.ts" || f === "index.mjs" || f === "index.js";
     const isPackageFile = (f: string) => f === "package.json";
 
-    function fileToSub(f: string): string {
-      if (f === "package.json") return "deps";
-      if (f === "schema.yaml") return "schema";
-      return "index";
-    }
-
     function fnLabel(symbol: string, forSlug: string, sub?: string): string {
       const parts = [symbol, bold(self.displayName), bold(forSlug)];
       if (sub) parts.push(yellow(`[${sub}]`));
       return parts.join("  ");
     }
 
-    const fnDir = path.join(rootDir, "function", slug);
-
-    function readLocalFn(): LocalResource<FunctionData> | null {
-      const schema = readYaml<FunctionSchema>(path.join(fnDir, "schema.yaml"));
-      if (!schema) return null;
-      const idx = readText(path.join(fnDir, indexFilename(schema.language))) ?? "";
-      let dependencies: Record<string, string> = {};
-      const pkgText = readText(path.join(fnDir, "package.json"));
-      if (pkgText) {
-        try {
-          dependencies = JSON.parse(pkgText).dependencies ?? {};
-        } catch {
-          /* ignore malformed package.json */
-        }
+    async function waitForRemoteId(): Promise<string | undefined> {
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const id = getRemoteId(slug);
+        if (id) return id;
+        await ctx.sleep(200);
       }
-      return {slug, data: {schema, index: idx, dependencies}};
-    }
-
-    async function waitForFiles(schema: FunctionSchema): Promise<boolean> {
-      const idxFile = indexFilename(schema.language);
-      const allPresent = () =>
-        fs.existsSync(path.join(fnDir, idxFile)) &&
-        fs.existsSync(path.join(fnDir, "package.json"));
-
-      for (let attempt = 0; attempt < 5; attempt++) {
-        if (allPresent()) return true;
-        await sleep(200);
-      }
-      return allPresent();
-    }
-
-    async function applyUpdate(remoteId: string, label?: string, successText = "updated"): Promise<void> {
-      const local = readLocalFn();
-      if (!local) return;
-      await spin(
-        label ?? fnLabel(yellow("~"), slug),
-        successText,
-        () => self.update(http, local, remoteId)
-      );
+      return getRemoteId(slug);
     }
 
     async function onSchemaAdd(): Promise<void> {
-      const schema = readYaml<FunctionSchema>(path.join(fnDir, "schema.yaml"));
+      const schema = self.readSchema(rootDir, slug);
       if (!schema) return;
 
       // Rename detection: _id matches a pending delete → it's a rename, not a create
@@ -424,50 +389,70 @@ export const functionModule: ResourceModule<FunctionData> = {
         if (pending) {
           clearRemoteId(pending.slug);
           setRemoteId(slug, pending.remoteId);
-          if (!(await waitForFiles(schema))) {
-            warn(`⚠  ${bold(self.displayName)}  ${bold(slug)}  timeout waiting for companion files after rename`);
-            return;
-          }
           const renameLabel = `${yellow("~")}  ${bold(self.displayName)}  ${bold(pending.slug)} ${cyan("→")} ${bold(slug)}`;
-          await applyUpdate(pending.remoteId, renameLabel, "updated (rename)");
+          await spin(renameLabel, "updated (rename)", () => self.updateSchema(http, pending.remoteId, schema));
           return;
         }
       }
 
       const remoteId = getRemoteId(slug);
       if (remoteId) {
-        // Already tracked remotely — re-add is an update
-        if (!(await waitForFiles(schema))) {
-          warn(`⚠  ${bold(self.displayName)}  ${bold(slug)}  timeout waiting for companion files`);
-          return;
-        }
-        await applyUpdate(remoteId);
+        // Already tracked remotely — re-add is a schema update
+        await spin(fnLabel(yellow("~"), slug, "schema"), "updated", () => self.updateSchema(http, remoteId, schema));
       } else {
-        // Brand new function
-        if (!(await waitForFiles(schema))) {
-          warn(`⚠  ${bold(self.displayName)}  ${bold(slug)}  timeout waiting for companion files; skipping create`);
-          return;
-        }
-        const local = readLocalFn();
-        if (!local) return;
+        // Brand new function — create schema only; index and deps arrive via their own add events
         await spin(fnLabel(green("+"), slug), "created", async () => {
-          await self.create(http, local);
+          const newRemoteId = await self.createSchema(http, schema);
+          if (!newRemoteId) return;
           await refreshState();
         });
       }
     }
 
     // ── Dispatch ────────────────────────────────────────────────────────────
+    // Each file type owns its own event handling:
+    //   schema.yaml  add/change/unlink → schema lifecycle (create / update / schedule-delete)
+    //   index.*      add/change        → uploadIndex only
+    //   package.json add/change        → uploadDependencies only
+    //   code unlink                    → warn only (delete schema.yaml to remove remotely)
+    // For "add" events on code files, waitForRemoteId handles the race where
+    // index/package arrive before schema.yaml has been processed.
 
     const isSchema   = file === "schema.yaml";
-    const isCodeFile = isIndexFile(file) || isPackageFile(file);
 
-    if      (type === "add"    && isSchema)   await onSchemaAdd();
-    else if (type === "change" && isSchema)   { const id = getRemoteId(slug); if (id) await applyUpdate(id, fnLabel(yellow("~"), slug, "schema")); }
-    else if (type !== "unlink" && isCodeFile) { const id = getRemoteId(slug); if (id) await applyUpdate(id, fnLabel(yellow("~"), slug, fileToSub(file))); }
-    else if (type === "unlink" && isSchema)   { const id = getRemoteId(slug); if (id) schedulePendingDelete(slug, id); }
-    else if (type === "unlink" && isCodeFile) {
-      warn(`⚠  ${bold(self.displayName)}  ${bold(slug)}  removing "${file}" has no effect on the remote function — delete schema.yaml to remove it`);
+    if (type === "add" && isSchema) {
+      await onSchemaAdd();
+    } else if (type === "change" && isSchema) {
+      const id = getRemoteId(slug);
+      if (id) {
+        const schema = self.readSchema(rootDir, slug);
+        if (schema) {
+          await spin(
+            fnLabel(yellow("~"), slug, "schema"),
+            "updated",
+            () => self.updateSchema(http, id, schema)
+          );
+        }
+      }
+    } else if (type !== "unlink" && isIndexFile(file)) {
+      const id = getRemoteId(slug) ?? (type === "add" ? await waitForRemoteId() : undefined);
+      if (id) {
+        const schema = self.readSchema(rootDir, slug);
+        const index = self.readIndex(rootDir, slug, schema?.language);
+        await spin(fnLabel(yellow("~"), slug, "index"), "updated", () => self.uploadIndex(http, id, index));
+      }
+    } else if (type !== "unlink" && isPackageFile(file)) {
+      const id = getRemoteId(slug) ?? (type === "add" ? await waitForRemoteId() : undefined);
+      if (id) {
+        const deps = self.readDependencies(rootDir, slug);
+        await spin(fnLabel(yellow("~"), slug, "deps"), "updated", () => self.uploadDependencies(http, id, deps));
+      }
+    } else if (type === "unlink" && isSchema) {
+      const id = getRemoteId(slug);
+      if (id) schedulePendingDelete(slug, id);
+    } else if (type === "unlink" && (isIndexFile(file) || isPackageFile(file))) {
+      // Silently ignore — could be a rename; the corresponding "add" will re-upload.
+      // Deleting only schema.yaml removes the remote function.
     }
   }
 };

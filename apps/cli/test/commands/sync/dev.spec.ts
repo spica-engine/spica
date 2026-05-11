@@ -58,9 +58,15 @@ function makeFunctionMod() {
   return {
     ...functionModule,
     readRemote: jest.fn<Promise<any[]>, []>().mockResolvedValue([]),
+    // legacy composite methods
     create: jest.fn<Promise<void>, any[]>().mockResolvedValue(undefined),
     update: jest.fn<Promise<void>, any[]>().mockResolvedValue(undefined),
-    delete: jest.fn<Promise<void>, any[]>().mockResolvedValue(undefined)
+    delete: jest.fn<Promise<void>, any[]>().mockResolvedValue(undefined),
+    // granular write methods used by devHandleEvent
+    createSchema: jest.fn<Promise<string | undefined>, any[]>().mockResolvedValue("remote-fn-id"),
+    updateSchema: jest.fn<Promise<void>, any[]>().mockResolvedValue(undefined),
+    uploadIndex: jest.fn<Promise<void>, any[]>().mockResolvedValue(undefined),
+    uploadDependencies: jest.fn<Promise<void>, any[]>().mockResolvedValue(undefined)
   };
 }
 
@@ -72,23 +78,6 @@ const mockHttp = {
 } as any;
 
 beforeEach(() => jest.clearAllMocks());
-
-// ─── HTTPS context warning ────────────────────────────────────────────────────
-
-describe("HTTPS context warning", () => {
-  it("emits a warning when context URL starts with https://", async () => {
-    const warnMessages: string[] = [];
-    const mod = makeMockModule("bucket");
-
-    // We can't easily unit-test the command function directly because it does
-    // network calls and side effects. We test the warning logic via the integration path.
-    // But we can verify the condition is simple: url.startsWith("https://")
-    const url = "https://my-spica.example.com";
-    expect(url.startsWith("https://")).toBe(true);
-    // Coverage: non-https should NOT trigger
-    expect("http://localhost:4300".startsWith("https://")).toBe(false);
-  });
-});
 
 // ─── Dispatcher: bucket (schema-only module) ──────────────────────────────────
 
@@ -288,113 +277,157 @@ describe("DevDispatcher — rename detection (single update, no delete+create)",
   });
 });
 
-// ─── Dispatcher: function insert with delay ───────────────────────────────────
+// ─── Dispatcher: function create via schema.yaml add ────────────────────────
 
-describe("DevDispatcher — function: insert ordering with retry", () => {
-  it("retries waiting for index/package files, then calls functionModule.create once", async () => {
-    jest.useFakeTimers();
+describe("DevDispatcher — function: schema.yaml add creates function", () => {
+  it("calls createSchema only — index and deps upload via their own add events", async () => {
     const dir = makeTmpDir();
     try {
       const fnDir = path.join(dir, "function", "MyFn");
       fs.mkdirSync(fnDir, {recursive: true});
       fs.writeFileSync(
         path.join(fnDir, "schema.yaml"),
-        yaml.stringify({name: "MyFn", language: "javascript", triggers: {}})
+        yaml.stringify({name: "MyFn", language: "javascript"})
       );
-      // index.mjs and package.json do NOT exist yet
 
       const mod = makeFunctionMod();
       const state = makeState(); // no existing function
-      const logs: string[] = [];
-      const warns: string[] = [];
 
       const dispatcher = createDevDispatcher({
         modules: [mod],
         http: mockHttp,
         rootDir: dir,
-        state,
-        logger: m => logs.push(m),
-        warnLogger: m => warns.push(m)
+        state
       });
 
-      // Start the event — it will be waiting for index+package
-      const eventPromise = dispatcher.handleEvent(
-        "add",
-        path.join(dir, "function", "MyFn", "schema.yaml")
-      );
+      await dispatcher.handleEvent("add", path.join(dir, "function", "MyFn", "schema.yaml"));
 
-      // After a tick, write the missing files
-      // We need to advance fake timers so the sleeps inside resolve
-      // First advance to first retry
-      await jest.advanceTimersByTimeAsync(150);
-      // Write the files mid-retry
-      fs.writeFileSync(path.join(fnDir, "index.mjs"), "export default () => {};");
-      fs.writeFileSync(
-        path.join(fnDir, "package.json"),
-        JSON.stringify({name: "MyFn", dependencies: {}})
-      );
-      // Advance remaining retries (5 retries × 200ms = 1000ms max)
-      await jest.advanceTimersByTimeAsync(1000);
-
-      await eventPromise;
-
-      expect(mod.create).toHaveBeenCalledTimes(1);
-      expect(warns.filter(w => w.includes("timeout"))).toHaveLength(0);
+      expect(mod.createSchema).toHaveBeenCalledTimes(1);
+      // index and deps are NOT uploaded by schema add — their own events handle them
+      expect(mod.uploadIndex).not.toHaveBeenCalled();
+      expect(mod.uploadDependencies).not.toHaveBeenCalled();
+      expect(mod.create).not.toHaveBeenCalled();
+      expect(mod.delete).not.toHaveBeenCalled();
     } finally {
-      jest.useRealTimers();
       cleanup(dir);
     }
   });
 
-  it("warns and skips create when index/package never appear (timeout)", async () => {
-    jest.useFakeTimers();
+  it("add on index.mjs calls uploadIndex (remoteId already available)", async () => {
     const dir = makeTmpDir();
     try {
-      const fnDir = path.join(dir, "function", "NoFiles");
+      const fnDir = path.join(dir, "function", "MyFn");
       fs.mkdirSync(fnDir, {recursive: true});
       fs.writeFileSync(
         path.join(fnDir, "schema.yaml"),
-        yaml.stringify({name: "NoFiles", language: "javascript", triggers: {}})
+        yaml.stringify({name: "MyFn", language: "javascript"})
       );
-      // Intentionally do NOT write index.mjs or package.json
+      fs.writeFileSync(path.join(fnDir, "index.mjs"), "export default () => {};");
 
       const mod = makeFunctionMod();
-      const state = makeState();
-      const warns: string[] = [];
+      const state = makeState({function: {MyFn: "remote-fn-id"}});
 
       const dispatcher = createDevDispatcher({
         modules: [mod],
         http: mockHttp,
         rootDir: dir,
-        state,
-        warnLogger: m => warns.push(m)
+        state
       });
 
-      const eventPromise = dispatcher.handleEvent(
-        "add",
-        path.join(dir, "function", "NoFiles", "schema.yaml")
+      await dispatcher.handleEvent("add", path.join(dir, "function", "MyFn", "index.mjs"));
+
+      expect(mod.uploadIndex).toHaveBeenCalledTimes(1);
+      const [, remoteId] = mod.uploadIndex.mock.calls[0];
+      expect(remoteId).toBe("remote-fn-id");
+      expect(mod.uploadDependencies).not.toHaveBeenCalled();
+      expect(mod.createSchema).not.toHaveBeenCalled();
+    } finally {
+      cleanup(dir);
+    }
+  });
+
+  it("add on package.json calls uploadDependencies (remoteId already available)", async () => {
+    const dir = makeTmpDir();
+    try {
+      const fnDir = path.join(dir, "function", "MyFn");
+      fs.mkdirSync(fnDir, {recursive: true});
+      fs.writeFileSync(
+        path.join(fnDir, "schema.yaml"),
+        yaml.stringify({name: "MyFn", language: "javascript"})
+      );
+      fs.writeFileSync(
+        path.join(fnDir, "package.json"),
+        JSON.stringify({dependencies: {lodash: "^4.0.0"}})
       );
 
-      // Advance past all retries (5 × 200ms = 1000ms)
-      await jest.advanceTimersByTimeAsync(1100);
-      await eventPromise;
+      const mod = makeFunctionMod();
+      const state = makeState({function: {MyFn: "remote-fn-id"}});
 
-      expect(mod.create).not.toHaveBeenCalled();
-      expect(warns.some(w => w.includes("timeout"))).toBe(true);
+      const dispatcher = createDevDispatcher({
+        modules: [mod],
+        http: mockHttp,
+        rootDir: dir,
+        state
+      });
+
+      await dispatcher.handleEvent("add", path.join(dir, "function", "MyFn", "package.json"));
+
+      expect(mod.uploadDependencies).toHaveBeenCalledTimes(1);
+      const [, remoteId, deps] = mod.uploadDependencies.mock.calls[0];
+      expect(remoteId).toBe("remote-fn-id");
+      expect(deps).toEqual({lodash: "^4.0.0"});
+      expect(mod.uploadIndex).not.toHaveBeenCalled();
     } finally {
-      jest.useRealTimers();
       cleanup(dir);
     }
   });
 });
 
-// ─── Dispatcher: function unlink of index/package warns only ─────────────────
+// ─── Dispatcher: function schema change (update) ─────────────────────────────
 
-describe("DevDispatcher — function: unlink of index/package warns, no API call", () => {
-  it("warns when index.mjs is removed while schema still present", async () => {
+describe("DevDispatcher — function: schema.yaml change updates schema only", () => {
+  it("calls updateSchema only — no index or deps upload", async () => {
     const dir = makeTmpDir();
     try {
-      // Schema still on disk
+      const fnDir = path.join(dir, "function", "MyFn");
+      fs.mkdirSync(fnDir, {recursive: true});
+      fs.writeFileSync(
+        path.join(fnDir, "schema.yaml"),
+        yaml.stringify({name: "MyFn", language: "javascript", timeout: 60})
+      );
+
+      const mod = makeFunctionMod();
+      const state = makeState({function: {MyFn: "remote-fn-id"}});
+
+      const dispatcher = createDevDispatcher({
+        modules: [mod],
+        http: mockHttp,
+        rootDir: dir,
+        state
+      });
+
+      await dispatcher.handleEvent("change", path.join(dir, "function", "MyFn", "schema.yaml"));
+
+      expect(mod.updateSchema).toHaveBeenCalledTimes(1);
+      const [, remoteId, schema] = mod.updateSchema.mock.calls[0];
+      expect(remoteId).toBe("remote-fn-id");
+      expect(schema.timeout).toBe(60);
+      expect(mod.uploadIndex).not.toHaveBeenCalled();
+      expect(mod.uploadDependencies).not.toHaveBeenCalled();
+      expect(mod.create).not.toHaveBeenCalled();
+      expect(mod.update).not.toHaveBeenCalled();
+    } finally {
+      cleanup(dir);
+    }
+  });
+});
+
+// ─── Dispatcher: function unlink of index/package is silently ignored ────────
+
+describe("DevDispatcher — function: unlink of index/package is silently ignored", () => {
+  it("does nothing when index.mjs is removed (could be a rename)", async () => {
+    const dir = makeTmpDir();
+    try {
       const fnDir = path.join(dir, "function", "MyFn");
       fs.mkdirSync(fnDir, {recursive: true});
       fs.writeFileSync(
@@ -422,14 +455,13 @@ describe("DevDispatcher — function: unlink of index/package warns, no API call
       expect(mod.delete).not.toHaveBeenCalled();
       expect(mod.update).not.toHaveBeenCalled();
       expect(mod.create).not.toHaveBeenCalled();
-      expect(warns.length).toBeGreaterThan(0);
-      expect(warns[0]).toContain("no effect");
+      expect(warns).toHaveLength(0);
     } finally {
       cleanup(dir);
     }
   });
 
-  it("warns when package.json is removed while schema still present", async () => {
+  it("does nothing when package.json is removed (could be a rename)", async () => {
     const dir = makeTmpDir();
     try {
       const fnDir = path.join(dir, "function", "MyFn");
@@ -457,7 +489,7 @@ describe("DevDispatcher — function: unlink of index/package warns, no API call
       );
 
       expect(mod2.delete).not.toHaveBeenCalled();
-      expect(warns2[0]).toContain("no effect");
+      expect(warns2).toHaveLength(0);
     } finally {
       cleanup(dir);
     }
@@ -503,8 +535,8 @@ describe("DevDispatcher — function: schema.yaml unlink deletes remote", () => 
 
 // ─── Dispatcher: function update on index/package change ─────────────────────
 
-describe("DevDispatcher — function: index/package change triggers update", () => {
-  it("calls functionModule.update when index.mjs changes", async () => {
+describe("DevDispatcher — function: index/package change triggers granular update", () => {
+  it("calls uploadIndex (not update) when index.mjs changes", async () => {
     const dir = makeTmpDir();
     try {
       const fnDir = path.join(dir, "function", "MyFn");
@@ -514,36 +546,32 @@ describe("DevDispatcher — function: index/package change triggers update", () 
         yaml.stringify({name: "MyFn", language: "javascript"})
       );
       fs.writeFileSync(path.join(fnDir, "index.mjs"), "export default () => 42;");
-      fs.writeFileSync(path.join(fnDir, "package.json"), JSON.stringify({dependencies: {}}));
 
       const mod = makeFunctionMod();
       const state = makeState({function: {MyFn: "remote-fn-id"}});
-      const logs: string[] = [];
 
       const dispatcher = createDevDispatcher({
         modules: [mod],
         http: mockHttp,
         rootDir: dir,
-        state,
-        logger: m => logs.push(m)
+        state
       });
 
-      await dispatcher.handleEvent(
-        "change",
-        path.join(dir, "function", "MyFn", "index.mjs")
-      );
+      await dispatcher.handleEvent("change", path.join(dir, "function", "MyFn", "index.mjs"));
 
-      expect(mod.update).toHaveBeenCalledTimes(1);
-      expect(mod.create).not.toHaveBeenCalled();
-      const [, local, remoteId] = mod.update.mock.calls[0];
-      expect(local.slug).toBe("MyFn");
+      expect(mod.uploadIndex).toHaveBeenCalledTimes(1);
+      const [, remoteId, index] = mod.uploadIndex.mock.calls[0];
       expect(remoteId).toBe("remote-fn-id");
+      expect(index).toBe("export default () => 42;");
+      expect(mod.update).not.toHaveBeenCalled();
+      expect(mod.updateSchema).not.toHaveBeenCalled();
+      expect(mod.uploadDependencies).not.toHaveBeenCalled();
     } finally {
       cleanup(dir);
     }
   });
 
-  it("calls functionModule.update when package.json changes", async () => {
+  it("calls uploadDependencies (not update) when package.json changes", async () => {
     const dir = makeTmpDir();
     try {
       const fnDir = path.join(dir, "function", "MyFn");
@@ -552,7 +580,6 @@ describe("DevDispatcher — function: index/package change triggers update", () 
         path.join(fnDir, "schema.yaml"),
         yaml.stringify({name: "MyFn", language: "javascript"})
       );
-      fs.writeFileSync(path.join(fnDir, "index.mjs"), "export default () => {};");
       fs.writeFileSync(
         path.join(fnDir, "package.json"),
         JSON.stringify({dependencies: {lodash: "^4.0.0"}})
@@ -568,12 +595,15 @@ describe("DevDispatcher — function: index/package change triggers update", () 
         state
       });
 
-      await dispatcher.handleEvent(
-        "change",
-        path.join(dir, "function", "MyFn", "package.json")
-      );
+      await dispatcher.handleEvent("change", path.join(dir, "function", "MyFn", "package.json"));
 
-      expect(mod.update).toHaveBeenCalledTimes(1);
+      expect(mod.uploadDependencies).toHaveBeenCalledTimes(1);
+      const [, remoteId, deps] = mod.uploadDependencies.mock.calls[0];
+      expect(remoteId).toBe("remote-fn-id");
+      expect(deps).toEqual({lodash: "^4.0.0"});
+      expect(mod.update).not.toHaveBeenCalled();
+      expect(mod.updateSchema).not.toHaveBeenCalled();
+      expect(mod.uploadIndex).not.toHaveBeenCalled();
     } finally {
       cleanup(dir);
     }
@@ -587,7 +617,6 @@ describe("DevDispatcher — function rename: promoted to single update", () => {
     jest.useFakeTimers();
     const dir = makeTmpDir();
     try {
-      // Create the new-name directory on disk with the same _id
       const newFnDir = path.join(dir, "function", "new-fn-name");
       fs.mkdirSync(newFnDir, {recursive: true});
       fs.writeFileSync(
@@ -595,47 +624,38 @@ describe("DevDispatcher — function rename: promoted to single update", () => {
         yaml.stringify({_id: "fn-id-1", name: "new-fn-name", language: "javascript"})
       );
       fs.writeFileSync(path.join(newFnDir, "index.mjs"), "export default () => {};");
-      fs.writeFileSync(
-        path.join(newFnDir, "package.json"),
-        JSON.stringify({dependencies: {}})
-      );
+      fs.writeFileSync(path.join(newFnDir, "package.json"), JSON.stringify({dependencies: {}}));
 
       const mod = makeFunctionMod();
       const state = makeState({function: {"old-fn-name": "fn-id-1"}});
-      const logs: string[] = [];
 
       const dispatcher = createDevDispatcher({
         modules: [mod],
         http: mockHttp,
         rootDir: dir,
         state,
-        logger: m => logs.push(m),
         renameWindowMs: 500
       });
 
-      // Simulate rename: unlink old, then add new within the window
       await dispatcher.handleEvent(
         "unlink",
         path.join(dir, "function", "old-fn-name", "schema.yaml")
       );
-
-      // Add new-name schema before window expires
-      const addPromise = dispatcher.handleEvent(
+      await dispatcher.handleEvent(
         "add",
         path.join(dir, "function", "new-fn-name", "schema.yaml")
       );
-      // Advance timers so waitForFunctionFiles resolves immediately
-      await jest.advanceTimersByTimeAsync(100);
-      await addPromise;
 
       expect(mod.delete).not.toHaveBeenCalled();
       expect(mod.create).not.toHaveBeenCalled();
-      expect(mod.update).toHaveBeenCalledTimes(1);
-      const [, local, remoteId] = mod.update.mock.calls[0];
-      expect(local.slug).toBe("new-fn-name");
+      // Rename: schema handler calls updateSchema only
+      // index and package.json add events will upload those separately
+      expect(mod.updateSchema).toHaveBeenCalledTimes(1);
+      expect(mod.uploadIndex).not.toHaveBeenCalled();
+      expect(mod.uploadDependencies).not.toHaveBeenCalled();
+      const [, remoteId] = mod.updateSchema.mock.calls[0];
       expect(remoteId).toBe("fn-id-1");
 
-      // Advance past window to confirm no delayed delete
       await jest.runAllTimersAsync();
       expect(mod.delete).not.toHaveBeenCalled();
     } finally {
@@ -706,6 +726,91 @@ describe("DevDispatcher — ignores non-schema files for non-function modules", 
       expect(mod.update).not.toHaveBeenCalled();
       expect(mod.delete).not.toHaveBeenCalled();
     } finally {
+      cleanup(dir);
+    }
+  });
+});
+
+// ─── Dispatcher: function code add waits for remoteId ────────────────────────────
+
+describe("DevDispatcher — function: code file arrives before schema is deployed", () => {
+  it("waits for remoteId then uploads index.ts once schema handler populates it", async () => {
+    jest.useFakeTimers();
+    const dir = makeTmpDir();
+    try {
+      const fnDir = path.join(dir, "function", "MyFn");
+      fs.mkdirSync(fnDir, {recursive: true});
+      fs.writeFileSync(path.join(fnDir, "index.ts"), "export default {}");
+      fs.writeFileSync(
+        path.join(fnDir, "schema.yaml"),
+        yaml.stringify({name: "MyFn", language: "typescript"})
+      );
+
+      const mod = makeFunctionMod();
+      // Start with no remoteId — schema.yaml add has not been processed yet
+      const state = makeState();
+
+      const dispatcher = createDevDispatcher({
+        modules: [mod],
+        http: mockHttp,
+        rootDir: dir,
+        state
+      });
+
+      // Fire index.ts "add" first — no remoteId yet, will block in waitForRemoteId
+      const codeEventPromise = dispatcher.handleEvent(
+        "add",
+        path.join(dir, "function", "MyFn", "index.ts")
+      );
+
+      // Simulate schema being deployed: remoteId appears in state
+      state.remoteIds.set("function", new Map([["MyFn", "remote-fn-id"]]));
+
+      // Advance timers so waitForRemoteId (10 × 200ms) polls and finds the id
+      await jest.advanceTimersByTimeAsync(10 * 200);
+      await codeEventPromise;
+
+      expect(mod.uploadIndex).toHaveBeenCalledTimes(1);
+      const [, remoteId] = mod.uploadIndex.mock.calls[0];
+      expect(remoteId).toBe("remote-fn-id");
+      expect(mod.uploadDependencies).not.toHaveBeenCalled();
+      expect(mod.create).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+      cleanup(dir);
+    }
+  });
+
+  it("silently skips when schema is never deployed within the wait window", async () => {
+    jest.useFakeTimers();
+    const dir = makeTmpDir();
+    try {
+      const fnDir = path.join(dir, "function", "MyFn");
+      fs.mkdirSync(fnDir, {recursive: true});
+      fs.writeFileSync(path.join(fnDir, "index.ts"), "export default {}");
+
+      const mod = makeFunctionMod();
+      const state = makeState(); // remoteId never appears
+
+      const dispatcher = createDevDispatcher({
+        modules: [mod],
+        http: mockHttp,
+        rootDir: dir,
+        state
+      });
+
+      const codeEventPromise = dispatcher.handleEvent(
+        "add",
+        path.join(dir, "function", "MyFn", "index.ts")
+      );
+
+      await jest.advanceTimersByTimeAsync(10 * 200 + 100);
+      await codeEventPromise;
+
+      expect(mod.uploadIndex).not.toHaveBeenCalled();
+      expect(mod.create).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
       cleanup(dir);
     }
   });
