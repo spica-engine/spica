@@ -11,7 +11,7 @@ set:
   application.publicHost: https://test.example.com
   ingress.hosts:
     - name: test.example.com
-      application: /spica
+      application: /
       api: /api
 
 tests:
@@ -64,7 +64,7 @@ tests:
     asserts:
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: /spica?(.*)
+          value: /?(.*)
       - equal:
           path: spec.rules[0].http.paths[0].pathType
           value: ImplementationSpecific
@@ -88,7 +88,7 @@ tests:
     set:
       ingress.hosts:
         - name: app1.example.com
-          application: /spica
+          application: /
         - name: app2.example.com
           api: /api
     asserts:

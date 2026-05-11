@@ -29,22 +29,22 @@ services:
     networks:
       - spica
   # use below if you want to serve panel locally via docker containers
-  # spica-web:
-  #   # use below if you want to build image locally
-  #   build:
-  #     context: ../../
-  #     dockerfile: apps/panel/Dockerfile
-  #     args:
-  #       BASE_URL: /
-  #       VITE_BASE_URL: http://localhost:4300
-  #   # image: spicaengine/panel:latest
-  #   container_name: spica-web
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-  #   networks:
-  #     - spica
+  spica-web:
+    # use below if you want to build image locally
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_URL: /
+        VITE_BASE_URL: http://localhost:4300
+    # image: spicaengine/panel:latest
+    container_name: spica-web
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - spica
 
   spica-api:
     image: spicaengine/api:master
@@ -78,19 +78,19 @@ services:
     networks:
       - spica
 
-  # /spica -> spica-web:80, /api -> spica-api:4300
-  # nginx:
-  #   image: nginx:alpine
-  #   container_name: spica-gateway
-  #   depends_on:
-  #     - spica-web
-  #     - spica-api
-  #   ports:
-  #     - "8080:80"
-  #   volumes:
-  #     - ./gateway.conf:/etc/nginx/nginx.conf:ro
-  #   networks:
-  #     - spica
+  # / -> spica-web:80, /api -> spica-api:4300
+  nginx:
+    image: nginx:alpine
+    container_name: spica-gateway
+    depends_on:
+      - spica-web
+      - spica-api
+    ports:
+      - "8080:80"
+    volumes:
+      - ./gateway.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - spica
 
 networks:
   spica:

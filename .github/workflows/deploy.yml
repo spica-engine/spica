@@ -3,7 +3,7 @@ name: Spica Master Deployment
 env:
   NX_NO_CLOUD: true
   VERSION: master
-  BASE_URL: /spica/
+  BASE_URL: /
   VITE_BASE_URL: https://master.spicaengine.com/api
 
 on:
