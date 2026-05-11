@@ -379,71 +379,61 @@ export const functionModule: ResourceModule<FunctionData> = {
 
     async function waitForFiles(schema: FunctionSchema): Promise<boolean> {
       const idxFile = indexFilename(schema.language);
-      for (let i = 0; i < 5; i++) {
-        if (
-          fs.existsSync(path.join(fnDir, idxFile)) &&
-          fs.existsSync(path.join(fnDir, "package.json"))
-        ) {
-          return true;
-        }
+      const allPresent = () =>
+        fs.existsSync(path.join(fnDir, idxFile)) &&
+        fs.existsSync(path.join(fnDir, "package.json"));
+
+      for (let attempt = 0; attempt < 5; attempt++) {
+        if (allPresent()) return true;
         await sleep(200);
       }
-      return (
-        fs.existsSync(path.join(fnDir, idxFile)) &&
-        fs.existsSync(path.join(fnDir, "package.json"))
-      );
+      return allPresent();
     }
 
-    if (type === "add" && file === "schema.yaml") {
+    async function applyUpdate(remoteId: string): Promise<void> {
+      const local = readLocalFn();
+      if (!local) return;
+      try {
+        await self.update(http, local, remoteId);
+        log(`[function] updated "${slug}"`);
+      } catch (err) {
+        warn(`[function] update "${slug}": ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
+    async function onSchemaAdd(): Promise<void> {
       const schema = readYaml<FunctionSchema>(path.join(fnDir, "schema.yaml"));
       if (!schema) return;
 
-      // Rename detection: if the new schema's _id matches a pending delete, it's a rename
+      // Rename detection: _id matches a pending delete → it's a rename, not a create
       const newLocalId = schema._id as string | undefined;
       if (newLocalId) {
         const pending = consumePendingDeleteByRemoteId(newLocalId);
         if (pending) {
           clearRemoteId(pending.slug);
           setRemoteId(slug, pending.remoteId);
-          const allPresent = await waitForFiles(schema);
-          if (!allPresent) {
+          if (!(await waitForFiles(schema))) {
             warn(`[function] timeout waiting for index/package files of "${slug}" after rename`);
             return;
           }
-          const local = readLocalFn();
-          if (!local) return;
           log(`[function] "${pending.slug}" → "${slug}"  (rename → update)`);
-          try {
-            await self.update(http, local, pending.remoteId);
-            log(`[function] updated "${slug}"`);
-          } catch (err) {
-            warn(`[function] update "${slug}": ${err instanceof Error ? err.message : String(err)}`);
-          }
+          await applyUpdate(pending.remoteId);
           return;
         }
       }
 
       const remoteId = getRemoteId(slug);
       if (remoteId) {
-        // slug already exists remotely — treat re-add as update
-        const allPresent = await waitForFiles(schema);
-        if (!allPresent) {
+        // Already tracked remotely — re-add is an update
+        if (!(await waitForFiles(schema))) {
           warn(`[function] timeout waiting for index/package files of "${slug}"`);
           return;
         }
-        const local = readLocalFn();
-        if (!local) return;
-        try {
-          await self.update(http, local, remoteId);
-          log(`[function] updated "${slug}"`);
-        } catch (err) {
-          warn(`[function] update "${slug}": ${err instanceof Error ? err.message : String(err)}`);
-        }
+        await applyUpdate(remoteId);
       } else {
-        // new function
+        // Brand new function
         log(`[function] creating "${slug}"…`);
-        const allPresent = await waitForFiles(schema);
-        if (!allPresent) {
+        if (!(await waitForFiles(schema))) {
           warn(`[function] timeout waiting for index/package files of "${slug}"; skipping create`);
           return;
         }
@@ -457,37 +447,19 @@ export const functionModule: ResourceModule<FunctionData> = {
           warn(`[function] create "${slug}": ${err instanceof Error ? err.message : String(err)}`);
         }
       }
-    } else if (type === "change" && file === "schema.yaml") {
-      const remoteId = getRemoteId(slug);
-      if (!remoteId) return;
-      const local = readLocalFn();
-      if (!local) return;
-      try {
-        await self.update(http, local, remoteId);
-        log(`[function] updated "${slug}"`);
-      } catch (err) {
-        warn(`[function] update "${slug}": ${err instanceof Error ? err.message : String(err)}`);
-      }
-    } else if ((type === "change" || type === "add") && (isIndexFile(file) || isPackageFile(file))) {
-      const remoteId = getRemoteId(slug);
-      if (!remoteId) return;
-      const local = readLocalFn();
-      if (!local) return;
-      try {
-        await self.update(http, local, remoteId);
-        log(`[function] updated "${slug}"`);
-      } catch (err) {
-        warn(`[function] update "${slug}": ${err instanceof Error ? err.message : String(err)}`);
-      }
-    } else if (type === "unlink" && file === "schema.yaml") {
-      const remoteId = getRemoteId(slug);
-      if (!remoteId) return;
-      schedulePendingDelete(slug, remoteId);
-    } else if (type === "unlink" && (isIndexFile(file) || isPackageFile(file))) {
-      warn(
-        `[function] Removing "${file}" has no effect on the remote function. ` +
-          `Restore the file or delete schema.yaml to remove the function.`
-      );
+    }
+
+    // ── Dispatch ────────────────────────────────────────────────────────────
+
+    const isSchema   = file === "schema.yaml";
+    const isCodeFile = isIndexFile(file) || isPackageFile(file);
+
+    if      (type === "add"    && isSchema)   await onSchemaAdd();
+    else if (type === "change" && isSchema)   { const id = getRemoteId(slug); if (id) await applyUpdate(id); }
+    else if (type !== "unlink" && isCodeFile) { const id = getRemoteId(slug); if (id) await applyUpdate(id); }
+    else if (type === "unlink" && isSchema)   { const id = getRemoteId(slug); if (id) schedulePendingDelete(slug, id); }
+    else if (type === "unlink" && isCodeFile) {
+      warn(`[function] Removing "${file}" has no effect on the remote function. Restore the file or delete schema.yaml to remove the function.`);
     }
   }
 };

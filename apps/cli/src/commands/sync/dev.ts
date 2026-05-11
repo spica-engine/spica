@@ -369,8 +369,8 @@ async function dev({args, options}: ActionParameters) {
   if (ctx.url.startsWith("https://")) {
     console.log(
       bold(yellow("\n⚠  Warning: The current context is using HTTPS.\n")) +
-        `   ${bold("sync dev")} is designed for local Spica instances. ` +
-        `Using it against a remote HTTPS endpoint may have unintended side-effects.\n` +
+        `   ${bold("sync dev")} is designed for development. ` +
+        `Using it against a remote instance may have unintended side-effects.\n` +
         `   Tip: Start a local instance with ${bold("spica project start")} and switch to it ` +
         `with ${bold("spica context switch <name>")} before running ${bold("sync dev")}.`
     );
