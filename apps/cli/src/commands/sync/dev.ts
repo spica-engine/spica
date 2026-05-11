@@ -61,10 +61,13 @@ function buildWatchIgnored(modules: ResourceModule[], rootDir: string) {
     modules.map(m => [m.name, new Set(m.watchedFiles ?? ["schema.yaml"])])
   );
   return (filePath: string, stats?: fs.Stats) => {
-    // Never ignore directories — chokidar must recurse into them
-    if (!stats || stats.isDirectory()) return false;
     const rel = path.relative(rootDir, filePath);
     const parts = rel.split(path.sep);
+    if (stats?.isDirectory()) {
+      // Only recurse into <module>/ and <module>/<slug>/ — ignore deeper dirs
+      return parts.length >= 3;
+    }
+    if (!stats) return false;
     // Ignore files outside <moduleName>/<slug>/<file> depth
     if (parts.length !== 3) return true;
     const [moduleName, , file] = parts;
