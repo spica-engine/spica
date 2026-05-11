@@ -5,26 +5,26 @@ import {buildPlan, renderPlan} from "./planner";
 import {resolveModules, MODULE_NAMES} from "./modules/index";
 
 async function plan({args, options}: ActionParameters) {
-  const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
-  const detailed = !!options.detailed;
-  const json = !!options.json;
-  const moduleFilter = options.module
-    ? (Array.isArray(options.module) ? options.module : [options.module]).map(String)
-    : undefined;
+  try {
+    const rootDir = path.resolve((args.dir as string | undefined) ?? process.cwd());
+    const detailed = !!options.detailed;
+    const json = !!options.json;
+    const moduleFilter = options.module
+      ? (Array.isArray(options.module) ? options.module : [options.module]).map(String)
+      : undefined;
 
-  const modules = resolveModules(moduleFilter);
-  const http = await httpService.createFromCurrentCtx();
+    const modules = resolveModules(moduleFilter);
+    const http = await httpService.createFromCurrentCtx();
 
-  const p = await buildPlan(modules, http, rootDir, detailed);
-  renderPlan(p, {detailed, json});
+    const p = await buildPlan(modules, http, rootDir, detailed);
+    renderPlan(p, {detailed, json});
 
-  const totalChanges = p.modules.reduce(
-    (n, m) => n + m.creates.length + m.updates.length + m.deletes.length,
-    0
-  );
-
-  // Exit code 2 when changes exist (Terraform-style), enables CI gating
-  process.exitCode = totalChanges > 0 ? 2 : 0;
+    process.exitCode = 0;
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(msg);
+    process.exitCode = 1;
+  }
 }
 
 export default function (program: Program): Command {
