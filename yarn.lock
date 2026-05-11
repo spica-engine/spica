@@ -10456,6 +10456,7 @@ __metadata:
     "@types/node": "npm:^22.10.7"
     "@types/semver": "npm:^7.5.8"
     axios: "npm:^1.8.2"
+    chokidar: "npm:^4.0.3"
     colorette: "npm:^2.0.20"
     columnify: "npm:^1.6.0"
     cosmiconfig: "npm:^9.0.0"

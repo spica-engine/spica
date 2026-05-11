@@ -803,11 +803,12 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
           e
         });
 
-      const policies = [...apikey.policies];
-      delete apikey.policies;
+      const policies = [...(apikey.policies ?? [])];
+      const apikeyData = {...apikey};
+      delete apikeyData.policies;
 
       const apikeyInsertPromise = this.targetService
-        .post("passport/apikey", apikey)
+        .post("passport/apikey", apikeyData)
         .catch(e => insertRejectionHandler(e));
 
       return apikeyInsertPromise.then(() => {
@@ -830,15 +831,16 @@ export class ApikeySynchronizer implements ModuleSynchronizer {
         });
       };
 
-      const policies = [...apikey.policies];
-      delete apikey.policies;
+      const policies = [...(apikey.policies ?? [])];
+      const apikeyData = {...apikey};
+      delete apikeyData.policies;
 
       // detaching all policies then attaching policies will cause sending a lot of requests, instead we will remove apikey
       const apikeyDeletePromise = this.targetService
         .delete(`passport/apikey/${apikey._id}`)
         .catch(e => rejectionHandler(e));
       const apikeyInsertPromise = apikeyDeletePromise.then(() =>
-        this.targetService.post(`passport/apikey`, apikey).catch(e => rejectionHandler(e))
+        this.targetService.post(`passport/apikey`, apikeyData).catch(e => rejectionHandler(e))
       );
 
       return apikeyInsertPromise.then(() => {

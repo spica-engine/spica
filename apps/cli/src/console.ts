@@ -22,11 +22,6 @@ export function spin(
       },
       error => {
         spinner.fail();
-        if (typeof error == "object" && "message" in error) {
-          console.error(error.message);
-          console.debug(error);
-          process.exit();
-        }
         return Promise.reject(error);
       }
     );
