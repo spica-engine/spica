@@ -6,7 +6,6 @@ import {bold, cyan, green, red, yellow} from "colorette";
 import ora from "ora";
 import {httpService} from "../../http";
 import {context} from "../../context";
-import {config} from "../../config";
 import {buildPlan, applyPlan, renderPlan} from "./planner";
 import {confirm} from "./prompt";
 import {resolveModules, MODULE_NAMES} from "./modules/index";
