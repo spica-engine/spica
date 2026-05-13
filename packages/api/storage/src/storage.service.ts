@@ -23,7 +23,7 @@ import {
   StorageResponse,
   PaginatedStorageResponse
 } from "@spica-server/interface-storage";
-import {Strategy} from "./strategy/strategy.js";
+import {Strategy, ProxyReadResult} from "./strategy/strategy.js";
 import {TransactionExecutor} from "@spica-server/transaction";
 
 import fs from "fs";
@@ -427,6 +427,23 @@ export class StorageService extends BaseCollection<StorageObjectMeta>("storage")
     const objectWithData = object as WithId<StorageObject<Buffer>>;
     objectWithData.content.data = await this.service.read(object.name);
     return objectWithData;
+  }
+
+  private async getMeta(idOrName: ObjectId | string): Promise<WithId<StorageObjectMeta> | null> {
+    const query =
+      idOrName instanceof ObjectId ? {_id: new ObjectId(idOrName)} : {name: idOrName as string};
+    return this._coll.findOne(query);
+  }
+
+  async proxyRead(
+    idOrName: ObjectId | string,
+    requestHeaders: Record<string, string>
+  ): Promise<ProxyReadResult> {
+    const meta = await this.getMeta(idOrName);
+    if (!meta) {
+      throw new NotFoundException(`Storage object could not be found`);
+    }
+    return this.service.proxyRead(meta.name, requestHeaders, meta);
   }
 
   async getUrl(name: string) {

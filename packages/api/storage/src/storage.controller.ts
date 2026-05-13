@@ -31,7 +31,6 @@ import {
   SimpleActionGuard
 } from "@spica-server/passport-guard";
 import {OR} from "@spica-server/core";
-import etag from "etag";
 import {createStorageActivity} from "./activity.resource.js";
 import {
   BsonBodyParser,
@@ -257,35 +256,40 @@ export class StorageController {
 
   /**
    * Returns content of the object along with http caching headers.
-   * When `if-none-match` header is present and matches the objects checksum, it will end the response with status code 304
-   * for futher information check: https://en.wikipedia.org/wiki/HTTP_ETag
+   * All storage strategies (local, S3, GCS) stream the response directly — the API acts
+   * as an authentication/authorization layer only.
+   * When `if-none-match` header is present and matches, the strategy responds with 304.
    * @param id Identifier of the object
-   * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
    */
   @Get(":id(*)/view")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("storage:show", "storage/:id"))
   async view(
+    @Req() req,
     @Res() res,
-    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string,
-    @Headers("if-none-match") ifNoneMatch?: string
+    @Param("id", OR(v => ObjectId.isValid(v), OBJECT_ID)) idOrName: ObjectId | string
   ) {
-    let object;
-    if (idOrName instanceof ObjectId) {
-      object = await this.storage.get(idOrName);
-    } else {
-      object = await this.storage.getByName(idOrName);
+    const FORWARDED_HEADERS = [
+      "range",
+      "if-match",
+      "if-none-match",
+      "if-modified-since",
+      "if-unmodified-since"
+    ];
+    const requestHeaders: Record<string, string> = {};
+    for (const header of FORWARDED_HEADERS) {
+      if (req.headers[header]) requestHeaders[header] = req.headers[header];
     }
-    if (!object) {
-      throw new NotFoundException("Could not find the object.");
+
+    const proxyResult = await this.storage.proxyRead(idOrName, requestHeaders);
+    res.status(proxyResult.statusCode);
+    for (const [key, value] of Object.entries(proxyResult.headers)) {
+      res.header(key, value);
     }
-    const eTag = etag(object.content.data);
-    if (eTag === ifNoneMatch) {
-      return res.status(HttpStatus.NOT_MODIFIED).end();
+    if (proxyResult.stream === null) {
+      return res.end();
     }
-    res.header("Content-type", object.content.type);
-    res.header("ETag", eTag);
-    res.header("Cache-control", "public, max-age=3600, must-revalidate");
-    res.end(object.content.data);
+    proxyResult.stream.on("error", () => res.destroy());
+    return proxyResult.stream.pipe(res);
   }
 
   /**

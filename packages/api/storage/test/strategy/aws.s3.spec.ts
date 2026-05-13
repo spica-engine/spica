@@ -299,4 +299,140 @@ describe("AWSS3", () => {
       expect(typeof obs.subscribe).toBe("function");
     });
   });
+
+  describe("proxyRead", () => {
+    const meta = {name: "test", content: {type: "text/plain"}} as any;
+
+    it("should stream object body and forward response headers", async () => {
+      const mockBodyStream = Readable.from(Buffer.from("file content"));
+      sendMock.mockResolvedValueOnce({
+        $metadata: {httpStatusCode: 200},
+        Body: mockBodyStream,
+        ContentType: "image/png",
+        ContentLength: 12,
+        ETag: '"abc123"',
+        LastModified: new Date("2024-01-01"),
+        CacheControl: "public, max-age=86400",
+        AcceptRanges: "bytes"
+      });
+
+      const result = await service.proxyRead("image.png", {}, meta);
+
+      expect(result).not.toBeNull();
+      expect(result!.statusCode).toBe(200);
+      expect(result!.stream).toBe(mockBodyStream);
+      expect(result!.headers["content-type"]).toBe("image/png");
+      expect(result!.headers["content-length"]).toBe("12");
+      expect(result!.headers["etag"]).toBe('"abc123"');
+      expect(result!.headers["cache-control"]).toBe("public, max-age=86400");
+      expect(result!.headers["accept-ranges"]).toBe("bytes");
+      const command = sendMock.mock.calls[0][0];
+      expect(command.input).toEqual({Bucket: "test-bucket", Key: "image.png"});
+    });
+
+    it("should forward if-none-match as IfNoneMatch to S3", async () => {
+      const mockBodyStream = Readable.from(Buffer.from("data"));
+      sendMock.mockResolvedValueOnce({
+        $metadata: {httpStatusCode: 200},
+        Body: mockBodyStream
+      });
+
+      await service.proxyRead("file.txt", {"if-none-match": '"etag-value"'}, meta);
+
+      const command = sendMock.mock.calls[0][0];
+      expect(command.input.IfNoneMatch).toBe('"etag-value"');
+    });
+
+    it("should forward range header and return 206 status with content-range", async () => {
+      const mockBodyStream = Readable.from(Buffer.from("partial data"));
+      sendMock.mockResolvedValueOnce({
+        $metadata: {httpStatusCode: 206},
+        Body: mockBodyStream,
+        ContentRange: "bytes 0-99/1000",
+        ContentType: "video/mp4"
+      });
+
+      const result = await service.proxyRead("video.mp4", {range: "bytes=0-99"}, meta);
+
+      expect(result!.statusCode).toBe(206);
+      expect(result!.headers["content-range"]).toBe("bytes 0-99/1000");
+      const command = sendMock.mock.calls[0][0];
+      expect(command.input.Range).toBe("bytes=0-99");
+    });
+
+    it("should forward if-match, if-modified-since, and if-unmodified-since headers", async () => {
+      sendMock.mockResolvedValueOnce({
+        $metadata: {httpStatusCode: 200},
+        Body: Readable.from(Buffer.from("data"))
+      });
+
+      const date = "Mon, 01 Jan 2024 00:00:00 GMT";
+      await service.proxyRead("file.txt", {
+        "if-match": '"match-etag"',
+        "if-modified-since": date,
+        "if-unmodified-since": date
+      }, meta);
+
+      const command = sendMock.mock.calls[0][0];
+      expect(command.input.IfMatch).toBe('"match-etag"');
+      expect(command.input.IfModifiedSince).toEqual(new Date(date));
+      expect(command.input.IfUnmodifiedSince).toEqual(new Date(date));
+    });
+
+    it("should return 304 with null stream when httpStatusCode is 304", async () => {
+      sendMock.mockResolvedValueOnce({
+        $metadata: {httpStatusCode: 304},
+        Body: null
+      });
+
+      const result = await service.proxyRead("file.txt", {"if-none-match": '"etag"'}, meta);
+
+      expect(result!.statusCode).toBe(304);
+      expect(result!.stream).toBeNull();
+    });
+
+    it("should return 304 with null stream when SDK throws a 304 error", async () => {
+      const error: any = new Error("Not Modified");
+      error.$metadata = {httpStatusCode: 304};
+      sendMock.mockRejectedValueOnce(error);
+
+      const result = await service.proxyRead("file.txt", {"if-none-match": '"etag"'}, meta);
+
+      expect(result!.statusCode).toBe(304);
+      expect(result!.stream).toBeNull();
+    });
+
+    it("should rethrow non-304 S3 errors", async () => {
+      const error: any = new Error("Access Denied");
+      error.$metadata = {httpStatusCode: 403};
+      sendMock.mockRejectedValueOnce(error);
+
+      await expect(service.proxyRead("secret.txt", {}, meta)).rejects.toThrow("Access Denied");
+    });
+
+    it("should not include content-length when ContentLength is undefined", async () => {
+      sendMock.mockResolvedValueOnce({
+        $metadata: {httpStatusCode: 200},
+        Body: Readable.from(Buffer.from("data")),
+        ContentType: "text/plain"
+      });
+
+      const result = await service.proxyRead("file.txt", {}, meta);
+
+      expect(result!.headers["content-length"]).toBeUndefined();
+    });
+
+    it("should set last-modified header as UTC string", async () => {
+      const lastModified = new Date("2024-06-15T12:00:00Z");
+      sendMock.mockResolvedValueOnce({
+        $metadata: {httpStatusCode: 200},
+        Body: Readable.from(Buffer.from("data")),
+        LastModified: lastModified
+      });
+
+      const result = await service.proxyRead("file.txt", {}, meta);
+
+      expect(result!.headers["last-modified"]).toBe(lastModified.toUTCString());
+    });
+  });
 });

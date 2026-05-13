@@ -2,13 +2,15 @@ import {StorageObjectMeta} from "@spica-server/interface-storage";
 import {Server, EVENTS} from "@tus/server";
 import {CronJob} from "cron";
 import {Observable, Subject} from "rxjs";
-import {Strategy} from "./strategy.js";
+import {Strategy, ProxyReadResult} from "./strategy.js";
 
-export abstract class BaseStrategy implements Strategy {
+export abstract class BaseStrategy extends Strategy {
   protected tusServer: Server;
   protected resumableUploadFinishedSubject = new Subject<StorageObjectMeta>();
 
-  constructor(protected resumableUploadExpiresIn: number) {}
+  constructor(protected resumableUploadExpiresIn: number) {
+    super();
+  }
 
   get resumableUploadFinished(): Observable<StorageObjectMeta> {
     return this.resumableUploadFinishedSubject.asObservable();
@@ -70,4 +72,5 @@ export abstract class BaseStrategy implements Strategy {
   abstract delete(id: string): Promise<void> | void;
   abstract url(id: string): Promise<string>;
   abstract rename(oldKey: string, newKey: string): Promise<void>;
+  abstract proxyRead(id: string, requestHeaders: Record<string, string>, meta: StorageObjectMeta): Promise<ProxyReadResult>;
 }

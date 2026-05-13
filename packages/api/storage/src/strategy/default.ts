@@ -1,7 +1,11 @@
 import fs from "fs";
+import {Readable} from "stream";
+import etag from "etag";
 import {FileStore} from "@tus/file-store";
 import {BaseStrategy} from "./base-strategy.js";
+import {ProxyReadResult} from "./strategy.js";
 import {Logger} from "@nestjs/common";
+import {StorageObjectMeta} from "@spica-server/interface-storage";
 
 export class Default extends BaseStrategy {
   private readonly logger = new Logger(Default.name);
@@ -130,5 +134,23 @@ export class Default extends BaseStrategy {
 
   private removeDir(objectPath) {
     return fs.promises.rm(objectPath, {recursive: true});
+  }
+
+  async proxyRead(id: string, requestHeaders: Record<string, string>, meta: StorageObjectMeta): Promise<ProxyReadResult> {
+    const buffer = await this.read(id);
+    const eTagValue = etag(buffer);
+
+    const headers: Record<string, string> = {
+      "content-type": meta.content.type,
+      "etag": eTagValue,
+      "cache-control": "public, max-age=3600, must-revalidate",
+      "content-length": String(buffer.length)
+    };
+
+    if (requestHeaders["if-none-match"] === eTagValue) {
+      return {stream: null, headers, statusCode: 304};
+    }
+
+    return {stream: Readable.from(buffer), headers, statusCode: 200};
   }
 }

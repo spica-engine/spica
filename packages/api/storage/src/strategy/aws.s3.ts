@@ -1,7 +1,9 @@
 import {ReadStream} from "fs";
+import {Readable} from "stream";
 import {
   S3Client,
   GetObjectCommand,
+  GetObjectCommandInput,
   PutObjectCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand,
@@ -11,6 +13,8 @@ import {
 import {readFileSync} from "fs";
 import {S3Store} from "@tus/s3-store";
 import {BaseStrategy} from "./base-strategy.js";
+import {ProxyReadResult} from "./strategy.js";
+import {StorageObjectMeta} from "@spica-server/interface-storage";
 
 export class AWSS3 extends BaseStrategy {
   s3: S3Client;
@@ -120,6 +124,55 @@ export class AWSS3 extends BaseStrategy {
   async url(id: string): Promise<string> {
     const region = await this.s3.config.region();
     return `https://${this.bucketName}.s3.${region}.amazonaws.com/${id}`;
+  }
+
+  async proxyRead(
+    id: string,
+    requestHeaders: Record<string, string>,
+    _meta: StorageObjectMeta
+  ): Promise<ProxyReadResult> {
+    const input: GetObjectCommandInput = {
+      Bucket: this.bucketName,
+      Key: id
+    };
+
+    const headerMappings: [string, (v: string) => void][] = [
+      ["if-none-match",     v => { input.IfNoneMatch = v; }],
+      ["if-match",          v => { input.IfMatch = v; }],
+      ["if-modified-since", v => { input.IfModifiedSince = new Date(v); }],
+      ["if-unmodified-since", v => { input.IfUnmodifiedSince = new Date(v); }],
+      ["range",             v => { input.Range = v; }]
+    ];
+    for (const [header, apply] of headerMappings) {
+      if (requestHeaders[header]) apply(requestHeaders[header]);
+    }
+
+    try {
+      const response = await this.s3.send(new GetObjectCommand(input));
+      const statusCode = response.$metadata.httpStatusCode ?? 200;
+
+      const headers = Object.fromEntries(
+        (
+          [
+            ["content-type", response.ContentType],
+            ["content-length", response.ContentLength !== undefined ? String(response.ContentLength) : undefined],
+            ["etag", response.ETag],
+            ["last-modified", response.LastModified?.toUTCString()],
+            ["cache-control", response.CacheControl],
+            ["content-range", response.ContentRange],
+            ["accept-ranges", response.AcceptRanges]
+          ] as [string, string | undefined][]
+        ).filter(([, v]) => v !== undefined)
+      ) as Record<string, string>;
+
+      const stream = statusCode === 304 ? null : (response.Body as unknown as Readable);
+      return {stream, headers, statusCode};
+    } catch (e: any) {
+      if (e.$metadata?.httpStatusCode === 304) {
+        return {stream: null, headers: {}, statusCode: 304};
+      }
+      throw e;
+    }
   }
 
   async rename(oldPrefix: string, newPrefix: string): Promise<void> {
