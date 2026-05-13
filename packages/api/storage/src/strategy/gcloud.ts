@@ -112,10 +112,16 @@ export class GCloud extends BaseStrategy {
     const fileSize = Number(metadata.size ?? 0);
 
     if (requestHeaders["range"]) {
+      if (fileSize <= 0) {
+        return {stream: null, headers: {"content-range": `bytes */${fileSize}`}, statusCode: 416};
+      }
       const match = requestHeaders["range"].match(/bytes=(\d+)-(\d*)/);
       if (match) {
         const start = parseInt(match[1], 10);
-        const end = match[2] ? parseInt(match[2], 10) : fileSize - 1;
+        if (start >= fileSize) {
+          return {stream: null, headers: {"content-range": `bytes */${fileSize}`}, statusCode: 416};
+        }
+        const end = match[2] ? Math.min(parseInt(match[2], 10), fileSize - 1) : fileSize - 1;
         streamOptions = {start, end};
         statusCode = 206;
         responseHeaders["content-range"] = `bytes ${start}-${end}/${fileSize}`;

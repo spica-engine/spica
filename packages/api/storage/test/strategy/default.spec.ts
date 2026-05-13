@@ -171,6 +171,8 @@ describe("Default", () => {
 
       expect(result.statusCode).toBe(304);
       expect(result.stream).toBeNull();
+      expect(result.headers["etag"]).toBe(eTagValue);
+      expect(result.headers["cache-control"]).toBe("public, max-age=3600, must-revalidate");
     });
 
     it("should return 200 when if-none-match does not match etag", async () => {

@@ -1,5 +1,4 @@
 import fs from "fs";
-import {Readable} from "stream";
 import etag from "etag";
 import {FileStore} from "@tus/file-store";
 import {BaseStrategy} from "./base-strategy.js";
@@ -137,20 +136,22 @@ export class Default extends BaseStrategy {
   }
 
   async proxyRead(id: string, requestHeaders: Record<string, string>, meta: StorageObjectMeta): Promise<ProxyReadResult> {
-    const buffer = await this.read(id);
-    const eTagValue = etag(buffer);
+    await this.ensureStorageDiskExists();
+    const objectPath = this.buildPath(id);
+    const stat = await fs.promises.stat(objectPath);
+    const eTagValue = etag(stat);
 
     const headers: Record<string, string> = {
       "content-type": meta.content.type,
       "etag": eTagValue,
       "cache-control": "public, max-age=3600, must-revalidate",
-      "content-length": String(buffer.length)
+      "content-length": String(stat.size)
     };
 
     if (requestHeaders["if-none-match"] === eTagValue) {
       return {stream: null, headers, statusCode: 304};
     }
 
-    return {stream: Readable.from(buffer), headers, statusCode: 200};
+    return {stream: fs.createReadStream(objectPath), headers, statusCode: 200};
   }
 }

@@ -483,5 +483,52 @@ describe("GCloud", () => {
 
       expect(result!.headers["content-length"]).toBeUndefined();
     });
+
+    it("should return 416 when range is requested on a zero-size file", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "video/mp4",
+        size: "0",
+        etag: '"empty"'
+      }]);
+
+      const result = await service.proxyRead("empty.mp4", {range: "bytes=0-499"}, meta);
+
+      expect(result!.statusCode).toBe(416);
+      expect(result!.stream).toBeNull();
+      expect(result!.headers["content-range"]).toBe("bytes */0");
+      expect(File.createReadStream).not.toHaveBeenCalled();
+    });
+
+    it("should return 416 when range start is beyond file size", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "text/plain",
+        size: "100",
+        etag: '"etag"'
+      }]);
+
+      const result = await service.proxyRead("file.txt", {range: "bytes=200-299"}, meta);
+
+      expect(result!.statusCode).toBe(416);
+      expect(result!.stream).toBeNull();
+      expect(result!.headers["content-range"]).toBe("bytes */100");
+      expect(File.createReadStream).not.toHaveBeenCalled();
+    });
+
+    it("should clamp explicit range end to fileSize-1 when end exceeds file size", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "text/plain",
+        size: "100",
+        etag: '"etag"'
+      }]);
+      const mockStream = Readable.from(Buffer.from("data"));
+      File.createReadStream.mockReturnValueOnce(mockStream);
+
+      const result = await service.proxyRead("file.txt", {range: "bytes=0-999"}, meta);
+
+      expect(result!.statusCode).toBe(206);
+      expect(result!.headers["content-range"]).toBe("bytes 0-99/100");
+      expect(result!.headers["content-length"]).toBe("100");
+      expect(File.createReadStream).toHaveBeenCalledWith({start: 0, end: 99});
+    });
   });
 });
