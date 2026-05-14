@@ -1,7 +1,10 @@
 import {ReadStream} from "fs";
+import {Readable} from "stream";
 import {Storage, Bucket} from "@google-cloud/storage";
 import {GCSStore} from "@tus/gcs-store";
 import {BaseStrategy} from "./base-strategy.js";
+import {ProxyReadResult} from "./strategy.js";
+import {StorageObjectMeta} from "@spica-server/interface-storage";
 import {Logger} from "@nestjs/common";
 
 export class GCloud extends BaseStrategy {
@@ -75,6 +78,61 @@ export class GCloud extends BaseStrategy {
       url.searchParams.delete("generation");
       return url.toString();
     });
+  }
+
+  async proxyRead(
+    id: string,
+    requestHeaders: Record<string, string>,
+    _meta: StorageObjectMeta
+  ): Promise<ProxyReadResult> {
+    const file = this.bucket.file(id);
+    const metadata = await this.getMetadata(id);
+
+    const responseHeaders = Object.fromEntries(
+      (
+        [
+          ["content-type", metadata.contentType],
+          ["etag", metadata.etag],
+          ["last-modified", metadata.updated ? new Date(metadata.updated).toUTCString() : undefined],
+          ["cache-control", metadata.cacheControl ?? "public, max-age=3600, must-revalidate"],
+          ["accept-ranges", "bytes"]
+        ] as [string, string | undefined][]
+      ).filter(([, v]) => v !== undefined)
+    ) as Record<string, string>;
+
+    if (
+      requestHeaders["if-none-match"] &&
+      requestHeaders["if-none-match"] === metadata.etag
+    ) {
+      return {stream: null, headers: responseHeaders, statusCode: 304};
+    }
+
+    let streamOptions: {start?: number; end?: number} = {};
+    let statusCode = 200;
+    const fileSize = Number(metadata.size ?? 0);
+
+    if (requestHeaders["range"]) {
+      if (fileSize <= 0) {
+        return {stream: null, headers: {"content-range": `bytes */${fileSize}`}, statusCode: 416};
+      }
+      const match = requestHeaders["range"].match(/bytes=(\d+)-(\d*)/);
+      if (match) {
+        const start = parseInt(match[1], 10);
+        if (start >= fileSize) {
+          return {stream: null, headers: {"content-range": `bytes */${fileSize}`}, statusCode: 416};
+        }
+        const end = match[2] ? Math.min(parseInt(match[2], 10), fileSize - 1) : fileSize - 1;
+        streamOptions = {start, end};
+        statusCode = 206;
+        responseHeaders["content-range"] = `bytes ${start}-${end}/${fileSize}`;
+        responseHeaders["content-length"] = String(end - start + 1);
+      }
+    } else if (fileSize > 0) {
+      responseHeaders["content-length"] = String(fileSize);
+    }
+
+    const stream = file.createReadStream(streamOptions) as unknown as Readable;
+    return {stream, headers: responseHeaders, statusCode};
   }
 
   async rename(oldName: string, newName: string): Promise<void> {

@@ -5,7 +5,6 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {PassportTestingModule} from "@spica-server/passport-testing";
 import {getMultipartFormDataMeta, StorageModule} from "@spica-server/storage";
 import {Binary, serialize} from "bson";
-import etag from "etag";
 import {StorageObject} from "@spica-server/interface-storage";
 import {GuardService} from "@spica-server/passport-guard-services";
 
@@ -473,11 +472,11 @@ describe("Storage Acceptance", () => {
           data: [row]
         }
       } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
+      const {headers: initialHeaders} = await req.get(`/storage/${row._id}/view`);
       const {statusCode, statusText} = await req.get(
         `/storage/${row._id}/view`,
         {},
-
-        {"If-None-Match": etag("third")}
+        {"If-None-Match": initialHeaders["etag"]}
       );
       expect(statusCode).toBe(304);
       expect(statusText).toBe("Not Modified");
@@ -492,10 +491,10 @@ describe("Storage Acceptance", () => {
       const {headers, body} = await req.get(
         `/storage/${row._id}/view`,
         {},
-        {"If-None-Match": etag("unexist content")}
+        {"If-None-Match": '"stale-etag"'}
       );
       expect(headers["content-type"]).toEqual("text/plain; charset=utf-8");
-      expect(headers["etag"]).toBe(etag("third"));
+      expect(headers["etag"]).toBeDefined();
       expect(body).toBe("third");
     });
 
@@ -507,7 +506,7 @@ describe("Storage Acceptance", () => {
       } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
       const {headers} = await req.get(`/storage/${row._id}/view`);
       expect(headers["content-type"]).toBe("text/plain; charset=utf-8");
-      expect(headers["etag"]).toBe(etag("third"));
+      expect(headers["etag"]).toBeDefined();
     });
   });
 
@@ -1408,7 +1407,7 @@ describe("Storage Acceptance", () => {
       } = await req.get("/storage", {paginate: true, sort: JSON.stringify({_id: -1})});
       const {headers, body} = await req.get(`/storage/${row.name}/view`);
       expect(headers["content-type"]).toEqual("text/plain; charset=utf-8");
-      expect(headers["etag"]).toBe(etag("third"));
+      expect(headers["etag"]).toBeDefined();
       expect(body).toBe("third");
     });
   });

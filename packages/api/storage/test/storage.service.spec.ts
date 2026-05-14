@@ -1,9 +1,11 @@
 import {Test, TestingModule} from "@nestjs/testing";
+import {NotFoundException} from "@nestjs/common";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database-testing";
 import {StorageService} from "@spica-server/storage";
 import {Default} from "@spica-server/storage";
 import {Strategy} from "@spica-server/storage";
 import {StorageObject, STORAGE_OPTIONS} from "@spica-server/interface-storage";
+import {Readable} from "stream";
 
 describe("Storage Service", () => {
   let module: TestingModule;
@@ -1019,6 +1021,54 @@ describe("Storage Service", () => {
           expect(result.map(r => r.name)).toEqual(["photos/vacation1.jpg", "photos/family.jpg"]);
         });
       });
+    });
+  });
+
+  describe("proxyRead", () => {
+    it("should throw NotFoundException when object is not found by id", async () => {
+      await expect(storageService.proxyRead(new ObjectId(), {})).rejects.toThrow(NotFoundException);
+    });
+
+    it("should throw NotFoundException when object is not found by name", async () => {
+      await expect(storageService.proxyRead("nonexistent", {})).rejects.toThrow(NotFoundException);
+    });
+
+    it("should delegate to strategy.proxyRead with object name when found by id", async () => {
+      await storageService.insert([storageObject]);
+      const mockProxyResult = {
+        stream: Readable.from(Buffer.from("data")),
+        headers: {"content-type": "text/plain"},
+        statusCode: 200
+      };
+      jest.spyOn(strategyInstance, "proxyRead").mockResolvedValueOnce(mockProxyResult);
+
+      const result = await storageService.proxyRead(storageObjectId, {range: "bytes=0-10"});
+
+      expect(result).toBe(mockProxyResult);
+      expect(strategyInstance.proxyRead).toHaveBeenCalledWith(
+        "name",
+        {range: "bytes=0-10"},
+        expect.objectContaining({name: "name"})
+      );
+    });
+
+    it("should delegate to strategy.proxyRead when found by name string", async () => {
+      await storageService.insert([storageObject]);
+      const mockProxyResult = {
+        stream: null,
+        headers: {etag: '"abc"'},
+        statusCode: 304
+      };
+      jest.spyOn(strategyInstance, "proxyRead").mockResolvedValueOnce(mockProxyResult);
+
+      const result = await storageService.proxyRead("name", {});
+
+      expect(result).toBe(mockProxyResult);
+      expect(strategyInstance.proxyRead).toHaveBeenCalledWith(
+        "name",
+        {},
+        expect.objectContaining({name: "name"})
+      );
     });
   });
 });
