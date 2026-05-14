@@ -268,8 +268,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       return available;
     }
 
+    const activeTargetWorkers = sameTargets.filter(
+      ({worker}) => worker.state != WorkerState.Timeouted && worker.state != WorkerState.Outdated
+    );
     const fresh = workers.find(({worker}) => worker.state == WorkerState.Fresh);
-    if (sameTargets.length < this.options.maxConcurrency) {
+    if (activeTargetWorkers.length < this.options.maxConcurrency) {
       return fresh;
     }
     return;
