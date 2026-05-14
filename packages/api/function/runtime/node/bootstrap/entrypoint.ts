@@ -284,9 +284,7 @@ async function _process(ev: event.Event, queue: EventQueue) {
 
   globalThis.require = createRequire(path.join(process.cwd(), "node_modules"));
 
-  let module = await import(
-    path.join(process.cwd(), ".build", process.env.ENTRYPOINT!) + "?event=" + ev.id
-  );
+  let module = await import(path.join(process.cwd(), ".build", process.env.ENTRYPOINT!));
 
   if ("default" in module && module.default.__esModule) {
     module = module.default; // Do not ask me why
