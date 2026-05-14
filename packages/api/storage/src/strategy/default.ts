@@ -95,14 +95,7 @@ export class Default extends BaseStrategy {
   }
 
   private async ensureStorageDiskExists() {
-    const hasAccess = await fs.promises
-      .access(this.path, fs.constants.F_OK)
-      .then(() => true)
-      .catch(() => false);
-    if (!hasAccess) {
-      return fs.promises.mkdir(this.path);
-    }
-    return Promise.resolve();
+    await fs.promises.mkdir(this.path, {recursive: true});
   }
 
   async rename(oldName: string, newName: string): Promise<void> {
