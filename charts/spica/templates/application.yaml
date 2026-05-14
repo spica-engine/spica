@@ -105,7 +105,7 @@ spec:
             --database-uri, {{ template "database.connection-uri" . }},
             --database-replica-set,  {{ .Values.database.replicaSetName }},
             --database-name,  {{ .Values.database.name }},
-            --passport-password,  {{ .Values.application.defaultPassword }},
+            --passport-default-identity-password,  {{ .Values.application.defaultPassword }},
             --public-url, {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}},
             --persistent-path, /data,
             --replication, "{{ ternary true false (gt (int .Values.application.replicas) 1) }}"
