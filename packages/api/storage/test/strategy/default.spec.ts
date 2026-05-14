@@ -1,5 +1,4 @@
 import {Default} from "@spica-server/storage";
-import {randomUUID} from "crypto";
 import fs from "fs";
 import os from "os";
 import path from "path";
@@ -8,16 +7,18 @@ import {Readable} from "stream";
 describe("Default", () => {
   let service: Default;
   let testDir: string;
+  let testDirParent: string;
 
   beforeEach(async () => {
     const baseTmpDir = process.env.TEST_TMPDIR || os.tmpdir();
-    testDir = await fs.promises.mkdtemp(path.join(baseTmpDir, "storage-default-"));
+    testDirParent = await fs.promises.mkdtemp(path.join(baseTmpDir, "storage-default-"));
+    testDir = path.join(testDirParent, "storage");
     service = new Default(testDir, "http://insteadof", 0);
   });
 
   afterEach(async () => {
     try {
-      await fs.promises.rm(testDir, {recursive: true, force: true});
+      await fs.promises.rm(testDirParent, {recursive: true, force: true});
     } catch {}
   });
 
@@ -111,12 +112,10 @@ describe("Default", () => {
 
   describe("ensureStorageDiskExists", () => {
     it("should create storage directory if it does not exist", async () => {
-      const baseTmpDir = process.env.TEST_TMPDIR || os.tmpdir();
-      const freshDir = path.join(baseTmpDir, `fresh-${randomUUID()}`);
+      const freshDir = path.join(testDirParent, "fresh");
       const freshService = new Default(freshDir, "http://insteadof", 0);
       await freshService.write("test", Buffer.from("data"));
       expect(fs.existsSync(freshDir)).toBe(true);
-      await fs.promises.rm(freshDir, {recursive: true, force: true});
     });
 
     it("should not fail if storage directory already exists", async () => {
