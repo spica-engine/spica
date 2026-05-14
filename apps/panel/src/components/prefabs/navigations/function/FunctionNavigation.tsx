@@ -160,6 +160,10 @@ const FunctionNavigation = () => {
     navigate("/function-logs");
   }, [navigate]);
 
+  const handleNavigateToVariables = useCallback(() => {
+    navigate("/function-variables");
+  }, [navigate]);
+
   return (
     <div className={styles.container}>
       <FluidContainer
@@ -175,47 +179,70 @@ const FunctionNavigation = () => {
         }}
         suffix={{
           children: (
-            <Button variant="icon" color="transparent" className={styles.button} onClick={handleNavigateToLogs}>
+         <>
+            <Button
+              variant="icon"
+              color="transparent"
+              className={styles.button}
+              onClick={handleNavigateToLogs}
+            >
+              <Icon name="bug" size="sm" />
+            </Button>
+                <Button
+              variant="icon"
+              color="transparent"
+              className={styles.button}
+              onClick={handleNavigateToVariables}
+            >
               <Icon name="cog" size="sm" />
             </Button>
+         </>
           )
         }}
       />
-      {orderedFunctions.map((fn, index) => (
-        <SortableNavigationItem
-          key={fn._id ?? index}
-          id={fn._id!}
-          title={fn.name}
-          index={index}
-          groupKey={FUNCTION_GROUP_KEY}
-          dndType={FUNCTION_ITEM_TYPE}
-          iconName="function"
-          moveItem={moveFunction}
-          onNavigate={handleNavigateToFunction}
-          onDragStart={handleDragStart}
-          onDrop={handleDropFunction}
-          itemClassName={styles.defaultNavigationItem}
-          renderSuffix={dragHandleRef => (
-            <>
-              <Button
-                variant="icon"
-                color="transparent"
-                className={styles.button}
-                onClick={e => handleDeleteClick(e, fn)}
-              >
-                <Icon name="delete" size="sm" />
-              </Button>
-              <div ref={dragHandleRef}>
-                <Button variant="icon" color="transparent" className={styles.button}>
-                  <Icon name="dragHorizontalVariant" size="sm" />
+      <div className={styles.navigationListContainer}>
+        {orderedFunctions.map((fn, index) => (
+          <SortableNavigationItem
+            key={fn._id ?? index}
+            id={fn._id!}
+            title={fn.name}
+            index={index}
+            groupKey={FUNCTION_GROUP_KEY}
+            dndType={FUNCTION_ITEM_TYPE}
+            iconName="function"
+            moveItem={moveFunction}
+            onNavigate={handleNavigateToFunction}
+            onDragStart={handleDragStart}
+            onDrop={handleDropFunction}
+            itemClassName={styles.defaultNavigationItem}
+            renderSuffix={dragHandleRef => (
+              <>
+                <Button
+                  variant="icon"
+                  color="transparent"
+                  className={styles.button}
+                  onClick={e => handleDeleteClick(e, fn)}
+                >
+                  <Icon name="delete" size="sm" />
                 </Button>
-              </div>
-            </>
-          )}
-        />
-      ))}
+                <div ref={dragHandleRef}>
+                  <Button variant="icon" color="transparent" className={styles.button}>
+                    <Icon name="dragHorizontalVariant" size="sm" />
+                  </Button>
+                </div>
+              </>
+            )}
+          />
+        ))}
+      </div>
       <div className={styles.addFunctionButtonContainer}>
-        <Button variant="outlined" color="default" fullWidth onClick={() => setIsModalOpen(true)} className={styles.addFunctionButton}>
+        <Button
+          color="transparent"
+          variant="text"
+          fullWidth
+          onClick={() => setIsModalOpen(true)}
+          className={styles.addFunctionButton}
+        >
           <Icon name="plus" size="sm" />
           Add New Function
         </Button>

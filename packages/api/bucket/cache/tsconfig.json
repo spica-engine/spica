@@ -7,6 +7,9 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../core/testing"
+    },
+    {
       "path": "../../../database"
     },
     {

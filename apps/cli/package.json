@@ -11,6 +11,46 @@
       "types": "./src/commands/project/sync.ts",
       "default": "./dist/src/commands/project/sync.js"
     },
+    "./src/commands/sync/planner": {
+      "types": "./src/commands/sync/planner.ts",
+      "default": "./dist/src/commands/sync/planner.js"
+    },
+    "./src/commands/sync/modules/bucket": {
+      "types": "./src/commands/sync/modules/bucket.ts",
+      "default": "./dist/src/commands/sync/modules/bucket.js"
+    },
+    "./src/commands/sync/modules/env-var": {
+      "types": "./src/commands/sync/modules/env-var.ts",
+      "default": "./dist/src/commands/sync/modules/env-var.js"
+    },
+    "./src/commands/sync/modules/secret": {
+      "types": "./src/commands/sync/modules/secret.ts",
+      "default": "./dist/src/commands/sync/modules/secret.js"
+    },
+    "./src/commands/sync/modules/policy": {
+      "types": "./src/commands/sync/modules/policy.ts",
+      "default": "./dist/src/commands/sync/modules/policy.js"
+    },
+    "./src/commands/sync/modules/function": {
+      "types": "./src/commands/sync/modules/function.ts",
+      "default": "./dist/src/commands/sync/modules/function.js"
+    },
+    "./src/commands/sync/modules/index": {
+      "types": "./src/commands/sync/modules/index.ts",
+      "default": "./dist/src/commands/sync/modules/index.js"
+    },
+    "./src/commands/sync/types": {
+      "types": "./src/commands/sync/types.ts",
+      "default": "./dist/src/commands/sync/types.js"
+    },
+    "./src/commands/sync/dev": {
+      "types": "./src/commands/sync/dev.ts",
+      "default": "./dist/src/commands/sync/dev.js"
+    },
+    "./src/commands/sync/fs-utils": {
+      "types": "./src/commands/sync/fs-utils.ts",
+      "default": "./dist/src/commands/sync/fs-utils.js"
+    },
     "./src/compile": {
       "types": "./src/compile.ts",
       "default": "./dist/src/compile.js"
@@ -33,6 +73,7 @@
   "dependencies": {
     "@caporal/core": "^2.0.7",
     "axios": "^1.8.2",
+    "chokidar": "^4.0.3",
     "colorette": "^2.0.20",
     "columnify": "^1.6.0",
     "cosmiconfig": "^9.0.0",

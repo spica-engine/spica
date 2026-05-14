@@ -1,12 +1,13 @@
-import React, {useEffect, useMemo, useState, useRef} from "react";
-import {Outlet, useNavigate} from "react-router-dom";
+import React, {useCallback, useEffect, useMemo, useState, useRef} from "react";
+import {Outlet, useLocation, useNavigate} from "react-router-dom";
 import SideBar from "../components/organisms/sidebar/SideBar";
 import type {NavigatorItemGroup, TypeNavigatorItem} from "../types/sidebar";
 
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
 import Toolbar from "../components/atoms/toolbar/Toolbar";
-import useLocalStorage from "../hooks/useLocalStorage";
+import {useSelector} from "react-redux";
+import {selectToken} from "../store/slices/authSlice";
 import {jwtDecode} from "jwt-decode";
 import type {AuthTokenJWTPayload} from "src/types/auth";
 import {useGetBucketsQuery, useUpdateBucketOrderMutation} from "../store/api/bucketApi";
@@ -16,10 +17,13 @@ import {
   type BucketNavigatorPopupWrapperProps
 } from "./components/BucketNavigatorPopupWrapper";
 import { getMenuItems, navigatorItems } from "../pages/home/sidebarItems";
+import {useAuth} from "../contexts/AuthContext";
 
 const Layout = () => {
   const navigate = useNavigate();
-  const [token] = useLocalStorage<string>("token", "");
+  const location = useLocation();
+  const token = useSelector(selectToken) ?? "";
+  const {logout} = useAuth();
 
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -112,16 +116,32 @@ const Layout = () => {
 
   useRequestTracker();
 
-  const name = useMemo(() => {
-    if (!token || !token.length) return "";
+  const decoded = useMemo(() => {
+    if (!token || !token.length) return null;
     try {
-      const decoded = jwtDecode<AuthTokenJWTPayload>(token);
-      return decoded.identifier;
+      return jwtDecode<AuthTokenJWTPayload>(token);
     } catch (err) {
       console.error(err);
-      return "";
+      return null;
     }
   }, [token]);
+
+  const name = decoded?.identifier ?? "";
+
+  const handleLogout = useCallback(() => {
+    logout();
+    navigate("/passport/identify");
+  }, [logout, navigate]);
+
+  const handleProfile = useCallback(() => {
+    const identityId = decoded?._id;
+    if (!identityId) return;
+    if (location.pathname === "/passport/identity") {
+      window.dispatchEvent(new CustomEvent("open-identity-drawer", {detail: {identityId}}));
+    } else {
+      navigate("/passport/identity", {state: {openIdentityId: identityId}});
+    }
+  }, [decoded, location.pathname, navigate]);
 
   const sideBarElement = (
     <div className={styles.sidebar}>
@@ -158,7 +178,7 @@ const Layout = () => {
       </div>
       <div className={styles.main}>
         <div className={styles.toolbar}>
-          <Toolbar token={token} name={name} onDrawerOpen={openDrawer} />
+          <Toolbar token={token} name={name} onDrawerOpen={openDrawer} onProfile={handleProfile} onLogout={handleLogout} />
         </div>
         <div className={styles.content}>
           <Outlet />

@@ -116,6 +116,117 @@ describe("Http", () => {
       });
     });
 
+    describe("json", () => {
+      it("should send object as json with application/json content-type", async () => {
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
+        await response.json({ok: true});
+
+        expect(writeHeadSpy).toHaveBeenCalledTimes(1);
+        expect(writeHeadSpy).toHaveBeenCalledWith(200, "OK", {
+          "Content-type": "application/json",
+          "Content-length": "11"
+        });
+        expect(endSpy).toHaveBeenCalledTimes(1);
+        const [bodyBuffer, encoding] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe(`{"ok":true}`);
+        expect(encoding).toBe("utf-8");
+      });
+
+      it("should send array as json", async () => {
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
+        await response.json([1, "two", true]);
+
+        expect(writeHeadSpy).toHaveBeenCalledTimes(1);
+        expect(writeHeadSpy).toHaveBeenCalledWith(200, "OK", {
+          "Content-type": "application/json",
+          "Content-length": "14"
+        });
+        expect(endSpy).toHaveBeenCalledTimes(1);
+        const [bodyBuffer] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe(`[1,"two",true]`);
+      });
+
+      it("should serialize primitives as json", async () => {
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
+        await response.json(42);
+
+        expect(writeHeadSpy).toHaveBeenCalledWith(200, "OK", {
+          "Content-type": "application/json",
+          "Content-length": "2"
+        });
+        const [bodyBuffer] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe("42");
+      });
+
+      it("should serialize boolean as json", async () => {
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
+        await response.json(false);
+
+        expect(writeHeadSpy).toHaveBeenCalledWith(200, "OK", {
+          "Content-type": "application/json",
+          "Content-length": "5"
+        });
+        const [bodyBuffer] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe("false");
+      });
+
+      it("should serialize null as json", async () => {
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
+        await response.json(null);
+
+        expect(writeHeadSpy).toHaveBeenCalledWith(200, "OK", {
+          "Content-type": "application/json",
+          "Content-length": "4"
+        });
+        const [bodyBuffer] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe("null");
+      });
+
+      it("should respect status code from status()", async () => {
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        await response.status(201, "Created").json({created: true});
+
+        expect(writeHeadSpy).toHaveBeenCalledWith(201, "Created", {
+          "Content-type": "application/json",
+          "Content-length": "16"
+        });
+      });
+
+      it("should fall back to null for non-serializable values like undefined", async () => {
+        const writeHeadSpy = jest.spyOn(response, "writeHead");
+        const endSpy = jest.spyOn(response, "end");
+        await response.json(undefined);
+
+        expect(writeHeadSpy).toHaveBeenCalledWith(200, "OK", {
+          "Content-type": "application/json",
+          "Content-length": "4"
+        });
+        const [bodyBuffer] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe("null");
+      });
+
+      it("should fall back to null for non-serializable function values", async () => {
+        const endSpy = jest.spyOn(response, "end");
+        await response.json(() => {});
+
+        const [bodyBuffer] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe("null");
+      });
+
+      it("should fall back to null for non-serializable symbol values", async () => {
+        const endSpy = jest.spyOn(response, "end");
+        await response.json(Symbol("s"));
+
+        const [bodyBuffer] = endSpy.mock.calls[0];
+        expect(bodyBuffer.toString()).toBe("null");
+      });
+    });
+
     describe("send", () => {
       it("should send boolean as string", async () => {
         const writeHeadSpy = jest.spyOn(response, "writeHead");

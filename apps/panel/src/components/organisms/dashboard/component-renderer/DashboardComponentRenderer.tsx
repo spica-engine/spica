@@ -96,7 +96,7 @@ const ChartRenderer: FC<{
       chartProps={{
         type: component.type as ChartType,
         data: chartData,
-        options: {responsive: true, maintainAspectRatio: false},
+        options: {},
       }}
       headerProps={{content: component.name}}
       onSettingsClick={onSettingsClick}

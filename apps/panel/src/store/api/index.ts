@@ -156,7 +156,8 @@ export {
   useUpdateApiKeyMutation,
   useDeleteApiKeyMutation,
   useGetApiKeyPoliciesQuery,
-  useUpdateApiKeyPoliciesMutation,
+  useAddApiKeyPolicyMutation,
+  useRemoveApiKeyPolicyMutation,
 } from './apiKeyApi';
 
 export type {
@@ -223,7 +224,7 @@ export {
   useUpdateStorageItemMutation,
   useDeleteStorageItemMutation,
   useUpdateStorageNameMutation,
-  useGetSubResourcesQuery,
+
 } from './storageApi';
 
 export type {

@@ -52,7 +52,36 @@ export class IdentityModule {
     registerAssetHandlers(prefService, repManager);
     if (registerConfigSchema) {
       registerConfigSchema("identity", {
-        type: "object"
+        description: "Configuration for the Identity module",
+        type: "object",
+        properties: {
+          password: {
+            description: "Password policy configuration for identities.",
+            type: "object",
+            properties: {
+              minLength: {
+                description: "Minimum number of characters required in the password.",
+                type: "integer"
+              },
+              minLowercase: {
+                description: "Minimum number of lowercase characters required in the password.",
+                type: "integer"
+              },
+              minUppercase: {
+                description: "Minimum number of uppercase characters required in the password.",
+                type: "integer"
+              },
+              minNumber: {
+                description: "Minimum number of numeric characters required in the password.",
+                type: "integer"
+              },
+              minSpecialCharacter: {
+                description: "Minimum number of special characters required in the password.",
+                type: "integer"
+              }
+            }
+          }
+        }
       });
     }
   }

@@ -83,7 +83,7 @@ spec:
             - containerPort: 80
           env:
             - name: BASE_URL
-              value: "/spica/"
+              value: "/"
           resources:
             requests:
               memory: "10Mi"
@@ -176,7 +176,7 @@ spec:
     - host: master.spicaengine.com
       http:
         paths:
-          - path: /spica/?(.*)
+          - path: /?(.*)
             pathType: ImplementationSpecific
             backend:
               service:

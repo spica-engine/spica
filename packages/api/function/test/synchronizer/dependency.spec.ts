@@ -92,7 +92,7 @@ describe("Function Dependency Synchronizer", () => {
     let dependencySupplier;
 
     beforeEach(() => {
-      dependencySupplier = getSupplier(engine, functionService);
+      dependencySupplier = getSupplier(engine, functionService, {watchMode: "realtime"});
     });
 
     it("should return ChangeSupplier with correct metadata", () => {

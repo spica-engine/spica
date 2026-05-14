@@ -46,7 +46,8 @@ xdescribe("SyncEngine Integration - Bucket", () => {
         VersionControlModule.forRoot({
           isReplicationEnabled: false,
           persistentPath: join(tmpdir()),
-          realtime: false
+          realtime: false,
+          watchMode: "realtime"
         }),
         BucketServiceModule.initialize(1000),
         HistoryModule.register(),

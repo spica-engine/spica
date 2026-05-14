@@ -81,7 +81,6 @@ export function registerAssetHandlers(
     // dependencies
     const dependencies = await engine.getPackages(fn).then(deps => {
       const depsDef = deps.reduce((acc, curr) => {
-        delete curr.types;
         acc[curr.name] = curr.version;
         return acc;
       }, {});

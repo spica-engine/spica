@@ -70,7 +70,8 @@ xdescribe("SyncEngine Integration - Function Index", () => {
         VersionControlModule.forRoot({
           isReplicationEnabled: false,
           persistentPath: join(tmpdir()),
-          realtime: false
+          realtime: false,
+          watchMode: "realtime"
         }),
         SchedulerModule.forRoot({
           invocationLogs: false,
@@ -124,7 +125,7 @@ xdescribe("SyncEngine Integration - Function Index", () => {
     functionEngine = module.get(FunctionEngine);
 
     syncEngine.registerChangeHandler(
-      getFunctionIndexSupplier(functionEngine, functionService),
+      getFunctionIndexSupplier(functionEngine, functionService, {watchMode: "realtime"}),
       getFunctionIndexApplier(functionService, functionEngine)
     );
   });

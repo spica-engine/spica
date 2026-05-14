@@ -70,7 +70,8 @@ xdescribe("SyncEngine Integration - Function Tsconfig", () => {
         VersionControlModule.forRoot({
           isReplicationEnabled: false,
           persistentPath: join(tmpdir()),
-          realtime: false
+          realtime: false,
+          watchMode: "realtime"
         }),
         SchedulerModule.forRoot({
           invocationLogs: false,
@@ -124,7 +125,7 @@ xdescribe("SyncEngine Integration - Function Tsconfig", () => {
     functionEngine = module.get(FunctionEngine);
 
     syncEngine.registerChangeHandler(
-      getFunctionTsconfigSupplier(functionEngine, functionService),
+      getFunctionTsconfigSupplier(functionEngine, functionService, {watchMode: "realtime"}),
       getFunctionTsconfigApplier(functionService, functionEngine)
     );
   });

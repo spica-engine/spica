@@ -66,15 +66,15 @@ const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: 
     [allSecrets, assignedSecretIdSet]
   );
 
-  const handleAddEnvVars = useCallback(() => {
-    if (!selectedVarIds.length) return;
-    const newVars = selectedVarIds
+  const handleAddEnvVars = useCallback((ids: string[]) => {
+    if (!ids.length) return;
+    const newVars = ids
       .map(id => allEnvVars.find(v => v._id === id))
       .filter((v): v is typeof allEnvVars[number] => !!v)
       .map(v => ({_id: v._id, key: v.key, value: v.value}));
     onEnvVarsChange([...envVars, ...newVars]);
     setSelectedVarIds([]);
-  }, [selectedVarIds, allEnvVars, envVars, onEnvVarsChange]);
+  }, [allEnvVars, envVars, onEnvVarsChange]);
 
   const handleRemoveEnvVar = useCallback(
     (envVarId: string) => {
@@ -83,15 +83,15 @@ const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: 
     [envVars, onEnvVarsChange]
   );
 
-  const handleAddSecrets = useCallback(() => {
-    if (!selectedSecretIds.length) return;
-    const newSecrets = selectedSecretIds
+  const handleAddSecrets = useCallback((ids: string[]) => {
+    if (!ids.length) return;
+    const newSecrets = ids
       .map(id => allSecrets.find(s => s._id === id))
       .filter((s): s is typeof allSecrets[number] => !!s)
       .map(s => ({_id: s._id, key: s.key}));
     onSecretsChange([...secrets, ...newSecrets]);
     setSelectedSecretIds([]);
-  }, [selectedSecretIds, allSecrets, secrets, onSecretsChange]);
+  }, [allSecrets, secrets, onSecretsChange]);
 
   const handleRemoveSecret = useCallback(
     (secretId: string) => {
@@ -102,94 +102,90 @@ const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: 
 
   const variablesContent = (
     <FlexElement direction="vertical" dimensionX="fill" gap={10}>
-      {envVars.map(v => (
-        <FluidContainer
-          key={v._id}
-          dimensionX="fill"
-          mode="fill"
-          alignment="leftCenter"
-          root={{
-            children: <Text size="medium">{v.key}</Text>,
-            alignment: "leftCenter",
-          }}
-          suffix={{
-            children: (
-              <Button
-                variant="icon"
-                color="danger"
-                onClick={() => handleRemoveEnvVar(v._id)}
-                className={styles.button}
-              >
-                <Icon name="delete" />
-              </Button>
-            ),
-          }}
-        />
-      ))}
       <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
         <Select
           options={envVarOptions}
           value={selectedVarIds}
           multiple
           placeholder="Select variables..."
-          onChange={value => setSelectedVarIds(Array.isArray(value) ? (value as string[]) : [])}
+          onChange={value => {
+            const ids = Array.isArray(value) ? (value as string[]) : [];
+            setSelectedVarIds(ids);
+            if (ids.length) handleAddEnvVars(ids);
+          }}
           dimensionX="fill"
         />
-        <Button
-          variant="icon"
-          color="default"
-          onClick={handleAddEnvVars}
-          disabled={!selectedVarIds.length}
-        >
-          <Icon name="plus" />
-        </Button>
+      </FlexElement>
+      <FlexElement direction="vertical" dimensionX="fill" gap={10} className={styles.itemList}>
+        {envVars.map(v => (
+          <FluidContainer
+            key={v._id}
+            dimensionX="fill"
+            mode="fill"
+            alignment="leftCenter"
+            root={{
+              children: <Text size="medium">{v.key}</Text>,
+              alignment: "leftCenter",
+            }}
+            suffix={{
+              children: (
+                <Button
+                  variant="icon"
+                  color="danger"
+                  onClick={() => handleRemoveEnvVar(v._id)}
+                  className={styles.button}
+                >
+                  <Icon name="delete" />
+                </Button>
+              ),
+            }}
+          />
+        ))}
       </FlexElement>
     </FlexElement>
   );
 
   const secretsContent = (
     <FlexElement direction="vertical" dimensionX="fill" gap={10}>
-      {secrets.map(s => (
-        <FluidContainer
-          key={s._id}
-          dimensionX="fill"
-          mode="fill"
-          alignment="leftCenter"
-          root={{
-            children: <Text size="medium">{s.key}</Text>,
-            alignment: "leftCenter",
-          }}
-          suffix={{
-            children: (
-              <Button
-                variant="icon"
-                color="danger"
-                onClick={() => handleRemoveSecret(s._id)}
-                className={styles.button}
-              >
-                <Icon name="delete" />
-              </Button>
-            ),
-          }}
-        />
-      ))}
       <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
         <Select
           options={secretOptions}
           value={selectedSecretIds}
           multiple
           placeholder="Select secrets..."
-          onChange={value => setSelectedSecretIds(Array.isArray(value) ? (value as string[]) : [])}
+          onChange={value => {
+            const ids = Array.isArray(value) ? (value as string[]) : [];
+            setSelectedSecretIds(ids);
+            if (ids.length) handleAddSecrets(ids);
+          }}
           dimensionX="fill"
         />
-        <Button
-          variant="icon"
-          color="default"
-          onClick={handleAddSecrets}
-          disabled={!selectedSecretIds.length}
-        >
-          <Icon name="plus" />
-        </Button>
+      </FlexElement>
+      <FlexElement direction="vertical" dimensionX="fill" gap={10} className={styles.itemList}>
+        {secrets.map(s => (
+          <FluidContainer
+            key={s._id}
+            dimensionX="fill"
+            mode="fill"
+            alignment="leftCenter"
+            root={{
+              children: <Text size="medium">{s.key}</Text>,
+              alignment: "leftCenter",
+            }}
+            suffix={{
+              children: (
+                <Button
+                  variant="icon"
+                  color="danger"
+                  onClick={() => handleRemoveSecret(s._id)}
+                  className={styles.button}
+                >
+                  <Icon name="delete" />
+                </Button>
+              ),
+            }}
+          />
+        ))}
       </FlexElement>
     </FlexElement>
   );

@@ -39,11 +39,11 @@ tests:
           path: metadata.annotations["helm.sh/hook"]
           value: post-install,post-upgrade
 
-  - it: should have backoffLimit of 5
+  - it: should have backoffLimit of 25
     asserts:
       - equal:
           path: spec.backoffLimit
-          value: 5
+          value: 25
 
   - it: should include single-node FQDN in container args when database.replicas is 1
     asserts:

@@ -4,8 +4,10 @@
  */
 
 import {memo, useCallback} from "react";
+import {useCopyToClipboard} from "../../../hooks/useCopyToClipboard";
 import {
   Accordion,
+  BooleanInput,
   Button,
   FlexElement,
   FluidContainer,
@@ -32,6 +34,8 @@ const DB_OPERATIONS = ["INSERT", "UPDATE", "REPLACE", "DELETE"];
 const BUCKET_OPERATIONS = ["ALL", "INSERT", "UPDATE", "DELETE"];
 const SYSTEM_EVENTS = ["READY"];
 
+const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || "";
+
 const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelProps) => {
   const handleAddTrigger = useCallback(() => {
     const newTrigger: FunctionTrigger = {
@@ -57,7 +61,13 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
 
   const handleHandlerChange = useCallback(
     (index: number, handler: string) => {
-      onChange(triggers.map((t, i) => (i === index ? {...t, handler} : t)));
+      onChange(
+        triggers.map((t, i) => {
+          if (i !== index) return t;
+          const options = t.type === "http" ? {...t.options, path: `/${handler}`} : t.options;
+          return {...t, handler, options};
+        })
+      );
     },
     [triggers, onChange]
   );
@@ -70,6 +80,15 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
     },
     [triggers, onChange]
   );
+
+  const handleActiveChange = useCallback(
+    (index: number, active: boolean) => {
+      onChange(triggers.map((t, i) => (i === index ? {...t, active} : t)));
+    },
+    [triggers, onChange]
+  );
+
+  const {copied: urlCopied, copy: copyUrl} = useCopyToClipboard();
 
   const typeOptions = TRIGGER_TYPES.map(type => ({
     label: enqueuers.find(e => e.description.name === type)?.description.title ?? type,
@@ -108,17 +127,22 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
           }}
           suffix={{
             children: (
-              <Button
-                variant="icon"
-                color="danger"
-                className={styles.deleteAction}
-                onClick={e => {
-                  e.stopPropagation();
-                  handleDeleteTrigger(index);
-                }}
-              >
-                <Icon name="delete" size="sm" />
-              </Button>
+              <FlexElement gap={4} alignment="leftCenter" onClick={e => e.stopPropagation()}>
+                <BooleanInput
+                  checked={trigger.active !== false}
+                  onChange={active => handleActiveChange(index, active)}
+                  size="small"
+                  containerProps={{className: styles.statusToggle}}
+                />
+                <Button
+                  variant="icon"
+                  color="danger"
+                  className={styles.deleteAction}
+                  onClick={() => handleDeleteTrigger(index)}
+                >
+                  <Icon name="delete" size="sm" />
+                </Button>
+              </FlexElement>
             )
           }}
         />
@@ -181,6 +205,19 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
                   className={styles.input}
                   type="text"
                 />
+              </FlexElement>
+              <FlexElement dimensionX="fill" alignment="leftCenter" gap={4}>
+                <Text size="small" dimensionX={"fill"} className={styles.path}>
+                  {`${BASE_URL}/fn-execute${trigger.options.path ?? ""}`}
+                </Text>
+                <Button
+                  variant="icon"
+                  color="default"
+                  className={styles.copyAction}
+                  onClick={() => copyUrl(`${BASE_URL}/fn-execute${trigger.options.path ?? ""}`)}
+                >
+                  <Icon name={urlCopied ? "check" : "contentCopy"} size="sm" />
+                </Button>
               </FlexElement>
             </FlexElement>
           )}

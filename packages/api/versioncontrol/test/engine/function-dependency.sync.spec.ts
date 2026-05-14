@@ -70,7 +70,8 @@ xdescribe("SyncEngine Integration - Function Dependency", () => {
         VersionControlModule.forRoot({
           isReplicationEnabled: false,
           persistentPath: join(tmpdir()),
-          realtime: false
+          realtime: false,
+          watchMode: "realtime"
         }),
         SchedulerModule.forRoot({
           invocationLogs: false,
@@ -124,7 +125,7 @@ xdescribe("SyncEngine Integration - Function Dependency", () => {
     functionEngine = module.get(FunctionEngine);
 
     syncEngine.registerChangeHandler(
-      getFunctionDependencySupplier(functionEngine, functionService),
+      getFunctionDependencySupplier(functionEngine, functionService, {watchMode: "realtime"}),
       getFunctionDependencyApplier(functionService, functionEngine)
     );
   });
@@ -281,7 +282,7 @@ xdescribe("SyncEngine Integration - Function Dependency", () => {
       const succeededSub = syncProcessor.watch(SyncStatuses.SUCCEEDED).subscribe(async sync => {
         succeededSub.unsubscribe();
         const deps = await CRUD.dependencies.findOne(functionService, functionEngine, _id);
-        expect(deps).toEqual([{name: "lodash", version: "^4.17.21", types: {}}]);
+        expect(deps).toEqual([{name: "lodash", version: "^4.17.21"}]);
         done();
       });
       repManager.write("function", name, fileName, packageContent, fileExtension);

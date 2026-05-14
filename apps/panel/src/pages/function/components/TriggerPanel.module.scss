@@ -23,6 +23,15 @@
     color: var(--color-danger, #ef4444);
   }
 }
+.statusToggle{
+  padding: 0 !important;
+}
+
+.copyAction{
+  min-width: unset !important;
+  width: unset !important;
+  padding: 0 !important;
+}
 
 .triggerMethodAccordion{
   padding: 0 !important;

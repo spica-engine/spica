@@ -7,6 +7,7 @@ import Layout from "./layout/Layout";
 import Bucket from "./pages/bucket/Bucket";
 import Identity from "./pages/identity/Identity";
 import User from "./pages/user/User";
+import UserProfiler from "./pages/observability/UserProfiler";
 import Diagram from "./pages/diagram/Diagram";
 import ProtectedRoute from "./components/guards/ProtectedRoute";
 import Storage from "./pages/storage/Storage";
@@ -20,8 +21,12 @@ import FunctionLogPage from "./pages/function-log/FunctionLogPage";
 import VersionControl from "./pages/version-control/VersionControl";
 import DashboardView from "./pages/dashboard/DashboardView";
 import Config from "./pages/config/Config";
+import ConfigModule from "./pages/config/ConfigModule";
 import RefreshToken from "./pages/refresh-token/RefreshToken";
 import SecretsAndVariables from "./pages/secrets-and-variables/SecretsAndVariables";
+import ApiKeyPage from "./pages/api-key/ApiKey";
+import FunctionVariablesPage from "./pages/function-variables/FunctionVariablesPage";
+import ObservabilityBucket from "./pages/observability/ObservabilityBucket";
 
 const router = createBrowserRouter(
   [
@@ -65,6 +70,10 @@ const router = createBrowserRouter(
           element: <User />
         },
         {
+          path: "passport/user/profile",
+          element: <UserProfiler />
+        },
+        {
           path: "passport/policy",
           element: <Policy />
         },
@@ -75,6 +84,10 @@ const router = createBrowserRouter(
         {
           path: "passport/refresh-token",
           element: <RefreshToken />
+        },
+        {
+          path: "passport/api-key",
+          element: <ApiKeyPage />
         },
         {
           path: "passport/secrets-and-variables",
@@ -101,6 +114,10 @@ const router = createBrowserRouter(
           element: <FunctionLogPage />
         },
         {
+          path: "function-variables",
+          element: <FunctionVariablesPage />
+        },
+        {
           path: "webhook/:webhookId",
           element: <Webhook />
         },
@@ -111,6 +128,14 @@ const router = createBrowserRouter(
         {
           path: "config",
           element: <Config />
+        },
+        {
+          path: "config/:module",
+          element: <ConfigModule />
+        },
+        {
+          path: "passport/observability/bucket",
+          element: <ObservabilityBucket />
         }
       ]
     },

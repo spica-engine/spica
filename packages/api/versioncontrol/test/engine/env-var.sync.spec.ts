@@ -39,7 +39,8 @@ xdescribe("SyncEngine Integration - EnvVar", () => {
         VersionControlModule.forRoot({
           isReplicationEnabled: false,
           persistentPath: join(tmpdir()),
-          realtime: false
+          realtime: false,
+          watchMode: "realtime"
         }),
         PreferenceTestingModule
       ],

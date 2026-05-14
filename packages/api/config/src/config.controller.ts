@@ -18,6 +18,12 @@ export class ConfigController {
     return this.configService.aggregate([resourceFilter]).toArray();
   }
 
+  @Get("schema")
+  @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]))
+  getAllConfigSchemas() {
+    return this.configSchemaRegistry.getSchemas();
+  }
+
   @Get(":module")
   @UseGuards(AuthGuard(["IDENTITY", "APIKEY"]), ActionGuard("config:show"))
   async getConfig(@Param("module") module: string) {

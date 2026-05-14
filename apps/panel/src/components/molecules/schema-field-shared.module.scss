@@ -1,0 +1,103 @@
+.fieldRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--padding-lg) 0;
+  border-bottom: 1px solid var(--color-border);
+  gap: var(--gap-lg);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.fieldInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-weight: 600;
+  font-size: var(--font-size-md);
+  color: var(--color-font-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fieldDescription {
+  font-size: var(--font-size-sm);
+  color: var(--color-input-placeholder);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fieldInput {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 320px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--padding-lg) 0;
+  border-bottom: 1px solid var(--color-border);
+  gap: var(--gap-lg);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.sectionHeader {
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+  padding: var(--padding-lg) 0 var(--padding-md) 0;
+  text-transform: capitalize;
+}
+
+.arraySection {
+  padding: var(--padding-lg) 0;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.arraySectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arrayRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+  padding: var(--padding-sm) 0;
+}
+
+.removeButton {
+  min-width: unset !important;
+  width: unset !important;
+  padding: 0 !important;
+}
+
+.addButton {
+  margin-top: var(--padding-sm);
+  align-self: flex-start;
+}

@@ -15,7 +15,9 @@ import {registerStatusProvider} from "./status.js";
 import FunctionSchema from "./schema/function.json" with {type: "json"};
 import {
   REGISTER_VC_CHANGE_HANDLER,
-  RegisterVCChangeHandler
+  RegisterVCChangeHandler,
+  VC_WATCH_OPTIONS,
+  VCWatchOptions
 } from "@spica-server/interface-versioncontrol";
 import {registerAssetHandlers} from "./asset.js";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
@@ -50,13 +52,14 @@ export class FunctionModule {
     @Optional()
     @Inject(REGISTER_VC_CHANGE_HANDLER)
     registerVCChangeHandler: RegisterVCChangeHandler,
+    @Optional() @Inject(VC_WATCH_OPTIONS) watchOpts: VCWatchOptions | null,
     logs: LogService,
     validator: Validator
   ) {
     if (registerVCChangeHandler) {
       registerVCChangeHandler(getSchemaSupplier(fs), getSchemaApplier(fs, fe, logs, validator));
-      registerVCChangeHandler(getIndexSupplier(fe, fs), getIndexApplier(fs, fe));
-      registerVCChangeHandler(getDependencySupplier(fe, fs), getDependencyApplier(fs, fe));
+      registerVCChangeHandler(getIndexSupplier(fe, fs, watchOpts!), getIndexApplier(fs, fe));
+      registerVCChangeHandler(getDependencySupplier(fe, fs, watchOpts!), getDependencyApplier(fs, fe));
     }
 
     registerStatusProvider(fs, scheduler);

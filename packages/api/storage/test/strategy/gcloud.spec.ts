@@ -31,6 +31,8 @@ describe("GCloud", () => {
       return writable;
     }),
 
+    createReadStream: jest.fn(),
+
     move: jest.fn(() => Promise.resolve())
   };
 
@@ -361,6 +363,172 @@ describe("GCloud", () => {
       const obs = service.resumableUploadFinished;
       expect(obs).toBeDefined();
       expect(typeof obs.subscribe).toBe("function");
+    });
+  });
+
+  describe("proxyRead", () => {
+    const meta = {name: "test", content: {type: "text/plain"}} as any;
+
+    it("should fetch metadata and stream object with response headers", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "image/jpeg",
+        size: "2048",
+        etag: '"abc123"',
+        updated: "2024-01-15T10:00:00Z",
+        cacheControl: "public, max-age=3600"
+      }]);
+      const mockStream = Readable.from(Buffer.from("image data"));
+      File.createReadStream.mockReturnValueOnce(mockStream);
+
+      const result = await service.proxyRead("photo.jpg", {}, meta);
+
+      expect(result).not.toBeNull();
+      expect(result!.statusCode).toBe(200);
+      expect(result!.stream).toBe(mockStream);
+      expect(result!.headers["content-type"]).toBe("image/jpeg");
+      expect(result!.headers["content-length"]).toBe("2048");
+      expect(result!.headers["etag"]).toBe('"abc123"');
+      expect(result!.headers["last-modified"]).toBe(new Date("2024-01-15T10:00:00Z").toUTCString());
+      expect(result!.headers["cache-control"]).toBe("public, max-age=3600");
+      expect(result!.headers["accept-ranges"]).toBe("bytes");
+      expect(File.createReadStream).toHaveBeenCalledWith({});
+    });
+
+    it("should return 304 when if-none-match matches etag", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "image/jpeg",
+        size: "2048",
+        etag: '"abc123"',
+        cacheControl: "public, max-age=3600"
+      }]);
+
+      const result = await service.proxyRead("photo.jpg", {"if-none-match": '"abc123"'}, meta);
+
+      expect(result!.statusCode).toBe(304);
+      expect(result!.stream).toBeNull();
+      expect(File.createReadStream).not.toHaveBeenCalled();
+    });
+
+    it("should not return 304 when if-none-match does not match etag", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "text/plain",
+        size: "100",
+        etag: '"current-etag"'
+      }]);
+      const mockStream = Readable.from(Buffer.from("content"));
+      File.createReadStream.mockReturnValueOnce(mockStream);
+
+      const result = await service.proxyRead("file.txt", {"if-none-match": '"old-etag"'}, meta);
+
+      expect(result!.statusCode).toBe(200);
+      expect(result!.stream).not.toBeNull();
+    });
+
+    it("should return 206 and set content-range for a range request", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "video/mp4",
+        size: "10000",
+        etag: '"vid123"'
+      }]);
+      const mockStream = Readable.from(Buffer.from("chunk"));
+      File.createReadStream.mockReturnValueOnce(mockStream);
+
+      const result = await service.proxyRead("video.mp4", {range: "bytes=0-999"}, meta);
+
+      expect(result!.statusCode).toBe(206);
+      expect(result!.headers["content-range"]).toBe("bytes 0-999/10000");
+      expect(result!.headers["content-length"]).toBe("1000");
+      expect(File.createReadStream).toHaveBeenCalledWith({start: 0, end: 999});
+    });
+
+    it("should calculate end as fileSize-1 when range end is omitted", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "video/mp4",
+        size: "10000",
+        etag: '"vid123"'
+      }]);
+      const mockStream = Readable.from(Buffer.from("rest of file"));
+      File.createReadStream.mockReturnValueOnce(mockStream);
+
+      const result = await service.proxyRead("video.mp4", {range: "bytes=500-"}, meta);
+
+      expect(result!.statusCode).toBe(206);
+      expect(result!.headers["content-range"]).toBe("bytes 500-9999/10000");
+      expect(result!.headers["content-length"]).toBe("9500");
+      expect(File.createReadStream).toHaveBeenCalledWith({start: 500, end: 9999});
+    });
+
+    it("should use default cache-control when metadata.cacheControl is absent", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "text/plain",
+        size: "10",
+        etag: '"etag"'
+      }]);
+      File.createReadStream.mockReturnValueOnce(Readable.from(Buffer.from("data")));
+
+      const result = await service.proxyRead("file.txt", {}, meta);
+
+      expect(result!.headers["cache-control"]).toBe("public, max-age=3600, must-revalidate");
+    });
+
+    it("should not set content-length when metadata.size is zero", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "text/plain",
+        size: "0",
+        etag: '"etag"'
+      }]);
+      File.createReadStream.mockReturnValueOnce(Readable.from(Buffer.from("")));
+
+      const result = await service.proxyRead("file.txt", {}, meta);
+
+      expect(result!.headers["content-length"]).toBeUndefined();
+    });
+
+    it("should return 416 when range is requested on a zero-size file", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "video/mp4",
+        size: "0",
+        etag: '"empty"'
+      }]);
+
+      const result = await service.proxyRead("empty.mp4", {range: "bytes=0-499"}, meta);
+
+      expect(result!.statusCode).toBe(416);
+      expect(result!.stream).toBeNull();
+      expect(result!.headers["content-range"]).toBe("bytes */0");
+      expect(File.createReadStream).not.toHaveBeenCalled();
+    });
+
+    it("should return 416 when range start is beyond file size", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "text/plain",
+        size: "100",
+        etag: '"etag"'
+      }]);
+
+      const result = await service.proxyRead("file.txt", {range: "bytes=200-299"}, meta);
+
+      expect(result!.statusCode).toBe(416);
+      expect(result!.stream).toBeNull();
+      expect(result!.headers["content-range"]).toBe("bytes */100");
+      expect(File.createReadStream).not.toHaveBeenCalled();
+    });
+
+    it("should clamp explicit range end to fileSize-1 when end exceeds file size", async () => {
+      File.getMetadata.mockResolvedValueOnce([{
+        contentType: "text/plain",
+        size: "100",
+        etag: '"etag"'
+      }]);
+      const mockStream = Readable.from(Buffer.from("data"));
+      File.createReadStream.mockReturnValueOnce(mockStream);
+
+      const result = await service.proxyRead("file.txt", {range: "bytes=0-999"}, meta);
+
+      expect(result!.statusCode).toBe(206);
+      expect(result!.headers["content-range"]).toBe("bytes 0-99/100");
+      expect(result!.headers["content-length"]).toBe("100");
+      expect(File.createReadStream).toHaveBeenCalledWith({start: 0, end: 99});
     });
   });
 });

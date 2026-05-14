@@ -96,7 +96,7 @@ const useFileView = ({file, styles, classNames, isLoading}: TypeUseFileView) => 
     {
       regex: /^application\/pdf/,
       viewer: (file: TypeFile) => {
-        const url = new URL(file.url);
+        const url = new URL(file.url, window.location.origin);
         url.search = "";
         return (
           <AuthorizedEmbed

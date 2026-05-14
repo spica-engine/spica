@@ -11,6 +11,26 @@ export interface UpdateConfigRequest {
   options: Record<string, unknown>;
 }
 
+export type SchemaType = "string" | "integer" | "number" | "boolean" | "array" | "object";
+
+export type ConfigSchemaProperty = {
+  type?: SchemaType;
+  description?: string;
+  enum?: string[];
+  minimum?: number;
+  properties?: Record<string, ConfigSchemaProperty>;
+  items?: ConfigSchemaProperty;
+  required?: string[];
+};
+
+export type ConfigModuleSchema = {
+  type?: SchemaType;
+  description?: string;
+  properties?: Record<string, ConfigSchemaProperty>;
+};
+
+export type ConfigSchemasResponse = Record<string, ConfigModuleSchema>;
+
 export const configApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getConfigs: builder.query<ConfigItem[], void>({
@@ -22,6 +42,11 @@ export const configApi = baseApi.injectEndpoints({
               { type: 'Config', id: 'LIST' },
             ]
           : [{ type: 'Config', id: 'LIST' }],
+    }),
+
+    getConfigSchemas: builder.query<ConfigSchemasResponse, void>({
+      query: () => '/config/schema',
+      providesTags: [{ type: 'ConfigSchema', id: 'LIST' }],
     }),
 
     getConfig: builder.query<ConfigItem, string>({
@@ -47,6 +72,7 @@ export const configApi = baseApi.injectEndpoints({
 export const {
   useGetConfigsQuery,
   useGetConfigQuery,
+  useGetConfigSchemasQuery,
   useLazyGetConfigQuery,
   useUpdateConfigMutation,
 } = configApi;

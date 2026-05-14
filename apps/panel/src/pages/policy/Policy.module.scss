@@ -21,6 +21,7 @@
   border: 1px solid var(--color-primary);
   border-top-left-radius: var(--border-radius-md);
   border-top-right-radius: var(--border-radius-md);
+  flex: 1;
   overflow: hidden;
 }
 
@@ -49,7 +50,7 @@
 .accordionContainer {
   padding: 0 var(--padding-sm) !important;
   background-color: var(--color-menu-background) !important;
-  max-height: 680px !important;
+  max-height: 640px !important;
   align-items: start !important;
   justify-content: start !important;
   overflow-y: scroll !important;

@@ -27,6 +27,11 @@
   margin-top: 8px;
 }
 
+.functionList {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
 .input {
   width: 100%;
   padding: 6px 10px;

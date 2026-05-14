@@ -91,7 +91,7 @@ describe("Function Index Synchronizer", () => {
     let indexSupplier;
 
     beforeEach(() => {
-      indexSupplier = getSupplier(engine, functionService);
+      indexSupplier = getSupplier(engine, functionService, {watchMode: "realtime"});
     });
 
     it("should return ChangeSupplier with correct metadata", () => {

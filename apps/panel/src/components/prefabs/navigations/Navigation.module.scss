@@ -52,6 +52,20 @@
   padding: var(--padding-md);
 }
 
+.navigationListContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .addFunctionButtonContainer{
   width: 100%;
   padding: var(--padding-md);

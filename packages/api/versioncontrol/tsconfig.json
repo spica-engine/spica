@@ -8,6 +8,9 @@
   "exclude": ["test/**/*.ts", "**/*.spec.ts"],
   "references": [
     {
+      "path": "processors/sync"
+    },
+    {
       "path": "sync/engine"
     },
     {

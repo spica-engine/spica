@@ -1,6 +1,6 @@
 .dashboardItem {
-  height: 100%;
-  min-height: 0;
+  height: 100% !important;
+
   display: flex;
 
   .settingButton {
@@ -21,11 +21,16 @@
   }
 
   .content {
-
+    flex: 1;
+    height: 0;
+    position: relative;
+    width: 100%;
   }
 
   .chart {
-  flex: 1;
+    height: 100% !important;
+    object-fit: inherit;
+
   }
 
   .smallOverlay {

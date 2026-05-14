@@ -9119,7 +9119,6 @@ __metadata:
   resolution: "@spica-server/function-pkgmanager-node@workspace:packages/api/function/pkgmanager/node"
   dependencies:
     "@spica-server/interface-function-pkgmanager": "workspace:*"
-    fast-glob: "npm:^3.3.3"
     rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
@@ -10457,6 +10456,7 @@ __metadata:
     "@types/node": "npm:^22.10.7"
     "@types/semver": "npm:^7.5.8"
     axios: "npm:^1.8.2"
+    chokidar: "npm:^4.0.3"
     colorette: "npm:^2.0.20"
     columnify: "npm:^1.6.0"
     cosmiconfig: "npm:^9.0.0"
@@ -10514,7 +10514,7 @@ __metadata:
     formik: "npm:^2.4.6"
     jwt-decode: "npm:^4.0.0"
     monaco-editor: "npm:^0.52.2"
-    oziko-ui-kit: "npm:^0.0.127"
+    oziko-ui-kit: "npm:^0.0.139"
     react: "npm:^19.0.0"
     react-dnd: "npm:^16.0.1"
     react-dnd-html5-backend: "npm:^16.0.1"
@@ -17990,7 +17990,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-glob@npm:^3.0.3, fast-glob@npm:^3.2.12, fast-glob@npm:^3.2.7, fast-glob@npm:^3.2.9, fast-glob@npm:^3.3.2, fast-glob@npm:^3.3.3":
+"fast-glob@npm:^3.0.3, fast-glob@npm:^3.2.12, fast-glob@npm:^3.2.7, fast-glob@npm:^3.2.9, fast-glob@npm:^3.3.2":
   version: 3.3.3
   resolution: "fast-glob@npm:3.3.3"
   dependencies:
@@ -24674,9 +24674,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oziko-ui-kit@npm:^0.0.127":
-  version: 0.0.127
-  resolution: "oziko-ui-kit@npm:0.0.127"
+"oziko-ui-kit@npm:^0.0.139":
+  version: 0.0.139
+  resolution: "oziko-ui-kit@npm:0.0.139"
   dependencies:
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.0"
@@ -24707,7 +24707,7 @@ __metadata:
   peerDependencies:
     react: ^19.0.0
     react-dom: ^19.0.0
-  checksum: 10c0/91cce5b309a64cc974984de5de77419eccbd7ea206761767374ecde443030586db59851f332ef454cd38f56a5fa681831d4d7f6fc7106477c0dddff32dfa7c82
+  checksum: 10c0/0204149c896bb8b1d7f2b1f694c012fc52a6629c77f75e0da2065546e7bb97ce587653bac96633a00fc75fdcc52cfa9252a5a745cde20cff7b9255e0dac79d35
   languageName: node
   linkType: hard
 

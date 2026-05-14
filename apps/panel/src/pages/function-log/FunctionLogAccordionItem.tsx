@@ -1,14 +1,7 @@
 import {Icon, type TypeAccordionItem} from "oziko-ui-kit";
 import type {FunctionLog} from "../../store/api/functionApi";
 import styles from "./FunctionLogPage.module.scss";
-
-const LEVEL_LABELS: Record<number, string> = {
-  0: "Debug",
-  1: "Log",
-  2: "Info",
-  3: "Warning",
-  4: "Error",
-};
+import {LOG_LEVEL_LABELS as LEVEL_LABELS} from "../../utils/functionLogLevels";
 
 const SEVERITY_CLASS: Record<number, string> = {
   0: styles.severityDebug,

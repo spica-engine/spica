@@ -48,6 +48,9 @@ spec:
         app.kubernetes.io/managed-by: helm
       annotations:
         checksum/application-secrets: {{ include (print $.Template.BasePath "/applicationsecrets.yaml") . | sha256sum }}
+{{- if .Values.application.podAnnotations }}
+{{ toYaml .Values.application.podAnnotations | indent 8 }}
+{{- end }}
     spec:
       serviceAccountName: {{ .Values.application.serviceAccountName }}
       containers:

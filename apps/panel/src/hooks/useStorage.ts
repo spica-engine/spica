@@ -108,17 +108,25 @@ function useStorageService() {
   }, []);
 
   const convertStorageToTypeFile = useCallback(
-    (storage: Storage): TypeFile => ({
-      _id: storage._id || "",
-      name: storage.name,
-      content: {
-        type: storage.name.endsWith("/")
-          ? "inode/directory"
-          : storage.content?.type || "application/octet-stream",
-        size: storage.content?.size || 0
-      },
-      url: storage.url || ""
-    }),
+    (storage: Storage): TypeFile => {
+      const apiBase = (import.meta.env.VITE_BASE_URL as string) || "/api";
+      const base = apiBase.endsWith("/") ? apiBase.slice(0, -1) : apiBase;
+      const viewUrl = storage._id
+        ? `${base}/storage/${storage._id}/view`
+        : storage.url || "";
+
+      return {
+        _id: storage._id || "",
+        name: storage.name,
+        content: {
+          type: storage.name.endsWith("/")
+            ? "inode/directory"
+            : storage.content?.type || "application/octet-stream",
+          size: storage.content?.size || 0
+        },
+        url: viewUrl
+      };
+    },
     []
   );
 

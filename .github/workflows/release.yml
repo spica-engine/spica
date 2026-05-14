@@ -2,7 +2,7 @@ name: Spica Release
 
 env:
   NX_NO_CLOUD: true
-  BASE_URL: /spica/
+  BASE_URL: /
   VITE_BASE_URL: /api
 
 on:

@@ -76,20 +76,23 @@ const ImportedFunctionPanel = ({code, onCodeChange, currentFunctionId}: Imported
       .map(fn => ({value: fn._id as string, label: fn.name}));
   }, [functionList, currentFunctionId, importedFunctionIdSet]);
 
-  const handleAdd = useCallback(() => {
-    if (!selectedIds.length) return;
+  const handleAdd = useCallback(
+    (ids: string[]) => {
+      if (!ids.length) return;
 
-    const importLines = selectedIds
-      .map(id => {
-        const fn = functionsMap[id];
-        const alias = fn ? toPascalCase(fn.name) || "ImportedFn" : "ImportedFn";
-        return `import * as ${alias} from "../../${id}/.build";\n`;
-      })
-      .join("");
+      const importLines = ids
+        .map(id => {
+          const fn = functionsMap[id];
+          const alias = fn ? toPascalCase(fn.name) || "ImportedFn" : "ImportedFn";
+          return `import * as ${alias} from "../../${id}/.build";\n`;
+        })
+        .join("");
 
-    onCodeChange(importLines + code);
-    setSelectedIds([]);
-  }, [selectedIds, functionsMap, code, onCodeChange]);
+      onCodeChange(importLines + code);
+      setSelectedIds([]);
+    },
+    [functionsMap, code, onCodeChange]
+  );
 
   const handleDelete = useCallback(
     (functionId: string) => {
@@ -113,6 +116,21 @@ const ImportedFunctionPanel = ({code, onCodeChange, currentFunctionId}: Imported
       ),
       content: (
         <FlexElement direction="vertical" dimensionX="fill" gap={10}>
+          <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
+            <Select
+              options={selectOptions}
+              value={selectedIds}
+              multiple
+              placeholder="Select functions..."
+              onChange={value => {
+                const ids = Array.isArray(value) ? (value as string[]) : [];
+                setSelectedIds(ids);
+                if (ids.length) handleAdd(ids);
+              }}
+              dimensionX="fill"
+            />
+          </FlexElement>
+          <FlexElement direction="vertical" dimensionX="fill" gap={10} className={styles.functionList}>
           {importedFunctions.map(imp => {
             const fn = functionsMap[imp.functionId];
             const displayName = fn?.name ?? imp.alias;
@@ -141,24 +159,8 @@ const ImportedFunctionPanel = ({code, onCodeChange, currentFunctionId}: Imported
               />
             );
           })}
-          <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
-            <Select
-              options={selectOptions}
-              value={selectedIds}
-              multiple
-              placeholder="Select functions..."
-              onChange={value => setSelectedIds(Array.isArray(value) ? (value as string[]) : [])}
-              dimensionX="fill"
-            />
-            <Button
-              variant="icon"
-              color="default"
-              onClick={handleAdd}
-              disabled={!selectedIds.length}
-            >
-              <Icon name="plus" />
-            </Button>
           </FlexElement>
+          
         </FlexElement>
       ),
     },

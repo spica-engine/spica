@@ -80,13 +80,14 @@ abstract class __MultipartFormDataBody extends __BaseBody {
   }
 
   isContentTypeValid(req) {
-    return req.headers["content-type"].startsWith("multipart/form-data");
+    return (req.headers["content-type"] ?? "").startsWith("multipart/form-data");
   }
 
   fileCleanup(context: ExecutionContext) {
     const [req] = context.getArgs();
     if (this.isContentTypeValid(req)) {
-      const files = this.isArray ? req.body : [req.body];
+      const rawFiles = this.isArray ? req.body : [req.body];
+      const files: any[] = Array.isArray(rawFiles) ? rawFiles : [];
       return Promise.all(
         files.map(file =>
           fs.promises

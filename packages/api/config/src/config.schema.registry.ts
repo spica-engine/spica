@@ -46,6 +46,14 @@ export class ConfigSchemaRegistry {
     return this.cachedCompositeSchema;
   }
 
+  getSchemas(): Record<string, object> {
+    const result: Record<string, object> = {};
+    for (const [moduleName, optionsSchema] of this.schemas.entries()) {
+      result[moduleName] = optionsSchema;
+    }
+    return result;
+  }
+
   async validate(data: BaseConfig<any>): Promise<void> {
     const schema = this.buildCompositeSchema();
     await this.validator.validate(schema, data).catch(error => {

@@ -7,6 +7,12 @@
   "include": ["src/**/*.ts", "index.ts"],
   "references": [
     {
+      "path": "../../../core/websocket"
+    },
+    {
+      "path": "../../../core/testing"
+    },
+    {
       "path": "../../../realtime"
     },
     {

@@ -6,7 +6,8 @@ import {
   ChangeSupplier,
   ChangeType,
   ChangeOrigin,
-  ChangeInitiator
+  ChangeInitiator,
+  VCWatchOptions
 } from "@spica-server/interface-versioncontrol";
 import * as CRUD from "../../../src/crud.js";
 import {Function} from "@spica-server/interface-function";
@@ -46,7 +47,11 @@ const getChangeLogForIndex = (
   };
 };
 
-export const getSupplier = (engine: FunctionEngine, fs: FunctionService): ChangeSupplier => {
+export const getSupplier = (
+  engine: FunctionEngine,
+  fs: FunctionService,
+  watchOpts: VCWatchOptions
+): ChangeSupplier => {
   return {
     module,
     subModule,
@@ -65,12 +70,17 @@ export const getSupplier = (engine: FunctionEngine, fs: FunctionService): Change
               );
               observer.next(changelog);
             } catch (error) {
-              observer.error(`Error on fn ${fn._id} index read: ${error}`);
+              logger.error(`Error on fn ${fn._id} index read:`, error instanceof Error ? error.stack : String(error));
             }
           });
         });
 
-        const subscription = engine.watch("index").subscribe({
+        const subscription = engine
+          .watch("index", {
+            usePolling: watchOpts.watchMode === "polling",
+            pollingInterval: watchOpts.pollingInterval
+          })
+          .subscribe({
           next: change => {
             const changeMap = {
               create: ChangeType.CREATE,

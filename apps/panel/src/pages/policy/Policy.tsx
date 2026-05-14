@@ -18,6 +18,7 @@ import PolicyDrawer, { type PolicyUpsertInput } from "./PolicyDrawer";
 import { registerAllRenderers } from "./registerRenderers";
 import { useModuleDataRegistry } from "./moduleRenderers";
 import { useModuleStatements } from "./hook/useStatement";
+import Confirmation from "../../components/molecules/confirmation/Confirmation";
 
 registerAllRenderers();
 
@@ -40,6 +41,7 @@ const Policy = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyItem | null>(null);
+  const [policyToDelete, setPolicyToDelete] = useState<PolicyItem | null>(null);
   
   const modules = useModuleStatements(statements ?? []);
   const { moduleData, moduleDataElements } = useModuleDataRegistry();
@@ -47,6 +49,11 @@ const Policy = () => {
 
   const openCreatePolicy = useCallback(() => {
     setSelectedPolicy(null);
+    setIsOpen(true);
+  }, []);
+
+  const openCreateFromPredefined = useCallback((policy: PolicyItem) => {
+    setSelectedPolicy({ ...policy, _id: "" });
     setIsOpen(true);
   }, []);
 
@@ -85,16 +92,24 @@ const Policy = () => {
     }
   }, [createPolicy, handleCloseDrawer, selectedPolicy, updatePolicy]);
 
-  const handleDeletePolicy = useCallback(async (policyId: string) => {
-    if (!confirm("Are you sure you want to delete this policy?")) return;
+  const handleDeleteClick = useCallback((policy: PolicyItem) => {
+    setPolicyToDelete(policy);
+  }, []);
 
+  const handleConfirmDelete = useCallback(async () => {
+    if (!policyToDelete) return;
     try {
-      await deletePolicy(policyId).unwrap();
+      await deletePolicy(policyToDelete._id).unwrap();
+      setPolicyToDelete(null);
     } catch (error) {
       console.error("Failed to delete policy:", error);
-      alert("Failed to delete policy. Please try again.");
+      setPolicyToDelete(null);
     }
-  }, [deletePolicy]);
+  }, [deletePolicy, policyToDelete]);
+
+  const handleCancelDelete = useCallback(() => {
+    setPolicyToDelete(null);
+  }, []);
 
   const columns: TableColumn<PolicyItem>[] = useMemo(() => {
     return [
@@ -124,29 +139,54 @@ const Policy = () => {
         minWidth: "100px",
         renderCell: ({ row }) => (
           <FlexElement dimensionX="fill" alignment="rightCenter" direction="horizontal">
-            <Button
-              variant="icon"
-              color="default"
-              className={styles.actionButton}
-              onClick={() => openEditPolicy(row)}
-              disabled={row.system}
-            >
-              <Icon name="layers" />
-            </Button>
-            <Button
-              variant="icon"
-              color="danger"
-              className={styles.actionButton}
-              onClick={() => handleDeletePolicy(row._id)}
-              disabled={row.system}
-            >
-              <Icon name="lock" />
-            </Button>
+            {row.system ? (
+              <>
+                <span title="Create new from this predefined policy">
+                  <Button
+                    variant="icon"
+                    color="default"
+                    className={styles.actionButton}
+                    onClick={() => openCreateFromPredefined(row)}
+                  >
+                    <Icon name="layers" />
+                  </Button>
+                </span>
+                <span title="You can't edit predefined policies">
+                  <Button
+                    variant="icon"
+                    color="default"
+                    className={styles.actionButton}
+                    onClick={() => {}}
+                  >
+                    <Icon name="lock" />
+                  </Button>
+                </span>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="icon"
+                  color="default"
+                  className={styles.actionButton}
+                  onClick={() => openEditPolicy(row)}
+                >
+                  <Icon name="pencil" />
+                </Button>
+                <Button
+                  variant="icon"
+                  color="danger"
+                  className={styles.actionButton}
+                  onClick={() => handleDeleteClick(row)}
+                >
+                  <Icon name="delete" />
+                </Button>
+              </>
+            )}
           </FlexElement>
         )
       }
     ];
-  }, [handleDeletePolicy, openEditPolicy]);
+  }, [handleDeleteClick, openCreateFromPredefined, openEditPolicy]);
 
   return (
     <FlexElement
@@ -178,6 +218,30 @@ const Policy = () => {
         onSave={handleSave}
         onCancel={handleCloseDrawer}
       />
+
+      {policyToDelete && (
+        <Confirmation
+          title="DELETE POLICY"
+          description={
+            <>
+              <span>
+                This action will permanently delete this policy and remove all associated permissions.
+                This cannot be undone.
+              </span>
+              <span>
+                Please type <strong>{policyToDelete.name}</strong> to confirm deletion.
+              </span>
+            </>
+          }
+          inputPlaceholder="Type Here"
+          confirmCondition={(input) => input === policyToDelete.name}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+          confirmLabel={<><Icon name="delete" /> Delete</>}
+          cancelLabel={<><Icon name="close" /> Cancel</>}
+          showInput
+        />
+      )}
     </FlexElement>
   );
 };

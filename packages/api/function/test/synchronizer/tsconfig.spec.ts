@@ -104,7 +104,7 @@ describe("Function tsconfig Synchronizer", () => {
     let tsconfigSupplier;
 
     beforeEach(() => {
-      tsconfigSupplier = getSupplier(engine, functionService);
+      tsconfigSupplier = getSupplier(engine, functionService, {watchMode: "realtime"});
     });
 
     it("should return ChangeSupplier with correct metadata", () => {
