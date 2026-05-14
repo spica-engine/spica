@@ -51,13 +51,6 @@ export const sideBarItems: SideBarItem[]=  [
     name: "Observability",
     icon: "security",
   },
-  {
-    id: "versionControl",
-    name: "Version Control",
-    icon: "forkRight",
-    position: "bottom",
-    route: "/version-control",
-  },
 ]
 
 type MenuItemMeta = {

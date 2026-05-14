@@ -13,12 +13,6 @@ import {Http} from "./services/interface.js";
 import {Axios} from "./services/axios.js";
 import {registerStatusProvider} from "./status.js";
 import FunctionSchema from "./schema/function.json" with {type: "json"};
-import {
-  REGISTER_VC_CHANGE_HANDLER,
-  RegisterVCChangeHandler,
-  VC_WATCH_OPTIONS,
-  VCWatchOptions
-} from "@spica-server/interface-versioncontrol";
 import {registerAssetHandlers} from "./asset.js";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
@@ -28,18 +22,6 @@ import {
   FUNCTION_OPTIONS,
   FunctionWithContent
 } from "@spica-server/interface-function";
-import {
-  getSupplier as getSchemaSupplier,
-  getApplier as getSchemaApplier
-} from "./synchronizer/schema/index.js";
-import {
-  getSupplier as getIndexSupplier,
-  getApplier as getIndexApplier
-} from "./synchronizer/index/index.js";
-import {
-  getSupplier as getDependencySupplier,
-  getApplier as getDependencyApplier
-} from "./synchronizer/dependency/index.js";
 import {FunctionRealtimeModule} from "@spica-server/function-realtime";
 
 @Module({})
@@ -49,19 +31,9 @@ export class FunctionModule {
     fe: FunctionEngine,
     scheduler: Scheduler,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
-    @Optional()
-    @Inject(REGISTER_VC_CHANGE_HANDLER)
-    registerVCChangeHandler: RegisterVCChangeHandler,
-    @Optional() @Inject(VC_WATCH_OPTIONS) watchOpts: VCWatchOptions | null,
     logs: LogService,
     validator: Validator
   ) {
-    if (registerVCChangeHandler) {
-      registerVCChangeHandler(getSchemaSupplier(fs), getSchemaApplier(fs, fe, logs, validator));
-      registerVCChangeHandler(getIndexSupplier(fe, fs, watchOpts!), getIndexApplier(fs, fe));
-      registerVCChangeHandler(getDependencySupplier(fe, fs, watchOpts!), getDependencyApplier(fs, fe));
-    }
-
     registerStatusProvider(fs, scheduler);
     registerAssetHandlers(fs, fe, logs, validator, this.assetRepManager);
   }
