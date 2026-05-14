@@ -31,7 +31,6 @@
     "@spica-server/interface-activity": "workspace:*",
     "@spica-server/interface-passport-guard": "workspace:*",
     "@spica-server/interface-passport-policy": "workspace:*",
-    "@spica-server/interface-versioncontrol": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/passport-policy-realtime": "workspace:*",
     "bson": "^6.10.1",

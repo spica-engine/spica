@@ -75,7 +75,6 @@
     "@spica-server/interface-replication": "workspace:*",
     "@spica-server/interface-representative": "workspace:*",
     "@spica-server/interface-secret": "workspace:*",
-    "@spica-server/interface-versioncontrol": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/realtime": "workspace:*",
     "@spica-server/replication": "workspace:*",

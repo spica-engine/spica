@@ -21,15 +21,10 @@ import {provideLanguageFinalizer} from "@spica-server/bucket-common";
 import {registerStatusProvider} from "./status.js";
 import BucketSchema from "./schemas/bucket.schema.json" with {type: "json"};
 import BucketsSchema from "./schemas/buckets.schema.json" with {type: "json"};
-import {
-  REGISTER_VC_CHANGE_HANDLER,
-  RegisterVCChangeHandler
-} from "@spica-server/interface-versioncontrol";
 import {registerAssetHandlers} from "./asset.js";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
 import {BucketOptions} from "@spica-server/interface-bucket";
-import {getSupplier, getApplier} from "./synchronizer/schema/index.js";
 
 @Module({})
 export class BucketModule {
@@ -126,15 +121,8 @@ export class BucketModule {
     bds: BucketDataService,
     validator: Validator,
     @Optional() private history: HistoryService,
-    @Optional()
-    @Inject(REGISTER_VC_CHANGE_HANDLER)
-    registerVCChangeHandler: RegisterVCChangeHandler,
     @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
-    if (registerVCChangeHandler) {
-      registerVCChangeHandler(getSupplier(bs), getApplier(bs, bds, this.history, validator));
-    }
-
     preference.default({
       scope: "bucket",
       language: {

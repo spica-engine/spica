@@ -13,7 +13,6 @@ import Bucket from "./bucket-navigation/Bucket";
 import AccessManagement from "./access-management/AccessManagement";
 import WebHook from "./webhook/WebHook";
 import FunctionNavigation from "./function/FunctionNavigation";
-import VersionControl from "./version-control/VersionControl";
 import DashboardNavigation from "./dashboard-navigation/DashboardNavigation";
 import ConfigNavigation from "./config-navigation/ConfigNavigation";
 import ObservabilityNavigation from "./observability/ObservabilityNavigation";
@@ -33,7 +32,6 @@ export const navigationRegistry: Record<string, NavigationComponent> = {
   function: FunctionNavigation,
   dashboard: DashboardNavigation,
   config: ConfigNavigation,
-  versionControl: VersionControl,
   observability: ObservabilityNavigation,
 };
 

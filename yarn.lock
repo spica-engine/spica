@@ -4192,22 +4192,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@kwsites/file-exists@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "@kwsites/file-exists@npm:1.1.1"
-  dependencies:
-    debug: "npm:^4.1.1"
-  checksum: 10c0/39e693239a72ccd8408bb618a0200e4a8d61682057ca7ae2c87668d7e69196e8d7e2c9cde73db6b23b3b0230169a15e5f1bfe086539f4be43e767b2db68e8ee4
-  languageName: node
-  linkType: hard
-
-"@kwsites/promise-deferred@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "@kwsites/promise-deferred@npm:1.1.1"
-  checksum: 10c0/ef1ad3f1f50991e3bed352b175986d8b4bc684521698514a2ed63c1d1fc9848843da4f2bc2df961c9b148c94e1c34bf33f0da8a90ba2234e452481f2cc9937b1
-  languageName: node
-  linkType: hard
-
 "@leichtgewicht/ip-codec@npm:^2.0.1":
   version: 2.0.5
   resolution: "@leichtgewicht/ip-codec@npm:2.0.5"
@@ -7648,22 +7632,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@simple-git/args-pathspec@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@simple-git/args-pathspec@npm:1.0.1"
-  checksum: 10c0/3ea2175e676c682255d4a10f275062d46dbb31a834eb53960a120681bde5c9f4ca7dbffdb2c6ec79e9969336604641df0f2595f36574068e7abefc2840614e2f
-  languageName: node
-  linkType: hard
-
-"@simple-git/argv-parser@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@simple-git/argv-parser@npm:1.0.2"
-  dependencies:
-    "@simple-git/args-pathspec": "npm:^1.0.1"
-  checksum: 10c0/f3e91ff99b35e2f190d071d127a6e4fcb05ea489fb13b959c0369767e2a639c01ca3cf98cc397d84fcf437a890a67597c1c35bd659263026bf0ef505cd49ee1d
-  languageName: node
-  linkType: hard
-
 "@sinclair/typebox@npm:^0.24.1":
   version: 0.24.51
   resolution: "@sinclair/typebox@npm:0.24.51"
@@ -8740,7 +8708,6 @@ __metadata:
     "@spica-server/interface-preference": "workspace:*"
     "@spica-server/interface-representative": "workspace:*"
     "@spica-server/interface-status": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -8890,7 +8857,6 @@ __metadata:
     "@spica-server/interface-asset": "workspace:*"
     "@spica-server/interface-dashboard": "workspace:*"
     "@spica-server/interface-representative": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -9003,7 +8969,6 @@ __metadata:
     "@spica-server/interface-env_var": "workspace:*"
     "@spica-server/interface-passport-identity": "workspace:*"
     "@spica-server/interface-representative": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -9331,7 +9296,6 @@ __metadata:
     "@spica-server/interface-replication": "workspace:*"
     "@spica-server/interface-representative": "workspace:*"
     "@spica-server/interface-secret": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-guard-services": "workspace:*"
     "@spica-server/passport-testing": "workspace:*"
@@ -9659,7 +9623,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@spica-server/interface-representative@workspace:packages/interface/representative"
   dependencies:
-    "@spica-server/interface-versioncontrol": "workspace:*"
     rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
@@ -9693,15 +9656,6 @@ __metadata:
   resolution: "@spica-server/interface-storage@workspace:packages/interface/storage"
   dependencies:
     "@spica-server/database": "workspace:*"
-  languageName: unknown
-  linkType: soft
-
-"@spica-server/interface-versioncontrol@workspace:*, @spica-server/interface-versioncontrol@workspace:packages/interface/versioncontrol":
-  version: 0.0.0-use.local
-  resolution: "@spica-server/interface-versioncontrol@workspace:packages/interface/versioncontrol"
-  dependencies:
-    "@spica-server/database": "workspace:*"
-    rxjs: "npm:^7.8.1"
   languageName: unknown
   linkType: soft
 
@@ -9899,7 +9853,6 @@ __metadata:
     "@spica-server/interface-activity": "workspace:*"
     "@spica-server/interface-passport-guard": "workspace:*"
     "@spica-server/interface-passport-policy": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
     "@spica-server/passport-guard": "workspace:*"
     "@spica-server/passport-policy-realtime": "workspace:*"
     bson: "npm:^6.10.1"
@@ -10147,7 +10100,6 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/interface-representative": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
     chokidar: "npm:^4.0.3"
     dotenv: "npm:^16.4.7"
     rxjs: "npm:^7.8.1"
@@ -10303,149 +10255,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@spica-server/versioncontrol-processors-changelog@workspace:*, @spica-server/versioncontrol-processors-changelog@workspace:packages/api/versioncontrol/processors/changelog":
-  version: 0.0.0-use.local
-  resolution: "@spica-server/versioncontrol-processors-changelog@workspace:packages/api/versioncontrol/processors/changelog"
-  dependencies:
-    "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
-    "@spica-server/versioncontrol-services-changelog": "workspace:*"
-    rxjs: "npm:^7.8.1"
-  languageName: unknown
-  linkType: soft
-
-"@spica-server/versioncontrol-processors-sync@workspace:*, @spica-server/versioncontrol-processors-sync@workspace:packages/api/versioncontrol/processors/sync":
-  version: 0.0.0-use.local
-  resolution: "@spica-server/versioncontrol-processors-sync@workspace:packages/api/versioncontrol/processors/sync"
-  dependencies:
-    "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/config": "workspace:*"
-    "@spica-server/database": "workspace:*"
-    "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface-config": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
-    "@spica-server/versioncontrol-services-sync": "workspace:*"
-    rxjs: "npm:^7.8.1"
-  languageName: unknown
-  linkType: soft
-
-"@spica-server/versioncontrol-services-changelog@workspace:*, @spica-server/versioncontrol-services-changelog@workspace:packages/api/versioncontrol/services/changelog":
-  version: 0.0.0-use.local
-  resolution: "@spica-server/versioncontrol-services-changelog@workspace:packages/api/versioncontrol/services/changelog"
-  dependencies:
-    "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/database": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
-  languageName: unknown
-  linkType: soft
-
-"@spica-server/versioncontrol-services-sync@workspace:*, @spica-server/versioncontrol-services-sync@workspace:packages/api/versioncontrol/services/sync":
-  version: 0.0.0-use.local
-  resolution: "@spica-server/versioncontrol-services-sync@workspace:packages/api/versioncontrol/services/sync"
-  dependencies:
-    "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/database": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
-  languageName: unknown
-  linkType: soft
-
-"@spica-server/versioncontrol-sync-engine@workspace:*, @spica-server/versioncontrol-sync-engine@workspace:packages/api/versioncontrol/sync/engine":
-  version: 0.0.0-use.local
-  resolution: "@spica-server/versioncontrol-sync-engine@workspace:packages/api/versioncontrol/sync/engine"
-  dependencies:
-    "@nestjs/common": "npm:^10.4.15"
-    "@spica-server/interface-representative": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
-    "@spica-server/replication": "workspace:*"
-    "@spica-server/versioncontrol-processors-changelog": "workspace:*"
-    "@spica-server/versioncontrol-processors-sync": "workspace:*"
-    rxjs: "npm:^7.8.1"
-  languageName: unknown
-  linkType: soft
-
-"@spica-server/versioncontrol-sync-realtime@workspace:*, @spica-server/versioncontrol-sync-realtime@workspace:packages/api/versioncontrol/sync/realtime":
-  version: 0.0.0-use.local
-  resolution: "@spica-server/versioncontrol-sync-realtime@workspace:packages/api/versioncontrol/sync/realtime"
-  dependencies:
-    "@nestjs/common": "npm:^10.4.15"
-    "@nestjs/testing": "npm:^10.4.15"
-    "@nestjs/websockets": "npm:^10.4.15"
-    "@spica-server/core-testing": "workspace:*"
-    "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database-realtime": "workspace:*"
-    "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface-realtime": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
-    "@spica-server/passport-guard": "workspace:*"
-    "@spica-server/passport-guard-services": "workspace:*"
-    "@spica-server/passport-testing": "workspace:*"
-    "@spica-server/realtime": "workspace:*"
-  languageName: unknown
-  linkType: soft
-
-"@spica-server/versioncontrol-sync@workspace:*, @spica-server/versioncontrol-sync@workspace:packages/api/versioncontrol/sync":
-  version: 0.0.0-use.local
-  resolution: "@spica-server/versioncontrol-sync@workspace:packages/api/versioncontrol/sync"
-  dependencies:
-    "@nestjs/common": "npm:^10.4.15"
-    "@nestjs/testing": "npm:^10.4.15"
-    "@spica-server/core": "workspace:*"
-    "@spica-server/core-schema": "workspace:*"
-    "@spica-server/core-testing": "workspace:*"
-    "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database": "workspace:*"
-    "@spica-server/database-pipeline": "workspace:*"
-    "@spica-server/database-testing": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
-    "@spica-server/passport-guard": "workspace:*"
-    "@spica-server/passport-guard-services": "workspace:*"
-    "@spica-server/passport-testing": "workspace:*"
-    "@spica-server/versioncontrol-services-sync": "workspace:*"
-    "@spica-server/versioncontrol-sync-realtime": "workspace:*"
-  languageName: unknown
-  linkType: soft
-
-"@spica-server/versioncontrol@workspace:*, @spica-server/versioncontrol@workspace:packages/api/versioncontrol":
-  version: 0.0.0-use.local
-  resolution: "@spica-server/versioncontrol@workspace:packages/api/versioncontrol"
-  dependencies:
-    "@nestjs/common": "npm:^10.4.15"
-    "@nestjs/testing": "npm:^10.4.15"
-    "@spica-server/bucket": "workspace:*"
-    "@spica-server/bucket-history": "workspace:*"
-    "@spica-server/bucket-services": "workspace:*"
-    "@spica-server/core-schema": "workspace:*"
-    "@spica-server/core-testing": "workspace:*"
-    "@spica-server/core-websocket": "workspace:*"
-    "@spica-server/database-testing": "workspace:*"
-    "@spica-server/env_var": "workspace:*"
-    "@spica-server/env_var-services": "workspace:*"
-    "@spica-server/function": "workspace:*"
-    "@spica-server/function-log": "workspace:*"
-    "@spica-server/function-scheduler": "workspace:*"
-    "@spica-server/function-services": "workspace:*"
-    "@spica-server/interface-bucket": "workspace:*"
-    "@spica-server/interface-config": "workspace:*"
-    "@spica-server/interface-env_var": "workspace:*"
-    "@spica-server/interface-function": "workspace:*"
-    "@spica-server/interface-passport-policy": "workspace:*"
-    "@spica-server/interface-versioncontrol": "workspace:*"
-    "@spica-server/passport-guard": "workspace:*"
-    "@spica-server/passport-guard-services": "workspace:*"
-    "@spica-server/passport-policy": "workspace:*"
-    "@spica-server/passport-testing": "workspace:*"
-    "@spica-server/preference-testing": "workspace:*"
-    "@spica-server/representative": "workspace:*"
-    "@spica-server/secret": "workspace:*"
-    "@spica-server/versioncontrol-sync": "workspace:*"
-    "@spica-server/versioncontrol-sync-engine": "workspace:*"
-    simple-git: "npm:^3.27.0"
-    uuid: "npm:^11.0.5"
-    yaml: "npm:^2.7.0"
-  languageName: unknown
-  linkType: soft
-
 "@spica/cli@workspace:apps/cli":
   version: 0.0.0-use.local
   resolution: "@spica/cli@workspace:apps/cli"
@@ -10559,7 +10368,6 @@ __metadata:
     "@spica-server/sms": "workspace:*"
     "@spica-server/status": "workspace:*"
     "@spica-server/storage": "workspace:*"
-    "@spica-server/versioncontrol": "workspace:*"
     "@types/cookie-parser": "npm:^1.4.8"
     "@types/yargs": "npm:^17.0.33"
     cookie-parser: "npm:^1.4.6"
@@ -29482,19 +29290,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"simple-git@npm:^3.27.0":
-  version: 3.35.1
-  resolution: "simple-git@npm:3.35.1"
-  dependencies:
-    "@kwsites/file-exists": "npm:^1.1.1"
-    "@kwsites/promise-deferred": "npm:^1.1.1"
-    "@simple-git/args-pathspec": "npm:^1.0.1"
-    "@simple-git/argv-parser": "npm:^1.0.2"
-    debug: "npm:^4.4.0"
-  checksum: 10c0/9318c7b98f52d993cc48f966df407238e70b1398d73d0e6f83d8228e0621b47df7c59bf036cd5dd53c85c0c219ad5f0842249d3e4d1a16e9ab63b1cefdfc8381
-  languageName: node
-  linkType: hard
-
 "simple-update-notifier@npm:^2.0.0":
   version: 2.0.0
   resolution: "simple-update-notifier@npm:2.0.0"
@@ -32029,7 +31824,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^11.0.0, uuid@npm:^11.0.5":
+"uuid@npm:^11.0.0":
   version: 11.1.0
   resolution: "uuid@npm:11.1.0"
   bin:

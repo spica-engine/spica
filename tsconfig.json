@@ -2,31 +2,13 @@
   "files": [],
   "references": [
     {
-      "path": "./packages/api/versioncontrol/processors/changelog"
-    },
-    {
-      "path": "./packages/api/versioncontrol/services/changelog"
-    },
-    {
-      "path": "./packages/api/versioncontrol/processors/sync"
-    },
-    {
       "path": "./packages/api/function/compiler/javascript"
     },
     {
       "path": "./packages/api/function/compiler/typescript"
     },
     {
-      "path": "./packages/api/versioncontrol/services/sync"
-    },
-    {
-      "path": "./packages/api/versioncontrol/sync/realtime"
-    },
-    {
       "path": "./packages/interface/passport/refresh_token"
-    },
-    {
-      "path": "./packages/api/versioncontrol/sync/engine"
     },
     {
       "path": "./packages/api/function/pkgmanager/local"
@@ -110,9 +92,6 @@
       "path": "./packages/interface/representative"
     },
     {
-      "path": "./packages/interface/versioncontrol"
-    },
-    {
       "path": "./packages/api/function/queue/node"
     },
     {
@@ -120,9 +99,6 @@
     },
     {
       "path": "./packages/api/passport/authfactor"
-    },
-    {
-      "path": "./packages/api/versioncontrol/sync"
     },
     {
       "path": "./packages/interface/bucket/common"
@@ -219,9 +195,6 @@
     },
     {
       "path": "./packages/api/passport/guard"
-    },
-    {
-      "path": "./packages/api/versioncontrol"
     },
     {
       "path": "./packages/interface/activity"
