@@ -9309,7 +9309,6 @@ __metadata:
     "@types/json-schema": "npm:^7.0.15"
     axios: "npm:^1.8.2"
     bson: "npm:^6.10.1"
-    chokidar: "npm:^4.0.3"
     rimraf: "npm:^6.0.1"
     rxjs: "npm:^7.8.1"
     testcontainers: "npm:^10.0.0"
@@ -10100,7 +10099,6 @@ __metadata:
   dependencies:
     "@nestjs/common": "npm:^10.4.15"
     "@spica-server/interface-representative": "workspace:*"
-    chokidar: "npm:^4.0.3"
     dotenv: "npm:^16.4.7"
     rxjs: "npm:^7.8.1"
     yaml: "npm:^2.7.0"
