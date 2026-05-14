@@ -283,7 +283,7 @@ export namespace dependencies {
     }
 
     if (deps.length) {
-      await engine.addPackage(fn, deps).toPromise();
+      await engine.installPackages(fn, deps);
     }
   }
 

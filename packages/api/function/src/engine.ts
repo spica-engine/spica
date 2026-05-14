@@ -7,7 +7,6 @@ import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
 import {rimraf} from "rimraf";
-import {Observable} from "rxjs";
 import {FunctionService} from "@spica-server/function-services";
 import {
   CollectionSlug,
@@ -101,7 +100,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     this.registerTriggers().then(() => {
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
-        this.cmdSubs = this.commander.register(this, [this.categorizeChanges], CommandType.SYNC);
+        this.cmdSubs = this.commander.register(
+          this,
+          [
+            this.categorizeChanges,
+            this.createFunction,
+            this.deleteFunction,
+            this.update,
+            this.compile,
+            this.installPackages,
+            this.removePackage
+          ],
+          CommandType.SYNC
+        );
       }
     });
   }
@@ -163,7 +174,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn));
   }
 
-  addPackage(fn: Function, qualifiedNames: string | string[]): Observable<number> {
+  installPackages(fn: Function, qualifiedNames: string | string[]): Promise<void> {
     return this.getDefaultPackageManager().install(this.getFunctionRoot(fn), qualifiedNames);
   }
 
