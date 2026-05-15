@@ -213,7 +213,7 @@ export namespace index {
     }
 
     const indexBuffer = Buffer.from(index, "utf-8");
-    const filename = fn.language === "javascript" ? "index.js" : "index.ts";
+    const filename = fn.language === "javascript" ? "index.mjs" : "index.ts";
 
     await engine.storeAssets(
       fn as Function & {_id: any},
