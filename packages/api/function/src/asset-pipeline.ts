@@ -3,10 +3,7 @@ import path from "path";
 import {Logger} from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
 import {Function, Options} from "@spica-server/interface-function";
-import {
-  FunctionAsset,
-  FunctionAssetFilename
-} from "@spica-server/interface-function-asset-storage";
+import {FunctionAsset, FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 import {FunctionAssetService} from "@spica-server/function-services";
 import {FunctionAssetReconciler, assetKey, hashBuffer} from "./asset-reconciler.js";
 import {FunctionAssetWatcher} from "./asset-watcher.js";

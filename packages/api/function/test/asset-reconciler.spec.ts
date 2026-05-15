@@ -1,6 +1,10 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {ObjectId} from "@spica-server/database";
-import {FunctionAssetReconciler, hashBuffer, assetKey} from "@spica-server/function/src/asset-reconciler";
+import {
+  FunctionAssetReconciler,
+  hashBuffer,
+  assetKey
+} from "@spica-server/function/src/asset-reconciler";
 import {FunctionAssetService} from "@spica-server/function-services";
 import {
   FUNCTION_ASSET_STRATEGY,
@@ -56,7 +60,10 @@ describe("FunctionAssetReconciler", () => {
       providers: [
         FunctionAssetReconciler,
         {provide: FUNCTION_ASSET_STRATEGY, useValue: mockStrategy},
-        {provide: FUNCTION_ASSET_STORAGE_OPTIONS, useValue: {strategy: "default", defaultPath: tmpDir}},
+        {
+          provide: FUNCTION_ASSET_STORAGE_OPTIONS,
+          useValue: {strategy: "default", defaultPath: tmpDir}
+        },
         {provide: FunctionAssetService, useValue: mockAssetService},
         {
           provide: FUNCTION_OPTIONS,

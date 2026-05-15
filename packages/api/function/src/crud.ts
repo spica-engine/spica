@@ -125,10 +125,7 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
   await engine.createFunction(fn);
 
   if (fn._id) {
-    const pkgBuffer = Buffer.from(
-      await engine.read(fn, "dependency").catch(() => "{}"),
-      "utf-8"
-    );
+    const pkgBuffer = Buffer.from(await engine.read(fn, "dependency").catch(() => "{}"), "utf-8");
     const files = [{filename: "package.json" as const, data: pkgBuffer}];
     await engine.storeAssets(fn as Function & {_id: any}, files, async () => {});
   }
@@ -218,10 +215,14 @@ export namespace index {
     const indexBuffer = Buffer.from(index, "utf-8");
     const filename = fn.language === "javascript" ? "index.js" : "index.ts";
 
-    await engine.storeAssets(fn as Function & {_id: any}, [{filename, data: indexBuffer}], async () => {
-      await engine.update(fn, index);
-      await engine.compile(fn);
-    });
+    await engine.storeAssets(
+      fn as Function & {_id: any},
+      [{filename, data: indexBuffer}],
+      async () => {
+        await engine.update(fn, index);
+        await engine.compile(fn);
+      }
+    );
 
     const envResolvedFn = await findOneForRuntime(fs, id);
 

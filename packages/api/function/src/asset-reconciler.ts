@@ -28,7 +28,8 @@ export class FunctionAssetReconciler {
 
   constructor(
     @Inject(FUNCTION_ASSET_STRATEGY) private readonly strategy: FunctionAssetStrategy,
-    @Inject(FUNCTION_ASSET_STORAGE_OPTIONS) private readonly storageOptions: FunctionAssetStorageOptions,
+    @Inject(FUNCTION_ASSET_STORAGE_OPTIONS)
+    private readonly storageOptions: FunctionAssetStorageOptions,
     private readonly assetService: FunctionAssetService,
     @Inject(FUNCTION_OPTIONS) private readonly options: Options
   ) {}
@@ -58,7 +59,11 @@ export class FunctionAssetReconciler {
   /**
    * Write buffer to runtime disk for a given function + filename.
    */
-  async writeLocalAsset(fn: Function, filename: FunctionAssetFilename, data: Buffer): Promise<void> {
+  async writeLocalAsset(
+    fn: Function,
+    filename: FunctionAssetFilename,
+    data: Buffer
+  ): Promise<void> {
     const filePath = this.getRuntimeFilePath(fn, filename);
     await fs.promises.mkdir(path.dirname(filePath), {recursive: true});
     await fs.promises.writeFile(filePath, data);
@@ -103,9 +108,7 @@ export class FunctionAssetReconciler {
       const local = await this.readLocalAsset(fn, asset.filename);
 
       if (local && local.hash === asset.hash) {
-        this.logger.debug(
-          `[reconcile] ${fn.name}/${asset.filename} hash match — skipping`
-        );
+        this.logger.debug(`[reconcile] ${fn.name}/${asset.filename} hash match — skipping`);
         continue;
       }
 

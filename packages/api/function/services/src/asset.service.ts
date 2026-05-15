@@ -37,9 +37,7 @@ export class FunctionAssetService extends BaseCollection<FunctionAsset>(collecti
     assets: Array<Omit<FunctionAsset, "functionId" | "_id">>
   ): Promise<void> {
     await Promise.all(
-      assets.map(({filename, ...fields}) =>
-        this.upsertAsset(functionId, filename, fields)
-      )
+      assets.map(({filename, ...fields}) => this.upsertAsset(functionId, filename, fields))
     );
   }
 

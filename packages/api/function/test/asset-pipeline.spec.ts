@@ -1,5 +1,9 @@
 import {ObjectId} from "@spica-server/database";
-import {applyAssetChange, applyAssetDelete, AssetChangeFile} from "@spica-server/function/src/asset-pipeline";
+import {
+  applyAssetChange,
+  applyAssetDelete,
+  AssetChangeFile
+} from "@spica-server/function/src/asset-pipeline";
 import {hashBuffer} from "@spica-server/function/src/asset-reconciler";
 import * as os from "os";
 import * as path from "path";
@@ -20,11 +24,13 @@ describe("applyAssetChange", () => {
   const makeReconciler = (strategy: any, storageOpts = {strategy: "default"}) => ({
     strategy,
     storageOptions: storageOpts,
-    writeLocalAsset: jest.fn().mockImplementation(async (_fn: any, filename: string, data: Buffer) => {
-      const filePath = path.join(tmpDir, _fn.name, filename);
-      await fsSync.promises.mkdir(path.dirname(filePath), {recursive: true});
-      await fsSync.promises.writeFile(filePath, data);
-    })
+    writeLocalAsset: jest
+      .fn()
+      .mockImplementation(async (_fn: any, filename: string, data: Buffer) => {
+        const filePath = path.join(tmpDir, _fn.name, filename);
+        await fsSync.promises.mkdir(path.dirname(filePath), {recursive: true});
+        await fsSync.promises.writeFile(filePath, data);
+      })
   });
 
   const makeAssetService = () => ({
@@ -53,9 +59,7 @@ describe("applyAssetChange", () => {
     const fnDir = path.join(tmpDir, fn.name);
     await fsSync.promises.mkdir(fnDir, {recursive: true});
 
-    const files: AssetChangeFile[] = [
-      {filename: "index.ts", data: Buffer.from("console.log(1)")}
-    ];
+    const files: AssetChangeFile[] = [{filename: "index.ts", data: Buffer.from("console.log(1)")}];
 
     // Write the file to disk before calling (simulating what localOp would do)
     await fsSync.promises.writeFile(path.join(fnDir, "index.ts"), files[0].data);
@@ -148,10 +152,9 @@ describe("applyAssetDelete", () => {
     };
     const reconciler = {strategy} as any;
     const assetService = {
-      findByFunction: jest.fn().mockResolvedValue([
-        {key: "functions/abc/index.ts"},
-        {key: "functions/abc/package.json"}
-      ]),
+      findByFunction: jest
+        .fn()
+        .mockResolvedValue([{key: "functions/abc/index.ts"}, {key: "functions/abc/package.json"}]),
       deleteByFunction: jest.fn().mockResolvedValue(undefined)
     } as any;
 

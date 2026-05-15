@@ -29,7 +29,9 @@ export class FunctionAssetStorageModule {
               case "default":
                 return new DefaultStrategy(opts.defaultPath);
               default:
-                throw new Error(`Unknown function asset storage strategy: ${(opts as any).strategy}`);
+                throw new Error(
+                  `Unknown function asset storage strategy: ${(opts as any).strategy}`
+                );
             }
           },
           inject: [FUNCTION_ASSET_STORAGE_OPTIONS]
