@@ -331,11 +331,10 @@ const args = yargsInstance
       default: "default",
       choices: ["default", "awss3", "gcs"]
     },
-    "function-asset-default-path": {
+    "function-asset-path": {
       string: true,
       description:
-        "Relative path under --persistent-path to store function assets when strategy is 'default'.",
-      default: "function-assets"
+        "Absolute path to store function assets when strategy is 'default'. All API replicas sharing the same database should point to the same path (e.g. an NFS mount) so that assets written by one replica can be read by others."
     },
     "function-asset-awss3-credentials-path": {
       string: true,
@@ -693,6 +692,12 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       );
     }
 
+    if (args["function-asset-storage-strategy"] == "default" && !args["function-asset-path"]) {
+      throw new TypeError(
+        "--function-asset-path must be present when --function-asset-storage-strategy is set to 'default'."
+      );
+    }
+
     if (args["storage-strategy"] == "default") {
       if (!args["default-storage-path"]) {
         throw new TypeError(
@@ -880,7 +885,7 @@ const modules = [
     functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"],
     assetStorage: {
       strategy: args["function-asset-storage-strategy"],
-      defaultPath: path.join(args["persistent-path"], args["function-asset-default-path"]),
+      defaultPath: args["function-asset-path"],
       awss3CredentialsPath: args["function-asset-awss3-credentials-path"],
       awss3BucketName: args["function-asset-awss3-bucket-name"],
       gcsServiceAccountPath: args["function-asset-gcs-service-account-path"],
