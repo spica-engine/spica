@@ -16,6 +16,9 @@
     },
     {
       "path": "../../../interface/function"
+    },
+    {
+      "path": "../../../interface/function/asset-storage"
     }
   ],
   "compilerOptions": {

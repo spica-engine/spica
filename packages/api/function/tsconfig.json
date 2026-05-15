@@ -43,6 +43,9 @@
       "path": "../../interface/function"
     },
     {
+      "path": "../../interface/function/asset-storage"
+    },
+    {
       "path": "../../interface/env_var"
     },
     {
@@ -56,6 +59,9 @@
     },
     {
       "path": "services"
+    },
+    {
+      "path": "asset-storage"
     },
     {
       "path": "scheduler"

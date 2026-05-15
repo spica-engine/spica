@@ -11,6 +11,7 @@ export interface FunctionOptions {
   logExpireAfterSeconds: number;
   entryLimit?: number;
   realtimeLogs: boolean;
+  assetStorage?: import("@spica-server/interface-function-asset-storage").FunctionAssetStorageOptions;
 }
 
 export const FUNCTION_OPTIONS = Symbol.for("FUNCTION_OPTIONS");

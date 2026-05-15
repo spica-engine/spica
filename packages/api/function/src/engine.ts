@@ -7,7 +7,7 @@ import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
 import {rimraf} from "rimraf";
-import {FunctionService} from "@spica-server/function-services";
+import {FunctionService, FunctionAssetService} from "@spica-server/function-services";
 import {
   CollectionSlug,
   Options,
@@ -24,6 +24,9 @@ import {
 import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
 
 import {createTargetChanges} from "./change.js";
+import {FunctionAssetReconciler} from "./asset-reconciler.js";
+import {FunctionAssetWatcher} from "./asset-watcher.js";
+import {applyAssetChange, applyAssetDelete, AssetChangeFile} from "./asset-pipeline.js";
 
 import HttpSchema from "./schema/http.json" with {type: "json"};
 import ScheduleSchema from "./schema/schedule.json" with {type: "json"};
@@ -61,7 +64,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug,
-    @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor
+    @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor,
+    @Optional() private reconciler: FunctionAssetReconciler,
+    @Optional() private assetService: FunctionAssetService,
+    @Optional() private assetWatcher: FunctionAssetWatcher
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -97,7 +103,15 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleInit() {
-    this.registerTriggers().then(() => {
+    const startupSequence = async () => {
+      if (this.assetWatcher) {
+        this.assetWatcher.registerPrepareCallback(fn => this.prepareFunction(fn as any));
+      }
+      if (this.reconciler) {
+        const fns = await CRUD.findForRuntime(this.fs);
+        await this.reconciler.reconcileAll(fns as any, fn => this.prepareFunction(fn as any));
+      }
+      await this.registerTriggers();
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
         this.cmdSubs = this.commander.register(
@@ -114,7 +128,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
           CommandType.SYNC
         );
       }
-    });
+    };
+    startupSequence();
   }
 
   registerTriggers() {
@@ -168,6 +183,54 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   private getFunctionRoot(fn: Function) {
     return path.join(this.options.root, fn.name);
+  }
+
+  /**
+   * Run npm install + compile for a function. Used by reconciler after restoring
+   * assets from storage, and by CRUD pipeline after writing new files.
+   */
+  async prepareFunction(fn: Function): Promise<void> {
+    await this.installPackages(fn, []);
+    await this.compile(fn);
+  }
+
+  /**
+   * Store asset files for a function via the configured strategy.
+   * If no asset strategy is configured, calls `localOp` directly (no-op wrapper).
+   *
+   * @param fn        The function whose assets are being changed.
+   * @param files     Files to persist (filename + buffer).
+   * @param localOp   Local disk/install/compile step to run before uploading.
+   */
+  async storeAssets(
+    fn: Function & {_id: ObjectId},
+    files: AssetChangeFile[],
+    localOp: () => Promise<void>
+  ): Promise<void> {
+    if (!this.reconciler || !this.assetService) {
+      // Asset storage not configured; just run the local operation.
+      return localOp();
+    }
+    return applyAssetChange(
+      fn,
+      files,
+      this.options,
+      this.reconciler,
+      this.assetService,
+      this.assetWatcher ?? null,
+      localOp
+    );
+  }
+
+  /**
+   * Delete all stored assets for a function from both storage and metadata.
+   * No-op when asset storage is not configured.
+   */
+  async removeAssets(fn: Function & {_id: ObjectId}): Promise<void> {
+    if (!this.reconciler || !this.assetService) {
+      return;
+    }
+    return applyAssetDelete(fn, this.reconciler, this.assetService);
   }
 
   getPackages(fn: Function): Promise<Package[]> {

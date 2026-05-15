@@ -23,6 +23,9 @@ import {
   FunctionWithContent
 } from "@spica-server/interface-function";
 import {FunctionRealtimeModule} from "@spica-server/function-realtime";
+import {FunctionAssetStorageModule} from "@spica-server/function-asset-storage";
+import {FunctionAssetReconciler} from "./asset-reconciler.js";
+import {FunctionAssetWatcher} from "./asset-watcher.js";
 
 @Module({})
 export class FunctionModule {
@@ -99,6 +102,12 @@ export class FunctionModule {
         }
       ]
     };
+
+    if (options.assetStorage) {
+      module.imports.push(FunctionAssetStorageModule.forRoot(options.assetStorage));
+      (module.providers as any[]).push(FunctionAssetReconciler, FunctionAssetWatcher);
+    }
+
     if (options.realtime) {
       module.imports.push(FunctionRealtimeModule.register());
     }

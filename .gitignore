@@ -57,3 +57,5 @@ yarn-error.log
 # Yarn Berry
 .yarn/cache
 .yarn/install-state.gz
+
+secrets/**

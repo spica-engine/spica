@@ -123,6 +123,16 @@ export async function findByName<
 export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   await insertWithChanges(fs, engine, fn);
   await engine.createFunction(fn);
+
+  if (fn._id) {
+    const pkgBuffer = Buffer.from(
+      await engine.read(fn, "dependency").catch(() => "{}"),
+      "utf-8"
+    );
+    const files = [{filename: "package.json" as const, data: pkgBuffer}];
+    await engine.storeAssets(fn as Function & {_id: any}, files, async () => {});
+  }
+
   return fn;
 }
 
@@ -173,6 +183,7 @@ export async function remove(
   engine.categorizeChanges(changes);
 
   await engine.deleteFunction(fn);
+  await engine.removeAssets(fn as Function & {_id: any});
 }
 
 export namespace index {
@@ -204,14 +215,18 @@ export namespace index {
       throw new NotFoundException("Cannot find function.");
     }
 
-    await engine.update(fn, index);
+    const indexBuffer = Buffer.from(index, "utf-8");
+    const filename = fn.language === "javascript" ? "index.js" : "index.ts";
+
+    await engine.storeAssets(fn as Function & {_id: any}, [{filename, data: indexBuffer}], async () => {
+      await engine.update(fn, index);
+      await engine.compile(fn);
+    });
 
     const envResolvedFn = await findOneForRuntime(fs, id);
 
     const changes = createTargetChanges(envResolvedFn, ChangeKind.Updated, engine.secretDecryptor);
     engine.categorizeChanges(changes);
-
-    return engine.compile(fn);
   }
 
   export async function filter(
@@ -283,7 +298,16 @@ export namespace dependencies {
     }
 
     if (deps.length) {
-      await engine.installPackages(fn, deps);
+      // Pass package.json as the file to store; applyAssetChange will re-read it
+      // from disk after localOp (npm install) so it captures the final state.
+      const placeholder = Buffer.alloc(0);
+      await engine.storeAssets(
+        fn as Function & {_id: any},
+        [{filename: "package.json", data: placeholder}],
+        async () => {
+          await engine.installPackages(fn, deps as string[]);
+        }
+      );
     }
   }
 
@@ -317,12 +341,19 @@ export namespace dependencies {
       throw new NotFoundException("Could not find the function.");
     }
 
-    await Promise.all(
-      deps.map(dep =>
-        engine.removePackage(fn, dep).catch(error => {
-          throw new BadRequestException(error.message);
-        })
-      )
+    const placeholder = Buffer.alloc(0);
+    await engine.storeAssets(
+      fn as Function & {_id: any},
+      [{filename: "package.json", data: placeholder}],
+      async () => {
+        await Promise.all(
+          deps.map(dep =>
+            engine.removePackage(fn, dep).catch(error => {
+              throw new BadRequestException(error.message);
+            })
+          )
+        );
+      }
     );
   }
 }

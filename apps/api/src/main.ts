@@ -322,6 +322,39 @@ const args = yargsInstance
       default: false
     }
   })
+  /* Function Asset Storage Options */
+  .option({
+    "function-asset-storage-strategy": {
+      string: true,
+      description:
+        "Storage strategy for function source assets. Available options are default, awss3, gcs.",
+      default: "default",
+      choices: ["default", "awss3", "gcs"]
+    },
+    "function-asset-default-path": {
+      string: true,
+      description:
+        "Relative path under --persistent-path to store function assets when strategy is 'default'.",
+      default: "function-assets"
+    },
+    "function-asset-awss3-credentials-path": {
+      string: true,
+      description:
+        "Path to the AWS credentials JSON file ({accessKeyId, secretAccessKey, region}) for function asset storage."
+    },
+    "function-asset-awss3-bucket-name": {
+      string: true,
+      description: "Name of the S3 bucket to store function assets."
+    },
+    "function-asset-gcs-service-account-path": {
+      string: true,
+      description: "Path to the GCS service account JSON file for function asset storage."
+    },
+    "function-asset-gcs-bucket-name": {
+      string: true,
+      description: "Name of the GCS bucket to store function assets."
+    }
+  })
   /* Storage Options */
   .option({
     "storage-strategy": {
@@ -642,6 +675,24 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       );
     }
 
+    if (
+      args["function-asset-storage-strategy"] == "awss3" &&
+      (!args["function-asset-awss3-credentials-path"] || !args["function-asset-awss3-bucket-name"])
+    ) {
+      throw new TypeError(
+        "--function-asset-awss3-credentials-path and --function-asset-awss3-bucket-name must be present when --function-asset-storage-strategy is set to 'awss3'."
+      );
+    }
+
+    if (
+      args["function-asset-storage-strategy"] == "gcs" &&
+      (!args["function-asset-gcs-service-account-path"] || !args["function-asset-gcs-bucket-name"])
+    ) {
+      throw new TypeError(
+        "--function-asset-gcs-service-account-path and --function-asset-gcs-bucket-name must be present when --function-asset-storage-strategy is set to 'gcs'."
+      );
+    }
+
     if (args["storage-strategy"] == "default") {
       if (!args["default-storage-path"]) {
         throw new TypeError(
@@ -826,7 +877,15 @@ const modules = [
     invocationLogs: args["function-invocation-logs"],
     realtime: true,
     grpcPort: args["grpc-function-port"],
-    functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"]
+    functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"],
+    assetStorage: {
+      strategy: args["function-asset-storage-strategy"],
+      defaultPath: path.join(args["persistent-path"], args["function-asset-default-path"]),
+      awss3CredentialsPath: args["function-asset-awss3-credentials-path"],
+      awss3BucketName: args["function-asset-awss3-bucket-name"],
+      gcsServiceAccountPath: args["function-asset-gcs-service-account-path"],
+      gcsBucketName: args["function-asset-gcs-bucket-name"]
+    }
   }),
   ConfigModule.forRoot(),
   StatusModule.forRoot({
