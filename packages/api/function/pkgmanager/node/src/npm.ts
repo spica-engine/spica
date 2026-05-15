@@ -2,8 +2,7 @@ import child_process from "child_process";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import {Observable} from "rxjs";
-import {NodePackageManager} from "./node.js";
+import { NodePackageManager } from "./node.js";
 
 function getNpmPath() {
   let npmPath: string = "npm";
@@ -11,50 +10,29 @@ function getNpmPath() {
 }
 
 export class Npm extends NodePackageManager {
-  install(cwd: string, _qualifiedNames: string | string[]): Observable<number> {
-    let qualifiedNames: string[] = this.normalizePackageNames(_qualifiedNames);
+  install(cwd: string, _qualifiedNames: string | string[]): Promise<void> {
+    const qualifiedNames: string[] = this.normalizePackageNames(_qualifiedNames);
 
-    return new Observable(observer => {
+    return new Promise<void>((resolve, reject) => {
       const proc = child_process.spawn(
         getNpmPath(),
-        ["install", ...qualifiedNames, "--no-audit", "--loglevel", "timing"],
-        {cwd}
+        ["install", ...qualifiedNames, "--no-audit"],
+        { cwd, stdio: ["pipe", "ignore", "pipe"] }
       );
-      let stderr: string = "",
-        stdout: string = "";
-      let progress = 1;
-      const progressAmountOfAStep = 100 / 18;
-      proc.stdout.on("data", chunk => {
-        chunk = chunk.toString();
-        stdout += chunk;
-      });
+      let stderr: string = "";
       proc.stderr.on("data", chunk => {
-        chunk = chunk.toString();
-
-        if (chunk.indexOf("timing") != -1) {
-          progress += 1;
-        }
-
-        observer.next(Math.min(Math.round(progressAmountOfAStep * progress), 100));
-
-        stderr += chunk;
+        stderr += chunk.toString();
       });
       proc.on("close", code => {
         if (code == 0) {
-          return observer.complete();
+          return resolve();
         }
-        observer.error(`npm install has failed. code: ${code}\n${stderr}`);
+        reject(`npm install has failed. code: ${code}\n${stderr}`);
       });
 
       proc.on("error", err => {
-        observer.error(`npm install has failed. error: ${err.message}`);
+        reject(`npm install has failed. error: ${err.message}`);
       });
-
-      return () => {
-        if (!proc.killed) {
-          proc.kill("SIGKILL");
-        }
-      };
     });
   }
 
@@ -69,14 +47,9 @@ export class Npm extends NodePackageManager {
           "--cache",
           fs.mkdtempSync(path.join(os.tmpdir(), "_npm_cache_"))
         ],
-        {cwd}
+        { cwd }
       );
-      let stderr: string = "",
-        stdout: string = "";
-      proc.stdout.on("data", chunk => {
-        chunk = chunk.toString();
-        stdout += chunk;
-      });
+      let stderr: string = "";
       proc.stderr.on("data", chunk => {
         chunk = chunk.toString();
         stderr += chunk;

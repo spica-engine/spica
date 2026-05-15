@@ -1,5 +1,4 @@
 import path from "path";
-import {Observable, throwError} from "rxjs";
 import {
   Package,
   PackageManager,
@@ -14,12 +13,12 @@ export class LocalPackageManager extends DelegatePkgManager {
     super(pkgManager);
   }
 
-  install(cwd: string, _qualifiedNames: string | string[]): Observable<number> {
+  install(cwd: string, _qualifiedNames: string | string[]): Promise<void> {
     let qualifiedNames: string[] = super.normalizePackageNames(_qualifiedNames);
     try {
       qualifiedNames = qualifiedNames.map(name => this.transformLocalPackageName(cwd, name));
     } catch (error) {
-      return throwError(() => error);
+      return Promise.reject(error);
     }
     return super.install(cwd, qualifiedNames);
   }

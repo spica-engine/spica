@@ -24,7 +24,6 @@
     "@spica-server/interface-env_var": "workspace:*",
     "@spica-server/interface-passport-identity": "workspace:*",
     "@spica-server/interface-representative": "workspace:*",
-    "@spica-server/interface-versioncontrol": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "rxjs": "^7.8.1",
     "yaml": "^2.7.0"

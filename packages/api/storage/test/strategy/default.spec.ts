@@ -1,20 +1,24 @@
 import {Default} from "@spica-server/storage";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import {Readable} from "stream";
 
 describe("Default", () => {
   let service: Default;
   let testDir: string;
+  let testDirParent: string;
 
-  beforeEach(() => {
-    testDir = path.join(process.env.TEST_TMPDIR, Date.now().toString());
+  beforeEach(async () => {
+    const baseTmpDir = process.env.TEST_TMPDIR || os.tmpdir();
+    testDirParent = await fs.promises.mkdtemp(path.join(baseTmpDir, "storage-default-"));
+    testDir = path.join(testDirParent, "storage");
     service = new Default(testDir, "http://insteadof", 0);
   });
 
   afterEach(async () => {
     try {
-      await fs.promises.rm(testDir, {recursive: true, force: true});
+      await fs.promises.rm(testDirParent, {recursive: true, force: true});
     } catch {}
   });
 
@@ -108,11 +112,10 @@ describe("Default", () => {
 
   describe("ensureStorageDiskExists", () => {
     it("should create storage directory if it does not exist", async () => {
-      const freshDir = path.join(process.env.TEST_TMPDIR, `fresh_${Date.now()}`);
+      const freshDir = path.join(testDirParent, "fresh");
       const freshService = new Default(freshDir, "http://insteadof", 0);
       await freshService.write("test", Buffer.from("data"));
       expect(fs.existsSync(freshDir)).toBe(true);
-      await fs.promises.rm(freshDir, {recursive: true, force: true});
     });
 
     it("should not fail if storage directory already exists", async () => {
@@ -141,6 +144,68 @@ describe("Default", () => {
       const obs = service.resumableUploadFinished;
       expect(obs).toBeDefined();
       expect(typeof obs.subscribe).toBe("function");
+    });
+  });
+
+  describe("proxyRead", () => {
+    const meta = {name: "test", content: {type: "text/plain"}} as any;
+
+    it("should return 200 with stream and correct headers for an existing file", async () => {
+      await service.write("proxy_file", Buffer.from("hello world"));
+
+      const result = await service.proxyRead("proxy_file", {}, meta);
+
+      expect(result.statusCode).toBe(200);
+      expect(result.stream).not.toBeNull();
+      expect(result.headers["content-type"]).toBe("text/plain");
+      expect(result.headers["content-length"]).toBe("11");
+      expect(result.headers["etag"]).toBeDefined();
+      expect(result.headers["cache-control"]).toBe("public, max-age=3600, must-revalidate");
+    });
+
+    it("should return 304 with null stream when if-none-match matches etag", async () => {
+      const content = Buffer.from("cached content");
+      await service.write("etag_file", content);
+
+      const {headers} = await service.proxyRead("etag_file", {}, meta);
+      const eTagValue = headers["etag"];
+
+      const result = await service.proxyRead("etag_file", {"if-none-match": eTagValue}, meta);
+
+      expect(result.statusCode).toBe(304);
+      expect(result.stream).toBeNull();
+      expect(result.headers["etag"]).toBe(eTagValue);
+      expect(result.headers["cache-control"]).toBe("public, max-age=3600, must-revalidate");
+    });
+
+    it("should return 200 when if-none-match does not match etag", async () => {
+      await service.write("stale_file", Buffer.from("content"));
+
+      const result = await service.proxyRead("stale_file", {"if-none-match": '"stale-etag"'}, meta);
+
+      expect(result.statusCode).toBe(200);
+      expect(result.stream).not.toBeNull();
+    });
+
+    it("should stream the correct file content", async () => {
+      await service.write("streamed_file", Buffer.from("streamed data"));
+
+      const result = await service.proxyRead("streamed_file", {}, meta);
+
+      const chunks: Buffer[] = [];
+      for await (const chunk of result.stream!) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      expect(Buffer.concat(chunks).toString()).toBe("streamed data");
+    });
+
+    it("should use content-type from meta", async () => {
+      await service.write("typed_file", Buffer.from("data"));
+      const imageMeta = {name: "typed_file", content: {type: "image/png"}} as any;
+
+      const result = await service.proxyRead("typed_file", {}, imageMeta);
+
+      expect(result.headers["content-type"]).toBe("image/png");
     });
   });
 });

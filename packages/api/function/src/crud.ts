@@ -126,11 +126,6 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
   return fn;
 }
 
-export async function insertSchema(fs: FunctionService, engine: FunctionEngine, fn: Function) {
-  await insertWithChanges(fs, engine, fn);
-  return fn;
-}
-
 export async function replace(fs: FunctionService, engine: FunctionEngine, fn: Function) {
   const _id = new ObjectId(fn._id);
 
@@ -219,19 +214,6 @@ export namespace index {
     return engine.compile(fn);
   }
 
-  export async function writeByName(
-    fs: FunctionService,
-    engine: FunctionEngine,
-    name: string,
-    content: string
-  ) {
-    const fn = await findByName(fs, name);
-    if (!fn) {
-      throw new NotFoundException(`Cannot find function with name ${name}.`);
-    }
-    return write(fs, engine, fn._id, content);
-  }
-
   export async function filter(
     fns: Function<EnvRelation, SecretRelation>[],
     text: string,
@@ -301,7 +283,7 @@ export namespace dependencies {
     }
 
     if (deps.length) {
-      await engine.addPackage(fn, deps).toPromise();
+      await engine.installPackages(fn, deps);
     }
   }
 
@@ -342,52 +324,6 @@ export namespace dependencies {
         })
       )
     );
-  }
-
-  export async function create(
-    fs: FunctionService,
-    engine: FunctionEngine,
-    id: ObjectId,
-    packageJson: any
-  ) {
-    const fn = await fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Could not find the function.");
-    }
-    await engine.createDependency(fn, packageJson);
-    const FunctionWithDependencies = {
-      ...fn,
-      dependencies: packageJson.dependencies || {}
-    };
-    await dependencies.update(engine, FunctionWithDependencies);
-  }
-
-  export async function remove(fs: FunctionService, engine: FunctionEngine, id: ObjectId) {
-    const fn = await fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Could not find the function.");
-    }
-    await engine.deleteDependency(fn);
-    const existingDependencies = await engine.getPackages(fn);
-    await dependencies.uninstall(
-      engine,
-      fn,
-      existingDependencies.map(d => d.name)
-    );
-  }
-
-  export async function writeAndInstall(
-    fs: FunctionService,
-    engine: FunctionEngine,
-    name: string,
-    deps: Dependency
-  ) {
-    const fn = await findByName(fs, name);
-    if (!fn) {
-      throw new NotFoundException(`Could not find the function with name ${name}.`);
-    }
-    await engine.writePackageJson(fn, deps);
-    await engine.installFromPackageJson(fn).toPromise();
   }
 }
 

@@ -14,7 +14,6 @@ import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {StatusModule} from "@spica-server/status";
 import {StorageModule} from "@spica-server/storage";
-import {VersionControlModule} from "@spica-server/versioncontrol";
 import {ReplicationModule} from "@spica-server/replication";
 import {AssetModule} from "@spica-server/asset";
 import {BatchModule} from "@spica-server/batch";
@@ -220,7 +219,6 @@ const args = yargsInstance
         "StatusFullAccess",
         "StorageFullAccess",
         "StrategyFullAccess",
-        "VersionControlFullAccess",
         "WebhookFullAccess",
         "UserFullAccess",
         "ConfigFullAccess"
@@ -433,15 +431,6 @@ const args = yargsInstance
       default: true
     }
   })
-  /* Version Control Options */
-  .options({
-    "version-control": {
-      boolean: true,
-      description:
-        "When enabled, server will track version of changes and there will be appliable commands to manage these versions.",
-      default: true
-    }
-  })
   /* Replication Options */
   .options({
     replication: {
@@ -532,11 +521,6 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     string: true,
     description: "Regex to filter access logs by status code",
     default: ".*"
-  })
-  .option("versioncontrol-sync-realtime", {
-    boolean: true,
-    description: "Enable/disable listening to version control sync realtime. Default value is true",
-    default: true
   })
   .middleware(args => {
     const username = process.env.MONGODB_USERNAME;
@@ -842,7 +826,7 @@ const modules = [
     invocationLogs: args["function-invocation-logs"],
     realtime: true,
     grpcPort: args["grpc-function-port"],
-    functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"] 
+    functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"]
   }),
   ConfigModule.forRoot(),
   StatusModule.forRoot({
@@ -853,16 +837,6 @@ const modules = [
 
 if (args["activity-stream"]) {
   modules.push(ActivityModule.forRoot({expireAfterSeconds: args["common-log-lifespan"]}));
-}
-
-if (args["version-control"]) {
-  modules.push(
-    VersionControlModule.forRoot({
-      persistentPath: args["persistent-path"],
-      isReplicationEnabled: args["replication"],
-      realtime: args["versioncontrol-sync-realtime"]
-    })
-  );
 }
 
 if (args["replication"]) {

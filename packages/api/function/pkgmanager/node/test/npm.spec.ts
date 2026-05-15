@@ -1,7 +1,6 @@
 import {Npm} from "@spica-server/function-pkgmanager-node";
 import fs from "fs";
 import path from "path";
-import {distinctUntilChanged} from "rxjs/operators";
 
 describe("npm", () => {
   let npm: Npm;
@@ -15,7 +14,7 @@ describe("npm", () => {
   });
 
   it("should install 'debug' package", async () => {
-    await npm.install(cwd, "debug@4.1.1").toPromise();
+    await npm.install(cwd, "debug@4.1.1");
     const packages = await npm.ls(cwd);
     expect(packages).toEqual([
       {
@@ -26,7 +25,7 @@ describe("npm", () => {
   });
 
   it("should install and uninstall 'rxjs' package", async () => {
-    await npm.install(cwd, "rxjs@6.0.0").toPromise();
+    await npm.install(cwd, "rxjs@6.0.0");
     let packages = await npm.ls(cwd);
     expect(packages).toEqual([
       {
@@ -47,30 +46,11 @@ describe("npm", () => {
 
   it("it should  fail when installing a package which does not exist", async () => {
     const _catch = jest.fn(() => {});
-    await npm.install(cwd, "rxjs@couldnotexist").toPromise().catch(_catch);
+    await npm.install(cwd, "rxjs@couldnotexist").catch(_catch);
     expect(_catch).toHaveBeenCalled();
     const errorMessage = _catch.mock.calls[0][0 as any];
     expect(errorMessage).toContain("npm error code ETARGET");
     expect(errorMessage).toContain("No matching version found for rxjs@couldnotexist");
     expect(errorMessage).toContain("npm install has failed. code: 1");
-  });
-
-  xit("should report progress", done => {
-    const progress = [];
-    npm
-      .install(cwd, "debug")
-      .pipe(distinctUntilChanged())
-      .subscribe({
-        next: p => progress.push(p),
-        complete: () => {
-          // prettier-ignore
-          expect(progress).toEqual([
-            6, 11, 17,  22, 28, 33, 39,
-            44, 50, 56,  61, 67, 72, 78,
-            83, 89, 94, 100
-          ]);
-          done();
-        }
-      });
   });
 });

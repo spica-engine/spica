@@ -244,28 +244,6 @@ export {
 export { default as useStorageService } from '../../hooks/useStorage';
 
 export {
-  versionControlApi,
-  versionControlApiReducerPath,
-  versionControlApiMiddleware,
-  useGetCommandsQuery,
-  useGetDiffQuery,
-  useCommitMutation,
-  useBranchMutation,
-  useRemoteMutation,
-  usePushMutation,
-  useLogQuery,
-  useExecuteCommandMutation,
-} from './versionControlApi';
-
-export type {
-  CommandsResponse,
-  CommandArgs,
-  ExecuteCommandArgs,
-  LogCommit,
-  LogResponse,
-} from './versionControlApi';
-
-export {
   refreshTokenApi,
   refreshTokenApiReducerPath,
   refreshTokenApiMiddleware,

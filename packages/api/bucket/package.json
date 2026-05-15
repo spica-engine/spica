@@ -49,7 +49,6 @@
     "@spica-server/interface-preference": "workspace:*",
     "@spica-server/interface-representative": "workspace:*",
     "@spica-server/interface-status": "workspace:*",
-    "@spica-server/interface-versioncontrol": "workspace:*",
     "@spica-server/passport-guard": "workspace:*",
     "@spica-server/preference-services": "workspace:*",
     "@spica-server/status": "workspace:*",

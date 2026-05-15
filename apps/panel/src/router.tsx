@@ -18,7 +18,6 @@ import Strategy from "./pages/strategy/Strategy";
 import Activities from "./pages/activities/Activities";
 import FunctionPage from "./pages/function/FunctionPage";
 import FunctionLogPage from "./pages/function-log/FunctionLogPage";
-import VersionControl from "./pages/version-control/VersionControl";
 import DashboardView from "./pages/dashboard/DashboardView";
 import Config from "./pages/config/Config";
 import ConfigModule from "./pages/config/ConfigModule";
@@ -120,10 +119,6 @@ const router = createBrowserRouter(
         {
           path: "webhook/:webhookId",
           element: <Webhook />
-        },
-        {
-          path: "version-control",
-          element: <VersionControl />
         },
         {
           path: "config",

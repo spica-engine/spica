@@ -10,11 +10,6 @@ import {
 import {PolicyController} from "./policy.controller.js";
 import {PolicyService} from "./policy.service.js";
 import PolicySchema from "./schemas/policy.json" with {type: "json"};
-import {getSupplier, getApplier} from "./synchronizer/schema/index.js";
-import {
-  REGISTER_VC_CHANGE_HANDLER,
-  RegisterVCChangeHandler
-} from "@spica-server/interface-versioncontrol";
 import {PolicyRealtimeModule} from "@spica-server/passport-policy-realtime";
 @Global()
 @Module({})
@@ -53,18 +48,9 @@ export class PolicyModule {
 
   constructor(
     ps: PolicyService,
-    @Optional()
-    @Inject(REGISTER_VC_CHANGE_HANDLER)
-    registerVCChangeHandler: RegisterVCChangeHandler,
     @Optional() @Inject(APIKEY_POLICY_FINALIZER) apikeyFinalizer: changeFactory,
     @Optional() @Inject(IDENTITY_POLICY_FINALIZER) identityFinalizer: changeFactory,
     validator: Validator
   ) {
-    if (registerVCChangeHandler) {
-      registerVCChangeHandler(
-        getSupplier(ps),
-        getApplier(ps, apikeyFinalizer, identityFinalizer, validator)
-      );
-    }
   }
 }
