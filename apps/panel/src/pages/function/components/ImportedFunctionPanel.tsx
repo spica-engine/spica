@@ -5,19 +5,15 @@
 
 import {memo, useCallback, useMemo, useState} from "react";
 import {
-  Accordion,
   Button,
   FlexElement,
-  FluidContainer,
   Icon,
   Select,
-  Text,
-  type TypeAccordionItem,
 } from "oziko-ui-kit";
 import type {TypeLabeledValue} from "oziko-ui-kit";
 import {useGetFunctionsQuery} from "../../../store/api/functionApi";
 import type {SpicaFunction} from "../../../store/api/functionApi";
-import styles from "./DependencyPanel.module.scss";
+import styles from "./ImportedFunctionPanel.module.scss";
 
 const IMPORT_REGEX = /^import\s+\*\s+as\s+(\w+)\s+from\s+["']\.\.\/\.\.\/([^/]+)\/\.build["'];?\s*$/gm;
 
@@ -107,71 +103,60 @@ const ImportedFunctionPanel = ({code, onCodeChange, currentFunctionId}: Imported
     [code, onCodeChange]
   );
 
-  const accordionItems: TypeAccordionItem[] = [
-    {
-      title: (
-        <FlexElement gap={8} alignment="leftCenter">
-          <Text size="medium">Imported Functions</Text>
-        </FlexElement>
-      ),
-      content: (
-        <FlexElement direction="vertical" dimensionX="fill" gap={10}>
-          <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
-            <Select
-              options={selectOptions}
-              value={selectedIds}
-              multiple
-              placeholder="Select functions..."
-              onChange={value => {
-                const ids = Array.isArray(value) ? (value as string[]) : [];
-                setSelectedIds(ids);
-                if (ids.length) handleAdd(ids);
-              }}
-              dimensionX="fill"
-            />
-          </FlexElement>
-          <FlexElement direction="vertical" dimensionX="fill" gap={10} className={styles.functionList}>
+  return (
+    <FlexElement direction="vertical" dimensionX="fill" alignment="leftCenter" gap={8} className={styles.addRow}>
+      <div className={styles.selectWrapper}>
+        <Select
+          options={selectOptions}
+          value={selectedIds}
+          multiple
+          placeholder="Select functions to import..."
+          popupClassName={styles.importSelectDropdown}
+          onChange={value => {
+            const ids = Array.isArray(value) ? (value as string[]) : [];
+            setSelectedIds(ids);
+            if (ids.length) handleAdd(ids);
+          }}
+          dimensionX="fill"
+        />
+      </div>
+
+      {importedFunctions.length === 0 ? (
+        <div className={styles.emptyState}>
+          <Icon name="codeTags" size="md" />
+          <span>No imported functions</span>
+        </div>
+      ) : (
+        <FlexElement className={styles.fnList} dimensionX="fill" direction="vertical" gap={4}>
           {importedFunctions.map(imp => {
             const fn = functionsMap[imp.functionId];
             const displayName = fn?.name ?? imp.alias;
             return (
-              <FluidContainer
-                key={imp.functionId}
-                dimensionX="fill"
-                mode="fill"
-                alignment="leftCenter"
-                root={{
-                  children: <Text size="medium">{displayName}</Text>,
-                  alignment: "leftCenter",
-                }}
-                suffix={{
-                  children: (
-                    <Button
-                      variant="icon"
-                      color="danger"
-                      onClick={() => handleDelete(imp.functionId)}
-                      className={styles.button}
-                    >
-                      <Icon name="delete" />
-                    </Button>
-                  ),
-                }}
-              />
+              <FlexElement key={imp.functionId} className={styles.fnItem} dimensionX="fill">
+                <div className={styles.fnIcon}>
+                  <Icon name="codeTags" size="sm" />
+                </div>
+                <div className={styles.fnInfo}>
+                  <div className={styles.fnName}>{displayName}</div>
+                  <div className={styles.fnAlias}>as {imp.alias}</div>
+                </div>
+                <div className={styles.fnActions}>
+                  <Button
+                    variant="icon"
+                    color="danger"
+                    className={styles.deleteBtn}
+                    onClick={() => handleDelete(imp.functionId)}
+                    title="Remove import"
+                  >
+                    <Icon name="delete" size="sm" />
+                  </Button>
+                </div>
+              </FlexElement>
             );
           })}
-          </FlexElement>
-          
         </FlexElement>
-      ),
-    },
-  ];
-
-  return (
-    <Accordion
-      items={accordionItems}
-      suffixOnHover={false}
-      noBackgroundOnFocus
-    />
+      )}
+    </FlexElement>
   );
 };
 

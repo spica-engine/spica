@@ -1,0 +1,49 @@
+@use "../../../styles/mixins";
+
+.toolbar {
+  height: var(--size-topbar-h) !important;
+  border-bottom: var(--border-default);
+  background: var(--color-surface);
+  padding: 0 var(--spacing-12);
+  flex-shrink: 0;
+}
+
+.jwtChip {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  background: var(--color-surface-2);
+  border: var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-3) var(--spacing-8);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color var(--transition-border), color var(--transition-border);
+  max-width: 220px;
+  overflow: hidden;
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.jwtLabel {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-amber);
+  flex-shrink: 0;
+}
+
+.jwtText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}

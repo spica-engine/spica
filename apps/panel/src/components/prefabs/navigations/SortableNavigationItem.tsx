@@ -1,7 +1,7 @@
-import {useCallback, useRef, type FC, type ReactNode} from "react";
+import React, {useCallback, useRef, type FC, type ReactNode} from "react";
 import {useDrag, useDrop} from "react-dnd";
 import type {Identifier, XYCoord} from "dnd-core";
-import {FluidContainer, Icon, Text, type IconName} from "oziko-ui-kit";
+import {FluidContainer, Icon, type IconName} from "oziko-ui-kit";
 
 type NavigationDragItem = {
   id: string;
@@ -52,6 +52,9 @@ export type SortableNavigationItemProps = {
   groupKey: string;
   dndType: string;
   iconName: IconName;
+  variant?: 'classic' | 'sidebar';
+  isActive?: boolean;
+  activeClassName?: string;
   moveItem: (from: number, to: number) => void;
   onNavigate: (id: string) => void;
   onDragStart: (index: number) => void;
@@ -69,6 +72,9 @@ const SortableNavigationItem: FC<SortableNavigationItemProps> = ({
   groupKey,
   dndType,
   iconName,
+  variant = 'classic',
+  isActive = false,
+  activeClassName,
   moveItem,
   onNavigate,
   onDragStart,
@@ -143,6 +149,28 @@ const SortableNavigationItem: FC<SortableNavigationItemProps> = ({
   const handleClick = useCallback(() => {
     onNavigate(id);
   }, [id, onNavigate]);
+
+  if (variant === 'sidebar') {
+    return (
+      <div
+        ref={setContainerRef}
+        data-handler-id={handlerId ?? undefined}
+        style={{opacity: isDragging ? 0.4 : 1}}
+        className={`${itemClassName ?? ''}${isActive && activeClassName ? ` ${activeClassName}` : ''}`}
+        onClick={handleClick}
+      >
+        <Icon
+          name={iconName}
+          size="sm"
+          style={{flexShrink: 0, opacity: isActive ? 1 : 0.6} as React.CSSProperties}
+        />
+        <span className={titleClassName}>{title}</span>
+        {renderSuffix && (
+          <div className={suffixClassName}>{renderSuffix(setDragHandleRef)}</div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

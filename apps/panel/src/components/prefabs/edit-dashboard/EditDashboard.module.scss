@@ -1,4 +1,6 @@
-/* ── Edit (name-only) modal ── */
+/* ═══════════════════════════════════════════════════════════════
+   EDIT MODE  (name-only modal)
+═══════════════════════════════════════════════════════════════ */
 .modal {
   height: min-content !important;
   min-height: fit-content;
@@ -38,7 +40,6 @@
     margin: 0 !important;
     font-size: var(--font-size-lg) !important;
     font-weight: bold !important;
-    font-family: var(--font-family-base) !important;
     color: var(--color-black);
   }
 
@@ -67,7 +68,6 @@
 
   .input {
     height: 44px;
-    font-family: var(--font-family-base);
     font-size: var(--font-size-md);
   }
 }
@@ -82,85 +82,505 @@
   padding: 0 var(--padding-md);
 }
 
-/* ── Create (full form) modal ── */
+/* ═══════════════════════════════════════════════════════════════
+   CREATE MODE — new dashboard popup
+═══════════════════════════════════════════════════════════════ */
+
+/* Modal shell */
 .createModal {
-  width: 90vw !important;
-  max-width: 1100px !important;
+  width: min(900px, 95vw) !important;
+  max-width: 900px !important;
   height: min-content !important;
   min-height: fit-content;
   padding: 0 !important;
   box-shadow: var(--box-shadow);
+  overflow: hidden;
 }
 
-.createContainer {
-  padding: var(--padding-xl) var(--padding-xl) var(--padding-md);
-  gap: var(--gap-lg);
-}
-
-.dashboardNameInput {
+.createPopup {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  height: 48px;
-  padding: 0 var(--padding-md);
+  background-color: var(--color-menu-background);
   border-radius: var(--border-radius-md);
-  border: var(--border-default);
-  background-color: var(--color-input-background);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-md);
+  overflow: hidden;
 }
 
-.componentsHeader {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--color-black);
-}
-
-.componentInput {
-  flex: 1;
-  height: 44px;
-  padding: 0 var(--padding-md);
-  border-radius: var(--border-radius-md);
-  border: var(--border-default);
-  background-color: var(--color-input-background);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-md);
-}
-
-.ratioLabel {
-  color: var(--color-font-tertiary);
-  white-space: nowrap;
-}
-
-.componentActionButton {
-  min-width: 36px !important;
-  min-height: 36px !important;
-  padding: 0 !important;
+/* Name bar */
+.nameBar {
+  padding: 14px 20px;
+  border-bottom: var(--border-default);
   flex-shrink: 0;
 }
 
-.urlHint {
-  color: var(--color-font-tertiary);
-  padding-left: 2px;
+.nameInput {
+  width: 100%;
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  padding: 9px 14px;
+  background-color: var(--color-input-background);
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  color: var(--color-font-primary);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+
+  &:focus {
+    border-color: var(--color-accent);
+    background-color: var(--color-menu-background);
+    box-shadow: 0 0 0 3px var(--color-accent-subtle);
+  }
+
+  &::placeholder {
+    color: var(--color-font-tertiary);
+    font-weight: 400;
+  }
 }
 
-.addComponentButton {
+.nameError {
+  font-size: var(--font-size-xs) !important;
+  margin-top: 4px;
+}
+
+/* Popup body */
+.popupBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px 8px;
+  max-height: 72vh;
+
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+}
+
+/* Section divider */
+.sectionDivider {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--gap-sm);
-  width: 100%;
-  padding: var(--padding-lg);
-  border: 2px dashed var(--color-border);
-  border-radius: var(--border-radius-md);
-  background: none;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sectionLine {
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+.sectionLabel {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-font-tertiary);
+}
+
+.sectionCount {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: "JetBrains Mono", monospace;
+  color: var(--color-font-tertiary);
+  background-color: var(--color-input-background);
+  border: var(--border-default);
+  border-radius: 5px;
+  padding: 1px 7px;
+}
+
+/* Component list */
+.compList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* Component card */
+.compCard {
+  border: var(--border-default);
+  border-radius: 11px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+/* Card header */
+.compHead {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  background-color: var(--color-input-background);
+  border-bottom: var(--border-default);
   cursor: pointer;
-  color: var(--color-font-primary);
-  transition: background-color 0.15s ease;
+  user-select: none;
+  transition: background-color 0.1s;
 
   &:hover {
     background-color: var(--color-hover);
   }
 }
 
+.compCardCollapsed .compHead {
+  border-bottom-color: transparent;
+}
+
+.compNum {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background-color: var(--color-menu-background);
+  border: var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+  color: var(--color-font-tertiary);
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.compNamePrev {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-font-primary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compTypeBadge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-family: "JetBrains Mono", monospace;
+  flex-shrink: 0;
+}
+
+.compRatioBadge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background-color: var(--color-input-background);
+  color: var(--color-font-tertiary);
+  font-family: "JetBrains Mono", monospace;
+  flex-shrink: 0;
+  border: var(--border-default);
+}
+
+.compChevron {
+  color: var(--color-font-tertiary);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.compChevronCollapsed {
+  transform: rotate(-90deg);
+}
+
+/* Card body */
+.compBody {
+  padding: 16px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Card footer */
+.compFoot {
+  padding: 10px 16px 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Two column layout */
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Field */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fieldLbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-font-tertiary);
+}
+
+.fieldInput {
+  width: 100%;
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  padding: 8px 11px;
+  background-color: var(--color-input-background);
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--color-font-primary);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+
+  &:focus {
+    border-color: var(--color-accent);
+    background-color: var(--color-menu-background);
+    box-shadow: 0 0 0 3px var(--color-accent-subtle);
+  }
+
+  &::placeholder {
+    color: var(--color-font-tertiary);
+  }
+}
+
+.fieldHint {
+  font-size: 11px;
+  color: var(--color-font-tertiary);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+/* Type card grid */
+.typeGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.typeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 6px 9px;
+  border-radius: 9px;
+  border: 1.5px solid var(--color-border);
+  background-color: var(--color-input-background);
+  cursor: pointer;
+  transition: all 0.14s;
+  position: relative;
+
+  &:hover {
+    border-color: var(--color-accent);
+    background-color: var(--color-menu-background);
+  }
+}
+
+.typeCardSel {
+  border-color: var(--color-accent) !important;
+  background-color: var(--color-accent-subtle) !important;
+  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+
+  .typeCardLbl {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  .miniBar {
+    background-color: var(--color-accent-subtle);
+  }
+
+  .miniBarHi {
+    background-color: var(--color-accent);
+  }
+}
+
+.typeCardDot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.typeCardIcon {
+  height: 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.typeCardLbl {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--color-font-tertiary);
+  line-height: 1;
+  transition: color 0.14s;
+}
+
+/* Mini bar icon (Bar type card) */
+.miniBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 28px;
+}
+
+.miniBar {
+  width: 7px;
+  border-radius: 2px 2px 0 0;
+  background-color: var(--color-border);
+  transition: background-color 0.14s;
+}
+
+.miniBarHi {
+  background-color: var(--color-accent-subtle);
+}
+
+/* Stat icon (Stat type card) */
+.statIcon {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.statNumber {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.statBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.statLine {
+  width: 26px;
+  height: 3px;
+  border-radius: 2px;
+  background-color: var(--color-vc-added);
+}
+
+.statPercent {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-vc-added);
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Ratio pills */
+.ratioPills {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.ratioPill {
+  padding: 5px 13px;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-border);
+  background-color: var(--color-input-background);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--color-font-primary);
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: "JetBrains Mono", monospace;
+
+  &:hover {
+    border-color: var(--color-accent);
+    background-color: var(--color-menu-background);
+  }
+}
+
+.ratioPillSel {
+  border-color: var(--color-accent) !important;
+  background-color: var(--color-accent-subtle) !important;
+  color: var(--color-accent) !important;
+}
+
+/* Delete button */
+.deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: rgba(var(--color-danger-rgb), 0.08);
+  color: var(--color-danger);
+  border: 1px solid transparent;
+  transition: all 0.12s;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-danger, #ef4444);
+    color: #fff;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+/* Add component button */
+.addCompBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-font-tertiary);
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background-color: var(--color-accent-subtle);
+  }
+}
+
+/* Create footer */
 .createFooter {
-  padding-top: var(--padding-md);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  border-top: var(--border-default);
+  flex-shrink: 0;
+}
+
+.saveButtonText {
+  color: var(--color-font-secondary) !important;
 }

@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import type { CellKeyboardHandler, CellRendererProps, CellKeyboardContext } from '../types'
-import { BaseCellRenderer } from './BaseCellRenderer'
+import React, { useCallback, useRef, useState } from 'react'
+import type { CellRendererProps } from '../types'
 import { Popover, Button, FlexElement } from 'oziko-ui-kit'
 import Editor from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
@@ -89,31 +88,11 @@ const getMonacoEditorOptions = (): editor.IStandaloneEditorConstructionOptions =
 export const JsonCell: React.FC<CellRendererProps> = ({
   value,
   onChange,
-  isFocused,
-  onRequestBlur,
 }) => {
-  const [editValue, setEditValue] = useState<string>('')
+  const [isOpen, setIsOpen] = useState(false)
+  const [editValue, setEditValue] = useState<string>(() => valueToJsonString(value))
   const [jsonError, setJsonError] = useState<string | null>(null)
-  const [pendingValue, setPendingValue] = useState<PendingValue | null>(null)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
-
-  useEffect(() => {
-    if (!isFocused) {
-      setEditValue(valueToJsonString(value))
-      setJsonError(null)
-    }
-  }, [value, isFocused])
-
-  useEffect(() => {
-    if (!pendingValue) return
-
-    const currentValueStr = JSON.stringify(value)
-    const baseValueStr = JSON.stringify(pendingValue.baseValue)
-
-    if (currentValueStr !== baseValueStr) {
-      setPendingValue(null)
-    }
-  }, [value, pendingValue])
 
   const handleEditorChange = useCallback((newValue: string | undefined = '') => {
     setEditValue(newValue)
@@ -140,46 +119,22 @@ export const JsonCell: React.FC<CellRendererProps> = ({
     }
 
     onChange(valueToSend)
-    setPendingValue({ value: valueToSend, baseValue: valueToSend })
     setJsonError(null)
-    onRequestBlur()
-  }, [editValue, onChange, value, onRequestBlur])
+    setIsOpen(false)
+  }, [editValue, onChange, value])
 
   const handleCancel = useCallback(() => {
     setEditValue(valueToJsonString(value))
     setJsonError(null)
-    setPendingValue(null)
-    onRequestBlur()
-  }, [value, onRequestBlur])
+    setIsOpen(false)
+  }, [value])
 
-  const handlePopoverClose = useCallback(() => {
-    handleCancel()
-  }, [handleCancel])
+  const handleOpen = useCallback(() => {
+    setEditValue(valueToJsonString(value))
+    setIsOpen(true)
+  }, [value])
 
-  useEffect(() => {
-    if (!isFocused) return
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        e.stopPropagation()
-        handleCancel()
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown, true)
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown, true)
-    }
-  }, [isFocused, handleCancel])
-
-
-  const getDisplayValue = (): string => {
-    const valueToFormat = pendingValue?.value ?? value
-    return valueToJsonString(valueToFormat)
-  }
-
-  const formattedJson = getDisplayValue()
+  const formattedJson = valueToJsonString(value)
   const displayText = formattedJson.length > DISPLAY_TEXT_MAX_LENGTH
     ? `${formattedJson.substring(0, DISPLAY_TEXT_MAX_LENGTH)}...`
     : formattedJson || DEFAULT_EMPTY_JSON
@@ -187,17 +142,16 @@ export const JsonCell: React.FC<CellRendererProps> = ({
   const monacoOptions = getMonacoEditorOptions()
 
   return (
-    <BaseCellRenderer isFocused={isFocused}>
-      <Popover
-        open={isFocused}
-        onClose={handlePopoverClose}
-        content={
-          <FlexElement dimensionX="fill" dimensionY="fill" gap={8} direction="vertical">
-            <FlexElement
-              dimensionX="fill"
-              dimensionY="fill"
-              className={styles.monacoEditorWrapper}
-              onKeyDown={(e) => e.stopPropagation()}
+    <Popover
+      open={isOpen}
+      onClose={handleCancel}
+      content={
+        <FlexElement dimensionX="fill" dimensionY="fill" gap={8} direction="vertical">
+          <FlexElement
+            dimensionX="fill"
+            dimensionY="fill"
+            className={styles.monacoEditorWrapper}
+            onKeyDown={(e) => e.stopPropagation()}
             >
               <Editor
                 defaultLanguage={JSON_EDITOR_LANGUAGE}
@@ -227,23 +181,10 @@ export const JsonCell: React.FC<CellRendererProps> = ({
           dimensionY: POPOVER_HEIGHT,
         }}
       >
-        <span className={styles.valueCell} title={formattedJson}>
+        <span className={styles.valueCell} title={formattedJson} onClick={handleOpen}>
           {displayText}
         </span>
       </Popover>
-    </BaseCellRenderer>
   )
-}
-
-const TYPING_KEYS = ['Backspace', 'Delete'] as const
-
-const isTypingKey = (key: string): boolean => {
-  return key.length === 1 || TYPING_KEYS.includes(key as typeof TYPING_KEYS[number])
-}
-
-export const JsonCellKeyboardHandler: CellKeyboardHandler = {
-  handleKeyDown: (event: KeyboardEvent, context: CellKeyboardContext): boolean => {
-    return isTypingKey(event.key)
-  }
 }
 

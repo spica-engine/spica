@@ -1,18 +1,11 @@
 import React, {useCallback, useMemo, useState} from "react";
-import {Button, FlexElement, Icon, Popover, Spinner, type TableColumn} from "oziko-ui-kit";
+import {FlexElement, Icon, Spinner, type TableColumn} from "oziko-ui-kit";
 import InfiniteScroll from "react-infinite-scroll-component";
 import SpicaTable from "../table/Table";
 import type {ProfilerEntry} from "../../../store/api/userApi";
 import pageStyles from "../../../pages/shared/EntityPage.module.scss";
 import styles from "./ProfilerTable.module.scss";
-import ProfilerFilter from "../../molecules/profiler-filter/ProfilerFilter";
 import ProfilerEntryDrawer from "../../molecules/profiler-entry-drawer/ProfilerEntryDrawer";
-import {
-  createProfilerFilterDefaultValues,
-  isDefaultProfilerFilter,
-  OP_OPTIONS,
-  type ProfilerFilterValues,
-} from "../../../utils/profilerFilter";
 
 const OP_COLORS: Record<string, string> = {
   insert: "#4caf50",
@@ -53,39 +46,27 @@ function formatMillis(ms: number): string {
 }
 
 export type ProfilerTableProps = {
-  title: string;
-  subtitle: string;
   entries: ProfilerEntry[];
   isLoading: boolean;
   isFetching: boolean;
   hasMore: boolean;
   onLoadMore: () => void;
   scrollContainerId: string;
-  filter: ProfilerFilterValues;
   sortOrder: 1 | -1;
-  onFilterChange: (filter: ProfilerFilterValues) => void;
   onToggleSort: () => void;
-  onRefetch: () => void;
 };
 
 const ProfilerTable = ({
-  title,
-  subtitle,
   entries,
   isLoading,
   isFetching,
   hasMore,
   onLoadMore,
   scrollContainerId,
-  filter,
   sortOrder,
-  onFilterChange,
   onToggleSort,
-  onRefetch,
 }: ProfilerTableProps) => {
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<ProfilerEntry | null>(null);
-  const hasActiveFilter = useMemo(() => !isDefaultProfilerFilter(filter), [filter]);
 
   const handleRowClick = useCallback(({row}: {row: ProfilerEntry}) => {
     setSelectedEntry(row);
@@ -256,52 +237,6 @@ const ProfilerTable = ({
 
   return (
     <FlexElement className={pageStyles.pageContainer} direction="vertical" gap={16} dimensionX="fill">
-      <FlexElement direction="horizontal" dimensionX="fill" style={{justifyContent: "space-between", alignItems: "center"}}>
-        <FlexElement direction="horizontal" gap={8} alignment="leftCenter">
-          <Icon name="filterCenterFocus" size={22} />
-          <span style={{fontSize: "18px", fontWeight: 600}}>{title}</span>
-          <span style={{fontSize: "13px", color: "var(--color-text-secondary)"}}>{subtitle}</span>
-        </FlexElement>
-        <FlexElement direction="horizontal" gap={8} alignment="rightCenter">
-          <Popover
-            open={isFilterOpen}
-            onClose={() => setIsFilterOpen(false)}
-            placement="bottom"
-            content={
-              <ProfilerFilter
-                initialValues={filter}
-                onApply={values => {
-                  onFilterChange(values);
-                  setIsFilterOpen(false);
-                }}
-                onCancel={() => setIsFilterOpen(false)}
-              />
-            }
-          >
-            <Button
-              onClick={() => setIsFilterOpen(prev => !prev)}
-              color={hasActiveFilter ? "primary" : undefined}
-            >
-              <Icon name="filter" size="sm" />
-              Filter
-              {hasActiveFilter && <Icon name="check" size="sm" />}
-            </Button>
-          </Popover>
-          {hasActiveFilter && (
-            <Button
-              variant="text"
-              onClick={() => onFilterChange(createProfilerFilterDefaultValues())}
-            >
-              <Icon name="close" size="sm" />
-              Clear Filters
-            </Button>
-          )}
-          <Button variant="text" onClick={onRefetch} disabled={isFetching}>
-            <Icon name="refresh" size={16} />
-          </Button>
-        </FlexElement>
-      </FlexElement>
-
       {isLoading ? (
         <FlexElement alignment="center" style={{padding: "60px 0"}}>
           <Spinner />

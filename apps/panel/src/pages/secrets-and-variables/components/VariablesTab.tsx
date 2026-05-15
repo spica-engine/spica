@@ -1,27 +1,55 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { Button, Drawer, FlexElement, Icon, Text, type TableColumn } from "oziko-ui-kit";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Button, Drawer, FlexElement, Icon, type TableColumn } from "oziko-ui-kit";
 import {
   useGetEnvVarsQuery,
   useDeleteEnvVarMutation,
 } from "../../../store/api/envVarApi";
 import type { EnvVar } from "../../../store/api/envVarApi";
 import SpicaTable from "../../../components/organisms/table/Table";
-import VariableForm from "./VariableForm";
+import SearchBar from "../../../components/atoms/search-bar/SearchBar";
+import EntryForm from "./EntryForm";
 import DeleteConfirmation from "./DeleteConfirmation";
 import styles from "../SecretsAndVariables.module.scss";
 
-const VariablesTab = () => {
+type VariablesTabProps = {
+  isNewOpen?: boolean;
+  onNewClose?: () => void;
+  onCountChange?: (count: number) => void;
+};
+
+const VariablesTab = ({ isNewOpen, onNewClose, onCountChange }: VariablesTabProps) => {
   const { data: response, isLoading } = useGetEnvVarsQuery({ limit: 100, skip: 0 });
   const [deleteEnvVar, { isLoading: isDeleting }] = useDeleteEnvVarMutation();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedVariable, setSelectedVariable] = useState<EnvVar | null>(null);
   const [variableToDelete, setVariableToDelete] = useState<EnvVar | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const handleOpenDrawer = useCallback(() => {
-    setSelectedVariable(null);
-    setIsDrawerOpen(true);
-  }, []);
+  const envVars = response?.data ?? [];
+
+  const filteredVars = useMemo(
+    () =>
+      searchQuery.trim()
+        ? envVars.filter((v) =>
+            v.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            v.value.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : envVars,
+    [envVars, searchQuery]
+  );
+
+  useEffect(() => {
+    onCountChange?.(envVars.length);
+  }, [envVars.length, onCountChange]);
+
+  useEffect(() => {
+    if (isNewOpen) {
+      setSelectedVariable(null);
+      setIsDrawerOpen(true);
+      onNewClose?.();
+    }
+  }, [isNewOpen, onNewClose]);
 
   const handleEditVariable = useCallback((envVar: EnvVar) => {
     setSelectedVariable(envVar);
@@ -50,15 +78,16 @@ const VariablesTab = () => {
 
   const handleCancelDelete = useCallback(() => setVariableToDelete(null), []);
 
-  const envVars = response?.data ?? [];
-
   const columns: TableColumn<EnvVar>[] = useMemo(
     () => [
       {
         header: <FlexElement>Name</FlexElement>,
         key: "key",
         renderCell: ({ row }) => (
-          <span className={styles.keyCell}>{row.key}</span>
+          <span className={styles.keyCell}>
+            {row.key}
+            <span className={styles.badgeVar}>VAR</span>
+          </span>
         ),
       },
       {
@@ -71,7 +100,7 @@ const VariablesTab = () => {
       {
         header: <FlexElement>Last updated</FlexElement>,
         key: "updated",
-        renderCell: () => <span>—</span>,
+        renderCell: () => <span className={styles.dateCell}>—</span>,
       },
       {
         header: (
@@ -110,36 +139,44 @@ const VariablesTab = () => {
   );
 
   return (
-    <FlexElement dimensionX="fill" alignment="rightBottom" direction="vertical" gap={10}>
+    <FlexElement dimensionX="fill" direction="vertical" gap={0}>
+      <div className={styles.toolbar}>
+        <SearchBar
+          className={styles.searchBox}
+          inputProps={{
+            placeholder: "Search…",
+            value: searchQuery,
+            onChange: (e) => setSearchQuery(e.target.value),
+          }}
+        />
+        <span className={styles.entryCount}>{filteredVars.length} entries</span>
+      </div>
 
-        <Button variant="solid" color="primary" onClick={handleOpenDrawer}>
-          <Icon name="plus" /> New repository variable
-        </Button>
-
-    <FlexElement alignment="center" dimensionX="fill" direction="vertical">
-          <SpicaTable
-        data={envVars}
-        columns={columns}
-        isLoading={isLoading}
-        skeletonRowCount={5}
-      />
-
-      {!isLoading && envVars.length === 0 && (
-        <div className={styles.emptyState}>
-          <Text>There are no variables for this repository.</Text>
-        </div>
-      )}
-    </FlexElement>
+      <div className={styles.tableArea}>
+        <SpicaTable
+          data={filteredVars}
+          columns={columns}
+          isLoading={isLoading}
+          skeletonRowCount={5}
+          emptyState={{
+            title: searchQuery ? "No variables found" : "No variables yet",
+            description: searchQuery
+              ? `No variables match "${searchQuery}".`
+              : "Add your first variable to store non-sensitive configuration.",
+          }}
+        />
+      </div>
 
       <Drawer
         placement="right"
-        size={600}
+        size={480}
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
         showCloseButton={false}
       >
-        <VariableForm
+        <EntryForm
           isOpen={isDrawerOpen}
+          defaultType="variable"
           selectedVariable={selectedVariable}
           onClose={handleCloseDrawer}
         />
@@ -159,3 +196,4 @@ const VariablesTab = () => {
 };
 
 export default VariablesTab;
+

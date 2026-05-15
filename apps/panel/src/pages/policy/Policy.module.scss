@@ -12,6 +12,127 @@
   }
 }
 
+/* ── Policy Drawer (BucketEntryDrawer-style) ─────────────────────── */
+
+.policyDrawerScrollable {
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.policyDrawerContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.policyDrawerHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  height: 48px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.policyDrawerHeaderInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.policyDrawerTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.policyDrawerSubtitle {
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  line-height: 1.4;
+  margin-top: 1px;
+}
+
+.policyDrawerClose {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border: none;
+  background: none;
+  padding: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+  }
+}
+
+.policyDrawerBody {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+}
+
+.policyDrawerFooter {
+  width: 100% !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  padding: 11px 14px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  flex-shrink: 0;
+}
+
+.policyDrawerErrorText {
+  font-size: var(--font-size-xs) !important;
+  color: var(--color-red);
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.policyDrawerButtons {
+  width: 100% !important;
+
+  > * {
+    flex: 1 !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+    padding: 5px 11px !important;
+    font-size: 12.5px !important;
+  }
+}
+
 .actionButton {
   padding: 0;
   width: unset !important;

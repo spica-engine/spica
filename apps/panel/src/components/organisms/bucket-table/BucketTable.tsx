@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {FlexElement, Icon, Table, type TableColumn, Button, Popover, type IconName, useLayer } from "oziko-ui-kit";
+import {FlexElement, Icon, Table, type TableColumn, Button, Popover, type IconName } from "oziko-ui-kit";
 import {useEntrySelection} from "../../../hooks/useEntrySelection";
 import type { BucketSchema, BucketDataRow, BucketProperty } from "./types";
-import { EditableCell } from "./EditableCell";
+import { cellRegistry } from "./cellRegistry";
 import styles from "./BucketTable.module.scss";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type {BucketType} from "../../../store/api/bucketApi";
@@ -13,12 +13,17 @@ import { FIELD_REGISTRY } from "../../../domain/fields/registry";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import Confirmation from "../../molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
+import type { TableRowClickParams } from "oziko-ui-kit";
+
 interface BucketTableNewProps {
   bucket: BucketSchema;
   data: BucketDataRow[];
   onDataChange?: (rowId: string, propertyKey: string, newValue: any) => void;
+  onRowClick?: (params: TableRowClickParams<BucketDataRow>) => void;
+  onNewEntry?: () => void;
   loading?: boolean;
   visibleColumns?: Record<string, boolean>;
+  onSort?: (sort: Record<string, 1 | -1> | null) => void;
 }
 
 
@@ -189,29 +194,26 @@ const ColumnHeader = ({
 };
 
 
-const BucketTable: React.FC<BucketTableNewProps> = ({ 
+const BucketTable: React.FC<BucketTableNewProps> = ({
+  onNewEntry,
   bucket, 
   data,
   onDataChange,
+  onRowClick,
   loading = false,
-  visibleColumns
+  visibleColumns,
+  onSort
 }) => {
   const {selectedEntries, selectEntry, deselectEntry, selectEntries, resetSelection} = useEntrySelection(bucket._id);
 
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [blurTrigger, setBlurTrigger] = useState(0);
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
     `${bucket?._id}-fields-order`,
     bucket?.properties ? Object.keys(bucket.properties) : []
   );
-
-  const [sortMeta, setSortMeta] = useLocalStorage<{
-    field: string;
-    direction: "asc" | "desc";
-  } | null>(`${bucket?._id}-sort-meta`, null);
 
   const forbiddenFieldNames = useMemo(() => {
     return bucket?.properties ? Object.keys(bucket.properties) : [];
@@ -313,16 +315,16 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 
   const onSortAsc = useCallback(
     (fieldTitle: string) => {
-      setSortMeta({field: fieldTitle, direction: "asc"});
+      onSort?.({[fieldTitle]: 1});
     },
-    [setSortMeta]
+    [onSort]
   );
 
   const onSortDesc = useCallback(
     (fieldTitle: string) => {
-      setSortMeta({field: fieldTitle, direction: "desc"});
+      onSort?.({[fieldTitle]: -1});
     },
-    [setSortMeta]
+    [onSort]
   );
 
   useEffect(() => {
@@ -347,26 +349,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   }, [bucket?.properties, bucket?._id]);
 
 
-  useLayer(
-    [tableContainerRef],
-    () => setBlurTrigger(prev => prev + 1)
-  );
-
-  useEffect(() => {
-    const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setBlurTrigger(prev => prev + 1);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscKey);
-
-    return () => {
-      document.removeEventListener('keydown', handleEscKey);
-    };
-  }, []);
-
-
   const renderIdCell = useCallback((params: { row: BucketDataRow; isFocused: boolean }) => {
     return (
       <div className={styles.readonlyCell}>
@@ -375,9 +357,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     );
   }, []);
 
-  const handleRequestBlur = useCallback(() => {
-    setBlurTrigger(prev => prev + 1);
-  }, []);
 
   const createDeleteHandler = useCallback((fieldKey: string, isPrimaryField: boolean) => {
     if (isPrimaryField) return undefined;
@@ -388,24 +367,23 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     key: string,
     property: BucketProperty
   ) => {
+    const cellConfig = cellRegistry.get(property.type);
+    const CellComponent = cellConfig.component;
 
     return (params: { row: BucketDataRow; isFocused: boolean }) => {
       const value = params.row[key];
-      
+
       return (
-        <EditableCell
+        <CellComponent
           value={structuredClone(value)}
           propertyKey={key}
           property={property}
           rowId={params.row._id}
-          isFocused={params.isFocused}
-          onValueChange={handleValueChange} 
-          onRequestBlur={handleRequestBlur}
-          blurTrigger={blurTrigger}
+          onChange={(newValue) => handleValueChange(key, params.row._id, newValue)}
         />
       );
     };
-  }, [handleValueChange, handleRequestBlur, blurTrigger]);
+  }, [handleValueChange]);
 
   const createPropertyColumn = useCallback((
     key: string,
@@ -538,38 +516,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   }, [data, selectedEntries, selectEntries, resetSelection, propertyColumns, renderCheckboxCell]);
 
 
-  const compareValues = useCallback((aValue: any, bValue: any): number => {
-    if (aValue == null && bValue == null) return 0;
-    if (aValue == null) return 1;
-    if (bValue == null) return -1;
-
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return aValue.localeCompare(bValue);
-    }
-    
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return aValue - bValue;
-    }
-    
-    if (aValue instanceof Date && bValue instanceof Date) {
-      return aValue.getTime() - bValue.getTime();
-    }
-    
-    return String(aValue).localeCompare(String(bValue));
-  }, []);
-
-  const sortedData = useMemo(() => {
-    const currentData = data ?? [];
-    if (!sortMeta || currentData.length === 0) return currentData;
-
-    return [...currentData].sort((a, b) => {
-      const aValue = a[sortMeta.field];
-      const bValue = b[sortMeta.field];
-      const comparison = compareValues(aValue, bValue);
-      return sortMeta.direction === 'asc' ? comparison : -comparison;
-    });
-  }, [data, sortMeta, compareValues]);
-
   if (!bucket?.properties) {
     return (
       <div className={styles.emptyState}>
@@ -582,45 +528,41 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   return (
 <>
 <div ref={tableContainerRef} className={styles.tableContainer}>
-      <div className={styles.tableWrapper}>
-        <Table
-          columns={columns}
-          data={sortedData}
-          saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
-          fixedColumns={['checkbox', '_id']}
-          noResizeableColumns={['checkbox', '_id']}
-          tableClassName={styles.table}
-          headerClassName={styles.header}
-          columnClassName={styles.column}
-          cellClassName={styles.cell}
-          loading={loading}
-          skeletonRowCount={10}
-          isCellFocusable={({columnKey}) => columnKey !== '_id' && columnKey !== 'checkbox'}
-        />
-      </div>
-      <FlexElement
-        className={styles.newFieldContainer}
-        direction="vertical"
-        dimensionY="fill"
-        alignment="leftTop"
-      >
+      <Table
+        columns={columns}
+        data={data}
+        saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
+        fixedColumns={['checkbox', '_id']}
+        noResizeableColumns={['checkbox']}
+        loading={loading}
+        skeletonRowCount={10}
+        onRowClick={onRowClick}
+        emptyState={onNewEntry ? {
+          title: "This bucket is empty",
+          description: "No entries yet. Add one manually or import in bulk via CSV.",
+          actions: (
+            <Button variant="solid" onClick={onNewEntry}>
+              <Icon name="plus" size={14} />
+              New Entry
+            </Button>
+          ),
+        } : undefined}
+      />
+      <div className={`${styles.newFieldContainer} ${!loading && data.length === 0 && onNewEntry ? styles.newFieldContainerEmpty : ""}`}>
         <BucketFieldPopup
           onSaveAndClose={handleSaveAndClose}
           forbiddenFieldNames={forbiddenFieldNames}
         >
           {({onOpen}) => (
-            <FlexElement className={styles.newFieldHeader} dimensionY={36} onClick={onOpen}>
+            <FlexElement className={styles.newFieldHeader} dimensionY={34} dimensionX="fill" onClick={onOpen}>
               <Icon name="plus" size={16} />
               <span>New Field</span>
             </FlexElement>
           )}
         </BucketFieldPopup>
-      </FlexElement>
+      </div>
 
     </div>
-     {!sortedData.length && <div className={styles.noDataText}>
-      <p>No data available</p>
-    </div>}
 </>
   );
 };

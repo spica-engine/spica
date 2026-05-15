@@ -7,45 +7,79 @@
   left: 0;
   height: 100%;
   display: flex;
-  padding: var(--padding-md) 0;
+  padding: 0;
 
   .menuContainer {
     height: 100%;
-    width: 60px;
+    width: 44px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     align-items: center;
-    padding: 0 0 var(--padding-lg);
+    padding: 10px 0 8px;
+    gap: 2px;
+    flex-shrink: 0;
+    background-color: var(--color-menu-background);
+    border-right: 1px solid var(--color-border);
+    z-index: 20;
+  }
+
+  .logo {
+    margin-bottom: 10px;
+    flex-shrink: 0;
   }
 
   .menu {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     width: 100%;
-    .menuItem {
-      width: 55px;
-      height: 70px;
-      @include mixins.flexCenter;
-      border-top-left-radius: var(--border-radius-md);
-      border-bottom-left-radius: var(--border-radius-md);
-      cursor: pointer;
-      outline: none;
-      border: none;
+    gap: 2px;
+    flex: 1;
+  }
 
+  .menuItem {
+    width: 32px;
+    height: 32px;
+    @include mixins.flexCenter;
+    border-radius: 7px;
+    cursor: pointer;
+    outline: none;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    transition: background 0.12s, color 0.12s;
+    padding: 0;
+
+    svg {
+      display: block;
+      flex-shrink: 0;
     }
 
-    .active {
-      background-color: var(--color-menu-background);
+    &:hover {
+      background: var(--color-soft);
+      color: var(--color-font-primary);
     }
+  }
+
+  .active {
+    background: rgba(var(--color-primary-rgb), 0.07) !important;
+    color: var(--color-primary) !important;
+  }
+
+  .separator {
+    width: 20px;
+    height: 1px;
+    background: var(--color-border);
+    margin: 3px 0;
+    flex-shrink: 0;
   }
 
   .versionControl {
     cursor: pointer;
   }
+
   .navigatorContainer {
-    width: var(--navigator-width);
+    width: var(--navigator-w);
     transition: width var(--transition-duration) ease-in;
     overflow: hidden;
 
@@ -57,13 +91,5 @@
         transition: opacity var(--transition-duration) ease-out;
       }
     }
-  }
-
-  .activeMenuIcon {
-    color: var(--color-font-primary)
-  }
-
-  .deactiveMenuIcon {
-    color: var(--color-font-tertiary)
   }
 }

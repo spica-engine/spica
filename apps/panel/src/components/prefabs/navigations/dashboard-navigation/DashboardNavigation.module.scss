@@ -1,12 +1,11 @@
 .dashboardLink {
   text-decoration: none;
-  display: block;
-  border-radius: var(--border-radius-sm);
-  transition: background-color 0.15s ease;
+}
 
-  &.active {
-    background-color: var(--color-hover);
-  }
+.dashboardTitle {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .popoverMenu {
@@ -40,14 +39,5 @@
     &:hover {
       background-color: rgba(var(--color-danger-rgb, 244, 67, 54), 0.08);
     }
-  }
-}
-
-.addButtonContainer {
-  width: 100%;
-  padding: var(--padding-md);
-
-  .addButton {
-    border-radius: var(--border-radius-md) !important;
   }
 }

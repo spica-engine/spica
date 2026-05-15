@@ -42,7 +42,6 @@
   margin: 0 !important;
   font-size: var(--font-size-lg) !important;
   font-weight: bold !important;
-  font-family: var(--font-family-base) !important;
   color: var(--color-black);
 }
 
@@ -56,7 +55,6 @@
 }
 
 .input {
-  font-family: var(--font-family-base);
   font-size: var(--font-size-md);
 }
 
@@ -130,7 +128,6 @@
 .input {
   width: 100% !important;
   height: 44px;
-  font-family: var(--font-family-base);
   font-size: var(--font-size-md);
 }
 

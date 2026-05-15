@@ -185,20 +185,16 @@ export const bucketApi = baseApi.injectEndpoints({
     }>({
       query: ({ bucketId, ...params }) => {
         const queryParams = new URLSearchParams();
-        Object.entries(params).forEach(([key, value]) => {
-          if (value !== undefined) {
-            if (typeof value === 'object') {
-              queryParams.append(key, JSON.stringify(value));
-            } else {
-              queryParams.append(key, String(value));
-            }
-          }
-        });
-        
-        return {
-          url: `bucket/${bucketId}/data`,
-          params: Object.fromEntries(queryParams),
-        };
+
+        if (params.paginate != null) queryParams.append('paginate', String(params.paginate));
+        if (params.relation != null) queryParams.append('relation', String(params.relation));
+        if (params.limit != null) queryParams.append('limit', String(params.limit));
+        if (params.skip != null) queryParams.append('skip', String(params.skip));
+        if (params.sort) queryParams.append('sort', JSON.stringify(params.sort));
+        if (params.filter) queryParams.append('filter', JSON.stringify(params.filter));
+
+        const qs = queryParams.toString();
+        return qs ? `bucket/${bucketId}/data?${qs}` : `bucket/${bucketId}/data`;
       },
       providesTags: (result, error, { bucketId }) => [
         { type: 'BucketData', id: bucketId },

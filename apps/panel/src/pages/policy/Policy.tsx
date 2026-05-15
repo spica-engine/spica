@@ -10,15 +10,17 @@ import {
   useUpdatePolicyMutation,
   useDeletePolicyMutation,
   useGetStatementsQuery,
+  type Policy as PolicyType,
 } from "../../store/api/policyApi";
-import { Button, FlexElement, Icon, type TableColumn } from "oziko-ui-kit";
-import SpicaTable from "../../components/organisms/table/Table";
+import { Button, FlexElement, Icon, Table, type TableColumn } from "oziko-ui-kit";
 import styles from "./Policy.module.scss";
+import bucketStyles from "../bucket/Bucket.module.scss";
 import PolicyDrawer, { type PolicyUpsertInput } from "./PolicyDrawer";
 import { registerAllRenderers } from "./registerRenderers";
 import { useModuleDataRegistry } from "./moduleRenderers";
 import { useModuleStatements } from "./hook/useStatement";
 import Confirmation from "../../components/molecules/confirmation/Confirmation";
+import PolicyActionBar from "../../components/molecules/policy-action-bar/PolicyActionBar";
 
 registerAllRenderers();
 
@@ -42,9 +44,36 @@ const Policy = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyItem | null>(null);
   const [policyToDelete, setPolicyToDelete] = useState<PolicyItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
   
   const modules = useModuleStatements(statements ?? []);
   const { moduleData, moduleDataElements } = useModuleDataRegistry();
+
+  const filteredPolicies = useMemo(() => {
+    let list = policies ?? [];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.name?.toLowerCase().includes(q) ||
+          p.description?.toLowerCase().includes(q) ||
+          p._id?.toLowerCase().includes(q)
+      );
+    }
+    if (appliedFilter) {
+      const filterEntries = Object.entries(appliedFilter);
+      list = list.filter((p: any) =>
+        filterEntries.every(([key, val]) => {
+          if (val === null || val === undefined) return true;
+          const itemVal = p[key];
+          if (typeof val === "string") return String(itemVal ?? "").toLowerCase().includes(val.toLowerCase());
+          return itemVal === val;
+        })
+      );
+    }
+    return list;
+  }, [policies, searchQuery, appliedFilter]);
 
 
   const openCreatePolicy = useCallback(() => {
@@ -111,7 +140,7 @@ const Policy = () => {
     setPolicyToDelete(null);
   }, []);
 
-  const columns: TableColumn<PolicyItem>[] = useMemo(() => {
+  const columns: TableColumn<PolicyType>[] = useMemo(() => {
     return [
       {
         header: <FlexElement>#</FlexElement>,
@@ -189,26 +218,30 @@ const Policy = () => {
   }, [handleDeleteClick, openCreateFromPredefined, openEditPolicy]);
 
   return (
-    <FlexElement
-      dimensionX="fill"
-      direction="vertical"
-      gap={10}
-      className={styles.policyContainer}
-    >
-      <FlexElement
-        dimensionX="fill"
-        alignment="rightCenter"
-        direction="horizontal"
-        gap={10}
-      >
-        <Button onClick={openCreatePolicy}>
-          <Icon name="plus" />
-          Add Policy
-        </Button>
-      </FlexElement>
+    <div className={bucketStyles.container}>
+      <PolicyActionBar
+        onSearch={setSearchQuery}
+        onAddPolicy={openCreatePolicy}
+        onFilter={setAppliedFilter}
+      />
 
       {moduleDataElements}
-      <SpicaTable data={policies ?? []} columns={columns} isLoading={isLoading} skeletonRowCount={10}/>
+      <Table
+        data={filteredPolicies}
+        columns={columns}
+        loading={isLoading}
+        skeletonRowCount={10}
+        emptyState={{
+          title: "No policies found",
+          description: "There are no policies yet. Create one to get started.",
+          actions: (
+            <Button onClick={openCreatePolicy}>
+              <Icon name="plus" size={14} />
+              Add Policy
+            </Button>
+          ),
+        }}
+      />
 
       <PolicyDrawer
         isOpen={isOpen}
@@ -242,7 +275,7 @@ const Policy = () => {
           showInput
         />
       )}
-    </FlexElement>
+    </div>
   );
 };
 

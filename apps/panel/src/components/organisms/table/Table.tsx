@@ -2,9 +2,8 @@ import {
   FlexElement,
   Table,
   type TableColumn,
+  type TableEmptyStateProps,
   type TableRowClickParams,
-  type TableCellParams,
-  type TableCellKeyDownParams,
   type TableSkeletonCellParams,
 } from 'oziko-ui-kit';
 import React from 'react'
@@ -23,15 +22,10 @@ type SpicaTableProps<T> = {
   renderSkeletonCell?: (params: TableSkeletonCellParams<T>) => React.ReactNode;
   fixedColumns?: string[];
   noResizeableColumns?: string[];
-  tableClassName?: string;
-  cellClassName?: string;
-  isCellFocusable?: (params: TableCellParams<T>) => boolean;
-  onCellKeyDown?: (params: TableCellKeyDownParams) => void;
   onRowClick?: (params: TableRowClickParams<T>) => void;
+  emptyState?: TableEmptyStateProps;
 }
 
-
-const NO_CELL_FOCUS = () => false;
 
 const SpicaTable = <T,>({
   columns,
@@ -41,28 +35,20 @@ const SpicaTable = <T,>({
   renderSkeletonCell,
   fixedColumns,
   noResizeableColumns,
-  tableClassName,
-  cellClassName,
-  isCellFocusable = NO_CELL_FOCUS,
-  onCellKeyDown,
   onRowClick,
+  emptyState,
 }: SpicaTableProps<T>) => {
   return (
     <Table
       columns={columns}
       data={data}
-      tableClassName={tableClassName ?? styles.table}
-      headerClassName={`${styles.header} ${styles.policyTableHeaders}`}
-      columnClassName={`${styles.column} ${styles.policyTableColumns}`}
-      cellClassName={cellClassName ? `${styles.cell} ${cellClassName}` : styles.cell}
       loading={isLoading}
       skeletonRowCount={skeletonRowCount ?? 10}
       renderSkeletonCell={renderSkeletonCell}
       fixedColumns={fixedColumns ?? []}
       noResizeableColumns={noResizeableColumns}
-      isCellFocusable={isCellFocusable}
-      onCellKeyDown={onCellKeyDown}
       onRowClick={onRowClick}
+      emptyState={emptyState}
     />
   )
 }

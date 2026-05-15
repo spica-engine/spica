@@ -202,7 +202,7 @@ const BucketMorePopup: FC<TypeBucketMorePopup> = ({className, bucket}) => {
           />
         }
       >
-        <Button variant="text" onClick={handleOpen}>
+        <Button shape="chip" variant="outlined" color="default" onClick={handleOpen}>
           <Icon name="dotsVertical" />
           More
         </Button>
