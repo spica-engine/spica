@@ -4,7 +4,7 @@
  */
 
 import {memo, useCallback, useState} from "react";
-import {Accordion, Button, FlexElement, FluidContainer, Icon, Text, type TypeAccordionItem} from "oziko-ui-kit";
+import {Button, FlexElement, Icon} from "oziko-ui-kit";
 import {
   useGetFunctionDependenciesQuery,
   useAddFunctionDependencyMutation,
@@ -72,87 +72,70 @@ const DependencyPanel = ({functionId}: DependencyPanelProps) => {
     [functionId, addDependency]
   );
 
-  const accordionItems: TypeAccordionItem[] = [
-    {
-      title: (
-        <FlexElement gap={8} alignment="leftCenter">
-          <Text size="medium">Dependencies</Text>
-          {isPending && <span className={styles.spinner} />}
-        </FlexElement>
-      ),
-      content: (
-        <FlexElement direction="vertical" dimensionX="fill" gap={10}>
-          {isLoading && <Text size="small">Loading...</Text>}
-          {!isLoading &&
-            dependencies.map(dep => (
-              <FluidContainer
-                key={dep.name}
-                dimensionX="fill"
-                mode="fill"
-                alignment="leftCenter"
-                root={{
-                  children: (
-                    <Text size="medium">
-                      {dep.name} @{dep.version}
-                    </Text>
-                  ),
-                  alignment: "leftCenter",
-                }}
-                suffix={{
-                  children: (
-                    <>
-                      <Button
-                        variant="icon"
-                        color="default"
-                        onClick={() => handleUpdate(dep.name)}
-                        disabled={isPending}
-                        className={styles.button}
-                      >
-                        <Icon name="refresh" />
-                      </Button>
-                      <Button
-                        variant="icon"
-                        color="danger"
-                        onClick={() => handleDelete(dep.name)}
-                        disabled={isPending}
-                        className={styles.button}
-                      >
-                        <Icon name="delete" />
-                      </Button>
-                    </>
-                  )
-                }}
-              />
-            ))}
-          <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
-            <input
-              className={styles.input}
-              placeholder="Package name"
-              value={newDependency}
-              onChange={e => setNewDependency(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isPending}
-            />
-            <Button
-              variant="icon"
-              color="default"
-              onClick={handleAdd}
-              disabled={isPending || !newDependency.trim()}
-            >
-              <Icon name="plus" />
-            </Button>
-          </FlexElement>
-        </FlexElement>
-      )
-    }
-  ];
-
   return (
-    <Accordion
-      items={accordionItems}
-      suffixOnHover={false}
-      noBackgroundOnFocus
-    />
+    <FlexElement direction="vertical" dimensionX="fill" gap={0}>
+      {isLoading ? (
+        <div className={styles.emptyState}>
+          <Icon name="refresh" size="md" />
+          <span>Loading dependencies…</span>
+        </div>
+      ) : dependencies.length === 0 ? (
+        <div className={styles.emptyState}>
+          <Icon name="layers" size="md" />
+          <span>No packages installed</span>
+        </div>
+      ) : (
+        <div className={styles.depList}>
+          {dependencies.map(dep => (
+            <div key={dep.name} className={styles.depItem}>
+              <span className={styles.depName} title={`${dep.name} ${dep.version}`.trim()}>
+                {[dep.name, dep.version].filter(Boolean).join(" ")}
+              </span>
+              <div className={styles.depActions}>
+                <Button
+                  variant="icon"
+                  color="default"
+                  onClick={() => handleUpdate(dep.name)}
+                  disabled={isPending}
+                  className={styles.actionButton}
+                  title="Update to latest"
+                >
+                  <Icon name="refresh" size="sm" />
+                </Button>
+                <Button
+                  variant="icon"
+                  color="danger"
+                  onClick={() => handleDelete(dep.name)}
+                  disabled={isPending}
+                  className={styles.actionButton}
+                >
+                  <Icon name="delete" size="sm" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className={styles.addRow}>
+        <input
+          className={styles.addInput}
+          placeholder="Package name (e.g. lodash@4)"
+          value={newDependency}
+          onChange={e => setNewDependency(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isPending}
+        />
+        <Button
+          variant="icon"
+          color="default"
+          onClick={handleAdd}
+          disabled={isPending || !newDependency.trim()}
+          className={styles.submitButton}
+        >
+          <Icon name="plus" size="sm" />
+        </Button>
+      </div>
+    </FlexElement>
   );
 };
 

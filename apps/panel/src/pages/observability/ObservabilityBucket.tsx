@@ -1,10 +1,13 @@
 import React, {useState, useCallback, useMemo, useEffect} from "react";
 import {skipToken} from "@reduxjs/toolkit/query/react";
-import {FlexElement, Select, Text} from "oziko-ui-kit";
+import {Select} from "oziko-ui-kit";
 import {useGetBucketsQuery, useGetBucketDataProfileQuery} from "../../store/api/bucketApi";
 import ProfilerTable from "../../components/organisms/profiler-table/ProfilerTable";
 import {useProfilerInfiniteList} from "../../hooks/useProfilerInfiniteList";
 import {createProfilerFilterDefaultValues} from "../../utils/profilerFilter";
+import ObservabilityActionBar from "../../components/molecules/observability-action-bar/ObservabilityActionBar";
+import bucketStyles from "../bucket/Bucket.module.scss";
+import styles from "../shared/EntityPage.module.scss";
 
 const PAGE_SIZE = 20;
 
@@ -42,35 +45,37 @@ const ObservabilityBucket = () => {
   );
 
   return (
-    <FlexElement direction="vertical" gap={12} dimensionX="fill" alignment="leftCenter">
-      <FlexElement direction="horizontal" gap={8} alignment="leftCenter">
-        <Text size="medium">Bucket</Text>
+    <div className={bucketStyles.container}>
+      <ObservabilityActionBar
+        title="Bucket Profiler"
+        subtitle={bucketId ? `— ${selectedBucketTitle}` : ""}
+        filter={profiler.filter}
+        isFetching={isFetching}
+        onFilterChange={profiler.handleFilterChange}
+        onRefetch={refetch}
+      >
         <Select
           options={bucketOptions}
           value={bucketId}
           onChange={handleBucketChange}
           placeholder="Select a bucket…"
-          dimensionX="fill"
-          style={{maxWidth: "320px"}}
+          style={{width: "220px"}}
         />
-      </FlexElement>
+      </ObservabilityActionBar>
 
-      <ProfilerTable
-        title="Bucket Profiler"
-        subtitle={bucketId ? `— MongoDB profiler entries for ${selectedBucketTitle}` : "— Select a bucket to filter profiler data"}
-        entries={profiler.allEntries}
-        isLoading={isLoading && profiler.skip === 0}
-        isFetching={isFetching}
-        hasMore={profiler.hasMore}
-        onLoadMore={profiler.handleLoadMore}
-        scrollContainerId="bucket-profiler-scroll"
-        filter={profiler.filter}
-        sortOrder={profiler.sortOrder}
-        onFilterChange={profiler.handleFilterChange}
-        onToggleSort={profiler.handleToggleSort}
-        onRefetch={refetch}
-      />
-    </FlexElement>
+      <div className={styles.scrollContainer}>
+        <ProfilerTable
+          entries={profiler.allEntries}
+          isLoading={isLoading && profiler.skip === 0}
+          isFetching={isFetching}
+          hasMore={profiler.hasMore}
+          onLoadMore={profiler.handleLoadMore}
+          scrollContainerId="bucket-profiler-scroll"
+          sortOrder={profiler.sortOrder}
+          onToggleSort={profiler.handleToggleSort}
+        />
+      </div>
+    </div>
   );
 };
 

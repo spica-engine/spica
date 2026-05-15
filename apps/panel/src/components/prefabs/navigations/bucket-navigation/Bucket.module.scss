@@ -1,77 +1,153 @@
 @use "../../../../styles/mixins";
 
-
 .bucketsItemContainer {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow-y: auto;
-    scrollbar-width: none; 
-    -ms-overflow-style: none;
-    
-    &::-webkit-scrollbar {
-        display: none;
-    }
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: var(--spacing-5) var(--spacing-7) var(--spacing-10);
 
-    .bucketItem {
-        transition: opacity 0.2s ease-in-out;
-        padding: 0 var(--padding-sm) 0 var(--padding-md);
-      
-        &:hover {
-          background-color: var(--color-hover);
-          cursor: pointer;
-          .actionButtons {
-            opacity: 1;
-          }
-        }
-      
-        .itemButton {
-          padding: 0 !important;
-        }
-      
-        .bucketTitle {
-          overflow-wrap: anywhere;
-        }
-        .actionButtons {
-          opacity: 0;
-          transition: opacity 0.2s ease-in-out;
-        }
-      }
-  }
-
-
-.accordionHeader {
-  height: 32px !important;
-  padding: 0 var(--padding-sm) 0 var(--padding-md);
-  svg {
+  &::-webkit-scrollbar {
     display: none;
   }
-  &:hover svg {
-    display: block;
+}
+
+// ── Bucket nav row ─────────────────────────────────────
+
+.bucketItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base-plus);
+  user-select: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+
+    .actionButtons {
+      opacity: 1;
+    }
+  }
+
+  .itemButton {
+    padding: 0 !important;
+    color: var(--color-text-faint);
+  }
+
+  .bucketTitle {
+    overflow-wrap: anywhere;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .actionButtons {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
   }
 }
 
-.accordion > div > div:nth-child(2) > div > div > div {
-  padding: var(--padding-xs) !important;
+.bucketItemActive {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-weight: var(--font-weight-medium);
+
+  .actionButtons {
+    opacity: 1;
+  }
 }
 
-.accordion > div:has(.accordionOpen) > div:nth-child(2) {
-  padding: var(--padding-md) 0 !important;
-}
-
-.selected {
-  background-color: var(--color-hover);
-}
+// ── Category group ─────────────────────────────────────
 
 .categoryItem {
-  margin-bottom: var(--padding-xs);
+  margin-bottom: var(--spacing-7);
 }
 
-.categoryDragHandle {
+.catGroupHead {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-5);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-2);
+
+    .catGroupDrag {
+      opacity: 1;
+    }
+  }
+}
+
+.catGroupChevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.catGroupChevronCollapsed {
+  transform: rotate(-90deg);
+}
+
+.catGroupLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.catGroupDrag {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  border-radius: var(--radius-xs);
+  color: var(--color-text-faint);
   cursor: grab;
+  flex-shrink: 0;
+  opacity: 0;
+  margin-left: auto;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    color: var(--color-text-muted);
+  }
 }
 
+.catGroupItems {
+  padding-left: var(--spacing-7);
+}
 
+// ── Uncategorized label ────────────────────────────────
+
+.uncategorizedLabel {
+  font-size: 9.5px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  padding: var(--spacing-7) var(--spacing-5) var(--spacing-2);
+}

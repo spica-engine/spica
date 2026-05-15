@@ -1,0 +1,46 @@
+@use "../../../../styles/mixins";
+
+.itemsContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: var(--spacing-5) var(--spacing-7) var(--spacing-10);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.configItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base-plus);
+  user-select: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+  }
+}
+
+.configItemActive {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-weight: var(--font-weight-medium);
+}
+
+.configItemTitle {
+  overflow-wrap: anywhere;
+  flex: 1;
+  min-width: 0;
+  text-transform: capitalize;
+}

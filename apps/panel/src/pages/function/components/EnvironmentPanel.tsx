@@ -5,14 +5,10 @@
 
 import {memo, useCallback, useMemo, useState} from "react";
 import {
-  Accordion,
   Button,
   FlexElement,
-  FluidContainer,
   Icon,
   Select,
-  Text,
-  type TypeAccordionItem,
 } from "oziko-ui-kit";
 import type {TypeLabeledValue} from "oziko-ui-kit";
 import type {ResolvedEnvVar, ResolvedSecret} from "../../../store/api/functionApi";
@@ -101,13 +97,13 @@ const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: 
   );
 
   const variablesContent = (
-    <FlexElement direction="vertical" dimensionX="fill" gap={10}>
+    <FlexElement direction="vertical" dimensionX="fill" gap={8}>
       <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
         <Select
           options={envVarOptions}
           value={selectedVarIds}
           multiple
-          placeholder="Select variables..."
+          placeholder="Select variables to add..."
           onChange={value => {
             const ids = Array.isArray(value) ? (value as string[]) : [];
             setSelectedVarIds(ids);
@@ -116,43 +112,41 @@ const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: 
           dimensionX="fill"
         />
       </FlexElement>
-      <FlexElement direction="vertical" dimensionX="fill" gap={10} className={styles.itemList}>
-        {envVars.map(v => (
-          <FluidContainer
-            key={v._id}
-            dimensionX="fill"
-            mode="fill"
-            alignment="leftCenter"
-            root={{
-              children: <Text size="medium">{v.key}</Text>,
-              alignment: "leftCenter",
-            }}
-            suffix={{
-              children: (
+      {envVars.length === 0 ? (
+        <div className={styles.emptyState}>
+          <Icon name="key" size="md" />
+          <span>No variables assigned</span>
+        </div>
+      ) : (
+        <div className={styles.itemList}>
+          {envVars.map(v => (
+            <div key={v._id} className={styles.varItem}>
+              <span className={styles.varKey}>{v.key}</span>
+              <div className={styles.varActions}>
                 <Button
                   variant="icon"
                   color="danger"
                   onClick={() => handleRemoveEnvVar(v._id)}
                   className={styles.button}
                 >
-                  <Icon name="delete" />
+                  <Icon name="delete" size="sm" />
                 </Button>
-              ),
-            }}
-          />
-        ))}
-      </FlexElement>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </FlexElement>
   );
 
   const secretsContent = (
-    <FlexElement direction="vertical" dimensionX="fill" gap={10}>
+    <FlexElement direction="vertical" dimensionX="fill" gap={8}>
       <FlexElement dimensionX="fill" gap={4} className={styles.addDependencyRow}>
         <Select
           options={secretOptions}
           value={selectedSecretIds}
           multiple
-          placeholder="Select secrets..."
+          placeholder="Select secrets to add..."
           onChange={value => {
             const ids = Array.isArray(value) ? (value as string[]) : [];
             setSelectedSecretIds(ids);
@@ -161,70 +155,53 @@ const EnvironmentPanel = ({envVars, secrets, onEnvVarsChange, onSecretsChange}: 
           dimensionX="fill"
         />
       </FlexElement>
-      <FlexElement direction="vertical" dimensionX="fill" gap={10} className={styles.itemList}>
-        {secrets.map(s => (
-          <FluidContainer
-            key={s._id}
-            dimensionX="fill"
-            mode="fill"
-            alignment="leftCenter"
-            root={{
-              children: <Text size="medium">{s.key}</Text>,
-              alignment: "leftCenter",
-            }}
-            suffix={{
-              children: (
+      {secrets.length === 0 ? (
+        <div className={styles.emptyState}>
+          <Icon name="lock" size="md" />
+          <span>No secrets assigned</span>
+        </div>
+      ) : (
+        <div className={styles.itemList}>
+          {secrets.map(s => (
+            <div key={s._id} className={styles.varItem}>
+              <span className={styles.varKey}>{s.key}</span>
+              <div className={styles.varActions}>
                 <Button
                   variant="icon"
                   color="danger"
                   onClick={() => handleRemoveSecret(s._id)}
                   className={styles.button}
                 >
-                  <Icon name="delete" />
+                  <Icon name="delete" size="sm" />
                 </Button>
-              ),
-            }}
-          />
-        ))}
-      </FlexElement>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </FlexElement>
   );
 
-  const accordionItems: TypeAccordionItem[] = [
-    {
-      title: (
-        <FlexElement gap={8} alignment="leftCenter">
-          <Text size="medium">Environment</Text>
-        </FlexElement>
-      ),
-      content: (
-        <FlexElement direction="vertical" alignment="leftTop" dimensionX="fill" gap={0}>
-          <div className={styles.tabsHeader}>
-            <button
-              className={activeTab === "variables" ? styles.tabActive : styles.tab}
-              onClick={() => setActiveTab("variables")}
-            >
-              Variables
-            </button>
-            <button
-              className={activeTab === "secrets" ? styles.tabActive : styles.tab}
-              onClick={() => setActiveTab("secrets")}
-            >
-              Secrets
-            </button>
-          </div>
-          {activeTab === "variables" ? variablesContent : secretsContent}
-        </FlexElement>
-      ),
-    },
-  ];
-
   return (
-    <Accordion
-      items={accordionItems}
-      suffixOnHover={false}
-      noBackgroundOnFocus
-    />
+    <FlexElement direction="vertical" alignment="leftTop" dimensionX="fill" gap={0}>
+      <div className={styles.tabsHeader}>
+        <button
+          className={activeTab === "variables" ? styles.tabActive : styles.tab}
+          onClick={() => setActiveTab("variables")}
+        >
+          Variables
+          {envVars.length > 0 && <span className={styles.tabCount}>{envVars.length}</span>}
+        </button>
+        <button
+          className={activeTab === "secrets" ? styles.tabActive : styles.tab}
+          onClick={() => setActiveTab("secrets")}
+        >
+          Secrets
+          {secrets.length > 0 && <span className={styles.tabCount}>{secrets.length}</span>}
+        </button>
+      </div>
+      {activeTab === "variables" ? variablesContent : secretsContent}
+    </FlexElement>
   );
 };
 

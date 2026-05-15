@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import type { CellRendererProps, CellKeyboardHandler } from "../types";
-import { BaseCellRenderer } from "./BaseCellRenderer";
+import type { CellRendererProps } from "../types";
 import StorageFileSelect from "../../storage-file-select/StorageFileSelect";
 import { useUploadFilesMutation, useGetStorageItemQuery } from "../../../../store/api/storageApi";
 import type { Storage } from "../../../../store/api/storageApi";
@@ -11,8 +10,6 @@ import styles from "./Cells.module.scss";
 export const StorageCell: React.FC<CellRendererProps> = ({
   value,
   onChange,
-  isFocused,
-  onRequestBlur,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadFiles] = useUploadFilesMutation();
@@ -44,8 +41,7 @@ export const StorageCell: React.FC<CellRendererProps> = ({
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
-    onRequestBlur();
-  }, [onRequestBlur]);
+  }, []);
 
   const handleFileSelect = useCallback(
     (file: Storage) => {
@@ -63,34 +59,29 @@ export const StorageCell: React.FC<CellRendererProps> = ({
         const result = await uploadFiles({ files: fileList.files }).unwrap();
         if (result && result.length > 0) {
           onChange(result[0]._id || null);
-          onRequestBlur();
         }
       } catch (error) {
         console.error("Failed to upload file:", error);
       }
     },
-    [uploadFiles, onChange, onRequestBlur]
+    [uploadFiles, onChange]
   );
 
   const handleDelete = useCallback(() => {
     onChange(null);
-    onRequestBlur();
-  }, [onChange, onRequestBlur]);
+  }, [onChange]);
 
   return (
     <>
-      <BaseCellRenderer isFocused={isFocused}>
-        <StorageMinimizedInput
-          file={typeFile}
-          placeholder="Click or Drag&Drop"
-          onUpload={handleUpload}
-          onClickShowFileSelect={handleClickShowFileSelect}
-          onDelete={handleDelete}
-          dimensionX="fill"
-          className={styles.storageCell}
-          
-        />
-      </BaseCellRenderer>
+      <StorageMinimizedInput
+        file={typeFile}
+        placeholder="Click or Drag&Drop"
+        onUpload={handleUpload}
+        onClickShowFileSelect={handleClickShowFileSelect}
+        onDelete={handleDelete}
+        dimensionX="fill"
+        className={styles.storageCell}
+      />
       <StorageFileSelect
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -98,15 +89,5 @@ export const StorageCell: React.FC<CellRendererProps> = ({
       />
     </>
   );
-};
-
-export const StorageCellKeyboardHandler: CellKeyboardHandler = {
-  handleKeyDown: (event, context) => {
-    if (event.key === "Enter" || event.key === " ") {
-      // Open the file select modal
-      return true;
-    }
-    return false;
-  },
 };
 

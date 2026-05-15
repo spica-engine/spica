@@ -1,5 +1,5 @@
 import React from "react";
-import {Button, Icon, Text} from "oziko-ui-kit";
+import {Button, Icon} from "oziko-ui-kit";
 import styles from "./AddBucketPopup.module.scss";
 import EditBucket from "../../prefabs/edit-bucket/EditBucket";
 
@@ -16,9 +16,7 @@ const AddBucketPopup = () => {
           variant="text"
         >
           <Icon name="plus" size="xs" />
-          <Text className={styles.noLineHeight} size="medium">
-            New Bucket
-          </Text>
+          New Bucket
         </Button>
       )}
     </EditBucket>

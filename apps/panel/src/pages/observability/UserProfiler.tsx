@@ -2,6 +2,9 @@ import React, {useEffect} from "react";
 import {useGetUserProfileQuery} from "../../store/api/userApi";
 import ProfilerTable from "../../components/organisms/profiler-table/ProfilerTable";
 import {useProfilerInfiniteList} from "../../hooks/useProfilerInfiniteList";
+import ObservabilityActionBar from "../../components/molecules/observability-action-bar/ObservabilityActionBar";
+import bucketStyles from "../bucket/Bucket.module.scss";
+import styles from "../shared/EntityPage.module.scss";
 
 const PAGE_SIZE = 20;
 
@@ -17,21 +20,29 @@ const UserProfiler = () => {
   }, [data, isFetching, profiler.skip]);
 
   return (
-    <ProfilerTable
-      title="User Profiler"
-      subtitle="— MongoDB profiler entries for the user collection"
-      entries={profiler.allEntries}
-      isLoading={isLoading && profiler.skip === 0}
-      isFetching={isFetching}
-      hasMore={profiler.hasMore}
-      onLoadMore={profiler.handleLoadMore}
-      scrollContainerId="user-profiler-scroll"
-      filter={profiler.filter}
-      sortOrder={profiler.sortOrder}
-      onFilterChange={profiler.handleFilterChange}
-      onToggleSort={profiler.handleToggleSort}
-      onRefetch={refetch}
-    />
+    <div className={bucketStyles.container}>
+      <ObservabilityActionBar
+        title="User Profiler"
+        subtitle="— MongoDB profiler entries for the user collection"
+        filter={profiler.filter}
+        isFetching={isFetching}
+        onFilterChange={profiler.handleFilterChange}
+        onRefetch={refetch}
+      />
+
+      <div className={styles.scrollContainer}>
+        <ProfilerTable
+          entries={profiler.allEntries}
+          isLoading={isLoading && profiler.skip === 0}
+          isFetching={isFetching}
+          hasMore={profiler.hasMore}
+          onLoadMore={profiler.handleLoadMore}
+          scrollContainerId="user-profiler-scroll"
+          sortOrder={profiler.sortOrder}
+          onToggleSort={profiler.handleToggleSort}
+        />
+      </div>
+    </div>
   );
 };
 

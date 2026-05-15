@@ -18,12 +18,11 @@ type EditBucketProps = {
 const EditBucket: FC<EditBucketProps> = ({ bucket, mode = 'edit', initialValue = 'New Bucket', children }) => {
     const [renameBucket] = useRenameBucketMutation();
     const [createBucket] = useCreateBucketMutation();
+    const isCreateMode = mode === 'create' || !bucket;
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [value, setValue] = useState(bucket?.title || initialValue);
+    const [value, setValue] = useState(isCreateMode ? '' : (bucket?.title || initialValue));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>("");
-    
-    const isCreateMode = mode === 'create' || !bucket;
     
     const handleSave = async () => {
         try {
@@ -67,13 +66,13 @@ const EditBucket: FC<EditBucketProps> = ({ bucket, mode = 'edit', initialValue =
 
     const handleClose = () => {
         setIsModalOpen(false);
-        setValue(bucket?.title || initialValue);
+        setValue(isCreateMode ? '' : (bucket?.title || initialValue));
         setError("");
     };
 
     const handleOpen = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setValue(bucket?.title || initialValue);
+        setValue(isCreateMode ? '' : (bucket?.title || initialValue));
         setIsModalOpen(true);
     };
 
@@ -97,18 +96,23 @@ const EditBucket: FC<EditBucketProps> = ({ bucket, mode = 'edit', initialValue =
                                     <Text className={styles.headerText}>
                                         {isCreateMode ? 'ADD NEW BUCKET' : 'EDIT NAME'}
                                     </Text>
+                                    <button className={styles.closeButton} onClick={handleClose} type="button">
+                                        <Icon name="close" size="sm" />
+                                    </button>
                                 </div>
                             )
                         }}
                         root={{
                             children: (
-                                <div>
-                                    <FlexElement gap={5} className={styles.inputContainer}>
-                                        <Icon name="formatQuoteClose" size="md" />
+                                <div className={styles.body}>
+                                    <FlexElement gap={0} className={styles.inputContainer}>
+                                        <div className={styles.inputIconArea}>
+                                            <Icon name="fields" size="sm" />
+                                        </div>
                                         <Input
                                             className={styles.input}
                                             onChange={e => setValue(e.target.value)}
-                                            placeholder="Name"
+                                            placeholder={isCreateMode ? initialValue : "Name"}
                                             value={value}
                                         />
                                     </FlexElement>
@@ -125,6 +129,15 @@ const EditBucket: FC<EditBucketProps> = ({ bucket, mode = 'edit', initialValue =
                             alignment: "rightCenter",
                             children: (
                                 <FlexElement gap={10} className={styles.buttonsContainer}>
+                                    <Button
+                                        className={styles.cancelButton}
+                                        variant="text"
+                                        onClick={handleClose}
+                                        disabled={loading}
+                                    >
+                                        <Icon name="close" />
+                                        <Text>Cancel</Text>
+                                    </Button>
                                     <div className={styles.addButtonWrapper}>
                                         <Button
                                             className={styles.addButton}
@@ -136,15 +149,6 @@ const EditBucket: FC<EditBucketProps> = ({ bucket, mode = 'edit', initialValue =
                                             <Text className={styles.addButtonText}>Save</Text>
                                         </Button>
                                     </div>
-                                    <Button
-                                        className={styles.cancelButton}
-                                        variant="text"
-                                        onClick={handleClose}
-                                        disabled={loading}
-                                    >
-                                        <Icon name="close" />
-                                        <Text>Cancel</Text>
-                                    </Button>
                                 </FlexElement>
                             )
                         }}

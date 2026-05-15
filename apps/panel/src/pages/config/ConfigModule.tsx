@@ -1,6 +1,5 @@
 import {useParams} from "react-router-dom";
-import {Button, Text} from "oziko-ui-kit";
-import Page from "../../components/organisms/page-layout/Page";
+import {Button} from "oziko-ui-kit";
 import SchemaFormRenderer from "../../components/organisms/schema-form-renderer/SchemaFormRenderer";
 import GenericKeyValueFields from "../../components/molecules/generic-key-value-fields/GenericKeyValueFields";
 import {useGetConfigQuery, useGetConfigSchemasQuery} from "../../store/api/configApi";
@@ -24,30 +23,33 @@ const ConfigModule = () => {
 
   if (!module) return null;
 
-  const title = module.toUpperCase() + " CONFIGURATION";
+  const sectionLabel = module.charAt(0).toUpperCase() + module.slice(1) + " Configuration";
 
   if (isLoading) {
     return (
-      <Page title={title}>
+      <div className={styles.contentArea}>
+        <p className={styles.sectionLabel}>{sectionLabel}</p>
         <div className={styles.loadingContainer}>
           {Array.from({length: 5}).map((_, i) => (
             <div key={i} className={styles.skeletonRow} />
           ))}
         </div>
-      </Page>
+      </div>
     );
   }
 
   if (error && !is404) {
     return (
-      <Page title={title}>
-        <Text>Error loading configuration. Please try again.</Text>
-      </Page>
+      <div className={styles.contentArea}>
+        <p className={styles.sectionLabel}>{sectionLabel}</p>
+        <p className={styles.errorText}>Error loading configuration. Please try again.</p>
+      </div>
     );
   }
 
   return (
-    <Page title={title}>
+    <div className={styles.contentArea}>
+      <p className={styles.sectionLabel}>{sectionLabel}</p>
       <div className={styles.moduleContainer}>
         {moduleSchema ? (
           <SchemaFormRenderer
@@ -72,7 +74,7 @@ const ConfigModule = () => {
           </Button>
         </div>
       </div>
-    </Page>
+    </div>
   );
 };
 

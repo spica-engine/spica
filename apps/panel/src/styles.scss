@@ -13,9 +13,8 @@
   --font-size-xl: 1.125rem;
   /* 18px */
 
-  --font-family-base:
-    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --font-family-base: 'DM Sans', sans-serif;
+  --font-sans: var(--font-family-base);
 
   --color-primary: #1c1c50;
   --color-primary-rgb: 28, 28, 80;
@@ -126,18 +125,26 @@
 
   --transition-duration: 0.3s;
   --disabled-opacity: 0.6;
-  --sidebar-width: 60px;
-  --navigator-width: 200px;
-  --sidebar-with-navigator-width: 260px;
+  --sidebar-width: 44px;
+  --navigator-w: var(--size-sidebar-w);
+  --sidebar-with-navigator-width: calc(var(--sidebar-width) + var(--navigator-w));
 
   --file-card-image-height: 240px;
 }
 
 @font-face {
-  font-family: "Inter";
-  src: url("./assets/fonts/inter/Inter-VariableFont_opsz\,wght.ttf") format("ttf");
-  font-weight: 400;
+  font-family: "DM Sans";
+  src: url("./assets/fonts/dm-sans/DMSans-VariableFont_opsz,wght.ttf") format("truetype");
+  font-weight: 100 900;
   font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DM Sans";
+  src: url("./assets/fonts/dm-sans/DMSans-Italic-VariableFont_opsz,wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: italic;
   font-display: swap;
 }
 
@@ -147,7 +154,7 @@ html {
 
 body {
   margin: 0;
-  font-family: var(--font-family-base);
+  font-family: var(--font-family-base) !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -156,8 +163,11 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+  font-family: inherit;
 }
 
 .objectInput {

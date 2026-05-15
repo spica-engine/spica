@@ -13,9 +13,10 @@ type SchemaArrayFieldProps = {
   schema: ConfigSchemaProperty;
   options: Record<string, unknown>;
   onBatchUpdate: BatchUpdater;
+  isNested?: boolean;
 };
 
-const SchemaArrayField = ({path, schema, options, onBatchUpdate}: SchemaArrayFieldProps) => {
+const SchemaArrayField = ({path, schema, options, onBatchUpdate, isNested = false}: SchemaArrayFieldProps) => {
   const itemSchema = schema.items;
   if (!itemSchema || itemSchema.type !== "object" || !itemSchema.properties) {
     return null;
@@ -61,11 +62,21 @@ const SchemaArrayField = ({path, schema, options, onBatchUpdate}: SchemaArrayFie
     });
   }, [path, onBatchUpdate]);
 
-  return (
-    <div className={styles.arraySection}>
-      <div className={styles.arraySectionHeader}>
-        <span className={styles.fieldLabel}>{label}</span>
-      </div>
+  const body = (
+    <div className={styles.arrayBody}>
+      {propKeys.length > 0 && (
+        <div className={styles.arrayColHeaders}>
+          {propKeys.map(k => (
+            <span key={k} className={styles.arrayColHeader}>{humanize(k)}</span>
+          ))}
+          <span style={{width: 36, flexShrink: 0}} />
+        </div>
+      )}
+      {items.length === 0 && (
+        <div className={styles.arrayEmptyState}>
+          No items yet. Use "+ Add" to add one.
+        </div>
+      )}
       {items.map((item, index) => (
         <div key={item._id} className={styles.arrayRow}>
           {propKeys.map(propKey => {
@@ -102,9 +113,31 @@ const SchemaArrayField = ({path, schema, options, onBatchUpdate}: SchemaArrayFie
           </Button>
         </div>
       ))}
-      <Button variant="text" color="primary" onClick={addItem} className={styles.addButton}>
+      <Button variant="text" color="primary" onClick={addItem} className={styles.arrayAddBtn}>
         <Icon name="plus" /> Add
       </Button>
+    </div>
+  );
+
+  if (isNested) {
+    return (
+      <div className={styles.nestedArraySection}>
+        <div className={styles.nestedArrayHeader}>
+          <span className={styles.arraySectionTitle}>{label}</span>
+          {schema.description && <span className={styles.arraySectionDesc}>{schema.description}</span>}
+        </div>
+        {body}
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.arraySection}>
+      <div className={styles.arraySectionHeader}>
+        <span className={styles.arraySectionTitle}>{label}</span>
+        {schema.description && <span className={styles.arraySectionDesc}>{schema.description}</span>}
+      </div>
+      {body}
     </div>
   );
 };

@@ -1,24 +1,235 @@
-@use "../../../styles/mixins";
 .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-menu-background);
+  flex-shrink: 0;
+  gap: 8px;
   width: 100%;
-  @include mixins.flexAlignCenterJustifyBetween;
 }
 
-.actionBar button {
-  height: 32px !important;
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 
-.refreshButton, .columnButton {
-  color: var(--color-font-primary);
+.searchBar {
+  flex-shrink: 0;
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ghostButton {
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-font-primary) !important;
+  background: transparent !important;
+  font-size: 12.5px !important;
+  padding: 5px 11px !important;
+  border-radius: 6px !important;
+  height: unset !important;
+
+  &:hover {
+    background: var(--color-layout-background) !important;
+  }
+}
+
+.deleteButton {
+  height: unset !important;
+  font-size: 12.5px !important;
+  padding: 5px 11px !important;
+  border-radius: 6px !important;
+}
+
+.newEntryWrapper {
+  button {
+    font-size: 12.5px !important;
+    padding: 5px 11px !important;
+    border-radius: 6px !important;
+    height: unset !important;
+  }
 }
 
 .columnsPopoverContent {
   z-index: 4;
-  > div {
-    max-height: 415px;
-    overflow-y: auto;
-    width: 100%;
-    @include mixins.hideScrollbar;
+  padding: 0 !important;
+  min-width: 220px;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden !important;
+}
+
+.columnPanel {
+  width: 100%;
+}
+
+.displayAllRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  height: 38px;
+  cursor: pointer;
+  background: var(--color-layout-background);
+  border-bottom: 1px solid var(--color-border);
+  user-select: none;
+  transition: background 0.08s;
+
+  &:hover {
+    background: var(--color-surface-3);
   }
-  min-width: 200px;
+}
+
+.displayAllLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-font-primary);
+}
+
+.columnList {
+  max-height: 340px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+}
+
+.columnRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  height: 36px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.08s;
+
+  &.columnRowLocked {
+    cursor: default;
+  }
+
+  &:hover {
+    background: var(--color-layout-background);
+  }
+
+  &:hover .columnName {
+    color: var(--color-font-primary);
+  }
+}
+
+.columnRowHidden {
+  .columnName {
+    color: var(--color-text-faint);
+    text-decoration: line-through;
+    text-decoration-color: var(--color-text-faint);
+  }
+}
+
+.columnName {
+  flex: 1;
+  font-size: 12px;
+  color: var(--color-font-tertiary);
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.08s;
+}
+
+.lockedTag {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.customCheckbox {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: all 0.1s;
+}
+
+.checkboxOn {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.checkboxDash {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.checkboxDisabled {
+  opacity: 0.38;
+}
+
+.hiddenBadge {
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+}
+
+.columnButtonActive {
+  background: rgba(var(--color-primary-rgb), 0.07) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
+.chipActive {
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+  background: rgba(var(--color-primary-rgb), 0.07) !important;
+  font-weight: 500 !important;
+}
+
+.chipBadge {
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "JetBrains Mono", "Courier New", monospace;
 }

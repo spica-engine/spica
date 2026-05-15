@@ -47,10 +47,19 @@ export const identityApi = baseApi.injectEndpoints({
       filter?: Record<string, any>;
       paginate?: boolean;
     } | void>({
-      query: (params) => ({
-        url: 'passport/identity',
-        params: params || {},
-      }),
+      query: (options = {}) => {
+        const params = new URLSearchParams();
+        const {limit, skip, sort, filter, paginate} = options;
+
+        if (paginate != null) params.append('paginate', String(paginate));
+        if (limit != null) params.append('limit', String(limit));
+        if (skip != null) params.append('skip', String(skip));
+        if (sort) params.append('sort', JSON.stringify(sort));
+        if (filter) params.append('filter', JSON.stringify(filter));
+
+        const qs = params.toString();
+        return qs ? `passport/identity?${qs}` : 'passport/identity';
+      },
       transformResponse: (response: IdentityListResponse | Identity[]) => {
         if (Array.isArray(response)) {
           return { data: response, meta: { total: response.length } };

@@ -1,5 +1,5 @@
 import {useState, useCallback, useEffect} from "react";
-import type {BucketDataQueryWithIdType} from "../store/api/bucketApi";
+import type {BucketDataQueryType} from "../store/api/bucketApi";
 
 const escapeForRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -16,7 +16,7 @@ const buildBucketQuery = (searchText: string, searchableColumns: string[]) =>
   }) as const;
 
 interface UseBucketSearchResult {
-  searchQuery: BucketDataQueryWithIdType | undefined;
+  searchQuery: BucketDataQueryType | undefined;
   handleSearch: (search: string) => Promise<void>;
 }
 
@@ -24,7 +24,7 @@ export function useBucketSearch(
   bucketId: string,
   searchableColumns: string[]
 ): UseBucketSearchResult {
-  const [searchQuery, setSearchQuery] = useState<BucketDataQueryWithIdType | undefined>();
+  const [searchQuery, setSearchQuery] = useState<BucketDataQueryType | undefined>();
 
   useEffect(() => {
     setSearchQuery(undefined);
@@ -34,7 +34,7 @@ export function useBucketSearch(
     async (search: string) => {
       const trimmed = search.trim();
       const query = trimmed === "" ? undefined : buildBucketQuery(trimmed, searchableColumns);
-      setSearchQuery(query && bucketId ? {bucketId, ...query} : undefined);
+      setSearchQuery(query && bucketId ? query : undefined);
     },
     [bucketId, searchableColumns]
   );

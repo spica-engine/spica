@@ -8,36 +8,39 @@ type SchemaStringFieldProps = {
   schema: ConfigSchemaProperty;
   options: Record<string, unknown>;
   onUpdate: (path: string, value: unknown) => void;
+  isNested?: boolean;
 };
 
-const SchemaStringField = ({path, schema, options, onUpdate}: SchemaStringFieldProps) => {
+const SchemaStringField = ({path, schema, options, onUpdate, isNested = false}: SchemaStringFieldProps) => {
   const currentValue = (getNestedValue(options, path) as string) ?? "";
   const fieldKey = humanize(path.split(".").pop()!);
   const description = schema.description;
 
   if (schema.enum && schema.enum.length > 0) {
     const selectOptions = schema.enum.map(v => ({label: v, value: v}));
-    return (
+    const row = (
       <div className={styles.fieldRow}>
         <div className={styles.fieldInfo}>
           <span className={styles.fieldLabel}>{fieldKey}</span>
           {description && <span className={styles.fieldDescription}>{description}</span>}
+          </div>
+          <div className={styles.fieldInput}>
+            <Select
+              dimensionX="fill"
+              dimensionY={36}
+              options={selectOptions}
+              value={currentValue}
+              onChange={v => onUpdate(path, v)}
+              placeholder="Select..."
+            />
+          </div>
         </div>
-        <div className={styles.fieldInput}>
-          <Select
-            dimensionX="fill"
-            dimensionY={36}
-            options={selectOptions}
-            value={currentValue}
-            onChange={v => onUpdate(path, v)}
-            placeholder="Select..."
-          />
-        </div>
-      </div>
     );
+    if (isNested) return row;
+    return <div className={styles.standaloneCard}>{row}</div>;
   }
 
-  return (
+  const row = (
     <div className={styles.fieldRow}>
       <div className={styles.fieldInfo}>
         <span className={styles.fieldLabel}>{fieldKey}</span>
@@ -52,6 +55,9 @@ const SchemaStringField = ({path, schema, options, onUpdate}: SchemaStringFieldP
       </div>
     </div>
   );
+
+  if (isNested) return row;
+  return <div className={styles.standaloneCard}>{row}</div>;
 };
 
 export default SchemaStringField;
