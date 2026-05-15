@@ -28,9 +28,8 @@ describe("hashBuffer", () => {
 });
 
 describe("assetKey", () => {
-  it("should format as functions/<hexId>/<filename>", () => {
-    const id = new ObjectId("507f1f77bcf86cd799439011");
-    expect(assetKey(id, "index.ts")).toBe("functions/507f1f77bcf86cd799439011/index.ts");
+  it("should format as functions/<name>/<filename>", () => {
+    expect(assetKey("myFunc", "index.ts")).toBe("functions/myFunc/index.ts");
   });
 });
 

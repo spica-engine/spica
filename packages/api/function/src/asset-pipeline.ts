@@ -123,7 +123,7 @@ export async function applyAssetChange(
       // Re-read from disk after localOp (e.g. package.json may have been modified by npm install).
       const diskData = (await readRuntimeFile(options, fn, filename)) ?? data;
       const hash = hashBuffer(diskData);
-      const key = assetKey(fn._id, filename);
+      const key = assetKey(fn.name, filename);
 
       await reconciler["strategy"].write(key, diskData);
       newlyUploadedKeys.push(key);

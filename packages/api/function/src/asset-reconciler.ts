@@ -18,8 +18,8 @@ export function hashBuffer(buf: Buffer): string {
   return createHash("sha256").update(buf).digest("hex");
 }
 
-export function assetKey(functionId: ObjectId, filename: string): string {
-  return `functions/${functionId.toHexString()}/${filename}`;
+export function assetKey(functionName: string, filename: string): string {
+  return `functions/${functionName}/${filename}`;
 }
 
 @Injectable()
@@ -73,11 +73,11 @@ export class FunctionAssetReconciler {
    * Upload a local asset to the configured strategy. Returns the metadata record.
    */
   async uploadAsset(
-    functionId: ObjectId,
+    functionName: string,
     filename: FunctionAssetFilename,
     data: Buffer
   ): Promise<Omit<FunctionAsset, "functionId" | "_id">> {
-    const key = assetKey(functionId, filename);
+    const key = assetKey(functionName, filename);
     const hash = hashBuffer(data);
     await this.strategy.write(key, data);
     return {
