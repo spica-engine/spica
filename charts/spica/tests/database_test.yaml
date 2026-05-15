@@ -166,10 +166,13 @@ tests:
     asserts:
       - contains:
           path: spec.template.spec.containers[0].startupProbe.exec.command
-          content: mongosh
+          content: /bin/sh
       - contains:
           path: spec.template.spec.containers[0].startupProbe.exec.command
-          content: "db.adminCommand('ping')"
+          content: -c
+      - matchRegex:
+          path: spec.template.spec.containers[0].startupProbe.exec.command[2]
+          pattern: "db.adminCommand\\('ping'\\)"
 
   - it: should use default startup probe timing values
     template: templates/database.yaml
@@ -185,10 +188,10 @@ tests:
           value: 5
       - equal:
           path: spec.template.spec.containers[0].startupProbe.timeoutSeconds
-          value: 5
+          value: 15
       - equal:
           path: spec.template.spec.containers[0].startupProbe.failureThreshold
-          value: 20
+          value: 30
 
   - it: should reflect custom startup probe values from values.yaml
     set:
@@ -222,10 +225,13 @@ tests:
     asserts:
       - contains:
           path: spec.template.spec.containers[0].livenessProbe.exec.command
-          content: mongosh
+          content: /bin/sh
       - contains:
           path: spec.template.spec.containers[0].livenessProbe.exec.command
-          content: "db.adminCommand('ping')"
+          content: -c
+      - matchRegex:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command[2]
+          pattern: "db.adminCommand\\('ping'\\)"
 
   - it: should use default liveness probe timing values
     template: templates/database.yaml
@@ -238,7 +244,7 @@ tests:
           value: 30
       - equal:
           path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
-          value: 10
+          value: 15
       - equal:
           path: spec.template.spec.containers[0].livenessProbe.failureThreshold
           value: 3
@@ -271,10 +277,13 @@ tests:
     asserts:
       - contains:
           path: spec.template.spec.containers[0].readinessProbe.exec.command
-          content: mongosh
+          content: /bin/sh
       - contains:
           path: spec.template.spec.containers[0].readinessProbe.exec.command
-          content: "db.adminCommand('ping')"
+          content: -c
+      - matchRegex:
+          path: spec.template.spec.containers[0].readinessProbe.exec.command[2]
+          pattern: "db.adminCommand\\('ping'\\)"
 
   - it: should use default readiness probe timing values
     template: templates/database.yaml
@@ -287,7 +296,7 @@ tests:
           value: 10
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.timeoutSeconds
-          value: 5
+          value: 15
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.failureThreshold
           value: 3
