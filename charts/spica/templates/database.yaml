@@ -93,9 +93,15 @@ spec:
           startupProbe:
             exec:
               command:
-                - /bin/sh
-                - -c
-                - mongosh --username $ROOT_USERNAME --password $ROOT_PASSWORD --authenticationDatabase admin --eval "db.adminCommand('ping')"
+                - mongosh
+                - --username
+                - $(ROOT_USERNAME)
+                - --password
+                - $(ROOT_PASSWORD)
+                - --authenticationDatabase
+                - admin
+                - --eval
+                - "db.adminCommand('ping')"
             initialDelaySeconds: {{ .Values.database.startupProbeInitialDelaySeconds }}
             periodSeconds: {{ .Values.database.startupProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.database.startupProbeTimeoutSeconds }}
@@ -103,18 +109,30 @@ spec:
           livenessProbe:
             exec:
               command:
-                - /bin/sh
-                - -c
-                - mongosh --username $ROOT_USERNAME --password $ROOT_PASSWORD --authenticationDatabase admin --eval "db.adminCommand('ping')"
+                - mongosh
+                - --username
+                - $(ROOT_USERNAME)
+                - --password
+                - $(ROOT_PASSWORD)
+                - --authenticationDatabase
+                - admin
+                - --eval
+                - "db.adminCommand('ping')"
             periodSeconds: {{ .Values.database.livenessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.database.livenessProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.database.livenessProbeFailureThreshold }}
           readinessProbe:
             exec:
               command:
-                - /bin/sh
-                - -c
-                - mongosh --username $ROOT_USERNAME --password $ROOT_PASSWORD --authenticationDatabase admin --eval "db.adminCommand('ping')"
+                - mongosh
+                - --username
+                - $(ROOT_USERNAME)
+                - --password
+                - $(ROOT_PASSWORD)
+                - --authenticationDatabase
+                - admin
+                - --eval
+                - "db.adminCommand('ping')"
             periodSeconds: {{ .Values.database.readinessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.database.readinessProbeTimeoutSeconds }}
             failureThreshold: {{ .Values.database.readinessProbeFailureThreshold }}

@@ -166,13 +166,10 @@ tests:
     asserts:
       - contains:
           path: spec.template.spec.containers[0].startupProbe.exec.command
-          content: /bin/sh
+          content: mongosh
       - contains:
           path: spec.template.spec.containers[0].startupProbe.exec.command
-          content: -c
-      - matchRegex:
-          path: spec.template.spec.containers[0].startupProbe.exec.command[2]
-          pattern: "db.adminCommand\\('ping'\\)"
+          content: "db.adminCommand('ping')"
 
   - it: should use default startup probe timing values
     template: templates/database.yaml
@@ -225,13 +222,10 @@ tests:
     asserts:
       - contains:
           path: spec.template.spec.containers[0].livenessProbe.exec.command
-          content: /bin/sh
+          content: mongosh
       - contains:
           path: spec.template.spec.containers[0].livenessProbe.exec.command
-          content: -c
-      - matchRegex:
-          path: spec.template.spec.containers[0].livenessProbe.exec.command[2]
-          pattern: "db.adminCommand\\('ping'\\)"
+          content: "db.adminCommand('ping')"
 
   - it: should use default liveness probe timing values
     template: templates/database.yaml
@@ -277,13 +271,10 @@ tests:
     asserts:
       - contains:
           path: spec.template.spec.containers[0].readinessProbe.exec.command
-          content: /bin/sh
+          content: mongosh
       - contains:
           path: spec.template.spec.containers[0].readinessProbe.exec.command
-          content: -c
-      - matchRegex:
-          path: spec.template.spec.containers[0].readinessProbe.exec.command[2]
-          pattern: "db.adminCommand\\('ping'\\)"
+          content: "db.adminCommand('ping')"
 
   - it: should use default readiness probe timing values
     template: templates/database.yaml
