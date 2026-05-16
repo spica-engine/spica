@@ -6,7 +6,6 @@
  
 import React, { useCallback, useMemo } from 'react'
 import type { CellRendererProps } from '../types';
-import { BaseCellRenderer } from './BaseCellRenderer';
 import RelationMinimized from '../../../prefabs/relation-picker/RelationMinimized';
 import type { RelationSelected } from '../../../prefabs/relation-picker/types';
 import { useBucketLookup } from '../../../../contexts/BucketLookupContext';
@@ -16,8 +15,6 @@ export const RelationCell: React.FC<CellRendererProps> = ({
   value,
   onChange,
   property,
-  isFocused,
-  onRequestBlur,
 }) => {     
   const bucketLookup = useBucketLookup();
   const relatedBucketId = property.bucketId;
@@ -42,14 +39,12 @@ export const RelationCell: React.FC<CellRendererProps> = ({
           label: label
         };
       }
-      // Fallback if no properties available
       return {
         kind: 'id',
         id: value._id
       };
     }
 
-    // Case 3: Value is a plain ID string
     if (typeof value === 'string') {
       return {
         kind: 'id',
@@ -61,9 +56,7 @@ export const RelationCell: React.FC<CellRendererProps> = ({
   }, [value, relatedBucketId, bucketLookup]);
 
   const handleChange = useCallback((selectedValue: RelationSelected | null) => {
- 
     onChange?.(selectedValue?.id ?? null);
-    onRequestBlur?.();
   }, [onChange]);
 
   const resolveLabel = useCallback((id: string): string | null => {
@@ -72,21 +65,19 @@ export const RelationCell: React.FC<CellRendererProps> = ({
   }, [bucketLookup, relatedBucketId]);
 
   if (!relatedBucketId) {
-    return <BaseCellRenderer isFocused={isFocused}>No bucket ID</BaseCellRenderer>;
+    return <span>No bucket ID</span>;
   }
 
   const relatedBucketTitle = bucketLookup.getTitleById(relatedBucketId) ?? 'Unknown bucket';
   const emptyLabel = `Select from ${relatedBucketTitle}`;
 
   return (
-    <BaseCellRenderer isFocused={isFocused}>
-      <RelationMinimized
-        bucketId={relatedBucketId}
-        value={normalizedValue}
-        onChange={handleChange}
-        emptyLabel={emptyLabel}
-        resolveLabel={resolveLabel}
-      />
-    </BaseCellRenderer>
+    <RelationMinimized
+      bucketId={relatedBucketId}
+      value={normalizedValue}
+      onChange={handleChange}
+      emptyLabel={emptyLabel}
+      resolveLabel={resolveLabel}
+    />
   )
 }

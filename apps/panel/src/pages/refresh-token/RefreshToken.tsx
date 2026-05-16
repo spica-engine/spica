@@ -1,14 +1,15 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Button, FlexElement, Icon, type TableColumn } from "oziko-ui-kit";
+import { Button, FlexElement, Icon, Table, type TableColumn } from "oziko-ui-kit";
 import {
   useGetRefreshTokensQuery,
   useUpdateRefreshTokenMutation,
   useDeleteRefreshTokenMutation,
 } from "../../store/api/refreshTokenApi";
 import type { RefreshToken } from "../../store/api/refreshTokenApi";
-import SpicaTable from "../../components/organisms/table/Table";
 import Confirmation from "../../components/molecules/confirmation/Confirmation";
 import styles from "./RefreshToken.module.scss";
+import sharedStyles from "../shared/EntityPage.module.scss";
+import bucketStyles from "../bucket/Bucket.module.scss";
 
 function formatDate(value?: string): string {
   if (!value) return "—";
@@ -60,6 +61,8 @@ const RefreshTokenPage = () => {
       {
         header: <FlexElement>#</FlexElement>,
         key: "_id",
+        width: "120px",
+        minWidth: "100px",
         renderCell: ({ row }) => (
           <span className={styles.idCell} title={row._id}>
             {row._id.slice(-8)}
@@ -69,30 +72,39 @@ const RefreshTokenPage = () => {
       {
         header: <FlexElement>Identity</FlexElement>,
         key: "identity",
+        width: "240px",
+        minWidth: "160px",
         renderCell: ({ row }) => <span>{row.identity ?? "—"}</span>,
       },
       {
         header: <FlexElement>Created</FlexElement>,
         key: "created_at",
+        width: "180px",
+        minWidth: "140px",
         renderCell: ({ row }) => <span>{formatDate(row.created_at)}</span>,
       },
       {
         header: <FlexElement>Expires</FlexElement>,
         key: "expired_at",
+        width: "180px",
+        minWidth: "140px",
         renderCell: ({ row }) => <span>{formatDate(row.expired_at)}</span>,
       },
       {
         header: <FlexElement>Last Used</FlexElement>,
         key: "last_used_at",
+        width: "180px",
+        minWidth: "140px",
         renderCell: ({ row }) => <span>{formatDate(row.last_used_at)}</span>,
       },
       {
         header: <FlexElement>Status</FlexElement>,
         key: "disabled",
-        width: "100px",
+        width: "120px",
         minWidth: "100px",
         renderCell: ({ row }) => (
           <span className={row.disabled ? styles.statusDisabled : styles.statusActive}>
+            <span className={styles.statusDot} />
             {row.disabled ? "Disabled" : "Active"}
           </span>
         ),
@@ -111,7 +123,7 @@ const RefreshTokenPage = () => {
             <Button
               variant="icon"
               color="default"
-              className={styles.actionButton}
+              className={sharedStyles.actionButton}
               onClick={() => handleToggleDisabled(row)}
               title={row.disabled ? "Enable token" : "Disable token"}
             >
@@ -120,7 +132,7 @@ const RefreshTokenPage = () => {
             <Button
               variant="icon"
               color="danger"
-              className={styles.actionButton}
+              className={sharedStyles.actionButton}
               onClick={(e) => handleDeleteClick(e, row)}
             >
               <Icon name="delete" />
@@ -133,18 +145,19 @@ const RefreshTokenPage = () => {
   );
 
   return (
-    <FlexElement
-      dimensionX="fill"
-      direction="vertical"
-      gap={10}
-      className={styles.container}
-    >
-      <SpicaTable
-        data={tokens}
-        columns={columns}
-        isLoading={isLoading}
-        skeletonRowCount={10}
-      />
+    <div className={bucketStyles.container}>
+      <div id="refresh-token-scroll-container" className={sharedStyles.scrollContainer}>
+        <Table
+          data={tokens}
+          columns={columns}
+          loading={isLoading}
+          skeletonRowCount={10}
+          emptyState={{
+            title: "No refresh tokens found",
+            description: "There are no active refresh tokens.",
+          }}
+        />
+      </div>
 
       {tokenToDelete && (
         <Confirmation
@@ -166,7 +179,7 @@ const RefreshTokenPage = () => {
           loading={isDeleting}
         />
       )}
-    </FlexElement>
+    </div>
   );
 };
 

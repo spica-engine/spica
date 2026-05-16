@@ -18,16 +18,30 @@
 }
 
 .sidebar {
-  width: 380px;
-  min-width: 380px;
+  width: 300px;
+  min-width: 300px;
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
   border-left: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   padding-bottom: var(--padding-md);
+}
+
+.sidebarContent {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
 }
 
 .sidebarHidden {
@@ -45,48 +59,127 @@
   border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
 }
 
-.saveButtonContainer{
-
+.saveButtonContainer {
   width: 100%;
-  padding: 0 var(--padding-md);
+  padding: 10px 14px 0;
 }
 
-/* Code Toolbar */
-.codeToolbar {
+.saveButton {
+  padding: 9px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+/* Function Tab Bar */
+.fnTabBar {
+  height: 40px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
-  min-height: 42px;
-  padding: 0;
+  flex-shrink: 0;
+  padding: 0 4px;
+  gap: 2px;
+  user-select: none;
 }
 
-.toolbarTitle {
+.fnTab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 16px;
-  height: 100%;
-  background: var(--color-bg-secondary, rgba(255, 255, 255, 0.04));
-  border-right: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
-  white-space: nowrap;
-}
-
-.toolbarSpacer {
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: default;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition: background var(--transition-fast), color var(--transition-fast);
+  min-width: 0;
   flex: 1;
+  max-width: 280px;
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
-.toolbarActions {
+.fnTabDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.fnTabName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 1px 3px;
+
+  &:hover {
+    background: var(--color-accent-subtle-2);
+  }
+}
+
+.fnTabEditInput {
+  border: none;
+  outline: none;
+  background: var(--color-accent-subtle-2);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-accent);
+  border-radius: 3px;
+  padding: 1px 3px;
+  min-width: 60px;
+  max-width: 180px;
+}
+
+.fnTabActions {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 8px;
+  gap: 2px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.fnTabBtn {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-secondary);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+
+    &:hover {
+      background: transparent;
+    }
+  }
 }
 
 .saveStatus {
-  font-size: var(--font-size-xs, 11px);
-  color: var(--color-font-secondary);
+  font-size: 11px;
+  color: var(--color-text-muted);
   white-space: nowrap;
-  margin-right: 8px;
+  margin-right: 4px;
 }
 
 /* Editor */
@@ -96,153 +189,161 @@
   border-left: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
 }
 
-/* Resize handle */
-.resizeHandle {
-  width: 100%;
-  height: 5px;
-  cursor: row-resize;
-  background: transparent;
-
-  &:hover {
-    background: var(--color-primary, #6366f1);
-    opacity: 0.5;
-  }
-}
-
 /* Footer / Log Panel */
 .footerBar {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
-  min-height: 42px;
-  max-height: 50vh;
-  overflow: hidden;
-  transition: height 0.2s ease;
+  flex-shrink: 0;
+  background: var(--color-surface);
 }
 
-.footerLogWrapper {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+.logBar {
+  background: var(--color-surface-2);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  flex-shrink: 0;
+  user-select: none;
 }
 
-.footerToggle {
+.logBarToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-text-secondary);
+  }
+}
+
+.logBarChevron {
+  transition: transform 0.2s ease;
+
+  &.open {
+    transform: rotate(180deg);
+  }
+}
+
+.logBarRight {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.logSearchInput {
+  width: 160px;
+  height: 26px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  padding: 0 8px;
+  outline: none;
+  transition: border-color var(--transition-border);
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:focus {
+    border-color: var(--color-accent);
+  }
+}
+
+.logBarBtn {
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 12px;
-  height: 42px;
-  min-height: 42px;
-  cursor: pointer;
-  border: none;
-  background: none;
-  color: var(--color-font-primary);
-  font-size: var(--font-size-sm, 13px);
+  transition: background var(--transition-fast), border-color var(--transition-border);
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--color-surface-3);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+
+    &:hover {
+      background: var(--color-surface-2);
+    }
+  }
 }
 
-/* Log View */
-.logView {
+.logFilterWrapper {
+  position: relative;
+}
+
+.logFilterDropdown {
+  position: absolute;
+  bottom: 32px;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px;
+  z-index: 20;
+  box-shadow: var(--shadow-md);
+  min-width: 140px;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  overflow: hidden;
+  gap: 4px;
 }
 
-.logToolbar {
-  padding: 4px 12px;
-  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
-  min-height: 32px;
-}
-
-.logTitle {
-  font-weight: 600;
-}
-
-.levelFilter {
-  padding: 2px 8px;
-  font-size: 11px;
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.15));
-  border-radius: 4px;
-  background: transparent;
-  color: var(--color-font-secondary);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--color-bg-secondary, rgba(255, 255, 255, 0.06));
-  }
-}
-
-.levelActive {
-  background: var(--color-primary, #6366f1);
-  color: #fff;
-  border-color: var(--color-primary, #6366f1);
-}
-
-.logList {
-  flex: 1;
-  overflow-y: auto;
-  font-family: monospace;
-  font-size: 12px;
-}
-
-.logEntry {
+.logFilterLabel {
   display: flex;
-  gap: 12px;
-  padding: 2px 12px;
-  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.04));
-  line-height: 22px;
-
-  &:hover {
-    background: var(--color-bg-secondary, rgba(255, 255, 255, 0.03));
-  }
-}
-
-.logTimestamp {
-  color: var(--color-font-secondary);
-  white-space: nowrap;
-  min-width: 170px;
-}
-
-.logContent {
-  flex: 1;
-  word-break: break-all;
-  white-space: pre-wrap;
-}
-
-.logDebug {
-  color: var(--color-font-secondary, #888);
-}
-
-.logInfo {
-  color: var(--color-font-primary);
-}
-
-.logWarning {
-  color: #f59e0b;
-}
-
-.logError {
-  color: #ef4444;
-}
-
-.logEmpty {
-  padding: 16px 12px;
-  color: var(--color-font-secondary);
-}
-
-.loadMoreButton {
-  width: 100%;
-  padding: 6px;
-  border: none;
-  background: var(--color-bg-secondary, rgba(255, 255, 255, 0.04));
-  color: var(--color-font-secondary);
-  cursor: pointer;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 3px 4px;
+  border-radius: 5px;
+  transition: background var(--transition-fast);
 
   &:hover {
-    background: var(--color-bg-secondary, rgba(255, 255, 255, 0.08));
+    background: var(--color-surface-2);
+  }
+
+  input[type='checkbox'] {
+    cursor: pointer;
   }
 }
+
+.footerLogWrapper {
+  height: 360px;
+  overflow-y: auto;
+  border-top: 1px solid var(--color-border);
+}
+
+
 
 /* Sidebar Sections */
 .sidebarSection {

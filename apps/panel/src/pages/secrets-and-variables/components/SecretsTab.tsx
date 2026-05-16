@@ -1,27 +1,54 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { Button, Drawer, FlexElement, Icon, Text, type TableColumn } from "oziko-ui-kit";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Button, Drawer, FlexElement, Icon, type TableColumn } from "oziko-ui-kit";
 import {
   useGetSecretsQuery,
   useDeleteSecretMutation,
 } from "../../../store/api/secretApi";
 import type { Secret } from "../../../store/api/secretApi";
 import SpicaTable from "../../../components/organisms/table/Table";
-import SecretForm from "./SecretForm";
+import SearchBar from "../../../components/atoms/search-bar/SearchBar";
+import EntryForm from "./EntryForm";
 import DeleteConfirmation from "./DeleteConfirmation";
 import styles from "../SecretsAndVariables.module.scss";
 
-const SecretsTab = () => {
+type SecretsTabProps = {
+  isNewOpen?: boolean;
+  onNewClose?: () => void;
+  onCountChange?: (count: number) => void;
+};
+
+const SecretsTab = ({ isNewOpen, onNewClose, onCountChange }: SecretsTabProps) => {
   const { data: response, isLoading } = useGetSecretsQuery({ limit: 100, skip: 0 });
   const [deleteSecret, { isLoading: isDeleting }] = useDeleteSecretMutation();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedSecret, setSelectedSecret] = useState<Secret | null>(null);
   const [secretToDelete, setSecretToDelete] = useState<Secret | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const handleOpenDrawer = useCallback(() => {
-    setSelectedSecret(null);
-    setIsDrawerOpen(true);
-  }, []);
+  const secrets = response?.data ?? [];
+
+  const filteredSecrets = useMemo(
+    () =>
+      searchQuery.trim()
+        ? secrets.filter((s) =>
+            s.key.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : secrets,
+    [secrets, searchQuery]
+  );
+
+  useEffect(() => {
+    onCountChange?.(secrets.length);
+  }, [secrets.length, onCountChange]);
+
+  useEffect(() => {
+    if (isNewOpen) {
+      setSelectedSecret(null);
+      setIsDrawerOpen(true);
+      onNewClose?.();
+    }
+  }, [isNewOpen, onNewClose]);
 
   const handleEditSecret = useCallback((secret: Secret) => {
     setSelectedSecret(secret);
@@ -50,21 +77,27 @@ const SecretsTab = () => {
 
   const handleCancelDelete = useCallback(() => setSecretToDelete(null), []);
 
-  const secrets = response?.data ?? [];
-
   const columns: TableColumn<Secret>[] = useMemo(
     () => [
       {
         header: <FlexElement>Name</FlexElement>,
         key: "key",
         renderCell: ({ row }) => (
-          <span className={styles.keyCell}>{row.key}</span>
+          <span className={styles.keyCell}>
+            {row.key}
+            <span className={styles.badgeSecret}>SECRET</span>
+          </span>
         ),
+      },
+      {
+        header: <FlexElement>Value</FlexElement>,
+        key: "value",
+        renderCell: () => <span className={styles.valueMasked}>••••••••••••</span>,
       },
       {
         header: <FlexElement>Last updated</FlexElement>,
         key: "updated",
-        renderCell: () => <span>—</span>,
+        renderCell: () => <span className={styles.dateCell}>—</span>,
       },
       {
         header: (
@@ -103,37 +136,44 @@ const SecretsTab = () => {
   );
 
   return (
-    <FlexElement dimensionX="fill" dimensionY="fill" alignment="rightBottom" direction="vertical" gap={10}>
+    <FlexElement dimensionX="fill" direction="vertical" gap={0}>
+      <div className={styles.toolbar}>
+        <SearchBar
+          className={styles.searchBox}
+          inputProps={{
+            placeholder: "Search…",
+            value: searchQuery,
+            onChange: (e) => setSearchQuery(e.target.value),
+          }}
+        />
+        <span className={styles.entryCount}>{filteredSecrets.length} entries</span>
+      </div>
 
-        <Button variant="solid" color="primary" onClick={handleOpenDrawer}>
-          <Icon name="plus" /> New repository secret
-        </Button>
-
-    <FlexElement dimensionX="fill" direction="vertical" gap={10}>
-
-          <SpicaTable
-        data={secrets}
-        columns={columns}
-        isLoading={isLoading}
-        skeletonRowCount={5}
-      />
-
-      {!isLoading && secrets.length === 0 && (
-        <div className={styles.emptyState}>
-          <Text>There are no secrets for this repository.</Text>
-        </div>
-      )}
-    </FlexElement>
+      <div className={styles.tableArea}>
+        <SpicaTable
+          data={filteredSecrets}
+          columns={columns}
+          isLoading={isLoading}
+          skeletonRowCount={5}
+          emptyState={{
+            title: searchQuery ? "No secrets found" : "No secrets yet",
+            description: searchQuery
+              ? `No secrets match "${searchQuery}".`
+              : "Add your first secret to store sensitive data securely.",
+          }}
+        />
+      </div>
 
       <Drawer
         placement="right"
-        size={600}
+        size={480}
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
         showCloseButton={false}
       >
-        <SecretForm
+        <EntryForm
           isOpen={isDrawerOpen}
+          defaultType="secret"
           selectedSecret={selectedSecret}
           onClose={handleCloseDrawer}
         />
@@ -153,3 +193,4 @@ const SecretsTab = () => {
 };
 
 export default SecretsTab;
+

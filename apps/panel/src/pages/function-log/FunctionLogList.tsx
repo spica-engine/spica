@@ -24,6 +24,7 @@ type FunctionLogListProps = {
   isRefreshing: boolean;
   toolbarActions?: ReactNode;
   filterActions?: ReactNode;
+  hideToolbar?: boolean;
 };
 
 const FunctionLogList = ({
@@ -38,6 +39,7 @@ const FunctionLogList = ({
   isRefreshing,
   toolbarActions,
   filterActions,
+  hideToolbar = false,
 }: FunctionLogListProps) => {
   const accordionItems = useMemo<TypeAccordionItem[]>(
     () =>
@@ -60,39 +62,43 @@ const FunctionLogList = ({
       dimensionX="fill"
     >
       <FlexElement direction="vertical" dimensionX="fill" gap={8} className={styles.listHeader}>
-        {/* Row 1: search | clear + refresh + results */}
-        <FlexElement alignment="leftCenter" dimensionX="fill" gap={8}>
-          <FlexElement alignment="leftCenter" gap={8} className={styles.searchRow}>
-            <Icon name="magnify" size="sm" />
-            <Input
-              placeholder="Search logs..."
-              value={searchQuery}
-              onChange={e => onSearchChange(e.target.value)}
-              dimensionX={300}
-              debounceDelay={200}
-            />
-          </FlexElement>
-          <FlexElement alignment="rightCenter" dimensionX="fill" gap={8}>
-            {toolbarActions}
-            <Button variant="solid" color="soft" onClick={onRefresh} type="button" loading={isRefreshing} disabled={isRefreshing}>
-              <Icon name="refresh" size="sm" />
-              Refresh
-            </Button>
-            <Text className={styles.resultCount}>{logs.length} Results</Text>
-          </FlexElement>
-        </FlexElement>
+        {!hideToolbar && (
+          <>
+            {/* Row 1: search | clear + refresh + results */}
+            <FlexElement alignment="leftCenter" dimensionX="fill" gap={8}>
+              <FlexElement alignment="leftCenter" gap={8} className={styles.searchRow}>
+                <Icon name="magnify" size="sm" />
+                <Input
+                  placeholder="Search logs..."
+                  value={searchQuery}
+                  onChange={e => onSearchChange(e.target.value)}
+                  dimensionX={300}
+                  debounceDelay={200}
+                />
+              </FlexElement>
+              <FlexElement alignment="rightCenter" dimensionX="fill" gap={8}>
+                {toolbarActions}
+                <Button variant="solid" color="soft" onClick={onRefresh} type="button" loading={isRefreshing} disabled={isRefreshing}>
+                  <Icon name="refresh" size="sm" />
+                  Refresh
+                </Button>
+                <Text className={styles.resultCount}>{logs.length} Results</Text>
+              </FlexElement>
+            </FlexElement>
 
-        {/* Row 2: date range filter + reset */}
-        {(filterActions || isFilterApplied) && (
-          <FlexElement alignment="leftCenter" dimensionX="fill" gap={8}>
-            {filterActions}
-            {isFilterApplied && (
-              <Button onClick={onReset} type="button">
-                <Icon name="undo" size="sm" />
-                Reset
-              </Button>
+            {/* Row 2: date range filter + reset */}
+            {(filterActions || isFilterApplied) && (
+              <FlexElement alignment="leftCenter" dimensionX="fill" gap={8}>
+                {filterActions}
+                {isFilterApplied && (
+                  <Button onClick={onReset} type="button">
+                    <Icon name="undo" size="sm" />
+                    Reset
+                  </Button>
+                )}
+              </FlexElement>
             )}
-          </FlexElement>
+          </>
         )}
       </FlexElement>
       <FlexElement className={styles.logList} dimensionX="fill" direction="vertical">

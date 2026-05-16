@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -9,6 +9,7 @@ interface UseInfiniteListOptions<T> {
   response: PaginatedResponse<T> | undefined;
   isFetching: boolean;
   pageSize: number;
+  queryKey: string;
   skip: number;
   setSkip: React.Dispatch<React.SetStateAction<number>>;
 }
@@ -25,10 +26,21 @@ export function useInfiniteList<T extends { _id?: string }>({
   response,
   isFetching,
   pageSize,
+  queryKey,
   skip,
   setSkip,
 }: UseInfiniteListOptions<T>): UseInfiniteListReturn<T> {
   const [allItems, setAllItems] = useState<T[]>([]);
+  const previousQueryKeyRef = useRef(queryKey);
+
+  useEffect(() => {
+    if (queryKey === previousQueryKeyRef.current) {
+      return;
+    }
+
+    previousQueryKeyRef.current = queryKey;
+    setAllItems([]);
+  }, [queryKey]);
 
   useEffect(() => {
     if (!response?.data) return;
@@ -54,7 +66,6 @@ export function useInfiniteList<T extends { _id?: string }>({
 
   const resetList = useCallback(() => {
     setSkip(0);
-    setAllItems([]);
   }, [setSkip]);
 
   return { allItems, totalCount, hasMore, handleLoadMore, resetList };

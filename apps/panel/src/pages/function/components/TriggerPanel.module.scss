@@ -1,49 +1,249 @@
-.fieldLabel {
+// ─── Section header ──────────────────────────────────────────────────────────
+
+.badgeCount {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--color-bg-secondary, rgba(0, 0, 0, 0.06));
   color: var(--color-font-secondary);
+  border-radius: 20px;
+  padding: 1px 8px;
+  line-height: 1.5;
+}
+
+.handlerName {
+  font-size: 12.5px;
   font-weight: 500;
+  color: var(--color-text-secondary, var(--color-font-primary));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
-.addButton {
+.handlerPlaceholder {
+  font-size: 12.5px;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  opacity: 0.65;
+  font-style: italic;
+  flex: 1;
+  min-width: 0;
+}
+
+// ─── Trigger item content wrapper ───────────────────────────────────────────
+
+.triggerItemContent {
+  padding: 4px 0 0;
   width: 100%;
-  margin-top: 8px;
 }
 
-.deleteAction {
+.triggerRowBody {
+  padding: 0 0 12px;
+}
+
+.triggerList {
+  width: 100%;
+}
+
+// ─── Field groups inside trigger content ─────────────────────────────────────
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.fieldLabel {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary, var(--color-font-primary));
+  letter-spacing: 0.02em;
+}
+
+// ─── Path input row ───────────────────────────────────────────────────────────
+
+.inputRow {
   display: flex;
   align-items: center;
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  color: inherit;
-  opacity: 0.6;
+  height: 36px;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.12));
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--color-input-background, transparent);
+  transition: border-color 0.15s;
 
-  &:hover {
-    opacity: 1;
-    color: var(--color-danger, #ef4444);
+  &:focus-within {
+    border-color: var(--color-primary, #6366f1);
   }
 }
-.statusToggle{
-  padding: 0 !important;
+
+.inputPrefix {
+  padding: 0 10px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  border-right: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+  background: var(--color-bg-secondary, rgba(0, 0, 0, 0.03));
+  flex-shrink: 0;
 }
 
-.copyAction{
+.pathInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--color-text-secondary, var(--color-font-primary));
+  padding: 0 10px;
+  height: 100%;
+
+  &::placeholder {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--color-text-muted, var(--color-font-secondary));
+    opacity: 0.55;
+  }
+}
+
+// ─── URL preview row ──────────────────────────────────────────────────────────
+
+.urlRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--color-bg-secondary, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.06));
+  width: 100%;
+}
+
+.urlText {
+  flex: 1;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10.5px;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.addTriggerButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1.5px dashed var(--color-border, rgba(0, 0, 0, 0.15));
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+
+  &:hover {
+    border-color: var(--color-accent, var(--color-primary, #6366f1));
+    color: var(--color-accent, var(--color-primary, #6366f1));
+    background: var(--color-accent-subtle, rgba(99, 102, 241, 0.06));
+  }
+}
+
+// ─── Empty state ─────────────────────────────────────────────────────────────
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0 4px;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  opacity: 0.6;
+  font-size: 12px;
+  width: 100%;
+}
+
+.triggerToggle {
+  width: 34px;
+  height: 19px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: var(--color-surface-3, rgba(0, 0, 0, 0.06));
+  border: 1.5px solid var(--color-border, rgba(0, 0, 0, 0.12));
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  padding: 0;
+
+  &::after {
+    content: "";
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--color-border, #d0d5dd);
+    top: 1px;
+    left: 1px;
+    transition: transform 0.18s, background 0.18s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.triggerToggleOn {
+  background: var(--color-accent, var(--color-primary, #6366f1));
+  border-color: var(--color-accent, var(--color-primary, #6366f1));
+
+  &::after {
+    transform: translateX(15px);
+    background: #fff;
+  }
+}
+
+.triggerDeleteButton {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, color 0.1s;
+  padding: 0;
+
+  &:hover {
+    background: rgba(240, 68, 56, 0.08);
+    color: var(--color-danger, #f04438);
+  }
+}
+
+.copyAction {
   min-width: unset !important;
   width: unset !important;
   padding: 0 !important;
 }
 
-.triggerMethodAccordion{
-  padding: 0 !important;
-  border-bottom: var(--border-default) !important;
-  &:last-child {
-    border-bottom: none !important;
-  }
-}
-.triggerMethodAccordionContent{
-  padding: var(--padding-md) 0 !important;
+.path {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10.5px;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
+// Legacy — kept for compatibility
 .inputContainer {
   width: 100% !important;
   height: 44px;
@@ -52,9 +252,9 @@
   border: var(--border-default);
   background-color: var(--color-input-background);
 }
+
 .input {
   width: 100% !important;
   height: 44px;
-  font-family: var(--font-family-base);
   font-size: var(--font-size-md);
 }

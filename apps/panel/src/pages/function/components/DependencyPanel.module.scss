@@ -1,12 +1,14 @@
+// ─── Spinner ────────────────────────────────────────────────────────────────
+
 .spinner {
   display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--color-border, rgba(255, 255, 255, 0.15));
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-border, rgba(0, 0, 0, 0.1));
   border-top-color: var(--color-primary, #6366f1);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
-  margin-left: 8px;
+  flex-shrink: 0;
 }
 
 @keyframes spin {
@@ -15,8 +17,141 @@
   }
 }
 
+// ─── Section header ──────────────────────────────────────────────────────────
+
+.badgeCount {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--color-bg-secondary, rgba(0, 0, 0, 0.06));
+  color: var(--color-font-secondary);
+  border-radius: 20px;
+  padding: 1px 8px;
+  line-height: 1.5;
+}
+
+// ─── Dependency list ─────────────────────────────────────────────────────────
+
+.depList {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.depItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
+  cursor: default;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.depName {
+  flex: 1;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--color-text-secondary, var(--color-font-primary));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.depActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+// ─── Add row ─────────────────────────────────────────────────────────────────
+
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.addInput {
+  flex: 1;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.12));
+  border-radius: 7px;
+  background: var(--color-input-background, transparent);
+  color: var(--color-font-primary);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: var(--color-primary, #6366f1);
+  }
+
+  &::placeholder {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--color-font-secondary);
+    opacity: 0.6;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.actionButton {
+  min-width: unset !important;
+  width: 22px !important;
+  height: 22px !important;
+  padding: 0 !important;
+  border-radius: 4px !important;
+  color: var(--color-text-muted, var(--color-font-secondary)) !important;
+}
+
+.submitButton {
+  min-width: unset !important;
+  width: 26px !important;
+  height: 26px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  background: var(--color-accent, var(--color-primary, #6366f1)) !important;
+  color: #fff !important;
+}
+
+// ─── Empty state ─────────────────────────────────────────────────────────────
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 0 4px;
+  color: var(--color-text-muted, var(--color-font-secondary));
+  opacity: 0.6;
+  font-size: 12px;
+  width: 100%;
+}
+
+// ─── Legacy (shared by ImportedFunctionPanel before migration) ───────────────
+
+.functionList {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
 .button {
   padding: 0 !important;
+  min-width: unset !important;
+  width: unset;
 }
 
 .dangerButton {
@@ -25,11 +160,6 @@
 
 .addDependencyRow {
   margin-top: 8px;
-}
-
-.functionList {
-  max-height: 500px;
-  overflow-y: auto;
 }
 
 .input {
@@ -50,9 +180,4 @@
   &:disabled {
     opacity: 0.5;
   }
-}
-
-.button{
-  width: unset;
-  min-width: unset !important;
 }

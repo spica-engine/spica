@@ -1,0 +1,164 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.modalWrap {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  width: min(860px, 98vw);
+  max-height: calc(100vh - 48px);
+  background: var(--color-menu-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+/* ═══ LEFT — Type panel ═══ */
+.typePanel {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--color-input-background);
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.typePanelHead {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-font-tertiary);
+}
+
+.typeList {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.typeItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  color: var(--color-font-tertiary);
+  font-size: 12.5px;
+  font-weight: 500;
+  user-select: none;
+
+  &:hover {
+    background: var(--color-hover, var(--color-input-background));
+    color: var(--color-font-primary);
+  }
+
+  &.active {
+    background: var(--color-soft, rgba(0, 0, 0, 0.06));
+    color: var(--color-primary, #1a2448);
+    font-weight: 600;
+
+    .typeIcon {
+      color: var(--color-primary, #1a2448) !important;
+    }
+  }
+}
+
+.typeIcon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.12s;
+}
+
+/* ═══ RIGHT — Config panel ═══ */
+.configPanel {
+  flex: 1;
+  min-width: 0;
+  background: var(--color-menu-background);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+}
+
+.placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  color: var(--color-font-tertiary);
+  font-size: 13px;
+
+  svg {
+    opacity: 0.35;
+  }
+
+  p {
+    margin: 0;
+    font-size: 12.5px;
+    text-align: center;
+  }
+}
+
+/* Config panel content — wraps BucketAddField to fill the right panel */
+.configPanelContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+
+  // BucketAddField renders a FlexElement(direction=vertical) as its root.
+  // Force it to fill the panel and start from the top (not center).
+  > div {
+    flex: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 14px 16px !important;
+    // Ensure flex items start from top, not centered
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+
+    // Fix widths for all nested form inputs
+    > div,
+    > div input,
+    > div select,
+    > div textarea {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+  }
+}

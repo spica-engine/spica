@@ -7,49 +7,22 @@ export type SideBarItem = {
   icon: IconName;
   position?: "bottom";
   route?: string;
+  separator?: true;
 };
 
-export const sideBarItems: SideBarItem[]=  [
+export const sideBarItems: SideBarItem[] = [
+  { id: "dashboard",        name: "Dashboard",         icon: "dashboard"  },
+  { id: "bucket",           name: "Bucket",            icon: "bucket"     },
+  { id: "separator-1",      name: "",                  icon: "cog",       separator: true },
+  { id: "function",         name: "Function",          icon: "function"   },
+  { id: "accessManagement", name: "Access Management", icon: "identities" },
+  { id: "config",           name: "Configuration",     icon: "cog"        },
+  { id: "webhook",          name: "Webhook",           icon: "webhook"    },
+  { id: "observability",    name: "Observability",     icon: "security"   },
+  { id: "storage",          name: "Storage",           icon: "storage"    },
   {
-    id: "bucket",
-    name: "Bucket",
-    icon: "bucket",
-  },
-  {
-    id: "dashboard",
-    name: "Dashboard",
-    icon: "dashboard",
-  },
- 
-  {
-    id: "storage",
-    name: "Storage",
-    icon: "storage",
-  },
-  {
-    id: "accessManagement",
-    name: "Access Management",
-    icon: "identities",
-  },
-  {
-    id: "function",
-    name: "Function",
-    icon: "function",
-  },
-  {
-    id: "webhook",
-    name: "Webhook",
-    icon: "webhook",
-  },
-  {
-    id: "config",
-    name: "Configuration",
-    icon: "cog",
-  },
-  {
-    id: "observability",
-    name: "Observability",
-    icon: "security",
+    id: "versionControl", name: "Version Control", icon: "forkRight",
+    position: "bottom", route: "/version-control",
   },
 ]
 

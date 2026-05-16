@@ -6,9 +6,9 @@
  * that opens the EditDashboard modal in create mode.
  */
 
-import React, {memo, useCallback, useState} from "react";
+import React, {memo, useCallback, useMemo, useState} from "react";
 import {Link, useNavigate, useParams} from "react-router-dom";
-import {Button, FluidContainer, Icon, Popover, Text} from "oziko-ui-kit";
+import {Icon, Popover, Text} from "oziko-ui-kit";
 import styles from "../Navigation.module.scss";
 import dashboardStyles from "./DashboardNavigation.module.scss";
 import {
@@ -22,9 +22,16 @@ import Confirmation from "../../../molecules/confirmation/Confirmation";
 const DashboardNavigation = () => {
   const navigate = useNavigate();
   const {dashboardId: activeDashboardId} = useParams<{dashboardId: string}>();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const {data, isLoading} = useGetDashboardsQuery();
   const dashboards = data?.data ?? [];
+
+  const filteredDashboards = useMemo(() => {
+    if (!searchQuery.trim()) return dashboards;
+    const q = searchQuery.toLowerCase();
+    return dashboards.filter(d => d.name.toLowerCase().includes(q));
+  }, [dashboards, searchQuery]);
 
   const [deleteDashboard, {isLoading: isDeleting}] = useDeleteDashboardMutation();
   const [deletingDashboard, setDeletingDashboard] = useState<Dashboard | null>(null);
@@ -68,18 +75,19 @@ const DashboardNavigation = () => {
 
   return (
     <div className={styles.container}>
-      <FluidContainer
-        dimensionX="fill"
-        mode="fill"
-        className={styles.header}
-        root={{
-          children: (
-            <Text dimensionX="fill" size="large">
-              Dashboards
-            </Text>
-          )
-        }}
-      />
+      <div className={styles.sidebarHead}>
+        <div className={styles.sidebarTopRow}>
+          <span className={styles.sidebarLabel}>Dashboards</span>
+        </div>
+        <div className={styles.searchBox}>
+          <Icon name="search" size="sm" />
+          <input
+            placeholder="Search dashboards…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
 
       <div className={styles.navigationListContainer}>
         {(() => {
@@ -91,95 +99,69 @@ const DashboardNavigation = () => {
             );
           }
 
-          if (dashboards.length === 0) {
+          if (filteredDashboards.length === 0) {
             return (
               <Text size="small" className={styles.defaultNavigationItem}>
-                No dashboards
+                {dashboards.length === 0 ? "No dashboards" : "No results"}
               </Text>
             );
           }
 
-          return dashboards.map(dashboard => {
+          return filteredDashboards.map(dashboard => {
             const isActive = dashboard._id === activeDashboardId;
 
             return (
               <Link
                 key={dashboard._id}
                 to={`/dashboard/${dashboard._id}`}
-                className={`${styles.defaultNavigationItem} ${dashboardStyles.dashboardLink} ${
-                  isActive ? dashboardStyles.active : ""
-                }`}
+                className={`${dashboardStyles.dashboardLink} ${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
               >
-                <FluidContainer
-                  dimensionX="fill"
-                  dimensionY={36}
-                  mode="fill"
-                  prefix={{
-                    children: <Icon name="dashboard" size="md" />
-                  }}
-                  root={{
-                    children: (
-                      <Text size="medium" dimensionX="fill">
-                        {dashboard.name}
-                      </Text>
-                    ),
-                    alignment: "leftCenter"
-                  }}
-                  suffix={{
-                    children: (
-                      <Popover
-                        trigger="hover"
-                        content={
-                          <div className={dashboardStyles.popoverMenu}>
-                            <EditDashboard dashboard={dashboard} mode="edit">
-                              {({onOpen}) => (
-                                <button
-                                  className={dashboardStyles.popoverMenuItem}
-                                  onClick={onOpen}
-                                >
-                                  <Icon name="pencil" size="sm" />
-                                  <Text size="small">Change Name</Text>
-                                </button>
-                              )}
-                            </EditDashboard>
-
+                <Icon name="dashboard" size="md" />
+                <span className={dashboardStyles.dashboardTitle}>{dashboard.name}</span>
+                <div className={styles.navItemActions}>
+                  <Popover
+                    trigger="hover"
+                    content={
+                      <div className={dashboardStyles.popoverMenu}>
+                        <EditDashboard dashboard={dashboard} mode="edit">
+                          {({onOpen}) => (
                             <button
-                              className={`${dashboardStyles.popoverMenuItem} ${dashboardStyles.danger}`}
-                              onClick={e => handleDeleteClick(e, dashboard)}
+                              className={dashboardStyles.popoverMenuItem}
+                              onClick={onOpen}
                             >
-                              <Icon name="delete" size="sm" />
-                              <Text size="small">Delete</Text>
+                              <Icon name="pencil" size="sm" />
+                              <Text size="small">Change Name</Text>
                             </button>
-                          </div>
-                        }
-                      >
-                        <Icon name="dotsVertical" />
-                      </Popover>
-                    )
-                  }}
-                />
+                          )}
+                        </EditDashboard>
+
+                        <button
+                          className={`${dashboardStyles.popoverMenuItem} ${dashboardStyles.danger}`}
+                          onClick={e => handleDeleteClick(e, dashboard)}
+                        >
+                          <Icon name="delete" size="sm" />
+                          <Text size="small">Delete</Text>
+                        </button>
+                      </div>
+                    }
+                  >
+                    <Icon name="dotsVertical" />
+                  </Popover>
+                </div>
               </Link>
             );
           });
         })()}
       </div>
 
-      <div className={dashboardStyles.addButtonContainer}>
-        <EditDashboard mode="create" onCreated={handleCreated}>
-          {({onOpen}) => (
-            <Button
-              color="transparent"
-              variant="text"
-              fullWidth
-              onClick={onOpen}
-              className={dashboardStyles.addButton}
-            >
-              <Icon name="plus" size="sm" />
-              Add New Dashboard
-            </Button>
-          )}
-        </EditDashboard>
-      </div>
+      <EditDashboard mode="create" onCreated={handleCreated}>
+        {({onOpen}) => (
+          <button onClick={onOpen} className={styles.addButton}>
+            <Icon name="plus" size="sm" />
+            Add New Dashboard
+          </button>
+        )}
+      </EditDashboard>
 
       {deletingDashboard && (
         <Confirmation

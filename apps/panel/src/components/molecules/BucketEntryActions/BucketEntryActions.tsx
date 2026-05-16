@@ -25,13 +25,13 @@ export const BucketEntryActions = ({
           {error}
         </Text>
       )}
-      <FlexElement gap={12}>
+      <FlexElement gap={8} className={styles.buttonsRow}>
         {onCancel && (
-          <Button onClick={onCancel} disabled={isLoading} variant="outlined">
+          <Button onClick={onCancel} disabled={isLoading} variant="outlined" color="default">
             {cancelButtonText}
           </Button>
         )}
-        <Button onClick={onSubmit} loading={isLoading} disabled={isLoading} className={styles.saveButton}>
+        <Button onClick={onSubmit} loading={isLoading} disabled={isLoading}>
           <FluidContainer
             prefix={{children: <Icon name="save" />}}
             root={{children: submitButtonText}}
