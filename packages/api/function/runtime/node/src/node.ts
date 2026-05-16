@@ -28,6 +28,8 @@ export class NodeWorker extends Worker {
       }
     });
     this._process.once("exit", () => (this._quit = true));
+    this._process.stdout.pipe(process.stdout);
+    this._process.stderr.pipe(process.stderr);
     Object.assign(this, this._process);
   }
 
