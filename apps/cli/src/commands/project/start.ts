@@ -1,16 +1,16 @@
-import { Action, ActionParameters, Command, CreateCommandParameters, Program } from "@caporal/core";
+import {Action, ActionParameters, Command, CreateCommandParameters, Program} from "@caporal/core";
 
 import caporalCore from "@caporal/core";
-const { CaporalValidator } = caporalCore;
+const {CaporalValidator} = caporalCore;
 
 import getport from "get-port";
 import open from "open";
-import { Stream } from "stream";
-import { spin } from "../../console";
-import { projectLocalResourceFolder, projectName } from "../../validator";
+import {Stream} from "stream";
+import {spin} from "../../console";
+import {projectLocalResourceFolder, projectName} from "../../validator";
 import path from "path";
 import fs from "fs";
-import { DockerMachine } from "../../project";
+import {DockerMachine} from "../../project";
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {
   return new Promise(resolve => {
@@ -27,15 +27,15 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
   });
 }
 
-async function create({ args: cmdArgs, options }: ActionParameters) {
-  const { name }: { name?: string } = cmdArgs;
-  const { localResourceFolder }: { localResourceFolder?: string } = options;
+async function create({args: cmdArgs, options}: ActionParameters) {
+  const {name}: {name?: string} = cmdArgs;
+  const {localResourceFolder}: {localResourceFolder?: string} = options;
 
   const machine = new DockerMachine();
 
   const networkName = `${name}-network`,
     databaseName = `${name}-db`,
-    port = await getport({ port: options.port as number }),
+    port = await getport({port: options.port as number}),
     publicHost = `http://localhost:${port}`,
     apiUrl = `${publicHost}/api`,
     functionApiUrl = apiUrl.replace("localhost", "host.docker.internal");
@@ -49,7 +49,7 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
   let args = [];
   if (options.apiOptions) {
     const filename = path.resolve(options.apiOptions as string);
-    const rawFile = fs.readFileSync(filename, { encoding: "utf8" });
+    const rawFile = fs.readFileSync(filename, {encoding: "utf8"});
 
     let apiOptions = {};
     try {
@@ -81,12 +81,12 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
   ];
 
   const foundNetworks = await machine.listNetworks({
-    filters: JSON.stringify({ label: [`namespace=${name}`] })
+    filters: JSON.stringify({label: [`namespace=${name}`]})
   });
 
   const foundContainers = await machine.listContainers({
     all: true,
-    filters: JSON.stringify({ label: [`namespace=${name}`] })
+    filters: JSON.stringify({label: [`namespace=${name}`]})
   });
 
   if ((foundNetworks.length || foundContainers.length) && !options.force) {
@@ -98,8 +98,9 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
 
   if (options.force && (foundNetworks.length || foundContainers.length)) {
     await spin({
-      text: `Shutting down and removing the previous containers, networks${!options.retainVolumes ? ", and volumes" : ""
-        }.`,
+      text: `Shutting down and removing the previous containers, networks${
+        !options.retainVolumes ? ", and volumes" : ""
+      }.`,
       op: async () => {
         await Promise.all(
           foundContainers.map(async containerInfo => {
@@ -115,7 +116,7 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
         if (!options.retainVolumes) {
           const foundVolumes = (
             await machine.listVolumes({
-              filters: JSON.stringify({ label: [`namespace=${name}`] })
+              filters: JSON.stringify({label: [`namespace=${name}`]})
             })
           ).Volumes;
           await Promise.all(foundVolumes.map(volume => machine.getVolume(volume.Name).remove()));
@@ -174,7 +175,7 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
     text: `Creating a network named ${networkName}.`,
     op: machine.createNetwork({
       Name: networkName,
-      Labels: { namespace: name }
+      Labels: {namespace: name}
     })
   });
 
@@ -183,7 +184,7 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
       Image: `mongo:${options.mongoVersion.toString()}`,
       name: `${databaseName}-${instanceIndex}`,
       Cmd: ["--replSet", name, "--bind_ip_all"],
-      Labels: { namespace: name },
+      Labels: {namespace: name},
       HostConfig: {
         RestartPolicy: {
           Name: options.restart ? "unless-stopped" : "no"
@@ -199,13 +200,13 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
                 Options: {}
               },
               NoCopy: false,
-              Labels: { namespace: name }
+              Labels: {namespace: name}
             }
           }
         ]
       }
     });
-    await network.connect({ Container: container.id });
+    await network.connect({Container: container.id});
     return container.start();
   }
 
@@ -243,7 +244,7 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
       const replSetConfig = JSON.stringify({
         _id: name,
         members: new Array(databaseReplicas).fill(0).map((_, index) => {
-          return { _id: index, host: `${databaseName}-${index}` };
+          return {_id: index, host: `${databaseName}-${index}`};
         })
       });
 
@@ -328,7 +329,7 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
 
   let binds = [];
   if (localResourceFolder) {
-    fs.mkdirSync(localResourceFolder, { recursive: true });
+    fs.mkdirSync(localResourceFolder, {recursive: true});
     binds = [`${localResourceFolder}:${persistentPath}/representatives`];
   }
 
@@ -339,14 +340,14 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
         Image: `spicaengine/panel:${options.imageVersion}`,
         name: `${name}-spica`,
         Env: ["BASE_URL=/"],
-        Labels: { namespace: name },
+        Labels: {namespace: name},
         HostConfig: {
           RestartPolicy: {
             Name: options.restart ? "unless-stopped" : "no"
           }
         }
       });
-      await network.connect({ Container: client.id });
+      await network.connect({Container: client.id});
       await client.start();
 
       spinner.text = `Creating spica containers (1/2)`;
@@ -355,8 +356,8 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
         Image: `spicaengine/api:${options.imageVersion}`,
         name: `${name}-api`,
         Cmd: args,
-        Labels: { namespace: name },
-        ExposedPorts: { "80/tcp": {} },
+        Labels: {namespace: name},
+        ExposedPorts: {"80/tcp": {}},
         HostConfig: {
           RestartPolicy: {
             Name: options.restart ? "unless-stopped" : "no"
@@ -368,7 +369,7 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
               Type: "volume",
               VolumeOptions: {
                 NoCopy: false,
-                Labels: { namespace: name },
+                Labels: {namespace: name},
                 DriverConfig: {
                   Name: "local",
                   Options: {}
@@ -379,7 +380,7 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
           Binds: binds
         }
       });
-      await network.connect({ Container: api.id });
+      await network.connect({Container: api.id});
       await api.start();
       //wait for the api initialization
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -395,14 +396,14 @@ async function create({ args: cmdArgs, options }: ActionParameters) {
         Image: `nginx:latest`,
         name: `${name}-ingress`,
         HostConfig: {
-          PortBindings: { "80/tcp": [{ HostPort: port.toString() }] },
+          PortBindings: {"80/tcp": [{HostPort: port.toString()}]},
           RestartPolicy: {
             Name: options.restart ? "unless-stopped" : "no"
           }
         },
-        Labels: { namespace: name }
+        Labels: {namespace: name}
       });
-      await network.connect({ Container: proxy.id });
+      await network.connect({Container: proxy.id});
       await proxy.start();
       const nginxConfig = `
       upstream ${name}-api {
@@ -464,7 +465,7 @@ Password: ${password}
 export default function (program: Program): Command {
   return program
     .command("project start", "Start a project on your local machine.")
-    .argument("<name>", "Name of the project.", { validator: projectName })
+    .argument("<name>", "Name of the project.", {validator: projectName})
     .option(
       "-p, --port",
       "Port that ingress will serve on. If not specified an open port will be used.",
