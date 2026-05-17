@@ -1,6 +1,6 @@
 import React, {memo, useState, useCallback, useEffect, useMemo} from "react";
 import styles from "./BucketActionBar.module.scss";
-import {Button, FlexElement, Icon, Popover, Checkbox} from "oziko-ui-kit";
+import {Button, Icon, Popover} from "oziko-ui-kit";
 import SearchBar from "../../../components/atoms/search-bar/SearchBar";
 import debounce from "lodash/debounce";
 import BucketMorePopup from "../bucket-more-popup/BucketMorePopup";
@@ -9,10 +9,16 @@ import type {BucketDataType, BucketType, Property} from "src/store/api/bucketApi
 import type {ColumnType} from "../../../components/organisms/bucket-table/BucketTable";
 import BucketEntryDrawer from "../../organisms/BucketEntryDrawer/BucketEntryDrawer";
 import {useEntrySelection} from "../../../hooks/useEntrySelection";
+import FilterPanel from "../../prefabs/filter-panel/FilterPanel";
+import SortPanel from "../../prefabs/sort-panel/SortPanel";
+import type {FilterField, SortField} from "../../prefabs/filter-panel/types";
 
 type BucketActionBarProps = {
   onRefresh: () => Promise<BucketDataType | void>;
   onSearch: (search: string) => void;
+  onFilter: (filter: Record<string, any> | null) => void;
+  onSort: (sort: Record<string, 1 | -1> | null) => void;
+  filterFields: FilterField[];
   bucket: BucketType;
   bucketData: Record<string, any>[];
   searchLoading?: boolean;
@@ -99,6 +105,9 @@ const DeleteWarningParagraph = ({
 const BucketActionBar = ({
   onRefresh,
   onSearch,
+  onFilter,
+  onSort,
+  filterFields,
   bucket,
   bucketData,
   searchLoading,
@@ -111,9 +120,46 @@ const BucketActionBar = ({
   const [searchValue, setSearchValue] = useState("");
   const {selectedEntries, deselectEntry} = useEntrySelection(bucket._id);
 
+  const [isColumnsOpen, setIsColumnsOpen] = useState(false);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteEntryError, setDeleteEntryError] = useState<string | null>(null);
+  const [isNewEntryDrawerOpen, setIsNewEntryDrawerOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [activeFilterCount, setActiveFilterCount] = useState(0);
+  const [activeSortCount, setActiveSortCount] = useState(0);
+
+  const sortFields: SortField[] = useMemo(
+    () => filterFields.map(f => ({key: f.key, label: f.label})),
+    [filterFields]
+  );
+
+  const handleFilterApply = useCallback(
+    (filter: Record<string, any> | null) => {
+      setActiveFilterCount(filter ? Object.keys(filter).length || 1 : 0);
+      onFilter(filter);
+    },
+    [onFilter]
+  );
+
+  const handleFilterClear = useCallback(() => {
+    setActiveFilterCount(0);
+    onFilter(null);
+  }, [onFilter]);
+
+  const handleSortApply = useCallback(
+    (sort: Record<string, 1 | -1> | null) => {
+      setActiveSortCount(sort ? Object.keys(sort).length : 0);
+      onSort(sort);
+    },
+    [onSort]
+  );
+
+  const handleSortClear = useCallback(() => {
+    setActiveSortCount(0);
+    onSort(null);
+  }, [onSort]);
 
   useEffect(() => setSearchValue(""), [bucket?._id]);
 
@@ -189,78 +235,207 @@ const BucketActionBar = ({
     setIsDeleteConfirmationOpen(true);
   };
 
-  const {allColumnsVisible, someColumnsVisible} = useMemo(() => {
+  const {allColumnsVisible, someColumnsVisible, hiddenColumnsCount} = useMemo(() => {
     const {_id, ...otherColumnsVisibility} = visibleColumns;
     const otherColumnsValues = Object.values(otherColumnsVisibility);
     const allColumnsVisible = otherColumnsValues.every(isVisible => isVisible);
     const someColumnsVisible =
       !allColumnsVisible && otherColumnsValues.some(isVisible => isVisible);
-    return {allColumnsVisible, someColumnsVisible};
+    const hiddenColumnsCount = otherColumnsValues.filter(isVisible => !isVisible).length;
+    return {allColumnsVisible, someColumnsVisible, hiddenColumnsCount};
   }, [visibleColumns]);
 
   return (
     <div className={styles.container}>
-      <SearchBar
-        inputProps={{
-          onKeyDown: handleKeyDown,
-          value: searchValue,
-          onChange: handleSearchInputChange
-        }}
-        loading={searchLoading}
-      />
-      <FlexElement className={styles.actionBar}>
-        <BucketEntryDrawer bucket={bucket} />
-        {selectedEntries.size > 0 && (
-          <Button
-            onClick={handleOpenEntryDeletionForm}
-            color="danger"
-            className={styles.deleteButton}
-          >
-            <Icon name="delete" />
-            Delete
-          </Button>
-        )}
-        <Button
-          className={styles.refreshButton}
-          variant="text"
-          onClick={onRefresh}
-          disabled={refreshLoading || searchLoading}
-          loading={refreshLoading}
-        >
-          <Icon name="refresh" />
-          Refresh
-        </Button>
-        <Popover
-          contentProps={{
-            className: styles.columnsPopoverContent
-          }}
-          content={
-            <div>
-              <Checkbox
-                label="Display All"
-                checked={allColumnsVisible}
-                indeterminate={someColumnsVisible}
-                onChange={() => toggleColumn()}
-                className={styles.displayAllCheckbox}
-              />
-              {columns.slice(1).map(col => (
-                <Checkbox
-                  key={col.key}
-                  label={col.header}
-                  checked={visibleColumns[col.key]}
-                  onChange={() => toggleColumn(col.key)}
+        {/* LEFT: search + filter chips */}
+        <div className={styles.toolbarLeft}>
+          <SearchBar
+            className={styles.searchBar}
+            inputProps={{
+              onKeyDown: handleKeyDown,
+              value: searchValue,
+              onChange: handleSearchInputChange
+            }}
+            loading={searchLoading}
+          />
+          <Button shape="chip" variant="outlined" color="primary">All</Button>
+          <Popover
+            open={isFilterOpen}
+            onClose={() => setIsFilterOpen(false)}
+            placement="bottomStart"
+            contentProps={{style: {padding: 0, background: 'transparent', boxShadow: 'none', border: 'none'}}}
+            content={
+              filterFields.length > 0 ? (
+                <FilterPanel
+                  fields={filterFields}
+                  onApply={handleFilterApply}
+                  onClear={handleFilterClear}
+                  onRequestClose={() => setIsFilterOpen(false)}
                 />
-              ))}
-            </div>
-          }
-        >
-          <Button className={styles.columnButton} variant="text" onClick={() => {}}>
-            <Icon name="eye" />
-            Column
+              ) : null
+            }
+          >
+            <Button
+              shape="chip"
+              variant="outlined"
+              color="default"
+              className={`${(isFilterOpen || activeFilterCount > 0) ? styles.chipActive : ""}`}
+              onClick={() => setIsFilterOpen(prev => !prev)}
+            >
+              <Icon name="filter" />
+              Filter
+              {activeFilterCount > 0 && (
+                <span className={styles.chipBadge}>{activeFilterCount}</span>
+              )}
+            </Button>
+          </Popover>
+          <Popover
+            open={isSortOpen}
+            onClose={() => setIsSortOpen(false)}
+            placement="bottomStart"
+            contentProps={{style: {padding: 0, background: 'transparent', boxShadow: 'none', border: 'none'}}}
+            content={
+              sortFields.length > 0 ? (
+                <SortPanel
+                  fields={sortFields}
+                  onApply={handleSortApply}
+                  onClear={handleSortClear}
+                />
+              ) : null
+            }
+          >
+            <Button
+              shape="chip"
+              variant="outlined"
+              color="default"
+              className={`${(isSortOpen || activeSortCount > 0) ? styles.chipActive : ""}`}
+              onClick={() => setIsSortOpen(prev => !prev)}
+            >
+              <Icon name="sort" />
+              Sort
+              {activeSortCount > 0 && (
+                <span className={styles.chipBadge}>{activeSortCount}</span>
+              )}
+            </Button>
+          </Popover>
+        </div>
+
+        {/* RIGHT: actions */}
+        <div className={styles.toolbarRight}>
+          {selectedEntries.size > 0 && (
+            <Button
+              onClick={handleOpenEntryDeletionForm}
+              color="danger"
+              variant="outlined"
+              className={styles.deleteButton}
+            >
+              <Icon name="delete" />
+              Delete
+            </Button>
+          )}
+          <Button
+            className={styles.ghostButton}
+            variant="outlined"
+            color="default"
+            onClick={onRefresh}
+            disabled={refreshLoading || searchLoading}
+            loading={refreshLoading}
+          >
+            <Icon name="refresh" />
+            Refresh
           </Button>
-        </Popover>
-        <BucketMorePopup bucket={bucket} />
-      </FlexElement>
+          <Popover
+            open={isColumnsOpen}
+            onClose={() => setIsColumnsOpen(false)}
+            contentProps={{
+              className: styles.columnsPopoverContent
+            }}
+            content={
+              <div className={styles.columnPanel}>
+                <div
+                  className={styles.displayAllRow}
+                  onClick={() => toggleColumn()}
+                >
+                  <div
+                    className={`${styles.customCheckbox} ${
+                      allColumnsVisible
+                        ? styles.checkboxOn
+                        : someColumnsVisible
+                        ? styles.checkboxDash
+                        : ""
+                    }`}
+                  >
+                    {allColumnsVisible && (
+                      <svg width="9" height="9" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="3.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {!allColumnsVisible && someColumnsVisible && (
+                      <svg width="9" height="9" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="3.5">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className={styles.displayAllLabel}>Display All</span>
+                </div>
+                <div className={styles.columnList}>
+                  {columns.map(col => {
+                    const isVisible = visibleColumns[col.key];
+                    const isLocked = col.key === "_id";
+                    return (
+                      <div
+                        key={col.key}
+                        className={`${styles.columnRow} ${!isVisible ? styles.columnRowHidden : ""} ${isLocked ? styles.columnRowLocked : ""}`}
+                        onClick={!isLocked ? () => toggleColumn(col.key) : undefined}
+                      >
+                        <div
+                          className={`${styles.customCheckbox} ${isVisible ? styles.checkboxOn : ""} ${
+                            isLocked ? styles.checkboxDisabled : ""
+                          }`}
+                        >
+                          {isVisible && (
+                            <svg width="9" height="9" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="3.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className={styles.columnName}>{col.header}</span>
+                        {isLocked && <span className={styles.lockedTag}>LOCKED</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            }
+          >
+            <Button
+              className={`${styles.ghostButton} ${isColumnsOpen ? styles.columnButtonActive : ""}`}
+              variant="outlined"
+              color="default"
+              onClick={() => setIsColumnsOpen(prev => !prev)}
+            >
+              <Icon name="eye" />
+              Column
+              {hiddenColumnsCount > 0 && (
+                <span className={styles.hiddenBadge}>{hiddenColumnsCount}</span>
+              )}
+            </Button>
+          </Popover>
+          <BucketMorePopup bucket={bucket} />
+          <div className={styles.newEntryWrapper}>
+            <Button onClick={() => setIsNewEntryDrawerOpen(true)}>
+              <Icon name="plus" />
+              New Entry
+            </Button>
+            <BucketEntryDrawer
+              bucket={bucket}
+              isOpen={isNewEntryDrawerOpen}
+              onClose={() => setIsNewEntryDrawerOpen(false)}
+              onEntryCreated={onRefresh}
+            />
+          </div>
+        </div>
+
       {isDeleteConfirmationOpen && (
         <Confirmation
           title="DELETE ENTRIES"

@@ -1,17 +1,31 @@
 .footer {
   width: 100% !important;
-  justify-content: flex-end !important;
-  flex-direction: column;
-  gap: 12px;
+  flex-direction: column !important;
+  gap: 0 !important;
+  padding: 11px 14px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  flex-shrink: 0;
 
   .errorText {
     font-size: var(--font-size-xs) !important;
-    color: var(--color-danger);
+    color: var(--color-red);
     width: 100%;
-  }
-
-  .saveButton {
-    height: 38px;
+    margin-bottom: 8px;
   }
 }
+
+.buttonsRow {
+  width: 100% !important;
+
+  > * {
+    flex: 1 !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+    padding: 5px 11px !important;
+    font-size: 12.5px !important;
+  }
+}
+
+
 

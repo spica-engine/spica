@@ -1,31 +1,18 @@
 import type { BucketPropertyType, CellTypeConfig } from "./types";
 import {
   StringCell,
-  StringCellKeyboardHandler,
   NumberCell,
-  NumberCellKeyboardHandler,
   DateCell,
-  DateCellKeyboardHandler,
   DefaultCell,
-  DefaultCellKeyboardHandler,
   MultipleSelectionCell,
-  MultipleSelectionCellKeyboardHandler,
   ColorCell,
-  ColorCellKeyboardHandler,
   StorageCell,
-  StorageCellKeyboardHandler,
   TextareaCell,
-  TextareaCellKeyboardHandler,
   BooleanCell,
-  BooleanCellKeyboardHandler,
   ArrayCell,
-  ArrayCellKeyboardHandler,
   ObjectCell,
-  ObjectCellKeyboardHandler,
   LocationCell,
-  LocationCellKeyboardHandler,
   JsonCell,
-  JsonCellKeyboardHandler,
   RelationCell,
 } from "./cells";
 
@@ -39,7 +26,6 @@ class CellRegistry {
     
     this.defaultConfig = {
       component: DefaultCell,
-      keyboardHandler: DefaultCellKeyboardHandler,
     };
 
     this.registerDefaults();
@@ -48,88 +34,66 @@ class CellRegistry {
   private registerDefaults() {
     this.register("string", {
       component: StringCell,
-      keyboardHandler: StringCellKeyboardHandler,
       defaultValue: "",
     });
 
     this.register("number", {
       component: NumberCell,
-      keyboardHandler: NumberCellKeyboardHandler,
       defaultValue: 0,
     });
 
     this.register("date", {
       component: DateCell,
-      keyboardHandler: DateCellKeyboardHandler,
       defaultValue: null,
     });
 
     this.register("multiselect", {
       component: MultipleSelectionCell,
-      keyboardHandler: MultipleSelectionCellKeyboardHandler,
       defaultValue: [],
     });
+
     this.register("boolean", {
       component: BooleanCell,
-      keyboardHandler: BooleanCellKeyboardHandler,
-      defaultValue: null,
-      autoEnterEditMode: true,
-    });
-
-    this.register("array", {
-      component: DefaultCell,
-      keyboardHandler: DefaultCellKeyboardHandler,
-      defaultValue: [],
-    });
-
-    this.register("object", {
-      component: DefaultCell,
-      keyboardHandler: DefaultCellKeyboardHandler,
-      defaultValue: {},
+      defaultValue: false,
     });
 
     this.register("color", {
       component: ColorCell,
-      keyboardHandler: ColorCellKeyboardHandler,
       defaultValue: "#000000",
     });
 
     this.register("storage", {
       component: StorageCell,
-      keyboardHandler: StorageCellKeyboardHandler,
       defaultValue: null,
     });
 
     this.register("textarea", {
       component: TextareaCell,
-      keyboardHandler: TextareaCellKeyboardHandler,
       defaultValue: "",
     });
-    
+
     this.register("array", {
       component: ArrayCell,
-      keyboardHandler: ArrayCellKeyboardHandler,
       defaultValue: [],
     });
+
     this.register("object", {
       component: ObjectCell,
-      keyboardHandler: ObjectCellKeyboardHandler,
       defaultValue: {},
     });
+
     this.register("location", {
       component: LocationCell,
-      keyboardHandler: LocationCellKeyboardHandler,
       defaultValue: null,
     });
+
     this.register("json", {
       component: JsonCell,
-      keyboardHandler: JsonCellKeyboardHandler,
       defaultValue: {},
     });
 
     this.register("relation", {
       component: RelationCell,
-      keyboardHandler: DefaultCellKeyboardHandler,
       defaultValue: null,
     });
   }

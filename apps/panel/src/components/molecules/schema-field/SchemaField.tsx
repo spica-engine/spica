@@ -14,9 +14,10 @@ type SchemaFieldProps = {
   onBatchUpdate: BatchUpdater;
   onUpdate: (path: string, value: unknown) => void;
   showHeader?: boolean;
+  isNested?: boolean;
 };
 
-const SchemaField = ({path, schema, options, onBatchUpdate, onUpdate, showHeader = true}: SchemaFieldProps) => {
+const SchemaField = ({path, schema, options, onBatchUpdate, onUpdate, showHeader = true, isNested = false}: SchemaFieldProps) => {
   if (schema.type === "object" && schema.properties) {
     return (
       <SchemaObjectSection
@@ -37,20 +38,21 @@ const SchemaField = ({path, schema, options, onBatchUpdate, onUpdate, showHeader
         schema={schema}
         options={options}
         onBatchUpdate={onBatchUpdate}
+        isNested={isNested}
       />
     );
   }
 
   if (schema.type === "boolean") {
-    return <SchemaBooleanField path={path} schema={schema} options={options} onUpdate={onUpdate} />;
+    return <SchemaBooleanField path={path} schema={schema} options={options} onUpdate={onUpdate} isNested={isNested} />;
   }
 
   if (schema.type === "integer" || schema.type === "number") {
-    return <SchemaIntegerField path={path} schema={schema} options={options} onUpdate={onUpdate} />;
+    return <SchemaIntegerField path={path} schema={schema} options={options} onUpdate={onUpdate} isNested={isNested} />;
   }
 
   if (schema.type === "string") {
-    return <SchemaStringField path={path} schema={schema} options={options} onUpdate={onUpdate} />;
+    return <SchemaStringField path={path} schema={schema} options={options} onUpdate={onUpdate} isNested={isNested} />;
   }
 
   return null;

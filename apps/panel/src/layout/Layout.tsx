@@ -5,7 +5,7 @@ import type {NavigatorItemGroup, TypeNavigatorItem} from "../types/sidebar";
 
 import styles from "./Layout.module.scss";
 import {Drawer} from "oziko-ui-kit";
-import Toolbar from "../components/atoms/toolbar/Toolbar";
+import Topbar from "../components/atoms/topbar/Topbar";
 import {useSelector} from "react-redux";
 import {selectToken} from "../store/slices/authSlice";
 import {jwtDecode} from "jwt-decode";
@@ -178,7 +178,7 @@ const Layout = () => {
       </div>
       <div className={styles.main}>
         <div className={styles.toolbar}>
-          <Toolbar token={token} name={name} onDrawerOpen={openDrawer} onProfile={handleProfile} onLogout={handleLogout} />
+          <Topbar token={token} name={name} onDrawerOpen={openDrawer} onProfile={handleProfile} onLogout={handleLogout} />
         </div>
         <div className={styles.content}>
           <Outlet />

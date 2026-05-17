@@ -2,9 +2,11 @@
   height: min-content !important;
   min-height: fit-content;
   padding: 0;
-  width: 360px !important;
-  min-width: 360px !important;
-  box-shadow: var(--box-shadow);
+  width: 400px !important;
+  min-width: 400px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.13), 0 4px 16px rgba(0, 0, 0, 0.07);
 
   * {
     line-height: unset !important;
@@ -17,8 +19,8 @@
 
 .container {
   background-color: var(--color-menu-background);
-  border-radius: var(--border-radius-md);
-  width: 360px !important;
+  border-radius: 12px;
+  width: 400px !important;
 
   > div,
   .header,
@@ -28,49 +30,123 @@
 
   .header {
     display: flex;
+    align-items: center;
     justify-content: space-between !important;
     border-bottom: var(--border-default);
-    padding: var(--padding-xl) var(--padding-md);
+    padding: 16px 18px 14px;
   }
 
   .headerText {
     margin: 0 !important;
-    font-size: var(--font-size-lg) !important;
-    font-weight: bold !important;
-    font-family: var(--font-family-base) !important;
-    color: var(--color-black);
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: var(--color-text-primary, var(--color-black));
+  }
+
+  .closeButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    padding: 0;
+    flex-shrink: 0;
+    transition: background 0.1s, color 0.1s;
+
+    &:hover {
+      background: var(--color-surface-2, var(--color-input-background));
+      color: var(--color-text-primary, var(--color-black));
+    }
+  }
+
+  .body {
+    padding: 16px 18px;
+    width: 100%  !important;
   }
 
   .buttonsContainer {
-    padding-bottom: var(--padding-md);
-    padding-right: var(--padding-md);
+    padding: 10px 18px 14px;
+    gap: 6px !important;
+    justify-content: flex-end;
   }
 
   .addButtonWrapper {
-    border-radius: var(--border-radius-md);
+    display: contents;
   }
 
   .addButtonText {
     color: var(--color-font-secondary);
   }
 
-  .addButton,
+  .addButton {
+    height: auto !important;
+    min-height: unset !important;
+    padding: 8px 18px !important;
+    border-radius: 7px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+  }
+
   .cancelButton {
-    height: 32px !important;
+    height: auto !important;
+    min-height: unset !important;
+    padding: 8px 12px !important;
+    border-radius: 7px !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    color: var(--color-text-muted) !important;
+
+    &:hover {
+      color: var(--color-text-primary, var(--color-black)) !important;
+    }
   }
 
   .inputContainer {
-    width: 340px !important;
-    height: 44px;
-    padding: 0 var(--padding-md);
-    border-radius: var(--border-radius-md);
+    width: 100% !important;
+    height: auto;
+    padding: 0;
+    border-radius: 8px;
     border: var(--border-default);
     background-color: var(--color-input-background);
+    overflow: hidden;
+    gap: 0 !important;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+
+    &:focus-within {
+      border-color: var(--color-accent);
+      background: var(--color-surface, var(--color-menu-background));
+      box-shadow: 0 0 0 3px var(--color-accent-subtle, rgba(79, 110, 247, 0.1));
+
+      .inputIconArea {
+        color: var(--color-accent);
+      }
+    }
   }
+
+  .inputIconArea {
+    width: 38px;
+    min-width: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    align-self: stretch;
+    border-right: var(--border-default);
+    color: var(--color-text-muted);
+    transition: color 0.15s;
+  }
+
   .input {
-    height: 44px;
-    font-family: var(--font-family-base);
-    font-size: var(--font-size-md);
+    height: auto;
+    font-size: 13px !important;
+    padding: 10px 12px !important;
   }
 }
 

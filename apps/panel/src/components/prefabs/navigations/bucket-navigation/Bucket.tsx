@@ -7,9 +7,7 @@ import {
   Icon,
   Text,
   helperUtils,
-  Accordion,
   FlexElement,
-  FluidContainer,
   Button
 } from "oziko-ui-kit";
 import styles from "../Navigation.module.scss";
@@ -27,7 +25,7 @@ import {
   type SetStateAction
 } from "react";
 
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useLocation} from "react-router-dom";
 import {useGetBucketsQuery} from "../../../../store/api";
 import {useUpdateBucketOrderMutation, type BucketType} from "../../../../store/api/bucketApi";
 import {useDrag, useDrop} from "react-dnd";
@@ -128,12 +126,23 @@ const groupBucketsByCategory = (items: BucketNavigationItemData[]) => {
 
 type SortableCategoryItemProps = {
   categoryKey: string;
+  categoryName: string;
   index: number;
+  isCollapsed: boolean;
+  onToggleCollapse: (key: string) => void;
   moveCategory: (fromIndex: number, toIndex: number) => void;
-  children: (options: {setDragHandleRef: (node: HTMLDivElement | null) => void}) => ReactNode;
+  children: ReactNode;
 };
 
-const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index, moveCategory, children}) => {
+const SortableCategoryItem: FC<SortableCategoryItemProps> = ({
+  categoryKey,
+  categoryName,
+  index,
+  isCollapsed,
+  onToggleCollapse,
+  moveCategory,
+  children
+}) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [{handlerId}, drop] = useDrop<CategoryDragItem, void, {handlerId: Identifier | null}>({
@@ -167,10 +176,10 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index
       containerRef.current = node;
       if (node) {
         drop(node);
-        dragPreview(node.querySelector(" & > div > div > div"));
+        dragPreview(node);
       }
     },
-    [drop, dragPreview, isDragging]
+    [drop, dragPreview]
   );
 
   const setDragHandleRef = useCallback(
@@ -189,19 +198,40 @@ const SortableCategoryItem: FC<SortableCategoryItemProps> = ({categoryKey, index
       style={{opacity: isDragging ? 0.4 : 1}}
       className={bucketNavigationStyles.categoryItem}
     >
-      {children({setDragHandleRef})}
+      <div
+        className={bucketNavigationStyles.catGroupHead}
+        onClick={() => onToggleCollapse(categoryKey)}
+      >
+        <span
+          className={`${bucketNavigationStyles.catGroupChevron}${isCollapsed ? ` ${bucketNavigationStyles.catGroupChevronCollapsed}` : ''}`}
+        >
+          <Icon name="chevronDown" size="sm" />
+        </span>
+        <span className={bucketNavigationStyles.catGroupLabel}>{categoryName}</span>
+        <div ref={setDragHandleRef} className={bucketNavigationStyles.catGroupDrag}>
+          <Icon name="grip" size="sm" />
+        </div>
+      </div>
+      {!isCollapsed && (
+        <div className={bucketNavigationStyles.catGroupItems}>
+          {children}
+        </div>
+      )}
     </div>
   );
 };
 
 const Bucket = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const {data: buckets = []} = useGetBucketsQuery();
   const [orderedBuckets, setOrderedBuckets] = useState<BucketNavigationItemData[]>([]);
   const [openBucketId, setOpenBucketId] = useState<string | null>(null);
   const [updateBucketOrder] = useUpdateBucketOrderMutation();
   const previousBucketsRef = useRef<BucketNavigationItemData[] | null>(null);
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState('');
 
   const sortedBuckets = useMemo(() => {
     if (!Array.isArray(buckets)) {
@@ -219,6 +249,20 @@ const Bucket = () => {
       return a.title.localeCompare(b.title);
     });
   }, [buckets]);
+
+  const activeBucketId = useMemo(() => {
+    const match = location.pathname.match(/^\/bucket\/(.+)/);
+    return match ? match[1] : null;
+  }, [location.pathname]);
+
+  const filteredBuckets = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return orderedBuckets;
+    }
+
+    const q = searchQuery.toLowerCase();
+    return orderedBuckets.filter(b => b.title.toLowerCase().includes(q));
+  }, [orderedBuckets, searchQuery]);
 
   useEffect(() => {
     setOrderedBuckets(sortedBuckets as BucketNavigationItemData[]);
@@ -324,7 +368,15 @@ const Bucket = () => {
     });
   }, []);
 
-  const {grouped, ungrouped} = useMemo(() => groupBucketsByCategory(orderedBuckets), [orderedBuckets]);
+  const handleToggleCategoryCollapse = useCallback((key: string) => {
+    setCollapsedCategories(prev => ({...prev, [key]: !prev[key]}));
+  }, []);
+
+  const {grouped, ungrouped: _ungrouped} = useMemo(() => groupBucketsByCategory(orderedBuckets), [orderedBuckets]);
+  const {grouped: filteredGrouped, ungrouped: filteredUngrouped} = useMemo(
+    () => groupBucketsByCategory(filteredBuckets),
+    [filteredBuckets]
+  );
 
   useEffect(() => {
     setCategoryOrder(prevOrder => {
@@ -368,18 +420,18 @@ const Bucket = () => {
   }, []);
 
   const orderedGrouped = useMemo(() => {
-    if (!grouped.length) {
+    if (!filteredGrouped.length) {
       return [];
     }
 
-    const groupMap = new Map(grouped.map(group => [group.category, group]));
-  const orderedFromStorage = categoryOrder
-    .map(categoryName => groupMap.get(categoryName))
-    .filter(Boolean) as CategoryGroup[];
-    const remainingGroups = grouped.filter(group => !categoryOrder.includes(group.category));
+    const groupMap = new Map(filteredGrouped.map(group => [group.category, group]));
+    const orderedFromStorage = categoryOrder
+      .map(categoryName => groupMap.get(categoryName))
+      .filter(Boolean) as CategoryGroup[];
+    const remainingGroups = filteredGrouped.filter(group => !categoryOrder.includes(group.category));
 
     return [...orderedFromStorage, ...remainingGroups];
-  }, [categoryOrder, grouped]);
+  }, [categoryOrder, filteredGrouped]);
 
   const renderBucketItem = useCallback(
     (bucket: BucketNavigationItemData, index: number, groupKey: string) => (
@@ -391,6 +443,9 @@ const Bucket = () => {
         groupKey={groupKey}
         dndType={BUCKET_ITEM_TYPE}
         iconName="bucket"
+        variant="sidebar"
+        isActive={activeBucketId === bucket._id}
+        activeClassName={bucketNavigationStyles.bucketItemActive}
         moveItem={moveBucket}
         onNavigate={handleNavigateToBucket}
         onDragStart={handleDragStart}
@@ -399,27 +454,28 @@ const Bucket = () => {
         titleClassName={bucketNavigationStyles.bucketTitle}
         suffixClassName={bucketNavigationStyles.actionButtons}
         renderSuffix={dragHandleRef => (
-          <FlexElement gap={10}>
-            <div ref={dragHandleRef}>
+          <FlexElement gap={0}>
+               <div ref={dragHandleRef}>
               <Button
                 variant="icon"
                 color="transparent"
                 className={bucketNavigationStyles.itemButton}
               >
-                <Icon name="dragHorizontalVariant" size="sm" />
+                <Icon name="grip" size="xs"/>
               </Button>
             </div>
             <BucketNavigatorPopup
-              className={bucketNavigationStyles.itemButton}
               isOpen={openBucketId === bucket._id}
               setIsOpen={state => handleSetBucketPopupOpen(bucket._id, state)}
               bucket={bucket as BucketType}
             />
+         
           </FlexElement>
         )}
       />
     ),
     [
+      activeBucketId,
       handleDragStart,
       handleDropBucket,
       handleNavigateToBucket,
@@ -429,58 +485,28 @@ const Bucket = () => {
     ]
   );
 
-  const groupedAccordionItems = useMemo(
+  const groupedCategoryItems = useMemo(
     () =>
       orderedGrouped.map((groupItem, groupIndex) => {
         const categoryName = helperUtils.capitalize(groupItem.category ?? "Uncategorized");
-
-        const items = [
-          {
-            title: categoryName,
-            content: (
-              <>
-                {groupItem.items.map(({bucket, index}) =>
-                  renderBucketItem(bucket, index, bucket.category ?? groupItem.category ?? UNGROUPED_CATEGORY_KEY)
-                )}
-              </>
-            ),
-            icon: null
-          }
-        ];
 
         return (
           <SortableCategoryItem
             key={groupItem.category ?? groupIndex}
             categoryKey={groupItem.category}
+            categoryName={categoryName}
             index={groupIndex}
+            isCollapsed={collapsedCategories[groupItem.category] ?? false}
+            onToggleCollapse={handleToggleCategoryCollapse}
             moveCategory={moveCategory}
           >
-            {({setDragHandleRef}) => (
-              <Accordion
-                items={[
-                  {
-                    ...items[0],
-                    icon: (
-                      <FlexElement gap={4}>
-                        <div ref={setDragHandleRef} className={bucketNavigationStyles.categoryDragHandle}>
-                          <Icon name="dragHorizontalVariant" />
-                        </div>
-                        <Icon name="dotsVertical" />
-                      </FlexElement>
-                    )
-                  }
-                ]}
-                defaultActiveIndex={-1}
-                headerClassName={bucketNavigationStyles.accordionHeader}
-                className={`${bucketNavigationStyles.accordion}`}
-                openClassName={bucketNavigationStyles.accordionOpen}
-                gap={0}
-              />
+            {groupItem.items.map(({bucket, index}) =>
+              renderBucketItem(bucket, index, bucket.category ?? groupItem.category ?? UNGROUPED_CATEGORY_KEY)
             )}
           </SortableCategoryItem>
         );
       }),
-    [moveCategory, orderedGrouped, renderBucketItem]
+    [collapsedCategories, handleToggleCategoryCollapse, moveCategory, orderedGrouped, renderBucketItem]
   );
 
 
@@ -495,44 +521,46 @@ const Bucket = () => {
 
   return (
     <div className={styles.container}>
-      <FluidContainer
-        dimensionX={"fill"}
-        mode="fill"
-        className={styles.header}
-        root={{
-          children: (
-            <Text dimensionX={"fill"} size="large">
-              Buckets
-            </Text>
-          )
-        }}
-        suffix={{
-          children: (
-            <FlexElement gap={10}>
-              <Button
-                className={styles.button}
-                variant="icon"
-                color="transparent"
-                onClick={() => handleClockOutlineClick()}
-              >
-                <Icon name="clockOutline" className={styles.rootItemIcon} />
-              </Button>
-              <Button
-                className={styles.button}
-                variant="icon"
-                color="transparent"
-                onClick={() => handleViewListClick()}
-              >
-                <Icon name="viewList" className={styles.rootItemIcon} />
-              </Button>
-            </FlexElement>
-          )
-        }}
-      />
+      <div className={styles.sidebarHead}>
+        <div className={styles.sidebarTopRow}>
+          <span className={styles.sidebarLabel}>Buckets</span>
+          <div className={styles.sidebarActions}>
+            <button
+              className={styles.iconBtn}
+              onClick={handleClockOutlineClick}
+              title="History"
+            >
+              <Icon name="clockOutline" size="sm" />
+            </button>
+            <button
+              className={styles.iconBtn}
+              onClick={handleViewListClick}
+              title="View"
+            >
+              <Icon name="gridView" size="sm" />
+            </button>
+          </div>
+        </div>
+        <div className={styles.searchBox}>
+          <Icon name="search" size="sm" />
+          <input
+            placeholder="Search buckets…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
       <div className={bucketNavigationStyles.bucketsItemContainer}>
-        {groupedAccordionItems}
-        {ungrouped.map(({bucket, index}) =>
-          renderBucketItem(bucket, index, bucket.category ?? UNGROUPED_CATEGORY_KEY)
+        {groupedCategoryItems}
+        {filteredUngrouped.length > 0 && (
+          <>
+            {orderedGrouped.length > 0 && (
+              <div className={bucketNavigationStyles.uncategorizedLabel}>Uncategorized</div>
+            )}
+            {filteredUngrouped.map(({bucket, index}) =>
+              renderBucketItem(bucket, index, bucket.category ?? UNGROUPED_CATEGORY_KEY)
+            )}
+          </>
         )}
       </div>
 

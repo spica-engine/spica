@@ -70,7 +70,7 @@ const router = createBrowserRouter(
         },
         {
           path: "passport/user/profile",
-          element: <UserProfiler />
+          element: <Navigate to="/passport/observability/user" replace />
         },
         {
           path: "passport/policy",
@@ -131,6 +131,10 @@ const router = createBrowserRouter(
         {
           path: "passport/observability/bucket",
           element: <ObservabilityBucket />
+        },
+        {
+          path: "passport/observability/user",
+          element: <UserProfiler />
         }
       ]
     },

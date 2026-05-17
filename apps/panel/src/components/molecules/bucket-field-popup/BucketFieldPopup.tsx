@@ -1,3 +1,3 @@
-import BucketFieldSelectionPopup from "./BucketFieldSelectionPopup";
+import AddFieldModal from "../../organisms/add-field-modal/AddFieldModal";
 
-export default BucketFieldSelectionPopup;
+export default AddFieldModal;

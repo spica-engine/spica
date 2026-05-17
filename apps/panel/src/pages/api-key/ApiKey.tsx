@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Button, FlexElement, Icon, Spinner, type TableColumn } from "oziko-ui-kit";
+import { Button, FlexElement, Icon, Spinner, Table, type TableColumn } from "oziko-ui-kit";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {
   useGetApiKeysQuery,
@@ -7,29 +7,37 @@ import {
   type ApiKey as ApiKeyType,
 } from "../../store/api/apiKeyApi";
 import { useGetPoliciesQuery, type Policy } from "../../store/api/policyApi";
-import SpicaTable from "../../components/organisms/table/Table";
 import DeleteEntity from "../../components/prefabs/delete-entity/DeleteEntity";
 import { useInfiniteList } from "../../hooks/useInfiniteList";
 import ApiKeyDrawer from "./ApiKeyDrawer";
+import ApiKeyActionBar from "../../components/molecules/api-key-action-bar/ApiKeyActionBar";
 import styles from "./ApiKey.module.scss";
 import sharedStyles from "../shared/EntityPage.module.scss";
+import bucketStyles from "../bucket/Bucket.module.scss";
 
 const PAGE_SIZE = 20;
 
 const ApiKeyPage = () => {
   const [skip, setSkip] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
 
   const {
-    data: apiKeyResponse,
+    currentData: apiKeyResponse,
     isLoading,
     isFetching,
-  } = useGetApiKeysQuery({ limit: PAGE_SIZE, skip });
+  } = useGetApiKeysQuery({
+    limit: PAGE_SIZE,
+    skip,
+    ...(appliedFilter ? {filter: appliedFilter} : {}),
+  });
 
   const { allItems, hasMore, handleLoadMore, resetList } =
     useInfiniteList<ApiKeyType>({
       response: apiKeyResponse,
       isFetching,
       pageSize: PAGE_SIZE,
+      queryKey: JSON.stringify(appliedFilter ?? null),
       skip,
       setSkip,
     });
@@ -82,6 +90,17 @@ const ApiKeyPage = () => {
     []
   );
 
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return allItems;
+    const q = searchQuery.toLowerCase();
+    return allItems.filter(
+      (item) =>
+        item.name?.toLowerCase().includes(q) ||
+        item._id?.toLowerCase().includes(q) ||
+        item.description?.toLowerCase().includes(q)
+    );
+  }, [allItems, searchQuery]);
+
   const columns: TableColumn<ApiKeyType>[] = useMemo(
     () => [
       {
@@ -91,7 +110,7 @@ const ApiKeyPage = () => {
         minWidth: "220px",
         renderCell: ({ row }) => <span>{row._id}</span>,
       },
-          {
+      {
         header: <FlexElement>Key</FlexElement>,
         key: "key",
         width: "220px",
@@ -133,7 +152,6 @@ const ApiKeyPage = () => {
           <span title={row.description}>{row.description || "—"}</span>
         ),
       },
-
       {
         header: <FlexElement>Policies</FlexElement>,
         key: "policies",
@@ -226,26 +244,19 @@ const ApiKeyPage = () => {
   );
 
   return (
-    <FlexElement
-      dimensionX="fill"
-      direction="vertical"
-      gap={10}
-      className={sharedStyles.pageContainer}
-    >
-      <FlexElement
-        dimensionX="fill"
-        alignment="rightCenter"
-        direction="horizontal"
-        gap={10}
-      >
-        <Button onClick={handleOpenCreateDrawer}>
-          <Icon name="plus" /> New API Key
-        </Button>
-      </FlexElement>
+    <div className={bucketStyles.container}>
+      <ApiKeyActionBar
+        onSearch={setSearchQuery}
+        onNewApiKey={handleOpenCreateDrawer}
+        onFilter={(filter) => {
+          setAppliedFilter(filter);
+          setSkip(0);
+        }}
+      />
 
       <div id="apikey-scroll-container" className={sharedStyles.scrollContainer}>
         <InfiniteScroll
-          dataLength={allItems.length}
+          dataLength={filteredItems.length}
           next={handleLoadMore}
           hasMore={hasMore}
           loader={
@@ -255,11 +266,22 @@ const ApiKeyPage = () => {
           }
           scrollableTarget="apikey-scroll-container"
         >
-          <SpicaTable
+          <Table
             columns={columns}
-            data={allItems}
-            isLoading={isLoading}
+            data={filteredItems}
+            loading={isLoading}
             skeletonRowCount={10}
+            onRowClick={({ row }) => handleOpenEditDrawer(row)}
+            emptyState={{
+              title: "No API keys found",
+              description: "There are no API keys yet. Create one to get started.",
+              actions: (
+                <Button onClick={handleOpenCreateDrawer}>
+                  <Icon name="plus" size={14} />
+                  New API Key
+                </Button>
+              ),
+            }}
           />
         </InfiniteScroll>
       </div>
@@ -270,8 +292,9 @@ const ApiKeyPage = () => {
         onClose={handleCloseDrawer}
         onKeyCreated={handleKeyCreated}
       />
-    </FlexElement>
+    </div>
   );
 };
 
 export default ApiKeyPage;
+

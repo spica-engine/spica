@@ -4,8 +4,8 @@
  */
 
 import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {useNavigate} from "react-router-dom";
-import {Button, FluidContainer, Icon, Text} from "oziko-ui-kit";
+import {useNavigate, useLocation} from "react-router-dom";
+import {Button, Icon} from "oziko-ui-kit";
 import styles from "../Navigation.module.scss";
 import {
   useGetFunctionsQuery,
@@ -22,6 +22,7 @@ const FUNCTION_GROUP_KEY = "__functions__";
 
 const FunctionNavigation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const {data: functions} = useGetFunctionsQuery();
   const [updateFunctionOrder] = useUpdateFunctionOrderMutation();
   const [deleteFunction, {isLoading: isDeleting}] = useDeleteFunctionMutation();
@@ -30,8 +31,14 @@ const FunctionNavigation = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deletingFunction, setDeletingFunction] = useState<SpicaFunction | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const functionList = Array.isArray(functions) ? functions : functions?.data;
+
+  const activeFunctionId = useMemo(() => {
+    const match = location.pathname.match(/^\/function\/(.+)/);
+    return match ? match[1] : null;
+  }, [location.pathname]);
 
   const sortedFunctions = useMemo(() => {
     if (!Array.isArray(functionList)) {
@@ -53,6 +60,15 @@ const FunctionNavigation = () => {
   useEffect(() => {
     setOrderedFunctions(sortedFunctions);
   }, [sortedFunctions]);
+
+  const filteredFunctions = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return orderedFunctions;
+    }
+
+    const q = searchQuery.toLowerCase();
+    return orderedFunctions.filter(fn => fn.name.toLowerCase().includes(q));
+  }, [orderedFunctions, searchQuery]);
 
   const moveFunction = useCallback((fromIndex: number, toIndex: number) => {
     setOrderedFunctions(prev => {
@@ -166,42 +182,37 @@ const FunctionNavigation = () => {
 
   return (
     <div className={styles.container}>
-      <FluidContainer
-        dimensionX={"fill"}
-        mode="fill"
-        className={styles.header}
-        root={{
-          children: (
-            <Text dimensionX="fill" size="large">
-              Functions
-            </Text>
-          )
-        }}
-        suffix={{
-          children: (
-         <>
-            <Button
-              variant="icon"
-              color="transparent"
-              className={styles.button}
+      <div className={styles.sidebarHead}>
+        <div className={styles.sidebarTopRow}>
+          <span className={styles.sidebarLabel}>Functions</span>
+          <div className={styles.sidebarActions}>
+            <button
+              className={styles.iconBtn}
               onClick={handleNavigateToLogs}
+              title="Logs"
             >
               <Icon name="bug" size="sm" />
-            </Button>
-                <Button
-              variant="icon"
-              color="transparent"
-              className={styles.button}
+            </button>
+            <button
+              className={styles.iconBtn}
               onClick={handleNavigateToVariables}
+              title="Variables"
             >
               <Icon name="cog" size="sm" />
-            </Button>
-         </>
-          )
-        }}
-      />
+            </button>
+          </div>
+        </div>
+        <div className={styles.searchBox}>
+          <Icon name="search" size="sm" />
+          <input
+            placeholder="Search functions…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
       <div className={styles.navigationListContainer}>
-        {orderedFunctions.map((fn, index) => (
+        {filteredFunctions.map((fn, index) => (
           <SortableNavigationItem
             key={fn._id ?? index}
             id={fn._id!}
@@ -210,11 +221,15 @@ const FunctionNavigation = () => {
             groupKey={FUNCTION_GROUP_KEY}
             dndType={FUNCTION_ITEM_TYPE}
             iconName="function"
+            variant="sidebar"
+            isActive={activeFunctionId === fn._id}
+            activeClassName={styles.navItemActive}
             moveItem={moveFunction}
             onNavigate={handleNavigateToFunction}
             onDragStart={handleDragStart}
             onDrop={handleDropFunction}
-            itemClassName={styles.defaultNavigationItem}
+            itemClassName={styles.navItem}
+            suffixClassName={styles.navItemActions}
             renderSuffix={dragHandleRef => (
               <>
                 <Button
@@ -227,7 +242,7 @@ const FunctionNavigation = () => {
                 </Button>
                 <div ref={dragHandleRef}>
                   <Button variant="icon" color="transparent" className={styles.button}>
-                    <Icon name="dragHorizontalVariant" size="sm" />
+                    <Icon name="grip" size="sm" />
                   </Button>
                 </div>
               </>
@@ -235,18 +250,10 @@ const FunctionNavigation = () => {
           />
         ))}
       </div>
-      <div className={styles.addFunctionButtonContainer}>
-        <Button
-          color="transparent"
-          variant="text"
-          fullWidth
-          onClick={() => setIsModalOpen(true)}
-          className={styles.addFunctionButton}
-        >
-          <Icon name="plus" size="sm" />
-          Add New Function
-        </Button>
-      </div>
+      <button className={styles.addButton} onClick={() => setIsModalOpen(true)}>
+        <Icon name="plus" size="sm" />
+        Add New Function
+      </button>
 
       <AddFunctionModal
         isOpen={isModalOpen}

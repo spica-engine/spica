@@ -8,14 +8,15 @@ type SchemaBooleanFieldProps = {
   schema: ConfigSchemaProperty;
   options: Record<string, unknown>;
   onUpdate: (path: string, value: unknown) => void;
+  isNested?: boolean;
 };
 
-const SchemaBooleanField = ({path, schema, options, onUpdate}: SchemaBooleanFieldProps) => {
+const SchemaBooleanField = ({path, schema, options, onUpdate, isNested = false}: SchemaBooleanFieldProps) => {
   const currentValue = !!getNestedValue(options, path);
   const fieldKey = humanize(path.split(".").pop()!);
   const description = schema.description;
 
-  return (
+  const row = (
     <div className={styles.checkboxRow}>
       <div className={styles.fieldInfo}>
         <span className={styles.fieldLabel}>{fieldKey}</span>
@@ -24,6 +25,10 @@ const SchemaBooleanField = ({path, schema, options, onUpdate}: SchemaBooleanFiel
       <Switch checked={currentValue} onChange={checked => onUpdate(path, checked)} />
     </div>
   );
+
+  if (isNested) return row;
+
+  return <div className={styles.standaloneCard}>{row}</div>;
 };
 
 export default SchemaBooleanField;

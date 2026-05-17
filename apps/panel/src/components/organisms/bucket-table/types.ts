@@ -55,27 +55,10 @@ export interface CellRendererProps {
   property: BucketProperty;
   propertyKey: string;
   rowId: string;
-  isFocused: boolean;
-  onRequestBlur: () => void;
-}
-
-export interface CellKeyboardHandler {
-  handleKeyDown: (event: KeyboardEvent, context: CellKeyboardContext) => boolean | void;
-}
-
-export interface CellKeyboardContext {
-  value: any;
-  onChange: (newValue: any) => void;
-  property: BucketProperty;
-  propertyKey: string;
-  rowId: string;
-  onRequestBlur: () => void;
 }
 
 export interface CellTypeConfig {
   component: React.ComponentType<CellRendererProps>;
-  keyboardHandler: CellKeyboardHandler;
   defaultValue?: any;
-  autoEnterEditMode?: boolean;
 }
 

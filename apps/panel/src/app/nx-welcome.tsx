@@ -13,10 +13,7 @@ export function NxWelcome({ title }: { title: string }) {
           __html: `
     html {
       -webkit-text-size-adjust: 100%;
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-      'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
-      'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-      'Noto Color Emoji';
+      font-family: 'DM Sans', sans-serif;
       line-height: 1.5;
       tab-size: 4;
       scroll-behavior: smooth;
