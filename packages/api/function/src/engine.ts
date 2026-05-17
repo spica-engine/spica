@@ -65,9 +65,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(COLL_SLUG) collSlug: CollectionSlug,
     @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor,
-    @Optional() private reconciler: FunctionAssetReconciler,
-    @Optional() private assetService: FunctionAssetService,
-    @Optional() private assetWatcher: FunctionAssetWatcher
+    private reconciler: FunctionAssetReconciler,
+    private assetService: FunctionAssetService,
+    private assetWatcher: FunctionAssetWatcher
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -104,13 +104,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     const startupSequence = async () => {
-      if (this.assetWatcher) {
-        this.assetWatcher.registerPrepareCallback(fn => this.prepareFunction(fn as any));
-      }
-      if (this.reconciler) {
-        const fns = await CRUD.findForRuntime(this.fs);
-        await this.reconciler.reconcileAll(fns as any, fn => this.prepareFunction(fn as any));
-      }
+      this.assetWatcher.registerPrepareCallback(fn => this.prepareFunction(fn as any));
+      const fns = await CRUD.findForRuntime(this.fs);
+      await this.reconciler.reconcileAll(fns as any, fn => this.prepareFunction(fn as any));
       await this.registerTriggers();
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
@@ -207,17 +203,13 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     files: AssetChangeFile[],
     localOp: () => Promise<void>
   ): Promise<void> {
-    if (!this.reconciler || !this.assetService) {
-      // Asset storage not configured; just run the local operation.
-      return localOp();
-    }
     return applyAssetChange(
       fn,
       files,
       this.options,
       this.reconciler,
       this.assetService,
-      this.assetWatcher ?? null,
+      this.assetWatcher,
       localOp
     );
   }
@@ -227,9 +219,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
    * No-op when asset storage is not configured.
    */
   async removeAssets(fn: Function & {_id: ObjectId}): Promise<void> {
-    if (!this.reconciler || !this.assetService) {
-      return;
-    }
     return applyAssetDelete(fn, this.reconciler, this.assetService);
   }
 

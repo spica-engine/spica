@@ -103,10 +103,8 @@ export class FunctionModule {
       ]
     };
 
-    if (options.assetStorage) {
-      module.imports.push(FunctionAssetStorageModule.forRoot(options.assetStorage));
-      (module.providers as any[]).push(FunctionAssetReconciler, FunctionAssetWatcher);
-    }
+    module.imports.push(FunctionAssetStorageModule.forRoot(options.assetStorage));
+    (module.providers as any[]).push(FunctionAssetReconciler, FunctionAssetWatcher);
 
     if (options.realtime) {
       module.imports.push(FunctionRealtimeModule.register());

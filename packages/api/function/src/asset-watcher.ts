@@ -32,7 +32,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
   private readonly STAMP_TTL_MS = 10_000;
 
   /** Registered by FunctionEngine on init to break the circular import. */
-  private prepareCallback: ((fn: any) => Promise<void>) | null = null;
+  private prepareCallback!: (fn: any) => Promise<void>;
 
   constructor(
     private readonly assetService: FunctionAssetService,
@@ -91,7 +91,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
           );
 
           const changed = await this.reconciler.reconcileFunction(fn as any);
-          if (changed && this.prepareCallback) {
+          if (changed) {
             await this.prepareCallback(fn as any);
           }
         } catch (err) {
