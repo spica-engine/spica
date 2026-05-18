@@ -19,16 +19,21 @@ export class AWSS3Strategy implements FunctionAssetStrategy {
 
   constructor(
     private readonly credentialsPath: string,
-    private readonly bucketName: string
+    private readonly bucketName: string,
+    s3?: S3Client
   ) {
-    const config = this.getCredentials();
-    this.s3 = new S3Client({
-      credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey
-      },
-      region: config.region
-    });
+    if (s3) {
+      this.s3 = s3;
+    } else {
+      const config = this.getCredentials();
+      this.s3 = new S3Client({
+        credentials: {
+          accessKeyId: config.accessKeyId,
+          secretAccessKey: config.secretAccessKey
+        },
+        region: config.region
+      });
+    }
   }
 
   private getCredentials(): AwsCredentials {

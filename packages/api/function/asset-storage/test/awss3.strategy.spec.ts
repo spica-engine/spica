@@ -1,32 +1,20 @@
 import {AWSS3Strategy} from "../src/strategy/awss3.js";
-import * as fs from "fs";
-
-// Shared send mock — must be declared before jest.mock() factory executes.
-const sendMock = jest.fn();
-
-// Mock @aws-sdk/client-s3
-jest.mock("@aws-sdk/client-s3", () => ({
-  S3Client: jest.fn().mockImplementation(() => ({send: sendMock})),
-  GetObjectCommand: jest.fn(args => ({type: "get", ...args})),
-  PutObjectCommand: jest.fn(args => ({type: "put", ...args})),
-  DeleteObjectCommand: jest.fn(args => ({type: "delete", ...args})),
-  HeadObjectCommand: jest.fn(args => ({type: "head", ...args}))
-}));
+import {S3Client} from "@aws-sdk/client-s3";
 
 describe("AWSS3Strategy", () => {
   let strategy: AWSS3Strategy;
-  const credentialsPath = "/tmp/fake-creds.json";
+  let sendMock: jest.Mock;
   const bucketName = "test-bucket";
   const credentials = {accessKeyId: "key", secretAccessKey: "secret", region: "us-east-1"};
 
   beforeEach(() => {
-    jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify(credentials) as any);
-    sendMock.mockReset();
-    strategy = new AWSS3Strategy(credentialsPath, bucketName);
+    sendMock = jest.fn();
+    const mockClient = {send: sendMock} as unknown as S3Client;
+    strategy = new AWSS3Strategy("/fake/creds.json", bucketName, mockClient);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    jest.resetAllMocks();
   });
 
   it("should read a file by streaming body", async () => {
@@ -60,3 +48,4 @@ describe("AWSS3Strategy", () => {
     expect(await strategy.exists("functions/abc/missing.ts")).toBe(false);
   });
 });
+

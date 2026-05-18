@@ -1,26 +1,20 @@
 import {GCSStrategy} from "../src/strategy/gcs.js";
-
-// Mock @google-cloud/storage
-const fileMock = {
-  download: jest.fn(),
-  save: jest.fn(),
-  delete: jest.fn(),
-  exists: jest.fn()
-};
-const bucketMock = {file: jest.fn().mockReturnValue(fileMock)};
-const storageMock = {bucket: jest.fn().mockReturnValue(bucketMock)};
-
-jest.mock("@google-cloud/storage", () => ({
-  Storage: jest.fn().mockImplementation(() => storageMock),
-  Bucket: jest.fn()
-}));
+import {Storage} from "@google-cloud/storage";
 
 describe("GCSStrategy", () => {
   let strategy: GCSStrategy;
+  let fileMock: {download: jest.Mock; save: jest.Mock; delete: jest.Mock; exists: jest.Mock};
+  let bucketMock: {file: jest.Mock};
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    strategy = new GCSStrategy("/fake/sa.json", "test-bucket");
+    fileMock = {download: jest.fn(), save: jest.fn(), delete: jest.fn(), exists: jest.fn()};
+    bucketMock = {file: jest.fn().mockReturnValue(fileMock)};
+    const mockStorage = {bucket: jest.fn().mockReturnValue(bucketMock)} as unknown as Storage;
+    strategy = new GCSStrategy("/fake/sa.json", "test-bucket", mockStorage);
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   it("should read a file", async () => {
@@ -56,3 +50,4 @@ describe("GCSStrategy", () => {
     expect(await strategy.exists("functions/abc/missing.ts")).toBe(false);
   });
 });
+

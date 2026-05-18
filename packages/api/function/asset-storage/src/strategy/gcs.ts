@@ -5,9 +5,13 @@ export class GCSStrategy implements FunctionAssetStrategy {
   private readonly storage: Storage;
   private readonly bucket: Bucket;
 
-  constructor(serviceAccountPath: string, bucketName: string) {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = serviceAccountPath;
-    this.storage = new Storage();
+  constructor(serviceAccountPath: string, bucketName: string, storage?: Storage) {
+    if (storage) {
+      this.storage = storage;
+    } else {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = serviceAccountPath;
+      this.storage = new Storage();
+    }
     this.bucket = this.storage.bucket(bucketName);
   }
 
