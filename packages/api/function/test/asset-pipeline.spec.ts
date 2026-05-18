@@ -42,6 +42,8 @@ describe("applyAssetChange", () => {
         strategy: "default"
       })),
     deleteFromStorage: jest.fn().mockResolvedValue(undefined),
+    readFromStorage: jest.fn().mockResolvedValue(Buffer.from("")),
+    writeToStorage: jest.fn().mockResolvedValue(undefined),
     restoreAssets: jest.fn().mockResolvedValue(undefined)
   });
 

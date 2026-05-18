@@ -93,6 +93,21 @@ export class FunctionAssetReconciler {
   }
 
   /**
+   * Read a raw buffer from the configured storage strategy.
+   */
+  async readFromStorage(key: string): Promise<Buffer> {
+    return this.strategy.read(key);
+  }
+
+  /**
+   * Write a raw buffer to the configured storage strategy.
+   * Used during rollback to restore pre-existing objects that were overwritten.
+   */
+  async writeToStorage(key: string, data: Buffer): Promise<void> {
+    return this.strategy.write(key, data);
+  }
+
+  /**
    * Delete a key from the configured storage strategy.
    */
   async deleteFromStorage(key: string): Promise<void> {
