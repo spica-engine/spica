@@ -43,6 +43,14 @@
     "./src/synchronizer/tsconfig": {
       "types": "./src/synchronizer/tsconfig/index.ts",
       "default": "./dist/src/synchronizer/tsconfig/index.js"
+    },
+    "./src/asset-reconciler": {
+      "types": "./src/asset-reconciler.ts",
+      "default": "./dist/src/asset-reconciler.js"
+    },
+    "./src/asset-pipeline": {
+      "types": "./src/asset-pipeline.ts",
+      "default": "./dist/src/asset-pipeline.js"
     }
   },
   "dependencies": {
