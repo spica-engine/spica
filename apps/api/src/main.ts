@@ -328,8 +328,10 @@ const args = yargsInstance
       default: ["database"],
       coerce: (value: string | string[]) => {
         const values = Array.isArray(value)
-          ? value.flatMap(v => String(v).split(","))
-          : String(value).split(",");
+          ? value.flatMap(v => String(v).split(",").map(token => token.trim()))
+          : String(value)
+              .split(",")
+              .map(token => token.trim());
         return [...new Set(values.filter(Boolean))];
       }
     }
