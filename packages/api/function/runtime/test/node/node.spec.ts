@@ -51,7 +51,7 @@ describe("Node", () => {
       worker.kill().then(done);
     });
 
-    it("should track all streams independently when attaching in a loop", () => {
+    it("should track all streams independently when attaching in a loop", async () => {
       const worker = node.spawn({
         id: "test-loop-attach",
         env: {},
@@ -72,10 +72,10 @@ describe("Node", () => {
       expect(worker["_attachedStderrs"]).toContain(stderr1);
       expect(worker["_attachedStderrs"]).toContain(stderr2);
 
-      worker.kill();
+      await worker.kill();
     });
 
-    it("should preserve other pipes when re-attaching", () => {
+    it("should preserve other pipes when re-attaching", async () => {
       const worker = node.spawn({
         id: "test-preserve-pipes",
         env: {},
@@ -98,10 +98,10 @@ describe("Node", () => {
       const listeners = worker["_process"].stdout.listenerCount("data");
       expect(listeners).toBeGreaterThan(0);
 
-      worker.kill();
+      await worker.kill();
     });
 
-    it("should unpipe and re-track the same stream instance when re-attached", () => {
+    it("should unpipe and re-track the same stream instance when re-attached", async () => {
       const worker = node.spawn({
         id: "test-stale-ref",
         env: {},
@@ -118,7 +118,7 @@ describe("Node", () => {
       expect(worker["_attachedStdouts"].filter(s => s === stdout1)).toHaveLength(1);
       expect(worker["_attachedStderrs"].filter(s => s === stderr1)).toHaveLength(1);
 
-      worker.kill();
+      await worker.kill();
     });
   });
 });
