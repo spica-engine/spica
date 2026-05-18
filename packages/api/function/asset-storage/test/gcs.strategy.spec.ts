@@ -50,4 +50,3 @@ describe("GCSStrategy", () => {
     expect(await strategy.exists("functions/abc/missing.ts")).toBe(false);
   });
 });
-

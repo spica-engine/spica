@@ -48,4 +48,3 @@ describe("AWSS3Strategy", () => {
     expect(await strategy.exists("functions/abc/missing.ts")).toBe(false);
   });
 });
-
