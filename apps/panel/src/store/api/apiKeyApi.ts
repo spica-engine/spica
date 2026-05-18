@@ -2,9 +2,9 @@ import { baseApi } from './baseApi';
 
 export interface ApiKey {
   _id?: string;
+  key?: string;
   name: string;
   description?: string;
-  key?: string;
   policies?: string[];
   active?: boolean;
   expiresAt?: string | null;
@@ -109,11 +109,18 @@ export const apiKeyApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: 'ApiKey', id }],
     }),
 
-    updateApiKeyPolicies: builder.mutation<ApiKey, { id: string; policies: string[] }>({
-      query: ({ id, policies }) => ({
-        url: `passport/apikey/${id}/policies`,
+    addApiKeyPolicy: builder.mutation<ApiKey, { id: string; policyId: string }>({
+      query: ({ id, policyId }) => ({
+        url: `passport/apikey/${id}/policy/${policyId}`,
         method: 'PUT',
-        body: { policies },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'ApiKey', id }, 'ApiKey'],
+    }),
+
+    removeApiKeyPolicy: builder.mutation<void, { id: string; policyId: string }>({
+      query: ({ id, policyId }) => ({
+        url: `passport/apikey/${id}/policy/${policyId}`,
+        method: 'DELETE',
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'ApiKey', id }, 'ApiKey'],
     }),
@@ -128,7 +135,8 @@ export const {
   useUpdateApiKeyMutation,
   useDeleteApiKeyMutation,
   useGetApiKeyPoliciesQuery,
-  useUpdateApiKeyPoliciesMutation,
+  useAddApiKeyPolicyMutation,
+  useRemoveApiKeyPolicyMutation,
 } = apiKeyApi;
 
 export const apiKeyApiReducerPath = apiKeyApi.reducerPath;

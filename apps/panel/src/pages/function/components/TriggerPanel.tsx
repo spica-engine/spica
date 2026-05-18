@@ -4,17 +4,15 @@
  */
 
 import {memo, useCallback} from "react";
+import {useCopyToClipboard} from "../../../hooks/useCopyToClipboard";
 import {
-  Accordion,
   Button,
   FlexElement,
-  FluidContainer,
   Icon,
   Input,
-  Select,
-  Text,
-  type TypeAccordionItem
+  Select
 } from "oziko-ui-kit";
+import PanelAccordion, {PanelAccordionItem} from "../../../components/molecules/panel-accordion/PanelAccordion";
 import type {FunctionTrigger, Enqueuer} from "../../../store/api/functionApi";
 import styles from "./TriggerPanel.module.scss";
 
@@ -31,6 +29,8 @@ const HTTP_METHODS = ["All", "Get", "Post", "Put", "Delete", "Patch", "Head"];
 const DB_OPERATIONS = ["INSERT", "UPDATE", "REPLACE", "DELETE"];
 const BUCKET_OPERATIONS = ["ALL", "INSERT", "UPDATE", "DELETE"];
 const SYSTEM_EVENTS = ["READY"];
+
+const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || "";
 
 const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelProps) => {
   const handleAddTrigger = useCallback(() => {
@@ -57,7 +57,13 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
 
   const handleHandlerChange = useCallback(
     (index: number, handler: string) => {
-      onChange(triggers.map((t, i) => (i === index ? {...t, handler} : t)));
+      onChange(
+        triggers.map((t, i) => {
+          if (i !== index) return t;
+          const options = t.type === "http" ? {...t.options, path: `/${handler}`} : t.options;
+          return {...t, handler, options};
+        })
+      );
     },
     [triggers, onChange]
   );
@@ -70,6 +76,15 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
     },
     [triggers, onChange]
   );
+
+  const handleActiveChange = useCallback(
+    (index: number, active: boolean) => {
+      onChange(triggers.map((t, i) => (i === index ? {...t, active} : t)));
+    },
+    [triggers, onChange]
+  );
+
+  const {copied: urlCopied, copy: copyUrl} = useCopyToClipboard();
 
   const typeOptions = TRIGGER_TYPES.map(type => ({
     label: enqueuers.find(e => e.description.name === type)?.description.title ?? type,
@@ -95,229 +110,227 @@ const TriggerPanel = ({triggers, enqueuers, handlers, onChange}: TriggerPanelPro
     [enqueuers]
   );
 
-  const triggerItems: TypeAccordionItem[] = triggers.map((trigger, index) => {
-    return {
-      title: (
-        <FluidContainer
-          dimensionX="fill"
-          mode="fill"
-          alignment="leftCenter"
-          root={{
-            children: <Text size="small">{trigger.handler ?? trigger.type}</Text>,
-            alignment: "leftCenter"
-          }}
-          suffix={{
-            children: (
-              <Button
-                variant="icon"
-                color="danger"
-                className={styles.deleteAction}
-                onClick={e => {
-                  e.stopPropagation();
-                  handleDeleteTrigger(index);
-                }}
-              >
-                <Icon name="delete" size="sm" />
-              </Button>
-            )
-          }}
-        />
-      ),
-      content: (() => {
-        const handlerOptions = handlers.map(h => ({
-          label: h,
-          value: h,
-          disabled: triggers.some((t, ti) => ti !== index && t.handler === h),
-        }));
-        return (
-        <FlexElement direction="vertical" dimensionX="fill" gap={10}>
-          <FlexElement direction="vertical" dimensionX="fill" gap={6}>
-            <Text size="small" dimensionX={"fill"} className={styles.fieldLabel}>
-              Handler
-            </Text>
+  const triggerItems = triggers.map((trigger, index) => {
+    const handlerOptions = handlers.map(h => ({
+      label: h,
+      value: h,
+      disabled: triggers.some((t, ti) => ti !== index && t.handler === h),
+    }));
+
+    return (
+      <PanelAccordionItem
+        key={`trigger-${index}`}
+        variant="row"
+        bodyClassName={styles.triggerRowBody}
+        header={
+          <span className={trigger.handler ? styles.handlerName : styles.handlerPlaceholder}>
+            {trigger.handler ?? "No handler assigned"}
+          </span>
+        }
+        actions={
+          <>
+            <button
+              type="button"
+              className={`${styles.triggerToggle} ${trigger.active !== false ? styles.triggerToggleOn : ""}`}
+              aria-pressed={trigger.active !== false}
+              aria-label={trigger.active !== false ? "Disable trigger" : "Enable trigger"}
+              onClick={() => handleActiveChange(index, trigger.active === false)}
+            />
+            <button
+              type="button"
+              className={styles.triggerDeleteButton}
+              aria-label="Delete trigger"
+              onClick={() => handleDeleteTrigger(index)}
+            >
+              <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              </svg>
+            </button>
+          </>
+        }
+      >
+        <FlexElement direction="vertical" dimensionX="fill" gap={12} className={styles.triggerItemContent}>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldLabel}>Handler</span>
             <Select
               options={handlerOptions}
               value={trigger.handler ?? ""}
               onChange={value => handleHandlerChange(index, value as string)}
               dimensionX="fill"
             />
-          </FlexElement>
-          <FlexElement direction="vertical" dimensionX="fill" gap={6}>
-            <Text size="small" dimensionX={"fill"} className={styles.fieldLabel}>
-              Type
-            </Text>
+          </div>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldLabel}>Type</span>
             <Select
               options={typeOptions}
               value={trigger.type}
               onChange={value => handleTypeChange(index, value as FunctionTrigger["type"])}
               dimensionX="fill"
             />
-          </FlexElement>
+          </div>
           {trigger.type === "http" && (
-            <FlexElement direction="vertical" dimensionX="fill" gap={6}>
-              <FlexElement direction="vertical" dimensionX="fill" gap={6}>
-                <Text size="small" dimensionX={"fill"} className={styles.fieldLabel}>
-                  Method
-                </Text>
+            <>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>Method</span>
                 <Select
                   options={methodOptions}
                   value={trigger.options.method ?? "All"}
                   onChange={value => handleOptionChange(index, "method", value as string)}
                   dimensionX="fill"
                 />
-              </FlexElement>
-              <FlexElement direction="vertical" dimensionX="fill" alignment="leftTop" gap={6}>
-                <Text size="small" dimensionX={"fill"} className={styles.fieldLabel}>
-                  Path
-                </Text>
-              </FlexElement>
-
-              <FlexElement gap={5} className={styles.inputContainer}>
-                <Icon name="formatQuoteClose" size="md" />
-                <Input
-                  placeholder="/my-endpoint"
-                  value={trigger.options.path ?? ""}
-                  onChange={e => handleOptionChange(index, "path", e.target.value)}
-                  className={styles.input}
-                  type="text"
-                />
-              </FlexElement>
-            </FlexElement>
+              </div>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>Path</span>
+                <div className={styles.inputRow}>
+                  <div className={styles.inputPrefix}>
+                    <Icon name="formatQuoteClose" size="sm" />
+                  </div>
+                  <input
+                    className={styles.pathInput}
+                    placeholder="/my-endpoint"
+                    value={trigger.options.path ?? ""}
+                    onChange={e => handleOptionChange(index, "path", e.target.value)}
+                    type="text"
+                  />
+                </div>
+              </div>
+              <div className={styles.urlRow}>
+                <span className={styles.urlText}>
+                  {`${BASE_URL}/fn-execute${trigger.options.path ?? ""}`}
+                </span>
+                <Button
+                  variant="icon"
+                  color="default"
+                  className={styles.copyAction}
+                  onClick={() => copyUrl(`${BASE_URL}/fn-execute${trigger.options.path ?? ""}`)}
+                >
+                  <Icon name={urlCopied ? "check" : "contentCopy"} size="sm" />
+                </Button>
+              </div>
+            </>
           )}
           {trigger.type === "firehose" && (
-            <FlexElement direction="vertical" dimensionX="fill" gap={6}>
-              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                Event
-              </Text>
-              <FlexElement gap={5} className={styles.inputContainer}>
-                <Icon name="formatQuoteClose" size="md" />
-                <Input
-                  placeholder="* (all events), ** (connection), or custom event name"
+            <div className={styles.fieldGroup}>
+              <span className={styles.fieldLabel}>Event</span>
+              <div className={styles.inputRow}>
+                <div className={styles.inputPrefix}>
+                  <Icon name="formatQuoteClose" size="sm" />
+                </div>
+                <input
+                  className={styles.pathInput}
+                  placeholder="* (all), ** (connection), or custom event"
                   value={trigger.options.event ?? ""}
                   onChange={e => handleOptionChange(index, "event", e.target.value)}
-                  className={styles.input}
                   type="text"
                 />
-              </FlexElement>
-            </FlexElement>
+              </div>
+            </div>
           )}
           {trigger.type === "database" && (
-            <FlexElement direction="vertical" dimensionX="fill" gap={6}>
-              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                Collection
-              </Text>
-              <Select
-                options={getEnqueuerPropertyOptions("database", "collection")}
-                value={trigger.options.collection ?? ""}
-                onChange={value => handleOptionChange(index, "collection", value as string)}
-                dimensionX="fill"
-              />
-              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                Operation
-              </Text>
-              <Select
-                options={operationOptions}
-                value={trigger.options.type ?? "INSERT"}
-                onChange={value => handleOptionChange(index, "type", value as string)}
-                dimensionX="fill"
-              />
-            </FlexElement>
+            <>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>Collection</span>
+                <Select
+                  options={getEnqueuerPropertyOptions("database", "collection")}
+                  value={trigger.options.collection ?? ""}
+                  onChange={value => handleOptionChange(index, "collection", value as string)}
+                  dimensionX="fill"
+                />
+              </div>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>Operation</span>
+                <Select
+                  options={operationOptions}
+                  value={trigger.options.type ?? "INSERT"}
+                  onChange={value => handleOptionChange(index, "type", value as string)}
+                  dimensionX="fill"
+                />
+              </div>
+            </>
           )}
           {trigger.type === "schedule" && (
-            <FlexElement direction="vertical" dimensionX="fill" gap={6}>
-              <Text size="small" className={styles.fieldLabel}>
-                Cron Expression
-              </Text>
-              <Input
-                placeholder="* * * * *"
-                value={trigger.options.frequency ?? ""}
-                onChange={e => handleOptionChange(index, "frequency", e.target.value)}
-              />
-              <Text size="small" className={styles.fieldLabel}>
-                Timezone
-              </Text>
-              <Input
-                placeholder="UTC"
-                value={trigger.options.timezone ?? ""}
-                onChange={e => handleOptionChange(index, "timezone", e.target.value)}
-              />
-            </FlexElement>
+            <>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>Cron Expression</span>
+                <Input
+                  placeholder="* * * * *"
+                  value={trigger.options.frequency ?? ""}
+                  onChange={e => handleOptionChange(index, "frequency", e.target.value)}
+                />
+              </div>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>Timezone</span>
+                <Input
+                  placeholder="UTC"
+                  value={trigger.options.timezone ?? ""}
+                  onChange={e => handleOptionChange(index, "timezone", e.target.value)}
+                />
+              </div>
+            </>
           )}
           {trigger.type === "system" && (
-            <FlexElement direction="vertical" dimensionX="fill" gap={6}>
-              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                Event
-              </Text>
+            <div className={styles.fieldGroup}>
+              <span className={styles.fieldLabel}>Event</span>
               <Select
                 options={systemEventOptions}
                 value={trigger.options.name ?? "READY"}
                 onChange={value => handleOptionChange(index, "name", value as string)}
                 dimensionX="fill"
               />
-            </FlexElement>
+            </div>
           )}
           {trigger.type === "bucket" && (
-            <FlexElement direction="vertical" dimensionX="fill" gap={6}>
-              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                Bucket
-              </Text>
-              <Select
-                options={getEnqueuerPropertyOptions("bucket", "bucket")}
-                value={trigger.options.bucket ?? ""}
-                onChange={value => handleOptionChange(index, "bucket", value as string)}
-                dimensionX="fill"
-              />
-              <Text size="small" dimensionX="fill" className={styles.fieldLabel}>
-                Operation Type
-              </Text>
-              <Select
-                options={bucketOperationOptions}
-                value={trigger.options.type ?? "ALL"}
-                onChange={value => handleOptionChange(index, "type", value as string)}
-                dimensionX="fill"
-              />
-            </FlexElement>
+            <>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>Bucket</span>
+                <Select
+                  options={getEnqueuerPropertyOptions("bucket", "bucket")}
+                  value={trigger.options.bucket ?? ""}
+                  onChange={value => handleOptionChange(index, "bucket", value as string)}
+                  dimensionX="fill"
+                />
+              </div>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>Operation Type</span>
+                <Select
+                  options={bucketOperationOptions}
+                  value={trigger.options.type ?? "ALL"}
+                  onChange={value => handleOptionChange(index, "type", value as string)}
+                  dimensionX="fill"
+                />
+              </div>
+            </>
           )}
         </FlexElement>
-        );
-      })()
-    };
+      </PanelAccordionItem>
+    );
   });
 
-  const outerItems: TypeAccordionItem[] = [
-    {
-      title: (
-        <FlexElement gap={8} alignment="leftCenter">
-          <Text size="medium">Triggers</Text>
-        </FlexElement>
-      ),
-      content: (
-        <FlexElement direction="vertical" dimensionX="fill" gap={8}>
-          {triggerItems.length > 0 && (
-            <Accordion
-              items={triggerItems}
-              defaultActiveIndex={-1}
-              suffixOnHover={false}
-              noBackgroundOnFocus
-              headerClassName={styles.triggerMethodAccordion}
-              contentClassName={styles.triggerMethodAccordionContent}
-            />
-          )}
-          <Button
-            variant="text"
-            color="default"
-            onClick={handleAddTrigger}
-            className={styles.addButton}
-          >
-            <Icon name="plus" size="sm" />
-            Add Trigger
-          </Button>
-        </FlexElement>
-      )
-    }
-  ];
-
-  return <Accordion items={outerItems} suffixOnHover={false} noBackgroundOnFocus />;
+  return (
+    <FlexElement direction="vertical" dimensionX="fill" gap={8}>
+      {triggerItems.length === 0 ? (
+        <div className={styles.emptyState}>
+          <Icon name="function" size="md" />
+          <span>No triggers configured yet</span>
+        </div>
+      ) : (
+        <PanelAccordion className={styles.triggerList}>{triggerItems}</PanelAccordion>
+      )}
+      <button
+        type="button"
+        onClick={handleAddTrigger}
+        className={styles.addTriggerButton}
+      >
+        <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Add Trigger
+      </button>
+    </FlexElement>
+  );
 };
 
 export default memo(TriggerPanel);
+

@@ -1,0 +1,321 @@
+// ── Config block card ────────────────────────────────────
+
+.configBlock {
+  background: var(--color-menu-background);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.configBlockHead {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.configBlockTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-font-primary);
+  margin-bottom: 3px;
+  text-transform: capitalize;
+  letter-spacing: -0.1px;
+}
+
+.configBlockDesc {
+  font-size: 12px;
+  color: var(--color-input-placeholder);
+  line-height: 1.5;
+}
+
+// ── Setting rows (inside a card) ─────────────────────────
+
+.fieldRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-menu-background);
+  transition: background 0.08s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--color-soft-light);
+  }
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-menu-background);
+  transition: background 0.08s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--color-soft-light);
+  }
+}
+
+.fieldInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-font-primary);
+}
+
+.fieldDescription {
+  font-size: 11.5px;
+  color: var(--color-input-placeholder);
+  line-height: 1.5;
+}
+
+// ── Number input ─────────────────────────────────────────
+
+.fieldInput {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 220px;
+  justify-content: flex-end;
+}
+
+.numFieldKey {
+  font-size: 11.5px;
+  color: var(--color-input-placeholder);
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+.settingNumInput {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-soft-light);
+  overflow: hidden;
+  height: 34px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+  width: 130px;
+
+  &:focus-within {
+    border-color: var(--color-accent);
+    background: var(--color-menu-background);
+    box-shadow: 0 0 0 3px var(--color-accent-subtle);
+  }
+}
+
+.numIcon {
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-input-placeholder);
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border);
+  align-self: stretch;
+}
+
+.numInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--color-font-primary);
+  text-align: right;
+
+  &::placeholder {
+    color: var(--color-input-placeholder);
+  }
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &[type=number] {
+    -moz-appearance: textfield;
+  }
+}
+
+// ── Sub-section (nested object inside a card) ─────────────
+
+.subSection {
+  border-top: 1px solid var(--color-border);
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.subSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-font-primary);
+  padding: 16px 20px 4px;
+  letter-spacing: -0.1px;
+}
+
+.subSectionDesc {
+  font-size: 12px;
+  color: var(--color-input-placeholder);
+  padding: 0 20px 14px;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--color-border);
+}
+
+// ── Standalone field card (top-level scalar/array field) ─
+
+.standaloneCard {
+  background: var(--color-menu-background);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+// ── Array section card ───────────────────────────────────
+
+.arraySection {
+  background: var(--color-menu-background);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+// ── Nested array (inside an object card) ─────────────────
+
+.nestedArraySection {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-menu-background);
+
+  &:first-child {
+    border-top: none;
+  }
+}
+
+.nestedArrayHeader {
+  padding: 12px 20px 8px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.arraySectionHeader {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.arraySectionTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-font-primary);
+  text-transform: capitalize;
+  letter-spacing: -0.1px;
+}
+
+.arraySectionDesc {
+  font-size: 12px;
+  color: var(--color-input-placeholder);
+  line-height: 1.5;
+}
+
+.arrayBody {
+  padding: 12px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.arrayColHeaders {
+  display: flex;
+  gap: 8px;
+  padding: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-input-placeholder);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.arrayColHeader {
+  flex: 1;
+}
+
+.arrayRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.arrayEmptyState {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1.5px dashed var(--color-border);
+  background: var(--color-soft-light);
+  color: var(--color-input-placeholder);
+  font-size: 12.5px;
+  margin: 8px 0;
+}
+
+.arrayAddBtn {
+  margin-top: 8px;
+  align-self: flex-start;
+}
+
+.removeButton {
+  min-width: unset !important;
+  width: unset !important;
+  padding: 0 !important;
+}
+
+// ── Legacy (section header, add button) ──────────────────
+
+.sectionHeader {
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+  padding: var(--padding-lg) 0 var(--padding-md) 0;
+  text-transform: capitalize;
+}
+
+.addButton {
+  margin-top: var(--padding-sm);
+  align-self: flex-start;
+}

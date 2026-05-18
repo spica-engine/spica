@@ -36,7 +36,7 @@ function buildAutoLayout(components: DashboardComponent[], cols: number, hasAddT
   let currentRowHeight = hasAddTile ? ADD_TILE.h : 0;
 
   return components.map((comp, index) => {
-    const [w, h] = comp.ratio.split("/").map(Number);
+    const [w, h] = (comp.ratio ?? "1/1").split("/").map(Number);
     if (currentX + w > cols) {
       currentY += currentRowHeight;
       currentX = 0;
@@ -84,7 +84,13 @@ const DashboardLayout: FC<TypeDashboardLayout> = ({
     const componentIds = components.map((_c, i) => String(i));
     const validStored = storedLayout.filter((item: Layout) => componentIds.includes(item.i));
 
-    if (validStored.length === components.length && validStored.length > 0) {
+    const ratiosMatch = validStored.every(item => {
+      const comp = components[Number(item.i)];
+      const [w, h] = (comp.ratio ?? "1/1").split("/").map(Number);
+      return item.w === w && item.h === h;
+    });
+
+    if (validStored.length === components.length && validStored.length > 0 && ratiosMatch) {
       setLayout(validStored);
     } else {
       const auto = buildAutoLayout(components, cols, hasAddTile);
@@ -101,8 +107,10 @@ const DashboardLayout: FC<TypeDashboardLayout> = ({
     (newLayout: Layout[]) => {
       const filtered = newLayout.filter(item => item.i !== ADD_TILE_ID);
       setLayout(filtered);
-      const storageKey = getStorageKey(dashboardId);
-      localStorage.setItem(storageKey, JSON.stringify(filtered));
+      if (filtered.length > 0) {
+        const storageKey = getStorageKey(dashboardId);
+        localStorage.setItem(storageKey, JSON.stringify(filtered));
+      }
       onLayoutChangeProp?.(filtered);
     },
     [dashboardId, onLayoutChangeProp]

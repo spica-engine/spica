@@ -19,28 +19,23 @@ import {
   useInjectSecretMutation,
   useEjectSecretMutation,
 } from "../../store/api/functionApi";
-import {useGetFunctionLogsQuery} from "../../store/api/functionApi";
+import {useGetFunctionLogsQuery, useClearFunctionLogsMutation} from "../../store/api/functionApi";
 import type {FunctionLog} from "../../store/api/functionApi";
 import type {FunctionTrigger, ResolvedEnvVar, ResolvedSecret} from "../../store/api/functionApi";
 import {useAppDispatch} from "../../store/hook";
 import Loader from "../../components/atoms/loader/Loader";
 import Confirmation from "../../components/molecules/confirmation/Confirmation";
+import PanelAccordion, {PanelAccordionItem} from "../../components/molecules/panel-accordion/PanelAccordion";
 import CodeEditor from "./components/CodeEditor";
 import ImportedFunctionPanel from "./components/ImportedFunctionPanel";
 import TriggerPanel from "./components/TriggerPanel";
 import DependencyPanel from "./components/DependencyPanel";
 import EnvironmentPanel from "./components/EnvironmentPanel";
 import FunctionLogList from "../function-log/FunctionLogList";
+import FunctionLogFilter from "../function-log/FunctionLogFilter";
 import ConfigurationDialog from "./components/ConfigurationDialog";
+import {LOG_LEVEL_LABELS as LEVEL_LABELS} from "../../utils/functionLogLevels";
 import styles from "./FunctionPage.module.scss";
-
-const LEVEL_LABELS: Record<number, string> = {
-  0: "Debug",
-  1: "Log",
-  2: "Info",
-  3: "Warning",
-  4: "Error",
-};
 
 const IMPORT_REGEX = /^import\s+\*\s+as\s+(\w+)\s+from\s+["']\.\.\/\.\.\/([^/]+)\/\.build["'];?\s*$/gm;
 
@@ -63,13 +58,13 @@ const FunctionPage = () => {
   const [ejectEnvVar] = useEjectEnvVarMutation();
   const [injectSecret] = useInjectSecretMutation();
   const [ejectSecret] = useEjectSecretMutation();
+  const [clearFunctionLogs, {isLoading: isClearingLogs}] = useClearFunctionLogsMutation();
 
   const [code, setCode] = useState("");
   const [lastSavedCode, setLastSavedCode] = useState("");
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const [showLogs, setShowLogs] = useState(false);
-  const [logHeight, setLogHeight] = useState(300);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [localTriggers, setLocalTriggers] = useState<FunctionTrigger[]>([]);
@@ -77,24 +72,37 @@ const FunctionPage = () => {
   const [localSecrets, setLocalSecrets] = useState<ResolvedSecret[]>([]);
   const [isSidebarSaving, setIsSidebarSaving] = useState(false);
   const [logSearchQuery, setLogSearchQuery] = useState("");
+  const [logDateRange, setLogDateRange] = useState(() => {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const begin = new Date();
+    begin.setHours(0, 0, 0, 0);
+    return {begin, end};
+  });
+  const [logLevelFilter, setLogLevelFilter] = useState({info: true, warning: true, error: true, success: true});
+  const [logLevelFilterOpen, setLogLevelFilterOpen] = useState(false);
+  const [isNameEditing, setIsNameEditing] = useState(false);
+  const [editingName, setEditingName] = useState("");
+  const logFilterWrapperRef = useRef<HTMLDivElement | null>(null);
 
-  const isResizingRef = useRef(false);
+  const logSelectedLevels = useMemo(() => {
+    const {info, warning, error} = logLevelFilter;
+    if (info && warning && error) return [];
+    const levels: number[] = [];
+    if (info) levels.push(0, 1, 2);
+    if (warning) levels.push(3);
+    if (error) levels.push(4);
+    return levels;
+  }, [logLevelFilter]);
 
-  const logDateRange = useMemo(() => {
-    const d = new Date();
-    return {
-      begin: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).toISOString(),
-      end: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).toISOString(),
-    };
-  }, []);
-
-  const {data: fnLogs = []} = useGetFunctionLogsQuery(
+  const {data: fnLogs = [], refetch: refetchLogs, isFetching: isLogsFetching} = useGetFunctionLogsQuery(
     {
       functions: [functionId],
-      begin: logDateRange.begin,
-      end: logDateRange.end,
+      begin: logDateRange.begin.toISOString(),
+      end: logDateRange.end.toISOString(),
       limit: 100,
       sort: {_id: -1},
+      levels: logSelectedLevels.length > 0 ? logSelectedLevels : undefined,
     },
     {skip: !functionId || !showLogs}
   );
@@ -214,6 +222,30 @@ const FunctionPage = () => {
     };
   }, [importedFunctionIds, dispatch]);
 
+  useEffect(() => {
+    if (!logLevelFilterOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) {
+        return;
+      }
+
+      if (logFilterWrapperRef.current?.contains(event.target)) {
+        return;
+      }
+
+      setLogLevelFilterOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [logLevelFilterOpen]);
+
   const hasUnsavedChanges = code !== lastSavedCode;
   const hasSidebarChanges =
     JSON.stringify(localTriggers) !== JSON.stringify(serverTriggers) ||
@@ -298,25 +330,79 @@ const FunctionPage = () => {
     }
   }, [functionId, deleteFunction, navigate]);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isResizingRef.current) return;
-    const newHeight = window.innerHeight - e.clientY;
-    if (newHeight >= 42 && newHeight <= window.innerHeight * 0.6) {
-      setLogHeight(newHeight);
-    }
+  const handleLogFilterApply = useCallback(
+    (begin: Date, end: Date, _functions: string[], levels: number[]) => {
+      setLogDateRange({begin, end});
+      // legacy callback kept for compatibility; levels managed by logLevelFilter UI
+    },
+    []
+  );
+
+  const handleLogReset = useCallback(() => {
+    setLogSearchQuery("");
+    setLogLevelFilter({info: true, warning: true, error: true, success: true});
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const begin = new Date();
+    begin.setHours(0, 0, 0, 0);
+    setLogDateRange({begin, end});
   }, []);
 
-  const handleMouseUp = useCallback(() => {
-    isResizingRef.current = false;
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
-  }, [handleMouseMove]);
+  const handleNameEditStart = useCallback(() => {
+    if (!fn) return;
+    setEditingName(fn.name);
+    setIsNameEditing(true);
+  }, [fn]);
 
-  const handleResizeStart = useCallback(() => {
-    isResizingRef.current = true;
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  }, [handleMouseMove, handleMouseUp]);
+  const handleNameEditSave = useCallback(async () => {
+    if (!fn?._id || !editingName.trim()) {
+      setIsNameEditing(false);
+      return;
+    }
+    const newName = editingName.trim();
+    if (newName !== fn.name) {
+      try {
+        await updateFunction({
+          id: fn._id,
+          body: {name: newName, language: fn.language, timeout: fn.timeout, triggers: fn.triggers as any},
+        }).unwrap();
+      } catch {
+        // revert on error
+      }
+    }
+    setIsNameEditing(false);
+  }, [fn, editingName, updateFunction]);
+
+  const handleNameEditKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") handleNameEditSave();
+      if (e.key === "Escape") setIsNameEditing(false);
+    },
+    [handleNameEditSave]
+  );
+
+  const handleClearLogs = useCallback(async () => {
+    if (!functionId) return;
+    await clearFunctionLogs({
+      functionId,
+      begin: logDateRange.begin.toISOString(),
+      end: logDateRange.end.toISOString(),
+    });
+    refetchLogs();
+  }, [functionId, clearFunctionLogs, logDateRange, refetchLogs]);
+
+  const isLogFilterApplied = (() => {
+    if (logSearchQuery.trim() !== "" || logSelectedLevels.length > 0) return true;
+    const today = new Date();
+    return (
+      logDateRange.begin.toDateString() !== today.toDateString() ||
+      logDateRange.begin.getHours() !== 0 ||
+      logDateRange.begin.getMinutes() !== 0 ||
+      logDateRange.end.toDateString() !== today.toDateString() ||
+      logDateRange.end.getHours() !== 23 ||
+      logDateRange.end.getMinutes() !== 59
+    );
+  })();
 
   const toggleLogs = useCallback(() => setShowLogs(prev => !prev), []);
   const toggleSidebar = useCallback(() => setShowSidebar(prev => !prev), []);
@@ -336,32 +422,48 @@ const FunctionPage = () => {
   return (
     <div className={styles.container}>
       <div className={`${styles.codeArea} ${!showSidebar ? styles.codeAreaExpanded : ""}`}>
-        {/* Toolbar */}
-        <div className={styles.codeToolbar}>
-          <div className={styles.toolbarTitle}>
-            <Icon name="function" size="md" />
-            <Text size="medium">{fn.name}</Text>
-          </div>
-          <div className={styles.toolbarSpacer} />
-          <div className={styles.toolbarActions}>
-            <Button variant="icon" color="transparent" onClick={() => setIsEditOpen(true)}>
-              <Icon name="pencil" size="sm" />
-            </Button>
-            <Button variant="icon" color="transparent" onClick={handleSaveIndex} disabled={isIndexSaving || !hasUnsavedChanges}>
-              <Icon name="save" size="sm" />
-            </Button>
-            {lastSaveTime && (
-              <span className={styles.saveStatus}>
-                Saved: {lastSaveTime.toLocaleTimeString()}
+        {/* Function Tab Bar */}
+        <div className={styles.fnTabBar}>
+          <div className={styles.fnTab}>
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+            {isNameEditing ? (
+              <input
+                className={styles.fnTabEditInput}
+                value={editingName}
+                autoFocus
+                onChange={e => setEditingName(e.target.value)}
+                onBlur={handleNameEditSave}
+                onKeyDown={handleNameEditKeyDown}
+              />
+            ) : (
+              <span className={styles.fnTabName} onClick={handleNameEditStart} title="Click to rename">
+                {fn.name}
               </span>
             )}
-            {isIndexSaving && <span className={styles.saveStatus}>Saving...</span>}
-            <Button variant="icon" color="transparent" onClick={() => setIsDeleteOpen(true)}>
-              <Icon name="delete" size="sm" />
-            </Button>
-            <Button variant="icon" color="transparent" onClick={toggleSidebar}>
-              <Icon name={showSidebar ? "chevronRight" : "chevronLeft"} size="sm" />
-            </Button>
+            <span className={styles.fnTabDot} />
+            <div className={styles.fnTabActions}>
+              <button className={styles.fnTabBtn} title="Edit configuration" onClick={() => setIsEditOpen(true)}>
+                <Icon name="pencil" size="sm" />
+              </button>
+              <button
+                className={styles.fnTabBtn}
+                title="Save code"
+                onClick={handleSaveIndex}
+                disabled={isIndexSaving || !hasUnsavedChanges}
+              >
+                <Icon name="save" size="sm" />
+              </button>
+              {lastSaveTime && !isIndexSaving && (
+                <span className={styles.saveStatus}>Saved {lastSaveTime.toLocaleTimeString()}</span>
+              )}
+              {isIndexSaving && <span className={styles.saveStatus}>Saving…</span>}
+              <button className={styles.fnTabBtn} title="Toggle sidebar" onClick={toggleSidebar}>
+                <Icon name={showSidebar ? "chevronRight" : "chevronLeft"} size="sm" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -377,28 +479,85 @@ const FunctionPage = () => {
           />
         </div>
 
-        {/* Resize handle */}
-        {showLogs && (
-          <hr className={styles.resizeHandle} onMouseDown={handleResizeStart} />
-        )}
+        {/* Log bar + Log panel */}
+        <div className={styles.footerBar}>
+          {/* Always-visible 32px bar */}
+          <div className={styles.logBar}>
+            <button className={styles.logBarToggle} onClick={toggleLogs}>
+              <svg
+                width="12"
+                height="12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+                style={{transition: "transform 0.2s", transform: showLogs ? "rotate(180deg)" : "none"}}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+              Logs
+            </button>
+            <div className={styles.logBarRight}>
+              <input
+                className={styles.logSearchInput}
+                placeholder="Search logs…"
+                value={logSearchQuery}
+                onChange={e => setLogSearchQuery(e.target.value)}
+              />
+              <div ref={logFilterWrapperRef} className={styles.logFilterWrapper}>
+                <button
+                  className={styles.logBarBtn}
+                  onClick={() => setLogLevelFilterOpen(prev => !prev)}
+                >
+                  <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                  </svg>
+                  Filter
+                </button>
+                {logLevelFilterOpen && (
+                  <div className={styles.logFilterDropdown}>
+                    {(["info", "warning", "error", "success"] as const).map(key => (
+                      <label key={key} className={styles.logFilterLabel}>
+                        <input
+                          type="checkbox"
+                          checked={logLevelFilter[key]}
+                          onChange={e =>
+                            setLogLevelFilter(prev => ({...prev, [key]: e.target.checked}))
+                          }
+                        />
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button className={styles.logBarBtn} onClick={handleLogReset}>
+                Reset
+              </button>
+              <button
+                className={styles.logBarBtn}
+                onClick={handleClearLogs}
+                disabled={isClearingLogs || fnLogs.length === 0}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
 
-        {/* Log panel */}
-        <div
-          className={styles.footerBar}
-          style={showLogs ? {height: logHeight} : undefined}
-        >
-          <button className={styles.footerToggle} onClick={toggleLogs}>
-            <Icon name="chevronDown" size="sm" />
-            Logs
-          </button>
+          {/* Log list */}
           {showLogs && (
             <div className={styles.footerLogWrapper}>
               <FunctionLogList
                 logs={filteredLogs}
-                searchQuery={logSearchQuery}
-                onSearchChange={setLogSearchQuery}
+                searchQuery=""
+                onSearchChange={() => {}}
                 functionNames={logFunctionNames}
                 handlerNames={logHandlerNames}
+                onRefresh={refetchLogs}
+                onReset={handleLogReset}
+                isFilterApplied={false}
+                isRefreshing={isLogsFetching}
+                hideToolbar
               />
             </div>
           )}
@@ -408,26 +567,37 @@ const FunctionPage = () => {
       {/* Right sidebar */}
       <div className={`${styles.sidebar} ${!showSidebar ? styles.sidebarHidden : ""}`}>
         <div className={styles.sidebarContent}>
-        <ImportedFunctionPanel code={code} onCodeChange={setCode} currentFunctionId={functionId} />
-        <TriggerPanel
-          triggers={localTriggers}
-          enqueuers={information?.enqueuers ?? []}
-          handlers={handlers}
-          onChange={setLocalTriggers}
-        />
-        <DependencyPanel functionId={functionId} />
-        <EnvironmentPanel
-          envVars={localEnvVars}
-          secrets={localSecrets}
-          onEnvVarsChange={setLocalEnvVars}
-          onSecretsChange={setLocalSecrets}
-        />
+          <PanelAccordion>
+            <PanelAccordionItem header="Imported Functions" defaultOpen>
+              <ImportedFunctionPanel code={code} onCodeChange={setCode} currentFunctionId={functionId} />
+            </PanelAccordionItem>
+            <PanelAccordionItem header="Triggers" defaultOpen>
+              <TriggerPanel
+                triggers={localTriggers}
+                enqueuers={information?.enqueuers ?? []}
+                handlers={handlers}
+                onChange={setLocalTriggers}
+              />
+            </PanelAccordionItem>
+            <PanelAccordionItem header="Dependencies" defaultOpen>
+              <DependencyPanel functionId={functionId} />
+            </PanelAccordionItem>
+            <PanelAccordionItem header="Environment" defaultOpen>
+              <EnvironmentPanel
+                envVars={localEnvVars}
+                secrets={localSecrets}
+                onEnvVarsChange={setLocalEnvVars}
+                onSecretsChange={setLocalSecrets}
+              />
+            </PanelAccordionItem>
+          </PanelAccordion>
         </div>
         <FlexElement className={styles.saveButtonContainer} direction="vertical" dimensionX="fill">
-        <Button
+          <Button
             fullWidth
             variant="solid"
             color="primary"
+            className={styles.saveButton}
             onClick={handleSaveSidebar}
             disabled={(!hasSidebarChanges && !hasUnsavedChanges) || isSidebarSaving}
           >
@@ -435,7 +605,6 @@ const FunctionPage = () => {
             {isSidebarSaving ? "Saving..." : "Save"}
           </Button>
         </FlexElement>
-      
       </div>
 
       {/* Edit drawer */}

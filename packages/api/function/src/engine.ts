@@ -7,7 +7,6 @@ import fs from "fs";
 import {JSONSchema7} from "json-schema";
 import path from "path";
 import {rimraf} from "rimraf";
-import {Observable} from "rxjs";
 import {FunctionService} from "@spica-server/function-services";
 import {
   CollectionSlug,
@@ -20,7 +19,6 @@ import {
   SCHEMA,
   SchemaWithName,
   EnvRelation,
-  FunctionWithContent,
   SecretRelation
 } from "@spica-server/interface-function";
 import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret";
@@ -37,7 +35,6 @@ import * as CRUD from "./crud.js";
 import {ClassCommander} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
 import {Package} from "@spica-server/interface-function-pkgmanager";
-import chokidar from "chokidar";
 
 @Injectable()
 export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
@@ -103,7 +100,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     this.registerTriggers().then(() => {
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
-        this.cmdSubs = this.commander.register(this, [this.categorizeChanges], CommandType.SYNC);
+        this.cmdSubs = this.commander.register(
+          this,
+          [
+            this.categorizeChanges,
+            this.createFunction,
+            this.deleteFunction,
+            this.update,
+            this.compile,
+            this.installPackages,
+            this.removePackage
+          ],
+          CommandType.SYNC
+        );
       }
     });
   }
@@ -162,10 +171,10 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   getPackages(fn: Function): Promise<Package[]> {
-    return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn), true);
+    return this.getDefaultPackageManager().ls(this.getFunctionRoot(fn));
   }
 
-  addPackage(fn: Function, qualifiedNames: string | string[]): Observable<number> {
+  installPackages(fn: Function, qualifiedNames: string | string[]): Promise<void> {
     return this.getDefaultPackageManager().install(this.getFunctionRoot(fn), qualifiedNames);
   }
 
@@ -192,43 +201,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
       path.join(functionRoot, "package.json"),
       JSON.stringify(packageJson, null, 2)
     );
-  }
-
-  createSchema(fn: Function) {
-    const functionRoot = this.getFunctionRoot(fn);
-    return fs.promises.mkdir(functionRoot, {recursive: true});
-  }
-
-  createDependency(fn: Function, packageJson) {
-    const functionRoot = this.getFunctionRoot(fn);
-    return fs.promises.writeFile(
-      path.join(functionRoot, "package.json"),
-      JSON.stringify(packageJson, null, 2)
-    );
-  }
-
-  async writePackageJson(fn: Function, dependencies: {[key: string]: string} = {}) {
-    const functionRoot = this.getFunctionRoot(fn);
-    const functionLanguage = this.getFunctionLanguage(fn);
-    await fs.promises.mkdir(functionRoot, {recursive: true});
-    const packageJson = {
-      name: fn.name,
-      description: fn.description || "No description.",
-      version: "0.0.1",
-      private: true,
-      keywords: ["spica", "function", "node.js"],
-      license: "UNLICENSED",
-      main: path.join(".", this.options.outDir, functionLanguage.description.entrypoints.runtime),
-      dependencies
-    };
-    return fs.promises.writeFile(
-      path.join(functionRoot, "package.json"),
-      JSON.stringify(packageJson, null, 2)
-    );
-  }
-
-  installFromPackageJson(fn: Function): Observable<number> {
-    return this.getDefaultPackageManager().install(this.getFunctionRoot(fn), []);
   }
 
   deleteFunction(fn: Function) {
@@ -274,100 +246,6 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         }
         throw Error(e);
       });
-  }
-
-  deleteIndex(fn: Function): Promise<void> {
-    const filePath = this.getFunctionBuildEntrypoint(fn);
-    return fs.promises.rm(filePath);
-  }
-
-  deleteDependency(fn: Function): Promise<void> {
-    const filePath = path.join(this.getFunctionRoot(fn), "package.json");
-    return fs.promises.rm(filePath);
-  }
-
-  watch(scope: "index" | "dependency" | "tsconfig"): Observable<{
-    fn: FunctionWithContent;
-    type: "create" | "update" | "delete";
-    event_id: string;
-  }> {
-    let files = [];
-
-    switch (scope) {
-      case "index":
-        files = ["index.mjs", "index.ts"];
-        break;
-      case "dependency":
-        files = ["package.json"];
-        break;
-      case "tsconfig":
-        files = ["tsconfig.json"];
-        break;
-    }
-    const moduleDir = this.options.root;
-    fs.mkdirSync(moduleDir, {recursive: true});
-
-    return new Observable(observer => {
-      const watcher = chokidar.watch(moduleDir, {
-        ignored: /(^|[/\\])\../,
-        persistent: true,
-        depth: 2,
-        awaitWriteFinish: true
-      });
-
-      const handleFileEvent = async (filePath: string, type: "create" | "update" | "delete") => {
-        const relativePath = filePath.slice(moduleDir.length + 1);
-        const parts = relativePath.split(/[/\\]/);
-
-        const isCorrectDepth = parts.length == 2;
-        const isTrackedFile = files.some(file => parts[1] == file);
-        if (!isCorrectDepth || !isTrackedFile) return;
-
-        const dirName = parts[0];
-
-        let eventId: string;
-        const now = new Date(new Date().setMilliseconds(0)).getTime();
-        if (type === "delete") {
-          eventId = `unlink-${now}`;
-        } else {
-          try {
-            const stats = await fs.promises.stat(filePath);
-            eventId = `${stats.ino}-${stats.mtimeMs}-${stats.size}`;
-          } catch {
-            eventId = `stat-err-${now}`;
-          }
-        }
-
-        let contentPromise: Promise<string> | null;
-        let content: string | null;
-        let fn: Function | null;
-        if (type == "delete") {
-          contentPromise = Promise.resolve(null);
-        } else {
-          contentPromise = fs.promises.readFile(filePath).then(b => b.toString());
-        }
-
-        await Promise.all([
-          CRUD.findByName(this.fs, dirName, {
-            resolveEnvRelations: EnvRelation.NotResolved,
-            resolveSecretRelations: SecretRelation.NotResolved
-          }).then(r => (fn = r)),
-          contentPromise.then(c => (content = c))
-        ]);
-
-        if (!fn) return;
-
-        observer.next({fn: {...fn, content}, type, event_id: eventId});
-      };
-
-      watcher.on("change", path => handleFileEvent(path, "update"));
-      watcher.on("unlink", path => handleFileEvent(path, "delete"));
-      watcher.on("add", path => handleFileEvent(path, "create"));
-
-      watcher.on("error", err => observer.error(err));
-
-      return () => watcher.close();
-    });
   }
 
   getSchema(name: string): Promise<JSONSchema7 | null> {

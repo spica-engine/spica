@@ -1,12 +1,12 @@
-import {memo, useMemo} from "react";
+import {memo, useMemo, type ReactNode} from "react";
 import {
   Accordion,
+  Button,
   FlexElement,
   Input,
   Icon,
   Text,
   type TypeAccordionItem,
-  FluidContainer
 } from "oziko-ui-kit";
 import type {FunctionLog} from "../../store/api/functionApi";
 import {buildAccordionItem} from "./FunctionLogAccordionItem";
@@ -18,6 +18,13 @@ type FunctionLogListProps = {
   onSearchChange: (query: string) => void;
   functionNames: Record<string, string>;
   handlerNames: Record<string, string>;
+  onRefresh: () => void;
+  onReset: () => void;
+  isFilterApplied: boolean;
+  isRefreshing: boolean;
+  toolbarActions?: ReactNode;
+  filterActions?: ReactNode;
+  hideToolbar?: boolean;
 };
 
 const FunctionLogList = ({
@@ -25,7 +32,14 @@ const FunctionLogList = ({
   searchQuery,
   onSearchChange,
   functionNames,
-  handlerNames
+  handlerNames,
+  onRefresh,
+  onReset,
+  isFilterApplied,
+  isRefreshing,
+  toolbarActions,
+  filterActions,
+  hideToolbar = false,
 }: FunctionLogListProps) => {
   const accordionItems = useMemo<TypeAccordionItem[]>(
     () =>
@@ -47,29 +61,46 @@ const FunctionLogList = ({
       className={styles.listContainer}
       dimensionX="fill"
     >
-      <FluidContainer
-        dimensionX="fill"
-        mode="fill"
-        className={styles.listHeader}
-        prefix={{
-          children: (
-            <>
-              <Icon name="magnify" size="sm" />
-              <Input
-                placeholder="Search logs..."
-                value={searchQuery}
-                onChange={e => onSearchChange(e.target.value)}
-                dimensionX={300}
-                debounceDelay={200}
-              />
-            </>
-          ),
-          className: styles.searchRow,
-          alignment: "leftCenter"
-        }}
-        root={{children: <></>}}
-        suffix={{children: <Text className={styles.resultCount}>{logs.length} Results</Text>}}
-      />
+      <FlexElement direction="vertical" dimensionX="fill" gap={8} className={styles.listHeader}>
+        {!hideToolbar && (
+          <>
+            {/* Row 1: search | clear + refresh + results */}
+            <FlexElement alignment="leftCenter" dimensionX="fill" gap={8}>
+              <FlexElement alignment="leftCenter" gap={8} className={styles.searchRow}>
+                <Icon name="magnify" size="sm" />
+                <Input
+                  placeholder="Search logs..."
+                  value={searchQuery}
+                  onChange={e => onSearchChange(e.target.value)}
+                  dimensionX={300}
+                  debounceDelay={200}
+                />
+              </FlexElement>
+              <FlexElement alignment="rightCenter" dimensionX="fill" gap={8}>
+                {toolbarActions}
+                <Button variant="solid" color="soft" onClick={onRefresh} type="button" loading={isRefreshing} disabled={isRefreshing}>
+                  <Icon name="refresh" size="sm" />
+                  Refresh
+                </Button>
+                <Text className={styles.resultCount}>{logs.length} Results</Text>
+              </FlexElement>
+            </FlexElement>
+
+            {/* Row 2: date range filter + reset */}
+            {(filterActions || isFilterApplied) && (
+              <FlexElement alignment="leftCenter" dimensionX="fill" gap={8}>
+                {filterActions}
+                {isFilterApplied && (
+                  <Button onClick={onReset} type="button">
+                    <Icon name="undo" size="sm" />
+                    Reset
+                  </Button>
+                )}
+              </FlexElement>
+            )}
+          </>
+        )}
+      </FlexElement>
       <FlexElement className={styles.logList} dimensionX="fill" direction="vertical">
         <div className={styles.columnHeader}>
           <span>Severity</span>

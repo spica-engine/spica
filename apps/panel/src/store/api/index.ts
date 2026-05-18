@@ -156,7 +156,8 @@ export {
   useUpdateApiKeyMutation,
   useDeleteApiKeyMutation,
   useGetApiKeyPoliciesQuery,
-  useUpdateApiKeyPoliciesMutation,
+  useAddApiKeyPolicyMutation,
+  useRemoveApiKeyPolicyMutation,
 } from './apiKeyApi';
 
 export type {
@@ -223,7 +224,7 @@ export {
   useUpdateStorageItemMutation,
   useDeleteStorageItemMutation,
   useUpdateStorageNameMutation,
-  useGetSubResourcesQuery,
+
 } from './storageApi';
 
 export type {
@@ -241,28 +242,6 @@ export {
 } from '../../hooks/useStorageData';
 
 export { default as useStorageService } from '../../hooks/useStorage';
-
-export {
-  versionControlApi,
-  versionControlApiReducerPath,
-  versionControlApiMiddleware,
-  useGetCommandsQuery,
-  useGetDiffQuery,
-  useCommitMutation,
-  useBranchMutation,
-  useRemoteMutation,
-  usePushMutation,
-  useLogQuery,
-  useExecuteCommandMutation,
-} from './versionControlApi';
-
-export type {
-  CommandsResponse,
-  CommandArgs,
-  ExecuteCommandArgs,
-  LogCommit,
-  LogResponse,
-} from './versionControlApi';
 
 export {
   refreshTokenApi,

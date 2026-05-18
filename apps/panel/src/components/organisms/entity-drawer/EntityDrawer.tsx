@@ -1,8 +1,10 @@
-import React, { useMemo } from "react";
-import { Button, Drawer, FlexElement, Text, useInputRepresenter } from "oziko-ui-kit";
+import React, { useMemo, useRef } from "react";
+import { Drawer, FlexElement, useInputRepresenter } from "oziko-ui-kit";
 import { useGetPoliciesQuery } from "../../../store/api/policyApi";
 import { useEntityDrawer, type EntityWithPolicies } from "../../../hooks/useEntityDrawer";
-import styles from "../../../pages/shared/EntityPage.module.scss";
+import drawerStyles from "../BucketEntryDrawer/BucketEntryDrawer.module.scss";
+import formStyles from "../../molecules/BucketEntryForm/BucketEntryForm.module.scss";
+import { BucketEntryActions } from "../../molecules/BucketEntryActions/BucketEntryActions";
 
 type EntityDrawerProps<TEntity extends EntityWithPolicies> = {
   isOpen: boolean;
@@ -32,6 +34,7 @@ function EntityDrawer<TEntity extends EntityWithPolicies>({
   isUpdating,
 }: EntityDrawerProps<TEntity>) {
   const { data: policies } = useGetPoliciesQuery();
+  const formContainerRef = useRef<HTMLDivElement>(null);
 
   const policyOptions = useMemo(() => {
     return (policies ?? []).map((p) => p._id);
@@ -64,54 +67,51 @@ function EntityDrawer<TEntity extends EntityWithPolicies>({
     value: formValues,
     onChange: handleChange,
     error: formErrors,
-    errorClassName: styles.error,
-    containerClassName: styles.inputFieldContainer,
+    containerClassName: formStyles.inputFieldContainer,
   });
+
+  const subtitle = (selectedEntity as any)?.[nameField] ?? (isEditMode ? "edit" : "new");
 
   return (
     <Drawer
       placement="right"
-      size={600}
+      size={380}
       isOpen={isOpen}
       onClose={onClose}
       showCloseButton={false}
+      scrollableContentClassName={drawerStyles.scrollableWrapper}
     >
-      <FlexElement
-        dimensionX="fill"
-        dimensionY="fill"
-        direction="vertical"
-        gap={0}
-        alignment="leftTop"
-        className={styles.drawerContainer}
-      >
-        <FlexElement dimensionX="fill" alignment="leftTop" className={styles.drawerTitle}>
-          <Text size="large">{isEditMode ? `Edit ${entityLabel}` : `New ${entityLabel}`}</Text>
-        </FlexElement>
-        <FlexElement
-          dimensionX="fill"
-          dimensionY="fill"
-          direction="vertical"
-          alignment="leftTop"
-          gap={16}
-          className={styles.fieldContainer}
-        >
-          {fields}
-        </FlexElement>
-        <FlexElement
-          dimensionX="fill"
-          direction="horizontal"
-          gap={10}
-          alignment="rightCenter"
-          className={styles.drawerFooter}
-        >
-          <Button variant="outlined" color="default" onClick={onClose} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} loading={isSaving}>
-            Save
-          </Button>
-        </FlexElement>
-      </FlexElement>
+      <div className={drawerStyles.drawerContent}>
+        <div className={drawerStyles.drawerHeader}>
+          <div className={drawerStyles.drawerHeaderInfo}>
+            <div className={drawerStyles.drawerTitle}>
+              {isEditMode ? `Edit ${entityLabel}` : `New ${entityLabel}`}
+            </div>
+            <div className={drawerStyles.drawerSubtitle}>
+              {entityLabel}&nbsp;·&nbsp;{subtitle}
+            </div>
+          </div>
+          <button className={drawerStyles.drawerClose} onClick={onClose}>
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className={drawerStyles.drawerBody} ref={formContainerRef}>
+          <FlexElement direction="vertical" gap={10} className={formStyles.formContent}>
+            {fields}
+          </FlexElement>
+        </div>
+
+        <BucketEntryActions
+          onSubmit={handleSave}
+          onCancel={onClose}
+          isLoading={isSaving}
+          submitButtonText={isEditMode ? "Save changes" : "Save and close"}
+        />
+      </div>
     </Drawer>
   );
 }

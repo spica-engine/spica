@@ -1,0 +1,350 @@
+/* ════════════════════════════════
+   FILTER PANEL
+════════════════════════════════ */
+
+.filterPanel {
+  background: var(--color-menu-background);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 440px;
+}
+
+/* Panel header */
+.fpHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-layout-background);
+}
+
+.fpHeadLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fpHeadTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-font-tertiary);
+}
+
+.fpHeadCount {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background: rgba(var(--color-primary-rgb), 0.13);
+  color: var(--color-primary);
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+
+.fpHeadActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fpClearBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--color-font-tertiary);
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+}
+
+.fpApplyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.12s;
+
+  &:hover {
+    opacity: 0.88;
+  }
+}
+
+/* Filter rows container */
+.fpRows {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* Single filter row */
+.filterRow {
+  display: grid;
+  grid-template-columns: 28px 1fr 140px 1fr 28px;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Logic badge AND / OR */
+.logicBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-font-tertiary);
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  padding: 3px 0;
+  height: 30px;
+  transition: all 0.12s;
+  background: var(--color-layout-background);
+  user-select: none;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+
+  &:hover {
+    border-color: rgba(var(--color-primary-rgb), 0.3);
+    color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.07);
+  }
+}
+
+.logicOr {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.1);
+
+  &:hover {
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #d97706;
+    background: rgba(245, 158, 11, 0.15);
+  }
+}
+
+/* Field select */
+.fSelectWrap {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-layout-background);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  height: 32px;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    background: var(--color-menu-background);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.07);
+  }
+}
+
+.fSelectIcon {
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-font-tertiary);
+  flex-shrink: 0;
+}
+
+.fSelect {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 8px 0 0;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-font-primary);
+  cursor: pointer;
+  min-width: 0;
+  appearance: none;
+}
+
+.fSelectArrow {
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-font-tertiary);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* Operator select */
+.opSelectWrap {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-layout-background);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  height: 32px;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    background: var(--color-menu-background);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.07);
+  }
+}
+
+.opSelect {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-font-primary);
+  cursor: pointer;
+  appearance: none;
+}
+
+.opSelectArrow {
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-font-tertiary);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* Value input column — ui-kit components render here */
+.valInputHidden {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Strip extra vertical spacing from ui-kit field wrapper in compact row */
+.compactInput {
+  gap: 0 !important;
+}
+
+/* Remove row button */
+.rowRmBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-font-tertiary);
+  transition: background 0.1s, color 0.1s;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+  }
+}
+
+/* Footer: add condition + tags */
+.fpAddRow {
+  padding: 8px 14px 12px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fpAddBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px dashed var(--color-border);
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-font-tertiary);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.07);
+  }
+}
+
+/* Active filter tags */
+.filterTagsRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.filterTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(var(--color-primary-rgb), 0.07);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.13);
+  color: var(--color-primary);
+  border-radius: 5px;
+  padding: 3px 6px 3px 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.filterTagField {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10.5px;
+}
+
+.filterTagOp {
+  color: var(--color-font-tertiary);
+  font-size: 10.5px;
+}
+
+.filterTagVal {
+  font-weight: 600;
+}
+
+.filterTagRm {
+  cursor: pointer;
+  opacity: 0.6;
+  display: flex;
+  transition: opacity 0.1s;
+
+  &:hover {
+    opacity: 1;
+  }
+}

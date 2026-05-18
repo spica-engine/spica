@@ -1,9 +1,6 @@
-import {Observable} from "rxjs";
-
 export interface Package {
   name: string;
   version: string;
-  types: object;
 }
 
 export abstract class PackageManager {
@@ -11,9 +8,9 @@ export abstract class PackageManager {
     return Array.isArray(qualifiedNames) ? qualifiedNames : [qualifiedNames];
   }
 
-  abstract install(cwd: string, qualifiedNames: string | string[]): Observable<number>;
+  abstract install(cwd: string, qualifiedNames: string | string[]): Promise<void>;
   abstract uninstall(cwd: string, name: string): Promise<void>;
-  abstract ls(cwd: string, includeTypes?: boolean): Promise<Package[]>;
+  abstract ls(cwd: string): Promise<Package[]>;
 }
 
 export abstract class DelegatePkgManager extends PackageManager {
@@ -24,13 +21,13 @@ export abstract class DelegatePkgManager extends PackageManager {
   normalizePackageNames(qualifiedNames: string | string[]): string[] {
     return super.normalizePackageNames(qualifiedNames);
   }
-  install(cwd: string, qualifiedNames: string | string[]): Observable<number> {
+  install(cwd: string, qualifiedNames: string | string[]): Promise<void> {
     return this.pkgManager.install(cwd, qualifiedNames);
   }
   uninstall(cwd: string, name: string): Promise<void> {
     return this.pkgManager.uninstall(cwd, name);
   }
-  ls(cwd: string, includeTypes?: boolean): Promise<Package[]> {
-    return this.pkgManager.ls(cwd, includeTypes);
+  ls(cwd: string): Promise<Package[]> {
+    return this.pkgManager.ls(cwd);
   }
 }

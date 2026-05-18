@@ -1,6 +1,5 @@
 import React from "react";
-import type { CellRendererProps, CellKeyboardHandler } from "../types";
-import { BaseCellRenderer } from "./BaseCellRenderer";
+import type { CellRendererProps } from "../types";
 import styles from "./Cells.module.scss";
 
 /**
@@ -9,7 +8,6 @@ import styles from "./Cells.module.scss";
  */
 export const DefaultCell: React.FC<CellRendererProps> = ({
   value,
-  isFocused,
   property,
 }) => {
   const displayValue = () => {
@@ -19,18 +17,9 @@ export const DefaultCell: React.FC<CellRendererProps> = ({
   };
 
   return (
-    <BaseCellRenderer isFocused={isFocused}>
-      <span className={styles.defaultValueCell}>
-        {displayValue()} <span className={styles.defaultTypeLabel}>({property.type})</span>
-      </span>
-    </BaseCellRenderer>
+    <span className={styles.defaultValueCell}>
+      {displayValue()} <span className={styles.defaultTypeLabel}>({property.type})</span>
+    </span>
   );
-};
-
-export const DefaultCellKeyboardHandler: CellKeyboardHandler = {
-  handleKeyDown: () => {
-    // No special keyboard handling for unknown types
-    return false;
-  }
 };
 

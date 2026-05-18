@@ -2,7 +2,7 @@ import styles from "./Bucket.module.scss";
 import {useExecuteBatchMutation, type BatchResponse, type BatchResponseItem} from "../../store/api/batchApi";
 import {useUpdateBucketEntryMutation, useGetBucketsQuery} from "../../store/api/bucketApi";
 import {useParams} from "react-router-dom";
-import {useCallback, useEffect, useMemo} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import BucketActionBar from "../../components/molecules/bucket-action-bar/BucketActionBar";
 import type {BucketType} from "src/store/api/bucketApi";
 import Loader from "../../components/atoms/loader/Loader";
@@ -14,14 +14,20 @@ import {resetBucketSelection} from "../../store";
 import {selectParsedToken} from "../../store/slices/authSlice";
 import BucketTableNew from "../../components/organisms/bucket-table/BucketTable";
 import {BucketLookupContext, type BucketLookup} from "../../contexts/BucketLookupContext";
+import BucketEntryDrawer from "../../components/organisms/BucketEntryDrawer/BucketEntryDrawer";
+import type {FilterField} from "../../components/prefabs/filter-panel/types";
 
 
 export default function Bucket() {
   const {bucketId = ""} = useParams<{bucketId: string}>();
+  const [editingEntry, setEditingEntry] = useState<Record<string, any> | null>(null);
+  const [isNewEntryDrawerOpen, setIsNewEntryDrawerOpen] = useState(false);
   const {data: buckets = []} = useGetBucketsQuery();
   const [executeBatchRequest] = useExecuteBatchMutation();
   const [updateBucketEntry] = useUpdateBucketEntryMutation();
   const dispatch = useAppDispatch();
+  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
+  const [appliedSort, setAppliedSort] = useState<Record<string, 1 | -1> | null>(null);
 
   const bucket = useMemo(
     () => buckets?.find((i: BucketType) => i._id === bucketId),
@@ -39,8 +45,46 @@ export default function Bucket() {
 
   const {searchQuery, handleSearch} = useBucketSearch(bucketId, searchableColumns);
 
+  // Derive FilterField[] from bucket.properties for the filter panel
+  const filterFields = useMemo((): FilterField[] => {
+    if (!bucket?.properties) return [];
+    const skipTypes = new Set(["relation", "location", "object", "array", "json", "storage"]);
+    return Object.entries(bucket.properties)
+      .filter(([, prop]: [string, any]) => !skipTypes.has(prop.type))
+      .map(([key, prop]: [string, any]): FilterField => {
+        const strTypes = new Set(["string", "textarea", "color", "richtext", "hash", "encrypted"]);
+        const fieldType: FilterField["type"] =
+          strTypes.has(prop.type) ? "string" :
+          prop.type === "number" ? "number" :
+          prop.type === "date" ? "date" :
+          prop.type === "boolean" ? "boolean" :
+          prop.type === "multiselect" && prop.items?.enum ? "enum" : "string";
+        const base: FilterField = {key, label: prop.title || key, type: fieldType};
+        if (fieldType === "enum" && prop.items?.enum) {
+          base.enumOptions = (prop.items.enum as string[]).map(v => ({label: v, value: v}));
+        }
+        return base;
+      });
+  }, [bucket]);
+
+  // Merge filter/sort into searchQuery for useBucketData
+  const mergedSearchQuery = useMemo(() => {
+    if (!appliedFilter && !appliedSort) return searchQuery;
+    const merged = {...(searchQuery ?? {})};
+    if (appliedSort) {
+      merged.sort = appliedSort as any;
+    }
+    if (appliedFilter) {
+      const existing = (searchQuery as any)?.filter;
+      merged.filter = existing
+        ? {$and: [existing, appliedFilter]}
+        : appliedFilter;
+    }
+    return merged;
+  }, [searchQuery, appliedFilter, appliedSort]);
+
   const {bucketData, bucketDataLoading, refreshLoading, handleRefresh} =
-    useBucketData(bucketId, searchQuery);
+    useBucketData(bucketId, mergedSearchQuery);
 
   const isTableLoading = useMemo(() => formattedColumns.length <= 1, [formattedColumns]);
   const authToken = useAppSelector(selectParsedToken);
@@ -151,6 +195,17 @@ export default function Bucket() {
     [executeBatchRequest, authToken]
   );
 
+  const handleRowClick = useCallback(
+    ({row}: {row: any}) => {
+      setEditingEntry(row);
+    },
+    []
+  );
+
+  const handleEditDrawerClose = useCallback(() => setEditingEntry(null), []);
+  const handleNewEntryDrawerClose = useCallback(() => setIsNewEntryDrawerOpen(false), []);
+  const handleOpenNewEntry = useCallback(() => setIsNewEntryDrawerOpen(true), []);
+
   if (formattedColumns.length <= 1 || !bucket) {
     return <Loader />;
   }
@@ -160,6 +215,9 @@ export default function Bucket() {
       <div className={styles.container}>
         <BucketActionBar
           onSearch={handleSearch}
+          onFilter={setAppliedFilter}
+          onSort={setAppliedSort}
+          filterFields={filterFields}
           bucket={bucket as BucketType}
           bucketData={bucketData?.data ?? []}
           deleteBucketEntries={deleteBucketEntries}
@@ -174,10 +232,27 @@ export default function Bucket() {
           bucket={bucket as any}
           data={bucketData?.data ?? []}
           onDataChange={handleDataChange}
+          onRowClick={handleRowClick}
+          onNewEntry={handleOpenNewEntry}
+          onSort={setAppliedSort}
           loading={bucketDataLoading}
           visibleColumns={visibleColumns}
         />
+
       </div>
+      <BucketEntryDrawer
+        bucket={bucket as BucketType}
+        entry={editingEntry}
+        isOpen={editingEntry !== null}
+        onClose={handleEditDrawerClose}
+        onEntryCreated={handleRefresh}
+      />
+      <BucketEntryDrawer
+        bucket={bucket as BucketType}
+        isOpen={isNewEntryDrawerOpen}
+        onClose={handleNewEntryDrawerClose}
+        onEntryCreated={handleRefresh}
+      />
     </BucketLookupContext.Provider>
   );
 }

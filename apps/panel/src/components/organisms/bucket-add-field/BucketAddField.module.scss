@@ -60,8 +60,9 @@
 
 .configurationOptionsContainer {
   width: 100%;
-  background: var(--color-input-background);
-  border-radius: var(--border-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   > div > div {
     gap: 0 !important;
   }

@@ -1,4 +1,11 @@
-import { FlexElement, Table, type TableColumn } from 'oziko-ui-kit';
+import {
+  FlexElement,
+  Table,
+  type TableColumn,
+  type TableEmptyStateProps,
+  type TableRowClickParams,
+  type TableSkeletonCellParams,
+} from 'oziko-ui-kit';
 import React from 'react'
 import styles from './Table.module.scss';
 
@@ -12,24 +19,37 @@ type SpicaTableProps<T> = {
   data: T[];
   isLoading?: boolean;
   skeletonRowCount?: number;
+  renderSkeletonCell?: (params: TableSkeletonCellParams<T>) => React.ReactNode;
   fixedColumns?: string[];
-  tableClassName?: string;
+  noResizeableColumns?: string[];
+  onRowClick?: (params: TableRowClickParams<T>) => void;
+  emptyState?: TableEmptyStateProps;
 }
 
 
-const SpicaTable = <T,>({ columns, data, isLoading, skeletonRowCount, fixedColumns, tableClassName }: SpicaTableProps<T>) => {
+const SpicaTable = <T,>({
+  columns,
+  data,
+  isLoading,
+  skeletonRowCount,
+  renderSkeletonCell,
+  fixedColumns,
+  noResizeableColumns,
+  onRowClick,
+  emptyState,
+}: SpicaTableProps<T>) => {
   return (
     <Table
-    columns={columns}
-    data={data}
-    tableClassName={tableClassName ?? styles.table}
-    headerClassName={`${styles.header} ${styles.policyTableHeaders}`}
-    columnClassName={`${styles.column} ${styles.policyTableColumns}`}
-    cellClassName={styles.cell}
-    loading={isLoading}
-    skeletonRowCount={skeletonRowCount ?? 10}
-    fixedColumns={fixedColumns ?? []}
-  />
+      columns={columns}
+      data={data}
+      loading={isLoading}
+      skeletonRowCount={skeletonRowCount ?? 10}
+      renderSkeletonCell={renderSkeletonCell}
+      fixedColumns={fixedColumns ?? []}
+      noResizeableColumns={noResizeableColumns}
+      onRowClick={onRowClick}
+      emptyState={emptyState}
+    />
   )
 }
 

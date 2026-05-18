@@ -1,5 +1,30 @@
 import { baseApi } from './baseApi';
 
+export interface ProfilerEntry {
+  _id?: string;
+  op: "command" | "count" | "distinct" | "geoNear" | "getMore" | "group" | "insert" | "mapReduce" | "query" | "remove" | "update";
+  ns: string;
+  command: Record<string, any>;
+  keysExamined: number;
+  docsExamined: number;
+  numYield: number;
+  locks: Record<string, any>;
+  millis: number;
+  planSummary: string;
+  ts: string;
+  client: string;
+  appName: string;
+  allUsers: Array<Record<string, any>>;
+  user: string;
+}
+
+export interface ProfilerQueryParams {
+  filter?: Record<string, any>;
+  limit?: number;
+  skip?: number;
+  sort?: Record<string, 1 | -1>;
+}
+
 export interface User {
   _id?: string;
   username: string;
@@ -44,10 +69,19 @@ export const userApi = baseApi.injectEndpoints({
       filter?: Record<string, any>;
       paginate?: boolean;
     } | void>({
-      query: (params) => ({
-        url: 'passport/user',
-        params: params || {},
-      }),
+      query: (options = {}) => {
+        const params = new URLSearchParams();
+        const {limit, skip, sort, filter, paginate} = options;
+
+        if (paginate != null) params.append('paginate', String(paginate));
+        if (limit != null) params.append('limit', String(limit));
+        if (skip != null) params.append('skip', String(skip));
+        if (sort) params.append('sort', JSON.stringify(sort));
+        if (filter) params.append('filter', JSON.stringify(filter));
+
+        const qs = params.toString();
+        return qs ? `passport/user?${qs}` : 'passport/user';
+      },
       transformResponse: (response: UserListResponse | User[]) => {
         if (Array.isArray(response)) {
           return { data: response, meta: { total: response.length } };
@@ -103,6 +137,19 @@ export const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'User', id }, 'User'],
     }),
+
+    getUserProfile: builder.query<ProfilerEntry[], ProfilerQueryParams | void>({
+      query: (params) => {
+        const queryParams: Record<string, string> = {};
+        if (params) {
+          if (params.filter) queryParams['filter'] = JSON.stringify(params.filter);
+          if (params.limit !== undefined) queryParams['limit'] = String(params.limit);
+          if (params.skip !== undefined) queryParams['skip'] = String(params.skip);
+          if (params.sort) queryParams['sort'] = JSON.stringify(params.sort);
+        }
+        return { url: 'passport/user/profile', params: queryParams };
+      },
+    }),
   }),
   overrideExisting: false,
 });
@@ -115,4 +162,6 @@ export const {
   useDeleteUserMutation,
   useAddUserPolicyMutation,
   useRemoveUserPolicyMutation,
+  useGetUserProfileQuery,
+  useLazyGetUserProfileQuery,
 } = userApi;

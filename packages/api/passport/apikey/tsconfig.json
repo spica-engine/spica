@@ -7,6 +7,9 @@
   "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
   "references": [
     {
+      "path": "../testing"
+    },
+    {
       "path": "../guard"
     },
     {

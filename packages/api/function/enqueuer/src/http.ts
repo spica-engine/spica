@@ -22,6 +22,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
 
   private router = express.Router({mergeParams: true});
   private rateLimitService = new HttpRateLimitService();
+  private unhandledLayer: any;
 
   constructor(
     private queue: EventQueue,
@@ -40,6 +41,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       }) as any
     );
     this.router.use(this.handleUnhandled);
+    this.unhandledLayer = this.router.stack[this.router.stack.length - 1];
     const stack = httpServer._router.stack;
     httpServer.use("/fn-execute", this.router);
     const expressInitIndex = stack.findIndex(l => l.name === "expressInit");
@@ -61,11 +63,12 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   }
 
   private reorderUnhandledHandle() {
-    this.router.stack.splice(
-      this.router.stack.findIndex(l => l.handle == this.handleUnhandled),
-      1
-    );
+    const idx = this.router.stack.indexOf(this.unhandledLayer);
+    if (idx !== -1) {
+      this.router.stack.splice(idx, 1);
+    }
     this.router.use(this.handleUnhandled);
+    this.unhandledLayer = this.router.stack[this.router.stack.length - 1];
   }
 
   subscribe(target: event.Target, options: HttpOptions): void {

@@ -7,25 +7,14 @@ import {ASSET_REP_MANAGER} from "@spica-server/interface-asset";
 import {IRepresentativeManager} from "@spica-server/interface-representative";
 import {registerAssetHandlers} from "./asset.js";
 import {DashboardRealtimeModule} from "@spica-server/dashboard-realtime";
-import {
-  REGISTER_VC_CHANGE_HANDLER,
-  RegisterVCChangeHandler
-} from "@spica-server/interface-versioncontrol";
-import {getSupplier, getApplier} from "./synchronizer/schema/index.js";
 
 @Module({})
 export class DashboardModule {
   constructor(
     ds: DashboardService,
     validator: Validator,
-    @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager,
-    @Optional()
-    @Inject(REGISTER_VC_CHANGE_HANDLER)
-    registerVCChangeHandler: RegisterVCChangeHandler
+    @Optional() @Inject(ASSET_REP_MANAGER) private assetRepManager: IRepresentativeManager
   ) {
-    if (registerVCChangeHandler) {
-      registerVCChangeHandler(getSupplier(ds), getApplier(ds, validator));
-    }
     registerAssetHandlers(ds, validator, assetRepManager);
   }
   static forRoot({realtime}): DynamicModule {

@@ -1,12 +1,26 @@
 .addNewButton {
-  width: 100%;
-  height: 60px;
-  min-height: 60px;
+  width: calc(100% - var(--spacing-7) * 2);
+  margin: var(--spacing-3) var(--spacing-7) var(--spacing-7);
+  height: auto;
+  min-height: unset;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  gap: var(--gap-sm);
+  gap: var(--spacing-5);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border) !important;
+  color: var(--color-text-muted) !important;
+  font-size: 12px;
+  font-family: var(--font-sans);
   font-weight: 400;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-accent) !important;
+    color: var(--color-accent) !important;
+    background: var(--color-accent-subtle);
+  }
 }
 .noLineHeight {
   line-height: 0 !important;

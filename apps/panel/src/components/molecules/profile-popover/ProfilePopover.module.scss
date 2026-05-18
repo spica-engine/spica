@@ -1,30 +1,81 @@
 .popoverContainer {
-  padding: 0 !important;
+  width: 240px !important;
+  padding: 0;
+  z-index: 4;
+  justify-content: start !important;
+}
 
-  .settingsContainer {
-    padding: 0 !important;
-
-    .settings {
-      @extend .menuItem;
-      justify-content: flex-start !important;
-      cursor: pointer;
-    }
-  }
-
-  .themeContainer {
-    @extend .menuItem;
-    .theme {
-      min-width: 35px;
+.popoverContent {
+  width: 100% !important;
+  > div {
+    width: 100% !important;
+    justify-content: start !important;
+    padding: 0 var(--padding-md);
+    &:hover {
+      background-color: var(--color-hover) !important;
     }
   }
 }
 
-.menuItem {
-  padding: var(--padding-md) !important;
-  font-size: var(--font-size-md);
-  font-weight: 700;
-  width: 100%;
-  &:hover {
-    background-color: var(--color-input-background);
+.profileContainer {
+  border-bottom: var(--border-default);
+  height: 40px !important;
+  width: 100% !important;
+  align-items: center;
+  cursor: pointer;
+
+  button {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    justify-content: start;
+    padding-left: 0;
+    height: 20px;
+    > div > div {
+      gap: var(--gap-md) !important;
+    }
+  }
+
+  button:hover {
+    background-color: transparent !important;
+  }
+}
+
+.logoutContainer {
+  height: 40px !important;
+  width: 100% !important;
+  align-items: center;
+  cursor: pointer;
+
+  &.hasBorder {
+    border-bottom: var(--border-default);
+  }
+
+  button {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    justify-content: start;
+    padding-left: 0;
+    height: 20px;
+    > div > div {
+      gap: var(--gap-md) !important;
+    }
+  }
+
+  button:hover {
+    background-color: transparent !important;
+  }
+}
+
+.themeContainer {
+  height: 40px !important;
+  width: 100% !important;
+  align-items: center;
+
+  .theme {
+    min-width: 35px;
+    font-size: var(--font-size-md);
+    font-weight: 700;
   }
 }

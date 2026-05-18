@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {FlexElement, Icon, Table, type TableColumn, Button, Popover, type IconName } from "oziko-ui-kit";
+import {useEntrySelection} from "../../../hooks/useEntrySelection";
 import type { BucketSchema, BucketDataRow, BucketProperty } from "./types";
-import { EditableCell } from "./EditableCell";
+import { cellRegistry } from "./cellRegistry";
 import styles from "./BucketTable.module.scss";
 import type {FieldFormState} from "../../../domain/fields/types";
 import type {BucketType} from "../../../store/api/bucketApi";
@@ -12,12 +13,17 @@ import { FIELD_REGISTRY } from "../../../domain/fields/registry";
 import ColumnActionsMenu from "../../molecules/column-actions-menu/ColumnActionsMenu";
 import Confirmation from "../../molecules/confirmation/Confirmation";
 import useLocalStorage from "../../../hooks/useLocalStorage";
+import type { TableRowClickParams } from "oziko-ui-kit";
+
 interface BucketTableNewProps {
   bucket: BucketSchema;
   data: BucketDataRow[];
   onDataChange?: (rowId: string, propertyKey: string, newValue: any) => void;
+  onRowClick?: (params: TableRowClickParams<BucketDataRow>) => void;
+  onNewEntry?: () => void;
   loading?: boolean;
   visibleColumns?: Record<string, boolean>;
+  onSort?: (sort: Record<string, 1 | -1> | null) => void;
 }
 
 
@@ -188,28 +194,26 @@ const ColumnHeader = ({
 };
 
 
-const BucketTable: React.FC<BucketTableNewProps> = ({ 
+const BucketTable: React.FC<BucketTableNewProps> = ({
+  onNewEntry,
   bucket, 
   data,
   onDataChange,
+  onRowClick,
   loading = false,
-  visibleColumns
+  visibleColumns,
+  onSort
 }) => {
+  const {selectedEntries, selectEntry, deselectEntry, selectEntries, resetSelection} = useEntrySelection(bucket._id);
 
   const [createBucketField] = useCreateBucketFieldMutation();
   const [deleteBucketField] = useDeleteBucketFieldMutation();
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [blurTrigger, setBlurTrigger] = useState(0);
 
   const [fieldsOrder, setFieldsOrder] = useLocalStorage<string[]>(
     `${bucket?._id}-fields-order`,
     bucket?.properties ? Object.keys(bucket.properties) : []
   );
-
-  const [sortMeta, setSortMeta] = useLocalStorage<{
-    field: string;
-    direction: "asc" | "desc";
-  } | null>(`${bucket?._id}-sort-meta`, null);
 
   const forbiddenFieldNames = useMemo(() => {
     return bucket?.properties ? Object.keys(bucket.properties) : [];
@@ -311,16 +315,16 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
 
   const onSortAsc = useCallback(
     (fieldTitle: string) => {
-      setSortMeta({field: fieldTitle, direction: "asc"});
+      onSort?.({[fieldTitle]: 1});
     },
-    [setSortMeta]
+    [onSort]
   );
 
   const onSortDesc = useCallback(
     (fieldTitle: string) => {
-      setSortMeta({field: fieldTitle, direction: "desc"});
+      onSort?.({[fieldTitle]: -1});
     },
-    [setSortMeta]
+    [onSort]
   );
 
   useEffect(() => {
@@ -345,112 +349,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   }, [bucket?.properties, bucket?._id]);
 
 
-  const hasPopoverRole = useCallback((element: Element): boolean => {
-    const role = element.getAttribute('role');
-    if (!role) return false;
-    
-    const popoverRoles = ['dialog', 'menu', 'listbox', 'tooltip', 'combobox', 'grid', 'tree'];
-    return popoverRoles.includes(role);
-  }, []);
-
-  const hasPortalClassName = useCallback((element: Element): boolean => {
-    const className = element.className;
-    let classNameStr = '';
-    
-    if (typeof className === 'string') {
-      classNameStr = className;
-    } else if (className && typeof className === 'object') {
-      const classNameObj = className as { baseVal?: string };
-      classNameStr = (typeof classNameObj.baseVal === 'string')
-        ? classNameObj.baseVal
-        : String(className);
-    }
-    
-    if (!classNameStr) return false;
-    
-    const portalClassNames = [
-      'rc-portal', 'rc-tooltip', 'rc-dropdown', 
-      'popover', 'Popover', 'portal', 'Portal'
-    ];
-    
-    return portalClassNames.some(name => classNameStr.includes(name));
-  }, []);
-
-  const hasPopoverAriaAttributes = useCallback((element: Element): boolean => {
-    if (element.getAttribute('aria-expanded') === 'true') return true;
-    if (element.getAttribute('aria-haspopup') === 'true') return true;
-    
-    if (element instanceof HTMLElement) {
-      return 'popover' in element.dataset || 'portal' in element.dataset;
-    }
-    
-    return false;
-  }, []);
-
-  const hasFixedPositioning = useCallback((element: Element): boolean => {
-    const style = globalThis.getComputedStyle(element);
-    if (style.position !== 'fixed') return false;
-    
-    const zIndex = style.zIndex;
-    return zIndex !== 'auto' && Number.parseInt(zIndex, 10) > 1000;
-  }, []);
-
-  const isInsidePopover = useCallback((element: Node | null): boolean => {
-    if (!element) return false;
-    
-    let current: Node | null = element;
-    
-    while (current && current !== document.body) {
-      if (!(current instanceof Element)) {
-        current = current.parentNode;
-        continue;
-      }
-      
-      if (
-        hasPopoverRole(current) ||
-        hasPortalClassName(current) ||
-        hasPopoverAriaAttributes(current) ||
-        hasFixedPositioning(current)
-      ) {
-        return true;
-      }
-      
-      current = current.parentNode;
-    }
-    
-    return false;
-  }, [hasPopoverRole, hasPortalClassName, hasPopoverAriaAttributes, hasFixedPositioning]);
-
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      
-      if (isInsidePopover(target)) {
-        return;
-      }
-      
-      if (tableContainerRef.current && !tableContainerRef.current.contains(target)) {
-        setBlurTrigger(prev => prev + 1);
-      }
-    };
-
-    const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setBlurTrigger(prev => prev + 1);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscKey);
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscKey);
-    };
-  }, [isInsidePopover]);
-
-
   const renderIdCell = useCallback((params: { row: BucketDataRow; isFocused: boolean }) => {
     return (
       <div className={styles.readonlyCell}>
@@ -459,9 +357,6 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     );
   }, []);
 
-  const handleRequestBlur = useCallback(() => {
-    setBlurTrigger(prev => prev + 1);
-  }, []);
 
   const createDeleteHandler = useCallback((fieldKey: string, isPrimaryField: boolean) => {
     if (isPrimaryField) return undefined;
@@ -472,24 +367,23 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     key: string,
     property: BucketProperty
   ) => {
+    const cellConfig = cellRegistry.get(property.type);
+    const CellComponent = cellConfig.component;
 
     return (params: { row: BucketDataRow; isFocused: boolean }) => {
       const value = params.row[key];
-      
+
       return (
-        <EditableCell
+        <CellComponent
           value={structuredClone(value)}
           propertyKey={key}
           property={property}
           rowId={params.row._id}
-          isFocused={params.isFocused}
-          onValueChange={handleValueChange} 
-          onRequestBlur={handleRequestBlur}
-          blurTrigger={blurTrigger}
+          onChange={(newValue) => handleValueChange(key, params.row._id, newValue)}
         />
       );
     };
-  }, [handleValueChange, handleRequestBlur, blurTrigger]);
+  }, [handleValueChange]);
 
   const createPropertyColumn = useCallback((
     key: string,
@@ -532,21 +426,39 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     createPropertyRenderCell
   ]);
 
-  const columns = useMemo((): TableColumn<BucketDataRow>[] => {
+  const renderCheckboxCell = useCallback((params: {row: BucketDataRow; isFocused: boolean}) => {
+    const isChecked = selectedEntries.has(params.row._id);
+    return (
+      <div className={styles.checkboxCell}>
+        <input
+          type="checkbox"
+          className={styles.rowCheckbox}
+          checked={isChecked}
+          onChange={(e) => {
+            e.stopPropagation();
+            if (isChecked) {
+              deselectEntry(params.row._id);
+            } else {
+              selectEntry(params.row._id);
+            }
+          }}
+        />
+      </div>
+    );
+  }, [selectedEntries, selectEntry, deselectEntry]);
+
+  const propertyColumns = useMemo((): TableColumn<BucketDataRow>[] => {
     if (!bucket?.properties) return [];
 
-    const systemColumns: TableColumn<BucketDataRow>[] = [
-      {
-        key: '_id',
-        header: '_id',
-        width: '250px',
-        minWidth: '250px',
-        renderCell: renderIdCell,
-      }
-    ];
+    const idColumn: TableColumn<BucketDataRow> = {
+      key: '_id',
+      header: '_id',
+      width: '250px',
+      minWidth: '250px',
+      renderCell: renderIdCell,
+    };
 
     const propertyKeys = Object.keys(bucket.properties);
-
 
     const orderedKeys = fieldsOrder.filter(key => propertyKeys.includes(key));
     const newKeys = propertyKeys.filter(key => !fieldsOrder.includes(key));
@@ -556,12 +468,12 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
       ? finalOrderedKeys.filter(key => visibleColumns[key] !== false)
       : finalOrderedKeys;
 
-    const propertyColumns = visibleOrderedKeys.map((key, index) => {
+    const propCols = visibleOrderedKeys.map((key, index) => {
       const property: BucketProperty = bucket.properties[key];
       return createPropertyColumn(key, property, index, visibleOrderedKeys.length);
     });
 
-    return [...systemColumns, ...propertyColumns];
+    return [idColumn, ...propCols];
   }, [
     bucket?.properties,
     fieldsOrder,
@@ -570,38 +482,39 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
     visibleColumns
   ]);
 
+  const columns = useMemo((): TableColumn<BucketDataRow>[] => {
+    const hasData = data.length > 0;
+    const allSelected = hasData && data.every(row => selectedEntries.has(row._id));
+    const someSelected = hasData && !allSelected && data.some(row => selectedEntries.has(row._id));
 
-  const compareValues = useCallback((aValue: any, bValue: any): number => {
-    if (aValue == null && bValue == null) return 0;
-    if (aValue == null) return 1;
-    if (bValue == null) return -1;
+    const checkboxColumn: TableColumn<BucketDataRow> = {
+      key: 'checkbox',
+      header: (
+        <div className={styles.checkboxCell}>
+          <input
+            type="checkbox"
+            className={styles.rowCheckbox}
+            checked={allSelected}
+            disabled={!hasData}
+            ref={el => { if (el) el.indeterminate = someSelected; }}
+            onChange={() => {
+              if (allSelected || someSelected) {
+                resetSelection();
+              } else {
+                selectEntries(data.map(row => row._id));
+              }
+            }}
+          />
+        </div>
+      ),
+      width: '40px',
+      minWidth: '40px',
+      renderCell: renderCheckboxCell,
+    };
 
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return aValue.localeCompare(bValue);
-    }
-    
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return aValue - bValue;
-    }
-    
-    if (aValue instanceof Date && bValue instanceof Date) {
-      return aValue.getTime() - bValue.getTime();
-    }
-    
-    return String(aValue).localeCompare(String(bValue));
-  }, []);
+    return [checkboxColumn, ...propertyColumns];
+  }, [data, selectedEntries, selectEntries, resetSelection, propertyColumns, renderCheckboxCell]);
 
-  const sortedData = useMemo(() => {
-    const currentData = data ?? [];
-    if (!sortMeta || currentData.length === 0) return currentData;
-
-    return [...currentData].sort((a, b) => {
-      const aValue = a[sortMeta.field];
-      const bValue = b[sortMeta.field];
-      const comparison = compareValues(aValue, bValue);
-      return sortMeta.direction === 'asc' ? comparison : -comparison;
-    });
-  }, [data, sortMeta, compareValues]);
 
   if (!bucket?.properties) {
     return (
@@ -615,44 +528,41 @@ const BucketTable: React.FC<BucketTableNewProps> = ({
   return (
 <>
 <div ref={tableContainerRef} className={styles.tableContainer}>
-      <div className={styles.tableWrapper}>
-        <Table
-          columns={columns}
-          data={sortedData}
-          saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
-          fixedColumns={['_id']}
-          noResizeableColumns={['_id']}
-          tableClassName={styles.table}
-          headerClassName={styles.header}
-          columnClassName={styles.column}
-          cellClassName={styles.cell}
-          loading={loading}
-          skeletonRowCount={10}
-        />
-      </div>
-      <FlexElement
-        className={styles.newFieldContainer}
-        direction="vertical"
-        dimensionY="fill"
-        alignment="leftTop"
-      >
+      <Table
+        columns={columns}
+        data={data}
+        saveToLocalStorage={{ id: `bucket-table-${bucket._id}`, save: true }}
+        fixedColumns={['checkbox', '_id']}
+        noResizeableColumns={['checkbox']}
+        loading={loading}
+        skeletonRowCount={10}
+        onRowClick={onRowClick}
+        emptyState={onNewEntry ? {
+          title: "This bucket is empty",
+          description: "No entries yet. Add one manually or import in bulk via CSV.",
+          actions: (
+            <Button variant="solid" onClick={onNewEntry}>
+              <Icon name="plus" size={14} />
+              New Entry
+            </Button>
+          ),
+        } : undefined}
+      />
+      <div className={`${styles.newFieldContainer} ${!loading && data.length === 0 && onNewEntry ? styles.newFieldContainerEmpty : ""}`}>
         <BucketFieldPopup
           onSaveAndClose={handleSaveAndClose}
           forbiddenFieldNames={forbiddenFieldNames}
         >
           {({onOpen}) => (
-            <FlexElement className={styles.newFieldHeader} dimensionY={36} onClick={onOpen}>
+            <FlexElement className={styles.newFieldHeader} dimensionY={34} dimensionX="fill" onClick={onOpen}>
               <Icon name="plus" size={16} />
               <span>New Field</span>
             </FlexElement>
           )}
         </BucketFieldPopup>
-      </FlexElement>
+      </div>
 
     </div>
-     {!sortedData.length && <div className={styles.noDataText}>
-      <p>No data available</p>
-    </div>}
 </>
   );
 };

@@ -3,7 +3,7 @@ name: Spica Master Deployment
 env:
   NX_NO_CLOUD: true
   VERSION: master
-  BASE_URL: /spica/
+  BASE_URL: /
   VITE_BASE_URL: https://master.spicaengine.com/api
 
 on:
@@ -14,6 +14,9 @@ jobs:
   build_and_push:
     name: Build and Push (${{ matrix.project }})
     runs-on: ubuntu-latest
+    outputs:
+      panel: ${{ steps.digest.outputs.panel }}
+      api: ${{ steps.digest.outputs.api }}
     strategy:
       fail-fast: false
       matrix:
@@ -72,6 +75,7 @@ jobs:
             ${{ runner.os }}-docker-cache-${{ matrix.project }}-
 
       - name: Build and push image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.dir }}
@@ -82,6 +86,10 @@ jobs:
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha,scope=${{ matrix.project }}
           cache-to: type=gha,scope=${{ matrix.project }},mode=max
+
+      - name: Export image digest
+        run: echo "${{ matrix.project }}=${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
+        id: digest
 
   deploy:
     name: Deploy to GKE
@@ -106,6 +114,17 @@ jobs:
         uses: Azure/setup-kubectl@v4.0.0
 
       - name: Deploy to GKE
+        env:
+          PANEL_DIGEST: ${{ needs.build_and_push.outputs.panel }}
+          API_DIGEST: ${{ needs.build_and_push.outputs.api }}
         run: |
           kubectl apply -f ./deployment.yaml
-          kubectl delete --all pods -n infrastructure-master-spicaengine-com
+          NS=infrastructure-master-spicaengine-com
+          if [ -n "$PANEL_DIGEST" ]; then
+            kubectl set image statefulset/spica spica=spicaengine/panel@$PANEL_DIGEST -n $NS
+          fi
+          if [ -n "$API_DIGEST" ]; then
+            kubectl set image statefulset/spica api=spicaengine/api@$API_DIGEST -n $NS
+          fi
+          kubectl rollout restart statefulset/spica -n $NS
+          kubectl rollout status statefulset/spica -n $NS --timeout=120s

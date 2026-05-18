@@ -4,7 +4,11 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["src/**/*.ts", "index.ts", "src/**/*.json"],
+  "include": [
+    "src/**/*.ts",
+    "index.ts",
+    "src/**/*.json"
+  ],
   "references": [
     {
       "path": "../status"
@@ -14,9 +18,6 @@
     },
     {
       "path": "../passport/guard"
-    },
-    {
-      "path": "../../interface/versioncontrol"
     },
     {
       "path": "../../interface/status"

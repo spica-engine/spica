@@ -2,7 +2,6 @@ import {Npm} from "@spica-server/function-pkgmanager-node";
 import {LocalPackageManager} from "@spica-server/function-pkgmanager-local";
 import fs from "fs";
 import path from "path";
-import {of} from "rxjs";
 import {Package, PackageManager} from "@spica-server/interface-function-pkgmanager";
 
 describe("local package manager", () => {
@@ -18,14 +17,13 @@ describe("local package manager", () => {
     beforeEach(() => {
       mockPackageManager = {
         install: jest.fn().mockImplementation((...args) => {
-          return of(1);
+          return Promise.resolve();
         }),
         ls: jest.fn().mockImplementation((...args) => {
           return [
             {
               name: "mock-fn",
-              version: "1",
-              types: {}
+              version: "1"
             }
           ] as Package[];
         }),
@@ -50,7 +48,7 @@ describe("local package manager", () => {
 
     it("should transform local package names, skip others", async () => {
       const prefixedFn2 = `@spica-fn/${fn2Name}`;
-      await localPkgManager.install(cwd, ["test@4.1.1", prefixedFn2]).toPromise();
+      await localPkgManager.install(cwd, ["test@4.1.1", prefixedFn2]);
       const transformedPkgName = localPkgManager["transformLocalPackageName"](cwd, prefixedFn2);
       expect(mockPackageManager.install).toHaveBeenCalledWith(cwd, [
         "test@4.1.1",
@@ -72,7 +70,7 @@ describe("local package manager", () => {
     it("should prevent installing itself as package", async () => {
       let errMsg;
       try {
-        await localPkgManager.install(cwd, `@spica-fn/${fn1Name}`).toPromise();
+        await localPkgManager.install(cwd, `@spica-fn/${fn1Name}`);
       } catch (error) {
         errMsg = error.message;
       }
@@ -82,7 +80,7 @@ describe("local package manager", () => {
     it("should not transform local package names that already have a version specifier", async () => {
       const pkgWithSemver = `@spica-fn/${fn2Name}@1.0.0`;
       const pkgWithFile = `@spica-fn/${fn2Name}@file:../custom-path`;
-      await localPkgManager.install(cwd, [pkgWithSemver, pkgWithFile]).toPromise();
+      await localPkgManager.install(cwd, [pkgWithSemver, pkgWithFile]);
       expect(mockPackageManager.install).toHaveBeenCalledWith(cwd, [pkgWithSemver, pkgWithFile]);
     });
   });
@@ -108,30 +106,27 @@ describe("local package manager", () => {
 
       it("should not transform local package names that already have an explicit file specifier", async () => {
         const explicitFilePkg = `@spica-fn/${fn2Name}@file:../${fn2Name}`;
-        await localPackageManager.install(cwd, [explicitFilePkg]).toPromise();
+        await localPackageManager.install(cwd, [explicitFilePkg]);
         const packages = await localPackageManager.ls(cwd);
         expect(packages).toEqual([
           {
             name: `@spica-fn/${fn2Name}`,
-            version: `file:../${fn2Name}`,
-            types: {}
+            version: `file:../${fn2Name}`
           }
         ]);
       });
 
       it("should install, uninstall packages", async () => {
-        await localPackageManager.install(cwd, ["debug@4.1.1", `@spica-fn/${fn2Name}`]).toPromise();
+        await localPackageManager.install(cwd, ["debug@4.1.1", `@spica-fn/${fn2Name}`]);
         let packages = await localPackageManager.ls(cwd);
         expect(packages).toEqual([
           {
             name: `@spica-fn/${fn2Name}`,
-            version: "file:../my-second-function",
-            types: {}
+            version: "file:../my-second-function"
           },
           {
             name: "debug",
-            version: "^4.1.1",
-            types: {}
+            version: "^4.1.1"
           }
         ]);
 
@@ -140,8 +135,7 @@ describe("local package manager", () => {
         expect(packages).toEqual([
           {
             name: "debug",
-            version: "^4.1.1",
-            types: {}
+            version: "^4.1.1"
           }
         ]);
 

@@ -157,11 +157,11 @@ const BucketAddFieldBusiness: FC<BucketAddFieldBusinessProps> = ({
     if (!isValid) return;
 
     setIsLoading(true);
-    const result = await onSaveAndClose(formValues);
+    const result = await onSaveAndClose({...formValues, type: fieldType as FieldKind});
     setIsLoading(false);
 
     if (result) onClose?.();
-  }, [formValues, onSaveAndClose, validateForm, onClose]);
+  }, [formValues, fieldType, onSaveAndClose, validateForm, onClose]);
 
   const handleCreateInnerField = useCallback((values: FieldFormState) => {
     const innerKind = values.type || FieldKind.String;

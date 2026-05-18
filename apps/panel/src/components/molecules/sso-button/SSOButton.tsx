@@ -3,7 +3,7 @@ import {
   Text,
   FluidContainer,
   type TypeFluidContainer,
-  useOnClickOutside,
+  useLayer,
   type IconName
 } from "oziko-ui-kit";
 import React, {type FC, memo, useRef, useState} from "react";
@@ -24,10 +24,10 @@ const SSOButton: FC<TypeSSOButton> = ({icon, label, onClick, ...props}) => {
     if (onClick) onClick();
   };
 
-  useOnClickOutside({
-    targetElements: [containerRef],
-    onClickOutside: () => setIsClicked(false)
-  });
+  useLayer(
+    [containerRef],
+    () => setIsClicked(false)
+  );
 
   return (
     <FluidContainer

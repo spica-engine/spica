@@ -73,9 +73,6 @@ function buildBaseProperty(values: FieldFormState): Property {
     title: fieldValues.title,
     description: fieldValues.description || undefined,
     options: {
-      position: "bottom",
-      index: configurationValues.index || undefined,
-      unique: configurationValues.uniqueValues || undefined,
       translate: configurationValues.translate || undefined
     },
     required:
@@ -115,7 +112,7 @@ function getLocationType(value: any): "geojson" | "latlng" | "unknown" | "none" 
 
 const STRING_DEFINITION: FieldDefinition = {
   kind: FieldKind.String,
-  display: {label: "String", icon: "formatQuoteClose"},
+  display: {label: "String", icon: "fieldText"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
@@ -163,7 +160,7 @@ const STRING_DEFINITION: FieldDefinition = {
 
 const NUMBER_DEFINITION: FieldDefinition = {
   kind: FieldKind.Number,
-  display: {label: "Number", icon: "numericBox"},
+  display: {label: "Number", icon: "fieldNumber"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(Object.keys(BasicConfig).map(key => [key, false])),
@@ -232,7 +229,7 @@ const NUMBER_DEFINITION: FieldDefinition = {
 
 const BOOLEAN_DEFINITION: FieldDefinition = {
   kind: FieldKind.Boolean,
-  display: {label: "Boolean", icon: "checkboxBlankOutline"},
+  display: {label: "Boolean", icon: "fieldBoolean"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
@@ -272,7 +269,7 @@ const BOOLEAN_DEFINITION: FieldDefinition = {
 
 const DATE_DEFINITION: FieldDefinition = {
   kind: FieldKind.Date,
-  display: {label: "Date", icon: "calendarBlank"},
+  display: {label: "Date", icon: "fieldDate"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),
@@ -326,7 +323,7 @@ const DATE_DEFINITION: FieldDefinition = {
 
 const TEXTAREA_DEFINITION: FieldDefinition = {
   kind: FieldKind.Textarea,
-  display: {label: "Textarea", icon: "formatColorText"},
+  display: {label: "Textarea", icon: "fieldTextarea"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
@@ -357,7 +354,7 @@ const TEXTAREA_DEFINITION: FieldDefinition = {
 
 const MULTISELECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Multiselect,
-  display: {label: "Select", icon: "formatListChecks"},
+  display: {label: "Select", icon: "fieldSelect"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     fieldValues: {
@@ -415,8 +412,8 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
         ...form.fieldValues,
         chip:
           newSelectionType === "string"
-            ? form.fieldValues.chip.map((v: string | number) => String(v))
-            : form.fieldValues.chip
+            ? (form.fieldValues.chip ?? []).map((v: string | number) => String(v))
+            : (form.fieldValues.chip ?? [])
                 .map((v: string | number) => Number(v))
                 .filter((v: number) => !isNaN(v))
       }
@@ -435,7 +432,7 @@ const MULTISELECT_DEFINITION: FieldDefinition = {
 
 const RELATION_DEFINITION: FieldDefinition = {
   kind: FieldKind.Relation,
-  display: {label: "Relation", icon: "callMerge"},
+  display: {label: "Relation", icon: "fieldRelation"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     fieldValues: {
@@ -527,7 +524,7 @@ const RELATION_DEFINITION: FieldDefinition = {
 
 const LOCATION_DEFINITION: FieldDefinition = {
   kind: FieldKind.Location,
-  display: {label: "Location", icon: "mapMarker"},
+  display: {label: "Location", icon: "fieldLocation"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
@@ -582,7 +579,7 @@ function formatArrayFieldValues(
 
 const ARRAY_DEFINITION: FieldDefinition = {
   kind: FieldKind.Array,
-  display: {label: "Array", icon: "ballot"},
+  display: {label: "Array", icon: "fieldArray"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     fieldValues: {
@@ -762,7 +759,7 @@ const ARRAY_DEFINITION: FieldDefinition = {
 
 const OBJECT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Object,
-  display: {label: "Object", icon: "dataObject"},
+  display: {label: "Object", icon: "fieldObject"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
@@ -918,7 +915,7 @@ const OBJECT_DEFINITION: FieldDefinition = {
 
 const FILE_DEFINITION: FieldDefinition = {
   kind: FieldKind.File,
-  display: {label: "File", icon: "imageMultiple"},
+  display: {label: "File", icon: "fieldFile"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
@@ -949,7 +946,7 @@ const FILE_DEFINITION: FieldDefinition = {
 
 const RICHTEXT_DEFINITION: FieldDefinition = {
   kind: FieldKind.Richtext,
-  display: {label: "Richtext", icon: "formatAlignCenter"},
+  display: {label: "Richtext", icon: "fieldRichtext"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
@@ -981,7 +978,7 @@ const RICHTEXT_DEFINITION: FieldDefinition = {
 
 const JSON_DEFINITION: FieldDefinition = {
   kind: FieldKind.Json,
-  display: {label: "JSON", icon: "dataObject"},
+  display: {label: "JSON", icon: "fieldObject"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(
@@ -1008,7 +1005,7 @@ const JSON_DEFINITION: FieldDefinition = {
   buildValueProperty: property =>
     ({
       ...property,
-      type: FieldKind.Object, //FieldKind.Json is not in TypeInputTypeMap yet, so we use Object for now, will be fixed later
+      type: FieldKind.Json,
       id: crypto.randomUUID(),
       description: undefined
     }) as TypeProperty,
@@ -1018,7 +1015,7 @@ const JSON_DEFINITION: FieldDefinition = {
 
 const COLOR_DEFINITION: FieldDefinition = {
   kind: FieldKind.Color,
-  display: {label: "Color", icon: "palette"},
+  display: {label: "Color", icon: "fieldColor"},
   creationFormDefaultValues: freezeFormDefaults({
     ...BASE_FORM_DEFAULTS,
     configurationValues: Object.fromEntries(Object.keys(MinimalConfig).map(key => [key, false])),

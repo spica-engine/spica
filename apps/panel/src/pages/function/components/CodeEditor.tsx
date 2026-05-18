@@ -7,6 +7,10 @@ import {memo, useCallback, useEffect, useRef} from "react";
 import Editor, {type OnMount, type Monaco} from "@monaco-editor/react";
 import type {editor} from "monaco-editor";
 
+function getMonacoThemeName(): string {
+  return document.documentElement.getAttribute("data-theme") === "dark" ? "custom-dark" : "custom-light";
+}
+
 type ExtraLibs = Record<string, string>;
 
 type CodeEditorProps = {
@@ -28,8 +32,17 @@ const editorOptions: editor.IStandaloneEditorConstructionOptions = {
   formatOnType: true,
   lineNumbers: "on",
   folding: true,
-  scrollbar: {alwaysConsumeMouseWheel: false},
-  fontSize: 14,
+  scrollbar: {
+    alwaysConsumeMouseWheel: false,
+    vertical: "auto",
+    horizontal: "auto",
+    useShadows: false,
+    verticalScrollbarSize: 5,
+    horizontalScrollbarSize: 5,
+  },
+  fontSize: 12.5,
+  fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+  lineHeight: 21,
   tabSize: 2,
 };
 
@@ -41,16 +54,25 @@ const CodeEditor = ({value, language, onChange, onSave, readOnly, functionId, ex
   const extraLibDisposablesRef = useRef<{dispose(): void}[]>([]);
 
   const handleBeforeMount = useCallback((monaco: Monaco) => {
-    const bg = getComputedStyle(document.documentElement)
-      .getPropertyValue("--color-layout-background")
-      .trim() || "#ffffff";
-
+    // Use hardcoded token values so both themes are always correctly defined,
+    // regardless of which mode is active at editor mount time.
     monaco.editor.defineTheme("custom-light", {
       base: "vs",
       inherit: true,
       rules: [],
       colors: {
-        "editor.background": bg,
+        "editor.background": "#ffffff",
+        "editor.foreground": "#111827",
+      },
+    });
+
+    monaco.editor.defineTheme("custom-dark", {
+      base: "vs-dark",
+      inherit: true,
+      rules: [],
+      colors: {
+        "editor.background": "#13181f",
+        "editor.foreground": "#e4e8f2",
       },
     });
 
@@ -74,6 +96,17 @@ const CodeEditor = ({value, language, onChange, onSave, readOnly, functionId, ex
       keybindings: [2048 | 49], // Ctrl/Cmd + S
       run: () => onSaveRef.current?.(),
     });
+  }, []);
+
+  // Live theme switching: watch data-theme attribute on <html>
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const monaco = monacoRef.current;
+      if (!monaco) return;
+      monaco.editor.setTheme(getMonacoThemeName());
+    });
+    observer.observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -114,7 +147,7 @@ const CodeEditor = ({value, language, onChange, onSave, readOnly, functionId, ex
       beforeMount={handleBeforeMount}
       onMount={handleMount}
       options={{...editorOptions, readOnly}}
-      theme="custom-light"
+      theme={getMonacoThemeName()}
     />
   );
 };

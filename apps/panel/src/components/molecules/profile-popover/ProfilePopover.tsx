@@ -1,12 +1,12 @@
-import {Button, FlexElement, Icon, Popover, Switch, type TypeSwitch} from "oziko-ui-kit";
+import {Button, FlexElement, FluidContainer, Icon, Popover, Switch, Text, type TypeSwitch} from "oziko-ui-kit";
 import React, {memo, type FC} from "react";
 import styles from "./ProfilePopover.module.scss";
-import MenuGroup from "../../../components/organisms/menu-group/MenuGroup";
+
 type TypeProfilePopover = {
   profileOnClick?: () => void;
   logoutOnClick?: () => void;
   theme?: "Light" | "Dark";
-  switchProps: TypeSwitch;
+  switchProps?: TypeSwitch;
 };
 const ProfilePopover: FC<TypeProfilePopover> = ({
   profileOnClick = () => {},
@@ -16,41 +16,51 @@ const ProfilePopover: FC<TypeProfilePopover> = ({
 }) => {
   return (
     <Popover
-      contentProps={{
-        className: styles.popoverContainer
-      }}
+      contentProps={{className: styles.popoverContainer}}
       content={
-        <MenuGroup
-          options={{
-            profile: {
-              value: (
-                <FlexElement alignment="leftCenter" dimensionX={"fill"} dimensionY={"hug"}>
-                  <span className={styles.theme}> {theme}</span>
-                  <Switch {...switchProps}></Switch>
-                </FlexElement>
-              ),
-              className: styles.themeContainer
-            },
-            settings: {
-              value: (
-                <FlexElement direction="vertical" dimensionX={"fill"}>
-                  <span className={styles.settings} onClick={profileOnClick}>
-                    Profile
-                  </span>
-                  <span className={styles.settings} onClick={logoutOnClick}>
-                    Logout
-                  </span>
-                </FlexElement>
-              ),
-              className: styles.settingsContainer,
-              alignment: "leftCenter"
-            }
+        <FluidContainer
+          gap={0}
+          direction="vertical"
+          className={styles.popoverContent}
+          alignment="leftTop"
+          prefix={{
+            className: styles.profileContainer,
+            onClick: profileOnClick,
+            children: (
+              <Button variant="text">
+                <Icon name="person" />
+                <Text>Profile</Text>
+              </Button>
+            )
           }}
-        ></MenuGroup>
+          root={{
+            className: `${styles.logoutContainer}${switchProps ? ` ${styles.hasBorder}` : ""}`,
+            onClick: logoutOnClick,
+            children: (
+              <Button variant="text">
+                <Icon name="logout" />
+                <Text>Logout</Text>
+              </Button>
+            )
+          }}
+          suffix={
+            switchProps
+              ? {
+                  className: styles.themeContainer,
+                  children: (
+                    <FlexElement alignment="leftCenter" dimensionX="fill" dimensionY="hug">
+                      <span className={styles.theme}>{theme}</span>
+                      <Switch {...switchProps} />
+                    </FlexElement>
+                  )
+                }
+              : undefined
+          }
+        />
       }
     >
       <Button variant="icon" shape="circle" className={styles.button}>
-        <Icon name={"person"}></Icon>
+        <Icon name="person" size="lg" />
       </Button>
     </Popover>
   );

@@ -124,8 +124,9 @@ const BucketNavigatorPopup: FC<TypeBucketNavigatorPopup> = ({
           }}
           color="transparent"
           variant="icon"
+          className={styles.optionsButton}
         >
-          <Icon name="dotsVertical" size="sm" />
+          <Icon name="dotsVertical" size="xs" />
         </Button>
       </Popover>
       {isCategorySelectCreateOpen && (

@@ -18,6 +18,7 @@ database:
   logLevel: 0
   profilingLevel: 1
   profilingSlowms: 100
+  terminationGracePeriodSeconds: 60
   # probes
   # startup
   startupProbeInitialDelaySeconds: 15
@@ -63,7 +64,7 @@ application:
   twilioAuthToken:
   twilioFromNumber:
   defaultPassword: spica
-  webBaseUrl: /spica/
+  webBaseUrl: /
   apiBaseUrl: /api/
   publicHost:
   storageSize: 2Gi
@@ -73,6 +74,7 @@ application:
   args: []
   diskAccessMode: ReadWriteOnce
   serviceAccountName: default
+  podAnnotations: {}
   # probes
   # startup
   apiStartupProbeInitialDelaySeconds: 10

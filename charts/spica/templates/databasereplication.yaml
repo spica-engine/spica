@@ -12,7 +12,7 @@ metadata:
   annotations:
     helm.sh/hook: post-install,post-upgrade
 spec:
-  backoffLimit: 5
+  backoffLimit: 25
   template:
     spec:
       restartPolicy: OnFailure

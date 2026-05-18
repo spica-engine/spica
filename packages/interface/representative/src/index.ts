@@ -1,5 +1,11 @@
 import {Observable} from "rxjs";
-import {ChangeType} from "@spica-server/interface-versioncontrol";
+
+export enum ChangeType {
+  INSERT = 0,
+  UPDATE = 1,
+  DELETE = 2,
+  REPLACE = 3
+}
 
 export interface IRepresentativeManager {
   write(

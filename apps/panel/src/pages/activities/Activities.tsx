@@ -5,8 +5,7 @@
 
 import React, {useState, useCallback} from "react";
 import {Link} from "react-router-dom";
-import {Button, FlexElement, Icon, type TableColumn} from "oziko-ui-kit";
-import SpicaTable from "../../components/organisms/table/Table";
+import {FlexElement, Table, type TableColumn} from "oziko-ui-kit";
 import {useGetActivitiesQuery, type Activity, type ActivityOptions} from "../../store/api";
 import {
   formatActivityAction,
@@ -15,8 +14,10 @@ import {
   buildActivityLink,
   titleCase
 } from "./activityUtils";
-import ActivityFilterPopover from "./ActivityFilterPopover";
+import ActivityActionBar from "../../components/molecules/activity-action-bar/ActivityActionBar";
 import styles from "./Activities.module.scss";
+import sharedStyles from "../shared/EntityPage.module.scss";
+import bucketStyles from "../bucket/Bucket.module.scss";
 
 const DEFAULT_OPTIONS: ActivityOptions = { limit: 20, skip: 0 };
 
@@ -102,52 +103,33 @@ function createActivityColumns(
 const ACTIVITY_COLUMNS = createActivityColumns(styles.resourceLink);
 
 const Activities = () => {
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
   const [filterOptions, setFilterOptions] = useState<ActivityOptions>(DEFAULT_OPTIONS);
 
-  const {data: activities = [], isLoading} = useGetActivitiesQuery(filterOptions);
+  const {data: activities = [], isLoading} = useGetActivitiesQuery(
+    appliedFilter ? {...filterOptions, filter: appliedFilter} : filterOptions
+  );
 
-  const handleApplyFilter = useCallback((options: ActivityOptions) => {
-    setFilterOptions(options);
-    setIsFilterOpen(false);
+  const handleFilter = useCallback((filter: Record<string, any> | null) => {
+    setAppliedFilter(filter);
   }, []);
-
-  const handleToggleFilter = useCallback(() => {
-    setIsFilterOpen((prev) => !prev);
-  }, []);
-
-  const handleCloseFilter = useCallback(() => setIsFilterOpen(false), []);
-
-  const columns = ACTIVITY_COLUMNS;
 
   return (
-    <div className={styles.activities}>
-      <FlexElement dimensionX="fill" alignment="rightCenter">
-        <ActivityFilterPopover
-          open={isFilterOpen}
-          onClose={handleCloseFilter}
-          onApply={handleApplyFilter}
-        >
-          <Button onClick={handleToggleFilter}>
-            <Icon name="filter" />
-            Filter
-          </Button>
-        </ActivityFilterPopover>
-      </FlexElement>
-      <div className={styles.tableContainer}>
-        <SpicaTable
-          columns={columns}
+    <div className={bucketStyles.container}>
+      <ActivityActionBar onFilter={handleFilter} />
+      <div className={sharedStyles.scrollContainer}>
+        <Table
+          columns={ACTIVITY_COLUMNS}
           data={activities}
-          isLoading={isLoading}
+          loading={isLoading}
           skeletonRowCount={10}
           fixedColumns={["_id"]}
-          tableClassName={styles.table}
+          emptyState={{
+            title: "No activities found",
+            description: "There are no activities to show.",
+          }}
         />
-        {!isLoading && activities.length === 0 ? (
-          <div className={styles.emptyState}>There is no activities to show</div>
-        ) : null}
       </div>
-    
     </div>
   );
 };

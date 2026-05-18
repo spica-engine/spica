@@ -1,6 +1,13 @@
 import {StorageObjectMeta} from "@spica-server/interface-storage";
 import {ReadStream} from "fs";
+import {Readable} from "stream";
 import {Observable} from "rxjs";
+
+export interface ProxyReadResult {
+  stream: Readable | null;
+  headers: Record<string, string>;
+  statusCode: number;
+}
 
 export abstract class Strategy {
   abstract read(id: string): Promise<Buffer>;
@@ -11,4 +18,5 @@ export abstract class Strategy {
   abstract rename(oldKey: string, newKey: string): Promise<void>;
   abstract handleResumableUpload(req: any, res: any): any;
   abstract get resumableUploadFinished(): Observable<StorageObjectMeta>;
+  abstract proxyRead(id: string, requestHeaders: Record<string, string>, meta: StorageObjectMeta): Promise<ProxyReadResult>;
 }

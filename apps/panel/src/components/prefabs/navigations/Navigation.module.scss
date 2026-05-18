@@ -1,10 +1,10 @@
 .container {
-  width: var(--navigator-width);
+  width: var(--navigator-w);
   background: var(--color-menu-background);
-  border-radius: var(--border-radius-xl);
+  border-radius: 0;
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  gap: var(--gap-sm);
 
   .header {
     padding: 0 var(--padding-md);
@@ -52,6 +52,20 @@
   padding: var(--padding-md);
 }
 
+.navigationListContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .addFunctionButtonContainer{
   width: 100%;
   padding: var(--padding-md);
@@ -59,4 +73,148 @@
   .addFunctionButton{
     border-radius: var(--border-radius-md) !important;
   }
+}
+
+// ── New sidebar design ──────────────────────────────────
+
+.sidebarHead {
+  padding: 12px var(--spacing-9) var(--spacing-7);
+  border-bottom: var(--border-default);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-7);
+}
+
+.sidebarTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebarLabel {
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.sidebarActions {
+  display: flex;
+  gap: var(--spacing-1);
+}
+
+.iconBtn {
+  width: var(--size-icon-btn);
+  height: var(--size-icon-btn);
+  border-radius: var(--radius-md-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  transition: background var(--transition-base), color var(--transition-base);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-secondary);
+  }
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-5);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-4) var(--spacing-8);
+  color: var(--color-text-muted);
+  transition: border-color var(--transition-border);
+
+  &:focus-within {
+    border-color: var(--color-accent);
+  }
+
+  input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--color-text-primary);
+    font-size: 12px;
+    font-family: var(--font-sans);
+    width: 100%;
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-5);
+  padding: var(--spacing-4) var(--spacing-5);
+  margin: var(--spacing-5) var(--spacing-7);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
+  font-family: var(--font-sans);
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+  width: calc(100% - var(--spacing-7) * 2);
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background: var(--color-accent-subtle);
+  }
+}
+
+// ── Shared nav row (used by FunctionNavigation & others) ─
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base-plus);
+  user-select: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+
+    .navItemActions {
+      opacity: 1;
+    }
+  }
+}
+
+.navItemActive {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-weight: var(--font-weight-medium);
+
+  .navItemActions {
+    opacity: 1;
+  }
+}
+
+.navItemActions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  gap: var(--spacing-1);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 }

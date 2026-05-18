@@ -3,129 +3,107 @@
  * email: rio.kenan@gmail.com
  */
 
-import {FlexElement, FluidContainer, Icon, Text, type IconName} from "oziko-ui-kit";
+import {Icon, type IconName} from "oziko-ui-kit";
 import styles from "../Navigation.module.scss";
+import bucketNavigationStyles from "../bucket-navigation/Bucket.module.scss";
 import React from "react";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useLocation} from "react-router-dom";
 import strategyIcon from "../../../../assets/icons/strategy.svg";
 import accountDetails from "../../../../assets/icons/account-details.svg";
-
-
 
 type AccessManagementItem = {
   title: string;
   icon: IconName | React.ReactElement;
+  path: string;
   onClick: () => void;
 };
 
 const AccessManagement = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const accessManagementItems: AccessManagementItem[] = [
     {
       title: "Identities",
       icon: "identities",
-      onClick: () => {
-        navigate("/passport/identity");
-      }
+      path: "/passport/identity",
+      onClick: () => navigate("/passport/identity")
     },
     {
       title: "Users",
       icon: "person",
-      onClick: () => {
-        navigate("/passport/user");
-      }
+      path: "/passport/user",
+      onClick: () => navigate("/passport/user")
     },
     {
       title: "Policies",
       icon: "layers",
-      onClick: () => {
-        navigate("passport/policy");
-      }
+      path: "/passport/policy",
+      onClick: () => navigate("passport/policy")
     },
     {
       title: "Strategies",
-      icon: <img src={strategyIcon} alt="strategy" className={styles.icon}/>,
-      onClick: () => {
-        navigate("/passport/strategy");
-      }
+      icon: <img src={strategyIcon} alt="strategy" className={styles.icon} />,
+      path: "/passport/strategy",
+      onClick: () => navigate("/passport/strategy")
     },
     {
       title: "API Keys",
       icon: "key",
-      onClick: () => {
-        navigate("/passport/api-key");
-      }
+      path: "/passport/api-key",
+      onClick: () => navigate("/passport/api-key")
     },
     {
       title: "Refresh Tokens",
       icon: "key",
-      onClick: () => {
-        navigate("/passport/refresh-token");
-      }
+      path: "/passport/refresh-token",
+      onClick: () => navigate("/passport/refresh-token")
     },
     {
       title: "Secrets and Variables",
       icon: "lock" as IconName,
-      onClick: () => {
-        navigate("/passport/secrets-and-variables");
-      }
+      path: "/passport/secrets-and-variables",
+      onClick: () => navigate("/passport/secrets-and-variables")
     },
     {
       title: "User Activities",
-      icon: <img src={accountDetails} alt="activity" className={styles.icon}/>,
-      onClick: () => {
-        navigate("/activity");
-      }
-    },
-    {
-      title: "Config",
-      icon: "cog",
-      onClick: () => {
-        navigate("/config");
-      }
+      icon: <img src={accountDetails} alt="activity" className={styles.icon} />,
+      path: "/activity",
+      onClick: () => navigate("/activity")
     }
   ];
 
   return (
     <div className={styles.container}>
-      <FluidContainer
-        dimensionX={"fill"}
-        mode="fill"
-        className={styles.header}
-        root={{
-          children: (
-            <Text dimensionX={"fill"} size="large">
-              Access Management
-            </Text>
-          )
-        }}
-      />
+      <div className={styles.sidebarHead}>
+        <div className={styles.sidebarTopRow}>
+          <span className={styles.sidebarLabel}>Access Management</span>
+        </div>
+      </div>
 
-      <FlexElement direction="vertical" dimensionX="fill" >
-        {accessManagementItems.map(item => (
-          <FluidContainer
-            key={item.title}
-            dimensionX="fill"
-            dimensionY={36}
-            mode="fill"
-            alignment="leftCenter"
-            className={styles.defaultNavigationItem}
-            onClick={item.onClick}
-
-            prefix={{
-                children: typeof item.icon === "string" ? <Icon name={item.icon} /> : item.icon
-            }}
-            root={{
-              children: (
-                <Text dimensionX="fill" size="medium">
-                  {item.title}
-                </Text>
-              )
-            }}
-          />
-        ))}
-      </FlexElement>
+      <div className={bucketNavigationStyles.bucketsItemContainer}>
+        {accessManagementItems.map(item => {
+          const isActive = location.pathname.startsWith(item.path);
+          return (
+            <div
+              key={item.title}
+              className={`${bucketNavigationStyles.bucketItem}${isActive ? ` ${bucketNavigationStyles.bucketItemActive}` : ""}`}
+              onClick={item.onClick}
+            >
+              {typeof item.icon === "string" ? (
+                <Icon
+                  name={item.icon}
+                  size="sm"
+                  style={{flexShrink: 0, opacity: isActive ? 1 : 0.6} as React.CSSProperties}
+                />
+              ) : (
+                item.icon
+              )}
+              <span className={bucketNavigationStyles.bucketTitle}>{item.title}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

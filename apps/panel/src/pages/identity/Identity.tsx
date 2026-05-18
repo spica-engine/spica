@@ -1,32 +1,43 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { Button, FlexElement, Icon, Spinner, type TableColumn } from "oziko-ui-kit";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Button, FlexElement, Icon, Spinner, Table, type TableColumn } from "oziko-ui-kit";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {
   useGetIdentitiesQuery,
+  useGetIdentityQuery,
   type Identity as IdentityType,
 } from "../../store/api/identityApi";
 import { useGetPoliciesQuery, type Policy } from "../../store/api/policyApi";
-import SpicaTable from "../../components/organisms/table/Table";
 import DeleteIdentity from "../../components/prefabs/delete-identity/DeleteIdentity";
 import { useInfiniteList } from "../../hooks/useInfiniteList";
 import IdentityDrawer from "./IdentityDrawer";
 import styles from "../shared/EntityPage.module.scss";
+import bucketStyles from "../bucket/Bucket.module.scss";
+import { useLocation, useNavigate } from "react-router-dom";
+import IdentityActionBar from "../../components/molecules/identity-action-bar/IdentityActionBar";
 
 const PAGE_SIZE = 20;
 
 const Identity = () => {
   const [skip, setSkip] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [appliedFilter, setAppliedFilter] = useState<Record<string, any> | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const { data: identityResponse, isLoading, isFetching } = useGetIdentitiesQuery({
+  const openIdentityId = (location.state as { openIdentityId?: string })?.openIdentityId;
+
+  const { currentData: identityResponse, isLoading, isFetching } = useGetIdentitiesQuery({
     paginate: true,
     limit: PAGE_SIZE,
     skip,
+    ...(appliedFilter ? {filter: appliedFilter} : {}),
   });
 
   const { allItems, hasMore, handleLoadMore, resetList } = useInfiniteList<IdentityType>({
     response: identityResponse,
     isFetching,
     pageSize: PAGE_SIZE,
+    queryKey: JSON.stringify(appliedFilter ?? null),
     skip,
     setSkip,
   });
@@ -35,6 +46,39 @@ const Identity = () => {
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedIdentity, setSelectedIdentity] = useState<IdentityType | null>(null);
+  const [profileIdentityId, setProfileIdentityId] = useState<string | null>(null);
+
+  const { data: fetchedProfileIdentity } = useGetIdentityQuery(profileIdentityId!, {
+    skip: !profileIdentityId,
+  });
+
+  const openDrawerForIdentity = useCallback((identityId: string) => {
+    setProfileIdentityId(identityId);
+  }, []);
+
+  useEffect(() => {
+    if (fetchedProfileIdentity) {
+      setSelectedIdentity(fetchedProfileIdentity);
+      setIsDrawerOpen(true);
+      setProfileIdentityId(null);
+    }
+  }, [fetchedProfileIdentity]);
+
+  useEffect(() => {
+    if (openIdentityId) {
+      openDrawerForIdentity(openIdentityId);
+      navigate(location.pathname, {replace: true, state: {}});
+    }
+  }, [openIdentityId]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const identityId = (e as CustomEvent<{identityId: string}>).detail.identityId;
+      openDrawerForIdentity(identityId);
+    };
+    window.addEventListener("open-identity-drawer", handler);
+    return () => window.removeEventListener("open-identity-drawer", handler);
+  }, [openDrawerForIdentity]);
 
   const policyNameMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -83,7 +127,7 @@ const Identity = () => {
             .map((id) => policyNameMap.get(id) || id)
             .join(", ");
           return (
-            <span className={styles.policiesCell} title={policyNames}>
+            <span title={policyNames}>
               {policyNames || "—"}
             </span>
           );
@@ -138,30 +182,30 @@ const Identity = () => {
     [handleOpenEditDrawer, policyNameMap, resetList]
   );
 
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return allItems;
+    const q = searchQuery.toLowerCase();
+    return allItems.filter(
+      (item) =>
+        item.identifier?.toLowerCase().includes(q) ||
+        item._id?.toLowerCase().includes(q)
+    );
+  }, [allItems, searchQuery]);
+
   return (
-    <FlexElement
-      dimensionX="fill"
-      direction="vertical"
-      gap={10}
-      className={styles.pageContainer}
-    >
-      <FlexElement
-        dimensionX="fill"
-        alignment="rightCenter"
-        direction="horizontal"
-        gap={10}
-      >
-        <Button onClick={() => {}}>
-          <Icon name="filter" /> Filter
-        </Button>
-        <Button onClick={handleOpenCreateDrawer}>
-          <Icon name="plus" /> New Identity
-        </Button>
-      </FlexElement>
+    <div className={bucketStyles.container}>
+      <IdentityActionBar
+        onSearch={setSearchQuery}
+        onNewIdentity={handleOpenCreateDrawer}
+        onFilter={(filter) => {
+          setAppliedFilter(filter);
+          setSkip(0);
+        }}
+      />
 
       <div id="identity-scroll-container" className={styles.scrollContainer}>
         <InfiniteScroll
-          dataLength={allItems.length}
+          dataLength={filteredItems.length}
           next={handleLoadMore}
           hasMore={hasMore}
           loader={
@@ -171,11 +215,22 @@ const Identity = () => {
           }
           scrollableTarget="identity-scroll-container"
         >
-          <SpicaTable
+          <Table
             columns={columns}
-            data={allItems}
-            isLoading={isLoading}
+            data={filteredItems}
+            loading={isLoading}
             skeletonRowCount={10}
+            onRowClick={({ row }) => handleOpenEditDrawer(row)}
+            emptyState={{
+              title: "No identities found",
+              description: "There are no identities yet. Create one to get started.",
+              actions: (
+                <Button onClick={handleOpenCreateDrawer}>
+                  <Icon name="plus" size={14} />
+                  New Identity
+                </Button>
+              ),
+            }}
           />
         </InfiniteScroll>
       </div>
@@ -185,7 +240,7 @@ const Identity = () => {
         selectedIdentity={selectedIdentity}
         onClose={handleCloseDrawer}
       />
-    </FlexElement>
+    </div>
   );
 };
 

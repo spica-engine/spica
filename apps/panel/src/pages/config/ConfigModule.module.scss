@@ -1,0 +1,51 @@
+.contentArea {
+  padding: 28px 32px 60px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-input-placeholder);
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.moduleContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.saveRow {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 0 32px;
+}
+
+.saveButton {
+  min-width: 140px;
+}
+
+.errorText {
+  font-size: 13px;
+  color: var(--color-font-secondary);
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.skeletonRow {
+  height: 56px;
+  background: var(--color-menu-background);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
