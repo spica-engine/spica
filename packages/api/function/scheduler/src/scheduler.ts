@@ -27,7 +27,7 @@ import {
 } from "@spica-server/function-queue";
 import {event} from "@spica-server/function-queue-proto";
 import {Runtime, Worker} from "@spica-server/function-runtime";
-import {DatabaseOutput, StandartStream} from "@spica-server/function-runtime-io";
+import {DatabaseOutput, StandartStream, StandardStreamOutput} from "@spica-server/function-runtime-io";
 import {generateLog} from "@spica-server/function-runtime-logger";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
@@ -57,7 +57,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   readonly enqueuers = new Set<Enqueuer<unknown>>();
   readonly languages = new Map<string, Language>();
 
-  private output: StandartStream;
+  private outputs: StandartStream[];
 
   constructor(
     private http: HttpAdapterHost,
@@ -73,7 +73,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.commander.register(this, [this.outdateWorkers], CommandType.SYNC);
     }
 
-    this.output = new DatabaseOutput(database);
+    this.outputs = this.createOutputs(database);
 
     this.languages.set("typescript", new Typescript(options.tsCompilerPath));
     this.languages.set("javascript", new Javascript());
@@ -178,6 +178,20 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.scaleWorkers();
   }
 
+  private createOutputs(database: DatabaseService): StandartStream[] {
+    const workerLogOutput = this.options.workerLogOutput ?? ["database"];
+    const outputs: StandartStream[] = [];
+
+    if (workerLogOutput.includes("database")) {
+      outputs.push(new DatabaseOutput(database));
+    }
+    if (workerLogOutput.includes("stdout")) {
+      outputs.push(new StandardStreamOutput());
+    }
+
+    return outputs.length > 0 ? outputs : [new DatabaseOutput(database)];
+  }
+
   killFreeWorkers() {
     const freeWorkers = Array.from(this.workers.entries()).filter(
       ([key, worker]) =>
@@ -185,7 +199,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         worker.state == WorkerState.Fresh ||
         worker.state == WorkerState.Targeted
     );
-
     const killWorkers = freeWorkers.map(([key, worker]) => {
       return worker.kill();
     });
@@ -287,11 +300,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       const {id: workerId, worker} = workerMeta;
 
-      const [stdout, stderr] = this.output.create({
-        eventId: event.id,
-        functionId: event.target.id
-      });
-      worker.attach(stdout, stderr);
+      const streamOptions = {eventId: event.id, functionId: event.target.id};
+      const pairs = this.outputs.map(o => o.create(streamOptions));
+      for (const [stdout, stderr] of pairs) {
+        worker.attach(stdout, stderr);
+      }
 
       const timeoutInMs = Math.min(this.options.timeout, event.target.context.timeout) * 1000;
 
@@ -300,12 +313,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       }'. The worker is being shut down.`;
 
       const timeoutMsg = this.options.logger ? generateLog(msg, LogLevels.INFO) : msg;
-      const channel = this.options.logger ? stdout : stderr;
+      const channels = pairs.map(([stdout, stderr]) => (this.options.logger ? stdout : stderr));
 
       const timeoutFn = () => {
         worker.markAsTimeouted();
-        if (channel.writable) {
-          channel.write(timeoutMsg);
+        for (const channel of channels) {
+          if (channel.writable) {
+            channel.write(timeoutMsg);
+          }
         }
         worker.kill();
       };

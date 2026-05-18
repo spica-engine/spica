@@ -320,6 +320,18 @@ const args = yargsInstance
       boolean: true,
       description: "Log function invocations to the stdout.",
       default: false
+    },
+    "function-worker-log-output": {
+      array: true,
+      description:
+        "Output streams for function worker logs. Accepted values: database, stdout. Defaults to database only.",
+      default: ["database"],
+      coerce: (value: string | string[]) => {
+        const values = Array.isArray(value)
+          ? value.flatMap(v => String(v).split(","))
+          : String(value).split(",");
+        return [...new Set(values.filter(Boolean))];
+      }
     }
   })
   /* Storage Options */
@@ -624,6 +636,21 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       throw new TypeError("--function-worker-concurrency must be a positive number");
     }
 
+    const validLogOutputs = ["database", "stdout"];
+    const workerLogOutput = args["function-worker-log-output"] as string[];
+    for (const output of workerLogOutput) {
+      if (!validLogOutputs.includes(output)) {
+        throw new TypeError(
+          `Invalid --function-worker-log-output value: '${output}'. Must be one of: ${validLogOutputs.join(", ")}`
+        );
+      }
+    }
+    if (workerLogOutput.length === 0) {
+      throw new TypeError(
+        "--function-worker-log-output must include at least one value: database, stdout"
+      );
+    }
+
     if (
       args["storage-strategy"] == "gcloud" &&
       (!args["gcloud-service-account-path"] || !args["gcloud-bucket-name"])
@@ -824,6 +851,7 @@ const modules = [
     realtimeLogs: true,
     logger: args["function-logger"],
     invocationLogs: args["function-invocation-logs"],
+    workerLogOutput: args["function-worker-log-output"],
     realtime: true,
     grpcPort: args["grpc-function-port"],
     functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"]
