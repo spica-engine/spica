@@ -31,12 +31,13 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     private corsOptions: CorsOptions,
     private schedulerUnsubscription: (targetId: string) => void,
     private guardService: IGuardService,
-    private attachStatusTracker?: AttachStatusTracker
+    private attachStatusTracker?: AttachStatusTracker,
+    private payloadSizeLimit?: number
   ) {
     super();
     this.router.use(
       bodyParser.raw({
-        limit: "10mb",
+        limit: this.payloadSizeLimit ? this.payloadSizeLimit * 1024 * 1024 : "10mb",
         type: "*/*"
       }) as any
     );

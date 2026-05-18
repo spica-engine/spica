@@ -826,7 +826,8 @@ const modules = [
     invocationLogs: args["function-invocation-logs"],
     realtime: true,
     grpcPort: args["grpc-function-port"],
-    functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"]
+    functionGrpcMaxMessageSizeBytes: args["function-grpc-max-message-size-bytes"],
+    payloadSizeLimit: args["payload-size-limit"]
   }),
   ConfigModule.forRoot(),
   StatusModule.forRoot({
