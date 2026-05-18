@@ -26,6 +26,8 @@ import {SECRET_DECRYPTOR, SecretDecryptor} from "@spica-server/interface-secret"
 import {createTargetChanges} from "./change.js";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {FunctionAssetWatcher} from "./asset-watcher.js";
+import {SelfWriteTracker} from "./asset-write-tracker.js";
+import {FunctionPreparationService} from "./function-preparation.service.js";
 import {applyAssetChange, applyAssetDelete, AssetChangeFile} from "./asset-pipeline.js";
 
 import HttpSchema from "./schema/http.json" with {type: "json"};
@@ -67,7 +69,9 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     @Inject(SECRET_DECRYPTOR) public secretDecryptor: SecretDecryptor,
     private reconciler: FunctionAssetReconciler,
     private assetService: FunctionAssetService,
-    private assetWatcher: FunctionAssetWatcher
+    private assetWatcher: FunctionAssetWatcher,
+    private tracker: SelfWriteTracker,
+    private preparationService: FunctionPreparationService
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -104,9 +108,8 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     const startupSequence = async () => {
-      this.assetWatcher.registerPrepareCallback(fn => this.prepareFunction(fn as any));
       const fns = await CRUD.findForRuntime(this.fs);
-      await this.reconciler.reconcileAll(fns as any, fn => this.prepareFunction(fn as any));
+      await this.reconciler.reconcileAll(fns as any);
       await this.registerTriggers();
       if (this.commander) {
         // trigger updates should be published to the other replicas except initial trigger registration
@@ -125,7 +128,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
         );
       }
     };
-    startupSequence();
+    return startupSequence();
   }
 
   registerTriggers() {
@@ -186,8 +189,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
    * assets from storage, and by CRUD pipeline after writing new files.
    */
   async prepareFunction(fn: Function): Promise<void> {
-    await this.installPackages(fn, []);
-    await this.compile(fn);
+    return this.preparationService.prepare(fn);
   }
 
   /**
@@ -203,15 +205,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
     files: AssetChangeFile[],
     localOp: () => Promise<void>
   ): Promise<void> {
-    return applyAssetChange(
-      fn,
-      files,
-      this.options,
-      this.reconciler,
-      this.assetService,
-      this.assetWatcher,
-      localOp
-    );
+    return applyAssetChange(fn, files, this.reconciler, this.assetService, this.tracker, localOp);
   }
 
   /**
@@ -227,7 +221,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   installPackages(fn: Function, qualifiedNames: string | string[]): Promise<void> {
-    return this.getDefaultPackageManager().install(this.getFunctionRoot(fn), qualifiedNames);
+    return this.preparationService.installPackages(fn, qualifiedNames);
   }
 
   removePackage(fn: Function, name: string): Promise<void> {
@@ -261,13 +255,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   compile(fn: Function) {
-    const language = this.getFunctionLanguage(fn);
-    const outDirRelative = path.join(".", this.options.outDir);
-    return language.compile({
-      cwd: this.getFunctionRoot(fn),
-      outDir: outDirRelative,
-      entrypoints: language.description.entrypoints
-    });
+    return this.preparationService.compile(fn);
   }
 
   async update(fn: Function, index: string): Promise<void> {

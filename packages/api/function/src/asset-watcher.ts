@@ -2,51 +2,28 @@ import {Injectable, Logger, OnModuleDestroy, OnModuleInit} from "@nestjs/common"
 import {Subscription} from "rxjs";
 import {FunctionService, FunctionAssetService} from "@spica-server/function-services";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
+import {SelfWriteTracker} from "./asset-write-tracker.js";
+import {FunctionPreparationService} from "./function-preparation.service.js";
 import * as CRUD from "./crud.js";
-
-interface RecentWriteKey {
-  functionId: string;
-  filename: string;
-  hash: string;
-}
 
 /**
  * Watches the function_assets change stream and reconciles peer-originated writes.
  *
- * When this node writes a new asset record, it stamps it in the "recently written"
- * set so it can be skipped on the change-stream notification. Peer nodes (or external
- * updates) will not have this stamp, so the reconciler will run for them.
+ * Peer writes (from other nodes) trigger reconciliation + re-prepare.
+ * Self-writes (from this node) are suppressed via SelfWriteTracker.
  */
 @Injectable()
 export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(FunctionAssetWatcher.name);
   private subscription: Subscription;
 
-  /**
-   * A small in-memory stamp: key → expiry timestamp (ms).
-   * Written via `stampSelfWrite`; checked in the change-stream handler.
-   */
-  private recentWrites = new Map<string, number>();
-
-  /** How long (ms) a self-write stamp suppresses the change stream reaction. */
-  private readonly STAMP_TTL_MS = 10_000;
-
-  /** Registered by FunctionEngine on init to break the circular import. */
-  private prepareCallback!: (fn: any) => Promise<void>;
-
   constructor(
     private readonly assetService: FunctionAssetService,
     private readonly functionService: FunctionService,
-    private readonly reconciler: FunctionAssetReconciler
+    private readonly reconciler: FunctionAssetReconciler,
+    private readonly tracker: SelfWriteTracker,
+    private readonly preparationService: FunctionPreparationService
   ) {}
-
-  /**
-   * Called by FunctionEngine during its onModuleInit to register the prepare callback.
-   * This avoids a circular import: asset-watcher does not import engine.
-   */
-  registerPrepareCallback(cb: (fn: any) => Promise<void>): void {
-    this.prepareCallback = cb;
-  }
 
   onModuleInit() {
     const pipeline = [
@@ -68,13 +45,10 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
           if (!functionId) return;
 
           // Skip if this node originated the write.
-          const stamp = this.buildStampKey({
-            functionId: functionId.toHexString(),
-            filename,
-            hash
-          });
-          if (this.isRecentSelfWrite(stamp)) {
-            this.logger.debug(`[asset-watcher] Suppressing self-write for ${stamp}`);
+          if (this.tracker.isSelfWrite({functionId: functionId.toHexString(), filename, hash})) {
+            this.logger.debug(
+              `[asset-watcher] Suppressing self-write for ${functionId}/${filename}`
+            );
             return;
           }
 
@@ -92,7 +66,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
 
           const changed = await this.reconciler.reconcileFunction(fn as any);
           if (changed) {
-            await this.prepareCallback(fn as any);
+            await this.preparationService.prepare(fn as any);
           }
         } catch (err) {
           this.logger.error(
@@ -111,37 +85,5 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
     if (this.subscription && !this.subscription.closed) {
       this.subscription.unsubscribe();
     }
-    this.recentWrites.clear();
-  }
-
-  /**
-   * Call this immediately before writing asset metadata so the change-stream
-   * handler on this node suppresses the resulting event.
-   */
-  stampSelfWrite(write: RecentWriteKey): void {
-    const key = this.buildStampKey(write);
-    const expiry = Date.now() + this.STAMP_TTL_MS;
-    this.recentWrites.set(key, expiry);
-
-    // Schedule cleanup.
-    setTimeout(() => {
-      if ((this.recentWrites.get(key) ?? 0) <= Date.now()) {
-        this.recentWrites.delete(key);
-      }
-    }, this.STAMP_TTL_MS + 100).unref();
-  }
-
-  private buildStampKey(write: RecentWriteKey): string {
-    return `${write.functionId}::${write.filename}::${write.hash}`;
-  }
-
-  private isRecentSelfWrite(stamp: string): boolean {
-    const expiry = this.recentWrites.get(stamp);
-    if (!expiry) return false;
-    if (Date.now() > expiry) {
-      this.recentWrites.delete(stamp);
-      return false;
-    }
-    return true;
   }
 }

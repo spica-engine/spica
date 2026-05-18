@@ -127,7 +127,9 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
   if (fn._id) {
     const pkgBuffer = Buffer.from(await engine.read(fn, "dependency").catch(() => "{}"), "utf-8");
     const files = [{filename: "package.json" as const, data: pkgBuffer}];
-    await engine.storeAssets(fn as Function & {_id: any}, files, async () => {});
+    // No localOp on initial create — the function has no index to compile yet.
+    const noLocalOp = async () => {};
+    await engine.storeAssets(fn as Function & {_id: any}, files, noLocalOp);
   }
 
   return fn;

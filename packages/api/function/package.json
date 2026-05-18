@@ -51,6 +51,14 @@
     "./src/asset-pipeline": {
       "types": "./src/asset-pipeline.ts",
       "default": "./dist/src/asset-pipeline.js"
+    },
+    "./src/asset-write-tracker": {
+      "types": "./src/asset-write-tracker.ts",
+      "default": "./dist/src/asset-write-tracker.js"
+    },
+    "./src/function-preparation.service": {
+      "types": "./src/function-preparation.service.ts",
+      "default": "./dist/src/function-preparation.service.js"
     }
   },
   "dependencies": {

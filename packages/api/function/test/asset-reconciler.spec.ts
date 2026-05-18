@@ -11,6 +11,7 @@ import {
   FUNCTION_ASSET_STORAGE_OPTIONS
 } from "@spica-server/interface-function-asset-storage";
 import {FUNCTION_OPTIONS} from "@spica-server/interface-function";
+import {FunctionPreparationService} from "@spica-server/function/src/function-preparation.service";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -52,6 +53,10 @@ describe("FunctionAssetReconciler", () => {
     deleteByFunction: jest.fn()
   };
 
+  const mockPreparationService = {
+    prepare: jest.fn().mockResolvedValue(undefined)
+  };
+
   beforeEach(async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "reconciler-test-"));
 
@@ -67,7 +72,8 @@ describe("FunctionAssetReconciler", () => {
         {
           provide: FUNCTION_OPTIONS,
           useValue: {root: tmpDir, timeout: 60, outDir: ".build"}
-        }
+        },
+        {provide: FunctionPreparationService, useValue: mockPreparationService}
       ]
     }).compile();
 
@@ -207,18 +213,16 @@ describe("FunctionAssetReconciler", () => {
         }
       ]);
 
-      const prepare = jest.fn().mockResolvedValue(undefined);
-      await reconciler.reconcileAll([fn as any], prepare);
-      expect(prepare).toHaveBeenCalledWith(fn);
+      await reconciler.reconcileAll([fn as any]);
+      expect(mockPreparationService.prepare).toHaveBeenCalledWith(fn);
     });
 
     it("should not call prepare when nothing changed", async () => {
       const fn = makeFn();
       mockAssetService.findByFunction.mockResolvedValueOnce([]);
 
-      const prepare = jest.fn();
-      await reconciler.reconcileAll([fn as any], prepare);
-      expect(prepare).not.toHaveBeenCalled();
+      await reconciler.reconcileAll([fn as any]);
+      expect(mockPreparationService.prepare).not.toHaveBeenCalled();
     });
   });
 });

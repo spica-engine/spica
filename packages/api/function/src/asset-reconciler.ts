@@ -13,6 +13,7 @@ import {
   FunctionAssetStorageOptions
 } from "@spica-server/interface-function-asset-storage";
 import {Function, Options, FUNCTION_OPTIONS} from "@spica-server/interface-function";
+import {FunctionPreparationService} from "./function-preparation.service.js";
 
 export function hashBuffer(buf: Buffer): string {
   return createHash("sha256").update(buf).digest("hex");
@@ -31,7 +32,8 @@ export class FunctionAssetReconciler {
     @Inject(FUNCTION_ASSET_STORAGE_OPTIONS)
     private readonly storageOptions: FunctionAssetStorageOptions,
     private readonly assetService: FunctionAssetService,
-    @Inject(FUNCTION_OPTIONS) private readonly options: Options
+    @Inject(FUNCTION_OPTIONS) private readonly options: Options,
+    private readonly preparationService: FunctionPreparationService
   ) {}
 
   private getRuntimeFilePath(fn: Function, filename: FunctionAssetFilename): string {
@@ -91,6 +93,33 @@ export class FunctionAssetReconciler {
   }
 
   /**
+   * Delete a key from the configured storage strategy.
+   */
+  async deleteFromStorage(key: string): Promise<void> {
+    return this.strategy.delete(key);
+  }
+
+  /**
+   * Restore a set of assets from remote storage back to local disk.
+   * Used during rollback after a failed pipeline operation.
+   */
+  async restoreAssets(
+    fn: Function,
+    prevAssets: Array<{key: string; filename: FunctionAssetFilename}>
+  ): Promise<void> {
+    for (const asset of prevAssets) {
+      try {
+        const data = await this.strategy.read(asset.key);
+        await this.writeLocalAsset(fn, asset.filename, data);
+      } catch (e) {
+        this.logger.error(
+          `[rollback] Could not restore ${fn.name}/${asset.filename}: ${e instanceof Error ? e.message : e}`
+        );
+      }
+    }
+  }
+
+  /**
    * Reconcile a single function: compare local file hashes to stored metadata.
    * Downloads and restores any file whose hash doesn't match (or is missing).
    * Returns true if any file was updated (caller should re-prepare the function).
@@ -125,36 +154,23 @@ export class FunctionAssetReconciler {
   }
 
   /**
-   * Run reconciliation for all provided functions, bounded by the given concurrency.
-   * After syncing files, runs engine.installPackages + engine.compile when any
-   * file changed. Engine injection is done lazily via a callback to avoid circular
-   * dependency.
+   * Run reconciliation for all provided functions.
+   * After syncing files, runs installPackages + compile when any file changed.
    */
-  async reconcileAll(
-    fns: Array<Function & {_id: ObjectId}>,
-    prepare: (fn: Function & {_id: ObjectId}) => Promise<void>,
-    concurrency = 5
-  ): Promise<void> {
-    const chunks: Array<Array<Function & {_id: ObjectId}>> = [];
-    for (let i = 0; i < fns.length; i += concurrency) {
-      chunks.push(fns.slice(i, i + concurrency));
-    }
-
-    for (const chunk of chunks) {
-      await Promise.all(
-        chunk.map(async fn => {
-          try {
-            const changed = await this.reconcileFunction(fn);
-            if (changed) {
-              await prepare(fn);
-            }
-          } catch (err) {
-            this.logger.error(
-              `[reconcile] Failed for function ${fn.name}: ${err instanceof Error ? err.message : err}`
-            );
+  async reconcileAll(fns: Array<Function & {_id: ObjectId}>): Promise<void> {
+    await Promise.all(
+      fns.map(async fn => {
+        try {
+          const changed = await this.reconcileFunction(fn);
+          if (changed) {
+            await this.preparationService.prepare(fn);
           }
-        })
-      );
-    }
+        } catch (err) {
+          this.logger.error(
+            `[reconcile] Failed for function ${fn.name}: ${err instanceof Error ? err.message : err}`
+          );
+        }
+      })
+    );
   }
 }
