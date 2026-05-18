@@ -37,7 +37,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     super();
     this.router.use(
       bodyParser.raw({
-        limit: this.payloadSizeLimit ? this.payloadSizeLimit * 1024 * 1024 : "10mb",
+        limit: this.payloadSizeLimit != null ? this.payloadSizeLimit * 1024 * 1024 : "10mb",
         type: "*/*"
       }) as any
     );
