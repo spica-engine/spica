@@ -27,7 +27,9 @@ describe("StandardStreamOutput", () => {
 
     stdout.write(Buffer.from("hello stdout"), err => {
       expect(err).toBeFalsy();
-      expect(Buffer.concat(written).toString()).toBe("hello stdout");
+      const output = Buffer.concat(written).toString();
+      // Output format: "<ISO_TIMESTAMP> [fn1:undefined] LOG hello stdout\n"
+      expect(output).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z \[fn1:undefined\] LOG hello stdout\n/);
       (process.stdout.write as jest.Mock).mockRestore();
       done();
     });
@@ -46,7 +48,9 @@ describe("StandardStreamOutput", () => {
 
     stderr.write(Buffer.from("hello stderr"), err => {
       expect(err).toBeFalsy();
-      expect(Buffer.concat(written).toString()).toBe("hello stderr");
+      const output = Buffer.concat(written).toString();
+      // Output format: "<ISO_TIMESTAMP> [fn1:undefined] ERROR hello stderr\n"
+      expect(output).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z \[fn1:undefined\] ERROR hello stderr\n/);
       (process.stderr.write as jest.Mock).mockRestore();
       done();
     });
