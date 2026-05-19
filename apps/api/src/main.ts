@@ -24,6 +24,7 @@ import {SmsModule} from "@spica-server/sms";
 
 import fs from "fs";
 import https from "https";
+import os from "os";
 import path from "path";
 import yargs from "yargs/yargs";
 import morgan from "morgan";
@@ -333,8 +334,9 @@ const args = yargsInstance
     },
     "function-asset-path": {
       string: true,
+      default: path.join(os.tmpdir(), "spica-function-assets"),
       description:
-        "Absolute path to store function assets when strategy is 'default'. All API replicas sharing the same database should point to the same path (e.g. an NFS mount) so that assets written by one replica can be read by others."
+        "Path to store function assets (used when --function-asset-storage-strategy is 'default'). In multi-replica deployments all replicas should point to the same shared path (e.g. an NFS mount)."
     },
     "function-asset-awss3-credentials-path": {
       string: true,
@@ -689,12 +691,6 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     ) {
       throw new TypeError(
         "--function-asset-gcs-service-account-path and --function-asset-gcs-bucket-name must be present when --function-asset-storage-strategy is set to 'gcs'."
-      );
-    }
-
-    if (args["function-asset-storage-strategy"] == "default" && !args["function-asset-path"]) {
-      throw new TypeError(
-        "--function-asset-path must be present when --function-asset-storage-strategy is set to 'default'."
       );
     }
 
