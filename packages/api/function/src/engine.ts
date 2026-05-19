@@ -29,6 +29,7 @@ import {FunctionAssetWatcher} from "./asset-watcher.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
 import {applyAssetChange, applyAssetDelete, AssetChangeFile} from "./asset-pipeline.js";
+import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 
 import HttpSchema from "./schema/http.json" with {type: "json"};
 import ScheduleSchema from "./schema/schedule.json" with {type: "json"};
@@ -194,18 +195,24 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Store asset files for a function via the configured strategy.
-   * If no asset strategy is configured, calls `localOp` directly (no-op wrapper).
    *
-   * @param fn        The function whose assets are being changed.
-   * @param files     Files to persist (filename + buffer).
-   * @param localOp   Local disk/install/compile step to run before uploading.
+   * @param fn  The function whose assets are being changed.
+   * @param op  Callback that performs all disk writes / installs / compiles and
+   *            returns the final file contents (filename + buffer) to upload.
    */
   async storeAssets(
     fn: Function & {_id: ObjectId},
-    files: AssetChangeFile[],
-    localOp: () => Promise<void>
+    op: () => Promise<AssetChangeFile[]>
   ): Promise<void> {
-    return applyAssetChange(fn, files, this.reconciler, this.assetService, this.tracker, localOp);
+    return applyAssetChange(fn, op, this.reconciler, this.assetService, this.tracker);
+  }
+
+  /**
+   * Returns the asset storage filename (e.g. "index.ts" or "index.mjs") for
+   * the function's build entrypoint, based on its language configuration.
+   */
+  getIndexFilename(fn: Function): FunctionAssetFilename {
+    return this.getFunctionLanguage(fn).description.entrypoints.build as FunctionAssetFilename;
   }
 
   /**

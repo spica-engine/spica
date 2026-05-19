@@ -64,27 +64,20 @@ describe("applyAssetChange", () => {
     jest.clearAllMocks();
   });
 
-  it("should write files, run localOp, upload to strategy, and upsert metadata", async () => {
+  it("should run op, upload to strategy, and upsert metadata", async () => {
     const reconciler = makeReconciler() as any;
     const assetService = makeAssetService();
-    const localOp = jest.fn().mockResolvedValue(undefined);
-
-    const fnDir = path.join(tmpDir, fn.name);
-    await fsSync.promises.mkdir(fnDir, {recursive: true});
-
     const files: AssetChangeFile[] = [{filename: "index.ts", data: Buffer.from("console.log(1)")}];
+    const op = jest.fn().mockResolvedValue(files);
 
-    // Write the file to disk before calling (simulating what localOp would do)
-    await fsSync.promises.writeFile(path.join(fnDir, "index.ts"), files[0].data);
+    await applyAssetChange(fn, op, reconciler, assetService, null);
 
-    await applyAssetChange(fn, files, reconciler, assetService, null, localOp);
-
-    expect(localOp).toHaveBeenCalled();
+    expect(op).toHaveBeenCalled();
     expect(reconciler.uploadAsset).toHaveBeenCalledTimes(1);
     expect(assetService.upsertMany).toHaveBeenCalledTimes(1);
   });
 
-  it("should rollback local files when localOp throws", async () => {
+  it("should rollback local files when op throws", async () => {
     const reconciler = makeReconciler() as any;
     const assetService = makeAssetService();
 
@@ -97,13 +90,11 @@ describe("applyAssetChange", () => {
       }
     ]);
 
-    const localOp = jest.fn().mockRejectedValue(new Error("compile failed"));
+    const op = jest.fn().mockRejectedValue(new Error("compile failed"));
 
-    const files: AssetChangeFile[] = [{filename: "index.ts", data: Buffer.from("bad-code")}];
-
-    await expect(
-      applyAssetChange(fn, files, reconciler, assetService, null, localOp)
-    ).rejects.toThrow("compile failed");
+    await expect(applyAssetChange(fn, op, reconciler, assetService, null)).rejects.toThrow(
+      "compile failed"
+    );
 
     // Upload step never reached
     expect(reconciler.uploadAsset).not.toHaveBeenCalled();
@@ -116,17 +107,12 @@ describe("applyAssetChange", () => {
     const reconciler = makeReconciler() as any;
     (reconciler.uploadAsset as jest.Mock).mockRejectedValueOnce(new Error("upload failed"));
     const assetService = makeAssetService();
-    const localOp = jest.fn().mockResolvedValue(undefined);
-
-    const fnDir = path.join(tmpDir, fn.name);
-    await fsSync.promises.mkdir(fnDir, {recursive: true});
-    await fsSync.promises.writeFile(path.join(fnDir, "index.ts"), "code");
-
     const files: AssetChangeFile[] = [{filename: "index.ts", data: Buffer.from("code")}];
+    const op = jest.fn().mockResolvedValue(files);
 
-    await expect(
-      applyAssetChange(fn, files, reconciler, assetService, null, localOp)
-    ).rejects.toThrow("upload failed");
+    await expect(applyAssetChange(fn, op, reconciler, assetService, null)).rejects.toThrow(
+      "upload failed"
+    );
 
     expect(assetService.upsertMany).not.toHaveBeenCalled();
     expect(reconciler.restoreAssets).toHaveBeenCalled();
@@ -138,17 +124,12 @@ describe("applyAssetChange", () => {
     const reconciler = makeReconciler() as any;
     const assetService = makeAssetService();
     assetService.upsertMany.mockRejectedValueOnce(new Error("db down"));
-    const localOp = jest.fn().mockResolvedValue(undefined);
-
-    const fnDir = path.join(tmpDir, fn.name);
-    await fsSync.promises.mkdir(fnDir, {recursive: true});
-    await fsSync.promises.writeFile(path.join(fnDir, "index.ts"), "code");
-
     const files: AssetChangeFile[] = [{filename: "index.ts", data: Buffer.from("code")}];
+    const op = jest.fn().mockResolvedValue(files);
 
-    await expect(
-      applyAssetChange(fn, files, reconciler, assetService, null, localOp)
-    ).rejects.toThrow("db down");
+    await expect(applyAssetChange(fn, op, reconciler, assetService, null)).rejects.toThrow(
+      "db down"
+    );
 
     // Should attempt to clean up the uploaded key
     expect(reconciler.deleteFromStorage).toHaveBeenCalledTimes(1);
