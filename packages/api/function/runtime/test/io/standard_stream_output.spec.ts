@@ -18,18 +18,23 @@ describe("StandardStreamOutput", () => {
     const [stdout] = io.create({eventId: "event1", functionId: "fn1"});
 
     const written: Buffer[] = [];
-    jest.spyOn(process.stdout, "write").mockImplementation((chunk: any, encodingOrCb?: any, cb?: any) => {
-      written.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-      const callback = typeof encodingOrCb === "function" ? encodingOrCb : typeof cb === "function" ? cb : null;
-      if (callback) callback();
-      return true;
-    });
+    jest
+      .spyOn(process.stdout, "write")
+      .mockImplementation((chunk: any, encodingOrCb?: any, cb?: any) => {
+        written.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        const callback =
+          typeof encodingOrCb === "function" ? encodingOrCb : typeof cb === "function" ? cb : null;
+        if (callback) callback();
+        return true;
+      });
 
     stdout.write(Buffer.from("hello stdout"), err => {
       expect(err).toBeFalsy();
       const output = Buffer.concat(written).toString();
       // Output format: "<ISO_TIMESTAMP> [fn1:undefined] LOG hello stdout\n"
-      expect(output).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z \[fn1:undefined\] LOG hello stdout\n/);
+      expect(output).toMatch(
+        /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z \[fn1:undefined\] LOG hello stdout\n/
+      );
       (process.stdout.write as jest.Mock).mockRestore();
       done();
     });
@@ -39,18 +44,23 @@ describe("StandardStreamOutput", () => {
     const [, stderr] = io.create({eventId: "event1", functionId: "fn1"});
 
     const written: Buffer[] = [];
-    jest.spyOn(process.stderr, "write").mockImplementation((chunk: any, encodingOrCb?: any, cb?: any) => {
-      written.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-      const callback = typeof encodingOrCb === "function" ? encodingOrCb : typeof cb === "function" ? cb : null;
-      if (callback) callback();
-      return true;
-    });
+    jest
+      .spyOn(process.stderr, "write")
+      .mockImplementation((chunk: any, encodingOrCb?: any, cb?: any) => {
+        written.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        const callback =
+          typeof encodingOrCb === "function" ? encodingOrCb : typeof cb === "function" ? cb : null;
+        if (callback) callback();
+        return true;
+      });
 
     stderr.write(Buffer.from("hello stderr"), err => {
       expect(err).toBeFalsy();
       const output = Buffer.concat(written).toString();
       // Output format: "<ISO_TIMESTAMP> [fn1:undefined] ERROR hello stderr\n"
-      expect(output).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z \[fn1:undefined\] ERROR hello stderr\n/);
+      expect(output).toMatch(
+        /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z \[fn1:undefined\] ERROR hello stderr\n/
+      );
       (process.stderr.write as jest.Mock).mockRestore();
       done();
     });
