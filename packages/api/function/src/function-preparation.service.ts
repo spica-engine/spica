@@ -37,4 +37,14 @@ export class FunctionPreparationService {
     await this.installPackages(fn, []);
     await this.compile(fn);
   }
+
+  /** Re-prepare only the index file: recompile without reinstalling packages. */
+  prepareIndex(fn: Function): Promise<void> {
+    return this.compile(fn);
+  }
+
+  /** Re-prepare only package.json: reinstall packages without recompiling. */
+  preparePackageJson(fn: Function): Promise<void> {
+    return this.installPackages(fn, []);
+  }
 }

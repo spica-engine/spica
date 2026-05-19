@@ -28,7 +28,7 @@ import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {FunctionAssetWatcher} from "./asset-watcher.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
-import {applyAssetChange, AssetChangeFile} from "./asset-pipeline.js";
+import {applyAssetChange} from "./asset-pipeline.js";
 import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 
 import HttpSchema from "./schema/http.json" with {type: "json"};
@@ -194,17 +194,19 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Store asset files for a function via the configured strategy.
+   * Store a single asset file for a function via the configured strategy.
    *
-   * @param fn  The function whose assets are being changed.
-   * @param op  Callback that performs all disk writes / installs / compiles and
-   *            returns the final file contents (filename + buffer) to upload.
+   * @param fn        The function whose asset is being changed.
+   * @param filename  The asset filename (e.g. "index.ts" or "package.json").
+   * @param op        Callback that performs all disk writes / installs / compiles
+   *                  and returns the new file buffer to upload.
    */
   async storeAssets(
     fn: Function & {_id: ObjectId},
-    op: () => Promise<AssetChangeFile[]>
+    filename: FunctionAssetFilename,
+    op: () => Promise<Buffer>
   ): Promise<void> {
-    return applyAssetChange(fn, op, this.reconciler, this.assetService, this.tracker);
+    return applyAssetChange(fn, filename, op, this.reconciler, this.assetService, this.tracker);
   }
 
   /**

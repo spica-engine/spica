@@ -125,10 +125,10 @@ export async function insert(fs: FunctionService, engine: FunctionEngine, fn: Fu
   await engine.createFunction(fn);
 
   if (fn._id) {
-    await engine.storeAssets(fn as Function & {_id: any}, async () => {
+    await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
       await engine.createFunction(fn);
       const pkgContent = await engine.read(fn, "dependency").catch(() => "{}");
-      return [{filename: "package.json" as const, data: Buffer.from(pkgContent, "utf-8")}];
+      return Buffer.from(pkgContent, "utf-8");
     });
   }
 
@@ -214,10 +214,10 @@ export namespace index {
       throw new NotFoundException("Cannot find function.");
     }
 
-    await engine.storeAssets(fn as Function & {_id: any}, async () => {
+    await engine.storeAssets(fn as Function & {_id: any}, engine.getIndexFilename(fn), async () => {
       await engine.update(fn, index);
       await engine.compile(fn);
-      return [{filename: engine.getIndexFilename(fn), data: Buffer.from(index, "utf-8")}];
+      return Buffer.from(index, "utf-8");
     });
 
     const envResolvedFn = await findOneForRuntime(fs, id);
@@ -295,10 +295,10 @@ export namespace dependencies {
     }
 
     if (deps.length) {
-      await engine.storeAssets(fn as Function & {_id: any}, async () => {
+      await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
         await engine.installPackages(fn, deps as string[]);
         const pkgContent = await engine.read(fn, "dependency");
-        return [{filename: "package.json" as const, data: Buffer.from(pkgContent, "utf-8")}];
+        return Buffer.from(pkgContent, "utf-8");
       });
     }
   }
@@ -333,7 +333,7 @@ export namespace dependencies {
       throw new NotFoundException("Could not find the function.");
     }
 
-    await engine.storeAssets(fn as Function & {_id: any}, async () => {
+    await engine.storeAssets(fn as Function & {_id: any}, "package.json", async () => {
       await Promise.all(
         deps.map(dep =>
           engine.removePackage(fn, dep).catch(error => {
@@ -342,7 +342,7 @@ export namespace dependencies {
         )
       );
       const pkgContent = await engine.read(fn, "dependency");
-      return [{filename: "package.json" as const, data: Buffer.from(pkgContent, "utf-8")}];
+      return Buffer.from(pkgContent, "utf-8");
     });
   }
 }

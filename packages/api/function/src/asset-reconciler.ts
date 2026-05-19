@@ -119,91 +119,75 @@ export class FunctionAssetReconciler {
   }
 
   /**
-   * Restore a set of assets from remote storage back to local disk.
-   * Used during rollback after a failed pipeline operation.
+   * Restore a single asset from remote storage back to local disk.
+   * No-op when prevAsset is null (file did not previously exist).
    */
-  private async restoreAssets(
+  private async restoreAsset(
     fn: Function,
-    prevAssets: Array<{key: string; filename: FunctionAssetFilename}>
+    prevAsset: {key: string; filename: FunctionAssetFilename} | null
   ): Promise<void> {
-    for (const asset of prevAssets) {
-      try {
-        const data = await this.strategy.read(asset.key);
-        await this.writeLocalAsset(fn, asset.filename, data);
-      } catch (e) {
-        this.logger.error(
-          `[rollback] Could not restore ${fn.name}/${asset.filename}: ${e instanceof Error ? e.message : e}`
-        );
-      }
+    if (!prevAsset) return;
+    try {
+      const data = await this.strategy.read(prevAsset.key);
+      await this.writeLocalAsset(fn, prevAsset.filename, data);
+    } catch (e) {
+      this.logger.error(
+        `[rollback] Could not restore ${fn.name}/${prevAsset.filename}: ${e instanceof Error ? e.message : e}`
+      );
     }
   }
 
   /**
-   * Re-prepare a function after rollback: reinstall packages and recompile.
-   * Ensures the runtime (compiled artifact + node_modules) matches the files
-   * that were just restored to disk.
+   * Read and cache the buffer of a single pre-existing asset from storage.
+   * Returns null when prevAsset is null (new file — nothing to snapshot).
    */
-  private async prepare(fn: Function): Promise<void> {
-    return this.preparationService.prepare(fn);
+  async snapshotAsset(prevAsset: {key: string} | null): Promise<Buffer | null> {
+    if (!prevAsset) return null;
+    try {
+      return await this.readFromStorage(prevAsset.key);
+    } catch {
+      // Asset in metadata but missing from storage — treat as absent.
+      return null;
+    }
   }
 
   /**
-   * Read and cache buffer content from storage for each pre-existing asset.
-   * Enables safe rollback of in-place-overwritten keys during a failed upload.
-   */
-  async snapshotAssets(prevAssets: Array<{key: string}>): Promise<Map<string, Buffer>> {
-    const map = new Map<string, Buffer>();
-    await Promise.all(
-      prevAssets.map(async asset => {
-        try {
-          map.set(asset.key, await this.readFromStorage(asset.key));
-        } catch {
-          // Asset in metadata but missing from storage — will be deleted on rollback.
-        }
-      })
-    );
-    return map;
-  }
-
-  /**
-   * Restore disk files from storage then re-prepare the runtime.
-   * Used when only the operation step failed (storage was not touched).
-   * Skips prepare when prevAssets is empty — no known-good state to restore against.
+   * Restore a single file from storage to disk, then run the targeted prepare
+   * step for that filename (compile for index files, install for package.json).
+   * No-op when prevAsset is null — nothing to restore.
    */
   async rollbackDisk(
     fn: Function,
-    prevAssets: Array<{key: string; filename: FunctionAssetFilename}>
+    prevAsset: {key: string; filename: FunctionAssetFilename} | null
   ): Promise<void> {
-    await this.restoreAssets(fn, prevAssets);
-    if (prevAssets.length > 0) {
-      await this.prepare(fn).catch(e => {
-        this.logger.error(`[rollback] Post-rollback prepare failed for ${fn.name}: ${errMsg(e)}`);
-      });
-    }
+    if (!prevAsset) return;
+    await this.restoreAsset(fn, prevAsset);
+    const prepareStep =
+      prevAsset.filename === "package.json"
+        ? () => this.preparationService.preparePackageJson(fn)
+        : () => this.preparationService.prepareIndex(fn);
+    await prepareStep().catch(e => {
+      this.logger.error(`[rollback] Post-rollback prepare failed for ${fn.name}: ${errMsg(e)}`);
+    });
   }
 
   /**
-   * Full rollback: restore storage keys to their pre-upload state, then
-   * restore disk + re-prepare. Pre-existing keys are re-uploaded with the
-   * old buffer; new keys are deleted.
+   * Full rollback for a single-file upload failure: restore the storage key to
+   * its pre-upload state (re-write old buffer or delete if it was a new file),
+   * then restore disk + re-prepare.
    *
-   * Must restore storage before disk so restoreAssets reads the correct content.
+   * Storage must be restored before disk so restoreAsset reads the correct content.
    */
   async rollback(
     fn: Function,
-    prevAssets: Array<{key: string; filename: FunctionAssetFilename}>,
-    uploadedKeys: string[],
-    prevBuffers: Map<string, Buffer>
+    prevAsset: {key: string; filename: FunctionAssetFilename} | null,
+    uploadedKey: string,
+    prevBuffer: Buffer | null
   ): Promise<void> {
-    await Promise.all(
-      uploadedKeys.map(key => {
-        const old = prevBuffers.get(key);
-        return old !== undefined
-          ? this.writeToStorage(key, old).catch(() => {})
-          : this.deleteFromStorage(key).catch(() => {});
-      })
-    );
-    await this.rollbackDisk(fn, prevAssets);
+    await (prevBuffer !== null
+      ? this.writeToStorage(uploadedKey, prevBuffer).catch(() => {})
+      : this.deleteFromStorage(uploadedKey).catch(() => {}));
+    await this.rollbackDisk(fn, prevAsset);
   }
 
   /**

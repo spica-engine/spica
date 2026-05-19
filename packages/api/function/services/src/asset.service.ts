@@ -20,6 +20,13 @@ export class FunctionAssetService extends BaseCollection<FunctionAsset>(collecti
     return this.find({functionId});
   }
 
+  findByFilename(
+    functionId: ObjectId,
+    filename: FunctionAssetFilename
+  ): Promise<WithId<FunctionAsset> | null> {
+    return this.findOne({functionId, filename});
+  }
+
   async upsertAsset(
     functionId: ObjectId,
     filename: FunctionAssetFilename,
