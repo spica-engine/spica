@@ -15,152 +15,47 @@ export interface AssetChangeFile {
   data: Buffer;
 }
 
-/**
- * Full rollback-safe asset-change pipeline.
- *
- * Steps (per spec):
- *  1. Snapshot prev metadata + prev storage buffers (rollback ref).
- *  2. Apply local disk writes + run `localOp` (install/compile).
- *     On failure → restore disk from prevAssets, abort.
- *  3. Upload new assets to storage strategy.
- *     On failure → restore storage (re-upload old buffers / delete new keys),
- *                  then restore disk, abort.
- *  4. Update metadata in MongoDB.
- *     On failure → same storage + disk restore, abort.
- *  5. Stamp self-writes in watcher (suppress change-stream self-reaction).
- */
-export async function applyAssetChange(
-  fn: FunctionWithId,
-  files: AssetChangeFile[],
-  reconciler: FunctionAssetReconciler,
-  assetService: FunctionAssetService,
-  tracker: SelfWriteTracker | null,
-  localOp: () => Promise<void>
-): Promise<void> {
-  // Step 1: snapshot prev metadata + prev storage buffers.
-  // Reading buffers upfront ensures we can restore pre-existing storage objects
-  // even after they have been overwritten by a subsequent failed upload.
-  const prevAssets = await assetService.findByFunction(fn._id);
-  const prevBuffers = new Map<string, Buffer>();
-  await Promise.all(
-    prevAssets.map(async asset => {
-      try {
-        prevBuffers.set(asset.key, await reconciler.readFromStorage(asset.key));
-      } catch {
-        // Asset referenced in metadata but missing from storage — treat as new on rollback.
-      }
-    })
-  );
-
-  // Step 2: apply local disk writes + execute install/compile.
-  // Skip writing if data is empty (length === 0) — this signals a capture-only
-  // placeholder where the localOp itself produces the file (e.g. npm install
-  // updates package.json).  Writing an empty buffer would corrupt the file.
-  for (const {filename, data} of files) {
-    if (data.length > 0) {
-      await reconciler.writeLocalAsset(fn, filename, data);
-    }
-  }
-
-  try {
-    await localOp();
-  } catch (localErr) {
-    logger.error(
-      `[asset-pipeline] Local op failed for ${fn.name}: ${localErr instanceof Error ? localErr.message : localErr}. Restoring…`
-    );
-    // Storage is untouched at this point — disk restore is sufficient.
-    await reconciler.restoreAssets(fn, prevAssets);
-    // Re-prepare so the runtime (compiled artifact / node_modules) matches the restored files.
-    if (prevAssets.length > 0) {
-      await reconciler.prepare(fn).catch(prepErr => {
-        logger.error(
-          `[asset-pipeline] Post-rollback prepare failed for ${fn.name}: ${prepErr instanceof Error ? prepErr.message : prepErr}`
-        );
-      });
-    }
-    throw localErr;
-  }
-
-  // Step 3: upload new assets to storage.
-  const uploadedRecords: Array<Omit<FunctionAsset, "functionId" | "_id">> = [];
-  const newlyUploadedKeys: string[] = [];
-
-  try {
-    for (const {filename, data} of files) {
-      // Re-read from disk after localOp (e.g. package.json may have been modified by npm install).
-      const localAsset = await reconciler.readLocalAsset(fn, filename);
-      const diskData = localAsset ? localAsset.buffer : data;
-
-      const record = await reconciler.uploadAsset(fn.name, filename, diskData);
-      newlyUploadedKeys.push(record.key);
-      uploadedRecords.push(record);
-    }
-  } catch (uploadErr) {
-    logger.error(
-      `[asset-pipeline] Upload failed for ${fn.name}: ${uploadErr instanceof Error ? uploadErr.message : uploadErr}. Restoring…`
-    );
-    // Restore storage first so restoreAssets reads correct old content from storage.
-    await rollbackStorage(newlyUploadedKeys, prevBuffers, reconciler);
-    await reconciler.restoreAssets(fn, prevAssets);
-    // Re-prepare so the runtime matches the restored files.
-    if (prevAssets.length > 0) {
-      await reconciler.prepare(fn).catch(prepErr => {
-        logger.error(
-          `[asset-pipeline] Post-rollback prepare failed for ${fn.name}: ${prepErr instanceof Error ? prepErr.message : prepErr}`
-        );
-      });
-    }
-    throw uploadErr;
-  }
-
-  // Step 4: update metadata in MongoDB.
-  try {
-    // Stamp before writing so the change-stream on this node suppresses the event.
-    if (tracker) {
-      for (const record of uploadedRecords) {
-        tracker.stamp({
-          functionId: fn._id.toHexString(),
-          filename: record.filename,
-          hash: record.hash
-        });
-      }
-    }
-    await assetService.upsertMany(fn._id, uploadedRecords);
-  } catch (metaErr) {
-    logger.error(
-      `[asset-pipeline] Metadata update failed for ${fn.name}: ${metaErr instanceof Error ? metaErr.message : metaErr}. Restoring…`
-    );
-    // Same: restore storage before disk so restoreAssets reads correct old content.
-    await rollbackStorage(newlyUploadedKeys, prevBuffers, reconciler);
-    await reconciler.restoreAssets(fn, prevAssets);
-    // Re-prepare so the runtime matches the restored files.
-    if (prevAssets.length > 0) {
-      await reconciler.prepare(fn).catch(prepErr => {
-        logger.error(
-          `[asset-pipeline] Post-rollback prepare failed for ${fn.name}: ${prepErr instanceof Error ? prepErr.message : prepErr}`
-        );
-      });
-    }
-    throw metaErr;
-  }
+/** Format any caught value as a string for use in log messages. */
+function errMsg(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
 }
 
 /**
- * Restore storage to its pre-upload state, then restore disk.
+ * Read and cache buffer content from storage for each pre-existing asset.
+ * Enables safe rollback of in-place-overwritten keys during a failed upload.
+ */
+async function snapshotPrevBuffers(
+  prevAssets: Array<{key: string}>,
+  reconciler: FunctionAssetReconciler
+): Promise<Map<string, Buffer>> {
+  const map = new Map<string, Buffer>();
+  await Promise.all(
+    prevAssets.map(async asset => {
+      try {
+        map.set(asset.key, await reconciler.readFromStorage(asset.key));
+      } catch {
+        // Asset in metadata but missing from storage — will be deleted on rollback.
+      }
+    })
+  );
+  return map;
+}
+
+/**
+ * Restore storage keys to their pre-upload state.
+ * Pre-existing keys → re-upload old buffer (undo in-place overwrite).
+ * New keys          → delete from storage.
  *
- * Pre-existing keys (found in prevBuffers) → re-upload old buffer (undo overwrite).
- * Genuinely new keys (not in prevBuffers)  → delete from storage.
- *
- * Must be called BEFORE reconciler.restoreAssets so that restoreAssets reads
+ * Must be called BEFORE restoreDiskAndPrepare so that restoreAssets reads
  * the correct old content from storage when writing back to disk.
  */
-async function rollbackStorage(
-  newlyUploadedKeys: string[],
+async function restoreStorageKeys(
+  uploadedKeys: string[],
   prevBuffers: Map<string, Buffer>,
   reconciler: FunctionAssetReconciler
 ): Promise<void> {
   await Promise.all(
-    newlyUploadedKeys.map(key => {
+    uploadedKeys.map(key => {
       const old = prevBuffers.get(key);
       return old !== undefined
         ? reconciler.writeToStorage(key, old).catch(() => {})
@@ -170,8 +65,106 @@ async function rollbackStorage(
 }
 
 /**
+ * Restore disk files from storage then re-prepare the runtime
+ * (reinstall packages + recompile) so it is consistent with the restored files.
+ * Skipped when prevAssets is empty — no known-good state to prepare against.
+ */
+async function restoreDiskAndPrepare(
+  fn: FunctionWithId,
+  prevAssets: Array<{key: string; filename: FunctionAssetFilename}>,
+  reconciler: FunctionAssetReconciler
+): Promise<void> {
+  await reconciler.restoreAssets(fn, prevAssets);
+  if (prevAssets.length > 0) {
+    await reconciler.prepare(fn).catch(e => {
+      logger.error(`[asset-pipeline] Post-rollback prepare failed for ${fn.name}: ${errMsg(e)}`);
+    });
+  }
+}
+
+/**
+ * Full rollback-safe asset-change pipeline.
+ *
+ * Steps:
+ *  1. Snapshot prev metadata + storage buffers (rollback reference).
+ *  2. Write files to disk, then run `localOp` (install / compile).
+ *     On failure → restore disk + re-prepare, abort.
+ *  3. Upload assets to the storage strategy.
+ *     On failure → restore storage, restore disk + re-prepare, abort.
+ *  4. Persist asset metadata in MongoDB.
+ *     On failure → restore storage, restore disk + re-prepare, abort.
+ */
+export async function applyAssetChange(
+  fn: FunctionWithId,
+  files: AssetChangeFile[],
+  reconciler: FunctionAssetReconciler,
+  assetService: FunctionAssetService,
+  tracker: SelfWriteTracker | null,
+  localOp: () => Promise<void>
+): Promise<void> {
+  // Step 1: snapshot prev metadata + storage buffers.
+  const prevAssets = await assetService.findByFunction(fn._id);
+  const prevBuffers = await snapshotPrevBuffers(prevAssets, reconciler);
+
+  // Step 2: write files to disk, then execute localOp (install / compile).
+  // Empty-buffer files are capture-only placeholders — localOp produces them;
+  // writing an empty buffer would corrupt the file.
+  for (const {filename, data} of files) {
+    if (data.length > 0) {
+      await reconciler.writeLocalAsset(fn, filename, data);
+    }
+  }
+
+  try {
+    await localOp();
+  } catch (e) {
+    logger.error(`[asset-pipeline] Local op failed for ${fn.name}: ${errMsg(e)}. Restoring…`);
+    await restoreDiskAndPrepare(fn, prevAssets, reconciler); // storage untouched
+    throw e;
+  }
+
+  // Step 3: upload to storage.
+  // Both arrays grow incrementally so the catch block can roll back only the
+  // keys that actually succeeded before the failure.
+  const uploadedRecords: Array<Omit<FunctionAsset, "functionId" | "_id">> = [];
+  const uploadedKeys: string[] = [];
+
+  try {
+    for (const {filename, data} of files) {
+      // Re-read from disk after localOp — npm install may have updated package.json.
+      const local = await reconciler.readLocalAsset(fn, filename);
+      const record = await reconciler.uploadAsset(fn.name, filename, local ? local.buffer : data);
+      uploadedKeys.push(record.key);
+      uploadedRecords.push(record);
+    }
+  } catch (e) {
+    logger.error(`[asset-pipeline] Upload failed for ${fn.name}: ${errMsg(e)}. Restoring…`);
+    await restoreStorageKeys(uploadedKeys, prevBuffers, reconciler);
+    await restoreDiskAndPrepare(fn, prevAssets, reconciler);
+    throw e;
+  }
+
+  // Step 4: persist metadata.
+  try {
+    if (tracker) {
+      for (const r of uploadedRecords) {
+        tracker.stamp({functionId: fn._id.toHexString(), filename: r.filename, hash: r.hash});
+      }
+    }
+    await assetService.upsertMany(fn._id, uploadedRecords);
+  } catch (e) {
+    logger.error(
+      `[asset-pipeline] Metadata update failed for ${fn.name}: ${errMsg(e)}. Restoring…`
+    );
+    await restoreStorageKeys(uploadedKeys, prevBuffers, reconciler);
+    await restoreDiskAndPrepare(fn, prevAssets, reconciler);
+    throw e;
+  }
+}
+
+/**
  * Delete all stored assets for a function from both storage and metadata.
- * Called during CRUD.remove after the local dir has been wiped.
+ * Called during CRUD.remove after the local directory has been wiped.
  */
 export async function applyAssetDelete(
   fn: FunctionWithId,
@@ -182,9 +175,7 @@ export async function applyAssetDelete(
   await Promise.all(
     prevAssets.map(asset =>
       reconciler.deleteFromStorage(asset.key).catch(e => {
-        logger.error(
-          `[asset-pipeline] Could not delete remote asset ${asset.key}: ${e instanceof Error ? e.message : e}`
-        );
+        logger.error(`[asset-pipeline] Could not delete remote asset ${asset.key}: ${errMsg(e)}`);
       })
     )
   );
