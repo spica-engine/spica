@@ -338,6 +338,62 @@ describe("http enqueuer", () => {
     ).toEqual([123, 34, 116, 101, 115, 116, 34, 58, 49, 125]);
   });
 
+  it("should reject requests exceeding the default 10mb body size limit", async () => {
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/test",
+      preflight: false
+    });
+    const bodyExceeding10mb = Buffer.alloc(11 * 1024 * 1024, "a");
+    const response = await req
+      .post("/fn-execute/test", bodyExceeding10mb, {"Content-type": "application/octet-stream"})
+      .catch(e => e.response);
+    expect(response.statusCode).toBe(413);
+  });
+
+  it("should respect a custom payloadSizeLimit passed to the constructor", async () => {
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule]
+    }).compile();
+    const customApp = module.createNestApplication();
+    const customReq = module.get(Request);
+    await customApp.listen(customReq.socket);
+
+    const customEnqueuer = new HttpEnqueuer(
+      eventQueue as any,
+      httpQueue as any,
+      customApp.getHttpAdapter().getInstance(),
+      corsOptions,
+      jest.fn(),
+      createNoopGuardService(),
+      undefined,
+      1 // 1 MiB custom limit
+    );
+
+    customEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/large",
+      preflight: false
+    });
+
+    // Body exceeding 1 MiB should be rejected with 413
+    const bigBody = Buffer.alloc(2 * 1024 * 1024, "a");
+    const rejected = await customReq
+      .post("/fn-execute/large", bigBody, {"Content-type": "application/octet-stream"})
+      .catch(e => e.response);
+    expect(rejected.statusCode).toBe(413);
+
+    // Body within 1 MiB should be accepted
+    httpQueue.enqueue.mockImplementation((id, _req, res) => res.end());
+    const smallBody = Buffer.alloc(512 * 1024, "a");
+    await customReq.post("/fn-execute/large", smallBody, {
+      "Content-type": "application/octet-stream"
+    });
+    expect(httpQueue.enqueue).toHaveBeenCalled();
+
+    await customApp.close();
+  });
+
   it("should dequeue when connection is closed", done => {
     httpQueue.enqueue.mockImplementation((id, req, res) => {
       res.connection.destroy();
