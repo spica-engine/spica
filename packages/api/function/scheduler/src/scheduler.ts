@@ -122,7 +122,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         this.options.corsOptions,
         schedulerUnsubscription,
         this.guardService,
-        this.attachStatusTracker
+        this.attachStatusTracker,
+        this.options.payloadSizeLimit
       )
     );
 

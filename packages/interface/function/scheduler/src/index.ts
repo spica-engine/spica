@@ -27,6 +27,7 @@ export interface SchedulingOptions {
   tsCompilerPath?: string;
   grpcPort?: number;
   functionGrpcMaxMessageSizeBytes?: number;
+  payloadSizeLimit?: number;
 }
 
 export type Schedule = (event: event.Event) => void;
