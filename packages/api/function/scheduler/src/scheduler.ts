@@ -1,3 +1,4 @@
+import path from "path";
 import {Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
@@ -27,7 +28,11 @@ import {
 } from "@spica-server/function-queue";
 import {event} from "@spica-server/function-queue-proto";
 import {Runtime, Worker} from "@spica-server/function-runtime";
-import {DatabaseOutput, StandartStream, StandardStreamOutput} from "@spica-server/function-runtime-io";
+import {
+  DatabaseOutput,
+  StandartStream,
+  StandardStreamOutput
+} from "@spica-server/function-runtime-io";
 import {generateLog} from "@spica-server/function-runtime-logger";
 import {ClassCommander, JobReducer} from "@spica-server/replication";
 import {CommandType} from "@spica-server/interface-replication";
@@ -300,7 +305,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
       const {id: workerId, worker} = workerMeta;
 
-      const streamOptions = {eventId: event.id, functionId: event.target.id};
+      const streamOptions = {
+        eventId: event.id,
+        functionId: event.target.id,
+        functionName: path.basename(event.target.cwd),
+        handler: event.target.handler
+      };
       const pairs = this.outputs.map(o => o.create(streamOptions));
       for (const [stdout, stderr] of pairs) {
         worker.attach(stdout, stderr);
