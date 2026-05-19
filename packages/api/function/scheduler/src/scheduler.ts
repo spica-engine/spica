@@ -185,17 +185,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   private createOutputs(database: DatabaseService): StandartStream[] {
-    const workerLogOutput = this.options.workerLogOutput ?? ["database"];
+    const workerLogOutput = this.options.workerLogOutput;
     const outputs: StandartStream[] = [];
 
-    if (workerLogOutput.includes("database")) {
+    if (workerLogOutput?.includes("database")) {
       outputs.push(new DatabaseOutput(database));
     }
-    if (workerLogOutput.includes("stdout")) {
+    if (workerLogOutput?.includes("stdout")) {
       outputs.push(new StandardStreamOutput());
     }
 
-    return outputs.length > 0 ? outputs : [new DatabaseOutput(database)];
+    return outputs;
   }
 
   killFreeWorkers() {

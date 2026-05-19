@@ -30,6 +30,7 @@ describe("Scheduler", () => {
     maxConcurrency: 2,
     debug: false,
     logger: false,
+    workerLogOutput: ["database"] as ("database" | "stdout")[],
     spawnEntrypointPath: process.env.FUNCTION_SPAWN_ENTRYPOINT_PATH,
     tsCompilerPath: process.env.FUNCTION_TS_COMPILER_PATH
   };
@@ -173,7 +174,7 @@ describe("Scheduler", () => {
     const kill = jest.spyOn(worker, "kill");
 
     const stream = new PassThrough();
-    jest.spyOn(scheduler["output"], "create").mockReturnValue([stream, stream]);
+    jest.spyOn(scheduler["outputs"][0], "create").mockReturnValue([stream, stream]);
 
     const write = jest.spyOn(stream, "write");
 
@@ -186,7 +187,6 @@ describe("Scheduler", () => {
       type: -1 as any
     });
     scheduler.enqueue(ev);
-
     expect(kill).not.toHaveBeenCalled();
     expect(write).not.toHaveBeenCalled();
 
@@ -203,7 +203,7 @@ describe("Scheduler", () => {
     const kill = jest.spyOn(worker, "kill");
 
     const stream = new PassThrough();
-    jest.spyOn(scheduler["output"], "create").mockReturnValue([stream, stream]);
+    jest.spyOn(scheduler["outputs"][0], "create").mockReturnValue([stream, stream]);
 
     const write = jest.spyOn(stream, "write");
 
