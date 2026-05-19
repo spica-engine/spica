@@ -23,6 +23,10 @@ export function assetKey(functionName: string, filename: string): string {
   return `functions/${functionName}/${filename}`;
 }
 
+function errMsg(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
 @Injectable()
 export class FunctionAssetReconciler {
   private readonly logger = new Logger(FunctionAssetReconciler.name);
@@ -95,7 +99,7 @@ export class FunctionAssetReconciler {
   /**
    * Read a raw buffer from the configured storage strategy.
    */
-  async readFromStorage(key: string): Promise<Buffer> {
+  private async readFromStorage(key: string): Promise<Buffer> {
     return this.strategy.read(key);
   }
 
@@ -103,14 +107,14 @@ export class FunctionAssetReconciler {
    * Write a raw buffer to the configured storage strategy.
    * Used during rollback to restore pre-existing objects that were overwritten.
    */
-  async writeToStorage(key: string, data: Buffer): Promise<void> {
+  private async writeToStorage(key: string, data: Buffer): Promise<void> {
     return this.strategy.write(key, data);
   }
 
   /**
    * Delete a key from the configured storage strategy.
    */
-  async deleteFromStorage(key: string): Promise<void> {
+  private async deleteFromStorage(key: string): Promise<void> {
     return this.strategy.delete(key);
   }
 
@@ -118,7 +122,7 @@ export class FunctionAssetReconciler {
    * Restore a set of assets from remote storage back to local disk.
    * Used during rollback after a failed pipeline operation.
    */
-  async restoreAssets(
+  private async restoreAssets(
     fn: Function,
     prevAssets: Array<{key: string; filename: FunctionAssetFilename}>
   ): Promise<void> {
@@ -139,8 +143,82 @@ export class FunctionAssetReconciler {
    * Ensures the runtime (compiled artifact + node_modules) matches the files
    * that were just restored to disk.
    */
-  async prepare(fn: Function): Promise<void> {
+  private async prepare(fn: Function): Promise<void> {
     return this.preparationService.prepare(fn);
+  }
+
+  /**
+   * Read and cache buffer content from storage for each pre-existing asset.
+   * Enables safe rollback of in-place-overwritten keys during a failed upload.
+   */
+  async snapshotAssets(prevAssets: Array<{key: string}>): Promise<Map<string, Buffer>> {
+    const map = new Map<string, Buffer>();
+    await Promise.all(
+      prevAssets.map(async asset => {
+        try {
+          map.set(asset.key, await this.readFromStorage(asset.key));
+        } catch {
+          // Asset in metadata but missing from storage — will be deleted on rollback.
+        }
+      })
+    );
+    return map;
+  }
+
+  /**
+   * Restore disk files from storage then re-prepare the runtime.
+   * Used when only the operation step failed (storage was not touched).
+   * Skips prepare when prevAssets is empty — no known-good state to restore against.
+   */
+  async rollbackDisk(
+    fn: Function,
+    prevAssets: Array<{key: string; filename: FunctionAssetFilename}>
+  ): Promise<void> {
+    await this.restoreAssets(fn, prevAssets);
+    if (prevAssets.length > 0) {
+      await this.prepare(fn).catch(e => {
+        this.logger.error(`[rollback] Post-rollback prepare failed for ${fn.name}: ${errMsg(e)}`);
+      });
+    }
+  }
+
+  /**
+   * Full rollback: restore storage keys to their pre-upload state, then
+   * restore disk + re-prepare. Pre-existing keys are re-uploaded with the
+   * old buffer; new keys are deleted.
+   *
+   * Must restore storage before disk so restoreAssets reads the correct content.
+   */
+  async rollback(
+    fn: Function,
+    prevAssets: Array<{key: string; filename: FunctionAssetFilename}>,
+    uploadedKeys: string[],
+    prevBuffers: Map<string, Buffer>
+  ): Promise<void> {
+    await Promise.all(
+      uploadedKeys.map(key => {
+        const old = prevBuffers.get(key);
+        return old !== undefined
+          ? this.writeToStorage(key, old).catch(() => {})
+          : this.deleteFromStorage(key).catch(() => {});
+      })
+    );
+    await this.rollbackDisk(fn, prevAssets);
+  }
+
+  /**
+   * Delete all stored assets for a function from both storage and metadata.
+   */
+  async deleteAll(fn: Function & {_id: ObjectId}): Promise<void> {
+    const prevAssets = await this.assetService.findByFunction(fn._id);
+    await Promise.all(
+      prevAssets.map(asset =>
+        this.deleteFromStorage(asset.key).catch(e => {
+          this.logger.error(`[rollback] Could not delete remote asset ${asset.key}: ${errMsg(e)}`);
+        })
+      )
+    );
+    await this.assetService.deleteByFunction(fn._id);
   }
 
   /**

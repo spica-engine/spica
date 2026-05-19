@@ -21,68 +21,6 @@ function errMsg(e: unknown): string {
 }
 
 /**
- * Read and cache buffer content from storage for each pre-existing asset.
- * Enables safe rollback of in-place-overwritten keys during a failed upload.
- */
-async function snapshotPrevBuffers(
-  prevAssets: Array<{key: string}>,
-  reconciler: FunctionAssetReconciler
-): Promise<Map<string, Buffer>> {
-  const map = new Map<string, Buffer>();
-  await Promise.all(
-    prevAssets.map(async asset => {
-      try {
-        map.set(asset.key, await reconciler.readFromStorage(asset.key));
-      } catch {
-        // Asset in metadata but missing from storage — will be deleted on rollback.
-      }
-    })
-  );
-  return map;
-}
-
-/**
- * Restore storage keys to their pre-upload state.
- * Pre-existing keys → re-upload old buffer (undo in-place overwrite).
- * New keys          → delete from storage.
- *
- * Must be called BEFORE restoreDiskAndPrepare so that restoreAssets reads
- * the correct old content from storage when writing back to disk.
- */
-async function restoreStorageKeys(
-  uploadedKeys: string[],
-  prevBuffers: Map<string, Buffer>,
-  reconciler: FunctionAssetReconciler
-): Promise<void> {
-  await Promise.all(
-    uploadedKeys.map(key => {
-      const old = prevBuffers.get(key);
-      return old !== undefined
-        ? reconciler.writeToStorage(key, old).catch(() => {})
-        : reconciler.deleteFromStorage(key).catch(() => {});
-    })
-  );
-}
-
-/**
- * Restore disk files from storage then re-prepare the runtime
- * (reinstall packages + recompile) so it is consistent with the restored files.
- * Skipped when prevAssets is empty — no known-good state to prepare against.
- */
-async function restoreDiskAndPrepare(
-  fn: FunctionWithId,
-  prevAssets: Array<{key: string; filename: FunctionAssetFilename}>,
-  reconciler: FunctionAssetReconciler
-): Promise<void> {
-  await reconciler.restoreAssets(fn, prevAssets);
-  if (prevAssets.length > 0) {
-    await reconciler.prepare(fn).catch(e => {
-      logger.error(`[asset-pipeline] Post-rollback prepare failed for ${fn.name}: ${errMsg(e)}`);
-    });
-  }
-}
-
-/**
  * Full rollback-safe asset-change pipeline.
  *
  * Steps:
@@ -104,7 +42,7 @@ export async function applyAssetChange(
 ): Promise<void> {
   // Step 1: snapshot prev metadata + storage buffers.
   const prevAssets = await assetService.findByFunction(fn._id);
-  const prevBuffers = await snapshotPrevBuffers(prevAssets, reconciler);
+  const prevBuffers = await reconciler.snapshotAssets(prevAssets);
 
   // Step 2: execute the operation — the callback handles all disk writes and
   // returns the final file contents ready for upload.
@@ -113,7 +51,7 @@ export async function applyAssetChange(
     files = await op();
   } catch (e) {
     logger.error(`[asset-pipeline] Op failed for ${fn.name}: ${errMsg(e)}. Restoring…`);
-    await restoreDiskAndPrepare(fn, prevAssets, reconciler); // storage untouched
+    await reconciler.rollbackDisk(fn, prevAssets);
     throw e;
   }
 
@@ -131,8 +69,7 @@ export async function applyAssetChange(
     }
   } catch (e) {
     logger.error(`[asset-pipeline] Upload failed for ${fn.name}: ${errMsg(e)}. Restoring…`);
-    await restoreStorageKeys(uploadedKeys, prevBuffers, reconciler);
-    await restoreDiskAndPrepare(fn, prevAssets, reconciler);
+    await reconciler.rollback(fn, prevAssets, uploadedKeys, prevBuffers);
     throw e;
   }
 
@@ -148,28 +85,7 @@ export async function applyAssetChange(
     logger.error(
       `[asset-pipeline] Metadata update failed for ${fn.name}: ${errMsg(e)}. Restoring…`
     );
-    await restoreStorageKeys(uploadedKeys, prevBuffers, reconciler);
-    await restoreDiskAndPrepare(fn, prevAssets, reconciler);
+    await reconciler.rollback(fn, prevAssets, uploadedKeys, prevBuffers);
     throw e;
   }
-}
-
-/**
- * Delete all stored assets for a function from both storage and metadata.
- * Called during CRUD.remove after the local directory has been wiped.
- */
-export async function applyAssetDelete(
-  fn: FunctionWithId,
-  reconciler: FunctionAssetReconciler,
-  assetService: FunctionAssetService
-): Promise<void> {
-  const prevAssets = await assetService.findByFunction(fn._id);
-  await Promise.all(
-    prevAssets.map(asset =>
-      reconciler.deleteFromStorage(asset.key).catch(e => {
-        logger.error(`[asset-pipeline] Could not delete remote asset ${asset.key}: ${errMsg(e)}`);
-      })
-    )
-  );
-  await assetService.deleteByFunction(fn._id);
 }

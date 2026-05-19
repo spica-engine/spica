@@ -1,36 +1,11 @@
 import {ObjectId} from "@spica-server/database";
-import {
-  applyAssetChange,
-  applyAssetDelete,
-  AssetChangeFile
-} from "@spica-server/function/src/asset-pipeline";
+import {applyAssetChange, AssetChangeFile} from "@spica-server/function/src/asset-pipeline";
 import {hashBuffer} from "@spica-server/function/src/asset-reconciler";
-import * as os from "os";
-import * as path from "path";
-import * as fsSync from "fs";
 
 describe("applyAssetChange", () => {
-  let tmpDir: string;
   let fn: any;
 
   const makeReconciler = () => ({
-    writeLocalAsset: jest
-      .fn()
-      .mockImplementation(async (_fn: any, filename: string, data: Buffer) => {
-        const filePath = path.join(tmpDir, _fn.name, filename);
-        await fsSync.promises.mkdir(path.dirname(filePath), {recursive: true});
-        await fsSync.promises.writeFile(filePath, data);
-      }),
-    readLocalAsset: jest.fn().mockImplementation(async (_fn: any, filename: string) => {
-      const filePath = path.join(tmpDir, _fn.name, filename);
-      try {
-        const buffer = await fsSync.promises.readFile(filePath);
-        return {buffer, hash: hashBuffer(buffer)};
-      } catch (e: any) {
-        if (e.code === "ENOENT") return null;
-        throw e;
-      }
-    }),
     uploadAsset: jest
       .fn()
       .mockImplementation(async (functionName: string, filename: string, data: Buffer) => ({
@@ -41,11 +16,9 @@ describe("applyAssetChange", () => {
         uploadDate: new Date(),
         strategy: "default"
       })),
-    deleteFromStorage: jest.fn().mockResolvedValue(undefined),
-    readFromStorage: jest.fn().mockResolvedValue(Buffer.from("")),
-    writeToStorage: jest.fn().mockResolvedValue(undefined),
-    restoreAssets: jest.fn().mockResolvedValue(undefined),
-    prepare: jest.fn().mockResolvedValue(undefined)
+    snapshotAssets: jest.fn().mockResolvedValue(new Map()),
+    rollbackDisk: jest.fn().mockResolvedValue(undefined),
+    rollback: jest.fn().mockResolvedValue(undefined)
   });
 
   const makeAssetService = () => ({
@@ -55,12 +28,10 @@ describe("applyAssetChange", () => {
   });
 
   beforeEach(() => {
-    tmpDir = fsSync.mkdtempSync(path.join(os.tmpdir(), "pipeline-test-"));
     fn = {_id: new ObjectId(), name: "test-fn", language: "typescript"};
   });
 
-  afterEach(async () => {
-    await fsSync.promises.rm(tmpDir, {recursive: true, force: true});
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -98,9 +69,8 @@ describe("applyAssetChange", () => {
 
     // Upload step never reached
     expect(reconciler.uploadAsset).not.toHaveBeenCalled();
-    // Rollback attempted and followed by re-prepare against restored files
-    expect(reconciler.restoreAssets).toHaveBeenCalled();
-    expect(reconciler.prepare).toHaveBeenCalledWith(fn);
+    // Disk rollback (restore + prepare) attempted
+    expect(reconciler.rollbackDisk).toHaveBeenCalledWith(fn, expect.any(Array));
   });
 
   it("should rollback and best-effort delete when strategy.write throws", async () => {
@@ -115,9 +85,8 @@ describe("applyAssetChange", () => {
     );
 
     expect(assetService.upsertMany).not.toHaveBeenCalled();
-    expect(reconciler.restoreAssets).toHaveBeenCalled();
-    // prevAssets is empty — no prepare expected
-    expect(reconciler.prepare).not.toHaveBeenCalled();
+    // Full rollback: storage + disk
+    expect(reconciler.rollback).toHaveBeenCalledTimes(1);
   });
 
   it("should rollback and delete uploaded keys when upsertMany throws", async () => {
@@ -131,29 +100,7 @@ describe("applyAssetChange", () => {
       "db down"
     );
 
-    // Should attempt to clean up the uploaded key
-    expect(reconciler.deleteFromStorage).toHaveBeenCalledTimes(1);
-    // prevAssets is empty — no prepare expected
-    expect(reconciler.prepare).not.toHaveBeenCalled();
-  });
-});
-
-describe("applyAssetDelete", () => {
-  it("should delete all remote assets and metadata", async () => {
-    const reconciler = {
-      deleteFromStorage: jest.fn().mockResolvedValue(undefined)
-    } as any;
-    const assetService = {
-      findByFunction: jest
-        .fn()
-        .mockResolvedValue([{key: "functions/abc/index.ts"}, {key: "functions/abc/package.json"}]),
-      deleteByFunction: jest.fn().mockResolvedValue(undefined)
-    } as any;
-
-    const fn: any = {_id: new ObjectId(), name: "fn"};
-    await applyAssetDelete(fn, reconciler, assetService);
-
-    expect(reconciler.deleteFromStorage).toHaveBeenCalledTimes(2);
-    expect(assetService.deleteByFunction).toHaveBeenCalledWith(fn._id);
+    // Full rollback: restore storage + disk
+    expect(reconciler.rollback).toHaveBeenCalledTimes(1);
   });
 });

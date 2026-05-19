@@ -28,7 +28,7 @@ import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {FunctionAssetWatcher} from "./asset-watcher.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
 import {FunctionPreparationService} from "./function-preparation.service.js";
-import {applyAssetChange, applyAssetDelete, AssetChangeFile} from "./asset-pipeline.js";
+import {applyAssetChange, AssetChangeFile} from "./asset-pipeline.js";
 import {FunctionAssetFilename} from "@spica-server/interface-function-asset-storage";
 
 import HttpSchema from "./schema/http.json" with {type: "json"};
@@ -220,7 +220,7 @@ export class FunctionEngine implements OnModuleInit, OnModuleDestroy {
    * No-op when asset storage is not configured.
    */
   async removeAssets(fn: Function & {_id: ObjectId}): Promise<void> {
-    return applyAssetDelete(fn, this.reconciler, this.assetService);
+    return this.reconciler.deleteAll(fn);
   }
 
   getPackages(fn: Function): Promise<Package[]> {

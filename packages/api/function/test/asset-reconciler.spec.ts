@@ -225,4 +225,89 @@ describe("FunctionAssetReconciler", () => {
       expect(mockPreparationService.prepare).not.toHaveBeenCalled();
     });
   });
+
+  describe("snapshotAssets", () => {
+    it("should return a map of key to buffer for each asset in storage", async () => {
+      const buf = Buffer.from("snapshot-content");
+      mockStrategy.read.mockResolvedValueOnce(buf);
+
+      const result = await reconciler.snapshotAssets([{key: "functions/my-fn/index.ts"}]);
+
+      expect(result.get("functions/my-fn/index.ts")).toEqual(buf);
+    });
+
+    it("should silently skip keys missing from storage", async () => {
+      mockStrategy.read.mockRejectedValueOnce(new Error("not found"));
+
+      const result = await reconciler.snapshotAssets([{key: "functions/my-fn/index.ts"}]);
+
+      expect(result.size).toBe(0);
+    });
+  });
+
+  describe("rollbackDisk", () => {
+    it("should prepare after restoring when prevAssets is non-empty", async () => {
+      const fn = makeFn();
+      mockStrategy.read.mockResolvedValue(Buffer.from("old"));
+
+      await reconciler.rollbackDisk(fn as any, [
+        {key: "functions/my-fn/index.ts", filename: "index.ts" as any}
+      ]);
+
+      expect(mockPreparationService.prepare).toHaveBeenCalledWith(fn);
+    });
+
+    it("should skip prepare when prevAssets is empty", async () => {
+      const fn = makeFn();
+
+      await reconciler.rollbackDisk(fn as any, []);
+
+      expect(mockPreparationService.prepare).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("rollback", () => {
+    it("should re-upload old buffer for pre-existing storage keys", async () => {
+      const fn = makeFn();
+      const oldBuf = Buffer.from("old-code");
+      const prevBuffers = new Map([["functions/my-fn/index.ts", oldBuf]]);
+
+      // restoreAssets (called by rollbackDisk) reads from storage
+      mockStrategy.read.mockResolvedValue(oldBuf);
+      mockStrategy.write.mockResolvedValue(undefined);
+
+      await reconciler.rollback(
+        fn as any,
+        [{key: "functions/my-fn/index.ts", filename: "index.ts" as any}],
+        ["functions/my-fn/index.ts"],
+        prevBuffers
+      );
+
+      expect(mockStrategy.write).toHaveBeenCalledWith("functions/my-fn/index.ts", oldBuf);
+    });
+
+    it("should delete new storage keys that were not in prevBuffers", async () => {
+      const fn = makeFn();
+      const prevBuffers = new Map<string, Buffer>(); // empty — key was new
+
+      await reconciler.rollback(fn as any, [], ["functions/my-fn/index.ts"], prevBuffers);
+
+      expect(mockStrategy.delete).toHaveBeenCalledWith("functions/my-fn/index.ts");
+    });
+  });
+
+  describe("deleteAll", () => {
+    it("should delete all remote assets and metadata for a function", async () => {
+      const fn = makeFn();
+      mockAssetService.findByFunction.mockResolvedValueOnce([
+        {key: "functions/my-fn/index.ts"},
+        {key: "functions/my-fn/package.json"}
+      ]);
+
+      await reconciler.deleteAll(fn as any);
+
+      expect(mockStrategy.delete).toHaveBeenCalledTimes(2);
+      expect(mockAssetService.deleteByFunction).toHaveBeenCalledWith(fn._id);
+    });
+  });
 });
