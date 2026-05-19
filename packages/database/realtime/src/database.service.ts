@@ -5,21 +5,36 @@ import {Observable} from "rxjs";
 import {FindOptions} from "@spica-server/interface-database";
 import {Emitter} from "./stream.js";
 import isEqual from "lodash/isEqual.js";
+import {PassThrough, Readable} from "stream";
 
 @Injectable()
 export class RealtimeDatabaseService implements OnModuleDestroy {
   constructor(private database: DatabaseService) {}
 
-  private changeStreams = new Map<string, ChangeStream>();
+  private changeStreams = new Map<string, {stream: ChangeStream; hub: PassThrough; cursorReadable: Readable}>();
   private getChangeStream(name: string) {
     if (this.changeStreams.has(name)) {
-      return this.changeStreams.get(name);
+      return this.changeStreams.get(name)!;
     }
 
-    const changeStream = this.database.collection(name).watch([], {fullDocument: "updateLookup"});
-    this.changeStreams.set(name, changeStream);
+    const stream = this.database.collection(name).watch([], {fullDocument: "updateLookup"});
+    const hub = new PassThrough({objectMode: true});
+    // Improvement 1: unlimited listeners — prevents MaxListenersExceededWarning with many subscribers
+    hub.setMaxListeners(0);
+    // Improvement 2: store cursorReadable so it can be explicitly destroyed on teardown
+    const cursorReadable = stream.stream();
+    // Improvement 3: error handlers on both objects — unhandled 'error' events crash the process
+    cursorReadable.on("error", err =>
+      console.error(`[ChangeStream/${name}] cursor error: ${err.message}`)
+    );
+    hub.on("error", err =>
+      console.error(`[ChangeStream/${name}] hub error: ${err.message}`)
+    );
+    cursorReadable.pipe(hub);
+    const entry = {stream, hub, cursorReadable};
+    this.changeStreams.set(name, entry);
 
-    return changeStream;
+    return entry;
   }
 
   private emitters = new Map<string, {value: Emitter<any>; listenerCount: number}>();
@@ -32,9 +47,9 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
       return emitter.value;
     }
 
-    const changeStream = this.getChangeStream(name);
+    const {hub} = this.getChangeStream(name);
     const emitter = {
-      value: new Emitter(this.database.collection(name), changeStream, options),
+      value: new Emitter(this.database.collection(name), hub, options),
       listenerCount: 1
     };
 
@@ -63,11 +78,19 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
+    const closedStreams = new Set<string>();
     await Promise.all(
       Array.from(this.emitters).map(([_, emitter]) => {
-        const stream = this.changeStreams.get(emitter.value.collectionName);
-        this.changeStreams.delete(emitter.value.collectionName);
-        return this.closeStreamSafely(stream);
+        const collName = emitter.value.collectionName;
+        if (closedStreams.has(collName)) {
+          return;
+        }
+        closedStreams.add(collName);
+        const entry = this.changeStreams.get(collName);
+        this.changeStreams.delete(collName);
+        if (entry) {
+          return this.closeStreamSafely(entry);
+        }
       })
     );
     this.emitters.clear();
@@ -90,8 +113,10 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
         .some(name => name == collName);
 
       if (!streamListenersRemain) {
-        const changeStream = this.changeStreams.get(collName);
-        this.closeStreamSafely(changeStream);
+        const entry = this.changeStreams.get(collName);
+        if (entry) {
+          this.closeStreamSafely(entry);
+        }
         this.changeStreams.delete(collName);
       }
     }
@@ -108,12 +133,18 @@ export class RealtimeDatabaseService implements OnModuleDestroy {
     return this.getEmitter(name, options).getObservable();
   }
 
-  private closeStreamSafely(stream: ChangeStream) {
-    if (stream && !stream.closed) {
-      return stream.close();
+  private closeStreamSafely(entry: {stream: ChangeStream; hub: PassThrough; cursorReadable: Readable}) {
+    if (entry && entry.stream && !entry.stream.closed) {
+      // Improvement 4: close ChangeStream first (stops data production), then destroy
+      // cursorReadable (terminates the pipe), then end hub — prevents ERR_STREAM_WRITE_AFTER_END
+      // that could occur when hub.end() is called before the pipe source is stopped.
+      return entry.stream.close().then(() => {
+        entry.cursorReadable.destroy();
+        entry.hub.end();
+      });
     } else {
       console.warn(
-        `Change stream for collection ${stream?.namespace?.collection} is already closed.`
+        `Change stream for collection ${entry?.stream?.namespace?.collection} is already closed.`
       );
     }
   }

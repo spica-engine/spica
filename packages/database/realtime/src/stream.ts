@@ -1,9 +1,9 @@
 import {Query} from "mingo";
 import {ChunkKind, StreamChunk} from "@spica-server/interface-realtime";
-import {ChangeStream, Collection, ObjectId} from "mongodb";
+import {Collection, ObjectId} from "mongodb";
 import {asyncScheduler, Observable, Subject, Subscriber, Subscription, TeardownLogic} from "rxjs";
 import {filter, bufferTime, switchMap, share} from "rxjs/operators";
-import {PassThrough} from "stream";
+import {Readable} from "stream";
 import {DatabaseChange, FindOptions, OperationType} from "@spica-server/interface-database";
 import {levenshtein} from "./levenshtein.js";
 import {late} from "./operators.js";
@@ -23,12 +23,10 @@ export class Emitter<T extends {_id: ObjectId}> {
 
   public collectionName;
 
-  private passThrough = new PassThrough({
-    objectMode: true
-  });
+  private dataHandler: (change: DatabaseChange<T>) => void;
   constructor(
     private collection: Collection,
-    private changeStream: ChangeStream,
+    private source: Readable,
     private options: FindOptions<T>
   ) {
     this.collectionName = collection.collectionName;
@@ -38,7 +36,7 @@ export class Emitter<T extends {_id: ObjectId}> {
         this.listenSortChanges();
       }
 
-      this.passThrough.on("data", (change: DatabaseChange<T>) => {
+      this.dataHandler = (change: DatabaseChange<T>) => {
         switch (change.operationType) {
           case OperationType.INSERT:
             if (
@@ -114,9 +112,9 @@ export class Emitter<T extends {_id: ObjectId}> {
 
             break;
         }
-      });
+      };
 
-      this.changeStream.stream().pipe(this.passThrough);
+      this.source.on("data", this.dataHandler);
 
       return this.getTearDownLogic();
     };
@@ -209,11 +207,7 @@ export class Emitter<T extends {_id: ObjectId}> {
         this.sortSubscription.unsubscribe();
       }
 
-      if (!this.changeStream.closed) {
-        this.changeStream.stream().unpipe(this.passThrough);
-      }
-
-      this.passThrough.removeAllListeners();
+      this.source.off("data", this.dataHandler);
     };
   }
 

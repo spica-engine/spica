@@ -890,7 +890,8 @@ const modules = [
       awss3BucketName: args["function-asset-awss3-bucket-name"],
       gcsServiceAccountPath: args["function-asset-gcs-service-account-path"],
       gcsBucketName: args["function-asset-gcs-bucket-name"]
-    }
+    },
+    payloadSizeLimit: args["payload-size-limit"]
   }),
   ConfigModule.forRoot(),
   StatusModule.forRoot({

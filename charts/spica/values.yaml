@@ -23,15 +23,15 @@ database:
   # startup
   startupProbeInitialDelaySeconds: 15
   startupProbePeriodSeconds: 5
-  startupProbeTimeoutSeconds: 5
-  startupProbeFailureThreshold: 20
+  startupProbeTimeoutSeconds: 15
+  startupProbeFailureThreshold: 30
   # liveness
   livenessProbePeriodSeconds: 30
-  livenessProbeTimeoutSeconds: 10
+  livenessProbeTimeoutSeconds: 15
   livenessProbeFailureThreshold: 3
   # readiness
   readinessProbePeriodSeconds: 10
-  readinessProbeTimeoutSeconds: 5
+  readinessProbeTimeoutSeconds: 15
   readinessProbeFailureThreshold: 3
 
 images:
