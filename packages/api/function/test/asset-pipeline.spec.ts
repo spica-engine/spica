@@ -44,7 +44,8 @@ describe("applyAssetChange", () => {
     deleteFromStorage: jest.fn().mockResolvedValue(undefined),
     readFromStorage: jest.fn().mockResolvedValue(Buffer.from("")),
     writeToStorage: jest.fn().mockResolvedValue(undefined),
-    restoreAssets: jest.fn().mockResolvedValue(undefined)
+    restoreAssets: jest.fn().mockResolvedValue(undefined),
+    prepare: jest.fn().mockResolvedValue(undefined)
   });
 
   const makeAssetService = () => ({
@@ -106,8 +107,9 @@ describe("applyAssetChange", () => {
 
     // Upload step never reached
     expect(reconciler.uploadAsset).not.toHaveBeenCalled();
-    // Rollback attempted
+    // Rollback attempted and followed by re-prepare against restored files
     expect(reconciler.restoreAssets).toHaveBeenCalled();
+    expect(reconciler.prepare).toHaveBeenCalledWith(fn);
   });
 
   it("should rollback and best-effort delete when strategy.write throws", async () => {
@@ -128,6 +130,8 @@ describe("applyAssetChange", () => {
 
     expect(assetService.upsertMany).not.toHaveBeenCalled();
     expect(reconciler.restoreAssets).toHaveBeenCalled();
+    // prevAssets is empty — no prepare expected
+    expect(reconciler.prepare).not.toHaveBeenCalled();
   });
 
   it("should rollback and delete uploaded keys when upsertMany throws", async () => {
@@ -148,6 +152,8 @@ describe("applyAssetChange", () => {
 
     // Should attempt to clean up the uploaded key
     expect(reconciler.deleteFromStorage).toHaveBeenCalledTimes(1);
+    // prevAssets is empty — no prepare expected
+    expect(reconciler.prepare).not.toHaveBeenCalled();
   });
 });
 

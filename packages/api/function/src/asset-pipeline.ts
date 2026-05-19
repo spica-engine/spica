@@ -70,6 +70,14 @@ export async function applyAssetChange(
     );
     // Storage is untouched at this point — disk restore is sufficient.
     await reconciler.restoreAssets(fn, prevAssets);
+    // Re-prepare so the runtime (compiled artifact / node_modules) matches the restored files.
+    if (prevAssets.length > 0) {
+      await reconciler.prepare(fn).catch(prepErr => {
+        logger.error(
+          `[asset-pipeline] Post-rollback prepare failed for ${fn.name}: ${prepErr instanceof Error ? prepErr.message : prepErr}`
+        );
+      });
+    }
     throw localErr;
   }
 
@@ -94,6 +102,14 @@ export async function applyAssetChange(
     // Restore storage first so restoreAssets reads correct old content from storage.
     await rollbackStorage(newlyUploadedKeys, prevBuffers, reconciler);
     await reconciler.restoreAssets(fn, prevAssets);
+    // Re-prepare so the runtime matches the restored files.
+    if (prevAssets.length > 0) {
+      await reconciler.prepare(fn).catch(prepErr => {
+        logger.error(
+          `[asset-pipeline] Post-rollback prepare failed for ${fn.name}: ${prepErr instanceof Error ? prepErr.message : prepErr}`
+        );
+      });
+    }
     throw uploadErr;
   }
 
@@ -117,6 +133,14 @@ export async function applyAssetChange(
     // Same: restore storage before disk so restoreAssets reads correct old content.
     await rollbackStorage(newlyUploadedKeys, prevBuffers, reconciler);
     await reconciler.restoreAssets(fn, prevAssets);
+    // Re-prepare so the runtime matches the restored files.
+    if (prevAssets.length > 0) {
+      await reconciler.prepare(fn).catch(prepErr => {
+        logger.error(
+          `[asset-pipeline] Post-rollback prepare failed for ${fn.name}: ${prepErr instanceof Error ? prepErr.message : prepErr}`
+        );
+      });
+    }
     throw metaErr;
   }
 }
@@ -126,7 +150,7 @@ export async function applyAssetChange(
  *
  * Pre-existing keys (found in prevBuffers) → re-upload old buffer (undo overwrite).
  * Genuinely new keys (not in prevBuffers)  → delete from storage.
- *i,;;;;,
+ *
  * Must be called BEFORE reconciler.restoreAssets so that restoreAssets reads
  * the correct old content from storage when writing back to disk.
  */

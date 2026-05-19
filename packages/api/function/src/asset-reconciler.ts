@@ -135,6 +135,15 @@ export class FunctionAssetReconciler {
   }
 
   /**
+   * Re-prepare a function after rollback: reinstall packages and recompile.
+   * Ensures the runtime (compiled artifact + node_modules) matches the files
+   * that were just restored to disk.
+   */
+  async prepare(fn: Function): Promise<void> {
+    return this.preparationService.prepare(fn);
+  }
+
+  /**
    * Reconcile a single function: compare local file hashes to stored metadata.
    * Downloads and restores any file whose hash doesn't match (or is missing).
    * Returns true if any file was updated (caller should re-prepare the function).
