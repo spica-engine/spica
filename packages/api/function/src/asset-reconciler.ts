@@ -223,14 +223,14 @@ export class FunctionAssetReconciler {
 
   /**
    * Reconcile a single function: compare local file hashes to stored metadata.
-   * Downloads and restores any file whose hash doesn't match (or is missing).
-   * Returns true if any file was updated (caller should re-prepare the function).
+   * Downloads and restores any file whose hash doesn't match (or is missing),
+   * then re-prepares the function if any file changed.
    */
-  async reconcileFunction(fn: Function & {_id: ObjectId}): Promise<boolean> {
+  async reconcileFunction(fn: Function & {_id: ObjectId}): Promise<void> {
     const storedAssets = await this.assetService.findByFunction(fn._id);
     if (storedAssets.length === 0) {
       // No metadata recorded; nothing to reconcile.
-      return false;
+      return;
     }
 
     let anyChanged = false;
@@ -252,7 +252,9 @@ export class FunctionAssetReconciler {
       anyChanged = true;
     }
 
-    return anyChanged;
+    if (anyChanged) {
+      await this.preparationService.prepare(fn);
+    }
   }
 
   /**
@@ -263,10 +265,7 @@ export class FunctionAssetReconciler {
     await Promise.all(
       fns.map(async fn => {
         try {
-          const changed = await this.reconcileFunction(fn);
-          if (changed) {
-            await this.preparationService.prepare(fn);
-          }
+          await this.reconcileFunction(fn);
         } catch (err) {
           this.logger.error(
             `[reconcile] Failed for function ${fn.name}: ${err instanceof Error ? err.message : err}`

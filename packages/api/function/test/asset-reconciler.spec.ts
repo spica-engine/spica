@@ -123,12 +123,12 @@ describe("FunctionAssetReconciler", () => {
   });
 
   describe("reconcileFunction", () => {
-    it("should return false and skip when no stored assets", async () => {
+    it("should skip reconciliation when no stored assets", async () => {
       mockAssetService.findByFunction.mockResolvedValueOnce([]);
       const fn = makeFn();
-      const changed = await reconciler.reconcileFunction(fn as any);
-      expect(changed).toBe(false);
+      await reconciler.reconcileFunction(fn as any);
       expect(mockStrategy.read).not.toHaveBeenCalled();
+      expect(mockPreparationService.prepare).not.toHaveBeenCalled();
     });
 
     it("should skip download when hash matches", async () => {
@@ -145,9 +145,9 @@ describe("FunctionAssetReconciler", () => {
         {filename: "index.ts", key: "functions/x/index.ts", hash, strategy: "default"}
       ]);
 
-      const changed = await reconciler.reconcileFunction(fn as any);
-      expect(changed).toBe(false);
+      await reconciler.reconcileFunction(fn as any);
       expect(mockStrategy.read).not.toHaveBeenCalled();
+      expect(mockPreparationService.prepare).not.toHaveBeenCalled();
     });
 
     it("should download and restore when hash mismatches", async () => {
@@ -169,9 +169,9 @@ describe("FunctionAssetReconciler", () => {
         }
       ]);
 
-      const changed = await reconciler.reconcileFunction(fn as any);
-      expect(changed).toBe(true);
+      await reconciler.reconcileFunction(fn as any);
       expect(mockStrategy.read).toHaveBeenCalledWith("functions/x/index.ts");
+      expect(mockPreparationService.prepare).toHaveBeenCalledWith(fn);
 
       const onDisk = await fs.promises.readFile(path.join(tmpDir, fn.name, "index.ts"));
       expect(onDisk).toEqual(remoteData);
@@ -191,8 +191,8 @@ describe("FunctionAssetReconciler", () => {
         }
       ]);
 
-      const changed = await reconciler.reconcileFunction(fn as any);
-      expect(changed).toBe(true);
+      await reconciler.reconcileFunction(fn as any);
+      expect(mockPreparationService.prepare).toHaveBeenCalledWith(fn);
 
       const onDisk = await fs.promises.readFile(path.join(tmpDir, fn.name, "index.ts"));
       expect(onDisk).toEqual(remoteData);

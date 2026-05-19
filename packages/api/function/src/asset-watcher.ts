@@ -3,7 +3,6 @@ import {Subscription} from "rxjs";
 import {FunctionService, FunctionAssetService} from "@spica-server/function-services";
 import {FunctionAssetReconciler} from "./asset-reconciler.js";
 import {SelfWriteTracker} from "./asset-write-tracker.js";
-import {FunctionPreparationService} from "./function-preparation.service.js";
 import * as CRUD from "./crud.js";
 
 /**
@@ -21,8 +20,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
     private readonly assetService: FunctionAssetService,
     private readonly functionService: FunctionService,
     private readonly reconciler: FunctionAssetReconciler,
-    private readonly tracker: SelfWriteTracker,
-    private readonly preparationService: FunctionPreparationService
+    private readonly tracker: SelfWriteTracker
   ) {}
 
   onModuleInit() {
@@ -64,10 +62,7 @@ export class FunctionAssetWatcher implements OnModuleInit, OnModuleDestroy {
             `[asset-watcher] Peer asset change detected for ${fn.name}/${filename} — reconciling`
           );
 
-          const changed = await this.reconciler.reconcileFunction(fn as any);
-          if (changed) {
-            await this.preparationService.prepare(fn as any);
-          }
+          await this.reconciler.reconcileFunction(fn as any);
         } catch (err) {
           this.logger.error(
             `[asset-watcher] Error handling change: ${err instanceof Error ? err.message : err}`
