@@ -75,9 +75,9 @@ export async function applyAssetChange(
 
   // Step 3: diff against stored hashes; snapshot only what will be overwritten.
   const changedFiles = filterChangedFiles(files, prevAssets);
-  const prevBuffers = await reconciler.snapshotAssets(prevAssetsFor(changedFiles, prevAssets));
-
   if (changedFiles.length === 0) return;
+
+  const prevBuffers = await reconciler.snapshotAssets(prevAssetsFor(changedFiles, prevAssets));
 
   // Step 4: upload changed files to storage.
   // Both arrays grow incrementally so the catch block rolls back only the
